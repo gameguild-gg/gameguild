@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
 [JsonDerivedType(typeof(StandardTest), "standard")]
-[JsonDerivedType(typeof(FunctionalTest), "functional")]
+[JsonDerivedType(typeof(FunctionalTestGroup), "functional")]
 public abstract record Test
 {
     /// <summary>Relative weight used to compute total score. Defaults to 1.0; must be &gt;= 0.</summary>
@@ -33,11 +33,23 @@ public sealed record StandardTest : Test
 }
 
 /// <summary>
-/// Function-call test: invokes a specific C/C++ function with typed arguments and compares the return value.
+/// Function-call test group: invokes a single C/C++ function (carried once on <see cref="Function"/>)
+/// against one or more input/expected cases. Weight is per-group, not per-case.
 /// </summary>
-public sealed record FunctionalTest : Test
+public sealed record FunctionalTestGroup : Test
 {
     public required TestFunctionData Function { get; init; }
 
-    public required FunctionParameter Result { get; init; }
+    public required IReadOnlyList<FunctionalTestCase> Cases { get; init; }
+}
+
+/// <summary>
+/// One case within a <see cref="FunctionalTestGroup"/>: argument list + expected return value.
+/// <see cref="Inputs"/> length MUST match <see cref="TestFunctionData.Parameters"/> length (validator-enforced).
+/// </summary>
+public sealed record FunctionalTestCase
+{
+    public required FunctionParameter[] Inputs { get; init; }
+
+    public required FunctionParameter Expected { get; init; }
 }

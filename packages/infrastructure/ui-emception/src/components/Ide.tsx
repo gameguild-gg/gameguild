@@ -1,12 +1,12 @@
 import type { OnMount } from '@monaco-editor/react';
 import { bootInWorker, DEFAULT_MANIFEST_URL, wrapWorkerClient } from '@gameguild/emception-browser';
 import { Terminal } from '@xterm/xterm';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
 import type { DockGroup, FileMeta, FileMetaInput, GradingPlan, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
-import { DEFAULT_IMAGE, SDL_CANVAS_PATH, WORKSPACE_STORAGE_KEY, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types';
+import { DEFAULT_IMAGE, SDL_CANVAS_PATH, parseWorkspaceBundle, resolveArgs, workspaceConfigToState, workspaceStorageKey } from './ide-types';
 import TestResultsPanel from './TestResultsPanel';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import TerminalPanel from './TerminalPanel';
@@ -81,6 +81,27 @@ export interface IdeProps {
   onStderr?: (chunk: string) => void;
    /** Fired when a compile-and-run or test execution finishes, with the exit code. */
   onExecutionComplete?: (exitCode: number) => void;
+  // ── T6 authoring extensions (in-IDE authoring surface) ───────────────
+  /** UUID used by T8 to namespace VFS path + localStorage key per assignment. */
+  assignmentToken?: string;
+  /** When supplied, the in-header preset picker is ALWAYS rendered (overrides the
+   *  default `!workspaceConfig && !workspaceUrl` gate). Each entry renders as an `<option>`. */
+  presetOptions?: Array<{ value: string; label: string }>;
+  /** Fired when the user changes the preset via the in-header picker. The internal
+   *  `switchWorkspace(value)` is ALSO called when `value` matches a known PRESETS key. */
+  onPresetChange?: (value: string) => void;
+  /** v1 2-tier file metadata map. When supplied, FileExplorer renders per-row
+   *  visibility `<Select>` + modifiable `<Switch>` controls. */
+  fileMeta?: Record<string, { visibility: 'Public' | 'Private'; modifiable: boolean }>;
+  /** Fired on a visibility/modifiable change with the merged patch. */
+  onFileMetaChange?: (path: string, patch: Partial<{ visibility: 'Public' | 'Private'; modifiable: boolean }>) => void;
+  /** Opaque tests-model prop — consumer narrows. Echoed back via `getAuthoredState()`. */
+  tests?: unknown;
+  /** Fired when the consumer-supplied tests editor mutates the model. */
+  onTestsChange?: (next: unknown) => void;
+  /** Slot rendered in a collapsible sidebar region (below FileExplorer) when supplied.
+   *  Hosts the page-composed StandardTest + FunctionalTestGroup editors. */
+  testsPanelSlot?: ReactNode;
 }
 
 /** Imperative handle exposed by `<Ide ref={...}>`. */
@@ -98,11 +119,39 @@ export interface IdeHandle {
   setFileMeta(path: string, meta: FileMetaInput): Promise<void>;
   /** Content-diff against the seeded workspace — returns edited + student-created files. */
   getModifiedFiles(): Promise<Array<{ path: string; content: string; encoding: 'text' }>>;
+  /** Single snapshot for the page's save handler — files + fileMeta + tests + activePresetId. */
+  getAuthoredState(): Promise<{
+    files: Array<{ path: string; content: string }>;
+    fileMeta: Record<string, { visibility: 'Public' | 'Private'; modifiable: boolean }>;
+    tests?: unknown;
+    presetId: string;
+  }>;
 }
 
 type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
 
-export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception', manifestUrl = DEFAULT_MANIFEST_URL, workspaceConfig, workspaceUrl, onTestReport, onStdout, onStderr, onExecutionComplete, testPlan, testMode = 'full', maxScore = 100, passingScore = 60 }, ref) {
+export default forwardRef<IdeHandle, IdeProps>(function Ide({
+  title = 'Emception',
+  manifestUrl = DEFAULT_MANIFEST_URL,
+  workspaceConfig,
+  workspaceUrl,
+  onTestReport,
+  onStdout,
+  onStderr,
+  onExecutionComplete,
+  testPlan,
+  testMode = 'full',
+  maxScore = 100,
+  passingScore = 60,
+  assignmentToken,
+  presetOptions,
+  onPresetChange,
+  fileMeta,
+  onFileMetaChange,
+  tests,
+  onTestsChange,
+  testsPanelSlot,
+}, ref) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -136,6 +185,12 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
 
   // Resolve the active workspace config: prop > fetched bundle > default preset
   const [activePresetId, setActivePresetId] = useState<string>(workspaceConfig?.id ?? DEFAULT_PRESET.id);
+  // Mirror activePresetId for stale-closure-free reads inside useImperativeHandle.
+  const activePresetIdRef = useRef(activePresetId);
+  activePresetIdRef.current = activePresetId;
+  // Mirror the new authoring props for getAuthoredState (useImperativeHandle deps don't include them).
+  const propsRef = useRef<{ fileMeta?: IdeProps['fileMeta']; tests?: unknown; assignmentToken?: string }>({});
+  propsRef.current = { fileMeta, tests, assignmentToken };
   const [fetchedConfig, setFetchedConfig] = useState<WorkspaceConfig | null>(null);
   const resolvedConfig = workspaceConfig ?? fetchedConfig ?? PRESETS[activePresetId] ?? DEFAULT_PRESET;
   const initialState = workspaceConfigToState(resolvedConfig);
@@ -183,7 +238,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
 
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(WORKSPACE_STORAGE_KEY);
+      const raw = window.localStorage.getItem(workspaceStorageKey(assignmentToken));
       if (!raw) return;
       const parsed = JSON.parse(raw) as {
         files?: Record<string, WorkspaceFile>;
@@ -210,7 +265,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       // Exclude runtime-only canvas entries from persisted workspace files
       const filesToSave = Object.fromEntries(Object.entries(files).filter(([path, file]) => path !== SDL_CANVAS_PATH && file.type !== 'canvas'));
       window.localStorage.setItem(
-        WORKSPACE_STORAGE_KEY,
+        workspaceStorageKey(assignmentToken),
         JSON.stringify({
           files: filesToSave,
           selectedPath,
@@ -287,7 +342,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
     const enc = new TextEncoder();
     const textFiles = Object.values(filesToSync).filter((f) => f.type === 'text' && isTextFile(f.path));
     for (const file of textFiles) {
-      const fsPath = toWorkspaceFsPath(file.path);
+      const fsPath = toWorkspaceFsPath(file.path, propsRef.current.assignmentToken);
       await client.writeFile(fsPath, enc.encode(file.content));
       console.log(`${P} VFS sync: ${file.path} -> ${fsPath}`);
     }
@@ -474,7 +529,13 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
     };
   }, []);
 
-  useImperativeHandle(ref, () => ({
+  useImperativeHandle(ref, () => {
+    const getFiles = async () => {
+      return Object.values(filesRef.current)
+        .filter((f) => f.type === 'text')
+        .map(({ path, content }) => ({ path, content }));
+    };
+    return {
     runTests: async (plan) => {
       const api = apiRef.current;
       if (!api) throw new Error('Worker not booted yet');
@@ -487,11 +548,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       if (!api) throw new Error('Worker not booted yet');
       return api.compileAndRun(sourceOrFiles, opts);
     },
-    getFiles: async () => {
-      return Object.values(filesRef.current)
-        .filter((f) => f.type === 'text')
-        .map(({ path, content }) => ({ path, content }));
-    },
+    getFiles,
     setFiles: async (newFiles) => {
       // Replace semantics: discard prior state, seed fresh workspace + snapshot.
       const replaced: Record<string, WorkspaceFile> = {};
@@ -522,7 +579,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       const orch = orchestratorRef.current;
       if (orch) {
         const enc = new TextEncoder();
-        await orch.client.writeFile(toWorkspaceFsPath(path), enc.encode(content));
+        await orch.client.writeFile(toWorkspaceFsPath(path, propsRef.current.assignmentToken), enc.encode(content));
       }
     },
     removeFile: async (path) => {
@@ -555,7 +612,22 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
         .filter((f) => f.type === 'text' && f.content !== seeded.get(f.path))
         .map(({ path, content }) => ({ path, content, encoding: 'text' as const }));
     },
-  }), [syncFilesToVfs]);
+    getAuthoredState: async () => {
+      const fm = propsRef.current.fileMeta;
+      const fileMetaSnapshot: Record<string, { visibility: 'Public' | 'Private'; modifiable: boolean }> = {};
+      if (fm) {
+        for (const [path, meta] of Object.entries(fm)) {
+          fileMetaSnapshot[path] = { visibility: meta.visibility, modifiable: meta.modifiable };
+        }
+      }
+      return {
+        files: await getFiles(),
+        fileMeta: fileMetaSnapshot,
+        tests: propsRef.current.tests,
+        presetId: activePresetIdRef.current,
+      };
+    },
+  }; }, [syncFilesToVfs]);
 
   const ensureOpenTab = useCallback(
     (path: string, group: DockGroup = 'main') => {
@@ -914,7 +986,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       console.log(`${P} COMPILE & RUN START`);
       const enc = new TextEncoder();
       for (const file of textFiles) {
-        const fsPath = toWorkspaceFsPath(file.path);
+        const fsPath = toWorkspaceFsPath(file.path, propsRef.current.assignmentToken);
         await client.writeFile(fsPath, enc.encode(file.content));
         console.log(`${P} Synced ${file.path} -> ${fsPath}`);
       }
@@ -925,7 +997,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       // ── Python script path ──────────────────────────────────────
       if (runType === 'python-script') {
         const pyFile = compileTarget ?? entryPoint ?? '/user/main.py';
-        const fsPath = toWorkspaceFsPath(pyFile);
+        const fsPath = toWorkspaceFsPath(pyFile, propsRef.current.assignmentToken);
         const args = resolvedConfig.run.args ? resolveArgs(resolvedConfig.run.args, fsPath) : ['python3', fsPath];
         setStatus('Running Python...');
         tty.writeLine(`\x1b[36mRunning ${pyFile}...\x1b[0m`);
@@ -1023,7 +1095,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
         tty.writeLine(`Compiling ${compileTarget}...`);
         tty.writeLine('\x1b[36mSDL3 detected \u2014 compiling object...\x1b[0m');
 
-        const sourceFsPath = toWorkspaceFsPath(compileTarget);
+        const sourceFsPath = toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken);
         const sdlObjPath = '/tmp/emception-sdl-main.o';
         const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
@@ -1429,7 +1501,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       const useDirectPath = resolvedConfig.compile.args.length === 0 && resolvedConfig.run.type === 'wasi-terminal';
 
       if (useDirectPath) {
-        const sourceFsPath = toWorkspaceFsPath(compileTarget);
+        const sourceFsPath = toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken);
         const objPath = '/tmp/emception-terminal-main.o';
         const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
@@ -1584,8 +1656,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       // ── emcc path (Python-based pipeline) ───────────────────────
       const compileArgs =
         resolvedConfig.compile.args.length > 0
-          ? resolveArgs(resolvedConfig.compile.args, toWorkspaceFsPath(compileTarget))
-          : ['emcc', toWorkspaceFsPath(compileTarget), '-o', '/home/user/main.wasm', '-O2'];
+          ? resolveArgs(resolvedConfig.compile.args, toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken))
+          : ['emcc', toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken), '-o', '/home/user/main.wasm', '-O2'];
       const result = await client.run(compileArgs[0], compileArgs, {
         cwd: resolvedConfig.compile.cwd ?? '/home/user',
         onStdout: (t: string) => {
@@ -1622,7 +1694,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       if ((!wasmBytes || wasmBytes.length === 0) && resolvedConfig.run.type === 'wasi-terminal' && resolvedConfig.compile.tool === 'emcc') {
         tty.writeLine('\x1b[33mOutput artifact missing after emcc; attempting fallback link pipeline...\x1b[0m');
         const fallbackObj = '/tmp/emception-fallback-main.o';
-        const sourceFsPath = toWorkspaceFsPath(compileTarget);
+        const sourceFsPath = toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken);
 
         const clangFallback = await client.run(
           'clang',
@@ -1752,7 +1824,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       const textFiles = Object.values(files).filter((f) => f.type === 'text' && isTextFile(f.path));
       const enc = new TextEncoder();
       for (const file of textFiles) {
-        const fsPath = toWorkspaceFsPath(file.path);
+        const fsPath = toWorkspaceFsPath(file.path, propsRef.current.assignmentToken);
         await client.writeFile(fsPath, enc.encode(file.content));
       }
 
@@ -1877,12 +1949,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
       >
         <h1 style={{ fontSize: '0.8rem', fontWeight: 600, color: '#cdd6f4', margin: 0, letterSpacing: '0.03em' }}>{title}</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {/* Workspace preset picker */}
-          {!workspaceConfig && !workspaceUrl && (
+          {/* Workspace preset picker — visible when presetOptions supplied OR no workspaceConfig/workspaceUrl */}
+          {((presetOptions && presetOptions.length > 0) || (!workspaceConfig && !workspaceUrl)) && (
             <select
               data-testid="workspace-picker"
               value={activePresetId}
-              onChange={(e) => switchWorkspace(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (PRESETS[v]) switchWorkspace(v);
+                onPresetChange?.(v);
+              }}
               style={{
                 height: 24,
                 fontSize: '0.72rem',
@@ -1894,9 +1970,12 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
                 padding: '0 0.4rem',
               }}
             >
-              {PRESET_IDS.map((id) => (
-                <option key={id} value={id}>
-                  {PRESETS[id].label}
+              {(presetOptions && presetOptions.length > 0
+                ? presetOptions
+                : PRESET_IDS.map((id) => ({ value: id, label: PRESETS[id].label }))
+              ).map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
                 </option>
               ))}
             </select>
@@ -2023,7 +2102,23 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({ title = 'Emception
             onCreateFile={createFile}
             onRename={renameSelectedFile}
             onDelete={deleteSelectedFile}
+            fileMeta={fileMeta}
+            onFileMetaChange={onFileMetaChange}
           />
+          {testsPanelSlot != null && (
+            <section
+              data-testid="tests-panel-slot"
+              style={{
+                flexShrink: 0,
+                maxHeight: '40%',
+                overflow: 'auto',
+                borderTop: '1px solid #313244',
+                background: '#11111b',
+              }}
+            >
+              {testsPanelSlot}
+            </section>
+          )}
         </Panel>
 
         <PanelResizeHandle style={resizerStyle} />

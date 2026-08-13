@@ -146,13 +146,16 @@ test('generateDoctestHarness: produces correct shape for int add(int, int)', () 
         {
             functionName: 'add',
             parameters: [
-                { name: 'a', type: 'Integer', content: 2 },
-                { name: 'b', type: 'Integer', content: 3 },
+                { name: 'a', type: 'Integer', content: 0 },
+                { name: 'b', type: 'Integer', content: 0 },
             ],
             returnType: { type: 'Integer', content: 0 },
-            result: { type: 'Integer', content: 5 },
         },
-        0,
+        [{ Inputs: [
+            { type: 'Integer', content: 2 },
+            { type: 'Integer', content: 3 },
+        ], Expected: { type: 'Integer', content: 5 } }],
+        { index: 0 },
     );
 
     assert.equal(out.filename, 'functional_0_test.cpp');
@@ -165,33 +168,84 @@ test('generateDoctestHarness: produces correct shape for int add(int, int)', () 
     assert.match(out.source, /^extern "C" int add\(int, int\);$/m);
     // (d4) TEST_CASE block named "<index>:<functionName>"
     assert.match(out.source, /^TEST_CASE\("0:add"\) \{$/m);
-    // (d5) CHECK macro with serialized args + result literal
+    // (d5) CHECK macro with serialized args + expected literal
     assert.match(out.source, /^    CHECK\(add\(2, 3\) == 5\);$/m);
 });
 
-test('generateDoctestHarness: filename uses caller-supplied index', () => {
+test('generateDoctestHarness: multi-case group emits ONE decl + N CHECK lines', () => {
     const out = generateDoctestHarness(
         {
             functionName: 'add',
+            parameters: [
+                { name: 'a', type: 'Integer', content: 0 },
+                { name: 'b', type: 'Integer', content: 0 },
+            ],
+            returnType: { type: 'Integer', content: 0 },
+        },
+        [
+            { Inputs: [{ type: 'Integer', content: 2 }, { type: 'Integer', content: 3 }], Expected: { type: 'Integer', content: 5 } },
+            { Inputs: [{ type: 'Integer', content: 10 }, { type: 'Integer', content: 20 }], Expected: { type: 'Integer', content: 30 } },
+        ],
+        { index: 0 },
+    );
+
+    // ONE extern "C" forward decl — not duplicated per case
+    const declMatches = out.source.match(/^extern "C" int add\(int, int\);$/gm);
+    assert.equal(declMatches?.length, 1, 'extern "C" decl emitted exactly once');
+
+    // ONE TEST_CASE block
+    const testCaseMatches = out.source.match(/^TEST_CASE\("0:add"\) \{$/gm);
+    assert.equal(testCaseMatches?.length, 1, 'TEST_CASE block emitted exactly once');
+
+    // N CHECK lines (one per case), in the order the cases were supplied
+    assert.match(out.source, /^    CHECK\(add\(2, 3\) == 5\);$/m);
+    assert.match(out.source, /^    CHECK\(add\(10, 20\) == 30\);$/m);
+    const checkMatches = out.source.match(/^    CHECK\(add\(/gm);
+    assert.equal(checkMatches?.length, 2, '2 CHECK lines for 2 cases');
+});
+
+test('generateDoctestHarness: options.name overrides TEST_CASE label', () => {
+    const out = generateDoctestHarness(
+        {
+            functionName: 'add',
+            parameters: [
+                { name: 'a', type: 'Integer', content: 0 },
+                { name: 'b', type: 'Integer', content: 0 },
+            ],
+            returnType: { type: 'Integer', content: 0 },
+        },
+        [{ Inputs: [
+            { type: 'Integer', content: 2 },
+            { type: 'Integer', content: 3 },
+        ], Expected: { type: 'Integer', content: 5 } }],
+        { index: 7, name: 'add-basics' },
+    );
+    assert.equal(out.filename, 'functional_7_test.cpp', 'index still seeds filename');
+    assert.match(out.source, /TEST_CASE\("7:add-basics"\)/, 'label falls back to options.name');
+});
+
+test('generateDoctestHarness: defaults index=0 when options omitted', () => {
+    const out = generateDoctestHarness(
+        {
+            functionName: 'one',
             parameters: [],
             returnType: { type: 'Integer', content: 0 },
-            result: { type: 'Integer', content: 7 },
         },
-        3,
+        [{ Inputs: [], Expected: { type: 'Integer', content: 7 } }],
     );
-    assert.equal(out.filename, 'functional_3_test.cpp');
-    assert.match(out.source, /TEST_CASE\("3:add"\)/);
+    assert.equal(out.filename, 'functional_0_test.cpp');
+    assert.match(out.source, /TEST_CASE\("0:one"\)/);
 });
 
 test('generateDoctestHarness: String returnType → std::string decl + quoted result', () => {
     const out = generateDoctestHarness(
         {
             functionName: 'greet',
-            parameters: [{ name: 'who', type: 'String', content: 'world' }],
+            parameters: [{ name: 'who', type: 'String', content: '' }],
             returnType: { type: 'String', content: '' },
-            result: { type: 'String', content: 'hello world' },
         },
-        1,
+        [{ Inputs: [{ type: 'String', content: 'world' }], Expected: { type: 'String', content: 'hello world' } }],
+        { index: 1 },
     );
 
     assert.match(out.source, /^extern "C" std::string greet\(std::string\);$/m);
@@ -202,11 +256,11 @@ test('generateDoctestHarness: Boolean returnType + literal', () => {
     const out = generateDoctestHarness(
         {
             functionName: 'isEven',
-            parameters: [{ name: 'n', type: 'Integer', content: 4 }],
+            parameters: [{ name: 'n', type: 'Integer', content: 0 }],
             returnType: { type: 'Boolean', content: false },
-            result: { type: 'Boolean', content: true },
         },
-        2,
+        [{ Inputs: [{ type: 'Integer', content: 4 }], Expected: { type: 'Boolean', content: true } }],
+        { index: 2 },
     );
 
     assert.match(out.source, /^extern "C" bool isEven\(int\);$/m);
@@ -218,13 +272,16 @@ test('generateDoctestHarness: Float returnType + double args', () => {
         {
             functionName: 'avg',
             parameters: [
-                { name: 'x', type: 'Float', content: 1.5 },
-                { name: 'y', type: 'Float', content: 2.5 },
+                { name: 'x', type: 'Float', content: 0 },
+                { name: 'y', type: 'Float', content: 0 },
             ],
             returnType: { type: 'Float', content: 0 },
-            result: { type: 'Float', content: 2 },
         },
-        4,
+        [{ Inputs: [
+            { type: 'Float', content: 1.5 },
+            { type: 'Float', content: 2.5 },
+        ], Expected: { type: 'Float', content: 2 } }],
+        { index: 4 },
     );
 
     assert.match(out.source, /^extern "C" double avg\(double, double\);$/m);
@@ -239,9 +296,9 @@ test('generateDoctestHarness: re-throws on Array param (does not generate)', () 
                     functionName: 'bad',
                     parameters: [{ name: 'xs', type: 'Array', content: [1] }],
                     returnType: { type: 'Integer', content: 0 },
-                    result: { type: 'Integer', content: 0 },
                 },
-                0,
+                [{ Inputs: [{ type: 'Array', content: [1] }], Expected: { type: 'Integer', content: 0 } }],
+                { index: 0 },
             ),
         { message: 'Array/Dictionary parameter types not supported in v1' },
     );
@@ -255,11 +312,27 @@ test('generateDoctestHarness: re-throws on Array returnType', () => {
                     functionName: 'bad',
                     parameters: [],
                     returnType: { type: 'Array', content: [] },
-                    result: { type: 'Array', content: [] },
                 },
-                0,
+                [{ Inputs: [], Expected: { type: 'Array', content: [] } }],
+                { index: 0 },
             ),
         { message: 'Array/Dictionary parameter types not supported in v1' },
+    );
+});
+
+test('generateDoctestHarness: throws when cases array is empty (M5 guard)', () => {
+    assert.throws(
+        () =>
+            generateDoctestHarness(
+                {
+                    functionName: 'add',
+                    parameters: [{ name: 'a', type: 'Integer', content: 0 }],
+                    returnType: { type: 'Integer', content: 0 },
+                },
+                [],
+                { index: 0 },
+            ),
+        { message: 'FunctionalTestGroup requires \u22651 case' },
     );
 });
 
@@ -267,11 +340,11 @@ test('generateDoctestHarness: string content with quotes/backslash/newline/tab i
     const out = generateDoctestHarness(
         {
             functionName: 'echo',
-            parameters: [{ name: 's', type: 'String', content: 'a"\\\n\tb' }],
+            parameters: [{ name: 's', type: 'String', content: '' }],
             returnType: { type: 'String', content: '' },
-            result: { type: 'String', content: 'x' },
         },
-        0,
+        [{ Inputs: [{ type: 'String', content: 'a"\\\n\tb' }], Expected: { type: 'String', content: 'x' } }],
+        { index: 0 },
     );
     // Escaped form: a\"\n\tb  — within the surrounding double quotes the
     // backslash sequence are literal C++ escapes (\, ", \n, \t).
@@ -283,27 +356,45 @@ test('generateDoctestHarness: string content with quotes/backslash/newline/tab i
 // Boots a real emception runtime (browser/worker adapter) to verify the
 // generated harness compiles and `doctest.h` resolves in the sysroot. Skipped
 // by default — the orchestrator runs it explicitly when a runtime is present.
+//
+// Two skip gates:
+//   1. `EMCEPTION_SMOKE=1` must be set (user opt-in).
+//   2. A browser-like runtime must be available. The browser adapter
+//      transitively imports `*.py?raw` (the emscripten subprocess shim) which
+//      Node's loader rejects with `ERR_UNKNOWN_FILE_EXTENSION`. Running this
+//      under raw Node previously produced a phantom pass because the test
+//      object used `run` instead of `fn` (Node's test runner never executed
+//      the body). Both are fixed below: `fn` is used so the body runs, and
+//      the smoke is skipped when the host is Node-only.
+
+const IS_NODE = typeof process === 'object' && !!process.versions?.node && typeof window === 'undefined';
 
 test({
     name: 'generateDoctestHarness: integration smoke — harness compiles + runs in emception',
-    async run() {
+    async fn() {
         const { createEmception } = await import('@gameguild/emception-browser');
         const em = await createEmception({
             manifestUrl: process.env.EMCEPTION_MANIFEST_URL ?? '/cdn/manifest.json',
             tty: 'none',
         });
         try {
+            // Multi-case group: signature add(int, int) → int with 2 cases.
+            // Proves: (a) the harness compiles in the real worker, (b) the
+            // doctest.h path resolves, (c) both CHECK lines execute and pass.
             const harness = generateDoctestHarness(
                 {
                     functionName: 'add',
                     parameters: [
-                        { name: 'a', type: 'Integer', content: 2 },
-                        { name: 'b', type: 'Integer', content: 3 },
+                        { name: 'a', type: 'Integer', content: 0 },
+                        { name: 'b', type: 'Integer', content: 0 },
                     ],
                     returnType: { type: 'Integer', content: 0 },
-                    result: { type: 'Integer', content: 5 },
                 },
-                0,
+                [
+                    { Inputs: [{ type: 'Integer', content: 2 }, { type: 'Integer', content: 3 }], Expected: { type: 'Integer', content: 5 } },
+                    { Inputs: [{ type: 'Integer', content: 10 }, { type: 'Integer', content: 20 }], Expected: { type: 'Integer', content: 30 } },
+                ],
+                { index: 0 },
             );
 
             await em.writeFile('/home/user/solution.cpp', [
@@ -328,5 +419,7 @@ test({
             em.dispose();
         }
     },
-    skip: !process.env.EMCEPTION_SMOKE ? 'set EMCEPTION_SMOKE=1 to enable' : undefined,
+    skip: (!process.env.EMCEPTION_SMOKE || IS_NODE)
+        ? 'set EMCEPTION_SMOKE=1 in a browser test runner (Playwright/etc); raw Node cannot host the browser adapter'
+        : undefined,
 });

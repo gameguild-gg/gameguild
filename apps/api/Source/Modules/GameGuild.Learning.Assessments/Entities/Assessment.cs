@@ -40,13 +40,12 @@ public class Assessment : EntityBase
         string title,
         AssessmentType type,
         int maxScore,
-        int passingScore,
         bool isRequired = true,
         Guid? assessmentGroupId = null,
         Guid? contentId = null,
         AssessmentGradingMethod gradingMethods = AssessmentGradingMethod.InstructorGraded)
     {
-        ValidateScoreRange(maxScore, passingScore);
+        ValidateMaxScore(maxScore);
 
         return new Assessment
         {
@@ -57,7 +56,6 @@ public class Assessment : EntityBase
             Title = title,
             Type = NormalizeType(type),
             MaxScore = maxScore,
-            PassingScore = passingScore,
             IsRequired = isRequired,
             Order = 0,
             GradingMethods = gradingMethods
@@ -75,11 +73,10 @@ public class Assessment : EntityBase
         UpdatedAt = SystemClock.UtcNow;
     }
 
-    public void SetGrading(int maxScore, int passingScore)
+    public void SetMaxScore(int maxScore)
     {
-        ValidateScoreRange(maxScore, passingScore);
+        ValidateMaxScore(maxScore);
         MaxScore = maxScore;
-        PassingScore = passingScore;
         UpdatedAt = SystemClock.UtcNow;
     }
 
@@ -194,7 +191,6 @@ public class Assessment : EntityBase
         string? title,
         string? description,
         int? maxScore,
-        int? passingScore,
         int? timeLimitMinutes,
         int? maxAttempts,
         bool? isRequired,
@@ -216,10 +212,8 @@ public class Assessment : EntityBase
         if (title != null) Title = title;
         Description = description;
         var nextMaxScore = maxScore ?? MaxScore;
-        var nextPassingScore = passingScore ?? PassingScore;
-        ValidateScoreRange(nextMaxScore, nextPassingScore);
+        ValidateMaxScore(nextMaxScore);
         MaxScore = nextMaxScore;
-        PassingScore = nextPassingScore;
         TimeLimitMinutes = timeLimitMinutes;
         MaxAttempts = maxAttempts;
         if (isRequired.HasValue) IsRequired = isRequired.Value;
@@ -271,16 +265,11 @@ public class Assessment : EntityBase
         }
     }
 
-    private static void ValidateScoreRange(int maxScore, int passingScore)
+    private static void ValidateMaxScore(int maxScore)
     {
         if (maxScore <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(maxScore), "Maximum score must be greater than zero.");
-        }
-
-        if (passingScore < 0 || passingScore > maxScore)
-        {
-            throw new ArgumentOutOfRangeException(nameof(passingScore), "Passing score must be between zero and the maximum score.");
         }
     }
 

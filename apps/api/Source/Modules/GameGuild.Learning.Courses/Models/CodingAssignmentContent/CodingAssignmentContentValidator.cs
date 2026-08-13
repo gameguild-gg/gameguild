@@ -73,7 +73,7 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
             .WithMessage("Private files cannot be Modifiable").WithErrorCode("private_file_not_modifiable")
             .When(x => x.Data?.Files != null);
 
-        // FunctionalTest: FunctionName must match C-identifier regex
+        // FunctionalTestGroup: FunctionName must match C-identifier regex
         RuleForEach(x => x.Tests.Public)
             .Must(IsValidFunctionName)
             .WithMessage("FunctionName must match ^[A-Za-z_][A-Za-z0-9_]*$")
@@ -86,16 +86,42 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
             .WithErrorCode("invalid_function_name")
             .When(x => x.Tests?.Private != null);
 
-        // FunctionalTest: parameter + return types limited to v1 set (String/Boolean/Integer/Float)
+        // FunctionalTestGroup: ≥1 case per group
+        RuleForEach(x => x.Tests.Public)
+            .Must(HasAtLeastOneCase)
+            .WithMessage("FunctionalTestGroup must have at least one case")
+            .WithErrorCode("at_least_one_case")
+            .When(x => x.Tests?.Public != null);
+
+        RuleForEach(x => x.Tests.Private)
+            .Must(HasAtLeastOneCase)
+            .WithMessage("FunctionalTestGroup must have at least one case")
+            .WithErrorCode("at_least_one_case")
+            .When(x => x.Tests?.Private != null);
+
+        // FunctionalTestGroup: each case Inputs.Length == Function.Parameters.Length
+        RuleForEach(x => x.Tests.Public)
+            .Must(AreCaseInputLengthsValid)
+            .WithMessage("FunctionalTestCase Inputs length must match Function.Parameters length")
+            .WithErrorCode("case_inputs_length_mismatch")
+            .When(x => x.Tests?.Public != null);
+
+        RuleForEach(x => x.Tests.Private)
+            .Must(AreCaseInputLengthsValid)
+            .WithMessage("FunctionalTestCase Inputs length must match Function.Parameters length")
+            .WithErrorCode("case_inputs_length_mismatch")
+            .When(x => x.Tests?.Private != null);
+
+        // FunctionalTestGroup: signature + per-case types limited to v1 set (String/Boolean/Integer/Float)
         RuleForEach(x => x.Tests.Public)
             .Must(AreFunctionalParamTypesValid)
-            .WithMessage("FunctionalTest parameter type not supported in v1")
+            .WithMessage("FunctionalTestGroup parameter type not supported in v1")
             .WithErrorCode("functional_param_type_not_supported_v1")
             .When(x => x.Tests?.Public != null);
 
         RuleForEach(x => x.Tests.Private)
             .Must(AreFunctionalParamTypesValid)
-            .WithMessage("FunctionalTest parameter type not supported in v1")
+            .WithMessage("FunctionalTestGroup parameter type not supported in v1")
             .WithErrorCode("functional_param_type_not_supported_v1")
             .When(x => x.Tests?.Private != null);
 
@@ -103,32 +129,45 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
         RuleFor(x => x.Grading.MaxScore)
             .GreaterThan(0).WithMessage("MaxScore must be greater than 0").WithErrorCode("max_score_positive")
             .When(x => x.Grading != null);
-
-        RuleFor(x => x.Grading.PassingScore)
-            .GreaterThanOrEqualTo(0).WithMessage("PassingScore must be non-negative").WithErrorCode("passing_score_non_negative")
-            .When(x => x.Grading != null);
-
-        RuleFor(x => x.Grading.PassingScore)
-            .LessThanOrEqualTo(x => x.Grading.MaxScore)
-            .WithMessage("PassingScore must not exceed MaxScore").WithErrorCode("passing_score_within_max")
-            .When(x => x.Grading != null);
     }
 
     private static bool IsValidFunctionName(Test? t)
     {
-        if (t is not FunctionalTest f) return true;
+        if (t is not FunctionalTestGroup f) return true;
         return f.Function != null
             && !string.IsNullOrEmpty(f.Function.FunctionName)
             && s_functionName.IsMatch(f.Function.FunctionName);
     }
 
+    private static bool HasAtLeastOneCase(Test? t)
+        => t is not FunctionalTestGroup g || g.Cases.Count > 0;
+
+    private static bool AreCaseInputLengthsValid(Test? t)
+    {
+        if (t is not FunctionalTestGroup g || g.Function == null) return true;
+        var expected = g.Function.Parameters.Count;
+        foreach (var c in g.Cases)
+        {
+            if (c == null || c.Inputs == null || c.Inputs.Length != expected) return false;
+        }
+        return true;
+    }
+
     private static bool AreFunctionalParamTypesValid(Test? t)
     {
-        if (t is not FunctionalTest f || f.Function == null) return true;
+        if (t is not FunctionalTestGroup f || f.Function == null) return true;
         if (!IsValidParamType(f.Function.ReturnType.Type)) return false;
         foreach (var p in f.Function.Parameters)
         {
             if (p != null && !IsValidParamType(p.Type)) return false;
+        }
+        foreach (var c in f.Cases)
+        {
+            if (c == null || c.Expected == null || !IsValidParamType(c.Expected.Type)) return false;
+            foreach (var i in c.Inputs)
+            {
+                if (i != null && !IsValidParamType(i.Type)) return false;
+            }
         }
         return true;
     }

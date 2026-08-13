@@ -15,6 +15,7 @@
     "./styles/theme.css": "./src/styles/theme.css"
   },
   "peerDependencies": {
+    "@game-guild/ui": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
@@ -27,6 +28,7 @@
     "@babel/preset-react": "8",
     "@babel/preset-typescript": "7",
     "@game-guild/jest-config": "workspace:^",
+    "@game-guild/ui": "workspace:*",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@types/jest": "^30.0.0",

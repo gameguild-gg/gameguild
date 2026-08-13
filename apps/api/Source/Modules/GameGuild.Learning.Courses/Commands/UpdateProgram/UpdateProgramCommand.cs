@@ -17,5 +17,6 @@ public sealed record UpdateProgramCommand(
   ProgramDifficulty? Difficulty = null,
   EnrollmentStatus? EnrollmentStatus = null,
   int? MaxEnrollments = null,
-  DateTime? EnrollmentDeadline = null
+  DateTime? EnrollmentDeadline = null,
+  decimal? PassingScore = null
 ) : ICommand<Program>;

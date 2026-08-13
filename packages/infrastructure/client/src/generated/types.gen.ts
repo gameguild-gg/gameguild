@@ -4854,6 +4854,7 @@ export interface LearningCoursesCreateProgramContent {
 export interface LearningCoursesCreateProgram {
   creatorId?: string | null;
   description?: string | null;
+  passingScore?: number;
   slug?: string | null;
   thumbnail?: string | null;
   title?: string | null;
@@ -4892,7 +4893,6 @@ export interface LearningCoursesGraderSummary {
 
 export interface LearningCoursesGradingConfig {
   maxScore?: number;
-  passingScore?: number;
 }
 
 export type LearningCoursesLessonContentFormat = 'Markdown' | 'Lexical' | 'RevealJs' | 'Video' | 'Html' | 'ExternalLink';
@@ -5007,6 +5007,7 @@ export interface LearningCoursesProgram {
   isEnrollmentOpen?: boolean;
   maxEnrollments?: number | null;
   metadata?: string | null;
+  passingScore?: number;
   skillsProvided?: string | null;
   skillsRequired?: string | null;
   slug?: string | null;
@@ -5186,6 +5187,7 @@ export interface LearningCoursesUpdateProgram {
   estimatedHours?: number | null;
   maxEnrollments?: number | null;
   metadata?: string | null;
+  passingScore?: number;
   skillsProvided?: string | null;
   skillsRequired?: string | null;
   slug?: string | null;
@@ -14808,6 +14810,7 @@ LearningCoursesCreateProgramContentSchema = z.object({
 LearningCoursesCreateProgramSchema = z.object({
   creatorId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
+  passingScore: z.number().optional(),
   slug: z.string().nullable().optional(),
   thumbnail: z.string().nullable().optional(),
   title: z.string().nullable().optional(),
@@ -14851,7 +14854,6 @@ LearningCoursesGraderSummarySchema = z.object({
 /** Zod schema for LearningCoursesGradingConfig */
 LearningCoursesGradingConfigSchema = z.object({
   maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCoursesLessonContentFormat */
@@ -14983,6 +14985,7 @@ LearningCoursesProgramSchema = z.object({
   isEnrollmentOpen: z.boolean().optional(),
   maxEnrollments: z.number().int().nullable().optional(),
   metadata: z.string().nullable().optional(),
+  passingScore: z.number().optional(),
   skillsProvided: z.string().nullable().optional(),
   skillsRequired: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
@@ -15197,6 +15200,7 @@ LearningCoursesUpdateProgramSchema = z.object({
   estimatedHours: z.number().int().nullable().optional(),
   maxEnrollments: z.number().int().nullable().optional(),
   metadata: z.string().nullable().optional(),
+  passingScore: z.number().optional(),
   skillsProvided: z.string().nullable().optional(),
   skillsRequired: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),

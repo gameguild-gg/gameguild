@@ -32,6 +32,7 @@ public sealed class UpdateProgramCommandHandler(IApplicationDbContext context, I
     if (request.EnrollmentStatus.HasValue) program.EnrollmentStatus = request.EnrollmentStatus.Value;
     if (request.MaxEnrollments.HasValue) program.MaxEnrollments = request.MaxEnrollments;
     if (request.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = request.EnrollmentDeadline;
+    if (request.PassingScore.HasValue) program.PassingScore = request.PassingScore.Value;
 
     program.Touch();
 

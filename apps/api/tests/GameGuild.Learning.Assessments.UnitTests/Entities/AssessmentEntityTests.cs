@@ -19,14 +19,13 @@ public class AssessmentEntityTests
     public void Create_ShouldNormalizeLegacyExamToQuizAndSetDefaultValues()
     {
         var courseId = Guid.NewGuid();
-        var assessment = Assessment.Create(courseId, "Midterm Exam", AssessmentType.Exam, 100, 70);
+        var assessment = Assessment.Create(courseId, "Midterm Exam", AssessmentType.Exam, 100);
 
         assessment.Id.Should().NotBeEmpty();
         assessment.CourseId.Should().Be(courseId);
         assessment.Title.Should().Be("Midterm Exam");
         assessment.Type.Should().Be(AssessmentType.Quiz);
         assessment.MaxScore.Should().Be(100);
-        assessment.PassingScore.Should().Be(70);
         assessment.IsRequired.Should().BeTrue();
         assessment.Order.Should().Be(0);
         assessment.TimeLimitMinutes.Should().BeNull();
@@ -36,7 +35,7 @@ public class AssessmentEntityTests
     [Fact]
     public void Create_WithIsRequiredFalse_ShouldSetFalse()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 50, 25, isRequired: false);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 50, isRequired: false);
         assessment.IsRequired.Should().BeFalse();
     }
 
@@ -50,7 +49,6 @@ public class AssessmentEntityTests
             "Linked quiz",
             AssessmentType.Quiz,
             100,
-            70,
             contentId: contentId);
 
         assessment.ContentId.Should().Be(contentId);
@@ -59,7 +57,7 @@ public class AssessmentEntityTests
     [Fact]
     public void Create_WithoutContentId_ShouldDefaultToNull()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
 
         assessment.ContentId.Should().BeNull();
     }
@@ -72,7 +70,6 @@ public class AssessmentEntityTests
             "Multi-graded quiz",
             AssessmentType.Quiz,
             100,
-            70,
             gradingMethods: AssessmentGradingMethod.AutoGraded | AssessmentGradingMethod.InstructorGraded);
 
         assessment.GradingMethods.Should().Be(AssessmentGradingMethod.AutoGraded | AssessmentGradingMethod.InstructorGraded);
@@ -82,7 +79,7 @@ public class AssessmentEntityTests
     [Fact]
     public void Create_WithoutGradingMethods_ShouldDefaultToInstructorGraded()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
 
         assessment.GradingMethods.Should().Be(AssessmentGradingMethod.InstructorGraded);
     }
@@ -95,7 +92,6 @@ public class AssessmentEntityTests
             "Survey",
             AssessmentType.Quiz,
             100,
-            70,
             gradingMethods: AssessmentGradingMethod.None);
 
         assessment.GradingMethods.Should().Be(AssessmentGradingMethod.None);
@@ -104,7 +100,7 @@ public class AssessmentEntityTests
     [Fact]
     public void Update_WithGradingMethods_ShouldPersistNewFlags()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
 
         assessment.Update(
             null, null, null, null, null, null, null, null, null,
@@ -121,10 +117,9 @@ public class AssessmentEntityTests
             "Quiz",
             AssessmentType.Quiz,
             100,
-            70,
             gradingMethods: AssessmentGradingMethod.PeerReview);
 
-        assessment.Update(null, null, null, null, null, null, null, null, null);
+        assessment.Update(null, null, null, null, null, null, null, null);
 
         assessment.GradingMethods.Should().Be(AssessmentGradingMethod.PeerReview);
     }
@@ -132,7 +127,7 @@ public class AssessmentEntityTests
     [Fact]
     public void SetDefinition_ShouldPersistStructuredPayloadAndSchemaVersion()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
         using var definition = JsonDocument.Parse("{\"blocks\":{\"question-1\":{\"kind\":\"multiple-choice\"}},\"order\":[\"question-1\"]}");
 
         assessment.SetDefinition(definition.RootElement, 2);
@@ -144,7 +139,7 @@ public class AssessmentEntityTests
     [Fact]
     public void SetDefinition_ShouldRejectUndefinedPayloadOrInvalidSchemaVersion()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 70);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
         using var definition = JsonDocument.Parse("{}");
 
         var undefinedAction = () => assessment.SetDefinition(default, 1);
@@ -155,13 +150,11 @@ public class AssessmentEntityTests
     }
 
     [Theory]
-    [InlineData(0, 0)]
-    [InlineData(-1, 0)]
-    [InlineData(100, -1)]
-    [InlineData(100, 101)]
-    public void Create_WithInvalidScoreRange_Throws(int maxScore, int passingScore)
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Create_WithNonPositiveMaxScore_Throws(int maxScore)
     {
-        var action = () => Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, maxScore, passingScore);
+        var action = () => Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, maxScore);
 
         action.Should().Throw<ArgumentOutOfRangeException>();
     }
@@ -196,14 +189,14 @@ public class AssessmentEntityTests
     [Fact]
     public void IsAvailable_WhenNoDateRestrictions_ShouldReturnTrue()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100, 50);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100);
         assessment.IsAvailable().Should().BeTrue();
     }
 
     [Fact]
     public void IsAvailable_WhenBeforeAvailableFrom_ShouldReturnFalse()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100, 50);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100);
         assessment.SetAvailability(DateTime.UtcNow.AddDays(1), null);
         assessment.IsAvailable().Should().BeFalse();
     }
@@ -211,7 +204,7 @@ public class AssessmentEntityTests
     [Fact]
     public void IsAvailable_WhenAfterAvailableUntil_ShouldReturnFalse()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100, 50);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100);
         assessment.SetAvailability(null, DateTime.UtcNow.AddDays(-1));
         assessment.IsAvailable().Should().BeFalse();
     }
@@ -219,7 +212,7 @@ public class AssessmentEntityTests
     [Fact]
     public void IsAvailable_WhenWithinWindow_ShouldReturnTrue()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100, 50);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100);
         assessment.SetAvailability(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(1));
         assessment.IsAvailable().Should().BeTrue();
     }
@@ -227,7 +220,7 @@ public class AssessmentEntityTests
     [Fact]
     public void SetDescription_ShouldUpdateDescription()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100, 50);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100);
         assessment.SetDescription("A comprehensive quiz");
         assessment.Description.Should().Be("A comprehensive quiz");
     }
@@ -235,7 +228,7 @@ public class AssessmentEntityTests
     [Fact]
     public void SetTimeLimit_ShouldUpdateTimeLimit()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Exam, 100, 50);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Exam, 100);
         assessment.SetTimeLimit(90);
         assessment.TimeLimitMinutes.Should().Be(90);
     }
@@ -243,7 +236,7 @@ public class AssessmentEntityTests
     [Fact]
     public void SetMaxAttempts_ShouldUpdateMaxAttempts()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100, 50);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Test", AssessmentType.Quiz, 100);
         assessment.SetMaxAttempts(3);
         assessment.MaxAttempts.Should().Be(3);
     }
@@ -251,35 +244,34 @@ public class AssessmentEntityTests
     [Fact]
     public void Update_ShouldModifyMultipleFields()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Old Title", AssessmentType.Quiz, 100, 50);
-        assessment.Update("New Title", "New Desc", 200, 100, 60, 5, false, null, null);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Old Title", AssessmentType.Quiz, 100);
+        assessment.Update("New Title", "New Desc", 200, 60, 5, false, null, null);
 
         assessment.Title.Should().Be("New Title");
         assessment.Description.Should().Be("New Desc");
         assessment.MaxScore.Should().Be(200);
-        assessment.PassingScore.Should().Be(100);
         assessment.TimeLimitMinutes.Should().Be(60);
         assessment.MaxAttempts.Should().Be(5);
         assessment.IsRequired.Should().BeFalse();
     }
 
     [Fact]
-    public void Update_WhenNewMaximumWouldBeBelowPassingScore_Throws()
+    public void Update_WithLowerMaxScore_SucceedsWhenNoSubmissionConflicts()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 60);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
 
-        var action = () => assessment.Update(null, null, 50, null, null, null, null, null, null);
+        assessment.Update(null, null, 50, null, null, null, null, null);
 
-        action.Should().Throw<ArgumentOutOfRangeException>();
+        assessment.MaxScore.Should().Be(50);
     }
 
     [Fact]
     public void Update_WithContentId_ShouldSetContentId()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100, 50);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100);
         var contentId = Guid.NewGuid();
 
-        assessment.Update(null, null, null, null, null, null, null, null, null, contentId);
+        assessment.Update(null, null, null, null, null, null, null, null, contentId);
 
         assessment.ContentId.Should().Be(contentId);
     }
@@ -287,10 +279,10 @@ public class AssessmentEntityTests
     [Fact]
     public void Update_WithClearContentId_ShouldClearContentId()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100, 50);
-        assessment.Update(null, null, null, null, null, null, null, null, null, Guid.NewGuid());
+        var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100);
+        assessment.Update(null, null, null, null, null, null, null, null, Guid.NewGuid());
 
-        assessment.Update(null, null, null, null, null, null, null, null, null, null, clearContentId: true);
+        assessment.Update(null, null, null, null, null, null, null, null, null, clearContentId: true);
 
         assessment.ContentId.Should().BeNull();
     }
@@ -305,7 +297,7 @@ public class AssessmentServiceRestoreTests
     public async Task RestoreAssessmentAsync_OnSoftDeletedAssessment_MakesItFetchable()
     {
         await using var db = CreateContext();
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 60);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
         assessment.SetMaxAttempts(1);
         assessment.Version = 1;
         assessment.SoftDelete();
@@ -341,7 +333,7 @@ public class AssessmentServiceRestoreTests
     public async Task RestoreAssessmentAsync_OnActiveAssessment_IsIdempotent()
     {
         await using var db = CreateContext();
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 60);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
         db.Set<Assessment>().Add(assessment);
         await db.SaveChangesAsync();
         var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
@@ -483,7 +475,7 @@ public class AssessmentSubmissionEntityTests
     public async Task StartSubmissionAsync_UsesHighestHistoricalAttemptNumber()
     {
         await using var db = CreateContext();
-        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100, 60);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
         assessment.SetMaxAttempts(4);
         var enrollmentId = Guid.NewGuid();
         var historicalSubmission = AssessmentSubmission.Start(assessment.Id, enrollmentId, Guid.NewGuid(), 3);
@@ -530,7 +522,7 @@ public class AssessmentDtoTests
     [Fact]
     public void FromEntity_ShouldMapAllProperties()
     {
-        var assessment = Assessment.Create(Guid.NewGuid(), "Final Exam", AssessmentType.Exam, 100, 70);
+        var assessment = Assessment.Create(Guid.NewGuid(), "Final Exam", AssessmentType.Exam, 100);
         assessment.SetDescription("Comprehensive exam");
         assessment.SetTimeLimit(120);
         assessment.SetMaxAttempts(2);
@@ -543,7 +535,6 @@ public class AssessmentDtoTests
         dto.Description.Should().Be("Comprehensive exam");
         dto.Type.Should().Be(AssessmentType.Quiz);
         dto.MaxScore.Should().Be(100);
-        dto.PassingScore.Should().Be(70);
         dto.TimeLimitMinutes.Should().Be(120);
         dto.MaxAttempts.Should().Be(2);
         dto.IsRequired.Should().BeTrue();
@@ -556,7 +547,7 @@ public class AssessmentDtoTests
         var id = Guid.NewGuid();
         var courseId = Guid.NewGuid();
         var dto = new AssessmentDto(id, courseId, null, "Quiz", "Desc",
-            AssessmentType.Quiz, 50, 30, 15, 3, false, 1,
+            AssessmentType.Quiz, 50, 15, 3, false, 1,
             DateTime.UtcNow, DateTime.UtcNow.AddDays(7), null, null, null, null, true);
 
         dto.Id.Should().Be(id);
@@ -600,20 +591,20 @@ public sealed class AssessmentServiceAnalyticsTests
         var courseId = Guid.NewGuid();
         var quizGroup = AssessmentGroup.Create(courseId, "Quizzes", 20, 1);
         var projectGroup = AssessmentGroup.Create(courseId, "Final Project", 30, 2);
-        var quiz = Assessment.Create(courseId, "Intro quiz", AssessmentType.Quiz, 10, 6, assessmentGroupId: quizGroup.Id);
-        var project = Assessment.Create(courseId, "Final build", AssessmentType.Project, 100, 70, assessmentGroupId: projectGroup.Id);
-        var attendance = Assessment.Create(courseId, "Attendance", AssessmentType.Assignment, 10, 6);
-        var ignoredOtherCourse = Assessment.Create(Guid.NewGuid(), "Other", AssessmentType.Quiz, 10, 6);
+        var quiz = Assessment.Create(courseId, "Intro quiz", AssessmentType.Quiz, 10, assessmentGroupId: quizGroup.Id);
+        var project = Assessment.Create(courseId, "Final build", AssessmentType.Project, 100, assessmentGroupId: projectGroup.Id);
+        var attendance = Assessment.Create(courseId, "Attendance", AssessmentType.Assignment, 10);
+        var ignoredOtherCourse = Assessment.Create(Guid.NewGuid(), "Other", AssessmentType.Quiz, 10);
 
         var quizSubmission = AssessmentSubmission.Start(quiz.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         quizSubmission.Submit();
-        quizSubmission.Grade(8, quiz.PassingScore, quiz.MaxScore);
+        quizSubmission.Grade(8, 6, quiz.MaxScore);
         var projectSubmission = AssessmentSubmission.Start(project.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         projectSubmission.Submit();
-        projectSubmission.Grade(50, project.PassingScore, project.MaxScore);
+        projectSubmission.Grade(50, 70, project.MaxScore);
         var ignoredSubmission = AssessmentSubmission.Start(ignoredOtherCourse.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
         ignoredSubmission.Submit();
-        ignoredSubmission.Grade(10, ignoredOtherCourse.PassingScore, ignoredOtherCourse.MaxScore);
+        ignoredSubmission.Grade(10, 6, ignoredOtherCourse.MaxScore);
 
         db.Set<AssessmentGroup>().AddRange(quizGroup, projectGroup);
         db.Set<Assessment>().AddRange(quiz, project, attendance, ignoredOtherCourse);
@@ -716,14 +707,13 @@ public class AssessmentRequestRecordTests
     {
         var courseId = Guid.NewGuid();
         var request = new CreateAssessmentRequest(courseId, "Exam", "Final", AssessmentType.Exam,
-            100, 70, 60, 3, true, DateTime.UtcNow, DateTime.UtcNow.AddDays(7));
+            100, 60, 3, true, DateTime.UtcNow, DateTime.UtcNow.AddDays(7));
 
         request.CourseId.Should().Be(courseId);
         request.Title.Should().Be("Exam");
         request.Description.Should().Be("Final");
         request.Type.Should().Be(AssessmentType.Exam);
         request.MaxScore.Should().Be(100);
-        request.PassingScore.Should().Be(70);
         request.TimeLimitMinutes.Should().Be(60);
         request.MaxAttempts.Should().Be(3);
         request.IsRequired.Should().BeTrue();
@@ -732,7 +722,7 @@ public class AssessmentRequestRecordTests
     [Fact]
     public void CreateAssessmentRequest_Defaults_ShouldBeCorrect()
     {
-        var request = new CreateAssessmentRequest(Guid.NewGuid(), "Quiz", null, AssessmentType.Quiz, 50, 30);
+        var request = new CreateAssessmentRequest(Guid.NewGuid(), "Quiz", null, AssessmentType.Quiz, 50);
 
         request.TimeLimitMinutes.Should().BeNull();
         request.MaxAttempts.Should().BeNull();
@@ -755,13 +745,12 @@ public class AssessmentRequestRecordTests
     [Fact]
     public void UpdateAssessmentRequest_ShouldSetAllProperties()
     {
-        var request = new UpdateAssessmentRequest("New Title", "New Desc", 200, 100, 90, 5, false,
+        var request = new UpdateAssessmentRequest("New Title", "New Desc", 200, 90, 5, false,
             DateTime.UtcNow, DateTime.UtcNow.AddDays(14));
 
         request.Title.Should().Be("New Title");
         request.Description.Should().Be("New Desc");
         request.MaxScore.Should().Be(200);
-        request.PassingScore.Should().Be(100);
         request.TimeLimitMinutes.Should().Be(90);
         request.MaxAttempts.Should().Be(5);
         request.IsRequired.Should().BeFalse();
@@ -775,7 +764,6 @@ public class AssessmentRequestRecordTests
         request.Title.Should().BeNull();
         request.Description.Should().BeNull();
         request.MaxScore.Should().BeNull();
-        request.PassingScore.Should().BeNull();
         request.TimeLimitMinutes.Should().BeNull();
         request.MaxAttempts.Should().BeNull();
         request.IsRequired.Should().BeNull();

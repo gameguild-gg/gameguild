@@ -10,8 +10,11 @@ export function isTextFile(path: string): boolean {
     );
 }
 
-export function toWorkspaceFsPath(path: string): string {
-    if (path.startsWith('/user/')) return `/home${path}`;
+export function toWorkspaceFsPath(path: string, assignmentToken?: string): string {
+    if (path.startsWith('/user/')) {
+        const rest = path.slice('/user/'.length);
+        return assignmentToken ? `/home/user/${assignmentToken}/${rest}` : `/home/user/${rest}`;
+    }
     return `/home/user/${fileName(path)}`;
 }
 
