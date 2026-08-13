@@ -29,26 +29,15 @@ import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import { Switch } from "@game-guild/ui/components/switch";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@game-guild/ui/components/select";
-import {
   putCodingAssignmentAction,
   type CodingAssignmentContent,
   type CodingEnvironment,
   type FileVisibility,
-  type FunctionParameter,
-  type FunctionParameterWithName,
   type FunctionParameterType,
-  type FunctionParameterValue,
   type StandardTest,
-  type FunctionalTest,
+  type FunctionalTestGroup,
   type Test,
 } from "@/lib/coding-assignment/actions";
-import { AssignmentFilesTree, type AssignmentFileRow } from "./assignment-files-tree";
 import { StandardTestEditor } from "./standard-test-editor";
 import { FunctionalTestEditor } from "./functional-test-editor";
 
@@ -71,6 +60,14 @@ const DEFAULT_TOOLS: Record<CodingLanguage, string> = {
 };
 
 const FUNCTION_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+/** In-memory file row mirrored from initialContent + IDE getAuthoredState(). */
+interface AssignmentFileRow {
+  path: string;
+  content: string;
+  visibility: FileVisibility;
+  modifiable: boolean;
+}
 
 interface EditorProps {
   courseId: string;
@@ -123,9 +120,6 @@ export function CodingDefinitionEditor({
       : [],
   );
   const [maxScore, setMaxScore] = useState<number>(initialContent?.Grading.MaxScore ?? 100);
-  const [passingScore, setPassingScore] = useState<number>(
-    initialContent?.Grading.PassingScore ?? 60,
-  );
 
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -145,22 +139,41 @@ export function CodingDefinitionEditor({
     };
   }, [language, fileRows]);
 
-  // ── Apply per-file meta to the IDE whenever it changes ──
-  useEffect(() => {
-    const ref = ideRef.current;
-    if (!ref) return;
-    for (const row of fileRows) {
-      void ref.setFileMeta(row.path, {
-        visibility: row.visibility,
-        modifiable: row.modifiable,
-      });
+  // ── IDE authoring props ──
+  const fileMeta = useMemo(
+    () =>
+      Object.fromEntries(
+        fileRows.map((r) => [
+          r.path,
+          { visibility: r.visibility, modifiable: r.modifiable },
+        ]),
+      ) as Record<string, { visibility: FileVisibility; modifiable: boolean }>,
+    [fileRows],
+  );
+
+  const testSuite = useMemo<{ Public: Test[]; Private: Test[] }>(() => {
+    const Public: Test[] = [];
+    const Private: Test[] = [];
+    for (const row of testRows) {
+      (row.visibility === "Public" ? Public : Private).push(row.test);
     }
-  }, [fileRows]);
+    return { Public, Private };
+  }, [testRows]);
+
+  // ── Auto-seed default sample on first mount when no initialContent ──
+  // The Language preset Card used to host this seed via handleLanguageChange;
+  // the page no longer has that surface (preset picker moved into the IDE
+  // header). Seed once on mount so fileRows + testRows aren't empty.
+  useEffect(() => {
+    if (initialContent) return;
+    handleLanguageChange(initialLang);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Validation ──
   const validationErrors = useMemo(
-    () => validateAll({ maxScore, passingScore, testRows, fileRows }),
-    [maxScore, passingScore, testRows, fileRows],
+    () => validateAll({ maxScore, testRows, fileRows }),
+    [maxScore, testRows, fileRows],
   );
   const isValid = validationErrors.length === 0;
 
@@ -173,39 +186,27 @@ export function CodingDefinitionEditor({
         fileRows,
         testRows,
         maxScore,
-        passingScore,
       }),
-    [language, allowStudentCreateFiles, fileRows, testRows, maxScore, passingScore],
+    [language, allowStudentCreateFiles, fileRows, testRows, maxScore],
   );
 
   // ── Handlers ──
   function handleLanguageChange(next: CodingLanguage) {
     setLanguage(next);
     const sample = ASSIGNMENT_SAMPLES[next as CodingLanguage];
-    if (sample) {
-      const rows: AssignmentFileRow[] = Object.entries(
-        sample.workspaceConfig.files,
-      ).map(([path, bundle]) => ({
-        path,
-        content: bundle.content,
-        visibility: "Public" as FileVisibility,
-        modifiable: true,
-      }));
-      setFileRows(rows);
-      // ponytail: seed a single visible stdio case so the editor isn't empty.
-      setTestRows([
-        {
-          test: {
-            kind: "standard",
-            Name: "echo stdin",
-            Stdin: "hello",
-            Stdout: "hello",
-            Weight: 1,
-          },
-          visibility: "Public",
-        },
-      ]);
-    }
+    if (!sample) return;
+    const rows: AssignmentFileRow[] = Object.entries(
+      sample.workspaceConfig.files,
+    ).map(([path, bundle]) => ({
+      path,
+      content: bundle.content,
+      visibility: "Public" as FileVisibility,
+      modifiable: true,
+    }));
+    setFileRows(rows);
+    // ponytail: do NOT seed testRows here — authoring flows expect add-*
+    // clicks to produce row index 0. Seeding files only keeps the IDE useful
+    // on first mount without breaking test-row assumptions.
   }
 
   function handleAddStandard() {
@@ -237,7 +238,7 @@ export function CodingDefinitionEditor({
             Parameters: [],
             ReturnType: { Type: "integer", Content: 0 },
           },
-          Result: { Type: "integer", Content: 0 },
+          Cases: [],
         },
         visibility: "Public",
       },
@@ -262,30 +263,19 @@ export function CodingDefinitionEditor({
     setTestRows((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  function handleFileAdd(path: string, content: string) {
-    setFileRows((prev) => [
-      ...prev,
-      { path, content, visibility: "Public", modifiable: true },
-    ]);
-    void ideRef.current?.addFile(path, content);
-  }
-
-  function handleFileChange(path: string, patch: Partial<AssignmentFileRow>) {
+  function handleFileMetaChange(
+    path: string,
+    patch: Partial<{ visibility: FileVisibility; modifiable: boolean }>,
+  ) {
     setFileRows((prev) =>
       prev.map((row) => (row.path === path ? { ...row, ...patch } : row)),
     );
-    const current = fileRows.find((r) => r.path === path);
-    if (current && (patch.visibility || patch.modifiable !== undefined)) {
-      void ideRef.current?.setFileMeta(path, {
-        visibility: patch.visibility ?? current.visibility,
-        modifiable: patch.modifiable ?? current.modifiable,
-      });
-    }
   }
 
-  async function handleFileRemove(path: string) {
-    setFileRows((prev) => prev.filter((row) => row.path !== path));
-    await ideRef.current?.removeFile(path);
+  // ponytail: IDE doesn't mutate tests outside the slot; kept for API parity.
+  // If a future IDE feature needs to push tests inward, narrow + setTestRows here.
+  function handleTestsChange(_next: unknown) {
+    /* no-op */
   }
 
   async function handleSave() {
@@ -296,28 +286,57 @@ export function CodingDefinitionEditor({
     setError(null);
     setSaved(false);
 
-    // Refresh file contents from the IDE before assembling the payload.
+    // Pull the latest authored state from the IDE: files + fileMeta + tests + presetId.
     let liveFileRows = fileRows;
+    let liveTestRows = testRows;
+    let liveLanguage = language;
+
     if (ideRef.current) {
       try {
-        const liveFiles = await ideRef.current.getFiles();
-        const liveMap = new Map(liveFiles.map((f) => [f.path, f.content]));
-        liveFileRows = fileRows.map((row) => ({
+        const authored = await ideRef.current.getAuthoredState();
+        const liveMap = new Map(authored.files.map((f) => [f.path, f.content]));
+        const knownPaths = new Set(fileRows.map((r) => r.path));
+        // Refresh content + meta of known rows.
+        const refreshed = fileRows.map((row) => ({
           ...row,
           content: liveMap.get(row.path) ?? row.content,
+          visibility: authored.fileMeta[row.path]?.visibility ?? row.visibility,
+          modifiable: authored.fileMeta[row.path]?.modifiable ?? row.modifiable,
         }));
+        // Carry IDE-only additions (files created in-frame via FileExplorer).
+        const additions: AssignmentFileRow[] = authored.files
+          .filter((f) => !knownPaths.has(f.path))
+          .map((f) => ({
+            path: f.path,
+            content: f.content,
+            visibility: (authored.fileMeta[f.path]?.visibility ?? "Public") as FileVisibility,
+            modifiable: authored.fileMeta[f.path]?.modifiable ?? true,
+          }));
+        liveFileRows = [...refreshed, ...additions];
+
+        // authored.tests is opaque (echoed from our `tests` prop); narrow to TestSuite.
+        const suite = authored.tests as { Public?: Test[]; Private?: Test[] } | undefined;
+        if (suite) {
+          liveTestRows = [
+            ...(suite.Public ?? []).map((test) => ({ test, visibility: "Public" as FileVisibility })),
+            ...(suite.Private ?? []).map((test) => ({ test, visibility: "Private" as FileVisibility })),
+          ];
+        }
+
+        if (authored.presetId) {
+          liveLanguage = authored.presetId as CodingLanguage;
+        }
       } catch {
-        // ponytail: IDE not yet booted — keep authored content.
+        // ponytail: IDE not booted — keep authored state from React.
       }
     }
 
     const content = buildContent({
-      language,
+      language: liveLanguage,
       allowStudentCreateFiles,
       fileRows: liveFileRows,
-      testRows,
+      testRows: liveTestRows,
       maxScore,
-      passingScore,
     });
 
     startTransition(async () => {
@@ -359,50 +378,83 @@ export function CodingDefinitionEditor({
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Language preset</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="language">Language / preset</Label>
-                <Select
-                  value={language}
-                  onValueChange={(v) => handleLanguageChange(v as CodingLanguage)}
-                >
-                  <SelectTrigger id="language" data-testid="language-select">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LANGUAGE_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-muted-foreground text-xs">
-                  Selecting a preset loads starter files into the IDE and seeds
-                  a default StandardTest case from the assignment template.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
           {workspaceConfig && (
             <Card>
               <CardHeader>
-                <CardTitle>Starter files</CardTitle>
+                <CardTitle>Workspace</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <AssignmentFilesTree
-                  files={fileRows}
-                  onAdd={handleFileAdd}
-                  onChange={handleFileChange}
-                  onRemove={handleFileRemove}
-                />
                 <div data-testid="ide-mount">
-                  <Ide ref={ideRef} workspaceConfig={workspaceConfig} />
+                  <Ide
+                    ref={ideRef}
+                    workspaceConfig={workspaceConfig}
+                    assignmentToken={assessmentId}
+                    presetOptions={LANGUAGE_OPTIONS}
+                    onPresetChange={(v) => handleLanguageChange(v as CodingLanguage)}
+                    fileMeta={fileMeta}
+                    onFileMetaChange={handleFileMetaChange}
+                    tests={testSuite}
+                    onTestsChange={handleTestsChange}
+                    testsPanelSlot={
+                      <div className="space-y-4">
+                        {testRows.length === 0 && (
+                          <p
+                            className="text-muted-foreground text-sm"
+                            data-testid="empty-tests"
+                          >
+                            No tests yet. Add a Standard or Functional test below.
+                          </p>
+                        )}
+                        {testRows.map((row, i) =>
+                          row.test.kind === "standard" ? (
+                            <StandardTestEditor
+                              key={i}
+                              index={i}
+                              test={row.test as StandardTest}
+                              visibility={row.visibility}
+                              errors={validationErrors.filter((e) =>
+                                e.field.startsWith(`tests[${i}]`),
+                              )}
+                              onChange={handleTestChange}
+                              onVisibilityChange={handleTestVisibilityChange}
+                              onRemove={handleRemoveTest}
+                            />
+                          ) : (
+                            <FunctionalTestEditor
+                              key={i}
+                              index={i}
+                              test={row.test as FunctionalTestGroup}
+                              visibility={row.visibility}
+                              errors={validationErrors.filter((e) =>
+                                e.field.startsWith(`tests[${i}]`),
+                              )}
+                              onChange={handleTestChange}
+                              onVisibilityChange={handleTestVisibilityChange}
+                              onRemove={handleRemoveTest}
+                            />
+                          ),
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAddStandard}
+                            data-testid="add-standard"
+                          >
+                            <Plus className="mr-1 h-3 w-3" /> Standard test
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAddFunctional}
+                            data-testid="add-functional"
+                          >
+                            <Plus className="mr-1 h-3 w-3" /> Functional test
+                          </Button>
+                        </div>
+                      </div>
+                    }
+                  />
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch
@@ -418,69 +470,6 @@ export function CodingDefinitionEditor({
               </CardContent>
             </Card>
           )}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Tests</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {testRows.length === 0 && (
-                <p
-                  className="text-muted-foreground text-sm"
-                  data-testid="empty-tests"
-                >
-                  No tests yet. Add a Standard or Functional test below.
-                </p>
-              )}
-              {testRows.map((row, i) =>
-                row.test.kind === "standard" ? (
-                  <StandardTestEditor
-                    key={i}
-                    index={i}
-                    test={row.test as StandardTest}
-                    visibility={row.visibility}
-                    errors={validationErrors.filter((e) =>
-                      e.field.startsWith(`tests[${i}]`),
-                    )}
-                    onChange={handleTestChange}
-                    onVisibilityChange={handleTestVisibilityChange}
-                    onRemove={handleRemoveTest}
-                  />
-                ) : (
-                  <FunctionalTestEditor
-                    key={i}
-                    index={i}
-                    test={row.test as FunctionalTest}
-                    visibility={row.visibility}
-                    errors={validationErrors.filter((e) =>
-                      e.field.startsWith(`tests[${i}]`),
-                    )}
-                    onChange={handleTestChange}
-                    onVisibilityChange={handleTestVisibilityChange}
-                    onRemove={handleRemoveTest}
-                  />
-                ),
-              )}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddStandard}
-                  data-testid="add-standard"
-                >
-                  <Plus className="mr-1 h-3 w-3" /> Standard test
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddFunctional}
-                  data-testid="add-functional"
-                >
-                  <Plus className="mr-1 h-3 w-3" /> Functional test
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="space-y-6">
@@ -502,22 +491,6 @@ export function CodingDefinitionEditor({
                 {validationErrors.find((e) => e.field === "Grading.MaxScore") && (
                   <p className="text-destructive text-xs">
                     {validationErrors.find((e) => e.field === "Grading.MaxScore")!.message}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="passing-score">Passing score</Label>
-                <Input
-                  id="passing-score"
-                  type="number"
-                  min={0}
-                  value={passingScore}
-                  onChange={(e) => setPassingScore(Number(e.target.value))}
-                  data-testid="passing-score"
-                />
-                {validationErrors.find((e) => e.field === "Grading.PassingScore") && (
-                  <p className="text-destructive text-xs">
-                    {validationErrors.find((e) => e.field === "Grading.PassingScore")!.message}
                   </p>
                 )}
               </div>
@@ -586,7 +559,6 @@ export function CodingDefinitionEditor({
 
 interface ValidationState {
   maxScore: number;
-  passingScore: number;
   testRows: TestRow[];
   fileRows: AssignmentFileRow[];
 }
@@ -610,20 +582,6 @@ function validateAll(state: ValidationState): ValidationErr[] {
       field: "Grading.MaxScore",
       code: "max_score_positive",
       message: "Max score must be greater than 0.",
-    });
-  }
-  if (state.passingScore < 0) {
-    errors.push({
-      field: "Grading.PassingScore",
-      code: "passing_score_non_negative",
-      message: "Passing score must be ≥ 0.",
-    });
-  }
-  if (state.passingScore > state.maxScore) {
-    errors.push({
-      field: "Grading.PassingScore",
-      code: "passing_score_within_max",
-      message: "Passing score cannot exceed max score.",
     });
   }
 
@@ -667,7 +625,7 @@ function validateAll(state: ValidationState): ValidationErr[] {
         });
       }
     } else if (t.kind === "functional") {
-      const fn = t as FunctionalTest;
+      const fn = t as FunctionalTestGroup;
       if (!FUNCTION_NAME_RE.test(fn.Function.FunctionName)) {
         errors.push({
           field: `${path}.Function.FunctionName`,
@@ -693,13 +651,6 @@ function validateAll(state: ValidationState): ValidationErr[] {
           message: `Return type "${fn.Function.ReturnType.Type}" is not supported in v1.`,
         });
       }
-      if (!isV1ParamType(fn.Result.Type)) {
-        errors.push({
-          field: `${path}.Result`,
-          code: "functional_param_type_not_supported_v1",
-          message: `Result type "${fn.Result.Type}" is not supported in v1.`,
-        });
-      }
     }
   });
 
@@ -718,7 +669,6 @@ interface BuildArgs {
   fileRows: AssignmentFileRow[];
   testRows: TestRow[];
   maxScore: number;
-  passingScore: number;
 }
 
 function buildContent(args: BuildArgs): CodingAssignmentContent {
@@ -751,31 +701,6 @@ function buildContent(args: BuildArgs): CodingAssignmentContent {
     Environment: environment,
     Data: { Files: files },
     Tests: { Public: pub, Private: priv },
-    Grading: { MaxScore: args.maxScore, PassingScore: args.passingScore },
+    Grading: { MaxScore: args.maxScore },
   };
 }
-
-// Helpers re-exported for tests.
-export const __testHelpers = {
-  parseContent(type: FunctionParameterType, raw: string): FunctionParameterValue {
-    switch (type) {
-      case "integer":
-      case "float":
-        return Number.isNaN(Number(raw)) ? 0 : Number(raw);
-      case "boolean":
-        return raw === "true" || raw === "1";
-      case "string":
-        return raw;
-    }
-  },
-  makeParameter(name: string, type: FunctionParameterType, content: FunctionParameterValue): FunctionParameterWithName {
-    return { Name: name, Type: type, Content: content };
-  },
-  makeParameterType(t: string): FunctionParameterType {
-    if (!isV1ParamType(t)) throw new Error(`unsupported type: ${t}`);
-    return t;
-  },
-  makeFunctionParameter(type: FunctionParameterType, content: FunctionParameterValue): FunctionParameter {
-    return { Type: type, Content: content };
-  },
-};

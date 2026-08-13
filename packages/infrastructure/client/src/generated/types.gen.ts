@@ -4105,7 +4105,6 @@ export interface LearningAssessmentsAssessment {
   description?: string | null;
   type?: LearningAssessmentsAssessmentType;
   maxScore?: number;
-  passingScore?: number;
   timeLimitMinutes?: number | null;
   maxAttempts?: number | null;
   isRequired?: boolean;
@@ -4221,7 +4220,6 @@ export interface LearningAssessmentsCreateAssessmentInput {
   description?: string | null;
   type?: LearningAssessmentsAssessmentType;
   maxScore?: number;
-  passingScore?: number;
   timeLimitMinutes?: number | null;
   maxAttempts?: number | null;
   isRequired?: boolean;
@@ -4319,7 +4317,6 @@ export interface LearningAssessmentsUpdateAssessmentInput {
   title?: string | null;
   description?: string | null;
   maxScore?: number | null;
-  passingScore?: number | null;
   timeLimitMinutes?: number | null;
   maxAttempts?: number | null;
   isRequired?: boolean | null;
@@ -4857,6 +4854,7 @@ export interface LearningCoursesCreateProgram {
   slug?: string | null;
   thumbnail?: string | null;
   creatorId?: string | null;
+  passingScore?: number;
 }
 
 export interface LearningCoursesEngagementMetrics {
@@ -4892,7 +4890,6 @@ export interface LearningCoursesGraderSummary {
 
 export interface LearningCoursesGradingConfig {
   maxScore?: number;
-  passingScore?: number;
 }
 
 export type LearningCoursesLessonContentFormat = 'Markdown' | 'Lexical' | 'RevealJs' | 'Video' | 'Html' | 'ExternalLink';
@@ -5004,6 +5001,7 @@ export interface LearningCoursesProgram {
   thumbnail?: string | null;
   videoShowcaseUrl?: string | null;
   estimatedHours?: number | null;
+  passingScore?: number;
   enrollmentStatus?: LearningCoursesEnrollmentStatus;
   maxEnrollments?: number | null;
   enrollmentDeadline?: string | null;
@@ -5191,6 +5189,7 @@ export interface LearningCoursesUpdateProgram {
   enrollmentStatus?: LearningCoursesEnrollmentStatus;
   maxEnrollments?: number | null;
   enrollmentDeadline?: string | null;
+  passingScore?: number | null;
   clearMaxEnrollments?: boolean;
   clearEnrollmentDeadline?: boolean;
 }
@@ -5708,7 +5707,6 @@ export interface LearningWorkspacesLearnerAssessmentDeadline {
   title?: string | null;
   type?: string | null;
   maxScore?: number;
-  passingScore?: number;
   availableFrom?: string | null;
   availableUntil?: string | null;
   dueAt?: string | null;
@@ -5723,7 +5721,6 @@ export interface LearningWorkspacesLearnerAssessment {
   description?: string | null;
   type?: string | null;
   maxScore?: number;
-  passingScore?: number;
   timeLimitMinutes?: number | null;
   maxAttempts?: number | null;
   isRequired?: boolean;
@@ -5880,7 +5877,6 @@ export interface LearningWorkspacesLearnerGradeItem {
   title?: string | null;
   type?: string | null;
   maxScore?: number;
-  passingScore?: number;
   availableFrom?: string | null;
   availableUntil?: string | null;
   dueAt?: string | null;
@@ -13981,7 +13977,6 @@ LearningAssessmentsAssessmentSchema = z.object({
   description: z.string().nullable().optional(),
   type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
   maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
   timeLimitMinutes: z.number().int().nullable().optional(),
   maxAttempts: z.number().int().nullable().optional(),
   isRequired: z.boolean().optional(),
@@ -14116,7 +14111,6 @@ LearningAssessmentsCreateAssessmentInputSchema = z.object({
   description: z.string().nullable().optional(),
   type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
   maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
   timeLimitMinutes: z.number().int().nullable().optional(),
   maxAttempts: z.number().int().nullable().optional(),
   isRequired: z.boolean().optional(),
@@ -14225,7 +14219,6 @@ LearningAssessmentsUpdateAssessmentInputSchema = z.object({
   title: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   maxScore: z.number().int().nullable().optional(),
-  passingScore: z.number().int().nullable().optional(),
   timeLimitMinutes: z.number().int().nullable().optional(),
   maxAttempts: z.number().int().nullable().optional(),
   isRequired: z.boolean().nullable().optional(),
@@ -14866,6 +14859,7 @@ LearningCoursesCreateProgramSchema = z.object({
   slug: z.string().nullable().optional(),
   thumbnail: z.string().nullable().optional(),
   creatorId: z.string().uuid().nullable().optional(),
+  passingScore: z.number().optional(),
 });
 
 /** Zod schema for LearningCoursesEngagementMetrics */
@@ -14906,7 +14900,6 @@ LearningCoursesGraderSummarySchema = z.object({
 /** Zod schema for LearningCoursesGradingConfig */
 LearningCoursesGradingConfigSchema = z.object({
   maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCoursesLessonContentFormat */
@@ -15035,6 +15028,7 @@ LearningCoursesProgramSchema = z.object({
   thumbnail: z.string().nullable().optional(),
   videoShowcaseUrl: z.string().nullable().optional(),
   estimatedHours: z.number().int().nullable().optional(),
+  passingScore: z.number().optional(),
   enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
   maxEnrollments: z.number().int().nullable().optional(),
   enrollmentDeadline: z.string().datetime().nullable().optional(),
@@ -15257,6 +15251,7 @@ LearningCoursesUpdateProgramSchema = z.object({
   enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
   maxEnrollments: z.number().int().nullable().optional(),
   enrollmentDeadline: z.string().datetime().nullable().optional(),
+  passingScore: z.number().nullable().optional(),
   clearMaxEnrollments: z.boolean().optional(),
   clearEnrollmentDeadline: z.boolean().optional(),
 });
@@ -15867,7 +15862,6 @@ LearningWorkspacesLearnerAssessmentDeadlineSchema = z.object({
   title: z.string().nullable().optional(),
   type: z.string().nullable().optional(),
   maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
@@ -15883,7 +15877,6 @@ LearningWorkspacesLearnerAssessmentSchema = z.object({
   description: z.string().nullable().optional(),
   type: z.string().nullable().optional(),
   maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
   timeLimitMinutes: z.number().int().nullable().optional(),
   maxAttempts: z.number().int().nullable().optional(),
   isRequired: z.boolean().optional(),
@@ -16093,7 +16086,6 @@ LearningWorkspacesLearnerGradeItemSchema = z.object({
   title: z.string().nullable().optional(),
   type: z.string().nullable().optional(),
   maxScore: z.number().int().optional(),
-  passingScore: z.number().int().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),

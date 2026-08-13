@@ -1,12 +1,13 @@
 /**
- * @emception/core — tsd type tests
+ * emception - tsd type tests
  *
- * Run: npm run test:types --workspace=@emception/core
+ * Run: pnpm --filter emception run test:types
  * Requires a build first (handled by the script).
  */
 import type {
     EmceptionAPI,
     FileEntry,
+    NativeBuildConfig,
     RunOptions,
     TestCase,
     TestCaseResult,
@@ -17,7 +18,9 @@ import type {
     WorkspaceBuildConfig,
     WorkspaceOptions,
     WorkspaceSeed,
-} from '@emception/core';
+    WorkspaceSeedPolicy,
+} from 'emception';
+import { ToolchainPreset } from 'emception';
 import {
     BuildConfigError,
     CanvasUnavailableError,
@@ -27,7 +30,7 @@ import {
     TestFailureError,
     TimeoutError,
     WorkspaceConflictError,
-} from '@emception/core/errors';
+} from 'emception/errors';
 import { expectAssignable, expectError, expectType } from 'tsd';
 
 // ── Error hierarchy ──────────────────────────────────────────────────────────
@@ -59,21 +62,21 @@ expectAssignable<WorkspaceSeed>(seed);
 // ── WorkspaceBuildConfig ──────────────────────────────────────────────────────
 
 const build: WorkspaceBuildConfig = {
+    toolchain: ToolchainPreset.CPP,
     compiler: 'em++',
-    std: 'c++20',
-    flags: ['-O2'],
+    flags: ['-std=c++20', '-O2'],
     ldflags: ['-sEXIT_RUNTIME=1'],
 };
 expectAssignable<WorkspaceBuildConfig>(build);
 
 // compiler must be one of the allowed literals
-expectError<WorkspaceBuildConfig['compiler']>('gcc');
+expectError<NativeBuildConfig['compiler']>('gcc');
 
 // ── WorkspaceOptions ─────────────────────────────────────────────────────────
 
 const opts: WorkspaceOptions = { name: 'lesson-01' };
 expectAssignable<WorkspaceOptions>(opts);
-expectType<'once' | 'overwrite' | 'merge' | undefined>(opts.seedPolicy);
+expectType<WorkspaceSeedPolicy | undefined>(opts.seedPolicy);
 
 // ── RunOptions ───────────────────────────────────────────────────────────────
 

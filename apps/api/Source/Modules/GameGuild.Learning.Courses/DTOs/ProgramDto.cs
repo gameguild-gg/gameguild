@@ -17,6 +17,7 @@ public sealed record ProgramDto
     public string? Thumbnail { get; init; }
     public string? VideoShowcaseUrl { get; init; }
     public int? EstimatedHours { get; init; }
+    public decimal PassingScore { get; init; }
     public EnrollmentStatus EnrollmentStatus { get; init; }
     public int? MaxEnrollments { get; init; }
     public DateTime? EnrollmentDeadline { get; init; }

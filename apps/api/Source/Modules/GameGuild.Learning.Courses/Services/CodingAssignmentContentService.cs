@@ -63,7 +63,7 @@ public sealed class CodingAssignmentContentService(
         context.Set<ProgramContent>().Update(content);
         await context.SaveChangesAsync(ct).ConfigureAwait(false);
 
-        await assessmentGradingSync.SyncAsync(contentId, body.Grading.MaxScore, body.Grading.PassingScore, ct).ConfigureAwait(false);
+        await assessmentGradingSync.SyncAsync(contentId, body.Grading.MaxScore, ct).ConfigureAwait(false);
 
         return Result.Success(body);
     }

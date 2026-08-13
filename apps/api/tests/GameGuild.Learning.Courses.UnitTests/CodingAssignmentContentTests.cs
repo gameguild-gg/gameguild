@@ -62,7 +62,7 @@ public class CodingAssignmentContentTests
         var deserialized = JsonSerializer.Deserialize<CodingAssignmentContent>(json, s_jsonOptions);
 
         deserialized!.Tests.Public[0].Should().BeOfType<StandardTest>();
-        deserialized.Tests.Public[1].Should().BeOfType<FunctionalTest>();
+        deserialized.Tests.Public[1].Should().BeOfType<FunctionalTestGroup>();
         deserialized.Tests.Private[0].Should().BeOfType<StandardTest>();
     }
 
@@ -137,7 +137,7 @@ public class CodingAssignmentContentTests
         errors.Should().Contain(e => e.ErrorCode == "invalid_visibility_value");
     }
 
-    // ── (c) FunctionalTest with non-v1 parameter type → functional_param_type_not_supported_v1 ──────
+    // ── (c) FunctionalTestGroup with non-v1 parameter type → functional_param_type_not_supported_v1 ─
 
     [Fact]
     public void Validator_Rejects_FunctionalNonV1ParameterType()
@@ -148,7 +148,7 @@ public class CodingAssignmentContentTests
             {
                 Public = new()
                 {
-                    new FunctionalTest
+                    new FunctionalTestGroup
                     {
                         Function = new TestFunctionData
                         {
@@ -168,10 +168,24 @@ public class CodingAssignmentContentTests
                                 Content = JsonSerializer.SerializeToElement(0)
                             }
                         },
-                        Result = new FunctionParameter
+                        Cases = new[]
                         {
-                            Type = FunctionParameterType.Integer,
-                            Content = JsonSerializer.SerializeToElement(0)
+                            new FunctionalTestCase
+                            {
+                                Inputs = new[]
+                                {
+                                    new FunctionParameter
+                                    {
+                                        Type = FunctionParameterType.Integer,
+                                        Content = JsonSerializer.SerializeToElement(0)
+                                    }
+                                },
+                                Expected = new FunctionParameter
+                                {
+                                    Type = FunctionParameterType.Integer,
+                                    Content = JsonSerializer.SerializeToElement(0)
+                                }
+                            }
                         }
                     }
                 }
@@ -214,29 +228,9 @@ public class CodingAssignmentContentTests
     [Fact]
     public void Validator_Rejects_NonPositiveMaxScore()
     {
-        var content = CreateMinimalValid() with { Grading = new GradingConfig { MaxScore = 0, PassingScore = 0 } };
+        var content = CreateMinimalValid() with { Grading = new GradingConfig { MaxScore = 0 } };
         var errors = Validate(content);
         errors.Should().Contain(e => e.ErrorCode == "max_score_positive");
-    }
-
-    // ── (c) PassingScore > MaxScore → passing_score_within_max ───────────────────────────────────────
-
-    [Fact]
-    public void Validator_Rejects_PassingScoreAboveMax()
-    {
-        var content = CreateMinimalValid() with { Grading = new GradingConfig { MaxScore = 10, PassingScore = 20 } };
-        var errors = Validate(content);
-        errors.Should().Contain(e => e.ErrorCode == "passing_score_within_max");
-    }
-
-    // ── (c) PassingScore < 0 → passing_score_non_negative ────────────────────────────────────────────
-
-    [Fact]
-    public void Validator_Rejects_NegativePassingScore()
-    {
-        var content = CreateMinimalValid() with { Grading = new GradingConfig { MaxScore = 10, PassingScore = -1 } };
-        var errors = Validate(content);
-        errors.Should().Contain(e => e.ErrorCode == "passing_score_non_negative");
     }
 
     // ── (c) bad Language → invalid_language ───────────────────────────────────────────────────────────
@@ -268,7 +262,7 @@ public class CodingAssignmentContentTests
         {
             Public = new() { new StandardTest { Stdout = "ok" } }
         },
-        Grading = new GradingConfig { MaxScore = 100, PassingScore = 70 }
+        Grading = new GradingConfig { MaxScore = 100 }
     };
 
     private static CodingAssignmentContent CreateMinimalValidWithFunctional(string functionName) => new()
@@ -279,7 +273,7 @@ public class CodingAssignmentContentTests
         {
             Public = new()
             {
-                new FunctionalTest
+                new FunctionalTestGroup
                 {
                     Function = new TestFunctionData
                     {
@@ -291,15 +285,22 @@ public class CodingAssignmentContentTests
                             Content = JsonSerializer.SerializeToElement(0)
                         }
                     },
-                    Result = new FunctionParameter
+                    Cases = new[]
                     {
-                        Type = FunctionParameterType.Integer,
-                        Content = JsonSerializer.SerializeToElement(0)
+                        new FunctionalTestCase
+                        {
+                            Inputs = Array.Empty<FunctionParameter>(),
+                            Expected = new FunctionParameter
+                            {
+                                Type = FunctionParameterType.Integer,
+                                Content = JsonSerializer.SerializeToElement(0)
+                            }
+                        }
                     }
                 }
             }
         },
-        Grading = new GradingConfig { MaxScore = 100, PassingScore = 70 }
+        Grading = new GradingConfig { MaxScore = 100 }
     };
 
     private static CodingAssignmentContent CreateValid() => new()
@@ -318,7 +319,7 @@ public class CodingAssignmentContentTests
             Public = new()
             {
                 new StandardTest { Stdout = "ok", Name = "first" },
-                new FunctionalTest
+                new FunctionalTestGroup
                 {
                     Function = new TestFunctionData
                     {
@@ -338,10 +339,24 @@ public class CodingAssignmentContentTests
                             Content = JsonSerializer.SerializeToElement(0)
                         }
                     },
-                    Result = new FunctionParameter
+                    Cases = new[]
                     {
-                        Type = FunctionParameterType.Integer,
-                        Content = JsonSerializer.SerializeToElement(0)
+                        new FunctionalTestCase
+                        {
+                            Inputs = new[]
+                            {
+                                new FunctionParameter
+                                {
+                                    Type = FunctionParameterType.Integer,
+                                    Content = JsonSerializer.SerializeToElement(0)
+                                }
+                            },
+                            Expected = new FunctionParameter
+                            {
+                                Type = FunctionParameterType.Integer,
+                                Content = JsonSerializer.SerializeToElement(0)
+                            }
+                        }
                     }
                 }
             },
@@ -350,7 +365,7 @@ public class CodingAssignmentContentTests
                 new StandardTest { Stdout = "ok2" }
             }
         },
-        Grading = new GradingConfig { MaxScore = 100, PassingScore = 70 }
+        Grading = new GradingConfig { MaxScore = 100 }
     };
 
     private static List<ValidationFailure> Validate(CodingAssignmentContent content)

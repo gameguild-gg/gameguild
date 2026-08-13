@@ -82,7 +82,6 @@ public sealed class CodingAssignmentJsonBodyMigrationTests
 
         // (g) Grading mapped from v2 MaxScore/PassingScore.
         v1.Grading.MaxScore.Should().Be(100);
-        v1.Grading.PassingScore.Should().Be(70);
     }
 
     [Fact]

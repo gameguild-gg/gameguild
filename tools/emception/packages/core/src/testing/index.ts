@@ -23,7 +23,8 @@ export {
     type FunctionParameter,
     type FunctionParameterType,
     type FunctionParameterWithName,
-    type FunctionalTestDescriptor,
+    type FunctionalTestCase,
+    type FunctionalTestSignature,
 } from './functional/harness.js';
 export {
     buildTestPlan,
@@ -34,6 +35,7 @@ export {
     type CodingAssignmentContent,
     type FileEncoding,
     type FileVisibility,
+    type FunctionalTestCase as WireFunctionalTestCase,
     type GeneratedFile,
     type Test,
     type TestFunctionData,

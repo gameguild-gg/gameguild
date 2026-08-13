@@ -126,6 +126,7 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
         argv.push(v === true ? `-D${key}` : `-D${key}=${v}`);
       }
     }
+    argv.push(...(plan.build?.flags ?? []));
     argv.push(...sources);
 
     const result = await em.run('clang', argv, {

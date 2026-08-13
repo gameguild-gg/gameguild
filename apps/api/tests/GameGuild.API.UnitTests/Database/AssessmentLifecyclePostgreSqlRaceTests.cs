@@ -44,7 +44,6 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
                     "Vertical slice review",
                     AssessmentType.Project,
                     120,
-                    84,
                     assessmentGroupId: group.Id);
                 assessment.SetDeliveryContract(
                     SubmissionModality.Project | SubmissionModality.StructuredAnswer,
@@ -101,7 +100,7 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
             await using (var setup = new ApplicationDbContext(options))
             {
                 await setup.Database.EnsureCreatedAsync();
-                var assessment = Assessment.Create(courseId, "Race", AssessmentType.Quiz, 100, 60);
+                var assessment = Assessment.Create(courseId, "Race", AssessmentType.Quiz, 100);
                 assessmentId = assessment.Id;
                 setup.Add(assessment);
                 await setup.SaveChangesAsync();

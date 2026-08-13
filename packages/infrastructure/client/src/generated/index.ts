@@ -3,7 +3,7 @@
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
- * Generated from: http://127.0.0.1:8080/swagger/v1/swagger.json
+ * Generated from: http://localhost:8080/swagger/v1/swagger.json
  *
  * To regenerate, run: pnpm generate
  */

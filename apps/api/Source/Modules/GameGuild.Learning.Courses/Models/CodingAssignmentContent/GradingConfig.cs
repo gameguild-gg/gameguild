@@ -6,6 +6,4 @@ namespace GameGuild.Learning.Courses;
 public sealed record GradingConfig
 {
     public int MaxScore { get; init; }
-
-    public int PassingScore { get; init; }
 }

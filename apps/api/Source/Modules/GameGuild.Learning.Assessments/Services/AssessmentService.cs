@@ -37,7 +37,6 @@ public class AssessmentService : IAssessmentService
                 request.Title,
                 request.Type,
                 request.MaxScore,
-                request.PassingScore,
                 request.IsRequired,
                 request.AssessmentGroupId,
                 request.ContentId,
@@ -182,7 +181,6 @@ public class AssessmentService : IAssessmentService
                 request.Title,
                 request.Description,
                 request.MaxScore,
-                request.PassingScore,
                 request.TimeLimitMinutes,
                 request.MaxAttempts,
                 request.IsRequired,
@@ -638,17 +636,15 @@ public class AssessmentService : IAssessmentService
                 return new AssessmentScoreFact(
                     assessment.Id,
                     percent,
-                    s.Passed ?? percent >= PassingPercent(assessment));
+                    s.Passed ?? percent >= DefaultPassingPercent);
             })
             .ToList();
     }
 
-    private static decimal PassingPercent(Assessment assessment)
-    {
-        return assessment.MaxScore <= 0
-            ? 0
-            : Math.Clamp((decimal)assessment.PassingScore / assessment.MaxScore * 100m, 0m, 100m);
-    }
+    // ponytail: per-assessment PassingScore is gone (T3); course-level Program.PassingScore
+    // drives grade time. For legacy rows where submission.Passed is null, fall back to the
+    // historical course default of 60%. Revisit if analytics need course-specific thresholds.
+    private const decimal DefaultPassingPercent = 60m;
 
     private static decimal AveragePercent(IReadOnlyCollection<AssessmentScoreFact> facts)
     {
@@ -822,7 +818,18 @@ public class AssessmentService : IAssessmentService
                 return Result.Failure<AssessmentSubmission>(Error.NotFound("Assessment", "Assessment not found"));
             }
 
-            submission.Grade(request.Score, assessment.PassingScore, assessment.MaxScore, request.GradedBy, request.Feedback);
+            // ponytail: Assessment.CourseId stores Program.Id (verified via content.ProgramId != assessment.CourseId
+            // in AssessmentService.cs). Course owns the PassingScore threshold (T1); compute the absolute snapshot.
+            var program = await _context.Set<Program>()
+                .FirstOrDefaultAsync(p => p.Id == assessment.CourseId)
+                .ConfigureAwait(false);
+            if (program == null)
+            {
+                return Result.Failure<AssessmentSubmission>(Error.NotFound("Course", "Course not found for assessment"));
+            }
+
+            var absolutePassing = (int)Math.Round(assessment.MaxScore * ((double)program.PassingScore / 100.0));
+            submission.Grade(request.Score, absolutePassing, assessment.MaxScore, request.GradedBy, request.Feedback);
             _context.Set<AssessmentSubmission>().Update(submission);
             await _context.SaveChangesAsync().ConfigureAwait(false);
 

@@ -12,5 +12,10 @@ public class ProgramConfiguration : IEntityTypeConfiguration<Program> {
     builder.Ignore(p => p.SkillsProvided);
     builder.Ignore(p => p.AverageRating);
     builder.Ignore(p => p.TotalRatings);
+
+    builder.Property(p => p.PassingScore)
+      .IsRequired()
+      .HasPrecision(5, 2)
+      .HasDefaultValue(60m);
   }
 }

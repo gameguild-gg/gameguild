@@ -18,7 +18,8 @@ import type {
   FunctionParameterType,
   FunctionParameterValue,
   StandardTest,
-  FunctionalTest,
+  FunctionalTestGroup,
+  FunctionalTestCase,
   Test,
 } from "./types";
 import { revalidatePath } from "next/cache";
@@ -32,7 +33,8 @@ export type {
   FunctionParameterType,
   FunctionParameterValue,
   StandardTest,
-  FunctionalTest,
+  FunctionalTestGroup,
+  FunctionalTestCase,
   Test,
 } from "./types";
 

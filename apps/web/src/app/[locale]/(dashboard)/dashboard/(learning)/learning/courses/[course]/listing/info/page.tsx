@@ -35,6 +35,7 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
   const [category, setCategory] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [estimatedHours, setEstimatedHours] = useState('');
+  const [passingScore, setPassingScore] = useState('60');
   const [skillsRequired, setSkillsRequired] = useState('');
   const [skillsProvided, setSkillsProvided] = useState('');
 
@@ -53,6 +54,9 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
           setCategory(data.category);
           setDifficulty(data.difficulty);
           setEstimatedHours(data.estimatedHours?.toString() ?? '');
+          setPassingScore(
+            typeof data.passingScore === 'number' ? data.passingScore.toString() : '60',
+          );
           setSkillsRequired(data.skillsRequired ?? '');
           setSkillsProvided(data.skillsProvided ?? '');
         }
@@ -81,6 +85,7 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
         category,
         difficulty,
         estimatedHours: estimatedHours ? parseInt(estimatedHours, 10) : 0,
+        passingScore: passingScore ? parseInt(passingScore, 10) : undefined,
         skillsRequired: skillsRequired.trim(),
         skillsProvided: skillsProvided.trim(),
       });
@@ -221,6 +226,22 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
                   value={estimatedHours}
                   onChange={(e) => setEstimatedHours(e.target.value)}
                 />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="passingScore">Passing score (%)</Label>
+                <Input
+                  id="passingScore"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={passingScore}
+                  onChange={(e) => setPassingScore(e.target.value)}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Minimum percentage (0-100) required to pass this course. Applied to all assessments.
+                </p>
               </div>
             </CardContent>
           </Card>
