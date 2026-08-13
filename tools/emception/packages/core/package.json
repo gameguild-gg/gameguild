@@ -58,10 +58,11 @@
     "clean": "rm -rf dist cdn"
   },
   "tsd": {
-    "directory": ".",
+    "directory": "test-d",
     "compilerOptions": {
       "moduleResolution": "node16",
-      "module": "node16"
+      "module": "node16",
+      "composite": false
     }
   },
   "devDependencies": {

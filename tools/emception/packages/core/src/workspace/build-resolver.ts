@@ -96,7 +96,10 @@ function mergeLayer(base: WorkspaceBuildConfig, layer: Partial<WorkspaceBuildCon
 
 /** Resolve the final build config given the three optional layers. */
 export function resolveBuild(input: ResolveBuildInput): ResolvedBuild {
-  const presetBuild: WorkspaceBuildConfig = input.preset ? BUILD_PRESETS[input.preset] : { toolchain: ToolchainPreset.CPP };
+  const presetBuild = input.preset ? BUILD_PRESETS[input.preset] : { toolchain: ToolchainPreset.CPP };
+  if (!presetBuild) {
+    throw new BuildConfigError(`resolveBuild: unknown toolchain preset '${input.preset}'.`);
+  }
   const merged = [input.workspace ?? {}, input.callsite ?? {}].reduce<WorkspaceBuildConfig>(mergeLayer, presetBuild);
 
   validate(merged);
