@@ -12,7 +12,8 @@ import { FileText, Save } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { LexicalSurface } from "../../lexical-surface"
+import { LexicalSurface } from "@game-guild/lexical-surface"
+import { lexicalSurfaceAdapters } from "@/components/block-content-editor/lexical-surface-adapters"
 import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
 import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
 import type { RichTextData } from "../../nodes/rich-text-node"
@@ -90,6 +91,7 @@ export function RichTextEditor({ initialData, onSave, onCancel }: RichTextEditor
             placeholder="Start writing your rich text content..."
             contentClassName="min-h-[400px] max-w-none"
             className="flex-1 flex flex-col"
+            adapters={lexicalSurfaceAdapters}
           />
         </div>
       </div>

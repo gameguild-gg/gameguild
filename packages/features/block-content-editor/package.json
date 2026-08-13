@@ -12,7 +12,6 @@
     "./engines/*": "./src/engines/*",
     "./extras/*": "./src/extras/*",
     "./hooks/*": "./src/hooks/*",
-    "./lexical-surface/*": "./src/lexical-surface/*",
     "./lib/*": "./src/lib/*",
     "./nodes/*": "./src/nodes/*",
     "./plugins/*": "./src/plugins/*",

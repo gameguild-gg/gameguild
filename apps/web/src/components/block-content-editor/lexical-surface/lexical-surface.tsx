@@ -40,8 +40,6 @@ import {
   buildInitialEditorState,
   stripSelection,
 } from "../lib/lexical/initial-editor-state";
-import { BlockEmbedPlugin } from "../plugins/block-embed-plugin";
-import { BlockInsertMenuPlugin } from "../plugins/block-insert-menu-plugin";
 import { LEXICAL_SURFACE_THEME } from "./theme";
 import {
   ToolbarPlugin,
@@ -94,10 +92,6 @@ export type LexicalSurfaceFeatures = {
   draggable?: boolean;
   /** Native playground `/` slash menu (paragraph, headings, lists, …). Default: true */
   picker?: boolean;
-  /** Our `BlockEmbedPlugin` (renders embeddable blocks). Default: true */
-  blockEmbed?: boolean;
-  /** Our `BlockInsertMenuPlugin` ("//" trigger). Default: true */
-  blockInsertMenu?: boolean;
   /** Apply page-size/margin/orientation from the toolbar to the editable area. Default: true */
   pageLayout?: boolean;
   /** Keyboard shortcuts (Ctrl+\\, Ctrl+Shift+1/2/3, Alt+Shift+1..3, etc.). Default: true */
@@ -175,8 +169,6 @@ const DEFAULT_FEATURES: Required<LexicalSurfaceFeatures> = {
   floatingLinkEditor: true,
   draggable: true,
   picker: true,
-  blockEmbed: true,
-  blockInsertMenu: true,
   pageLayout: true,
   shortcuts: true,
   equation: true,
@@ -214,7 +206,6 @@ function resolveFeatures(
     merged.floatingLinkEditor = false;
     merged.draggable = false;
     merged.picker = false;
-    merged.blockInsertMenu = false;
     merged.history = false;
   }
   return merged;
@@ -283,8 +274,6 @@ function EditorBody({
               setActiveEditor={setActiveEditor}
               setIsLinkEditMode={setIsLinkEditMode}
               features={{
-                blockEmbed: features.blockEmbed,
-                blockInsertMenu: features.blockInsertMenu,
                 pageLayout: features.pageLayout,
               }}
             />
@@ -395,8 +384,6 @@ function EditorBody({
         {features.mermaid && <MermaidPlugin />}
         {features.vegaLite && <VegaLitePlugin />}
         {features.media && <MediaPlugin />}
-        {features.blockEmbed && <BlockEmbedPlugin />}
-        {features.blockInsertMenu && <BlockInsertMenuPlugin />}
         {anchorElem && features.floatingTextFormat && (
           <FloatingTextFormatToolbarPlugin
             anchorElem={anchorElem}

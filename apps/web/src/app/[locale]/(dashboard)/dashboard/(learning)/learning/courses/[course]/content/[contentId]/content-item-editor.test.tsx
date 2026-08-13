@@ -41,7 +41,15 @@ vi.mock("@/lib/learning/actions", () => ({
   restoreAssessment: vi.fn(),
 }));
 
-vi.mock("@/components/block-content-editor/lexical-surface", () => ({
+const putCodingDefinitionMock = vi.hoisted(() => ({
+  putCodingDefinition: vi.fn(),
+}));
+
+vi.mock("@/lib/emception/put-coding-definition", () => ({
+  putCodingDefinition: putCodingDefinitionMock.putCodingDefinition,
+}));
+
+vi.mock("@game-guild/lexical-surface", () => ({
   LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
     <textarea aria-label={accessibleLabel ?? "Body"} readOnly />
   ),
