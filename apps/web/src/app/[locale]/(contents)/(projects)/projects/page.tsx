@@ -1,7 +1,7 @@
+import { ProjectCoverImage } from '@/components/projects/project-cover-image';
 import { Link } from '@/i18n/navigation';
 import { getPublishedProjects } from '@/lib/projects/public-projects';
 import { ArrowRight, FlaskConical, Search, Tags } from 'lucide-react';
-import Image from 'next/image';
 import React from 'react';
 
 export default async function Page(): Promise<React.JSX.Element> {
@@ -86,7 +86,7 @@ export default async function Page(): Promise<React.JSX.Element> {
               <article key={project.slug} className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70">
                 <Link href={`/projects/${project.slug}`} className="group block">
                   <div className="relative h-48 overflow-hidden">
-                    <Image
+                    <ProjectCoverImage
                       src={project.previewImage}
                       alt={`${project.title} project preview`}
                       fill
