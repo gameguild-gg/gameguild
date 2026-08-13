@@ -11888,7 +11888,7 @@ export interface GetTestingRequestsInput {
     includeArchived?: boolean;
   };
 }
-export type GetTestingRequestsOutput = Array<Types.TestingLabTestingInput>;
+export type GetTestingRequestsOutput = Array<Types.TestingLabTestingRequestDetailProjection>;
 export const getTestingRequestsEndpoint = {
   operationId: 'getTestingRequests' as const,
   method: 'GET' as const,
