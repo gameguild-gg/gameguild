@@ -142,7 +142,10 @@ vi.mock("@dnd-kit/utilities", () => ({
   CSS: { Translate: { toString: () => undefined } },
 }));
 
-vi.mock("@/components/block-content-editor/lexical-surface", () => ({
+vi.mock("@/lib/emception/put-coding-definition", () => ({
+  putCodingDefinition: codingLibMocks.putCodingDefinition,
+}));
+vi.mock("@game-guild/lexical-surface", () => ({
   LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
     <textarea aria-label={accessibleLabel ?? "Body"} readOnly />
   ),
