@@ -10,9 +10,9 @@ export const CPP_SDL3_PRESET: WorkspaceConfig = {
   version: 1,
   compile: {
     tool: 'emcc',
-    args: ['emcc', '{sourceFile}', '-sUSE_SDL=3', '-I/usr/include', '-sALLOW_MEMORY_GROWTH=1', '-sENVIRONMENT=web', '-O1', '-o', '/home/user/main.wasm'],
-    cwd: '/home/user',
-    output: '/home/user/main.wasm',
+    args: ['emcc', '{sourceFile}', '-sUSE_SDL=3', '-I/usr/include', '-sALLOW_MEMORY_GROWTH=1', '-sENVIRONMENT=web', '-O1', '-o', '/app/main.wasm'],
+    cwd: '/app',
+    output: '/app/main.wasm',
     sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-main.cpp' },
   },
   run: {
@@ -51,14 +51,14 @@ export const CPP_TERMINAL_PRESET: WorkspaceConfig = {
     // SharedArrayBuffer + Atomics.wait, so -sASYNCIFY is not needed.
     tool: 'clang',
     args: [],
-    cwd: '/home/user',
-    output: '/home/user/main.wasm',
+    cwd: '/app',
+    output: '/app/main.wasm',
     sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/main.cpp' },
   },
   run: {
     type: 'wasi-terminal',
     tool: 'wasi-run',
-    args: ['wasi-run', '/home/user/main.wasm'],
+    args: ['wasi-run', '/app/main.wasm'],
   },
   features: {
     canvas: false,
@@ -102,15 +102,15 @@ export const CMAKE_PRESET: WorkspaceConfig = {
   version: 1,
   compile: {
     tool: 'cmake',
-    args: ['cmake', '-B', '/home/user/build', '-G', 'Ninja', '-S', '/home/user'],
-    cwd: '/home/user',
-    output: '/home/user/build/hello',
+    args: ['cmake', '-B', '/app/build', '-G', 'Ninja', '-S', '/app'],
+    cwd: '/app',
+    output: '/app/build/hello',
     sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/main.cpp' },
   },
   run: {
     type: 'cmake-build',
     tool: 'wasi-run',
-    args: ['wasi-run', '/home/user/build/hello'],
+    args: ['wasi-run', '/app/build/hello'],
   },
   features: {
     canvas: false,
@@ -149,7 +149,7 @@ export const PYTHON_PRESET: WorkspaceConfig = {
   compile: {
     tool: 'python3',
     args: ['python3', '{sourceFile}'],
-    cwd: '/home/user',
+    cwd: '/app',
     output: '',
     sourceDetect: { extensions: ['.py'], entryPoint: '/user/main.py' },
   },
