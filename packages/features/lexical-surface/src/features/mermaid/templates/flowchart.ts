@@ -9,7 +9,7 @@ export default {
   icon: GitBranch,
   category: "flowcharts",
   preview: "A → B → C",
-  previewImage: "previews/flowchart.svg",
+  previewImage: "previews/flowchart.png",
   code: `flowchart TD
     A[Start] --> B[Process]
     B --> C{Decision}

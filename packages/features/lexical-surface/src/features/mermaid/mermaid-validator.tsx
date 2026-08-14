@@ -13,13 +13,6 @@ export class MermaidValidator {
       try {
         const mermaid = await import("mermaid");
         this.mermaidAPI = mermaid.default.mermaidAPI;
-
-        // Initialize mermaid with basic config
-        mermaid.default.initialize({
-          startOnLoad: false,
-          theme: "default",
-          securityLevel: "loose",
-        });
       } catch (error) {
         console.error("Failed to initialize Mermaid validator:", error);
       }
