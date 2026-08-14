@@ -135,4 +135,44 @@ describe('testing lab dashboard page', () => {
     expect(screen.getByText('Friday feedback lab')).toBeInTheDocument();
     expect(screen.getByText('Remote lab')).toBeInTheDocument();
   });
+
+  it('describes registrations against unlimited capacity without rendering an impossible denominator', async () => {
+    mocks.getTestingLabDashboard.mockResolvedValue({
+      accessIssues: [],
+      requests: [],
+      sessions: [],
+      locations: [],
+      publicSessions: [],
+    });
+    mocks.getTestingLabAnalytics.mockResolvedValue({
+      accessIssues: [],
+      current: {
+        events: 0,
+        completedEvents: 0,
+        applications: 0,
+        approvedProjects: 0,
+        registeredTesters: 2,
+        attendedTesters: 0,
+        feedback: 0,
+        averageRating: null,
+        recommendationRate: null,
+        capacity: 0,
+        fillRate: 0,
+      },
+      previous: null,
+      locations: { total: 0, active: 0 },
+      trend: [],
+      events: [],
+    });
+    mocks.getTestingEventsDirectory.mockResolvedValue({
+      accessIssues: [],
+      events: [],
+    });
+
+    render(await TestingLabPage());
+
+    expect(screen.getByText('Unlimited')).toBeInTheDocument();
+    expect(screen.getByText('2 registered')).toBeInTheDocument();
+    expect(screen.queryByText('2/0 seats')).not.toBeInTheDocument();
+  });
 });
