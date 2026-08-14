@@ -70,7 +70,7 @@ public class UserProfilesControllerTests
     }
 
     [Fact]
-    public async Task UpdateAndReplaceProfile_ShouldMapCommandsAndReturnNoContent()
+    public async Task UpdateAndReplaceProfile_ShouldMapCommandsAndReturnPersistedProfile()
     {
         var userId = Guid.NewGuid();
         var updateRequest = new UpdateUserProfileRequest(DisplayName: "Matheus", Bio: "Bio");
@@ -86,21 +86,22 @@ public class UserProfilesControllerTests
             ProfileVisibility: "public",
             ShowEmail: true,
             ShowLocation: true);
+        var profile = CreateProfileDto(userId);
 
         _sender.Setup(sender => sender.Send(
                 It.Is<UpdateUserProfileCommand>(command => command.UserId == userId && ReferenceEquals(command.Request, updateRequest)),
                 It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(profile);
         _sender.Setup(sender => sender.Send(
                 It.Is<ReplaceUserProfileCommand>(command => command.UserId == userId && ReferenceEquals(command.Request, replaceRequest)),
                 It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync(profile);
 
         var update = await _controller.UpdateProfile(userId, updateRequest, CancellationToken.None);
         var replace = await _controller.ReplaceProfile(userId, replaceRequest, CancellationToken.None);
 
-        update.Should().BeOfType<NoContentResult>();
-        replace.Should().BeOfType<NoContentResult>();
+        update.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(profile);
+        replace.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(profile);
     }
 
     private static UserProfileDto CreateProfileDto(Guid? userId = null)
