@@ -27,6 +27,12 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
 
     private const string GoogleUserUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
 
+    private const string DiscordAuthUrl = "https://discord.com/oauth2/authorize";
+
+    private const string DiscordTokenUrl = "https://discord.com/api/oauth2/token";
+
+    private const string DiscordUserUrl = "https://discord.com/api/v10/users/@me";
+
     private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, PropertyNameCaseInsensitive = true };
 
     public Task<string> GetAuthorizationUrlAsync(string provider, string redirectUri, string state, string[ ]? scopes = null)
@@ -39,6 +45,7 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
         {
             "github" => BuildGitHubAuthUrl(clientId, redirectUri, state, scopes),
             "google" => BuildGoogleAuthUrl(clientId, redirectUri, state, scopes),
+            "discord" => BuildDiscordAuthUrl(clientId, redirectUri, state),
             _ => throw new NotSupportedException($"OAuth provider not supported: {provider}")
         };
 
@@ -65,6 +72,7 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
         {
             "github" => await GetGitHubUserProfileAsync(accessToken).ConfigureAwait(false),
             "google" => await GetGoogleUserProfileAsync(accessToken).ConfigureAwait(false),
+            "discord" => await GetDiscordUserProfileAsync(accessToken).ConfigureAwait(false),
             _ => throw new NotSupportedException($"Provider not supported: {provider}")
         };
     }
@@ -96,6 +104,7 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
         {
             "github" => await ExchangeGitHubCodeAsync(code, redirectUri).ConfigureAwait(false),
             "google" => await ExchangeGoogleCodeAsync(code, redirectUri).ConfigureAwait(false),
+            "discord" => await ExchangeDiscordCodeAsync(code, redirectUri).ConfigureAwait(false),
             _ => throw new NotSupportedException($"Provider not supported: {provider}")
         };
     }
@@ -253,6 +262,75 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration, I
             LastName = user.FamilyName,
             AvatarUrl = user.Picture,
             Locale = null, // GoogleUserDto doesn't include locale
+            AccessToken = accessToken
+        };
+    }
+
+    #endregion
+
+    #region Discord OAuth
+
+    private string BuildDiscordAuthUrl(string clientId, string redirectUri, string state)
+    {
+        return $"{DiscordAuthUrl}?client_id={Uri.EscapeDataString(clientId)}" +
+               $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+               $"&state={Uri.EscapeDataString(state)}" +
+               $"&scope={Uri.EscapeDataString("identify email")}" +
+               $"&response_type=code";
+    }
+
+    private async Task<string> ExchangeDiscordCodeAsync(string code, string redirectUri)
+    {
+        var clientId = configuration["OAuth:Discord:ClientId"];
+        var clientSecret = configuration["OAuth:Discord:ClientSecret"];
+
+        if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret)) { throw new InvalidOperationException("Discord OAuth client ID or client secret not configured"); }
+
+        // Discord's token endpoint only accepts form-urlencoded bodies (client credentials as form fields)
+        var tokenRequest = new Dictionary<string, string> { { "client_id", clientId }, { "client_secret", clientSecret }, { "grant_type", "authorization_code" }, { "code", code }, { "redirect_uri", redirectUri } };
+
+        using var content = new FormUrlEncodedContent(tokenRequest);
+        using var response = await httpClient.PostAsync(new Uri(DiscordTokenUrl), content).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+        return tokenResponse.GetProperty("access_token").GetString() ?? throw new InvalidOperationException("Failed to get access token from Discord");
+    }
+
+    private async Task<OAuthUserProfile> GetDiscordUserProfileAsync(string accessToken)
+    {
+        httpClient.DefaultRequestHeaders.Clear();
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+        using var response = await httpClient.GetAsync(new Uri(DiscordUserUrl)).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        var user = JsonSerializer.Deserialize<DiscordUserDto>(content, _jsonOptions) ?? throw new InvalidOperationException("Failed to parse Discord user");
+
+        string avatarUrl;
+        if (string.IsNullOrEmpty(user.Avatar))
+        {
+            // Default avatar index derived from the snowflake's upper bits (Discord docs: (id >> 22) % 6)
+            avatarUrl = $"https://cdn.discordapp.com/embed/avatars/{(long.Parse(user.Id, CultureInfo.InvariantCulture) >> 22) % 6}.png";
+        }
+        else
+        {
+            var extension = user.Avatar.StartsWith("a_", StringComparison.Ordinal) ? "gif" : "png";
+            avatarUrl = $"https://cdn.discordapp.com/avatars/{user.Id}/{user.Avatar}.{extension}?size=256";
+        }
+
+        return new OAuthUserProfile
+        {
+            ProviderId = user.Id,
+            Provider = "Discord",
+            Email = user.Email,
+            EmailVerified = user.Verified ?? false,
+            Name = !string.IsNullOrEmpty(user.GlobalName) ? user.GlobalName : user.Username,
+            Username = user.Username,
+            AvatarUrl = avatarUrl,
             AccessToken = accessToken
         };
     }
