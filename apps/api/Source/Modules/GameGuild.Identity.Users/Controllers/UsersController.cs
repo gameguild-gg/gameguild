@@ -14,7 +14,10 @@ namespace GameGuild.Identity.Users;
 [ApiVersion("1.0")]
 [Microsoft.AspNetCore.Http.Tags("users")]
 [Authorize]
-public sealed class UsersController(ISender sender, IActorContextAccessor actorContextAccessor) : BaseApiController
+public sealed class UsersController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor,
+    ITenantMembershipChecker tenantMembershipChecker) : BaseApiController
 {
     #region Collection Operations - /v1/users
 
@@ -99,6 +102,11 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckUserExistsById(Guid userId, CancellationToken ct)
     {
+        if (!await CanAccessUserAsync(userId, UsersPermission.Keys.Read, ct).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
+
         UserDto? user = await sender.Send(new GetUserByIdQuery(userId), ct).ConfigureAwait(false);
 
         return user is null ? NotFound() : Ok();
@@ -119,6 +127,11 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetUserById(Guid userId, CancellationToken ct)
     {
+        if (!await CanAccessUserAsync(userId, UsersPermission.Keys.Read, ct).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
+
         UserDto? user = await sender.Send(new GetUserByIdQuery(userId), ct).ConfigureAwait(false);
 
         return user is null ? NotFound() : Ok(user);
@@ -141,6 +154,11 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     public async Task<IActionResult> PatchUserById(Guid userId, [FromBody] UpdateUserRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
+        if (!await CanAccessUserAsync(userId, UsersPermission.Keys.Manage, ct).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
+
         var command = new UpdateUserCommand(userId, body.Name, body.PhoneNumber);
         var user = await sender.Send(command, ct).ConfigureAwait(false);
 
@@ -164,6 +182,11 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     public async Task<IActionResult> UpdateUserById(Guid userId, [FromBody] CreateUserRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
+        if (!await CanAccessUserAsync(userId, UsersPermission.Keys.Manage, ct).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
+
         var command = new UpdateUserCommand(userId, body.Name, body.PhoneNumber);
         var user = await sender.Send(command, ct).ConfigureAwait(false);
 
@@ -184,9 +207,33 @@ public sealed class UsersController(ISender sender, IActorContextAccessor actorC
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteUserById(Guid userId, CancellationToken ct)
     {
+        if (!await CanAccessUserAsync(userId, UsersPermission.Keys.Manage, ct).ConfigureAwait(false))
+        {
+            return Forbid();
+        }
+
         await sender.Send(new DeleteUserCommand(userId), ct).ConfigureAwait(false);
 
         return NoContent();
+    }
+
+    private async Task<bool> CanAccessUserAsync(Guid userId, string permission, CancellationToken cancellationToken)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (actor.IsSystemAdmin || actor.SubjectIdAsGuid == userId)
+        {
+            return true;
+        }
+
+        if (!actor.TenantId.HasValue ||
+            (!actor.IsTenantAdmin && !actor.HasPermission(permission) && !actor.HasPermission(UsersPermission.Keys.Manage)))
+        {
+            return false;
+        }
+
+        return await tenantMembershipChecker
+            .IsUserMemberOfTenantAsync(userId, actor.TenantId.Value, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     #endregion

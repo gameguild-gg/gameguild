@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Net;
 using GameGuild.Configuration.PresentationLayer.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
@@ -94,6 +95,13 @@ public sealed class AuthorizationTenantResolver : IAuthorizationTenantResolver
 
     private static string? ExtractSubdomain(string host)
     {
+        if (string.IsNullOrWhiteSpace(host) ||
+            string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+            IPAddress.TryParse(host, out _))
+        {
+            return null;
+        }
+
         var parts = host.Split('.');
         if (parts.Length >= 3)
         {

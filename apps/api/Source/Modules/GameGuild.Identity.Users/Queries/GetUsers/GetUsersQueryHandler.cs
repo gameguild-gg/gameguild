@@ -45,21 +45,18 @@ public sealed class GetUsersQueryHandler(
 
         var actorTenantId = Actor.TenantId;
 
-        if (actorTenantId.HasValue)
+        if (actorTenantId.HasValue && !Actor.IsSystemAdmin)
         {
-            if (!Actor.IsSystemAdmin)
+            var actorUserId = Actor.SubjectIdAsGuid
+                ?? throw new AuthenticationRequiredException("Authenticated user ID is required to list users.");
+
+            var actorMembership = await tenantMemberRepository
+                .GetByUserAndTenantAsync(actorUserId, actorTenantId.Value, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (actorMembership is null || !actorMembership.IsActive)
             {
-                var actorUserId = Actor.SubjectIdAsGuid
-                    ?? throw new AuthenticationRequiredException("Authenticated user ID is required to list users.");
-
-                var actorMembership = await tenantMemberRepository
-                    .GetByUserAndTenantAsync(actorUserId, actorTenantId.Value, cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (actorMembership is null || !actorMembership.IsActive)
-                {
-                    throw AccessDeniedException.ForTenantMembership(actorUserId, actorTenantId.Value);
-                }
+                throw AccessDeniedException.ForTenantMembership(actorUserId, actorTenantId.Value);
             }
 
             query = query.Where(u => u.TenantMemberships.Any(m => m.TenantId == actorTenantId.Value && m.IsActive));

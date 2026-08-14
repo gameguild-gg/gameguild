@@ -51,6 +51,9 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
         if (builtInPolicy is not null)
             return builtInPolicy;
 
+        if (string.Equals(policyName, Policies.TenantAdmin, StringComparison.Ordinal))
+            return TryBuildStaticFallbackPolicy(policyName);
+
         // Resolve tenant context and scoped services within a scope
         string tenantId;
         long version;
