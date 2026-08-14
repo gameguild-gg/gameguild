@@ -11103,6 +11103,47 @@ export const postSupportTicketsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetSupportTicketsMineInput {
+  query?: {
+    status?: Types.CommerceProductsSupportTicketStatus;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetSupportTicketsMineOutput = Types.PagedResultOfGameGuildCommerceProductsSupportTicketDto;
+export const getSupportTicketsMineEndpoint = {
+  operationId: 'getSupportTicketsMine' as const,
+  method: 'GET' as const,
+  path: '/v1/support/tickets/mine' as const,
+  tags: ['Commerce/products/support/tickets/selfService'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostSupportTicketsMineInput {
+  body?: Types.CommerceProductsCreateMySupportTicketInput;
+}
+export type PostSupportTicketsMineOutput = Types.CommerceProductsSupportTicket;
+export const postSupportTicketsMineEndpoint = {
+  operationId: 'postSupportTicketsMine' as const,
+  method: 'POST' as const,
+  path: '/v1/support/tickets/mine' as const,
+  tags: ['Commerce/products/support/tickets/selfService'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostSupportTicketsMineMessagesInput {
+  ticketId: string;
+  body?: Types.CommerceProductsAddMySupportTicketMessageInput;
+}
+export type PostSupportTicketsMineMessagesOutput = Types.CommerceProductsSupportTicket;
+export const postSupportTicketsMineMessagesEndpoint = {
+  operationId: 'postSupportTicketsMineMessages' as const,
+  method: 'POST' as const,
+  path: '/v1/support/tickets/mine/{ticketId}/messages' as const,
+  tags: ['Commerce/products/support/tickets/selfService'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetSupportTicketByIdInput {
   ticketId: string;
   query?: {
@@ -14418,6 +14459,43 @@ export const patchUsersMembershipsRoleEndpoint = {
 } as const;
 
 /**
+ * Activate a tenant membership
+ *
+ * Restores access to the specified tenant membership.
+ */
+export interface PostUsersMembershipsActivateInput {
+  userId: string;
+  tenantId: string;
+}
+export type PostUsersMembershipsActivateOutput = Types.IdentityTenantsSetTenantMembershipStatusOutput;
+export const postUsersMembershipsActivateEndpoint = {
+  operationId: 'postUsersMembershipsActivate' as const,
+  method: 'POST' as const,
+  path: '/v1/users/{userId}/memberships/{tenantId}:activate' as const,
+  tags: ['Users/memberships'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Deactivate a tenant membership
+ *
+ * Suspends access to the specified tenant without deleting membership history.
+ */
+export interface PostUsersMembershipsDeactivateInput {
+  userId: string;
+  tenantId: string;
+  body?: Types.IdentityTenantsSetTenantMembershipStatusInput;
+}
+export type PostUsersMembershipsDeactivateOutput = Types.IdentityTenantsSetTenantMembershipStatusOutput;
+export const postUsersMembershipsDeactivateEndpoint = {
+  operationId: 'postUsersMembershipsDeactivate' as const,
+  method: 'POST' as const,
+  path: '/v1/users/{userId}/memberships/{tenantId}:deactivate' as const,
+  tags: ['Users/memberships'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Get count of user's active tenant memberships
  */
 export interface GetUsersMembershipsCountInput {
@@ -15059,7 +15137,7 @@ export interface PutUsersProfileInput {
   userId: string;
   body?: Types.IdentityUsersReplaceUserProfileInput;
 }
-export type PutUsersProfileOutput = void;
+export type PutUsersProfileOutput = Types.IdentityUsersUserProfileDto;
 export const putUsersProfileEndpoint = {
   operationId: 'putUsersProfile' as const,
   method: 'PUT' as const,
@@ -15075,7 +15153,7 @@ export interface PatchUsersProfileInput {
   userId: string;
   body?: Types.IdentityUsersUpdateUserProfileInput;
 }
-export type PatchUsersProfileOutput = void;
+export type PatchUsersProfileOutput = Types.IdentityUsersUserProfileDto;
 export const patchUsersProfileEndpoint = {
   operationId: 'patchUsersProfile' as const,
   method: 'PATCH' as const,
@@ -16574,6 +16652,9 @@ export const endpoints = {
   postSubscriptionPlansCompare: postSubscriptionPlansCompareEndpoint,
   getSupportTickets: getSupportTicketsEndpoint,
   postSupportTickets: postSupportTicketsEndpoint,
+  getSupportTicketsMine: getSupportTicketsMineEndpoint,
+  postSupportTicketsMine: postSupportTicketsMineEndpoint,
+  postSupportTicketsMineMessages: postSupportTicketsMineMessagesEndpoint,
   getSupportTicketById: getSupportTicketByIdEndpoint,
   postSupportTicketsMessages: postSupportTicketsMessagesEndpoint,
   postSupportTicketsAssign: postSupportTicketsAssignEndpoint,
@@ -16794,6 +16875,8 @@ export const endpoints = {
   postUsersMembershipsInviteCancel: postUsersMembershipsInviteCancelEndpoint,
   postUsersMembershipsInviteResend: postUsersMembershipsInviteResendEndpoint,
   patchUsersMembershipsRole: patchUsersMembershipsRoleEndpoint,
+  postUsersMembershipsActivate: postUsersMembershipsActivateEndpoint,
+  postUsersMembershipsDeactivate: postUsersMembershipsDeactivateEndpoint,
   getUsersMembershipsCount: getUsersMembershipsCountEndpoint,
   getUsersMetadata: getUsersMetadataEndpoint,
   putUsersMetadata: putUsersMetadataEndpoint,
