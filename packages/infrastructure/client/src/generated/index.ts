@@ -104,6 +104,7 @@ export * from './modules/learning-experience-recommendations.gen.js';
 export * from './modules/resources.gen.js';
 export * from './modules/auth-roles.gen.js';
 export * from './modules/commerce-products-support-tickets.gen.js';
+export * from './modules/commerce-products-support-tickets-selfservice.gen.js';
 export * from './modules/api-teams.gen.js';
 export * from './modules/api-teams-projects.gen.js';
 export * from './modules/tenants.gen.js';
