@@ -103,7 +103,7 @@ const GRAPHICS_BUILD_CASE: GradingCase = {
 export const ASSIGNMENT_SAMPLES: Record<CodingLanguage, AssignmentSample> = {
   cpp: {
     workspaceConfig: {
-      id: 'assignment-cpp',
+      id: 'cpp',
       label: 'C++ Assignment',
       description: 'Stdin/stdout starter with hidden doctest case',
       version: 1,
@@ -144,7 +144,7 @@ export const ASSIGNMENT_SAMPLES: Record<CodingLanguage, AssignmentSample> = {
   // pick this when the curriculum targets pure C.
   c: {
     workspaceConfig: {
-      id: 'assignment-c',
+      id: 'c',
       label: 'C Assignment',
       description: 'C stdin/stdout starter',
       version: 1,
@@ -201,7 +201,7 @@ int main(void) {
 
   'sdl-cpp': {
     workspaceConfig: {
-      id: 'assignment-sdl',
+      id: 'sdl-cpp',
       label: 'SDL3 C++ Assignment',
       description: 'SDL3 graphics starter — emcc + libSDL3',
       version: 1,
@@ -250,7 +250,7 @@ int main(void) {
 
   'raylib-cpp': {
     workspaceConfig: {
-      id: 'assignment-raylib',
+      id: 'raylib-cpp',
       label: 'raylib C++ Assignment',
       description: 'raylib graphics starter — emcc + libraylib',
       version: 1,

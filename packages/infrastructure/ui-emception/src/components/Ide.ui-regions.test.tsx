@@ -1,4 +1,5 @@
 import { render, act, screen, within, fireEvent } from '@testing-library/react';
+import { createRef } from 'react';
 
 if (typeof globalThis.TextEncoder === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -101,6 +102,7 @@ jest.mock('@game-guild/ui/components/switch', () => ({
 }));
 
 import Ide from './Ide';
+import type { IdeHandle } from './Ide';
 
 // Smoke test the manual shadcn stubs to catch broken mock wiring early.
 describe('shadcn mock smoke', () => {
@@ -279,5 +281,127 @@ describe('T7 in-IDE authoring regions', () => {
       picker.dispatchEvent(new Event('change', { bubbles: true }));
     });
     expect(onPresetChange).toHaveBeenCalledWith('cpp-sdl3');
+  });
+
+  it('(image-upload) dropped image is stored as a file and returned by getFiles with base64 encoding', async () => {
+    // Given: a synchronous FileReader stub that yields a base64 data-URI.
+    const RealFileReader = globalThis.FileReader;
+    const b64 = btoa('fake-png-bytes');
+    class FakeFileReader {
+      result: string | ArrayBuffer | null = null;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      readAsDataURL(file: File) {
+        this.result = `data:${file.type};base64,${b64}`;
+        this.onload?.();
+      }
+    }
+    (globalThis as unknown as { FileReader: unknown }).FileReader = FakeFileReader;
+
+    const ref = createRef<IdeHandle>();
+    window.localStorage.clear();
+    await act(async () => {
+      render(<Ide ref={ref} />);
+    });
+
+    // When: an image file is dropped onto the explorer.
+    const aside = document.querySelector('aside')!;
+    const png = new File(['fake-png-bytes'], 'pic.png', { type: 'image/png' });
+    await act(async () => {
+      fireEvent.drop(aside, { dataTransfer: { types: ['Files'], files: [png] } });
+    });
+
+    // Then: getFiles returns it with the data-URI prefix stripped + base64 encoding.
+    const files = await ref.current!.getFiles();
+    const img = files.find((f) => f.path === '/user/pic.png');
+    expect(img).toEqual({ path: '/user/pic.png', content: b64, encoding: 'base64' });
+
+    // And: a same-name drop again gets a -2 collision suffix.
+    await act(async () => {
+      fireEvent.drop(aside, { dataTransfer: { types: ['Files'], files: [png] } });
+    });
+    const filesAfterCollision = await ref.current!.getFiles();
+    expect(filesAfterCollision.find((f) => f.path === '/user/pic-2.png')).toBeDefined();
+
+    // And: image files are excluded from the localStorage persistence payload.
+    const persisted = JSON.parse(
+      window.localStorage.getItem('gameguild.emception.workspace.v1') ?? '{}',
+    ) as { files?: Record<string, { type?: string }> };
+    expect(persisted.files?.['/user/pic.png']).toBeUndefined();
+
+    (globalThis as unknown as { FileReader: unknown }).FileReader = RealFileReader;
+  });
+});
+
+describe('external workspaceConfig sync', () => {
+  const makeConfig = (id: string, entry: string) => ({
+    id,
+    label: `WS ${id}`,
+    compile: { tool: 'clang', args: [], output: '/home/user/main.wasm' },
+    run: { type: 'wasi-terminal' as const },
+    features: {},
+    layout: { activeFile: entry, openTabs: [{ path: entry, group: 'main' as const }] },
+    files: { [entry]: { encoding: 'text' as const, content: 'int main(){}' } },
+  });
+  const pickerOptions = [
+    { value: 'ws-a', label: 'Workspace A' },
+    { value: 'ws-b', label: 'Workspace B' },
+  ];
+
+  it('applies a workspaceConfig prop whose id differs from the active preset (dropdown follows)', async () => {
+    const view = render(<Ide workspaceConfig={makeConfig('ws-a', '/user/main.cpp')} presetOptions={pickerOptions} />);
+    expect((screen.getByTestId('workspace-picker') as HTMLSelectElement).value).toBe('ws-a');
+
+    await act(async () => {
+      view.rerender(<Ide workspaceConfig={makeConfig('ws-b', '/user/other.c')} presetOptions={pickerOptions} />);
+    });
+
+    expect((screen.getByTestId('workspace-picker') as HTMLSelectElement).value).toBe('ws-b');
+  });
+
+  it('does not re-apply when the prop echoes back with the same id', async () => {
+    const onPresetChange = jest.fn();
+    const view = render(
+      <Ide workspaceConfig={makeConfig('ws-a', '/user/main.cpp')} presetOptions={pickerOptions} onPresetChange={onPresetChange} />,
+    );
+    // In-IDE pick of a non-PRESETS id: only onPresetChange fires, active
+    // preset stays ws-a (the parent is expected to re-seed with a ws-b config).
+    const picker = screen.getByTestId('workspace-picker') as HTMLSelectElement;
+    await act(async () => {
+      picker.value = 'ws-b';
+      picker.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(onPresetChange).toHaveBeenCalledWith('ws-b');
+    // Same-id echo must not apply anything — internal state is still ws-a.
+    await act(async () => {
+      view.rerender(<Ide workspaceConfig={makeConfig('ws-a', '/user/main.cpp')} presetOptions={pickerOptions} onPresetChange={onPresetChange} />);
+    });
+    expect((screen.getByTestId('workspace-picker') as HTMLSelectElement).value).toBe('ws-a');
+  });
+
+  it('persists workspace state under the per-preset namespaced localStorage key', async () => {
+    const setItem = jest.spyOn(Storage.prototype, 'setItem');
+    try {
+      const view = render(
+        <Ide assignmentToken="tok-1" workspaceConfig={makeConfig('ws-a', '/user/main.cpp')} presetOptions={pickerOptions} />,
+      );
+      expect(setItem).toHaveBeenCalledWith(
+        'gameguild.emception.workspace.tok-1.ws-a.v2',
+        expect.stringContaining('/user/main.cpp'),
+      );
+
+      await act(async () => {
+        view.rerender(
+          <Ide assignmentToken="tok-1" workspaceConfig={makeConfig('ws-b', '/user/other.c')} presetOptions={pickerOptions} />,
+        );
+      });
+      expect(setItem).toHaveBeenCalledWith(
+        'gameguild.emception.workspace.tok-1.ws-b.v2',
+        expect.stringContaining('/user/other.c'),
+      );
+    } finally {
+      setItem.mockRestore();
+      window.localStorage.clear();
+    }
   });
 });

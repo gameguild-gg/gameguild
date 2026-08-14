@@ -143,7 +143,7 @@ describe('IdeHandle extensions: addFile / removeFile / setFileMeta / getModified
 
     const files = await ref.current!.getFiles();
     const added = files.find((f) => f.path === '/user/added.c');
-    expect(added).toEqual({ path: '/user/added.c', content: 'int main(){return 0;}' });
+    expect(added).toEqual({ path: '/user/added.c', content: 'int main(){return 0;}', encoding: 'text' });
   });
 
   it('removeFile removes the file from getFiles result', async () => {

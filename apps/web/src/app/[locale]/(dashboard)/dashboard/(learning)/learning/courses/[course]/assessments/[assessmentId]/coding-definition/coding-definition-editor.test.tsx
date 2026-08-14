@@ -22,7 +22,7 @@ const putMock = vi.hoisted(() => vi.fn());
 const assignmentSamplesMock = vi.hoisted(() => ({
   cpp: {
     workspaceConfig: {
-      id: "assignment-cpp",
+      id: "cpp",
       label: "C++ Assignment",
       version: 1,
       files: {
@@ -348,6 +348,22 @@ describe("CodingDefinitionEditor", () => {
       (await screen.findAllByText(/Function name must match/i)).length,
     ).toBeGreaterThan(0);
     expect(screen.getByTestId("save-button")).toBeDisabled();
+  });
+
+  it("rejects a FunctionalTest with zero cases — mirrors backend at_least_one_case", async () => {
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} />);
+
+    await user.click(screen.getByTestId("add-functional"));
+    fireEvent.change(screen.getByTestId("functional-functionName-0"), {
+      target: { value: "add" },
+    });
+
+    expect(
+      (await screen.findAllByText(/at least one case/i)).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByTestId("save-button")).toBeDisabled();
+    expect(putCodingAssignmentAction).not.toHaveBeenCalled();
   });
 
   it("functional editor: signature parameter + case input — defaults to v1 types only", async () => {

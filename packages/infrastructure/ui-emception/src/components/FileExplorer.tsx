@@ -48,6 +48,8 @@ interface FileExplorerProps {
     fileMeta?: Record<string, FileMeta>;
     /** Fired on visibility/modifiable change with the merged patch. */
     onFileMetaChange?: (path: string, patch: Partial<FileMeta>) => void;
+    /** Fired when images are picked via the upload button or dropped onto the explorer. */
+    onUploadFiles?: (files: File[]) => void;
 }
 
 export default function FileExplorer({
@@ -63,9 +65,13 @@ export default function FileExplorer({
     fileTree,
     fileMeta,
     onFileMetaChange,
+    onUploadFiles,
 }: FileExplorerProps) {
     const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; path: string } | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const uploadInputRef = useRef<HTMLInputElement>(null);
+    const [dropActive, setDropActive] = useState(false);
+    const dragCounterRef = useRef(0);
 
     const dismissCtx = useCallback(() => setCtxMenu(null), []);
 
@@ -189,8 +195,43 @@ export default function FileExplorer({
     return (
         <aside
             ref={containerRef}
-            style={{ width: '100%', height: '100%', background: '#11111b', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
+            data-testid="file-explorer"
+            style={{
+                width: '100%',
+                height: '100%',
+                background: '#11111b',
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                position: 'relative',
+                ...(dropActive ? { outline: '2px dashed #89b4fa', outlineOffset: -2, background: '#181825' } : {}),
+            }}
             onClick={dismissCtx}
+            onDragOver={(e) => {
+                if (!onUploadFiles || !Array.from(e.dataTransfer.types).includes('Files')) return;
+                e.preventDefault();
+                setDropActive(true);
+            }}
+            onDragEnter={(e) => {
+                if (!onUploadFiles || !Array.from(e.dataTransfer.types).includes('Files')) return;
+                e.preventDefault();
+                dragCounterRef.current++;
+            }}
+            onDragLeave={() => {
+                if (--dragCounterRef.current <= 0) {
+                    dragCounterRef.current = 0;
+                    setDropActive(false);
+                }
+            }}
+            onDrop={(e) => {
+                if (!onUploadFiles) return;
+                const images = Array.from(e.dataTransfer.files ?? []).filter((f) => f.type.startsWith('image/'));
+                if (images.length === 0) return;
+                e.preventDefault();
+                dragCounterRef.current = 0;
+                setDropActive(false);
+                onUploadFiles(images);
+            }}
         >
             {/* Header */}
             <div
@@ -207,14 +248,27 @@ export default function FileExplorer({
                 EXPLORER
             </div>
 
-            {/* New file buttons */}
+            {/* New file / upload image buttons */}
             <div style={{ display: 'flex', gap: '0.25rem', padding: '0.35rem 0.5rem', borderBottom: '1px solid #313244', background: '#181825', flexShrink: 0 }}>
-                <button onClick={() => onCreateFile('text')} style={actionBtnStyle} title="New source file (.cpp)">
-                    +Code
+                <button onClick={() => onCreateFile('text')} style={actionBtnStyle} title="New source file (.cpp)" data-testid="explorer-new-file">
+                    📄+
                 </button>
-                <button onClick={() => onCreateFile('image')} style={actionBtnStyle} title="New image file">
-                    +Img
+                <button onClick={() => uploadInputRef.current?.click()} style={actionBtnStyle} title="Upload images" data-testid="explorer-upload">
+                    ⬆
                 </button>
+                <input
+                    ref={uploadInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    hidden
+                    data-testid="explorer-upload-input"
+                    onChange={(e) => {
+                        const images = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith('image/'));
+                        e.target.value = '';
+                        if (images.length > 0) onUploadFiles?.(images);
+                    }}
+                />
             </div>
 
             {/* Workspace label */}

@@ -30,9 +30,15 @@ export const SDL_CANVAS_PATH = '/user/sdl-canvas';
 
 /**
  * Per-assignment localStorage key. Returns the legacy v1 global key when no
- * token is supplied (backward compat for non-assignment consumers).
+ * token is supplied (backward compat for non-assignment consumers). When a
+ * workspaceId is supplied alongside the token, the key is additionally
+ * namespaced per workspace so preset switches never restore another
+ * language's stale tab layout (e.g. cpp tabs over an SDL canvas workspace).
  */
-export function workspaceStorageKey(assignmentToken?: string): string {
+export function workspaceStorageKey(assignmentToken?: string, workspaceId?: string): string {
+  if (assignmentToken && workspaceId) {
+    return `gameguild.emception.workspace.${assignmentToken}.${workspaceId}.v2`;
+  }
   return assignmentToken
     ? `gameguild.emception.workspace.${assignmentToken}.v2`
     : WORKSPACE_STORAGE_KEY;
@@ -260,6 +266,15 @@ function inferTabType(path: string): TabType {
   return 'text';
 }
 
+const IMAGE_MIME_BY_EXT: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  svg: 'image/svg+xml',
+};
+
 /** Convert a WorkspaceConfig's files map + layout into IDE-ready WorkspaceFile records and OpenTab arrays. */
 export function workspaceConfigToState(config: WorkspaceConfig): {
   files: Record<string, WorkspaceFile>;
@@ -271,7 +286,11 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
   for (const [path, bundle] of Object.entries(config.files)) {
     const type = inferTabType(path);
     if (type === 'canvas') continue;
-    const content = bundle.encoding === 'base64' ? `data:application/octet-stream;base64,${bundle.content}` : bundle.content;
+    // Image tabs render content directly as <img src>; base64 bundles need a
+    // decodable mime type, inferred from the extension.
+    const ext = path.split('.').pop()?.toLowerCase() ?? '';
+    const mime = IMAGE_MIME_BY_EXT[ext] ?? 'application/octet-stream';
+    const content = bundle.encoding === 'base64' ? `data:${mime};base64,${bundle.content}` : bundle.content;
     wsFiles[path] = { path, type, content };
   }
 

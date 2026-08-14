@@ -56,6 +56,10 @@ describe('workspaceStorageKey', () => {
   it('returns v2 namespaced key when token supplied', () => expect(workspaceStorageKey('abc-123')).toBe('gameguild.emception.workspace.abc-123.v2'));
   it('returns v1 legacy key when called with no args', () => expect(workspaceStorageKey()).toBe('gameguild.emception.workspace.v1'));
   it('returns v1 legacy key when token is undefined', () => expect(workspaceStorageKey(undefined)).toBe('gameguild.emception.workspace.v1'));
+  it('returns per-workspace key when token and workspaceId supplied', () =>
+    expect(workspaceStorageKey('abc-123', 'sdl-cpp')).toBe('gameguild.emception.workspace.abc-123.sdl-cpp.v2'));
+  it('falls back to token-only key when workspaceId is undefined', () =>
+    expect(workspaceStorageKey('abc-123', undefined)).toBe('gameguild.emception.workspace.abc-123.v2'));
 });
 
 // ─── inferLanguage ───────────────────────────────────────────────────────────

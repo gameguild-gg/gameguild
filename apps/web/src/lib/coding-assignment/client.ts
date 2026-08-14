@@ -72,6 +72,15 @@ export type PutCodingAssignmentResult =
 
 function extractError(err: unknown): string {
   if (!isRecord(err)) return 'An unexpected error occurred.';
+  // Prefer field-level detail (e.g. "$.Environment.Tools: required") over the
+  // generic ASP.NET ProblemDetails title ("One or more validation errors
+  // occurred.") — ApiError carries ProblemDetails.errors as fieldErrors.
+  if (isRecord(err.fieldErrors)) {
+    const lines = Object.entries(err.fieldErrors)
+      .filter(([, msgs]) => Array.isArray(msgs) && msgs.length > 0)
+      .map(([field, msgs]) => `${field}: ${(msgs as unknown[]).map(String).join(', ')}`);
+    if (lines.length > 0) return `Validation: ${lines.join('; ')}`;
+  }
   const detail = typeof err.detail === 'string' ? err.detail : undefined;
   const message = typeof err.message === 'string' ? err.message : undefined;
   return detail || message || 'An unexpected error occurred.';
