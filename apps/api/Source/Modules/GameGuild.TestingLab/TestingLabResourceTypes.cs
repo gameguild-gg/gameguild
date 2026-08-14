@@ -33,12 +33,14 @@ public static class TestingLabResourceTypes
 
     public const string Analytics = "TestingLabAnalytics";
 
+    public const string Settings = "TestingLabSettings";
+
     /// <summary>
     ///     All TestingLab resource types for validation.
     /// </summary>
     public static readonly IReadOnlyList<string> All = new[]
     {
-        Session, Location, Feedback, Request, Participant, Event, Application, Analytics
+        Session, Location, Feedback, Request, Participant, Event, Application, Analytics, Settings
     };
 
     /// <summary>
@@ -81,4 +83,9 @@ public static class TestingLabActions
     {
         Create, Read, Edit, Delete, Moderate, Approve, Manage
     };
+}
+
+public static class TestingLabAssetScopes
+{
+    public const string ApplicationReview = "TestingLab.ApplicationReview";
 }

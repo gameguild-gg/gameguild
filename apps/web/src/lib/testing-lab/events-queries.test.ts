@@ -49,6 +49,7 @@ import {
   getPublicTestingEventsDirectory,
   getTestingEventFeedbackReview,
   getTestingEventManagerData,
+  getTestingApplicationsDirectory,
   getTestingEventsDirectory,
   getTestingParticipantDirectory,
   getTestingApplicationTesterEligibility,
@@ -247,6 +248,32 @@ describe('Testing Lab event queries', () => {
     expect(result.feedback[0]?.feedback?.overallRating).toBe(9);
     expect(result.accessIssues).toEqual([]);
     expect(mocks.participation.getTestingEventsFeedback).toHaveBeenCalledWith('event-1');
+  });
+
+  it('loads the tenant application directory from only events that contain applications', async () => {
+    mocks.events.getTestingEvents.mockResolvedValue({
+      ok: true,
+      data: [
+        { id: 'event-1', name: 'Friday campus lab', applicationCount: 1 },
+        { id: 'event-empty', name: 'Empty lab', applicationCount: 0 },
+      ],
+    });
+
+    const result = await getTestingApplicationsDirectory({ status: 'Pending' });
+
+    expect(result.entries).toEqual([
+      {
+        event: { id: 'event-1', name: 'Friday campus lab', applicationCount: 1 },
+        application: { id: 'application-1', eventId: 'event-1', status: 'Pending' },
+      },
+    ]);
+    expect(result.accessIssues).toEqual([]);
+    expect(mocks.events.getTestingEventsByEventIdApplications).toHaveBeenCalledTimes(1);
+    expect(mocks.events.getTestingEventsByEventIdApplications).toHaveBeenCalledWith('event-1', {
+      status: 'Pending',
+      skip: 0,
+      take: 100,
+    });
   });
 
   it('loads tester eligibility in one tenant-scoped request', async () => {

@@ -47,6 +47,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Projects\GameGuild.Projects.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Teams\GameGuild.Teams.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.ProjectWork\GameGuild.ProjectWork.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />

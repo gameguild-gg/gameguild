@@ -1,7 +1,7 @@
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { TerminalTab } from './ide-types';
 import { TERMINAL_THEME } from './ide-types';
 
@@ -130,7 +130,6 @@ export default function TerminalPanel({
     onCloseTerminal,
     onBootTerminalReady,
 }: TerminalPanelProps) {
-    const [panelView, setPanelView] = useState<'terminal' | 'problems' | 'output'>('terminal');
     const handleReady = useCallback(
         (tabId: string, term: Terminal) => {
             if (tabId === 'terminal-1') {
@@ -142,63 +141,21 @@ export default function TerminalPanel({
 
     return (
         <div style={{ height: '100%', background: '#11111b', display: 'flex', flexDirection: 'column', overflow: 'hidden', borderTop: '1px solid #313244' }}>
-            {/* Panel section selector + actions (VS Code panel header) */}
+            {/* Terminal tab strip + actions */}
             <div
                 style={{
                     display: 'flex',
-                    alignItems: 'stretch',
+                    alignItems: 'center',
                     justifyContent: 'space-between',
-                    background: '#181825',
+                    gap: '0.1rem',
+                    padding: '0.15rem 0.35rem',
                     borderBottom: '1px solid #313244',
+                    background: '#181825',
+                    overflowX: 'auto',
                     flexShrink: 0,
                 }}
             >
-                <div style={{ display: 'flex', alignItems: 'stretch' }}>
-                    {(['terminal', 'problems', 'output'] as const).map((view) => (
-                        <button
-                            key={view}
-                            onClick={() => setPanelView(view)}
-                            style={{
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                color: panelView === view ? '#cdd6f4' : '#6c7086',
-                                fontSize: '0.72rem',
-                                fontWeight: panelView === view ? 600 : 400,
-                                padding: '0.4rem 0.7rem',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                                borderBottom: panelView === view ? '2px solid #89b4fa' : '2px solid transparent',
-                            }}
-                        >
-                            {view}
-                        </button>
-                    ))}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.1rem', padding: '0 0.5rem', color: '#9399b2', fontSize: '0.85rem' }}>
-                    <button onClick={onNewTerminal} style={iconBtnStyle} title="New terminal">
-                        ＋
-                    </button>
-                    <button onClick={() => onCloseTerminal(activeTerminalId)} style={iconBtnStyle} title="Kill terminal">
-                        🗙
-                    </button>
-                </div>
-            </div>
-
-            {/* Terminal tab strip (only shown for terminal view) */}
-            {panelView === 'terminal' && (
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.1rem',
-                        padding: '0.15rem 0.35rem',
-                        borderBottom: '1px solid #313244',
-                        background: '#1a1a2e',
-                        overflowX: 'auto',
-                        flexShrink: 0,
-                    }}
-                >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.1rem', overflowX: 'auto' }}>
                     {terminalTabs.map((tab) => {
                         const isActive = tab.id === activeTerminalId;
                         const isBoot = tab.id === 'terminal-1';
@@ -240,7 +197,15 @@ export default function TerminalPanel({
                         );
                     })}
                 </div>
-            )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.1rem', padding: '0 0.5rem', color: '#9399b2', fontSize: '0.85rem' }}>
+                    <button onClick={onNewTerminal} style={iconBtnStyle} title="New terminal">
+                        ＋
+                    </button>
+                    <button onClick={() => onCloseTerminal(activeTerminalId)} style={iconBtnStyle} title="Kill terminal">
+                        🗙
+                    </button>
+                </div>
+            </div>
 
             {/* Terminal instances — all mounted; only active is visible */}
             <div style={{ flex: 1, overflow: 'hidden', background: '#1e1e2e' }}>

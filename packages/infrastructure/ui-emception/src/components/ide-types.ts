@@ -19,6 +19,7 @@ export interface GradingPlan {
   cases: GradingCase[];
   build?: Record<string, unknown>;
   timeoutMsPerCase?: number;
+  generatedFiles?: Array<{ path: string; content: string }>;
 }
 
 export type TabType = 'text' | 'image' | 'canvas';

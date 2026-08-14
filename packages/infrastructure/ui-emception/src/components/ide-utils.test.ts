@@ -39,9 +39,15 @@ describe('toWorkspaceFsPath', () => {
   it('maps /user/* to /home/user/*', () => expect(toWorkspaceFsPath('/user/main.cpp')).toBe('/home/user/main.cpp'));
   it('maps a nested /user path correctly', () => expect(toWorkspaceFsPath('/user/lib/utils.cpp')).toBe('/home/user/lib/utils.cpp'));
   it('falls back to /home/user/<basename> for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas')).toBe('/home/user/canvas'));
-  it('namespaces by assignmentToken when supplied', () => expect(toWorkspaceFsPath('/user/main.cpp', 'abc-123')).toBe('/home/user/abc-123/main.cpp'));
-  it('namespaces nested paths by assignmentToken', () => expect(toWorkspaceFsPath('/user/lib/utils.cpp', 'abc-123')).toBe('/home/user/abc-123/lib/utils.cpp'));
-  it('ignores assignmentToken for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas', 'abc-123')).toBe('/home/user/canvas'));
+  it('ignores assignmentToken (flat mount, no per-assignment namespace)', () => {
+    expect(toWorkspaceFsPath('/user/main.cpp', 'abc-123')).toBe('/home/user/main.cpp');
+    expect(toWorkspaceFsPath('/user/lib/utils.cpp', 'abc-123')).toBe('/home/user/lib/utils.cpp');
+    expect(toWorkspaceFsPath('/other/canvas', 'abc-123')).toBe('/home/user/canvas');
+  });
+  it('normalizes /home/user/* (buildTestPlan output shape) to /home/user/*', () => {
+    expect(toWorkspaceFsPath('/home/user/functional_0_test.cpp')).toBe('/home/user/functional_0_test.cpp');
+    expect(toWorkspaceFsPath('/home/user/solution.cpp')).toBe('/home/user/solution.cpp');
+  });
 });
 
 // ─── workspaceStorageKey ─────────────────────────────────────────────────────

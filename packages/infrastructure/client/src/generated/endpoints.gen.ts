@@ -11,6 +11,35 @@ import type * as Types from './types.gen.js';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Endpoint Definitions
 
+export interface PostApiAssetsAccessUrlInput {
+  assetId: string;
+  body?: Types.AssetsSecurityAccessUrlInput;
+}
+export type PostApiAssetsAccessUrlOutput = Types.AssetsAssetAccessUrl;
+export const postApiAssetsAccessUrlEndpoint = {
+  operationId: 'postApiAssetsAccessUrl' as const,
+  method: 'POST' as const,
+  path: '/api/assets/{assetId}/access-url' as const,
+  tags: ['Assets/secureDelivery'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetApiAssetsContentInput {
+  assetId: string;
+  query?: {
+    token?: string;
+    transform?: string;
+  };
+}
+export type GetApiAssetsContentOutput = void;
+export const getApiAssetsContentEndpoint = {
+  operationId: 'getApiAssetsContent' as const,
+  method: 'GET' as const,
+  path: '/api/assets/{assetId}/content' as const,
+  tags: ['Assets/secureDelivery'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiCertificatesCourseInput {
   courseId: string;
 }
@@ -3769,6 +3798,31 @@ export const postWalletsUnfreezeEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAssetsByReferenceIdByTokenInput {
+  referenceId: string;
+  token: string;
+}
+export type GetAssetsByReferenceIdByTokenOutput = void;
+export const getAssetsByReferenceIdByTokenEndpoint = {
+  operationId: 'getAssetsByReferenceIdByToken' as const,
+  method: 'GET' as const,
+  path: '/assets/{referenceId}/{token}' as const,
+  tags: ['Assets/cdn'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetEInput {
+  token: string;
+}
+export type GetEOutput = void;
+export const getEEndpoint = {
+  operationId: 'getE' as const,
+  method: 'GET' as const,
+  path: '/e/{token}' as const,
+  tags: ['Assets/cdn'] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * Comprehensive application health check
  *
@@ -3856,6 +3910,223 @@ export const getReadyEndpoint = {
   method: 'GET' as const,
   path: '/ready' as const,
   tags: ['Health'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetTInput {
+  transformation: string;
+  referenceId: string;
+  token: string;
+}
+export type GetTOutput = void;
+export const getTEndpoint = {
+  operationId: 'getT' as const,
+  method: 'GET' as const,
+  path: '/t/{transformation}/{referenceId}/{token}' as const,
+  tags: ['Assets/cdn'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminAssetsInput {
+  query?: {
+    status?: string;
+    limit?: number;
+  };
+}
+export type GetAdminAssetsOutput = void;
+export const getAdminAssetsEndpoint = {
+  operationId: 'getAdminAssets' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/assets' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminAssetsRunGcInput {
+  query?: {
+    gracePeriodHours?: number;
+    limit?: number;
+    dryRun?: boolean;
+  };
+}
+export type PostAdminAssetsRunGcOutput = void;
+export const postAdminAssetsRunGcEndpoint = {
+  operationId: 'postAdminAssetsRunGc' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/assets/:run-gc' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminAssetsGcCandidatesInput {
+  query?: {
+    gracePeriodHours?: number;
+    limit?: number;
+  };
+}
+export type GetAdminAssetsGcCandidatesOutput = void;
+export const getAdminAssetsGcCandidatesEndpoint = {
+  operationId: 'getAdminAssetsGcCandidates' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/assets/gc-candidates' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminAssetsModerationQueueInput {
+  query?: {
+    limit?: number;
+  };
+}
+export type GetAdminAssetsModerationQueueOutput = void;
+export const getAdminAssetsModerationQueueEndpoint = {
+  operationId: 'getAdminAssetsModerationQueue' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/assets/moderation-queue' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminAssetsReportsReviewInput {
+  reportId: string;
+  body?: Types.AssetsControllersReviewReportInput;
+}
+export type PostAdminAssetsReportsReviewOutput = void;
+export const postAdminAssetsReportsReviewEndpoint = {
+  operationId: 'postAdminAssetsReportsReview' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/assets/reports/{reportId}:review' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminAssetsRetentionInput {
+  query?: {
+    gracePeriodHours?: number;
+    limit?: number;
+  };
+}
+export type GetAdminAssetsRetentionOutput = Types.AssetsQueriesAssetRetentionReportOutput;
+export const getAdminAssetsRetentionEndpoint = {
+  operationId: 'getAdminAssetsRetention' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/assets/retention' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminAssetsRetentionRunInput {
+  query?: {
+    gracePeriodHours?: number;
+    limit?: number;
+    dryRun?: boolean;
+  };
+}
+export type PostAdminAssetsRetentionRunOutput = void;
+export const postAdminAssetsRetentionRunEndpoint = {
+  operationId: 'postAdminAssetsRetentionRun' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/assets/retention:run' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetAdminAssetsStatisticsInput = void;
+export type GetAdminAssetsStatisticsOutput = Types.AssetsQueriesAssetStatisticsOutput;
+export const getAdminAssetsStatisticsEndpoint = {
+  operationId: 'getAdminAssetsStatistics' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/assets/statistics' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminAssetsStatisticsExportInput {
+  query?: {
+    format?: string;
+  };
+}
+export type GetAdminAssetsStatisticsExportOutput = Blob;
+export const getAdminAssetsStatisticsExportEndpoint = {
+  operationId: 'getAdminAssetsStatisticsExport' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/assets/statistics:export' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminAssetsMarkUndeletableInput {
+  contentId: string;
+  body?: Types.AssetsControllersMarkNonDeletableInput;
+}
+export type PostAdminAssetsMarkUndeletableOutput = void;
+export const postAdminAssetsMarkUndeletableEndpoint = {
+  operationId: 'postAdminAssetsMarkUndeletable' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/assets/{contentId}:mark-undeletable' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminAssetsReviewModerationInput {
+  contentId: string;
+  body?: Types.AssetsControllersContentModerationInput;
+}
+export type PostAdminAssetsReviewModerationOutput = void;
+export const postAdminAssetsReviewModerationEndpoint = {
+  operationId: 'postAdminAssetsReviewModeration' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/assets/{contentId}:review-moderation' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminAssetsRunVirusScanInput {
+  contentId: string;
+  body?: Types.AssetsControllersUpdateVirusScanInput;
+}
+export type PostAdminAssetsRunVirusScanOutput = void;
+export const postAdminAssetsRunVirusScanEndpoint = {
+  operationId: 'postAdminAssetsRunVirusScan' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/assets/{contentId}:run-virus-scan' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminAssetsUnmarkUndeletableInput {
+  contentId: string;
+}
+export type PostAdminAssetsUnmarkUndeletableOutput = void;
+export const postAdminAssetsUnmarkUndeletableEndpoint = {
+  operationId: 'postAdminAssetsUnmarkUndeletable' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/assets/{contentId}:unmark-undeletable' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminAssetsReportsInput {
+  id: string;
+}
+export type GetAdminAssetsReportsOutput = void;
+export const getAdminAssetsReportsEndpoint = {
+  operationId: 'getAdminAssetsReports' as const,
+  method: 'GET' as const,
+  path: '/v1/admin/assets/{id}/reports' as const,
+  tags: ['Assets/admin'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminAssetsForceDeleteInput {
+  id: string;
+}
+export type PostAdminAssetsForceDeleteOutput = void;
+export const postAdminAssetsForceDeleteEndpoint = {
+  operationId: 'postAdminAssetsForceDelete' as const,
+  method: 'POST' as const,
+  path: '/v1/admin/assets/{id}:force-delete' as const,
+  tags: ['Assets/admin'] as const,
   requiresAuth: true,
 } as const;
 
@@ -4390,6 +4661,378 @@ export const postAssessmentsRestoreEndpoint = {
   method: 'POST' as const,
   path: '/v1/assessments/{id}/restore' as const,
   tags: ['Learning/assessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetLibrariesAssetsCopyInput {
+  referenceId: string;
+  body?: Types.AssetsControllersCopyAssetReferenceInput;
+}
+export type PostAssetLibrariesAssetsCopyOutput = void;
+export const postAssetLibrariesAssetsCopyEndpoint = {
+  operationId: 'postAssetLibrariesAssetsCopy' as const,
+  method: 'POST' as const,
+  path: '/v1/asset-libraries/assets/{referenceId}/copy' as const,
+  tags: ['Assets/libraries'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssetLibrariesAssetsRevisionsInput {
+  referenceId: string;
+}
+export type GetAssetLibrariesAssetsRevisionsOutput = void;
+export const getAssetLibrariesAssetsRevisionsEndpoint = {
+  operationId: 'getAssetLibrariesAssetsRevisions' as const,
+  method: 'GET' as const,
+  path: '/v1/asset-libraries/assets/{referenceId}/revisions' as const,
+  tags: ['Assets/libraries'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetLibrariesAssetsRevisionsRestoreInput {
+  referenceId: string;
+  revisionId: string;
+}
+export type PostAssetLibrariesAssetsRevisionsRestoreOutput = void;
+export const postAssetLibrariesAssetsRevisionsRestoreEndpoint = {
+  operationId: 'postAssetLibrariesAssetsRevisionsRestore' as const,
+  method: 'POST' as const,
+  path: '/v1/asset-libraries/assets/{referenceId}/revisions/{revisionId}/restore' as const,
+  tags: ['Assets/libraries'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAssetLibrariesFoldersRestrictionInput {
+  folderId: string;
+  body?: Types.AssetsControllersRestrictAssetFolderInput;
+}
+export type PutAssetLibrariesFoldersRestrictionOutput = void;
+export const putAssetLibrariesFoldersRestrictionEndpoint = {
+  operationId: 'putAssetLibrariesFoldersRestriction' as const,
+  method: 'PUT' as const,
+  path: '/v1/asset-libraries/folders/{folderId}/restriction' as const,
+  tags: ['Assets/libraries'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssetLibrariesInput {
+  resourceType: string;
+  resourceId: string;
+}
+export type GetAssetLibrariesOutput = void;
+export const getAssetLibrariesEndpoint = {
+  operationId: 'getAssetLibraries' as const,
+  method: 'GET' as const,
+  path: '/v1/asset-libraries/{resourceType}/{resourceId}' as const,
+  tags: ['Assets/libraries'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetLibrariesFoldersInput {
+  resourceType: string;
+  resourceId: string;
+  body?: Types.AssetsControllersCreateAssetFolderInput;
+}
+export type PostAssetLibrariesFoldersOutput = void;
+export const postAssetLibrariesFoldersEndpoint = {
+  operationId: 'postAssetLibrariesFolders' as const,
+  method: 'POST' as const,
+  path: '/v1/asset-libraries/{resourceType}/{resourceId}/folders' as const,
+  tags: ['Assets/libraries'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssetsInput {
+  query?: {
+    owner?: string;
+    parentType?: string;
+    parentId?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAssetsOutput = void;
+export const getAssetsEndpoint = {
+  operationId: 'getAssets' as const,
+  method: 'GET' as const,
+  path: '/v1/assets' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetsInput {
+  query?: {
+    displayName?: string;
+    accessPolicy?: Types.AssetsAssetAccessPolicy;
+    parentResourceType?: string;
+    parentResourceId?: string;
+    folderId?: string;
+  };
+  body?: FormData;
+}
+export type PostAssetsOutput = void;
+export const postAssetsEndpoint = {
+  operationId: 'postAssets' as const,
+  method: 'POST' as const,
+  path: '/v1/assets' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetsBulkDeleteInput {
+  body?: Types.AssetsControllersBulkDeleteAssetsInput;
+}
+export type PostAssetsBulkDeleteOutput = Types.AssetsCommandsBulkDeleteAssetsOutput;
+export const postAssetsBulkDeleteEndpoint = {
+  operationId: 'postAssetsBulkDelete' as const,
+  method: 'POST' as const,
+  path: '/v1/assets/bulk-delete' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetsBulkDownloadInput {
+  body?: Types.AssetsControllersBulkAssetAccessUrlInput;
+}
+export type PostAssetsBulkDownloadOutput = Types.AssetsQueriesBulkAssetAccessUrlsOutput;
+export const postAssetsBulkDownloadEndpoint = {
+  operationId: 'postAssetsBulkDownload' as const,
+  method: 'POST' as const,
+  path: '/v1/assets/bulk-download' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetsBulkUploadInput {
+  query?: {
+    accessPolicy?: Types.AssetsAssetAccessPolicy;
+    parentResourceType?: string;
+    parentResourceId?: string;
+    folderId?: string;
+  };
+  body?: FormData;
+}
+export type PostAssetsBulkUploadOutput = Types.AssetsCommandsBulkUploadAssetsOutput;
+export const postAssetsBulkUploadEndpoint = {
+  operationId: 'postAssetsBulkUpload' as const,
+  method: 'POST' as const,
+  path: '/v1/assets/bulk-upload' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetsChunkedUploadsInput {
+  query?: {
+    fileName?: string;
+    mimeType?: string;
+    totalSize?: number;
+  };
+}
+export type PostAssetsChunkedUploadsOutput = Types.AssetsChunkedUploadSession;
+export const postAssetsChunkedUploadsEndpoint = {
+  operationId: 'postAssetsChunkedUploads' as const,
+  method: 'POST' as const,
+  path: '/v1/assets/chunked-uploads' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteAssetsChunkedUploadsInput {
+  uploadId: string;
+}
+export type DeleteAssetsChunkedUploadsOutput = void;
+export const deleteAssetsChunkedUploadsEndpoint = {
+  operationId: 'deleteAssetsChunkedUploads' as const,
+  method: 'DELETE' as const,
+  path: '/v1/assets/chunked-uploads/{uploadId}' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetsChunkedUploadsPartsInput {
+  uploadId: string;
+  query?: {
+    chunkIndex?: number;
+  };
+  body?: FormData;
+}
+export type PostAssetsChunkedUploadsPartsOutput = void;
+export const postAssetsChunkedUploadsPartsEndpoint = {
+  operationId: 'postAssetsChunkedUploadsParts' as const,
+  method: 'POST' as const,
+  path: '/v1/assets/chunked-uploads/{uploadId}/parts' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetsChunkedUploadsCompleteInput {
+  uploadId: string;
+  query?: {
+    displayName?: string;
+    accessPolicy?: Types.AssetsAssetAccessPolicy;
+    parentResourceType?: string;
+    parentResourceId?: string;
+    folderId?: string;
+  };
+}
+export type PostAssetsChunkedUploadsCompleteOutput = Types.AssetsAssetUploadResult;
+export const postAssetsChunkedUploadsCompleteEndpoint = {
+  operationId: 'postAssetsChunkedUploadsComplete' as const,
+  method: 'POST' as const,
+  path: '/v1/assets/chunked-uploads/{uploadId}:complete' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssetsSearchInput {
+  query?: {
+    q?: string;
+    kind?: Types.AssetsAssetKind;
+    parentType?: string;
+    parentId?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetAssetsSearchOutput = Types.AssetsQueriesAssetSearchOutput;
+export const getAssetsSearchEndpoint = {
+  operationId: 'getAssetsSearch' as const,
+  method: 'GET' as const,
+  path: '/v1/assets/search' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssetsByIdInput {
+  id: string;
+  query?: {
+    includeContent?: boolean;
+  };
+}
+export type GetAssetsByIdOutput = void;
+export const getAssetsByIdEndpoint = {
+  operationId: 'getAssetsById' as const,
+  method: 'GET' as const,
+  path: '/v1/assets/{id}' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteAssetsInput {
+  id: string;
+}
+export type DeleteAssetsOutput = void;
+export const deleteAssetsEndpoint = {
+  operationId: 'deleteAssets' as const,
+  method: 'DELETE' as const,
+  path: '/v1/assets/{id}' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PatchAssetsInput {
+  id: string;
+  body?: Types.AssetsControllersUpdateAssetInput;
+}
+export type PatchAssetsOutput = void;
+export const patchAssetsEndpoint = {
+  operationId: 'patchAssets' as const,
+  method: 'PATCH' as const,
+  path: '/v1/assets/{id}' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssetsContentInput {
+  id: string;
+  query?: {
+    token?: string;
+    transform?: string;
+  };
+}
+export type GetAssetsContentOutput = void;
+export const getAssetsContentEndpoint = {
+  operationId: 'getAssetsContent' as const,
+  method: 'GET' as const,
+  path: '/v1/assets/{id}/content' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssetExtractedTextInput {
+  id: string;
+}
+export type GetAssetExtractedTextOutput = Types.AssetsControllersAssetExtractedTextOutput;
+export const getAssetExtractedTextEndpoint = {
+  operationId: 'getAssetExtractedText' as const,
+  method: 'GET' as const,
+  path: '/v1/assets/{id}/extracted-text' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssetsPreviewInput {
+  id: string;
+  query?: {
+    includeExtractedText?: boolean;
+    thumbnailWidth?: number;
+    thumbnailHeight?: number;
+  };
+}
+export type GetAssetsPreviewOutput = Types.AssetsQueriesAssetPreviewOutput;
+export const getAssetsPreviewEndpoint = {
+  operationId: 'getAssetsPreview' as const,
+  method: 'GET' as const,
+  path: '/v1/assets/{id}/preview' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetSignedAssetExtractedTextInput {
+  id: string;
+  query?: {
+    token?: string;
+  };
+}
+export type GetSignedAssetExtractedTextOutput = void;
+export const getSignedAssetExtractedTextEndpoint = {
+  operationId: 'getSignedAssetExtractedText' as const,
+  method: 'GET' as const,
+  path: '/v1/assets/{id}:extracted-text' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetsGenerateAccessUrlInput {
+  id: string;
+  query?: {
+    width?: number;
+    height?: number;
+    fit?: Types.AssetsImageFit;
+    format?: Types.AssetsImageFormat;
+    quality?: number;
+    direct?: boolean;
+  };
+}
+export type PostAssetsGenerateAccessUrlOutput = void;
+export const postAssetsGenerateAccessUrlEndpoint = {
+  operationId: 'postAssetsGenerateAccessUrl' as const,
+  method: 'POST' as const,
+  path: '/v1/assets/{id}:generate-access-url' as const,
+  tags: ['Assets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssetsReportInput {
+  id: string;
+  body?: Types.AssetsControllersReportAssetInput;
+}
+export type PostAssetsReportOutput = void;
+export const postAssetsReportEndpoint = {
+  operationId: 'postAssetsReport' as const,
+  method: 'POST' as const,
+  path: '/v1/assets/{id}:report' as const,
+  tags: ['Assets'] as const,
   requiresAuth: true,
 } as const;
 
@@ -6610,15 +7253,15 @@ export const deleteCoursesActivityGradesEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetCoursesByProgramIdContentInput {
+export interface GetCoursesContentInput {
   programId: string;
   query?: {
     level?: string;
   };
 }
-export type GetCoursesByProgramIdContentOutput = Array<Types.LearningCoursesProgramContent>;
-export const getCoursesByProgramIdContentEndpoint = {
-  operationId: 'getCoursesByProgramIdContent' as const,
+export type GetCoursesContentOutput = Array<Types.LearningCoursesProgramContent>;
+export const getCoursesContentEndpoint = {
+  operationId: 'getCoursesContent' as const,
   method: 'GET' as const,
   path: '/v1/courses/{programId}/content' as const,
   tags: ['Learning/courses/programContent'] as const,
@@ -6714,13 +7357,13 @@ export const getCoursesContentStatsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetCoursesByProgramIdContentByIdInput {
+export interface GetCoursesContentByIdInput {
   programId: string;
   id: string;
 }
-export type GetCoursesByProgramIdContentByIdOutput = Types.LearningCoursesProgramContent;
-export const getCoursesByProgramIdContentByIdEndpoint = {
-  operationId: 'getCoursesByProgramIdContentById' as const,
+export type GetCoursesContentByIdOutput = Types.LearningCoursesProgramContent;
+export const getCoursesContentByIdEndpoint = {
+  operationId: 'getCoursesContentById' as const,
   method: 'GET' as const,
   path: '/v1/courses/{programId}/content/{id}' as const,
   tags: ['Learning/courses/programContent'] as const,
@@ -6859,6 +7502,16 @@ export const postCoursesInteractionsEventsEndpoint = {
   method: 'POST' as const,
   path: '/v1/courses/{programId}/interactions/{interactionId}/events' as const,
   tags: ['Learning/courses/lessonInteractionEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetDashboardContextsInput = void;
+export type GetDashboardContextsOutput = Types.APIDashboardDashboardContextsOutput;
+export const getDashboardContextsEndpoint = {
+  operationId: 'getDashboardContexts' as const,
+  method: 'GET' as const,
+  path: '/v1/dashboard/contexts' as const,
+  tags: ['Api/dashboard/contexts'] as const,
   requiresAuth: true,
 } as const;
 
@@ -7417,12 +8070,274 @@ export const getLaunchPadEndpoint = {
 export interface PostLaunchPadInput {
   body?: Types.LaunchPadCreateLaunchPlanInput;
 }
-export type PostLaunchPadOutput = Types.LaunchPadLaunchPlan;
+export type PostLaunchPadOutput = void;
 export const postLaunchPadEndpoint = {
   operationId: 'postLaunchPad' as const,
   method: 'POST' as const,
   path: '/v1/launch-pad' as const,
   tags: ['LaunchPad'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostLaunchPadEventsInput {
+  body?: Types.LaunchPadCreateLaunchPadEventInput;
+}
+export type PostLaunchPadEventsOutput = Types.LaunchPadLaunchPadEventProjection;
+export const postLaunchPadEventsEndpoint = {
+  operationId: 'postLaunchPadEvents' as const,
+  method: 'POST' as const,
+  path: '/v1/launch-pad/events' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetLaunchPadEventsAnalyticsInput = void;
+export type GetLaunchPadEventsAnalyticsOutput = Types.LaunchPadLaunchPadAnalyticsProjection;
+export const getLaunchPadEventsAnalyticsEndpoint = {
+  operationId: 'getLaunchPadEventsAnalytics' as const,
+  method: 'GET' as const,
+  path: '/v1/launch-pad/events/analytics' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetLaunchPadEventsApplicationsMeInput = void;
+export type GetLaunchPadEventsApplicationsMeOutput = Array<Types.LaunchPadLaunchPadApplicationProjection>;
+export const getLaunchPadEventsApplicationsMeEndpoint = {
+  operationId: 'getLaunchPadEventsApplicationsMe' as const,
+  method: 'GET' as const,
+  path: '/v1/launch-pad/events/applications/me' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutLaunchPadEventsApplicationsInput {
+  applicationId: string;
+  body?: Types.LaunchPadUpdateLaunchPadApplicationInput;
+}
+export type PutLaunchPadEventsApplicationsOutput = Types.LaunchPadLaunchPadApplicationProjection;
+export const putLaunchPadEventsApplicationsEndpoint = {
+  operationId: 'putLaunchPadEventsApplications' as const,
+  method: 'PUT' as const,
+  path: '/v1/launch-pad/events/applications/{applicationId}' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostLaunchPadEventsApplicationsReviewInput {
+  applicationId: string;
+  body?: Types.LaunchPadReviewLaunchPadApplicationInput;
+}
+export type PostLaunchPadEventsApplicationsReviewOutput = Types.LaunchPadLaunchPadApplicationProjection;
+export const postLaunchPadEventsApplicationsReviewEndpoint = {
+  operationId: 'postLaunchPadEventsApplicationsReview' as const,
+  method: 'POST' as const,
+  path: '/v1/launch-pad/events/applications/{applicationId}:review' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostLaunchPadEventsApplicationsWithdrawInput {
+  applicationId: string;
+}
+export type PostLaunchPadEventsApplicationsWithdrawOutput = Types.LaunchPadLaunchPadApplicationProjection;
+export const postLaunchPadEventsApplicationsWithdrawEndpoint = {
+  operationId: 'postLaunchPadEventsApplicationsWithdraw' as const,
+  method: 'POST' as const,
+  path: '/v1/launch-pad/events/applications/{applicationId}:withdraw' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetLaunchPadEventsManagementInput = void;
+export type GetLaunchPadEventsManagementOutput = Array<Types.LaunchPadLaunchPadEventProjection>;
+export const getLaunchPadEventsManagementEndpoint = {
+  operationId: 'getLaunchPadEventsManagement' as const,
+  method: 'GET' as const,
+  path: '/v1/launch-pad/events/management' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetLaunchPadEventsPublicInput = void;
+export type GetLaunchPadEventsPublicOutput = Array<Types.LaunchPadLaunchPadEventProjection>;
+export const getLaunchPadEventsPublicEndpoint = {
+  operationId: 'getLaunchPadEventsPublic' as const,
+  method: 'GET' as const,
+  path: '/v1/launch-pad/events/public' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetLaunchPadEventsPublicByIdInput {
+  id: string;
+}
+export type GetLaunchPadEventsPublicByIdOutput = Types.LaunchPadLaunchPadEventDetailProjection;
+export const getLaunchPadEventsPublicByIdEndpoint = {
+  operationId: 'getLaunchPadEventsPublicById' as const,
+  method: 'GET' as const,
+  path: '/v1/launch-pad/events/public/{id}' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetLaunchPadEventsRegistrationsMeInput = void;
+export type GetLaunchPadEventsRegistrationsMeOutput = Array<Types.LaunchPadLaunchPadRegistrationProjection>;
+export const getLaunchPadEventsRegistrationsMeEndpoint = {
+  operationId: 'getLaunchPadEventsRegistrationsMe' as const,
+  method: 'GET' as const,
+  path: '/v1/launch-pad/events/registrations/me' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostLaunchPadEventsRegistrationsCancelInput {
+  registrationId: string;
+}
+export type PostLaunchPadEventsRegistrationsCancelOutput = Types.LaunchPadLaunchPadRegistrationProjection;
+export const postLaunchPadEventsRegistrationsCancelEndpoint = {
+  operationId: 'postLaunchPadEventsRegistrationsCancel' as const,
+  method: 'POST' as const,
+  path: '/v1/launch-pad/events/registrations/{registrationId}:cancel' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostLaunchPadEventsRegistrationsTransitionInput {
+  registrationId: string;
+  body?: Types.LaunchPadTransitionLaunchPadRegistrationInput;
+}
+export type PostLaunchPadEventsRegistrationsTransitionOutput = Types.LaunchPadLaunchPadRegistrationProjection;
+export const postLaunchPadEventsRegistrationsTransitionEndpoint = {
+  operationId: 'postLaunchPadEventsRegistrationsTransition' as const,
+  method: 'POST' as const,
+  path: '/v1/launch-pad/events/registrations/{registrationId}:transition' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutLaunchPadEventsSlotsInput {
+  slotId: string;
+  body?: Types.LaunchPadCreateLaunchPadSlotInput;
+}
+export type PutLaunchPadEventsSlotsOutput = Types.LaunchPadLaunchPadSlotProjection;
+export const putLaunchPadEventsSlotsEndpoint = {
+  operationId: 'putLaunchPadEventsSlots' as const,
+  method: 'PUT' as const,
+  path: '/v1/launch-pad/events/slots/{slotId}' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteLaunchPadEventsSlotsInput {
+  slotId: string;
+}
+export type DeleteLaunchPadEventsSlotsOutput = void;
+export const deleteLaunchPadEventsSlotsEndpoint = {
+  operationId: 'deleteLaunchPadEventsSlots' as const,
+  method: 'DELETE' as const,
+  path: '/v1/launch-pad/events/slots/{slotId}' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostLaunchPadEventsSlotsRegistrationsInput {
+  slotId: string;
+}
+export type PostLaunchPadEventsSlotsRegistrationsOutput = Types.LaunchPadLaunchPadRegistrationProjection;
+export const postLaunchPadEventsSlotsRegistrationsEndpoint = {
+  operationId: 'postLaunchPadEventsSlotsRegistrations' as const,
+  method: 'POST' as const,
+  path: '/v1/launch-pad/events/slots/{slotId}/registrations' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostLaunchPadEventsApplicationsInput {
+  eventId: string;
+  body?: Types.LaunchPadSubmitLaunchPadApplicationInput;
+}
+export type PostLaunchPadEventsApplicationsOutput = Types.LaunchPadLaunchPadApplicationProjection;
+export const postLaunchPadEventsApplicationsEndpoint = {
+  operationId: 'postLaunchPadEventsApplications' as const,
+  method: 'POST' as const,
+  path: '/v1/launch-pad/events/{eventId}/applications' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetLaunchPadEventsApplicationsManagementInput {
+  eventId: string;
+}
+export type GetLaunchPadEventsApplicationsManagementOutput = Array<Types.LaunchPadLaunchPadApplicationProjection>;
+export const getLaunchPadEventsApplicationsManagementEndpoint = {
+  operationId: 'getLaunchPadEventsApplicationsManagement' as const,
+  method: 'GET' as const,
+  path: '/v1/launch-pad/events/{eventId}/applications/management' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetLaunchPadEventsRegistrationsManagementInput {
+  eventId: string;
+}
+export type GetLaunchPadEventsRegistrationsManagementOutput = Array<Types.LaunchPadLaunchPadRegistrationProjection>;
+export const getLaunchPadEventsRegistrationsManagementEndpoint = {
+  operationId: 'getLaunchPadEventsRegistrationsManagement' as const,
+  method: 'GET' as const,
+  path: '/v1/launch-pad/events/{eventId}/registrations/management' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostLaunchPadEventsSlotsInput {
+  eventId: string;
+  body?: Types.LaunchPadCreateLaunchPadSlotInput;
+}
+export type PostLaunchPadEventsSlotsOutput = Types.LaunchPadLaunchPadSlotProjection;
+export const postLaunchPadEventsSlotsEndpoint = {
+  operationId: 'postLaunchPadEventsSlots' as const,
+  method: 'POST' as const,
+  path: '/v1/launch-pad/events/{eventId}/slots' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutLaunchPadEventsInput {
+  id: string;
+  body?: Types.LaunchPadUpdateLaunchPadEventInput;
+}
+export type PutLaunchPadEventsOutput = Types.LaunchPadLaunchPadEventProjection;
+export const putLaunchPadEventsEndpoint = {
+  operationId: 'putLaunchPadEvents' as const,
+  method: 'PUT' as const,
+  path: '/v1/launch-pad/events/{id}' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetLaunchPadEventsByIdManagementInput {
+  id: string;
+}
+export type GetLaunchPadEventsByIdManagementOutput = Types.LaunchPadLaunchPadEventDetailProjection;
+export const getLaunchPadEventsByIdManagementEndpoint = {
+  operationId: 'getLaunchPadEventsByIdManagement' as const,
+  method: 'GET' as const,
+  path: '/v1/launch-pad/events/{id}/management' as const,
+  tags: ['LaunchPad/events'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostLaunchPadEventsTransitionInput {
+  id: string;
+  body?: Types.LaunchPadTransitionLaunchPadEventInput;
+}
+export type PostLaunchPadEventsTransitionOutput = Types.LaunchPadLaunchPadEventProjection;
+export const postLaunchPadEventsTransitionEndpoint = {
+  operationId: 'postLaunchPadEventsTransition' as const,
+  method: 'POST' as const,
+  path: '/v1/launch-pad/events/{id}:transition' as const,
+  tags: ['LaunchPad/events'] as const,
   requiresAuth: true,
 } as const;
 
@@ -8404,7 +9319,7 @@ export interface GetProjectsInput {
     sortDirection?: string;
   };
 }
-export type GetProjectsOutput = Array<Types.ProjectsProject>;
+export type GetProjectsOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsEndpoint = {
   operationId: 'getProjects' as const,
   method: 'GET' as const,
@@ -8416,11 +9331,25 @@ export const getProjectsEndpoint = {
 export interface PostProjectsInput {
   body?: Types.ProjectsCreateProjectInput;
 }
-export type PostProjectsOutput = Types.ProjectsProject;
+export type PostProjectsOutput = Types.ProjectsProjectApiOutput;
 export const postProjectsEndpoint = {
   operationId: 'postProjects' as const,
   method: 'POST' as const,
   path: '/v1/projects' as const,
+  tags: ['Projects'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetProjectsAccessibleVersionsInput {
+  query?: {
+    take?: number;
+  };
+}
+export type GetProjectsAccessibleVersionsOutput = Array<Types.ProjectsProjectVersionOptionProjection>;
+export const getProjectsAccessibleVersionsEndpoint = {
+  operationId: 'getProjectsAccessibleVersions' as const,
+  method: 'GET' as const,
+  path: '/v1/projects/accessible-versions' as const,
   tags: ['Projects'] as const,
   requiresAuth: true,
 } as const;
@@ -8433,7 +9362,7 @@ export interface GetProjectsCategoryInput {
     take?: number;
   };
 }
-export type GetProjectsCategoryOutput = Array<Types.ProjectsProject>;
+export type GetProjectsCategoryOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsCategoryEndpoint = {
   operationId: 'getProjectsCategory' as const,
   method: 'GET' as const,
@@ -8450,7 +9379,7 @@ export interface GetProjectsCreatorInput {
     take?: number;
   };
 }
-export type GetProjectsCreatorOutput = Array<Types.ProjectsProject>;
+export type GetProjectsCreatorOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsCreatorEndpoint = {
   operationId: 'getProjectsCreator' as const,
   method: 'GET' as const,
@@ -8465,7 +9394,7 @@ export interface GetProjectsFeaturedInput {
     take?: number;
   };
 }
-export type GetProjectsFeaturedOutput = Array<Types.ProjectsProject>;
+export type GetProjectsFeaturedOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsFeaturedEndpoint = {
   operationId: 'getProjectsFeatured' as const,
   method: 'GET' as const,
@@ -8514,7 +9443,7 @@ export interface GetProjectsPopularInput {
     take?: number;
   };
 }
-export type GetProjectsPopularOutput = Array<Types.ProjectsProject>;
+export type GetProjectsPopularOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsPopularEndpoint = {
   operationId: 'getProjectsPopular' as const,
   method: 'GET' as const,
@@ -8529,7 +9458,7 @@ export interface GetProjectsRecentInput {
     take?: number;
   };
 }
-export type GetProjectsRecentOutput = Array<Types.ProjectsProject>;
+export type GetProjectsRecentOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsRecentEndpoint = {
   operationId: 'getProjectsRecent' as const,
   method: 'GET' as const,
@@ -8573,7 +9502,7 @@ export interface GetProjectsSearchInput {
     sortDirection?: string;
   };
 }
-export type GetProjectsSearchOutput = Array<Types.ProjectsProject>;
+export type GetProjectsSearchOutput = Array<Types.ProjectsProjectApiOutput>;
 export const getProjectsSearchEndpoint = {
   operationId: 'getProjectsSearch' as const,
   method: 'GET' as const,
@@ -8590,7 +9519,7 @@ export interface GetProjectsSlugInput {
     includeCollaborators?: boolean;
   };
 }
-export type GetProjectsSlugOutput = Types.ProjectsProject;
+export type GetProjectsSlugOutput = Types.ProjectsProjectApiOutput;
 export const getProjectsSlugEndpoint = {
   operationId: 'getProjectsSlug' as const,
   method: 'GET' as const,
@@ -8608,7 +9537,7 @@ export interface GetProjectsByIdInput {
     includeStatistics?: boolean;
   };
 }
-export type GetProjectsByIdOutput = Types.ProjectsProject;
+export type GetProjectsByIdOutput = Types.ProjectsProjectApiOutput;
 export const getProjectsByIdEndpoint = {
   operationId: 'getProjectsById' as const,
   method: 'GET' as const,
@@ -8621,7 +9550,7 @@ export interface PutProjectsInput {
   id: string;
   body?: Types.ProjectsUpdateProjectInput;
 }
-export type PutProjectsOutput = Types.ProjectsProject;
+export type PutProjectsOutput = Types.ProjectsProjectApiOutput;
 export const putProjectsEndpoint = {
   operationId: 'putProjects' as const,
   method: 'PUT' as const,
@@ -8727,10 +9656,35 @@ export const getProjectsStatisticsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetProjectsVersionsInput {
+  id: string;
+}
+export type GetProjectsVersionsOutput = Array<Types.ProjectsProjectVersionApiOutput>;
+export const getProjectsVersionsEndpoint = {
+  operationId: 'getProjectsVersions' as const,
+  method: 'GET' as const,
+  path: '/v1/projects/{id}/versions' as const,
+  tags: ['Projects'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsVersionsInput {
+  id: string;
+  body?: Types.ProjectsCreateProjectVersionInput;
+}
+export type PostProjectsVersionsOutput = Types.ProjectsProjectVersionApiOutput;
+export const postProjectsVersionsEndpoint = {
+  operationId: 'postProjectsVersions' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{id}/versions' as const,
+  tags: ['Projects'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostProjectsArchiveInput {
   id: string;
 }
-export type PostProjectsArchiveOutput = Types.ProjectsProject;
+export type PostProjectsArchiveOutput = Types.ProjectsProjectApiOutput;
 export const postProjectsArchiveEndpoint = {
   operationId: 'postProjectsArchive' as const,
   method: 'POST' as const,
@@ -8742,11 +9696,23 @@ export const postProjectsArchiveEndpoint = {
 export interface PostProjectsPublishInput {
   id: string;
 }
-export type PostProjectsPublishOutput = Types.ProjectsProject;
+export type PostProjectsPublishOutput = Types.ProjectsProjectApiOutput;
 export const postProjectsPublishEndpoint = {
   operationId: 'postProjectsPublish' as const,
   method: 'POST' as const,
   path: '/v1/projects/{id}:publish' as const,
+  tags: ['Projects'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsRestoreInput {
+  id: string;
+}
+export type PostProjectsRestoreOutput = Types.ProjectsProjectApiOutput;
+export const postProjectsRestoreEndpoint = {
+  operationId: 'postProjectsRestore' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{id}:restore' as const,
   tags: ['Projects'] as const,
   requiresAuth: true,
 } as const;
@@ -8767,12 +9733,183 @@ export const postProjectsShareEndpoint = {
 export interface PostProjectsUnpublishInput {
   id: string;
 }
-export type PostProjectsUnpublishOutput = Types.ProjectsProject;
+export type PostProjectsUnpublishOutput = Types.ProjectsProjectApiOutput;
 export const postProjectsUnpublishEndpoint = {
   operationId: 'postProjectsUnpublish' as const,
   method: 'POST' as const,
   path: '/v1/projects/{id}:unpublish' as const,
   tags: ['Projects'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetProjectsOwnershipInput {
+  projectId: string;
+}
+export type GetProjectsOwnershipOutput = Types.APIProjectsProjectOwnership;
+export const getProjectsOwnershipEndpoint = {
+  operationId: 'getProjectsOwnership' as const,
+  method: 'GET' as const,
+  path: '/v1/projects/{projectId}/ownership' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsOwnershipAgreementsInput {
+  projectId: string;
+  body?: Types.APIProjectsCreateProjectTeamAgreementInput;
+}
+export type PostProjectsOwnershipAgreementsOutput = Types.APIProjectsProjectTeamAgreement;
+export const postProjectsOwnershipAgreementsEndpoint = {
+  operationId: 'postProjectsOwnershipAgreements' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/ownership/agreements' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsOwnershipAgreementsAcceptInput {
+  projectId: string;
+  agreementId: string;
+}
+export type PostProjectsOwnershipAgreementsAcceptOutput = Types.APIProjectsProjectTeamAgreement;
+export const postProjectsOwnershipAgreementsAcceptEndpoint = {
+  operationId: 'postProjectsOwnershipAgreementsAccept' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/ownership/agreements/{agreementId}/accept' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsOwnershipAgreementsCancelInput {
+  projectId: string;
+  agreementId: string;
+}
+export type PostProjectsOwnershipAgreementsCancelOutput = Types.APIProjectsProjectTeamAgreement;
+export const postProjectsOwnershipAgreementsCancelEndpoint = {
+  operationId: 'postProjectsOwnershipAgreementsCancel' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/ownership/agreements/{agreementId}/cancel' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsOwnershipAgreementsCompleteInput {
+  projectId: string;
+  agreementId: string;
+}
+export type PostProjectsOwnershipAgreementsCompleteOutput = Types.APIProjectsProjectTeamAgreement;
+export const postProjectsOwnershipAgreementsCompleteEndpoint = {
+  operationId: 'postProjectsOwnershipAgreementsComplete' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/ownership/agreements/{agreementId}/complete' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsOwnershipAgreementsCounterInput {
+  projectId: string;
+  agreementId: string;
+  body?: Types.APIProjectsCounterProjectTeamAgreementInput;
+}
+export type PostProjectsOwnershipAgreementsCounterOutput = Types.APIProjectsProjectTeamAgreement;
+export const postProjectsOwnershipAgreementsCounterEndpoint = {
+  operationId: 'postProjectsOwnershipAgreementsCounter' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/ownership/agreements/{agreementId}/counter' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsOwnershipAllocationsInput {
+  projectId: string;
+  body?: Types.APIProjectsCreateProjectAllocationInput;
+}
+export type PostProjectsOwnershipAllocationsOutput = Types.APIProjectsProjectAllocation;
+export const postProjectsOwnershipAllocationsEndpoint = {
+  operationId: 'postProjectsOwnershipAllocations' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/ownership/allocations' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutProjectsOwnershipAllocationsInput {
+  projectId: string;
+  allocationId: string;
+  body?: Types.APIProjectsUpdateProjectAllocationInput;
+}
+export type PutProjectsOwnershipAllocationsOutput = Types.APIProjectsProjectAllocation;
+export const putProjectsOwnershipAllocationsEndpoint = {
+  operationId: 'putProjectsOwnershipAllocations' as const,
+  method: 'PUT' as const,
+  path: '/v1/projects/{projectId}/ownership/allocations/{allocationId}' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteProjectsOwnershipAllocationsInput {
+  projectId: string;
+  allocationId: string;
+}
+export type DeleteProjectsOwnershipAllocationsOutput = void;
+export const deleteProjectsOwnershipAllocationsEndpoint = {
+  operationId: 'deleteProjectsOwnershipAllocations' as const,
+  method: 'DELETE' as const,
+  path: '/v1/projects/{projectId}/ownership/allocations/{allocationId}' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsOwnershipOwnerTeamInput {
+  projectId: string;
+  body?: Types.APIProjectsTransferProjectOwnerTeamInput;
+}
+export type PostProjectsOwnershipOwnerTeamOutput = Types.APIProjectsProjectOwnership;
+export const postProjectsOwnershipOwnerTeamEndpoint = {
+  operationId: 'postProjectsOwnershipOwnerTeam' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/ownership/owner-team' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsOwnershipTeamsInput {
+  projectId: string;
+  body?: Types.APIProjectsAddProjectTeamInput;
+}
+export type PostProjectsOwnershipTeamsOutput = Types.APIProjectsProjectTeamOwnership;
+export const postProjectsOwnershipTeamsEndpoint = {
+  operationId: 'postProjectsOwnershipTeams' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/ownership/teams' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutProjectsOwnershipTeamsInput {
+  projectId: string;
+  projectTeamId: string;
+  body?: Types.APIProjectsUpdateProjectTeamInput;
+}
+export type PutProjectsOwnershipTeamsOutput = Types.APIProjectsProjectTeamOwnership;
+export const putProjectsOwnershipTeamsEndpoint = {
+  operationId: 'putProjectsOwnershipTeams' as const,
+  method: 'PUT' as const,
+  path: '/v1/projects/{projectId}/ownership/teams/{projectTeamId}' as const,
+  tags: ['Api/projects/ownership'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteProjectsOwnershipTeamsInput {
+  projectId: string;
+  projectTeamId: string;
+}
+export type DeleteProjectsOwnershipTeamsOutput = void;
+export const deleteProjectsOwnershipTeamsEndpoint = {
+  operationId: 'deleteProjectsOwnershipTeams' as const,
+  method: 'DELETE' as const,
+  path: '/v1/projects/{projectId}/ownership/teams/{projectTeamId}' as const,
+  tags: ['Api/projects/ownership'] as const,
   requiresAuth: true,
 } as const;
 
@@ -8900,6 +10037,372 @@ export const deleteProjectsStoreProductsEndpoint = {
   method: 'DELETE' as const,
   path: '/v1/projects/{projectId}/store-products/{productId}' as const,
   tags: ['Projects/storeProducts'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetProjectsWorkInput {
+  projectId: string;
+}
+export type GetProjectsWorkOutput = Types.APIProjectWorkProjectBoard;
+export const getProjectsWorkEndpoint = {
+  operationId: 'getProjectsWork' as const,
+  method: 'GET' as const,
+  path: '/v1/projects/{projectId}/work' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsWorkColumnsInput {
+  projectId: string;
+  body?: Types.APIProjectWorkConfigureProjectWorkColumnInput;
+}
+export type PostProjectsWorkColumnsOutput = Types.APIProjectWorkProjectWorkColumn;
+export const postProjectsWorkColumnsEndpoint = {
+  operationId: 'postProjectsWorkColumns' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/work/columns' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutProjectsWorkColumnsInput {
+  projectId: string;
+  columnId: string;
+  body?: Types.APIProjectWorkConfigureProjectWorkColumnInput;
+}
+export type PutProjectsWorkColumnsOutput = Types.APIProjectWorkProjectWorkColumn;
+export const putProjectsWorkColumnsEndpoint = {
+  operationId: 'putProjectsWorkColumns' as const,
+  method: 'PUT' as const,
+  path: '/v1/projects/{projectId}/work/columns/{columnId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteProjectsWorkColumnsInput {
+  projectId: string;
+  columnId: string;
+}
+export type DeleteProjectsWorkColumnsOutput = void;
+export const deleteProjectsWorkColumnsEndpoint = {
+  operationId: 'deleteProjectsWorkColumns' as const,
+  method: 'DELETE' as const,
+  path: '/v1/projects/{projectId}/work/columns/{columnId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetProjectsWorkHistoryInput {
+  projectId: string;
+  query?: {
+    take?: number;
+  };
+}
+export type GetProjectsWorkHistoryOutput = Array<Types.APIProjectWorkProjectWorkHistory>;
+export const getProjectsWorkHistoryEndpoint = {
+  operationId: 'getProjectsWorkHistory' as const,
+  method: 'GET' as const,
+  path: '/v1/projects/{projectId}/work/history' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetProjectsWorkLabelsInput {
+  projectId: string;
+}
+export type GetProjectsWorkLabelsOutput = Array<Types.APIProjectWorkProjectTaskLabel>;
+export const getProjectsWorkLabelsEndpoint = {
+  operationId: 'getProjectsWorkLabels' as const,
+  method: 'GET' as const,
+  path: '/v1/projects/{projectId}/work/labels' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsWorkLabelsInput {
+  projectId: string;
+  body?: Types.APIProjectWorkCreateProjectTaskLabelInput;
+}
+export type PostProjectsWorkLabelsOutput = Types.APIProjectWorkProjectTaskLabel;
+export const postProjectsWorkLabelsEndpoint = {
+  operationId: 'postProjectsWorkLabels' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/work/labels' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteProjectsWorkLabelsInput {
+  projectId: string;
+  labelId: string;
+}
+export type DeleteProjectsWorkLabelsOutput = void;
+export const deleteProjectsWorkLabelsEndpoint = {
+  operationId: 'deleteProjectsWorkLabels' as const,
+  method: 'DELETE' as const,
+  path: '/v1/projects/{projectId}/work/labels/{labelId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetProjectsWorkMilestonesInput {
+  projectId: string;
+}
+export type GetProjectsWorkMilestonesOutput = Array<Types.APIProjectWorkProjectMilestone>;
+export const getProjectsWorkMilestonesEndpoint = {
+  operationId: 'getProjectsWorkMilestones' as const,
+  method: 'GET' as const,
+  path: '/v1/projects/{projectId}/work/milestones' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsWorkMilestonesInput {
+  projectId: string;
+  body?: Types.APIProjectWorkCreateProjectMilestoneInput;
+}
+export type PostProjectsWorkMilestonesOutput = Types.APIProjectWorkProjectMilestone;
+export const postProjectsWorkMilestonesEndpoint = {
+  operationId: 'postProjectsWorkMilestones' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/work/milestones' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutProjectsWorkMilestonesInput {
+  projectId: string;
+  milestoneId: string;
+  body?: Types.APIProjectWorkUpdateProjectMilestoneInput;
+}
+export type PutProjectsWorkMilestonesOutput = Types.APIProjectWorkProjectMilestone;
+export const putProjectsWorkMilestonesEndpoint = {
+  operationId: 'putProjectsWorkMilestones' as const,
+  method: 'PUT' as const,
+  path: '/v1/projects/{projectId}/work/milestones/{milestoneId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteProjectsWorkMilestonesInput {
+  projectId: string;
+  milestoneId: string;
+}
+export type DeleteProjectsWorkMilestonesOutput = void;
+export const deleteProjectsWorkMilestonesEndpoint = {
+  operationId: 'deleteProjectsWorkMilestones' as const,
+  method: 'DELETE' as const,
+  path: '/v1/projects/{projectId}/work/milestones/{milestoneId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsWorkTasksInput {
+  projectId: string;
+  body?: Types.APIProjectWorkCreateProjectWorkTaskInput;
+}
+export type PostProjectsWorkTasksOutput = Types.APIProjectWorkProjectWorkTask;
+export const postProjectsWorkTasksEndpoint = {
+  operationId: 'postProjectsWorkTasks' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/work/tasks' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetProjectsWorkTasksInput {
+  projectId: string;
+  taskId: string;
+}
+export type GetProjectsWorkTasksOutput = Types.APIProjectWorkProjectWorkTaskDetails;
+export const getProjectsWorkTasksEndpoint = {
+  operationId: 'getProjectsWorkTasks' as const,
+  method: 'GET' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutProjectsWorkTasksInput {
+  projectId: string;
+  taskId: string;
+  body?: Types.APIProjectWorkUpdateProjectWorkTaskInput;
+}
+export type PutProjectsWorkTasksOutput = Types.APIProjectWorkProjectWorkTask;
+export const putProjectsWorkTasksEndpoint = {
+  operationId: 'putProjectsWorkTasks' as const,
+  method: 'PUT' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteProjectsWorkTasksInput {
+  projectId: string;
+  taskId: string;
+}
+export type DeleteProjectsWorkTasksOutput = void;
+export const deleteProjectsWorkTasksEndpoint = {
+  operationId: 'deleteProjectsWorkTasks' as const,
+  method: 'DELETE' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsWorkTasksChecklistInput {
+  projectId: string;
+  taskId: string;
+  body?: Types.APIProjectWorkAddProjectTaskChecklistInput;
+}
+export type PostProjectsWorkTasksChecklistOutput = void;
+export const postProjectsWorkTasksChecklistEndpoint = {
+  operationId: 'postProjectsWorkTasksChecklist' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/checklist' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutProjectsWorkTasksChecklistInput {
+  projectId: string;
+  taskId: string;
+  itemId: string;
+  body?: Types.APIProjectWorkUpdateProjectTaskChecklistInput;
+}
+export type PutProjectsWorkTasksChecklistOutput = Types.APIProjectWorkProjectChecklistItem;
+export const putProjectsWorkTasksChecklistEndpoint = {
+  operationId: 'putProjectsWorkTasksChecklist' as const,
+  method: 'PUT' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/checklist/{itemId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteProjectsWorkTasksChecklistInput {
+  projectId: string;
+  taskId: string;
+  itemId: string;
+}
+export type DeleteProjectsWorkTasksChecklistOutput = void;
+export const deleteProjectsWorkTasksChecklistEndpoint = {
+  operationId: 'deleteProjectsWorkTasksChecklist' as const,
+  method: 'DELETE' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/checklist/{itemId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsWorkTasksCommentsInput {
+  projectId: string;
+  taskId: string;
+  body?: Types.APIProjectWorkAddProjectTaskCommentInput;
+}
+export type PostProjectsWorkTasksCommentsOutput = void;
+export const postProjectsWorkTasksCommentsEndpoint = {
+  operationId: 'postProjectsWorkTasksComments' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/comments' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutProjectsWorkTasksCommentsInput {
+  projectId: string;
+  taskId: string;
+  commentId: string;
+  body?: Types.APIProjectWorkUpdateProjectTaskCommentInput;
+}
+export type PutProjectsWorkTasksCommentsOutput = Types.APIProjectWorkProjectTaskComment;
+export const putProjectsWorkTasksCommentsEndpoint = {
+  operationId: 'putProjectsWorkTasksComments' as const,
+  method: 'PUT' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/comments/{commentId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteProjectsWorkTasksCommentsInput {
+  projectId: string;
+  taskId: string;
+  commentId: string;
+}
+export type DeleteProjectsWorkTasksCommentsOutput = void;
+export const deleteProjectsWorkTasksCommentsEndpoint = {
+  operationId: 'deleteProjectsWorkTasksComments' as const,
+  method: 'DELETE' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/comments/{commentId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsWorkTasksDependenciesInput {
+  projectId: string;
+  taskId: string;
+  body?: Types.APIProjectWorkAddProjectTaskDependencyInput;
+}
+export type PostProjectsWorkTasksDependenciesOutput = void;
+export const postProjectsWorkTasksDependenciesEndpoint = {
+  operationId: 'postProjectsWorkTasksDependencies' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/dependencies' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteProjectsWorkTasksDependenciesInput {
+  projectId: string;
+  taskId: string;
+  dependencyId: string;
+}
+export type DeleteProjectsWorkTasksDependenciesOutput = void;
+export const deleteProjectsWorkTasksDependenciesEndpoint = {
+  operationId: 'deleteProjectsWorkTasksDependencies' as const,
+  method: 'DELETE' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/dependencies/{dependencyId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostProjectsWorkTasksLabelsInput {
+  projectId: string;
+  taskId: string;
+  labelId: string;
+}
+export type PostProjectsWorkTasksLabelsOutput = void;
+export const postProjectsWorkTasksLabelsEndpoint = {
+  operationId: 'postProjectsWorkTasksLabels' as const,
+  method: 'POST' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/labels/{labelId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteProjectsWorkTasksLabelsInput {
+  projectId: string;
+  taskId: string;
+  labelId: string;
+}
+export type DeleteProjectsWorkTasksLabelsOutput = void;
+export const deleteProjectsWorkTasksLabelsEndpoint = {
+  operationId: 'deleteProjectsWorkTasksLabels' as const,
+  method: 'DELETE' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/labels/{labelId}' as const,
+  tags: ['Api/projectWork'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutProjectsWorkTasksMoveInput {
+  projectId: string;
+  taskId: string;
+  body?: Types.APIProjectWorkMoveProjectWorkTaskInput;
+}
+export type PutProjectsWorkTasksMoveOutput = Types.APIProjectWorkProjectWorkTask;
+export const putProjectsWorkTasksMoveEndpoint = {
+  operationId: 'putProjectsWorkTasksMove' as const,
+  method: 'PUT' as const,
+  path: '/v1/projects/{projectId}/work/tasks/{taskId}/move' as const,
+  tags: ['Api/projectWork'] as const,
   requiresAuth: true,
 } as const;
 
@@ -9667,6 +11170,189 @@ export const postSupportTicketsResolveEndpoint = {
   requiresAuth: true,
 } as const;
 
+export type GetTeamsInput = void;
+export type GetTeamsOutput = Array<Types.APITeamsTeam>;
+export const getTeamsEndpoint = {
+  operationId: 'getTeams' as const,
+  method: 'GET' as const,
+  path: '/v1/teams' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostTeamsInput {
+  body?: Types.APITeamsCreateTeamInput;
+}
+export type PostTeamsOutput = Types.APITeamsTeam;
+export const postTeamsEndpoint = {
+  operationId: 'postTeams' as const,
+  method: 'POST' as const,
+  path: '/v1/teams' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostTeamsInvitationsAcceptInput {
+  body?: Types.APITeamsAcceptTeamInvitationInput;
+}
+export type PostTeamsInvitationsAcceptOutput = Types.APITeamsTeam;
+export const postTeamsInvitationsAcceptEndpoint = {
+  operationId: 'postTeamsInvitationsAccept' as const,
+  method: 'POST' as const,
+  path: '/v1/teams/invitations/accept' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostTeamsInvitationsByInvitationIdAcceptInput {
+  invitationId: string;
+}
+export type PostTeamsInvitationsByInvitationIdAcceptOutput = Types.APITeamsTeam;
+export const postTeamsInvitationsByInvitationIdAcceptEndpoint = {
+  operationId: 'postTeamsInvitationsByInvitationIdAccept' as const,
+  method: 'POST' as const,
+  path: '/v1/teams/invitations/{invitationId}:accept' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetTeamsMyInvitationsInput = void;
+export type GetTeamsMyInvitationsOutput = Array<Types.APITeamsMyTeamInvitation>;
+export const getTeamsMyInvitationsEndpoint = {
+  operationId: 'getTeamsMyInvitations' as const,
+  method: 'GET' as const,
+  path: '/v1/teams/my-invitations' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetTeamsByTeamIdInput {
+  teamId: string;
+}
+export type GetTeamsByTeamIdOutput = Types.APITeamsTeam;
+export const getTeamsByTeamIdEndpoint = {
+  operationId: 'getTeamsByTeamId' as const,
+  method: 'GET' as const,
+  path: '/v1/teams/{teamId}' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutTeamsInput {
+  teamId: string;
+  body?: Types.APITeamsUpdateTeamInput;
+}
+export type PutTeamsOutput = Types.APITeamsTeam;
+export const putTeamsEndpoint = {
+  operationId: 'putTeams' as const,
+  method: 'PUT' as const,
+  path: '/v1/teams/{teamId}' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteTeamsInput {
+  teamId: string;
+}
+export type DeleteTeamsOutput = void;
+export const deleteTeamsEndpoint = {
+  operationId: 'deleteTeams' as const,
+  method: 'DELETE' as const,
+  path: '/v1/teams/{teamId}' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetTeamsInvitationsInput {
+  teamId: string;
+}
+export type GetTeamsInvitationsOutput = Array<Types.APITeamsTeamInvitation>;
+export const getTeamsInvitationsEndpoint = {
+  operationId: 'getTeamsInvitations' as const,
+  method: 'GET' as const,
+  path: '/v1/teams/{teamId}/invitations' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostTeamsInvitationsInput {
+  teamId: string;
+  body?: Types.APITeamsCreateTeamInvitationInput;
+}
+export type PostTeamsInvitationsOutput = Types.APITeamsTeamInvitationCreated;
+export const postTeamsInvitationsEndpoint = {
+  operationId: 'postTeamsInvitations' as const,
+  method: 'POST' as const,
+  path: '/v1/teams/{teamId}/invitations' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteTeamsInvitationsInput {
+  teamId: string;
+  invitationId: string;
+}
+export type DeleteTeamsInvitationsOutput = void;
+export const deleteTeamsInvitationsEndpoint = {
+  operationId: 'deleteTeamsInvitations' as const,
+  method: 'DELETE' as const,
+  path: '/v1/teams/{teamId}/invitations/{invitationId}' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostTeamsMembersInput {
+  teamId: string;
+  body?: Types.APITeamsAddTeamMemberInput;
+}
+export type PostTeamsMembersOutput = Types.APITeamsTeamMember;
+export const postTeamsMembersEndpoint = {
+  operationId: 'postTeamsMembers' as const,
+  method: 'POST' as const,
+  path: '/v1/teams/{teamId}/members' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutTeamsMembersInput {
+  teamId: string;
+  userId: string;
+  body?: Types.APITeamsChangeTeamMemberInput;
+}
+export type PutTeamsMembersOutput = Types.APITeamsTeamMember;
+export const putTeamsMembersEndpoint = {
+  operationId: 'putTeamsMembers' as const,
+  method: 'PUT' as const,
+  path: '/v1/teams/{teamId}/members/{userId}' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteTeamsMembersInput {
+  teamId: string;
+  userId: string;
+}
+export type DeleteTeamsMembersOutput = void;
+export const deleteTeamsMembersEndpoint = {
+  operationId: 'deleteTeamsMembers' as const,
+  method: 'DELETE' as const,
+  path: '/v1/teams/{teamId}/members/{userId}' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetTeamsProjectsInput {
+  teamId: string;
+}
+export type GetTeamsProjectsOutput = Array<Types.APITeamsTeamProjectSummary>;
+export const getTeamsProjectsEndpoint = {
+  operationId: 'getTeamsProjects' as const,
+  method: 'GET' as const,
+  path: '/v1/teams/{teamId}/projects' as const,
+  tags: ['Api/teams/projects'] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * Get tenants with pagination, search, and sorting
  *
@@ -10283,6 +11969,7 @@ export type GetTenantsResourcesLimitsOutput = {
   Storage?: boolean;
   SubscriptionPlans?: boolean;
   Subscriptions?: boolean;
+  Teams?: boolean;
   Tenants?: boolean;
   TestingSessions?: boolean;
   Users?: boolean;
@@ -10525,6 +12212,7 @@ export type GetTenantsResourcesUsageSummaryOutput = {
   Storage?: number;
   SubscriptionPlans?: number;
   Subscriptions?: number;
+  Teams?: number;
   Tenants?: number;
   TestingSessions?: number;
   Users?: number;
@@ -11120,6 +12808,18 @@ export const getTestingEventsApplicationsByApplicationIdEndpoint = {
   operationId: 'getTestingEventsApplicationsByApplicationId' as const,
   method: 'GET' as const,
   path: '/v1/testing/events/applications/{applicationId}' as const,
+  tags: ['TestingLab/testingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetTestingEventsApplicationsReviewPackageInput {
+  applicationId: string;
+}
+export type GetTestingEventsApplicationsReviewPackageOutput = Types.TestingLabTestingApplicationReviewPackageProjection;
+export const getTestingEventsApplicationsReviewPackageEndpoint = {
+  operationId: 'getTestingEventsApplicationsReviewPackage' as const,
+  method: 'GET' as const,
+  path: '/v1/testing/events/applications/{applicationId}/review-package' as const,
   tags: ['TestingLab/testingEvents'] as const,
   requiresAuth: true,
 } as const;
@@ -13549,6 +15249,7 @@ export type GetUsersResourcesLimitsOutput = {
   Storage?: boolean;
   SubscriptionPlans?: boolean;
   Subscriptions?: boolean;
+  Teams?: boolean;
   Tenants?: boolean;
   TestingSessions?: boolean;
   Users?: boolean;
@@ -13726,6 +15427,7 @@ export type GetUsersResourcesUsageSummaryOutput = {
   Storage?: number;
   SubscriptionPlans?: number;
   Subscriptions?: number;
+  Teams?: number;
   Tenants?: number;
   TestingSessions?: number;
   Users?: number;
@@ -14083,6 +15785,8 @@ export const postVCoursesCheckoutCompleteEndpoint = {
 
 /** Registry of all endpoints */
 export const endpoints = {
+  postApiAssetsAccessUrl: postApiAssetsAccessUrlEndpoint,
+  getApiAssetsContent: getApiAssetsContentEndpoint,
   getApiCertificatesCourse: getApiCertificatesCourseEndpoint,
   getApiCertificatesExpiring: getApiCertificatesExpiringEndpoint,
   postApiCertificatesIssue: postApiCertificatesIssueEndpoint,
@@ -14342,12 +16046,30 @@ export const endpoints = {
   getWalletsAuditLog: getWalletsAuditLogEndpoint,
   postWalletsFreeze: postWalletsFreezeEndpoint,
   postWalletsUnfreeze: postWalletsUnfreezeEndpoint,
+  getAssetsByReferenceIdByToken: getAssetsByReferenceIdByTokenEndpoint,
+  getE: getEEndpoint,
   getHealth: getHealthEndpoint,
   getHealthDependencies: getHealthDependenciesEndpoint,
   getInfo: getInfoEndpoint,
   getLive: getLiveEndpoint,
   getMetrics: getMetricsEndpoint,
   getReady: getReadyEndpoint,
+  getT: getTEndpoint,
+  getAdminAssets: getAdminAssetsEndpoint,
+  postAdminAssetsRunGc: postAdminAssetsRunGcEndpoint,
+  getAdminAssetsGcCandidates: getAdminAssetsGcCandidatesEndpoint,
+  getAdminAssetsModerationQueue: getAdminAssetsModerationQueueEndpoint,
+  postAdminAssetsReportsReview: postAdminAssetsReportsReviewEndpoint,
+  getAdminAssetsRetention: getAdminAssetsRetentionEndpoint,
+  postAdminAssetsRetentionRun: postAdminAssetsRetentionRunEndpoint,
+  getAdminAssetsStatistics: getAdminAssetsStatisticsEndpoint,
+  getAdminAssetsStatisticsExport: getAdminAssetsStatisticsExportEndpoint,
+  postAdminAssetsMarkUndeletable: postAdminAssetsMarkUndeletableEndpoint,
+  postAdminAssetsReviewModeration: postAdminAssetsReviewModerationEndpoint,
+  postAdminAssetsRunVirusScan: postAdminAssetsRunVirusScanEndpoint,
+  postAdminAssetsUnmarkUndeletable: postAdminAssetsUnmarkUndeletableEndpoint,
+  getAdminAssetsReports: getAdminAssetsReportsEndpoint,
+  postAdminAssetsForceDelete: postAdminAssetsForceDeleteEndpoint,
   postAiChat: postAiChatEndpoint,
   postAiEmail: postAiEmailEndpoint,
   postAiGenerate: postAiGenerateEndpoint,
@@ -14391,6 +16113,31 @@ export const endpoints = {
   postAssessmentsInteractiveVideoCues: postAssessmentsInteractiveVideoCuesEndpoint,
   deleteAssessmentsInteractiveVideoCues: deleteAssessmentsInteractiveVideoCuesEndpoint,
   postAssessmentsRestore: postAssessmentsRestoreEndpoint,
+  postAssetLibrariesAssetsCopy: postAssetLibrariesAssetsCopyEndpoint,
+  getAssetLibrariesAssetsRevisions: getAssetLibrariesAssetsRevisionsEndpoint,
+  postAssetLibrariesAssetsRevisionsRestore: postAssetLibrariesAssetsRevisionsRestoreEndpoint,
+  putAssetLibrariesFoldersRestriction: putAssetLibrariesFoldersRestrictionEndpoint,
+  getAssetLibraries: getAssetLibrariesEndpoint,
+  postAssetLibrariesFolders: postAssetLibrariesFoldersEndpoint,
+  getAssets: getAssetsEndpoint,
+  postAssets: postAssetsEndpoint,
+  postAssetsBulkDelete: postAssetsBulkDeleteEndpoint,
+  postAssetsBulkDownload: postAssetsBulkDownloadEndpoint,
+  postAssetsBulkUpload: postAssetsBulkUploadEndpoint,
+  postAssetsChunkedUploads: postAssetsChunkedUploadsEndpoint,
+  deleteAssetsChunkedUploads: deleteAssetsChunkedUploadsEndpoint,
+  postAssetsChunkedUploadsParts: postAssetsChunkedUploadsPartsEndpoint,
+  postAssetsChunkedUploadsComplete: postAssetsChunkedUploadsCompleteEndpoint,
+  getAssetsSearch: getAssetsSearchEndpoint,
+  getAssetsById: getAssetsByIdEndpoint,
+  deleteAssets: deleteAssetsEndpoint,
+  patchAssets: patchAssetsEndpoint,
+  getAssetsContent: getAssetsContentEndpoint,
+  getAssetExtractedText: getAssetExtractedTextEndpoint,
+  getAssetsPreview: getAssetsPreviewEndpoint,
+  getSignedAssetExtractedText: getSignedAssetExtractedTextEndpoint,
+  postAssetsGenerateAccessUrl: postAssetsGenerateAccessUrlEndpoint,
+  postAssetsReport: postAssetsReportEndpoint,
   getAuthApiKeys: getAuthApiKeysEndpoint,
   postAuthApiKeys: postAuthApiKeysEndpoint,
   postAuthApiKeysRevoke: postAuthApiKeysRevokeEndpoint,
@@ -14545,7 +16292,7 @@ export const endpoints = {
   getCoursesActivityGradesStudent: getCoursesActivityGradesStudentEndpoint,
   putCoursesActivityGrades: putCoursesActivityGradesEndpoint,
   deleteCoursesActivityGrades: deleteCoursesActivityGradesEndpoint,
-  getCoursesByProgramIdContent: getCoursesByProgramIdContentEndpoint,
+  getCoursesContent: getCoursesContentEndpoint,
   postCoursesContent: postCoursesContentEndpoint,
   getCoursesContentByType: getCoursesContentByTypeEndpoint,
   getCoursesContentByVisibility: getCoursesContentByVisibilityEndpoint,
@@ -14553,7 +16300,7 @@ export const endpoints = {
   getCoursesContentRequired: getCoursesContentRequiredEndpoint,
   postCoursesContentSearch: postCoursesContentSearchEndpoint,
   getCoursesContentStats: getCoursesContentStatsEndpoint,
-  getCoursesByProgramIdContentById: getCoursesByProgramIdContentByIdEndpoint,
+  getCoursesContentById: getCoursesContentByIdEndpoint,
   putCoursesContent: putCoursesContentEndpoint,
   deleteCoursesContent: deleteCoursesContentEndpoint,
   getCoursesContentCodingAssignment: getCoursesContentCodingAssignmentEndpoint,
@@ -14564,6 +16311,7 @@ export const endpoints = {
   getCoursesContentChildren: getCoursesContentChildrenEndpoint,
   getCoursesInteractionsEvents: getCoursesInteractionsEventsEndpoint,
   postCoursesInteractionsEvents: postCoursesInteractionsEventsEndpoint,
+  getDashboardContexts: getDashboardContextsEndpoint,
   getDiscoveryCollections: getDiscoveryCollectionsEndpoint,
   postDiscoveryCollections: postDiscoveryCollectionsEndpoint,
   getDiscoveryCollectionsCurator: getDiscoveryCollectionsCuratorEndpoint,
@@ -14605,6 +16353,28 @@ export const endpoints = {
   getFeaturesValue: getFeaturesValueEndpoint,
   getLaunchPad: getLaunchPadEndpoint,
   postLaunchPad: postLaunchPadEndpoint,
+  postLaunchPadEvents: postLaunchPadEventsEndpoint,
+  getLaunchPadEventsAnalytics: getLaunchPadEventsAnalyticsEndpoint,
+  getLaunchPadEventsApplicationsMe: getLaunchPadEventsApplicationsMeEndpoint,
+  putLaunchPadEventsApplications: putLaunchPadEventsApplicationsEndpoint,
+  postLaunchPadEventsApplicationsReview: postLaunchPadEventsApplicationsReviewEndpoint,
+  postLaunchPadEventsApplicationsWithdraw: postLaunchPadEventsApplicationsWithdrawEndpoint,
+  getLaunchPadEventsManagement: getLaunchPadEventsManagementEndpoint,
+  getLaunchPadEventsPublic: getLaunchPadEventsPublicEndpoint,
+  getLaunchPadEventsPublicById: getLaunchPadEventsPublicByIdEndpoint,
+  getLaunchPadEventsRegistrationsMe: getLaunchPadEventsRegistrationsMeEndpoint,
+  postLaunchPadEventsRegistrationsCancel: postLaunchPadEventsRegistrationsCancelEndpoint,
+  postLaunchPadEventsRegistrationsTransition: postLaunchPadEventsRegistrationsTransitionEndpoint,
+  putLaunchPadEventsSlots: putLaunchPadEventsSlotsEndpoint,
+  deleteLaunchPadEventsSlots: deleteLaunchPadEventsSlotsEndpoint,
+  postLaunchPadEventsSlotsRegistrations: postLaunchPadEventsSlotsRegistrationsEndpoint,
+  postLaunchPadEventsApplications: postLaunchPadEventsApplicationsEndpoint,
+  getLaunchPadEventsApplicationsManagement: getLaunchPadEventsApplicationsManagementEndpoint,
+  getLaunchPadEventsRegistrationsManagement: getLaunchPadEventsRegistrationsManagementEndpoint,
+  postLaunchPadEventsSlots: postLaunchPadEventsSlotsEndpoint,
+  putLaunchPadEvents: putLaunchPadEventsEndpoint,
+  getLaunchPadEventsByIdManagement: getLaunchPadEventsByIdManagementEndpoint,
+  postLaunchPadEventsTransition: postLaunchPadEventsTransitionEndpoint,
   getLaunchPadProjects: getLaunchPadProjectsEndpoint,
   getLaunchPadById: getLaunchPadByIdEndpoint,
   postLaunchPadChecklistComplete: postLaunchPadChecklistCompleteEndpoint,
@@ -14677,6 +16447,7 @@ export const endpoints = {
   postProductsDeactivate: postProductsDeactivateEndpoint,
   getProjects: getProjectsEndpoint,
   postProjects: postProjectsEndpoint,
+  getProjectsAccessibleVersions: getProjectsAccessibleVersionsEndpoint,
   getProjectsCategory: getProjectsCategoryEndpoint,
   getProjectsCreator: getProjectsCreatorEndpoint,
   getProjectsFeatured: getProjectsFeaturedEndpoint,
@@ -14698,10 +16469,26 @@ export const endpoints = {
   deleteProjectsCollaborators: deleteProjectsCollaboratorsEndpoint,
   postProjectsInvitations: postProjectsInvitationsEndpoint,
   getProjectsStatistics: getProjectsStatisticsEndpoint,
+  getProjectsVersions: getProjectsVersionsEndpoint,
+  postProjectsVersions: postProjectsVersionsEndpoint,
   postProjectsArchive: postProjectsArchiveEndpoint,
   postProjectsPublish: postProjectsPublishEndpoint,
+  postProjectsRestore: postProjectsRestoreEndpoint,
   postProjectsShare: postProjectsShareEndpoint,
   postProjectsUnpublish: postProjectsUnpublishEndpoint,
+  getProjectsOwnership: getProjectsOwnershipEndpoint,
+  postProjectsOwnershipAgreements: postProjectsOwnershipAgreementsEndpoint,
+  postProjectsOwnershipAgreementsAccept: postProjectsOwnershipAgreementsAcceptEndpoint,
+  postProjectsOwnershipAgreementsCancel: postProjectsOwnershipAgreementsCancelEndpoint,
+  postProjectsOwnershipAgreementsComplete: postProjectsOwnershipAgreementsCompleteEndpoint,
+  postProjectsOwnershipAgreementsCounter: postProjectsOwnershipAgreementsCounterEndpoint,
+  postProjectsOwnershipAllocations: postProjectsOwnershipAllocationsEndpoint,
+  putProjectsOwnershipAllocations: putProjectsOwnershipAllocationsEndpoint,
+  deleteProjectsOwnershipAllocations: deleteProjectsOwnershipAllocationsEndpoint,
+  postProjectsOwnershipOwnerTeam: postProjectsOwnershipOwnerTeamEndpoint,
+  postProjectsOwnershipTeams: postProjectsOwnershipTeamsEndpoint,
+  putProjectsOwnershipTeams: putProjectsOwnershipTeamsEndpoint,
+  deleteProjectsOwnershipTeams: deleteProjectsOwnershipTeamsEndpoint,
   postProjectsPermissionsShareWithRole: postProjectsPermissionsShareWithRoleEndpoint,
   getProjectsPermissionsCollaborators: getProjectsPermissionsCollaboratorsEndpoint,
   postProjectsPermissionsCollaborators: postProjectsPermissionsCollaboratorsEndpoint,
@@ -14712,6 +16499,33 @@ export const endpoints = {
   getProjectsStoreProducts: getProjectsStoreProductsEndpoint,
   postProjectsStoreProducts: postProjectsStoreProductsEndpoint,
   deleteProjectsStoreProducts: deleteProjectsStoreProductsEndpoint,
+  getProjectsWork: getProjectsWorkEndpoint,
+  postProjectsWorkColumns: postProjectsWorkColumnsEndpoint,
+  putProjectsWorkColumns: putProjectsWorkColumnsEndpoint,
+  deleteProjectsWorkColumns: deleteProjectsWorkColumnsEndpoint,
+  getProjectsWorkHistory: getProjectsWorkHistoryEndpoint,
+  getProjectsWorkLabels: getProjectsWorkLabelsEndpoint,
+  postProjectsWorkLabels: postProjectsWorkLabelsEndpoint,
+  deleteProjectsWorkLabels: deleteProjectsWorkLabelsEndpoint,
+  getProjectsWorkMilestones: getProjectsWorkMilestonesEndpoint,
+  postProjectsWorkMilestones: postProjectsWorkMilestonesEndpoint,
+  putProjectsWorkMilestones: putProjectsWorkMilestonesEndpoint,
+  deleteProjectsWorkMilestones: deleteProjectsWorkMilestonesEndpoint,
+  postProjectsWorkTasks: postProjectsWorkTasksEndpoint,
+  getProjectsWorkTasks: getProjectsWorkTasksEndpoint,
+  putProjectsWorkTasks: putProjectsWorkTasksEndpoint,
+  deleteProjectsWorkTasks: deleteProjectsWorkTasksEndpoint,
+  postProjectsWorkTasksChecklist: postProjectsWorkTasksChecklistEndpoint,
+  putProjectsWorkTasksChecklist: putProjectsWorkTasksChecklistEndpoint,
+  deleteProjectsWorkTasksChecklist: deleteProjectsWorkTasksChecklistEndpoint,
+  postProjectsWorkTasksComments: postProjectsWorkTasksCommentsEndpoint,
+  putProjectsWorkTasksComments: putProjectsWorkTasksCommentsEndpoint,
+  deleteProjectsWorkTasksComments: deleteProjectsWorkTasksCommentsEndpoint,
+  postProjectsWorkTasksDependencies: postProjectsWorkTasksDependenciesEndpoint,
+  deleteProjectsWorkTasksDependencies: deleteProjectsWorkTasksDependenciesEndpoint,
+  postProjectsWorkTasksLabels: postProjectsWorkTasksLabelsEndpoint,
+  deleteProjectsWorkTasksLabels: deleteProjectsWorkTasksLabelsEndpoint,
+  putProjectsWorkTasksMove: putProjectsWorkTasksMoveEndpoint,
   getPromoCodes: getPromoCodesEndpoint,
   postPromoCodes: postPromoCodesEndpoint,
   postPromoCodesApply: postPromoCodesApplyEndpoint,
@@ -14765,6 +16579,21 @@ export const endpoints = {
   postSupportTicketsAssign: postSupportTicketsAssignEndpoint,
   postSupportTicketsClose: postSupportTicketsCloseEndpoint,
   postSupportTicketsResolve: postSupportTicketsResolveEndpoint,
+  getTeams: getTeamsEndpoint,
+  postTeams: postTeamsEndpoint,
+  postTeamsInvitationsAccept: postTeamsInvitationsAcceptEndpoint,
+  postTeamsInvitationsByInvitationIdAccept: postTeamsInvitationsByInvitationIdAcceptEndpoint,
+  getTeamsMyInvitations: getTeamsMyInvitationsEndpoint,
+  getTeamsByTeamId: getTeamsByTeamIdEndpoint,
+  putTeams: putTeamsEndpoint,
+  deleteTeams: deleteTeamsEndpoint,
+  getTeamsInvitations: getTeamsInvitationsEndpoint,
+  postTeamsInvitations: postTeamsInvitationsEndpoint,
+  deleteTeamsInvitations: deleteTeamsInvitationsEndpoint,
+  postTeamsMembers: postTeamsMembersEndpoint,
+  putTeamsMembers: putTeamsMembersEndpoint,
+  deleteTeamsMembers: deleteTeamsMembersEndpoint,
+  getTeamsProjects: getTeamsProjectsEndpoint,
   getTenants: getTenantsEndpoint,
   postTenants: postTenantsEndpoint,
   getTenantsByTenantId: getTenantsByTenantIdEndpoint,
@@ -14846,6 +16675,7 @@ export const endpoints = {
   postTestingEvents: postTestingEventsEndpoint,
   getTestingEventsApplicationsMe: getTestingEventsApplicationsMeEndpoint,
   getTestingEventsApplicationsByApplicationId: getTestingEventsApplicationsByApplicationIdEndpoint,
+  getTestingEventsApplicationsReviewPackage: getTestingEventsApplicationsReviewPackageEndpoint,
   putTestingEventsApplicationsSlot: putTestingEventsApplicationsSlotEndpoint,
   postTestingEventsApplicationsVotes: postTestingEventsApplicationsVotesEndpoint,
   postTestingEventsApplicationsApprove: postTestingEventsApplicationsApproveEndpoint,

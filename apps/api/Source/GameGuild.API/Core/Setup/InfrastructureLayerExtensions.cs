@@ -3,6 +3,8 @@ using System.Text.RegularExpressions;
 using GameGuild.AI;
 using GameGuild.API.Context;
 using GameGuild.API.Database;
+using GameGuild.API.Dashboard;
+using GameGuild.Assets.Extensions;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Payments;
@@ -15,6 +17,7 @@ using GameGuild.Features;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context;
+using GameGuild.Identity.Tenants;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
 using GameGuild.Learning.Assessments;
@@ -38,8 +41,11 @@ using GameGuild.Social.Profiles;
 using GameGuild.Social.Reactions;
 using GameGuild.Tags;
 using GameGuild.Projects;
+using GameGuild.ProjectWork;
+using GameGuild.Teams;
 using GameGuild.TestingLab;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using LearningSocialModule = GameGuild.Learning.Experience.Social.SocialModule;
 
 namespace GameGuild.API.Setup;
@@ -328,12 +334,16 @@ public static class InfrastructureLayerExtensions
         services.AddGameJamsModule();
         logger.LogInformation("Game Jams Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10f.8. Projects, Testing Lab, and Launch Pad Modules
+        // 10f.8. Teams, Projects, Project Work, Assets, Testing Lab, and Launch Pad Modules
         stepStopwatch.Restart();
+        services.AddTeamsModule();
         services.AddProjectsModule();
+        services.AddProjectWorkModule();
+        services.AddAssetsModule(configuration);
         services.AddTestingLabModule(configuration);
         services.AddLaunchPadModule();
-        logger.LogInformation("Projects/Testing Lab/Launch Pad Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+        services.AddScoped<IDashboardWorkspaceContextService, DashboardWorkspaceContextService>();
+        logger.LogInformation("Teams/Projects/Project Work/Assets/Testing Lab/Launch Pad Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10g. Content Pages Module (pages, sections, content resources, OpenGraph)
         stepStopwatch.Restart();
@@ -561,19 +571,38 @@ public static class InfrastructureLayerExtensions
 
         foreach (var (interfaceType, implementationType) in serviceRegistrations)
         {
-            // Skip services that are already registered (e.g. via module-specific factories)
-            if (services.Any(sd => sd.ServiceType == interfaceType))
+            var existingDescriptors = services
+                .Where(descriptor => descriptor.ServiceType == interfaceType)
+                .ToArray();
+            var onlyFailClosedMembershipFallbacks =
+                interfaceType == typeof(ITenantMembershipChecker) &&
+                existingDescriptors.Length > 0 &&
+                existingDescriptors.All(descriptor =>
+                    descriptor.ImplementationType == typeof(FailClosedTenantMembershipChecker));
+
+            // The authorization module deliberately registers a fail-closed membership
+            // checker before the Tenants assembly is discovered. Replace that fallback
+            // with the real implementation; keep all other explicit registrations.
+            if (existingDescriptors.Length > 0 && !onlyFailClosedMembershipFallbacks)
             {
                 logger.LogInformation("Skipped {Service} — already registered",
                     FormatInterfaceName(interfaceType.Name));
                 continue;
             }
 
+            if (onlyFailClosedMembershipFallbacks)
+                services.RemoveAll(interfaceType);
+
             stepStopwatch.Restart();
             services.AddScoped(interfaceType, implementationType);
             logger.LogInformation("Registered {Service} in {ElapsedMs}ms",
                 FormatInterfaceName(interfaceType.Name), stepStopwatch.ElapsedMilliseconds);
         }
+
+        // This adapter intentionally has a different name from its authorization
+        // contract, so convention discovery is not sufficient to guarantee that it
+        // replaces the early fail-closed fallback in every host/test load order.
+        services.Replace(ServiceDescriptor.Scoped<ITenantMembershipChecker, TenantMembershipChecker>());
 
         totalStopwatch.Stop();
         logger.LogInformation("Completed service setup in {ElapsedMs}ms", serviceStopwatch.ElapsedMilliseconds);

@@ -806,7 +806,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 9. Get a single content item ────────────────────────────────────────
   it('gets a single content item by ID', async () => {
-    const result = await content.getCoursesByProgramIdContentById(courseId, lessonContentId);
+    const result = await content.getCoursesContentById(courseId, lessonContentId);
 
     const contentItem = unwrap(result, 'Get single content');
     expect(contentItem.id).toBe(lessonContentId);
@@ -856,15 +856,16 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
     const createStudent = async (label: string) => {
       const tag = unique();
+      const studentEmail = `cohort_${label}_${tag}@example.com`;
+      const studentPassword = 'Str0ng!Passw0rd123!';
       const result = unwrap(
         await authedClient.request<SignInOutput>({
           method: 'POST',
           path: '/v1/auth/sign-up',
           body: {
             username: `cohort_${label}_${tag}`,
-            email: `cohort_${label}_${tag}@example.com`,
-            password: 'Str0ng!Passw0rd123!',
-            ...(tenantId ? { tenantId } : {}),
+            email: studentEmail,
+            password: studentPassword,
           },
           requiresAuth: false,
         }),
@@ -873,7 +874,29 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
       const id = result.userId || result.user?.id || '';
       expect(id).toBeTruthy();
       temporaryUserIds.push(id);
-      return { id, accessToken: result.accessToken };
+
+      if (!tenantId) return { id, accessToken: result.accessToken };
+
+      unwrap(
+        await authedClient.request({
+          method: 'POST',
+          path: `/v1/users/${id}/memberships`,
+          body: { tenantId, role: 'Member', invitedByEmail: email },
+        }),
+        `Add ${label} cohort student to course tenant`,
+      );
+
+      const tenantSignIn = unwrap(
+        await authedClient.request<SignInOutput>({
+          method: 'POST',
+          path: '/v1/auth/sign-in',
+          body: { email: studentEmail, password: studentPassword, tenantId },
+          requiresAuth: false,
+        }),
+        `Sign in ${label} cohort student to course tenant`,
+      );
+
+      return { id, accessToken: tenantSignIn.accessToken };
     };
 
     const createCohort = async (name: string, startsInDays: number) => {
@@ -1367,13 +1390,35 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
           username: `course_checkout_${prospectTag}`,
           email: prospectEmail,
           password: prospectPassword,
-          ...(tenantId ? { tenantId } : {}),
         },
         requiresAuth: false,
       }),
       'Prospect sign-up for paid course checkout',
     );
-    const prospectToken = signUp.accessToken;
+    const prospectId = signUp.userId || signUp.user?.id || '';
+    expect(prospectId).toBeTruthy();
+
+    let prospectToken = signUp.accessToken;
+    if (tenantId) {
+      unwrap(
+        await authedClient.request({
+          method: 'POST',
+          path: `/v1/users/${prospectId}/memberships`,
+          body: { tenantId, role: 'Member', invitedByEmail: email },
+        }),
+        'Add checkout prospect to course tenant',
+      );
+
+      prospectToken = unwrap(
+        await publicClient.request<SignInOutput>({
+          method: 'POST',
+          path: '/v1/auth/sign-in',
+          body: { email: prospectEmail, password: prospectPassword, tenantId },
+          requiresAuth: false,
+        }),
+        'Sign in checkout prospect to course tenant',
+      ).accessToken;
+    }
     const prospectClient = createClient({
       baseUrl: BASE_URL,
       timeout: 15_000,
@@ -1503,7 +1548,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(result.ok).toBe(true);
 
     // Verify it's gone
-    const getResult = await content.getCoursesByProgramIdContentById(courseId, assignmentContentId);
+    const getResult = await content.getCoursesContentById(courseId, assignmentContentId);
     expect(getResult.ok).toBe(false);
   });
 

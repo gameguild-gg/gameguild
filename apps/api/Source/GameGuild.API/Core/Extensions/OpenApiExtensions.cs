@@ -165,6 +165,11 @@ public static class OpenApiExtensions
                 });
 
                 // Normalize controller tags into a consistent module/controller path.
+                // Named routes are deliberate SDK contract names. Preserve them as OpenAPI
+                // operation IDs; unnamed routes continue through the client's deterministic
+                // path-based normalizer.
+                c.CustomOperationIds(apiDescription =>
+                    apiDescription.ActionDescriptor.AttributeRouteInfo?.Name);
                 c.OperationFilter<ModuleControllerTagOperationFilter>();
                 c.OperationFilter<AllowAnonymousOperationFilter>();
                 c.SchemaFilter<FlagsEnumSchemaFilter>();

@@ -9,7 +9,7 @@ import type {
   LearningAssessmentsAssessment,
   LearningAssessmentsLearnerAssessmentSubmission,
   LearningCoursesProgramContentType,
-  ProjectsProject,
+  ProjectsProjectApiOutput,
 } from "@game-guild/client";
 import {
   Alert,
@@ -30,7 +30,7 @@ export type LearnerActivityDescriptor =
       kind: "assessment";
       assessment: LearningAssessmentsAssessment;
       submission?: LearningAssessmentsLearnerAssessmentSubmission;
-      projects?: ProjectsProject[];
+      projects?: ProjectsProjectApiOutput[];
     }
   | {
       kind: "content";

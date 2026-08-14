@@ -92,14 +92,21 @@ public sealed class ProjectQueryHandlers
       .Where(p => p.Id == request.ProjectId && p.DeletedAt == null);
 
     // Include related data if requested
-    if (request.IncludeTeam) { query = query.Include(p => p.Collaborators); }
+    if (request.IncludeTeam) { query = query.Include(p => p.Teams).ThenInclude(team => team.Team); }
 
     if (request.IncludeReleases) { query = query.Include(p => p.Releases); }
 
-    if (request.IncludeCollaborators) { query = query.Include(p => p.Collaborators); }
+    if (request.IncludeCollaborators) { query = query.Include(p => p.Collaborators).ThenInclude(collaborator => collaborator.User); }
 
     // Always include basic relations
-    query = query.Include(p => p.CreatedBy).Include(p => p.Category);
+    query = query
+      .Include(p => p.CreatedBy)
+      .Include(p => p.Category)
+      .Include(p => p.ProjectMetadata)
+      .Include(p => p.Versions);
+    if (request.IncludeStatistics) {
+      query = query.Include(p => p.Followers).Include(p => p.Feedbacks).Include(p => p.JamSubmissions);
+    }
 
     // Apply access control
     query = _authorizationService.ApplyReadAccess(query);
@@ -119,14 +126,18 @@ public sealed class ProjectQueryHandlers
     var query = _context.Set<Project>().Where(p => p.Slug == request.Slug && p.DeletedAt == null);
 
     // Include related data if requested
-    if (request.IncludeTeam) { query = query.Include(p => p.Collaborators); }
+    if (request.IncludeTeam) { query = query.Include(p => p.Teams).ThenInclude(team => team.Team); }
 
     if (request.IncludeReleases) { query = query.Include(p => p.Releases); }
 
-    if (request.IncludeCollaborators) { query = query.Include(p => p.Collaborators); }
+    if (request.IncludeCollaborators) { query = query.Include(p => p.Collaborators).ThenInclude(collaborator => collaborator.User); }
 
     // Always include basic relations
-    query = query.Include(p => p.CreatedBy).Include(p => p.Category);
+    query = query
+      .Include(p => p.CreatedBy)
+      .Include(p => p.Category)
+      .Include(p => p.ProjectMetadata)
+      .Include(p => p.Versions);
 
     // Apply access control
     query = _authorizationService.ApplyReadAccess(query);
@@ -152,7 +163,7 @@ public sealed class ProjectQueryHandlers
   public async Task<Result<IEnumerable<Project>>> Handle(GetProjectsByCreatorQuery request, CancellationToken cancellationToken) {
     var query = _context.Set<Project>()
       .AsNoTracking()
-      .Where(p => p.Collaborators.Any(c => c.UserId == request.CreatorId && c.Role == ProjectRoles.Owner) && p.DeletedAt == null);
+      .Where(p => p.CreatedById == request.CreatorId && p.DeletedAt == null);
 
     if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 

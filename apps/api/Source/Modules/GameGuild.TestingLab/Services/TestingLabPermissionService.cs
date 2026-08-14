@@ -161,7 +161,8 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
            permission.ResourceType == TestingLabResourceTypes.Participant ||
            permission.ResourceType == TestingLabResourceTypes.Event ||
            permission.ResourceType == TestingLabResourceTypes.Application ||
-           permission.ResourceType == TestingLabResourceTypes.Analytics))
+           permission.ResourceType == TestingLabResourceTypes.Analytics ||
+           permission.ResourceType == TestingLabResourceTypes.Settings))
         .ToListAsync()
         .ConfigureAwait(false);
 

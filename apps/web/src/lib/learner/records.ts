@@ -21,7 +21,7 @@ import {
   type LearningWorkspacesLearnerDiscussion,
   type LearningWorkspacesLearnerGradeSummary,
   type LearningWorkspacesLearnerScheduleEntry,
-  type ProjectsProject,
+  type ProjectsProjectApiOutput,
 } from "@game-guild/client";
 
 type LearnerCertificateRecord = LearningCertificatesCertificate & {
@@ -286,7 +286,7 @@ export async function getMyCertificates(): Promise<
 
 export async function getMyProjects(
   userId: string,
-): Promise<ProjectsProject[]> {
+): Promise<ProjectsProjectApiOutput[]> {
   const client = await getClient();
   if (!client || !userId) return [];
   const result = await new GeneratedApi.ProjectsModule(

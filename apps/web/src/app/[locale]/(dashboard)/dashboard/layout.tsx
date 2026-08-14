@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { DashboardShell } from '@/components/layout';
 import { redirect } from '@/i18n/navigation';
 import { getDashboardNotificationSummary } from '@/lib/dashboard-notifications';
+import { getDashboardContexts } from '@/lib/dashboard-contexts';
 import React from 'react';
 
 export default async function Layout({ children, params }: LayoutProps<'/[locale]/dashboard'>): Promise<React.JSX.Element> {
@@ -16,7 +17,10 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
     throw new Error('Unauthenticated dashboard access');
   }
 
-  const notifications = await getDashboardNotificationSummary(session.user.id);
+  const [notifications, dashboardContexts] = await Promise.all([
+    getDashboardNotificationSummary(session.user.id),
+    getDashboardContexts(),
+  ]);
   const dashboardUser = {
     id: session.user.id,
     name: session.user.name?.trim() || session.user.email?.split('@')[0] || 'GameGuild user',
@@ -25,7 +29,12 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   };
 
   return (
-    <DashboardShell notifications={notifications} user={dashboardUser}>
+    <DashboardShell
+      notifications={notifications}
+      user={dashboardUser}
+      capabilities={dashboardContexts.capabilities}
+      contexts={dashboardContexts.contexts}
+    >
       {children}
     </DashboardShell>
   );

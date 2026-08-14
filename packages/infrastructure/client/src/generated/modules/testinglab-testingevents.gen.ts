@@ -95,6 +95,26 @@ export class TestinglabTestingeventsModule {
 
   /**
    */
+  async getTestingEventsApplicationsReviewPackage(applicationId: string): Promise<Result<Types.TestingLabTestingApplicationReviewPackageProjection, ApiError>> {
+    const url = `/v1/testing/events/applications/${applicationId}/review-package`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.TestingLabTestingApplicationReviewPackageProjectionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async putTestingEventsApplicationsSlot(
     applicationId: string,
     body: Types.TestingLabAssignTestingProjectApplicationSlotInput,

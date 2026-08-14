@@ -28,6 +28,7 @@ public class ProjectMutations {
       Visibility = input.Visibility ?? ContentVisibility.Public,
       Status = input.Status ?? ContentStatus.Draft,
       Tags = input.Tags,
+      OwnerTeamId = input.OwnerTeamId,
     };
 
     var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);

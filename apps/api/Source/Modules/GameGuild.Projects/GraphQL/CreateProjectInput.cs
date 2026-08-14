@@ -14,7 +14,8 @@ public record CreateProjectInput(
   Guid? CategoryId,
   ContentStatus? Status,
   ContentVisibility? Visibility,
-  List<string>? Tags
+  List<string>? Tags,
+  Guid? OwnerTeamId
 ) {
   public string Title { get; init; } = Title;
 
@@ -39,4 +40,6 @@ public record CreateProjectInput(
   public ContentVisibility? Visibility { get; init; } = Visibility;
 
   public List<string>? Tags { get; init; } = Tags;
+
+  public Guid? OwnerTeamId { get; init; } = OwnerTeamId;
 }

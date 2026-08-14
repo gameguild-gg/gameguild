@@ -23,6 +23,16 @@ export interface TestingEventsDirectory {
   accessIssues: string[];
 }
 
+export interface TestingApplicationDirectoryEntry {
+  event: TestingLabTestingEventProjection;
+  application: TestingLabTestingProjectApplicationProjection;
+}
+
+export interface TestingApplicationsDirectory {
+  entries: TestingApplicationDirectoryEntry[];
+  accessIssues: string[];
+}
+
 export interface TestingEventManagerData {
   event: TestingLabTestingEventProjection | null;
   slots: TestingLabTestingEventSlotProjection[];
@@ -58,6 +68,10 @@ export interface TestingEventsDirectoryOptions {
   status?: TestingLabTestingEventStatus;
   skip?: number;
   take?: number;
+}
+
+export interface TestingApplicationsDirectoryOptions {
+  status?: TestingLabTestingApplicationStatus;
 }
 
 export interface TestingEventManagerOptions {
@@ -136,6 +150,44 @@ export async function getArchivedTestingEventsDirectory(
   return {
     events: result.data ?? [],
     accessIssues: result.issue ? [result.issue] : [],
+  };
+}
+
+export async function getTestingApplicationsDirectory(
+  options: TestingApplicationsDirectoryOptions = {},
+): Promise<TestingApplicationsDirectory> {
+  const api = createModules();
+  const eventsResult = await read(
+    api.events.getTestingEvents({ skip: 0, take: 100 }),
+    'Events',
+  );
+  const events = eventsResult.data ?? [];
+  const applicationResults = await Promise.all(
+    events
+      .filter((event): event is TestingLabTestingEventProjection & { id: string } =>
+        Boolean(event.id) && event.applicationCount !== 0,
+      )
+      .map(async (event) => ({
+        event,
+        result: await read(
+          api.events.getTestingEventsByEventIdApplications(event.id, {
+            status: options.status,
+            skip: 0,
+            take: 100,
+          }),
+          `Applications for ${event.name ?? event.id}`,
+        ),
+      })),
+  );
+
+  return {
+    entries: applicationResults.flatMap(({ event, result }) =>
+      (result.data ?? []).map((application) => ({ event, application })),
+    ),
+    accessIssues: [
+      eventsResult.issue,
+      ...applicationResults.map(({ result }) => result.issue),
+    ].filter((issue): issue is string => Boolean(issue)),
   };
 }
 

@@ -9,6 +9,7 @@ import type { DockGroup, FileMeta, FileMetaInput, GradingPlan, OpenTab, TabType,
 import { DEFAULT_IMAGE, SDL_CANVAS_PATH, parseWorkspaceBundle, resolveArgs, workspaceConfigToState, workspaceStorageKey } from './ide-types';
 import TestResultsPanel from './TestResultsPanel';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
+import { MINI_DOCTEST_H, parseMiniDoctest } from './doctest-header';
 import TerminalPanel from './TerminalPanel';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets';
 
@@ -58,6 +59,17 @@ function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<
       }
     }
   };
+}
+
+function matchesExpected(actual: string, expected: string | RegExp): boolean {
+  // wasi-run's byte-level capture joins fd_write chunks with '\n', leaving a
+  // spurious trailing newline; compare with trailing newlines trimmed.
+  const trimmed = actual.replace(/[\r\n]+$/, '');
+  return typeof expected === 'string' ? trimmed === expected.replace(/[\r\n]+$/, '') : expected.test(trimmed);
+}
+
+function stringifyExpected(v: string | RegExp): string {
+  return v instanceof RegExp ? v.toString() : JSON.stringify(v);
 }
 
 export interface IdeProps {
@@ -221,8 +233,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   const seededContentRef = useRef<Map<string, string>>(new Map());
   /** Bumped on every setFileMeta call to re-run the per-file readOnly effect. */
   const [metaVersion, bumpMetaVersion] = useState(0);
-  // Expose filesRef for e2e tests so Playwright can verify file content was updated
-  (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
+  // Expose filesRef for e2e tests so Playwright can verify file content was updated.
+  // Guarded for SSR (Next.js server render has no window).
+  if (typeof window !== 'undefined') {
+    (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
+  }
 
   const fileTree = buildFileTree(Object.keys(files).filter((path) => path !== SDL_CANVAS_PATH && files[path]?.type !== 'canvas'));
   const activeTab = openTabs.find((t) => t.id === activeTabId) ?? openTabs[0] ?? null;
@@ -307,34 +322,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     };
     }, [workspaceUrl]);
 
-    // ── Run Tests button handler ───────────────────────────────────
-     const handleRunTests = useCallback(async () => {
-    if (!apiRef.current || !testPlan) return;
-    setTestRunning(true);
-    setLastReport(null);
-    try {
-      const filteredCases = testMode === 'public'
-         ? testPlan.cases
-             .filter((c) => !c.hidden)
-             .map(({ hidden: _hidden, ...rest }) => rest)
-         : testPlan.cases;
-      const runPlan = {
-        cases: filteredCases,
-        build: testPlan.build,
-        timeoutMsPerCase: testPlan.timeoutMsPerCase,
-       };
-      const report = await apiRef.current.runTests(runPlan as any);
-      setLastReport(report);
-      try { onTestReportRef.current?.(report); } catch { /* swallow */ }
-      setStatus('Tests complete');
-      } catch (err) {
-      setStatus(`Test error: ${(err as Error).message}`);
-      } finally {
-      setTestRunning(false);
-      }
-    }, [testPlan, testMode]);
-
-    // ── Sync workspace files into the Worker VFS (/home/user) ─────
+     // ── Sync workspace files into the Worker VFS (/home/user) ─────
   const syncFilesToVfs = useCallback(async (filesToSync: Record<string, WorkspaceFile>) => {
     const orch = orchestratorRef.current;
     if (!orch) return;
@@ -349,6 +337,406 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     }
     console.log(`${P} VFS sync complete (${textFiles.length} files)`);
   }, []);
+
+      // ── Run Tests button handler ───────────────────────────────────
+      const handleRunTests = useCallback(async () => {
+    const orch = orchestratorRef.current;
+    if (!orch || !testPlan || testPlan.cases.length === 0) return;
+    const { client, tty } = orch;
+    setTestRunning(true);
+    setLastReport(null);
+    const totalStart = performance.now();
+
+    let report: import('./TestResultsPanel').TestReport;
+    try {
+      // Sync workspace text files to /home/user/<name> in the VFS so the compiler
+      // reads the latest editor content.
+      await syncFilesToVfs(filesRef.current);
+
+      // All text C/C++ sources — the stdio path compiles the first; the
+      // doctest path concatenates all of them into one combined TU.
+      const studentSources = Object.values(filesRef.current).filter(
+        (f) => f.type === 'text' && isSourceFile(f.path),
+      );
+      if (studentSources.length === 0) {
+        throw new Error('No C/C++ source file found in workspace');
+      }
+
+      // ── Filter cases per testMode (before building — a doctest-only plan
+      //    must not pay for, or fail on, the stdio binary build) ──
+      const cases = testMode === 'public' ? testPlan.cases.filter((c) => !c.hidden) : testPlan.cases;
+      const wasmPath = '/home/user/main.wasm';
+
+      // ── stdio binary (clang -cc1 + wasm-ld) — same args as the working
+      //    handleCompile direct path. Only built when stdio cases exist: a
+      //    doctest-only workspace has no main() and --entry=main fails. ──
+      if (cases.some((c) => c.kind === 'stdio')) {
+        const mainSrc = studentSources[0];
+        const sourceFsPath = toWorkspaceFsPath(mainSrc.path, propsRef.current.assignmentToken);
+        const objPath = '/tmp/emception-test-main.o';
+
+        // ── Compile (clang -cc1) — same args as the working handleCompile direct path ──
+        tty.writeLine('\x1b[36m[tests] Compiling...\x1b[0m');
+        const clangResult = await client.run(
+          'clang',
+          [
+            'clang',
+            '-cc1',
+            '-triple',
+            'wasm32-unknown-emscripten',
+            '-emit-obj',
+            '-O1',
+            '-disable-free',
+            '-clear-ast-before-backend',
+            '-disable-llvm-verifier',
+            '-discard-value-names',
+            '-main-file-name',
+            'main.cpp',
+            '-mrelocation-model',
+            'static',
+            '-mframe-pointer=none',
+            '-ffp-contract=on',
+            '-fno-rounding-math',
+            '-mconstructor-aliases',
+            '-target-cpu',
+            'generic',
+            '-fvisibility=hidden',
+            '-internal-isystem',
+            '/usr/include/c++/v1',
+            '-internal-isystem',
+            '/usr/include/compat',
+            '-internal-isystem',
+            '/usr/lib/clang/23/include',
+            '-resource-dir',
+            '/usr/lib/clang/23',
+            '-internal-isystem',
+            '/usr/include',
+            '-fdeprecated-macro',
+            '-ferror-limit',
+            '19',
+            '-fgnuc-version=4.2.1',
+            '-fcxx-exceptions',
+            '-fexceptions',
+            '-o',
+            objPath,
+            '-x',
+            'c++',
+            sourceFsPath,
+          ],
+          {
+            cwd: '/home/user',
+            onStdout: (t: string) => console.log(t),
+            onStderr: (t: string) => {
+              console.error(t);
+              tty.writeError(t);
+            },
+          },
+        );
+        if (clangResult.exitCode !== 0) {
+          throw new Error(`Compilation failed (exit ${clangResult.exitCode})`);
+        }
+
+        // ── Link (wasm-ld) ──
+        tty.writeLine('\x1b[36m[tests] Linking...\x1b[0m');
+        const lldResult = await client.run(
+          'wasm-ld',
+          [
+            'wasm-ld',
+            objPath,
+            '-o',
+            wasmPath,
+            '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
+            '--entry=main',
+            '--import-undefined',
+            '--allow-undefined',
+            '--export-table',
+            '--table-base=1',
+            '--export=__wasm_call_ctors',
+            '-lc',
+            '-ldlmalloc',
+            '-lcompiler_rt',
+            '-lc++-noexcept',
+            '-lc++abi-noexcept',
+            '-lsockets',
+          ],
+          {
+            cwd: '/home/user',
+            onStdout: (t: string) => console.log(t),
+            onStderr: (t: string) => {
+              console.error(t);
+              tty.writeError(t);
+            },
+          },
+        );
+        if (lldResult.exitCode !== 0) {
+          throw new Error(`Link failed (exit ${lldResult.exitCode})`);
+        }
+      }
+
+      // ── Run each case: stdio via wasi-run, doctest via a combined TU ──
+      const enc = new TextEncoder();
+      const reportCases: import('./TestResultsPanel').TestCaseResult[] = [];
+      let doctestIdx = 0;
+      let doctestHeaderWritten = false;
+      for (const test of cases) {
+        const name = test.name ?? test.kind;
+        const caseStart = performance.now();
+
+        if (test.kind === 'doctest') {
+          try {
+            const harnessPath = test.sourceFiles?.[0];
+            const harness = harnessPath
+              ? testPlan.generatedFiles?.find((g) => g.path === harnessPath)
+              : undefined;
+            if (!harness) {
+              reportCases.push({
+                name,
+                passed: false,
+                durationMs: Math.round(performance.now() - caseStart),
+                diagnostic: `Doctest case skipped: no generated harness file for '${harnessPath ?? '<none>'}' (kind 'doctest' not yet supported without generatedFiles).`,
+              });
+              continue;
+            }
+
+            // One combined TU per doctest case: student sources with their
+            // main() renamed (doctest's main wins) + the harness with its
+            // extern "C" decl stripped — same-TU linkage needs no C mangling.
+            if (!doctestHeaderWritten) {
+              await client.writeFile('/home/user/doctest.h', enc.encode(MINI_DOCTEST_H));
+              doctestHeaderWritten = true;
+            }
+            const combinedName = `functional_combined_${doctestIdx}.cpp`;
+            const combinedPath = `/home/user/${combinedName}`;
+            const doctestWasmPath = `/home/user/functional_${doctestIdx}.wasm`;
+            const doctestObjPath = `/tmp/functional_${doctestIdx}.o`;
+            const combined = [
+              '#include "doctest.h"',
+              '#include <string>',
+              '#define main gg_student_main_disabled',
+              ...studentSources.map((f) => f.content),
+              '#undef main',
+              harness.content.replace(/^extern "C" .*;\s*$/m, ''),
+            ].join('\n');
+            await client.writeFile(combinedPath, enc.encode(combined));
+
+            tty.writeLine(`\x1b[36m[tests] Compiling doctest ${name}...\x1b[0m`);
+            const dClangResult = await client.run(
+              'clang',
+              [
+                'clang',
+                '-cc1',
+                '-triple',
+                'wasm32-unknown-emscripten',
+                '-emit-obj',
+                '-O1',
+                '-disable-free',
+                '-clear-ast-before-backend',
+                '-disable-llvm-verifier',
+                '-discard-value-names',
+                '-main-file-name',
+                combinedName,
+                '-mrelocation-model',
+                'static',
+                '-mframe-pointer=none',
+                '-ffp-contract=on',
+                '-fno-rounding-math',
+                '-mconstructor-aliases',
+                '-target-cpu',
+                'generic',
+                '-fvisibility=hidden',
+                '-internal-isystem',
+                '/usr/include/c++/v1',
+                '-internal-isystem',
+                '/usr/include/compat',
+                '-internal-isystem',
+                '/usr/lib/clang/23/include',
+                '-resource-dir',
+                '/usr/lib/clang/23',
+                '-internal-isystem',
+                '/usr/include',
+                '-fdeprecated-macro',
+                '-ferror-limit',
+                '19',
+                '-fgnuc-version=4.2.1',
+                '-fcxx-exceptions',
+                '-fexceptions',
+                '-o',
+                doctestObjPath,
+                '-x',
+                'c++',
+                combinedPath,
+              ],
+              {
+                cwd: '/home/user',
+                onStdout: (t: string) => console.log(t),
+                onStderr: (t: string) => {
+                  console.error(t);
+                  tty.writeError(t);
+                },
+              },
+            );
+            if (dClangResult.exitCode !== 0) {
+              throw new Error(`Doctest compilation failed (exit ${dClangResult.exitCode}): ${dClangResult.stderr}`);
+            }
+
+            tty.writeLine(`\x1b[36m[tests] Linking doctest ${name}...\x1b[0m`);
+            const dLldResult = await client.run(
+              'wasm-ld',
+              [
+                'wasm-ld',
+                doctestObjPath,
+                '-o',
+                doctestWasmPath,
+                '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
+                '--entry=main',
+                '--import-undefined',
+                '--allow-undefined',
+                '--export-table',
+                '--table-base=1',
+                '--export=__wasm_call_ctors',
+                '-lc',
+                '-ldlmalloc',
+                '-lcompiler_rt',
+                '-lc++-noexcept',
+                '-lc++abi-noexcept',
+                '-lsockets',
+              ],
+              {
+                cwd: '/home/user',
+                onStdout: (t: string) => console.log(t),
+                onStderr: (t: string) => {
+                  console.error(t);
+                  tty.writeError(t);
+                },
+              },
+            );
+            if (dLldResult.exitCode !== 0) {
+              throw new Error(`Doctest link failed (exit ${dLldResult.exitCode}): ${dLldResult.stderr}`);
+            }
+
+            const result = await client.run('wasi-run', ['wasi-run', doctestWasmPath], {
+              cwd: '/home/user',
+            });
+            const parsed = parseMiniDoctest(result.stdout);
+            let diagnostic: string | undefined;
+            if (parsed.status === 'crash') {
+              diagnostic = `Doctest binary crashed before printing a summary:\n${parsed.failures.join('\n')}`;
+            } else if (parsed.status === 'failure') {
+              diagnostic =
+                parsed.failures.length > 0
+                  ? parsed.failures.join('\n')
+                  : `Doctest reported ${parsed.casesFailed} failed test case(s).`;
+            }
+            reportCases.push({
+              name,
+              passed: parsed.status === 'success',
+              durationMs: Math.round(performance.now() - caseStart),
+              diagnostic,
+            });
+          } catch (err) {
+            reportCases.push({
+              name,
+              passed: false,
+              durationMs: Math.round(performance.now() - caseStart),
+              diagnostic: err instanceof Error ? err.message : String(err),
+            });
+          }
+          doctestIdx++;
+          continue;
+        }
+
+        if (test.kind !== 'stdio') {
+          reportCases.push({
+            name,
+            passed: false,
+            durationMs: 0,
+            diagnostic: `Test kind '${test.kind}' not yet supported by the direct-compile test runner.`,
+          });
+          continue;
+        }
+
+        try {
+          // Tool-runner stdin contract: a line must end with '\n' before the
+          // feeder returns null (mirrors presets.ts makeStdinFeeder).
+          const rawStdin = test.stdin ?? '';
+          const stdinBytes = enc.encode(rawStdin.endsWith('\n') ? rawStdin : `${rawStdin}\n`);
+          let stdinIdx = 0;
+          const result = await client.run('wasi-run', ['wasi-run', wasmPath], {
+            cwd: '/home/user',
+            stdin: () => (stdinIdx >= stdinBytes.length ? null : stdinBytes[stdinIdx++]),
+          });
+
+          const stdoutOk =
+            test.expectedStdout === undefined ? true : matchesExpected(result.stdout, test.expectedStdout);
+          const stderrOk =
+            test.expectedStderr === undefined ? true : matchesExpected(result.stderr, test.expectedStderr);
+          const exitOk = test.expectedExit === undefined ? true : result.exitCode === test.expectedExit;
+          const passed = stdoutOk && stderrOk && exitOk;
+
+          let diagnostic: string | undefined;
+          if (!passed) {
+            const parts: string[] = [];
+            if (!stdoutOk && test.expectedStdout !== undefined) {
+              parts.push(
+                `stdout mismatch:\n  expected: ${stringifyExpected(test.expectedStdout)}\n  actual:   ${JSON.stringify(result.stdout)}`,
+              );
+            }
+            if (!stderrOk && test.expectedStderr !== undefined) {
+              parts.push(
+                `stderr mismatch:\n  expected: ${stringifyExpected(test.expectedStderr)}\n  actual:   ${JSON.stringify(result.stderr)}`,
+              );
+            }
+            if (!exitOk && test.expectedExit !== undefined) {
+              parts.push(`exit code mismatch: expected ${test.expectedExit}, got ${result.exitCode}`);
+            }
+            diagnostic = parts.join('\n');
+          }
+
+          reportCases.push({
+            name,
+            passed,
+            durationMs: Math.round(performance.now() - caseStart),
+            diagnostic,
+          });
+        } catch (err) {
+          reportCases.push({
+            name,
+            passed: false,
+            durationMs: Math.round(performance.now() - caseStart),
+            diagnostic: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+
+      const passedCount = reportCases.filter((c) => c.passed).length;
+      report = {
+        passed: passedCount,
+        failed: reportCases.length - passedCount,
+        totalDurationMs: Math.round(performance.now() - totalStart),
+        cases: reportCases,
+      };
+      setLastReport(report);
+      try {
+        onTestReportRef.current?.(report);
+      } catch {
+        /* swallow */
+      }
+      setStatus(`Tests complete (${report.passed}/${report.cases.length} passed)`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setStatus(`Test error: ${message}`);
+      tty.writeError(`\x1b[31m${message}\x1b[0m`);
+      report = {
+        passed: 0,
+        failed: 1,
+        totalDurationMs: Math.round(performance.now() - totalStart),
+        cases: [{ name: 'compile', passed: false, durationMs: 0, diagnostic: message }],
+      };
+      setLastReport(report);
+    } finally {
+      setTestRunning(false);
+    }
+    }, [testPlan, testMode, syncFilesToVfs]);
 
   // ── Switch workspace preset ───────────────────────────────────
   const switchWorkspace = useCallback(
@@ -918,8 +1306,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     syncMonacoModels();
   }, [files, syncMonacoModels]);
 
-  // Expose for e2e tests so Playwright can update file content directly in React state
-  (window as unknown as Record<string, unknown>).__setFileContent = handleEditorChange;
+  // Expose for e2e tests so Playwright can update file content directly in React state.
+  // Guarded for SSR (Next.js server render has no window).
+  if (typeof window !== 'undefined') {
+    (window as unknown as Record<string, unknown>).__setFileContent = handleEditorChange;
+  }
 
   const teardownSdlRuntime = useCallback(() => {
     const sdlMod = sdlModuleRef.current;
@@ -1927,7 +2318,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   const showCompileButton = executionPhase !== 'running' || canRecompileWhileRunning;
 
   return (
-    <div className="emception-ide" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="emception-ide" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', minHeight: 400, fontFamily: 'system-ui, sans-serif' }}>
       {/* Hidden log for Playwright E2E assertions — not visible to users */}
       <pre data-testid="terminal" ref={terminalLogRef} hidden aria-hidden="true" style={{ display: 'none' }} />
       {/* Hidden holder keeps the SDL <canvas> alive when no dock group hosts it.

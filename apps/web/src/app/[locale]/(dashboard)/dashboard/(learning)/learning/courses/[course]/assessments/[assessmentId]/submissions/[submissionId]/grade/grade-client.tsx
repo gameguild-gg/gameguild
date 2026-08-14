@@ -265,7 +265,7 @@ export function GradeClient({
         </div>
       )}
 
-      <div className="border">
+      <div className="border h-[70vh] min-h-[500px]">
         <Ide
           ref={ideRef}
           manifestUrl={manifestUrl}

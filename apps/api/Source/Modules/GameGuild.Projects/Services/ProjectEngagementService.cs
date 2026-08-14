@@ -1,3 +1,6 @@
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
+using GameGuild.Teams;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Projects;
@@ -5,17 +8,27 @@ namespace GameGuild.Projects;
 /// <summary>
 /// Service implementation for project engagement: teams, followers, feedback, jams, and analytics.
 /// </summary>
-public class ProjectEngagementService(IApplicationDbContext context) : IProjectEngagementService
+public class ProjectEngagementService(
+    IApplicationDbContext context,
+    IProjectAuthorizationService authorizationService,
+    IActorContextAccessor actorContextAccessor) : IProjectEngagementService
 {
     #region Team Integration
 
     public async Task<ProjectTeam> AddTeamToProjectAsync(Guid projectId, Guid teamId, string role, string? permissions = null)
     {
+        await RequireProjectPermissionAsync(projectId, PermissionType.Manage).ConfigureAwait(false);
+        var projectTenantId = await context.Set<Project>().Where(project => project.Id == projectId && project.DeletedAt == null)
+            .Select(project => project.TenantId).SingleAsync().ConfigureAwait(false);
+        if (!await context.Set<Team>().AnyAsync(team => team.Id == teamId && team.TenantId == projectTenantId && team.IsActive && team.DeletedAt == null).ConfigureAwait(false))
+            throw new ArgumentException("Team not found in the Project tenant.", nameof(teamId));
         var projectTeam = new ProjectTeam
         {
             ProjectId = projectId,
             TeamId = teamId,
-            Role = role,
+            Role = Enum.TryParse<ProjectTeamRole>(role, true, out var parsedRole)
+                ? parsedRole
+                : throw new ArgumentException("Unknown project team role.", nameof(role)),
             Permissions = permissions,
             AssignedAt = SystemClock.UtcNow,
             IsActive = true
@@ -29,6 +42,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<bool> RemoveTeamFromProjectAsync(Guid projectId, Guid teamId)
     {
+        await RequireProjectPermissionAsync(projectId, PermissionType.Manage).ConfigureAwait(false);
         var projectTeam = await context.Set<ProjectTeam>()
             .FirstOrDefaultAsync(pt => pt.ProjectId == projectId && pt.TeamId == teamId);
 
@@ -43,6 +57,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<IEnumerable<ProjectTeam>> GetProjectTeamsAsync(Guid projectId)
     {
+        await RequireProjectPermissionAsync(projectId, PermissionType.Read).ConfigureAwait(false);
         return await context.Set<ProjectTeam>()
             .Include(pt => pt.Team!)
             .ThenInclude(t => t.Members)
@@ -52,13 +67,10 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<IEnumerable<Project>> GetProjectsByTeamAsync(Guid teamId)
     {
-        return await context.Set<ProjectTeam>()
-            .Include(pt => pt.Project!)
-            .ThenInclude(p => p.CreatedBy)
-            .Include(pt => pt.Project!)
-            .ThenInclude(p => p.Category)
-            .Where(pt => pt.TeamId == teamId && pt.IsActive && pt.Project!.DeletedAt == null)
-            .Select(pt => pt.Project!)
+        return await authorizationService.ApplyReadAccess(context.Set<Project>())
+            .Include(project => project.CreatedBy)
+            .Include(project => project.Category)
+            .Where(project => project.Teams.Any(team => team.TeamId == teamId && team.IsActive && team.DeletedAt == null && team.EndedAt == null))
             .ToListAsync();
     }
 
@@ -68,6 +80,8 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<ProjectFollower> FollowProjectAsync(Guid projectId, Guid userId, bool emailNotifications = true, bool pushNotifications = true)
     {
+        await RequireActorAsync(userId).ConfigureAwait(false);
+        await RequireProjectPermissionAsync(projectId, PermissionType.Read).ConfigureAwait(false);
         var existing = await context.Set<ProjectFollower>()
             .FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
@@ -90,6 +104,8 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<bool> UnfollowProjectAsync(Guid projectId, Guid userId)
     {
+        await RequireActorAsync(userId).ConfigureAwait(false);
+        await RequireProjectPermissionAsync(projectId, PermissionType.Read).ConfigureAwait(false);
         var follower = await context.Set<ProjectFollower>()
             .FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
@@ -103,12 +119,16 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<bool> IsUserFollowingProjectAsync(Guid projectId, Guid userId)
     {
+        if (actorContextAccessor.ActorContext.SubjectIdAsGuid != userId ||
+            !await authorizationService.HasPermissionAsync(projectId, PermissionType.Read).ConfigureAwait(false))
+            return false;
         return await context.Set<ProjectFollower>()
             .AnyAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
     }
 
     public async Task<IEnumerable<ProjectFollower>> GetProjectFollowersAsync(Guid projectId)
     {
+        await RequireProjectPermissionAsync(projectId, PermissionType.Read).ConfigureAwait(false);
         return await context.Set<ProjectFollower>()
             .Include(pf => pf.User)
             .Where(pf => pf.ProjectId == projectId)
@@ -118,13 +138,11 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<IEnumerable<Project>> GetProjectsFollowedByUserAsync(Guid userId)
     {
-        return await context.Set<ProjectFollower>()
-            .Include(pf => pf.Project)
-            .ThenInclude(p => p.CreatedBy)
-            .Include(pf => pf.Project)
-            .ThenInclude(p => p.Category)
-            .Where(pf => pf.UserId == userId && pf.Project.DeletedAt == null)
-            .Select(pf => pf.Project)
+        await RequireActorAsync(userId).ConfigureAwait(false);
+        return await authorizationService.ApplyReadAccess(context.Set<Project>())
+            .Include(project => project.CreatedBy)
+            .Include(project => project.Category)
+            .Where(project => project.Followers.Any(follower => follower.UserId == userId))
             .ToListAsync();
     }
 
@@ -134,6 +152,8 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<ProjectFeedback> AddProjectFeedbackAsync(Guid projectId, Guid userId, int rating, string title, string? content = null)
     {
+        await RequireActorAsync(userId).ConfigureAwait(false);
+        await RequireProjectPermissionAsync(projectId, PermissionType.Read).ConfigureAwait(false);
         var existing = await context.Set<ProjectFeedback>()
             .FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
@@ -166,10 +186,14 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<ProjectFeedback> UpdateProjectFeedbackAsync(Guid feedbackId, int rating, string title, string? content = null)
     {
-        var feedback = await context.Set<ProjectFeedback>().FindAsync(feedbackId).ConfigureAwait(false);
+        var feedback = await context.Set<ProjectFeedback>().FirstOrDefaultAsync(candidate => candidate.Id == feedbackId).ConfigureAwait(false);
 
         if (feedback == null)
             throw new ArgumentException("Feedback not found", nameof(feedbackId));
+        var actorId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (actorId != feedback.UserId &&
+            !await authorizationService.HasPermissionAsync(feedback.ProjectId, PermissionType.Edit).ConfigureAwait(false))
+            throw new UnauthorizedAccessException("Only the feedback author or a Project editor may update feedback.");
 
         feedback.Rating = rating;
         feedback.Title = title;
@@ -183,9 +207,13 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<bool> DeleteProjectFeedbackAsync(Guid feedbackId)
     {
-        var feedback = await context.Set<ProjectFeedback>().FindAsync(feedbackId).ConfigureAwait(false);
+        var feedback = await context.Set<ProjectFeedback>().FirstOrDefaultAsync(candidate => candidate.Id == feedbackId).ConfigureAwait(false);
 
         if (feedback == null) return false;
+        var actorId = actorContextAccessor.ActorContext.SubjectIdAsGuid;
+        if (actorId != feedback.UserId &&
+            !await authorizationService.HasPermissionAsync(feedback.ProjectId, PermissionType.Edit).ConfigureAwait(false))
+            return false;
 
         context.Set<ProjectFeedback>().Remove(feedback);
         await context.SaveChangesAsync().ConfigureAwait(false);
@@ -195,6 +223,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<IEnumerable<ProjectFeedback>> GetProjectFeedbackAsync(Guid projectId, int skip = 0, int take = 50)
     {
+        await RequireProjectPermissionAsync(projectId, PermissionType.Read).ConfigureAwait(false);
         return await context.Set<ProjectFeedback>()
             .Include(pf => pf.User)
             .Where(pf => pf.ProjectId == projectId && pf.Status == ContentStatus.Published)
@@ -206,6 +235,10 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<ProjectFeedback?> GetUserFeedbackForProjectAsync(Guid projectId, Guid userId)
     {
+        if (actorContextAccessor.ActorContext.SubjectIdAsGuid != userId &&
+            !await authorizationService.HasPermissionAsync(projectId, PermissionType.Edit).ConfigureAwait(false))
+            return null;
+        await RequireProjectPermissionAsync(projectId, PermissionType.Read).ConfigureAwait(false);
         return await context.Set<ProjectFeedback>()
             .Include(pf => pf.User)
             .FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
@@ -217,6 +250,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<ProjectJamSubmission> SubmitProjectToJamAsync(Guid projectId, Guid jamId, string? submissionNotes = null)
     {
+        await RequireProjectPermissionAsync(projectId, PermissionType.Edit).ConfigureAwait(false);
         var existing = await context.Set<ProjectJamSubmission>()
             .FirstOrDefaultAsync(pjs => pjs.ProjectId == projectId && pjs.JamId == jamId);
 
@@ -239,6 +273,8 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<bool> RemoveProjectFromJamAsync(Guid projectId, Guid jamId)
     {
+        if (!await authorizationService.HasPermissionAsync(projectId, PermissionType.Edit).ConfigureAwait(false))
+            return false;
         var submission = await context.Set<ProjectJamSubmission>()
             .FirstOrDefaultAsync(pjs => pjs.ProjectId == projectId && pjs.JamId == jamId);
 
@@ -252,6 +288,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<IEnumerable<ProjectJamSubmission>> GetProjectJamSubmissionsAsync(Guid projectId)
     {
+        await RequireProjectPermissionAsync(projectId, PermissionType.Read).ConfigureAwait(false);
         return await context.Set<ProjectJamSubmission>()
             .Include(pjs => pjs.Jam)
             .Include(pjs => pjs.Scores)
@@ -261,13 +298,10 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<IEnumerable<Project>> GetProjectsByJamAsync(Guid jamId)
     {
-        return await context.Set<ProjectJamSubmission>()
-            .Include(pjs => pjs.Project)
-            .ThenInclude(p => p.CreatedBy)
-            .Include(pjs => pjs.Project)
-            .ThenInclude(p => p.Category)
-            .Where(pjs => pjs.JamId == jamId && pjs.Project.DeletedAt == null)
-            .Select(pjs => pjs.Project)
+        return await authorizationService.ApplyReadAccess(context.Set<Project>())
+            .Include(project => project.CreatedBy)
+            .Include(project => project.Category)
+            .Where(project => project.JamSubmissions.Any(submission => submission.JamId == jamId))
             .ToListAsync();
     }
 
@@ -277,6 +311,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<ProjectStatistics> GetProjectStatisticsAsync(Guid projectId)
     {
+        await RequireProjectPermissionAsync(projectId, PermissionType.Read).ConfigureAwait(false);
         var project = await context.Set<Project>()
             .Include(p => p.Followers)
             .Include(p => p.Feedbacks)
@@ -315,7 +350,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
     {
         var cutoffDate = SystemClock.UtcNow.Subtract(timeWindow ?? TimeSpan.FromDays(7));
 
-        var projects = await context.Set<Project>()
+        var projects = await authorizationService.ApplyReadAccess(context.Set<Project>())
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
             .Include(p => p.Followers)
@@ -332,7 +367,7 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
 
     public async Task<IEnumerable<Project>> GetPopularProjectsAsync(int take = 10)
     {
-        return await context.Set<Project>()
+        return await authorizationService.ApplyReadAccess(context.Set<Project>())
             .Include(p => p.CreatedBy)
             .Include(p => p.Category)
             .Include(p => p.Releases)
@@ -341,6 +376,19 @@ public class ProjectEngagementService(IApplicationDbContext context) : IProjectE
             .ThenByDescending(p => p.Followers.Count)
             .Take(take)
             .ToListAsync();
+    }
+
+    private async Task RequireProjectPermissionAsync(Guid projectId, PermissionType permission)
+    {
+        if (!await authorizationService.HasPermissionAsync(projectId, permission).ConfigureAwait(false))
+            throw new UnauthorizedAccessException($"Project {permission} permission is required.");
+    }
+
+    private async Task RequireActorAsync(Guid userId)
+    {
+        if (actorContextAccessor.ActorContext.SubjectIdAsGuid != userId ||
+            !await authorizationService.IsActorActiveTenantMemberAsync().ConfigureAwait(false))
+            throw new UnauthorizedAccessException("The authenticated active tenant member must match the requested user.");
     }
 
     private static decimal CalculateTrendingScore(Project project, DateTime cutoffDate)
