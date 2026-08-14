@@ -34,6 +34,9 @@ public class AuthService(
     public Task<SignInResponse> GoogleIdTokenSignInAsync(GoogleIdTokenRequest request, CancellationToken cancellationToken = default) =>
         oauthAuthService.GoogleIdTokenSignInAsync(request, cancellationToken);
 
+    public Task<SignInResponse> DiscordSignInAsync(DiscordSignInRequest request, CancellationToken cancellationToken = default) =>
+        oauthAuthService.DiscordSignInAsync(request, cancellationToken);
+
     public Task<string> GetGitHubAuthUrlAsync(string redirectUri) =>
         oauthAuthService.GetGitHubAuthUrlAsync(redirectUri);
 

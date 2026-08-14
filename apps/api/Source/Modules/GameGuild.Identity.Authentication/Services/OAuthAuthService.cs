@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-/// OAuth authentication: GitHub OAuth, Google OAuth, Google ID token
+/// OAuth authentication: GitHub OAuth, Google OAuth, Google ID token, Discord OAuth
 /// </summary>
 public class OAuthAuthService(
     IUserRepository userRepository,
@@ -138,7 +138,7 @@ public class OAuthAuthService(
         var email = googleUser.Email;
         var providerKey = googleUser.Sub;
 
-        var user = await ResolveGoogleUserAsync(email, providerKey, googleUser, cancellationToken).ConfigureAwait(false);
+        var user = await ResolveExternalUserAsync("google", email, providerKey, googleUser.Name, googleUser.EmailVerified, cancellationToken).ConfigureAwait(false);
         var userId = user.Id;
 
         await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
@@ -186,17 +186,73 @@ public class OAuthAuthService(
         };
     }
 
+    public async Task<SignInResponse> DiscordSignInAsync(DiscordSignInRequest request, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Processing Discord OAuth sign-in");
+
+        // HandleCallbackAsync dispatches to ExchangeDiscordCodeAsync (code → access token)
+        // and then GetUserProfileAsync("discord", token) → OAuthUserProfile.
+        var discordUser = await oauthService
+            .HandleCallbackAsync("discord", request.Code, request.State, request.RedirectUri)
+            .ConfigureAwait(false);
+
+        var email = discordUser.Email ?? throw new UnauthorizedAccessException("Discord account has no email");
+
+        var user = await ResolveExternalUserAsync("discord", email, discordUser.ProviderId, discordUser.Name, discordUser.EmailVerified, cancellationToken).ConfigureAwait(false);
+        var userId = user.Id;
+
+        await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
+
+        var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
+
+        var httpContext = httpContextAccessor.HttpContext;
+        var ipAddress = authAttemptService.GetClientIpAddress(httpContext);
+        var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
+        var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
+
+        var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+            userId,
+            user.Email,
+            tenantAccessContext.Roles.ToArray(),
+            tenantAccessContext.TenantId,
+            user.TokenVersion,
+            cancellationToken).ConfigureAwait(false);
+        var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
+
+        var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
+        var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
+
+        logger.LogInformation("Discord OAuth sign-in successful for {Email}", email);
+
+        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
+
+        return new SignInResponse
+        {
+            Success = true,
+            Message = "Discord sign-in successful",
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            ExpiresAt = refreshTokenExpiresAt,
+            ExpiresIn = accessTokenExpirationMinutes * 60,
+            AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
+            RefreshTokenExpiresAt = refreshTokenExpiresAt,
+            UserId = userId,
+            Email = user.Email,
+            SessionId = Guid.NewGuid(),
+            TenantId = tenantAccessContext.TenantId,
+            AvailableTenants = tenantAccessContext.AvailableTenants
+        };
+    }
+
     /// <summary>
-    ///     Resolves the GameGuild <see cref="User" /> for a verified Google identity using the
+    ///     Resolves the GameGuild <see cref="User" /> for a verified external identity using the
     ///     auto-link policy: existing ExternalLogin wins; else verified-email match links to
     ///     the existing user; else a brand-new OAuth user is created. Concurrent sign-ins for
     ///     the same identity race the unique (Provider, ProviderKey) index — on collision the
     ///     losing insert is caught and the winning rows are refetched (idempotent resume).
     /// </summary>
-    private async Task<User> ResolveGoogleUserAsync(string email, string providerKey, VerifiedGoogleUser googleUser, CancellationToken cancellationToken)
+    private async Task<User> ResolveExternalUserAsync(string provider, string email, string providerKey, string name, bool emailVerified, CancellationToken cancellationToken)
     {
-        const string provider = "google";
-
         var existingLink = await externalLoginRepository
             .GetByProviderKeyAsync(provider, providerKey, cancellationToken)
             .ConfigureAwait(false);
@@ -209,18 +265,18 @@ public class OAuthAuthService(
 
         var existingByEmail = await userRepository.GetByEmailAsync(email, cancellationToken).ConfigureAwait(false);
 
-        if (existingByEmail != null && !googleUser.EmailVerified)
+        if (existingByEmail != null && !emailVerified)
         {
-            // Refuse to merge an unverified-email collision — would let a Google-unverified
-            // identity hijack a pre-existing account.
-            throw new UnauthorizedAccessException("Email is not verified by Google");
+            // Refuse to merge an unverified-email collision — would let an unverified
+            // external identity hijack a pre-existing account.
+            throw new UnauthorizedAccessException($"Email is not verified by {CultureInfo.InvariantCulture.TextInfo.ToTitleCase(provider)}");
         }
 
         var user = existingByEmail;
         var createdNewUser = false;
         if (user == null)
         {
-            user = User.CreateOAuthUser(email, googleUser.Name ?? email.Split('@')[0]);
+            user = User.CreateOAuthUser(email, name ?? email.Split('@')[0]);
             createdNewUser = true;
         }
 
