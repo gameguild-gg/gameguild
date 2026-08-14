@@ -89,14 +89,14 @@ public class CodingAssignmentContentTests
         errors.Should().BeEmpty();
     }
 
-    // ── (c) validator rejects: empty Tests.Public + Tests.Private → at_least_one_test ────────────────
+    // ── (c) validator accepts empty Tests.Public + Tests.Private (open-ended assignments) ───────────
 
     [Fact]
-    public void Validator_Rejects_NoTests()
+    public void Validator_Accepts_EmptyTestSuite()
     {
         var content = CreateMinimalValid() with { Tests = new TestSuite() };
         var errors = Validate(content);
-        errors.Should().Contain(e => e.ErrorCode == "at_least_one_test");
+        errors.Should().NotContain(e => e.ErrorCode == "at_least_one_test");
     }
 
     // ── (c) Modifiable==true && Visibility=="Private" → private_file_not_modifiable ──────────────────
