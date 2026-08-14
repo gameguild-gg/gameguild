@@ -45,6 +45,35 @@ describe('createFetchTransport — extended', () => {
     }
   });
 
+  it('should preserve downloadable attachments as Blob values', async () => {
+    globalThis.fetch = vi.fn(async () => {
+      return new Response('event,applications\nAugust lab,2', {
+        status: 200,
+        headers: {
+          'Content-Disposition': 'attachment; filename="testing-lab.csv"',
+          'Content-Type': 'text/csv; charset=utf-8',
+        },
+      });
+    });
+
+    const transport = createFetchTransport({
+      baseUrl: 'http://localhost:5000',
+    });
+
+    const result = await transport.request<Blob>({
+      path: '/analytics/export',
+      method: 'GET',
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.data).toBeInstanceOf(Blob);
+      await expect(result.data.data.text()).resolves.toBe(
+        'event,applications\nAugust lab,2',
+      );
+    }
+  });
+
   it('should handle 204 No Content response', async () => {
     globalThis.fetch = vi.fn(async () => {
       return new Response(null, { status: 204 });

@@ -192,7 +192,10 @@ async function executeRequest<T>(
         }
       } else {
         // Non-JSON response
-        data = (await response.text()) as T;
+        const contentDisposition = response.headers.get('Content-Disposition');
+        data = contentDisposition?.toLowerCase().includes('attachment')
+          ? ((await response.blob()) as T)
+          : ((await response.text()) as T);
       }
     }
 
