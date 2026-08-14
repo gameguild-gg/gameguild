@@ -47,6 +47,7 @@ export default async function LearnerActivityPage({
   let activity: LearnerActivityDescriptor | null = null;
   let codingAssignment: CodingAssignmentContent | null = null;
   let useCodingExperience = false;
+  let codingUnpublished = false;
   let description = '';
   let dueAt: string | null | undefined;
   let points: number | undefined;
@@ -81,6 +82,7 @@ export default async function LearnerActivityPage({
         useCodingExperience = true;
       }
     }
+    codingUnpublished = codingEligible && !codingAssignment;
   } else if (activityId.startsWith('content-')) {
     const contentId = activityId.slice('content-'.length);
     const item = access.course.modules
@@ -141,6 +143,22 @@ export default async function LearnerActivityPage({
           </CardHeader>
           <CardContent className="prose max-w-none dark:prose-invert">
             <MarkdownRenderer content={description} />
+          </CardContent>
+        </Card>
+      ) : null}
+      {codingUnpublished ? (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg text-amber-600 dark:text-amber-400">
+              <ClipboardCheck className="size-5" />
+              Coding assignment not published yet
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            This coding assignment hasn't been published by the instructor
+            yet. The interactive code editor will appear here once the
+            definition is saved — until then, you can still submit your
+            response using the form below.
           </CardContent>
         </Card>
       ) : null}

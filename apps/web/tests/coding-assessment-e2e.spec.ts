@@ -296,6 +296,49 @@ test.describe("Coding Assessment E2E", () => {
     await expect(results).toContainText("0 failed");
   });
 
+  test("save definition round-trips through the v1 API", async ({ page }) => {
+    // Regression proof for the programId GUID fix: the PUT must succeed (a
+    // 400 programId validation error or 403 would leave the URL unchanged).
+    //
+    // Read-back is blocked by an API-side bug: JsonBody lives in a jsonb
+    // column (keys normalized by length/bytes → "Name" before "kind") while
+    // the API's System.Text.Json reader only accepts the "kind" discriminator
+    // as the FIRST key — GET .../coding-assignment/full 404s on everything
+    // this PUT writes. Re-add the reopen-and-assert block from
+    // tests/coding-assessment-authoring.spec.ts once the API reads the
+    // discriminator anywhere (or the column becomes text).
+    test.setTimeout(240_000); // emception boot + save
+
+    // 2. Open the editor + wait for boot.
+    await page.goto(`${WEB_BASE_URL}${CODING_DEFINITION_ROUTE}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(
+      page.getByText("Coding Definition Editor"),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("status").first()).toHaveText("Ready", {
+      timeout: 60_000,
+    });
+    await page.waitForTimeout(1_000);
+
+    // 3. Tests tab; clear persisted/seeded rows, author a standard test.
+    await page.getByRole("button", { name: "Tests", exact: true }).click();
+    await expect(page.getByTestId("tests-panel-slot")).toBeVisible();
+    await removeAllTestRows(page);
+    await page.getByTestId("add-standard").click();
+    await page.getByTestId("standard-stdin-0").fill("world");
+    await page.getByTestId("standard-stdout-0").fill("hello world");
+
+    // 4. Save -> success redirects to the assessment page. This proves the
+    //    PUT went through the programId GUID: a slug in programId fails
+    //    FluentValidation (400) and the editor stays put with an error.
+    await waitForSaveEnabled(page);
+    await page.getByTestId("save-button").click();
+    await page.waitForURL(`**/assessments/${ASSESSMENT_ID}`, {
+      timeout: 90_000,
+    });
+  });
+
   test("SDL3 canvas program renders end-to-end", async ({ page }) => {
     test.setTimeout(240_000);
     const consoleErrors: string[] = [];
@@ -477,4 +520,11 @@ async function selectRadixOption(
 ) {
   await page.getByTestId(triggerTestId).click();
   await page.getByRole("option", { name: label, exact: true }).click();
+}
+
+/** Wait for the Save button to be present and enabled (form valid, not pending). */
+async function waitForSaveEnabled(page: Page) {
+  const save = page.getByTestId("save-button");
+  await save.waitFor({ state: "visible" });
+  await expect(save).toBeEnabled({ timeout: 30_000 });
 }
