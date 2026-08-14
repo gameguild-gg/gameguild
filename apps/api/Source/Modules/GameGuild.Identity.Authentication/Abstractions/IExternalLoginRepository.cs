@@ -19,6 +19,21 @@ public interface IExternalLoginRepository
     ///     Inserts a new external login, or — if a row already exists for the same
     ///     (Provider, ProviderKey) — updates the linked UserId on the existing row.
     ///     Idempotent under repeated calls with the same (Provider, ProviderKey).
+    ///     Sign-in flows only: authenticated linking must use <see cref="AddAsync" /> so a
+    ///     concurrent winner's row can never be silently reassigned.
     /// </summary>
     Task<ExternalLogin> UpsertAsync(ExternalLogin externalLogin, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Insert-only: adds the row without reading first. Throws <c>DbUpdateException</c> when the
+    ///     (Provider, ProviderKey) unique index rejects a concurrent duplicate — callers handle the
+    ///     race by refetching. Never updates an existing row.
+    /// </summary>
+    Task<ExternalLogin> AddAsync(ExternalLogin externalLogin, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Hard-deletes the external login row for the given (provider, user).
+    /// </summary>
+    /// <returns>True when a row was removed; false when no such link exists.</returns>
+    Task<bool> DeleteAsync(string provider, Guid userId, CancellationToken cancellationToken = default);
 }

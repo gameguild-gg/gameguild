@@ -357,6 +357,11 @@ public class ProgramContentController(
 
   private async Task<bool> HasProgramManagementAccessAsync(Guid programId, Guid userId)
   {
+    if (actorContextAccessor.ActorContext.IsSystemAdmin)
+    {
+      return true;
+    }
+
     var tenantId = ClaimsExtractor.GetTenantIdAsGuid(User) ?? actorContextAccessor.ActorContext.TenantId;
 
     return await HasProgramPermissionAsync(userId, tenantId, programId, PermissionType.Read).ConfigureAwait(false)
