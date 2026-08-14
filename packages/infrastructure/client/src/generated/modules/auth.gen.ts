@@ -16,6 +16,62 @@ export class AuthModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Initiate Discord OAuth sign-in
+   *
+   * Initiates the Discord OAuth authorization-code flow and returns the authorization URL with the CSRF state parameter.
+   */
+  async postAuthDiscordAuthorize(
+    body: Types.IdentityAuthenticationDiscordAuthorizeInput,
+  ): Promise<Result<Types.IdentityAuthenticationDiscordSignInOutput, ApiError>> {
+    const url = '/v1/auth/discord:authorize';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordAuthorizeInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationDiscordSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Discord OAuth callback
+   *
+   * Exchanges the Discord OAuth authorization code for access and refresh tokens, applying the same account matching and auto-link policy as Google sign-in.
+   */
+  async postAuthDiscordCallback(body: Types.IdentityAuthenticationDiscordCallbackInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/discord:callback';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordCallbackInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: false,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Send email verification
    *
    * Sends a verification email to the specified email address to confirm ownership.
@@ -71,6 +127,111 @@ export class AuthModule {
     }
 
     return result;
+  }
+
+  /**
+   * List linked external logins
+   *
+   * Returns the external identity providers linked to the authenticated user, newest first.
+   */
+  async getAuthExternalLogins(): Promise<Result<Array<Types.IdentityAuthenticationExternalLogin>, ApiError>> {
+    const url = '/v1/auth/external-logins';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.IdentityAuthenticationExternalLogin>, ApiError>;
+  }
+
+  /**
+   * Start Discord account link
+   *
+   * Returns the Discord OAuth authorization URL plus the state parameter to validate at the callback.
+   */
+  async postAuthExternalLoginsDiscordLinkAuthorize(
+    body: Types.IdentityAuthenticationDiscordLinkAuthorizeInput,
+  ): Promise<Result<Types.IdentityAuthenticationDiscordLinkAuthorizeOutput, ApiError>> {
+    const url = '/v1/auth/external-logins/discord:link-authorize';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordLinkAuthorizeInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationDiscordLinkAuthorizeOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Complete Discord account link
+   *
+   * Exchanges the Discord authorization code for the user profile and links the Discord identity to the authenticated user. Idempotent when already linked to the same user.
+   */
+  async postAuthExternalLoginsDiscordLinkCallback(body: Types.IdentityAuthenticationDiscordLinkCallbackInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/auth/external-logins/discord:link-callback';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordLinkCallbackInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Link Google account
+   *
+   * Verifies a Google ID token and links the Google identity to the authenticated user. Idempotent when already linked to the same user.
+   */
+  async postAuthExternalLoginsGoogle(body: Types.IdentityAuthenticationLinkGoogleAccountInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/auth/external-logins/google';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationLinkGoogleAccountInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Unlink external login
+   *
+   * Removes the external login link for the given provider. Refused with 400 when it is the user's last sign-in method and no password is set.
+   */
+  async deleteAuthExternalLogins(provider: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/external-logins/${provider}`;
+
+    const result = await this.client.request({
+      method: 'DELETE',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 
   /**
