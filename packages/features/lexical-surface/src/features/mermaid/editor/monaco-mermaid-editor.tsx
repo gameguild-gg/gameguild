@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { Monaco, OnMount } from "@monaco-editor/react";
 import type { editor, IDisposable } from "monaco-editor";
-import { MonacoCodeEditor } from "../../shared/ui/monaco-code-editor";
-import type { MonacoSurfacePreferences } from "../../shared/ui/editor-preferences";
+import { MonacoCodeEditor } from "../../../shared/ui/monaco-code-editor";
+import type { MonacoSurfacePreferences } from "../../../shared/ui/editor-preferences";
 import { createMermaidCompletionProvider } from "./mermaid-completion-provider";
 import {
   mermaidLanguageConfig,

@@ -14,13 +14,13 @@ import {
 } from "lexical";
 import { Pencil, Trash2 } from "lucide-react";
 import { cn } from "@game-guild/ui/lib/utils";
-import { DeleteConfirmDialog } from "../../shared/ui/dialogs/delete-confirm-dialog";
-import { useNodeDeleteProtection } from "../../shared/lexical/node-delete-protection";
+import { DeleteConfirmDialog } from "../../../shared/ui/dialogs/delete-confirm-dialog";
+import { useNodeDeleteProtection } from "../../../shared/lexical/node-delete-protection";
 import { $isVegaLiteLexicalNode } from "./vega-lite-node";
-import type { VegaLiteData } from "./vega-lite-data";
-import { VegaLiteEditor } from "./vega-lite-editor";
-import { VegaLiteViewer } from "./vega-lite-viewer";
-import { getThemePair } from "./vega-theme-helper";
+import type { VegaLiteData } from "../vega-lite-data";
+import { VegaLiteEditor } from "../editor/vega-lite-editor";
+import { VegaLiteViewer } from "../rendering/vega-lite-viewer";
+import { getThemePair } from "../theme/vega-theme-helper";
 
 interface VegaLiteLexicalComponentProps {
   spec: string;

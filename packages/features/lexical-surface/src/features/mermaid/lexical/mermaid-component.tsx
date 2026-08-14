@@ -14,12 +14,12 @@ import {
 } from "lexical";
 import { Pencil, Trash2 } from "lucide-react";
 import { cn } from "@game-guild/ui/lib/utils";
-import { DeleteConfirmDialog } from "../../shared/ui/dialogs/delete-confirm-dialog";
-import { useNodeDeleteProtection } from "../../shared/lexical/node-delete-protection";
+import { DeleteConfirmDialog } from "../../../shared/ui/dialogs/delete-confirm-dialog";
+import { useNodeDeleteProtection } from "../../../shared/lexical/node-delete-protection";
 import { $isMermaidLexicalNode } from "./mermaid-node";
-import type { MermaidData } from "./mermaid-data";
-import { MermaidEditor } from "./mermaid-editor";
-import { MermaidViewer } from "./mermaid-viewer";
+import type { MermaidData } from "../mermaid-data";
+import { MermaidEditor } from "../editor/mermaid-editor";
+import { MermaidViewer } from "../rendering/mermaid-viewer";
 import type {
   MermaidDiagramType,
   MermaidThemeName,

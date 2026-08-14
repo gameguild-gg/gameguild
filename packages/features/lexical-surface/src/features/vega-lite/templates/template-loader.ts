@@ -11,6 +11,7 @@ export interface VegaLiteTemplate {
   id: string;
   type: string;
   title: string;
+  initialTitle?: string;
   description: string;
   icon: LucideIcon;
   category: string;
@@ -35,6 +36,11 @@ export interface TemplateSubcategory {
  * Template category structure matching Vega-Lite official examples
  */
 export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
+  {
+    id: "starter",
+    label: "Starter",
+    subcategories: [],
+  },
   {
     id: "single-view-plots",
     label: "Single-View Plots",
@@ -146,6 +152,9 @@ async function loadTemplatesFromFolder(): Promise<VegaLiteTemplate[]> {
   // For now, we'll manually import the templates we've created
 
   try {
+    const blank = await import("./blank");
+    templates.push(blank.default);
+
     // Single-View Plots - Bar Charts
     const simpleBar = await import("./single-view-plots/bar-charts/simple-bar");
     templates.push(simpleBar.default);

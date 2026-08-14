@@ -2,13 +2,13 @@
 
 import { Button } from "@game-guild/ui/components/button";
 import { Download } from "lucide-react";
-import { useDarkMode } from "../../shared/ui/use-dark-mode";
+import { useDarkMode } from "../../../shared/ui/use-dark-mode";
 import {
   applyThemeOverrides,
   DARK_THEME_OVERRIDES,
   LIGHT_THEME_OVERRIDES,
-} from "./vega-theme-overrides";
-import { loadCsvDataIntoSpec } from "./vega-csv-loader";
+} from "../theme/vega-theme-overrides";
+import { loadCsvDataIntoSpec } from "../data/vega-csv-loader";
 
 // Function to create dark version of any theme
 function createDarkTheme(baseTheme: any) {

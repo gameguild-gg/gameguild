@@ -4,8 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { BarChart3, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react";
 import { Button } from "@game-guild/ui/components/button";
 import { useVegaLiteChart, renderVegaChart } from "./vega-lite-chart";
-import { useDarkMode } from "../../shared/ui/use-dark-mode";
-import { loadCsvDataIntoSpec } from "./vega-csv-loader";
+import { useDarkMode } from "../../../shared/ui/use-dark-mode";
+import { loadCsvDataIntoSpec } from "../data/vega-csv-loader";
 
 interface VegaLiteViewerProps {
   spec: string;
@@ -68,6 +68,8 @@ export function VegaLiteViewer({
     x: 0,
     y: 0,
   });
+  const [renderError, setRenderError] = useState("");
+  const [fullscreenRenderError, setFullscreenRenderError] = useState("");
 
   // Use the new hook for chart data processing
   const { parsedSpec, isLoading, error, vegaRef, fullscreenVegaRef } =
@@ -101,66 +103,57 @@ export function VegaLiteViewer({
 
   // Render chart when parsedSpec is available
   useEffect(() => {
-    const loadChart = async () => {
-      if (!parsedSpec || !vegaRef.current) {
-        console.log(
-          "VegaLiteViewer: Skipping render - missing spec or container",
-        );
-        return;
-      }
-
-      try {
-        await renderVegaChart(
-          vegaRef.current,
-          parsedSpec,
-          layout,
-          title,
-          theme,
-        );
-        console.log("VegaLiteViewer: Chart rendered successfully");
-      } catch (err: any) {
-        console.error("VegaLiteViewer: Error rendering chart:", err);
-        if (vegaRef.current) {
-          vegaRef.current.innerHTML = `
-            <div class="text-red-500 p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 max-w-full">
-              <div class="font-medium text-sm">Error rendering chart:</div>
-              <div class="text-xs mt-1 opacity-80">${err.message || "Unknown error"}</div>
-            </div>
-          `;
+    const container = vegaRef.current;
+    if (!parsedSpec || !container) return;
+    let active = true;
+    let dispose: (() => void) | undefined;
+    setRenderError("");
+    void renderVegaChart(container, parsedSpec, layout, theme)
+      .then((cleanup) => {
+        if (active) dispose = cleanup;
+        else cleanup();
+      })
+      .catch((renderFailure) => {
+        if (active) {
+          setRenderError(
+            renderFailure instanceof Error
+              ? renderFailure.message
+              : "Unknown rendering error",
+          );
         }
-      }
+      });
+    return () => {
+      active = false;
+      dispose?.();
     };
-
-    loadChart();
-  }, [parsedSpec, layout, title, theme]);
+  }, [parsedSpec, layout, theme]);
 
   // Render fullscreen chart when fullscreen is toggled
   useEffect(() => {
-    const loadFullscreenChart = async () => {
-      if (isFullscreen && fullscreenVegaRef.current && parsedSpec) {
-        try {
-          await renderVegaChart(
-            fullscreenVegaRef.current,
-            parsedSpec,
-            layout,
-            title,
-            theme,
+    const container = fullscreenVegaRef.current;
+    if (!isFullscreen || !container || !parsedSpec) return;
+    let active = true;
+    let dispose: (() => void) | undefined;
+    setFullscreenRenderError("");
+    void renderVegaChart(container, parsedSpec, layout, theme)
+      .then((cleanup) => {
+        if (active) dispose = cleanup;
+        else cleanup();
+      })
+      .catch((renderFailure) => {
+        if (active) {
+          setFullscreenRenderError(
+            renderFailure instanceof Error
+              ? renderFailure.message
+              : "Unknown rendering error",
           );
-        } catch (err: any) {
-          if (fullscreenVegaRef.current) {
-            fullscreenVegaRef.current.innerHTML = `
-              <div class="text-red-500 p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 max-w-full">
-                <div class="font-medium text-sm">Error rendering chart:</div>
-                <div class="text-xs mt-1 opacity-80">${err.message || "Unknown error"}</div>
-              </div>
-            `;
-          }
         }
-      }
+      });
+    return () => {
+      active = false;
+      dispose?.();
     };
-
-    loadFullscreenChart();
-  }, [isFullscreen, parsedSpec, layout, title, theme]);
+  }, [isFullscreen, parsedSpec, layout, theme]);
 
   // Handle escape key for fullscreen
   useEffect(() => {
@@ -507,34 +500,35 @@ export function VegaLiteViewer({
               <div className="text-gray-400 dark:text-gray-500 text-sm">
                 Rendering chart...
               </div>
-            ) : error ? (
-              <div className="text-red-500 p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 max-w-full">
-                <div className="font-medium text-sm">
-                  Error rendering chart:
-                </div>
-                <div className="text-xs mt-1 opacity-80">{error}</div>
-              </div>
             ) : spec ? (
-              <div
-                ref={vegaRef}
-                className="absolute inset-0 flex justify-center items-center"
-                style={{
-                  transform: `scale(${zoom / 100}) translate(${position.x / (zoom / 100)}px, ${position.y / (zoom / 100)}px)`,
-                  transformOrigin: "center",
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  zIndex: 5,
-                  userSelect: zoom > 100 ? "none" : "auto",
-                  pointerEvents: zoom > 100 ? "none" : "auto",
-                  transition: isDragging
-                    ? "none"
-                    : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-                // Chart will be rendered directly into vegaRef
-              />
+              <>
+                <div
+                  ref={vegaRef}
+                  className={`absolute inset-0 flex justify-center items-center ${
+                    error || renderError ? "invisible" : ""
+                  }`}
+                  style={{
+                    transform: `scale(${zoom / 100}) translate(${position.x / (zoom / 100)}px, ${position.y / (zoom / 100)}px)`,
+                    transformOrigin: "center",
+                    zIndex: 5,
+                    userSelect: zoom > 100 ? "none" : "auto",
+                    pointerEvents: zoom > 100 ? "none" : "auto",
+                    transition: isDragging
+                      ? "none"
+                      : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                />
+                {(error || renderError) && (
+                  <div className="z-10 max-w-full rounded-md bg-red-50/50 p-3 text-red-500 dark:bg-red-900/10">
+                    <div className="text-sm font-medium">
+                      Error rendering chart:
+                    </div>
+                    <div className="mt-1 text-xs opacity-80">
+                      {error || renderError}
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-gray-400 dark:text-gray-500 text-sm">
                 No chart specification provided
@@ -636,7 +630,7 @@ export function VegaLiteViewer({
             <div className="flex-1 p-6 overflow-auto bg-gray-50 dark:bg-gray-900">
               <div
                 ref={fullscreenContainerRef}
-                className={`flex justify-center items-center h-full ${
+                className={`relative flex h-full items-center justify-center ${
                   fullscreenZoom > 100 ? "cursor-move" : "cursor-default"
                 }`}
                 onMouseDown={handleFullscreenMouseDown}
@@ -647,7 +641,9 @@ export function VegaLiteViewer({
               >
                 <div
                   ref={fullscreenVegaRef}
-                  className="flex justify-center items-center max-w-full max-h-full transition-transform duration-200 ease-in-out"
+                  className={`flex max-h-full max-w-full items-center justify-center transition-transform duration-200 ease-in-out ${
+                    fullscreenRenderError ? "invisible absolute inset-0" : ""
+                  }`}
                   style={{
                     transform: `scale(${fullscreenZoom / 100}) translate(${fullscreenPosition.x / (fullscreenZoom / 100)}px, ${fullscreenPosition.y / (fullscreenZoom / 100)}px)`,
                     transformOrigin: "center",
@@ -657,8 +653,17 @@ export function VegaLiteViewer({
                       ? "none"
                       : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                   }}
-                  // Chart will be rendered directly into fullscreenVegaRef
                 />
+                {fullscreenRenderError && (
+                  <div className="max-w-full rounded-md bg-red-50/50 p-3 text-red-500 dark:bg-red-900/10">
+                    <div className="text-sm font-medium">
+                      Error rendering chart:
+                    </div>
+                    <div className="mt-1 text-xs opacity-80">
+                      {fullscreenRenderError}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

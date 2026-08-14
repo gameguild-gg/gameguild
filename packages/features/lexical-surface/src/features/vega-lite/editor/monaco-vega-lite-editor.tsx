@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { Monaco, OnMount } from "@monaco-editor/react";
 import type { editor, IDisposable, languages, IPosition } from "monaco-editor";
-import { MonacoCodeEditor } from "../../shared/ui/monaco-code-editor";
-import type { MonacoSurfacePreferences } from "../../shared/ui/editor-preferences";
+import vegaLiteSchema from "vega-lite/vega-lite-schema.json";
+import { MonacoCodeEditor } from "../../../shared/ui/monaco-code-editor";
+import type { MonacoSurfacePreferences } from "../../../shared/ui/editor-preferences";
 import {
   VegaLiteValidator,
   type VegaLiteValidationResult,
@@ -67,34 +68,24 @@ export function MonacoVegaLiteEditor({
   }, [onValidationChange, validate, value]);
 
   const beforeMount = useCallback(async (monaco: Monaco) => {
-    const schemaUrl =
-      "https://cdn.jsdelivr.net/npm/vega-lite@6/build/vega-lite-schema.json";
-    try {
-      const response = await fetch(schemaUrl);
-      if (response.ok) {
-        const schema = await response.json();
-        const jsonLanguages = monaco.languages as typeof monaco.languages & {
-          json?: {
-            jsonDefaults?: {
-              setDiagnosticsOptions: (options: unknown) => void;
-            };
-          };
+    const jsonLanguages = monaco.languages as typeof monaco.languages & {
+      json?: {
+        jsonDefaults?: {
+          setDiagnosticsOptions: (options: unknown) => void;
         };
-        jsonLanguages.json?.jsonDefaults?.setDiagnosticsOptions({
-          validate: true,
-          enableSchemaRequest: false,
-          schemas: [
-            {
-              uri: "https://vega.github.io/schema/vega-lite/v6.json",
-              fileMatch: ["*"],
-              schema,
-            },
-          ],
-        });
-      }
-    } catch {
-      // The package validator remains available when the remote schema is offline.
-    }
+      };
+    };
+    jsonLanguages.json?.jsonDefaults?.setDiagnosticsOptions({
+      validate: true,
+      enableSchemaRequest: false,
+      schemas: [
+        {
+          uri: "https://vega.github.io/schema/vega-lite/v6.json",
+          fileMatch: ["inmemory://lexical-surface/vega-lite.json"],
+          schema: vegaLiteSchema,
+        },
+      ],
+    });
 
     completionRef.current?.dispose();
     completionRef.current = monaco.languages.registerCompletionItemProvider(
@@ -160,6 +151,7 @@ export function MonacoVegaLiteEditor({
 
   return (
     <MonacoCodeEditor
+      path="inmemory://lexical-surface/vega-lite.json"
       language="json"
       height={height}
       value={value}

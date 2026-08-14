@@ -11,27 +11,29 @@ import {
   createCommand,
   type LexicalCommand,
 } from "lexical";
-import { VegaLiteEditor } from "./vega-lite-editor";
-import {
-  $createVegaLiteLexicalNode,
-  VegaLiteLexicalNode,
-} from "./vega-lite-node";
-import type { VegaLiteData } from "./vega-lite-data";
+import { MermaidEditor } from "../editor/mermaid-editor";
+import { $createMermaidLexicalNode, MermaidLexicalNode } from "./mermaid-node";
+import type { MermaidData } from "../mermaid-data";
+import type {
+  MermaidDiagramType,
+  MermaidThemeName,
+  MermaidThemeMode,
+} from "./mermaid-node";
 
-export const INSERT_VEGA_LITE_LEXICAL_COMMAND: LexicalCommand<void> =
-  createCommand("INSERT_VEGA_LITE_LEXICAL_COMMAND");
+export const INSERT_MERMAID_LEXICAL_COMMAND: LexicalCommand<void> =
+  createCommand("INSERT_MERMAID_LEXICAL_COMMAND");
 
-export function VegaLitePlugin() {
+export function MermaidPlugin() {
   const [editor] = useLexicalComposerContext();
   const [isModalOpen, setModalOpen] = useState(false);
   useEffect(() => {
-    if (!editor.hasNodes([VegaLiteLexicalNode])) {
+    if (!editor.hasNodes([MermaidLexicalNode])) {
       throw new Error(
-        "VegaLitePlugin: VegaLiteLexicalNode not registered on editor",
+        "MermaidPlugin: MermaidLexicalNode not registered on editor",
       );
     }
     return editor.registerCommand<void>(
-      INSERT_VEGA_LITE_LEXICAL_COMMAND,
+      INSERT_MERMAID_LEXICAL_COMMAND,
       () => {
         setModalOpen(true);
         return true;
@@ -40,16 +42,17 @@ export function VegaLitePlugin() {
     );
   }, [editor]);
 
-  const handleSave = (data: VegaLiteData) => {
+  const handleSave = (data: MermaidData) => {
     editor.update(() => {
-      const node = $createVegaLiteLexicalNode(data.spec);
+      const node = $createMermaidLexicalNode(
+        data.code,
+        data.type as MermaidDiagramType,
+      );
+      node.setTheme((data.theme || "default") as MermaidThemeName);
+      node.setThemeMode((data.themeMode || "system") as MermaidThemeMode);
       node.setTitle(data.title || "");
       node.setCaption(data.caption || "");
       node.setSize(data.size ?? 100);
-      node.setTheme(data.theme || "default");
-      node.setThemeMode(data.themeMode || "system");
-      node.setLayout(data.layout || "rectangular");
-      node.setData(data.data || {});
 
       $insertNodes([node]);
       if ($isRootOrShadowRoot(node.getParentOrThrow())) {
@@ -64,6 +67,6 @@ export function VegaLitePlugin() {
   };
 
   return isModalOpen ? (
-    <VegaLiteEditor onSave={handleSave} onCancel={handleCancel} />
+    <MermaidEditor onSave={handleSave} onCancel={handleCancel} />
   ) : null;
 }

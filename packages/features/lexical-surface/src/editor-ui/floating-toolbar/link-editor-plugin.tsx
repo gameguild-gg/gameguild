@@ -50,26 +50,7 @@ import {
 import { cn } from "@game-guild/ui/lib/utils";
 import { CheckIcon, CloseIcon, DeleteIcon, EditIcon } from "../../icons";
 import { getSelectedNode } from "../../shared/lexical/get-selected-node";
-
-const SUPPORTED_URL_PROTOCOLS = new Set([
-  "http:",
-  "https:",
-  "mailto:",
-  "sms:",
-  "tel:",
-]);
-
-function sanitizeUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
-    if (!SUPPORTED_URL_PROTOCOLS.has(parsed.protocol)) {
-      return "about:blank";
-    }
-  } catch {
-    return url;
-  }
-  return url;
-}
+import { openSafeUrl, sanitizeUrl } from "../../shared/security/safe-url";
 
 function $getSelectedLinkNode(selection: RangeSelection): LinkNode | null {
   const node = getSelectedNode(selection);
@@ -482,7 +463,7 @@ function useFloatingLinkEditorToolbar(
             const node = getSelectedNode(selection);
             const linkNode = $findMatchingParent(node, $isLinkNode);
             if ($isLinkNode(linkNode) && (payload.metaKey || payload.ctrlKey)) {
-              window.open(linkNode.getURL(), "_blank");
+              openSafeUrl(linkNode.getURL());
               return true;
             }
           }
