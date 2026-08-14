@@ -48,6 +48,9 @@ const HELLO_PROGRAM =
   "    return 0;\n" +
   "}\n";
 
+// Functional-test program: only a function, no main — doctest supplies main.
+const ADD_PROGRAM = "int add(int a, int b) {\n    return a + b;\n}\n";
+
 test.describe("Coding Assessment E2E", () => {
   // Skip unless explicitly invoked with E2E_RUN=1 — runnable, but CI-safe.
   test.skip(!process.env.E2E_RUN, "set E2E_RUN=1 (needs web + API + seeded admin)");
@@ -170,6 +173,77 @@ test.describe("Coding Assessment E2E", () => {
     await expect(results).toContainText("0 failed");
     await expect(page.getByTestId("test-case-0")).toContainText("✓");
   });
+
+  test("functional test (doctest) passes end-to-end", async ({ page }) => {
+    // 2. Open the coding-definition editor + wait for emception boot.
+    await page.goto(`${WEB_BASE_URL}${CODING_DEFINITION_ROUTE}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(
+      page.getByText("Coding Definition Editor"),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("status").first()).toHaveText("Ready", {
+      timeout: 60_000,
+    });
+    await page.waitForTimeout(1_000);
+
+    // 3. Replace main.cpp with the main()-less add() function.
+    const mainPath = await page.evaluate(() => {
+      const ref = (
+        window as unknown as {
+          __emception_filesRef__?: { current: Record<string, { path: string }> };
+        }
+      ).__emception_filesRef__;
+      return Object.keys(ref?.current ?? {}).find((p) => p.endsWith("main.cpp"));
+    });
+    if (!mainPath) throw new Error("main.cpp not found in IDE workspace state");
+    await page.evaluate(
+      ({ path, content }) => {
+        (
+          window as unknown as {
+            __setFileContent: (p: string, c: string) => void;
+          }
+        ).__setFileContent(path, content);
+      },
+      { path: mainPath, content: ADD_PROGRAM },
+    );
+    await page.waitForTimeout(500);
+
+    // 4. Tests tab + clear seeded rows.
+    await page.getByRole("button", { name: "Tests", exact: true }).click();
+    await expect(page.getByTestId("tests-panel-slot")).toBeVisible();
+    await removeAllTestRows(page);
+
+    // 5. Author a functional test: int add(int a, int b), case add(2,3)==5.
+    //    Param type defaults to String — must select Integer explicitly;
+    //    return type defaults to Integer (handleAddFunctional).
+    await page.getByTestId("add-functional").click();
+    await page.getByTestId("functional-functionName-0").fill("add");
+    await page.getByTestId("functional-add-param-0").click();
+    await page.getByTestId("functional-add-param-0").click();
+    await page.getByTestId("functional-param-name-0-0").fill("a");
+    await selectRadixOption(page, "functional-param-type-0-0", "Integer");
+    await page.getByTestId("functional-param-name-0-1").fill("b");
+    await selectRadixOption(page, "functional-param-type-0-1", "Integer");
+    await page.getByTestId("functional-add-case-0").click();
+    await page.getByTestId("functional-case-input-value-0-0-0").fill("2");
+    await page.getByTestId("functional-case-input-value-0-0-1").fill("3");
+    await page.getByTestId("functional-case-expected-value-0-0").fill("5");
+
+    // 6. Run Tests.
+    const runTests = page.getByTestId("run-tests-button");
+    await expect(runTests).toBeVisible();
+    await expect(runTests).toBeEnabled();
+    await runTests.click();
+
+    // 7. Wait for results — combined-TU compile + link + wasi-run.
+    const results = page.getByTestId("test-results-panel");
+    await expect(results).toBeVisible({ timeout: 90_000 });
+
+    // 8. Verify the doctest case passed.
+    await expect(results).toContainText("1 passed");
+    await expect(results).toContainText("0 failed");
+  });
 });
 
 /**
@@ -186,4 +260,14 @@ async function removeAllTestRows(page: Page) {
     await next.click().catch(() => {});
     await page.waitForTimeout(30);
   }
+}
+
+/** Open a radix Select by trigger testid and pick the option by label. */
+async function selectRadixOption(
+  page: Page,
+  triggerTestId: string,
+  label: string,
+) {
+  await page.getByTestId(triggerTestId).click();
+  await page.getByRole("option", { name: label, exact: true }).click();
 }
