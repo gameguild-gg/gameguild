@@ -1,9 +1,10 @@
+using GameGuild.Assets;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Projects;
 using GameGuild.Teams;
 
-namespace GameGuild.Assets.Security;
+namespace GameGuild.Projects.Integrations;
 
 public sealed class ProjectAssetParentAuthorizationResolver(
     IProjectAuthorizationService projectAuthorizationService,

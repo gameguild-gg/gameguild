@@ -25,8 +25,6 @@
         <ProjectReference Include="..\GameGuild.Resources\GameGuild.Resources.csproj" />
         <ProjectReference Include="..\GameGuild.Features\GameGuild.Features.csproj" />
         <ProjectReference Include="..\GameGuild.Localization\GameGuild.Localization.csproj" />
-        <ProjectReference Include="..\GameGuild.Projects\GameGuild.Projects.csproj" />
-        <ProjectReference Include="..\GameGuild.Teams\GameGuild.Teams.csproj" />
     </ItemGroup>
 
 </Project>
