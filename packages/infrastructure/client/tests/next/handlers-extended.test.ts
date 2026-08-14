@@ -4,6 +4,10 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createHandlers } from '../../src/integrations/next/handlers.js';
+import {
+  stateCookieName,
+  signStatePayload,
+} from '../../src/integrations/next/oauth-state.js';
 import type { ResolvedAuthConfig, ProviderResult } from '../../src/runtime/auth/types.js';
 
 vi.mock('../../src/runtime/auth/jwt.js', () => ({
@@ -483,7 +487,13 @@ describe('Handlers — OAuth callback extended', () => {
     });
     const { GET } = createHandlers(config);
 
-    const request = new Request('http://localhost/api/auth/callback/github?code=abc123&state=xyz');
+    const stateCookie = await signStatePayload(
+      { state: 'xyz', redirectTo: '/', flow: 'signin', exp: Date.now() + 600000 },
+      'test-secret-min-32-chars-long-ok',
+    );
+    const request = new Request('http://localhost/api/auth/callback/github?code=abc123&state=xyz', {
+      headers: { cookie: `${stateCookieName('github')}=${stateCookie}` },
+    });
     const response = await GET(request);
     expect(response.status).toBe(302);
     // Should redirect to newUser page or '/'
@@ -503,7 +513,13 @@ describe('Handlers — OAuth callback extended', () => {
     });
     const { GET } = createHandlers(config);
 
-    const request = new Request('http://localhost/api/auth/callback/github?code=abc123');
+    const stateCookie = await signStatePayload(
+      { state: 'xyz', redirectTo: '/', flow: 'signin', exp: Date.now() + 600000 },
+      'test-secret-min-32-chars-long-ok',
+    );
+    const request = new Request('http://localhost/api/auth/callback/github?code=abc123&state=xyz', {
+      headers: { cookie: `${stateCookieName('github')}=${stateCookie}` },
+    });
     const response = await GET(request);
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toContain('callback_failed');

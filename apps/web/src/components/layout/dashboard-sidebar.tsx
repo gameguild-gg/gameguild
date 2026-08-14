@@ -91,6 +91,11 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
         url: '/dashboard/invitations',
         icon: MailCheck,
       },
+      {
+        title: 'Settings',
+        url: '/dashboard/settings/account',
+        icon: Settings,
+      },
     ],
   },
   {

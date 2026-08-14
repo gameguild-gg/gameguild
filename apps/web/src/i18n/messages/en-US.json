@@ -1,1 +1,54 @@
-{}
+{
+  "authError": {
+    "title": "Sign-in failed",
+    "stateMismatch": "Your sign-in session expired or the request was tampered with. Please try again.",
+    "missingCode": "The sign-in response was incomplete. Please try again.",
+    "callbackFailed": "We couldn't complete sign-in with the provider. Please try again.",
+    "accessDenied": "You cancelled the sign-in request. No worries — you can try again anytime.",
+    "generic": "Something went wrong during sign-in. Please try again.",
+    "backToSignIn": "Back to sign in"
+  },
+  "signIn": {
+    "continueWithDiscord": "Continue with Discord"
+  },
+  "settings": {
+    "accountTitle": "Account settings",
+    "accountDescription": "Manage how you sign in to GameGuild."
+  },
+  "connectedAccounts": {
+    "title": "Connected Accounts",
+    "description": "Sign-in methods linked to your account. Removing the last one requires a password.",
+    "linkedOn": "Linked on {date}",
+    "notLinked": "Not linked",
+    "unlink": "Unlink",
+    "google": {
+      "name": "Google",
+      "linkSuccess": "Google account linked.",
+      "unlinkSuccess": "Google account unlinked.",
+      "unavailable": "Google sign-in is unavailable."
+    },
+    "discord": {
+      "name": "Discord",
+      "connect": "Connect Discord",
+      "unlinkSuccess": "Discord account unlinked."
+    },
+    "errors": {
+      "conflict": "This account is already linked to another GameGuild user.",
+      "lastSignInMethod": "You can't remove your last sign-in method without a password set.",
+      "notLinked": "This provider isn't linked to your account.",
+      "unauthorized": "Your session expired. Please sign in again.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "banner": {
+      "linkedTitle": "Account connected",
+      "linkedDiscord": "Discord is now linked to your account.",
+      "errorTitle": "Something went wrong",
+      "errors": {
+        "conflict": "That Discord account is already linked to another GameGuild user.",
+        "lastSignInMethod": "You can't remove your last sign-in method without a password set.",
+        "stateMismatch": "The linking request expired or was tampered with. Please try again.",
+        "generic": "We couldn't complete the request. Please try again."
+      }
+    }
+  }
+}

@@ -87,7 +87,9 @@ export {
   CredentialsProvider,
   GoogleProvider,
   GitHubProvider,
+  DiscordProvider,
   type CredentialsProviderOptions,
   type GoogleProviderOptions,
   type GitHubProviderOptions,
+  type DiscordProviderOptions,
 } from './providers/index.js';
