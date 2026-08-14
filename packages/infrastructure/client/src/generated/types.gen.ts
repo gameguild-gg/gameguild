@@ -1378,6 +1378,10 @@ export interface CommercePaymentsWalletTransaction {
 
 export type CommercePaymentsWalletTransactionType = 'Credit' | 'Debit' | 'TransferIn' | 'TransferOut' | 'Refund' | 'Fee' | 'Adjustment';
 
+export interface CommerceProductsAddMySupportTicketMessageInput {
+  body?: string | null;
+}
+
 export interface CommerceProductsAddSupportTicketMessageInput {
   authorEmail?: string | null;
   authorName?: string | null;
@@ -1434,6 +1438,13 @@ export interface CommerceProductsCloseSupportTicketInput {
   agentUserId?: string;
   closingNotes?: string | null;
   tenantId?: string;
+}
+
+export interface CommerceProductsCreateMySupportTicketInput {
+  body?: string | null;
+  category?: string | null;
+  priority?: CommerceProductsSupportTicketPriority;
+  subject?: string | null;
 }
 
 export interface CommerceProductsCreateProductInput {
@@ -3026,6 +3037,37 @@ export interface IdentityAuthenticationDisableMfaInput {
   password: string;
 }
 
+export interface IdentityAuthenticationDiscordAuthorizeInput {
+  redirectUri: string;
+}
+
+export interface IdentityAuthenticationDiscordCallbackInput {
+  code: string;
+  redirectUri: string;
+  state: string;
+  tenantId?: string | null;
+}
+
+export interface IdentityAuthenticationDiscordLinkAuthorizeInput {
+  redirectUri: string;
+}
+
+export interface IdentityAuthenticationDiscordLinkAuthorizeOutput {
+  authUrl: string | null;
+  state: string | null;
+}
+
+export interface IdentityAuthenticationDiscordLinkCallbackInput {
+  code: string;
+  redirectUri: string;
+  state: string;
+}
+
+export interface IdentityAuthenticationDiscordSignInOutput {
+  authUrl: string | null;
+  state: string | null;
+}
+
 export interface IdentityAuthenticationEmailVerificationOutput {
   message: string | null;
 }
@@ -3036,6 +3078,11 @@ export interface IdentityAuthenticationEmailVerificationResult {
   success?: boolean;
   userId?: string | null;
   verifiedAt?: string | null;
+}
+
+export interface IdentityAuthenticationExternalLogin {
+  createdAt: string;
+  provider: string | null;
 }
 
 export interface IdentityAuthenticationGitHubSignInOutput {
@@ -3056,6 +3103,10 @@ export interface IdentityAuthenticationJwtKeyInfo {
   rotatedAt?: string | null;
   rotationReason?: string | null;
   validFrom?: string;
+}
+
+export interface IdentityAuthenticationLinkGoogleAccountInput {
+  idToken: string;
 }
 
 export interface IdentityAuthenticationLocalSignInInput {
@@ -3700,6 +3751,18 @@ export interface IdentityTenantsReplaceTenantSettingsInput {
   systemConfiguration?: IdentityTenantsUpdateTenantSystemConfigurationInput;
   systemLimits?: IdentityTenantsUpdateTenantSystemLimitsInput;
   userInterfaceSettings?: IdentityTenantsUpdateTenantUiSettingsInput;
+}
+
+export interface IdentityTenantsSetTenantMembershipStatusInput {
+  reason?: string | null;
+}
+
+export interface IdentityTenantsSetTenantMembershipStatusOutput {
+  isActive?: boolean;
+  memberId?: string;
+  message?: string | null;
+  notFound?: boolean;
+  success?: boolean;
 }
 
 export interface IdentityTenantsSlugValidation {
@@ -4396,6 +4459,7 @@ export interface IdentityUsersUser {
   metadata?: IdentityUsersUserMetadata;
   name: string;
   notifications?: Array<IdentityUsersUserNotification> | null;
+  passwordHash?: string | null;
   phoneNumber?: string | null;
   preferences?: IdentityUsersUserPreferences;
   profile?: IdentityUsersUserProfile;
@@ -9538,6 +9602,7 @@ export let CommercePaymentsUserWalletSchema: z.ZodType<CommercePaymentsUserWalle
 export let CommercePaymentsValidateTaxExemptionInputSchema: z.ZodType<CommercePaymentsValidateTaxExemptionInput>;
 export let CommercePaymentsWalletTransactionSchema: z.ZodType<CommercePaymentsWalletTransaction>;
 export let CommercePaymentsWalletTransactionTypeSchema: z.ZodType<CommercePaymentsWalletTransactionType>;
+export let CommerceProductsAddMySupportTicketMessageInputSchema: z.ZodType<CommerceProductsAddMySupportTicketMessageInput>;
 export let CommerceProductsAddSupportTicketMessageInputSchema: z.ZodType<CommerceProductsAddSupportTicketMessageInput>;
 export let CommerceProductsAppliedPromoCodeSchema: z.ZodType<CommerceProductsAppliedPromoCode>;
 export let CommerceProductsApplyPromoCodesInputSchema: z.ZodType<CommerceProductsApplyPromoCodesInput>;
@@ -9546,6 +9611,7 @@ export let CommerceProductsBatchCreateProductsInputSchema: z.ZodType<CommercePro
 export let CommerceProductsBatchProductCreateItemSchema: z.ZodType<CommerceProductsBatchProductCreateItem>;
 export let CommerceProductsCheckMultipleAccessInputSchema: z.ZodType<CommerceProductsCheckMultipleAccessInput>;
 export let CommerceProductsCloseSupportTicketInputSchema: z.ZodType<CommerceProductsCloseSupportTicketInput>;
+export let CommerceProductsCreateMySupportTicketInputSchema: z.ZodType<CommerceProductsCreateMySupportTicketInput>;
 export let CommerceProductsCreateProductInputSchema: z.ZodType<CommerceProductsCreateProductInput>;
 export let CommerceProductsCreatePromoCodeInputSchema: z.ZodType<CommerceProductsCreatePromoCodeInput>;
 export let CommerceProductsCreateSupportTicketInputSchema: z.ZodType<CommerceProductsCreateSupportTicketInput>;
@@ -9712,11 +9778,19 @@ export let IdentityAuthenticationCreateRoleInputSchema: z.ZodType<IdentityAuthen
 export let IdentityAuthenticationCreateServiceAccountInputSchema: z.ZodType<IdentityAuthenticationCreateServiceAccountInput>;
 export let IdentityAuthenticationDeviceInfoSchema: z.ZodType<IdentityAuthenticationDeviceInfo>;
 export let IdentityAuthenticationDisableMfaInputSchema: z.ZodType<IdentityAuthenticationDisableMfaInput>;
+export let IdentityAuthenticationDiscordAuthorizeInputSchema: z.ZodType<IdentityAuthenticationDiscordAuthorizeInput>;
+export let IdentityAuthenticationDiscordCallbackInputSchema: z.ZodType<IdentityAuthenticationDiscordCallbackInput>;
+export let IdentityAuthenticationDiscordLinkAuthorizeInputSchema: z.ZodType<IdentityAuthenticationDiscordLinkAuthorizeInput>;
+export let IdentityAuthenticationDiscordLinkAuthorizeOutputSchema: z.ZodType<IdentityAuthenticationDiscordLinkAuthorizeOutput>;
+export let IdentityAuthenticationDiscordLinkCallbackInputSchema: z.ZodType<IdentityAuthenticationDiscordLinkCallbackInput>;
+export let IdentityAuthenticationDiscordSignInOutputSchema: z.ZodType<IdentityAuthenticationDiscordSignInOutput>;
 export let IdentityAuthenticationEmailVerificationOutputSchema: z.ZodType<IdentityAuthenticationEmailVerificationOutput>;
 export let IdentityAuthenticationEmailVerificationResultSchema: z.ZodType<IdentityAuthenticationEmailVerificationResult>;
+export let IdentityAuthenticationExternalLoginSchema: z.ZodType<IdentityAuthenticationExternalLogin>;
 export let IdentityAuthenticationGitHubSignInOutputSchema: z.ZodType<IdentityAuthenticationGitHubSignInOutput>;
 export let IdentityAuthenticationGoogleIdTokenInputSchema: z.ZodType<IdentityAuthenticationGoogleIdTokenInput>;
 export let IdentityAuthenticationJwtKeyInfoSchema: z.ZodType<IdentityAuthenticationJwtKeyInfo>;
+export let IdentityAuthenticationLinkGoogleAccountInputSchema: z.ZodType<IdentityAuthenticationLinkGoogleAccountInput>;
 export let IdentityAuthenticationLocalSignInInputSchema: z.ZodType<IdentityAuthenticationLocalSignInInput>;
 export let IdentityAuthenticationLocalSignUpInputSchema: z.ZodType<IdentityAuthenticationLocalSignUpInput>;
 export let IdentityAuthenticationLocationInfoSchema: z.ZodType<IdentityAuthenticationLocationInfo>;
@@ -9796,6 +9870,8 @@ export let IdentityTenantsMembershipCountOutputSchema: z.ZodType<IdentityTenants
 export let IdentityTenantsRecoverInputSchema: z.ZodType<IdentityTenantsRecoverInput>;
 export let IdentityTenantsReplaceTenantMetadataInputSchema: z.ZodType<IdentityTenantsReplaceTenantMetadataInput>;
 export let IdentityTenantsReplaceTenantSettingsInputSchema: z.ZodType<IdentityTenantsReplaceTenantSettingsInput>;
+export let IdentityTenantsSetTenantMembershipStatusInputSchema: z.ZodType<IdentityTenantsSetTenantMembershipStatusInput>;
+export let IdentityTenantsSetTenantMembershipStatusOutputSchema: z.ZodType<IdentityTenantsSetTenantMembershipStatusOutput>;
 export let IdentityTenantsSlugValidationSchema: z.ZodType<IdentityTenantsSlugValidation>;
 export let IdentityTenantsTenantSchema: z.ZodType<IdentityTenantsTenant>;
 export let IdentityTenantsTenantAddressSchema: z.ZodType<IdentityTenantsTenantAddress>;
@@ -12060,6 +12136,11 @@ CommercePaymentsWalletTransactionSchema = z.object({
 /** Zod schema for CommercePaymentsWalletTransactionType */
 CommercePaymentsWalletTransactionTypeSchema = z.enum(['Credit', 'Debit', 'TransferIn', 'TransferOut', 'Refund', 'Fee', 'Adjustment']);
 
+/** Zod schema for CommerceProductsAddMySupportTicketMessageInput */
+CommerceProductsAddMySupportTicketMessageInputSchema = z.object({
+  body: z.string().nullable().optional(),
+});
+
 /** Zod schema for CommerceProductsAddSupportTicketMessageInput */
 CommerceProductsAddSupportTicketMessageInputSchema = z.object({
   authorEmail: z.string().nullable().optional(),
@@ -12127,6 +12208,14 @@ CommerceProductsCloseSupportTicketInputSchema = z.object({
   agentUserId: z.string().uuid().optional(),
   closingNotes: z.string().nullable().optional(),
   tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommerceProductsCreateMySupportTicketInput */
+CommerceProductsCreateMySupportTicketInputSchema = z.object({
+  body: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
+  subject: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsCreateProductInput */
@@ -13961,6 +14050,43 @@ IdentityAuthenticationDisableMfaInputSchema = z.object({
   password: z.string().min(1),
 });
 
+/** Zod schema for IdentityAuthenticationDiscordAuthorizeInput */
+IdentityAuthenticationDiscordAuthorizeInputSchema = z.object({
+  redirectUri: z.string().min(1),
+});
+
+/** Zod schema for IdentityAuthenticationDiscordCallbackInput */
+IdentityAuthenticationDiscordCallbackInputSchema = z.object({
+  code: z.string().min(1),
+  redirectUri: z.string().min(1),
+  state: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationDiscordLinkAuthorizeInput */
+IdentityAuthenticationDiscordLinkAuthorizeInputSchema = z.object({
+  redirectUri: z.string().min(1),
+});
+
+/** Zod schema for IdentityAuthenticationDiscordLinkAuthorizeOutput */
+IdentityAuthenticationDiscordLinkAuthorizeOutputSchema = z.object({
+  authUrl: z.string().nullable(),
+  state: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationDiscordLinkCallbackInput */
+IdentityAuthenticationDiscordLinkCallbackInputSchema = z.object({
+  code: z.string().min(1),
+  redirectUri: z.string().min(1),
+  state: z.string().min(1),
+});
+
+/** Zod schema for IdentityAuthenticationDiscordSignInOutput */
+IdentityAuthenticationDiscordSignInOutputSchema = z.object({
+  authUrl: z.string().nullable(),
+  state: z.string().nullable(),
+});
+
 /** Zod schema for IdentityAuthenticationEmailVerificationOutput */
 IdentityAuthenticationEmailVerificationOutputSchema = z.object({
   message: z.string().nullable(),
@@ -13973,6 +14099,12 @@ IdentityAuthenticationEmailVerificationResultSchema = z.object({
   success: z.boolean().optional(),
   userId: z.string().uuid().nullable().optional(),
   verifiedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationExternalLogin */
+IdentityAuthenticationExternalLoginSchema = z.object({
+  createdAt: z.string().datetime(),
+  provider: z.string().nullable(),
 });
 
 /** Zod schema for IdentityAuthenticationGitHubSignInOutput */
@@ -13996,6 +14128,11 @@ IdentityAuthenticationJwtKeyInfoSchema = z.object({
   rotatedAt: z.string().datetime().nullable().optional(),
   rotationReason: z.string().nullable().optional(),
   validFrom: z.string().datetime().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationLinkGoogleAccountInput */
+IdentityAuthenticationLinkGoogleAccountInputSchema = z.object({
+  idToken: z.string().min(1),
 });
 
 /** Zod schema for IdentityAuthenticationLocalSignInInput */
@@ -14735,6 +14872,20 @@ IdentityTenantsReplaceTenantSettingsInputSchema = z.object({
   systemConfiguration: z.lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema).optional(),
   systemLimits: z.lazy(() => IdentityTenantsUpdateTenantSystemLimitsInputSchema).optional(),
   userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
+});
+
+/** Zod schema for IdentityTenantsSetTenantMembershipStatusInput */
+IdentityTenantsSetTenantMembershipStatusInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsSetTenantMembershipStatusOutput */
+IdentityTenantsSetTenantMembershipStatusOutputSchema = z.object({
+  isActive: z.boolean().optional(),
+  memberId: z.string().uuid().optional(),
+  message: z.string().nullable().optional(),
+  notFound: z.boolean().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityTenantsSlugValidation */
@@ -15580,6 +15731,7 @@ IdentityUsersUserSchema = z.object({
     .array(z.lazy(() => IdentityUsersUserNotificationSchema))
     .nullable()
     .optional(),
+  passwordHash: z.string().max(512).nullable().optional(),
   phoneNumber: z.string().max(20).nullable().optional(),
   preferences: z.lazy(() => IdentityUsersUserPreferencesSchema).optional(),
   profile: z.lazy(() => IdentityUsersUserProfileSchema).optional(),

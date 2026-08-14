@@ -67,7 +67,7 @@ export class UsersProfilesModule {
   /**
    * Replace user profile (full update)
    */
-  async putUsersProfile(userId: string, body: Types.IdentityUsersReplaceUserProfileInput): Promise<Result<void, ApiError>> {
+  async putUsersProfile(userId: string, body: Types.IdentityUsersReplaceUserProfileInput): Promise<Result<Types.IdentityUsersUserProfileDto, ApiError>> {
     const url = `/v1/users/${userId}/profile`;
 
     // Validate request body
@@ -80,13 +80,19 @@ export class UsersProfilesModule {
       requiresAuth: true,
     });
 
-    return result as Result<void, ApiError>;
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityUsersUserProfileDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
    * Update user profile (partial update)
    */
-  async patchUsersProfile(userId: string, body: Types.IdentityUsersUpdateUserProfileInput): Promise<Result<void, ApiError>> {
+  async patchUsersProfile(userId: string, body: Types.IdentityUsersUpdateUserProfileInput): Promise<Result<Types.IdentityUsersUserProfileDto, ApiError>> {
     const url = `/v1/users/${userId}/profile`;
 
     // Validate request body
@@ -99,7 +105,13 @@ export class UsersProfilesModule {
       requiresAuth: true,
     });
 
-    return result as Result<void, ApiError>;
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityUsersUserProfileDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 }
 
