@@ -83,6 +83,7 @@ public class AuthenticationPerformanceTests : IDisposable
             Password = "password123"
         };
 
+        await _handler.Handle(command, CancellationToken.None);
         var stopwatch = Stopwatch.StartNew();
 
         // Act

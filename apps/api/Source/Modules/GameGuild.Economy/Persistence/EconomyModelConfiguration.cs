@@ -1,3 +1,4 @@
+using GameGuild.Economy.Integrations.AI;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Economy.Persistence;
@@ -23,6 +24,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         ConfigureHardToSoftConversionRiskDecisionReceipt(modelBuilder);
         ConfigureFifoFragmentReservationReceipt(modelBuilder);
         ConfigureProviderReversalReceipt(modelBuilder);
+        modelBuilder.ApplyConfiguration(new AiProviderCostFactEntityConfiguration());
     }
 
     private static void ConfigureWallets(ModelBuilder modelBuilder)

@@ -96,6 +96,52 @@ public sealed class UserMembershipsController(
         return result.Success ? Ok(result) : NotFound(result);
     }
 
+    [HttpPost("v{version:apiVersion}/users/{userId:guid}/memberships/{tenantId:guid}:deactivate")]
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [EndpointSummary("Deactivate a tenant membership")]
+    [EndpointDescription("Suspends access to the specified tenant without deleting membership history.")]
+    [ProducesResponseType<SetTenantMembershipStatusResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<SetTenantMembershipStatusResponse>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<SetTenantMembershipStatusResponse>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> DeactivateUserMembership(
+        Guid userId,
+        Guid tenantId,
+        [FromBody] SetTenantMembershipStatusRequest? body,
+        CancellationToken ct = default)
+    {
+        if (!CanManageTenant(tenantId))
+            return Forbid();
+
+        var result = await sender.Send(
+                new SetTenantMembershipStatusCommand(tenantId, userId, false, body?.Reason),
+                ct)
+            .ConfigureAwait(false);
+
+        return ToMembershipStatusResult(result);
+    }
+
+    [HttpPost("v{version:apiVersion}/users/{userId:guid}/memberships/{tenantId:guid}:activate")]
+    [Authorize(Policy = Policies.TenantAdmin)]
+    [EndpointSummary("Activate a tenant membership")]
+    [EndpointDescription("Restores access to the specified tenant membership.")]
+    [ProducesResponseType<SetTenantMembershipStatusResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<SetTenantMembershipStatusResponse>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ActivateUserMembership(
+        Guid userId,
+        Guid tenantId,
+        CancellationToken ct = default)
+    {
+        if (!CanManageTenant(tenantId))
+            return Forbid();
+
+        var result = await sender.Send(
+                new SetTenantMembershipStatusCommand(tenantId, userId, true),
+                ct)
+            .ConfigureAwait(false);
+
+        return ToMembershipStatusResult(result);
+    }
+
     /// <summary>
     ///     Resend a pending membership invite.
     /// </summary>
@@ -284,6 +330,16 @@ public sealed class UserMembershipsController(
             TotalCount = memberships.Count
         };
     }
+
+    private IActionResult ToMembershipStatusResult(SetTenantMembershipStatusResponse result)
+    {
+        if (result.Success)
+        {
+            return Ok(result);
+        }
+
+        return result.NotFound ? NotFound(result) : Conflict(result);
+    }
 }
 
 /// <summary>
@@ -353,4 +409,9 @@ public sealed record UpdateUserMembershipRoleRequest
     ///     New role assigned in the tenant.
     /// </summary>
     public string Role { get; init; } = "Member";
+}
+
+public sealed record SetTenantMembershipStatusRequest
+{
+    public string? Reason { get; init; }
 }

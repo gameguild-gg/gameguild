@@ -1,4 +1,5 @@
 using GameGuild.Identity.Context.Actors;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -24,10 +25,16 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
     {
         var endpoint = context.HttpContext.GetEndpoint();
         if (endpoint == null) return;
+        if (endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null) return;
 
         // Get action descriptor for attribute discovery
         var actionDescriptor = context.ActionDescriptor as ControllerActionDescriptor;
         if (actionDescriptor == null) return;
+        if (actionDescriptor.MethodInfo.GetCustomAttributes(true).OfType<IAllowAnonymous>().Any() ||
+            actionDescriptor.ControllerTypeInfo.GetCustomAttributes(true).OfType<IAllowAnonymous>().Any())
+        {
+            return;
+        }
 
         var actorContextAccessor = context.HttpContext.RequestServices.GetService<IActorContextAccessor>();
         var permissionQueryService = context.HttpContext.RequestServices.GetService<IPermissionQueryService>();

@@ -160,7 +160,7 @@ public class UserMembershipsControllerTests
     }
 
     [Fact]
-    public async Task GetUserMemberships_TenantAdminOnlyReceivesCurrentTenantMembership()
+    public async Task GetUserMemberships_ShouldOnlyReturnCurrentTenantMembership_ForTenantAdmin()
     {
         var sender = new StubSender();
         var tenantId = Guid.NewGuid();

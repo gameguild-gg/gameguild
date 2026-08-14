@@ -9,7 +9,7 @@ namespace GameGuild.Identity.Tenants;
 
 /// <summary>
 ///     Middleware that resolves and validates the current tenant for multi-tenant requests.
-///     Resolution priority: X-Tenant-Id header > Host domain > Query string > Default tenant.
+///     Resolution priority: X-Tenant-Id header > Host domain > Query string > Route > JWT claim > anonymous default tenant.
 ///     Stores the resolved tenant in HttpContext.Items for downstream access.
 ///     Uses CQRS queries via IMediator for tenant resolution.
 ///     
@@ -80,9 +80,22 @@ public class TenantMiddleware(
         var path = context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
 
         // Skip tenant resolution for system endpoints
-        if (ShouldBypassTenantResolution(path))
+        if (ShouldBypassTenantResolution(context, path))
         {
             await next(context).ConfigureAwait(false);
+            return;
+        }
+
+        var authenticatedTenantId = Authorization.Utilities.ClaimsExtractor.GetTenantIdAsGuid(context.User);
+        var explicitTenantId = GetExplicitTenantId(context);
+        if (authenticatedTenantId.HasValue &&
+            explicitTenantId.HasValue &&
+            authenticatedTenantId.Value != explicitTenantId.Value)
+        {
+            await RejectTenantClaimMismatchAsync(
+                context,
+                authenticatedTenantId.Value,
+                explicitTenantId.Value).ConfigureAwait(false);
             return;
         }
 
@@ -94,24 +107,31 @@ public class TenantMiddleware(
 
         if (tenant is not null)
         {
+            if (authenticatedTenantId.HasValue && tenant.Id != authenticatedTenantId.Value)
+            {
+                await RejectTenantClaimMismatchAsync(
+                    context,
+                    authenticatedTenantId.Value,
+                    tenant.Id).ConfigureAwait(false);
+                return;
+            }
+
             // SECURITY: Validate tenant membership for authenticated users
             var userId = GetAuthenticatedUserId(context);
             if (userId.HasValue)
             {
-                // A SystemAdmin is a platform actor, not merely a tenant-local
-                // administrator. Requiring a membership for every tenant makes a
-                // valid super admin appear authenticated yet unable to operate.
                 var isSystemAdmin = Authorization.Utilities.ClaimsExtractor
                     .GetRoles(context.User)
                     .Any(role => role.Equals("SystemAdmin", StringComparison.OrdinalIgnoreCase));
+                var membership = isSystemAdmin
+                    ? null
+                    : await GetActiveTenantMembershipAsync(
+                        userId.Value,
+                        tenant.Id,
+                        tenantMemberRepository,
+                        context.RequestAborted).ConfigureAwait(false);
 
-                var isMember = isSystemAdmin || await ValidateTenantMembershipAsync(
-                    userId.Value,
-                    tenant.Id,
-                    tenantMemberRepository,
-                    context.RequestAborted).ConfigureAwait(false);
-
-                if (!isMember)
+                if (!isSystemAdmin && membership is null)
                 {
                     logger.LogWarning(
                         "User {UserId} attempted to access tenant {TenantId} ({TenantName}) without membership",
@@ -128,10 +148,15 @@ public class TenantMiddleware(
                     return;
                 }
 
-                logger.LogDebug(
-                    "Tenant membership validated: User {UserId} is member of tenant {TenantId}",
-                    userId.Value,
-                    tenant.Id);
+                if (membership is not null)
+                {
+                    context.Items[HttpContextKeys.AuthorizationTenantRole] = membership.Role;
+                    logger.LogDebug(
+                        "Tenant membership validated: User {UserId} is member of tenant {TenantId} with role {TenantRole}",
+                        userId.Value,
+                        tenant.Id,
+                        membership.Role);
+                }
             }
 
             // Store tenant in HttpContext.Items for access throughout the request
@@ -164,8 +189,13 @@ public class TenantMiddleware(
         }
     }
 
-    private static bool ShouldBypassTenantResolution(string path)
+    private static bool ShouldBypassTenantResolution(HttpContext context, string path)
     {
+        if (IsReadOnlyMembershipIntrospection(context, path))
+        {
+            return true;
+        }
+
         // Check for exact match paths (like root "/")
         if (ExactBypassPaths.Any(bypassPath =>
             path.Equals(bypassPath, StringComparison.OrdinalIgnoreCase)))
@@ -176,6 +206,49 @@ public class TenantMiddleware(
         // Check for prefix match paths
         return BypassPaths.Any(bypassPath =>
             path.StartsWith(bypassPath, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsReadOnlyMembershipIntrospection(HttpContext context, string path)
+    {
+        if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method))
+        {
+            return false;
+        }
+
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        return segments.Length == 4 &&
+               segments[0].Length > 1 &&
+               segments[0][0] == 'v' &&
+               int.TryParse(segments[0].AsSpan(1), out _) &&
+               segments[1].Equals("users", StringComparison.OrdinalIgnoreCase) &&
+               Guid.TryParse(segments[2], out _) &&
+               (segments[3].Equals("memberships", StringComparison.OrdinalIgnoreCase) ||
+                segments[3].Equals("memberships:count", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static Guid? GetExplicitTenantId(HttpContext context)
+    {
+        return TenantIdExtractor.FromHeader(context, TenantIdHeader) ??
+               TenantIdExtractor.FromQuery(context, TenantIdQueryKey) ??
+               TenantIdExtractor.FromRoute(context, TenantIdQueryKey);
+    }
+
+    private async Task RejectTenantClaimMismatchAsync(
+        HttpContext context,
+        Guid authenticatedTenantId,
+        Guid requestedTenantId)
+    {
+        logger.LogWarning(
+            "Authenticated tenant {AuthenticatedTenantId} does not match requested tenant {RequestedTenantId}",
+            authenticatedTenantId,
+            requestedTenantId);
+
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = "TenantMismatch",
+            message = "Switch workspace before accessing the requested tenant"
+        }, context.RequestAborted).ConfigureAwait(false);
     }
 
     private async Task<(Tenant? Tenant, string ResolutionSource)> ResolveTenantAsync(
@@ -232,7 +305,29 @@ public class TenantMiddleware(
             }
         }
 
-        // 5. Fall back to default tenant
+        // 5. Use the authenticated tenant claim when no explicit route selection was provided.
+        var tenantIdFromClaim = Authorization.Utilities.ClaimsExtractor.GetTenantIdAsGuid(context.User);
+        if (tenantIdFromClaim.HasValue)
+        {
+            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromClaim.Value), cancellationToken).ConfigureAwait(false);
+            if (tenant is not null && tenant.IsActive)
+            {
+                return (tenant, "Claim");
+            }
+
+            logger.LogWarning(
+                "Tenant ID {TenantId} from authenticated claim not found or inactive",
+                tenantIdFromClaim);
+        }
+
+        // 6. Only anonymous traffic can fall back to the platform default tenant.
+        // Authenticated users without a tenant claim are onboarding or selecting a workspace;
+        // silently binding them to the default tenant would create a cross-tenant authorization risk.
+        if (Authorization.Utilities.ClaimsExtractor.IsAuthenticated(context.User))
+        {
+            return (null, "None");
+        }
+
         var defaultTenant = await mediator.Send(new GetDefaultTenantQuery(), cancellationToken).ConfigureAwait(false);
         if (defaultTenant is not null && defaultTenant.IsActive)
         {
@@ -265,7 +360,7 @@ public class TenantMiddleware(
     /// <param name="memberRepository">The tenant member repository</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if the user is an active member of the tenant, false otherwise</returns>
-    private async Task<bool> ValidateTenantMembershipAsync(
+    private async Task<TenantMember?> GetActiveTenantMembershipAsync(
         Guid userId,
         Guid tenantId,
         ITenantMemberRepository memberRepository,
@@ -278,8 +373,7 @@ public class TenantMiddleware(
                 tenantId,
                 cancellationToken).ConfigureAwait(false);
 
-            // User must have an active membership
-            return membership is not null && membership.IsActive;
+            return membership is { IsActive: true } ? membership : null;
         }
         catch (Exception ex)
         {
@@ -289,7 +383,7 @@ public class TenantMiddleware(
                 "Failed to validate tenant membership for user {UserId} in tenant {TenantId}",
                 userId,
                 tenantId);
-            return false;
+            return null;
         }
     }
 }
@@ -301,7 +395,7 @@ public static class TenantMiddlewareExtensions
 {
     /// <summary>
     ///     Adds the tenant resolution middleware to the application pipeline.
-    ///     Should be placed after authentication so tenant membership can be validated.
+    ///     Should be placed after routing and authentication so membership validation sees the authenticated user.
     /// </summary>
     /// <param name="app">The application builder</param>
     /// <returns>The application builder for chaining</returns>

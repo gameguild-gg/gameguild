@@ -38,5 +38,7 @@ public sealed class CertificatesModelConfiguration : IModelConfiguration
             entity.HasIndex(certificate => certificate.CourseId);
             entity.HasIndex(certificate => certificate.Status);
         });
+
+        modelBuilder.Entity<CertificateTag>();
     }
 }

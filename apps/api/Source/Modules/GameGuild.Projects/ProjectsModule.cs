@@ -1,3 +1,5 @@
+using GameGuild.Assets;
+using GameGuild.Projects.Integrations;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Projects;
@@ -17,6 +19,9 @@ public static class ProjectsModule {
         services.AddScoped<IProjectEngagementService, ProjectEngagementService>();
         services.AddScoped<IProjectChannelAvailabilityService, ProjectChannelAvailabilityService>();
         services.AddScoped<IProjectAuthorizationService, ProjectAuthorizationService>();
+        services.AddScoped<IAssetParentAuthorizationResolver, ProjectAssetParentAuthorizationResolver>();
+        services.AddScoped<IAssetParentAuthorizationResolver, TeamAssetParentAuthorizationResolver>();
+        services.AddScoped<IAssetFolderRestrictionAuthorizationResolver, ProjectAssetFolderRestrictionAuthorizationResolver>();
         services.AddScoped<IPermissionResolver, ProjectPermissionResolver>();
         services.AddScoped<IResourcePermissionService, ProjectResourcePermissionService>();
         services.AddScoped<IProjectLifecycleLock, ProjectLifecycleLock>();

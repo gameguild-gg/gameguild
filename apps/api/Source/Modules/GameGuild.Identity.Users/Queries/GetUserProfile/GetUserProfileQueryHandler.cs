@@ -16,25 +16,6 @@ public sealed class GetUserProfileQueryHandler(IUserProfileRepository profileRep
         if (profile == null)
             return null;
 
-        return new UserProfileDto(
-            Id: profile.Id,
-            UserId: profile.UserId,
-            DisplayName: profile.DisplayName,
-            Bio: profile.Bio,
-            Location: profile.Location,
-            Website: profile.Website,
-            JobTitle: profile.JobTitle,
-            Company: profile.Company,
-            AvatarUrl: profile.AvatarUrl,
-            BannerUrl: profile.BannerUrl,
-            TimeZone: null,
-            Language: null,
-            ProfileVisibility: profile.Visibility.ToString().ToLowerInvariant(),
-            ShowEmail: false,
-            ShowLocation: false,
-            CreatedAt: profile.CreatedAt,
-            UpdatedAt: profile.UpdatedAt,
-            Version: BitConverter.GetBytes(profile.Version)
-        );
+        return UserProfileDto.FromEntity(profile);
     }
 }

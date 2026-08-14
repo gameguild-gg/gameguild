@@ -9,7 +9,6 @@ public sealed class AiModelConfiguration : IModelConfiguration
     {
         modelBuilder.ApplyConfiguration(new AiConversationLogConfiguration());
         modelBuilder.ApplyConfiguration(new AiPromptTemplateConfiguration());
-        modelBuilder.ApplyConfiguration(new AiProviderCostFactEntityConfiguration());
     }
 }
 

@@ -255,6 +255,12 @@ public class AuditPerformanceTests : IDisposable
         // Arrange
         const int iterations = 100;
         var userIds = Enumerable.Range(0, iterations).Select(_ => Guid.NewGuid()).ToList();
+
+        await _auditService.LogAuthenticationAsync("Warmup", Guid.NewGuid(), success: true);
+        var warmupLogs = await _context.Set<AuditLog>().ToListAsync();
+        _context.RemoveRange(warmupLogs);
+        await _context.SaveChangesAsync();
+
         var stopwatch = Stopwatch.StartNew();
 
         // Act
