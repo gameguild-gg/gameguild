@@ -35,6 +35,11 @@ public static class HttpContextKeys
     /// </summary>
     public const string AuthorizationTenantId = "AuthorizationTenantId";
 
+    /// <summary>
+    ///     Key for storing the active tenant membership role validated for this request.
+    /// </summary>
+    public const string AuthorizationTenantRole = "AuthorizationTenantRole";
+
     // ========================
     // LEGACY CONTEXTS (Deprecated)
     // ========================
@@ -99,6 +104,7 @@ public static class HttpContextKeys
     {
         ActorContext,
         AuthorizationTenantId,
+        AuthorizationTenantRole,
 #pragma warning disable CS0618 // Obsolete members included for validation
         UserContext,
         TenantContext,
