@@ -1,10 +1,9 @@
-"use client"
+"use client";
 
-import type { MermaidData } from "@/components/block-content-editor/nodes/mermaid-node"
-import { MermaidViewer } from "@/components/block-content-editor/extras/mermaid/mermaid-viewer"
+import { MermaidViewer, type MermaidData } from "@game-guild/lexical-surface";
 
 interface PreviewMermaidProps {
-  data: MermaidData
+  data: MermaidData;
 }
 
 export function PreviewMermaid({ data }: PreviewMermaidProps) {
@@ -17,5 +16,5 @@ export function PreviewMermaid({ data }: PreviewMermaidProps) {
       showControls={true}
       allowFullscreen={true}
     />
-  )
+  );
 }

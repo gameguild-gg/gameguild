@@ -1,25 +1,30 @@
-"use client"
+"use client";
 
-import { VegaLiteViewer } from "@/components/block-content-editor/extras/vega-lite/vega-lite-viewer"
-import { getThemePair } from "@/components/block-content-editor/extras/vega-lite/vega-theme-helper"
+import {
+  getVegaLiteThemePair as getThemePair,
+  VegaLiteViewer,
+} from "@game-guild/lexical-surface";
 
 interface PreviewVegaLiteProps {
   node: {
     data: {
-      spec: string
-      title?: string
-      caption?: string
-      theme?: string
-      themeMode?: string
-      layout?: "square" | "rectangular"
-      size?: number
-    }
-  }
+      spec: string;
+      title?: string;
+      caption?: string;
+      theme?: string;
+      themeMode?: string;
+      layout?: "square" | "rectangular";
+      size?: number;
+    };
+  };
 }
 
 export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
-  const { spec, title, caption, theme, themeMode, layout, size } = node.data
-  const themePair = getThemePair((theme as any) || "default", (themeMode as any) || "system")
+  const { spec, title, caption, theme, themeMode, layout, size } = node.data;
+  const themePair = getThemePair(
+    (theme as any) || "default",
+    (themeMode as any) || "system",
+  );
 
   return (
     <VegaLiteViewer
@@ -33,5 +38,5 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
       showControls={true}
       allowFullscreen={true}
     />
-  )
+  );
 }
