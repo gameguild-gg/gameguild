@@ -1,5 +1,5 @@
 {
   "hash": "d0d8e8e8ededf64693f775d1c62db83801231797b5ca6a36363506d726b3595b",
   "apiVersion": "1.0",
-  "source": "http://127.0.0.1:15099/swagger/v1/swagger.json"
+  "source": "gameguild-openapi"
 }
