@@ -1,5 +1,7 @@
 @import "@game-guild/ui/globals.css";
 
+@source "../../../../packages/features/lexical-surface/src/**/*.{ts,tsx}";
+
 /* Scrollbar utilities */
 @utility scrollbar-hide {
   -ms-overflow-style: none;
