@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getToken: vi.fn(),
+  auth: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
   getToken: mocks.getToken,
+  auth: mocks.auth,
 }));
 
 import { getLaunchProjectOptions, getPlanReadiness, normalizeLaunchStatus, type LaunchPlan } from './queries';
@@ -15,6 +17,7 @@ describe('launch pad queries', () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     mocks.getToken.mockResolvedValue('launch-token');
+    mocks.auth.mockResolvedValue({ tenantId: 'tenant-1' });
   });
 
   it('normalizes numeric launch statuses from the API', () => {
@@ -66,7 +69,7 @@ describe('launch pad queries', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8080/v1/projects?take=50&sortBy=UpdatedAt&sortDirection=DESC',
       expect.objectContaining({
-        headers: { Authorization: 'Bearer launch-token' },
+        headers: { Authorization: 'Bearer launch-token', 'X-Tenant-Id': 'tenant-1' },
         next: { revalidate: 60 },
       }),
     );

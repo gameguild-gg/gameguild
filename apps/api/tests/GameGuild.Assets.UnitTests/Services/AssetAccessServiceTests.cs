@@ -13,6 +13,9 @@ public class AssetAccessServiceTests
     private readonly Mock<IAssetTokenService> _tokenServiceMock;
     private readonly Mock<ITenantMemberRepository> _tenantMemberRepositoryMock;
     private readonly Mock<IFeatureFlagEvaluationService> _featureServiceMock;
+    private readonly Mock<IAssetParentAuthorizationResolver> _parentAuthorizationResolverMock;
+    private readonly Mock<IAssetFolderAuthorizationService> _folderAuthorizationServiceMock;
+    private readonly Mock<IAssetScopedAccessService> _scopedAccessServiceMock;
     private readonly Mock<ILogger<AssetAccessService>> _loggerMock;
     private readonly AssetAccessOptions _options;
     private readonly AssetAccessService _service;
@@ -25,6 +28,12 @@ public class AssetAccessServiceTests
         _tokenServiceMock = new Mock<IAssetTokenService>();
         _tenantMemberRepositoryMock = new Mock<ITenantMemberRepository>();
         _featureServiceMock = new Mock<IFeatureFlagEvaluationService>();
+        _parentAuthorizationResolverMock = new Mock<IAssetParentAuthorizationResolver>();
+        _folderAuthorizationServiceMock = new Mock<IAssetFolderAuthorizationService>();
+        _scopedAccessServiceMock = new Mock<IAssetScopedAccessService>();
+        _folderAuthorizationServiceMock
+            .Setup(x => x.CanReadAsync(It.IsAny<AssetReference>(), It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _loggerMock = new Mock<ILogger<AssetAccessService>>();
         _options = new AssetAccessOptions
         {
@@ -40,6 +49,9 @@ public class AssetAccessServiceTests
             _tokenServiceMock.Object,
             _tenantMemberRepositoryMock.Object,
             _featureServiceMock.Object,
+            [_parentAuthorizationResolverMock.Object],
+            _folderAuthorizationServiceMock.Object,
+            _scopedAccessServiceMock.Object,
             Options.Create(_options),
             _loggerMock.Object);
     }
@@ -237,7 +249,7 @@ public class AssetAccessServiceTests
     }
 
     [Fact]
-    public async Task ValidateAccessAsync_InheritedAsset_WithUser_ReturnsValid()
+    public async Task ValidateAccessAsync_InheritedAsset_WithoutParentMetadata_ReturnsDenied()
     {
         // Arrange
         var assetReferenceId = Guid.NewGuid();
@@ -251,6 +263,117 @@ public class AssetAccessServiceTests
         var result = await _service.ValidateAccessAsync(assetReferenceId, Guid.NewGuid(), Guid.NewGuid());
 
         // Assert
+        result.IsValid.Should().BeFalse();
+        result.DeniedReason.Should().Be(AssetAccessDeniedReason.OwnershipRequired);
+    }
+
+    [Fact]
+    public async Task ValidateAccessAsync_InheritedAsset_ParentAccessDenied_ReturnsDenied()
+    {
+        var assetReferenceId = Guid.NewGuid();
+        var parentId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var reference = CreateAssetReference(
+            assetReferenceId,
+            AssetAccessPolicy.Inherited,
+            parentResourceType: "Project",
+            parentResourceId: parentId);
+
+        _referenceRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+        _parentAuthorizationResolverMock.Setup(x => x.Supports("Project")).Returns(true);
+        _parentAuthorizationResolverMock
+            .Setup(x => x.CanReadAsync(parentId, userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _service.ValidateAccessAsync(assetReferenceId, userId, tenantId);
+
+        result.IsValid.Should().BeFalse();
+        result.DeniedReason.Should().Be(AssetAccessDeniedReason.OwnershipRequired);
+    }
+
+    [Fact]
+    public async Task ValidateAccessAsync_InheritedAsset_ParentAccessGranted_ReturnsValid()
+    {
+        var assetReferenceId = Guid.NewGuid();
+        var parentId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var reference = CreateAssetReference(
+            assetReferenceId,
+            AssetAccessPolicy.Inherited,
+            parentResourceType: "Project",
+            parentResourceId: parentId);
+
+        _referenceRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+        _parentAuthorizationResolverMock.Setup(x => x.Supports("Project")).Returns(true);
+        _parentAuthorizationResolverMock
+            .Setup(x => x.CanReadAsync(parentId, userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.ValidateAccessAsync(assetReferenceId, userId, tenantId);
+
+        result.IsValid.Should().BeTrue();
+        result.DeniedReason.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ValidateAccessAsync_InheritedAsset_FolderRestrictionDenied_ReturnsDenied()
+    {
+        var assetReferenceId = Guid.NewGuid();
+        var parentId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var reference = CreateAssetReference(
+            assetReferenceId,
+            AssetAccessPolicy.Inherited,
+            parentResourceType: "Project",
+            parentResourceId: parentId);
+        reference.MoveToFolder(Guid.NewGuid());
+
+        _referenceRepositoryMock
+            .Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+        _parentAuthorizationResolverMock.Setup(x => x.Supports("Project")).Returns(true);
+        _parentAuthorizationResolverMock
+            .Setup(x => x.CanReadAsync(parentId, userId, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _folderAuthorizationServiceMock
+            .Setup(x => x.CanReadAsync(reference, userId, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _service.ValidateAccessAsync(assetReferenceId, userId, Guid.NewGuid());
+
+        result.IsValid.Should().BeFalse();
+        result.DeniedReason.Should().Be(AssetAccessDeniedReason.OwnershipRequired);
+    }
+
+    [Fact]
+    public async Task ValidateAccessAsync_InheritedAsset_ExactTemporaryGrant_AllowsOnlySubmittedReference()
+    {
+        var assetReferenceId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var reference = CreateAssetReference(
+            assetReferenceId,
+            AssetAccessPolicy.Inherited,
+            parentResourceType: "Project",
+            parentResourceId: Guid.NewGuid());
+        _referenceRepositoryMock.Setup(x => x.GetByIdAsync(assetReferenceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reference);
+        _parentAuthorizationResolverMock.Setup(x => x.Supports("Project")).Returns(true);
+        _parentAuthorizationResolverMock.Setup(x => x.CanReadAsync(
+                It.IsAny<Guid>(), userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _scopedAccessServiceMock.Setup(x => x.HasActiveGrantAsync(
+                assetReferenceId, userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var result = await _service.ValidateAccessAsync(assetReferenceId, userId, tenantId);
+
         result.IsValid.Should().BeTrue();
     }
 
@@ -460,15 +583,20 @@ public class AssetAccessServiceTests
 
     #region Helper Methods
 
-    private static AssetReference CreateAssetReference(Guid id, AssetAccessPolicy policy, Guid? createdByUserId = null)
+    private static AssetReference CreateAssetReference(
+        Guid id,
+        AssetAccessPolicy policy,
+        Guid? createdByUserId = null,
+        string? parentResourceType = null,
+        Guid? parentResourceId = null)
     {
         var reference = new AssetReference(
             Guid.NewGuid(),
             createdByUserId ?? Guid.NewGuid(),
             "Test Asset",
             policy,
-            null,
-            null);
+            parentResourceType,
+            parentResourceId);
         
         typeof(AssetReference).GetProperty("Id")?.SetValue(reference, id);
         

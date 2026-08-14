@@ -13,6 +13,7 @@ public sealed class ModuleConfiguration
     [
         "AI",
         "Assessments",
+        "Assets",
         "Authentication",
         "Authorization",
         "Billing",

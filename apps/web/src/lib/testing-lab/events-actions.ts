@@ -367,11 +367,13 @@ export async function submitTestingProjectApplication(
 ): Promise<TestingEventActionResult<{ id?: string }>> {
   const eventId = text(formData, 'eventId');
   const projectId = text(formData, 'projectId');
-  if (!eventId || !projectId) return { success: false, error: 'Event and existing project are required.' };
+  const projectVersionId = text(formData, 'projectVersionId');
+  if (!eventId || !projectId || !projectVersionId)
+    return { success: false, error: 'Event, project, and an accessible project version are required.' };
   return complete(
     createModules().events.postTestingEventsApplications(eventId, {
       projectId,
-      projectVersionId: optionalText(formData, 'projectVersionId'),
+      projectVersionId,
       preferredAvailability: optionalText(formData, 'preferredAvailability'),
     }),
     'Project application submitted.',

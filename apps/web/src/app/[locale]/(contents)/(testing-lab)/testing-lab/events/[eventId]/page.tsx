@@ -3,7 +3,7 @@ import { TestingProjectApplication } from '@/components/testing-lab/testing-proj
 import { TestingSlotRegistration } from '@/components/testing-lab/testing-slot-registration';
 import { Link } from '@/i18n/navigation';
 import { getPublicTestingEventExperience } from '@/lib/testing-lab/events-queries';
-import { getTestingProjectOptions } from '@/lib/testing-lab/queries';
+import { getTestingProjectVersionOptions } from '@/lib/testing-lab/queries';
 import { Badge } from '@game-guild/ui/components/badge';
 import type { TestingLabPublicTestingEventSlotProjection } from '@game-guild/client';
 import { ArrowLeft, CalendarDays, ClipboardCheck, FlaskConical, MessageSquareText } from 'lucide-react';
@@ -51,7 +51,7 @@ export default async function PublicTestingEventDetailPage({
   }
 
   const event = experience.event;
-  const projects = experience.isAuthenticated ? await getTestingProjectOptions() : [];
+  const projectVersions = experience.isAuthenticated ? await getTestingProjectVersionOptions() : [];
   const application = experience.applications[0];
   const acceptsApplications = event.status === 'ApplicationsOpen';
 
@@ -168,7 +168,7 @@ export default async function PublicTestingEventDetailPage({
                 eventId={eventId}
                 isAuthenticated={experience.isAuthenticated}
                 acceptsApplications={acceptsApplications}
-                projects={projects}
+                projectVersions={projectVersions}
                 application={application?.id ? {
                   id: application.id,
                   status: application.status,

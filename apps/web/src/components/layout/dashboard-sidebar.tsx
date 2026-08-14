@@ -22,14 +22,16 @@ import {
   BarChart3,
   BookOpen,
   ChevronRight,
+  ClipboardList,
   FileText,
   FlaskConical,
   FolderOpen,
-  Gamepad2,
   HeadphonesIcon,
   LayoutDashboard,
+  MapPin,
   MailCheck,
   FolderKanban,
+  MessageSquareText,
   Rocket,
   Settings,
   ShieldCheck,
@@ -38,6 +40,8 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import * as React from 'react';
+import type { DashboardContextSummary } from '@/lib/dashboard-contexts';
+import { ContextSwitcher } from './team-switcher';
 
 // Types for navigation structure
 export interface DashboardNavSubItem {
@@ -46,6 +50,7 @@ export interface DashboardNavSubItem {
   icon: LucideIcon;
   isActive?: boolean;
   badge?: string;
+  requiredCapabilities?: readonly string[];
 }
 
 export interface DashboardNavItem {
@@ -53,6 +58,7 @@ export interface DashboardNavItem {
   url?: string;
   icon?: LucideIcon;
   items: DashboardNavSubItem[];
+  requiredCapabilities?: readonly string[];
 }
 
 export interface DashboardNavGroupItem {
@@ -61,6 +67,7 @@ export interface DashboardNavGroupItem {
   icon?: LucideIcon;
   items?: DashboardNavSubItem[];
   subGroups?: DashboardNavItem[];
+  requiredCapabilities?: readonly string[];
 }
 
 export interface DashboardNavGroup {
@@ -93,34 +100,193 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
         title: 'Overview',
         url: '/dashboard/community',
         icon: LayoutDashboard,
+        requiredCapabilities: ['Community.Manage'],
       },
       {
         title: 'Members',
         icon: Users,
+        requiredCapabilities: ['Community.ManageMembers'],
         subGroups: [
           {
             title: 'Overview',
             url: '/dashboard/community/members',
             icon: LayoutDashboard,
             items: [],
+            requiredCapabilities: ['Community.ManageMembers'],
           },
           {
             title: 'Users',
             url: '/dashboard/community/members/users',
             icon: UserCog,
             items: [],
+            requiredCapabilities: ['Community.ManageMembers'],
           },
           {
             title: 'Groups',
             url: '/dashboard/community/members/groups',
             icon: Users,
             items: [],
+            requiredCapabilities: ['Community.ManageMembers'],
           },
           {
             title: 'Support',
             url: '/dashboard/community/members/support',
             icon: HeadphonesIcon,
             items: [],
+            requiredCapabilities: ['Community.ManageSupport'],
+          },
+        ],
+      },
+      {
+        title: 'Testing Lab',
+        icon: FlaskConical,
+        requiredCapabilities: [
+          'TestingLab.ManageEvents',
+          'TestingLab.ReviewApplications',
+          'TestingLab.ManageParticipants',
+          'TestingLab.ManageFeedback',
+          'TestingLab.ViewAnalytics',
+          'TestingLab.ManageSettings',
+        ],
+        subGroups: [
+          {
+            title: 'Overview',
+            url: '/dashboard/testing-lab',
+            icon: LayoutDashboard,
+            items: [],
+            requiredCapabilities: [
+              'TestingLab.ManageEvents',
+              'TestingLab.ReviewApplications',
+              'TestingLab.ManageParticipants',
+              'TestingLab.ManageFeedback',
+              'TestingLab.ViewAnalytics',
+              'TestingLab.ManageSettings',
+            ],
+          },
+          {
+            title: 'Events',
+            url: '/dashboard/testing-lab/events',
+            icon: FlaskConical,
+            items: [],
+            requiredCapabilities: ['TestingLab.ManageEvents'],
+          },
+          {
+            title: 'Applications',
+            url: '/dashboard/testing-lab/applications',
+            icon: ClipboardList,
+            items: [],
+            requiredCapabilities: ['TestingLab.ReviewApplications'],
+          },
+          {
+            title: 'Projects',
+            url: '/dashboard/testing-lab/projects',
+            icon: FolderKanban,
+            items: [],
+            requiredCapabilities: ['TestingLab.ReviewApplications'],
+          },
+          {
+            title: 'Participants',
+            url: '/dashboard/testing-lab/participants',
+            icon: Users,
+            items: [],
+            requiredCapabilities: ['TestingLab.ManageParticipants'],
+          },
+          {
+            title: 'Feedback',
+            url: '/dashboard/testing-lab/feedback',
+            icon: MessageSquareText,
+            items: [],
+            requiredCapabilities: ['TestingLab.ManageFeedback'],
+          },
+          {
+            title: 'Analytics',
+            url: '/dashboard/testing-lab/analytics',
+            icon: BarChart3,
+            items: [],
+            requiredCapabilities: ['TestingLab.ViewAnalytics'],
+          },
+          {
+            title: 'Locations',
+            url: '/dashboard/testing-lab/locations',
+            icon: MapPin,
+            items: [],
+            requiredCapabilities: ['TestingLab.ManageSettings'],
+          },
+          {
+            title: 'Access',
+            url: '/dashboard/testing-lab/access',
+            icon: ShieldCheck,
+            items: [],
+            requiredCapabilities: ['TestingLab.ManageSettings'],
+          },
+          {
+            title: 'Settings',
+            url: '/dashboard/testing-lab/settings',
+            icon: Settings,
+            items: [],
+            requiredCapabilities: ['TestingLab.ManageSettings'],
+          },
+        ],
+      },
+      {
+        title: 'Launch Pad',
+        url: '/dashboard/launch-pad',
+        icon: Rocket,
+        requiredCapabilities: [
+          'LaunchPad.ManageEvents',
+          'LaunchPad.ReviewApplications',
+          'LaunchPad.ManageParticipants',
+          'LaunchPad.ViewAnalytics',
+          'LaunchPad.ManageSettings',
+        ],
+        subGroups: [
+          {
+            title: 'Overview',
+            url: '/dashboard/launch-pad',
+            icon: LayoutDashboard,
+            items: [],
+            requiredCapabilities: [
+              'LaunchPad.ManageEvents',
+              'LaunchPad.ReviewApplications',
+              'LaunchPad.ManageParticipants',
+              'LaunchPad.ViewAnalytics',
+              'LaunchPad.ManageSettings',
+            ],
+          },
+          {
+            title: 'Events',
+            url: '/dashboard/launch-pad/events',
+            icon: Rocket,
+            items: [],
+            requiredCapabilities: ['LaunchPad.ManageEvents'],
+          },
+          {
+            title: 'Applications',
+            url: '/dashboard/launch-pad/applications',
+            icon: ClipboardList,
+            items: [],
+            requiredCapabilities: ['LaunchPad.ReviewApplications'],
+          },
+          {
+            title: 'Participants',
+            url: '/dashboard/launch-pad/participants',
+            icon: Users,
+            items: [],
+            requiredCapabilities: ['LaunchPad.ManageParticipants'],
+          },
+          {
+            title: 'Analytics',
+            url: '/dashboard/launch-pad/analytics',
+            icon: BarChart3,
+            items: [],
+            requiredCapabilities: ['LaunchPad.ViewAnalytics'],
+          },
+          {
+            title: 'Settings',
+            url: '/dashboard/launch-pad/settings',
+            icon: Settings,
+            items: [],
+            requiredCapabilities: ['LaunchPad.ManageSettings'],
           },
         ],
       },
@@ -133,57 +299,83 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
         title: 'Roles',
         url: '/dashboard/platform/roles',
         icon: ShieldCheck,
+        requiredCapabilities: ['Platform.ManageRoles'],
       },
       {
         title: 'Learning',
         icon: BookOpen,
+        requiredCapabilities: ['Learning.Manage'],
         subGroups: [
           {
             title: 'Overview',
             url: '/dashboard/learning',
             icon: LayoutDashboard,
             items: [],
+            requiredCapabilities: ['Learning.Manage'],
           },
           {
             title: 'Courses',
             url: '/dashboard/learning/courses',
             icon: BookOpen,
             items: [],
+            requiredCapabilities: ['Learning.Manage'],
           },
           {
             title: 'Tutorials',
             url: '/dashboard/learning/tutorials',
             icon: FileText,
             items: [],
+            requiredCapabilities: ['Learning.Manage'],
           },
           {
             title: 'Resources',
             url: '/dashboard/learning/resources',
             icon: FolderOpen,
             items: [],
+            requiredCapabilities: ['Learning.Manage'],
           },
         ],
-      },
-      {
-        title: 'Testing Lab',
-        icon: FlaskConical,
-        subGroups: [
-          { title: 'Overview', url: '/dashboard/testing-lab', icon: LayoutDashboard, items: [] },
-          { title: 'Events', url: '/dashboard/testing-lab/events', icon: FlaskConical, items: [] },
-          { title: 'Projects', url: '/dashboard/testing-lab/projects', icon: FolderKanban, items: [] },
-          { title: 'Participants', url: '/dashboard/testing-lab/participants', icon: Users, items: [] },
-          { title: 'Analytics', url: '/dashboard/testing-lab/analytics', icon: BarChart3, items: [] },
-          { title: 'Settings', url: '/dashboard/testing-lab/settings', icon: Settings, items: [] },
-        ],
-      },
-      {
-        title: 'Launch Pad',
-        url: '/dashboard/launch-pad',
-        icon: Rocket,
       },
     ],
   },
 ];
+
+function hasAnyCapability(
+  requiredCapabilities: readonly string[] | undefined,
+  capabilities: ReadonlySet<string>,
+): boolean {
+  return (
+    !requiredCapabilities?.length ||
+    requiredCapabilities.some((capability) => capabilities.has(capability))
+  );
+}
+
+export function filterDashboardNavigation(
+  groups: DashboardNavGroup[],
+  actorCapabilities: readonly string[],
+): DashboardNavGroup[] {
+  const capabilities = new Set(actorCapabilities);
+
+  return groups.flatMap((group) => {
+    const items = group.items.flatMap((item) => {
+      if (!hasAnyCapability(item.requiredCapabilities, capabilities)) return [];
+
+      const nestedItems = item.items?.filter((nested) =>
+        hasAnyCapability(nested.requiredCapabilities, capabilities),
+      );
+      const subGroups = item.subGroups?.filter((nested) =>
+        hasAnyCapability(nested.requiredCapabilities, capabilities),
+      );
+
+      if (item.items?.length && !nestedItems?.length) return [];
+      if (item.subGroups?.length && !subGroups?.length) return [];
+
+      return [{ ...item, items: nestedItems, subGroups }];
+    });
+
+    return items.length ? [{ ...group, items }] : [];
+  });
+}
 
 export function flattenDashboardNavigationItems(groups: DashboardNavGroup[] = dashboardNavigationData): DashboardNavSubItem[] {
   const items: DashboardNavSubItem[] = [];
@@ -339,28 +531,23 @@ function NavGroups({ groups }: { groups: DashboardNavGroup[] }) {
   );
 }
 
-export function DashboardSidebar(props: React.ComponentProps<typeof Sidebar>) {
+interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  navigation?: DashboardNavGroup[];
+  contexts?: readonly DashboardContextSummary[];
+}
+
+export function DashboardSidebar({
+  navigation = filterDashboardNavigation(dashboardNavigationData, []),
+  contexts = [],
+  ...props
+}: DashboardSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg">
-              <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Gamepad2 className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">GameGuild</span>
-                  <span className="truncate text-xs text-sidebar-foreground/70">Creator dashboard</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <ContextSwitcher contexts={contexts} />
       </SidebarHeader>
       <SidebarContent className="gap-0">
-        <NavGroups groups={dashboardNavigationData} />
+        <NavGroups groups={navigation} />
       </SidebarContent>
       <SidebarFooter />
       <SidebarRail />

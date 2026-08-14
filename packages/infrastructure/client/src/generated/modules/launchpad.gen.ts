@@ -32,7 +32,7 @@ export class LaunchpadModule {
 
   /**
    */
-  async postLaunchPad(body: Types.LaunchPadCreateLaunchPlanInput): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+  async postLaunchPad(body: Types.LaunchPadCreateLaunchPlanInput): Promise<Result<void, ApiError>> {
     const url = '/v1/launch-pad';
 
     // Validate request body
@@ -45,13 +45,7 @@ export class LaunchpadModule {
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LaunchPadLaunchPlanSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<void, ApiError>;
   }
 
   /**

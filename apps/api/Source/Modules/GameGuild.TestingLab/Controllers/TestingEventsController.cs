@@ -264,7 +264,8 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             eventId,
             request.ProjectId,
             request.ProjectVersionId,
-            request.PreferredAvailability), cancellationToken).ConfigureAwait(false);
+            request.PreferredAvailability,
+            request.SubmittedAssetReferenceIds), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetApplication), new { applicationId = result.Value.Id }, result.Value)
             : ToActionResult(result);
@@ -301,6 +302,14 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
         Guid applicationId,
         CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingProjectApplicationQuery(applicationId), cancellationToken).ConfigureAwait(false));
+
+    [HttpGet("applications/{applicationId:guid}/review-package")]
+    public async Task<ActionResult<TestingApplicationReviewPackageProjection>> GetApplicationReviewPackage(
+        Guid applicationId,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetTestingApplicationReviewPackageQuery(applicationId),
+            cancellationToken).ConfigureAwait(false));
 
     [HttpPost("applications/{applicationId:guid}:withdraw")]
     public async Task<ActionResult<TestingProjectApplicationProjection>> WithdrawApplication(

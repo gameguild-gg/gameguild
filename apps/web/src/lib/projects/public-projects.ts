@@ -3,7 +3,7 @@ import type { PublicProject } from "@/lib/community/public-community";
 import {
   createServerClient,
   GeneratedApi,
-  type ProjectsProject,
+  type ProjectsProjectApiOutput,
 } from "@game-guild/client";
 import { cache } from "react";
 
@@ -71,7 +71,7 @@ function safeProjectImage(value?: string | null) {
   }
 }
 
-function projectAccent(type?: ProjectsProject["type"]) {
+function projectAccent(type?: ProjectsProjectApiOutput["type"]) {
   if (type === "Art" || type === "Music")
     return "from-fuchsia-400/30 via-violet-300/10 to-slate-950";
   if (type === "Tool" || type === "Plugin" || type === "Library")
@@ -81,16 +81,22 @@ function projectAccent(type?: ProjectsProject["type"]) {
   return "from-sky-400/30 via-cyan-300/10 to-slate-950";
 }
 
-function projectCreator(project: ProjectsProject) {
+function projectCreator(project: ProjectsProjectApiOutput) {
+  if (project.creator?.name || project.creator?.username) {
+    return project.creator.name || project.creator.username!;
+  }
+
   const owner = project.collaborators?.find(
     (collaborator) =>
       collaborator.isActive !== false &&
-      collaborator.role.toLowerCase() === "owner",
+      collaborator.role?.toLowerCase() === "owner",
   );
-  return owner?.user?.name || owner?.user?.username || "GameGuild creator";
+  return owner?.userName || "GameGuild creator";
 }
 
-function projectMedia(project: ProjectsProject): PublicProject["media"] {
+function projectMedia(
+  project: ProjectsProjectApiOutput,
+): PublicProject["media"] {
   const latestRelease =
     project.releases?.find((release) => release.isLatest) ??
     project.releases?.[0];
@@ -122,12 +128,12 @@ function projectMedia(project: ProjectsProject): PublicProject["media"] {
       ];
 }
 
-function mapProject(project: ProjectsProject): PublicProject {
-  const releases =
-    project.releases?.filter((release) => release.isDeleted !== true) ?? [];
+function mapProject(project: ProjectsProjectApiOutput): PublicProject {
+  const releases = project.releases ?? [];
+  const slug = project.slug || project.id || "project";
   return {
-    slug: project.slug,
-    title: project.title,
+    slug,
+    title: project.title || slug,
     creator: projectCreator(project),
     creatorRole: project.type ? `${project.type} creator` : "Project creator",
     summary:
@@ -138,7 +144,7 @@ function mapProject(project: ProjectsProject): PublicProject {
       project.description ||
       project.shortDescription ||
       "The creator has not added a detailed description yet.",
-    status: project.developmentStatus || project.status,
+    status: project.developmentStatus || project.status || "Published",
     tags: parseTags(project.tags),
     coursePath: project.category?.name || "Independent project",
     accent: projectAccent(project.type),

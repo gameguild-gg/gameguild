@@ -12,6 +12,7 @@ public sealed class LaunchPadModule : ModuleBase
     public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IProjectLifecycleParticipant, LaunchPadProjectLifecycleParticipant>();
+        services.AddScoped<ILaunchPadAuthorizationService, LaunchPadAuthorizationService>();
         return services;
     }
 

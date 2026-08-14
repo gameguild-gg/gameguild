@@ -106,6 +106,10 @@ public sealed class Project : EntityBase {
     /// <summary> Navigation property to project teams </summary>
     public ICollection<ProjectTeam> Teams { get; set; } = new List<ProjectTeam>();
 
+    public ICollection<ProjectMemberAllocation> Allocations { get; set; } = new List<ProjectMemberAllocation>();
+
+    public ICollection<ProjectTeamAgreement> TeamAgreements { get; set; } = new List<ProjectTeamAgreement>();
+
     /// <summary> Navigation property to project followers </summary>
     public ICollection<ProjectFollower> Followers { get; set; } = new List<ProjectFollower>();
 
@@ -149,6 +153,86 @@ public sealed class Project : EntityBase {
     /// <summary> Computed property: Number of teams working on this project </summary>
     [NotMapped]
     public int TeamCount => Teams.Count(team => team.IsActive);
+
+    public ProjectTeam SetOwnerTeam(Guid teamId)
+    {
+        if (teamId == Guid.Empty) throw new ArgumentException("An owner team is required.", nameof(teamId));
+
+        foreach (var owner in Teams.Where(team => team.IsActive && team.Role == ProjectTeamRole.Owner && team.TeamId != teamId))
+            owner.Role = ProjectTeamRole.CoOwner;
+
+        var projectTeam = Teams.SingleOrDefault(team => team.TeamId == teamId && team.DeletedAt == null);
+        if (projectTeam == null)
+        {
+            projectTeam = new ProjectTeam
+            {
+                TenantId = TenantId,
+                ProjectId = Id,
+                TeamId = teamId
+            };
+            Teams.Add(projectTeam);
+        }
+
+        projectTeam.Role = ProjectTeamRole.Owner;
+        projectTeam.ParticipationMode = ProjectTeamParticipationMode.AllMembers;
+        projectTeam.IsActive = true;
+        projectTeam.EndedAt = null;
+        Touch();
+        return projectTeam;
+    }
+
+    public ProjectTeam AddParticipatingTeam(Guid teamId, ProjectTeamRole role)
+    {
+        if (role == ProjectTeamRole.Owner)
+            throw new ArgumentException("Use SetOwnerTeam to transfer ownership.", nameof(role));
+        if (Teams.Any(team => team.TeamId == teamId && team.IsActive && team.DeletedAt == null))
+            throw new InvalidOperationException("This team already participates in the project.");
+
+        var projectTeam = new ProjectTeam
+        {
+            TenantId = TenantId,
+            ProjectId = Id,
+            TeamId = teamId,
+            Role = role,
+            ParticipationMode = ProjectTeamParticipationMode.SelectedMembers
+        };
+        Teams.Add(projectTeam);
+        Touch();
+        return projectTeam;
+    }
+
+    public ProjectMemberAllocation AddAllocation(
+        Guid projectTeamId,
+        Guid userId,
+        string function,
+        decimal capacityPercentage,
+        DateTime? startsAt = null,
+        DateTime? endsAt = null)
+    {
+        if (capacityPercentage is <= 0 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(capacityPercentage));
+        var projectTeam = Teams.SingleOrDefault(team => team.Id == projectTeamId && team.IsActive && team.DeletedAt == null)
+            ?? throw new InvalidOperationException("The project team is not active.");
+        var start = startsAt ?? SystemClock.UtcNow;
+        if (endsAt.HasValue && endsAt <= start)
+            throw new ArgumentException("Allocation end must be after its start.", nameof(endsAt));
+
+        var allocation = new ProjectMemberAllocation
+        {
+            TenantId = TenantId,
+            ProjectId = Id,
+            ProjectTeamId = projectTeam.Id,
+            UserId = userId,
+            Function = function.Trim(),
+            CapacityPercentage = capacityPercentage,
+            StartsAt = start,
+            EndsAt = endsAt
+        };
+        projectTeam.Allocations.Add(allocation);
+        Allocations.Add(allocation);
+        Touch();
+        return allocation;
+    }
 
     /// <summary> Generate URL-friendly slug from title </summary>
     public static string GenerateSlug(string title) {

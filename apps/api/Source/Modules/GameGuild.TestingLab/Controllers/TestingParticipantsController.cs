@@ -2,6 +2,7 @@ using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.TestingLab;
@@ -30,13 +31,16 @@ public class TestingParticipantsController(
     [RequireTestingLabPermission(TestingLabActions.Manage, TestingLabResourceTypes.Participant)]
     public async Task<ActionResult<TestingParticipantMutationProjection>> AddParticipant(Guid requestId, Guid userId)
     {
-        var participant = await participantService.AddParticipantAsync(requestId, userId).ConfigureAwait(false);
-        return Ok(new TestingParticipantMutationProjection(
-            participant.Id,
-            participant.TestingRequestId,
-            participant.UserId,
-            participant.Status,
-            participant.StartedAt));
+        return await Execute(async () =>
+        {
+            var participant = await participantService.AddParticipantAsync(requestId, userId).ConfigureAwait(false);
+            return new TestingParticipantMutationProjection(
+                participant.Id,
+                participant.TestingRequestId,
+                participant.UserId,
+                participant.Status,
+                participant.StartedAt);
+        }).ConfigureAwait(false);
     }
 
     // DELETE: testing/requests/{requestId}/participants/{userId}
@@ -79,8 +83,8 @@ public class TestingParticipantsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var registration = await participantService.RegisterForSessionAsync(sessionId, userId.Value, request.RegistrationType, request.Notes).ConfigureAwait(false);
-        return Ok(registration);
+        return await Execute(() => participantService.RegisterForSessionAsync(
+            sessionId, userId.Value, request.RegistrationType, request.Notes)).ConfigureAwait(false);
     }
 
     // DELETE: testing/sessions/{sessionId}/register
@@ -91,9 +95,12 @@ public class TestingParticipantsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var result = await participantService.UnregisterFromSessionAsync(sessionId, userId.Value).ConfigureAwait(false);
-        if (!result) return NotFound();
-        return NoContent();
+        try
+        {
+            var result = await participantService.UnregisterFromSessionAsync(sessionId, userId.Value).ConfigureAwait(false);
+            return result ? NoContent() : NotFound();
+        }
+        catch (UnauthorizedAccessException) { return Forbid(); }
     }
 
     // GET: testing/sessions/{sessionId}/registrations
@@ -117,8 +124,8 @@ public class TestingParticipantsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var waitlistEntry = await participantService.AddToWaitlistAsync(sessionId, userId.Value, request.RegistrationType, request.Notes).ConfigureAwait(false);
-        return Ok(waitlistEntry);
+        return await Execute(() => participantService.AddToWaitlistAsync(
+            sessionId, userId.Value, request.RegistrationType, request.Notes)).ConfigureAwait(false);
     }
 
     // DELETE: testing/sessions/{sessionId}/waitlist
@@ -129,9 +136,12 @@ public class TestingParticipantsController(
         if (userId == null)
             return Unauthorized("User ID not found in token");
 
-        var result = await participantService.RemoveFromWaitlistAsync(sessionId, userId.Value).ConfigureAwait(false);
-        if (!result) return NotFound();
-        return NoContent();
+        try
+        {
+            var result = await participantService.RemoveFromWaitlistAsync(sessionId, userId.Value).ConfigureAwait(false);
+            return result ? NoContent() : NotFound();
+        }
+        catch (UnauthorizedAccessException) { return Forbid(); }
     }
 
     // GET: testing/sessions/{sessionId}/waitlist
@@ -166,4 +176,20 @@ public class TestingParticipantsController(
     }
 
     #endregion
+
+    private async Task<ActionResult<T>> Execute<T>(Func<Task<T>> operation)
+    {
+        try { return Ok(await operation().ConfigureAwait(false)); }
+        catch (KeyNotFoundException) { return NotFound(); }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "TestingLab.ParticipationConflict",
+                Detail = exception.Message,
+                Status = StatusCodes.Status409Conflict,
+            });
+        }
+    }
 }

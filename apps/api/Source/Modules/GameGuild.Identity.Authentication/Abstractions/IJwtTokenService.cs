@@ -21,7 +21,22 @@ public interface IJwtTokenService
     // Async methods
     Task<string> GenerateAccessTokenAsync(Guid userId, string email, string[ ] roles, Guid? tenantId, int tokenVersion = 1, CancellationToken cancellationToken = default);
 
+    Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        DateTimeOffset authenticatedAt,
+        CancellationToken cancellationToken = default);
+
     Task<string> GenerateRefreshTokenAsync(Guid userId, DeviceInfo deviceInfo, CancellationToken cancellationToken = default);
+
+    Task<string> GenerateRefreshTokenAsync(
+        Guid userId,
+        DeviceInfo deviceInfo,
+        DateTimeOffset authenticatedAt,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Generates an access token for a service account (client_credentials flow).

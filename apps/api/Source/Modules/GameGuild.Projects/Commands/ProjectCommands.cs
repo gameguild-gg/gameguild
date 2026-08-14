@@ -35,6 +35,8 @@ public sealed record CreateProjectCommand : ICommand<Result<Project>> {
   public List<string>? Tags { get; init; }
 
   public Guid? TenantId { get; init; }
+
+  public Guid? OwnerTeamId { get; init; }
 }
 
 /// <summary>

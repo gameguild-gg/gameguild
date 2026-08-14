@@ -71,6 +71,8 @@
         <!-- <ProjectReference Include="..\Modules\GameGuild.Social.Follows\GameGuild.Social.Follows.csproj" /> -->
         <ProjectReference Include="..\Modules\GameGuild.GameJams\GameGuild.GameJams.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Projects\GameGuild.Projects.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.ProjectWork\GameGuild.ProjectWork.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Teams\GameGuild.Teams.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.TestingLab\GameGuild.TestingLab.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.LaunchPad\GameGuild.LaunchPad.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Tags\GameGuild.Tags.csproj" />

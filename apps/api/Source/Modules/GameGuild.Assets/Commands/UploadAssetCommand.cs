@@ -21,7 +21,8 @@ public sealed record UploadAssetCommand(
     string? DisplayName = null,
     AssetAccessPolicy AccessPolicy = AssetAccessPolicy.Private,
     string? ParentResourceType = null,
-    Guid? ParentResourceId = null) : IRequest<UploadAssetResponse>;
+    Guid? ParentResourceId = null,
+    Guid? FolderId = null) : IRequest<UploadAssetResponse>;
 
 public sealed record UploadAssetResponse(
     Guid AssetReferenceId,
@@ -41,6 +42,9 @@ public sealed class UploadAssetValidator : AbstractValidator<UploadAssetCommand>
         RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.DisplayName).MaximumLength(255).When(x => x.DisplayName != null);
         RuleFor(x => x.ParentResourceType).MaximumLength(100).When(x => x.ParentResourceType != null);
+        RuleFor(x => x.ParentResourceId).NotEmpty().When(x => !string.IsNullOrWhiteSpace(x.ParentResourceType));
+        RuleFor(x => x.ParentResourceType).NotEmpty().When(x => x.ParentResourceId.HasValue);
+        RuleFor(x => x.ParentResourceId).NotEmpty().When(x => x.FolderId.HasValue);
     }
 }
 
@@ -48,24 +52,38 @@ public sealed class UploadAssetHandler : IRequestHandler<UploadAssetCommand, Upl
 {
     private readonly IAssetUploadService _uploadService;
     private readonly IAssetContentRepository _contentRepository;
+    private readonly IAssetUploadAuthorizationService _authorizationService;
 
     public UploadAssetHandler(
         IAssetUploadService uploadService,
-        IAssetContentRepository contentRepository)
+        IAssetContentRepository contentRepository,
+        IAssetUploadAuthorizationService authorizationService)
     {
         _uploadService = uploadService;
         _contentRepository = contentRepository;
+        _authorizationService = authorizationService;
     }
 
     public async Task<UploadAssetResponse> Handle(
         UploadAssetCommand request,
         CancellationToken ct = default)
     {
+        if (!await _authorizationService.CanUploadAsync(
+                request.ParentResourceType,
+                request.ParentResourceId,
+                request.FolderId,
+                request.UserId,
+                request.TenantId,
+                ct).ConfigureAwait(false))
+            return new UploadAssetResponse(Guid.Empty, Guid.Empty, string.Empty, false, "Forbidden");
+
         var options = new UploadAssetOptions(
             request.DisplayName ?? request.FileName,
             request.AccessPolicy,
             request.ParentResourceType,
-            request.ParentResourceId);
+            request.ParentResourceId,
+            request.FolderId,
+            request.TenantId);
 
         var result = await _uploadService.UploadAsync(
             request.Content,

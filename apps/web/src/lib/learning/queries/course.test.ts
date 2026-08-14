@@ -7,8 +7,8 @@ const mocks = vi.hoisted(() => ({
   getCoursesSlug: vi.fn(),
   getCoursesAnalytics: vi.fn(),
   getCoursesUsers: vi.fn(),
-  getCoursesByProgramIdContent: vi.fn(),
-  getCoursesByProgramIdContentById: vi.fn(),
+  getCoursesContent: vi.fn(),
+  getCoursesContentById: vi.fn(),
   getUsersByUserId: vi.fn(),
   getApiLearningEnrollmentsCourses: vi.fn(),
   getToken: vi.fn(),
@@ -28,8 +28,8 @@ vi.mock("@game-guild/client", () => ({
       getCoursesUsers = mocks.getCoursesUsers;
     },
     LearningCoursesProgramcontentModule: class {
-      getCoursesByProgramIdContent = mocks.getCoursesByProgramIdContent;
-      getCoursesByProgramIdContentById = mocks.getCoursesByProgramIdContentById;
+      getCoursesContent = mocks.getCoursesContent;
+      getCoursesContentById = mocks.getCoursesContentById;
     },
     LearningEnrollmentsModule: class {
       getApiLearningEnrollmentsCourses = mocks.getApiLearningEnrollmentsCourses;
@@ -59,8 +59,8 @@ describe("course analytics query", () => {
     mocks.getCoursesSlug.mockReset();
     mocks.getApiLearningEnrollmentsCourses.mockReset();
     mocks.getCoursesUsers.mockReset();
-    mocks.getCoursesByProgramIdContent.mockReset();
-    mocks.getCoursesByProgramIdContentById.mockReset();
+    mocks.getCoursesContent.mockReset();
+    mocks.getCoursesContentById.mockReset();
     mocks.getUsersByUserId.mockReset();
   });
 
@@ -216,7 +216,7 @@ describe("course analytics query", () => {
       sortOrder: 0,
       children: [],
     };
-    mocks.getCoursesByProgramIdContent.mockResolvedValue({
+    mocks.getCoursesContent.mockResolvedValue({
       ok: true,
       data: [
         {

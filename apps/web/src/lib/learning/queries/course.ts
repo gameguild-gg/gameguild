@@ -358,7 +358,7 @@ export const getCourseContent = cache(
     try {
       const resolvedCourseId = await resolveCourseId(courseId);
       const { content } = createCourseModules();
-      const result = await content.getCoursesByProgramIdContent(resolvedCourseId);
+      const result = await content.getCoursesContent(resolvedCourseId);
 
       if (!result.ok) return { items: [], total: 0 };
 
@@ -395,14 +395,14 @@ export const getContentItem = cache(
     try {
       const resolvedCourseId = await resolveCourseId(courseId);
       const { content } = createCourseModules();
-      const result = await content.getCoursesByProgramIdContentById(
+      const result = await content.getCoursesContentById(
         resolvedCourseId,
         contentId,
       );
 
       if (result.ok) return mapContentDetailDto(result.data);
 
-      const courseContent = await content.getCoursesByProgramIdContent(resolvedCourseId);
+      const courseContent = await content.getCoursesContent(resolvedCourseId);
       const fallbackDto = courseContent.ok
         ? findContentDto(courseContent.data, contentId)
         : null;

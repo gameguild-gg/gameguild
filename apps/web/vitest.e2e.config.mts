@@ -9,6 +9,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.{e2e,e2e.test}.{js,ts,jsx,tsx}'],
+    fileParallelism: false,
     testTimeout: 30_000,
     hookTimeout: 30_000,
   },
