@@ -33,16 +33,20 @@ export default async function CodingDefinitionPage({
   // The linked ProgramContent is the v1 storage home. The Task 3 PUT is
   // upsert (Metis #26), so the editor handles "no content yet" client-side
   // by seeding from the assignment's sample workspace.
+  // `assessment.courseId` IS the Program GUID (Assessment.CourseId =
+  // Program.Id) — the URL `course` param is only a slug, the v1 API
+  // validates programId as a GUID (same pattern as grade/page.tsx).
+  const programId = assessment.courseId;
   const contentId = assessment.contentId;
   const initialContent = contentId
-    ? await getCodingAssignmentFull(courseId, contentId)
+    ? await getCodingAssignmentFull(programId, contentId)
     : null;
 
   return (
     <CodingDefinitionEditor
       courseId={courseId}
       assessmentId={assessmentId}
-      programId={courseId}
+      programId={programId}
       contentId={contentId}
       assessmentTitle={assessment.title}
       initialContent={initialContent}

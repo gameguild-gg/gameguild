@@ -18,6 +18,7 @@
     "dev:learning": "pnpm --filter @game-guild/learning run dev",
     "dev:ops": "pnpm --filter @game-guild/ops run dev",
     "dev:web": "corepack pnpm --filter @game-guild/client build && corepack pnpm --filter @game-guild/web run dev",
+    "kill:ports": "lsof -ti:8080,3000 | xargs kill -9 || true",
     "dev:emception": "pnpm --dir demos/emception-ide-react run dev",
     "build": "turbo run build",
     "build:emception": "pnpm --dir tools/emception run build:packages",
