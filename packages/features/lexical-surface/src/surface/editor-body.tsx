@@ -20,6 +20,7 @@ import {
   PagesPlugin,
 } from "../features/page";
 import { ToolbarPlugin, useToolbarState } from "../editor-ui/top-toolbar";
+import { EditableStatePlugin } from "./editable-state-plugin";
 import { EditorPlugins } from "./editor-plugins";
 
 export type EditorBodyProps = {
@@ -90,6 +91,7 @@ export function EditorBody({
 
   return (
     <>
+      <EditableStatePlugin editable={!readOnly} />
       {toolbar && (toolbarWrapper ? toolbarWrapper(toolbar) : toolbar)}
       {headerSlot}
       <div

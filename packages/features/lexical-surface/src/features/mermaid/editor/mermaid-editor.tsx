@@ -10,7 +10,6 @@ import {
   Save,
   Users,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { Button } from "@game-guild/ui/components/button";
 import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
@@ -22,10 +21,11 @@ import {
   SelectValue,
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
-import { FeatureEditorShell } from "../../shared/ui/feature-editor-shell";
-import { useFeatureEditorSettings } from "../../shared/ui/use-feature-editor-settings";
-import { ValidationPanel } from "../../shared/ui/validation-panel";
-import type { MermaidData } from "./mermaid-data";
+import { FeatureEditorShell } from "../../../shared/ui/feature-editor-shell";
+import { useFeatureEditorSettings } from "../../../shared/ui/use-feature-editor-settings";
+import { ValidationPanel } from "../../../shared/ui/validation-panel";
+import { useDarkMode } from "../../../shared/ui/use-dark-mode";
+import type { MermaidData } from "../mermaid-data";
 import { MonacoMermaidEditor } from "./monaco-mermaid-editor";
 import { MermaidTemplateSelector } from "./mermaid-template-selector";
 import {
@@ -34,12 +34,12 @@ import {
   MERMAID_THEME_MODE_DESCRIPTIONS,
   type MermaidTheme,
   type MermaidThemeMode,
-} from "./mermaid-theme-helper";
+} from "../theme/mermaid-theme-helper";
 import {
   MermaidValidator,
   type MermaidValidationResult,
 } from "./mermaid-validator";
-import { MermaidViewer } from "./mermaid-viewer";
+import { MermaidViewer } from "../rendering/mermaid-viewer";
 
 const EMPTY_MERMAID_DATA: MermaidData = {
   code: "",
@@ -60,7 +60,7 @@ export function MermaidEditor({
   onSave: (data: MermaidData) => void;
   onCancel: () => void;
 }) {
-  const { resolvedTheme } = useTheme();
+  const isDarkMode = useDarkMode();
   const settings = useFeatureEditorSettings("mermaid");
   const initial = { ...EMPTY_MERMAID_DATA, ...initialData };
   const [data, setData] = useState<MermaidData>(initial);
@@ -276,7 +276,7 @@ export function MermaidEditor({
                   value={data.code}
                   onChange={(code) => updateData({ code: code ?? "" }, false)}
                   onValidationChange={handleValidation}
-                  theme={resolvedTheme === "dark" ? "dark" : "light"}
+                  theme={isDarkMode ? "dark" : "light"}
                   options={settings.editor}
                 />
               </div>

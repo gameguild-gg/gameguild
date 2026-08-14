@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { VegaLiteViewer } from "./vega-lite-viewer";
-import { loadCsvDataIntoSpec } from "./vega-csv-loader";
+import { loadCsvDataIntoSpec } from "../data/vega-csv-loader";
 
 interface ControlledVegaLiteViewerProps {
   spec: string;

@@ -11,17 +11,32 @@ import {
 } from "@game-guild/ui/components/card";
 import { Input } from "@game-guild/ui/components/input";
 import { Search, X } from "lucide-react";
-import type { MermaidData } from "./mermaid-data";
+import type { MermaidData } from "../mermaid-data";
 import {
   getAllTemplates,
   searchTemplates,
   type MermaidTemplate,
-} from "./templates/template-loader";
+} from "../templates/template-loader";
 
 interface MermaidTemplateSelectorProps {
   onSelect: (template: { type: MermaidData["type"]; code: string }) => void;
   onCancel: () => void;
 }
+
+const PREVIEW_IMAGES: Record<string, string> = {
+  "previews/flowchart.png": new URL(
+    "../templates/previews/flowchart.png",
+    import.meta.url,
+  ).href,
+  "previews/treemap-beta.svg": new URL(
+    "../templates/previews/treemap-beta.svg",
+    import.meta.url,
+  ).href,
+  "previews/user-journey.svg": new URL(
+    "../templates/previews/user-journey.svg",
+    import.meta.url,
+  ).href,
+};
 
 export function MermaidTemplateSelector({
   onSelect,
@@ -170,21 +185,9 @@ export function MermaidTemplateSelector({
               {filteredTemplates.map((template) => {
                 const IconComponent = template.icon;
 
-                // Try to load preview image
-                let previewImageSrc = null;
-                if (template.previewImage) {
-                  try {
-                    previewImageSrc =
-                      require(`./templates/${template.previewImage}`).default
-                        ?.src ||
-                      require(`./templates/${template.previewImage}`);
-                  } catch (e) {
-                    console.warn(
-                      `Preview image not found for template ${template.id}:`,
-                      template.previewImage,
-                    );
-                  }
-                }
+                const previewImageSrc = template.previewImage
+                  ? PREVIEW_IMAGES[template.previewImage]
+                  : undefined;
 
                 return (
                   <Card
@@ -196,11 +199,7 @@ export function MermaidTemplateSelector({
                     {previewImageSrc ? (
                       <div className="w-full aspect-square bg-gray-100 dark:bg-gray-700 relative overflow-hidden">
                         <img
-                          src={
-                            typeof previewImageSrc === "string"
-                              ? previewImageSrc
-                              : previewImageSrc.src || previewImageSrc
-                          }
+                          src={previewImageSrc}
                           alt={template.title}
                           className="w-full h-full object-contain p-3"
                           onError={(e) => {

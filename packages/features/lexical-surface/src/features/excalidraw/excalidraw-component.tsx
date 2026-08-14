@@ -21,10 +21,10 @@ import {
   type NodeKey,
 } from "lexical";
 import { Pencil, Trash2 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { cn } from "@game-guild/ui/lib/utils";
 import type { AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
 import { DeleteConfirmDialog } from "../../shared/ui/dialogs/delete-confirm-dialog";
+import { useDarkMode } from "../../shared/ui/use-dark-mode";
 import { useNodeDeleteProtection } from "../../shared/lexical/node-delete-protection";
 import ExcalidrawImage from "./excalidraw-image";
 import ExcalidrawModal, {
@@ -133,15 +133,14 @@ export default function ExcalidrawComponent({
   // Mantém a pré-visualização SVG do desenho coerente com o tema
   // atual da página: sobrescreve `appState.theme` / `exportWithDarkMode`
   // sem alterar o JSON salvo no nó.
-  const { resolvedTheme } = useTheme();
+  const isDarkMode = useDarkMode();
   const themedAppState = useMemo<AppState>(() => {
-    const isDark = resolvedTheme === "dark";
     return {
       ...(appState as AppState),
-      theme: isDark ? "dark" : "light",
-      exportWithDarkMode: isDark,
+      theme: isDarkMode ? "dark" : "light",
+      exportWithDarkMode: isDarkMode,
     } as AppState;
-  }, [appState, resolvedTheme]);
+  }, [appState, isDarkMode]);
 
   const closeModal = useCallback(() => {
     setModalOpen(false);

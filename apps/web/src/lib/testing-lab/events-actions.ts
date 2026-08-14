@@ -235,15 +235,13 @@ export async function deleteTestingEvent(formData: FormData): Promise<TestingEve
 export async function archiveTestingEvent(formData: FormData): Promise<TestingEventActionResult<boolean>> {
   const eventId = text(formData, 'eventId');
   if (!eventId) return { success: false, error: 'Event is required.' };
-  // ponytail: API endpoint removed in schema sync; kept export so callers compile.
-  return { success: false, error: 'Archive endpoint unavailable.' };
+  return complete(createModules().events.postTestingEventsArchive(eventId), 'Testing event archived.', eventId);
 }
 
 export async function restoreTestingEvent(formData: FormData): Promise<TestingEventActionResult<boolean>> {
   const eventId = text(formData, 'eventId');
   if (!eventId) return { success: false, error: 'Event is required.' };
-  // ponytail: API endpoint removed in schema sync; kept export so callers compile.
-  return { success: false, error: 'Restore endpoint unavailable.' };
+  return complete(createModules().events.postTestingEventsRestore(eventId), 'Testing event restored.', eventId);
 }
 
 type EventTransition =

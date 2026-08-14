@@ -10,18 +10,25 @@ import {
   CardTitle,
 } from "@game-guild/ui/components/card";
 import { Input } from "@game-guild/ui/components/input";
-import { BarChart3, Search, X, ChevronRight } from "lucide-react";
+import { Search, X, ChevronRight } from "lucide-react";
 import {
   getAllTemplates,
   searchTemplates,
   TEMPLATE_CATEGORIES,
   type VegaLiteTemplate,
-} from "./templates/template-loader";
+} from "../templates/template-loader";
 
 interface VegaLiteTemplateSelectorProps {
   onSelect: (template: { type: string; spec: string; title?: string }) => void;
   onCancel: () => void;
 }
+
+const PREVIEW_IMAGES: Record<string, string> = {
+  "single-view-plots/bar-charts/simple-bar.png": new URL(
+    "../templates/single-view-plots/bar-charts/simple-bar.png",
+    import.meta.url,
+  ).href,
+};
 
 export function VegaLiteTemplateSelector({
   onSelect,
@@ -85,7 +92,7 @@ export function VegaLiteTemplateSelector({
     onSelect({
       type: template.type,
       spec: JSON.stringify(template.spec, null, 2),
-      title: template.title,
+      title: template.initialTitle ?? template.title,
     });
   };
 
@@ -221,25 +228,11 @@ export function VegaLiteTemplateSelector({
             {filteredTemplates.map((template) => {
               const IconComponent = template.icon;
 
-              // For Next.js, we need to use dynamic imports or require for images
-              let previewImageSrc = null;
-              if (template.previewImage) {
-                try {
-                  // Try to load the image using require (works in Next.js)
-                  previewImageSrc =
-                    require(
-                      `./templates/${template.category}/${template.subcategory}/${template.previewImage}`,
-                    ).default?.src ||
-                    require(
-                      `./templates/${template.category}/${template.subcategory}/${template.previewImage}`,
-                    );
-                } catch (e) {
-                  console.warn(
-                    `Preview image not found for template ${template.id}:`,
-                    template.previewImage,
-                  );
-                }
-              }
+              const previewImageSrc = template.previewImage
+                ? PREVIEW_IMAGES[
+                    `${template.category}/${template.subcategory}/${template.previewImage}`
+                  ]
+                : undefined;
 
               return (
                 <Card
@@ -251,11 +244,7 @@ export function VegaLiteTemplateSelector({
                   {previewImageSrc ? (
                     <div className="w-full aspect-square bg-gray-100 dark:bg-gray-700 relative overflow-hidden">
                       <img
-                        src={
-                          typeof previewImageSrc === "string"
-                            ? previewImageSrc
-                            : previewImageSrc.src || previewImageSrc
-                        }
+                        src={previewImageSrc}
                         alt={template.title}
                         className="w-full h-full object-contain p-3"
                         onError={(e) => {
@@ -308,44 +297,6 @@ export function VegaLiteTemplateSelector({
               </p>
             </div>
           )}
-
-          {/* Custom Template Option */}
-          <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-            <Card
-              className="cursor-pointer hover:shadow-lg transition-all duration-200 border-dashed border-2 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 bg-gray-50 dark:bg-gray-800/50"
-              onClick={() =>
-                onSelect({
-                  type: "custom",
-                  spec: JSON.stringify(
-                    {
-                      $schema:
-                        "https://vega.github.io/schema/vega-lite/v6.json",
-                      data: {
-                        values: [],
-                      },
-                      mark: "point",
-                      encoding: {},
-                    },
-                    null,
-                    2,
-                  ),
-                  title: "Custom Chart",
-                })
-              }
-            >
-              <CardContent className="p-6 text-center">
-                <div className="p-3 rounded-lg bg-gray-200 dark:bg-gray-700 inline-block mb-3">
-                  <BarChart3 className="h-6 w-6 text-gray-600 dark:text-gray-400" />
-                </div>
-                <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-1">
-                  Start from Blank
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  Create your own custom Vega-Lite specification
-                </p>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </div>
