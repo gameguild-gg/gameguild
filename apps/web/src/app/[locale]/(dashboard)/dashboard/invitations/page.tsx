@@ -1,6 +1,8 @@
 import { auth } from '@/auth';
 import { getPendingMemberInvitations } from '@/lib/community';
 import { acceptCurrentUserInvite } from '@/lib/community/actions/member-access';
+import { acceptTeamInvitationForm } from '@/lib/workspace-actions';
+import { getWorkspaceMyTeamInvitations } from '@/lib/workspaces';
 import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -13,7 +15,7 @@ interface Props {
 }
 
 export default async function InvitationsPage({ searchParams }: Props): Promise<React.JSX.Element> {
-  const [session, query] = await Promise.all([auth(), searchParams]);
+  const [session, query, teamInvitations] = await Promise.all([auth(), searchParams, getWorkspaceMyTeamInvitations()]);
   const result = await getPendingMemberInvitations(session?.user.id ?? '');
   const warning = query?.error ?? result.error;
 
@@ -84,6 +86,33 @@ export default async function InvitationsPage({ searchParams }: Props): Promise<
                       <Check className="mr-2 size-4" />
                       Accept invitation
                     </Button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending Team invitations</CardTitle>
+          <CardDescription>Accepting joins the Team; it does not grant event-management capabilities.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {teamInvitations.length === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">No pending Team invitations.</div>
+          ) : (
+            <div className="divide-y rounded-lg border">
+              {teamInvitations.map((invitation) => (
+                <div key={invitation.id} className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2"><p className="font-medium">{invitation.teamName}</p><Badge variant="secondary">{String(invitation.authority)}</Badge></div>
+                    <p className="mt-1 text-sm text-muted-foreground">Expires {new Date(invitation.expiresAt).toLocaleString()}</p>
+                  </div>
+                  <form action={acceptTeamInvitationForm}>
+                    <input type="hidden" name="invitationId" value={invitation.id} />
+                    <Button type="submit"><Check className="mr-2 size-4" />Accept Team invitation</Button>
                   </form>
                 </div>
               ))}

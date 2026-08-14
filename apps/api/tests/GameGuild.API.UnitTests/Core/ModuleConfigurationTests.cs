@@ -13,6 +13,7 @@ public class ModuleConfigurationTests
         ModuleConfiguration.DefaultEnabledModules.Should().Contain("Users");
         ModuleConfiguration.DefaultEnabledModules.Should().Contain("Tenants");
         ModuleConfiguration.DefaultEnabledModules.Should().Contain("Payments");
+        ModuleConfiguration.DefaultEnabledModules.Should().Contain("Assets");
         ModuleConfiguration.DefaultEnabledModules.Should().Contain("Projects");
         ModuleConfiguration.DefaultEnabledModules.Should().Contain("TestingLab");
         ModuleConfiguration.DefaultEnabledModules.Should().Contain("LaunchPad");

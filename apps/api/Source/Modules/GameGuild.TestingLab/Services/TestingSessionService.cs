@@ -1,186 +1,103 @@
-
-
 namespace GameGuild.TestingLab;
 
-public class TestingSessionService : ITestingSessionService {
-  private readonly IApplicationDbContext _context;
+/// <summary>
+/// Backward-compatible adapter for the legacy session service contract. The
+/// canonical operations services own tenant resolution, authorization scope and
+/// persistence.
+/// </summary>
+public sealed class TestingSessionService(
+    ITestingSessionOperations sessions,
+    ITestingParticipantOperations participants) : ITestingSessionService
+{
+    public Task<IEnumerable<TestingSession>> GetAllAsync() => sessions.GetAllTestingSessionsAsync();
 
-  public TestingSessionService(IApplicationDbContext context) { _context = context; }
+    public Task<IEnumerable<TestingSession>> GetWithPaginationAsync(int skip = 0, int take = 50) =>
+        sessions.GetTestingSessionsAsync(skip, take);
 
-  public async Task<IEnumerable<TestingSession>> GetAllAsync() {
-    return await _context.Set<TestingSession>().Where(ts => ts.DeletedAt == null).Include(ts => ts.TestingRequest).Include(ts => ts.Location).OrderByDescending(ts => ts.CreatedAt).ToListAsync();
-  }
+    public Task<TestingSession?> GetByIdAsync(Guid id) => sessions.GetTestingSessionByIdAsync(id);
 
-  public async Task<IEnumerable<TestingSession>> GetWithPaginationAsync(int skip = 0, int take = 50) {
-    return await _context.Set<TestingSession>().Where(ts => ts.DeletedAt == null).Include(ts => ts.TestingRequest).Include(ts => ts.Location).OrderByDescending(ts => ts.CreatedAt).Skip(skip).Take(take).ToListAsync();
-  }
+    public Task<TestingSession?> GetByIdWithDetailsAsync(Guid id) => sessions.GetTestingSessionByIdWithDetailsAsync(id);
 
-  public async Task<TestingSession?> GetByIdAsync(Guid id) { return await _context.Set<TestingSession>().Where(ts => ts.Id == id && ts.DeletedAt == null).Include(ts => ts.TestingRequest).Include(ts => ts.Location).FirstOrDefaultAsync(); }
+    public Task<TestingSession> CreateAsync(TestingSession testingSession) =>
+        sessions.CreateTestingSessionAsync(testingSession);
 
-  public async Task<TestingSession?> GetByIdWithDetailsAsync(Guid id) {
-    return await _context.Set<TestingSession>().Where(ts => ts.Id == id && ts.DeletedAt == null).Include(ts => ts.TestingRequest).Include(ts => ts.Location).Include(ts => ts.Registrations).FirstOrDefaultAsync();
-  }
+    public Task<TestingSession> UpdateAsync(TestingSession testingSession) =>
+        sessions.UpdateTestingSessionAsync(testingSession);
 
-  public async Task<TestingSession> CreateAsync(TestingSession testingSession) {
-    testingSession.Id = Guid.NewGuid();
-    testingSession.Touch();
+    public Task<bool> DeleteAsync(Guid id) => sessions.DeleteTestingSessionAsync(id);
 
-    _context.Set<TestingSession>().Add(testingSession);
-    await _context.SaveChangesAsync().ConfigureAwait(false);
+    public Task<bool> RestoreAsync(Guid id) => sessions.RestoreTestingSessionAsync(id);
 
-    return testingSession;
-  }
+    public Task<IEnumerable<TestingSession>> GetByTestingRequestAsync(Guid testingRequestId) =>
+        sessions.GetTestingSessionsByRequestAsync(testingRequestId);
 
-  public async Task<TestingSession> UpdateAsync(TestingSession testingSession) {
-    var existingSession = await _context.Set<TestingSession>().FindAsync(testingSession.Id).ConfigureAwait(false);
+    public Task<IEnumerable<TestingSession>> GetByStatusAsync(SessionStatus status) =>
+        sessions.GetTestingSessionsByStatusAsync(status);
 
-    if (existingSession == null) throw new InvalidOperationException($"Testing session with ID {testingSession.Id} not found.");
+    public async Task<IEnumerable<TestingSession>> GetUpcomingSessionsAsync()
+    {
+        var now = SystemClock.UtcNow;
+        return (await sessions.GetTestingSessionsByStatusAsync(SessionStatus.Scheduled).ConfigureAwait(false))
+            .Where(session => session.StartTime > now)
+            .OrderBy(session => session.StartTime)
+            .ToArray();
+    }
 
-    // Update properties
-    existingSession.SessionName = testingSession.SessionName;
-    existingSession.SessionDate = testingSession.SessionDate;
-    existingSession.StartTime = testingSession.StartTime;
-    existingSession.EndTime = testingSession.EndTime;
-    existingSession.MaxTesters = testingSession.MaxTesters;
-    existingSession.Status = testingSession.Status;
-    existingSession.ManagerUserId = testingSession.ManagerUserId;
-    existingSession.Touch();
+    public async Task<IEnumerable<TestingSession>> GetActiveSessionsAsync()
+    {
+        var now = SystemClock.UtcNow;
+        return (await sessions.GetTestingSessionsByStatusAsync(SessionStatus.Active).ConfigureAwait(false))
+            .Where(session => session.StartTime <= now && session.EndTime >= now)
+            .OrderBy(session => session.StartTime)
+            .ToArray();
+    }
 
-    await _context.SaveChangesAsync().ConfigureAwait(false);
+    public Task<IEnumerable<TestingSession>> GetByLocationAsync(Guid locationId) =>
+        sessions.GetTestingSessionsByLocationAsync(locationId);
 
-    return (await GetByIdAsync(existingSession.Id).ConfigureAwait(false)) ?? existingSession;
-  }
+    public async Task<IEnumerable<TestingSession>> GetByDateRangeAsync(DateTime startDate, DateTime endDate) =>
+        (await sessions.GetAllTestingSessionsAsync().ConfigureAwait(false))
+        .Where(session => session.SessionDate >= startDate && session.SessionDate <= endDate)
+        .OrderBy(session => session.SessionDate)
+        .ToArray();
 
-  public async Task<bool> DeleteAsync(Guid id) {
-    var session = await _context.Set<TestingSession>().FindAsync(id).ConfigureAwait(false);
+    public async Task<bool> CanUserJoinSessionAsync(Guid userId, Guid testingSessionId)
+    {
+        var session = await sessions.GetTestingSessionByIdAsync(testingSessionId).ConfigureAwait(false);
+        if (session == null || !session.AllowsRegistration) return false;
+        return !(await participants.GetSessionRegistrationsAsync(testingSessionId).ConfigureAwait(false))
+            .Any(registration => registration.UserId == userId && registration.DeletedAt == null);
+    }
 
-    if (session == null) return false;
+    public async Task<TestingSession> JoinSessionAsync(Guid userId, Guid testingSessionId)
+    {
+        await participants.RegisterForSessionAsync(testingSessionId, userId, RegistrationType.Tester).ConfigureAwait(false);
+        return await sessions.GetTestingSessionByIdAsync(testingSessionId).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Testing session not found after registration.");
+    }
 
-    session.SoftDelete();
-    session.Touch();
-    await _context.SaveChangesAsync().ConfigureAwait(false);
+    public async Task<TestingSession> LeaveSessionAsync(Guid userId, Guid testingSessionId)
+    {
+        if (!await participants.UnregisterFromSessionAsync(testingSessionId, userId).ConfigureAwait(false))
+            throw new InvalidOperationException("User is not registered for this session.");
+        return await sessions.GetTestingSessionByIdAsync(testingSessionId).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Testing session not found after cancellation.");
+    }
 
-    return true;
-  }
+    public Task<TestingSession> StartSessionAsync(Guid testingSessionId) =>
+        TransitionAsync(testingSessionId, session => session.Start());
 
-  public async Task<bool> RestoreAsync(Guid id) {
-    var session = await _context.Set<TestingSession>().FindAsync(id).ConfigureAwait(false);
+    public Task<TestingSession> EndSessionAsync(Guid testingSessionId) =>
+        TransitionAsync(testingSessionId, session => session.Complete());
 
-    if (session == null) return false;
+    public Task<TestingSession> CancelSessionAsync(Guid testingSessionId) =>
+        TransitionAsync(testingSessionId, session => session.Cancel());
 
-    session.Restore();
-    session.Touch();
-    await _context.SaveChangesAsync().ConfigureAwait(false);
-
-    return true;
-  }
-
-  public async Task<IEnumerable<TestingSession>> GetByTestingRequestAsync(Guid testingRequestId) {
-    return await _context.Set<TestingSession>().Where(ts => ts.TestingRequestId == testingRequestId && ts.DeletedAt == null).Include(ts => ts.TestingRequest).Include(ts => ts.Location).OrderBy(ts => ts.SessionDate).ToListAsync();
-  }
-
-  public async Task<IEnumerable<TestingSession>> GetByStatusAsync(SessionStatus status) {
-    return await _context.Set<TestingSession>().Where(ts => ts.Status == status && ts.DeletedAt == null).Include(ts => ts.TestingRequest).Include(ts => ts.Location).OrderBy(ts => ts.SessionDate).ToListAsync();
-  }
-
-  public async Task<IEnumerable<TestingSession>> GetUpcomingSessionsAsync() {
-    var now = SystemClock.UtcNow;
-
-    return await _context.Set<TestingSession>().Where(ts => ts.StartTime > now && ts.DeletedAt == null && ts.Status == SessionStatus.Scheduled).Include(ts => ts.TestingRequest).Include(ts => ts.Location).OrderBy(ts => ts.StartTime).ToListAsync();
-  }
-
-  public async Task<IEnumerable<TestingSession>> GetActiveSessionsAsync() {
-    var now = SystemClock.UtcNow;
-
-    return await _context.Set<TestingSession>().Where(ts => ts.StartTime <= now && ts.EndTime >= now && ts.DeletedAt == null && ts.Status == SessionStatus.Active)
-                         .Include(ts => ts.TestingRequest)
-                         .Include(ts => ts.Location)
-                         .OrderBy(ts => ts.StartTime)
-                         .ToListAsync();
-  }
-
-  public async Task<IEnumerable<TestingSession>> GetByLocationAsync(Guid locationId) {
-    return await _context.Set<TestingSession>().Where(ts => ts.LocationId == locationId && ts.DeletedAt == null).Include(ts => ts.TestingRequest).Include(ts => ts.Location).OrderBy(ts => ts.SessionDate).ToListAsync();
-  }
-
-  public async Task<IEnumerable<TestingSession>> GetByDateRangeAsync(DateTime startDate, DateTime endDate) {
-    return await _context.Set<TestingSession>().Where(ts => ts.SessionDate >= startDate && ts.SessionDate <= endDate && ts.DeletedAt == null).Include(ts => ts.TestingRequest).Include(ts => ts.Location).OrderBy(ts => ts.SessionDate).ToListAsync();
-  }
-
-  public async Task<bool> CanUserJoinSessionAsync(Guid userId, Guid testingSessionId) {
-    var session = await GetByIdAsync(testingSessionId).ConfigureAwait(false);
-
-    if (session == null) return false;
-
-    var registrationCount = await _context.Set<SessionRegistration>().CountAsync(sr => sr.SessionId == testingSessionId);
-
-    return registrationCount < session.MaxTesters;
-  }
-
-  public async Task<TestingSession> JoinSessionAsync(Guid userId, Guid testingSessionId) {
-    // Check if user is already registered
-    var existingRegistration = await _context.Set<SessionRegistration>().FirstOrDefaultAsync(sr => sr.SessionId == testingSessionId && sr.UserId == userId);
-
-    if (existingRegistration != null) throw new InvalidOperationException("User is already registered for this session");
-
-    // Check if session has available slots
-    if (!await CanUserJoinSessionAsync(userId, testingSessionId)) throw new InvalidOperationException("Session is full");
-
-    var registration = new SessionRegistration { SessionId = testingSessionId, UserId = userId, RegistrationType = RegistrationType.Tester, AttendanceStatus = AttendanceStatus.Registered };
-
-    _context.Set<SessionRegistration>().Add(registration);
-    await _context.SaveChangesAsync().ConfigureAwait(false);
-
-    return await GetByIdAsync(testingSessionId) ?? throw new InvalidOperationException("Session not found after joining");
-  }
-
-  public async Task<TestingSession> LeaveSessionAsync(Guid userId, Guid testingSessionId) {
-    var registration = await _context.Set<SessionRegistration>().FirstOrDefaultAsync(sr => sr.SessionId == testingSessionId && sr.UserId == userId);
-
-    if (registration == null) throw new InvalidOperationException("User is not registered for this session");
-
-    _context.Set<SessionRegistration>().Remove(registration);
-    await _context.SaveChangesAsync().ConfigureAwait(false);
-
-    return await GetByIdAsync(testingSessionId) ?? throw new InvalidOperationException("Session not found after leaving");
-  }
-
-  public async Task<TestingSession> StartSessionAsync(Guid testingSessionId) {
-    var session = await GetByIdAsync(testingSessionId).ConfigureAwait(false);
-
-    if (session == null) throw new InvalidOperationException("Session not found");
-
-    session.Status = SessionStatus.Active;
-    session.Touch();
-
-    await _context.SaveChangesAsync().ConfigureAwait(false);
-
-    return session;
-  }
-
-  public async Task<TestingSession> EndSessionAsync(Guid testingSessionId) {
-    var session = await GetByIdAsync(testingSessionId).ConfigureAwait(false);
-
-    if (session == null) throw new InvalidOperationException("Session not found");
-
-    session.Status = SessionStatus.Completed;
-    session.Touch();
-
-    await _context.SaveChangesAsync().ConfigureAwait(false);
-
-    return session;
-  }
-
-  public async Task<TestingSession> CancelSessionAsync(Guid testingSessionId) {
-    var session = await GetByIdAsync(testingSessionId).ConfigureAwait(false);
-
-    if (session == null) throw new InvalidOperationException("Session not found");
-
-    session.Status = SessionStatus.Cancelled;
-    session.Touch();
-
-    await _context.SaveChangesAsync().ConfigureAwait(false);
-
-    return session;
-  }
+    private async Task<TestingSession> TransitionAsync(Guid sessionId, Action<TestingSession> transition)
+    {
+        var session = await sessions.GetTestingSessionByIdAsync(sessionId).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Testing session not found.");
+        transition(session);
+        return await sessions.UpdateTestingSessionAsync(session).ConfigureAwait(false);
+    }
 }

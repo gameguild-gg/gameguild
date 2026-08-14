@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using GameGuild.Teams;
 
 namespace GameGuild.Projects;
 
@@ -80,7 +81,8 @@ public sealed class ProjectsModelConfiguration : IModelConfiguration
         {
             builder.ToTable("project_teams");
             builder.HasKey(team => team.Id);
-            builder.Property(team => team.Role).IsRequired().HasMaxLength(100);
+            builder.Property(team => team.Role).HasConversion<string>().IsRequired().HasMaxLength(30);
+            builder.Property(team => team.ParticipationMode).HasConversion<string>().IsRequired().HasMaxLength(30);
             builder.Property(team => team.Permissions).HasMaxLength(1000);
             builder.Property(team => team.Notes).HasMaxLength(1000);
             builder.HasOne(team => team.Project)
@@ -96,30 +98,40 @@ public sealed class ProjectsModelConfiguration : IModelConfiguration
             builder.HasIndex(team => team.AssignedAt);
         });
 
-        modelBuilder.Entity<Team>(builder =>
+        modelBuilder.Entity<ProjectMemberAllocation>(builder =>
         {
-            builder.ToTable("project_collaboration_teams");
-            builder.HasKey(team => team.Id);
-            builder.Property(team => team.Name).IsRequired().HasMaxLength(200);
-            builder.Property(team => team.Description).HasMaxLength(2000);
-            builder.HasIndex(team => team.Name);
+            builder.ToTable("project_member_allocations");
+            builder.HasKey(allocation => allocation.Id);
+            builder.Property(allocation => allocation.Function).IsRequired().HasMaxLength(100);
+            builder.HasOne(allocation => allocation.Project)
+                .WithMany(project => project.Allocations)
+                .HasForeignKey(allocation => allocation.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(allocation => allocation.ProjectTeam)
+                .WithMany(team => team.Allocations)
+                .HasForeignKey(allocation => allocation.ProjectTeamId)
+                .OnDelete(DeleteBehavior.Cascade);
+            builder.HasOne(allocation => allocation.User)
+                .WithMany()
+                .HasForeignKey(allocation => allocation.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(allocation => new { allocation.ProjectId, allocation.UserId, allocation.ProjectTeamId }).IsUnique();
         });
 
-        modelBuilder.Entity<TeamMember>(builder =>
+        modelBuilder.Entity<ProjectTeamAgreement>(builder =>
         {
-            builder.ToTable("project_collaboration_team_members");
-            builder.HasKey(member => member.Id);
-            builder.Property(member => member.Role).IsRequired().HasMaxLength(100);
-            builder.HasOne(member => member.Team)
-                .WithMany(team => team.Members)
-                .HasForeignKey(member => member.TeamId)
+            builder.ToTable("project_team_agreements");
+            builder.HasKey(agreement => agreement.Id);
+            builder.Property(agreement => agreement.Status).HasConversion<string>().HasMaxLength(30);
+            builder.Property(agreement => agreement.Scope).IsRequired().HasMaxLength(1000);
+            builder.Property(agreement => agreement.Deliverables).IsRequired().HasMaxLength(2000);
+            builder.HasOne<Project>()
+                .WithMany(project => project.TeamAgreements)
+                .HasForeignKey(agreement => agreement.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
-            builder.HasOne(member => member.User)
-                .WithMany()
-                .HasForeignKey(member => member.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-            builder.HasIndex(member => new { member.TeamId, member.UserId }).IsUnique();
-            builder.HasIndex(member => member.UserId);
+            builder.HasOne<Team>().WithMany().HasForeignKey(agreement => agreement.ProposingTeamId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<Team>().WithMany().HasForeignKey(agreement => agreement.ReceivingTeamId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(agreement => agreement.ProjectId);
         });
 
         modelBuilder.Entity<ProjectInvitation>(builder =>

@@ -12,7 +12,8 @@ public sealed record BulkUploadAssetsCommand(
     Guid? TenantId,
     AssetAccessPolicy AccessPolicy = AssetAccessPolicy.Private,
     string? ParentResourceType = null,
-    Guid? ParentResourceId = null) : IRequest<BulkUploadAssetsResponse>;
+    Guid? ParentResourceId = null,
+    Guid? FolderId = null) : IRequest<BulkUploadAssetsResponse>;
 
 public sealed record BulkUploadAssetsResponse(
     int TotalRequested,
@@ -28,12 +29,29 @@ public sealed record BulkUploadAssetItem(
     string? Error);
 
 public sealed class BulkUploadAssetsHandler(
-    IAssetUploadService uploadService) : IRequestHandler<BulkUploadAssetsCommand, BulkUploadAssetsResponse>
+    IAssetUploadService uploadService,
+    IAssetUploadAuthorizationService authorizationService) : IRequestHandler<BulkUploadAssetsCommand, BulkUploadAssetsResponse>
 {
     public async Task<BulkUploadAssetsResponse> Handle(
         BulkUploadAssetsCommand request,
         CancellationToken ct = default)
     {
+        if (!await authorizationService.CanUploadAsync(
+                request.ParentResourceType,
+                request.ParentResourceId,
+                request.FolderId,
+                request.UserId,
+                request.TenantId,
+                ct).ConfigureAwait(false))
+        {
+            return new BulkUploadAssetsResponse(
+                request.Files.Count,
+                0,
+                request.Files.Count,
+                request.Files.Select(file => new BulkUploadAssetItem(
+                    file.FileName, false, null, null, "Forbidden")).ToArray());
+        }
+
         var items = new List<BulkUploadAssetItem>();
 
         foreach (var file in request.Files)
@@ -44,7 +62,9 @@ public sealed class BulkUploadAssetsHandler(
                     file.DisplayName ?? file.FileName,
                     request.AccessPolicy,
                     request.ParentResourceType,
-                    request.ParentResourceId);
+                    request.ParentResourceId,
+                    request.FolderId,
+                    request.TenantId);
 
                 var result = await uploadService
                     .UploadAsync(file.Content, file.FileName, file.MimeType, request.UserId, options, ct)

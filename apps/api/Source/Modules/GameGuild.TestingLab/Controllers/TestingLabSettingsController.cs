@@ -1,4 +1,3 @@
-using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +17,7 @@ public class TestingLabSettingsController(
   private ActorContext Actor => actorContextAccessor.ActorContext;
   /// <summary> Get testing lab settings for the current tenant or global settings if no tenant context Creates default settings if none exist </summary>
   [HttpGet]
-  [RequireContentTypePermission<TestingLabSettings>(PermissionType.Read)]
+  [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Settings)]
   public async Task<ActionResult<TestingLabSettingsDto>> GetSettings() {
     var userId = Actor.SubjectIdAsGuid;
     if (userId == null) { return Unauthorized(new { message = "User ID claim not found in token" }); }
@@ -33,7 +32,7 @@ public class TestingLabSettingsController(
 
   /// <summary> Create or update testing lab settings for the current tenant </summary>
   [HttpPut]
-  [RequireContentTypePermission<TestingLabSettings>(PermissionType.Edit)]
+  [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Settings)]
   public async Task<ActionResult<TestingLabSettingsDto>> CreateOrUpdateSettings([FromBody] CreateTestingLabSettingsDto dto) {
     try {
       // Allow null tenant (global) – pass through nullable context
@@ -52,7 +51,7 @@ public class TestingLabSettingsController(
 
   /// <summary> Update testing lab settings for the current tenant (partial update) </summary>
   [HttpPatch]
-  [RequireContentTypePermission<TestingLabSettings>(PermissionType.Edit)]
+  [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Settings)]
   public async Task<ActionResult<TestingLabSettingsDto>> UpdateSettings([FromBody] UpdateTestingLabSettingsDto dto) {
     try {
       var tenantId = Actor.TenantId; // nullable allowed
@@ -70,7 +69,7 @@ public class TestingLabSettingsController(
 
   /// <summary> Reset testing lab settings to default values for the current tenant </summary>
   [HttpPost("reset")]
-  [RequireContentTypePermission<TestingLabSettings>(PermissionType.Edit)]
+  [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Settings)]
   public async Task<ActionResult<TestingLabSettingsDto>> ResetSettings() {
     try {
       var tenantId = Actor.TenantId;
@@ -88,7 +87,7 @@ public class TestingLabSettingsController(
 
   /// <summary> Check if testing lab settings exist for the current tenant </summary>
   [HttpGet("exists")]
-  [RequireContentTypePermission<TestingLabSettings>(PermissionType.Read)]
+  [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Settings)]
   public async Task<ActionResult<bool>> SettingsExist() {
     var tenantId = Actor.TenantId;
     var exists = await settingsService.TestingLabSettingsExistAsync(tenantId);

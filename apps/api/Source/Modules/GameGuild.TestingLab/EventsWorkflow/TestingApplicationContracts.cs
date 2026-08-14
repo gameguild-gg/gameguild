@@ -21,13 +21,15 @@ public sealed record TestingProjectApplicationProjection(
     Guid? DecidedByUserId,
     string? DecisionRationale,
     DateTime? DecidedAt,
-    IReadOnlyList<TestingApplicationVoteProjection> Votes);
+    IReadOnlyList<TestingApplicationVoteProjection> Votes,
+    IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null);
 
 public sealed record SubmitTestingProjectApplicationCommand(
     Guid EventId,
     Guid ProjectId,
-    Guid? ProjectVersionId,
-    string? PreferredAvailability) : ICommand<Result<TestingProjectApplicationProjection>>;
+    Guid ProjectVersionId,
+    string? PreferredAvailability,
+    IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null) : ICommand<Result<TestingProjectApplicationProjection>>;
 
 public sealed record WithdrawTestingProjectApplicationCommand(Guid ApplicationId)
     : ICommand<Result<TestingProjectApplicationProjection>>;
@@ -75,10 +77,30 @@ public sealed record GetTestingApplicationTesterEligibilityQuery(
     IReadOnlyList<Guid> TesterUserIds)
     : IQuery<Result<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>>;
 
+public sealed record TestingApplicationReviewAssetProjection(
+    Guid AssetReferenceId,
+    string? DisplayName,
+    string MimeType,
+    string AccessUrl,
+    DateTimeOffset ExpiresAt);
+
+public sealed record TestingApplicationReviewPackageProjection(
+    Guid ApplicationId,
+    Guid ProjectId,
+    Guid ProjectVersionId,
+    string VersionNumber,
+    string VersionStatus,
+    string? ReleaseNotes,
+    IReadOnlyList<TestingApplicationReviewAssetProjection> Assets);
+
+public sealed record GetTestingApplicationReviewPackageQuery(Guid ApplicationId)
+    : IQuery<Result<TestingApplicationReviewPackageProjection>>;
+
 public sealed record SubmitTestingProjectApplicationRequest(
     Guid ProjectId,
-    Guid? ProjectVersionId,
-    string? PreferredAvailability);
+    Guid ProjectVersionId,
+    string? PreferredAvailability,
+    IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null);
 
 public sealed record CastTestingApplicationVoteRequest(
     TestingApplicationVoteDecision Decision,

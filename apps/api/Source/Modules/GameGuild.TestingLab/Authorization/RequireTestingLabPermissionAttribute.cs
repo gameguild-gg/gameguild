@@ -1,4 +1,6 @@
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Authorization;
+using GameGuild.Projects;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +26,7 @@ public sealed class TestingLabPermissionAuthorizationFilter(
     string? resourceIdParameterName,
     IActorContextAccessor actorContextAccessor,
     ITestingLabPermissionService permissionService,
+    IProjectAuthorizationService projectAuthorizationService,
     IApplicationDbContext dbContext) : IAsyncAuthorizationFilter
 {
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -119,9 +122,15 @@ public sealed class TestingLabPermissionAuthorizationFilter(
         {
             var resource = await dbContext.Set<TestingProjectApplication>().IgnoreQueryFilters().AsNoTracking()
                 .Where(item => item.Id == resourceId && item.TenantId == tenantId)
-                .Select(item => new { item.SubmittedByUserId })
+                .Select(item => new { item.ProjectId })
                 .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-            return new(resource != null, action == TestingLabActions.Read && resource?.SubmittedByUserId == actorId);
+            if (resource == null) return new(false, false);
+            var requiredPermission = action == TestingLabActions.Read ? PermissionType.Read : PermissionType.Edit;
+            var projectAccess = await projectAuthorizationService.HasPermissionAsync(
+                resource.ProjectId,
+                requiredPermission,
+                cancellationToken).ConfigureAwait(false);
+            return new(true, projectAccess);
         }
         if (type == TestingLabResourceTypes.Request)
         {

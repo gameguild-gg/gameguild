@@ -29,6 +29,25 @@ public sealed class JwtTokenService(
     /// </summary>
     public Task<string> GenerateAccessTokenAsync(Guid userId, string email, string[ ] roles, Guid? tenantId, int tokenVersion = 1, CancellationToken cancellationToken = default)
     {
+        return GenerateAccessTokenAsync(
+            userId,
+            email,
+            roles,
+            tenantId,
+            tokenVersion,
+            new DateTimeOffset(DateTime.SpecifyKind(SystemClock.UtcNow, DateTimeKind.Utc)),
+            cancellationToken);
+    }
+
+    public Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        DateTimeOffset authenticatedAt,
+        CancellationToken cancellationToken = default)
+    {
         if (roles == null) throw new ArgumentNullException(nameof(roles));
 
         logger.LogInformation("Generating access token for user: {UserId}", userId);
@@ -41,6 +60,7 @@ public sealed class JwtTokenService(
                 new Claim(JwtRegisteredClaimNames.Email, email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64),
+                new Claim("auth_time", authenticatedAt.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64),
                 // Token version for immediate revocation support
                 // When user changes password/signs out all sessions, increment their token version
                 // Validation middleware checks current version vs token version and rejects stale tokens
@@ -75,7 +95,20 @@ public sealed class JwtTokenService(
     /// <summary>
     ///     Generates a refresh token and stores it in the database.
     /// </summary>
-    public async Task<string> GenerateRefreshTokenAsync(Guid userId, DeviceInfo deviceInfo, CancellationToken cancellationToken = default)
+    public Task<string> GenerateRefreshTokenAsync(Guid userId, DeviceInfo deviceInfo, CancellationToken cancellationToken = default)
+    {
+        return GenerateRefreshTokenAsync(
+            userId,
+            deviceInfo,
+            new DateTimeOffset(DateTime.SpecifyKind(SystemClock.UtcNow, DateTimeKind.Utc)),
+            cancellationToken);
+    }
+
+    public async Task<string> GenerateRefreshTokenAsync(
+        Guid userId,
+        DeviceInfo deviceInfo,
+        DateTimeOffset authenticatedAt,
+        CancellationToken cancellationToken = default)
     {
         if (deviceInfo == null) throw new ArgumentNullException(nameof(deviceInfo));
 
@@ -113,6 +146,7 @@ public sealed class JwtTokenService(
                     UserId = userId,
                     Token = hashedToken, // Store hash, not plaintext
                     CreatedByIp = httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0",
+                    CreatedAt = authenticatedAt.UtcDateTime,
                     ExpiresAt = SystemClock.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays),
                     IsRevoked = false
                 };

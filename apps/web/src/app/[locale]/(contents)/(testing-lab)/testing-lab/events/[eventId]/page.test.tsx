@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getPublicTestingEventExperience: vi.fn(),
-  getTestingProjectOptions: vi.fn(),
+  getTestingProjectVersionOptions: vi.fn(),
 }));
 
 vi.mock('@/lib/testing-lab/events-queries', () => ({
@@ -12,7 +12,7 @@ vi.mock('@/lib/testing-lab/events-queries', () => ({
 }));
 
 vi.mock('@/lib/testing-lab/queries', () => ({
-  getTestingProjectOptions: mocks.getTestingProjectOptions,
+  getTestingProjectVersionOptions: mocks.getTestingProjectVersionOptions,
 }));
 
 vi.mock('@/components/testing-lab/testing-project-application', () => ({
@@ -44,7 +44,7 @@ import PublicTestingEventDetailPage from './page';
 describe('Public Testing Event detail page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getTestingProjectOptions.mockResolvedValue([{ id: 'project-1', title: 'Asterion' }]);
+    mocks.getTestingProjectVersionOptions.mockResolvedValue([{ id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'published' }]);
   });
 
   it('composes candidacy, tester registration, and feedback from actor-scoped API data', async () => {
@@ -72,7 +72,7 @@ describe('Public Testing Event detail page', () => {
     expect(screen.getByText('Application state: Pending')).toBeInTheDocument();
     expect(screen.getByText('Tester state: Waitlisted')).toBeInTheDocument();
     expect(screen.getByText('Feedback obligations: 1')).toBeInTheDocument();
-    expect(mocks.getTestingProjectOptions).toHaveBeenCalledOnce();
+    expect(mocks.getTestingProjectVersionOptions).toHaveBeenCalledOnce();
   });
 
   it('does not query private project choices for anonymous visitors', async () => {
@@ -96,7 +96,7 @@ describe('Public Testing Event detail page', () => {
     render(await PublicTestingEventDetailPage({ params: Promise.resolve({ eventId: 'event-1' }) }));
 
     expect(screen.getByText('Application state: new')).toBeInTheDocument();
-    expect(mocks.getTestingProjectOptions).not.toHaveBeenCalled();
+    expect(mocks.getTestingProjectVersionOptions).not.toHaveBeenCalled();
   });
 
   it('renders an accessible retry state and records the public contract failure', async () => {

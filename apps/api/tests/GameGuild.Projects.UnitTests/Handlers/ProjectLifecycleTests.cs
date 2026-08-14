@@ -81,6 +81,51 @@ public sealed class ProjectLifecycleTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task DeleteCommand_ShouldRejectPermanentDeletionWithoutRecentAuthentication()
+    {
+        var tenantId = Guid.NewGuid();
+        var project = new Project
+        {
+            Title = "Permanent deletion",
+            Slug = $"permanent-{Guid.NewGuid():N}",
+            TenantId = tenantId,
+            CreatedById = _actorId,
+        };
+        _context.Set<Project>().Add(project);
+        _context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = project.Id,
+            UserId = _actorId,
+            Role = ProjectRoles.Owner,
+            Permissions = "Delete",
+            IsActive = true,
+        });
+        _context.Set<User>().Add(new User { Id = _actorId, IsActive = true });
+        _context.Set<TenantMember>().Add(new TenantMember
+        {
+            UserId = _actorId,
+            TenantId = tenantId,
+            Role = "Member",
+            IsActive = true,
+        });
+        await _context.SaveChangesAsync();
+        var actorAccessor = new ActorContextAccessor();
+        actorAccessor.SetActorContext(ActorContextBuilder.ForUser(_actorId).WithTenantId(tenantId).Build());
+        var handler = new ProjectCommandHandlers(
+            _context,
+            actorAccessor,
+            NullLogger<ProjectCommandHandlers>.Instance);
+
+        var result = await handler.Handle(
+            new DeleteProjectCommand { ProjectId = project.Id, DeletedBy = _actorId, SoftDelete = false },
+            default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Project.ReauthenticationRequired");
+        (await _context.Set<Project>().FindAsync(project.Id)).Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task Restore_ShouldNotReactivateClosedChannelAssociations()
     {
         var deletedAt = DateTime.UtcNow.AddHours(-1);
@@ -99,7 +144,12 @@ public sealed class ProjectLifecycleTests : IAsyncDisposable
         _context.AddRange(project, link);
         await _context.SaveChangesAsync();
 
-        var restored = await new ProjectCrudService(_context).RestoreProjectAsync(project.Id);
+        var authorization = new Mock<IProjectAuthorizationService>();
+        authorization
+            .Setup(service => service.HasPermissionIncludingDeletedAsync(project.Id, PermissionType.Restore, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var restored = await new ProjectCrudService(_context, authorization.Object, new ActorContextAccessor())
+            .RestoreProjectAsync(project.Id);
 
         restored.Should().BeTrue();
         project.DeletedAt.Should().BeNull();

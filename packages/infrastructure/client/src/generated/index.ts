@@ -3,7 +3,7 @@
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
- * Generated from: captured-openapi
+ * Generated from: gameguild-openapi
  *
  * To regenerate, run: pnpm generate
  */
@@ -18,6 +18,7 @@ export * from './errors.gen.js';
 export * from './endpoints.gen.js';
 
 // Re-export module-grouped endpoints
+export * from './modules/assets-securedelivery.gen.js';
 export * from './modules/learning-certificates.gen.js';
 export * from './modules/learning-cohorts.gen.js';
 export * from './modules/compliance-ferpa.gen.js';
@@ -51,10 +52,14 @@ export * from './modules/commerce-subscriptions.gen.js';
 export * from './modules/commerce-payments-taxjurisdictions.gen.js';
 export * from './modules/commerce-payments-taxrules.gen.js';
 export * from './modules/commerce-payments-wallets.gen.js';
+export * from './modules/assets-cdn.gen.js';
 export * from './modules/health.gen.js';
+export * from './modules/assets-admin.gen.js';
 export * from './modules/ai.gen.js';
 export * from './modules/ai-prompttemplates.gen.js';
 export * from './modules/learning-assessments.gen.js';
+export * from './modules/assets-libraries.gen.js';
+export * from './modules/assets.gen.js';
 export * from './modules/auth-apikeys.gen.js';
 export * from './modules/auth.gen.js';
 export * from './modules/auth-multifactor.gen.js';
@@ -74,11 +79,13 @@ export * from './modules/learning-courses-programlifecycle.gen.js';
 export * from './modules/learning-courses-activitygrade.gen.js';
 export * from './modules/learning-courses-programcontent.gen.js';
 export * from './modules/learning-courses-lessoninteractionevents.gen.js';
+export * from './modules/api-dashboard-contexts.gen.js';
 export * from './modules/learning-experience-discovery.gen.js';
 export * from './modules/commerce-products-entitlements.gen.js';
 export * from './modules/features.gen.js';
 export * from './modules/features-flags.gen.js';
 export * from './modules/launchpad.gen.js';
+export * from './modules/launchpad-events.gen.js';
 export * from './modules/learning-experience-learningpaths-learningpath.gen.js';
 export * from './modules/learning-workspaces-learnerworkspace.gen.js';
 export * from './modules/content-marketingleads.gen.js';
@@ -88,13 +95,17 @@ export * from './modules/commerce-orders.gen.js';
 export * from './modules/content-pages.gen.js';
 export * from './modules/commerce-products.gen.js';
 export * from './modules/projects.gen.js';
+export * from './modules/api-projects-ownership.gen.js';
 export * from './modules/projects-permission.gen.js';
 export * from './modules/projects-storeproducts.gen.js';
+export * from './modules/api-projectwork.gen.js';
 export * from './modules/commerce-products-promocodes.gen.js';
 export * from './modules/learning-experience-recommendations.gen.js';
 export * from './modules/resources.gen.js';
 export * from './modules/auth-roles.gen.js';
 export * from './modules/commerce-products-support-tickets.gen.js';
+export * from './modules/api-teams.gen.js';
+export * from './modules/api-teams-projects.gen.js';
 export * from './modules/tenants.gen.js';
 export * from './modules/tenants-ai.gen.js';
 export * from './modules/features-capabilities.gen.js';

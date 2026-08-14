@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using GameGuild.Projects;
 using GameGuild.Identity.Users;
+using GameGuild.Identity.Tenants;
 using GameGuild.API.Database;
 
 namespace GameGuild.Projects.UnitTests.Infrastructure;
@@ -26,6 +27,7 @@ public class TestProjectsDbContext : DbContext, IApplicationDbContext
     public DbSet<ProjectTeam> ProjectTeams { get; set; } = null!;
     public DbSet<ProjectVersion> ProjectVersions { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
+    public DbSet<TenantMember> TenantMembers { get; set; } = null!;
 
     public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
         => Database.BeginTransactionAsync(cancellationToken);
@@ -63,6 +65,14 @@ public class TestProjectsDbContext : DbContext, IApplicationDbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+        });
+
+        modelBuilder.Entity<TenantMember>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Ignore(e => e.Tenant);
+            entity.Ignore(e => e.ParentMember);
+            entity.Ignore(e => e.ChildMembers);
         });
 
         // Add other entity configurations as needed

@@ -1,5 +1,6 @@
 using GameGuild.Identity.Users;
 using GameGuild.Projects;
+using System.Text.Json;
 
 namespace GameGuild.TestingLab;
 
@@ -21,6 +22,14 @@ public sealed class TestingProjectApplication : EntityBase
     public Guid SubmittedByUserId { get; private set; }
 
     public User SubmittedBy { get; private set; } = null!;
+
+    [MaxLength(10000)]
+    public string? SubmittedAssetReferenceIdsJson { get; private set; }
+
+    [NotMapped]
+    public IReadOnlyList<Guid> SubmittedAssetReferenceIds => string.IsNullOrWhiteSpace(SubmittedAssetReferenceIdsJson)
+        ? []
+        : JsonSerializer.Deserialize<Guid[]>(SubmittedAssetReferenceIdsJson) ?? [];
 
     [MaxLength(1000)]
     public string? PreferredAvailability { get; private set; }
@@ -52,7 +61,8 @@ public sealed class TestingProjectApplication : EntityBase
         Guid? projectVersionId,
         Guid submittedByUserId,
         string? preferredAvailability,
-        Guid? tenantId)
+        Guid? tenantId,
+        IReadOnlyCollection<Guid>? submittedAssetReferenceIds = null)
     {
         if (eventId == Guid.Empty || projectId == Guid.Empty || submittedByUserId == Guid.Empty)
             throw new ArgumentException("Event, project, and applicant are required.");
@@ -64,9 +74,16 @@ public sealed class TestingProjectApplication : EntityBase
             ProjectId = projectId,
             ProjectVersionId = projectVersionId,
             SubmittedByUserId = submittedByUserId,
+            SubmittedAssetReferenceIdsJson = SerializeAssetIds(submittedAssetReferenceIds),
             PreferredAvailability = string.IsNullOrWhiteSpace(preferredAvailability) ? null : preferredAvailability.Trim(),
             TenantId = tenantId,
         };
+    }
+
+    private static string? SerializeAssetIds(IReadOnlyCollection<Guid>? assetReferenceIds)
+    {
+        var normalized = assetReferenceIds?.Where(id => id != Guid.Empty).Distinct().Take(100).ToArray();
+        return normalized is { Length: > 0 } ? JsonSerializer.Serialize(normalized) : null;
     }
 
     public void BeginReview()
@@ -126,9 +143,8 @@ public sealed class TestingProjectApplication : EntityBase
         AssignedSlotId = slotId;
         Touch();
     }
-    public void Withdraw(Guid actorUserId)
+    public void Withdraw()
     {
-        if (actorUserId != SubmittedByUserId) throw new UnauthorizedAccessException("Only the applicant can withdraw this application.");
         if (Status is TestingApplicationStatus.Approved or TestingApplicationStatus.Rejected)
             throw new InvalidOperationException("A decided application cannot be withdrawn.");
         Status = TestingApplicationStatus.Withdrawn;

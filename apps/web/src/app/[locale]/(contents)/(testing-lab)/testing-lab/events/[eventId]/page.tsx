@@ -3,7 +3,7 @@ import { TestingProjectApplication } from '@/components/testing-lab/testing-proj
 import { TestingSlotRegistration } from '@/components/testing-lab/testing-slot-registration';
 import { Link } from '@/i18n/navigation';
 import { getPublicTestingEventExperience } from '@/lib/testing-lab/events-queries';
-import { getTestingProjectOptions } from '@/lib/testing-lab/queries';
+import { getTestingProjectVersionOptions } from '@/lib/testing-lab/queries';
 import { Badge } from '@game-guild/ui/components/badge';
 import type { TestingLabPublicTestingEventSlotProjection } from '@game-guild/client';
 import { ArrowLeft, CalendarDays, ClipboardCheck, FlaskConical, MessageSquareText } from 'lucide-react';
@@ -23,10 +23,13 @@ function formatDateTime(value?: string | null) {
 
 export default async function PublicTestingEventDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ eventId: string }>;
+  searchParams?: Promise<{ projectId?: string }>;
 }) {
   const { eventId } = await params;
+  const { projectId } = searchParams ? await searchParams : {};
   const experience = await getPublicTestingEventExperience(eventId);
   if (!experience.event && experience.accessIssues.length === 0) notFound();
 
@@ -51,7 +54,7 @@ export default async function PublicTestingEventDetailPage({
   }
 
   const event = experience.event;
-  const projects = experience.isAuthenticated ? await getTestingProjectOptions() : [];
+  const projectVersions = experience.isAuthenticated ? await getTestingProjectVersionOptions() : [];
   const application = experience.applications[0];
   const acceptsApplications = event.status === 'ApplicationsOpen';
 
@@ -168,7 +171,8 @@ export default async function PublicTestingEventDetailPage({
                 eventId={eventId}
                 isAuthenticated={experience.isAuthenticated}
                 acceptsApplications={acceptsApplications}
-                projects={projects}
+                projectVersions={projectVersions}
+                initialProjectId={projectId}
                 application={application?.id ? {
                   id: application.id,
                   status: application.status,

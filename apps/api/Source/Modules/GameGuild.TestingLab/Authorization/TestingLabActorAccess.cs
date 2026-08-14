@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.TestingLab;
 
 /// <summary>
-///     Central active-actor check for Testing Lab handlers that do not pass through
-///     the standard authorization behavior. System administrators are platform actors
-///     and therefore do not need a second membership in every managed tenant.
+///     Central active-user and active-membership check for Testing Lab handlers that do not pass through
+///     the standard authorization behavior. Administrative roles grant authority only inside the
+///     currently selected tenant; they never replace tenant membership.
 /// </summary>
 internal static class TestingLabActorAccess
 {
@@ -32,10 +32,7 @@ internal static class TestingLabActorAccess
                 user.DeletedAt == null,
                 cancellationToken)
             .ConfigureAwait(false);
-        if (!activeUser || actor.IsSystemAdmin)
-        {
-            return activeUser;
-        }
+        if (!activeUser) return false;
 
         return await context.Set<TenantMember>()
             .AsNoTracking()

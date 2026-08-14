@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Configuration.ApplicationLayer;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -71,6 +72,28 @@ public class JwtTokenServiceTests
         // Assert
         token.Should().NotBeNullOrEmpty();
         token.Split('.').Should().HaveCount(3); // JWT has 3 parts
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+        var authenticatedAt = long.Parse(jwt.Claims.Single(claim => claim.Type == "auth_time").Value);
+        DateTimeOffset.FromUnixTimeSeconds(authenticatedAt).Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
+    }
+
+    [Fact]
+    public async Task GenerateAccessTokenAsync_WithAuthenticationTime_ShouldPreserveAuthenticationTime()
+    {
+        var authenticatedAt = DateTimeOffset.UtcNow.AddMinutes(-12);
+
+        var token = await _service.GenerateAccessTokenAsync(
+            Guid.NewGuid(),
+            "test@example.com",
+            ["User"],
+            Guid.NewGuid(),
+            1,
+            authenticatedAt,
+            CancellationToken.None);
+
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+        var claim = long.Parse(jwt.Claims.Single(candidate => candidate.Type == "auth_time").Value);
+        DateTimeOffset.FromUnixTimeSeconds(claim).Should().Be(authenticatedAt.AddTicks(-(authenticatedAt.Ticks % TimeSpan.TicksPerSecond)));
     }
 
     [Fact]
@@ -191,6 +214,25 @@ public class JwtTokenServiceTests
             DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays), 
             TimeSpan.FromMinutes(1)
         );
+    }
+
+    [Fact]
+    public async Task GenerateRefreshTokenAsync_WithAuthenticationTime_ShouldPreserveSessionStart()
+    {
+        var userId = Guid.NewGuid();
+        var authenticatedAt = DateTimeOffset.UtcNow.AddHours(-3);
+        var deviceInfo = new DeviceInfo { Fingerprint = "device-123", IpAddress = "127.0.0.1" };
+        RefreshToken? capturedToken = null;
+        _refreshTokenHasherMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns("hash");
+        _refreshTokenRepositoryMock
+            .Setup(x => x.CreateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
+            .Callback<RefreshToken, CancellationToken>((token, _) => capturedToken = token)
+            .ReturnsAsync((RefreshToken token, CancellationToken _) => token);
+
+        await _service.GenerateRefreshTokenAsync(userId, deviceInfo, authenticatedAt, CancellationToken.None);
+
+        capturedToken.Should().NotBeNull();
+        capturedToken!.CreatedAt.Should().Be(authenticatedAt.UtcDateTime);
     }
 
     [Fact]

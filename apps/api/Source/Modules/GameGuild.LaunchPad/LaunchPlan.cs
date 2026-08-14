@@ -9,6 +9,12 @@ namespace GameGuild.LaunchPad;
 [Index(nameof(Status), nameof(TargetLaunchAt), Name = "IX_launch_plans_Status_TargetLaunchAt")]
 public sealed class LaunchPlan : EntityBase<Guid>
 {
+    public Guid? LaunchPadEventId { get; private set; }
+    public LaunchPadEvent? LaunchPadEvent { get; private set; }
+    public Guid? LaunchPadApplicationId { get; private set; }
+    public LaunchPadApplication? LaunchPadApplication { get; private set; }
+    public Guid? ProjectVersionId { get; private set; }
+    public ProjectVersion? ProjectVersion { get; private set; }
     public Guid ProjectId { get; set; }
     public Project Project { get; set; } = null!;
 
@@ -48,6 +54,55 @@ public sealed class LaunchPlan : EntityBase<Guid>
 
         Status = LaunchPlanStatus.Launched;
         LaunchedAt = SystemClock.UtcNow;
+    }
+
+    public static LaunchPlan CreateForApprovedApplication(
+        Guid tenantId,
+        Guid launchPadEventId,
+        Guid launchPadApplicationId,
+        Guid projectId,
+        Guid projectVersionId,
+        string name)
+    {
+        if (new[] { tenantId, launchPadEventId, launchPadApplicationId, projectId, projectVersionId }.Any(id => id == Guid.Empty))
+            throw new ArgumentException("Tenant, event, application, project and version are required.");
+        var plan = new LaunchPlan
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            LaunchPadEventId = launchPadEventId,
+            LaunchPadApplicationId = launchPadApplicationId,
+            ProjectId = projectId,
+            ProjectVersionId = projectVersionId,
+            Name = name.Trim(),
+            Status = LaunchPlanStatus.Preparing
+        };
+
+        plan.ChecklistItems.Add(new LaunchChecklistItem
+        {
+            Id = Guid.NewGuid(),
+            Title = "Event application approved",
+            Category = "Approval",
+            IsRequired = true,
+            IsComplete = true,
+            CompletedAt = SystemClock.UtcNow
+        });
+        plan.ChecklistItems.Add(new LaunchChecklistItem
+        {
+            Id = Guid.NewGuid(),
+            Title = "Release build verified",
+            Category = "Quality",
+            IsRequired = true
+        });
+        plan.ChecklistItems.Add(new LaunchChecklistItem
+        {
+            Id = Guid.NewGuid(),
+            Title = "Distribution readiness confirmed",
+            Category = "Distribution",
+            IsRequired = true
+        });
+
+        return plan;
     }
 }
 

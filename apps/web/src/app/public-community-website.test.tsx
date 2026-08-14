@@ -168,7 +168,7 @@ describe('public community website UX', () => {
     expect(screen.getByRole('heading', { name: /launch pad/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /from project to public release/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /readiness signals/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /open launch pad/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /discover launch pad events/i })).toHaveAttribute('href', '/launch-pad/events');
   });
 
   it('replaces the jobs placeholder with a community opportunities page', async () => {

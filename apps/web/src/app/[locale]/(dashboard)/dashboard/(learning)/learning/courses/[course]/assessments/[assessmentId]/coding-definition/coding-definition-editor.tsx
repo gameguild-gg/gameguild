@@ -37,6 +37,13 @@ import {
   type FunctionalTestGroup,
   type Test,
 } from "@/lib/coding-assignment/actions";
+// ponytail: same import path + cast bridge as grade-client.tsx. The web
+// CodingAssignmentContent uses readonly arrays; the emception mapper input
+// uses mutable arrays. Wire shape is identical at runtime.
+import { buildTestPlan } from "emception/testing";
+import type {
+  CodingAssignmentContent as EmceptionAssignmentContent,
+} from "emception/testing";
 import { StandardTestEditor } from "./standard-test-editor";
 import { FunctionalTestEditor } from "./functional-test-editor";
 
@@ -158,6 +165,31 @@ export function CodingDefinitionEditor({
     }
     return { Public, Private };
   }, [testRows]);
+
+  // ── Derived test plan for in-IDE "Run Tests" ──
+  // Rebuilds the v1 content from current rows + runs buildTestPlan so the Ide
+  // gets a fresh GradingPlan on every authoring edit. Returns undefined when
+  // there are no tests or the plan cannot be built (e.g. a functional group
+  // with zero cases mid-authoring) — the Ide then hides the Run Tests button.
+  const authoredTestPlan = useMemo(() => {
+    if (testRows.length === 0) return undefined;
+    try {
+      const content = buildContent({
+        language,
+        allowStudentCreateFiles,
+        fileRows,
+        testRows,
+        maxScore,
+      });
+      const { plan, generatedFiles } = buildTestPlan(
+        content as unknown as EmceptionAssignmentContent,
+        { mode: "full" },
+      );
+      return { ...plan, generatedFiles };
+    } catch {
+      return undefined;
+    }
+  }, [language, allowStudentCreateFiles, fileRows, testRows, maxScore]);
 
   // ── Auto-seed default sample on first mount when no initialContent ──
   // The Language preset Card used to host this seed via handleLanguageChange;
@@ -390,7 +422,7 @@ export function CodingDefinitionEditor({
             <CardTitle>Workspace</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div data-testid="ide-mount">
+            <div data-testid="ide-mount" className="h-[70vh] min-h-[500px]">
               <Ide
                 ref={ideRef}
                 workspaceConfig={workspaceConfig}
@@ -401,6 +433,9 @@ export function CodingDefinitionEditor({
                 onFileMetaChange={handleFileMetaChange}
                 tests={testSuite}
                 onTestsChange={handleTestsChange}
+                testPlan={authoredTestPlan}
+                testMode="full"
+                maxScore={maxScore}
                 testsPanelSlot={
                   <div className="space-y-4">
                     {testRows.length === 0 && (

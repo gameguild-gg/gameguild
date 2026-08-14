@@ -140,18 +140,6 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
         if (context is not DbContext dbContext || !dbContext.Database.IsRelational())
             return await TryIncrementTrackedAsync(tenantId, type, amount, cancellationToken).ConfigureAwait(false);
 
-        await using var ownedTransaction = dbContext.Database.CurrentTransaction is null
-            ? await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
-            : null;
-
-        async Task<(bool Success, ResourceQuota? Quota)> CompleteAsync(bool success, ResourceQuota? quota)
-        {
-            if (ownedTransaction is not null)
-                await ownedTransaction.CommitAsync(CancellationToken.None).ConfigureAwait(false);
-
-            return (success, quota);
-        }
-
         var maximumStartingUsage = long.MaxValue - amount;
 
         // Two attempts cover the only expected state transition between read and write:
@@ -164,10 +152,10 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
                 .ConfigureAwait(false);
 
             if (quota == null)
-                return await CompleteAsync(true, null).ConfigureAwait(false);
+                return (true, null);
 
             if (!quota.IsActive)
-                return await CompleteAsync(true, quota).ConfigureAwait(false);
+                return (true, quota);
 
             var observedLastReset = quota.LastReset;
             var observedVersion = quota.Version;
@@ -181,7 +169,7 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
             if (quota.ShouldReset())
             {
                 if (quota.HardLimit.HasValue && amount > quota.HardLimit.Value)
-                    return await CompleteAsync(false, quota).ConfigureAwait(false);
+                    return (false, quota);
 
                 affectedRows = await ResourceQuotas
                     .Where(candidate =>
@@ -210,7 +198,7 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
 
                 if (quota.HardLimit.HasValue &&
                     (amount > quota.HardLimit.Value || quota.CurrentUsage > quota.HardLimit.Value - amount))
-                    return await CompleteAsync(false, quota).ConfigureAwait(false);
+                    return (false, quota);
 
                 // Do not compare Version here: every successful consumer increments it.
                 // PostgreSQL serializes writers and re-evaluates these live limit and
@@ -242,7 +230,7 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
                     .SingleAsync(candidate => candidate.Id == quota.Id, cancellationToken)
                     .ConfigureAwait(false);
 
-                return await CompleteAsync(true, updatedQuota).ConfigureAwait(false);
+                return (true, updatedQuota);
             }
         }
 
@@ -252,14 +240,14 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
             .ConfigureAwait(false);
 
         if (latestQuota == null)
-            return await CompleteAsync(true, null).ConfigureAwait(false);
+            return (true, null);
 
         if (!latestQuota.IsActive)
-            return await CompleteAsync(true, latestQuota).ConfigureAwait(false);
+            return (true, latestQuota);
 
         if (!latestQuota.ShouldReset() && latestQuota.HardLimit.HasValue &&
             (amount > latestQuota.HardLimit.Value || latestQuota.CurrentUsage > latestQuota.HardLimit.Value - amount))
-            return await CompleteAsync(false, latestQuota).ConfigureAwait(false);
+            return (false, latestQuota);
 
         if (!latestQuota.ShouldReset() &&
             !latestQuota.HardLimit.HasValue &&

@@ -51,6 +51,7 @@ export class UsersResourcesModule {
         Storage?: boolean;
         SubscriptionPlans?: boolean;
         Subscriptions?: boolean;
+        Teams?: boolean;
         Tenants?: boolean;
         TestingSessions?: boolean;
         Users?: boolean;
@@ -95,6 +96,7 @@ export class UsersResourcesModule {
         Storage?: boolean;
         SubscriptionPlans?: boolean;
         Subscriptions?: boolean;
+        Teams?: boolean;
         Tenants?: boolean;
         TestingSessions?: boolean;
         Users?: boolean;
@@ -160,6 +162,7 @@ export class UsersResourcesModule {
         Storage?: number;
         SubscriptionPlans?: number;
         Subscriptions?: number;
+        Teams?: number;
         Tenants?: number;
         TestingSessions?: number;
         Users?: number;
@@ -203,6 +206,7 @@ export class UsersResourcesModule {
         Storage?: number;
         SubscriptionPlans?: number;
         Subscriptions?: number;
+        Teams?: number;
         Tenants?: number;
         TestingSessions?: number;
         Users?: number;
