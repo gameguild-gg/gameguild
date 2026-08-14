@@ -98,7 +98,9 @@ public sealed class UnlinkExternalLoginCommandHandler(
 /// <summary>
 ///     Shared three-way link rule for authenticated account linking (plan B1):
 ///     no existing row → insert; same user → idempotent no-op; different user → 409 conflict.
-///     Never resolves a conflict via UpsertAsync — it would reassign row ownership.
+///     The insert uses insert-only AddAsync — UpsertAsync is FORBIDDEN here because its internal
+///     read-then-update path silently reassigns row ownership when a concurrent request committed
+///     the same (Provider, ProviderKey) between our pre-check and the write.
 /// </summary>
 internal static class ExternalLoginLinking
 {
@@ -115,7 +117,7 @@ internal static class ExternalLoginLinking
         {
             try
             {
-                await externalLoginRepository.UpsertAsync(
+                await externalLoginRepository.AddAsync(
                     new ExternalLogin { UserId = userId, Provider = provider, ProviderKey = providerKey },
                     cancellationToken).ConfigureAwait(false);
 
