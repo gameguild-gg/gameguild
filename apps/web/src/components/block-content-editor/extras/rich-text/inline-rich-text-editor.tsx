@@ -12,7 +12,6 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { LexicalEditor, SerializedEditorState } from "lexical"
 
 import { LexicalSurface } from "@game-guild/lexical-surface"
-import { lexicalSurfaceAdapters } from "@/components/block-content-editor/lexical-surface-adapters"
 import type { RichTextData } from "../../nodes/rich-text-node"
 
 interface InlineRichTextEditorProps {
@@ -58,7 +57,6 @@ export function InlineRichTextEditor({ data, onChange, readOnly = false }: Inlin
       placeholder="Start writing…"
       contentClassName="min-h-[80px]"
       features={{ toolbar: false, pageLayout: false }}
-      adapters={lexicalSurfaceAdapters}
     />
   )
 }

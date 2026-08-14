@@ -27,12 +27,16 @@ import { Switch } from "@/components/ui/switch"
 import { DeleteConfirmDialog } from "../../dialogs/delete-confirm-dialog"
 import { DuplicateNameDialog } from "../../dialogs/duplicate-name-dialog"
 import { BaseConfirmDialog } from "../../dialogs/base-confirm-dialog"
-import { MediaUploadDialog } from "../../media-upload-dialog"
+import type { AssetRecord } from "@game-guild/assets"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
+import { AssetPickerDialog, AssetsProvider } from "@game-guild/assets/react"
 import { FileSourceMenu } from "../file-source-menu"
 import { SaveCollectionDialog } from "./save-collection-dialog"
+import { CollectionBrowser } from "./collection-browser"
 import type { CodeFile, FileTreeFolder, FileTreeItem, FileType } from "../types"
 import { cn } from "@/lib/utils"
-import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+
+const assetRepository = getDefaultBrowserAssetRepository()
 
 interface FileExplorerProps {
   files: CodeFile[]
@@ -169,33 +173,17 @@ export function FileExplorer({
     setShowAssetDialog(true)
   }
 
-  const handleAssetSelected = async (results: any) => {
+  const handleAssetSelected = async (results: AssetRecord | AssetRecord[]) => {
     if (!onAddFileFromAsset) return
 
-    // Processar resultados (pode ser array ou objeto único)
     const assets = Array.isArray(results) ? results : [results]
 
     for (const asset of assets) {
-      if (asset.type === "file" && asset.assetId && asset.name) {
-        // Carregar conteúdo do asset
-        const { assetManager } = await import("@/components/block-content-editor/lib/storage/assets/asset-manager")
-        const assetData = await assetManager.getAsset(asset.assetId)
-        
-        if (assetData?.data) {
-          // Se for um dataURL, converter para texto
-          let content = ""
-          if (assetData.data.startsWith("data:")) {
-            // Extrair base64 e decodificar
-            const base64Data = assetData.data.split(",")[1]
-            if (base64Data) {
-              content = atob(base64Data)
-            }
-          } else {
-            content = assetData.data
-          }
-
-          onAddFileFromAsset(assetDialogPath, asset.assetId, asset.name, content)
-        }
+      try {
+        const content = await assetRepository.readText(asset.uri)
+        onAddFileFromAsset(assetDialogPath, asset.uri, asset.name, content)
+      } catch (error) {
+        console.error(`Failed to read ${asset.name} as text:`, error)
       }
     }
 
@@ -1467,91 +1455,26 @@ export function FileExplorer({
         />
       )}
 
-      {/* Media Upload Dialog for Code Files */}
       {onAddFileFromAsset && (
-        <MediaUploadDialog
-          open={showAssetDialog}
-          onOpenChange={setShowAssetDialog}
-          onMediaSelected={handleAssetSelected}
-          title="Add Code File from Assets"
-          acceptTypes="*/*"
-          urlPlaceholder="https://example.com/code-file.js"
-          uploadLabel="Select a code file from your device"
-          urlLabel="Enter the URL of the code file"
-          multiple={true}
-          compress={false}
-          allowCompressionToggle={false}
-          forceTextStorage={true}
-        />
+        <AssetsProvider>
+          <AssetPickerDialog
+            open={showAssetDialog}
+            onOpenChange={setShowAssetDialog}
+            onSelect={(assets) => void handleAssetSelected(assets)}
+            title="Add code files"
+            description="Upload or select text files stored in this browser."
+            kinds={["code", "document", "dataset"]}
+            multiple
+          />
+        </AssetsProvider>
       )}
 
-      {/* Collection Browser Dialog */}
       {onImportCollection && showCollectionBrowser && (
-        <MediaUploadDialog
-          open={showCollectionBrowser}
-          onOpenChange={setShowCollectionBrowser}
-          title="Import Collection"
-          sources={{ collections: true, files: false, url: false }}
-          onMediaSelected={async (result) => {
-            const results = Array.isArray(result) ? result : [result]
-            
-            for (const res of results) {
-              if (res.data.startsWith('collection://')) {
-                const collectionId = res.data.replace('collection://', '')
-                
-                try {
-                  // Load collection manifest
-                  const manifest = await assetManager.getCollection(collectionId)
-                  
-                  if (manifest) {
-                    // Extract files from collection structure
-                    const files: Array<{ name: string; path: string; assetId: string; isFile?: 'f' | 'm' | 't'; readonly?: boolean; isVisible?: boolean }> = []
-                    const folderMetadata = new Map<string, { readonly?: boolean; isVisible?: boolean }>()
-                    
-                    const collectFiles = (folder: any, basePath = '') => {
-                      // Store folder metadata
-                      if (folder.path) {
-                        folderMetadata.set(folder.path, {
-                          readonly: folder.readonly,
-                          isVisible: folder.isVisible,
-                        })
-                      }
-                      
-                      // Add files from this folder
-                      if (folder.files) {
-                        folder.files.forEach((file: any) => {
-                          files.push({
-                            name: file.name,
-                            path: file.path,
-                            assetId: file.assetId || '',
-                            isFile: file.isFile,
-                            readonly: file.readonly,
-                            isVisible: file.isVisible,
-                          })
-                        })
-                      }
-                      
-                      // Recursively collect from subfolders
-                      if (folder.folders) {
-                        folder.folders.forEach((subfolder: any) => {
-                          collectFiles(subfolder, folder.path || '')
-                        })
-                      }
-                    }
-                    
-                    collectFiles(manifest.structure)
-                    
-                    // Import files
-                    onImportCollection(collectionPath, files, folderMetadata)
-                  }
-                } catch (error) {
-                  console.error('Failed to import collection:', error)
-                }
-              }
-            }
-            
-            setShowCollectionBrowser(false)
-          }}
+        <CollectionBrowser
+          onClose={() => setShowCollectionBrowser(false)}
+          onImportFiles={(files, folderMetadata) =>
+            onImportCollection(collectionPath, files, folderMetadata)
+          }
         />
       )}
 

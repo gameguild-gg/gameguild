@@ -5,6 +5,9 @@ import { toast } from "sonner"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
+
+const assetRepository = getDefaultBrowserAssetRepository()
 
 interface StorageAdapter {
   load: (id: string) => Promise<ProjectData | null>
@@ -87,6 +90,10 @@ export function useProjectActions({
 
     try {
       await storageAdapter.delete(projectToDelete.id)
+      await assetRepository.reconcileUsage(
+        { type: "project", id: projectToDelete.id },
+        [],
+      )
       
       toast.success("Projeto excluído", {
         description: `"${projectToDelete.name}" foi removido permanentemente`,

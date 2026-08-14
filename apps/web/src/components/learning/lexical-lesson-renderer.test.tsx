@@ -14,13 +14,6 @@ vi.mock("@game-guild/lexical-surface", () => ({
   },
 }));
 
-vi.mock(
-  "@/components/block-content-editor/lexical-surface-viewer-adapters",
-  () => ({
-    lexicalSurfaceViewerAdapters: { assets: {} },
-  }),
-);
-
 const state = {
   root: {
     children: [],

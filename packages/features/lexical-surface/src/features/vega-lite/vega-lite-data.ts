@@ -1,3 +1,12 @@
+import type { AssetUri } from "@game-guild/assets";
+
+export interface VegaDataAttachment {
+  name: string;
+  assetUri: AssetUri;
+  mimeType: "text/csv" | "application/json";
+  size: number;
+}
+
 export interface VegaLiteData {
   spec: string;
   title?: string;
@@ -16,5 +25,5 @@ export interface VegaLiteData {
     | "powerbi";
   themeMode?: "system" | "only-light" | "only-dark";
   layout?: "square" | "rectangular";
-  data?: Record<string, string>;
+  attachments?: Record<string, VegaDataAttachment>;
 }

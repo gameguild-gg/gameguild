@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Image, Video, Music } from "lucide-react"
-import { MediaUploadDialog } from "@/components/block-content-editor/extras/media-upload-dialog"
+import type { AssetRecord } from "@game-guild/assets"
+import { AssetPickerDialog, AssetsProvider } from "@game-guild/assets/react"
 import type { BaseMediaData } from "@/components/block-content-editor/nodes/base/media-node-base"
 import { AssetImage } from "./asset-image"
 
@@ -23,12 +24,12 @@ export function MediaListTab({ items, onItemsChange, allowMixedTypes = false, de
     setShowUploadDialog(true)
   }
 
-  const handleMediaSelected = (result: any) => {
+  const handleMediaSelected = (result: AssetRecord | AssetRecord[]) => {
     if (Array.isArray(result)) {
       // Multiple files
       const newItems = result.map((item) => ({
         type: uploadType,
-        src: item.data,
+        src: item.uri,
         alt: item.name || "",
         caption: "",
         size: 100,
@@ -42,7 +43,7 @@ export function MediaListTab({ items, onItemsChange, allowMixedTypes = false, de
       // Single file
       const newItem: BaseMediaData = {
         type: uploadType,
-        src: result.data,
+        src: result.uri,
         alt: result.name || "",
         caption: "",
         size: 100,
@@ -170,15 +171,17 @@ export function MediaListTab({ items, onItemsChange, allowMixedTypes = false, de
       </div>
 
       {/* Upload Dialog */}
-      <MediaUploadDialog
-        open={showUploadDialog}
-        onOpenChange={setShowUploadDialog}
-        onMediaSelected={handleMediaSelected}
-        title={`Add ${uploadType}`}
-        acceptTypes={uploadType === "image" ? "image/*" : uploadType === "video" ? "video/*" : "audio/*"}
-        urlPlaceholder={`https://example.com/${uploadType}.${uploadType === "image" ? "jpg" : uploadType === "video" ? "mp4" : "mp3"}`}
-        multiple={true}
-      />
+      <AssetsProvider>
+        <AssetPickerDialog
+          open={showUploadDialog}
+          onOpenChange={setShowUploadDialog}
+          onSelect={handleMediaSelected}
+          title={`Add ${uploadType}`}
+          accept={uploadType === "image" ? "image/*" : uploadType === "video" ? "video/*" : "audio/*"}
+          kinds={[uploadType]}
+          multiple={true}
+        />
+      </AssetsProvider>
     </div>
   )
 }
