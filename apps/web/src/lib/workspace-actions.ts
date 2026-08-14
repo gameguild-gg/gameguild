@@ -23,6 +23,23 @@ async function request<T>(method: WorkspaceMethod, path: string, body?: unknown)
 
 const text = (data: FormData, key: string) => String(data.get(key) ?? '').trim();
 
+function isoDate(data: FormData, key: string): string | null {
+  const raw = text(data, key);
+  if (!raw) return null;
+  const wallClock = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(raw)
+    ? `${raw}Z`
+    : raw;
+  const value = new Date(wallClock);
+  return Number.isNaN(value.valueOf()) ? null : value.toISOString();
+}
+
+function projectTaskPriority(data: FormData): string {
+  const value = text(data, 'priority');
+  if (value === 'Medium') return 'Normal';
+  if (value === 'Critical') return 'Urgent';
+  return value || 'Normal';
+}
+
 export async function createTeamForm(data: FormData): Promise<void> {
   const name = text(data, 'name');
   const slug = text(data, 'slug').toLowerCase();
@@ -105,7 +122,7 @@ export async function createTeamInvitationForm(data: FormData): Promise<void> {
     userId: text(data, 'userId') || null,
     email: text(data, 'email') || null,
     authority: text(data, 'authority') || 'Member',
-    expiresAt: text(data, 'expiresAt'),
+    expiresAt: isoDate(data, 'expiresAt'),
   });
   revalidatePath(text(data, 'returnPath'));
 }
@@ -167,10 +184,10 @@ export async function createProjectTaskForm(data: FormData): Promise<void> {
     columnId,
     title,
     description: text(data, 'description') || null,
-    priority: text(data, 'priority') || 'Medium',
+    priority: projectTaskPriority(data),
     assigneeUserId: text(data, 'assigneeUserId') || null,
     milestoneId: null,
-    dueAt: text(data, 'dueAt') || null,
+    dueAt: isoDate(data, 'dueAt'),
   });
   revalidatePath(text(data, 'returnPath'));
 }
@@ -194,7 +211,7 @@ export async function createProjectMilestoneForm(data: FormData): Promise<void> 
   await request('POST', `/v1/projects/${projectId}/work/milestones`, {
     name,
     description: text(data, 'description') || null,
-    dueAt: text(data, 'dueAt') || null,
+    dueAt: isoDate(data, 'dueAt'),
   });
   revalidatePath(text(data, 'returnPath'));
 }
@@ -294,8 +311,8 @@ export async function createProjectAllocationForm(data: FormData): Promise<void>
     userId,
     function: text(data, 'function'),
     capacityPercentage: Number(text(data, 'capacityPercentage') || 100),
-    startsAt: text(data, 'startsAt'),
-    endsAt: text(data, 'endsAt') || null,
+    startsAt: isoDate(data, 'startsAt'),
+    endsAt: isoDate(data, 'endsAt'),
   });
   revalidatePath(text(data, 'returnPath'));
 }
@@ -308,8 +325,8 @@ export async function createProjectAgreementForm(data: FormData): Promise<void> 
     receivingTeamId: text(data, 'receivingTeamId'),
     scope: text(data, 'scope'),
     deliverables: text(data, 'deliverables'),
-    startsAt: text(data, 'startsAt'),
-    endsAt: text(data, 'endsAt'),
+    startsAt: isoDate(data, 'startsAt'),
+    endsAt: isoDate(data, 'endsAt'),
   });
   revalidatePath(text(data, 'returnPath'));
 }
@@ -330,8 +347,8 @@ export async function counterProjectAgreementForm(data: FormData): Promise<void>
   await request('POST', `/v1/projects/${projectId}/ownership/agreements/${agreementId}/counter`, {
     scope: text(data, 'scope'),
     deliverables: text(data, 'deliverables'),
-    startsAt: text(data, 'startsAt'),
-    endsAt: text(data, 'endsAt'),
+    startsAt: isoDate(data, 'startsAt'),
+    endsAt: isoDate(data, 'endsAt'),
   });
   revalidatePath(text(data, 'returnPath'));
 }
@@ -363,7 +380,7 @@ export async function removeProjectAllocationForm(data: FormData): Promise<void>
 export async function transitionProjectForm(data: FormData): Promise<void> {
   const projectId = text(data, 'projectId');
   const action = text(data, 'projectAction');
-  if (!projectId || !['publish', 'unpublish', 'archive'].includes(action)) return;
+  if (!projectId || !['publish', 'unpublish', 'archive', 'restore'].includes(action)) return;
   await request('POST', `/v1/projects/${projectId}:${action}`);
   revalidatePath(text(data, 'returnPath'));
   revalidatePath('/dashboard');

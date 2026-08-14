@@ -8,8 +8,9 @@ import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { notFound } from 'next/navigation';
 
-export default async function LaunchPadEventDetailPage({ params }: { params: Promise<{ eventId: string }> }) {
+export default async function LaunchPadEventDetailPage({ params, searchParams }: { params: Promise<{ eventId: string }>; searchParams?: Promise<{ projectId?: string }> }) {
   const { eventId } = await params;
+  const { projectId } = searchParams ? await searchParams : {};
   const detail = await getPublicLaunchPadEvent(eventId);
   if (!detail) notFound();
   const [versions, applications, registrations] = await Promise.all([
@@ -25,7 +26,7 @@ export default async function LaunchPadEventDetailPage({ params }: { params: Pro
         <header><div className="flex flex-wrap items-center gap-3"><h1 className="text-4xl font-semibold">{detail.event.name}</h1><Badge variant="outline">{detail.event.status}</Badge></div><p className="mt-3 max-w-3xl text-slate-300">{detail.event.description}</p></header>
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="border-white/10 bg-white/[0.04] text-white"><CardHeader><CardTitle>Project application</CardTitle></CardHeader><CardContent>
-            {currentApplication ? <div className="space-y-2"><Badge>{currentApplication.status}</Badge><p className="text-sm text-slate-400">This application belongs to Project {currentApplication.projectId}, not to the original submitter.</p></div> : detail.event.status === 'ApplicationsOpen' ? <LaunchPadApplicationForm eventId={eventId} versions={versions} /> : <p className="text-sm text-slate-400">Applications are closed.</p>}
+            {currentApplication ? <div className="space-y-2"><Badge>{currentApplication.status}</Badge><p className="text-sm text-slate-400">This application belongs to Project {currentApplication.projectId}, not to the original submitter.</p></div> : detail.event.status === 'ApplicationsOpen' ? <LaunchPadApplicationForm eventId={eventId} versions={versions} initialProjectId={projectId} /> : <p className="text-sm text-slate-400">Applications are closed.</p>}
           </CardContent></Card>
           <Card className="border-white/10 bg-white/[0.04] text-white"><CardHeader><CardTitle>Individual participation</CardTitle></CardHeader><CardContent className="space-y-3">
             {detail.slots.length === 0 ? <p className="text-sm text-slate-400">No participant slot configured.</p> : detail.slots.map((slot) => (
