@@ -1,4 +1,6 @@
 using FluentAssertions;
+using GameGuild.Commerce.Payments;
+using GameGuild.Economy.Integrations;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Reserves;
@@ -7,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace GameGuild.Commerce.Payments.UnitTests.Services;
+namespace GameGuild.Economy.UnitTests;
 
 public sealed class StripeEconomyFundingAdapterTests
 {
@@ -90,7 +92,7 @@ public sealed class StripeEconomyFundingAdapterTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddPaymentsModule(new ConfigurationBuilder().Build());
+        services.AddEconomyCoreComposition(new ConfigurationBuilder().Build());
         using var provider = services.BuildServiceProvider();
 
         provider.GetRequiredService<IStripeEconomyFundingAdapter>()

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Economy.Integrations.AI;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -7,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace GameGuild.AI.UnitTests;
+namespace GameGuild.Economy.UnitTests;
 
 public sealed class AiProviderCostFactPersistenceTests
 {
@@ -69,10 +70,10 @@ public sealed class AiProviderCostFactPersistenceTests
     }
 
     [Fact]
-    public void AiModule_RegistersTheEfProviderCostFactStore()
+    public void EconomyModule_RegistersTheEfProviderCostFactStore()
     {
         var services = new ServiceCollection();
-        services.AddAiModule(new ConfigurationBuilder().Build());
+        services.AddEconomyCoreComposition(new ConfigurationBuilder().Build());
 
         services.Should().Contain(descriptor =>
             descriptor.ServiceType == typeof(IAiProviderCostFactStore) &&
@@ -120,7 +121,8 @@ public sealed class AiProviderCostFactPersistenceTests
         : DbContext(options), IApplicationDbContext
     {
         protected override void OnModelCreating(ModelBuilder modelBuilder) =>
-            new AiModelConfiguration().Configure(modelBuilder);
+            new AiProviderCostFactEntityConfiguration().Configure(
+                modelBuilder.Entity<AiProviderCostFactEntity>());
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
