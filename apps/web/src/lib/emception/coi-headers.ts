@@ -35,6 +35,16 @@ export const COI_LEARN_RULES: HeaderRule[] = [
     source: '/learn/activities/:path*',
     headers: COI_LEARN_HEADERS,
   },
+  // Instructor coding-definition editor hosts the same emception IDE; without
+  // COI the worker degrades WASI stdin to instant EOF and stdio tests fail.
+  {
+    source: '/:locale/dashboard/learning/courses/:course/assessments/:assessment/coding-definition',
+    headers: COI_LEARN_HEADERS,
+  },
+  {
+    source: '/dashboard/learning/courses/:course/assessments/:assessment/coding-definition',
+    headers: COI_LEARN_HEADERS,
+  },
 ];
 
 // Matches a pathname against a Next.js header source pattern. Supports the subset
