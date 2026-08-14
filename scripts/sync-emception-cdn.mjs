@@ -25,10 +25,10 @@ const requestedDemoDirs = process.argv.slice(2);
 const demoDirs = requestedDemoDirs.length
     ? requestedDemoDirs
     : [
-        'tools/emception/apps/ide-next',
-        'tools/emception/apps/ide-react',
-        'tools/emception/apps/run-react',
-        'tools/emception/apps/run-webcomponent',
+        'demos/emception-ide-next',
+        'demos/emception-ide-react',
+        'demos/emception-run-react',
+        'demos/emception-run-webcomponent',
     ];
 
 async function sleep(ms) {

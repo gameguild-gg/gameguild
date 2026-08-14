@@ -21,8 +21,8 @@ npm run build:all   # ~30 min on first run
 Then run a demo:
 
 ```bash
-cd apps/ide-react && npm install && npm run dev   # Vite/React (http://localhost:5173)
-cd apps/ide-next  && npm install && npm run dev   # Next.js   (http://localhost:3000)
+cd ../../demos/emception-ide-react && npm install && npm run dev   # Vite/React (http://localhost:5173)
+cd ../../demos/emception-ide-next  && npm install && npm run dev   # Next.js   (http://localhost:3000)
 ```
 
 The demos sync CDN assets from the built CDN payload via a `predev`/`prebuild` hook.
@@ -49,7 +49,7 @@ The demos sync CDN assets from the built CDN payload via a `predev`/`prebuild` h
 | 14  | `build:manifest`     | `manifest.json` + raw CDN staging                                          |
 | 15  | `build:bundles`      | Brotli-compressed `.tar.br` bundles (≈ 29 files, ≈ 182 MB)                 |
 | 16  | `build:lib`          | Publishable library (`tsup` + `tsc -p tsconfig.lib.json`)                  |
-| 17  | `deploy:cdn`         | Copies CDN to `apps/ide-react/public/cdn/` and `apps/ide-next/public/cdn/` |
+| 17  | `deploy:cdn`         | Copies CDN to `demos/emception-ide-react/public/cdn/` and `demos/emception-ide-next/public/cdn/` |
 
 Convenience aggregates:
 

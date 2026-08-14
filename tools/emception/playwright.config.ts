@@ -44,7 +44,7 @@ export default defineConfig({
         // tools/emception/public/cdn/. Without this, SDL3 compilation fails
         // with FROZEN_CACHE because the cache-lib and port markers are missing.
         command: `PORT=${PORT} npm run dev`,
-        cwd: './apps/ide-next',
+        cwd: '../../demos/emception-ide-next',
         url: `http://localhost:${PORT}`,
         // Keep deterministic test runs: stale dev servers can keep old bundled
         // workspace presets in memory and mask source-level fixes.
