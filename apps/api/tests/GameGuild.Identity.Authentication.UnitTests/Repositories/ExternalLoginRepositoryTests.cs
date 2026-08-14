@@ -106,6 +106,44 @@ public class ExternalLoginRepositoryTests
         userIdIndex!.IsUnique.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task DeleteAsync_RemovesOnlyTheTargetRow_AndReturnsTrue()
+    {
+        await using var context = CreateContext();
+        var repository = new ExternalLoginRepository(context);
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+
+        await repository.UpsertAsync(CreateExternalLogin(userId, "google", "sub-1"));
+        await repository.UpsertAsync(CreateExternalLogin(userId, "discord", "snow-1"));
+        await repository.UpsertAsync(CreateExternalLogin(otherUserId, "google", "sub-2"));
+
+        var removed = await repository.DeleteAsync("google", userId);
+
+        removed.Should().BeTrue();
+        (await repository.GetByProviderKeyAsync("google", "sub-1")).Should().BeNull();
+        (await repository.GetByProviderKeyAsync("google", "sub-2")).Should().NotBeNull("row of another user must be untouched");
+        var remaining = await repository.GetByUserIdAsync(userId);
+        remaining.Should().ContainSingle().Which.Provider.Should().Be("discord");
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ReturnsFalse_WhenNoRowForProviderAndUser()
+    {
+        await using var context = CreateContext();
+        var repository = new ExternalLoginRepository(context);
+        var userId = Guid.NewGuid();
+
+        await repository.UpsertAsync(CreateExternalLogin(userId, "google", "sub-1"));
+
+        var wrongProvider = await repository.DeleteAsync("discord", userId);
+        var wrongUser = await repository.DeleteAsync("google", Guid.NewGuid());
+
+        wrongProvider.Should().BeFalse();
+        wrongUser.Should().BeFalse();
+        (await repository.GetByProviderKeyAsync("google", "sub-1")).Should().NotBeNull("no row may be removed on a miss");
+    }
+
     private static TestExternalLoginDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<TestExternalLoginDbContext>()
