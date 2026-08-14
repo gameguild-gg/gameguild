@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "dev": "docker compose -f compose.yaml up -d --wait && run-p dev:web dev:api",
+    "dev": "docker compose -f compose.yaml up -d --wait && sh -c 'pnpm dev:api & api_pid=$!; echo \"[dev] waiting for API (http://localhost:8080/health)...\"; until curl -sf http://localhost:8080/health >/dev/null 2>&1; do if ! kill -0 $api_pid 2>/dev/null; then echo \"[dev] API process died\"; exit 1; fi; sleep 2; done; echo \"[dev] API up — starting web\"; pnpm dev:web'",
     "dev:api": "dotenv -e .env -- dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:8080",
     "dev:compose": "docker compose -f compose.yaml --profile app up -d --build",
     "dev:compose:down": "docker compose -f compose.yaml down",
