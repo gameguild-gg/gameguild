@@ -62,6 +62,11 @@ function statusClasses(status: TestingEventStatus) {
   return "border-red-800 bg-red-950/30 text-red-300";
 }
 
+function eventHref(eventId: string, projectId?: string) {
+  const path = `/testing-lab/events/${eventId}`;
+  return projectId ? `${path}?projectId=${encodeURIComponent(projectId)}` : path;
+}
+
 function EventMeta({ session }: { session: TestingEventViewModel }) {
   return (
     <div className="grid grid-cols-2 gap-3 text-xs text-slate-400">
@@ -87,8 +92,10 @@ function EventMeta({ session }: { session: TestingEventViewModel }) {
 
 export function TestingEventCard({
   session,
+  projectId,
 }: {
   session: TestingEventViewModel;
+  projectId?: string;
 }) {
   const almostFull =
     session.availableTesterCount != null && session.availableTesterCount <= 2;
@@ -132,7 +139,7 @@ export function TestingEventCard({
           size="sm"
           className="mt-auto w-full border border-blue-400/40 bg-gradient-to-r from-blue-600/40 to-blue-500/30 text-white hover:from-blue-600/90 hover:to-blue-500/90"
         >
-          <Link href={`/testing-lab/events/${session.id}`}>View event</Link>
+          <Link href={eventHref(session.id, projectId)}>View event</Link>
         </Button>
       </CardContent>
     </Card>
@@ -141,8 +148,10 @@ export function TestingEventCard({
 
 export function TestingEventRow({
   session,
+  projectId,
 }: {
   session: TestingEventViewModel;
+  projectId?: string;
 }) {
   return (
     <article className="grid gap-5 rounded-lg border border-slate-700 bg-gradient-to-br from-slate-900/60 to-slate-800/50 p-5 transition hover:border-slate-500 lg:grid-cols-[minmax(0,1fr)_18rem_10rem] lg:items-center">
@@ -170,7 +179,7 @@ export function TestingEventRow({
         size="sm"
         className="w-full border border-blue-400/40 bg-blue-600/40 text-white hover:bg-blue-600/80"
       >
-        <Link href={`/testing-lab/events/${session.id}`}>View event</Link>
+        <Link href={eventHref(session.id, projectId)}>View event</Link>
       </Button>
     </article>
   );
@@ -178,8 +187,10 @@ export function TestingEventRow({
 
 export function TestingEventsTable({
   sessions,
+  projectId,
 }: {
   sessions: TestingEventViewModel[];
+  projectId?: string;
 }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-slate-700 bg-gradient-to-br from-slate-900/60 to-slate-800/50">
@@ -243,7 +254,7 @@ export function TestingEventsTable({
               </td>
               <td className="p-4">
                 <Button asChild size="sm" variant="outline">
-                  <Link href={`/testing-lab/events/${session.id}`}>
+                  <Link href={eventHref(session.id, projectId)}>
                     View event
                   </Link>
                 </Button>

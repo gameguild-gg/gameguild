@@ -5,7 +5,8 @@ import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CalendarDays, Rocket } from 'lucide-react';
 
-export default async function LaunchPadEventsPage() {
+export default async function LaunchPadEventsPage({ searchParams }: { searchParams?: Promise<{ projectId?: string }> }) {
+  const { projectId } = searchParams ? await searchParams : {};
   const events = await getPublicLaunchPadEvents();
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-14 text-white">
@@ -18,7 +19,7 @@ export default async function LaunchPadEventsPage() {
           {events.length === 0 ? <p className="text-slate-400">No public Launch Pad event is available.</p> : events.map((event) => (
             <Card key={event.id} className="border-white/10 bg-white/[0.04] text-white">
               <CardHeader><div className="flex justify-between gap-3"><CardTitle className="flex items-center gap-2"><Rocket className="size-5" /> {event.name}</CardTitle><Badge variant="outline">{event.status}</Badge></div></CardHeader>
-              <CardContent className="space-y-4"><p className="text-sm text-slate-400">{event.description || 'Community launch event'}</p><p className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" />{new Date(event.startsAt).toLocaleString()}</p><Button asChild><Link href={`/launch-pad/events/${event.id}`}>View event</Link></Button></CardContent>
+              <CardContent className="space-y-4"><p className="text-sm text-slate-400">{event.description || 'Community launch event'}</p><p className="flex items-center gap-2 text-sm"><CalendarDays className="size-4" />{new Date(event.startsAt).toLocaleString()}</p><Button asChild><Link href={projectId ? `/launch-pad/events/${event.id}?projectId=${encodeURIComponent(projectId)}` : `/launch-pad/events/${event.id}`}>View event</Link></Button></CardContent>
             </Card>
           ))}
         </section>

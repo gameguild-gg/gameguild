@@ -23,10 +23,13 @@ function formatDateTime(value?: string | null) {
 
 export default async function PublicTestingEventDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ eventId: string }>;
+  searchParams?: Promise<{ projectId?: string }>;
 }) {
   const { eventId } = await params;
+  const { projectId } = searchParams ? await searchParams : {};
   const experience = await getPublicTestingEventExperience(eventId);
   if (!experience.event && experience.accessIssues.length === 0) notFound();
 
@@ -169,6 +172,7 @@ export default async function PublicTestingEventDetailPage({
                 isAuthenticated={experience.isAuthenticated}
                 acceptsApplications={acceptsApplications}
                 projectVersions={projectVersions}
+                initialProjectId={projectId}
                 application={application?.id ? {
                   id: application.id,
                   status: application.status,
