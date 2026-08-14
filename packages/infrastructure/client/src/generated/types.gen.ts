@@ -4459,7 +4459,6 @@ export interface IdentityUsersUser {
   metadata?: IdentityUsersUserMetadata;
   name: string;
   notifications?: Array<IdentityUsersUserNotification> | null;
-  passwordHash?: string | null;
   phoneNumber?: string | null;
   preferences?: IdentityUsersUserPreferences;
   profile?: IdentityUsersUserProfile;
@@ -15731,7 +15730,6 @@ IdentityUsersUserSchema = z.object({
     .array(z.lazy(() => IdentityUsersUserNotificationSchema))
     .nullable()
     .optional(),
-  passwordHash: z.string().max(512).nullable().optional(),
   phoneNumber: z.string().max(20).nullable().optional(),
   preferences: z.lazy(() => IdentityUsersUserPreferencesSchema).optional(),
   profile: z.lazy(() => IdentityUsersUserProfileSchema).optional(),
