@@ -10,5 +10,45 @@
   },
   "signIn": {
     "continueWithDiscord": "Continuar com o Discord"
+  },
+  "settings": {
+    "accountTitle": "Configurações da conta",
+    "accountDescription": "Gerencie as formas de entrar no GameGuild."
+  },
+  "connectedAccounts": {
+    "title": "Contas conectadas",
+    "description": "Métodos de login vinculados à sua conta. Remover o último exige uma senha.",
+    "linkedOn": "Vinculado em {date}",
+    "notLinked": "Não vinculado",
+    "unlink": "Desvincular",
+    "google": {
+      "name": "Google",
+      "linkSuccess": "Conta do Google vinculada.",
+      "unlinkSuccess": "Conta do Google desvinculada.",
+      "unavailable": "O login com Google não está disponível."
+    },
+    "discord": {
+      "name": "Discord",
+      "connect": "Conectar Discord",
+      "unlinkSuccess": "Conta do Discord desvinculada."
+    },
+    "errors": {
+      "conflict": "Essa conta já está vinculada a outro usuário do GameGuild.",
+      "lastSignInMethod": "Você não pode remover seu último método de login sem uma senha definida.",
+      "notLinked": "Este provedor não está vinculado à sua conta.",
+      "unauthorized": "Sua sessão expirou. Entre novamente.",
+      "generic": "Algo deu errado. Tente novamente."
+    },
+    "banner": {
+      "linkedTitle": "Conta conectada",
+      "linkedDiscord": "O Discord agora está vinculado à sua conta.",
+      "errorTitle": "Algo deu errado",
+      "errors": {
+        "conflict": "Essa conta do Discord já está vinculada a outro usuário do GameGuild.",
+        "lastSignInMethod": "Você não pode remover seu último método de login sem uma senha definida.",
+        "stateMismatch": "A solicitação de vínculo expirou ou foi adulterada. Tente novamente.",
+        "generic": "Não conseguimos concluir a solicitação. Tente novamente."
+      }
+    }
   }
 }

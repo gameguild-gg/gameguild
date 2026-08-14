@@ -53,6 +53,7 @@ describe("dashboard management navigation", () => {
     expect(navigation[0]?.items.map((item) => item.title)).toEqual([
       "Dashboard",
       "Invitations",
+      "Settings",
     ]);
   });
 
