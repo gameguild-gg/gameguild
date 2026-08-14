@@ -1,7 +1,0 @@
-@import '@game-guild/emception-ui/styles/theme.css';
-
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}

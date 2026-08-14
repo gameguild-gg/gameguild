@@ -120,7 +120,7 @@ await step('web app artifacts', () => {
     // Clean CDN from root workspace
     rmrf(path.join(SCRIPT_ROOT, 'public/cdn'));
     // Clean CDN + per-app build state from all demo apps
-    const appDirs = ['apps/ide-react', 'apps/ide-next', 'apps/run-react', 'apps/run-webcomponent'];
+    const appDirs = ['../../demos/emception-ide-react', '../../demos/emception-ide-next', '../../demos/emception-run-react', '../../demos/emception-run-webcomponent'];
     for (const appDir of appDirs) {
         rmrf(path.join(SCRIPT_ROOT, appDir, 'public/cdn'));
         rmrf(path.join(SCRIPT_ROOT, appDir, '.next'));

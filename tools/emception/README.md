@@ -110,19 +110,20 @@ tools/emception/
 │   ├── react/         # @gameguild/emception-react – React bindings, hooks
 │   ├── webcomponent/  # @gameguild/emception-webcomponent – <emception-run> / <emception-ide>
 │   └── xterm/         # @gameguild/emception-xterm – xterm.js adapters
-├── apps/
-│   ├── ide-react/     # Vite + React demo
-│   └── ide-next/      # Next.js demo
 ├── scripts/           # TypeScript build pipeline (tsx)
 └── docs/              # Architecture, VFS, build docs
+
+Demo apps live at the repository root instead:
+`demos/emception-ide-react/`, `demos/emception-ide-next/`,
+`demos/emception-run-react/`, `demos/emception-run-webcomponent/`.
 ```
 
 ## Demos
 
 | Demo         | Path              | Stack       | Run                          |
 | ------------ | ----------------- | ----------- | ---------------------------- |
-| React + Vite | `apps/ide-react/` | React, Vite | `npm install && npm run dev` |
-| Next.js      | `apps/ide-next/`  | Next.js 15  | `npm install && npm run dev` |
+| React + Vite | `demos/emception-ide-react/` | React, Vite | `npm install && npm run dev` |
+| Next.js      | `demos/emception-ide-next/`  | Next.js 15  | `npm install && npm run dev` |
 
 Both demos sync CDN assets from the built CDN payload automatically.
 
