@@ -61,7 +61,10 @@ function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<
 }
 
 function matchesExpected(actual: string, expected: string | RegExp): boolean {
-  return typeof expected === 'string' ? actual === expected : expected.test(actual);
+  // wasi-run's byte-level capture joins fd_write chunks with '\n', leaving a
+  // spurious trailing newline; compare with trailing newlines trimmed.
+  const trimmed = actual.replace(/[\r\n]+$/, '');
+  return typeof expected === 'string' ? trimmed === expected.replace(/[\r\n]+$/, '') : expected.test(trimmed);
 }
 
 function stringifyExpected(v: string | RegExp): string {
@@ -318,7 +321,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     };
     }, [workspaceUrl]);
 
-     // ── Sync workspace files into the Worker VFS (/app) ─────
+     // ── Sync workspace files into the Worker VFS (/home/user) ─────
   const syncFilesToVfs = useCallback(async (filesToSync: Record<string, WorkspaceFile>) => {
     const orch = orchestratorRef.current;
     if (!orch) return;
@@ -345,7 +348,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
     let report: import('./TestResultsPanel').TestReport;
     try {
-      // Sync workspace text files to /app/<name> in the VFS so the compiler
+      // Sync workspace text files to /home/user/<name> in the VFS so the compiler
       // reads the latest editor content.
       await syncFilesToVfs(filesRef.current);
 
@@ -357,7 +360,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       }
       const sourceFsPath = toWorkspaceFsPath(mainSrc.path, propsRef.current.assignmentToken);
       const objPath = '/tmp/emception-test-main.o';
-      const wasmPath = '/app/main.wasm';
+      const wasmPath = '/home/user/main.wasm';
 
       // ── Compile (clang -cc1) — same args as the working handleCompile direct path ──
       tty.writeLine('\x1b[36m[tests] Compiling...\x1b[0m');
@@ -408,7 +411,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
           sourceFsPath,
         ],
         {
-          cwd: '/app',
+          cwd: '/home/user',
           onStdout: (t: string) => console.log(t),
           onStderr: (t: string) => {
             console.error(t);
@@ -444,7 +447,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
           '-lsockets',
         ],
         {
-          cwd: '/app',
+          cwd: '/home/user',
           onStdout: (t: string) => console.log(t),
           onStderr: (t: string) => {
             console.error(t);
@@ -477,10 +480,13 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         }
 
         try {
-          const stdinBytes = enc.encode(test.stdin ?? '');
+          // Tool-runner stdin contract: a line must end with '\n' before the
+          // feeder returns null (mirrors presets.ts makeStdinFeeder).
+          const rawStdin = test.stdin ?? '';
+          const stdinBytes = enc.encode(rawStdin.endsWith('\n') ? rawStdin : `${rawStdin}\n`);
           let stdinIdx = 0;
           const result = await client.run('wasi-run', ['wasi-run', wasmPath], {
-            cwd: '/app',
+            cwd: '/home/user',
             stdin: () => (stdinIdx >= stdinBytes.length ? null : stdinBytes[stdinIdx++]),
           });
 
@@ -630,7 +636,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
       if (orchestratorRef.current) {
         orchestratorRef.current.tty.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
-        // Sync new workspace files into VFS so /app is populated immediately
+        // Sync new workspace files into VFS so /home/user is populated immediately
         await syncFilesToVfs(state.files);
       }
       console.log(`${P} ===== WORKSPACE SWITCH COMPLETE =====`);
@@ -701,7 +707,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         // Expose worker client on window for E2E / debug access
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).__emception_client__ = result.client;
-        // Sync current workspace files into VFS so /app is populated on boot
+        // Sync current workspace files into VFS so /home/user is populated on boot
         await syncFilesToVfs(filesRef.current);
         setStatus('Ready');
         setIsReady(true);
@@ -1214,7 +1220,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         setExecutionPhase('running');
         const lineBufferedStdin = makeLineBufferedStdin(tty);
         await client.run(args[0], args, {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
           },
@@ -1240,7 +1246,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         tty.writeLine('\x1b[36mCMake configure...\x1b[0m');
         const configArgs = resolvedConfig.compile.args;
         const configResult = await client.run(configArgs[0], configArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.writeLine(t);
           },
@@ -1256,9 +1262,9 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         }
         setStatus('Ninja build...');
         tty.writeLine('\x1b[36mNinja build...\x1b[0m');
-        const buildDir = configArgs.includes('-B') ? configArgs[configArgs.indexOf('-B') + 1] : '/app/build';
+        const buildDir = configArgs.includes('-B') ? configArgs[configArgs.indexOf('-B') + 1] : '/home/user/build';
         const ninjaResult = await client.run('ninja', ['ninja', '-C', buildDir], {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.writeLine(t);
           },
@@ -1279,7 +1285,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         setExecutionPhase('running');
         const lineBufferedStdin = makeLineBufferedStdin(tty);
         await client.run(runArgs[0], runArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
           },
@@ -1307,7 +1313,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
         const sourceFsPath = toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken);
         const sdlObjPath = '/tmp/emception-sdl-main.o';
-        const wasmPath = resolvedConfig.compile.output || '/app/main.wasm';
+        const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
         // Compile with clang -cc1 directly (driver mode silently exits in
         // browser because cc1 cannot be spawned as a subprocess; cc1_main is
@@ -1365,7 +1371,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             sourceFsPath,
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/app',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => {
               console.log(t);
               tty.writeLine(t);
@@ -1421,7 +1427,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             '-lsockets',
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/app',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => {
               console.log(t);
               tty.writeLine(t);
@@ -1713,7 +1719,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       if (useDirectPath) {
         const sourceFsPath = toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken);
         const objPath = '/tmp/emception-terminal-main.o';
-        const wasmPath = resolvedConfig.compile.output || '/app/main.wasm';
+        const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
         tty.writeLine('\x1b[36mDirect compile (clang -cc1)...\x1b[0m');
         // Use clang -cc1 directly (not driver mode). The driver tries to
@@ -1771,7 +1777,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             sourceFsPath,
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/app',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => {
               console.log(t);
               tty.writeLine(t);
@@ -1814,7 +1820,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             '-lsockets',
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/app',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => {
               console.log(t);
               tty.writeLine(t);
@@ -1849,7 +1855,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         const runArgs = resolvedConfig.run.args ?? ['wasi-run', wasmPath];
         setExecutionPhase('running');
         await client.run(runArgs[0], runArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
           },
@@ -1867,9 +1873,9 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       const compileArgs =
         resolvedConfig.compile.args.length > 0
           ? resolveArgs(resolvedConfig.compile.args, toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken))
-          : ['emcc', toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken), '-o', '/app/main.wasm', '-O2'];
+          : ['emcc', toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken), '-o', '/home/user/main.wasm', '-O2'];
       const result = await client.run(compileArgs[0], compileArgs, {
-        cwd: resolvedConfig.compile.cwd ?? '/app',
+        cwd: resolvedConfig.compile.cwd ?? '/home/user',
         onStdout: (t: string) => {
           console.log(t);
           tty.writeLine(t);
@@ -1888,7 +1894,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       }
       setStatus('Compilation successful');
       tty.writeLine(`\x1b[32mCompilation successful in ${duration}s\x1b[0m`);
-      const wasmPath = resolvedConfig.compile.output || '/app/main.wasm';
+      const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
       let wasmBytes = await client.getFile(wasmPath);
 
       // emcc may return before all subprocess-linked outputs are flushed to VFS.
@@ -1923,7 +1929,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             fallbackObj,
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/app',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => tty.writeLine(t),
             onStderr: (t: string) => tty.writeError(t),
           },
@@ -1969,7 +1975,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
               '-lsockets',
             ],
             {
-              cwd: resolvedConfig.compile.cwd ?? '/app',
+              cwd: resolvedConfig.compile.cwd ?? '/home/user',
               onStdout: (t: string) => tty.writeLine(t),
               onStderr: (t: string) => tty.writeError(t),
             },
@@ -1987,10 +1993,10 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       console.log(`${P} Compilation output: main.wasm=${wasmBytes?.length ?? 0}`);
       tty.writeLine('Running...');
       const lineBufferedStdin = makeLineBufferedStdin(tty);
-      const runArgs = resolvedConfig.run.args ?? ['wasi-run', resolvedConfig.compile.output || '/app/main.wasm'];
+      const runArgs = resolvedConfig.run.args ?? ['wasi-run', resolvedConfig.compile.output || '/home/user/main.wasm'];
       setExecutionPhase('running');
       await client.run(runArgs[0], runArgs, {
-        cwd: resolvedConfig.compile.cwd ?? '/app',
+        cwd: resolvedConfig.compile.cwd ?? '/home/user',
         onStdout: (t: string) => {
           tty.write(t.replace(/\n/g, '\r\n'));
         },
@@ -2042,7 +2048,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       if (testConfig.compileArgs && testConfig.compileArgs.length > 0) {
         setStatus('Compiling tests...');
         const compileResult = await client.run(testConfig.tool, testConfig.compileArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.writeLine(t);
           },
@@ -2063,7 +2069,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       setExecutionPhase('running');
       const lineBufferedStdin = makeLineBufferedStdin(tty);
       const runResult = await client.run(testConfig.runArgs[0], testConfig.runArgs, {
-        cwd: resolvedConfig.compile.cwd ?? '/app',
+        cwd: resolvedConfig.compile.cwd ?? '/home/user',
         onStdout: (t: string) => {
           tty.write(t.replace(/\n/g, '\r\n'));
         },
