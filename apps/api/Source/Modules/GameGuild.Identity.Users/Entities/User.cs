@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 using GameGuild.Identity.Tenants;
 using Microsoft.EntityFrameworkCore;
 
@@ -77,7 +76,6 @@ public class User : EntityBase, IUser
     /// <summary>
     ///     BCrypt password hash. Null for OAuth-only users.
     /// </summary>
-    [JsonIgnore]
     [MaxLength(512)]
     public string? PasswordHash { get; set; }
 

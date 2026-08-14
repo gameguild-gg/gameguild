@@ -60,7 +60,7 @@ public sealed class UserProfilesController(ISender sender) : BaseApiController
     [HttpPatch("v{version:apiVersion}/users/{userId:guid}/profile")]
     [Authorize(Policy = Policies.UsersEditSelf)]
     [EndpointSummary("Update user profile (partial update)")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<UserProfileDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateProfile(Guid userId, [FromBody] UpdateUserProfileRequest body, CancellationToken ct)
@@ -68,9 +68,9 @@ public sealed class UserProfilesController(ISender sender) : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new UpdateUserProfileCommand(userId, body);
-        await sender.Send(command, ct).ConfigureAwait(false);
+        var profile = await sender.Send(command, ct).ConfigureAwait(false);
 
-        return NoContent();
+        return Ok(profile);
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ public sealed class UserProfilesController(ISender sender) : BaseApiController
     [HttpPut("v{version:apiVersion}/users/{userId:guid}/profile")]
     [Authorize(Policy = Policies.UsersEditSelf)]
     [EndpointSummary("Replace user profile (full update)")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<UserProfileDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ReplaceProfile(Guid userId, [FromBody] ReplaceUserProfileRequest body, CancellationToken ct)
@@ -87,8 +87,8 @@ public sealed class UserProfilesController(ISender sender) : BaseApiController
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new ReplaceUserProfileCommand(userId, body);
-        await sender.Send(command, ct).ConfigureAwait(false);
+        var profile = await sender.Send(command, ct).ConfigureAwait(false);
 
-        return NoContent();
+        return Ok(profile);
     }
 }
