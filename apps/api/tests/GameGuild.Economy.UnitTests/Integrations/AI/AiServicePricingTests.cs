@@ -1,7 +1,8 @@
 using FluentAssertions;
+using GameGuild.Economy.Integrations.AI;
 using Xunit;
 
-namespace GameGuild.AI.UnitTests;
+namespace GameGuild.Economy.UnitTests;
 
 public sealed class AiServicePricingTests
 {

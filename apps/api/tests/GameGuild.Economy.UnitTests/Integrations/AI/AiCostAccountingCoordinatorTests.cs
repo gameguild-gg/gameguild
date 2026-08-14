@@ -1,11 +1,12 @@
 using FluentAssertions;
+using GameGuild.Economy.Integrations.AI;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Reserves;
 using GameGuild.Economy.Risk;
 using Xunit;
 
-namespace GameGuild.AI.UnitTests;
+namespace GameGuild.Economy.UnitTests;
 
 public sealed class AiCostAccountingCoordinatorTests
 {

@@ -1,4 +1,6 @@
 using FluentAssertions;
+using GameGuild.Commerce.Payments;
+using GameGuild.Economy.Integrations;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
@@ -6,7 +8,7 @@ using GameGuild.Economy.Reserves;
 using GameGuild.Economy.Risk;
 using Xunit;
 
-namespace GameGuild.Commerce.Payments.UnitTests.Services;
+namespace GameGuild.Economy.UnitTests;
 
 public sealed class StripeEconomyFundingIntegrationTests
 {
