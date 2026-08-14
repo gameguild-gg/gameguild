@@ -20,6 +20,9 @@ async function loadTemplatesFromFolder(): Promise<MermaidTemplate[]> {
   const templates: MermaidTemplate[] = [];
 
   try {
+    const blank = await import("./blank");
+    templates.push(blank.default);
+
     // Flowcharts
     const simpleFlowchart = await import("./flowchart");
     templates.push(simpleFlowchart.default);
