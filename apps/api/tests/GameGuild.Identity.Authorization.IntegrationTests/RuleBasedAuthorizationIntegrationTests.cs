@@ -2,9 +2,14 @@ using System.Security.Claims;
 using FluentAssertions;
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit;
 using GameGuild.API;
+using GameGuild.API.Database;
 
 namespace GameGuild.Identity.Authorization.IntegrationTests;
 
@@ -14,10 +19,34 @@ namespace GameGuild.Identity.Authorization.IntegrationTests;
 public class RuleBasedAuthorizationIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly WebApplicationFactory<Program> _factory;
+    private static readonly string DatabaseName = $"AuthorizationRules_{Guid.NewGuid():N}";
 
     public RuleBasedAuthorizationIntegrationTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureTestServices(services =>
+            {
+                var descriptorsToRemove = services
+                    .Where(descriptor =>
+                        descriptor.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
+                        descriptor.ServiceType == typeof(ApplicationDbContext) ||
+                        descriptor.ServiceType.FullName?.Contains("EntityFramework", StringComparison.Ordinal) == true ||
+                        descriptor.ImplementationType?.FullName?.Contains("Npgsql", StringComparison.Ordinal) == true)
+                    .ToList();
+
+                foreach (var descriptor in descriptorsToRemove)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(DatabaseName));
+            });
+        });
+
+        using var scope = _factory.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.EnsureCreated();
     }
 
     [Fact]

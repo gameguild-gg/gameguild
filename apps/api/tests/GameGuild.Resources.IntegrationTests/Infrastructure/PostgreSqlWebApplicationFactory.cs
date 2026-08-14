@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -36,6 +37,8 @@ public class PostgreSqlWebApplicationFactory : WebApplicationFactory<GameGuild.A
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
         
         builder.UseEnvironment("Testing");
+        builder.UseSetting("Database:MigrationConnectionString", _connectionString);
+        builder.UseSetting("Database:FailStartupOnMigrationFailure", "true");
         builder.ConfigureTestServices(services =>
         {
             // Remove all existing DbContext registrations
@@ -61,13 +64,6 @@ public class PostgreSqlWebApplicationFactory : WebApplicationFactory<GameGuild.A
                 });
             });
 
-            // Ensure database schema is created after configuration
-            var sp = services.BuildServiceProvider();
-            using var scope = sp.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            context.Database.EnsureCreated();
-            SeedAuthorizationFixtures(context);
-
             // Add test authentication scheme
             services.AddAuthentication(options =>
             {
@@ -81,6 +77,14 @@ public class PostgreSqlWebApplicationFactory : WebApplicationFactory<GameGuild.A
 
             services.AddHttpLogging(_ => { });
         });
+    }
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+        using var scope = host.Services.CreateScope();
+        SeedAuthorizationFixtures(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>());
+        return host;
     }
 
     private static void SeedAuthorizationFixtures(ApplicationDbContext context)
