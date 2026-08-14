@@ -1,3 +1,3 @@
 export * from "./mermaid-data";
-export * from "./mermaid-node";
-export * from "./mermaid-plugin";
+export * from "./lexical/mermaid-node";
+export * from "./lexical/mermaid-plugin";

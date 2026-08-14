@@ -9,7 +9,6 @@ export default {
   icon: Kanban,
   category: "project-management",
   preview: "TODO → IN PROGRESS → DONE",
-  previewImage: "previews/kanban.svg",
   code: `kanban
   Todo
     [Create user interface mockups]

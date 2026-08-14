@@ -10,24 +10,24 @@ import type {
 } from "lexical";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
-vi.mock("../features/mermaid/mermaid-editor", () => ({
+vi.mock("../features/mermaid/editor/mermaid-editor", () => ({
   MermaidEditor: () => <div data-testid="built-in-mermaid-editor" />,
 }));
 
-vi.mock("../features/vega-lite/vega-lite-editor", () => ({
+vi.mock("../features/vega-lite/editor/vega-lite-editor", () => ({
   VegaLiteEditor: () => <div data-testid="built-in-vega-editor" />,
 }));
 
 import {
   INSERT_MERMAID_LEXICAL_COMMAND,
   MermaidPlugin,
-} from "../features/mermaid/mermaid-plugin";
-import { MermaidLexicalNode } from "../features/mermaid/mermaid-node";
+} from "../features/mermaid/lexical/mermaid-plugin";
+import { MermaidLexicalNode } from "../features/mermaid/lexical/mermaid-node";
 import {
   INSERT_VEGA_LITE_LEXICAL_COMMAND,
   VegaLitePlugin,
-} from "../features/vega-lite/vega-lite-plugin";
-import { VegaLiteLexicalNode } from "../features/vega-lite/vega-lite-node";
+} from "../features/vega-lite/lexical/vega-lite-plugin";
+import { VegaLiteLexicalNode } from "../features/vega-lite/lexical/vega-lite-node";
 
 let root: Root | null = null;
 

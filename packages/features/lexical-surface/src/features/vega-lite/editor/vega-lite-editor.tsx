@@ -9,7 +9,6 @@ import {
   LayoutTemplate,
   Save,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { Button } from "@game-guild/ui/components/button";
 import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
@@ -21,12 +20,13 @@ import {
   SelectValue,
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
-import { FeatureEditorShell } from "../../shared/ui/feature-editor-shell";
-import { useFeatureEditorSettings } from "../../shared/ui/use-feature-editor-settings";
-import { ValidationPanel } from "../../shared/ui/validation-panel";
-import { ControlledVegaLiteViewer } from "./controlled-vega-lite-viewer";
+import { FeatureEditorShell } from "../../../shared/ui/feature-editor-shell";
+import { useFeatureEditorSettings } from "../../../shared/ui/use-feature-editor-settings";
+import { ValidationPanel } from "../../../shared/ui/validation-panel";
+import { useDarkMode } from "../../../shared/ui/use-dark-mode";
+import { ControlledVegaLiteViewer } from "../rendering/controlled-vega-lite-viewer";
 import { MonacoVegaLiteEditor } from "./monaco-vega-lite-editor";
-import type { VegaLiteData } from "./vega-lite-data";
+import type { VegaLiteData } from "../vega-lite-data";
 import { VegaLiteExport } from "./vega-lite-export";
 import { VegaLiteManager } from "./vega-lite-manager";
 import { VegaLiteTemplateSelector } from "./vega-lite-template-selector";
@@ -41,7 +41,7 @@ import {
   THEME_MODE_DESCRIPTIONS,
   type ThemeMode,
   type VegaThemeBase,
-} from "./vega-theme-helper";
+} from "../theme/vega-theme-helper";
 
 const DEFAULT_SPEC = JSON.stringify(
   {
@@ -82,7 +82,7 @@ export function VegaLiteEditor({
   onSave: (data: VegaLiteData) => void;
   onCancel: () => void;
 }) {
-  const { resolvedTheme } = useTheme();
+  const isDarkMode = useDarkMode();
   const settings = useFeatureEditorSettings("vega-lite");
   const initial = {
     ...EMPTY_VEGA_DATA,
@@ -351,7 +351,7 @@ export function VegaLiteEditor({
                   value={data.spec}
                   onChange={(spec) => updateData({ spec: spec ?? "" }, false)}
                   onValidationChange={handleValidation}
-                  theme={resolvedTheme === "dark" ? "dark" : "light"}
+                  theme={isDarkMode ? "dark" : "light"}
                   options={settings.editor}
                 />
               </div>

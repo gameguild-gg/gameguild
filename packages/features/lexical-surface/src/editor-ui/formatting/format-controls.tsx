@@ -144,35 +144,6 @@ const FONT_SIZE_OPTIONS = [
 const MIN_FONT_SIZE = 8;
 const MAX_FONT_SIZE = 400;
 
-const ACCESSIBILITY_FONTS_HREF =
-  "https://fonts.googleapis.com/css2?" +
-  [
-    "family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700",
-    "family=Lexend:wght@300;400;500;600;700",
-    "family=Lexend+Deca:wght@300;400;500;600;700",
-    "family=Andika:ital,wght@0,400;0,700;1,400;1,700",
-    "family=Nunito:ital,wght@0,400;0,700;1,400;1,700",
-    "family=Source+Code+Pro:wght@400;500;600;700",
-    "display=swap",
-  ].join("&");
-
-function ensureToolbarWebFontsLoaded(): void {
-  if (typeof document === "undefined") return;
-  const ensure = (href: string, id: string) => {
-    if (document.getElementById(id)) return;
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-  };
-  ensure(ACCESSIBILITY_FONTS_HREF, "lexical-toolbar-google-fonts");
-  ensure(
-    "https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.css",
-    "lexical-toolbar-opendyslexic",
-  );
-}
-
 export function BlockFormatDropDown({
   editor,
   blockType,
@@ -313,7 +284,6 @@ export function FontDropDown({
   compact?: boolean;
   preserveSelection?: boolean;
 }) {
-  React.useEffect(ensureToolbarWebFontsLoaded, []);
   const label =
     FONT_FAMILY_OPTIONS.find((option) => option.value === value)?.label ??
     value;
