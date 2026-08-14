@@ -27,4 +27,6 @@ module.exports = {
     on: jest.fn().mockReturnValue(() => {}),
     dispose: jest.fn(),
   }),
+  stubClient,
+  stubTty,
 };

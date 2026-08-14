@@ -60,6 +60,17 @@ function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<
   };
 }
 
+function matchesExpected(actual: string, expected: string | RegExp): boolean {
+  // wasi-run's byte-level capture joins fd_write chunks with '\n', leaving a
+  // spurious trailing newline; compare with trailing newlines trimmed.
+  const trimmed = actual.replace(/[\r\n]+$/, '');
+  return typeof expected === 'string' ? trimmed === expected.replace(/[\r\n]+$/, '') : expected.test(trimmed);
+}
+
+function stringifyExpected(v: string | RegExp): string {
+  return v instanceof RegExp ? v.toString() : JSON.stringify(v);
+}
+
 export interface IdeProps {
   title?: string;
   manifestUrl?: string;
@@ -221,8 +232,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   const seededContentRef = useRef<Map<string, string>>(new Map());
   /** Bumped on every setFileMeta call to re-run the per-file readOnly effect. */
   const [metaVersion, bumpMetaVersion] = useState(0);
-  // Expose filesRef for e2e tests so Playwright can verify file content was updated
-  (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
+  // Expose filesRef for e2e tests so Playwright can verify file content was updated.
+  // Guarded for SSR (Next.js server render has no window).
+  if (typeof window !== 'undefined') {
+    (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
+  }
 
   const fileTree = buildFileTree(Object.keys(files).filter((path) => path !== SDL_CANVAS_PATH && files[path]?.type !== 'canvas'));
   const activeTab = openTabs.find((t) => t.id === activeTabId) ?? openTabs[0] ?? null;
@@ -307,56 +321,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     };
     }, [workspaceUrl]);
 
-     // ── Run Tests button handler ───────────────────────────────────
-      const handleRunTests = useCallback(async () => {
-    if (!apiRef.current || !testPlan) return;
-    setTestRunning(true);
-    setLastReport(null);
-    try {
-      // Write generated harnesses (doctest .cpp) into the worker VFS at /app/<basename>.
-      const orch = orchestratorRef.current;
-      if (testPlan.generatedFiles?.length && orch) {
-        const enc = new TextEncoder();
-        for (const genFile of testPlan.generatedFiles) {
-          const fsPath = toWorkspaceFsPath(genFile.path);
-          await orch.client.writeFile(fsPath, enc.encode(genFile.content));
-        }
-      }
-
-      const filteredCases = testMode === 'public'
-          ? testPlan.cases
-              .filter((c) => !c.hidden)
-              .map(({ hidden: _hidden, ...rest }) => rest)
-          : testPlan.cases;
-      const runPlan: GradingPlan = {
-        cases: filteredCases,
-        build: testPlan.build,
-        timeoutMsPerCase: testPlan.timeoutMsPerCase,
-      };
-
-      // buildTestPlan emits /home/user/<name>; normalize to /app/<name> so
-      // paths match the flat VFS mount where workspace files already live.
-      if (Array.isArray(runPlan.build?.sources)) {
-        runPlan.build!.sources = (runPlan.build!.sources as string[]).map((src) => toWorkspaceFsPath(src));
-      }
-      for (const c of runPlan.cases) {
-        if (Array.isArray(c.sourceFiles)) {
-          c.sourceFiles = c.sourceFiles.map((sf: string) => toWorkspaceFsPath(sf));
-        }
-      }
-
-      const report = await apiRef.current.runTests(runPlan as any);
-      setLastReport(report);
-      try { onTestReportRef.current?.(report); } catch { /* swallow */ }
-      setStatus('Tests complete');
-      } catch (err) {
-      setStatus(`Test error: ${(err as Error).message}`);
-      } finally {
-      setTestRunning(false);
-      }
-    }, [testPlan, testMode]);
-
-    // ── Sync workspace files into the Worker VFS (/app) ─────
+     // ── Sync workspace files into the Worker VFS (/home/user) ─────
   const syncFilesToVfs = useCallback(async (filesToSync: Record<string, WorkspaceFile>) => {
     const orch = orchestratorRef.current;
     if (!orch) return;
@@ -371,6 +336,231 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     }
     console.log(`${P} VFS sync complete (${textFiles.length} files)`);
   }, []);
+
+      // ── Run Tests button handler ───────────────────────────────────
+      const handleRunTests = useCallback(async () => {
+    const orch = orchestratorRef.current;
+    if (!orch || !testPlan || testPlan.cases.length === 0) return;
+    const { client, tty } = orch;
+    setTestRunning(true);
+    setLastReport(null);
+    const totalStart = performance.now();
+
+    let report: import('./TestResultsPanel').TestReport;
+    try {
+      // Sync workspace text files to /home/user/<name> in the VFS so the compiler
+      // reads the latest editor content.
+      await syncFilesToVfs(filesRef.current);
+
+      const mainSrc = Object.values(filesRef.current).find(
+        (f) => f.type === 'text' && isSourceFile(f.path),
+      );
+      if (!mainSrc) {
+        throw new Error('No C/C++ source file found in workspace');
+      }
+      const sourceFsPath = toWorkspaceFsPath(mainSrc.path, propsRef.current.assignmentToken);
+      const objPath = '/tmp/emception-test-main.o';
+      const wasmPath = '/home/user/main.wasm';
+
+      // ── Compile (clang -cc1) — same args as the working handleCompile direct path ──
+      tty.writeLine('\x1b[36m[tests] Compiling...\x1b[0m');
+      const clangResult = await client.run(
+        'clang',
+        [
+          'clang',
+          '-cc1',
+          '-triple',
+          'wasm32-unknown-emscripten',
+          '-emit-obj',
+          '-O1',
+          '-disable-free',
+          '-clear-ast-before-backend',
+          '-disable-llvm-verifier',
+          '-discard-value-names',
+          '-main-file-name',
+          'main.cpp',
+          '-mrelocation-model',
+          'static',
+          '-mframe-pointer=none',
+          '-ffp-contract=on',
+          '-fno-rounding-math',
+          '-mconstructor-aliases',
+          '-target-cpu',
+          'generic',
+          '-fvisibility=hidden',
+          '-internal-isystem',
+          '/usr/include/c++/v1',
+          '-internal-isystem',
+          '/usr/include/compat',
+          '-internal-isystem',
+          '/usr/lib/clang/23/include',
+          '-resource-dir',
+          '/usr/lib/clang/23',
+          '-internal-isystem',
+          '/usr/include',
+          '-fdeprecated-macro',
+          '-ferror-limit',
+          '19',
+          '-fgnuc-version=4.2.1',
+          '-fcxx-exceptions',
+          '-fexceptions',
+          '-o',
+          objPath,
+          '-x',
+          'c++',
+          sourceFsPath,
+        ],
+        {
+          cwd: '/home/user',
+          onStdout: (t: string) => console.log(t),
+          onStderr: (t: string) => {
+            console.error(t);
+            tty.writeError(t);
+          },
+        },
+      );
+      if (clangResult.exitCode !== 0) {
+        throw new Error(`Compilation failed (exit ${clangResult.exitCode})`);
+      }
+
+      // ── Link (wasm-ld) ──
+      tty.writeLine('\x1b[36m[tests] Linking...\x1b[0m');
+      const lldResult = await client.run(
+        'wasm-ld',
+        [
+          'wasm-ld',
+          objPath,
+          '-o',
+          wasmPath,
+          '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
+          '--entry=main',
+          '--import-undefined',
+          '--allow-undefined',
+          '--export-table',
+          '--table-base=1',
+          '--export=__wasm_call_ctors',
+          '-lc',
+          '-ldlmalloc',
+          '-lcompiler_rt',
+          '-lc++-noexcept',
+          '-lc++abi-noexcept',
+          '-lsockets',
+        ],
+        {
+          cwd: '/home/user',
+          onStdout: (t: string) => console.log(t),
+          onStderr: (t: string) => {
+            console.error(t);
+            tty.writeError(t);
+          },
+        },
+      );
+      if (lldResult.exitCode !== 0) {
+        throw new Error(`Link failed (exit ${lldResult.exitCode})`);
+      }
+
+      // ── Filter cases per testMode ──
+      const cases = testMode === 'public' ? testPlan.cases.filter((c) => !c.hidden) : testPlan.cases;
+
+      // ── Run each stdio case via wasi-run; skip non-stdio kinds ──
+      const enc = new TextEncoder();
+      const reportCases: import('./TestResultsPanel').TestCaseResult[] = [];
+      for (const test of cases) {
+        const name = test.name ?? test.kind;
+        const caseStart = performance.now();
+
+        if (test.kind !== 'stdio') {
+          reportCases.push({
+            name,
+            passed: false,
+            durationMs: 0,
+            diagnostic: `Test kind '${test.kind}' not yet supported by the direct-compile test runner.`,
+          });
+          continue;
+        }
+
+        try {
+          // Tool-runner stdin contract: a line must end with '\n' before the
+          // feeder returns null (mirrors presets.ts makeStdinFeeder).
+          const rawStdin = test.stdin ?? '';
+          const stdinBytes = enc.encode(rawStdin.endsWith('\n') ? rawStdin : `${rawStdin}\n`);
+          let stdinIdx = 0;
+          const result = await client.run('wasi-run', ['wasi-run', wasmPath], {
+            cwd: '/home/user',
+            stdin: () => (stdinIdx >= stdinBytes.length ? null : stdinBytes[stdinIdx++]),
+          });
+
+          const stdoutOk =
+            test.expectedStdout === undefined ? true : matchesExpected(result.stdout, test.expectedStdout);
+          const stderrOk =
+            test.expectedStderr === undefined ? true : matchesExpected(result.stderr, test.expectedStderr);
+          const exitOk = test.expectedExit === undefined ? true : result.exitCode === test.expectedExit;
+          const passed = stdoutOk && stderrOk && exitOk;
+
+          let diagnostic: string | undefined;
+          if (!passed) {
+            const parts: string[] = [];
+            if (!stdoutOk && test.expectedStdout !== undefined) {
+              parts.push(
+                `stdout mismatch:\n  expected: ${stringifyExpected(test.expectedStdout)}\n  actual:   ${JSON.stringify(result.stdout)}`,
+              );
+            }
+            if (!stderrOk && test.expectedStderr !== undefined) {
+              parts.push(
+                `stderr mismatch:\n  expected: ${stringifyExpected(test.expectedStderr)}\n  actual:   ${JSON.stringify(result.stderr)}`,
+              );
+            }
+            if (!exitOk && test.expectedExit !== undefined) {
+              parts.push(`exit code mismatch: expected ${test.expectedExit}, got ${result.exitCode}`);
+            }
+            diagnostic = parts.join('\n');
+          }
+
+          reportCases.push({
+            name,
+            passed,
+            durationMs: Math.round(performance.now() - caseStart),
+            diagnostic,
+          });
+        } catch (err) {
+          reportCases.push({
+            name,
+            passed: false,
+            durationMs: Math.round(performance.now() - caseStart),
+            diagnostic: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
+
+      const passedCount = reportCases.filter((c) => c.passed).length;
+      report = {
+        passed: passedCount,
+        failed: reportCases.length - passedCount,
+        totalDurationMs: Math.round(performance.now() - totalStart),
+        cases: reportCases,
+      };
+      setLastReport(report);
+      try {
+        onTestReportRef.current?.(report);
+      } catch {
+        /* swallow */
+      }
+      setStatus(`Tests complete (${report.passed}/${report.cases.length} passed)`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setStatus(`Test error: ${message}`);
+      tty.writeError(`\x1b[31m${message}\x1b[0m`);
+      report = {
+        passed: 0,
+        failed: 1,
+        totalDurationMs: Math.round(performance.now() - totalStart),
+        cases: [{ name: 'compile', passed: false, durationMs: 0, diagnostic: message }],
+      };
+      setLastReport(report);
+    } finally {
+      setTestRunning(false);
+    }
+    }, [testPlan, testMode, syncFilesToVfs]);
 
   // ── Switch workspace preset ───────────────────────────────────
   const switchWorkspace = useCallback(
@@ -446,7 +636,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
       if (orchestratorRef.current) {
         orchestratorRef.current.tty.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
-        // Sync new workspace files into VFS so /app is populated immediately
+        // Sync new workspace files into VFS so /home/user is populated immediately
         await syncFilesToVfs(state.files);
       }
       console.log(`${P} ===== WORKSPACE SWITCH COMPLETE =====`);
@@ -517,7 +707,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         // Expose worker client on window for E2E / debug access
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).__emception_client__ = result.client;
-        // Sync current workspace files into VFS so /app is populated on boot
+        // Sync current workspace files into VFS so /home/user is populated on boot
         await syncFilesToVfs(filesRef.current);
         setStatus('Ready');
         setIsReady(true);
@@ -940,8 +1130,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     syncMonacoModels();
   }, [files, syncMonacoModels]);
 
-  // Expose for e2e tests so Playwright can update file content directly in React state
-  (window as unknown as Record<string, unknown>).__setFileContent = handleEditorChange;
+  // Expose for e2e tests so Playwright can update file content directly in React state.
+  // Guarded for SSR (Next.js server render has no window).
+  if (typeof window !== 'undefined') {
+    (window as unknown as Record<string, unknown>).__setFileContent = handleEditorChange;
+  }
 
   const teardownSdlRuntime = useCallback(() => {
     const sdlMod = sdlModuleRef.current;
@@ -1027,7 +1220,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         setExecutionPhase('running');
         const lineBufferedStdin = makeLineBufferedStdin(tty);
         await client.run(args[0], args, {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
           },
@@ -1053,7 +1246,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         tty.writeLine('\x1b[36mCMake configure...\x1b[0m');
         const configArgs = resolvedConfig.compile.args;
         const configResult = await client.run(configArgs[0], configArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.writeLine(t);
           },
@@ -1069,9 +1262,9 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         }
         setStatus('Ninja build...');
         tty.writeLine('\x1b[36mNinja build...\x1b[0m');
-        const buildDir = configArgs.includes('-B') ? configArgs[configArgs.indexOf('-B') + 1] : '/app/build';
+        const buildDir = configArgs.includes('-B') ? configArgs[configArgs.indexOf('-B') + 1] : '/home/user/build';
         const ninjaResult = await client.run('ninja', ['ninja', '-C', buildDir], {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.writeLine(t);
           },
@@ -1092,7 +1285,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         setExecutionPhase('running');
         const lineBufferedStdin = makeLineBufferedStdin(tty);
         await client.run(runArgs[0], runArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
           },
@@ -1120,7 +1313,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
         const sourceFsPath = toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken);
         const sdlObjPath = '/tmp/emception-sdl-main.o';
-        const wasmPath = resolvedConfig.compile.output || '/app/main.wasm';
+        const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
         // Compile with clang -cc1 directly (driver mode silently exits in
         // browser because cc1 cannot be spawned as a subprocess; cc1_main is
@@ -1178,7 +1371,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             sourceFsPath,
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/app',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => {
               console.log(t);
               tty.writeLine(t);
@@ -1234,7 +1427,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             '-lsockets',
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/app',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => {
               console.log(t);
               tty.writeLine(t);
@@ -1526,7 +1719,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       if (useDirectPath) {
         const sourceFsPath = toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken);
         const objPath = '/tmp/emception-terminal-main.o';
-        const wasmPath = resolvedConfig.compile.output || '/app/main.wasm';
+        const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
 
         tty.writeLine('\x1b[36mDirect compile (clang -cc1)...\x1b[0m');
         // Use clang -cc1 directly (not driver mode). The driver tries to
@@ -1584,7 +1777,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             sourceFsPath,
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/app',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => {
               console.log(t);
               tty.writeLine(t);
@@ -1627,7 +1820,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             '-lsockets',
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/app',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => {
               console.log(t);
               tty.writeLine(t);
@@ -1662,7 +1855,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         const runArgs = resolvedConfig.run.args ?? ['wasi-run', wasmPath];
         setExecutionPhase('running');
         await client.run(runArgs[0], runArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
           },
@@ -1680,9 +1873,9 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       const compileArgs =
         resolvedConfig.compile.args.length > 0
           ? resolveArgs(resolvedConfig.compile.args, toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken))
-          : ['emcc', toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken), '-o', '/app/main.wasm', '-O2'];
+          : ['emcc', toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken), '-o', '/home/user/main.wasm', '-O2'];
       const result = await client.run(compileArgs[0], compileArgs, {
-        cwd: resolvedConfig.compile.cwd ?? '/app',
+        cwd: resolvedConfig.compile.cwd ?? '/home/user',
         onStdout: (t: string) => {
           console.log(t);
           tty.writeLine(t);
@@ -1701,7 +1894,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       }
       setStatus('Compilation successful');
       tty.writeLine(`\x1b[32mCompilation successful in ${duration}s\x1b[0m`);
-      const wasmPath = resolvedConfig.compile.output || '/app/main.wasm';
+      const wasmPath = resolvedConfig.compile.output || '/home/user/main.wasm';
       let wasmBytes = await client.getFile(wasmPath);
 
       // emcc may return before all subprocess-linked outputs are flushed to VFS.
@@ -1736,7 +1929,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             fallbackObj,
           ],
           {
-            cwd: resolvedConfig.compile.cwd ?? '/app',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => tty.writeLine(t),
             onStderr: (t: string) => tty.writeError(t),
           },
@@ -1782,7 +1975,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
               '-lsockets',
             ],
             {
-              cwd: resolvedConfig.compile.cwd ?? '/app',
+              cwd: resolvedConfig.compile.cwd ?? '/home/user',
               onStdout: (t: string) => tty.writeLine(t),
               onStderr: (t: string) => tty.writeError(t),
             },
@@ -1800,10 +1993,10 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       console.log(`${P} Compilation output: main.wasm=${wasmBytes?.length ?? 0}`);
       tty.writeLine('Running...');
       const lineBufferedStdin = makeLineBufferedStdin(tty);
-      const runArgs = resolvedConfig.run.args ?? ['wasi-run', resolvedConfig.compile.output || '/app/main.wasm'];
+      const runArgs = resolvedConfig.run.args ?? ['wasi-run', resolvedConfig.compile.output || '/home/user/main.wasm'];
       setExecutionPhase('running');
       await client.run(runArgs[0], runArgs, {
-        cwd: resolvedConfig.compile.cwd ?? '/app',
+        cwd: resolvedConfig.compile.cwd ?? '/home/user',
         onStdout: (t: string) => {
           tty.write(t.replace(/\n/g, '\r\n'));
         },
@@ -1855,7 +2048,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       if (testConfig.compileArgs && testConfig.compileArgs.length > 0) {
         setStatus('Compiling tests...');
         const compileResult = await client.run(testConfig.tool, testConfig.compileArgs, {
-          cwd: resolvedConfig.compile.cwd ?? '/app',
+          cwd: resolvedConfig.compile.cwd ?? '/home/user',
           onStdout: (t: string) => {
             tty.writeLine(t);
           },
@@ -1876,7 +2069,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       setExecutionPhase('running');
       const lineBufferedStdin = makeLineBufferedStdin(tty);
       const runResult = await client.run(testConfig.runArgs[0], testConfig.runArgs, {
-        cwd: resolvedConfig.compile.cwd ?? '/app',
+        cwd: resolvedConfig.compile.cwd ?? '/home/user',
         onStdout: (t: string) => {
           tty.write(t.replace(/\n/g, '\r\n'));
         },

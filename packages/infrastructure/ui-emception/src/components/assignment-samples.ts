@@ -110,14 +110,14 @@ export const ASSIGNMENT_SAMPLES: Record<CodingLanguage, AssignmentSample> = {
       compile: {
         tool: 'clang',
         args: [],
-        cwd: '/app',
-        output: '/app/main.wasm',
+        cwd: '/home/user',
+        output: '/home/user/main.wasm',
         sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/main.cpp' },
       },
       run: {
         type: 'wasi-terminal',
         tool: 'wasi-run',
-        args: ['wasi-run', '/app/main.wasm'],
+        args: ['wasi-run', '/home/user/main.wasm'],
       },
       features: {
         canvas: false,
@@ -151,14 +151,14 @@ export const ASSIGNMENT_SAMPLES: Record<CodingLanguage, AssignmentSample> = {
       compile: {
         tool: 'clang',
         args: [],
-        cwd: '/app',
-        output: '/app/main.wasm',
+        cwd: '/home/user',
+        output: '/home/user/main.wasm',
         sourceDetect: { extensions: ['.c'], entryPoint: '/user/main.c' },
       },
       run: {
         type: 'wasi-terminal',
         tool: 'wasi-run',
-        args: ['wasi-run', '/app/main.wasm'],
+        args: ['wasi-run', '/home/user/main.wasm'],
       },
       features: {
         canvas: false,
@@ -216,10 +216,10 @@ int main(void) {
           '-sENVIRONMENT=web',
           '-O1',
           '-o',
-          '/app/main.wasm',
+          '/home/user/main.wasm',
         ],
-        cwd: '/app',
-        output: '/app/main.wasm',
+        cwd: '/home/user',
+        output: '/home/user/main.wasm',
         sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-main.cpp' },
       },
       run: {
@@ -266,10 +266,10 @@ int main(void) {
           '-sENVIRONMENT=web',
           '-O1',
           '-o',
-          '/app/main.wasm',
+          '/home/user/main.wasm',
         ],
-        cwd: '/app',
-        output: '/app/main.wasm',
+        cwd: '/home/user',
+        output: '/home/user/main.wasm',
         sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/raylib-main.cpp' },
       },
       run: {

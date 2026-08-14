@@ -137,6 +137,16 @@ const nextConfig: NextConfig = {
         ],
       },
       ...COI_LEARN_RULES,
+      // A cross-origin-isolated page may only spawn Workers whose script
+      // response also carries COEP, else Chromium blocks it with
+      // ERR_BLOCKED_BY_RESPONSE and the emception boot hangs forever.
+      {
+        source: "/_next/static/chunks/:file(emception-toolchain.*)",
+        headers: [
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
+        ],
+      },
       {
         source: "/wasm/:path*.wasm",
         headers: [
