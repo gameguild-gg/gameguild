@@ -1,5 +1,6 @@
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Projects.UnitTests.Infrastructure;
+using GameGuild.Teams;
 using System.Text.Json;
 
 namespace GameGuild.Projects.UnitTests.Handlers;
@@ -55,6 +56,53 @@ public class ProjectHandlersIntegrationTests : IDisposable
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetProjectById_IncludeTeam_LoadsProjectTeamsInsteadOfCollaborators()
+    {
+        var tenantId = Guid.NewGuid();
+        var project = _testDataBuilder.CreateProject(createdById: _testUserId, title: "Team-owned project");
+        project.TenantId = tenantId;
+        project.Visibility = ContentVisibility.Public;
+        project.Status = ContentStatus.Published;
+        var team = Team.Create(tenantId, "Studio Team", "studio-team", _testUserId);
+        var ownership = new ProjectTeam
+        {
+            TenantId = tenantId,
+            ProjectId = project.Id,
+            TeamId = team.Id,
+            Role = ProjectTeamRole.Owner,
+            ParticipationMode = ProjectTeamParticipationMode.AllMembers,
+            IsActive = true,
+        };
+        _context.Set<Project>().Add(project);
+        _context.Set<Team>().Add(team);
+        _context.Set<ProjectTeam>().Add(ownership);
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor.SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.Create().Build());
+        var handler = new ProjectQueryHandlers(
+            _context,
+            actorAccessor.Object,
+            new ProjectAuthorizationService(_context, actorAccessor.Object),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<ProjectQueryHandlers>.Instance);
+
+        var result = await handler.Handle(
+            new GetProjectByIdQuery
+            {
+                ProjectId = project.Id,
+                IncludeTeam = true,
+                IncludeReleases = false,
+                IncludeCollaborators = false,
+            },
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Teams.Should().ContainSingle(teamLink => teamLink.TeamId == team.Id);
     }
 
     [Fact]

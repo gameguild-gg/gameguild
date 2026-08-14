@@ -18,6 +18,7 @@ public class AssetsController(
     ISender sender,
     IActorContextAccessor actorContextAccessor,
     IAssetUploadService uploadService,
+    IAssetUploadAuthorizationService uploadAuthorizationService,
     IAssetTextExtractionService textExtractionService) : BaseApiController
 {
     private ActorContext Actor => actorContextAccessor.ActorContext;
@@ -33,6 +34,7 @@ public class AssetsController(
         [FromQuery] AssetAccessPolicy accessPolicy = AssetAccessPolicy.Private,
         [FromQuery] string? parentResourceType = null,
         [FromQuery] Guid? parentResourceId = null,
+        [FromQuery] Guid? folderId = null,
         CancellationToken ct = default)
     {
         if (file == null || file.Length == 0)
@@ -56,12 +58,14 @@ public class AssetsController(
             displayName,
             accessPolicy,
             parentResourceType,
-            parentResourceId);
+            parentResourceId,
+            folderId);
 
         var result = await sender.Send(command, ct).ConfigureAwait(false);
 
         if (result.Error != null)
         {
+            if (result.Error == "Forbidden") return Forbid();
             return BadRequest(new ProblemDetails { Title = result.Error });
         }
 
@@ -84,6 +88,7 @@ public class AssetsController(
         [FromQuery] AssetAccessPolicy accessPolicy = AssetAccessPolicy.Private,
         [FromQuery] string? parentResourceType = null,
         [FromQuery] Guid? parentResourceId = null,
+        [FromQuery] Guid? folderId = null,
         CancellationToken ct = default)
     {
         if (!Actor.SubjectIdAsGuid.HasValue || !Actor.TenantId.HasValue)
@@ -114,9 +119,11 @@ public class AssetsController(
                     Actor.TenantId.Value,
                     accessPolicy,
                     parentResourceType,
-                    parentResourceId),
+                    parentResourceId,
+                    folderId),
                 ct).ConfigureAwait(false);
 
+            if (result.Items.Count > 0 && result.Items.All(item => item.Error == "Forbidden")) return Forbid();
             return Ok(result);
         }
         finally
@@ -217,6 +224,7 @@ public class AssetsController(
     /// <param name="accessPolicy">Access policy for the asset</param>
     /// <param name="parentResourceType">Optional parent resource type</param>
     /// <param name="parentResourceId">Optional parent resource ID</param>
+    /// <param name="folderId">Optional virtual folder inside the parent library</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>The created asset reference</returns>
     [HttpPost("chunked-uploads/{uploadId}:complete")]
@@ -230,6 +238,7 @@ public class AssetsController(
         [FromQuery] AssetAccessPolicy accessPolicy = AssetAccessPolicy.Private,
         [FromQuery] string? parentResourceType = null,
         [FromQuery] Guid? parentResourceId = null,
+        [FromQuery] Guid? folderId = null,
         CancellationToken ct = default)
     {
         if (!Actor.SubjectIdAsGuid.HasValue)
@@ -237,11 +246,22 @@ public class AssetsController(
             return Unauthorized();
         }
 
+        if (!await uploadAuthorizationService.CanUploadAsync(
+                parentResourceType,
+                parentResourceId,
+                folderId,
+                Actor.SubjectIdAsGuid.Value,
+                Actor.TenantId,
+                ct).ConfigureAwait(false))
+            return Forbid();
+
         var options = new UploadAssetOptions(
             displayName,
             accessPolicy,
             parentResourceType,
-            parentResourceId);
+            parentResourceId,
+            folderId,
+            Actor.TenantId);
 
         var result = await uploadService.CompleteChunkedUploadAsync(uploadId, options, ct).ConfigureAwait(false);
 
@@ -334,7 +354,7 @@ public class AssetsController(
     /// <summary>
     /// Extract text from an asset when the MIME type supports direct parsing or OCR.
     /// </summary>
-    [HttpGet("{id:guid}/extracted-text")]
+    [HttpGet("{id:guid}/extracted-text", Name = "GetAssetExtractedText")]
     [ProducesResponseType(typeof(AssetExtractedTextResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -504,7 +524,7 @@ public class AssetsController(
     /// <summary>
     /// Get extracted searchable text for an asset.
     /// </summary>
-    [HttpGet("{id:guid}:extracted-text")]
+    [HttpGet("{id:guid}:extracted-text", Name = "GetSignedAssetExtractedText")]
     [AllowAnonymous]
     public async Task<IActionResult> GetExtractedText(
         Guid id,

@@ -24,7 +24,7 @@ public class ProgramContentController(
   /// Supports filtering via query parameters:
   /// - level=top: Get only top-level content
   /// </remarks>
-  [HttpGet]
+  [HttpGet(Name = "GetCoursesContent")]
   [AllowAnonymous]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetProgramContent(Guid programId, [FromQuery] string? level = null)
   {
@@ -56,7 +56,7 @@ public class ProgramContentController(
   }
 
   /// <summary> Get specific program content by ID (resource-level Read permission required on parent Program) </summary>
-  [HttpGet("{id}")]
+  [HttpGet("{id}", Name = "GetCoursesContentById")]
   [AllowAnonymous]
   public async Task<ActionResult<ProgramContentDto>> GetContent(Guid programId, Guid id)
   {

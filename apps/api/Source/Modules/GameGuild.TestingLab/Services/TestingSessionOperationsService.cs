@@ -194,11 +194,12 @@ public class TestingSessionOperationsService(
 
     public async Task<IEnumerable<TestingSession>> GetPublicTestingSessionsAsync(int take = 100)
     {
+        var tenantId = RequireTenantId();
         var now = SystemClock.UtcNow;
         var graceWindow = now.AddHours(-2);
 
         return await context.Set<TestingSession>()
-            .Where(ts => ts.DeletedAt == null &&
+            .Where(ts => ts.TenantId == tenantId && ts.DeletedAt == null &&
                 (ts.Status == SessionStatus.Scheduled || ts.Status == SessionStatus.Active) &&
                 ts.EndTime >= graceWindow)
             .Include(ts => ts.Location)
@@ -216,9 +217,12 @@ public class TestingSessionOperationsService(
 
         if (session == null) return new { };
 
-        var registrationCount = await context.Set<SessionRegistration>().CountAsync(sr => sr.SessionId == testingSessionId);
-        var waitlistCount = await context.Set<SessionWaitlist>().CountAsync(sw => sw.SessionId == testingSessionId);
-        var feedbackCount = await context.Set<TestingFeedback>().CountAsync(tf => tf.SessionId == testingSessionId);
+        var registrationCount = await context.Set<SessionRegistration>().CountAsync(sr =>
+            sr.SessionId == testingSessionId && sr.TenantId == tenantId && sr.DeletedAt == null);
+        var waitlistCount = await context.Set<SessionWaitlist>().CountAsync(sw =>
+            sw.SessionId == testingSessionId && sw.TenantId == tenantId && sw.DeletedAt == null);
+        var feedbackCount = await context.Set<TestingFeedback>().CountAsync(tf =>
+            tf.SessionId == testingSessionId && tf.TenantId == tenantId && tf.DeletedAt == null);
 
         return new
         {
@@ -261,7 +265,8 @@ public class TestingSessionOperationsService(
         if (!sessionBelongsToTenant)
             throw new UnauthorizedAccessException("Testing session is outside the current tenant.");
 
-        var registration = await context.Set<SessionRegistration>().FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
+        var registration = await context.Set<SessionRegistration>().FirstOrDefaultAsync(sr =>
+            sr.SessionId == sessionId && sr.UserId == userId && sr.TenantId == tenantId && sr.DeletedAt == null);
 
         if (registration == null) { throw new ArgumentException("Registration not found"); }
 

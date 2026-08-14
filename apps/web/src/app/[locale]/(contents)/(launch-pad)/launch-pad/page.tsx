@@ -44,10 +44,10 @@ export default async function LaunchPadPublicPage(): Promise<React.JSX.Element> 
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/projects"
+                href="/launch-pad/events"
                 className="inline-flex items-center rounded-full bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
               >
-                Review launch candidates
+                Discover Launch Pad events
                 <ArrowRight className="ml-2 size-4" aria-hidden="true" />
               </Link>
               <Link
@@ -183,13 +183,13 @@ export default async function LaunchPadPublicPage(): Promise<React.JSX.Element> 
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-12 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
             <h2 className="text-3xl font-semibold tracking-tight">Ready to prepare a release?</h2>
-            <p className="mt-2 text-sm text-slate-400">Start with a tested project, then move into the dashboard Launch Pad workflow.</p>
+            <p className="mt-2 text-sm text-slate-400">Apply with an accessible Team Project or register individually for an event.</p>
           </div>
           <Link
-            href="/dashboard/launch-pad"
+            href="/launch-pad/participation"
             className="inline-flex items-center rounded-full bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
           >
-            Open Launch Pad
+            Your participation
             <CalendarCheck2 className="ml-2 size-4" aria-hidden="true" />
           </Link>
         </div>

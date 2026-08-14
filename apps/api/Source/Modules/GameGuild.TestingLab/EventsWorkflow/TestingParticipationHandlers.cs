@@ -3,6 +3,7 @@ using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using GameGuild.Projects;
+using GameGuild.Teams;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.TestingLab;
@@ -141,7 +142,7 @@ public sealed class TestingParticipationHandlers(
             if (releasedCapacity)
                 await PromoteWaitlistAsync(loaded.Registration.SlotId, loaded.Actor.TenantId, cancellationToken).ConfigureAwait(false);
             else
-                await ReindexWaitlistAsync(loaded.Registration.SlotId, cancellationToken).ConfigureAwait(false);
+                await ReindexWaitlistAsync(loaded.Registration.SlotId, loaded.Actor.TenantId, cancellationToken).ConfigureAwait(false);
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             await lockHandle.CommitAsync(cancellationToken).ConfigureAwait(false);
             return Result.Success(await ToProjectionAsync(loaded.Registration, cancellationToken).ConfigureAwait(false));
@@ -209,18 +210,22 @@ public sealed class TestingParticipationHandlers(
                      collaborator.LeftAt == null) ||
                  context.Set<ProjectTeam>().Any(projectTeam =>
                      projectTeam.ProjectId == project.Id &&
+                     projectTeam.TenantId == project.TenantId &&
                      projectTeam.IsActive &&
                      projectTeam.DeletedAt == null &&
                      projectTeam.EndedAt == null &&
                      context.Set<Team>().Any(team =>
                          team.Id == projectTeam.TeamId &&
+                         team.TenantId == project.TenantId &&
                          team.IsActive &&
                          team.DeletedAt == null) &&
                      context.Set<TeamMember>().Any(member =>
                          member.TeamId == projectTeam.TeamId &&
+                         member.TenantId == project.TenantId &&
                          member.UserId == testerUserId &&
                          member.IsActive &&
-                         member.DeletedAt == null))),
+                         member.DeletedAt == null &&
+                         member.LeftAt == null))),
                 cancellationToken)
             .ConfigureAwait(false);
         if (ownsOrCollaborates)
@@ -234,6 +239,7 @@ public sealed class TestingParticipationHandlers(
                 candidate.SlotId == loaded.Registration.SlotId &&
                 candidate.ApplicationId == application.Id &&
                 candidate.TesterUserId == loaded.Registration.UserId &&
+                candidate.TenantId == loaded.Actor.TenantId &&
                 candidate.DeletedAt == null,
                 cancellationToken)
             .ConfigureAwait(false);
@@ -275,6 +281,7 @@ public sealed class TestingParticipationHandlers(
             .FirstOrDefaultAsync(candidate =>
                 candidate.SlotId == obligation.SlotId &&
                 candidate.UserId == actor.UserId &&
+                candidate.TenantId == actor.TenantId &&
                 candidate.Status != TestingSlotRegistrationStatus.Cancelled &&
                 candidate.Status != TestingSlotRegistrationStatus.NoShow &&
                 candidate.Status != TestingSlotRegistrationStatus.Waitlisted &&
@@ -286,7 +293,7 @@ public sealed class TestingParticipationHandlers(
             return Result.Failure<TestingEventFeedbackProjection>(
                 Error.Forbidden("TestingLab.AttendanceRequired", "Attendance is required before feedback can be submitted."));
         var slotMode = await context.Set<TestingEventSlot>()
-            .Where(candidate => candidate.Id == obligation.SlotId)
+            .Where(candidate => candidate.Id == obligation.SlotId && candidate.TenantId == actor.TenantId && candidate.DeletedAt == null)
             .Select(candidate => candidate.Mode)
             .SingleAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -328,6 +335,7 @@ public sealed class TestingParticipationHandlers(
         var pending = await context.Set<TestingFeedbackObligation>().AnyAsync(candidate =>
             candidate.SlotId == loaded.Registration.SlotId &&
             candidate.TesterUserId == loaded.Registration.UserId &&
+            candidate.TenantId == loaded.Actor.TenantId &&
             candidate.Status == TestingFeedbackObligationStatus.Pending &&
             candidate.DeletedAt == null,
             cancellationToken).ConfigureAwait(false);
@@ -483,6 +491,7 @@ public sealed class TestingParticipationHandlers(
                         obligation.EventId == registration.EventId &&
                         obligation.SlotId == registration.SlotId &&
                         obligation.TesterUserId == registration.UserId &&
+                        obligation.TenantId == actor.TenantId &&
                         obligation.Status == TestingFeedbackObligationStatus.Pending &&
                         obligation.DeletedAt == null)))
             .ToListAsync(cancellationToken)
@@ -653,14 +662,15 @@ public sealed class TestingParticipationHandlers(
                 promoted.UserId,
                 slotId);
         }
-        await ReindexWaitlistAsync(slotId, cancellationToken).ConfigureAwait(false);
+        await ReindexWaitlistAsync(slotId, tenantId, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task ReindexWaitlistAsync(Guid slotId, CancellationToken cancellationToken)
+    private async Task ReindexWaitlistAsync(Guid slotId, Guid tenantId, CancellationToken cancellationToken)
     {
         var waitlist = await context.Set<TestingSlotRegistration>()
             .Where(candidate =>
                 candidate.SlotId == slotId &&
+                candidate.TenantId == tenantId &&
                 candidate.Status == TestingSlotRegistrationStatus.Waitlisted &&
                 candidate.DeletedAt == null)
             .OrderBy(candidate => candidate.WaitlistPosition)
@@ -748,6 +758,7 @@ public sealed class TestingParticipationHandlers(
             : await context.Set<TestingFeedbackObligation>().CountAsync(candidate =>
                 candidate.SlotId == registration.SlotId &&
                 candidate.TesterUserId == registration.UserId &&
+                candidate.TenantId == registration.TenantId &&
                 candidate.Status == TestingFeedbackObligationStatus.Pending &&
                 candidate.DeletedAt == null,
                 cancellationToken).ConfigureAwait(false);
@@ -783,6 +794,7 @@ public sealed class TestingParticipationHandlers(
         var hasSubmittedFeedback = await context.Set<TestingFeedbackObligation>().AnyAsync(candidate =>
             candidate.SlotId == registration.SlotId &&
             candidate.TesterUserId == registration.UserId &&
+            candidate.TenantId == registration.TenantId &&
             candidate.Status == TestingFeedbackObligationStatus.Fulfilled &&
             candidate.DeletedAt == null,
             cancellationToken).ConfigureAwait(false);
@@ -791,10 +803,12 @@ public sealed class TestingParticipationHandlers(
             application.AssignedSlotId == registration.SlotId &&
             application.SubmittedByUserId == registration.UserId &&
             application.Status == TestingApplicationStatus.Approved &&
+            application.TenantId == registration.TenantId &&
             application.DeletedAt == null &&
             context.Set<TestingFeedbackObligation>().Any(obligation =>
                 obligation.ApplicationId == application.Id &&
                 obligation.SlotId == registration.SlotId &&
+                obligation.TenantId == registration.TenantId &&
                 obligation.DeletedAt == null),
             cancellationToken).ConfigureAwait(false);
         var state = new TestingLearningEvidenceState(

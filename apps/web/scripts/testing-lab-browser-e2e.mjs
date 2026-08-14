@@ -144,6 +144,19 @@ async function bootstrap() {
     owner.accessToken,
     auth.tenantId,
   );
+  const projectVersion = await apiRequest(
+    `/v1/projects/${project.id}/versions`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        versionNumber: '1.0.0-browser-e2e',
+        status: 'ready',
+        releaseNotes: 'Browser-verified Testing Lab build.',
+      }),
+    },
+    owner.accessToken,
+    auth.tenantId,
+  );
 
   const now = Date.now();
   const event = await apiRequest(
@@ -220,6 +233,7 @@ async function bootstrap() {
     event,
     owner,
     project,
+    projectVersion,
     reviewer,
     slot,
     tag,
@@ -331,7 +345,7 @@ async function run() {
     await signIn(ownerPage, fixture.owner.email, fixture.owner.password);
     await visit(ownerPage, `/testing-lab/events/${fixture.event.id}`, 'project-owner public Testing Lab event');
     await waitForClientHydration(ownerPage);
-    await ownerPage.getByLabel('Existing project').selectOption(fixture.project.id);
+    await ownerPage.getByLabel('Project version').selectOption(fixture.projectVersion.id);
     await ownerPage.getByLabel('Preferred availability').fill('The published campus schedule works for this project.');
     await ownerPage.getByRole('button', { name: 'Submit project application', exact: true }).click();
     await waitForText(ownerPage, 'Project application submitted.');

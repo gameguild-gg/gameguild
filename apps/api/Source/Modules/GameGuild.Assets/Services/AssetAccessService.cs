@@ -28,6 +28,9 @@ public class AssetAccessService : IAssetAccessService
     private readonly IAssetTokenService _tokenService;
     private readonly ITenantMemberRepository _tenantMemberRepository;
     private readonly IFeatureFlagEvaluationService _featureService;
+    private readonly IReadOnlyList<IAssetParentAuthorizationResolver> _parentAuthorizationResolvers;
+    private readonly IAssetFolderAuthorizationService _folderAuthorizationService;
+    private readonly IAssetScopedAccessService _scopedAccessService;
     private readonly AssetAccessOptions _options;
     private readonly ILogger<AssetAccessService> _logger;
 
@@ -38,6 +41,9 @@ public class AssetAccessService : IAssetAccessService
         IAssetTokenService tokenService,
         ITenantMemberRepository tenantMemberRepository,
         IFeatureFlagEvaluationService featureService,
+        IEnumerable<IAssetParentAuthorizationResolver> parentAuthorizationResolvers,
+        IAssetFolderAuthorizationService folderAuthorizationService,
+        IAssetScopedAccessService scopedAccessService,
         IOptions<AssetAccessOptions> options,
         ILogger<AssetAccessService> logger)
     {
@@ -47,6 +53,9 @@ public class AssetAccessService : IAssetAccessService
         _tokenService = tokenService;
         _tenantMemberRepository = tenantMemberRepository;
         _featureService = featureService;
+        _parentAuthorizationResolvers = parentAuthorizationResolvers.ToArray();
+        _folderAuthorizationService = folderAuthorizationService;
+        _scopedAccessService = scopedAccessService;
         _options = options.Value;
         _logger = logger;
     }
@@ -279,13 +288,47 @@ public class AssetAccessService : IAssetAccessService
                 return new AssetAccessValidation(true, null);
 
             case AssetAccessPolicy.Inherited:
-                // PLANNED: Check parent resource access via parent module's access control (depends on resource hierarchy implementation)
-                // For now, require authentication
                 if (userId == null)
                 {
                     return new AssetAccessValidation(false, AssetAccessDeniedReason.AuthenticationRequired);
                 }
-                return new AssetAccessValidation(true, null);
+                if (string.IsNullOrWhiteSpace(reference.ParentResourceType) || reference.ParentResourceId == null)
+                {
+                    return new AssetAccessValidation(false, AssetAccessDeniedReason.OwnershipRequired);
+                }
+
+                var parentResolver = _parentAuthorizationResolvers.FirstOrDefault(resolver =>
+                    resolver.Supports(reference.ParentResourceType));
+                if (parentResolver == null)
+                {
+                    return new AssetAccessValidation(false, AssetAccessDeniedReason.OwnershipRequired);
+                }
+
+                var canReadParent = await parentResolver.CanReadAsync(
+                    reference.ParentResourceId.Value,
+                    userId.Value,
+                    tenantId,
+                    ct).ConfigureAwait(false);
+                if (!canReadParent)
+                {
+                    var hasScopedGrant = await _scopedAccessService.HasActiveGrantAsync(
+                        reference.Id,
+                        userId.Value,
+                        tenantId,
+                        ct).ConfigureAwait(false);
+                    return hasScopedGrant
+                        ? new AssetAccessValidation(true, null)
+                        : new AssetAccessValidation(false, AssetAccessDeniedReason.OwnershipRequired);
+                }
+
+                var canReadFolder = await _folderAuthorizationService.CanReadAsync(
+                    reference,
+                    userId.Value,
+                    tenantId,
+                    ct).ConfigureAwait(false);
+                return canReadFolder
+                    ? new AssetAccessValidation(true, null)
+                    : new AssetAccessValidation(false, AssetAccessDeniedReason.OwnershipRequired);
 
             default:
                 return new AssetAccessValidation(false, AssetAccessDeniedReason.InvalidPolicy);

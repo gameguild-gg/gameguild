@@ -7,6 +7,7 @@ using GameGuild.Commerce.Subscriptions;
 using GameGuild.Features;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Tenants;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,18 @@ namespace GameGuild.API.UnitTests.Core;
 
 public sealed class InfrastructureConventionScanTests
 {
+    [Fact]
+    public void AddRepositories_Should_Replace_FailClosedTenantMembershipChecker_With_RealImplementation()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<ITenantMembershipChecker, FailClosedTenantMembershipChecker>();
+
+        InvokeAddRepositories(services, new CapturingLogger());
+
+        services.Last(descriptor => descriptor.ServiceType == typeof(ITenantMembershipChecker))
+            .ImplementationType.Should().Be<TenantMembershipChecker>();
+    }
+
     [Fact]
     public void MonthlyStatementDispatchBackgroundService_Should_Resolve_From_CompositionRoot_Dependencies()
     {

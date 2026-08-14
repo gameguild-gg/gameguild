@@ -3,6 +3,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.Projects;
+using GameGuild.Teams;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -14,7 +15,9 @@ public sealed class TestingApplicationHandlers(
     IProjectAuthorizationService projectAuthorizationService,
     ILogger<TestingApplicationHandlers> logger,
     IProjectLifecycleLock? capacityLock = null,
-    ITestingLabPermissionService? testingLabPermissionService = null) :
+    ITestingLabPermissionService? testingLabPermissionService = null,
+    GameGuild.Assets.IAssetScopedAccessService? assetScopedAccessService = null,
+    GameGuild.Assets.IAssetAccessService? assetAccessService = null) :
     ICommandHandler<SubmitTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<WithdrawTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<BeginReviewTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
@@ -26,7 +29,8 @@ public sealed class TestingApplicationHandlers(
     IQueryHandler<GetTestingProjectApplicationQuery, Result<TestingProjectApplicationProjection>>,
     IQueryHandler<GetMyTestingProjectApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>,
     IQueryHandler<GetTestingEventApplicationsQuery, Result<IReadOnlyList<TestingProjectApplicationProjection>>>,
-    IQueryHandler<GetTestingApplicationTesterEligibilityQuery, Result<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>>
+    IQueryHandler<GetTestingApplicationTesterEligibilityQuery, Result<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>>,
+    IQueryHandler<GetTestingApplicationReviewPackageQuery, Result<TestingApplicationReviewPackageProjection>>
 {
     private readonly IProjectLifecycleLock _capacityLock = capacityLock ?? new ProjectLifecycleLock(context);
     private bool IsTenantAdmin => actorContextAccessor.ActorContext.IsTenantAdmin;
@@ -63,16 +67,29 @@ public sealed class TestingApplicationHandlers(
             cancellationToken).ConfigureAwait(false);
         if (!projectExists)
             return Result.Failure<TestingProjectApplicationProjection>(Validation("The selected project is unavailable."));
-        if (request.ProjectVersionId.HasValue)
-        {
-            var versionExists = await context.Set<ProjectVersion>().AnyAsync(version =>
-                version.Id == request.ProjectVersionId.Value &&
+        var versionExists = await context.Set<ProjectVersion>().AnyAsync(version =>
+                version.Id == request.ProjectVersionId &&
                 version.ProjectId == request.ProjectId &&
                 version.TenantId == actor.TenantId &&
                 version.DeletedAt == null,
                 cancellationToken).ConfigureAwait(false);
-            if (!versionExists)
-                return Result.Failure<TestingProjectApplicationProjection>(Validation("Project version must be active and belong to the selected project."));
+        if (!versionExists)
+            return Result.Failure<TestingProjectApplicationProjection>(Validation("Project version must be active and belong to the selected project."));
+
+        var submittedAssetIds = request.SubmittedAssetReferenceIds?
+            .Where(id => id != Guid.Empty).Distinct().Take(100).ToArray() ?? [];
+        if (submittedAssetIds.Length > 0)
+        {
+            var validAssetCount = await context.Set<GameGuild.Assets.AssetReference>().AsNoTracking().CountAsync(asset =>
+                submittedAssetIds.Contains(asset.Id) &&
+                asset.TenantId == actor.TenantId &&
+                asset.DeletedAt == null &&
+                ((asset.ParentResourceType == nameof(Project) && asset.ParentResourceId == request.ProjectId) ||
+                 (asset.ParentResourceType == nameof(ProjectVersion) && asset.ParentResourceId == request.ProjectVersionId)),
+                cancellationToken).ConfigureAwait(false);
+            if (validAssetCount != submittedAssetIds.Length)
+                return Result.Failure<TestingProjectApplicationProjection>(
+                    Validation("Every submitted file must belong to the selected project or project version."));
         }
 
         var duplicate = await context.Set<TestingProjectApplication>().AnyAsync(application =>
@@ -92,7 +109,8 @@ public sealed class TestingApplicationHandlers(
             request.ProjectVersionId,
             actor.UserId,
             request.PreferredAvailability,
-            actor.TenantId);
+            actor.TenantId,
+            submittedAssetIds);
         context.Set<TestingProjectApplication>().Add(application);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Actor {ActorId} submitted project {ProjectId} to Testing Lab event {EventId}", actor.UserId, request.ProjectId, request.EventId);
@@ -105,9 +123,20 @@ public sealed class TestingApplicationHandlers(
     {
         var loaded = await LoadApplicationAsync(request.ApplicationId, cancellationToken).ConfigureAwait(false);
         if (loaded.Error != null) return Result.Failure<TestingProjectApplicationProjection>(loaded.Error);
+        if (!await projectAuthorizationService.HasPermissionAsync(
+                loaded.Application!.ProjectId,
+                PermissionType.Edit,
+                cancellationToken).ConfigureAwait(false))
+            return Result.Failure<TestingProjectApplicationProjection>(
+                Error.Forbidden("TestingLab.ProjectEditRequired", "Project edit access is required to withdraw its application."));
         try
         {
-            loaded.Application!.Withdraw(loaded.Actor!.UserId);
+            loaded.Application.Withdraw();
+            if (assetScopedAccessService != null)
+                await assetScopedAccessService.RevokeScopeAsync(
+                    TestingLabAssetScopes.ApplicationReview,
+                    loaded.Application.Id,
+                    cancellationToken).ConfigureAwait(false);
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return Result.Success(ToProjection(loaded.Application));
         }
@@ -222,6 +251,11 @@ public sealed class TestingApplicationHandlers(
         try
         {
             loaded.Application!.Reject(loaded.Actor!.UserId, request.Rationale);
+            if (assetScopedAccessService != null)
+                await assetScopedAccessService.RevokeScopeAsync(
+                    TestingLabAssetScopes.ApplicationReview,
+                    loaded.Application.Id,
+                    cancellationToken).ConfigureAwait(false);
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return Result.Success(ToProjection(loaded.Application));
         }
@@ -296,7 +330,11 @@ public sealed class TestingApplicationHandlers(
             member.IsActive &&
             member.DeletedAt == null,
             cancellationToken).ConfigureAwait(false);
-        if (application.SubmittedByUserId != actor.UserId && !canReview)
+        var canReadProject = await projectAuthorizationService.HasPermissionAsync(
+            application.ProjectId,
+            PermissionType.Read,
+            cancellationToken).ConfigureAwait(false);
+        if (!canReadProject && !canReview)
             return Result.Failure<TestingProjectApplicationProjection>(Error.Forbidden("TestingLab.ApplicationForbidden", "Application owner or reviewer access is required."));
         return Result.Success(ToProjection(application));
     }
@@ -356,15 +394,23 @@ public sealed class TestingApplicationHandlers(
             .AsNoTracking()
             .Include(application => application.Votes)
             .Where(application =>
-                application.SubmittedByUserId == actor.UserId &&
                 application.TenantId == actor.TenantId &&
                 application.DeletedAt == null);
         if (request.EventId.HasValue)
             query = query.Where(application => application.EventId == request.EventId.Value);
-        var applications = await query
+        var candidates = await query
             .OrderByDescending(application => application.CreatedAt)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
+        var applications = new List<TestingProjectApplication>();
+        foreach (var application in candidates)
+        {
+            if (await projectAuthorizationService.HasPermissionAsync(
+                    application.ProjectId,
+                    PermissionType.Read,
+                    cancellationToken).ConfigureAwait(false))
+                applications.Add(application);
+        }
         return Result.Success<IReadOnlyList<TestingProjectApplicationProjection>>(
             applications.Select(ToProjection).ToList());
     }
@@ -456,13 +502,17 @@ public sealed class TestingApplicationHandlers(
                 join member in context.Set<TeamMember>().AsNoTracking() on team.Id equals member.TeamId
                 where projectIds.Contains(projectTeam.ProjectId) &&
                       activeTesterIds.Contains(member.UserId) &&
+                      projectTeam.TenantId == actor.TenantId &&
                       projectTeam.IsActive &&
                       projectTeam.DeletedAt == null &&
                       projectTeam.EndedAt == null &&
+                      team.TenantId == actor.TenantId &&
                       team.IsActive &&
                       team.DeletedAt == null &&
+                      member.TenantId == actor.TenantId &&
                       member.IsActive &&
-                      member.DeletedAt == null
+                      member.DeletedAt == null &&
+                      member.LeftAt == null
                 select new { projectTeam.ProjectId, member.UserId })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -484,6 +534,77 @@ public sealed class TestingApplicationHandlers(
                         .ToArray()
                     : [])).ToList();
         return Result.Success<IReadOnlyList<TestingApplicationTesterEligibilityProjection>>(result);
+    }
+
+    public async Task<Result<TestingApplicationReviewPackageProjection>> Handle(
+        GetTestingApplicationReviewPackageQuery request,
+        CancellationToken cancellationToken)
+    {
+        var loaded = await LoadApplicationAsync(request.ApplicationId, cancellationToken).ConfigureAwait(false);
+        if (loaded.Error != null) return Result.Failure<TestingApplicationReviewPackageProjection>(loaded.Error);
+        var application = loaded.Application!;
+        var actor = loaded.Actor!;
+        var isCommitteeMember = await context.Set<TestingCommitteeMember>().AnyAsync(member =>
+            member.EventId == application.EventId && member.UserId == actor.UserId &&
+            member.IsActive && member.DeletedAt == null,
+            cancellationToken).ConfigureAwait(false);
+        var canReview = IsTenantAdmin || application.Event.ManagerUserId == actor.UserId || isCommitteeMember ||
+            await HasApplicationPermissionAsync(actor, TestingLabActions.Read, application.Id, cancellationToken).ConfigureAwait(false);
+        if (!canReview)
+            return Result.Failure<TestingApplicationReviewPackageProjection>(
+                Error.Forbidden("TestingLab.EventReviewerRequired", "Only an event reviewer can open the submitted review package."));
+        if (application.ProjectVersionId == null)
+            return Result.Failure<TestingApplicationReviewPackageProjection>(
+                Error.NotFound("TestingLab.ProjectVersionNotFound", "The submitted project version is unavailable."));
+
+        var version = await context.Set<ProjectVersion>().AsNoTracking().SingleOrDefaultAsync(candidate =>
+            candidate.Id == application.ProjectVersionId && candidate.ProjectId == application.ProjectId &&
+            candidate.TenantId == actor.TenantId && candidate.DeletedAt == null,
+            cancellationToken).ConfigureAwait(false);
+        if (version == null)
+            return Result.Failure<TestingApplicationReviewPackageProjection>(
+                Error.NotFound("TestingLab.ProjectVersionNotFound", "The submitted project version is unavailable."));
+
+        var assetIds = application.SubmittedAssetReferenceIds.ToArray();
+        List<GameGuild.Assets.AssetReference> assets = assetIds.Length == 0
+            ? []
+            : await context.Set<GameGuild.Assets.AssetReference>().AsNoTracking()
+                .Where(asset => assetIds.Contains(asset.Id) && asset.TenantId == actor.TenantId && asset.DeletedAt == null)
+                .OrderBy(asset => asset.DisplayName).ToListAsync(cancellationToken).ConfigureAwait(false);
+        var assetResults = new List<TestingApplicationReviewAssetProjection>(assets.Count);
+        if (assets.Count > 0 && assetScopedAccessService != null && assetAccessService != null)
+        {
+            var expiresAt = SystemClock.UtcNow.AddMinutes(15);
+            await assetScopedAccessService.GrantAsync(
+                assets.Select(asset => asset.Id).ToArray(),
+                actor.UserId,
+                actor.TenantId,
+                TestingLabAssetScopes.ApplicationReview,
+                application.Id,
+                expiresAt,
+                actor.UserId,
+                cancellationToken).ConfigureAwait(false);
+            foreach (var asset in assets)
+            {
+                var access = await assetAccessService.GenerateAccessUrlAsync(
+                    asset.Id,
+                    actor.UserId,
+                    actor.TenantId,
+                    ct: cancellationToken).ConfigureAwait(false);
+                if (access != null)
+                    assetResults.Add(new TestingApplicationReviewAssetProjection(
+                        asset.Id, asset.DisplayName, access.MimeType, access.Url, access.ExpiresAt));
+            }
+        }
+
+        return Result.Success(new TestingApplicationReviewPackageProjection(
+            application.Id,
+            application.ProjectId,
+            version.Id,
+            version.VersionNumber,
+            version.Status,
+            version.ReleaseNotes,
+            assetResults));
     }
 
     private async Task<LoadedApplication> LoadApplicationAsync(Guid applicationId, CancellationToken cancellationToken)
@@ -606,7 +727,8 @@ public sealed class TestingApplicationHandlers(
             .Where(vote => vote.DeletedAt == null)
             .OrderBy(vote => vote.CreatedAt)
             .Select(ToProjection)
-            .ToList());
+            .ToList(),
+        application.SubmittedAssetReferenceIds);
 
     private static TestingApplicationVoteProjection ToProjection(TestingApplicationVote vote) => new(
         vote.Id,

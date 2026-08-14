@@ -14,9 +14,12 @@ import { AlertCircle, CheckCircle2, FolderKanban, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition, type FormEvent } from 'react';
 
-interface ProjectOption {
+interface ProjectVersionOption {
   id: string;
-  title: string;
+  projectId: string;
+  projectTitle: string;
+  versionNumber: string;
+  status: string;
 }
 
 interface CurrentApplication {
@@ -39,17 +42,19 @@ export function TestingProjectApplication({
   eventId,
   isAuthenticated,
   acceptsApplications,
-  projects,
+  projectVersions,
   application,
 }: {
   eventId: string;
   isAuthenticated: boolean;
   acceptsApplications: boolean;
-  projects: ProjectOption[];
+  projectVersions: ProjectVersionOption[];
   application?: CurrentApplication;
 }) {
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TestingEventActionResult<unknown> | null>(null);
+  const [selectedVersionId, setSelectedVersionId] = useState('');
+  const selectedVersion = projectVersions.find((version) => version.id === selectedVersionId);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -107,11 +112,11 @@ export function TestingProjectApplication({
     return <p className="text-sm text-muted-foreground">Project applications are currently closed.</p>;
   }
 
-  if (projects.length === 0) {
+  if (projectVersions.length === 0) {
     return (
       <div className="flex flex-col items-start gap-3">
         <p className="text-sm text-muted-foreground">
-          Create a project on GameGuild before applying to this Testing Lab event.
+          Create an accessible project version before applying to this Testing Lab event.
         </p>
         <Button asChild variant="outline">
           <Link href="/projects">Browse projects</Link>
@@ -124,25 +129,27 @@ export function TestingProjectApplication({
     <form className="space-y-4" onSubmit={submit}>
       <input type="hidden" name="eventId" value={eventId} />
       <div className="space-y-2">
-        <Label htmlFor={`testing-project-${eventId}`}>Existing project</Label>
+        <Label htmlFor={`testing-project-${eventId}`}>Project version</Label>
         <div className="relative">
           <FolderKanban className="pointer-events-none absolute left-3 top-3 size-4 text-muted-foreground" />
           <select
             id={`testing-project-${eventId}`}
-            name="projectId"
+            name="projectVersionId"
             required
-            defaultValue=""
+            value={selectedVersionId}
+            onChange={(event) => setSelectedVersionId(event.target.value)}
             className="flex h-10 w-full rounded-md border border-input bg-background py-2 pl-10 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <option value="" disabled>
-              Select a project
+              Select a project version
             </option>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.title}
+            {projectVersions.map((version) => (
+              <option key={version.id} value={version.id}>
+                {version.projectTitle} · {version.versionNumber} ({version.status})
               </option>
             ))}
           </select>
+          <input type="hidden" name="projectId" value={selectedVersion?.projectId ?? ''} />
         </div>
       </div>
       <div className="space-y-2">

@@ -53,8 +53,10 @@ public class ContentResourceController(
         var resource = await resourceService.GetBySlugAsync(slug).ConfigureAwait(false);
         if (resource is null) return NotFound();
 
-        // Fire-and-forget view count increment
-        _ = resourceService.IncrementViewCountAsync(resource.Id);
+        // The service is scoped to this request and shares its DbContext. Await the
+        // update so the request scope cannot dispose the PostgreSQL connection while
+        // the command is still consuming protocol messages.
+        await resourceService.IncrementViewCountAsync(resource.Id).ConfigureAwait(false);
 
         return Ok(resource.ToDto());
     }

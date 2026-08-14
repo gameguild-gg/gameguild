@@ -33,6 +33,10 @@ public class AssetReferenceConfiguration : IEntityTypeConfiguration<AssetReferen
 
         builder.Property(e => e.ParentResourceId);
 
+        builder.Property(e => e.FolderId);
+
+        builder.Property(e => e.CurrentRevisionNumber).HasDefaultValue(0);
+
         builder.Property(e => e.AccessCount)
             .HasDefaultValue(0);
 
@@ -61,5 +65,10 @@ public class AssetReferenceConfiguration : IEntityTypeConfiguration<AssetReferen
 
         builder.HasIndex(e => e.AccessPolicy)
             .HasDatabaseName("IX_AssetReferences_AccessPolicy");
+
+        builder.HasOne<AssetFolder>()
+            .WithMany()
+            .HasForeignKey(e => e.FolderId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

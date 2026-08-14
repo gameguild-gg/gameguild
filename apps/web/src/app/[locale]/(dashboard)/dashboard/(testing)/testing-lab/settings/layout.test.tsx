@@ -20,13 +20,13 @@ vi.mock("@/i18n/navigation", () => ({
 
 import TestingLabSettingsLayout from "./layout";
 
+vi.mock("@/lib/require-dashboard-capability", () => ({
+  requireDashboardCapability: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe("TestingLabSettingsLayout", () => {
-  it("groups general, location, and access settings without horizontal overflow", () => {
-    render(
-      <TestingLabSettingsLayout>
-        <div>Settings content</div>
-      </TestingLabSettingsLayout>,
-    );
+  it("groups general, location, and access settings without horizontal overflow", async () => {
+    render(await TestingLabSettingsLayout({ children: <div>Settings content</div> }));
 
     const navigation = screen.getByRole("navigation", {
       name: "Testing Lab settings",

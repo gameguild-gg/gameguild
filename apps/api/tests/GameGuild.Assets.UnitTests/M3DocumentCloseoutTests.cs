@@ -173,7 +173,16 @@ public sealed class M3DocumentCloseoutTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AssetUploadResult(false, null, null, "Rejected"));
 
-        var handler = new BulkUploadAssetsHandler(upload.Object);
+        var authorization = new Mock<IAssetUploadAuthorizationService>();
+        authorization.Setup(service => service.CanUploadAsync(
+                It.IsAny<string?>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var handler = new BulkUploadAssetsHandler(upload.Object, authorization.Object);
 
         var result = await handler.Handle(new BulkUploadAssetsCommand(
             [

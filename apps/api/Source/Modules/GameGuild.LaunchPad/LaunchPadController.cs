@@ -36,22 +36,18 @@ public sealed class LaunchPadController(IMediator mediator) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<LaunchPlan>> CreateLaunchPlan(
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public Task<ActionResult<LaunchPlan>> CreateLaunchPlan(
         [FromBody] CreateLaunchPlanRequest request,
         CancellationToken cancellationToken = default)
     {
-        var result = await mediator.Send(new CreateLaunchPlanCommand
+        _ = request;
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult<ActionResult<LaunchPlan>>(Conflict(new
         {
-            ProjectId = request.ProjectId,
-            Name = request.Name,
-            Positioning = request.Positioning,
-            TargetLaunchAt = request.TargetLaunchAt,
-            Channels = request.Channels,
-            ChecklistItems = request.ChecklistItems
-        }, cancellationToken).ConfigureAwait(false);
-
-        if (result.IsFailure) return ToActionResult(result);
-        return CreatedAtAction(nameof(GetLaunchPlan), new { id = result.Value.Id }, result.Value);
+            code = "LaunchPad.ApplicationRequired",
+            message = "Launch plans are created only when a Launch Pad application is approved."
+        }));
     }
 
     [HttpPost("{id:guid}/checklist/{itemId:guid}:complete")]

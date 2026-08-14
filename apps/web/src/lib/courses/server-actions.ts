@@ -363,7 +363,7 @@ export async function getCourseLearningData(courseSlug: string): Promise<CourseL
         }
 
         const courseId = courseResult.data.id;
-        const [contentResult, progress] = await Promise.all([content.getCoursesByProgramIdContent(courseId), getCourseProgress(courseId)]);
+        const [contentResult, progress] = await Promise.all([content.getCoursesContent(courseId), getCourseProgress(courseId)]);
 
         if (!contentResult.ok) {
             return {
@@ -481,7 +481,7 @@ export async function getCourseProgress(_courseId: string): Promise<CourseProgre
         const userId = await getCurrentUserId();
         const [courseResult, contentResult, progressResult] = await Promise.all([
             programs.getCoursesById(_courseId),
-            content.getCoursesByProgramIdContent(_courseId),
+            content.getCoursesContent(_courseId),
             userId ? programs.getCoursesMeProgress(_courseId) : Promise.resolve(undefined),
         ]);
 

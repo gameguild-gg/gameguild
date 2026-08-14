@@ -3,7 +3,7 @@ import {
   createServerClient,
   GeneratedApi,
   type ApiError,
-  type ProjectsProject,
+  type ProjectsProjectApiOutput,
   type Result,
   type TestingLabTestingLabAnalyticsReportProjection,
   type TestingLabSessionProjectProjection,
@@ -112,6 +112,14 @@ export interface TestingProjectOption {
   status?: string | number | null;
 }
 
+export interface TestingProjectVersionOption {
+  id: string;
+  projectId: string;
+  projectTitle: string;
+  versionNumber: string;
+  status: string;
+}
+
 interface ApiReadResult<T> {
   data: T | null;
   issue?: string;
@@ -130,6 +138,7 @@ function createTestingLabModules() {
   });
 
   return {
+    client,
     requests: new GeneratedApi.TestinglabTestingrequestsModule(client),
     sessions: new GeneratedApi.TestinglabTestingsessionsModule(client),
     locations: new GeneratedApi.TestinglabTestinglocationsModule(client),
@@ -175,7 +184,7 @@ function isNotFound(result: ApiReadResult<unknown>) {
   return String(result.status) === '404';
 }
 
-function mapProject(project: ProjectsProject): TestingProjectOption | null {
+function mapProject(project: ProjectsProjectApiOutput): TestingProjectOption | null {
   if (!project.id) return null;
   return {
     id: project.id,
@@ -307,6 +316,21 @@ export const getTestingProjectOptions = cache(async (): Promise<TestingProjectOp
   return compact((projects.data ?? []).filter((project) => project.tenantId === tenantId).map(mapProject));
 });
 
+export const getTestingProjectVersionOptions = cache(async (): Promise<TestingProjectVersionOption[]> => {
+  const tenantId = (await auth().catch(() => null))?.tenantId;
+  if (!tenantId) return [];
+
+  const { client } = createTestingLabModules();
+  const result = await client.request<TestingProjectVersionOption[]>({
+    method: 'GET',
+    path: '/v1/projects/accessible-versions',
+    params: { take: 100 },
+    requiresAuth: true,
+  });
+
+  return result.ok ? result.data : [];
+});
+
 export interface TestingRequestDetailData {
   request: TestingRequestSummary | null;
   sessions: TestingSessionSummary[];
@@ -427,7 +451,7 @@ export interface TestingLabProjectDetailData extends TestingRequestDetailData {
   project: TestingProjectDetailSummary | null;
 }
 
-function mapProjectDetail(project: ProjectsProject): TestingProjectDetailSummary | null {
+function mapProjectDetail(project: ProjectsProjectApiOutput): TestingProjectDetailSummary | null {
   if (!project.id) return null;
 
   return {

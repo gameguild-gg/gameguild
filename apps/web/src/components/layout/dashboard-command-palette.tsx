@@ -13,7 +13,12 @@ import {
   CommandShortcut,
 } from '@/components/ui/command';
 import { usePathname, useRouter } from '@/i18n/navigation';
-import { flattenDashboardNavigationItems, type DashboardNavSubItem } from './dashboard-sidebar';
+import {
+  dashboardNavigationData,
+  flattenDashboardNavigationItems,
+  type DashboardNavGroup,
+  type DashboardNavSubItem,
+} from './dashboard-sidebar';
 
 export const DASHBOARD_COMMAND_PALETTE_OPEN_EVENT = 'gameguild:open-dashboard-command-palette';
 
@@ -26,12 +31,45 @@ type RecentRoute = {
   visitedAt: number;
 };
 
-const quickActions: DashboardNavSubItem[] = [
-  { title: 'Create course', url: '/dashboard/learning/courses/new', icon: Plus },
-  { title: 'Review testing lab', url: '/dashboard/testing-lab', icon: FlaskConical },
-  { title: 'Open launch pad', url: '/dashboard/launch-pad', icon: Rocket },
-  { title: 'Manage members', url: '/dashboard/community/members/users', icon: ArrowRight },
+type DashboardQuickAction = DashboardNavSubItem & {
+  requiredCapability: string;
+};
+
+const quickActions: DashboardQuickAction[] = [
+  {
+    title: 'Create course',
+    url: '/dashboard/learning/courses/new',
+    icon: Plus,
+    requiredCapability: 'Learning.Manage',
+  },
+  {
+    title: 'Review testing lab',
+    url: '/dashboard/testing-lab',
+    icon: FlaskConical,
+    requiredCapability: 'TestingLab.ManageEvents',
+  },
+  {
+    title: 'Open launch pad',
+    url: '/dashboard/launch-pad',
+    icon: Rocket,
+    requiredCapability: 'LaunchPad.ManageEvents',
+  },
+  {
+    title: 'Manage members',
+    url: '/dashboard/community/members/users',
+    icon: ArrowRight,
+    requiredCapability: 'Community.ManageMembers',
+  },
 ];
+
+export function filterDashboardQuickActions(
+  actorCapabilities: readonly string[],
+): DashboardQuickAction[] {
+  const capabilities = new Set(actorCapabilities);
+  return quickActions.filter((action) =>
+    capabilities.has(action.requiredCapability),
+  );
+}
 
 function getRouteLabel(href: string, items: DashboardNavSubItem[]): string {
   const exact = items.find((item) => item.url === href);
@@ -79,10 +117,25 @@ export function openDashboardCommandPalette() {
   window.dispatchEvent(new Event(DASHBOARD_COMMAND_PALETTE_OPEN_EVENT));
 }
 
-export function DashboardCommandPalette() {
+interface DashboardCommandPaletteProps {
+  navigation?: DashboardNavGroup[];
+  capabilities?: readonly string[];
+}
+
+export function DashboardCommandPalette({
+  navigation = dashboardNavigationData,
+  capabilities = [],
+}: DashboardCommandPaletteProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const navigationItems = React.useMemo(() => flattenDashboardNavigationItems(), []);
+  const navigationItems = React.useMemo(
+    () => flattenDashboardNavigationItems(navigation),
+    [navigation],
+  );
+  const authorizedQuickActions = React.useMemo(
+    () => filterDashboardQuickActions(capabilities),
+    [capabilities],
+  );
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
   const [recentRoutes, setRecentRoutes] = React.useState<RecentRoute[]>([]);
@@ -175,7 +228,7 @@ export function DashboardCommandPalette() {
         )}
 
         <CommandGroup heading="Quick actions">
-          {quickActions.map((action) => {
+          {authorizedQuickActions.map((action) => {
             const Icon = action.icon;
             return (
               <CommandItem key={action.url} value={`${action.title} ${action.url}`} onSelect={() => runCommand(action.url)}>

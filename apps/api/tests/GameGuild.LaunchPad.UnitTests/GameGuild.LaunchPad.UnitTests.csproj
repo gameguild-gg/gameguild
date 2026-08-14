@@ -28,6 +28,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.LaunchPad\GameGuild.LaunchPad.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Assets\GameGuild.Assets.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Projects\GameGuild.Projects.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     </ItemGroup>

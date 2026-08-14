@@ -279,6 +279,15 @@ describe('Testing Lab event workflow E2E', () => {
       'Create event project',
     );
     trackCleanupProject(project.id);
+    const projectVersion = unwrap(
+      await manager.request<Identified>({
+        method: 'POST',
+        path: `/v1/projects/${project.id}/versions`,
+        body: { versionNumber: '1.0.0-e2e', status: 'ready', releaseNotes: 'Testing Lab E2E build.' },
+        requiresAuth: true,
+      }),
+      'Create event project version',
+    );
 
     const now = Date.now();
     const event = unwrap(
@@ -357,7 +366,7 @@ describe('Testing Lab event workflow E2E', () => {
         path: `/v1/testing/events/${event.id}/applications`,
         body: {
           projectId: project.id,
-          projectVersionId: null,
+          projectVersionId: projectVersion.id,
           preferredAvailability: 'The first campus slot works.',
         },
         requiresAuth: true,
@@ -431,11 +440,20 @@ describe('Testing Lab event workflow E2E', () => {
       'Create rejection project',
     );
     trackCleanupProject(rejectedProject.id);
+    const rejectedProjectVersion = unwrap(
+      await manager.request<Identified>({
+        method: 'POST',
+        path: `/v1/projects/${rejectedProject.id}/versions`,
+        body: { versionNumber: '0.1.0-e2e', status: 'ready', releaseNotes: 'Deliberately unready E2E build.' },
+        requiresAuth: true,
+      }),
+      'Create rejection project version',
+    );
     const rejectedApplication = unwrap(
       await manager.request<ApplicationProjection>({
         method: 'POST',
         path: `/v1/testing/events/${event.id}/applications`,
-        body: { projectId: rejectedProject.id, preferredAvailability: 'Any slot.' },
+        body: { projectId: rejectedProject.id, projectVersionId: rejectedProjectVersion.id, preferredAvailability: 'Any slot.' },
         requiresAuth: true,
       }),
       'Submit rejection candidacy',
@@ -449,7 +467,7 @@ describe('Testing Lab event workflow E2E', () => {
       'Begin rejection review',
     );
     unwrap(
-      await tester.request<Identified>({
+      await reviewer.request<Identified>({
         method: 'POST',
         path: `/v1/testing/events/applications/${rejectedApplication.id}/votes`,
         body: { decision: 'Reject', comments: 'The build cannot complete its onboarding.' },
@@ -496,6 +514,23 @@ describe('Testing Lab event workflow E2E', () => {
       'Register first tester',
     );
     expect(managerRegistration.status).toBe('Registered');
+
+    unwrap(
+      await manager.request<RegistrationProjection>({
+        method: 'POST',
+        path: `/v1/testing/events/registrations/${managerRegistration.id}:check-in`,
+        requiresAuth: true,
+      }),
+      'Check project owner in before conflict assertion',
+    );
+    const ownProjectAssignment = await manager.request<FeedbackObligationProjection>({
+      method: 'POST',
+      path: `/v1/testing/events/registrations/${managerRegistration.id}/tested-projects`,
+      body: { applicationId: application.id },
+      requiresAuth: true,
+    });
+    expect(ownProjectAssignment.ok).toBe(false);
+    if (!ownProjectAssignment.ok) expect(ownProjectAssignment.error?.status).toBe(409);
 
     const waitlistedRegistration = unwrap(
       await tester.request<RegistrationProjection>({

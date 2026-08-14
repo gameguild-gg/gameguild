@@ -382,6 +382,8 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
             builder.Property(application => application.PreferredAvailability).HasMaxLength(1000);
             builder.Property(application => application.Status).HasConversion<string>().HasMaxLength(40);
             builder.Property(application => application.DecisionRationale).HasMaxLength(2000);
+            builder.Property(application => application.SubmittedAssetReferenceIdsJson).HasMaxLength(10000);
+            builder.Ignore(application => application.SubmittedAssetReferenceIds);
             builder.HasOne(application => application.Project)
                 .WithMany()
                 .HasForeignKey(application => application.ProjectId)

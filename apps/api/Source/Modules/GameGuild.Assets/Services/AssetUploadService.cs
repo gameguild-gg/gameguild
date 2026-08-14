@@ -124,6 +124,11 @@ public class AssetUploadService : IAssetUploadService
             options.ParentResourceType,
             options.ParentResourceId);
 
+        reference.TenantId = options.TenantId;
+        reference.MoveToFolder(options.FolderId);
+
+        reference.CreateInitialRevision(userId);
+
         reference = await _referenceRepository.AddAsync(reference, ct).ConfigureAwait(false);
 
         return new AssetUploadResult(true, reference.Id, assetContent.Id, null);
@@ -269,6 +274,11 @@ public class AssetUploadService : IAssetUploadService
             options.AccessPolicy,
             options.ParentResourceType,
             options.ParentResourceId);
+
+        reference.TenantId = options.TenantId;
+        reference.MoveToFolder(options.FolderId);
+
+        reference.CreateInitialRevision(session.UserId);
 
         reference = await _referenceRepository.AddAsync(reference, ct).ConfigureAwait(false);
 
