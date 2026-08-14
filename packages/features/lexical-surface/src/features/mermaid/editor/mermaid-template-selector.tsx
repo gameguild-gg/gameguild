@@ -11,12 +11,12 @@ import {
 } from "@game-guild/ui/components/card";
 import { Input } from "@game-guild/ui/components/input";
 import { Search, X } from "lucide-react";
-import type { MermaidData } from "./mermaid-data";
+import type { MermaidData } from "../mermaid-data";
 import {
   getAllTemplates,
   searchTemplates,
   type MermaidTemplate,
-} from "./templates/template-loader";
+} from "../templates/template-loader";
 
 interface MermaidTemplateSelectorProps {
   onSelect: (template: { type: MermaidData["type"]; code: string }) => void;
@@ -25,15 +25,15 @@ interface MermaidTemplateSelectorProps {
 
 const PREVIEW_IMAGES: Record<string, string> = {
   "previews/flowchart.png": new URL(
-    "./templates/previews/flowchart.png",
+    "../templates/previews/flowchart.png",
     import.meta.url,
   ).href,
   "previews/treemap-beta.svg": new URL(
-    "./templates/previews/treemap-beta.svg",
+    "../templates/previews/treemap-beta.svg",
     import.meta.url,
   ).href,
   "previews/user-journey.svg": new URL(
-    "./templates/previews/user-journey.svg",
+    "../templates/previews/user-journey.svg",
     import.meta.url,
   ).href,
 };

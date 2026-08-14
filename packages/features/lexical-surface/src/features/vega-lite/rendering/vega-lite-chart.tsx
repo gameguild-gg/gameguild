@@ -5,7 +5,7 @@ import {
   applyThemeOverrides,
   DARK_THEME_OVERRIDES,
   LIGHT_THEME_OVERRIDES,
-} from "./vega-theme-overrides";
+} from "../theme/vega-theme-overrides";
 
 const THEME_MAP: Record<string, string> = {
   default: "default",

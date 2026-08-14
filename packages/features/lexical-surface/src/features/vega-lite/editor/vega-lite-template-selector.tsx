@@ -16,7 +16,7 @@ import {
   searchTemplates,
   TEMPLATE_CATEGORIES,
   type VegaLiteTemplate,
-} from "./templates/template-loader";
+} from "../templates/template-loader";
 
 interface VegaLiteTemplateSelectorProps {
   onSelect: (template: { type: string; spec: string; title?: string }) => void;
@@ -25,7 +25,7 @@ interface VegaLiteTemplateSelectorProps {
 
 const PREVIEW_IMAGES: Record<string, string> = {
   "single-view-plots/bar-charts/simple-bar.png": new URL(
-    "./templates/single-view-plots/bar-charts/simple-bar.png",
+    "../templates/single-view-plots/bar-charts/simple-bar.png",
     import.meta.url,
   ).href,
 };

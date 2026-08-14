@@ -9,11 +9,11 @@ export { stripSelection } from "./schema/initial-editor-state";
 export type { BaseMediaData, MediaType } from "./features/media/media-data";
 export type { MermaidData } from "./features/mermaid/mermaid-data";
 export type { VegaLiteData } from "./features/vega-lite/vega-lite-data";
-export { MermaidEditor } from "./features/mermaid/mermaid-editor";
-export { MermaidViewer } from "./features/mermaid/mermaid-viewer";
-export { VegaLiteEditor } from "./features/vega-lite/vega-lite-editor";
-export { VegaLiteViewer } from "./features/vega-lite/vega-lite-viewer";
-export { getThemePair as getVegaLiteThemePair } from "./features/vega-lite/vega-theme-helper";
+export { MermaidEditor } from "./features/mermaid/editor/mermaid-editor";
+export { MermaidViewer } from "./features/mermaid/rendering/mermaid-viewer";
+export { VegaLiteEditor } from "./features/vega-lite/editor/vega-lite-editor";
+export { VegaLiteViewer } from "./features/vega-lite/rendering/vega-lite-viewer";
+export { getThemePair as getVegaLiteThemePair } from "./features/vega-lite/theme/vega-theme-helper";
 export type {
   AssetResolverAdapter,
   LexicalSurfaceAdapters,

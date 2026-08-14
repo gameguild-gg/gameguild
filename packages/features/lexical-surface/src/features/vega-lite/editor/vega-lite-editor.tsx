@@ -20,13 +20,13 @@ import {
   SelectValue,
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
-import { FeatureEditorShell } from "../../shared/ui/feature-editor-shell";
-import { useFeatureEditorSettings } from "../../shared/ui/use-feature-editor-settings";
-import { ValidationPanel } from "../../shared/ui/validation-panel";
-import { useDarkMode } from "../../shared/ui/use-dark-mode";
-import { ControlledVegaLiteViewer } from "./controlled-vega-lite-viewer";
+import { FeatureEditorShell } from "../../../shared/ui/feature-editor-shell";
+import { useFeatureEditorSettings } from "../../../shared/ui/use-feature-editor-settings";
+import { ValidationPanel } from "../../../shared/ui/validation-panel";
+import { useDarkMode } from "../../../shared/ui/use-dark-mode";
+import { ControlledVegaLiteViewer } from "../rendering/controlled-vega-lite-viewer";
 import { MonacoVegaLiteEditor } from "./monaco-vega-lite-editor";
-import type { VegaLiteData } from "./vega-lite-data";
+import type { VegaLiteData } from "../vega-lite-data";
 import { VegaLiteExport } from "./vega-lite-export";
 import { VegaLiteManager } from "./vega-lite-manager";
 import { VegaLiteTemplateSelector } from "./vega-lite-template-selector";
@@ -41,7 +41,7 @@ import {
   THEME_MODE_DESCRIPTIONS,
   type ThemeMode,
   type VegaThemeBase,
-} from "./vega-theme-helper";
+} from "../theme/vega-theme-helper";
 
 const DEFAULT_SPEC = JSON.stringify(
   {
