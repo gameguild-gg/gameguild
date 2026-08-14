@@ -15,13 +15,13 @@ import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import {
   Select,
-  SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
 import { FeatureEditorShell } from "../../../shared/ui/feature-editor-shell";
+import { FeatureEditorSelectContent } from "../../../shared/ui/feature-editor-select";
 import { useFeatureEditorSettings } from "../../../shared/ui/use-feature-editor-settings";
 import { ValidationPanel } from "../../../shared/ui/validation-panel";
 import { useDarkMode } from "../../../shared/ui/use-dark-mode";
@@ -194,13 +194,13 @@ export function MermaidEditor({
                 <SelectTrigger className="mt-1 w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <FeatureEditorSelectContent>
                   {AVAILABLE_MERMAID_THEMES.map((theme) => (
                     <SelectItem key={theme} value={theme}>
                       {MERMAID_THEME_DESCRIPTIONS[theme]}
                     </SelectItem>
                   ))}
-                </SelectContent>
+                </FeatureEditorSelectContent>
               </Select>
             </div>
             <div className="w-40">
@@ -214,7 +214,7 @@ export function MermaidEditor({
                 <SelectTrigger className="mt-1 w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <FeatureEditorSelectContent>
                   {Object.entries(MERMAID_THEME_MODE_DESCRIPTIONS).map(
                     ([mode, description]) => (
                       <SelectItem key={mode} value={mode}>
@@ -222,7 +222,7 @@ export function MermaidEditor({
                       </SelectItem>
                     ),
                   )}
-                </SelectContent>
+                </FeatureEditorSelectContent>
               </Select>
             </div>
             <div className="w-28">
