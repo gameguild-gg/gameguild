@@ -172,6 +172,21 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
     }
 
     [Fact]
+    public async Task Swagger_ShouldNotExposePasswordHashes()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/swagger/v1/swagger.json");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var document = JsonNode.Parse(await response.Content.ReadAsStringAsync())!.AsObject();
+        var userProperties = document["components"]!["schemas"]!["Identity_Users_User"]!["properties"]!.AsObject();
+
+        userProperties.Should().NotContainKey("passwordHash");
+    }
+
+    [Fact]
     public async Task Runtime_ShouldNotRouteUnverifiedOrderOperations()
     {
         using var client = _factory.CreateClient();
