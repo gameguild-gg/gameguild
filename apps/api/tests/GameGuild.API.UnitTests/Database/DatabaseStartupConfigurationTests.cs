@@ -83,6 +83,40 @@ public sealed class DatabaseStartupConfigurationTests
         failures.Should().BeEmpty();
     }
 
+    [Theory]
+    [InlineData("Test")]
+    [InlineData("Testing")]
+    public void ShouldRunStartupInitialization_DefaultsToFalseForTestEnvironments(string environmentName)
+    {
+        var configuration = CreateConfiguration(RuntimeConnection);
+
+        DatabaseStartupConfiguration.ShouldRunStartupInitialization(configuration, environmentName)
+            .Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData("Development")]
+    [InlineData("Production")]
+    public void ShouldRunStartupInitialization_DefaultsToTrueOutsideTestEnvironments(string environmentName)
+    {
+        var configuration = CreateConfiguration(RuntimeConnection);
+
+        DatabaseStartupConfiguration.ShouldRunStartupInitialization(configuration, environmentName)
+            .Should().BeTrue();
+    }
+
+    [Fact]
+    public void ShouldRunStartupInitialization_HonorsExplicitTestOverride()
+    {
+        var configuration = CreateConfiguration(RuntimeConnection, values: new Dictionary<string, string?>
+        {
+            ["Database:RunStartupInitialization"] = "true"
+        });
+
+        DatabaseStartupConfiguration.ShouldRunStartupInitialization(configuration, "Testing")
+            .Should().BeTrue();
+    }
+
     [Fact]
     public void DesignTimeFactory_PrefersMigrationConnection()
     {

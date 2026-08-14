@@ -9,7 +9,7 @@ public static class DatabaseStartupConfiguration
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        if (!(configuration.GetValue<bool?>("Database:RunStartupInitialization") ?? true) ||
+        if (!ShouldRunStartupInitialization(configuration, environmentName) ||
             AllowsRuntimeFallback(environmentName) ||
             configuration.GetValue<bool?>("Database:AllowSameMigrationUser") == true ||
             configuration.GetValue<bool?>("ALLOW_SAME_MIGRATION_USER") == true)
@@ -59,6 +59,14 @@ public static class DatabaseStartupConfiguration
             throw new InvalidOperationException($"Unsafe database startup configuration: {string.Join(" ", failures)}");
     }
 
+    public static bool ShouldRunStartupInitialization(IConfiguration configuration, string environmentName)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        return configuration.GetValue<bool?>("Database:RunStartupInitialization")
+            ?? !IsTestEnvironment(environmentName);
+    }
+
     public static string? ResolveMigrationConnectionString(IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("MigrationConnection")
@@ -71,6 +79,9 @@ public static class DatabaseStartupConfiguration
 
     internal static bool AllowsRuntimeFallback(string environmentName) =>
         string.Equals(environmentName, Environments.Development, StringComparison.OrdinalIgnoreCase) ||
+        IsTestEnvironment(environmentName);
+
+    private static bool IsTestEnvironment(string environmentName) =>
         string.Equals(environmentName, "Test", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(environmentName, "Testing", StringComparison.OrdinalIgnoreCase);
 }

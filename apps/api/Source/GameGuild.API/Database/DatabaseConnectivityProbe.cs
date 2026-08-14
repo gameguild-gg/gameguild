@@ -50,6 +50,10 @@ public sealed class DatabaseConnectivityProbe(IConfiguration configuration)
         {
             return false;
         }
+        catch (TimeoutException)
+        {
+            return false;
+        }
         catch (ArgumentException)
         {
             return false;
