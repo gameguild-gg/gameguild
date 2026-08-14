@@ -264,11 +264,11 @@ export function getMermaidConfigWithDarkTheme(
     theme: "base" as const,
     themeVariables: getMermaidDarkTheme(themeName),
     startOnLoad: false,
-    securityLevel: "loose" as const,
+    securityLevel: "strict" as const,
     fontFamily: "inherit",
     flowchart: {
       useMaxWidth: true,
-      htmlLabels: true,
+      htmlLabels: false,
     },
     logLevel: "error" as const,
     suppressErrorRendering: true,

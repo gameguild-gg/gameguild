@@ -9,8 +9,8 @@ import {
   getCurrentMermaidTheme,
   type MermaidTheme,
 } from "./mermaid-theme-helper";
-import { getMermaidConfigWithDarkTheme } from "./mermaid-dark-themes";
-import { useTheme } from "next-themes";
+import { useDarkMode } from "../../shared/ui/use-dark-mode";
+import { renderMermaidSvg } from "./mermaid-renderer";
 
 interface MermaidViewerProps {
   data: MermaidData;
@@ -84,8 +84,7 @@ export function MermaidViewer({
   }, [fullscreenBaseScale]);
 
   // Get current theme
-  const { resolvedTheme } = useTheme();
-  const isDarkMode = resolvedTheme === "dark";
+  const isDarkMode = useDarkMode();
 
   // Calculate the actual theme to use
   const themePair = getMermaidThemePair(
@@ -197,10 +196,17 @@ export function MermaidViewer({
 
   // Render diagram
   useEffect(() => {
+    let active = true;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    let scaleTimerId: ReturnType<typeof setTimeout> | undefined;
+
     const renderDiagram = async () => {
       if (!data.code || !data.code.trim()) {
-        setSvgContent("");
-        setError("");
+        if (active) {
+          setSvgContent("");
+          setError("");
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -208,69 +214,29 @@ export function MermaidViewer({
       setError("");
 
       try {
-        const mermaid = (await import("mermaid")).default;
-
-        await new Promise<void>((resolve, reject) => {
-          try {
-            // Check if using a custom dark theme
-            if (currentTheme.endsWith("-dark")) {
-              // Use custom dark theme configuration
-              const config = getMermaidConfigWithDarkTheme(
-                currentTheme as
-                  "default-dark" | "forest-dark" | "neutral-dark" | "base-dark",
-              );
-              mermaid.initialize(config);
-            } else {
-              // Use standard Mermaid theme
-              mermaid.initialize({
-                startOnLoad: false,
-                theme: currentTheme as
-                  "default" | "dark" | "forest" | "neutral" | "base",
-                securityLevel: "loose",
-                fontFamily: "inherit",
-                flowchart: {
-                  useMaxWidth: true,
-                  htmlLabels: true,
-                },
-                logLevel: "error",
-                suppressErrorRendering: true,
-              });
-            }
-            resolve();
-          } catch (initError) {
-            reject(initError);
-          }
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(
+            () => reject(new Error("Rendering timeout")),
+            10000,
+          );
         });
-
-        const id = `mermaid-viewer-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-
-        const renderPromise = mermaid.render(id, data.code);
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Rendering timeout")), 10000);
-        });
-
-        const { svg } = (await Promise.race([
-          renderPromise,
+        const svg = await Promise.race([
+          renderMermaidSvg(data.code, currentTheme),
           timeoutPromise,
-        ])) as any;
-
-        if (!svg) {
-          throw new Error("No SVG content generated");
-        }
+        ]);
+        if (timeoutId) clearTimeout(timeoutId);
+        if (!active) return;
 
         setSvgContent(svg);
         setError("");
 
-        // Calcular baseScale após um pequeno delay para garantir que o SVG está no DOM
-        setTimeout(() => {
-          calculateBaseScale();
-        }, 100);
-      } catch (err: any) {
-        console.error("Error rendering Mermaid diagram:", err);
+        scaleTimerId = setTimeout(calculateBaseScale, 100);
+      } catch (err: unknown) {
+        if (!active) return;
 
         let errorMessage = "Failed to render diagram";
 
-        if (err?.message) {
+        if (err instanceof Error) {
           if (err.message.includes("Parse error")) {
             errorMessage = "Syntax error in diagram code";
           } else if (err.message.includes("timeout")) {
@@ -285,11 +251,16 @@ export function MermaidViewer({
         setError(errorMessage);
         setSvgContent("");
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     };
 
-    renderDiagram();
+    void renderDiagram();
+    return () => {
+      active = false;
+      if (timeoutId) clearTimeout(timeoutId);
+      if (scaleTimerId) clearTimeout(scaleTimerId);
+    };
   }, [data.code, currentTheme]);
 
   // Handle escape key for fullscreen

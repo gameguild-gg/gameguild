@@ -23,6 +23,13 @@ interface VegaLiteTemplateSelectorProps {
   onCancel: () => void;
 }
 
+const PREVIEW_IMAGES: Record<string, string> = {
+  "single-view-plots/bar-charts/simple-bar.png": new URL(
+    "./templates/single-view-plots/bar-charts/simple-bar.png",
+    import.meta.url,
+  ).href,
+};
+
 export function VegaLiteTemplateSelector({
   onSelect,
   onCancel,
@@ -221,25 +228,11 @@ export function VegaLiteTemplateSelector({
             {filteredTemplates.map((template) => {
               const IconComponent = template.icon;
 
-              // For Next.js, we need to use dynamic imports or require for images
-              let previewImageSrc = null;
-              if (template.previewImage) {
-                try {
-                  // Try to load the image using require (works in Next.js)
-                  previewImageSrc =
-                    require(
-                      `./templates/${template.category}/${template.subcategory}/${template.previewImage}`,
-                    ).default?.src ||
-                    require(
-                      `./templates/${template.category}/${template.subcategory}/${template.previewImage}`,
-                    );
-                } catch (e) {
-                  console.warn(
-                    `Preview image not found for template ${template.id}:`,
-                    template.previewImage,
-                  );
-                }
-              }
+              const previewImageSrc = template.previewImage
+                ? PREVIEW_IMAGES[
+                    `${template.category}/${template.subcategory}/${template.previewImage}`
+                  ]
+                : undefined;
 
               return (
                 <Card
@@ -251,11 +244,7 @@ export function VegaLiteTemplateSelector({
                   {previewImageSrc ? (
                     <div className="w-full aspect-square bg-gray-100 dark:bg-gray-700 relative overflow-hidden">
                       <img
-                        src={
-                          typeof previewImageSrc === "string"
-                            ? previewImageSrc
-                            : previewImageSrc.src || previewImageSrc
-                        }
+                        src={previewImageSrc}
                         alt={template.title}
                         className="w-full h-full object-contain p-3"
                         onError={(e) => {

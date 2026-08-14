@@ -12,13 +12,13 @@ import "@excalidraw/excalidraw/index.css";
 import * as React from "react";
 import { lazy } from "react";
 import { useEffect, useRef, useState } from "react";
-import { useTheme } from "next-themes";
 import type {
   AppState,
   BinaryFiles,
   ExcalidrawImperativeAPI,
   ExcalidrawInitialDataState,
 } from "@excalidraw/excalidraw/types";
+import { useDarkMode } from "../../shared/ui/use-dark-mode";
 import {
   Dialog,
   DialogContent,
@@ -78,9 +78,7 @@ export default function ExcalidrawModal({
     useState<ExcalidrawInitialElements>(initialElements);
   const [files, setFiles] = useState<BinaryFiles>(initialFiles);
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);
-  const { resolvedTheme } = useTheme();
-  const excalidrawTheme: "light" | "dark" =
-    resolvedTheme === "dark" ? "dark" : "light";
+  const excalidrawTheme: "light" | "dark" = useDarkMode() ? "dark" : "light";
 
   // The canvas of Excalidraw is mounted during the opening animation of
   // the Radix Dialog (zoom-in-95), which causes the initial bounding rect

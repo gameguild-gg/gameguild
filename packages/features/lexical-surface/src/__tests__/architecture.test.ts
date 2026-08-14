@@ -90,6 +90,7 @@ describe("package architecture", () => {
         "@monaco-editor/react": expect.any(String),
         "@shikijs/monaco": expect.any(String),
         "d3-dsv": expect.any(String),
+        dompurify: expect.any(String),
         mermaid: expect.any(String),
         "monaco-editor": expect.any(String),
         shiki: expect.any(String),
@@ -98,5 +99,40 @@ describe("package architecture", () => {
         "vega-themes": expect.any(String),
       }),
     );
+  });
+
+  it("keeps React host-owned and avoids framework theme dependencies", () => {
+    const manifest = JSON.parse(readFileSync(PACKAGE_JSON, "utf8")) as {
+      dependencies: Record<string, string>;
+      peerDependencies: Record<string, string>;
+    };
+
+    expect(manifest.peerDependencies).toEqual(
+      expect.objectContaining({
+        react: expect.any(String),
+        "react-dom": expect.any(String),
+      }),
+    );
+    expect(manifest.dependencies).not.toHaveProperty("react");
+    expect(manifest.dependencies).not.toHaveProperty("react-dom");
+    expect(manifest.dependencies).not.toHaveProperty("next-themes");
+  });
+
+  it("does not add hidden network or dynamic CommonJS asset dependencies", () => {
+    const violations = sourceFiles(SOURCE_ROOT).filter((path) => {
+      const source = readFileSync(path, "utf8");
+      return /fonts\.googleapis|cdn\.jsdelivr|\brequire\s*\(/.test(source);
+    });
+
+    expect(violations).toEqual([]);
+  });
+
+  it("does not configure Mermaid with loose security", () => {
+    const violations = sourceFiles(SOURCE_ROOT).filter((path) => {
+      const source = readFileSync(path, "utf8");
+      return /securityLevel\s*:\s*["']loose["']/.test(source);
+    });
+
+    expect(violations).toEqual([]);
   });
 });
