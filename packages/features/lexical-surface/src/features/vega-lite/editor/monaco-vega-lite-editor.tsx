@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef } from "react";
 import type { Monaco, OnMount } from "@monaco-editor/react";
 import type { editor, IDisposable, languages, IPosition } from "monaco-editor";
 import vegaLiteSchema from "vega-lite/vega-lite-schema.json";
-import { MonacoCodeEditor } from "../../shared/ui/monaco-code-editor";
-import type { MonacoSurfacePreferences } from "../../shared/ui/editor-preferences";
+import { MonacoCodeEditor } from "../../../shared/ui/monaco-code-editor";
+import type { MonacoSurfacePreferences } from "../../../shared/ui/editor-preferences";
 import {
   VegaLiteValidator,
   type VegaLiteValidationResult,

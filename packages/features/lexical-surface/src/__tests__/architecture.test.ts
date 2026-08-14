@@ -41,6 +41,37 @@ describe("package architecture", () => {
     expect(violations).toEqual([]);
   });
 
+  it("keeps diagram feature roots limited to contracts and responsibility folders", () => {
+    const mermaidEntries = readdirSync(
+      resolve(SOURCE_ROOT, "features", "mermaid"),
+    ).sort();
+    const vegaLiteEntries = readdirSync(
+      resolve(SOURCE_ROOT, "features", "vega-lite"),
+    ).sort();
+
+    expect(mermaidEntries).toEqual([
+      "README.md",
+      "editor",
+      "index.ts",
+      "lexical",
+      "mermaid-data.ts",
+      "rendering",
+      "templates",
+      "theme",
+    ]);
+    expect(vegaLiteEntries).toEqual([
+      "README.md",
+      "data",
+      "editor",
+      "index.ts",
+      "lexical",
+      "rendering",
+      "templates",
+      "theme",
+      "vega-lite-data.ts",
+    ]);
+  });
+
   it("does not import application-owned modules", () => {
     const violations = sourceFiles(SOURCE_ROOT).filter((path) => {
       const source = readFileSync(path, "utf8");

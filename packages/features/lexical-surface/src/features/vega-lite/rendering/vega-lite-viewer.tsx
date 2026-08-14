@@ -4,8 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { BarChart3, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react";
 import { Button } from "@game-guild/ui/components/button";
 import { useVegaLiteChart, renderVegaChart } from "./vega-lite-chart";
-import { useDarkMode } from "../../shared/ui/use-dark-mode";
-import { loadCsvDataIntoSpec } from "./vega-csv-loader";
+import { useDarkMode } from "../../../shared/ui/use-dark-mode";
+import { loadCsvDataIntoSpec } from "../data/vega-csv-loader";
 
 interface VegaLiteViewerProps {
   spec: string;

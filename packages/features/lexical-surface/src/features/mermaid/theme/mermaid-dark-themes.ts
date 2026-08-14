@@ -265,6 +265,7 @@ export function getMermaidConfigWithDarkTheme(
     themeVariables: getMermaidDarkTheme(themeName),
     startOnLoad: false,
     securityLevel: "strict" as const,
+    htmlLabels: false,
     fontFamily: "inherit",
     flowchart: {
       useMaxWidth: true,

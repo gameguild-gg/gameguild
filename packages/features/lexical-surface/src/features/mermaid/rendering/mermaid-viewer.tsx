@@ -3,13 +3,13 @@
 import { useEffect, useState, useRef } from "react";
 import { GitBranch, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react";
 import { Button } from "@game-guild/ui/components/button";
-import type { MermaidData } from "./mermaid-data";
+import type { MermaidData } from "../mermaid-data";
 import {
   getMermaidThemePair,
   getCurrentMermaidTheme,
   type MermaidTheme,
-} from "./mermaid-theme-helper";
-import { useDarkMode } from "../../shared/ui/use-dark-mode";
+} from "../theme/mermaid-theme-helper";
+import { useDarkMode } from "../../../shared/ui/use-dark-mode";
 import { renderMermaidSvg } from "./mermaid-renderer";
 
 interface MermaidViewerProps {
