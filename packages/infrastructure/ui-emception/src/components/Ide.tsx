@@ -221,8 +221,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   const seededContentRef = useRef<Map<string, string>>(new Map());
   /** Bumped on every setFileMeta call to re-run the per-file readOnly effect. */
   const [metaVersion, bumpMetaVersion] = useState(0);
-  // Expose filesRef for e2e tests so Playwright can verify file content was updated
-  (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
+  // Expose filesRef for e2e tests so Playwright can verify file content was updated.
+  // Guarded for SSR (Next.js server render has no window).
+  if (typeof window !== 'undefined') {
+    (window as unknown as Record<string, unknown>).__emception_filesRef__ = filesRef;
+  }
 
   const fileTree = buildFileTree(Object.keys(files).filter((path) => path !== SDL_CANVAS_PATH && files[path]?.type !== 'canvas'));
   const activeTab = openTabs.find((t) => t.id === activeTabId) ?? openTabs[0] ?? null;
@@ -307,12 +310,34 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     };
     }, [workspaceUrl]);
 
+     // ── Sync workspace files into the Worker VFS (/app) ─────
+  const syncFilesToVfs = useCallback(async (filesToSync: Record<string, WorkspaceFile>) => {
+    const orch = orchestratorRef.current;
+    if (!orch) return;
+    const P = '[Emception:IDE]';
+    const { client } = orch;
+    const enc = new TextEncoder();
+    const textFiles = Object.values(filesToSync).filter((f) => f.type === 'text' && isTextFile(f.path));
+    for (const file of textFiles) {
+      const fsPath = toWorkspaceFsPath(file.path, propsRef.current.assignmentToken);
+      await client.writeFile(fsPath, enc.encode(file.content));
+      console.log(`${P} VFS sync: ${file.path} -> ${fsPath}`);
+    }
+    console.log(`${P} VFS sync complete (${textFiles.length} files)`);
+  }, []);
+
      // ── Run Tests button handler ───────────────────────────────────
       const handleRunTests = useCallback(async () => {
     if (!apiRef.current || !testPlan) return;
     setTestRunning(true);
     setLastReport(null);
     try {
+      // Re-sync workspace files so /app/<file> reflects the latest editor
+      // content before the engine compiles them. Without this, edits since
+      // the last compile/run never reach the VFS and tests run against stale
+      // (or missing) source.
+      await syncFilesToVfs(filesRef.current);
+
       // Write generated harnesses (doctest .cpp) into the worker VFS at /app/<basename>.
       const orch = orchestratorRef.current;
       if (testPlan.generatedFiles?.length && orch) {
@@ -354,23 +379,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       } finally {
       setTestRunning(false);
       }
-    }, [testPlan, testMode]);
-
-    // ── Sync workspace files into the Worker VFS (/app) ─────
-  const syncFilesToVfs = useCallback(async (filesToSync: Record<string, WorkspaceFile>) => {
-    const orch = orchestratorRef.current;
-    if (!orch) return;
-    const P = '[Emception:IDE]';
-    const { client } = orch;
-    const enc = new TextEncoder();
-    const textFiles = Object.values(filesToSync).filter((f) => f.type === 'text' && isTextFile(f.path));
-    for (const file of textFiles) {
-      const fsPath = toWorkspaceFsPath(file.path, propsRef.current.assignmentToken);
-      await client.writeFile(fsPath, enc.encode(file.content));
-      console.log(`${P} VFS sync: ${file.path} -> ${fsPath}`);
-    }
-    console.log(`${P} VFS sync complete (${textFiles.length} files)`);
-  }, []);
+    }, [testPlan, testMode, syncFilesToVfs]);
 
   // ── Switch workspace preset ───────────────────────────────────
   const switchWorkspace = useCallback(
@@ -514,6 +523,29 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         };
         orchestratorRef.current = result;
         apiRef.current = wrapWorkerClient(result.client);
+        // The test engine calls compileAndRun(undefined, { build: { sources: [...] } })
+        // expecting the helper to compile files already on disk at those VFS paths.
+        // The shipped worker helper instead reads opts.sources[0] as inline CONTENT,
+        // writes it to a bare 'main.cpp' path, and compiles — so the engine's call
+        // pattern yields an empty file at a relative path the VFS can't resolve.
+        // Translate the engine pattern: read each source from the VFS and pass its
+        // content through with cwd set to the source's directory so the helper's
+        // relative 'main.cpp' write+read resolves to the right absolute path.
+        const workerClient = result.client;
+        const wrappedApi = apiRef.current;
+        const baseCompileAndRun = wrappedApi.compileAndRun.bind(wrappedApi);
+        wrappedApi.compileAndRun = async (sourceOrFiles?: string | string[], opts?: Parameters<typeof baseCompileAndRun>[1]) => {
+          const buildSources = (opts?.build as { sources?: unknown } | undefined)?.sources;
+          if (sourceOrFiles === undefined && Array.isArray(buildSources) && buildSources.length > 0) {
+            const sourcePath = String(buildSources[0]);
+            const bytes = await workerClient.getFile(sourcePath);
+            const content = bytes ? new TextDecoder().decode(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)) : '';
+            const slash = sourcePath.lastIndexOf('/');
+            const cwd = slash > 0 ? sourcePath.slice(0, slash) : '/app';
+            return baseCompileAndRun(content, { ...opts, cwd });
+          }
+          return baseCompileAndRun(sourceOrFiles, opts);
+        };
         // Expose worker client on window for E2E / debug access
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).__emception_client__ = result.client;
@@ -940,8 +972,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     syncMonacoModels();
   }, [files, syncMonacoModels]);
 
-  // Expose for e2e tests so Playwright can update file content directly in React state
-  (window as unknown as Record<string, unknown>).__setFileContent = handleEditorChange;
+  // Expose for e2e tests so Playwright can update file content directly in React state.
+  // Guarded for SSR (Next.js server render has no window).
+  if (typeof window !== 'undefined') {
+    (window as unknown as Record<string, unknown>).__setFileContent = handleEditorChange;
+  }
 
   const teardownSdlRuntime = useCallback(() => {
     const sdlMod = sdlModuleRef.current;
