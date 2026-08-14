@@ -161,7 +161,7 @@ jobs:
 
       - name: Build Emception web consumers
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
-        run: pnpm --filter "@gameguild/emception-demo-*" run build --workspace-concurrency=1
+        run: pnpm --filter "@gameguild/emception-demo-*" --workspace-concurrency=1 run build
 
       - name: Build GameGuild web application with Emception contracts
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
