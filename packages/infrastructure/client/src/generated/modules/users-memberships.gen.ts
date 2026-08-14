@@ -203,6 +203,60 @@ export class UsersMembershipsModule {
   }
 
   /**
+   * Activate a tenant membership
+   *
+   * Restores access to the specified tenant membership.
+   */
+  async postUsersMembershipsActivate(userId: string, tenantId: string): Promise<Result<Types.IdentityTenantsSetTenantMembershipStatusOutput, ApiError>> {
+    const url = `/v1/users/${userId}/memberships/${tenantId}:activate`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityTenantsSetTenantMembershipStatusOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Deactivate a tenant membership
+   *
+   * Suspends access to the specified tenant without deleting membership history.
+   */
+  async postUsersMembershipsDeactivate(
+    userId: string,
+    tenantId: string,
+    body: Types.IdentityTenantsSetTenantMembershipStatusInput,
+  ): Promise<Result<Types.IdentityTenantsSetTenantMembershipStatusOutput, ApiError>> {
+    const url = `/v1/users/${userId}/memberships/${tenantId}:deactivate`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityTenantsSetTenantMembershipStatusInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityTenantsSetTenantMembershipStatusOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Get count of user's active tenant memberships
    */
   async getUsersMembershipsCount(userId: string): Promise<Result<Types.IdentityTenantsMembershipCountOutput, ApiError>> {

@@ -1378,6 +1378,10 @@ export interface CommercePaymentsWalletTransaction {
 
 export type CommercePaymentsWalletTransactionType = 'Credit' | 'Debit' | 'TransferIn' | 'TransferOut' | 'Refund' | 'Fee' | 'Adjustment';
 
+export interface CommerceProductsAddMySupportTicketMessageInput {
+  body?: string | null;
+}
+
 export interface CommerceProductsAddSupportTicketMessageInput {
   authorEmail?: string | null;
   authorName?: string | null;
@@ -1434,6 +1438,13 @@ export interface CommerceProductsCloseSupportTicketInput {
   agentUserId?: string;
   closingNotes?: string | null;
   tenantId?: string;
+}
+
+export interface CommerceProductsCreateMySupportTicketInput {
+  body?: string | null;
+  category?: string | null;
+  priority?: CommerceProductsSupportTicketPriority;
+  subject?: string | null;
 }
 
 export interface CommerceProductsCreateProductInput {
@@ -3700,6 +3711,18 @@ export interface IdentityTenantsReplaceTenantSettingsInput {
   systemConfiguration?: IdentityTenantsUpdateTenantSystemConfigurationInput;
   systemLimits?: IdentityTenantsUpdateTenantSystemLimitsInput;
   userInterfaceSettings?: IdentityTenantsUpdateTenantUiSettingsInput;
+}
+
+export interface IdentityTenantsSetTenantMembershipStatusInput {
+  reason?: string | null;
+}
+
+export interface IdentityTenantsSetTenantMembershipStatusOutput {
+  isActive?: boolean;
+  memberId?: string;
+  message?: string | null;
+  notFound?: boolean;
+  success?: boolean;
 }
 
 export interface IdentityTenantsSlugValidation {
@@ -9538,6 +9561,7 @@ export let CommercePaymentsUserWalletSchema: z.ZodType<CommercePaymentsUserWalle
 export let CommercePaymentsValidateTaxExemptionInputSchema: z.ZodType<CommercePaymentsValidateTaxExemptionInput>;
 export let CommercePaymentsWalletTransactionSchema: z.ZodType<CommercePaymentsWalletTransaction>;
 export let CommercePaymentsWalletTransactionTypeSchema: z.ZodType<CommercePaymentsWalletTransactionType>;
+export let CommerceProductsAddMySupportTicketMessageInputSchema: z.ZodType<CommerceProductsAddMySupportTicketMessageInput>;
 export let CommerceProductsAddSupportTicketMessageInputSchema: z.ZodType<CommerceProductsAddSupportTicketMessageInput>;
 export let CommerceProductsAppliedPromoCodeSchema: z.ZodType<CommerceProductsAppliedPromoCode>;
 export let CommerceProductsApplyPromoCodesInputSchema: z.ZodType<CommerceProductsApplyPromoCodesInput>;
@@ -9546,6 +9570,7 @@ export let CommerceProductsBatchCreateProductsInputSchema: z.ZodType<CommercePro
 export let CommerceProductsBatchProductCreateItemSchema: z.ZodType<CommerceProductsBatchProductCreateItem>;
 export let CommerceProductsCheckMultipleAccessInputSchema: z.ZodType<CommerceProductsCheckMultipleAccessInput>;
 export let CommerceProductsCloseSupportTicketInputSchema: z.ZodType<CommerceProductsCloseSupportTicketInput>;
+export let CommerceProductsCreateMySupportTicketInputSchema: z.ZodType<CommerceProductsCreateMySupportTicketInput>;
 export let CommerceProductsCreateProductInputSchema: z.ZodType<CommerceProductsCreateProductInput>;
 export let CommerceProductsCreatePromoCodeInputSchema: z.ZodType<CommerceProductsCreatePromoCodeInput>;
 export let CommerceProductsCreateSupportTicketInputSchema: z.ZodType<CommerceProductsCreateSupportTicketInput>;
@@ -9796,6 +9821,8 @@ export let IdentityTenantsMembershipCountOutputSchema: z.ZodType<IdentityTenants
 export let IdentityTenantsRecoverInputSchema: z.ZodType<IdentityTenantsRecoverInput>;
 export let IdentityTenantsReplaceTenantMetadataInputSchema: z.ZodType<IdentityTenantsReplaceTenantMetadataInput>;
 export let IdentityTenantsReplaceTenantSettingsInputSchema: z.ZodType<IdentityTenantsReplaceTenantSettingsInput>;
+export let IdentityTenantsSetTenantMembershipStatusInputSchema: z.ZodType<IdentityTenantsSetTenantMembershipStatusInput>;
+export let IdentityTenantsSetTenantMembershipStatusOutputSchema: z.ZodType<IdentityTenantsSetTenantMembershipStatusOutput>;
 export let IdentityTenantsSlugValidationSchema: z.ZodType<IdentityTenantsSlugValidation>;
 export let IdentityTenantsTenantSchema: z.ZodType<IdentityTenantsTenant>;
 export let IdentityTenantsTenantAddressSchema: z.ZodType<IdentityTenantsTenantAddress>;
@@ -12060,6 +12087,11 @@ CommercePaymentsWalletTransactionSchema = z.object({
 /** Zod schema for CommercePaymentsWalletTransactionType */
 CommercePaymentsWalletTransactionTypeSchema = z.enum(['Credit', 'Debit', 'TransferIn', 'TransferOut', 'Refund', 'Fee', 'Adjustment']);
 
+/** Zod schema for CommerceProductsAddMySupportTicketMessageInput */
+CommerceProductsAddMySupportTicketMessageInputSchema = z.object({
+  body: z.string().nullable().optional(),
+});
+
 /** Zod schema for CommerceProductsAddSupportTicketMessageInput */
 CommerceProductsAddSupportTicketMessageInputSchema = z.object({
   authorEmail: z.string().nullable().optional(),
@@ -12127,6 +12159,14 @@ CommerceProductsCloseSupportTicketInputSchema = z.object({
   agentUserId: z.string().uuid().optional(),
   closingNotes: z.string().nullable().optional(),
   tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommerceProductsCreateMySupportTicketInput */
+CommerceProductsCreateMySupportTicketInputSchema = z.object({
+  body: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
+  subject: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsCreateProductInput */
@@ -14735,6 +14775,20 @@ IdentityTenantsReplaceTenantSettingsInputSchema = z.object({
   systemConfiguration: z.lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema).optional(),
   systemLimits: z.lazy(() => IdentityTenantsUpdateTenantSystemLimitsInputSchema).optional(),
   userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
+});
+
+/** Zod schema for IdentityTenantsSetTenantMembershipStatusInput */
+IdentityTenantsSetTenantMembershipStatusInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for IdentityTenantsSetTenantMembershipStatusOutput */
+IdentityTenantsSetTenantMembershipStatusOutputSchema = z.object({
+  isActive: z.boolean().optional(),
+  memberId: z.string().uuid().optional(),
+  message: z.string().nullable().optional(),
+  notFound: z.boolean().optional(),
+  success: z.boolean().optional(),
 });
 
 /** Zod schema for IdentityTenantsSlugValidation */
