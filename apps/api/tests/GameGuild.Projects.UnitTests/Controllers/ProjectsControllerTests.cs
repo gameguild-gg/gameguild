@@ -400,6 +400,27 @@ public class ProjectsControllerTests
     }
 
     [Fact]
+    public async Task RestoreProject_Should_Return_Archived_Project_To_Draft()
+    {
+        var project = new Project
+        {
+            TenantId = Guid.NewGuid(),
+            Title = "Restore archived",
+            Slug = "restore-archived",
+            CreatedById = _actorId,
+            Status = ContentStatus.Archived,
+        };
+        _context.Projects.Add(project);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateController().RestoreProject(project.Id, default);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        project.Status.Should().Be(ContentStatus.Draft);
+        project.DeletedAt.Should().BeNull();
+    }
+
+    [Fact]
     public async Task DeleteProject_PermanentDelete_RequiresRecentAuthentication()
     {
         _actorContextAccessor.SetupGet(x => x.ActorContext).Returns(new ActorContext
