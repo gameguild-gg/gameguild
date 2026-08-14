@@ -14,13 +14,13 @@ import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import {
   Select,
-  SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
 import { FeatureEditorShell } from "../../../shared/ui/feature-editor-shell";
+import { FeatureEditorSelectContent } from "../../../shared/ui/feature-editor-select";
 import { useFeatureEditorSettings } from "../../../shared/ui/use-feature-editor-settings";
 import { ValidationPanel } from "../../../shared/ui/validation-panel";
 import { useDarkMode } from "../../../shared/ui/use-dark-mode";
@@ -254,13 +254,13 @@ export function VegaLiteEditor({
                 <SelectTrigger className="mt-1 w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="max-h-72">
+                <FeatureEditorSelectContent className="max-h-72">
                   {AVAILABLE_THEMES.map((theme) => (
                     <SelectItem key={theme} value={theme}>
                       {THEME_DESCRIPTIONS[theme]}
                     </SelectItem>
                   ))}
-                </SelectContent>
+                </FeatureEditorSelectContent>
               </Select>
             </div>
             <div className="w-40">
@@ -274,7 +274,7 @@ export function VegaLiteEditor({
                 <SelectTrigger className="mt-1 w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <FeatureEditorSelectContent>
                   {Object.entries(THEME_MODE_DESCRIPTIONS).map(
                     ([mode, description]) => (
                       <SelectItem key={mode} value={mode}>
@@ -282,7 +282,7 @@ export function VegaLiteEditor({
                       </SelectItem>
                     ),
                   )}
-                </SelectContent>
+                </FeatureEditorSelectContent>
               </Select>
             </div>
             <div className="w-36">
@@ -296,10 +296,10 @@ export function VegaLiteEditor({
                 <SelectTrigger className="mt-1 w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <FeatureEditorSelectContent>
                   <SelectItem value="rectangular">Rectangular</SelectItem>
                   <SelectItem value="square">Square</SelectItem>
-                </SelectContent>
+                </FeatureEditorSelectContent>
               </Select>
             </div>
             <div className="w-24">
