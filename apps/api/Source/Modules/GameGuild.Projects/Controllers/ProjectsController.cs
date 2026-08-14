@@ -308,7 +308,7 @@ public class ProjectsController : BaseApiController {
       : ToActionResult(Result.Failure<ProjectApiResponse>(result.Error));
   }
 
-  /// <summary> Restore a soft-deleted project </summary>
+  /// <summary> Restore an archived or soft-deleted project </summary>
   [HttpPost("{id:guid}:restore")]
   public async Task<ActionResult<ProjectApiResponse>> RestoreProject(Guid id, CancellationToken cancellationToken) {
     if (!await _authorizationService
@@ -318,11 +318,17 @@ public class ProjectsController : BaseApiController {
 
     var project = await _context.Set<Project>()
       .IgnoreQueryFilters()
-      .SingleOrDefaultAsync(candidate => candidate.Id == id && candidate.DeletedAt != null, cancellationToken)
+      .SingleOrDefaultAsync(candidate => candidate.Id == id, cancellationToken)
       .ConfigureAwait(false);
     if (project == null) return NotFound();
 
-    project.Restore();
+    var wasSoftDeleted = project.DeletedAt != null;
+    var wasArchived = project.Status is ContentStatus.Archived or ContentStatus.Deleted;
+    if (!wasSoftDeleted && !wasArchived)
+      return Conflict(new { code = "Project.NotRestorable", message = "Only archived or deleted projects can be restored." });
+
+    if (wasSoftDeleted) project.Restore();
+    if (wasArchived) project.Status = ContentStatus.Draft;
     project.Touch();
     await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     return Ok(ProjectApiResponse.FromProject(project));
