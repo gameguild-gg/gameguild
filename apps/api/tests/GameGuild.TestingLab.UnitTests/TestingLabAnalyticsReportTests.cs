@@ -64,6 +64,33 @@ public sealed class TestingLabAnalyticsReportTests : IDisposable
     }
 
     [Fact]
+    public async Task Report_IncludesCapacityForEventsWithRegistrationActivityInThePeriod()
+    {
+        await AddCompletedEventAsync(
+            _tenantId,
+            _managerId,
+            "Upcoming campus lab",
+            PeriodEnd.AddDays(2),
+            8,
+            1,
+            2,
+            0,
+            0,
+            PeriodStart.AddDays(2));
+
+        var result = await CreateHandler().Handle(
+            new GetTestingLabAnalyticsReportQuery(PeriodStart, PeriodEnd, IncludeComparison: false),
+            default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Current.Events.Should().Be(0);
+        result.Value.Current.RegisteredTesters.Should().Be(2);
+        result.Value.Current.Capacity.Should().Be(8);
+        result.Value.Current.FillRate.Should().Be(25m);
+        result.Value.Trend.Sum(item => item.Registrations).Should().Be(2);
+    }
+
+    [Fact]
     public async Task Report_RejectsAnInvalidPeriod()
     {
         var result = await CreateHandler().Handle(
@@ -104,8 +131,10 @@ public sealed class TestingLabAnalyticsReportTests : IDisposable
         int applications,
         int registrations,
         int attended,
-        int rating)
+        int rating,
+        DateTime? activityCreatedAt = null)
     {
+        var createdAt = activityCreatedAt ?? startsAt;
         var testingEvent = TestingEvent.Create(
             name,
             TestingEventMode.InPerson,
@@ -154,7 +183,7 @@ public sealed class TestingLabAnalyticsReportTests : IDisposable
                 applicant.Id,
                 null,
                 tenantId);
-            application.CreatedAt = startsAt;
+            application.CreatedAt = createdAt;
             _context.Add(application);
         }
 
@@ -167,7 +196,7 @@ public sealed class TestingLabAnalyticsReportTests : IDisposable
                 tester.Id,
                 null,
                 tenantId);
-            registration.CreatedAt = startsAt;
+            registration.CreatedAt = createdAt;
             if (index < attended)
             {
                 registration.CheckIn();
@@ -187,7 +216,7 @@ public sealed class TestingLabAnalyticsReportTests : IDisposable
                     true,
                     null,
                     tenantId);
-                feedback.CreatedAt = startsAt;
+                feedback.CreatedAt = createdAt;
                 _context.Add(feedback);
             }
         }
