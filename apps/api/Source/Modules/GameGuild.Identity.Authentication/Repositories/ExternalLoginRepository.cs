@@ -49,4 +49,18 @@ public class ExternalLoginRepository(IApplicationDbContext context) : IExternalL
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return existing;
     }
+
+    public async Task<bool> DeleteAsync(string provider, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var existing = await ExternalLogins.FirstOrDefaultAsync(
+            e => e.Provider == provider && e.UserId == userId,
+            cancellationToken);
+
+        if (existing == null) { return false; }
+
+        ExternalLogins.Remove(existing);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return true;
+    }
 }

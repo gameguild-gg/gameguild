@@ -21,4 +21,10 @@ public interface IExternalLoginRepository
     ///     Idempotent under repeated calls with the same (Provider, ProviderKey).
     /// </summary>
     Task<ExternalLogin> UpsertAsync(ExternalLogin externalLogin, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Hard-deletes the external login row for the given (provider, user).
+    /// </summary>
+    /// <returns>True when a row was removed; false when no such link exists.</returns>
+    Task<bool> DeleteAsync(string provider, Guid userId, CancellationToken cancellationToken = default);
 }
