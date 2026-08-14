@@ -66,6 +66,18 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         // Ensure the database is created
         var context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         context.Database.EnsureCreated();
+        if (!context.Set<GameGuild.Identity.Tenants.Tenant>().Any(tenant => tenant.IsDefault))
+        {
+            context.Add(new GameGuild.Identity.Tenants.Tenant
+            {
+                Name = "Public tenant",
+                Slug = "public",
+                AdminEmail = "admin@public.test",
+                IsDefault = true,
+                IsActive = true
+            });
+            context.SaveChanges();
+        }
     }
     [Fact]
     public async Task LocalSignUp_ShouldCreateUser_WhenValidDataProvided() {
@@ -92,6 +104,9 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
 
         user.Should().NotBeNull();
         user!.Email.Should().Be(signUpRequest.Email);
+        var membership = await context.Set<GameGuild.Identity.Tenants.TenantMember>()
+            .SingleOrDefaultAsync(member => member.UserId == user.Id && member.IsActive);
+        membership.Should().NotBeNull();
     }
 
     [Fact]

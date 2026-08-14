@@ -40,7 +40,33 @@ public sealed record UserProfileDto(
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt,
     byte[ ] Version
-);
+)
+{
+    public static UserProfileDto FromEntity(UserProfile profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        return new UserProfileDto(
+            Id: profile.Id,
+            UserId: profile.UserId,
+            DisplayName: profile.DisplayName,
+            Bio: profile.Bio,
+            Location: profile.Location,
+            Website: profile.Website,
+            JobTitle: profile.JobTitle,
+            Company: profile.Company,
+            AvatarUrl: profile.AvatarUrl,
+            BannerUrl: profile.BannerUrl,
+            TimeZone: null,
+            Language: null,
+            ProfileVisibility: profile.Visibility.ToString().ToLowerInvariant(),
+            ShowEmail: false,
+            ShowLocation: false,
+            CreatedAt: profile.CreatedAt,
+            UpdatedAt: profile.UpdatedAt,
+            Version: BitConverter.GetBytes(profile.Version));
+    }
+}
 
 /// <summary>
 ///     Request model for updating user profile

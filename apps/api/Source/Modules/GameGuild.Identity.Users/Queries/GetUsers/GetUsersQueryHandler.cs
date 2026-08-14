@@ -45,16 +45,8 @@ public sealed class GetUsersQueryHandler(
 
         var actorTenantId = Actor.TenantId;
 
-        if (!Actor.IsSystemAdmin)
+        if (actorTenantId.HasValue && !Actor.IsSystemAdmin)
         {
-            if (!actorTenantId.HasValue)
-            {
-                var unauthenticatedActorId = Actor.SubjectIdAsGuid
-                    ?? throw new AuthenticationRequiredException("Authenticated user ID is required to list users.");
-
-                throw new AccessDeniedException($"User {unauthenticatedActorId} attempted to list users without tenant context.");
-            }
-
             var actorUserId = Actor.SubjectIdAsGuid
                 ?? throw new AuthenticationRequiredException("Authenticated user ID is required to list users.");
 
@@ -68,6 +60,13 @@ public sealed class GetUsersQueryHandler(
             }
 
             query = query.Where(u => u.TenantMemberships.Any(m => m.TenantId == actorTenantId.Value && m.IsActive));
+        }
+        else if (!Actor.IsSystemAdmin)
+        {
+            var actorUserId = Actor.SubjectIdAsGuid
+                ?? throw new AuthenticationRequiredException("Authenticated user ID is required to list users.");
+
+            throw new AccessDeniedException($"User {actorUserId} attempted to list users without tenant context.");
         }
 
         // Apply includeDeleted filter first

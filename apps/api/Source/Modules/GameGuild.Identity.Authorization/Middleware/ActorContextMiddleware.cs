@@ -122,8 +122,15 @@ public sealed class ActorContextMiddleware
         var tenantIdStr = await tenantResolver.ResolveTenantIdAsync(httpContext, cancellationToken).ConfigureAwait(false);
         Guid? tenantId = Guid.TryParse(tenantIdStr, out var tid) ? tid : null;
 
-        // Extract roles from claims
+        // Token roles describe platform access. Tenant middleware contributes the
+        // current membership role only after validating it against persistence.
         var roles = ClaimsExtractor.GetRoles(user);
+        if (httpContext.Items.TryGetValue(HttpContextKeys.AuthorizationTenantRole, out var membershipRoleValue) &&
+            membershipRoleValue is string membershipRole &&
+            !string.IsNullOrWhiteSpace(membershipRole))
+        {
+            roles.Add(membershipRole);
+        }
 
         // Extract permissions - either from claims or fetch from database
         var permissions = await ExtractOrFetchPermissionsAsync(

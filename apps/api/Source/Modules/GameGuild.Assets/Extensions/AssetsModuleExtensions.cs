@@ -93,8 +93,6 @@ public static class AssetsModuleExtensions
         services.AddScoped<IAssetStorageService, AssetStorageService>();
         services.AddScoped<IAssetUploadService, AssetUploadService>();
         services.AddScoped<IAssetAccessService, AssetAccessService>();
-        services.AddScoped<IAssetParentAuthorizationResolver, ProjectAssetParentAuthorizationResolver>();
-        services.AddScoped<IAssetParentAuthorizationResolver, TeamAssetParentAuthorizationResolver>();
         services.AddScoped<IAssetUploadAuthorizationService, AssetUploadAuthorizationService>();
         services.AddScoped<IAssetFolderAuthorizationService, AssetFolderAuthorizationService>();
         services.AddScoped<IAssetLibraryService, AssetLibraryService>();

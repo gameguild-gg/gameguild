@@ -8,7 +8,6 @@ public sealed class TagsModelConfiguration : IModelConfiguration
     {
         modelBuilder.Entity<Tag>();
         modelBuilder.Entity<TagProficiency>();
-        modelBuilder.Entity<CertificateTag>();
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(TagsModelConfiguration).Assembly,
             type => type.Namespace?.StartsWith("GameGuild.Tags", StringComparison.Ordinal) == true);

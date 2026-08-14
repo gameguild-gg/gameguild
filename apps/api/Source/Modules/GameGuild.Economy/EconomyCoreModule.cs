@@ -1,5 +1,7 @@
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Funding;
+using GameGuild.Economy.Integrations;
+using GameGuild.Economy.Integrations.AI;
 using GameGuild.Economy.Risk;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +32,8 @@ public sealed class EconomyCoreModule : ModuleBase
         services.AddScoped<IFifoFragmentReservationGateway, PostgreSqlFifoFragmentReservationGateway>();
         services.AddScoped<IProviderReversalGateway, PostgreSqlProviderReversalGateway>();
         services.AddScoped<IFifoTransferGateway, PostgreSqlFifoTransferGateway>();
+        services.AddSingleton<IStripeEconomyFundingAdapter, StripeEconomyFundingAdapter>();
+        services.AddScoped<IAiProviderCostFactStore, EfAiProviderCostFactStore>();
         return services;
     }
 }
