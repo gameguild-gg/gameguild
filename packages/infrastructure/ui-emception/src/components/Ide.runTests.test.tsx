@@ -294,3 +294,155 @@ describe('Ide runTests button (testPlan/testMode props)', () => {
     expect(btn.disabled).toBe(false);
   });
 });
+
+// ── Doctest branch (combined TU + mini-doctest parse) ──────────────────────
+
+const DOCTEST_ONLY_PLAN: GradingPlan = {
+  cases: [{ kind: 'doctest', name: 'add', sourceFiles: ['/home/user/functional_0_test.cpp'], weight: 1, hidden: false }],
+  build: {},
+  generatedFiles: [
+    {
+      path: '/home/user/functional_0_test.cpp',
+      content:
+        '#include "doctest.h"\n#include <string>\n\nextern "C" int add(int, int);\nTEST_CASE("0:add") {\n    CHECK(add(2, 3) == 5);\n}\n',
+    },
+  ],
+};
+
+const DOCTEST_SUCCESS_STDOUT = [
+  'TEST CASE:  0:add',
+  '===============================================================================',
+  '[doctest] test cases:      1 |      1 passed |      0 failed | 0 skipped',
+  '[doctest] assertions:      1 |      1 passed |      0 failed |',
+  '[doctest] Status: SUCCESS!',
+].join('\n');
+
+const DOCTEST_FAILURE_STDOUT = [
+  '/home/user/functional_combined_0.cpp:9: ERROR: CHECK( add(2, 3) == 5 ) is NOT correct!',
+  '===============================================================================',
+  '[doctest] test cases:      1 |      0 passed |      1 failed | 0 skipped',
+  '[doctest] assertions:      1 |      0 passed |      1 failed |',
+  '[doctest] Status: FAILURE!',
+].join('\n');
+
+function stubToolDispatch(wasiRun: { exitCode: number; stdout: string; stderr: string }) {
+  const { stubClient } = require('@gameguild/emception-browser');
+  stubClient.run.mockImplementation(async (tool: string) =>
+    tool === 'wasi-run' ? wasiRun : { exitCode: 0, stdout: '', stderr: '' },
+  );
+  return stubClient;
+}
+
+function writtenText(path: string): string {
+  const { stubClient } = require('@gameguild/emception-browser');
+  const call = stubClient.writeFile.mock.calls.find((c: unknown[]) => c[0] === path);
+  return call ? new TextDecoder().decode(call[1] as Uint8Array) : '';
+}
+
+describe('Ide runTests doctest branch', () => {
+  it('doctest-only plan compiles a combined TU and reports the parsed verdict', async () => {
+    const onTestReport = jest.fn();
+    const ref = createRef<IdeHandle>();
+
+    await act(async () => {
+      render(<Ide ref={ref} testPlan={DOCTEST_ONLY_PLAN} testMode="full" onTestReport={onTestReport} />);
+    });
+
+    const stubClient = stubToolDispatch({ exitCode: 0, stdout: DOCTEST_SUCCESS_STDOUT, stderr: '' });
+
+    const btn = document.querySelector('[data-testid="run-tests-button"]') as HTMLButtonElement;
+    await act(async () => {
+      fireEvent.click(btn!);
+    });
+
+    // No stdio case → no main.wasm build: pipeline is doctest clang + wasm-ld + wasi-run.
+    const tools = stubClient.run.mock.calls.map((c: string[]) => c[0]);
+    expect(tools).toEqual(['clang', 'wasm-ld', 'wasi-run']);
+
+    // The combined TU strips extern "C", disables student main, embeds the harness.
+    expect(writtenText('/home/user/doctest.h')).toContain('mini_doctest');
+    const combined = writtenText('/home/user/functional_combined_0.cpp');
+    expect(combined).toContain('#define main gg_student_main_disabled');
+    expect(combined).toContain('TEST_CASE("0:add")');
+    expect(combined).not.toContain('extern "C"');
+
+    expect(onTestReport).toHaveBeenCalledTimes(1);
+    const report = onTestReport.mock.calls[0][0];
+    expect(report.cases).toHaveLength(1);
+    expect(report.cases[0].name).toBe('add');
+    expect(report.cases[0].passed).toBe(true);
+    expect(report.cases[0].diagnostic).toBeUndefined();
+  });
+
+  it('doctest failure surfaces CHECK failure lines as diagnostic', async () => {
+    const onTestReport = jest.fn();
+    const ref = createRef<IdeHandle>();
+
+    await act(async () => {
+      render(<Ide ref={ref} testPlan={DOCTEST_ONLY_PLAN} onTestReport={onTestReport} />);
+    });
+
+    stubToolDispatch({ exitCode: 1, stdout: DOCTEST_FAILURE_STDOUT, stderr: '' });
+
+    const btn = document.querySelector('[data-testid="run-tests-button"]') as HTMLButtonElement;
+    await act(async () => {
+      fireEvent.click(btn!);
+    });
+
+    const report = onTestReport.mock.calls[0][0];
+    expect(report.cases[0].passed).toBe(false);
+    expect(report.cases[0].diagnostic).toContain('ERROR: CHECK( add(2, 3) == 5 ) is NOT correct!');
+  });
+
+  it('doctest compile error produces a failed case with captured stderr', async () => {
+    const onTestReport = jest.fn();
+    const ref = createRef<IdeHandle>();
+
+    await act(async () => {
+      render(<Ide ref={ref} testPlan={DOCTEST_ONLY_PLAN} onTestReport={onTestReport} />);
+    });
+
+    const { stubClient } = require('@gameguild/emception-browser');
+    stubClient.run.mockImplementation(async (tool: string) =>
+      tool === 'clang'
+        ? { exitCode: 1, stdout: '', stderr: 'combined.cpp:5:1: error: expected unqualified-id' }
+        : { exitCode: 0, stdout: '', stderr: '' },
+    );
+
+    const btn = document.querySelector('[data-testid="run-tests-button"]') as HTMLButtonElement;
+    await act(async () => {
+      fireEvent.click(btn!);
+    });
+
+    const report = onTestReport.mock.calls[0][0];
+    expect(report.cases).toHaveLength(1);
+    expect(report.cases[0].passed).toBe(false);
+    expect(report.cases[0].diagnostic).toContain('Doctest compilation failed');
+    expect(report.cases[0].diagnostic).toContain('expected unqualified-id');
+    // Compile failed before any wasi-run.
+    expect(stubClient.run.mock.calls.map((c: string[]) => c[0])).toEqual(['clang']);
+  });
+
+  it('doctest case without a generated harness still reports a failed case', async () => {
+    const onTestReport = jest.fn();
+    const ref = createRef<IdeHandle>();
+
+    await act(async () => {
+      render(<Ide ref={ref} testPlan={SAMPLE_PLAN} onTestReport={onTestReport} />);
+    });
+
+    const stubClient = stubToolDispatch({ exitCode: 0, stdout: 'hello', stderr: '' });
+
+    const btn = document.querySelector('[data-testid="run-tests-button"]') as HTMLButtonElement;
+    await act(async () => {
+      fireEvent.click(btn!);
+    });
+
+    const report = onTestReport.mock.calls[0][0];
+    expect(report.cases[1].name).toBe('doctest_hidden');
+    expect(report.cases[1].passed).toBe(false);
+    expect(report.cases[1].diagnostic).toMatch(/not yet supported/);
+    // SAMPLE_PLAN has a stdio case → stdio build runs; doctest never reaches wasi-run.
+    expect(stubClient.run.mock.calls.map((c: string[]) => c[0])).toEqual(['clang', 'wasm-ld', 'wasi-run']);
+  });
+});
