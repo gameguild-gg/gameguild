@@ -136,6 +136,17 @@ test_published_api_uses_published_content_root() {
     "$ci_dir/verify-economy.sh"
 }
 
+test_whole_solution_provisions_garage() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq "garage_container='gameguild-economy-ci-garage-" "$gate" || return 1
+  grep -Fq 'dxflrs/garage:v2.3.0' "$gate" || return 1
+  grep -Fq 'GARAGE_HOST=127.0.0.1' "$gate" || return 1
+  grep -Fq 'export S3_SERVICE_URL="http://127.0.0.1:$garage_s3_port"' "$gate" || return 1
+  grep -Fq 'export GARAGE_ADMIN_URL="http://127.0.0.1:$garage_admin_port"' "$gate" || return 1
+  grep -Fq 'docker rm --force "$garage_container"' "$gate"
+}
+
 test_manifest_rejects_undeclared_project() {
   local root="$fixture_root/manifest-invalid"
   mkdir -p "$root/apps/api/Source/Modules/GameGuild.Economy"
@@ -342,6 +353,7 @@ run_test 'web Vitest is isolated from the published API instance' test_web_vites
 run_test 'local API readiness enables payment simulation explicitly' test_local_api_readiness_enables_simulation_explicitly
 run_test 'Coolify forwards Stripe gateway identity and mode' test_coolify_compose_forwards_stripe_gateway_identity
 run_test 'published API uses its published content root' test_published_api_uses_published_content_root
+run_test 'whole-solution tests provision isolated Garage storage' test_whole_solution_provisions_garage
 run_test 'manifest rejects undeclared Economy projects' test_manifest_rejects_undeclared_project
 run_test 'manifest accepts declared Economy projects and tests' test_manifest_accepts_declared_projects
 run_test 'manifest records normalize Windows line endings' test_manifest_record_fields_normalize_windows_line_endings
