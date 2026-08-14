@@ -237,7 +237,7 @@ async function run() {
     const preview = page.getByTestId("json-preview");
     await preview.waitFor();
     await page.waitForFunction(
-      () => /"id": "assignment-cpp"/.test(
+      () => /"id": "cpp"/.test(
         document.querySelector('[data-testid="json-preview"]')?.textContent ??
           "",
       ),

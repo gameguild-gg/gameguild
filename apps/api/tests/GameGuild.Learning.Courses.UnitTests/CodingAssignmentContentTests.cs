@@ -244,6 +244,54 @@ public class CodingAssignmentContentTests
         errors.Should().Contain(e => e.ErrorCode == "invalid_language");
     }
 
+    // ── total assignment size: sum of file Content lengths ≤ 10MB ─────────────────────────────────────
+
+    [Fact]
+    public void Validator_Rejects_FilesOver10MB()
+    {
+        var content = CreateMinimalValid() with
+        {
+            Data = new WorkspaceData
+            {
+                Files = new()
+                {
+                    ["big.png"] = new BundleFileMeta
+                    {
+                        Content = new string('a', 10_000_001),
+                        Encoding = "base64",
+                        Visibility = "Public",
+                        Modifiable = false
+                    }
+                }
+            }
+        };
+        var errors = Validate(content);
+        errors.Should().Contain(e => e.ErrorCode == "files_too_large");
+    }
+
+    [Fact]
+    public void Validator_Accepts_FilesJustUnder10MB()
+    {
+        var content = CreateMinimalValid() with
+        {
+            Data = new WorkspaceData
+            {
+                Files = new()
+                {
+                    ["big.png"] = new BundleFileMeta
+                    {
+                        Content = new string('a', 10_000_000),
+                        Encoding = "base64",
+                        Visibility = "Public",
+                        Modifiable = false
+                    }
+                }
+            }
+        };
+        var errors = Validate(content);
+        errors.Should().NotContain(e => e.ErrorCode == "files_too_large");
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────────────────────────────
 
     private static CodingAssignmentContent CreateMinimalValid() => new()

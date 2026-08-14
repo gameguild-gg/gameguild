@@ -120,7 +120,7 @@ export interface IdeProps {
 export interface IdeHandle {
   runTests: import('@gameguild/emception-browser').EmceptionAPI['runTests'];
   compileAndRun: import('@gameguild/emception-browser').EmceptionAPI['compileAndRun'];
-  getFiles(): Promise<Array<{ path: string; content: string }>>;
+  getFiles(): Promise<Array<{ path: string; content: string; encoding: 'text' | 'base64' }>>;
   setFiles(files: Array<{ path: string; content: string }>): Promise<void>;
   reset(): Promise<void>;
   /** Write a single file to reactive state + worker VFS via `client.writeFile`. */
@@ -133,7 +133,7 @@ export interface IdeHandle {
   getModifiedFiles(): Promise<Array<{ path: string; content: string; encoding: 'text' }>>;
   /** Single snapshot for the page's save handler — files + fileMeta + tests + activePresetId. */
   getAuthoredState(): Promise<{
-    files: Array<{ path: string; content: string }>;
+    files: Array<{ path: string; content: string; encoding: 'text' | 'base64' }>;
     fileMeta: Record<string, { visibility: 'Public' | 'Private'; modifiable: boolean }>;
     tests?: unknown;
     presetId: string;
@@ -254,7 +254,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(workspaceStorageKey(assignmentToken));
+      // Read with the mount-time preset id — the initial workspace's key.
+      const raw = window.localStorage.getItem(workspaceStorageKey(assignmentToken, activePresetIdRef.current));
       if (!raw) return;
       const parsed = JSON.parse(raw) as {
         files?: Record<string, WorkspaceFile>;
@@ -278,10 +279,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
   useEffect(() => {
     try {
-      // Exclude runtime-only canvas entries from persisted workspace files
-      const filesToSave = Object.fromEntries(Object.entries(files).filter(([path, file]) => path !== SDL_CANVAS_PATH && file.type !== 'canvas'));
+      // Exclude runtime-only canvas entries and image files (base64 data-URIs
+      // would blow the ~5MB localStorage quota) from the persisted workspace.
+      // Images are re-seeded from the saved assignment on reload.
+      const filesToSave = Object.fromEntries(
+        Object.entries(files).filter(([path, file]) => path !== SDL_CANVAS_PATH && file.type !== 'canvas' && file.type !== 'image'),
+      );
       window.localStorage.setItem(
-        workspaceStorageKey(assignmentToken),
+        // Ref read at effect-run time: applyWorkspace updates the ref and the
+        // persisted state in the same commit, so read/write keys never split.
+        workspaceStorageKey(assignmentToken, activePresetIdRef.current),
         JSON.stringify({
           files: filesToSave,
           selectedPath,
@@ -738,15 +745,13 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     }
     }, [testPlan, testMode, syncFilesToVfs]);
 
-  // ── Switch workspace preset ───────────────────────────────────
-  const switchWorkspace = useCallback(
-    async (presetId: string) => {
-      const preset = PRESETS[presetId];
-      if (!preset) return;
+  // ── Apply a workspace config to reactive state + Worker VFS ─────
+  const applyWorkspace = useCallback(
+    async (config: WorkspaceConfig, presetId: string) => {
       const P = '[Emception:IDE]';
-      console.log(`${P} ===== WORKSPACE SWITCH: "${activePresetId}" → "${presetId}" =====`);
+      console.log(`${P} applying workspace "${presetId}" (${config.label})`);
 
-      // Stop SDL3 loop if running
+      // Stop SDL3 loop if running + reset canvas state
       const sdlMod = sdlModuleRef.current;
       if (sdlMod) {
         try {
@@ -760,7 +765,6 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       sdlScriptRef.current = null;
       sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       sdlBlobUrlsRef.current = [];
-      // Reset canvas state
       const canvas = canvasRef.current;
       if (canvas) {
         delete canvas.dataset.sdlRunning;
@@ -768,30 +772,15 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       }
       setCanvasIsRunning(false);
       setExecutionPhase('idle');
-      stoppedRef.current = true;
-
-      // Reset VFS in the Worker to clear stale build artifacts from the previous workspace
-      if (orchestratorRef.current) {
-        const { client, tty } = orchestratorRef.current;
-        tty.clear();
-        tty.writeLine(`\x1b[33mSwitching workspace...\x1b[0m`);
-        try {
-          console.log(`${P} Resetting Worker VFS (clearing /tmp and /home/user)...`);
-          await client.resetVfs();
-          console.log(`${P} Worker VFS reset complete`);
-        } catch (err) {
-          console.warn(`${P} VFS reset failed, continuing:`, err);
-        }
-      }
 
       stoppedRef.current = false;
       setActivePresetId(presetId);
-      const state = workspaceConfigToState(preset);
+      const state = workspaceConfigToState(config);
       setFiles(state.files);
       setOpenTabs(state.openTabs);
       setActiveTabId(state.activeTabId);
       setExpandedDirs(state.expandedDirs);
-      setSelectedPath(preset.layout.activeFile);
+      setSelectedPath(config.layout.activeFile);
 
       // Dispose stale Monaco models from the OLD workspace after React re-renders.
       // We defer disposal so @monaco-editor/react can cleanly unmount its model
@@ -811,14 +800,53 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       }
 
       if (orchestratorRef.current) {
-        orchestratorRef.current.tty.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
+        orchestratorRef.current.tty.writeLine(`\x1b[32mSwitched to workspace: ${config.label}\x1b[0m`);
         // Sync new workspace files into VFS so /home/user is populated immediately
         await syncFilesToVfs(state.files);
       }
+    },
+    [syncFilesToVfs],
+  );
+
+  // ── Switch workspace preset (internal PRESETS registry) ─────────
+  const switchWorkspace = useCallback(
+    async (presetId: string) => {
+      const preset = PRESETS[presetId];
+      if (!preset) return;
+      const P = '[Emception:IDE]';
+      console.log(`${P} ===== WORKSPACE SWITCH: "${activePresetId}" → "${presetId}" =====`);
+      stoppedRef.current = true;
+
+      // Reset VFS in the Worker to clear stale build artifacts from the previous workspace
+      if (orchestratorRef.current) {
+        const { client, tty } = orchestratorRef.current;
+        tty.clear();
+        tty.writeLine(`\x1b[33mSwitching workspace...\x1b[0m`);
+        try {
+          console.log(`${P} Resetting Worker VFS (clearing /tmp and /home/user)...`);
+          await client.resetVfs();
+          console.log(`${P} Worker VFS reset complete`);
+        } catch (err) {
+          console.warn(`${P} VFS reset failed, continuing:`, err);
+        }
+      }
+
+      await applyWorkspace(preset, presetId);
       console.log(`${P} ===== WORKSPACE SWITCH COMPLETE =====`);
     },
-    [activePresetId, syncFilesToVfs],
+    [activePresetId, applyWorkspace],
   );
+
+  // ── React to external workspaceConfig prop changes ──────────────
+  // Parent-driven switches (e.g. the coding-definition page re-seeding on
+  // onPresetChange) land here when their id diverges from the tracked preset.
+  // The ref-dedupe keeps an in-IDE pick that echoes back through the parent
+  // from re-applying the same config.
+  useEffect(() => {
+    if (!workspaceConfig) return;
+    if (workspaceConfig.id === activePresetIdRef.current) return;
+    void applyWorkspace(workspaceConfig, workspaceConfig.id);
+  }, [workspaceConfig, applyWorkspace]);
 
   const handleBootTerminalReady = useCallback((term: Terminal) => {
     xtermRef.current = term;
@@ -919,10 +947,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   }, []);
 
   useImperativeHandle(ref, () => {
+    // Strips any data-URI mime prefix; non-matching (utf8/raw) content passes through.
+    const base64Prefix = /^data:[^;]*;base64,/;
     const getFiles = async () => {
       return Object.values(filesRef.current)
-        .filter((f) => f.type === 'text')
-        .map(({ path, content }) => ({ path, content }));
+        .filter((f) => f.type === 'text' || f.type === 'image')
+        .map((f) =>
+          f.type === 'image' && base64Prefix.test(f.content)
+            ? { path: f.path, content: f.content.replace(base64Prefix, ''), encoding: 'base64' as const }
+            : { path: f.path, content: f.content, encoding: 'text' as const },
+        );
     };
     return {
     runTests: async (plan) => {
@@ -1093,6 +1127,63 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       canvas.style.display = canvas.dataset.sdlRunning ? 'block' : 'none';
     }
   });
+
+  // 10MB assignment budget — backend validator enforces the authoritative limit.
+  const MAX_ASSIGNMENT_BYTES = 10_000_000;
+
+  /** Reads each uploaded image as a base64 data-URI and stores it under /user.
+   *  Rejects batches whose estimated serialized size would exceed 10MB. */
+  const handleUploadFiles = useCallback(async (uploads: File[]) => {
+    if (uploads.length === 0) return;
+    // Base64 inflates ~4/3 → estimate 1.4x the raw file size.
+    const existingBytes = Object.values(filesRef.current).reduce((sum, f) => sum + f.content.length, 0);
+    const incomingBytes = uploads.reduce((sum, f) => sum + f.size, 0);
+    if (existingBytes + incomingBytes * 1.4 > MAX_ASSIGNMENT_BYTES) {
+      const msg = `Upload rejected: assignment would exceed 10MB (current ${(existingBytes / 1e6).toFixed(1)}MB + ${(incomingBytes / 1e6).toFixed(1)}MB of images)`;
+      setStatus('Upload rejected: assignment would exceed 10MB');
+      const tty = orchestratorRef.current?.tty;
+      if (tty) tty.writeError(`\x1b[31m${msg}\x1b[0m`);
+      else xtermRef.current?.writeln(`\x1b[31m${msg}\x1b[0m`);
+      return;
+    }
+    let stored = 0;
+    for (const file of uploads) {
+      let dataUrl: string;
+      try {
+        dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(reader.error ?? new Error('FileReader failed'));
+          reader.readAsDataURL(file);
+        });
+      } catch (err) {
+        setStatus(`Upload failed: ${file.name}`);
+        orchestratorRef.current?.tty.writeError(`Upload failed: ${file.name}: ${err}`);
+        continue;
+      }
+      const base = `/user/${file.name}`;
+      const dot = base.lastIndexOf('.');
+      const stem = dot > 0 ? base.slice(0, dot) : base;
+      const ext = dot > 0 ? base.slice(dot) : '';
+      let path = base;
+      let n = 2;
+      while (filesRef.current[path]) {
+        path = `${stem}-${n}${ext}`;
+        n++;
+      }
+      filesRef.current = { ...filesRef.current, [path]: { path, type: 'image' as const, content: dataUrl } };
+      setFiles(filesRef.current);
+      setSelectedPath(path);
+      setOpenTabs((prev) =>
+        prev.some((t) => t.id === `tab:${path}`)
+          ? prev
+          : [...prev, { id: `tab:${path}`, path, type: 'image' as const, group: 'main' as const }],
+      );
+      setActiveTabId(`tab:${path}`);
+      stored++;
+    }
+    if (stored > 0) setStatus(`Uploaded ${stored} image file${stored === 1 ? '' : 's'}`);
+  }, []);
 
   const createFile = useCallback(
     (kind: TabType) => {
@@ -2494,6 +2585,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             onCreateFile={createFile}
             onRename={renameSelectedFile}
             onDelete={deleteSelectedFile}
+            onUploadFiles={handleUploadFiles}
             fileMeta={fileMeta}
             onFileMetaChange={onFileMetaChange}
           />

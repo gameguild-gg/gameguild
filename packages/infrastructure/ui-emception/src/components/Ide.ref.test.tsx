@@ -121,7 +121,7 @@ describe('Ide ref / imperative handle', () => {
 
     const files = await ref.current!.getFiles();
     const mainC = files.find((f) => f.path === '/home/user/main.c');
-    expect(mainC).toEqual({ path: '/home/user/main.c', content: 'int x;' });
+    expect(mainC).toEqual({ path: '/home/user/main.c', content: 'int x;', encoding: 'text' });
   });
 
   it('runTests rejects cleanly when worker not booted', async () => {

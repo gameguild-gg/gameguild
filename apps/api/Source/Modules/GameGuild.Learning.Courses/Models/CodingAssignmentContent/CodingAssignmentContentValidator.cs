@@ -66,6 +66,13 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
             .WithMessage("Private files cannot be Modifiable").WithErrorCode("private_file_not_modifiable")
             .When(x => x.Data?.Files != null);
 
+        // Total serialized size budget (base64 images included) — 10MB
+        RuleFor(x => x.Data.Files)
+            .Must(files => files.Values.Sum(f => f?.Content?.Length ?? 0) <= 10_000_000)
+            .WithMessage("Total assignment size must not exceed 10MB")
+            .WithErrorCode("files_too_large")
+            .When(x => x.Data?.Files != null);
+
         // FunctionalTestGroup: FunctionName must match C-identifier regex
         RuleForEach(x => x.Tests.Public)
             .Must(IsValidFunctionName)

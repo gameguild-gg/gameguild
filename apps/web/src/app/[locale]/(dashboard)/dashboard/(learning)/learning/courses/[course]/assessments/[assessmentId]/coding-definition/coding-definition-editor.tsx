@@ -37,6 +37,7 @@ import {
   type FunctionalTestGroup,
   type Test,
 } from "@/lib/coding-assignment/actions";
+import type { FileEncoding } from "@/lib/coding-assignment/types";
 // ponytail: same import path + cast bridge as grade-client.tsx. The web
 // CodingAssignmentContent uses readonly arrays; the emception mapper input
 // uses mutable arrays. Wire shape is identical at runtime.
@@ -71,6 +72,7 @@ const FUNCTION_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 interface AssignmentFileRow {
   path: string;
   content: string;
+  encoding: FileEncoding;
   visibility: FileVisibility;
   modifiable: boolean;
 }
@@ -112,6 +114,7 @@ export function CodingDefinitionEditor({
       ? Object.entries(initialContent.Data.Files).map(([path, meta]) => ({
           path,
           content: meta.Content,
+          encoding: meta.Encoding ?? "text",
           visibility: meta.Visibility,
           modifiable: meta.Modifiable,
         }))
@@ -136,7 +139,7 @@ export function CodingDefinitionEditor({
     if (!sample) return null;
     const files: WorkspaceConfig["files"] = {};
     for (const row of fileRows) {
-      files[row.path] = { encoding: "text", content: row.content };
+      files[row.path] = { encoding: row.encoding, content: row.content };
     }
     // ponytail: if no files yet, fall back to the preset so the IDE has something to boot with.
     return {
@@ -218,6 +221,7 @@ export function CodingDefinitionEditor({
     ).map(([path, bundle]) => ({
       path,
       content: bundle.content,
+      encoding: bundle.encoding,
       visibility: "Public" as FileVisibility,
       modifiable: true,
     }));
@@ -312,12 +316,13 @@ export function CodingDefinitionEditor({
     if (ideRef.current) {
       try {
         const authored = await ideRef.current.getAuthoredState();
-        const liveMap = new Map(authored.files.map((f) => [f.path, f.content]));
+        const liveMap = new Map(authored.files.map((f) => [f.path, f]));
         const knownPaths = new Set(fileRows.map((r) => r.path));
         // Refresh content + meta of known rows.
         const refreshed = fileRows.map((row) => ({
           ...row,
-          content: liveMap.get(row.path) ?? row.content,
+          content: liveMap.get(row.path)?.content ?? row.content,
+          encoding: liveMap.get(row.path)?.encoding ?? row.encoding,
           visibility: authored.fileMeta[row.path]?.visibility ?? row.visibility,
           modifiable: authored.fileMeta[row.path]?.modifiable ?? row.modifiable,
         }));
@@ -327,6 +332,7 @@ export function CodingDefinitionEditor({
           .map((f) => ({
             path: f.path,
             content: f.content,
+            encoding: f.encoding ?? "text",
             visibility: (authored.fileMeta[f.path]?.visibility ?? "Public") as FileVisibility,
             modifiable: authored.fileMeta[f.path]?.modifiable ?? true,
           }));
@@ -341,7 +347,13 @@ export function CodingDefinitionEditor({
           ];
         }
 
-        if (authored.presetId) {
+        // Guard: authored.presetId is the workspaceConfig id — only trust it
+        // when it maps to a known language, otherwise DEFAULT_TOOLS lookup
+        // yields undefined and the backend rejects the payload.
+        if (
+          authored.presetId &&
+          LANGUAGE_OPTIONS.some((o) => o.value === authored.presetId)
+        ) {
           liveLanguage = authored.presetId as CodingLanguage;
         }
       } catch {
@@ -356,6 +368,14 @@ export function CodingDefinitionEditor({
       testRows: liveTestRows,
       maxScore,
     });
+
+    // 10MB budget — matches the backend's files_too_large FluentValidation rule.
+    if (JSON.stringify(content).length > 10_000_000) {
+      setError(
+        "Assignment exceeds 10MB total (texts+images+tests). Remove some files.",
+      );
+      return;
+    }
 
     startTransition(async () => {
       const result = await putCodingAssignmentAction(programId, contentId, content);
@@ -594,6 +614,13 @@ function validateAll(state: ValidationState): ValidationErr[] {
           message: `Return type "${fn.Function.ReturnType.Type}" is not supported in v1.`,
         });
       }
+      if (fn.Cases.length === 0) {
+        errors.push({
+          field: `${path}.Cases`,
+          code: "at_least_one_case",
+          message: "Functional test requires at least one case.",
+        });
+      }
     }
   });
 
@@ -615,11 +642,11 @@ interface BuildArgs {
 }
 
 function buildContent(args: BuildArgs): CodingAssignmentContent {
-  const files: Record<string, { Content: string; Encoding: "text"; Visibility: FileVisibility; Modifiable: boolean }> = {};
+  const files: Record<string, { Content: string; Encoding: FileEncoding; Visibility: FileVisibility; Modifiable: boolean }> = {};
   for (const row of args.fileRows) {
     files[row.path] = {
       Content: row.content,
-      Encoding: "text",
+      Encoding: row.encoding,
       Visibility: row.visibility,
       Modifiable: row.modifiable,
     };
