@@ -27,7 +27,7 @@
     "build:web": "pnpm --filter @game-guild/web run build",
     "test": "turbo run test",
     "test:emception": "pnpm --dir tools/emception run test:packages",
-    "test:emception:e2e": "pnpm --dir tools/emception run e2e -- --project=chromium",
+    "test:emception:e2e": "pnpm --dir tools/emception run e2e --project=chromium",
     "test:emception:e2e:full": "pnpm --dir tools/emception run e2e:react",
     "test:emception:types": "pnpm --dir tools/emception run test:types:packages",
     "test:coverage": "turbo run test:coverage",
