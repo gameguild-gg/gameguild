@@ -99,24 +99,27 @@ public sealed class CodingAssignmentEndpointsTests
         persisted!.Grading.MaxScore.Should().Be(50);
     }
 
-    // ── (g) PUT invalid payload (empty tests) → 400 with at_least_one_test ───────
+    // ── (g) PUT with empty tests (open-ended assignment) → succeeds ──────────────
 
     [Fact]
-    public async Task UpsertAsync_WithEmptyTests_FailsWithAtLeastOneTest()
+    public async Task UpsertAsync_WithEmptyTests_Succeeds()
     {
         await using var fixture = new ServiceFixture();
         var programId = Guid.NewGuid();
         var content = PersistCodingContent(fixture, programId, BuildFullContent());
 
-        var invalid = BuildFullContent() with
+        var openEnded = BuildFullContent() with
         {
             Tests = new TestSuite { Public = new List<Test>(), Private = new List<Test>() }
         };
 
-        var result = await fixture.Service.UpsertAsync(programId, content.Id, invalid, Guid.NewGuid());
+        var result = await fixture.Service.UpsertAsync(programId, content.Id, openEnded, Guid.NewGuid());
 
-        result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be("at_least_one_test");
+        result.IsSuccess.Should().BeTrue();
+        await fixture.Context.Entry(content).ReloadAsync();
+        var persisted = System.Text.Json.JsonSerializer.Deserialize<CodingAssignmentContent>(content.JsonBody!);
+        persisted!.Tests.Public.Should().BeEmpty();
+        persisted.Tests.Private.Should().BeEmpty();
     }
 
     // ── (h) PUT syncs Assessment.MaxScore via IAssessmentGradingSync ─
