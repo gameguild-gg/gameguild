@@ -181,10 +181,11 @@ export function CodingDefinitionEditor({
         testRows,
         maxScore,
       });
-      return buildTestPlan(
+      const { plan, generatedFiles } = buildTestPlan(
         content as unknown as EmceptionAssignmentContent,
         { mode: "full" },
-      ).plan;
+      );
+      return { ...plan, generatedFiles };
     } catch {
       return undefined;
     }

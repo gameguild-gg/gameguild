@@ -10,9 +10,14 @@ export function isTextFile(path: string): boolean {
     );
 }
 
-export function toWorkspaceFsPath(path: string, assignmentToken?: string): string {
+/**
+ * Map any workspace path to the flat VFS mount `/app/<name>`. localStorage
+ * isolation (per-assessment) lives in `workspaceStorageKey`, not in the path.
+ * `_assignmentToken` is kept in the signature for backward-compat only.
+ */
+export function toWorkspaceFsPath(path: string, _assignmentToken?: string): string {
     const rest = path.startsWith('/user/') ? path.slice('/user/'.length) : fileName(path);
-    return assignmentToken ? `/home/user/${assignmentToken}/${rest}` : `/home/user/${rest}`;
+    return `/app/${rest}`;
 }
 
 export function fileName(path: string): string {
@@ -83,7 +88,7 @@ export function buildSDL3ArgsPort(targetFsPath: string): string[] {
         '-sALLOW_MEMORY_GROWTH=1',
         '-sENVIRONMENT=web',
         '-O1',
-        '-o', '/home/user/main.wasm',
+        '-o', '/app/main.wasm',
     ];
 }
 

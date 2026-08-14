@@ -36,12 +36,18 @@ describe('fileName', () => {
 // ─── toWorkspaceFsPath ───────────────────────────────────────────────────────
 
 describe('toWorkspaceFsPath', () => {
-  it('maps /user/* to /home/user/*', () => expect(toWorkspaceFsPath('/user/main.cpp')).toBe('/home/user/main.cpp'));
-  it('maps a nested /user path correctly', () => expect(toWorkspaceFsPath('/user/lib/utils.cpp')).toBe('/home/user/lib/utils.cpp'));
-  it('falls back to /home/user/<basename> for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas')).toBe('/home/user/canvas'));
-  it('namespaces by assignmentToken when supplied', () => expect(toWorkspaceFsPath('/user/main.cpp', 'abc-123')).toBe('/home/user/abc-123/main.cpp'));
-  it('namespaces nested paths by assignmentToken', () => expect(toWorkspaceFsPath('/user/lib/utils.cpp', 'abc-123')).toBe('/home/user/abc-123/lib/utils.cpp'));
-  it('namespaces basename by assignmentToken for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas', 'abc-123')).toBe('/home/user/abc-123/canvas'));
+  it('maps /user/* to /app/*', () => expect(toWorkspaceFsPath('/user/main.cpp')).toBe('/app/main.cpp'));
+  it('maps a nested /user path correctly', () => expect(toWorkspaceFsPath('/user/lib/utils.cpp')).toBe('/app/lib/utils.cpp'));
+  it('falls back to /app/<basename> for non-/user/ paths', () => expect(toWorkspaceFsPath('/other/canvas')).toBe('/app/canvas'));
+  it('ignores assignmentToken (flat mount, no per-assignment namespace)', () => {
+    expect(toWorkspaceFsPath('/user/main.cpp', 'abc-123')).toBe('/app/main.cpp');
+    expect(toWorkspaceFsPath('/user/lib/utils.cpp', 'abc-123')).toBe('/app/lib/utils.cpp');
+    expect(toWorkspaceFsPath('/other/canvas', 'abc-123')).toBe('/app/canvas');
+  });
+  it('normalizes /home/user/* (buildTestPlan output shape) to /app/*', () => {
+    expect(toWorkspaceFsPath('/home/user/functional_0_test.cpp')).toBe('/app/functional_0_test.cpp');
+    expect(toWorkspaceFsPath('/home/user/solution.cpp')).toBe('/app/solution.cpp');
+  });
 });
 
 // ─── workspaceStorageKey ─────────────────────────────────────────────────────
@@ -135,10 +141,10 @@ describe('detectsSDL', () => {
 // The port is built cleanly so no pthread EM_ASM stubs are needed.
 
 describe('buildSDL3ArgsPort', () => {
-  const args = buildSDL3ArgsPort('/home/user/main.cpp');
+  const args = buildSDL3ArgsPort('/app/main.cpp');
 
   it('starts with emcc', () => expect(args[0]).toBe('emcc'));
-  it('includes the target file as the second argument', () => expect(args[1]).toBe('/home/user/main.cpp'));
+  it('includes the target file as the second argument', () => expect(args[1]).toBe('/app/main.cpp'));
   it('uses -sUSE_SDL=3 (emscripten port, not the prebuilt .a)', () => expect(args).toContain('-sUSE_SDL=3'));
   it('does NOT link against /usr/lib/libSDL3.a', () => expect(args).not.toContain('/usr/lib/libSDL3.a'));
   it('does NOT need --js-library stubs (port has no pthread EM_ASM symbols)', () => expect(args).not.toContain('--js-library'));
@@ -146,14 +152,14 @@ describe('buildSDL3ArgsPort', () => {
   it('does NOT use SINGLE_FILE (WASM-only output, no JS generated)', () => expect(args.some((a) => a.includes('SINGLE_FILE'))).toBe(false));
   it('enables ALLOW_MEMORY_GROWTH=1', () => expect(args).toContain('-sALLOW_MEMORY_GROWTH=1'));
   it('sets ENVIRONMENT=web for browser-only output', () => expect(args).toContain('-sENVIRONMENT=web'));
-  it('outputs to /home/user/main.wasm (WASM-only, skips compiler.mjs)', () => {
+  it('outputs to /app/main.wasm (WASM-only, skips compiler.mjs)', () => {
     const oIdx = args.indexOf('-o');
     expect(oIdx).toBeGreaterThan(-1);
-    expect(args[oIdx + 1]).toBe('/home/user/main.wasm');
+    expect(args[oIdx + 1]).toBe('/app/main.wasm');
   });
   it('uses the target path passed in', () => {
-    const custom = buildSDL3ArgsPort('/home/user/my_program.cpp');
-    expect(custom[1]).toBe('/home/user/my_program.cpp');
+    const custom = buildSDL3ArgsPort('/app/my_program.cpp');
+    expect(custom[1]).toBe('/app/my_program.cpp');
   });
 });
 
