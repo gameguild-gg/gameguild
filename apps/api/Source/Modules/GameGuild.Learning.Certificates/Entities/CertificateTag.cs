@@ -1,4 +1,9 @@
-namespace GameGuild.Tags;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Tags;
+using Microsoft.EntityFrameworkCore;
+
+namespace GameGuild.Learning.Certificates;
 
 [Table("certificate_tags")]
 [Index(nameof(CertificateId))]
