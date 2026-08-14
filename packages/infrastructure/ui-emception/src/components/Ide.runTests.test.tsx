@@ -134,7 +134,7 @@ describe('Ide runTests button (testPlan/testMode props)', () => {
     expect(btn).toBeNull();
   });
 
-  it('public mode: filters hidden cases before calling runTests', async () => {
+  it('public mode: filters hidden cases before running', async () => {
     const onTestReport = jest.fn();
     const ref = createRef<IdeHandle>();
 
@@ -151,10 +151,8 @@ describe('Ide runTests button (testPlan/testMode props)', () => {
       );
     });
 
-    // Wire mock to return single-case report (only the public case ran)
-    const { wrapWorkerClient } = require('@gameguild/emception-browser');
-    const mockApi = wrapWorkerClient();
-    mockApi.runTests.mockResolvedValue(SINGLE_CASE_REPORT);
+    const { stubClient } = require('@gameguild/emception-browser');
+    stubClient.run.mockResolvedValue({ exitCode: 0, stdout: 'hello', stderr: '' });
 
     const btn = document.querySelector('[data-testid="run-tests-button"]') as HTMLButtonElement;
     expect(btn).not.toBeNull();
@@ -163,19 +161,20 @@ describe('Ide runTests button (testPlan/testMode props)', () => {
       fireEvent.click(btn!);
     });
 
-    // runTests should have been called with a plan containing ONLY the public case
-    expect(mockApi.runTests).toHaveBeenCalledTimes(1);
-    const calledPlan = mockApi.runTests.mock.calls[0][0];
-    expect(calledPlan.cases).toHaveLength(1);
-    expect(calledPlan.cases[0].name).toBe('stdio_public');
-    expect(calledPlan.cases[0].hidden).toBeUndefined(); // hidden stripped
+    // Public mode runs ONLY the stdio_public case (doctest_hidden is filtered).
+    // Pipeline: 1 clang + 1 wasm-ld + 1 wasi-run = 3 client.run calls.
+    const tools = stubClient.run.mock.calls.map((c: string[]) => c[0]);
+    expect(tools).toEqual(['clang', 'wasm-ld', 'wasi-run']);
 
-    // onTestReport should fire with the report (from imperative handle)
+    // Report fires with exactly 1 case (the public stdio case, which passes).
     expect(onTestReport).toHaveBeenCalledTimes(1);
-    expect(onTestReport).toHaveBeenCalledWith(SINGLE_CASE_REPORT);
+    const report = onTestReport.mock.calls[0][0];
+    expect(report.cases).toHaveLength(1);
+    expect(report.cases[0].name).toBe('stdio_public');
+    expect(report.cases[0].passed).toBe(true);
   });
 
-  it('full mode: runs all cases including hidden', async () => {
+  it('full mode: runs stdio cases and skips non-stdio cases with a diagnostic', async () => {
     const onTestReport = jest.fn();
     const ref = createRef<IdeHandle>();
 
@@ -192,9 +191,8 @@ describe('Ide runTests button (testPlan/testMode props)', () => {
       );
     });
 
-    const { wrapWorkerClient } = require('@gameguild/emception-browser');
-    const mockApi = wrapWorkerClient();
-    mockApi.runTests.mockResolvedValue(PASSING_REPORT);
+    const { stubClient } = require('@gameguild/emception-browser');
+    stubClient.run.mockResolvedValue({ exitCode: 0, stdout: 'hello', stderr: '' });
 
     const btn = document.querySelector('[data-testid="run-tests-button"]') as HTMLButtonElement;
 
@@ -202,26 +200,22 @@ describe('Ide runTests button (testPlan/testMode props)', () => {
       fireEvent.click(btn!);
     });
 
-    // runTests should have been called with ALL cases (both public + hidden)
-    expect(mockApi.runTests).toHaveBeenCalledTimes(1);
-    const calledPlan = mockApi.runTests.mock.calls[0][0];
-    expect(calledPlan.cases).toHaveLength(2);
-    expect(calledPlan.cases.map((c: any) => c.name)).toEqual(['stdio_public', 'doctest_hidden']);
+    // Only the stdio case triggers wasi-run; doctest is skipped before execution.
+    const tools = stubClient.run.mock.calls.map((c: string[]) => c[0]);
+    expect(tools.filter((t: string) => t === 'wasi-run')).toHaveLength(1);
+
+    // Report fires with all 2 cases: stdio passes, doctest flagged unsupported.
+    expect(onTestReport).toHaveBeenCalledTimes(1);
+    const report = onTestReport.mock.calls[0][0];
+    expect(report.cases).toHaveLength(2);
+    expect(report.cases.map((c: any) => c.name)).toEqual(['stdio_public', 'doctest_hidden']);
+    expect(report.cases[0].passed).toBe(true);
+    expect(report.cases[1].passed).toBe(false);
+    expect(report.cases[1].diagnostic).toMatch(/not yet supported/);
   });
 
   it('score preview shows weighted computeScore result in TestResultsPanel', async () => {
     const ref = createRef<IdeHandle>();
-
-    // Use a plan where only the first case passes: weight 2/(2+3) * 100 = 40
-    const partialReport = {
-      passed: 1,
-      failed: 1,
-      totalDurationMs: 100,
-      cases: [
-        { name: 'stdio_public', passed: true, durationMs: 40 },
-        { name: 'doctest_hidden', passed: false, durationMs: 60, diagnostic: 'test failed' },
-      ],
-    };
 
     await act(async () => {
       render(
@@ -235,9 +229,9 @@ describe('Ide runTests button (testPlan/testMode props)', () => {
       );
     });
 
-    const { wrapWorkerClient } = require('@gameguild/emception-browser');
-    const mockApi = wrapWorkerClient();
-    mockApi.runTests.mockResolvedValue(partialReport);
+    const { stubClient } = require('@gameguild/emception-browser');
+    // Make stdio_public pass (expectedStdout='hello'); doctest is unsupported.
+    stubClient.run.mockResolvedValue({ exitCode: 0, stdout: 'hello', stderr: '' });
 
     const btn = document.querySelector('[data-testid="run-tests-button"]') as HTMLButtonElement;
 
@@ -245,27 +239,25 @@ describe('Ide runTests button (testPlan/testMode props)', () => {
       fireEvent.click(btn!);
     });
 
-    // TestResultsPanel should render with score
     const panel = document.querySelector('[data-testid="test-results-panel"]');
     expect(panel).not.toBeNull();
 
-    // Weighted score: weight 2/(2+3) * 100 = 40 (stdio passes, doctest fails)
-    // Check the score text appears
+    // Weighted score: weight 2/(2+3) * 100 = 40 (stdio passes, doctest unsupported)
     expect(panel!.textContent).toContain('Score: 40/100');
     expect(panel!.textContent).toContain('1 passed');
     expect(panel!.textContent).toContain('1 failed');
   });
 
   it('default testMode is "full" (all cases run when testMode omitted)', async () => {
+    const onTestReport = jest.fn();
     const ref = createRef<IdeHandle>();
 
     await act(async () => {
-      render(<Ide ref={ref} testPlan={SAMPLE_PLAN} />);
+      render(<Ide ref={ref} testPlan={SAMPLE_PLAN} onTestReport={onTestReport} />);
     });
 
-    const { wrapWorkerClient } = require('@gameguild/emception-browser');
-    const mockApi = wrapWorkerClient();
-    mockApi.runTests.mockResolvedValue(PASSING_REPORT);
+    const { stubClient } = require('@gameguild/emception-browser');
+    stubClient.run.mockResolvedValue({ exitCode: 0, stdout: 'hello', stderr: '' });
 
     const btn = document.querySelector('[data-testid="run-tests-button"]') as HTMLButtonElement;
 
@@ -273,21 +265,22 @@ describe('Ide runTests button (testPlan/testMode props)', () => {
       fireEvent.click(btn!);
     });
 
-    // Default is "full" — all 2 cases passed
-    const calledPlan = mockApi.runTests.mock.calls[0][0];
-    expect(calledPlan.cases).toHaveLength(2);
+    // Default is "full" — both cases appear in the report.
+    expect(onTestReport).toHaveBeenCalledTimes(1);
+    const report = onTestReport.mock.calls[0][0];
+    expect(report.cases).toHaveLength(2);
   });
 
-  it('engine error surfaces and button re-enables', async () => {
+  it('compile error surfaces and button re-enables', async () => {
     const ref = createRef<IdeHandle>();
 
     await act(async () => {
       render(<Ide ref={ref} testPlan={SAMPLE_PLAN} testMode="full" />);
     });
 
-    const { wrapWorkerClient } = require('@gameguild/emception-browser');
-    const mockApi = wrapWorkerClient();
-    mockApi.runTests.mockRejectedValue(new Error('Worker not booted yet'));
+    const { stubClient } = require('@gameguild/emception-browser');
+    // clang fails → handleRunTests throws and surfaces a single-case failure report.
+    stubClient.run.mockResolvedValue({ exitCode: 1, stdout: '', stderr: 'boom' });
 
     const btn = document.querySelector('[data-testid="run-tests-button"]') as HTMLButtonElement;
     expect(btn).not.toBeNull();
@@ -297,7 +290,7 @@ describe('Ide runTests button (testPlan/testMode props)', () => {
       fireEvent.click(btn!);
     });
 
-    // Button should re-enable after error
+    // Button re-enables after the error path.
     expect(btn.disabled).toBe(false);
   });
 });
