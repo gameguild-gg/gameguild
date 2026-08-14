@@ -1,1 +1,14 @@
-{}
+{
+  "authError": {
+    "title": "Falha ao entrar",
+    "stateMismatch": "Sua sessão de login expirou ou a requisição foi adulterada. Tente novamente.",
+    "missingCode": "A resposta de login estava incompleta. Tente novamente.",
+    "callbackFailed": "Não conseguimos concluir o login com o provedor. Tente novamente.",
+    "accessDenied": "Você cancelou a solicitação de login. Sem problemas — você pode tentar novamente quando quiser.",
+    "generic": "Algo deu errado durante o login. Tente novamente.",
+    "backToSignIn": "Voltar para o login"
+  },
+  "signIn": {
+    "continueWithDiscord": "Continuar com o Discord"
+  }
+}
