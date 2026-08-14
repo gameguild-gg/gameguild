@@ -51,6 +51,57 @@ const HELLO_PROGRAM =
 // Functional-test program: only a function, no main — doctest supplies main.
 const ADD_PROGRAM = "int add(int a, int b) {\n    return a + b;\n}\n";
 
+// SDL3 sample — verbatim from ui-emception assignment-samples.ts (sdl-cpp preset).
+const SDL3_PROGRAM = `// SDL3 graphics starter — compile with emcc -sUSE_SDL=3
+#define SDL_MAIN_USE_CALLBACKS
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+
+static SDL_Window   *window   = NULL;
+static SDL_Renderer *renderer = NULL;
+
+SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+  SDL_Init(SDL_INIT_VIDEO);
+  SDL_CreateWindowAndRenderer("SDL3 Assignment", 640, 480, 0, &window, &renderer);
+  return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppIterate(void *appstate) {
+  SDL_SetRenderDrawColor(renderer, 30, 30, 45, 255);
+  SDL_RenderClear(renderer);
+  SDL_RenderPresent(renderer);
+  return SDL_APP_CONTINUE;
+}
+
+SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
+  return event->type == SDL_EVENT_QUIT ? SDL_APP_SUCCESS : SDL_APP_CONTINUE;
+}
+
+void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+  SDL_DestroyRenderer(renderer);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+}
+`;
+
+// raylib sample — verbatim from ui-emception assignment-samples.ts (raylib-cpp preset).
+const RAYLIB_PROGRAM = `// raylib graphics starter
+#include "raylib.h"
+
+int main(void) {
+  InitWindow(640, 480, "raylib Assignment");
+  SetTargetFPS(60);
+  while (!WindowShouldClose()) {
+    BeginDrawing();
+    ClearBackground((Color){30, 30, 45, 255});
+    DrawText("Hello raylib", 240, 220, 24, RAYWHITE);
+    EndDrawing();
+  }
+  CloseWindow();
+  return 0;
+}
+`;
+
 test.describe("Coding Assessment E2E", () => {
   // Skip unless explicitly invoked with E2E_RUN=1 — runnable, but CI-safe.
   test.skip(!process.env.E2E_RUN, "set E2E_RUN=1 (needs web + API + seeded admin)");
@@ -243,6 +294,162 @@ test.describe("Coding Assessment E2E", () => {
     // 8. Verify the doctest case passed.
     await expect(results).toContainText("1 passed");
     await expect(results).toContainText("0 failed");
+  });
+
+  test("SDL3 canvas program renders end-to-end", async ({ page }) => {
+    test.setTimeout(240_000);
+    const consoleErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") consoleErrors.push(msg.text());
+    });
+    page.on("pageerror", (err) => consoleErrors.push(String(err)));
+
+    // 2. Open the coding-definition editor + wait for emception boot.
+    await page.goto(`${WEB_BASE_URL}${CODING_DEFINITION_ROUTE}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(
+      page.getByText("Coding Definition Editor"),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("status").first()).toHaveText("Ready", {
+      timeout: 60_000,
+    });
+
+    // 3. Switch preset to SDL3 — the page re-seeds the workspace (file tree,
+    //    tabs, config) via onPresetChange → ASSIGNMENT_SAMPLES["sdl-cpp"].
+    await page.getByTestId("workspace-picker").selectOption("sdl-cpp");
+    await expect(page.getByText("sdl-main.cpp").first()).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.waitForTimeout(1_000); // let applyWorkspace sync the VFS
+
+    // 4. Force the SDL3 starter content (guards against stale localStorage).
+    const sdlPath = await page.evaluate(() => {
+      const ref = (
+        window as unknown as {
+          __emception_filesRef__?: { current: Record<string, { path: string }> };
+        }
+      ).__emception_filesRef__;
+      return Object.keys(ref?.current ?? {}).find((p) =>
+        p.endsWith("sdl-main.cpp"),
+      );
+    });
+    if (!sdlPath) throw new Error("sdl-main.cpp not found in IDE workspace state");
+    await page.evaluate(
+      ({ path, content }) => {
+        (
+          window as unknown as {
+            __setFileContent: (p: string, c: string) => void;
+          }
+        ).__setFileContent(path, content);
+      },
+      { path: sdlPath, content: SDL3_PROGRAM },
+    );
+    await page.waitForTimeout(500);
+
+    // 5. ▶ Compile & Run — bundle download + clang + wasm-ld + instantiate.
+    await page.getByTestId("compile-button").click();
+
+    // 6. Success marker: only the happy path writes this line. Cold CDN bundle
+    //    fetch + compile + link + instantiate needs the long leash.
+    const terminalLog = page.getByTestId("terminal");
+    await expect(terminalLog).toContainText("rendering in canvas tab", {
+      timeout: 90_000,
+    });
+
+    // 7. Canvas tab active + running state surfaced.
+    await expect
+      .poll(() =>
+        page
+          .getByTestId("sdl-canvas")
+          .evaluate((el) => el.dataset.sdlRunning ?? ""),
+      )
+      .toBe("true");
+    await expect(page.getByTestId("status").first()).toContainText("running");
+
+    // 8. No LinkError (the _abort_js import bug), no failed instantiation.
+    expect(consoleErrors.filter((e) => e.includes("LinkError"))).toEqual([]);
+    await expect(terminalLog).not.toContainText("instantiation failed");
+    await expect(terminalLog).not.toContainText("compile step failed");
+    await expect(terminalLog).not.toContainText("link step failed");
+  });
+
+  test("raylib canvas program renders end-to-end", async ({ page }) => {
+    test.setTimeout(240_000);
+    const consoleErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") consoleErrors.push(msg.text());
+    });
+    page.on("pageerror", (err) => consoleErrors.push(String(err)));
+
+    // 2. Open the coding-definition editor + wait for emception boot.
+    await page.goto(`${WEB_BASE_URL}${CODING_DEFINITION_ROUTE}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await expect(
+      page.getByText("Coding Definition Editor"),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("status").first()).toHaveText("Ready", {
+      timeout: 60_000,
+    });
+
+    // 3. Switch preset to raylib — page re-seeds workspace from sample.
+    await page.getByTestId("workspace-picker").selectOption("raylib-cpp");
+    await expect(page.getByText("raylib-main.cpp").first()).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.waitForTimeout(1_000); // let applyWorkspace sync the VFS
+
+    // 4. Force the raylib starter content (guards against stale localStorage).
+    const raylibPath = await page.evaluate(() => {
+      const ref = (
+        window as unknown as {
+          __emception_filesRef__?: { current: Record<string, { path: string }> };
+        }
+      ).__emception_filesRef__;
+      return Object.keys(ref?.current ?? {}).find((p) =>
+        p.endsWith("raylib-main.cpp"),
+      );
+    });
+    if (!raylibPath) {
+      throw new Error("raylib-main.cpp not found in IDE workspace state");
+    }
+    await page.evaluate(
+      ({ path, content }) => {
+        (
+          window as unknown as {
+            __setFileContent: (p: string, c: string) => void;
+          }
+        ).__setFileContent(path, content);
+      },
+      { path: raylibPath, content: RAYLIB_PROGRAM },
+    );
+    await page.waitForTimeout(500);
+
+    // 5. ▶ Compile & Run.
+    await page.getByTestId("compile-button").click();
+
+    // 6. Success marker (same reasoning as the SDL3 test).
+    const terminalLog = page.getByTestId("terminal");
+    await expect(terminalLog).toContainText("rendering in canvas tab", {
+      timeout: 90_000,
+    });
+
+    // 7. Canvas tab active + running state surfaced.
+    await expect
+      .poll(() =>
+        page
+          .getByTestId("sdl-canvas")
+          .evaluate((el) => el.dataset.sdlRunning ?? ""),
+      )
+      .toBe("true");
+    await expect(page.getByTestId("status").first()).toContainText("running");
+
+    // 8. Header materialized (no 'raylib.h' file not found), clean link.
+    await expect(terminalLog).not.toContainText("raylib.h' file not found");
+    await expect(terminalLog).not.toContainText("compile step failed");
+    await expect(terminalLog).not.toContainText("link step failed");
+    expect(consoleErrors.filter((e) => e.includes("LinkError"))).toEqual([]);
   });
 });
 
