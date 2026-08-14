@@ -207,7 +207,10 @@ function EventRows({
                 ["Testers", event.registeredTesters],
                 ["Attendance", event.attendedTesters],
                 ["Feedback", event.feedback],
-                ["Fill rate", `${event.fillRate}%`],
+                [
+                  "Fill rate",
+                  event.capacity > 0 ? `${event.fillRate}%` : "Unlimited",
+                ],
               ].map(([label, value]) => (
                 <div key={label} className="md:block">
                   <dt className="text-xs text-muted-foreground md:sr-only">
@@ -423,7 +426,14 @@ export default async function TestingLabAnalyticsPage({
               <h2 className="font-semibold">Operational health</h2>
               <dl className="mt-4 divide-y text-sm">
                 {[
-                  ["Capacity fill", `${analytics.current.fillRate}%`],
+                  [
+                    "Capacity fill",
+                    analytics.current.capacity > 0
+                      ? `${analytics.current.fillRate}%`
+                      : analytics.current.registeredTesters > 0
+                        ? "Unlimited"
+                        : "-",
+                  ],
                   [
                     "Recommendation rate",
                     analytics.current.recommendationRate === null

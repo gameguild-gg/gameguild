@@ -20,6 +20,17 @@ export default async function TestingLabPage() {
     getTestingEventsDirectory({ take: 100 }),
   ]);
   const issues = [...directory.accessIssues, ...analytics.accessIssues, ...events.accessIssues];
+  const capacityMetric = analytics.current.capacity > 0
+    ? {
+        value: `${analytics.current.fillRate}%`,
+        detail: `${analytics.current.registeredTesters}/${analytics.current.capacity} seats`,
+      }
+    : analytics.current.registeredTesters > 0
+      ? {
+          value: 'Unlimited',
+          detail: `${analytics.current.registeredTesters} registered`,
+        }
+      : { value: '-', detail: 'No capacity configured' };
 
   return (
     <div className="space-y-6 p-4 lg:p-6">
@@ -57,8 +68,8 @@ export default async function TestingLabPage() {
           ['Events', analytics.current.events, `${analytics.current.completedEvents} completed`],
           [
             'Capacity fill',
-            `${analytics.current.fillRate}%`,
-            `${analytics.current.registeredTesters}/${analytics.current.capacity} seats`,
+            capacityMetric.value,
+            capacityMetric.detail,
           ],
           [
             'Feedback',
