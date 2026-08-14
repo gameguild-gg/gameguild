@@ -162,6 +162,7 @@ done
 api_pid=''
 web_pid=''
 postgres_container=''
+garage_container=''
 
 cleanup() {
   local status=$?
@@ -171,6 +172,9 @@ cleanup() {
   stop_process_tree "$api_pid"
   if [[ -n "$postgres_container" ]]; then
     docker rm --force "$postgres_container" >/dev/null 2>&1 || true
+  fi
+  if [[ -n "$garage_container" ]]; then
+    docker rm --force "$garage_container" >/dev/null 2>&1 || true
   fi
   exit "$status"
 }
@@ -289,6 +293,40 @@ probe_sql='SELECT 1;'
 [[ "${ECONOMY_CI_PROBE_POSTGRES_FAILURE:-0}" != '1' ]] || probe_sql='SELECT 1 / 0;'
 run docker exec "$postgres_container" psql --username postgres --dbname economy_ci --set ON_ERROR_STOP=1 --command "$probe_sql"
 printf 'database=economy_ci\nport=%s\n' "$postgres_port" > "$artifact_root/postgres/connection.txt"
+
+if [[ "$skip_whole_solution" == false ]]; then
+  garage_container='gameguild-economy-ci-garage-'$$-$RANDOM
+  garage_config="$(native_path "$repository_root/scripts/garage/garage.toml")"
+  run docker run --detach --rm --name "$garage_container" \
+    --env GARAGE_CONFIG_FILE=/etc/garage/garage.toml \
+    --volume "$garage_config:/etc/garage/garage.toml:ro" \
+    --publish 127.0.0.1::3900 \
+    --publish 127.0.0.1::3903 \
+    dxflrs/garage:v2.3.0 >/dev/null
+
+  garage_s3_mapping="$(docker port "$garage_container" '3900/tcp')"
+  [[ "$garage_s3_mapping" =~ :([0-9]+)$ ]] || economy_gate_error "Could not resolve disposable Garage S3 port from '$garage_s3_mapping'"
+  garage_s3_port="${BASH_REMATCH[1]}"
+  garage_admin_mapping="$(docker port "$garage_container" '3903/tcp')"
+  [[ "$garage_admin_mapping" =~ :([0-9]+)$ ]] || economy_gate_error "Could not resolve disposable Garage admin port from '$garage_admin_mapping'"
+  garage_admin_port="${BASH_REMATCH[1]}"
+
+  run env GARAGE_HOST=127.0.0.1 \
+    GARAGE_ADMIN_PORT="$garage_admin_port" \
+    GARAGE_ADMIN_TOKEN=development-garage-admin-token \
+    GARAGE_S3_BUCKET=assets \
+    GARAGE_KEY_ID=GK111111111111111111111111 \
+    GARAGE_KEY_SECRET=2222222222222222222222222222222222222222222222222222222222222222 \
+    sh scripts/garage/init.sh
+
+  export S3_SERVICE_URL="http://127.0.0.1:$garage_s3_port"
+  export GARAGE_ADMIN_URL="http://127.0.0.1:$garage_admin_port"
+  export GARAGE_ADMIN_TOKEN=development-garage-admin-token
+  export S3_BUCKET=assets
+  export S3_ACCESS_KEY=GK111111111111111111111111
+  export S3_SECRET_KEY=2222222222222222222222222222222222222222222222222222222222222222
+  export S3_REGION=garage
+fi
 
 run dotnet restore apps/api/GameGuild.sln --nologo
 run dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal
