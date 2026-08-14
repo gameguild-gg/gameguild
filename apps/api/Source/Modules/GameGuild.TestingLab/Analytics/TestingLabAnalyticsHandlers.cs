@@ -159,7 +159,14 @@ public sealed class TestingLabAnalyticsHandlers(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var eventIds = events.Select(item => item.Id).ToArray();
+        // Capacity must cover both events occurring in the reporting window and
+        // events that received registrations during it. Registrations are an
+        // activity metric (CreatedAt), so an upcoming event can legitimately
+        // contribute registrations before its StartsAt enters the same window.
+        var eventIds = events.Select(item => item.Id)
+            .Concat(registrations.Select(item => item.EventId))
+            .Distinct()
+            .ToArray();
         var slots = await context.Set<TestingEventSlot>()
             .AsNoTracking()
             .Where(item =>
