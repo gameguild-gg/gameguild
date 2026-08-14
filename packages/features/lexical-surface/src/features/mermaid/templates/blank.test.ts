@@ -3,12 +3,12 @@ import blankTemplate from "./blank";
 import { getAllTemplates } from "./template-loader";
 
 describe("blank Mermaid template", () => {
-  it("starts with an empty document", () => {
+  it("starts with the minimal valid document", () => {
     expect(blankTemplate).toMatchObject({
       id: "blank-diagram",
       type: "flowchart",
       category: "starter",
-      code: "",
+      code: "flowchart",
     });
   });
 
