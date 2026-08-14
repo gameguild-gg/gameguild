@@ -106,6 +106,88 @@ public class ExternalLoginRepositoryTests
         userIdIndex!.IsUnique.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task DeleteAsync_RemovesOnlyTheTargetRow_AndReturnsTrue()
+    {
+        await using var context = CreateContext();
+        var repository = new ExternalLoginRepository(context);
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+
+        await repository.UpsertAsync(CreateExternalLogin(userId, "google", "sub-1"));
+        await repository.UpsertAsync(CreateExternalLogin(userId, "discord", "snow-1"));
+        await repository.UpsertAsync(CreateExternalLogin(otherUserId, "google", "sub-2"));
+
+        var removed = await repository.DeleteAsync("google", userId);
+
+        removed.Should().BeTrue();
+        (await repository.GetByProviderKeyAsync("google", "sub-1")).Should().BeNull();
+        (await repository.GetByProviderKeyAsync("google", "sub-2")).Should().NotBeNull("row of another user must be untouched");
+        var remaining = await repository.GetByUserIdAsync(userId);
+        remaining.Should().ContainSingle().Which.Provider.Should().Be("discord");
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ReturnsFalse_WhenNoRowForProviderAndUser()
+    {
+        await using var context = CreateContext();
+        var repository = new ExternalLoginRepository(context);
+        var userId = Guid.NewGuid();
+
+        await repository.UpsertAsync(CreateExternalLogin(userId, "google", "sub-1"));
+
+        var wrongProvider = await repository.DeleteAsync("discord", userId);
+        var wrongUser = await repository.DeleteAsync("google", Guid.NewGuid());
+
+        wrongProvider.Should().BeFalse();
+        wrongUser.Should().BeFalse();
+        (await repository.GetByProviderKeyAsync("google", "sub-1")).Should().NotBeNull("no row may be removed on a miss");
+    }
+
+    [Fact]
+    public async Task AddAsync_InsertsRowWithTimestamps_WithoutTouchingExistingRows()
+    {
+        await using var context = CreateContext();
+        var repository = new ExternalLoginRepository(context);
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        await repository.UpsertAsync(CreateExternalLogin(otherUserId, "google", "sub-other"));
+
+        var added = await repository.AddAsync(new ExternalLogin { UserId = userId, Provider = "google", ProviderKey = "sub-1" });
+
+        added.Id.Should().NotBe(Guid.Empty);
+        added.CreatedAt.Should().BeOnOrAfter(DateTime.UtcNow.AddSeconds(-5));
+        added.UpdatedAt.Should().BeOnOrAfter(DateTime.UtcNow.AddSeconds(-5));
+
+        var hit = await repository.GetByProviderKeyAsync("google", "sub-1");
+        hit.Should().NotBeNull();
+        hit!.UserId.Should().Be(userId);
+
+        // Insert-only contract: rows that DO exist for the provider are never read or updated.
+        (await repository.GetByProviderKeyAsync("google", "sub-other")).Should().NotBeNull();
+        (await repository.GetByUserIdAsync(otherUserId)).Should().HaveCount(1);
+    }
+
+    /// <summary>
+    ///     AddAsync relies on the relational unique index on (Provider, ProviderKey) to reject a
+    ///     duplicate insert with DbUpdateException — the in-memory provider does not enforce it
+    ///     at runtime (same limitation documented on the index-configuration test above). The
+    ///     conflict behavior is covered at the handler level with a mocked DbUpdateException.
+    /// </summary>
+    [Fact]
+    public async Task AddAsync_DuplicateInsertIsRejectedByTheDatabase_NotByTheRepository()
+    {
+        await using var context = CreateContext();
+        var repository = new ExternalLoginRepository(context);
+        var userId = Guid.NewGuid();
+
+        var first = await repository.AddAsync(new ExternalLogin { UserId = userId, Provider = "google", ProviderKey = "sub-1" });
+        var second = await repository.AddAsync(new ExternalLogin { UserId = Guid.NewGuid(), Provider = "google", ProviderKey = "sub-1" });
+
+        second.Id.Should().NotBe(first.Id, "InMemory does not enforce the unique index — duplicate rejection is the relational DB's job");
+        (await repository.GetByProviderKeyAsync("google", "sub-1")).Should().NotBeNull();
+    }
+
     private static TestExternalLoginDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<TestExternalLoginDbContext>()

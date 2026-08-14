@@ -5081,6 +5081,40 @@ export const postAuthApiKeysRevokeEndpoint = {
 } as const;
 
 /**
+ * Initiate Discord OAuth sign-in
+ *
+ * Initiates the Discord OAuth authorization-code flow and returns the authorization URL with the CSRF state parameter.
+ */
+export interface PostAuthDiscordAuthorizeInput {
+  body?: Types.IdentityAuthenticationDiscordAuthorizeInput;
+}
+export type PostAuthDiscordAuthorizeOutput = Types.IdentityAuthenticationDiscordSignInOutput;
+export const postAuthDiscordAuthorizeEndpoint = {
+  operationId: 'postAuthDiscordAuthorize' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/discord:authorize' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Discord OAuth callback
+ *
+ * Exchanges the Discord OAuth authorization code for access and refresh tokens, applying the same account matching and auto-link policy as Google sign-in.
+ */
+export interface PostAuthDiscordCallbackInput {
+  body?: Types.IdentityAuthenticationDiscordCallbackInput;
+}
+export type PostAuthDiscordCallbackOutput = Types.IdentityAuthenticationSignInOutput;
+export const postAuthDiscordCallbackEndpoint = {
+  operationId: 'postAuthDiscordCallback' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/discord:callback' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Send email verification
  *
  * Sends a verification email to the specified email address to confirm ownership.
@@ -5110,6 +5144,89 @@ export const postAuthEmailVerifyEndpoint = {
   operationId: 'postAuthEmailVerify' as const,
   method: 'POST' as const,
   path: '/v1/auth/email:verify' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * List linked external logins
+ *
+ * Returns the external identity providers linked to the authenticated user, newest first.
+ */
+export type GetAuthExternalLoginsInput = void;
+export type GetAuthExternalLoginsOutput = Array<Types.IdentityAuthenticationExternalLogin>;
+export const getAuthExternalLoginsEndpoint = {
+  operationId: 'getAuthExternalLogins' as const,
+  method: 'GET' as const,
+  path: '/v1/auth/external-logins' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Start Discord account link
+ *
+ * Returns the Discord OAuth authorization URL plus the state parameter to validate at the callback.
+ */
+export interface PostAuthExternalLoginsDiscordLinkAuthorizeInput {
+  body?: Types.IdentityAuthenticationDiscordLinkAuthorizeInput;
+}
+export type PostAuthExternalLoginsDiscordLinkAuthorizeOutput = Types.IdentityAuthenticationDiscordLinkAuthorizeOutput;
+export const postAuthExternalLoginsDiscordLinkAuthorizeEndpoint = {
+  operationId: 'postAuthExternalLoginsDiscordLinkAuthorize' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/external-logins/discord:link-authorize' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Complete Discord account link
+ *
+ * Exchanges the Discord authorization code for the user profile and links the Discord identity to the authenticated user. Idempotent when already linked to the same user.
+ */
+export interface PostAuthExternalLoginsDiscordLinkCallbackInput {
+  body?: Types.IdentityAuthenticationDiscordLinkCallbackInput;
+}
+export type PostAuthExternalLoginsDiscordLinkCallbackOutput = void;
+export const postAuthExternalLoginsDiscordLinkCallbackEndpoint = {
+  operationId: 'postAuthExternalLoginsDiscordLinkCallback' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/external-logins/discord:link-callback' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Link Google account
+ *
+ * Verifies a Google ID token and links the Google identity to the authenticated user. Idempotent when already linked to the same user.
+ */
+export interface PostAuthExternalLoginsGoogleInput {
+  body?: Types.IdentityAuthenticationLinkGoogleAccountInput;
+}
+export type PostAuthExternalLoginsGoogleOutput = void;
+export const postAuthExternalLoginsGoogleEndpoint = {
+  operationId: 'postAuthExternalLoginsGoogle' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/external-logins/google' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Unlink external login
+ *
+ * Removes the external login link for the given provider. Refused with 400 when it is the user's last sign-in method and no password is set.
+ */
+export interface DeleteAuthExternalLoginsInput {
+  provider: string;
+}
+export type DeleteAuthExternalLoginsOutput = void;
+export const deleteAuthExternalLoginsEndpoint = {
+  operationId: 'deleteAuthExternalLogins' as const,
+  method: 'DELETE' as const,
+  path: '/v1/auth/external-logins/{provider}' as const,
   tags: ['Auth'] as const,
   requiresAuth: true,
 } as const;
@@ -16219,8 +16336,15 @@ export const endpoints = {
   getAuthApiKeys: getAuthApiKeysEndpoint,
   postAuthApiKeys: postAuthApiKeysEndpoint,
   postAuthApiKeysRevoke: postAuthApiKeysRevokeEndpoint,
+  postAuthDiscordAuthorize: postAuthDiscordAuthorizeEndpoint,
+  postAuthDiscordCallback: postAuthDiscordCallbackEndpoint,
   postAuthEmailSendVerification: postAuthEmailSendVerificationEndpoint,
   postAuthEmailVerify: postAuthEmailVerifyEndpoint,
+  getAuthExternalLogins: getAuthExternalLoginsEndpoint,
+  postAuthExternalLoginsDiscordLinkAuthorize: postAuthExternalLoginsDiscordLinkAuthorizeEndpoint,
+  postAuthExternalLoginsDiscordLinkCallback: postAuthExternalLoginsDiscordLinkCallbackEndpoint,
+  postAuthExternalLoginsGoogle: postAuthExternalLoginsGoogleEndpoint,
+  deleteAuthExternalLogins: deleteAuthExternalLoginsEndpoint,
   getAuthGithubAuthorize: getAuthGithubAuthorizeEndpoint,
   getAuthGithubCallback: getAuthGithubCallbackEndpoint,
   postAuthGoogle: postAuthGoogleEndpoint,

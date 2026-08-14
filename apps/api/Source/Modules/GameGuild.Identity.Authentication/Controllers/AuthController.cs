@@ -185,6 +185,93 @@ public sealed class AuthController(ISender sender) : BaseApiController
 
     #endregion
 
+    #region Discord OAuth - /v1/auth/discord
+
+    /// <summary>
+    ///     Initiate Discord OAuth sign-in
+    /// </summary>
+    /// <param name="body">Redirect URI registered for the Discord application</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Discord OAuth authorization URL and state parameter</returns>
+    [AllowAnonymous]
+    [HttpPost("v{version:apiVersion}/auth/discord:authorize")]
+    [EndpointSummary("Initiate Discord OAuth sign-in")]
+    [EndpointDescription("Initiates the Discord OAuth authorization-code flow and returns the authorization URL with the CSRF state parameter.")]
+    [ProducesResponseType<DiscordSignInResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> DiscordAuthorize([FromBody] DiscordAuthorizeRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var command = new DiscordSignInCommand { RedirectUri = body.RedirectUri };
+
+        try
+        {
+            var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return DiscordNotConfigured(ex);
+        }
+    }
+
+    /// <summary>
+    ///     Handle Discord OAuth callback
+    /// </summary>
+    /// <param name="body">Discord callback with authorization code, state, redirect URI, and optional tenant context</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Authentication tokens on success</returns>
+    [AllowAnonymous]
+    [HttpPost("v{version:apiVersion}/auth/discord:callback")]
+    [EndpointSummary("Discord OAuth callback")]
+    [EndpointDescription("Exchanges the Discord OAuth authorization code for access and refresh tokens, applying the same account matching and auto-link policy as Google sign-in.")]
+    [ProducesResponseType<SignInResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> DiscordCallback([FromBody] DiscordCallbackRequestDto body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var command = new DiscordCallbackCommand
+        {
+            Code = body.Code,
+            State = body.State,
+            RedirectUri = body.RedirectUri,
+            TenantId = body.TenantId
+        };
+
+        try
+        {
+            SignInResponse result = await sender.Send(command, ct).ConfigureAwait(false);
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Detail = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return DiscordNotConfigured(ex);
+        }
+    }
+
+    private ObjectResult DiscordNotConfigured(InvalidOperationException ex)
+    {
+        return Problem(
+            statusCode: StatusCodes.Status503ServiceUnavailable,
+            title: "Discord OAuth is not configured",
+            detail: ex.Message);
+    }
+
+    #endregion
+
     #region Token Operations - /v1/auth/tokens
 
     /// <summary>
