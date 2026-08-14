@@ -3,6 +3,7 @@ import {
   GameGuildAuth,
   CredentialsProvider,
   GoogleProvider,
+  DiscordProvider,
   processSession,
   encodeSession,
   SessionStore,
@@ -22,7 +23,18 @@ const result = GameGuildAuth({
           }),
         ]
       : []),
+    ...(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET
+      ? [
+          DiscordProvider({
+            clientId: process.env.DISCORD_CLIENT_ID,
+            clientSecret: process.env.DISCORD_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
+  pages: {
+    error: "/auth-error",
+  },
   apiUrl:
     process.env.API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||

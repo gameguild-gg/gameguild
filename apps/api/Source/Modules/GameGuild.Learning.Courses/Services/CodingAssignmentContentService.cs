@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -83,12 +84,106 @@ public sealed class CodingAssignmentContentService(
         if (string.IsNullOrWhiteSpace(jsonBody)) return null;
         try
         {
-            return JsonSerializer.Deserialize<CodingAssignmentContent>(jsonBody, s_jsonOptions);
+            return JsonSerializer.Deserialize<CodingAssignmentContent>(
+                NormalizeTestDiscriminatorOrder(jsonBody), s_jsonOptions);
         }
         catch
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Postgres jsonb reorders object keys (by length, then bytes), which can move the polymorphic
+    /// <c>kind</c> discriminator behind other properties. System.Text.Json requires the discriminator
+    /// to precede derived-type properties, so hoist <c>kind</c> back to the front of every test object
+    /// before deserializing. The write path is unaffected.
+    /// </summary>
+    internal static string NormalizeTestDiscriminatorOrder(string jsonBody)
+    {
+        using var doc = JsonDocument.Parse(jsonBody);
+        var root = doc.RootElement;
+        if (root.ValueKind != JsonValueKind.Object
+            || !root.TryGetProperty("Tests", out var tests)
+            || tests.ValueKind != JsonValueKind.Object
+            || !TestsNeedNormalization(tests))
+        {
+            return jsonBody;
+        }
+
+        using var buffer = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(buffer))
+        {
+            writer.WriteStartObject();
+            foreach (var prop in root.EnumerateObject())
+            {
+                if (prop.Name != "Tests")
+                {
+                    prop.WriteTo(writer);
+                    continue;
+                }
+
+                writer.WritePropertyName("Tests");
+                writer.WriteStartObject();
+                foreach (var suite in tests.EnumerateObject())
+                {
+                    writer.WritePropertyName(suite.Name);
+                    if (suite.Value.ValueKind != JsonValueKind.Array)
+                    {
+                        suite.Value.WriteTo(writer);
+                        continue;
+                    }
+
+                    writer.WriteStartArray();
+                    foreach (var test in suite.Value.EnumerateArray())
+                    {
+                        WriteKindFirst(writer, test);
+                    }
+                    writer.WriteEndArray();
+                }
+                writer.WriteEndObject();
+            }
+            writer.WriteEndObject();
+        }
+        return Encoding.UTF8.GetString(buffer.ToArray());
+    }
+
+    private static bool TestsNeedNormalization(JsonElement tests)
+    {
+        foreach (var suite in tests.EnumerateObject())
+        {
+            if (suite.Value.ValueKind != JsonValueKind.Array) continue;
+            foreach (var test in suite.Value.EnumerateArray())
+            {
+                if (test.ValueKind == JsonValueKind.Object
+                    && test.TryGetProperty("kind", out _)
+                    && test.EnumerateObject().First().Name != "kind")
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static void WriteKindFirst(Utf8JsonWriter writer, JsonElement test)
+    {
+        if (test.ValueKind != JsonValueKind.Object
+            || !test.TryGetProperty("kind", out var kind)
+            || test.EnumerateObject().First().Name == "kind")
+        {
+            test.WriteTo(writer);
+            return;
+        }
+
+        writer.WriteStartObject();
+        writer.WritePropertyName("kind");
+        kind.WriteTo(writer);
+        foreach (var prop in test.EnumerateObject())
+        {
+            if (prop.Name != "kind") prop.WriteTo(writer);
+        }
+        writer.WriteEndObject();
     }
 
     private static CodingAssignmentContent StripPrivate(CodingAssignmentContent source)

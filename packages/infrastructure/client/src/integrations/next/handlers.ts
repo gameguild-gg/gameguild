@@ -8,6 +8,7 @@
  *   GET  /api/auth/csrf     — Get CSRF token
  *   GET  /api/auth/providers — List available providers
  *   POST /api/auth/signin   — Sign in with a provider
+ *   GET  /api/auth/signin/:provider — OAuth redirect sign-in
  *   POST /api/auth/signup   — Sign up (credentials only)
  *   POST /api/auth/signout  — Sign out
  *   POST /api/auth/session  — Update session
@@ -48,6 +49,15 @@ import {
   getOAuthAuthorizeUrl,
   getOAuthHandleCallback,
 } from './oauth-helpers.js';
+import {
+  STATE_COOKIE_MAX_AGE,
+  constantTimeEqual,
+  resolveAllowedRedirect,
+  signStatePayload,
+  stateCookieName,
+  stateCookieOptions,
+  verifyStateCookie,
+} from './oauth-state.js';
 
 /**
  * Internal cookie setter that collects Set-Cookie headers
@@ -292,6 +302,11 @@ export function createHandlers(config: ResolvedAuthConfig) {
         case 'callback':
           if (providerId) {
             return await handleOAuthCallback(request, providerId, cookies, responseCookies);
+          }
+          return buildResponse({ error: 'Missing provider' }, 400, responseCookies);
+        case 'signin':
+          if (providerId) {
+            return await handleOAuthSignInRedirect(request, providerId, responseCookies);
           }
           return buildResponse({ error: 'Missing provider' }, 400, responseCookies);
         default:
@@ -595,6 +610,61 @@ export function createHandlers(config: ResolvedAuthConfig) {
     /* v8 ignore stop */
   }
 
+  /**
+   * GET /api/auth/signin/:provider — OAuth redirect sign-in.
+   *
+   * For oauth-type providers with a getAuthorizeUrl bridge: fetch the
+   * authorization URL from the backend, stash CSRF state + redirect target
+   * in a signed short-lived cookie, and 302 to the provider.
+   */
+  async function handleOAuthSignInRedirect(
+    request: Request,
+    providerId: string,
+    responseCookies: ResponseCookies
+  ): Promise<Response> {
+    const provider = config.providers.find((p) => p.id === providerId);
+    if (!provider) throw new ProviderNotFoundError(providerId);
+
+    const getAuthorizeUrl = getOAuthAuthorizeUrl(provider as OAuthProviderWithMethods);
+    if (!getAuthorizeUrl) {
+      return buildResponse(
+        { error: 'Provider does not support redirect sign-in' },
+        400,
+        responseCookies
+      );
+    }
+
+    const url = new URL(request.url);
+    const redirectUri = `${url.origin}${config.basePath}/callback/${providerId}`;
+    const redirectTo = resolveAllowedRedirect(
+      url.searchParams.get('redirectTo'),
+      config.pages.signIn || '/'
+    );
+
+    const authUrl = await getAuthorizeUrl(config.apiUrl, redirectUri);
+    // The backend embeds the state in the authUrl; read it back so the
+    // callback can constant-time compare it against the query param.
+    const state = new URL(authUrl).searchParams.get('state') ?? '';
+
+    responseCookies.set(
+      stateCookieName(providerId),
+      await signStatePayload(
+        {
+          state,
+          redirectTo,
+          tenantId: url.searchParams.get('tenantId') ?? undefined,
+          locale: url.searchParams.get('locale') ?? undefined,
+          flow: 'signin',
+          exp: Date.now() + STATE_COOKIE_MAX_AGE * 1000,
+        },
+        config.secret
+      ),
+      stateCookieOptions()
+    );
+
+    return buildRedirect(authUrl, responseCookies);
+  }
+
   async function handleOAuthCallback(
     request: Request,
     providerId: string,
@@ -618,23 +688,47 @@ export function createHandlers(config: ResolvedAuthConfig) {
       return Response.redirect(`${url.origin}${errorPage}?error=missing_code`);
     }
 
+    // CSRF gate: the signed state cookie from GET /signin/:provider must
+    // verify (HMAC + expiry), be a live sign-in flow, and match the
+    // provider-returned state param in constant time.
+    const cookieName = stateCookieName(providerId);
+    const payload = await verifyStateCookie(cookies.get(cookieName), config.secret);
+
+    if (
+      !payload ||
+      payload.flow !== 'signin' ||
+      state === null ||
+      !constantTimeEqual(payload.state, state)
+    ) {
+      responseCookies.set(cookieName, '', stateCookieOptions(0));
+      return buildRedirect(`${url.origin}${errorPage}?error=state_mismatch`, responseCookies);
+    }
+
+    // Single-use: consume the cookie once verified.
+    responseCookies.set(cookieName, '', stateCookieOptions(0));
+
+    const redirectUri = `${url.origin}${config.basePath}/callback/${providerId}`;
+
     const oauthProvider = provider as OAuthProviderWithMethods;
     const handleCallback = getOAuthHandleCallback(oauthProvider);
 
     let result: ProviderResult | null = null;
     /* v8 ignore start */
     if (handleCallback) {
-      result = await handleCallback(config.apiUrl, code, state ?? undefined);
+      result = await handleCallback(config.apiUrl, code, state, redirectUri, payload.tenantId);
     }
     /* v8 ignore stop */
 
     if (!result) {
-      return Response.redirect(`${url.origin}${errorPage}?error=callback_failed`);
+      return buildRedirect(`${url.origin}${errorPage}?error=callback_failed`, responseCookies);
     }
 
     await finalizeAuth(result, 'signIn', config, sessionStore, responseCookies);
 
-    const callbackUrl = config.pages.newUser || '/';
+    let callbackUrl = payload.redirectTo || config.pages.newUser || '/';
+    if (payload.locale && !callbackUrl.startsWith(`/${payload.locale}`)) {
+      callbackUrl = `/${payload.locale}${callbackUrl}`;
+    }
     return buildRedirect(`${url.origin}${callbackUrl}`, responseCookies);
   }
 

@@ -144,6 +144,8 @@ services:
       - SeedData__ImportSnapshotCourses=${SEED_SNAPSHOT_COURSES:-true}
       - OAuth__Google__ClientId=${GOOGLE_CLIENT_ID:-}
       - OAuth__Google__ClientSecret=${GOOGLE_CLIENT_SECRET:-}
+      - OAuth__Discord__ClientId=${DISCORD_CLIENT_ID:-}
+      - OAuth__Discord__ClientSecret=${DISCORD_CLIENT_SECRET:-}
     volumes:
       - dataprotection-keys:/app/.aspnet/DataProtection-Keys
     security_opt:

@@ -7,6 +7,7 @@
 export { CredentialsProvider, type CredentialsProviderOptions } from './credentials.js';
 export { GoogleProvider, type GoogleProviderOptions } from './google.js';
 export { GitHubProvider, type GitHubProviderOptions } from './github.js';
+export { DiscordProvider, type DiscordProviderOptions } from './discord.js';
 
 export type {
   Provider,

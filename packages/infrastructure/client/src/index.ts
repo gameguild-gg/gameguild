@@ -83,6 +83,7 @@ export type {
 export { CredentialsProvider } from './runtime/auth/providers/credentials.js';
 export { GitHubProvider } from './runtime/auth/providers/github.js';
 export { GoogleProvider } from './runtime/auth/providers/google.js';
+export { DiscordProvider } from './runtime/auth/providers/discord.js';
 
 // Tenant types
 export type { TenantConfig, TenantProvider } from './runtime/tenant/types.js';

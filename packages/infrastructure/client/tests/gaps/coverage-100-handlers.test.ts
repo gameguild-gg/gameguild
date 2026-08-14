@@ -9,6 +9,10 @@
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { createClientFromCookies } from '../../src/integrations/next/index.js';
+import {
+  stateCookieName,
+  signStatePayload,
+} from '../../src/integrations/next/oauth-state.js';
 
 // ─── handlers.ts L507 — handleSignUp non-200 response ─────────────────
 
@@ -230,8 +234,13 @@ describe('handlers — OAuth callback null result (L609)', () => {
 
     const { GET } = createHandlers(config);
 
+    const stateCookie = await signStatePayload(
+      { state: 'xyz', redirectTo: '/', flow: 'signin', exp: Date.now() + 600000 },
+      'test-secret-min-32-chars-long-ok',
+    );
     const request = new Request('http://localhost/api/auth/callback/github?code=abc&state=xyz', {
       method: 'GET',
+      headers: { cookie: `${stateCookieName('github')}=${stateCookie}` },
     });
 
     const response = await GET(request);
