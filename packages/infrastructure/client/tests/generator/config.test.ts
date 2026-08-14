@@ -10,8 +10,20 @@ describe('generator configuration', () => {
     );
 
     expect(config.openApiSource).toBe('artifacts/test-results/openapi/openapi.json');
-    expect(config.generatedSourceLabel).toBe('captured-openapi');
+    expect(config.generatedSourceLabel).toBe('gameguild-openapi');
     expect(config.force).toBe(true);
+  });
+
+  it('keeps generated output independent from the remote fetch URL', () => {
+    const config = resolveGeneratorConfig(
+      [],
+      { OPENAPI_URL: 'http://127.0.0.1:15099/swagger/v1/swagger.json' },
+    );
+
+    expect(config.openApiSource).toBe(
+      'http://127.0.0.1:15099/swagger/v1/swagger.json',
+    );
+    expect(config.generatedSourceLabel).toBe('gameguild-openapi');
   });
 
   it('rejects --openapi without a path', () => {
