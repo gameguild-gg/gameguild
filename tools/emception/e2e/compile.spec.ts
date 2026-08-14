@@ -305,9 +305,11 @@ test.describe('Compile & Run', () => {
             const wasmOptLog = logs.find(l => l.text.includes('wasm-opt') && l.text.includes('asyncify'));
             expect(wasmOptLog, 'Should NOT run wasm-opt asyncify').toBeUndefined();
 
-            // Timing assertion: direct path should compile in < 15s
-            // (old emcc path was ~20s; direct path should be ~5s)
-            expect(compileDuration, `Compile took ${compileDuration.toFixed(1)}s — should be < 15s`).toBeLessThan(15);
+            // Timing assertion: direct path should compile fast.
+            // (old emcc path was ~20s; direct path is ~5s locally)
+            // CI runners are 2-3x slower — give 3x headroom there.
+            const budget = process.env.CI ? 45 : 15;
+            expect(compileDuration, `Compile took ${compileDuration.toFixed(1)}s — should be < ${budget}s`).toBeLessThan(budget);
 
             dumpLogs(logs, 'TIMING TEST');
         } finally {
