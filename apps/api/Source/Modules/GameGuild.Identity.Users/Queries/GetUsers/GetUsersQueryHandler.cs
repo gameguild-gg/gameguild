@@ -45,29 +45,31 @@ public sealed class GetUsersQueryHandler(
 
         var actorTenantId = Actor.TenantId;
 
-        if (!Actor.IsSystemAdmin)
+        if (actorTenantId.HasValue)
         {
-            if (!actorTenantId.HasValue)
+            if (!Actor.IsSystemAdmin)
             {
-                var unauthenticatedActorId = Actor.SubjectIdAsGuid
+                var actorUserId = Actor.SubjectIdAsGuid
                     ?? throw new AuthenticationRequiredException("Authenticated user ID is required to list users.");
 
-                throw new AccessDeniedException($"User {unauthenticatedActorId} attempted to list users without tenant context.");
-            }
+                var actorMembership = await tenantMemberRepository
+                    .GetByUserAndTenantAsync(actorUserId, actorTenantId.Value, cancellationToken)
+                    .ConfigureAwait(false);
 
-            var actorUserId = Actor.SubjectIdAsGuid
-                ?? throw new AuthenticationRequiredException("Authenticated user ID is required to list users.");
-
-            var actorMembership = await tenantMemberRepository
-                .GetByUserAndTenantAsync(actorUserId, actorTenantId.Value, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (actorMembership is null || !actorMembership.IsActive)
-            {
-                throw AccessDeniedException.ForTenantMembership(actorUserId, actorTenantId.Value);
+                if (actorMembership is null || !actorMembership.IsActive)
+                {
+                    throw AccessDeniedException.ForTenantMembership(actorUserId, actorTenantId.Value);
+                }
             }
 
             query = query.Where(u => u.TenantMemberships.Any(m => m.TenantId == actorTenantId.Value && m.IsActive));
+        }
+        else if (!Actor.IsSystemAdmin)
+        {
+            var actorUserId = Actor.SubjectIdAsGuid
+                ?? throw new AuthenticationRequiredException("Authenticated user ID is required to list users.");
+
+            throw new AccessDeniedException($"User {actorUserId} attempted to list users without tenant context.");
         }
 
         // Apply includeDeleted filter first
