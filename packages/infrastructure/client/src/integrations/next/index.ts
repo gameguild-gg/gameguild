@@ -23,7 +23,7 @@
 export { GameGuildAuth } from './auth.js';
 
 // ─── Provider Factories (re-exported for convenience) ────────────
-export { CredentialsProvider, GoogleProvider, GitHubProvider } from '../../runtime/auth/providers/index.js';
+export { CredentialsProvider, GoogleProvider, GitHubProvider, DiscordProvider } from '../../runtime/auth/providers/index.js';
 
 // ─── Auth Types ──────────────────────────────────────────────────
 export type {
