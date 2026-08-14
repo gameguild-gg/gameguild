@@ -93,7 +93,10 @@ public class ProjectsController : BaseApiController {
     [FromQuery] int take = 200) {
     if (!_actorContextAccessor.ActorContext.IsAuthenticated) return Unauthorized();
     var projects = _authorizationService.ApplyWorkspaceAccess(
-      _context.Set<Project>().AsNoTracking().Where(project => project.DeletedAt == null));
+      _context.Set<Project>().AsNoTracking().Where(project =>
+        project.DeletedAt == null &&
+        project.Status != ContentStatus.Archived &&
+        project.Status != ContentStatus.Deleted));
     var accessibleProjects = await projects
       .Select(project => new { project.Id, project.Title })
       .ToListAsync()

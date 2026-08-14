@@ -26,10 +26,12 @@ type PeriodFilter = "all" | "upcoming" | "month";
 interface TestingEventsBrowserProps {
   events: TestingEventViewModel[];
   accessIssues: string[];
+  projectId?: string;
 }
 export function TestingEventsBrowser({
   events,
   accessIssues,
+  projectId,
 }: TestingEventsBrowserProps) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -235,17 +237,17 @@ export function TestingEventsBrowser({
             className="grid gap-5 md:grid-cols-2 xl:grid-cols-3"
           >
             {filteredEvents.map((session) => (
-              <TestingEventCard key={session.id} session={session} />
+              <TestingEventCard key={session.id} session={session} projectId={projectId} />
             ))}
           </section>
         ) : viewMode === "row" ? (
           <section aria-label="Testing events" className="space-y-3">
             {filteredEvents.map((session) => (
-              <TestingEventRow key={session.id} session={session} />
+              <TestingEventRow key={session.id} session={session} projectId={projectId} />
             ))}
           </section>
         ) : (
-          <TestingEventsTable sessions={filteredEvents} />
+          <TestingEventsTable sessions={filteredEvents} projectId={projectId} />
         )}
       </div>
     </div>
