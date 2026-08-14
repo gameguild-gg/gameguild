@@ -1,6 +1,10 @@
 'use client';
 
-import { DashboardSidebar } from './dashboard-sidebar';
+import {
+  DashboardSidebar,
+  dashboardNavigationData,
+  filterDashboardNavigation,
+} from './dashboard-sidebar';
 import { DashboardHeader } from './dashboard-header';
 import { DashboardCommandPalette } from './dashboard-command-palette';
 import { cn } from '@game-guild/ui/lib/utils';
@@ -8,20 +12,37 @@ import { SidebarInset, SidebarProvider } from '@game-guild/ui/components/sidebar
 import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
 import type { DashboardUser } from './dashboard-user-menu';
 import { Toaster } from '@/components/ui/sonner';
+import type { DashboardContextSummary } from '@/lib/dashboard-contexts';
 
 interface DashboardShellProps {
   children: React.ReactNode;
   notifications?: DashboardNotificationSummary;
   user: DashboardUser;
+  capabilities?: readonly string[];
+  contexts?: readonly DashboardContextSummary[];
 }
 
-export function DashboardShell({ children, notifications, user }: DashboardShellProps) {
+export function DashboardShell({
+  children,
+  notifications,
+  user,
+  capabilities = [],
+  contexts = [],
+}: DashboardShellProps) {
+  const navigation = filterDashboardNavigation(
+    dashboardNavigationData,
+    capabilities,
+  );
+
   return (
     <div className="flex h-svh min-w-0 flex-1 overflow-hidden">
       <SidebarProvider>
-        <DashboardSidebar />
+        <DashboardSidebar navigation={navigation} contexts={contexts} />
         <SidebarInset className="min-w-0 overflow-hidden">
-          <DashboardCommandPalette />
+          <DashboardCommandPalette
+            navigation={navigation}
+            capabilities={capabilities}
+          />
           {/* Main Content */}
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
             {/* Navbar */}

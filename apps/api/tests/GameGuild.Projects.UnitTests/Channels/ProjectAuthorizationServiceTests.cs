@@ -3,6 +3,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
+using GameGuild.Teams;
 using ResourceTenantId = GameGuild.CQRS.Models.TenantId;
 
 namespace GameGuild.Projects.UnitTests.Channels;
@@ -81,26 +82,59 @@ public sealed class ProjectAuthorizationServiceTests : IDisposable
     {
         var project = AddPrivateProject();
         AddIdentity();
-        var team = new Team { Name = "Project team", IsActive = true };
+        var team = new Team { Name = "Project team", IsActive = true, TenantId = _tenantId };
         _context.Set<Team>().Add(team);
         _context.Set<TeamMember>().Add(new TeamMember
         {
             TeamId = team.Id,
             UserId = _actorId,
-            IsActive = true
+            IsActive = true,
+            TenantId = _tenantId
         });
         _context.Set<ProjectTeam>().Add(new ProjectTeam
         {
             ProjectId = project.Id,
             TeamId = team.Id,
             IsActive = true,
-            Permissions = "Read"
+            Permissions = "Read",
+            ParticipationMode = ProjectTeamParticipationMode.AllMembers,
+            TenantId = _tenantId
         });
         await _context.SaveChangesAsync();
 
         var allowed = await CreateService().HasPermissionAsync(project.Id, PermissionType.Read);
 
         allowed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HasPermission_Read_Should_Deny_Unallocated_Member_Of_A_SelectedMembers_Team()
+    {
+        var project = AddPrivateProject();
+        AddIdentity();
+        var team = new Team { Name = "Selected team", IsActive = true, TenantId = _tenantId };
+        _context.Set<Team>().Add(team);
+        _context.Set<TeamMember>().Add(new TeamMember
+        {
+            TeamId = team.Id,
+            UserId = _actorId,
+            IsActive = true,
+            TenantId = _tenantId
+        });
+        _context.Set<ProjectTeam>().Add(new ProjectTeam
+        {
+            ProjectId = project.Id,
+            TeamId = team.Id,
+            IsActive = true,
+            Permissions = "Read",
+            ParticipationMode = ProjectTeamParticipationMode.SelectedMembers,
+            TenantId = _tenantId
+        });
+        await _context.SaveChangesAsync();
+
+        var allowed = await CreateService().HasPermissionAsync(project.Id, PermissionType.Read);
+
+        allowed.Should().BeFalse();
     }
 
     [Theory]
@@ -243,6 +277,74 @@ public sealed class ProjectAuthorizationServiceTests : IDisposable
         await _context.SaveChangesAsync();
 
         var visible = await CreateService().ApplyReadAccess(_context.Set<Project>()).ToListAsync();
+
+        visible.Should().NotContain(item => item.Id == project.Id);
+    }
+
+    [Fact]
+    public async Task SystemAdmin_Should_Not_Bypass_Selected_Tenant_Membership()
+    {
+        _actorAccessor.SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.ForUser(_actorId)
+                .WithTenantId(_tenantId)
+                .WithRole("SystemAdmin")
+                .Build());
+        var project = AddPrivateProject();
+        _context.Set<User>().Add(new User { Id = _actorId, IsActive = true });
+        await _context.SaveChangesAsync();
+
+        (await CreateService().HasPermissionAsync(project.Id, PermissionType.Edit)).Should().BeFalse();
+        (await CreateService().ApplyReadAccess(_context.Set<Project>()).ToListAsync()).Should().BeEmpty();
+        (await CreateService().ApplyWorkspaceAccess(_context.Set<Project>()).ToListAsync()).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ApplyWorkspaceAccess_Should_Require_Read_For_A_Direct_Grant()
+    {
+        var project = AddPrivateProject();
+        AddIdentity();
+        _context.Set<ResourceUserPermission>().Add(new ResourceUserPermission
+        {
+            TenantId = new ResourceTenantId(_tenantId),
+            UserId = _actorId,
+            ResourceType = nameof(Project),
+            ResourceId = project.Id.ToString(),
+            Permissions = [PermissionType.Comment.ToString()],
+            GrantedByUserId = Guid.NewGuid()
+        });
+        await _context.SaveChangesAsync();
+
+        var visible = await CreateService().ApplyWorkspaceAccess(_context.Set<Project>()).ToListAsync();
+
+        visible.Should().NotContain(item => item.Id == project.Id);
+    }
+
+    [Fact]
+    public async Task ApplyWorkspaceAccess_Should_Require_Read_Or_Ownership_For_A_Project_Team()
+    {
+        var project = AddPrivateProject();
+        AddIdentity();
+        var team = new Team { Name = "Project team", IsActive = true, TenantId = _tenantId };
+        _context.Set<Team>().Add(team);
+        _context.Set<TeamMember>().Add(new TeamMember
+        {
+            TeamId = team.Id,
+            UserId = _actorId,
+            IsActive = true,
+            TenantId = _tenantId
+        });
+        _context.Set<ProjectTeam>().Add(new ProjectTeam
+        {
+            ProjectId = project.Id,
+            TeamId = team.Id,
+            Role = ProjectTeamRole.Guest,
+            IsActive = true,
+            Permissions = "Comment",
+            TenantId = _tenantId
+        });
+        await _context.SaveChangesAsync();
+
+        var visible = await CreateService().ApplyWorkspaceAccess(_context.Set<Project>()).ToListAsync();
 
         visible.Should().NotContain(item => item.Id == project.Id);
     }

@@ -34,6 +34,7 @@ public class ResourcesOptions : ModuleOptions
     {
         { "Users", 5.00m },
         { "Projects", 10.00m },
+        { "Teams", 5.00m },
         { "Storage", 0.05m },
         { "ApiCalls", 0.001m }
     };

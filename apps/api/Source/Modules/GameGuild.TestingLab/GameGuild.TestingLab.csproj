@@ -14,6 +14,8 @@
         <ProjectReference Include="..\GameGuild.Identity.Tenants\GameGuild.Identity.Tenants.csproj"/>
         <ProjectReference Include="..\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj"/>
         <ProjectReference Include="..\GameGuild.Projects\GameGuild.Projects.csproj"/>
+        <ProjectReference Include="..\GameGuild.Teams\GameGuild.Teams.csproj"/>
+        <ProjectReference Include="..\GameGuild.Assets\GameGuild.Assets.csproj"/>
     </ItemGroup>
 
 </Project>

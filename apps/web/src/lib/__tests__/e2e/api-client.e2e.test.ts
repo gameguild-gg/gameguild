@@ -38,6 +38,7 @@ const unwrapResult = <T>(result: Result<T, ApiError>, label: string): T => {
 describe('Auth flow E2E (no UI)', () => {
   it(
     'signs up, signs in, refreshes token, and fetches session/profile',
+    { timeout: 60_000 },
     async () => {
       const client = createBaseClient();
 
@@ -127,6 +128,5 @@ describe('Auth flow E2E (no UI)', () => {
         }
       }
     },
-    { timeout: 60_000 },
   );
 });

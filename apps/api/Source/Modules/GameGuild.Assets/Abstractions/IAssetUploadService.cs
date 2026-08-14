@@ -58,7 +58,9 @@ public record UploadAssetOptions(
     string? DisplayName = null,
     AssetAccessPolicy AccessPolicy = AssetAccessPolicy.Private,
     string? ParentResourceType = null,
-    Guid? ParentResourceId = null);
+    Guid? ParentResourceId = null,
+    Guid? FolderId = null,
+    Guid? TenantId = null);
 
 /// <summary>
 /// Result of an asset upload.

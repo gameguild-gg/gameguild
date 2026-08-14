@@ -262,6 +262,7 @@ public static class ResourceUsageTypeRegistry
         // Register all enum values with their metadata
         RegisterBuiltIn(ResourceUsageType.Users, "Users", "User accounts per tenant");
         RegisterBuiltIn(ResourceUsageType.Projects, "Projects", "Projects created per tenant");
+        RegisterBuiltIn(ResourceUsageType.Teams, "Teams", "Teams created per tenant");
         RegisterBuiltIn(ResourceUsageType.Storage, "Storage", "Storage usage", "bytes");
         RegisterBuiltIn(ResourceUsageType.ApiCalls, "ApiCalls", "API calls per period", "requests", ResourceQuotaPeriod.Daily);
         RegisterBuiltIn(ResourceUsageType.Programs, "Programs", "Programs (learning paths) per tenant");

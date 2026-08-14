@@ -93,6 +93,12 @@ public static class AssetsModuleExtensions
         services.AddScoped<IAssetStorageService, AssetStorageService>();
         services.AddScoped<IAssetUploadService, AssetUploadService>();
         services.AddScoped<IAssetAccessService, AssetAccessService>();
+        services.AddScoped<IAssetParentAuthorizationResolver, ProjectAssetParentAuthorizationResolver>();
+        services.AddScoped<IAssetParentAuthorizationResolver, TeamAssetParentAuthorizationResolver>();
+        services.AddScoped<IAssetUploadAuthorizationService, AssetUploadAuthorizationService>();
+        services.AddScoped<IAssetFolderAuthorizationService, AssetFolderAuthorizationService>();
+        services.AddScoped<IAssetLibraryService, AssetLibraryService>();
+        services.AddScoped<IAssetScopedAccessService, AssetScopedAccessService>();
         services.AddScoped<IAssetModerationService, AssetModerationService>();
         services.AddScoped<IAssetTextExtractionService, AssetTextExtractionService>();
 
@@ -147,6 +153,9 @@ public static class AssetsModuleExtensions
         modelBuilder.ApplyConfiguration(new AssetReferenceConfiguration());
         modelBuilder.ApplyConfiguration(new TransformedAssetConfiguration());
         modelBuilder.ApplyConfiguration(new AssetReportConfiguration());
+        modelBuilder.ApplyConfiguration(new AssetFolderConfiguration());
+        modelBuilder.ApplyConfiguration(new AssetReferenceRevisionConfiguration());
+        modelBuilder.ApplyConfiguration(new AssetScopedAccessGrantConfiguration());
 
         return modelBuilder;
     }

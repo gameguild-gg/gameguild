@@ -2,76 +2,58 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  completeLaunchChecklistItem: vi.fn(),
-  createLaunchPlan: vi.fn(),
-  getLaunchPadDashboard: vi.fn(),
-  getLaunchProjectOptions: vi.fn(),
-  getPlanReadiness: vi.fn(),
-  normalizeLaunchStatus: vi.fn(),
-  publishLaunchPlan: vi.fn(),
+  createLaunchPadEventForm: vi.fn(),
+  createLaunchPadSlotForm: vi.fn(),
+  transitionLaunchPadEventForm: vi.fn(),
+  getManagedLaunchPadEvents: vi.fn(),
+  getManagedLaunchPadEvent: vi.fn(),
+  getDashboardContexts: vi.fn(),
 }));
 
 vi.mock('@/lib/launch-pad/actions', () => ({
-  completeLaunchChecklistItem: mocks.completeLaunchChecklistItem,
-  createLaunchPlan: mocks.createLaunchPlan,
-  publishLaunchPlan: mocks.publishLaunchPlan,
+  createLaunchPadEventForm: mocks.createLaunchPadEventForm,
+  createLaunchPadSlotForm: mocks.createLaunchPadSlotForm,
+  transitionLaunchPadEventForm: mocks.transitionLaunchPadEventForm,
 }));
 
-vi.mock('@/lib/launch-pad', () => ({
-  getLaunchPadDashboard: mocks.getLaunchPadDashboard,
-  getLaunchProjectOptions: mocks.getLaunchProjectOptions,
-  getPlanReadiness: mocks.getPlanReadiness,
-  normalizeLaunchStatus: mocks.normalizeLaunchStatus,
+vi.mock('@/lib/launch-pad/queries', () => ({
+  getManagedLaunchPadEvents: mocks.getManagedLaunchPadEvents,
+  getManagedLaunchPadEvent: mocks.getManagedLaunchPadEvent,
 }));
 
-import LaunchPadPage from './page';
+vi.mock('@/lib/dashboard-contexts', () => ({
+  getDashboardContexts: mocks.getDashboardContexts,
+  hasAnyDashboardCapability: (capabilities: string[], capability: string) => capabilities.includes(capability),
+}));
 
-describe('launch pad dashboard page', () => {
-  it('renders persisted launch plans and project-backed creation controls', async () => {
-    mocks.getPlanReadiness.mockReturnValue(50);
-    mocks.normalizeLaunchStatus.mockReturnValue('Preparing');
-    mocks.getLaunchPadDashboard.mockResolvedValue([
-      {
-        id: 'launch-plan-1',
-        projectId: 'project-1',
-        project: { title: 'Arena Tactics' },
-        name: 'Steam launch',
-        positioning: 'A tactical prototype release for early strategy testers.',
-        targetLaunchAt: '2026-07-01T12:00:00.000Z',
-        status: 'Preparing',
-        channels: ['Steam', 'Newsletter'],
-        checklistItems: [
-          {
-            id: 'checklist-1',
-            title: 'Landing page approved',
-            category: 'Storefront',
-            isRequired: true,
-            isComplete: false,
-          },
-        ],
+vi.mock('@game-guild/ui/components/date-time-picker', () => ({
+  DateTimePicker: ({ id, name, required }: { id: string; name: string; required?: boolean }) => <input id={id} name={name} required={required} />,
+}));
+
+import LaunchPadManagementPage from './page';
+
+describe('launch pad management page', () => {
+  it('renders event lifecycle management without exposing personal participation', async () => {
+    mocks.getDashboardContexts.mockResolvedValue({ capabilities: ['LaunchPad.ManageEvents'] });
+    mocks.getManagedLaunchPadEvents.mockResolvedValue([{
+      id: 'event-1', name: 'Community launch', description: 'Present approved releases',
+      startsAt: '2026-09-01T18:00:00.000Z', endsAt: '2026-09-01T21:00:00.000Z', status: 'ApplicationsOpen',
+    }]);
+    mocks.getManagedLaunchPadEvent.mockResolvedValue({
+      event: {
+        id: 'event-1', name: 'Community launch', description: 'Present approved releases',
+        startsAt: '2026-09-01T18:00:00.000Z', endsAt: '2026-09-01T21:00:00.000Z', status: 'ApplicationsOpen',
       },
-    ]);
-    mocks.getLaunchProjectOptions.mockResolvedValue([
-      {
-        id: 'project-1',
-        title: 'Arena Tactics',
-        slug: 'arena-tactics',
-        status: 'Draft',
-      },
-    ]);
+      slots: [],
+    });
 
-    render(await LaunchPadPage());
+    render(await LaunchPadManagementPage());
 
-    expect(screen.getByRole('heading', { name: 'Launch Pad' })).toBeInTheDocument();
-    expect(screen.getByText('Steam launch')).toBeInTheDocument();
-    expect(screen.getAllByText('Arena Tactics')).toHaveLength(2);
-    expect(screen.getByText('50%')).toBeInTheDocument();
-    expect(screen.getByText('Steam, Newsletter')).toBeInTheDocument();
-    expect(screen.getByText('Landing page approved')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Mark done' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Publish launch' })).toBeDisabled();
-    expect(screen.getAllByText('Create launch plan')).toHaveLength(2);
-    expect(screen.getByLabelText('Launch name')).toBeRequired();
-    expect(screen.getByRole('button', { name: 'Create launch plan' })).toBeEnabled();
+    expect(screen.getByRole('heading', { name: /Launch Pad management/i })).toBeInTheDocument();
+    expect(screen.getByText('Community launch')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move to ApplicationsClosed' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create draft event' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Event starts')).toBeRequired();
+    expect(screen.queryByText(/your participation/i)).not.toBeInTheDocument();
   });
 });

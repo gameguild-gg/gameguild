@@ -15,7 +15,7 @@ describe('TestingProjectApplication', () => {
         eventId="event-1"
         isAuthenticated={false}
         acceptsApplications
-        projects={[]}
+        projectVersions={[]}
       />,
     );
 
@@ -28,11 +28,11 @@ describe('TestingProjectApplication', () => {
         eventId="event-1"
         isAuthenticated
         acceptsApplications
-        projects={[{ id: 'project-1', title: 'Asterion' }]}
+        projectVersions={[{ id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'published' }]}
       />,
     );
 
-    expect(screen.getByRole('option', { name: 'Asterion' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Asterion · 1.0.0 (published)' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /submit project application/i })).toBeInTheDocument();
     expect(screen.getByText(/capacity is reserved only after approval/i)).toBeInTheDocument();
   });
@@ -43,7 +43,7 @@ describe('TestingProjectApplication', () => {
         eventId="event-1"
         isAuthenticated
         acceptsApplications
-        projects={[]}
+        projectVersions={[]}
       />,
     );
 
@@ -56,7 +56,7 @@ describe('TestingProjectApplication', () => {
         eventId="event-1"
         isAuthenticated
         acceptsApplications
-        projects={[{ id: 'project-1', title: 'Asterion' }]}
+        projectVersions={[{ id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'published' }]}
         application={{
           id: 'application-1',
           status: 'Rejected',

@@ -1,5 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using GameGuild.Projects.UnitTests.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -30,6 +32,15 @@ public class ProjectsControllerTests
                 It.IsAny<GameGuild.Identity.Authorization.PermissionType>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+        _authorizationService
+            .Setup(service => service.HasPermissionIncludingDeletedAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<GameGuild.Identity.Authorization.PermissionType>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _authorizationService
+            .Setup(service => service.ApplyWorkspaceAccess(It.IsAny<IQueryable<Project>>(), It.IsAny<bool>()))
+            .Returns((IQueryable<Project> query, bool _) => query);
     }
 
     [Fact]
@@ -80,6 +91,44 @@ public class ProjectsControllerTests
     }
 
     [Fact]
+    public async Task ProjectVersions_Should_CreateAndListWithinProjectTenant()
+    {
+        var tenantId = Guid.NewGuid();
+        var project = new Project
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            Title = "Versioned project",
+            Slug = "versioned-project",
+            CreatedById = _actorId
+        };
+        _context.Projects.Add(project);
+        await _context.SaveChangesAsync();
+        var controller = CreateController();
+
+        var created = await controller.CreateProjectVersion(project.Id, new CreateProjectVersionRequest
+        {
+            VersionNumber = "1.0.0",
+            Status = "ready",
+            ReleaseNotes = "First testable build"
+        });
+        var listed = await controller.GetProjectVersions(project.Id);
+
+        created.Result.Should().BeOfType<CreatedAtActionResult>();
+        var version = await _context.Set<ProjectVersion>().SingleAsync();
+        version.TenantId.Should().Be(tenantId);
+        version.CreatedById.Should().Be(_actorId);
+        listed.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeAssignableTo<IReadOnlyList<ProjectVersionApiResponse>>()
+            .Which.Should().ContainSingle(item => item.VersionNumber == "1.0.0");
+
+        var options = await controller.GetAccessibleProjectVersions();
+        options.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeAssignableTo<IReadOnlyList<ProjectVersionOptionProjection>>()
+            .Which.Should().ContainSingle(item => item.ProjectId == project.Id && item.Id == version.Id);
+    }
+
+    [Fact]
     public async Task GetProjectCollaborators_Should_Return_Active_Collaborators()
     {
         var projectId = Guid.NewGuid();
@@ -123,6 +172,7 @@ public class ProjectsControllerTests
     [Fact]
     public async Task Project_Invitations_Should_List_Accept_And_Decline_Persisted_Invitations()
     {
+        var tenantId = Guid.NewGuid();
         var projectId = Guid.NewGuid();
         var inviteeId = _actorId;
         var declinedToken = "decline-token";
@@ -130,15 +180,30 @@ public class ProjectsControllerTests
         _context.Projects.Add(new Project
         {
             Id = projectId,
+            TenantId = tenantId,
             Title = "Launch Candidate",
             Slug = "launch-candidate",
             CreatedById = Guid.NewGuid(),
             Visibility = ContentVisibility.Public,
             Status = ContentStatus.Published
         });
+        _context.Users.Add(new User
+        {
+            Id = inviteeId,
+            Email = "invitee@example.com",
+            Name = "Invited User"
+        });
+        _context.TenantMembers.Add(new TenantMember
+        {
+            TenantId = tenantId,
+            UserId = inviteeId,
+            Role = "Member",
+            IsActive = true
+        });
         _context.ProjectInvitations.AddRange(
             new ProjectInvitation
             {
+                TenantId = tenantId,
                 ProjectId = projectId,
                 InvitedUserId = inviteeId,
                 InvitedByUserId = Guid.NewGuid(),
@@ -149,6 +214,7 @@ public class ProjectsControllerTests
             },
             new ProjectInvitation
             {
+                TenantId = tenantId,
                 ProjectId = projectId,
                 InvitedUserId = inviteeId,
                 InvitedByUserId = Guid.NewGuid(),
@@ -158,6 +224,9 @@ public class ProjectsControllerTests
                 Status = ProjectInvitationStatus.Pending
             });
         await _context.SaveChangesAsync();
+        _actorContextAccessor
+            .SetupGet(x => x.ActorContext)
+            .Returns(ActorContextBuilder.ForUser(inviteeId).WithTenantId(tenantId).WithRole("Member").Build());
 
         var controller = CreateController();
 
@@ -234,6 +303,90 @@ public class ProjectsControllerTests
         var result = await controller.AddProjectCollaborator(Guid.NewGuid(), new AddProjectCollaboratorRequest { UserId = Guid.NewGuid() });
 
         result.Result.Should().BeOfType<NotFoundResult>();
+    }
+
+    [Fact]
+    public async Task AddProjectCollaborator_Should_RejectUnknownPermissions_AndNormalizeExactValues()
+    {
+        var tenantId = Guid.NewGuid();
+        var collaboratorId = Guid.NewGuid();
+        var project = new Project
+        {
+            TenantId = tenantId,
+            Title = "Permission adapter",
+            Slug = "permission-adapter",
+            CreatedById = _actorId,
+        };
+        _context.Projects.Add(project);
+        _context.TenantMembers.Add(new TenantMember
+        {
+            TenantId = tenantId,
+            UserId = collaboratorId,
+            Role = "Member",
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+        var controller = CreateController();
+
+        var rejected = await controller.AddProjectCollaborator(project.Id, new AddProjectCollaboratorRequest
+        {
+            UserId = Guid.NewGuid(),
+            Permissions = "read,editor",
+        });
+        var accepted = await controller.AddProjectCollaborator(project.Id, new AddProjectCollaboratorRequest
+        {
+            UserId = collaboratorId,
+            Permissions = "read|COMMENT|read",
+        });
+
+        rejected.Result.Should().BeOfType<UnprocessableEntityObjectResult>();
+        accepted.Result.Should().BeOfType<CreatedAtActionResult>();
+        (await _context.ProjectCollaborators.SingleAsync()).Permissions.Should().Be("Read,Comment");
+    }
+
+    [Fact]
+    public async Task RestoreProject_Should_Use_Central_Authorization_And_Clear_Soft_Delete()
+    {
+        var project = new Project
+        {
+            TenantId = Guid.NewGuid(),
+            Title = "Restore centrally",
+            Slug = "restore-centrally",
+            CreatedById = _actorId,
+            DeletedAt = SystemClock.UtcNow.AddMinutes(-5),
+        };
+        _context.Projects.Add(project);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateController().RestoreProject(project.Id, default);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        project.DeletedAt.Should().BeNull();
+        _authorizationService.Verify(service => service.HasPermissionIncludingDeletedAsync(
+            project.Id,
+            GameGuild.Identity.Authorization.PermissionType.Restore,
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteProject_PermanentDelete_RequiresRecentAuthentication()
+    {
+        _actorContextAccessor.SetupGet(x => x.ActorContext).Returns(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = _actorId.ToString(),
+            IsAuthenticated = true,
+            Roles = new HashSet<string> { "Admin" },
+            Permissions = new HashSet<string>(),
+            TypedAttributes = ActorAttributes.Empty,
+        });
+
+        var result = await CreateController().DeleteProject(Guid.NewGuid(), softDelete: false);
+
+        result.Result.Should().BeOfType<ForbidResult>();
+        _mediator.Verify(mediator => mediator.Send(
+            It.IsAny<IRequest<Result<bool>>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Theory]

@@ -1,166 +1,87 @@
-
-
 namespace GameGuild.TestingLab;
 
-public class TestingRequestService : ITestingRequestService {
-  private readonly IApplicationDbContext _context;
-  private readonly ITestingRequestOperations _requestOperations;
+/// <summary>
+/// Backward-compatible adapter for the legacy request service contract. All data
+/// access is delegated to the canonical tenant-scoped operations services.
+/// </summary>
+public sealed class TestingRequestService(
+    ITestingRequestOperations requests,
+    ITestingParticipantOperations participants) : ITestingRequestService
+{
+    public Task<IEnumerable<TestingRequest>> GetAllAsync() => requests.GetAllTestingRequestsAsync();
 
-  public TestingRequestService(IApplicationDbContext context, ITestingRequestOperations requestOperations) {
-    _context = context;
-    _requestOperations = requestOperations;
-  }
+    public Task<IEnumerable<TestingRequest>> GetWithPaginationAsync(int skip = 0, int take = 50) =>
+        requests.GetTestingRequestsAsync(skip, take);
 
-  public async Task<IEnumerable<TestingRequest>> GetAllAsync() {
-    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).OrderByDescending(r => r.CreatedAt).ToListAsync();
-  }
+    public Task<TestingRequest?> GetByIdAsync(Guid id) => requests.GetTestingRequestByIdAsync(id);
 
-  public async Task<IEnumerable<TestingRequest>> GetWithPaginationAsync(int skip = 0, int take = 50) {
-    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).OrderByDescending(r => r.CreatedAt).Skip(skip).Take(take).ToListAsync();
-  }
+    public Task<TestingRequest?> GetByIdWithDetailsAsync(Guid id) => requests.GetTestingRequestByIdWithDetailsAsync(id);
 
-  public async Task<TestingRequest?> GetByIdAsync(Guid id) { return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).FirstOrDefaultAsync(r => r.Id == id); }
+    public Task<TestingRequest> CreateAsync(TestingRequest testingRequest) =>
+        requests.CreateTestingRequestAsync(testingRequest);
 
-  public async Task<TestingRequest?> GetByIdWithDetailsAsync(Guid id) { return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).FirstOrDefaultAsync(r => r.Id == id); }
+    public Task<TestingRequest> UpdateAsync(TestingRequest testingRequest) =>
+        requests.UpdateTestingRequestAsync(testingRequest);
 
-  public async Task<TestingRequest> CreateAsync(TestingRequest testingRequest) {
-    return await _requestOperations.CreateTestingRequestAsync(testingRequest).ConfigureAwait(false);
-  }
+    public Task<bool> DeleteAsync(Guid id) => requests.DeleteTestingRequestAsync(id);
 
-  public async Task<TestingRequest> UpdateAsync(TestingRequest testingRequest) {
-    testingRequest.Touch();
+    public Task<bool> RestoreAsync(Guid id) => requests.RestoreTestingRequestAsync(id);
 
-    _context.Set<TestingRequest>().Update(testingRequest);
-    await _context.SaveChangesAsync().ConfigureAwait(false);
+    public Task<IEnumerable<TestingRequest>> GetByProjectVersionAsync(Guid projectVersionId) =>
+        requests.GetTestingRequestsByProjectVersionAsync(projectVersionId);
 
-    return testingRequest;
-  }
+    public Task<IEnumerable<TestingRequest>> GetByStatusAsync(TestingRequestStatus status) =>
+        requests.GetTestingRequestsByStatusAsync(status);
 
-  public async Task<bool> DeleteAsync(Guid id) {
-    var testingRequest = await _context.Set<TestingRequest>().FirstOrDefaultAsync(r => r.Id == id);
+    public Task<IEnumerable<TestingRequest>> GetActiveRequestsAsync() => requests.GetActiveTestingRequestsAsync();
 
-    if (testingRequest == null) return false;
+    public async Task<IEnumerable<TestingRequest>> GetRequestsNeedingClosureAsync()
+    {
+        var now = SystemClock.UtcNow;
+        return (await requests.GetAllTestingRequestsAsync().ConfigureAwait(false))
+            .Where(request => (request.Status is TestingRequestStatus.Open or TestingRequestStatus.InProgress) &&
+                              request.EndDate < now)
+            .OrderBy(request => request.EndDate)
+            .ToArray();
+    }
 
-    _context.Set<TestingRequest>().Remove(testingRequest);
-    await _context.SaveChangesAsync().ConfigureAwait(false);
+    public async Task<bool> CanUserJoinTestingAsync(Guid userId, Guid testingRequestId)
+    {
+        var request = await requests.GetTestingRequestByIdAsync(testingRequestId).ConfigureAwait(false);
+        if (request == null || request.Status != TestingRequestStatus.Open) return false;
+        if (await participants.IsUserParticipantAsync(testingRequestId, userId).ConfigureAwait(false)) return false;
+        return !request.MaxTesters.HasValue || request.CurrentTesterCount < request.MaxTesters.Value;
+    }
 
-    return true;
-  }
+    public async Task<TestingRequest> JoinTestingAsync(Guid userId, Guid testingRequestId)
+    {
+        if (!await CanUserJoinTestingAsync(userId, testingRequestId).ConfigureAwait(false))
+            throw new InvalidOperationException("Testing request is unavailable, full, or already joined.");
+        var request = await requests.GetTestingRequestByIdAsync(testingRequestId).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Testing request not found.");
+        await participants.AddParticipantAsync(testingRequestId, userId).ConfigureAwait(false);
+        request.CurrentTesterCount++;
+        return await requests.UpdateTestingRequestAsync(request).ConfigureAwait(false);
+    }
 
-  public async Task<bool> RestoreAsync(Guid id) {
-    return await _requestOperations.RestoreTestingRequestAsync(id).ConfigureAwait(false);
-  }
+    public async Task<TestingRequest> LeaveTestingAsync(Guid userId, Guid testingRequestId)
+    {
+        var request = await requests.GetTestingRequestByIdAsync(testingRequestId).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Testing request not found.");
+        if (!await participants.RemoveParticipantAsync(testingRequestId, userId).ConfigureAwait(false))
+            throw new InvalidOperationException("User is not participating in this testing request.");
+        request.CurrentTesterCount = Math.Max(0, request.CurrentTesterCount - 1);
+        return await requests.UpdateTestingRequestAsync(request).ConfigureAwait(false);
+    }
 
-  public async Task<IEnumerable<TestingRequest>> GetByProjectVersionAsync(Guid projectVersionId) {
-    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).Where(r => r.ProjectVersionId == projectVersionId).OrderByDescending(r => r.CreatedAt).ToListAsync();
-  }
+    public async Task<TestingRequest> CloseTestingRequestAsync(Guid testingRequestId)
+    {
+        var request = await requests.GetTestingRequestByIdAsync(testingRequestId).ConfigureAwait(false)
+            ?? throw new KeyNotFoundException("Testing request not found.");
+        request.Status = TestingRequestStatus.Completed;
+        return await requests.UpdateTestingRequestAsync(request).ConfigureAwait(false);
+    }
 
-  public async Task<IEnumerable<TestingRequest>> GetByStatusAsync(TestingRequestStatus status) {
-    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).Where(r => r.Status == status).OrderByDescending(r => r.CreatedAt).ToListAsync();
-  }
-
-  public async Task<IEnumerable<TestingRequest>> GetActiveRequestsAsync() {
-    var now = SystemClock.UtcNow;
-
-    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy)
-                         .Include(r => r.ProjectVersion)
-                         .ThenInclude(pv => pv!.Project)
-                         .Where(r => r.Status == TestingRequestStatus.Open && r.StartDate <= now && r.EndDate >= now)
-                         .OrderBy(r => r.EndDate)
-                         .ToListAsync();
-  }
-
-  public async Task<IEnumerable<TestingRequest>> GetRequestsNeedingClosureAsync() {
-    var now = SystemClock.UtcNow;
-
-    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy)
-                         .Include(r => r.ProjectVersion)
-                         .ThenInclude(pv => pv!.Project)
-                         .Where(r => (r.Status == TestingRequestStatus.Open || r.Status == TestingRequestStatus.InProgress) && r.EndDate < now)
-                         .OrderBy(r => r.EndDate)
-                         .ToListAsync();
-  }
-
-  public async Task<bool> CanUserJoinTestingAsync(Guid userId, Guid testingRequestId) {
-    var request = await _context.Set<TestingRequest>().FirstOrDefaultAsync(r => r.Id == testingRequestId);
-
-    if (request == null || request.Status != TestingRequestStatus.Open) return false;
-
-    // Check if user is already participating
-    var existingParticipant = await _context.Set<TestingParticipant>().FirstOrDefaultAsync(p => p.TestingRequestId == testingRequestId && p.UserId == userId);
-
-    if (existingParticipant != null) return false; // Already participating
-
-    // Check if there's space
-    if (request.MaxTesters.HasValue && request.CurrentTesterCount >= request.MaxTesters.Value) return false;
-
-    return true;
-  }
-
-  public async Task<TestingRequest> JoinTestingAsync(Guid userId, Guid testingRequestId) {
-    var request = await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).FirstOrDefaultAsync(r => r.Id == testingRequestId);
-
-    if (request == null || request.Status != TestingRequestStatus.Open) throw new InvalidOperationException("Testing request is not available for joining");
-
-    // Check if user is already participating
-    var existingParticipant = await _context.Set<TestingParticipant>().FirstOrDefaultAsync(p => p.TestingRequestId == testingRequestId && p.UserId == userId);
-
-    if (existingParticipant != null) throw new InvalidOperationException("User is already participating in this testing request");
-
-    // Check if there's space
-    if (request.MaxTesters.HasValue && request.CurrentTesterCount >= request.MaxTesters.Value) throw new InvalidOperationException("Testing request has reached maximum testers");
-
-    var participant = new TestingParticipant { TestingRequestId = testingRequestId, UserId = userId, StartedAt = SystemClock.UtcNow };
-
-    _context.Set<TestingParticipant>().Add(participant);
-    request.CurrentTesterCount++;
-
-    await _context.SaveChangesAsync().ConfigureAwait(false);
-
-    return request;
-  }
-
-  public async Task<TestingRequest> LeaveTestingAsync(Guid userId, Guid testingRequestId) {
-    var request = await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).FirstOrDefaultAsync(r => r.Id == testingRequestId);
-
-    if (request == null) throw new ArgumentException("Testing request not found");
-
-    var participant = await _context.Set<TestingParticipant>().FirstOrDefaultAsync(p => p.TestingRequestId == testingRequestId && p.UserId == userId);
-
-    if (participant == null) throw new InvalidOperationException("User is not participating in this testing request");
-
-    _context.Set<TestingParticipant>().Remove(participant);
-    request.CurrentTesterCount = Math.Max(0, request.CurrentTesterCount - 1);
-
-    await _context.SaveChangesAsync().ConfigureAwait(false);
-
-    return request;
-  }
-
-  public async Task<TestingRequest> CloseTestingRequestAsync(Guid testingRequestId) {
-    var request = await _context.Set<TestingRequest>().Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv!.Project).FirstOrDefaultAsync(r => r.Id == testingRequestId);
-
-    if (request == null) throw new ArgumentException("Testing request not found");
-
-    request.Status = TestingRequestStatus.Completed;
-    request.Touch();
-
-    await _context.SaveChangesAsync().ConfigureAwait(false);
-
-    return request;
-  }
-
-  public async Task<IEnumerable<TestingRequest>> SearchAsync(string searchTerm) {
-    var lowerSearchTerm = searchTerm.ToLowerInvariant();
-
-    return await _context.Set<TestingRequest>().Include(r => r.CreatedBy)
-                         .Include(r => r.ProjectVersion)
-                         .ThenInclude(pv => pv!.Project)
-                         .Where(r => r.Title.ToLowerInvariant().Contains(lowerSearchTerm) ||
-                                     r.Description != null && r.Description.ToLowerInvariant().Contains(lowerSearchTerm) ||
-                                     r.ProjectVersion != null && r.ProjectVersion.Project != null && r.ProjectVersion.Project.Title.ToLowerInvariant().Contains(lowerSearchTerm)
-                         )
-                         .OrderByDescending(r => r.CreatedAt)
-                         .ToListAsync();
-  }
+    public Task<IEnumerable<TestingRequest>> SearchAsync(string searchTerm) =>
+        requests.SearchTestingRequestsAsync(searchTerm);
 }

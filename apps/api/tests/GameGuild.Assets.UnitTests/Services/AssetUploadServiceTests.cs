@@ -222,7 +222,8 @@ public class AssetUploadServiceTests
         var userId = Guid.NewGuid();
         var parentType = "Course";
         var parentId = Guid.NewGuid();
-        var options = new UploadAssetOptions("test.png", AssetAccessPolicy.Inherited, parentType, parentId);
+        var tenantId = Guid.NewGuid();
+        var options = new UploadAssetOptions("test.png", AssetAccessPolicy.Inherited, parentType, parentId, TenantId: tenantId);
 
         _contentRepositoryMock
             .Setup(x => x.GetByContentHashAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -262,6 +263,7 @@ public class AssetUploadServiceTests
         capturedReference.Should().NotBeNull();
         capturedReference!.ParentResourceType.Should().Be(parentType);
         capturedReference.ParentResourceId.Should().Be(parentId);
+        capturedReference.TenantId.Should().Be(tenantId);
     }
 
     [Fact]

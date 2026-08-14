@@ -32,6 +32,8 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.TestingLab\GameGuild.TestingLab.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Teams\GameGuild.Teams.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Assets\GameGuild.Assets.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     </ItemGroup>
 </Project>

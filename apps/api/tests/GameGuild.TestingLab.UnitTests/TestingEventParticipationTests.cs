@@ -3,6 +3,7 @@ using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using GameGuild.Projects;
+using GameGuild.Teams;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -176,16 +177,18 @@ public sealed class TestingEventParticipationTests : IDisposable
     {
         var (testingEvent, slot) = AddScheduledEventAndSlot(TestingEventMode.InPerson, 2, true);
         var application = AddApprovedApplication(testingEvent, slot);
-        var team = new Team { Name = "Project team", IsActive = true };
+        var team = new Team { TenantId = _tenantId, Name = "Project team", IsActive = true };
         _context.Set<Team>().Add(team);
         _context.Set<TeamMember>().Add(new TeamMember
         {
+            TenantId = _tenantId,
             TeamId = team.Id,
             UserId = _testerOneId,
             IsActive = true
         });
         _context.Set<ProjectTeam>().Add(new ProjectTeam
         {
+            TenantId = _tenantId,
             ProjectId = application.ProjectId,
             TeamId = team.Id,
             IsActive = true,
@@ -193,6 +196,43 @@ public sealed class TestingEventParticipationTests : IDisposable
         });
 
         await AssignAndAssertProjectTesterConflict(application, slot);
+    }
+
+    [Fact]
+    public async Task AssignProject_ShouldIgnoreCorruptCrossTenantTeamMembership()
+    {
+        var (testingEvent, slot) = AddScheduledEventAndSlot(TestingEventMode.InPerson, 2, true);
+        var application = AddApprovedApplication(testingEvent, slot);
+        var otherTenantId = Guid.NewGuid();
+        var team = new Team { TenantId = otherTenantId, Name = "Other tenant team", IsActive = true };
+        _context.Set<Team>().Add(team);
+        _context.Set<TeamMember>().Add(new TeamMember
+        {
+            TenantId = otherTenantId,
+            TeamId = team.Id,
+            UserId = _testerOneId,
+            IsActive = true,
+        });
+        _context.Set<ProjectTeam>().Add(new ProjectTeam
+        {
+            TenantId = _tenantId,
+            ProjectId = application.ProjectId,
+            TeamId = team.Id,
+            IsActive = true,
+            Permissions = "Read",
+        });
+        await _context.SaveChangesAsync();
+        var handler = CreateHandler();
+        SetActor(_testerOneId);
+        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        SetActor(_managerId);
+        await handler.Handle(new CheckInTestingEventRegistrationCommand(registered.Value.Id), default);
+
+        var result = await handler.Handle(
+            new AssignTestingProjectToTesterCommand(registered.Value.Id, application.Id),
+            default);
+
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -234,16 +274,18 @@ public sealed class TestingEventParticipationTests : IDisposable
             Permissions = "Read",
             IsActive = true
         });
-        var team = new Team { Name = "Project team", IsActive = true };
+        var team = new Team { TenantId = _tenantId, Name = "Project team", IsActive = true };
         _context.Set<Team>().Add(team);
         _context.Set<TeamMember>().Add(new TeamMember
         {
+            TenantId = _tenantId,
             TeamId = team.Id,
             UserId = _testerTwoId,
             IsActive = true
         });
         _context.Set<ProjectTeam>().Add(new ProjectTeam
         {
+            TenantId = _tenantId,
             ProjectId = application.ProjectId,
             TeamId = team.Id,
             IsActive = true,

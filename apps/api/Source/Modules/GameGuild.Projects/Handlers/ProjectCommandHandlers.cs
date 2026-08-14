@@ -1,5 +1,8 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Teams;
+using GameGuild.Resources;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -34,12 +37,15 @@ public sealed class ProjectCommandHandlers
 
   private readonly IProjectAuthorizationService _authorizationService;
 
+  private readonly IResourceQuotaEnforcer? _quotaEnforcer;
+
   public ProjectCommandHandlers(
     IApplicationDbContext context,
     IActorContextAccessor actorContextAccessor,
     ILogger<ProjectCommandHandlers> logger,
     IProjectLifecycleCoordinator? lifecycleCoordinator = null,
-    IProjectAuthorizationService? authorizationService = null) {
+    IProjectAuthorizationService? authorizationService = null,
+    IResourceQuotaEnforcer? quotaEnforcer = null) {
     _context = context;
     _actorContextAccessor = actorContextAccessor;
     _logger = logger;
@@ -47,6 +53,7 @@ public sealed class ProjectCommandHandlers
       context,
       [new ProjectStoreProductLifecycleParticipant(context)]);
     _authorizationService = authorizationService ?? new ProjectAuthorizationService(context, actorContextAccessor);
+    _quotaEnforcer = quotaEnforcer;
   }
 
   private ActorContext Actor => _actorContextAccessor.ActorContext;
@@ -59,6 +66,10 @@ public sealed class ProjectCommandHandlers
 
     if (!IsAuthenticated || UserId == null) {
       return Result.Failure<Project>(Error.Unauthorized("Project.Unauthenticated", "User must be authenticated"));
+    }
+
+    if (TenantId == null || !await _authorizationService.IsActorActiveTenantMemberAsync(cancellationToken).ConfigureAwait(false)) {
+      return Result.Failure<Project>(Error.Forbidden("Project.TenantMembershipRequired", "An active tenant membership is required"));
     }
 
     // Create project entity
@@ -76,12 +87,12 @@ public sealed class ProjectCommandHandlers
       Visibility = request.Visibility,
       Status = request.Status
     };
+    project.CreatedById = UserId.Value;
 
     // Set TenantId on the entity directly
-    var tenantId = request.TenantId ?? TenantId;
-    if (tenantId.HasValue) {
-      project.SetTenantId(tenantId.Value);
-    }
+    // Tenant authority always comes from the authenticated actor, never from the request body.
+    var tenantId = TenantId.Value;
+    project.SetTenantId(tenantId);
 
     // Generate slug from name
     project.Slug = GenerateSlug(request.Title);
@@ -95,6 +106,60 @@ public sealed class ProjectCommandHandlers
       project.Slug = $"{project.Slug}-{existingSlugCount + 1}";
     }
 
+    Team ownerTeam;
+    var teamQuotaConsumed = false;
+    if (request.OwnerTeamId is { } ownerTeamId) {
+      var canUseOwnerTeam = Actor.IsSystemAdmin || Actor.IsTenantAdmin || await _context.Set<TeamMember>()
+        .AsNoTracking()
+        .AnyAsync(member =>
+          member.TeamId == ownerTeamId &&
+          member.UserId == UserId.Value &&
+          member.Authority >= TeamMemberAuthority.Manager &&
+          member.IsActive &&
+          member.LeftAt == null &&
+          member.DeletedAt == null &&
+          _context.Set<Team>().Any(team =>
+            team.Id == ownerTeamId &&
+            team.TenantId == tenantId &&
+            team.IsActive &&
+            team.DeletedAt == null),
+          cancellationToken)
+        .ConfigureAwait(false);
+      if (!canUseOwnerTeam) {
+        return Result.Failure<Project>(Error.Forbidden(
+          "Project.OwnerTeamForbidden",
+          "Team manager authority is required to create a project for this team"));
+      }
+
+      ownerTeam = await _context.Set<Team>().SingleAsync(team => team.Id == ownerTeamId, cancellationToken).ConfigureAwait(false);
+    }
+    else {
+      if (_quotaEnforcer != null) {
+        var (allowed, currentUsage, hardLimit) = await _quotaEnforcer.TryAtomicConsumeAsync(
+          tenantId,
+          ResourceUsageType.Teams,
+          cancellationToken: cancellationToken).ConfigureAwait(false);
+        if (!allowed) {
+          return Result.Failure<Project>(Error.Conflict(
+            "Project.TeamQuotaExceeded",
+            $"Team quota exceeded. Current usage: {currentUsage}; hard limit: {hardLimit}"));
+        }
+        teamQuotaConsumed = true;
+      }
+      var personalSlugBase = $"{project.Slug}-team";
+      var personalSlug = personalSlugBase;
+      var suffix = 2;
+      while (await _context.Set<Team>().AnyAsync(team =>
+               team.TenantId == tenantId && team.Slug == personalSlug && team.DeletedAt == null,
+               cancellationToken).ConfigureAwait(false)) {
+        personalSlug = $"{personalSlugBase}-{suffix++}";
+      }
+      ownerTeam = Team.Create(tenantId, $"{request.Title} Team", personalSlug, UserId.Value, isPersonal: true);
+      _context.Set<Team>().Add(ownerTeam);
+    }
+
+    project.SetOwnerTeam(ownerTeam.Id);
+
     _context.Set<Project>().Add(project);
 
     // Add the creator as a collaborator with all permissions
@@ -102,14 +167,25 @@ public sealed class ProjectCommandHandlers
       Id = Guid.NewGuid(),
       ProjectId = project.Id,
       UserId = UserId!.Value,
-      Role = ProjectRoles.Owner,
+      Role = ProjectRoles.Editor,
       Permissions = FormatOwnerPermissions(),
       IsActive = true,
       JoinedAt = SystemClock.UtcNow
     };
     _context.Set<ProjectCollaborator>().Add(creatorCollaborator);
 
-    await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    try {
+      await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+    catch {
+      if (teamQuotaConsumed && _quotaEnforcer != null) {
+        await _quotaEnforcer.DecrementUsageAsync(
+          tenantId,
+          ResourceUsageType.Teams,
+          cancellationToken: cancellationToken).ConfigureAwait(false);
+      }
+      throw;
+    }
 
     _logger.LogInformation("Project created successfully: {ProjectId}", project.Id);
 
@@ -168,6 +244,12 @@ public sealed class ProjectCommandHandlers
 
     if (!await _authorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Delete, cancellationToken).ConfigureAwait(false)) {
       return Result.Failure<bool>(Error.NotFound("Project.NotFound", "Project not found"));
+    }
+
+    if (!request.SoftDelete && !await HasSensitiveActionAssuranceAsync(cancellationToken).ConfigureAwait(false)) {
+      return Result.Failure<bool>(Error.Forbidden(
+        "Project.ReauthenticationRequired",
+        "Recent authentication and verified MFA, when enabled, are required for permanent deletion"));
     }
 
     if (!await _lifecycleCoordinator.DeleteAsync(request.ProjectId, request.SoftDelete, cancellationToken).ConfigureAwait(false))
@@ -245,6 +327,17 @@ public sealed class ProjectCommandHandlers
   }
 
   private static string GenerateSlug(string name) { return Project.GenerateSlug(name); }
+
+  private async Task<bool> HasSensitiveActionAssuranceAsync(CancellationToken cancellationToken) {
+    if (Actor.TypedAttributes.AuthenticatedAt is not { } authenticatedAt ||
+        authenticatedAt < DateTimeOffset.UtcNow.Subtract(TimeSpan.FromMinutes(15)) ||
+        UserId is not { } actorId)
+      return false;
+    var hasMfa = await _context.Set<UserMfaConfiguration>().AsNoTracking().AnyAsync(configuration =>
+      configuration.UserId == actorId && configuration.IsEnabled && configuration.IsSetupComplete,
+      cancellationToken).ConfigureAwait(false);
+    return !hasMfa || Actor.IsMfaVerified;
+  }
 
   /// <summary> Format permissions for an owner collaborator </summary>
   private static string FormatOwnerPermissions() {

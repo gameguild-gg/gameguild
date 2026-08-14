@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+    <ProjectReference Include="..\GameGuild.Projects\GameGuild.Projects.csproj" />
+    <ProjectReference Include="..\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj" />
+    <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
+    <ProjectReference Include="..\GameGuild.Teams\GameGuild.Teams.csproj" />
+  </ItemGroup>
+</Project>

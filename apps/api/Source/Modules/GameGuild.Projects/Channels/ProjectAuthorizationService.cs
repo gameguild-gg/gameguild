@@ -2,6 +2,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
+using GameGuild.Teams;
 using Microsoft.EntityFrameworkCore;
 using ResourceTenantId = GameGuild.CQRS.Models.TenantId;
 
@@ -13,19 +14,37 @@ public interface IProjectAuthorizationService
 
     Task<bool> HasPermissionAsync(Guid projectId, PermissionType permission, CancellationToken cancellationToken = default);
 
+    Task<bool> HasPermissionIncludingDeletedAsync(Guid projectId, PermissionType permission, CancellationToken cancellationToken = default)
+        => HasPermissionAsync(projectId, permission, cancellationToken);
+
     IQueryable<Project> ApplyReadAccess(IQueryable<Project> query) => query;
+
+    IQueryable<Project> ApplyWorkspaceAccess(IQueryable<Project> query, bool includeDeleted = false) => query.Where(_ => false);
 }
 
 public sealed class ProjectAuthorizationService(IApplicationDbContext context, IActorContextAccessor actorContextAccessor)
     : IProjectAuthorizationService
 {
     public async Task<bool> HasPermissionAsync(Guid projectId, PermissionType permission, CancellationToken cancellationToken = default)
+        => await HasPermissionCoreAsync(projectId, permission, false, cancellationToken).ConfigureAwait(false);
+
+    public async Task<bool> HasPermissionIncludingDeletedAsync(Guid projectId, PermissionType permission, CancellationToken cancellationToken = default)
+        => await HasPermissionCoreAsync(projectId, permission, true, cancellationToken).ConfigureAwait(false);
+
+    private async Task<bool> HasPermissionCoreAsync(
+        Guid projectId,
+        PermissionType permission,
+        bool includeDeleted,
+        CancellationToken cancellationToken)
     {
         var actor = actorContextAccessor.ActorContext;
-        var project = await context.Set<Project>()
+        var projectQuery = includeDeleted
+            ? context.Set<Project>().IgnoreQueryFilters()
+            : context.Set<Project>();
+        var project = await projectQuery
             .Where(project =>
                 project.Id == projectId &&
-                project.DeletedAt == null)
+                (includeDeleted || project.DeletedAt == null))
             .Select(project => new
             {
                 project.CreatedById,
@@ -46,11 +65,11 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
         if (!await IsActorActiveTenantMemberAsync(cancellationToken).ConfigureAwait(false))
             return false;
 
-        var actorId = actor.SubjectIdAsGuid!.Value;
-        if (actor.IsSystemAdmin || actor.IsTenantAdmin)
-            return actor.IsSystemAdmin || project.TenantId == actor.TenantId;
         if (project.TenantId != actor.TenantId)
             return false;
+        var actorId = actor.SubjectIdAsGuid!.Value;
+        if (actor.IsSystemAdmin || actor.IsTenantAdmin)
+            return true;
         if (project.CreatedById == actorId)
             return true;
 
@@ -67,7 +86,7 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
             .ConfigureAwait(false);
 
         if (collaborators.Any(candidate =>
-                string.Equals(candidate.Role, ProjectRoles.Owner, StringComparison.OrdinalIgnoreCase) ||
+                candidate.Role == ProjectRoles.Owner ||
                 HasExactPermission(candidate.Permissions, permission)))
             return true;
 
@@ -78,13 +97,20 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
                 candidate.IsActive &&
                 candidate.DeletedAt == null &&
                 candidate.EndedAt == null)
-            .Select(candidate => new { candidate.TeamId, candidate.Role, candidate.Permissions })
+            .Select(candidate => new
+            {
+                candidate.Id,
+                candidate.TeamId,
+                candidate.Role,
+                candidate.Permissions,
+                candidate.ParticipationMode
+            })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
         foreach (var projectTeam in projectTeams)
         {
-            if (!string.Equals(projectTeam.Role, ProjectRoles.Owner, StringComparison.OrdinalIgnoreCase) &&
+            if (projectTeam.Role != ProjectTeamRole.Owner &&
                 !HasExactPermission(projectTeam.Permissions, permission))
                 continue;
 
@@ -94,11 +120,21 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
                     member.TeamId == projectTeam.TeamId &&
                     member.UserId == actorId &&
                     member.IsActive &&
+                    member.LeftAt == null &&
                     member.DeletedAt == null &&
                     context.Set<Team>().Any(team =>
                         team.Id == member.TeamId &&
+                        team.TenantId == project.TenantId &&
                         team.IsActive &&
-                        team.DeletedAt == null),
+                        team.DeletedAt == null) &&
+                    (projectTeam.ParticipationMode == ProjectTeamParticipationMode.AllMembers ||
+                     context.Set<ProjectMemberAllocation>().Any(allocation =>
+                         allocation.ProjectTeamId == projectTeam.Id &&
+                         allocation.UserId == actorId &&
+                         allocation.IsActive &&
+                         allocation.DeletedAt == null &&
+                         allocation.StartsAt <= SystemClock.UtcNow &&
+                         (!allocation.EndsAt.HasValue || allocation.EndsAt > SystemClock.UtcNow))),
                     cancellationToken)
                 .ConfigureAwait(false);
             if (activeMember)
@@ -106,19 +142,21 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
         }
 
         var resourceTenantId = new ResourceTenantId(project.TenantId!.Value);
-        var permissionName = permission.ToString();
-        return await context.Set<ResourceUserPermission>()
+        var directGrants = await context.Set<ResourceUserPermission>()
             .AsNoTracking()
-            .AnyAsync(candidate =>
+            .Where(candidate =>
                 candidate.TenantId == resourceTenantId &&
                 candidate.UserId == actorId &&
                 (candidate.ResourceType == nameof(Project) || candidate.ResourceType == "projects") &&
                 candidate.ResourceId == projectId.ToString() &&
                 candidate.RevokedAt == null &&
-                (!candidate.ExpiresAt.HasValue || candidate.ExpiresAt > SystemClock.UtcNow) &&
-                candidate.Permissions.Contains(permissionName),
+                (!candidate.ExpiresAt.HasValue || candidate.ExpiresAt > SystemClock.UtcNow))
+            .Select(candidate => candidate.Permissions)
+            .ToListAsync(
                 cancellationToken)
             .ConfigureAwait(false);
+        return directGrants.Any(grant => grant.Any(value =>
+            Enum.TryParse<PermissionType>(value, true, out var parsed) && parsed == permission));
     }
 
     public IQueryable<Project> ApplyReadAccess(IQueryable<Project> query)
@@ -137,12 +175,7 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
             user.IsActive &&
             !user.IsSuspended &&
             user.DeletedAt == null);
-        if (actor.IsSystemAdmin)
-            return query.Where(project =>
-                (project.Visibility == ContentVisibility.Public && project.Status == ContentStatus.Published) ||
-                isActiveUser);
-
-        if (actor.IsTenantAdmin)
+        if (actor.IsSystemAdmin || actor.IsTenantAdmin)
             return query.Where(project =>
                 (project.Visibility == ContentVisibility.Public && project.Status == ContentStatus.Published) ||
                 (project.TenantId == tenantId &&
@@ -181,18 +214,28 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
                   projectTeam.IsActive &&
                   projectTeam.DeletedAt == null &&
                   projectTeam.EndedAt == null &&
-                  (projectTeam.Role == ProjectRoles.Owner ||
+                  (projectTeam.Role == ProjectTeamRole.Owner ||
                    ("," + (projectTeam.Permissions ?? string.Empty).Replace(" ", "").Replace(";", ",").Replace("|", ",").ToUpper() + ",")
                        .Contains(",READ,")) &&
                   context.Set<Team>().Any(team =>
                       team.Id == projectTeam.TeamId &&
+                      team.TenantId == project.TenantId &&
                       team.IsActive &&
                       team.DeletedAt == null) &&
                   context.Set<TeamMember>().Any(member =>
                       member.TeamId == projectTeam.TeamId &&
                       member.UserId == actorId &&
                       member.IsActive &&
-                      member.DeletedAt == null)) ||
+                      member.LeftAt == null &&
+                      member.DeletedAt == null) &&
+                  (projectTeam.ParticipationMode == ProjectTeamParticipationMode.AllMembers ||
+                   context.Set<ProjectMemberAllocation>().Any(allocation =>
+                       allocation.ProjectTeamId == projectTeam.Id &&
+                       allocation.UserId == actorId &&
+                       allocation.IsActive &&
+                       allocation.DeletedAt == null &&
+                       allocation.StartsAt <= SystemClock.UtcNow &&
+                       (!allocation.EndsAt.HasValue || allocation.EndsAt > SystemClock.UtcNow)))) ||
               context.Set<ResourceUserPermission>().Any(grant =>
                   grant.TenantId == resourceTenantId &&
                   grant.UserId == actorId &&
@@ -201,6 +244,73 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
                   grant.RevokedAt == null &&
                   (!grant.ExpiresAt.HasValue || grant.ExpiresAt > SystemClock.UtcNow) &&
                   grant.Permissions.Contains(nameof(PermissionType.Read))))));
+    }
+
+    public IQueryable<Project> ApplyWorkspaceAccess(IQueryable<Project> query, bool includeDeleted = false)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } actorId || actor.TenantId is not { } tenantId)
+            return query.Where(_ => false);
+        if (actor.IsSystemAdmin || actor.IsTenantAdmin)
+            return query.Where(project =>
+                project.TenantId == tenantId &&
+                (includeDeleted || project.DeletedAt == null) &&
+                context.Set<TenantMember>().Any(member =>
+                    member.UserId == actorId &&
+                    member.TenantId == tenantId &&
+                    member.IsActive &&
+                    member.DeletedAt == null));
+
+        var resourceTenantId = new ResourceTenantId(tenantId);
+        return query.Where(project =>
+            project.TenantId == tenantId &&
+            (includeDeleted || project.DeletedAt == null) &&
+            context.Set<TenantMember>().Any(member =>
+                member.UserId == actorId &&
+                member.TenantId == tenantId &&
+                member.IsActive &&
+                member.DeletedAt == null) &&
+            (project.CreatedById == actorId ||
+             project.Collaborators.Any(collaborator =>
+                 collaborator.UserId == actorId &&
+                 collaborator.IsActive &&
+                 collaborator.DeletedAt == null &&
+                 collaborator.LeftAt == null) ||
+              context.Set<ProjectTeam>().Any(projectTeam =>
+                  projectTeam.ProjectId == project.Id &&
+                  projectTeam.IsActive &&
+                  projectTeam.DeletedAt == null &&
+                  projectTeam.EndedAt == null &&
+                  (projectTeam.Role == ProjectTeamRole.Owner ||
+                   ("," + (projectTeam.Permissions ?? string.Empty).Replace(" ", "").Replace(";", ",").Replace("|", ",").ToUpper() + ",")
+                       .Contains(",READ,")) &&
+                  context.Set<TeamMember>().Any(member =>
+                      member.TeamId == projectTeam.TeamId &&
+                     member.UserId == actorId &&
+                      member.IsActive &&
+                      member.LeftAt == null &&
+                      member.DeletedAt == null) &&
+                  context.Set<Team>().Any(team =>
+                      team.Id == projectTeam.TeamId &&
+                      team.TenantId == project.TenantId &&
+                      team.IsActive &&
+                      team.DeletedAt == null) &&
+                  (projectTeam.ParticipationMode == ProjectTeamParticipationMode.AllMembers ||
+                   context.Set<ProjectMemberAllocation>().Any(allocation =>
+                       allocation.ProjectTeamId == projectTeam.Id &&
+                       allocation.UserId == actorId &&
+                       allocation.IsActive &&
+                       allocation.DeletedAt == null &&
+                       allocation.StartsAt <= SystemClock.UtcNow &&
+                       (!allocation.EndsAt.HasValue || allocation.EndsAt > SystemClock.UtcNow)))) ||
+             context.Set<ResourceUserPermission>().Any(grant =>
+                 grant.TenantId == resourceTenantId &&
+                 grant.UserId == actorId &&
+                 (grant.ResourceType == nameof(Project) || grant.ResourceType == "projects") &&
+                   grant.ResourceId == project.Id.ToString() &&
+                   grant.RevokedAt == null &&
+                   (!grant.ExpiresAt.HasValue || grant.ExpiresAt > SystemClock.UtcNow) &&
+                   grant.Permissions.Contains(nameof(PermissionType.Read)))));
     }
 
     public async Task<bool> IsActorActiveTenantMemberAsync(CancellationToken cancellationToken = default)
@@ -221,9 +331,6 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
             .ConfigureAwait(false);
         if (!activeUser)
             return false;
-
-        if (actor.IsSystemAdmin)
-            return true;
 
         return await context.Set<TenantMember>()
             .AsNoTracking()

@@ -95,5 +95,8 @@ public enum ResourceUsageType
     AiRequests = 28,
 
     /// <summary>AI tokens consumed across providers</summary>
-    AiTokens = 29
+    AiTokens = 29,
+
+    /// <summary>Teams created per tenant</summary>
+    Teams = 30
 }
