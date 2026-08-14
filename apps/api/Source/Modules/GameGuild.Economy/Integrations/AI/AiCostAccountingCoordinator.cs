@@ -1,7 +1,7 @@
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 
-namespace GameGuild.AI;
+namespace GameGuild.Economy.Integrations.AI;
 
 public sealed class AiCostAccountingCoordinator
 {
