@@ -10,10 +10,10 @@ const require = createRequire(import.meta.url);
 
 const appArgs = process.argv.slice(2);
 const defaultApps = [
-    'apps/ide-next',
-    'apps/ide-react',
-    'apps/run-react',
-    'apps/run-webcomponent',
+    '../../demos/emception-ide-next',
+    '../../demos/emception-ide-react',
+    '../../demos/emception-run-react',
+    '../../demos/emception-run-webcomponent',
 ];
 
 async function exists(targetPath) {

@@ -1,0 +1,27 @@
+{
+  "name": "@gameguild/emception-demo-run-webcomponent",
+  "version": "4.0.0",
+  "private": true,
+  "description": "Minimal Vite + vanilla HTML demo for the <emception-run> custom element from @gameguild/emception-webcomponent.",
+  "type": "module",
+  "scripts": {
+    "predev": "npm run build:lib --prefix ../../tools/emception && node ../../tools/emception/scripts/install-app-cdn-from-package.mjs ../../demos/emception-run-webcomponent",
+    "dev": "run-p watch:core watch:browser watch:webcomponent vite",
+    "vite": "vite",
+    "watch:core": "tsc -p ../../tools/emception/packages/core/tsconfig.json --watch --preserveWatchOutput",
+    "watch:browser": "tsc -p ../../tools/emception/packages/browser/tsconfig.json --watch --preserveWatchOutput",
+    "watch:webcomponent": "tsc -p ../../tools/emception/packages/webcomponent/tsconfig.json --watch --preserveWatchOutput",
+    "prebuild": "npm run build:lib --prefix ../../tools/emception && node ../../tools/emception/scripts/install-app-cdn-from-package.mjs ../../demos/emception-run-webcomponent",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@gameguild/emception-browser": "*",
+    "@gameguild/emception-webcomponent": "*",
+    "emception": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vite": "^8.2.1"
+  }
+}

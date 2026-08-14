@@ -156,12 +156,12 @@ jobs:
       - name: Stage CDN into packages and demo applications
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: |
-          node scripts/sync-emception-cdn.mjs tools/emception/apps/ide-react
+          node scripts/sync-emception-cdn.mjs demos/emception-ide-react
           pnpm --dir tools/emception run stage:core:cdn
 
       - name: Build Emception web consumers
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
-        run: pnpm --filter "@gameguild/emception-demo-*" --filter "@game-guild/emception-demo-*" run build
+        run: pnpm --filter "@gameguild/emception-demo-*" run build --workspace-concurrency=1
 
       - name: Build GameGuild web application with Emception contracts
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
@@ -169,7 +169,7 @@ jobs:
 
       - name: Build GitHub Pages IDE
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
-        run: pnpm --dir tools/emception/apps/ide-react run build
+        run: pnpm --dir demos/emception-ide-react run build
         env:
           VITE_BASE: /gameguild/
 
@@ -177,7 +177,7 @@ jobs:
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         shell: bash
         run: |
-          test -f tools/emception/apps/ide-react/dist/index.html
+          test -f demos/emception-ide-react/dist/index.html
           test -f tools/emception/public/cdn/manifest.json
           test -d tools/emception/packages/core/dist
           test -d tools/emception/packages/core/cdn
@@ -193,7 +193,7 @@ jobs:
         with:
           name: emception-${{ github.sha }}
           path: |
-            tools/emception/apps/ide-react/dist
+            demos/emception-ide-react/dist
             tools/emception/public/cdn
             tools/emception/packages/core/dist
             tools/emception/packages/core/cdn
@@ -240,18 +240,15 @@ jobs:
         shell: bash
         run: |
           SOURCE="_artifacts/emception"
-          if [[ -d "${SOURCE}/tools/emception" ]]; then
-            SOURCE="${SOURCE}/tools/emception"
-          fi
 
-          test -f "${SOURCE}/apps/ide-react/dist/index.html"
-          test -f "${SOURCE}/public/cdn/manifest.json"
+          test -f "${SOURCE}/demos/emception-ide-react/dist/index.html"
+          test -f "${SOURCE}/tools/emception/public/cdn/manifest.json"
 
           rm -rf .pages
           mkdir -p .pages
-          cp -R "${SOURCE}/apps/ide-react/dist/." .pages/
+          cp -R "${SOURCE}/demos/emception-ide-react/dist/." .pages/
           rm -rf .pages/cdn
-          cp -R "${SOURCE}/public/cdn" .pages/cdn
+          cp -R "${SOURCE}/tools/emception/public/cdn" .pages/cdn
           find .pages -name '.gitignore' -delete
 
           echo "Pages payload: $(du -sh .pages | cut -f1)"
