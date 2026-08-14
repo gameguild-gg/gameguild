@@ -44,16 +44,20 @@ export function TestingProjectApplication({
   acceptsApplications,
   projectVersions,
   application,
+  initialProjectId,
 }: {
   eventId: string;
   isAuthenticated: boolean;
   acceptsApplications: boolean;
   projectVersions: ProjectVersionOption[];
   application?: CurrentApplication;
+  initialProjectId?: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TestingEventActionResult<unknown> | null>(null);
-  const [selectedVersionId, setSelectedVersionId] = useState('');
+  const [selectedVersionId, setSelectedVersionId] = useState(
+    () => projectVersions.find((version) => version.projectId === initialProjectId)?.id ?? '',
+  );
   const selectedVersion = projectVersions.find((version) => version.id === selectedVersionId);
 
   function submit(event: FormEvent<HTMLFormElement>) {

@@ -60,7 +60,7 @@ describe("Public Testing Lab events directory", () => {
       ],
     });
 
-    render(await TestingLabEventsPage());
+    render(await TestingLabEventsPage({}));
 
     expect(
       screen.getByRole("heading", { name: "Test. Play. Earn." }),
@@ -101,7 +101,7 @@ describe("Public Testing Lab events directory", () => {
       events: [],
     });
 
-    render(await TestingLabEventsPage());
+    render(await TestingLabEventsPage({}));
 
     expect(
       screen.getByRole("heading", { name: "No events available" }),

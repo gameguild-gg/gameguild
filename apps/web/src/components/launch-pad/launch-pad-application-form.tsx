@@ -7,8 +7,10 @@ import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { useState } from 'react';
 
-export function LaunchPadApplicationForm({ eventId, versions }: { eventId: string; versions: TestingProjectVersionOption[] }) {
-  const [versionId, setVersionId] = useState('');
+export function LaunchPadApplicationForm({ eventId, versions, initialProjectId }: { eventId: string; versions: TestingProjectVersionOption[]; initialProjectId?: string }) {
+  const [versionId, setVersionId] = useState(
+    () => versions.find((version) => version.projectId === initialProjectId)?.id ?? '',
+  );
   const selected = versions.find((version) => version.id === versionId);
   if (versions.length === 0) return <p className="text-sm text-slate-400">Create an accessible Project version before applying.</p>;
 

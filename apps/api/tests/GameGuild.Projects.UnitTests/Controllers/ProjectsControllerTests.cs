@@ -129,6 +129,37 @@ public class ProjectsControllerTests
     }
 
     [Fact]
+    public async Task AccessibleProjectVersions_Should_ExcludeArchivedProjects()
+    {
+        var archivedProject = new Project
+        {
+            Id = Guid.NewGuid(),
+            TenantId = Guid.NewGuid(),
+            Title = "Archived project",
+            Slug = "archived-project",
+            Status = ContentStatus.Archived,
+            CreatedById = _actorId
+        };
+        _context.Projects.Add(archivedProject);
+        _context.Set<ProjectVersion>().Add(new ProjectVersion
+        {
+            Id = Guid.NewGuid(),
+            TenantId = archivedProject.TenantId,
+            ProjectId = archivedProject.Id,
+            Project = archivedProject,
+            VersionNumber = "1.0.0",
+            CreatedById = _actorId
+        });
+        await _context.SaveChangesAsync();
+
+        var result = await CreateController().GetAccessibleProjectVersions();
+
+        result.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeAssignableTo<IReadOnlyList<ProjectVersionOptionProjection>>()
+            .Which.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task GetProjectCollaborators_Should_Return_Active_Collaborators()
     {
         var projectId = Guid.NewGuid();
