@@ -3,7 +3,14 @@ using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Reserves;
 using GameGuild.Economy.Risk;
 
-namespace GameGuild.AI;
+namespace GameGuild.Economy.Integrations.AI;
+
+public enum AiProvider
+{
+    OpenAi = 0,
+    Anthropic = 1,
+    Google = 2
+}
 
 public enum AiServiceChargeStatus
 {

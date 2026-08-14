@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace GameGuild.AI;
+namespace GameGuild.Economy.Integrations.AI;
 
 internal sealed class AiProviderCostFactEntity
 {

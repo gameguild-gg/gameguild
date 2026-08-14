@@ -1,10 +1,11 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Commerce.Payments;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 
-namespace GameGuild.Commerce.Payments;
+namespace GameGuild.Economy.Integrations;
 
 public interface IStripeEconomyFundingAdapter
 {

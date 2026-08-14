@@ -2,7 +2,7 @@ using System.Numerics;
 using GameGuild.Economy.Policy;
 using GameGuild.Economy.Reserves;
 
-namespace GameGuild.AI;
+namespace GameGuild.Economy.Integrations.AI;
 
 public sealed record AiProviderTokenCost(
     long InputCostUsdNanos,

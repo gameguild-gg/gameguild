@@ -2,7 +2,7 @@ using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Risk;
 
-namespace GameGuild.AI;
+namespace GameGuild.Economy.Integrations.AI;
 
 public sealed class AiCostRiskGate
 {
