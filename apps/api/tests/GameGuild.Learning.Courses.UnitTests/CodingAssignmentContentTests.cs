@@ -80,6 +80,62 @@ public class CodingAssignmentContentTests
         fnParam.GetProperty("Name").GetString().Should().Be("a");
     }
 
+    // ── jsonb key-order tolerance: Postgres jsonb may reorder keys ("Name" before "kind"), which
+    //    breaks STJ polymorphic reads. NormalizeTestDiscriminatorOrder is the read-side fix. ────────
+
+    [Fact]
+    public void Parse_Tolerates_JsonbKeyOrder_NameBeforeKind()
+    {
+        var normalized = CodingAssignmentContentService.NormalizeTestDiscriminatorOrder(JsonbOrderedJson());
+        var deserialized = JsonSerializer.Deserialize<CodingAssignmentContent>(normalized, s_jsonOptions);
+
+        deserialized.Should().NotBeNull();
+        deserialized!.Tests.Public[0].Should().BeOfType<StandardTest>().Which.Name.Should().Be("first");
+        deserialized.Tests.Public[1].Should().BeOfType<FunctionalTestGroup>()
+            .Which.Function.FunctionName.Should().Be("add");
+        deserialized.Tests.Private[0].Should().BeOfType<StandardTest>().Which.Stdout.Should().Be("ok2");
+    }
+
+    [Fact]
+    public void NormalizeTestDiscriminatorOrder_HoistsKindToFirstProperty()
+    {
+        var normalized = CodingAssignmentContentService.NormalizeTestDiscriminatorOrder(JsonbOrderedJson());
+
+        using var doc = JsonDocument.Parse(normalized);
+        foreach (var suite in new[] { "Public", "Private" })
+        {
+            foreach (var test in doc.RootElement.GetProperty("Tests").GetProperty(suite).EnumerateArray())
+            {
+                test.EnumerateObject().First().Name.Should().Be("kind");
+            }
+        }
+    }
+
+    [Fact]
+    public void NormalizeTestDiscriminatorOrder_LeavesKindFirstPayloadUnchanged()
+    {
+        var json = JsonSerializer.Serialize(CreateValid(), s_jsonOptions);
+
+        CodingAssignmentContentService.NormalizeTestDiscriminatorOrder(json).Should().Be(json);
+    }
+
+    private static string JsonbOrderedJson() => """
+        {
+          "Type": "coding-assignment",
+          "Version": 1,
+          "Environment": { "Language": "cpp", "Tools": "clang" },
+          "Data": { "Files": { "main.cpp": { "Content": "int main(){}", "Visibility": "Public", "Modifiable": true } } },
+          "Tests": {
+            "Public": [
+              { "Name": "first", "Weight": 1.0, "kind": "standard", "Stdout": "ok" },
+              { "Name": "fn", "Weight": 1.0, "kind": "functional", "Function": { "FunctionName": "add", "Parameters": [ { "Name": "a", "Type": "integer" } ], "ReturnType": { "Type": "integer" } }, "Cases": [ { "Inputs": [ { "Type": "integer", "Content": 0 } ], "Expected": { "Type": "integer", "Content": 0 } } ] }
+            ],
+            "Private": [ { "Name": "hidden", "Weight": 1.0, "kind": "standard", "Stdout": "ok2" } ]
+          },
+          "Grading": { "MaxScore": 100 }
+        }
+        """;
+
     // ── (b) validator accepts minimal valid payload ──────────────────────────────────────────────────
 
     [Fact]
