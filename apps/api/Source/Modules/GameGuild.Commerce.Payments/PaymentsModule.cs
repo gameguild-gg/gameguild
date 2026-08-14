@@ -44,8 +44,6 @@ public static class PaymentsModule
         services.AddScoped<IStripePaymentService, StripePaymentService>();
         services.AddScoped<IStripeCustomerService, StripeCustomerService>();
         services.AddScoped<IPaymentGateway, StripePaymentGateway>();
-        services.AddSingleton<IStripeEconomyFundingAdapter, StripeEconomyFundingAdapter>();
-
         // Register controllers
         services.AddControllers().AddApplicationPart(typeof(PaymentsModule).Assembly);
 

@@ -15,6 +15,26 @@ namespace GameGuild.Identity.Authorization.UnitTests.Providers;
 public class DbAuthorizationPolicyProviderFallbackTests
 {
     [Fact]
+    public async Task GetPolicyAsync_ReturnsCanonicalTenantAdminPolicy_WithoutScopedStores()
+    {
+        var services = new ServiceCollection();
+        await using var providerRoot = services.BuildServiceProvider();
+        var provider = new DbAuthorizationPolicyProvider(
+            Options.Create(new MsAuthorizationOptions()),
+            Mock.Of<IPolicyCache>(),
+            Mock.Of<IPolicyMerger>(),
+            providerRoot.GetRequiredService<IServiceScopeFactory>(),
+            Options.Create(new TenancyOptions()),
+            NullLogger<DbAuthorizationPolicyProvider>.Instance);
+
+        var policy = await provider.GetPolicyAsync(Policies.TenantAdmin);
+
+        policy.Should().NotBeNull();
+        policy!.Requirements.Should().Contain(requirement => requirement is TenantMatchRequirement);
+        policy.Requirements.Should().Contain(requirement => requirement is AssertionRequirement);
+    }
+
+    [Fact]
     public async Task GetPolicyAsync_ReturnsStaticFallback_ForRegisteredEmployeePolicyMissingFromStore()
     {
         var tenantId = Guid.NewGuid();

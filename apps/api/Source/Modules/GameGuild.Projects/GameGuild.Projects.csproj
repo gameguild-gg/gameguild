@@ -25,6 +25,7 @@
         <ProjectReference Include="..\GameGuild.Teams\GameGuild.Teams.csproj" />
         <ProjectReference Include="..\GameGuild.GameJams\GameGuild.GameJams.csproj" />
         <ProjectReference Include="..\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj" />
+        <ProjectReference Include="..\GameGuild.Assets\GameGuild.Assets.csproj" />
     </ItemGroup>
 
 </Project>

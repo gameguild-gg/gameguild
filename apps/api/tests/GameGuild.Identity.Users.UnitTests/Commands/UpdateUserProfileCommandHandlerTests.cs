@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.CQRS;
 using Moq;
 using Xunit;
 
@@ -41,7 +40,9 @@ public class UpdateUserProfileCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Should().Be(Unit.Value);
+        result.UserId.Should().Be(userId);
+        result.DisplayName.Should().Be("New Name");
+        result.Bio.Should().Be("New Bio");
         profile.DisplayName.Should().Be("New Name");
         profile.Bio.Should().Be("New Bio");
         _profileRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<UserProfile>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -86,8 +87,10 @@ public class UpdateUserProfileCommandHandlerTests
         _profileRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<UserProfile>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
+        result.UserId.Should().Be(userId);
+        result.DisplayName.Should().Be("Display Name");
         _profileRepositoryMock.Verify(x => x.AddAsync(
             It.Is<UserProfile>(profile =>
                 profile.UserId == userId &&
@@ -98,6 +101,6 @@ public class UpdateUserProfileCommandHandlerTests
                 profile.JobTitle == "Engineer" &&
                 profile.Company == "GameGuild"),
             It.IsAny<CancellationToken>()), Times.Once);
-        _profileRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<UserProfile>(), It.IsAny<CancellationToken>()), Times.Once);
+        _profileRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<UserProfile>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

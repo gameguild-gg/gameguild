@@ -22,6 +22,7 @@
         <ProjectReference Include="..\GameGuild.Learning\GameGuild.Learning.csproj" />
         <ProjectReference Include="..\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
         <ProjectReference Include="..\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" />
+        <ProjectReference Include="..\GameGuild.Tags\GameGuild.Tags.csproj" />
     </ItemGroup>
 
 </Project>

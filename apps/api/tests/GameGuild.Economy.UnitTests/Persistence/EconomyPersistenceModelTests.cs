@@ -11,6 +11,7 @@ public sealed class EconomyPersistenceModelTests
 {
     private static readonly string[] ExpectedTables =
     [
+        "ai_provider_cost_facts",
         "economy_accounts",
         "economy_chain_head",
         "economy_credit_lots",

@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.CQRS;
 using Moq;
 using Xunit;
 
@@ -57,7 +56,11 @@ public class ReplaceUserProfileCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Should().Be(Unit.Value);
+        result.UserId.Should().Be(userId);
+        result.DisplayName.Should().Be("New Name");
+        result.Bio.Should().Be("New bio");
+        result.Location.Should().Be("New York");
+        result.Website.Should().Be("https://example.com");
         _profileRepositoryMock.Verify(
             x => x.UpdateAsync(It.IsAny<UserProfile>(), It.IsAny<CancellationToken>()),
             Times.Once);
@@ -105,7 +108,9 @@ public class ReplaceUserProfileCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Should().Be(Unit.Value);
+        result.UserId.Should().Be(userId);
+        result.DisplayName.Should().Be("New Name");
+        result.Bio.Should().Be("New bio");
         _profileRepositoryMock.Verify(
             x => x.AddAsync(It.IsAny<UserProfile>(), It.IsAny<CancellationToken>()),
             Times.Once);

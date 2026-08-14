@@ -1,5 +1,5 @@
 #!/bin/sh
-# Provision a single-node garage dev cluster via the v2 admin HTTP API.
+# Provision a single-node Garage development cluster via the v2 admin HTTP API.
 # Cross-platform: no docker socket needed.
 set -eu
 

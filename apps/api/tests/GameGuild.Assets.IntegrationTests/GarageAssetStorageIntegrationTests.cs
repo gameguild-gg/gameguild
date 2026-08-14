@@ -1,6 +1,9 @@
 using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Amazon.S3;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
@@ -10,20 +13,22 @@ namespace GameGuild.Assets.IntegrationTests;
 
 public sealed class GarageAssetStorageIntegrationTests
 {
-    private const string Endpoint = "http://localhost:3900";
-    private const string AccessKey = "GK111111111111111111111111";
-    private const string SecretKey = "2222222222222222222222222222222222222222222222222222222222222222";
-    private const string Region = "garage";
+    private static readonly string Endpoint = Environment.GetEnvironmentVariable("S3_SERVICE_URL") ?? "http://localhost:3900";
+    private static readonly string AccessKey = Environment.GetEnvironmentVariable("S3_ACCESS_KEY") ?? "GK111111111111111111111111";
+    private static readonly string SecretKey = Environment.GetEnvironmentVariable("S3_SECRET_KEY") ?? "2222222222222222222222222222222222222222222222222222222222222222";
+    private static readonly string Region = Environment.GetEnvironmentVariable("S3_REGION") ?? "garage";
+    private static readonly string BucketName = Environment.GetEnvironmentVariable("S3_BUCKET") ?? "assets";
+    private static readonly string AdminEndpoint = Environment.GetEnvironmentVariable("GARAGE_ADMIN_URL") ?? "http://localhost:3903";
+    private static readonly string AdminToken = Environment.GetEnvironmentVariable("GARAGE_ADMIN_TOKEN") ?? "development-garage-admin-token";
 
     [Fact]
     public async Task AssetStorageService_RoundTripsContentThroughLocalGarage()
     {
         await AssertGarageIsAvailableAsync();
 
-        const string bucketName = "assets";
         var options = Options.Create(new AssetStorageOptions
         {
-            BucketName = bucketName,
+            BucketName = BucketName,
             ServiceUrl = Endpoint,
             AccessKey = AccessKey,
             SecretKey = SecretKey,
@@ -32,6 +37,7 @@ public sealed class GarageAssetStorageIntegrationTests
         });
 
         using var s3Client = CreateGarageClient();
+        await EnsureBucketAccessAsync();
         var storage = new AssetStorageService(s3Client, options);
         var payload = "garage-storage-smoke-" + Guid.NewGuid().ToString("N");
         var bytes = Encoding.UTF8.GetBytes(payload);
@@ -43,7 +49,7 @@ public sealed class GarageAssetStorageIntegrationTests
             upload = await storage.UploadAsync(uploadStream, contentHash, "text/plain");
         }
 
-        upload.BucketName.Should().Be(bucketName);
+        upload.BucketName.Should().Be(BucketName);
         upload.ObjectKey.Should().EndWith(".txt");
 
         (await storage.ExistsAsync(upload.BucketName, upload.ObjectKey)).Should().BeTrue();
@@ -89,6 +95,43 @@ public sealed class GarageAssetStorageIntegrationTests
                 ForcePathStyle = true,
                 UseHttp = true
             });
+    }
+
+    private static async Task EnsureBucketAccessAsync()
+    {
+        using var admin = new HttpClient { BaseAddress = new Uri(AdminEndpoint) };
+        admin.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AdminToken);
+
+        using var createResponse = await admin.PostAsJsonAsync(
+            "/v2/CreateBucket",
+            new { globalAlias = BucketName });
+
+        string? bucketId = null;
+        if (createResponse.IsSuccessStatusCode)
+        {
+            using var created = JsonDocument.Parse(await createResponse.Content.ReadAsStringAsync());
+            bucketId = created.RootElement.GetProperty("id").GetString();
+        }
+
+        if (string.IsNullOrWhiteSpace(bucketId))
+        {
+            using var infoResponse = await admin.GetAsync($"/v2/GetBucketInfo?globalAlias={Uri.EscapeDataString(BucketName)}");
+            infoResponse.EnsureSuccessStatusCode();
+            using var existing = JsonDocument.Parse(await infoResponse.Content.ReadAsStringAsync());
+            bucketId = existing.RootElement.GetProperty("id").GetString();
+        }
+
+        bucketId.Should().NotBeNullOrWhiteSpace();
+
+        using var accessResponse = await admin.PostAsJsonAsync(
+            "/v2/AllowBucketKey",
+            new
+            {
+                accessKeyId = AccessKey,
+                bucketId,
+                permissions = new { read = true, write = true, owner = true }
+            });
+        accessResponse.EnsureSuccessStatusCode();
     }
 
     private static async Task AssertGarageIsAvailableAsync()
