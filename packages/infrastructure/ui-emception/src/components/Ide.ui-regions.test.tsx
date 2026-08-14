@@ -118,7 +118,7 @@ describe('shadcn mock smoke', () => {
 });
 
 describe('T7 in-IDE authoring regions', () => {
-  it('(a) FileExplorer renders visibility Select + modifiable Switch per file when fileMeta supplied', async () => {
+  it('(a) FileExplorer renders visibility + modifiable toggle buttons per file when fileMeta supplied', async () => {
     await act(async () => {
       render(
         <Ide
@@ -131,13 +131,12 @@ describe('T7 in-IDE authoring regions', () => {
     });
 
     // DEFAULT_PRESET seeds SEED_FILE — controls attach to that row.
-    const visWrapper = screen.queryByTestId(`file-visibility-${SEED_FILE}`);
-    expect(visWrapper).not.toBeNull();
-    expect(visWrapper!.querySelector('select')).not.toBeNull();
-    expect((visWrapper!.querySelector('select') as HTMLSelectElement).value).toBe('Public');
-    const modSwitch = screen.queryByTestId(`file-modifiable-${SEED_FILE}`) as HTMLInputElement | null;
-    expect(modSwitch).not.toBeNull();
-    expect(modSwitch!.checked).toBe(true);
+    const visBtn = screen.queryByTestId(`file-visibility-${SEED_FILE}`);
+    expect(visBtn).not.toBeNull();
+    expect(visBtn!.textContent).toBe('👁');
+    const modBtn = screen.queryByTestId(`file-modifiable-${SEED_FILE}`);
+    expect(modBtn).not.toBeNull();
+    expect(modBtn!.textContent).toBe('✏️');
   });
 
   it('(a-backcompat) FileExplorer renders NO meta controls when fileMeta prop omitted', async () => {
@@ -158,9 +157,9 @@ describe('T7 in-IDE authoring regions', () => {
         />,
       );
     });
-    const select = screen.getByTestId(`file-visibility-${SEED_FILE}`)!.querySelector('select') as HTMLSelectElement;
+    const visBtn = screen.getByTestId(`file-visibility-${SEED_FILE}`);
     await act(async () => {
-      fireEvent.change(select, { target: { value: 'Private' } });
+      fireEvent.click(visBtn);
     });
     expect(onFileMetaChange).toHaveBeenCalledWith(SEED_FILE, { visibility: 'Private' });
   });
@@ -175,9 +174,9 @@ describe('T7 in-IDE authoring regions', () => {
         />,
       );
     });
-    const sw = screen.getByTestId(`file-modifiable-${SEED_FILE}`) as HTMLInputElement;
+    const modBtn = screen.getByTestId(`file-modifiable-${SEED_FILE}`);
     await act(async () => {
-      fireEvent.click(sw);
+      fireEvent.click(modBtn);
     });
     expect(onFileMetaChange).toHaveBeenCalledWith(SEED_FILE, { modifiable: false });
   });
