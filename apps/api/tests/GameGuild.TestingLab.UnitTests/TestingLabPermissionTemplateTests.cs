@@ -15,6 +15,20 @@ namespace GameGuild.TestingLab.UnitTests;
 public sealed class TestingLabPermissionTemplateTests
 {
     [Fact]
+    public void SettingsController_UsesTestingLabScopedAuthorizationOnEveryEndpoint()
+    {
+        var endpointMethods = typeof(TestingLabSettingsController).GetMethods()
+            .Where(method => method.DeclaringType == typeof(TestingLabSettingsController) &&
+                             method.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute), true).Length > 0)
+            .ToArray();
+
+        endpointMethods.Should().NotBeEmpty();
+        endpointMethods.Should().OnlyContain(method =>
+            method.GetCustomAttributes(typeof(RequireTestingLabPermissionAttribute), true).Length == 1);
+        TestingLabResourceTypes.All.Should().Contain(TestingLabResourceTypes.Settings);
+    }
+
+    [Fact]
     public async Task Service_Should_Create_Update_List_And_Delete_TestingLab_Role_Templates()
     {
         await using var context = CreateContext();

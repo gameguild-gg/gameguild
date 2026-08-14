@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Assets;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Authorization;
@@ -20,6 +21,40 @@ namespace GameGuild.LaunchPad.UnitTests;
 
 public sealed class LaunchPadTests
 {
+    [Fact]
+    public async Task CancellingReservedRegistration_ShouldPromoteOldestWaitlistedRegistration()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var registeredUserId = Guid.NewGuid();
+        var waitlistedUserId = Guid.NewGuid();
+        var launchEvent = LaunchPadEvent.Create(tenantId, "Event", DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(2).AddHours(4));
+        launchEvent.OpenApplications();
+        launchEvent.CloseApplications();
+        launchEvent.Schedule();
+        var slot = LaunchPadParticipantSlot.Create(tenantId, launchEvent.Id, "Audience", LaunchPadParticipantRole.Audience,
+            1, launchEvent.StartsAt, launchEvent.EndsAt);
+        slot.Reserve();
+        var registered = LaunchPadParticipantRegistration.Register(tenantId, slot.Id, registeredUserId, false);
+        var waitlisted = LaunchPadParticipantRegistration.Register(tenantId, slot.Id, waitlistedUserId, true);
+        context.AddRange(launchEvent, slot, registered, waitlisted);
+        await context.SaveChangesAsync();
+        var requestContext = new Mock<IRequestContextAccessor>();
+        requestContext.SetupGet(accessor => accessor.CurrentTenantId).Returns(tenantId);
+        var controller = new LaunchPadEventsController(
+            context,
+            requestContext.Object,
+            ActorAccessor(registeredUserId, tenantId).Object,
+            new Mock<ILaunchPadAuthorizationService>().Object,
+            new Mock<IAssetScopedAccessService>().Object);
+
+        var response = await controller.CancelRegistration(registered.Id, CancellationToken.None);
+
+        response.Result.Should().BeOfType<OkObjectResult>();
+        waitlisted.Status.Should().Be(LaunchPadParticipantStatus.Registered);
+        slot.ReservedCount.Should().Be(1);
+    }
+
     [Fact]
     public async Task LaunchPlan_Handler_Should_Create_Readiness_Checklist_And_Publish()
     {
@@ -80,7 +115,7 @@ public sealed class LaunchPadTests
     }
 
     [Fact]
-    public async Task LaunchPad_Controller_Should_Use_Cqrs_Mediator()
+    public async Task LaunchPad_Controller_Should_Reject_Legacy_Direct_Plan_Creation()
     {
         var mediator = new Mock<IMediator>();
         using var cancellation = new CancellationTokenSource();
@@ -103,13 +138,15 @@ public sealed class LaunchPadTests
             Channels = ["newsletter"]
         }, cancellation.Token);
 
-        result.Result.Should().BeOfType<CreatedAtActionResult>();
+        var conflict = result.Result.Should().BeOfType<ConflictObjectResult>().Subject;
+        conflict.Value.Should().BeEquivalentTo(new
+        {
+            code = "LaunchPad.ApplicationRequired",
+            message = "Launch plans are created only when a Launch Pad application is approved."
+        });
         mediator.Verify(m => m.Send(
-            It.Is<CreateLaunchPlanCommand>(command =>
-                command.ProjectId == plan.ProjectId &&
-                command.Name == "Public beta" &&
-                command.Channels.SequenceEqual(new[] { "newsletter" })),
-            cancellation.Token), Times.Once);
+            It.IsAny<CreateLaunchPlanCommand>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -520,6 +557,34 @@ public sealed class LaunchPadTests
     }
 
     [Fact]
+    public void Approved_Application_Creates_Linked_Actionable_Launch_Plan()
+    {
+        var tenantId = Guid.NewGuid();
+        var eventId = Guid.NewGuid();
+        var applicationId = Guid.NewGuid();
+        var projectId = Guid.NewGuid();
+        var projectVersionId = Guid.NewGuid();
+
+        var plan = LaunchPlan.CreateForApprovedApplication(
+            tenantId,
+            eventId,
+            applicationId,
+            projectId,
+            projectVersionId,
+            "Approved release");
+
+        plan.TenantId.Should().Be(tenantId);
+        plan.LaunchPadEventId.Should().Be(eventId);
+        plan.LaunchPadApplicationId.Should().Be(applicationId);
+        plan.ProjectId.Should().Be(projectId);
+        plan.ProjectVersionId.Should().Be(projectVersionId);
+        plan.ChecklistItems.Should().HaveCount(3);
+        plan.ChecklistItems.Should().ContainSingle(item => item.IsComplete);
+        plan.ReadinessPercent.Should().Be(33);
+        plan.Status.Should().Be(LaunchPlanStatus.Preparing);
+    }
+
+    [Fact]
     public async Task ProjectDelete_ShouldSoftDeleteLaunchPlanAndPreserveLaunchHistory()
     {
         await using var context = CreateContext();
@@ -646,7 +711,7 @@ public sealed class LaunchPadTests
             .Single(index => index.Properties.Select(property => property.Name).SequenceEqual([nameof(LaunchPlan.ProjectId)]));
 
         projectIndex.IsUnique.Should().BeTrue();
-        projectIndex.GetFilter().Should().Be("\"DeletedAt\" IS NULL");
+        projectIndex.GetFilter().Should().Be("\"DeletedAt\" IS NULL AND \"LaunchPadEventId\" IS NULL");
     }
 
     private static LaunchPadTestDbContext CreateContext()
@@ -755,6 +820,7 @@ public sealed class LaunchPadTests
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             new LaunchPadModelConfiguration().Configure(modelBuilder);
+            new ResourceUserPermissionConfiguration().Configure(modelBuilder.Entity<ResourceUserPermission>());
         }
     }
 

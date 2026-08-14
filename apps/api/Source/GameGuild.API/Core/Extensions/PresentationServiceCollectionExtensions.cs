@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using GameGuild.AI;
+using GameGuild.Assets.Controllers;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Payments;
@@ -232,6 +233,11 @@ public static class PresentationServiceCollectionExtensions
         services.AddControllers()
             .AddApplicationPart(typeof(ProjectsController).Assembly); // Projects module
         LogControllersFromAssembly(typeof(ProjectsController).Assembly, logger, controllerStopwatch);
+
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(AssetsController).Assembly); // Assets module
+        LogControllersFromAssembly(typeof(AssetsController).Assembly, logger, controllerStopwatch);
 
         controllerStopwatch.Restart();
         services.AddControllers()

@@ -1,7 +1,7 @@
 'use server';
 
-import { getToken } from '@/auth';
-import type { LaunchPlan } from './queries';
+import { auth, getToken } from '@/auth';
+import type { LaunchPadApplication, LaunchPadEvent, LaunchPadRegistration, LaunchPadSlot, LaunchPlan } from './queries';
 import { revalidatePath } from 'next/cache';
 
 type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -17,11 +17,13 @@ const defaultChecklist = [
 async function launchPadApiRequest<T>(path: string, init: RequestInit): Promise<ActionResult<T>> {
   const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   const token = await getToken();
+  const tenantId = (await auth().catch(() => null))?.tenantId;
   const response = await fetch(`${apiUrl}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),
       ...(init.headers ?? {}),
     },
   });
@@ -40,6 +42,134 @@ async function launchPadApiRequest<T>(path: string, init: RequestInit): Promise<
 
   return { success: true, data: await response.json() as T };
 }
+
+function value(formData: FormData, key: string) {
+  return String(formData.get(key) ?? '').trim();
+}
+
+function revalidateLaunchPad(eventId?: string) {
+  revalidatePath('/dashboard/launch-pad');
+  revalidatePath('/launch-pad');
+  revalidatePath('/launch-pad/events');
+  revalidatePath('/launch-pad/participation');
+  if (eventId) revalidatePath(`/launch-pad/events/${eventId}`);
+}
+
+export async function createLaunchPadEvent(formData: FormData): Promise<ActionResult<LaunchPadEvent>> {
+  const name = value(formData, 'name');
+  const startsAt = value(formData, 'startsAt');
+  const endsAt = value(formData, 'endsAt');
+  if (!name || !startsAt || !endsAt) return { success: false, error: 'Name, start, and end are required.' };
+  const result = await launchPadApiRequest<LaunchPadEvent>('/v1/launch-pad/events', {
+    method: 'POST',
+    body: JSON.stringify({
+      name,
+      description: value(formData, 'description') || null,
+      startsAt: new Date(startsAt).toISOString(),
+      endsAt: new Date(endsAt).toISOString(),
+      applicationsOpenAt: value(formData, 'applicationsOpenAt') ? new Date(value(formData, 'applicationsOpenAt')).toISOString() : null,
+      applicationsCloseAt: value(formData, 'applicationsCloseAt') ? new Date(value(formData, 'applicationsCloseAt')).toISOString() : null,
+    }),
+  });
+  if (result.success) revalidateLaunchPad(result.data.id);
+  return result;
+}
+
+export async function transitionLaunchPadEvent(formData: FormData): Promise<ActionResult<LaunchPadEvent>> {
+  const eventId = value(formData, 'eventId');
+  const status = value(formData, 'status');
+  if (!eventId || !status) return { success: false, error: 'Event and status are required.' };
+  const result = await launchPadApiRequest<LaunchPadEvent>(`/v1/launch-pad/events/${eventId}:transition`, {
+    method: 'POST', body: JSON.stringify({ status }),
+  });
+  if (result.success) revalidateLaunchPad(eventId);
+  return result;
+}
+
+export async function createLaunchPadSlot(formData: FormData): Promise<ActionResult<LaunchPadSlot>> {
+  const eventId = value(formData, 'eventId');
+  const result = await launchPadApiRequest<LaunchPadSlot>(`/v1/launch-pad/events/${eventId}/slots`, {
+    method: 'POST',
+    body: JSON.stringify({
+      name: value(formData, 'name'), role: value(formData, 'role'), capacity: Number(value(formData, 'capacity')),
+      startsAt: new Date(value(formData, 'startsAt')).toISOString(), endsAt: new Date(value(formData, 'endsAt')).toISOString(),
+    }),
+  });
+  if (result.success) revalidateLaunchPad(eventId);
+  return result;
+}
+
+export async function reviewLaunchPadApplication(formData: FormData): Promise<ActionResult<LaunchPadApplication>> {
+  const applicationId = value(formData, 'applicationId');
+  const status = value(formData, 'status');
+  const result = await launchPadApiRequest<LaunchPadApplication>(`/v1/launch-pad/events/applications/${applicationId}:review`, {
+    method: 'POST',
+    body: JSON.stringify({ status, launchPlanName: value(formData, 'launchPlanName') || null }),
+  });
+  if (result.success) revalidateLaunchPad(value(formData, 'eventId'));
+  return result;
+}
+
+export async function transitionLaunchPadRegistration(formData: FormData): Promise<ActionResult<LaunchPadRegistration>> {
+  const registrationId = value(formData, 'registrationId');
+  const status = value(formData, 'status');
+  const result = await launchPadApiRequest<LaunchPadRegistration>(`/v1/launch-pad/events/registrations/${registrationId}:transition`, {
+    method: 'POST', body: JSON.stringify({ status }),
+  });
+  if (result.success) revalidateLaunchPad(value(formData, 'eventId'));
+  return result;
+}
+
+export async function submitLaunchPadApplication(formData: FormData): Promise<ActionResult<LaunchPadApplication>> {
+  const eventId = value(formData, 'eventId');
+  const result = await launchPadApiRequest<LaunchPadApplication>(`/v1/launch-pad/events/${eventId}/applications`, {
+    method: 'POST',
+    body: JSON.stringify({ projectId: value(formData, 'projectId'), projectVersionId: value(formData, 'projectVersionId'), pitch: value(formData, 'pitch') || null }),
+  });
+  if (result.success) revalidateLaunchPad(eventId);
+  return result;
+}
+
+export async function registerLaunchPadSlot(formData: FormData): Promise<ActionResult<LaunchPadRegistration>> {
+  const eventId = value(formData, 'eventId');
+  const slotId = value(formData, 'slotId');
+  const result = await launchPadApiRequest<LaunchPadRegistration>(`/v1/launch-pad/events/slots/${slotId}/registrations`, { method: 'POST' });
+  if (result.success) revalidateLaunchPad(eventId);
+  return result;
+}
+
+export async function withdrawLaunchPadApplication(formData: FormData): Promise<ActionResult<LaunchPadApplication>> {
+  const result = await launchPadApiRequest<LaunchPadApplication>(`/v1/launch-pad/events/applications/${value(formData, 'applicationId')}:withdraw`, { method: 'POST' });
+  if (result.success) revalidateLaunchPad(value(formData, 'eventId'));
+  return result;
+}
+
+export async function updateLaunchPadApplication(formData: FormData): Promise<ActionResult<LaunchPadApplication>> {
+  const applicationId = value(formData, 'applicationId');
+  const result = await launchPadApiRequest<LaunchPadApplication>(`/v1/launch-pad/events/applications/${applicationId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ projectVersionId: value(formData, 'projectVersionId'), pitch: value(formData, 'pitch') || null }),
+  });
+  if (result.success) revalidateLaunchPad(value(formData, 'eventId'));
+  return result;
+}
+
+export async function cancelLaunchPadRegistration(formData: FormData): Promise<ActionResult<LaunchPadRegistration>> {
+  const result = await launchPadApiRequest<LaunchPadRegistration>(`/v1/launch-pad/events/registrations/${value(formData, 'registrationId')}:cancel`, { method: 'POST' });
+  if (result.success) revalidateLaunchPad(value(formData, 'eventId'));
+  return result;
+}
+
+export async function createLaunchPadEventForm(formData: FormData): Promise<void> { await createLaunchPadEvent(formData); }
+export async function transitionLaunchPadEventForm(formData: FormData): Promise<void> { await transitionLaunchPadEvent(formData); }
+export async function createLaunchPadSlotForm(formData: FormData): Promise<void> { await createLaunchPadSlot(formData); }
+export async function reviewLaunchPadApplicationForm(formData: FormData): Promise<void> { await reviewLaunchPadApplication(formData); }
+export async function transitionLaunchPadRegistrationForm(formData: FormData): Promise<void> { await transitionLaunchPadRegistration(formData); }
+export async function submitLaunchPadApplicationForm(formData: FormData): Promise<void> { await submitLaunchPadApplication(formData); }
+export async function registerLaunchPadSlotForm(formData: FormData): Promise<void> { await registerLaunchPadSlot(formData); }
+export async function withdrawLaunchPadApplicationForm(formData: FormData): Promise<void> { await withdrawLaunchPadApplication(formData); }
+export async function updateLaunchPadApplicationForm(formData: FormData): Promise<void> { await updateLaunchPadApplication(formData); }
+export async function cancelLaunchPadRegistrationForm(formData: FormData): Promise<void> { await cancelLaunchPadRegistration(formData); }
 
 function parseChecklist(raw: string) {
   const parsed = raw

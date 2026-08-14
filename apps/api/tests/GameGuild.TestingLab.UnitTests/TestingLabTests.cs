@@ -866,7 +866,7 @@ public class TestingRequestOperationsServiceTests
         var operations = CreateRequestService(context, actorId, actorTenantId).Service;
         var handler = new CreateTestingRequestCommandHandler(
             Mock.Of<ITestingRequestRepository>(),
-            new TestingRequestService(context, operations),
+            new TestingRequestService(operations, Mock.Of<ITestingParticipantOperations>()),
             mediator.Object);
 
         var act = () => handler.Handle(NewCreateCommand(foreignVersion.Id), default);

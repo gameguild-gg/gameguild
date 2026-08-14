@@ -267,7 +267,616 @@ export interface APIControllersRuntimeDetails {
   processArchitecture?: string | null;
 }
 
+export interface APIDashboardDashboardContextSummary {
+  id?: string | null;
+  name?: string | null;
+  route?: string | null;
+  type?: string | null;
+}
+
+export interface APIDashboardDashboardContextsOutput {
+  capabilities?: Array<string> | null;
+  contexts?: Array<APIDashboardDashboardContextSummary> | null;
+  counts?: APIDashboardDashboardWorkspaceCounts;
+  navigation?: Array<APIDashboardDashboardNavigationGroup> | null;
+}
+
+export interface APIDashboardDashboardNavigationGroup {
+  items?: Array<APIDashboardDashboardNavigationItem> | null;
+  label?: string | null;
+}
+
+export interface APIDashboardDashboardNavigationItem {
+  children?: Array<APIDashboardDashboardNavigationItem> | null;
+  route?: string | null;
+  title?: string | null;
+}
+
+export interface APIDashboardDashboardWorkspaceCounts {
+  invitations?: number;
+  pendingTasks?: number;
+  projects?: number;
+  teams?: number;
+}
+
+export interface APIProjectWorkAddProjectTaskChecklistInput {
+  text?: string | null;
+}
+
+export interface APIProjectWorkAddProjectTaskCommentInput {
+  body?: string | null;
+}
+
+export interface APIProjectWorkAddProjectTaskDependencyInput {
+  dependsOnTaskId?: string;
+}
+
+export interface APIProjectWorkConfigureProjectWorkColumnInput {
+  kind?: ProjectWorkProjectWorkColumnKind;
+  name?: string | null;
+  position?: number;
+  workInProgressLimit?: number | null;
+}
+
+export interface APIProjectWorkCreateProjectMilestoneInput {
+  description?: string | null;
+  dueAt?: string | null;
+  name?: string | null;
+}
+
+export interface APIProjectWorkCreateProjectTaskLabelInput {
+  color?: string | null;
+  name?: string | null;
+}
+
+export interface APIProjectWorkCreateProjectWorkTaskInput {
+  assigneeUserId?: string | null;
+  columnId?: string;
+  description?: string | null;
+  dueAt?: string | null;
+  milestoneId?: string | null;
+  priority?: ProjectWorkProjectWorkTaskPriority;
+  title?: string | null;
+}
+
+export interface APIProjectWorkMoveProjectWorkTaskInput {
+  columnId?: string;
+  position?: number;
+}
+
+export interface APIProjectWorkProjectBoard {
+  columns?: Array<APIProjectWorkProjectWorkColumn> | null;
+  id?: string;
+  name?: string | null;
+  projectId?: string;
+}
+
+export interface APIProjectWorkProjectChecklistItem {
+  id?: string;
+  isCompleted?: boolean;
+  position?: number;
+  text?: string | null;
+}
+
+export interface APIProjectWorkProjectMilestone {
+  completedAt?: string | null;
+  description?: string | null;
+  dueAt?: string | null;
+  id?: string;
+  name?: string | null;
+}
+
+export interface APIProjectWorkProjectTaskComment {
+  authorUserId?: string;
+  body?: string | null;
+  createdAt?: string;
+  editedAt?: string | null;
+  id?: string;
+}
+
+export interface APIProjectWorkProjectTaskDependency {
+  dependsOnTaskId?: string;
+  id?: string;
+}
+
+export interface APIProjectWorkProjectTaskLabel {
+  color?: string | null;
+  id?: string;
+  name?: string | null;
+}
+
+export interface APIProjectWorkProjectWorkColumn {
+  id?: string;
+  kind?: ProjectWorkProjectWorkColumnKind;
+  name?: string | null;
+  position?: number;
+  tasks?: Array<APIProjectWorkProjectWorkTask> | null;
+  workInProgressLimit?: number | null;
+}
+
+export interface APIProjectWorkProjectWorkHistory {
+  action?: string | null;
+  actorUserId?: string;
+  changesJson?: string | null;
+  createdAt?: string;
+  id?: string;
+  taskId?: string | null;
+}
+
+export interface APIProjectWorkProjectWorkTask {
+  assigneeUserId?: string | null;
+  columnId?: string;
+  completedAt?: string | null;
+  description?: string | null;
+  dueAt?: string | null;
+  id?: string;
+  milestoneId?: string | null;
+  position?: number;
+  priority?: ProjectWorkProjectWorkTaskPriority;
+  status?: ProjectWorkProjectWorkTaskStatus;
+  title?: string | null;
+}
+
+export interface APIProjectWorkProjectWorkTaskDetails {
+  checklist?: Array<APIProjectWorkProjectChecklistItem> | null;
+  comments?: Array<APIProjectWorkProjectTaskComment> | null;
+  dependencies?: Array<APIProjectWorkProjectTaskDependency> | null;
+  labels?: Array<APIProjectWorkProjectTaskLabel> | null;
+  task?: APIProjectWorkProjectWorkTask;
+}
+
+export interface APIProjectWorkUpdateProjectMilestoneInput {
+  completedAt?: string | null;
+  description?: string | null;
+  dueAt?: string | null;
+  name?: string | null;
+}
+
+export interface APIProjectWorkUpdateProjectTaskChecklistInput {
+  isCompleted?: boolean;
+}
+
+export interface APIProjectWorkUpdateProjectTaskCommentInput {
+  body?: string | null;
+}
+
+export interface APIProjectWorkUpdateProjectWorkTaskInput {
+  assigneeUserId?: string | null;
+  description?: string | null;
+  dueAt?: string | null;
+  milestoneId?: string | null;
+  priority?: ProjectWorkProjectWorkTaskPriority;
+  title?: string | null;
+}
+
+export interface APIProjectsAddProjectTeamInput {
+  contributionPercentage?: number;
+  notes?: string | null;
+  participationMode?: ProjectsProjectTeamParticipationMode;
+  permissions?: Array<IdentityAuthorizationPermissionType> | null;
+  role?: ProjectsProjectTeamRole;
+  teamId?: string;
+}
+
+export interface APIProjectsCounterProjectTeamAgreementInput {
+  deliverables?: string | null;
+  endsAt?: string;
+  scope?: string | null;
+  startsAt?: string;
+}
+
+export interface APIProjectsCreateProjectAllocationInput {
+  capacityPercentage?: number;
+  endsAt?: string | null;
+  function?: string | null;
+  projectTeamId?: string;
+  startsAt?: string;
+  userId?: string;
+}
+
+export interface APIProjectsCreateProjectTeamAgreementInput {
+  deliverables?: string | null;
+  endsAt?: string;
+  proposingTeamId?: string;
+  receivingTeamId?: string;
+  scope?: string | null;
+  startsAt?: string;
+}
+
+export interface APIProjectsProjectAllocation {
+  capacityPercentage?: number;
+  endsAt?: string | null;
+  function?: string | null;
+  id?: string;
+  isActive?: boolean;
+  projectTeamId?: string;
+  startsAt?: string;
+  userId?: string;
+}
+
+export interface APIProjectsProjectOwnership {
+  agreements?: Array<APIProjectsProjectTeamAgreement> | null;
+  allocations?: Array<APIProjectsProjectAllocation> | null;
+  projectId?: string;
+  teams?: Array<APIProjectsProjectTeamOwnership> | null;
+}
+
+export interface APIProjectsProjectTeamAgreement {
+  acceptedByUserId?: string | null;
+  deliverables?: string | null;
+  endsAt?: string;
+  id?: string;
+  proposedByUserId?: string;
+  proposingTeamId?: string;
+  receivingTeamId?: string;
+  revision?: number;
+  scope?: string | null;
+  startsAt?: string;
+  status?: ProjectsProjectTeamAgreementStatus;
+}
+
+export interface APIProjectsProjectTeamOwnership {
+  assignedAt?: string;
+  endedAt?: string | null;
+  id?: string;
+  isActive?: boolean;
+  participationMode?: ProjectsProjectTeamParticipationMode;
+  permissions?: Array<string> | null;
+  role?: ProjectsProjectTeamRole;
+  teamId?: string;
+  teamName?: string | null;
+  teamSlug?: string | null;
+}
+
+export interface APIProjectsTransferProjectOwnerTeamInput {
+  teamId?: string;
+}
+
+export interface APIProjectsUpdateProjectAllocationInput {
+  capacityPercentage?: number;
+  endsAt?: string | null;
+  function?: string | null;
+  isActive?: boolean;
+  startsAt?: string;
+}
+
+export interface APIProjectsUpdateProjectTeamInput {
+  contributionPercentage?: number;
+  notes?: string | null;
+  participationMode?: ProjectsProjectTeamParticipationMode;
+  permissions?: Array<IdentityAuthorizationPermissionType> | null;
+  role?: ProjectsProjectTeamRole;
+}
+
 export type APISetupEconomyCapabilityReadinessState = 'Disabled' | 'Ready' | 'ProviderNotReady' | 'InvalidConfiguration';
+
+export interface APITeamsAcceptTeamInvitationInput {
+  token?: string | null;
+}
+
+export interface APITeamsAddTeamMemberInput {
+  authority?: TeamsTeamMemberAuthority;
+  professionalTitle?: string | null;
+  userId?: string;
+}
+
+export interface APITeamsChangeTeamMemberInput {
+  authority?: TeamsTeamMemberAuthority;
+  professionalTitle?: string | null;
+}
+
+export interface APITeamsCreateTeamInput {
+  description?: string | null;
+  name?: string | null;
+  slug?: string | null;
+  visibility?: TeamsTeamVisibility;
+}
+
+export interface APITeamsCreateTeamInvitationInput {
+  authority?: TeamsTeamMemberAuthority;
+  email?: string | null;
+  expiresAt?: string;
+  userId?: string | null;
+}
+
+export interface APITeamsMyTeamInvitation {
+  authority?: TeamsTeamMemberAuthority;
+  expiresAt?: string;
+  id?: string;
+  teamId?: string;
+  teamName?: string | null;
+  teamSlug?: string | null;
+}
+
+export interface APITeamsTeam {
+  description?: string | null;
+  id?: string;
+  isPersonal?: boolean;
+  members?: Array<APITeamsTeamMember> | null;
+  name?: string | null;
+  slug?: string | null;
+  status?: TeamsTeamStatus;
+  tenantId?: string;
+  visibility?: TeamsTeamVisibility;
+}
+
+export interface APITeamsTeamInvitation {
+  authority?: TeamsTeamMemberAuthority;
+  expiresAt?: string;
+  id?: string;
+  invitedByUserId?: string;
+  invitedEmail?: string | null;
+  invitedUserId?: string | null;
+  revokedAt?: string | null;
+  usedAt?: string | null;
+}
+
+export interface APITeamsTeamInvitationCreated {
+  expiresAt?: string;
+  id?: string;
+  token?: string | null;
+}
+
+export interface APITeamsTeamMember {
+  authority?: TeamsTeamMemberAuthority;
+  isActive?: boolean;
+  joinedAt?: string;
+  professionalTitle?: string | null;
+  userId?: string;
+}
+
+export interface APITeamsTeamProjectSummary {
+  id?: string;
+  participationMode?: ProjectsProjectTeamParticipationMode;
+  slug?: string | null;
+  status?: ContentStatus;
+  teamRole?: ProjectsProjectTeamRole;
+  title?: string | null;
+  updatedAt?: string;
+  visibility?: ContentVisibility;
+}
+
+export interface APITeamsUpdateTeamInput {
+  description?: string | null;
+  name?: string | null;
+  slug?: string | null;
+  visibility?: TeamsTeamVisibility;
+}
+
+export type AssetsAssetAccessPolicy =
+  'Private' | 'SignedUrl' | 'TenantPublic' | 'Public' | 'PaidContent' | 'OwnerOnly' | 'Authenticated' | 'Unlisted' | 'Inherited';
+
+export interface AssetsAssetAccessUrl {
+  expiresAt?: string;
+  mimeType?: string | null;
+  token?: string | null;
+  url?: string | null;
+}
+
+export type AssetsAssetFolderRestrictionMode = 'None' | 'SelectedTeams' | 'TeamAuthorities' | 'AllocatedProjectMembers';
+
+export type AssetsAssetKind = 'Image' | 'Video' | 'Audio' | 'Document' | 'Archive' | 'Other';
+
+export interface AssetsAssetUploadResult {
+  assetContentId?: string | null;
+  assetReferenceId?: string | null;
+  error?: string | null;
+  success?: boolean;
+}
+
+export interface AssetsChunkedUploadSession {
+  expiresAt?: string;
+  fileName?: string | null;
+  mimeType?: string | null;
+  objectKey?: string | null;
+  totalChunks?: number;
+  totalSize?: number;
+  uploadId?: string | null;
+  uploadedChunks?: number;
+  userId?: string;
+}
+
+export interface AssetsCommandsBulkDeleteAssetItem {
+  assetReferenceId?: string;
+  contentMarkedForDeletion?: boolean;
+  error?: string | null;
+  success?: boolean;
+}
+
+export interface AssetsCommandsBulkDeleteAssetsOutput {
+  failed?: number;
+  items?: Array<AssetsCommandsBulkDeleteAssetItem> | null;
+  successful?: number;
+  totalRequested?: number;
+}
+
+export interface AssetsCommandsBulkUploadAssetItem {
+  assetContentId?: string | null;
+  assetReferenceId?: string | null;
+  error?: string | null;
+  fileName?: string | null;
+  success?: boolean;
+}
+
+export interface AssetsCommandsBulkUploadAssetsOutput {
+  failed?: number;
+  items?: Array<AssetsCommandsBulkUploadAssetItem> | null;
+  successful?: number;
+  totalRequested?: number;
+}
+
+export interface AssetsControllersAssetExtractedTextOutput {
+  assetId?: string;
+  isPartial?: boolean;
+  message?: string | null;
+  mimeType?: string | null;
+  source?: string | null;
+  status?: string | null;
+  text?: string | null;
+  usedOcr?: boolean;
+}
+
+export interface AssetsControllersBulkAssetAccessUrlInput {
+  assetIds?: Array<string> | null;
+  directStorageUrl?: boolean;
+}
+
+export interface AssetsControllersBulkDeleteAssetsInput {
+  assetIds?: Array<string> | null;
+}
+
+export interface AssetsControllersContentModerationInput {
+  labels?: Array<string> | null;
+  notes?: string | null;
+  status?: AssetsModerationStatus;
+}
+
+export interface AssetsControllersCopyAssetReferenceInput {
+  displayName?: string | null;
+  folderId?: string | null;
+}
+
+export interface AssetsControllersCreateAssetFolderInput {
+  name?: string | null;
+  parentFolderId?: string | null;
+}
+
+export interface AssetsControllersMarkNonDeletableInput {
+  reason?: string | null;
+}
+
+export interface AssetsControllersReportAssetInput {
+  description?: string | null;
+  reason?: AssetsReportReason;
+}
+
+export interface AssetsControllersRestrictAssetFolderInput {
+  authorities?: Array<string> | null;
+  mode?: AssetsAssetFolderRestrictionMode;
+  teamIds?: Array<string> | null;
+}
+
+export interface AssetsControllersReviewReportInput {
+  decision?: AssetsReviewDecision;
+  notes?: string | null;
+}
+
+export interface AssetsControllersUpdateAssetInput {
+  accessPolicy?: AssetsAssetAccessPolicy;
+  displayName?: string | null;
+}
+
+export interface AssetsControllersUpdateVirusScanInput {
+  scanResult?: string | null;
+  status?: AssetsVirusScanStatus;
+}
+
+export type AssetsImageFit = 'Contain' | 'Cover' | 'Fill' | 'Inside' | 'Outside';
+
+export type AssetsImageFormat = 'Original' | 'Jpeg' | 'Png' | 'Webp' | 'Avif' | 'Gif';
+
+export type AssetsModerationStatus = 'Pending' | 'Processing' | 'Approved' | 'Rejected' | 'NeedsReview' | 'ApprovedWithWarning' | 'Blocked';
+
+export interface AssetsQueriesAssetPreviewOutput {
+  assetContentId?: string;
+  assetReferenceId?: string;
+  canInlinePreview?: boolean;
+  contentUrl?: string | null;
+  displayName?: string | null;
+  expiresAt?: string | null;
+  extractedTextPreview?: string | null;
+  isBlocked?: boolean;
+  isTextTruncated?: boolean;
+  kind?: AssetsAssetKind;
+  mimeType?: string | null;
+  previewMode?: string | null;
+  thumbnailUrl?: string | null;
+  usedOcr?: boolean;
+  warnings?: Array<string> | null;
+}
+
+export interface AssetsQueriesAssetRetentionCandidateOutput {
+  assetContentId?: string;
+  bucketName?: string | null;
+  markedForDeletionAt?: string | null;
+  mimeType?: string | null;
+  objectKey?: string | null;
+  sizeBytes?: number;
+}
+
+export interface AssetsQueriesAssetRetentionReportOutput {
+  candidateBytes?: number;
+  candidates?: number;
+  gracePeriodHours?: number;
+  items?: Array<AssetsQueriesAssetRetentionCandidateOutput> | null;
+  limit?: number;
+  markedForDeletion?: number;
+  onLegalHold?: number;
+}
+
+export interface AssetsQueriesAssetSearchOutput {
+  items?: Array<AssetsQueriesAssetSearchResult> | null;
+  returned?: number;
+  totalMatched?: number;
+}
+
+export interface AssetsQueriesAssetSearchResult {
+  accessCount?: number;
+  assetContentId?: string;
+  assetReferenceId?: string;
+  createdAt?: string;
+  displayName?: string | null;
+  kind?: AssetsAssetKind;
+  lastAccessedAt?: string | null;
+  mimeType?: string | null;
+  originalFilename?: string | null;
+  parentResourceId?: string | null;
+  parentResourceType?: string | null;
+  sizeBytes?: number;
+}
+
+export interface AssetsQueriesAssetStatisticsOutput {
+  blockedOrRejected?: number;
+  documentAssets?: number;
+  imageAssets?: number;
+  legalHoldContent?: number;
+  pendingModeration?: number;
+  pendingVirusScans?: number;
+  retentionCandidates?: number;
+  totalAccesses?: number;
+  totalAssets?: number;
+  totalBytes?: number;
+  totalContentObjects?: number;
+  videoAssets?: number;
+}
+
+export interface AssetsQueriesBulkAssetAccessUrlItem {
+  assetReferenceId?: string;
+  error?: string | null;
+  expiresAt?: string | null;
+  mimeType?: string | null;
+  success?: boolean;
+  token?: string | null;
+  url?: string | null;
+}
+
+export interface AssetsQueriesBulkAssetAccessUrlsOutput {
+  failed?: number;
+  items?: Array<AssetsQueriesBulkAssetAccessUrlItem> | null;
+  successful?: number;
+  totalRequested?: number;
+}
+
+export type AssetsReportReason = 'Inappropriate' | 'Copyright' | 'Spam' | 'Violence' | 'Harassment' | 'Misinformation' | 'Other';
+
+export type AssetsReviewDecision = 'NoAction' | 'ContentRemoved' | 'ContentHidden' | 'UserWarned' | 'UserSuspended' | 'BlockContent';
+
+export interface AssetsSecurityAccessUrlInput {
+  directStorage?: boolean;
+  transform?: string | null;
+}
+
+export type AssetsVirusScanStatus = 'Pending' | 'Scanning' | 'Clean' | 'Infected' | 'ScanFailed';
 
 export type BillingCycle = 'Weekly' | 'Monthly' | 'Quarterly' | 'SemiAnnually' | 'Annually' | 'Biannually';
 
@@ -4030,6 +4639,23 @@ export interface KeyValuePairStringAuthenticationExtensionsPRFValues {
   value?: ObjectsAuthenticationExtensionsPRFValues;
 }
 
+export interface LaunchPadCreateLaunchPadEventInput {
+  applicationsCloseAt?: string | null;
+  applicationsOpenAt?: string | null;
+  description?: string | null;
+  endsAt?: string;
+  name?: string | null;
+  startsAt?: string;
+}
+
+export interface LaunchPadCreateLaunchPadSlotInput {
+  capacity?: number;
+  endsAt?: string;
+  name?: string | null;
+  role?: LaunchPadLaunchPadParticipantRole;
+  startsAt?: string;
+}
+
 export interface LaunchPadCreateLaunchPlanInput {
   channels?: Array<string> | null;
   checklistItems?: Array<LaunchPadLaunchChecklistItemInput> | null;
@@ -4066,6 +4692,167 @@ export interface LaunchPadLaunchChecklistItemInput {
   title?: string | null;
 }
 
+export interface LaunchPadLaunchPadAnalyticsProjection {
+  applications?: number;
+  approvedApplications?: number;
+  completedEvents?: number;
+  completedRegistrations?: number;
+  events?: number;
+  registrations?: number;
+}
+
+export interface LaunchPadLaunchPadApplication {
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  launchPadEvent?: LaunchPadLaunchPadEvent;
+  launchPadEventId?: string;
+  pitch?: string | null;
+  project?: ProjectsProject;
+  projectId?: string;
+  projectVersion?: ProjectsProjectVersion;
+  projectVersionId?: string;
+  reviewedAt?: string | null;
+  reviewedByUserId?: string | null;
+  status?: LaunchPadLaunchPadApplicationStatus;
+  submittedAssetReferenceIds?: Array<string> | null;
+  submittedAssetReferenceIdsJson?: string | null;
+  submittedAt?: string;
+  submittedByUser?: IdentityUsersUser;
+  submittedByUserId?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
+}
+
+export interface LaunchPadLaunchPadApplicationProjection {
+  eventId?: string;
+  id?: string;
+  pitch?: string | null;
+  projectId?: string;
+  projectVersionId?: string;
+  status?: LaunchPadLaunchPadApplicationStatus;
+  submittedAssetReferenceIds?: Array<string> | null;
+  submittedAt?: string;
+  submittedByUserId?: string;
+}
+
+export type LaunchPadLaunchPadApplicationStatus = 'Draft' | 'Submitted' | 'UnderReview' | 'Waitlisted' | 'Approved' | 'Rejected' | 'Withdrawn';
+
+export interface LaunchPadLaunchPadEvent {
+  applications?: Array<LaunchPadLaunchPadApplication> | null;
+  applicationsCloseAt?: string | null;
+  applicationsOpenAt?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  description?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  endsAt?: string;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  name: string;
+  slots?: Array<LaunchPadLaunchPadParticipantSlot> | null;
+  startsAt?: string;
+  status?: LaunchPadLaunchPadEventStatus;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
+}
+
+export interface LaunchPadLaunchPadEventDetailProjection {
+  event?: LaunchPadLaunchPadEventProjection;
+  slots?: Array<LaunchPadLaunchPadSlotProjection> | null;
+}
+
+export interface LaunchPadLaunchPadEventProjection {
+  applicationsCloseAt?: string | null;
+  applicationsOpenAt?: string | null;
+  description?: string | null;
+  endsAt?: string;
+  id?: string;
+  name?: string | null;
+  startsAt?: string;
+  status?: LaunchPadLaunchPadEventStatus;
+}
+
+export type LaunchPadLaunchPadEventStatus =
+  'Draft' | 'ApplicationsOpen' | 'ApplicationsClosed' | 'Scheduled' | 'Active' | 'Completed' | 'Cancelled' | 'Archived';
+
+export interface LaunchPadLaunchPadParticipantRegistration {
+  checkedInAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  launchPadParticipantSlot?: LaunchPadLaunchPadParticipantSlot;
+  launchPadParticipantSlotId?: string;
+  registeredAt?: string;
+  status?: LaunchPadLaunchPadParticipantStatus;
+  tenantId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId?: string;
+  version?: number;
+}
+
+export type LaunchPadLaunchPadParticipantRole = 'Participant' | 'Mentor' | 'Audience' | 'Presenter';
+
+export interface LaunchPadLaunchPadParticipantSlot {
+  capacity?: number;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  endsAt?: string;
+  hasCapacity?: boolean;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  launchPadEvent?: LaunchPadLaunchPadEvent;
+  launchPadEventId?: string;
+  name: string;
+  registrations?: Array<LaunchPadLaunchPadParticipantRegistration> | null;
+  reservedCount?: number;
+  role?: LaunchPadLaunchPadParticipantRole;
+  startsAt?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
+}
+
+export type LaunchPadLaunchPadParticipantStatus = 'Registered' | 'Waitlisted' | 'CheckedIn' | 'Attended' | 'Completed' | 'Cancelled' | 'NoShow';
+
+export interface LaunchPadLaunchPadRegistrationProjection {
+  checkedInAt?: string | null;
+  completedAt?: string | null;
+  id?: string;
+  registeredAt?: string;
+  slotId?: string;
+  status?: LaunchPadLaunchPadParticipantStatus;
+  userId?: string;
+}
+
+export interface LaunchPadLaunchPadSlotProjection {
+  capacity?: number;
+  endsAt?: string;
+  eventId?: string;
+  id?: string;
+  name?: string | null;
+  reservedCount?: number;
+  role?: LaunchPadLaunchPadParticipantRole;
+  startsAt?: string;
+}
+
 export interface LaunchPadLaunchPlan {
   channels?: Array<string> | null;
   checklistItems?: Array<LaunchPadLaunchChecklistItem> | null;
@@ -4076,11 +4863,17 @@ export interface LaunchPadLaunchPlan {
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
+  launchPadApplication?: LaunchPadLaunchPadApplication;
+  launchPadApplicationId?: string | null;
+  launchPadEvent?: LaunchPadLaunchPadEvent;
+  launchPadEventId?: string | null;
   launchedAt?: string | null;
   name: string;
   positioning?: string | null;
   project?: ProjectsProject;
   projectId?: string;
+  projectVersion?: ProjectsProjectVersion;
+  projectVersionId?: string | null;
   readinessPercent?: number;
   status?: LaunchPadLaunchPlanStatus;
   targetLaunchAt?: string | null;
@@ -4090,6 +4883,41 @@ export interface LaunchPadLaunchPlan {
 }
 
 export type LaunchPadLaunchPlanStatus = 'Draft' | 'Preparing' | 'Ready' | 'Launched' | 'Paused';
+
+export interface LaunchPadReviewLaunchPadApplicationInput {
+  launchPlanName?: string | null;
+  status?: LaunchPadLaunchPadApplicationStatus;
+}
+
+export interface LaunchPadSubmitLaunchPadApplicationInput {
+  pitch?: string | null;
+  projectId?: string;
+  projectVersionId?: string;
+  submittedAssetReferenceIds?: Array<string> | null;
+}
+
+export interface LaunchPadTransitionLaunchPadEventInput {
+  status?: LaunchPadLaunchPadEventStatus;
+}
+
+export interface LaunchPadTransitionLaunchPadRegistrationInput {
+  status?: LaunchPadLaunchPadParticipantStatus;
+}
+
+export interface LaunchPadUpdateLaunchPadApplicationInput {
+  pitch?: string | null;
+  projectVersionId?: string;
+  submittedAssetReferenceIds?: Array<string> | null;
+}
+
+export interface LaunchPadUpdateLaunchPadEventInput {
+  applicationsCloseAt?: string | null;
+  applicationsOpenAt?: string | null;
+  description?: string | null;
+  endsAt?: string;
+  name?: string | null;
+  startsAt?: string;
+}
 
 export interface LearningAssessmentsAssessment {
   allowLateSubmissions?: boolean;
@@ -6144,6 +6972,12 @@ export type ProgramCategory =
   | 'Language'
   | 'Other';
 
+export type ProjectWorkProjectWorkColumnKind = 'Backlog' | 'Ready' | 'InProgress' | 'InReview' | 'Done' | 'Custom';
+
+export type ProjectWorkProjectWorkTaskPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
+
+export type ProjectWorkProjectWorkTaskStatus = 'Backlog' | 'Ready' | 'InProgress' | 'InReview' | 'Done' | 'Cancelled';
+
 export interface ProjectsAddCollaboratorInput {
   email?: string | null;
   expiresAt?: string | null;
@@ -6173,6 +7007,7 @@ export interface ProjectsCreateProjectInput {
   description?: string | null;
   downloadUrl?: string | null;
   imageUrl?: string | null;
+  ownerTeamId?: string | null;
   repositoryUrl?: string | null;
   shortDescription?: string | null;
   status?: ContentStatus;
@@ -6181,6 +7016,12 @@ export interface ProjectsCreateProjectInput {
   type?: ProjectsProjectType;
   visibility?: ContentVisibility;
   websiteUrl?: string | null;
+}
+
+export interface ProjectsCreateProjectVersionInput {
+  releaseNotes?: string | null;
+  status?: string | null;
+  versionNumber: string;
 }
 
 export type ProjectsDevelopmentStatus = 'Planning' | 'InDevelopment' | 'Alpha' | 'Beta' | 'Released' | 'Completed' | 'OnHold' | 'Cancelled' | 'Archived';
@@ -6217,6 +7058,7 @@ export interface ProjectsPermissionUpdateResult {
 }
 
 export interface ProjectsProject {
+  allocations?: Array<ProjectsProjectMemberAllocation> | null;
   averageRating?: number | null;
   category?: ProjectsProjectCategory;
   categoryId?: string | null;
@@ -6253,6 +7095,7 @@ export interface ProjectsProject {
   socialLinks?: string | null;
   status: ContentStatus;
   tags?: string | null;
+  teamAgreements?: Array<ProjectsProjectTeamAgreement> | null;
   teamCount?: number;
   teams?: Array<ProjectsProjectTeam> | null;
   tenantId?: string | null;
@@ -6262,6 +7105,46 @@ export interface ProjectsProject {
   version?: number;
   versions?: Array<ProjectsProjectVersion> | null;
   visibility: ContentVisibility;
+  websiteUrl?: string | null;
+}
+
+export interface ProjectsProjectApiOutput {
+  averageRating?: number | null;
+  category?: ProjectsProjectCategoryApiOutput;
+  categoryId?: string | null;
+  collaborators?: Array<ProjectsProjectCollaboratorApiOutput> | null;
+  copyright?: string | null;
+  createdAt?: string;
+  createdById?: string | null;
+  creator?: ProjectsProjectUserApiOutput;
+  description?: string | null;
+  developmentStatus?: ProjectsDevelopmentStatus;
+  downloadUrl?: string | null;
+  featuredImageUrl?: string | null;
+  feedbackCount?: number;
+  followerCount?: number;
+  id?: string;
+  imageUrl?: string | null;
+  isInJam?: boolean;
+  latestVersion?: ProjectsProjectVersionApiOutput;
+  license?: string | null;
+  metadata?: ProjectsProjectMetadataApiOutput;
+  publishedAt?: string | null;
+  releases?: Array<ProjectsProjectReleaseApiOutput> | null;
+  repositoryUrl?: string | null;
+  shortDescription?: string | null;
+  slug?: string | null;
+  socialLinks?: string | null;
+  status?: ContentStatus;
+  tags?: string | null;
+  teamCount?: number;
+  teams?: Array<ProjectsProjectTeamApiOutput> | null;
+  tenantId?: string | null;
+  title?: string | null;
+  type?: ProjectsProjectType;
+  updatedAt?: string;
+  versions?: Array<ProjectsProjectVersionApiOutput> | null;
+  visibility?: ContentVisibility;
   websiteUrl?: string | null;
 }
 
@@ -6278,6 +7161,11 @@ export interface ProjectsProjectCategory {
   tenantId?: string | null;
   updatedAt: string;
   version?: number;
+}
+
+export interface ProjectsProjectCategoryApiOutput {
+  id?: string;
+  name?: string | null;
 }
 
 export interface ProjectsProjectCollaborator {
@@ -6299,6 +7187,17 @@ export interface ProjectsProjectCollaborator {
   user?: IdentityUsersUser;
   userId?: string;
   version?: number;
+}
+
+export interface ProjectsProjectCollaboratorApiOutput {
+  id?: string;
+  isActive?: boolean;
+  joinedAt?: string;
+  leftAt?: string | null;
+  permissions?: Array<string> | null;
+  role?: string | null;
+  userId?: string;
+  userName?: string | null;
 }
 
 export interface ProjectsProjectCollaboratorDto {
@@ -6404,6 +7303,27 @@ export interface ProjectsProjectJamSubmission {
   version?: number;
 }
 
+export interface ProjectsProjectMemberAllocation {
+  capacityPercentage?: number;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  endsAt?: string | null;
+  function: string;
+  id?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  projectId?: string;
+  projectTeamId?: string;
+  startsAt?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  userId?: string;
+  version?: number;
+}
+
 export interface ProjectsProjectMetadata {
   createdAt: string;
   deletedAt?: string | null;
@@ -6418,6 +7338,13 @@ export interface ProjectsProjectMetadata {
   tenantId?: string | null;
   updatedAt: string;
   version?: number;
+  viewCount?: number;
+}
+
+export interface ProjectsProjectMetadataApiOutput {
+  downloadCount?: number;
+  followerCount?: number;
+  id?: string;
   viewCount?: number;
 }
 
@@ -6452,6 +7379,27 @@ export interface ProjectsProjectRelease {
   version?: number;
 }
 
+export interface ProjectsProjectReleaseApiOutput {
+  buildNumber?: string | null;
+  checksum?: string | null;
+  description?: string | null;
+  downloadCount?: number;
+  downloadUrl?: string | null;
+  fileSize?: number | null;
+  id?: string;
+  isLatest?: boolean;
+  isPrerelease?: boolean;
+  releaseMetadata?: string | null;
+  releaseNotes?: string | null;
+  releaseType?: string | null;
+  releaseVersion?: string | null;
+  releasedAt?: string;
+  status?: ContentStatus;
+  supportedPlatforms?: string | null;
+  systemRequirements?: string | null;
+  title?: string | null;
+}
+
 export interface ProjectsProjectRoleTemplate {
   description?: string | null;
   name?: string | null;
@@ -6484,6 +7432,7 @@ export interface ProjectsProjectStoreProductProjection {
 }
 
 export interface ProjectsProjectTeam {
+  allocations?: Array<ProjectsProjectMemberAllocation> | null;
   assignedAt?: string;
   contributionPercentage?: number;
   createdAt: string;
@@ -6496,17 +7445,72 @@ export interface ProjectsProjectTeam {
   isGlobal?: boolean;
   isNew?: boolean;
   notes?: string | null;
+  participationMode?: ProjectsProjectTeamParticipationMode;
   permissions?: string | null;
   projectId?: string;
-  role: string;
-  team?: ProjectsTeam;
+  role?: ProjectsProjectTeamRole;
+  team?: TeamsTeam;
   teamId?: string;
   tenantId?: string | null;
   updatedAt: string;
   version?: number;
 }
 
+export interface ProjectsProjectTeamAgreement {
+  acceptedAt?: string | null;
+  acceptedByUserId?: string | null;
+  cancelledAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+  deletedAt?: string | null;
+  deliverables: string;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  endsAt?: string;
+  id?: string;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  projectId?: string;
+  proposedByUserId?: string;
+  proposingTeamId?: string;
+  receivingTeamId?: string;
+  revision?: number;
+  scope: string;
+  startsAt?: string;
+  status?: ProjectsProjectTeamAgreementStatus;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
+}
+
+export type ProjectsProjectTeamAgreementStatus = 'Proposed' | 'CounterProposed' | 'Accepted' | 'Cancelled' | 'Completed';
+
+export interface ProjectsProjectTeamApiOutput {
+  assignedAt?: string;
+  contributionPercentage?: number;
+  endedAt?: string | null;
+  id?: string;
+  isActive?: boolean;
+  name?: string | null;
+  notes?: string | null;
+  participationMode?: ProjectsProjectTeamParticipationMode;
+  permissions?: Array<string> | null;
+  role?: ProjectsProjectTeamRole;
+  slug?: string | null;
+  teamId?: string;
+}
+
+export type ProjectsProjectTeamParticipationMode = 'AllMembers' | 'SelectedMembers';
+
+export type ProjectsProjectTeamRole = 'Owner' | 'CoOwner' | 'Contributor' | 'Guest';
+
 export type ProjectsProjectType = 'Game' | 'Tool' | 'Art' | 'Music' | 'Educational' | 'Plugin' | 'Template' | 'Library' | 'Other';
+
+export interface ProjectsProjectUserApiOutput {
+  id?: string;
+  name?: string | null;
+  username?: string | null;
+}
 
 export interface ProjectsProjectVersion {
   createdAt: string;
@@ -6525,6 +7529,27 @@ export interface ProjectsProjectVersion {
   updatedAt: string;
   version?: number;
   versionNumber: string;
+}
+
+export interface ProjectsProjectVersionApiOutput {
+  createdAt?: string;
+  createdById?: string;
+  downloadCount?: number;
+  id?: string;
+  projectId?: string;
+  releaseNotes?: string | null;
+  status?: string | null;
+  updatedAt?: string;
+  versionNumber?: string | null;
+}
+
+export interface ProjectsProjectVersionOptionProjection {
+  id?: string;
+  projectId?: string;
+  projectTitle?: string | null;
+  status?: string | null;
+  updatedAt?: string;
+  versionNumber?: string | null;
 }
 
 export interface ProjectsShareProjectInput {
@@ -6548,43 +7573,6 @@ export interface ProjectsShareResult {
   failureCount?: number;
   success?: boolean;
   successCount?: number;
-}
-
-export interface ProjectsTeam {
-  createdAt: string;
-  deletedAt?: string | null;
-  description?: string | null;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-  isGlobal?: boolean;
-  isNew?: boolean;
-  members?: Array<ProjectsTeamMember> | null;
-  name: string;
-  tenantId?: string | null;
-  updatedAt: string;
-  version?: number;
-}
-
-export interface ProjectsTeamMember {
-  createdAt: string;
-  deletedAt?: string | null;
-  domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-  isGlobal?: boolean;
-  isNew?: boolean;
-  joinedAt?: string;
-  role?: string | null;
-  team?: ProjectsTeam;
-  teamId?: string;
-  tenantId?: string | null;
-  updatedAt: string;
-  user?: IdentityUsersUser;
-  userId?: string;
-  version?: number;
 }
 
 export interface ProjectsUpdateCollaboratorInput {
@@ -6764,7 +7752,8 @@ export type ResourcesResourceUsageType =
   | 'AssetDownloads'
   | 'AssetTransformations'
   | 'AiRequests'
-  | 'AiTokens';
+  | 'AiTokens'
+  | 'Teams';
 
 export interface ResourcesSetQuotaInput {
   hardLimit?: number | null;
@@ -7114,6 +8103,80 @@ export interface SocialReactionsTargetReactionSummary {
 
 export type SystemDayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 
+export interface TeamsTeam {
+  createdAt: string;
+  deletedAt?: string | null;
+  description?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  invitations?: Array<TeamsTeamInvitation> | null;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  isPersonal?: boolean;
+  members?: Array<TeamsTeamMember> | null;
+  name: string;
+  slug: string;
+  status?: TeamsTeamStatus;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
+  visibility?: TeamsTeamVisibility;
+}
+
+export interface TeamsTeamInvitation {
+  acceptedByUserId?: string | null;
+  authority?: TeamsTeamMemberAuthority;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  expiresAt?: string;
+  id?: string;
+  invitedByUserId?: string;
+  invitedEmail?: string | null;
+  invitedUserId?: string | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  revokedAt?: string | null;
+  team?: TeamsTeam;
+  teamId?: string;
+  tenantId?: string | null;
+  tokenHash: string;
+  updatedAt: string;
+  usedAt?: string | null;
+  version?: number;
+}
+
+export interface TeamsTeamMember {
+  authority?: TeamsTeamMemberAuthority;
+  createdAt: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  id?: string;
+  isActive?: boolean;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  joinedAt?: string;
+  leftAt?: string | null;
+  professionalTitle?: string | null;
+  team?: TeamsTeam;
+  teamId?: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  user?: IdentityUsersUser;
+  userId?: string;
+  version?: number;
+}
+
+export type TeamsTeamMemberAuthority = 'Viewer' | 'Member' | 'Manager' | 'Owner';
+
+export type TeamsTeamStatus = 'Active' | 'Archived';
+
+export type TeamsTeamVisibility = 'Private' | 'Tenant' | 'Public';
+
 export interface TenantInfo {
   id?: string;
   isActive?: boolean;
@@ -7440,7 +8503,26 @@ export interface TestingLabSubmitTestingEventFeedbackInput {
 export interface TestingLabSubmitTestingProjectApplicationInput {
   preferredAvailability?: string | null;
   projectId?: string;
-  projectVersionId?: string | null;
+  projectVersionId?: string;
+  submittedAssetReferenceIds?: Array<string> | null;
+}
+
+export interface TestingLabTestingApplicationReviewAssetProjection {
+  accessUrl?: string | null;
+  assetReferenceId?: string;
+  displayName?: string | null;
+  expiresAt?: string;
+  mimeType?: string | null;
+}
+
+export interface TestingLabTestingApplicationReviewPackageProjection {
+  applicationId?: string;
+  assets?: Array<TestingLabTestingApplicationReviewAssetProjection> | null;
+  projectId?: string;
+  projectVersionId?: string;
+  releaseNotes?: string | null;
+  versionNumber?: string | null;
+  versionStatus?: string | null;
 }
 
 export type TestingLabTestingApplicationStatus = 'Pending' | 'UnderReview' | 'Approved' | 'Rejected' | 'Waitlisted' | 'Withdrawn';
@@ -8075,6 +9157,8 @@ export interface TestingLabTestingProjectApplication {
   projectVersion?: ProjectsProjectVersion;
   projectVersionId?: string | null;
   status?: TestingLabTestingApplicationStatus;
+  submittedAssetReferenceIds?: Array<string> | null;
+  submittedAssetReferenceIdsJson?: string | null;
   submittedBy?: IdentityUsersUser;
   submittedByUserId?: string;
   tenantId?: string | null;
@@ -8094,6 +9178,7 @@ export interface TestingLabTestingProjectApplicationProjection {
   projectId?: string;
   projectVersionId?: string | null;
   status?: TestingLabTestingApplicationStatus;
+  submittedAssetReferenceIds?: Array<string> | null;
   submittedByUserId?: string;
   votes?: Array<TestingLabTestingApplicationVoteProjection> | null;
 }
@@ -8310,7 +9395,94 @@ export let APIControllersLivenessOutputSchema: z.ZodType<APIControllersLivenessO
 export let APIControllersProcessDetailsSchema: z.ZodType<APIControllersProcessDetails>;
 export let APIControllersReadinessOutputSchema: z.ZodType<APIControllersReadinessOutput>;
 export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDetails>;
+export let APIDashboardDashboardContextSummarySchema: z.ZodType<APIDashboardDashboardContextSummary>;
+export let APIDashboardDashboardContextsOutputSchema: z.ZodType<APIDashboardDashboardContextsOutput>;
+export let APIDashboardDashboardNavigationGroupSchema: z.ZodType<APIDashboardDashboardNavigationGroup>;
+export let APIDashboardDashboardNavigationItemSchema: z.ZodType<APIDashboardDashboardNavigationItem>;
+export let APIDashboardDashboardWorkspaceCountsSchema: z.ZodType<APIDashboardDashboardWorkspaceCounts>;
+export let APIProjectWorkAddProjectTaskChecklistInputSchema: z.ZodType<APIProjectWorkAddProjectTaskChecklistInput>;
+export let APIProjectWorkAddProjectTaskCommentInputSchema: z.ZodType<APIProjectWorkAddProjectTaskCommentInput>;
+export let APIProjectWorkAddProjectTaskDependencyInputSchema: z.ZodType<APIProjectWorkAddProjectTaskDependencyInput>;
+export let APIProjectWorkConfigureProjectWorkColumnInputSchema: z.ZodType<APIProjectWorkConfigureProjectWorkColumnInput>;
+export let APIProjectWorkCreateProjectMilestoneInputSchema: z.ZodType<APIProjectWorkCreateProjectMilestoneInput>;
+export let APIProjectWorkCreateProjectTaskLabelInputSchema: z.ZodType<APIProjectWorkCreateProjectTaskLabelInput>;
+export let APIProjectWorkCreateProjectWorkTaskInputSchema: z.ZodType<APIProjectWorkCreateProjectWorkTaskInput>;
+export let APIProjectWorkMoveProjectWorkTaskInputSchema: z.ZodType<APIProjectWorkMoveProjectWorkTaskInput>;
+export let APIProjectWorkProjectBoardSchema: z.ZodType<APIProjectWorkProjectBoard>;
+export let APIProjectWorkProjectChecklistItemSchema: z.ZodType<APIProjectWorkProjectChecklistItem>;
+export let APIProjectWorkProjectMilestoneSchema: z.ZodType<APIProjectWorkProjectMilestone>;
+export let APIProjectWorkProjectTaskCommentSchema: z.ZodType<APIProjectWorkProjectTaskComment>;
+export let APIProjectWorkProjectTaskDependencySchema: z.ZodType<APIProjectWorkProjectTaskDependency>;
+export let APIProjectWorkProjectTaskLabelSchema: z.ZodType<APIProjectWorkProjectTaskLabel>;
+export let APIProjectWorkProjectWorkColumnSchema: z.ZodType<APIProjectWorkProjectWorkColumn>;
+export let APIProjectWorkProjectWorkHistorySchema: z.ZodType<APIProjectWorkProjectWorkHistory>;
+export let APIProjectWorkProjectWorkTaskSchema: z.ZodType<APIProjectWorkProjectWorkTask>;
+export let APIProjectWorkProjectWorkTaskDetailsSchema: z.ZodType<APIProjectWorkProjectWorkTaskDetails>;
+export let APIProjectWorkUpdateProjectMilestoneInputSchema: z.ZodType<APIProjectWorkUpdateProjectMilestoneInput>;
+export let APIProjectWorkUpdateProjectTaskChecklistInputSchema: z.ZodType<APIProjectWorkUpdateProjectTaskChecklistInput>;
+export let APIProjectWorkUpdateProjectTaskCommentInputSchema: z.ZodType<APIProjectWorkUpdateProjectTaskCommentInput>;
+export let APIProjectWorkUpdateProjectWorkTaskInputSchema: z.ZodType<APIProjectWorkUpdateProjectWorkTaskInput>;
+export let APIProjectsAddProjectTeamInputSchema: z.ZodType<APIProjectsAddProjectTeamInput>;
+export let APIProjectsCounterProjectTeamAgreementInputSchema: z.ZodType<APIProjectsCounterProjectTeamAgreementInput>;
+export let APIProjectsCreateProjectAllocationInputSchema: z.ZodType<APIProjectsCreateProjectAllocationInput>;
+export let APIProjectsCreateProjectTeamAgreementInputSchema: z.ZodType<APIProjectsCreateProjectTeamAgreementInput>;
+export let APIProjectsProjectAllocationSchema: z.ZodType<APIProjectsProjectAllocation>;
+export let APIProjectsProjectOwnershipSchema: z.ZodType<APIProjectsProjectOwnership>;
+export let APIProjectsProjectTeamAgreementSchema: z.ZodType<APIProjectsProjectTeamAgreement>;
+export let APIProjectsProjectTeamOwnershipSchema: z.ZodType<APIProjectsProjectTeamOwnership>;
+export let APIProjectsTransferProjectOwnerTeamInputSchema: z.ZodType<APIProjectsTransferProjectOwnerTeamInput>;
+export let APIProjectsUpdateProjectAllocationInputSchema: z.ZodType<APIProjectsUpdateProjectAllocationInput>;
+export let APIProjectsUpdateProjectTeamInputSchema: z.ZodType<APIProjectsUpdateProjectTeamInput>;
 export let APISetupEconomyCapabilityReadinessStateSchema: z.ZodType<APISetupEconomyCapabilityReadinessState>;
+export let APITeamsAcceptTeamInvitationInputSchema: z.ZodType<APITeamsAcceptTeamInvitationInput>;
+export let APITeamsAddTeamMemberInputSchema: z.ZodType<APITeamsAddTeamMemberInput>;
+export let APITeamsChangeTeamMemberInputSchema: z.ZodType<APITeamsChangeTeamMemberInput>;
+export let APITeamsCreateTeamInputSchema: z.ZodType<APITeamsCreateTeamInput>;
+export let APITeamsCreateTeamInvitationInputSchema: z.ZodType<APITeamsCreateTeamInvitationInput>;
+export let APITeamsMyTeamInvitationSchema: z.ZodType<APITeamsMyTeamInvitation>;
+export let APITeamsTeamSchema: z.ZodType<APITeamsTeam>;
+export let APITeamsTeamInvitationSchema: z.ZodType<APITeamsTeamInvitation>;
+export let APITeamsTeamInvitationCreatedSchema: z.ZodType<APITeamsTeamInvitationCreated>;
+export let APITeamsTeamMemberSchema: z.ZodType<APITeamsTeamMember>;
+export let APITeamsTeamProjectSummarySchema: z.ZodType<APITeamsTeamProjectSummary>;
+export let APITeamsUpdateTeamInputSchema: z.ZodType<APITeamsUpdateTeamInput>;
+export let AssetsAssetAccessPolicySchema: z.ZodType<AssetsAssetAccessPolicy>;
+export let AssetsAssetAccessUrlSchema: z.ZodType<AssetsAssetAccessUrl>;
+export let AssetsAssetFolderRestrictionModeSchema: z.ZodType<AssetsAssetFolderRestrictionMode>;
+export let AssetsAssetKindSchema: z.ZodType<AssetsAssetKind>;
+export let AssetsAssetUploadResultSchema: z.ZodType<AssetsAssetUploadResult>;
+export let AssetsChunkedUploadSessionSchema: z.ZodType<AssetsChunkedUploadSession>;
+export let AssetsCommandsBulkDeleteAssetItemSchema: z.ZodType<AssetsCommandsBulkDeleteAssetItem>;
+export let AssetsCommandsBulkDeleteAssetsOutputSchema: z.ZodType<AssetsCommandsBulkDeleteAssetsOutput>;
+export let AssetsCommandsBulkUploadAssetItemSchema: z.ZodType<AssetsCommandsBulkUploadAssetItem>;
+export let AssetsCommandsBulkUploadAssetsOutputSchema: z.ZodType<AssetsCommandsBulkUploadAssetsOutput>;
+export let AssetsControllersAssetExtractedTextOutputSchema: z.ZodType<AssetsControllersAssetExtractedTextOutput>;
+export let AssetsControllersBulkAssetAccessUrlInputSchema: z.ZodType<AssetsControllersBulkAssetAccessUrlInput>;
+export let AssetsControllersBulkDeleteAssetsInputSchema: z.ZodType<AssetsControllersBulkDeleteAssetsInput>;
+export let AssetsControllersContentModerationInputSchema: z.ZodType<AssetsControllersContentModerationInput>;
+export let AssetsControllersCopyAssetReferenceInputSchema: z.ZodType<AssetsControllersCopyAssetReferenceInput>;
+export let AssetsControllersCreateAssetFolderInputSchema: z.ZodType<AssetsControllersCreateAssetFolderInput>;
+export let AssetsControllersMarkNonDeletableInputSchema: z.ZodType<AssetsControllersMarkNonDeletableInput>;
+export let AssetsControllersReportAssetInputSchema: z.ZodType<AssetsControllersReportAssetInput>;
+export let AssetsControllersRestrictAssetFolderInputSchema: z.ZodType<AssetsControllersRestrictAssetFolderInput>;
+export let AssetsControllersReviewReportInputSchema: z.ZodType<AssetsControllersReviewReportInput>;
+export let AssetsControllersUpdateAssetInputSchema: z.ZodType<AssetsControllersUpdateAssetInput>;
+export let AssetsControllersUpdateVirusScanInputSchema: z.ZodType<AssetsControllersUpdateVirusScanInput>;
+export let AssetsImageFitSchema: z.ZodType<AssetsImageFit>;
+export let AssetsImageFormatSchema: z.ZodType<AssetsImageFormat>;
+export let AssetsModerationStatusSchema: z.ZodType<AssetsModerationStatus>;
+export let AssetsQueriesAssetPreviewOutputSchema: z.ZodType<AssetsQueriesAssetPreviewOutput>;
+export let AssetsQueriesAssetRetentionCandidateOutputSchema: z.ZodType<AssetsQueriesAssetRetentionCandidateOutput>;
+export let AssetsQueriesAssetRetentionReportOutputSchema: z.ZodType<AssetsQueriesAssetRetentionReportOutput>;
+export let AssetsQueriesAssetSearchOutputSchema: z.ZodType<AssetsQueriesAssetSearchOutput>;
+export let AssetsQueriesAssetSearchResultSchema: z.ZodType<AssetsQueriesAssetSearchResult>;
+export let AssetsQueriesAssetStatisticsOutputSchema: z.ZodType<AssetsQueriesAssetStatisticsOutput>;
+export let AssetsQueriesBulkAssetAccessUrlItemSchema: z.ZodType<AssetsQueriesBulkAssetAccessUrlItem>;
+export let AssetsQueriesBulkAssetAccessUrlsOutputSchema: z.ZodType<AssetsQueriesBulkAssetAccessUrlsOutput>;
+export let AssetsReportReasonSchema: z.ZodType<AssetsReportReason>;
+export let AssetsReviewDecisionSchema: z.ZodType<AssetsReviewDecision>;
+export let AssetsSecurityAccessUrlInputSchema: z.ZodType<AssetsSecurityAccessUrlInput>;
+export let AssetsVirusScanStatusSchema: z.ZodType<AssetsVirusScanStatus>;
 export let BillingCycleSchema: z.ZodType<BillingCycle>;
 export let BulkOperationErrorSchema: z.ZodType<BulkOperationError>;
 export let BulkOperationOutputSchema: z.ZodType<BulkOperationOutput>;
@@ -8726,11 +9898,33 @@ export let IdentityUsersUserProfileSchema: z.ZodType<IdentityUsersUserProfile>;
 export let IdentityUsersUserProfileDtoSchema: z.ZodType<IdentityUsersUserProfileDto>;
 export let IdentityUsersUserStatusSchema: z.ZodType<IdentityUsersUserStatus>;
 export let KeyValuePairStringAuthenticationExtensionsPRFValuesSchema: z.ZodType<KeyValuePairStringAuthenticationExtensionsPRFValues>;
+export let LaunchPadCreateLaunchPadEventInputSchema: z.ZodType<LaunchPadCreateLaunchPadEventInput>;
+export let LaunchPadCreateLaunchPadSlotInputSchema: z.ZodType<LaunchPadCreateLaunchPadSlotInput>;
 export let LaunchPadCreateLaunchPlanInputSchema: z.ZodType<LaunchPadCreateLaunchPlanInput>;
 export let LaunchPadLaunchChecklistItemSchema: z.ZodType<LaunchPadLaunchChecklistItem>;
 export let LaunchPadLaunchChecklistItemInputSchema: z.ZodType<LaunchPadLaunchChecklistItemInput>;
+export let LaunchPadLaunchPadAnalyticsProjectionSchema: z.ZodType<LaunchPadLaunchPadAnalyticsProjection>;
+export let LaunchPadLaunchPadApplicationSchema: z.ZodType<LaunchPadLaunchPadApplication>;
+export let LaunchPadLaunchPadApplicationProjectionSchema: z.ZodType<LaunchPadLaunchPadApplicationProjection>;
+export let LaunchPadLaunchPadApplicationStatusSchema: z.ZodType<LaunchPadLaunchPadApplicationStatus>;
+export let LaunchPadLaunchPadEventSchema: z.ZodType<LaunchPadLaunchPadEvent>;
+export let LaunchPadLaunchPadEventDetailProjectionSchema: z.ZodType<LaunchPadLaunchPadEventDetailProjection>;
+export let LaunchPadLaunchPadEventProjectionSchema: z.ZodType<LaunchPadLaunchPadEventProjection>;
+export let LaunchPadLaunchPadEventStatusSchema: z.ZodType<LaunchPadLaunchPadEventStatus>;
+export let LaunchPadLaunchPadParticipantRegistrationSchema: z.ZodType<LaunchPadLaunchPadParticipantRegistration>;
+export let LaunchPadLaunchPadParticipantRoleSchema: z.ZodType<LaunchPadLaunchPadParticipantRole>;
+export let LaunchPadLaunchPadParticipantSlotSchema: z.ZodType<LaunchPadLaunchPadParticipantSlot>;
+export let LaunchPadLaunchPadParticipantStatusSchema: z.ZodType<LaunchPadLaunchPadParticipantStatus>;
+export let LaunchPadLaunchPadRegistrationProjectionSchema: z.ZodType<LaunchPadLaunchPadRegistrationProjection>;
+export let LaunchPadLaunchPadSlotProjectionSchema: z.ZodType<LaunchPadLaunchPadSlotProjection>;
 export let LaunchPadLaunchPlanSchema: z.ZodType<LaunchPadLaunchPlan>;
 export let LaunchPadLaunchPlanStatusSchema: z.ZodType<LaunchPadLaunchPlanStatus>;
+export let LaunchPadReviewLaunchPadApplicationInputSchema: z.ZodType<LaunchPadReviewLaunchPadApplicationInput>;
+export let LaunchPadSubmitLaunchPadApplicationInputSchema: z.ZodType<LaunchPadSubmitLaunchPadApplicationInput>;
+export let LaunchPadTransitionLaunchPadEventInputSchema: z.ZodType<LaunchPadTransitionLaunchPadEventInput>;
+export let LaunchPadTransitionLaunchPadRegistrationInputSchema: z.ZodType<LaunchPadTransitionLaunchPadRegistrationInput>;
+export let LaunchPadUpdateLaunchPadApplicationInputSchema: z.ZodType<LaunchPadUpdateLaunchPadApplicationInput>;
+export let LaunchPadUpdateLaunchPadEventInputSchema: z.ZodType<LaunchPadUpdateLaunchPadEventInput>;
 export let LearningAssessmentsAssessmentSchema: z.ZodType<LearningAssessmentsAssessment>;
 export let LearningAssessmentsAssessmentDefinitionSchema: z.ZodType<LearningAssessmentsAssessmentDefinition>;
 export let LearningAssessmentsAssessmentGradingMethodSchema: z.ZodType<LearningAssessmentsAssessmentGradingMethod>;
@@ -8964,10 +10158,14 @@ export let PagedResultOfGameGuildIdentityUsersUserDtoSchema: z.ZodType<PagedResu
 export let PagedResultOfGameGuildIdentityUsersUserNotificationDtoSchema: z.ZodType<PagedResultOfGameGuildIdentityUsersUserNotificationDto>;
 export let PagedResultOfGameGuildIdentityUsersUserProfileDtoSchema: z.ZodType<PagedResultOfGameGuildIdentityUsersUserProfileDto>;
 export let ProgramCategorySchema: z.ZodType<ProgramCategory>;
+export let ProjectWorkProjectWorkColumnKindSchema: z.ZodType<ProjectWorkProjectWorkColumnKind>;
+export let ProjectWorkProjectWorkTaskPrioritySchema: z.ZodType<ProjectWorkProjectWorkTaskPriority>;
+export let ProjectWorkProjectWorkTaskStatusSchema: z.ZodType<ProjectWorkProjectWorkTaskStatus>;
 export let ProjectsAddCollaboratorInputSchema: z.ZodType<ProjectsAddCollaboratorInput>;
 export let ProjectsAddProjectCollaboratorInputSchema: z.ZodType<ProjectsAddProjectCollaboratorInput>;
 export let ProjectsCollaboratorSchema: z.ZodType<ProjectsCollaborator>;
 export let ProjectsCreateProjectInputSchema: z.ZodType<ProjectsCreateProjectInput>;
+export let ProjectsCreateProjectVersionInputSchema: z.ZodType<ProjectsCreateProjectVersionInput>;
 export let ProjectsDevelopmentStatusSchema: z.ZodType<ProjectsDevelopmentStatus>;
 export let ProjectsEffectivePermissionSchema: z.ZodType<ProjectsEffectivePermission>;
 export let ProjectsInvitationResultSchema: z.ZodType<ProjectsInvitationResult>;
@@ -8975,27 +10173,39 @@ export let ProjectsInviteProjectCollaboratorInputSchema: z.ZodType<ProjectsInvit
 export let ProjectsLinkProjectStoreProductInputSchema: z.ZodType<ProjectsLinkProjectStoreProductInput>;
 export let ProjectsPermissionUpdateResultSchema: z.ZodType<ProjectsPermissionUpdateResult>;
 export let ProjectsProjectSchema: z.ZodType<ProjectsProject>;
+export let ProjectsProjectApiOutputSchema: z.ZodType<ProjectsProjectApiOutput>;
 export let ProjectsProjectCategorySchema: z.ZodType<ProjectsProjectCategory>;
+export let ProjectsProjectCategoryApiOutputSchema: z.ZodType<ProjectsProjectCategoryApiOutput>;
 export let ProjectsProjectCollaboratorSchema: z.ZodType<ProjectsProjectCollaborator>;
+export let ProjectsProjectCollaboratorApiOutputSchema: z.ZodType<ProjectsProjectCollaboratorApiOutput>;
 export let ProjectsProjectCollaboratorDtoSchema: z.ZodType<ProjectsProjectCollaboratorDto>;
 export let ProjectsProjectFeedbackSchema: z.ZodType<ProjectsProjectFeedback>;
 export let ProjectsProjectFollowerSchema: z.ZodType<ProjectsProjectFollower>;
 export let ProjectsProjectInvitationSchema: z.ZodType<ProjectsProjectInvitation>;
 export let ProjectsProjectInvitationStatusSchema: z.ZodType<ProjectsProjectInvitationStatus>;
 export let ProjectsProjectJamSubmissionSchema: z.ZodType<ProjectsProjectJamSubmission>;
+export let ProjectsProjectMemberAllocationSchema: z.ZodType<ProjectsProjectMemberAllocation>;
 export let ProjectsProjectMetadataSchema: z.ZodType<ProjectsProjectMetadata>;
+export let ProjectsProjectMetadataApiOutputSchema: z.ZodType<ProjectsProjectMetadataApiOutput>;
 export let ProjectsProjectReleaseSchema: z.ZodType<ProjectsProjectRelease>;
+export let ProjectsProjectReleaseApiOutputSchema: z.ZodType<ProjectsProjectReleaseApiOutput>;
 export let ProjectsProjectRoleTemplateSchema: z.ZodType<ProjectsProjectRoleTemplate>;
 export let ProjectsProjectStatisticsSchema: z.ZodType<ProjectsProjectStatistics>;
 export let ProjectsProjectStoreProductProjectionSchema: z.ZodType<ProjectsProjectStoreProductProjection>;
 export let ProjectsProjectTeamSchema: z.ZodType<ProjectsProjectTeam>;
+export let ProjectsProjectTeamAgreementSchema: z.ZodType<ProjectsProjectTeamAgreement>;
+export let ProjectsProjectTeamAgreementStatusSchema: z.ZodType<ProjectsProjectTeamAgreementStatus>;
+export let ProjectsProjectTeamApiOutputSchema: z.ZodType<ProjectsProjectTeamApiOutput>;
+export let ProjectsProjectTeamParticipationModeSchema: z.ZodType<ProjectsProjectTeamParticipationMode>;
+export let ProjectsProjectTeamRoleSchema: z.ZodType<ProjectsProjectTeamRole>;
 export let ProjectsProjectTypeSchema: z.ZodType<ProjectsProjectType>;
+export let ProjectsProjectUserApiOutputSchema: z.ZodType<ProjectsProjectUserApiOutput>;
 export let ProjectsProjectVersionSchema: z.ZodType<ProjectsProjectVersion>;
+export let ProjectsProjectVersionApiOutputSchema: z.ZodType<ProjectsProjectVersionApiOutput>;
+export let ProjectsProjectVersionOptionProjectionSchema: z.ZodType<ProjectsProjectVersionOptionProjection>;
 export let ProjectsShareProjectInputSchema: z.ZodType<ProjectsShareProjectInput>;
 export let ProjectsShareProjectWithRoleInputSchema: z.ZodType<ProjectsShareProjectWithRoleInput>;
 export let ProjectsShareResultSchema: z.ZodType<ProjectsShareResult>;
-export let ProjectsTeamSchema: z.ZodType<ProjectsTeam>;
-export let ProjectsTeamMemberSchema: z.ZodType<ProjectsTeamMember>;
 export let ProjectsUpdateCollaboratorInputSchema: z.ZodType<ProjectsUpdateCollaboratorInput>;
 export let ProjectsUpdateProjectCollaboratorInputSchema: z.ZodType<ProjectsUpdateProjectCollaboratorInput>;
 export let ProjectsUpdateProjectInputSchema: z.ZodType<ProjectsUpdateProjectInput>;
@@ -9058,6 +10268,12 @@ export let SocialReactionsRemoveReactionInputSchema: z.ZodType<SocialReactionsRe
 export let SocialReactionsSetReactionInputSchema: z.ZodType<SocialReactionsSetReactionInput>;
 export let SocialReactionsTargetReactionSummarySchema: z.ZodType<SocialReactionsTargetReactionSummary>;
 export let SystemDayOfWeekSchema: z.ZodType<SystemDayOfWeek>;
+export let TeamsTeamSchema: z.ZodType<TeamsTeam>;
+export let TeamsTeamInvitationSchema: z.ZodType<TeamsTeamInvitation>;
+export let TeamsTeamMemberSchema: z.ZodType<TeamsTeamMember>;
+export let TeamsTeamMemberAuthoritySchema: z.ZodType<TeamsTeamMemberAuthority>;
+export let TeamsTeamStatusSchema: z.ZodType<TeamsTeamStatus>;
+export let TeamsTeamVisibilitySchema: z.ZodType<TeamsTeamVisibility>;
 export let TenantInfoSchema: z.ZodType<TenantInfo>;
 export let TestingLabAddTestingEventCommitteeMemberInputSchema: z.ZodType<TestingLabAddTestingEventCommitteeMemberInput>;
 export let TestingLabAssignTestingLabRoleInputSchema: z.ZodType<TestingLabAssignTestingLabRoleInput>;
@@ -9099,6 +10315,8 @@ export let TestingLabSessionWaitlistSchema: z.ZodType<TestingLabSessionWaitlist>
 export let TestingLabSubmitFeedbackSchema: z.ZodType<TestingLabSubmitFeedback>;
 export let TestingLabSubmitTestingEventFeedbackInputSchema: z.ZodType<TestingLabSubmitTestingEventFeedbackInput>;
 export let TestingLabSubmitTestingProjectApplicationInputSchema: z.ZodType<TestingLabSubmitTestingProjectApplicationInput>;
+export let TestingLabTestingApplicationReviewAssetProjectionSchema: z.ZodType<TestingLabTestingApplicationReviewAssetProjection>;
+export let TestingLabTestingApplicationReviewPackageProjectionSchema: z.ZodType<TestingLabTestingApplicationReviewPackageProjection>;
 export let TestingLabTestingApplicationStatusSchema: z.ZodType<TestingLabTestingApplicationStatus>;
 export let TestingLabTestingApplicationTesterEligibilityProjectionSchema: z.ZodType<TestingLabTestingApplicationTesterEligibilityProjection>;
 export let TestingLabTestingApplicationVoteSchema: z.ZodType<TestingLabTestingApplicationVote>;
@@ -9469,8 +10687,776 @@ APIControllersRuntimeDetailsSchema = z.object({
   processArchitecture: z.string().nullable().optional(),
 });
 
+/** Zod schema for APIDashboardDashboardContextSummary */
+APIDashboardDashboardContextSummarySchema = z.object({
+  id: z.string().uuid().nullable().optional(),
+  name: z.string().nullable().optional(),
+  route: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIDashboardDashboardContextsOutput */
+APIDashboardDashboardContextsOutputSchema = z.object({
+  capabilities: z.array(z.string()).nullable().optional(),
+  contexts: z
+    .array(z.lazy(() => APIDashboardDashboardContextSummarySchema))
+    .nullable()
+    .optional(),
+  counts: z.lazy(() => APIDashboardDashboardWorkspaceCountsSchema).optional(),
+  navigation: z
+    .array(z.lazy(() => APIDashboardDashboardNavigationGroupSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for APIDashboardDashboardNavigationGroup */
+APIDashboardDashboardNavigationGroupSchema = z.object({
+  items: z
+    .array(z.lazy(() => APIDashboardDashboardNavigationItemSchema))
+    .nullable()
+    .optional(),
+  label: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIDashboardDashboardNavigationItem */
+APIDashboardDashboardNavigationItemSchema = z.object({
+  children: z
+    .array(z.lazy(() => APIDashboardDashboardNavigationItemSchema))
+    .nullable()
+    .optional(),
+  route: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIDashboardDashboardWorkspaceCounts */
+APIDashboardDashboardWorkspaceCountsSchema = z.object({
+  invitations: z.number().int().optional(),
+  pendingTasks: z.number().int().optional(),
+  projects: z.number().int().optional(),
+  teams: z.number().int().optional(),
+});
+
+/** Zod schema for APIProjectWorkAddProjectTaskChecklistInput */
+APIProjectWorkAddProjectTaskChecklistInputSchema = z.object({
+  text: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkAddProjectTaskCommentInput */
+APIProjectWorkAddProjectTaskCommentInputSchema = z.object({
+  body: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkAddProjectTaskDependencyInput */
+APIProjectWorkAddProjectTaskDependencyInputSchema = z.object({
+  dependsOnTaskId: z.string().uuid().optional(),
+});
+
+/** Zod schema for APIProjectWorkConfigureProjectWorkColumnInput */
+APIProjectWorkConfigureProjectWorkColumnInputSchema = z.object({
+  kind: z.lazy(() => ProjectWorkProjectWorkColumnKindSchema).optional(),
+  name: z.string().nullable().optional(),
+  position: z.number().int().optional(),
+  workInProgressLimit: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkCreateProjectMilestoneInput */
+APIProjectWorkCreateProjectMilestoneInputSchema = z.object({
+  description: z.string().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkCreateProjectTaskLabelInput */
+APIProjectWorkCreateProjectTaskLabelInputSchema = z.object({
+  color: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkCreateProjectWorkTaskInput */
+APIProjectWorkCreateProjectWorkTaskInputSchema = z.object({
+  assigneeUserId: z.string().uuid().nullable().optional(),
+  columnId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  milestoneId: z.string().uuid().nullable().optional(),
+  priority: z.lazy(() => ProjectWorkProjectWorkTaskPrioritySchema).optional(),
+  title: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkMoveProjectWorkTaskInput */
+APIProjectWorkMoveProjectWorkTaskInputSchema = z.object({
+  columnId: z.string().uuid().optional(),
+  position: z.number().int().optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectBoard */
+APIProjectWorkProjectBoardSchema = z.object({
+  columns: z
+    .array(z.lazy(() => APIProjectWorkProjectWorkColumnSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  projectId: z.string().uuid().optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectChecklistItem */
+APIProjectWorkProjectChecklistItemSchema = z.object({
+  id: z.string().uuid().optional(),
+  isCompleted: z.boolean().optional(),
+  position: z.number().int().optional(),
+  text: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectMilestone */
+APIProjectWorkProjectMilestoneSchema = z.object({
+  completedAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectTaskComment */
+APIProjectWorkProjectTaskCommentSchema = z.object({
+  authorUserId: z.string().uuid().optional(),
+  body: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  editedAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectTaskDependency */
+APIProjectWorkProjectTaskDependencySchema = z.object({
+  dependsOnTaskId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectTaskLabel */
+APIProjectWorkProjectTaskLabelSchema = z.object({
+  color: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectWorkColumn */
+APIProjectWorkProjectWorkColumnSchema = z.object({
+  id: z.string().uuid().optional(),
+  kind: z.lazy(() => ProjectWorkProjectWorkColumnKindSchema).optional(),
+  name: z.string().nullable().optional(),
+  position: z.number().int().optional(),
+  tasks: z
+    .array(z.lazy(() => APIProjectWorkProjectWorkTaskSchema))
+    .nullable()
+    .optional(),
+  workInProgressLimit: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectWorkHistory */
+APIProjectWorkProjectWorkHistorySchema = z.object({
+  action: z.string().nullable().optional(),
+  actorUserId: z.string().uuid().optional(),
+  changesJson: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  taskId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectWorkTask */
+APIProjectWorkProjectWorkTaskSchema = z.object({
+  assigneeUserId: z.string().uuid().nullable().optional(),
+  columnId: z.string().uuid().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  milestoneId: z.string().uuid().nullable().optional(),
+  position: z.number().int().optional(),
+  priority: z.lazy(() => ProjectWorkProjectWorkTaskPrioritySchema).optional(),
+  status: z.lazy(() => ProjectWorkProjectWorkTaskStatusSchema).optional(),
+  title: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkProjectWorkTaskDetails */
+APIProjectWorkProjectWorkTaskDetailsSchema = z.object({
+  checklist: z
+    .array(z.lazy(() => APIProjectWorkProjectChecklistItemSchema))
+    .nullable()
+    .optional(),
+  comments: z
+    .array(z.lazy(() => APIProjectWorkProjectTaskCommentSchema))
+    .nullable()
+    .optional(),
+  dependencies: z
+    .array(z.lazy(() => APIProjectWorkProjectTaskDependencySchema))
+    .nullable()
+    .optional(),
+  labels: z
+    .array(z.lazy(() => APIProjectWorkProjectTaskLabelSchema))
+    .nullable()
+    .optional(),
+  task: z.lazy(() => APIProjectWorkProjectWorkTaskSchema).optional(),
+});
+
+/** Zod schema for APIProjectWorkUpdateProjectMilestoneInput */
+APIProjectWorkUpdateProjectMilestoneInputSchema = z.object({
+  completedAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  name: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkUpdateProjectTaskChecklistInput */
+APIProjectWorkUpdateProjectTaskChecklistInputSchema = z.object({
+  isCompleted: z.boolean().optional(),
+});
+
+/** Zod schema for APIProjectWorkUpdateProjectTaskCommentInput */
+APIProjectWorkUpdateProjectTaskCommentInputSchema = z.object({
+  body: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectWorkUpdateProjectWorkTaskInput */
+APIProjectWorkUpdateProjectWorkTaskInputSchema = z.object({
+  assigneeUserId: z.string().uuid().nullable().optional(),
+  description: z.string().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  milestoneId: z.string().uuid().nullable().optional(),
+  priority: z.lazy(() => ProjectWorkProjectWorkTaskPrioritySchema).optional(),
+  title: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectsAddProjectTeamInput */
+APIProjectsAddProjectTeamInputSchema = z.object({
+  contributionPercentage: z.number().optional(),
+  notes: z.string().nullable().optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
+  permissions: z
+    .array(z.lazy(() => IdentityAuthorizationPermissionTypeSchema))
+    .nullable()
+    .optional(),
+  role: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
+  teamId: z.string().uuid().optional(),
+});
+
+/** Zod schema for APIProjectsCounterProjectTeamAgreementInput */
+APIProjectsCounterProjectTeamAgreementInputSchema = z.object({
+  deliverables: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  scope: z.string().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for APIProjectsCreateProjectAllocationInput */
+APIProjectsCreateProjectAllocationInputSchema = z.object({
+  capacityPercentage: z.number().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  function: z.string().nullable().optional(),
+  projectTeamId: z.string().uuid().optional(),
+  startsAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for APIProjectsCreateProjectTeamAgreementInput */
+APIProjectsCreateProjectTeamAgreementInputSchema = z.object({
+  deliverables: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  proposingTeamId: z.string().uuid().optional(),
+  receivingTeamId: z.string().uuid().optional(),
+  scope: z.string().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for APIProjectsProjectAllocation */
+APIProjectsProjectAllocationSchema = z.object({
+  capacityPercentage: z.number().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  function: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  projectTeamId: z.string().uuid().optional(),
+  startsAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for APIProjectsProjectOwnership */
+APIProjectsProjectOwnershipSchema = z.object({
+  agreements: z
+    .array(z.lazy(() => APIProjectsProjectTeamAgreementSchema))
+    .nullable()
+    .optional(),
+  allocations: z
+    .array(z.lazy(() => APIProjectsProjectAllocationSchema))
+    .nullable()
+    .optional(),
+  projectId: z.string().uuid().optional(),
+  teams: z
+    .array(z.lazy(() => APIProjectsProjectTeamOwnershipSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for APIProjectsProjectTeamAgreement */
+APIProjectsProjectTeamAgreementSchema = z.object({
+  acceptedByUserId: z.string().uuid().nullable().optional(),
+  deliverables: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  proposedByUserId: z.string().uuid().optional(),
+  proposingTeamId: z.string().uuid().optional(),
+  receivingTeamId: z.string().uuid().optional(),
+  revision: z.number().int().optional(),
+  scope: z.string().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => ProjectsProjectTeamAgreementStatusSchema).optional(),
+});
+
+/** Zod schema for APIProjectsProjectTeamOwnership */
+APIProjectsProjectTeamOwnershipSchema = z.object({
+  assignedAt: z.string().datetime().optional(),
+  endedAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
+  permissions: z.array(z.string()).nullable().optional(),
+  role: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
+  teamId: z.string().uuid().optional(),
+  teamName: z.string().nullable().optional(),
+  teamSlug: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIProjectsTransferProjectOwnerTeamInput */
+APIProjectsTransferProjectOwnerTeamInputSchema = z.object({
+  teamId: z.string().uuid().optional(),
+});
+
+/** Zod schema for APIProjectsUpdateProjectAllocationInput */
+APIProjectsUpdateProjectAllocationInputSchema = z.object({
+  capacityPercentage: z.number().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  function: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  startsAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for APIProjectsUpdateProjectTeamInput */
+APIProjectsUpdateProjectTeamInputSchema = z.object({
+  contributionPercentage: z.number().optional(),
+  notes: z.string().nullable().optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
+  permissions: z
+    .array(z.lazy(() => IdentityAuthorizationPermissionTypeSchema))
+    .nullable()
+    .optional(),
+  role: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
+});
+
 /** Zod schema for APISetupEconomyCapabilityReadinessState */
 APISetupEconomyCapabilityReadinessStateSchema = z.enum(['Disabled', 'Ready', 'ProviderNotReady', 'InvalidConfiguration']);
+
+/** Zod schema for APITeamsAcceptTeamInvitationInput */
+APITeamsAcceptTeamInvitationInputSchema = z.object({
+  token: z.string().nullable().optional(),
+});
+
+/** Zod schema for APITeamsAddTeamMemberInput */
+APITeamsAddTeamMemberInputSchema = z.object({
+  authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
+  professionalTitle: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for APITeamsChangeTeamMemberInput */
+APITeamsChangeTeamMemberInputSchema = z.object({
+  authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
+  professionalTitle: z.string().nullable().optional(),
+});
+
+/** Zod schema for APITeamsCreateTeamInput */
+APITeamsCreateTeamInputSchema = z.object({
+  description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  visibility: z.lazy(() => TeamsTeamVisibilitySchema).optional(),
+});
+
+/** Zod schema for APITeamsCreateTeamInvitationInput */
+APITeamsCreateTeamInvitationInputSchema = z.object({
+  authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
+  email: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  userId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for APITeamsMyTeamInvitation */
+APITeamsMyTeamInvitationSchema = z.object({
+  authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
+  expiresAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  teamId: z.string().uuid().optional(),
+  teamName: z.string().nullable().optional(),
+  teamSlug: z.string().nullable().optional(),
+});
+
+/** Zod schema for APITeamsTeam */
+APITeamsTeamSchema = z.object({
+  description: z.string().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isPersonal: z.boolean().optional(),
+  members: z
+    .array(z.lazy(() => APITeamsTeamMemberSchema))
+    .nullable()
+    .optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  status: z.lazy(() => TeamsTeamStatusSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  visibility: z.lazy(() => TeamsTeamVisibilitySchema).optional(),
+});
+
+/** Zod schema for APITeamsTeamInvitation */
+APITeamsTeamInvitationSchema = z.object({
+  authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
+  expiresAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  invitedByUserId: z.string().uuid().optional(),
+  invitedEmail: z.string().nullable().optional(),
+  invitedUserId: z.string().uuid().nullable().optional(),
+  revokedAt: z.string().datetime().nullable().optional(),
+  usedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for APITeamsTeamInvitationCreated */
+APITeamsTeamInvitationCreatedSchema = z.object({
+  expiresAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  token: z.string().nullable().optional(),
+});
+
+/** Zod schema for APITeamsTeamMember */
+APITeamsTeamMemberSchema = z.object({
+  authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
+  isActive: z.boolean().optional(),
+  joinedAt: z.string().datetime().optional(),
+  professionalTitle: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for APITeamsTeamProjectSummary */
+APITeamsTeamProjectSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
+  slug: z.string().nullable().optional(),
+  status: z.lazy(() => ContentStatusSchema).optional(),
+  teamRole: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
+  title: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
+});
+
+/** Zod schema for APITeamsUpdateTeamInput */
+APITeamsUpdateTeamInputSchema = z.object({
+  description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  visibility: z.lazy(() => TeamsTeamVisibilitySchema).optional(),
+});
+
+/** Zod schema for AssetsAssetAccessPolicy */
+AssetsAssetAccessPolicySchema = z.enum([
+  'Private',
+  'SignedUrl',
+  'TenantPublic',
+  'Public',
+  'PaidContent',
+  'OwnerOnly',
+  'Authenticated',
+  'Unlisted',
+  'Inherited',
+]);
+
+/** Zod schema for AssetsAssetAccessUrl */
+AssetsAssetAccessUrlSchema = z.object({
+  expiresAt: z.string().datetime().optional(),
+  mimeType: z.string().nullable().optional(),
+  token: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
+});
+
+/** Zod schema for AssetsAssetFolderRestrictionMode */
+AssetsAssetFolderRestrictionModeSchema = z.enum(['None', 'SelectedTeams', 'TeamAuthorities', 'AllocatedProjectMembers']);
+
+/** Zod schema for AssetsAssetKind */
+AssetsAssetKindSchema = z.enum(['Image', 'Video', 'Audio', 'Document', 'Archive', 'Other']);
+
+/** Zod schema for AssetsAssetUploadResult */
+AssetsAssetUploadResultSchema = z.object({
+  assetContentId: z.string().uuid().nullable().optional(),
+  assetReferenceId: z.string().uuid().nullable().optional(),
+  error: z.string().nullable().optional(),
+  success: z.boolean().optional(),
+});
+
+/** Zod schema for AssetsChunkedUploadSession */
+AssetsChunkedUploadSessionSchema = z.object({
+  expiresAt: z.string().datetime().optional(),
+  fileName: z.string().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  objectKey: z.string().nullable().optional(),
+  totalChunks: z.number().int().optional(),
+  totalSize: z.number().int().optional(),
+  uploadId: z.string().nullable().optional(),
+  uploadedChunks: z.number().int().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for AssetsCommandsBulkDeleteAssetItem */
+AssetsCommandsBulkDeleteAssetItemSchema = z.object({
+  assetReferenceId: z.string().uuid().optional(),
+  contentMarkedForDeletion: z.boolean().optional(),
+  error: z.string().nullable().optional(),
+  success: z.boolean().optional(),
+});
+
+/** Zod schema for AssetsCommandsBulkDeleteAssetsOutput */
+AssetsCommandsBulkDeleteAssetsOutputSchema = z.object({
+  failed: z.number().int().optional(),
+  items: z
+    .array(z.lazy(() => AssetsCommandsBulkDeleteAssetItemSchema))
+    .nullable()
+    .optional(),
+  successful: z.number().int().optional(),
+  totalRequested: z.number().int().optional(),
+});
+
+/** Zod schema for AssetsCommandsBulkUploadAssetItem */
+AssetsCommandsBulkUploadAssetItemSchema = z.object({
+  assetContentId: z.string().uuid().nullable().optional(),
+  assetReferenceId: z.string().uuid().nullable().optional(),
+  error: z.string().nullable().optional(),
+  fileName: z.string().nullable().optional(),
+  success: z.boolean().optional(),
+});
+
+/** Zod schema for AssetsCommandsBulkUploadAssetsOutput */
+AssetsCommandsBulkUploadAssetsOutputSchema = z.object({
+  failed: z.number().int().optional(),
+  items: z
+    .array(z.lazy(() => AssetsCommandsBulkUploadAssetItemSchema))
+    .nullable()
+    .optional(),
+  successful: z.number().int().optional(),
+  totalRequested: z.number().int().optional(),
+});
+
+/** Zod schema for AssetsControllersAssetExtractedTextOutput */
+AssetsControllersAssetExtractedTextOutputSchema = z.object({
+  assetId: z.string().uuid().optional(),
+  isPartial: z.boolean().optional(),
+  message: z.string().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  text: z.string().nullable().optional(),
+  usedOcr: z.boolean().optional(),
+});
+
+/** Zod schema for AssetsControllersBulkAssetAccessUrlInput */
+AssetsControllersBulkAssetAccessUrlInputSchema = z.object({
+  assetIds: z.array(z.string().uuid()).nullable().optional(),
+  directStorageUrl: z.boolean().optional(),
+});
+
+/** Zod schema for AssetsControllersBulkDeleteAssetsInput */
+AssetsControllersBulkDeleteAssetsInputSchema = z.object({
+  assetIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for AssetsControllersContentModerationInput */
+AssetsControllersContentModerationInputSchema = z.object({
+  labels: z.array(z.string()).nullable().optional(),
+  notes: z.string().nullable().optional(),
+  status: z.lazy(() => AssetsModerationStatusSchema).optional(),
+});
+
+/** Zod schema for AssetsControllersCopyAssetReferenceInput */
+AssetsControllersCopyAssetReferenceInputSchema = z.object({
+  displayName: z.string().nullable().optional(),
+  folderId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for AssetsControllersCreateAssetFolderInput */
+AssetsControllersCreateAssetFolderInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  parentFolderId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for AssetsControllersMarkNonDeletableInput */
+AssetsControllersMarkNonDeletableInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for AssetsControllersReportAssetInput */
+AssetsControllersReportAssetInputSchema = z.object({
+  description: z.string().nullable().optional(),
+  reason: z.lazy(() => AssetsReportReasonSchema).optional(),
+});
+
+/** Zod schema for AssetsControllersRestrictAssetFolderInput */
+AssetsControllersRestrictAssetFolderInputSchema = z.object({
+  authorities: z.array(z.string()).nullable().optional(),
+  mode: z.lazy(() => AssetsAssetFolderRestrictionModeSchema).optional(),
+  teamIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for AssetsControllersReviewReportInput */
+AssetsControllersReviewReportInputSchema = z.object({
+  decision: z.lazy(() => AssetsReviewDecisionSchema).optional(),
+  notes: z.string().nullable().optional(),
+});
+
+/** Zod schema for AssetsControllersUpdateAssetInput */
+AssetsControllersUpdateAssetInputSchema = z.object({
+  accessPolicy: z.lazy(() => AssetsAssetAccessPolicySchema).optional(),
+  displayName: z.string().nullable().optional(),
+});
+
+/** Zod schema for AssetsControllersUpdateVirusScanInput */
+AssetsControllersUpdateVirusScanInputSchema = z.object({
+  scanResult: z.string().nullable().optional(),
+  status: z.lazy(() => AssetsVirusScanStatusSchema).optional(),
+});
+
+/** Zod schema for AssetsImageFit */
+AssetsImageFitSchema = z.enum(['Contain', 'Cover', 'Fill', 'Inside', 'Outside']);
+
+/** Zod schema for AssetsImageFormat */
+AssetsImageFormatSchema = z.enum(['Original', 'Jpeg', 'Png', 'Webp', 'Avif', 'Gif']);
+
+/** Zod schema for AssetsModerationStatus */
+AssetsModerationStatusSchema = z.enum(['Pending', 'Processing', 'Approved', 'Rejected', 'NeedsReview', 'ApprovedWithWarning', 'Blocked']);
+
+/** Zod schema for AssetsQueriesAssetPreviewOutput */
+AssetsQueriesAssetPreviewOutputSchema = z.object({
+  assetContentId: z.string().uuid().optional(),
+  assetReferenceId: z.string().uuid().optional(),
+  canInlinePreview: z.boolean().optional(),
+  contentUrl: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  extractedTextPreview: z.string().nullable().optional(),
+  isBlocked: z.boolean().optional(),
+  isTextTruncated: z.boolean().optional(),
+  kind: z.lazy(() => AssetsAssetKindSchema).optional(),
+  mimeType: z.string().nullable().optional(),
+  previewMode: z.string().nullable().optional(),
+  thumbnailUrl: z.string().nullable().optional(),
+  usedOcr: z.boolean().optional(),
+  warnings: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for AssetsQueriesAssetRetentionCandidateOutput */
+AssetsQueriesAssetRetentionCandidateOutputSchema = z.object({
+  assetContentId: z.string().uuid().optional(),
+  bucketName: z.string().nullable().optional(),
+  markedForDeletionAt: z.string().datetime().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  objectKey: z.string().nullable().optional(),
+  sizeBytes: z.number().int().optional(),
+});
+
+/** Zod schema for AssetsQueriesAssetRetentionReportOutput */
+AssetsQueriesAssetRetentionReportOutputSchema = z.object({
+  candidateBytes: z.number().int().optional(),
+  candidates: z.number().int().optional(),
+  gracePeriodHours: z.number().int().optional(),
+  items: z
+    .array(z.lazy(() => AssetsQueriesAssetRetentionCandidateOutputSchema))
+    .nullable()
+    .optional(),
+  limit: z.number().int().optional(),
+  markedForDeletion: z.number().int().optional(),
+  onLegalHold: z.number().int().optional(),
+});
+
+/** Zod schema for AssetsQueriesAssetSearchOutput */
+AssetsQueriesAssetSearchOutputSchema = z.object({
+  items: z
+    .array(z.lazy(() => AssetsQueriesAssetSearchResultSchema))
+    .nullable()
+    .optional(),
+  returned: z.number().int().optional(),
+  totalMatched: z.number().int().optional(),
+});
+
+/** Zod schema for AssetsQueriesAssetSearchResult */
+AssetsQueriesAssetSearchResultSchema = z.object({
+  accessCount: z.number().int().optional(),
+  assetContentId: z.string().uuid().optional(),
+  assetReferenceId: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  displayName: z.string().nullable().optional(),
+  kind: z.lazy(() => AssetsAssetKindSchema).optional(),
+  lastAccessedAt: z.string().datetime().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  originalFilename: z.string().nullable().optional(),
+  parentResourceId: z.string().uuid().nullable().optional(),
+  parentResourceType: z.string().nullable().optional(),
+  sizeBytes: z.number().int().optional(),
+});
+
+/** Zod schema for AssetsQueriesAssetStatisticsOutput */
+AssetsQueriesAssetStatisticsOutputSchema = z.object({
+  blockedOrRejected: z.number().int().optional(),
+  documentAssets: z.number().int().optional(),
+  imageAssets: z.number().int().optional(),
+  legalHoldContent: z.number().int().optional(),
+  pendingModeration: z.number().int().optional(),
+  pendingVirusScans: z.number().int().optional(),
+  retentionCandidates: z.number().int().optional(),
+  totalAccesses: z.number().int().optional(),
+  totalAssets: z.number().int().optional(),
+  totalBytes: z.number().int().optional(),
+  totalContentObjects: z.number().int().optional(),
+  videoAssets: z.number().int().optional(),
+});
+
+/** Zod schema for AssetsQueriesBulkAssetAccessUrlItem */
+AssetsQueriesBulkAssetAccessUrlItemSchema = z.object({
+  assetReferenceId: z.string().uuid().optional(),
+  error: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  success: z.boolean().optional(),
+  token: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
+});
+
+/** Zod schema for AssetsQueriesBulkAssetAccessUrlsOutput */
+AssetsQueriesBulkAssetAccessUrlsOutputSchema = z.object({
+  failed: z.number().int().optional(),
+  items: z
+    .array(z.lazy(() => AssetsQueriesBulkAssetAccessUrlItemSchema))
+    .nullable()
+    .optional(),
+  successful: z.number().int().optional(),
+  totalRequested: z.number().int().optional(),
+});
+
+/** Zod schema for AssetsReportReason */
+AssetsReportReasonSchema = z.enum(['Inappropriate', 'Copyright', 'Spam', 'Violence', 'Harassment', 'Misinformation', 'Other']);
+
+/** Zod schema for AssetsReviewDecision */
+AssetsReviewDecisionSchema = z.enum(['NoAction', 'ContentRemoved', 'ContentHidden', 'UserWarned', 'UserSuspended', 'BlockContent']);
+
+/** Zod schema for AssetsSecurityAccessUrlInput */
+AssetsSecurityAccessUrlInputSchema = z.object({
+  directStorage: z.boolean().optional(),
+  transform: z.string().nullable().optional(),
+});
+
+/** Zod schema for AssetsVirusScanStatus */
+AssetsVirusScanStatusSchema = z.enum(['Pending', 'Scanning', 'Clean', 'Infected', 'ScanFailed']);
 
 /** Zod schema for BillingCycle */
 BillingCycleSchema = z.enum(['Weekly', 'Monthly', 'Quarterly', 'SemiAnnually', 'Annually', 'Biannually']);
@@ -13874,6 +15860,25 @@ KeyValuePairStringAuthenticationExtensionsPRFValuesSchema = z.object({
   value: z.lazy(() => ObjectsAuthenticationExtensionsPRFValuesSchema).optional(),
 });
 
+/** Zod schema for LaunchPadCreateLaunchPadEventInput */
+LaunchPadCreateLaunchPadEventInputSchema = z.object({
+  applicationsCloseAt: z.string().datetime().nullable().optional(),
+  applicationsOpenAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  name: z.string().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for LaunchPadCreateLaunchPadSlotInput */
+LaunchPadCreateLaunchPadSlotInputSchema = z.object({
+  capacity: z.number().int().optional(),
+  endsAt: z.string().datetime().optional(),
+  name: z.string().nullable().optional(),
+  role: z.lazy(() => LaunchPadLaunchPadParticipantRoleSchema).optional(),
+  startsAt: z.string().datetime().optional(),
+});
+
 /** Zod schema for LaunchPadCreateLaunchPlanInput */
 LaunchPadCreateLaunchPlanInputSchema = z.object({
   channels: z.array(z.string()).nullable().optional(),
@@ -13919,6 +15924,204 @@ LaunchPadLaunchChecklistItemInputSchema = z.object({
   title: z.string().nullable().optional(),
 });
 
+/** Zod schema for LaunchPadLaunchPadAnalyticsProjection */
+LaunchPadLaunchPadAnalyticsProjectionSchema = z.object({
+  applications: z.number().int().optional(),
+  approvedApplications: z.number().int().optional(),
+  completedEvents: z.number().int().optional(),
+  completedRegistrations: z.number().int().optional(),
+  events: z.number().int().optional(),
+  registrations: z.number().int().optional(),
+});
+
+/** Zod schema for LaunchPadLaunchPadApplication */
+LaunchPadLaunchPadApplicationSchema = z.object({
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  launchPadEvent: z.lazy(() => LaunchPadLaunchPadEventSchema).optional(),
+  launchPadEventId: z.string().uuid().optional(),
+  pitch: z.string().max(2000).nullable().optional(),
+  project: z.lazy(() => ProjectsProjectSchema).optional(),
+  projectId: z.string().uuid().optional(),
+  projectVersion: z.lazy(() => ProjectsProjectVersionSchema).optional(),
+  projectVersionId: z.string().uuid().optional(),
+  reviewedAt: z.string().datetime().nullable().optional(),
+  reviewedByUserId: z.string().uuid().nullable().optional(),
+  status: z.lazy(() => LaunchPadLaunchPadApplicationStatusSchema).optional(),
+  submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
+  submittedAssetReferenceIdsJson: z.string().max(10000).nullable().optional(),
+  submittedAt: z.string().datetime().optional(),
+  submittedByUser: z.lazy(() => IdentityUsersUserSchema).optional(),
+  submittedByUserId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for LaunchPadLaunchPadApplicationProjection */
+LaunchPadLaunchPadApplicationProjectionSchema = z.object({
+  eventId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  pitch: z.string().nullable().optional(),
+  projectId: z.string().uuid().optional(),
+  projectVersionId: z.string().uuid().optional(),
+  status: z.lazy(() => LaunchPadLaunchPadApplicationStatusSchema).optional(),
+  submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
+  submittedAt: z.string().datetime().optional(),
+  submittedByUserId: z.string().uuid().optional(),
+});
+
+/** Zod schema for LaunchPadLaunchPadApplicationStatus */
+LaunchPadLaunchPadApplicationStatusSchema = z.enum(['Draft', 'Submitted', 'UnderReview', 'Waitlisted', 'Approved', 'Rejected', 'Withdrawn']);
+
+/** Zod schema for LaunchPadLaunchPadEvent */
+LaunchPadLaunchPadEventSchema = z.object({
+  applications: z
+    .array(z.lazy(() => LaunchPadLaunchPadApplicationSchema))
+    .nullable()
+    .optional(),
+  applicationsCloseAt: z.string().datetime().nullable().optional(),
+  applicationsOpenAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().max(2000).nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  endsAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  name: z.string().min(1).max(200),
+  slots: z
+    .array(z.lazy(() => LaunchPadLaunchPadParticipantSlotSchema))
+    .nullable()
+    .optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => LaunchPadLaunchPadEventStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for LaunchPadLaunchPadEventDetailProjection */
+LaunchPadLaunchPadEventDetailProjectionSchema = z.object({
+  event: z.lazy(() => LaunchPadLaunchPadEventProjectionSchema).optional(),
+  slots: z
+    .array(z.lazy(() => LaunchPadLaunchPadSlotProjectionSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LaunchPadLaunchPadEventProjection */
+LaunchPadLaunchPadEventProjectionSchema = z.object({
+  applicationsCloseAt: z.string().datetime().nullable().optional(),
+  applicationsOpenAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => LaunchPadLaunchPadEventStatusSchema).optional(),
+});
+
+/** Zod schema for LaunchPadLaunchPadEventStatus */
+LaunchPadLaunchPadEventStatusSchema = z.enum(['Draft', 'ApplicationsOpen', 'ApplicationsClosed', 'Scheduled', 'Active', 'Completed', 'Cancelled', 'Archived']);
+
+/** Zod schema for LaunchPadLaunchPadParticipantRegistration */
+LaunchPadLaunchPadParticipantRegistrationSchema = z.object({
+  checkedInAt: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  launchPadParticipantSlot: z.lazy(() => LaunchPadLaunchPadParticipantSlotSchema).optional(),
+  launchPadParticipantSlotId: z.string().uuid().optional(),
+  registeredAt: z.string().datetime().optional(),
+  status: z.lazy(() => LaunchPadLaunchPadParticipantStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for LaunchPadLaunchPadParticipantRole */
+LaunchPadLaunchPadParticipantRoleSchema = z.enum(['Participant', 'Mentor', 'Audience', 'Presenter']);
+
+/** Zod schema for LaunchPadLaunchPadParticipantSlot */
+LaunchPadLaunchPadParticipantSlotSchema = z.object({
+  capacity: z.number().int().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  endsAt: z.string().datetime().optional(),
+  hasCapacity: z.boolean().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  launchPadEvent: z.lazy(() => LaunchPadLaunchPadEventSchema).optional(),
+  launchPadEventId: z.string().uuid().optional(),
+  name: z.string().min(1).max(120),
+  registrations: z
+    .array(z.lazy(() => LaunchPadLaunchPadParticipantRegistrationSchema))
+    .nullable()
+    .optional(),
+  reservedCount: z.number().int().optional(),
+  role: z.lazy(() => LaunchPadLaunchPadParticipantRoleSchema).optional(),
+  startsAt: z.string().datetime().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for LaunchPadLaunchPadParticipantStatus */
+LaunchPadLaunchPadParticipantStatusSchema = z.enum(['Registered', 'Waitlisted', 'CheckedIn', 'Attended', 'Completed', 'Cancelled', 'NoShow']);
+
+/** Zod schema for LaunchPadLaunchPadRegistrationProjection */
+LaunchPadLaunchPadRegistrationProjectionSchema = z.object({
+  checkedInAt: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  registeredAt: z.string().datetime().optional(),
+  slotId: z.string().uuid().optional(),
+  status: z.lazy(() => LaunchPadLaunchPadParticipantStatusSchema).optional(),
+  userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for LaunchPadLaunchPadSlotProjection */
+LaunchPadLaunchPadSlotProjectionSchema = z.object({
+  capacity: z.number().int().optional(),
+  endsAt: z.string().datetime().optional(),
+  eventId: z.string().uuid().optional(),
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  reservedCount: z.number().int().optional(),
+  role: z.lazy(() => LaunchPadLaunchPadParticipantRoleSchema).optional(),
+  startsAt: z.string().datetime().optional(),
+});
+
 /** Zod schema for LaunchPadLaunchPlan */
 LaunchPadLaunchPlanSchema = z.object({
   channels: z.array(z.string()).nullable().optional(),
@@ -13936,11 +16139,17 @@ LaunchPadLaunchPlanSchema = z.object({
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
+  launchPadApplication: z.lazy(() => LaunchPadLaunchPadApplicationSchema).optional(),
+  launchPadApplicationId: z.string().uuid().nullable().optional(),
+  launchPadEvent: z.lazy(() => LaunchPadLaunchPadEventSchema).optional(),
+  launchPadEventId: z.string().uuid().nullable().optional(),
   launchedAt: z.string().datetime().nullable().optional(),
   name: z.string().min(1).max(200),
   positioning: z.string().max(1000).nullable().optional(),
   project: z.lazy(() => ProjectsProjectSchema).optional(),
   projectId: z.string().uuid().optional(),
+  projectVersion: z.lazy(() => ProjectsProjectVersionSchema).optional(),
+  projectVersionId: z.string().uuid().nullable().optional(),
   readinessPercent: z.number().int().optional(),
   status: z.lazy(() => LaunchPadLaunchPlanStatusSchema).optional(),
   targetLaunchAt: z.string().datetime().nullable().optional(),
@@ -13951,6 +16160,47 @@ LaunchPadLaunchPlanSchema = z.object({
 
 /** Zod schema for LaunchPadLaunchPlanStatus */
 LaunchPadLaunchPlanStatusSchema = z.enum(['Draft', 'Preparing', 'Ready', 'Launched', 'Paused']);
+
+/** Zod schema for LaunchPadReviewLaunchPadApplicationInput */
+LaunchPadReviewLaunchPadApplicationInputSchema = z.object({
+  launchPlanName: z.string().nullable().optional(),
+  status: z.lazy(() => LaunchPadLaunchPadApplicationStatusSchema).optional(),
+});
+
+/** Zod schema for LaunchPadSubmitLaunchPadApplicationInput */
+LaunchPadSubmitLaunchPadApplicationInputSchema = z.object({
+  pitch: z.string().nullable().optional(),
+  projectId: z.string().uuid().optional(),
+  projectVersionId: z.string().uuid().optional(),
+  submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for LaunchPadTransitionLaunchPadEventInput */
+LaunchPadTransitionLaunchPadEventInputSchema = z.object({
+  status: z.lazy(() => LaunchPadLaunchPadEventStatusSchema).optional(),
+});
+
+/** Zod schema for LaunchPadTransitionLaunchPadRegistrationInput */
+LaunchPadTransitionLaunchPadRegistrationInputSchema = z.object({
+  status: z.lazy(() => LaunchPadLaunchPadParticipantStatusSchema).optional(),
+});
+
+/** Zod schema for LaunchPadUpdateLaunchPadApplicationInput */
+LaunchPadUpdateLaunchPadApplicationInputSchema = z.object({
+  pitch: z.string().nullable().optional(),
+  projectVersionId: z.string().uuid().optional(),
+  submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for LaunchPadUpdateLaunchPadEventInput */
+LaunchPadUpdateLaunchPadEventInputSchema = z.object({
+  applicationsCloseAt: z.string().datetime().nullable().optional(),
+  applicationsOpenAt: z.string().datetime().nullable().optional(),
+  description: z.string().nullable().optional(),
+  endsAt: z.string().datetime().optional(),
+  name: z.string().nullable().optional(),
+  startsAt: z.string().datetime().optional(),
+});
 
 /** Zod schema for LearningAssessmentsAssessment */
 LearningAssessmentsAssessmentSchema = z.object({
@@ -16418,6 +18668,15 @@ ProgramCategorySchema = z.enum([
   'Other',
 ]);
 
+/** Zod schema for ProjectWorkProjectWorkColumnKind */
+ProjectWorkProjectWorkColumnKindSchema = z.enum(['Backlog', 'Ready', 'InProgress', 'InReview', 'Done', 'Custom']);
+
+/** Zod schema for ProjectWorkProjectWorkTaskPriority */
+ProjectWorkProjectWorkTaskPrioritySchema = z.enum(['Low', 'Normal', 'High', 'Urgent']);
+
+/** Zod schema for ProjectWorkProjectWorkTaskStatus */
+ProjectWorkProjectWorkTaskStatusSchema = z.enum(['Backlog', 'Ready', 'InProgress', 'InReview', 'Done', 'Cancelled']);
+
 /** Zod schema for ProjectsAddCollaboratorInput */
 ProjectsAddCollaboratorInputSchema = z.object({
   email: z.string().nullable().optional(),
@@ -16454,6 +18713,7 @@ ProjectsCreateProjectInputSchema = z.object({
   description: z.string().min(0).max(2000).nullable().optional(),
   downloadUrl: z.string().url().nullable().optional(),
   imageUrl: z.string().url().nullable().optional(),
+  ownerTeamId: z.string().uuid().nullable().optional(),
   repositoryUrl: z.string().url().nullable().optional(),
   shortDescription: z.string().min(0).max(500).nullable().optional(),
   status: z.lazy(() => ContentStatusSchema).optional(),
@@ -16462,6 +18722,13 @@ ProjectsCreateProjectInputSchema = z.object({
   type: z.lazy(() => ProjectsProjectTypeSchema).optional(),
   visibility: z.lazy(() => ContentVisibilitySchema).optional(),
   websiteUrl: z.string().url().nullable().optional(),
+});
+
+/** Zod schema for ProjectsCreateProjectVersionInput */
+ProjectsCreateProjectVersionInputSchema = z.object({
+  releaseNotes: z.string().max(10000).nullable().optional(),
+  status: z.string().max(50).nullable().optional(),
+  versionNumber: z.string().min(1).max(50),
 });
 
 /** Zod schema for ProjectsDevelopmentStatus */
@@ -16508,6 +18775,10 @@ ProjectsPermissionUpdateResultSchema = z.object({
 
 /** Zod schema for ProjectsProject */
 ProjectsProjectSchema = z.object({
+  allocations: z
+    .array(z.lazy(() => ProjectsProjectMemberAllocationSchema))
+    .nullable()
+    .optional(),
   averageRating: z.number().nullable().optional(),
   category: z.lazy(() => ProjectsProjectCategorySchema).optional(),
   categoryId: z.string().uuid().nullable().optional(),
@@ -16562,6 +18833,10 @@ ProjectsProjectSchema = z.object({
   socialLinks: z.string().nullable().optional(),
   status: z.lazy(() => ContentStatusSchema),
   tags: z.string().nullable().optional(),
+  teamAgreements: z
+    .array(z.lazy(() => ProjectsProjectTeamAgreementSchema))
+    .nullable()
+    .optional(),
   teamCount: z.number().int().optional(),
   teams: z
     .array(z.lazy(() => ProjectsProjectTeamSchema))
@@ -16578,6 +18853,59 @@ ProjectsProjectSchema = z.object({
     .optional(),
   visibility: z.lazy(() => ContentVisibilitySchema),
   websiteUrl: z.string().max(500).nullable().optional(),
+});
+
+/** Zod schema for ProjectsProjectApiOutput */
+ProjectsProjectApiOutputSchema = z.object({
+  averageRating: z.number().nullable().optional(),
+  category: z.lazy(() => ProjectsProjectCategoryApiOutputSchema).optional(),
+  categoryId: z.string().uuid().nullable().optional(),
+  collaborators: z
+    .array(z.lazy(() => ProjectsProjectCollaboratorApiOutputSchema))
+    .nullable()
+    .optional(),
+  copyright: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  createdById: z.string().uuid().nullable().optional(),
+  creator: z.lazy(() => ProjectsProjectUserApiOutputSchema).optional(),
+  description: z.string().nullable().optional(),
+  developmentStatus: z.lazy(() => ProjectsDevelopmentStatusSchema).optional(),
+  downloadUrl: z.string().nullable().optional(),
+  featuredImageUrl: z.string().nullable().optional(),
+  feedbackCount: z.number().int().optional(),
+  followerCount: z.number().int().optional(),
+  id: z.string().uuid().optional(),
+  imageUrl: z.string().nullable().optional(),
+  isInJam: z.boolean().optional(),
+  latestVersion: z.lazy(() => ProjectsProjectVersionApiOutputSchema).optional(),
+  license: z.string().nullable().optional(),
+  metadata: z.lazy(() => ProjectsProjectMetadataApiOutputSchema).optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  releases: z
+    .array(z.lazy(() => ProjectsProjectReleaseApiOutputSchema))
+    .nullable()
+    .optional(),
+  repositoryUrl: z.string().nullable().optional(),
+  shortDescription: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  socialLinks: z.string().nullable().optional(),
+  status: z.lazy(() => ContentStatusSchema).optional(),
+  tags: z.string().nullable().optional(),
+  teamCount: z.number().int().optional(),
+  teams: z
+    .array(z.lazy(() => ProjectsProjectTeamApiOutputSchema))
+    .nullable()
+    .optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => ProjectsProjectTypeSchema).optional(),
+  updatedAt: z.string().datetime().optional(),
+  versions: z
+    .array(z.lazy(() => ProjectsProjectVersionApiOutputSchema))
+    .nullable()
+    .optional(),
+  visibility: z.lazy(() => ContentVisibilitySchema).optional(),
+  websiteUrl: z.string().nullable().optional(),
 });
 
 /** Zod schema for ProjectsProjectCategory */
@@ -16600,6 +18928,12 @@ ProjectsProjectCategorySchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
   updatedAt: z.string().datetime(),
   version: z.number().int().optional(),
+});
+
+/** Zod schema for ProjectsProjectCategoryApiOutput */
+ProjectsProjectCategoryApiOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
 });
 
 /** Zod schema for ProjectsProjectCollaborator */
@@ -16625,6 +18959,18 @@ ProjectsProjectCollaboratorSchema = z.object({
   user: z.lazy(() => IdentityUsersUserSchema).optional(),
   userId: z.string().uuid().optional(),
   version: z.number().int().optional(),
+});
+
+/** Zod schema for ProjectsProjectCollaboratorApiOutput */
+ProjectsProjectCollaboratorApiOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  joinedAt: z.string().datetime().optional(),
+  leftAt: z.string().datetime().nullable().optional(),
+  permissions: z.array(z.string()).nullable().optional(),
+  role: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
+  userName: z.string().nullable().optional(),
 });
 
 /** Zod schema for ProjectsProjectCollaboratorDto */
@@ -16751,6 +19097,31 @@ ProjectsProjectJamSubmissionSchema = z.object({
   version: z.number().int().optional(),
 });
 
+/** Zod schema for ProjectsProjectMemberAllocation */
+ProjectsProjectMemberAllocationSchema = z.object({
+  capacityPercentage: z.number().min(1).max(100).optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  function: z.string().min(1).max(100),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  projectId: z.string().uuid().optional(),
+  projectTeamId: z.string().uuid().optional(),
+  startsAt: z.string().datetime().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+});
+
 /** Zod schema for ProjectsProjectMetadata */
 ProjectsProjectMetadataSchema = z.object({
   createdAt: z.string().datetime(),
@@ -16769,6 +19140,14 @@ ProjectsProjectMetadataSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
   updatedAt: z.string().datetime(),
   version: z.number().int().optional(),
+  viewCount: z.number().int().optional(),
+});
+
+/** Zod schema for ProjectsProjectMetadataApiOutput */
+ProjectsProjectMetadataApiOutputSchema = z.object({
+  downloadCount: z.number().int().optional(),
+  followerCount: z.number().int().optional(),
+  id: z.string().uuid().optional(),
   viewCount: z.number().int().optional(),
 });
 
@@ -16805,6 +19184,28 @@ ProjectsProjectReleaseSchema = z.object({
   title: z.string().min(1).max(200),
   updatedAt: z.string().datetime(),
   version: z.number().int().optional(),
+});
+
+/** Zod schema for ProjectsProjectReleaseApiOutput */
+ProjectsProjectReleaseApiOutputSchema = z.object({
+  buildNumber: z.string().nullable().optional(),
+  checksum: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  downloadCount: z.number().int().optional(),
+  downloadUrl: z.string().nullable().optional(),
+  fileSize: z.number().int().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isLatest: z.boolean().optional(),
+  isPrerelease: z.boolean().optional(),
+  releaseMetadata: z.string().nullable().optional(),
+  releaseNotes: z.string().nullable().optional(),
+  releaseType: z.string().nullable().optional(),
+  releaseVersion: z.string().nullable().optional(),
+  releasedAt: z.string().datetime().optional(),
+  status: z.lazy(() => ContentStatusSchema).optional(),
+  supportedPlatforms: z.string().nullable().optional(),
+  systemRequirements: z.string().nullable().optional(),
+  title: z.string().nullable().optional(),
 });
 
 /** Zod schema for ProjectsProjectRoleTemplate */
@@ -16846,6 +19247,10 @@ ProjectsProjectStoreProductProjectionSchema = z.object({
 
 /** Zod schema for ProjectsProjectTeam */
 ProjectsProjectTeamSchema = z.object({
+  allocations: z
+    .array(z.lazy(() => ProjectsProjectMemberAllocationSchema))
+    .nullable()
+    .optional(),
   assignedAt: z.string().datetime().optional(),
   contributionPercentage: z.number().min(0).max(100).optional(),
   createdAt: z.string().datetime(),
@@ -16861,18 +19266,82 @@ ProjectsProjectTeamSchema = z.object({
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
   notes: z.string().max(1000).nullable().optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
   permissions: z.string().max(1000).nullable().optional(),
   projectId: z.string().uuid().optional(),
-  role: z.string().min(1).max(100),
-  team: z.lazy(() => ProjectsTeamSchema).optional(),
+  role: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
+  team: z.lazy(() => TeamsTeamSchema).optional(),
   teamId: z.string().uuid().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   updatedAt: z.string().datetime(),
   version: z.number().int().optional(),
 });
 
+/** Zod schema for ProjectsProjectTeamAgreement */
+ProjectsProjectTeamAgreementSchema = z.object({
+  acceptedAt: z.string().datetime().nullable().optional(),
+  acceptedByUserId: z.string().uuid().nullable().optional(),
+  cancelledAt: z.string().datetime().nullable().optional(),
+  completedAt: z.string().datetime().nullable().optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  deliverables: z.string().min(1).max(2000),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  endsAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  projectId: z.string().uuid().optional(),
+  proposedByUserId: z.string().uuid().optional(),
+  proposingTeamId: z.string().uuid().optional(),
+  receivingTeamId: z.string().uuid().optional(),
+  revision: z.number().int().optional(),
+  scope: z.string().min(1).max(1000),
+  startsAt: z.string().datetime().optional(),
+  status: z.lazy(() => ProjectsProjectTeamAgreementStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for ProjectsProjectTeamAgreementStatus */
+ProjectsProjectTeamAgreementStatusSchema = z.enum(['Proposed', 'CounterProposed', 'Accepted', 'Cancelled', 'Completed']);
+
+/** Zod schema for ProjectsProjectTeamApiOutput */
+ProjectsProjectTeamApiOutputSchema = z.object({
+  assignedAt: z.string().datetime().optional(),
+  contributionPercentage: z.number().optional(),
+  endedAt: z.string().datetime().nullable().optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  name: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
+  permissions: z.array(z.string()).nullable().optional(),
+  role: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
+  slug: z.string().nullable().optional(),
+  teamId: z.string().uuid().optional(),
+});
+
+/** Zod schema for ProjectsProjectTeamParticipationMode */
+ProjectsProjectTeamParticipationModeSchema = z.enum(['AllMembers', 'SelectedMembers']);
+
+/** Zod schema for ProjectsProjectTeamRole */
+ProjectsProjectTeamRoleSchema = z.enum(['Owner', 'CoOwner', 'Contributor', 'Guest']);
+
 /** Zod schema for ProjectsProjectType */
 ProjectsProjectTypeSchema = z.enum(['Game', 'Tool', 'Art', 'Music', 'Educational', 'Plugin', 'Template', 'Library', 'Other']);
+
+/** Zod schema for ProjectsProjectUserApiOutput */
+ProjectsProjectUserApiOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  username: z.string().nullable().optional(),
+});
 
 /** Zod schema for ProjectsProjectVersion */
 ProjectsProjectVersionSchema = z.object({
@@ -16895,6 +19364,29 @@ ProjectsProjectVersionSchema = z.object({
   updatedAt: z.string().datetime(),
   version: z.number().int().optional(),
   versionNumber: z.string().min(1).max(50),
+});
+
+/** Zod schema for ProjectsProjectVersionApiOutput */
+ProjectsProjectVersionApiOutputSchema = z.object({
+  createdAt: z.string().datetime().optional(),
+  createdById: z.string().uuid().optional(),
+  downloadCount: z.number().int().optional(),
+  id: z.string().uuid().optional(),
+  projectId: z.string().uuid().optional(),
+  releaseNotes: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+  versionNumber: z.string().nullable().optional(),
+});
+
+/** Zod schema for ProjectsProjectVersionOptionProjection */
+ProjectsProjectVersionOptionProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  projectId: z.string().uuid().optional(),
+  projectTitle: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+  versionNumber: z.string().nullable().optional(),
 });
 
 /** Zod schema for ProjectsShareProjectInput */
@@ -16921,54 +19413,6 @@ ProjectsShareResultSchema = z.object({
   failureCount: z.number().int().optional(),
   success: z.boolean().optional(),
   successCount: z.number().int().optional(),
-});
-
-/** Zod schema for ProjectsTeam */
-ProjectsTeamSchema = z.object({
-  createdAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  description: z.string().max(2000).nullable().optional(),
-  domainEvents: z
-    .array(z.lazy(() => CQRSIDomainEventSchema))
-    .nullable()
-    .optional(),
-  id: z.string().uuid().optional(),
-  isActive: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  members: z
-    .array(z.lazy(() => ProjectsTeamMemberSchema))
-    .nullable()
-    .optional(),
-  name: z.string().min(1).max(200),
-  tenantId: z.string().uuid().nullable().optional(),
-  updatedAt: z.string().datetime(),
-  version: z.number().int().optional(),
-});
-
-/** Zod schema for ProjectsTeamMember */
-ProjectsTeamMemberSchema = z.object({
-  createdAt: z.string().datetime(),
-  deletedAt: z.string().datetime().nullable().optional(),
-  domainEvents: z
-    .array(z.lazy(() => CQRSIDomainEventSchema))
-    .nullable()
-    .optional(),
-  id: z.string().uuid().optional(),
-  isActive: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
-  isGlobal: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  joinedAt: z.string().datetime().optional(),
-  role: z.string().max(100).nullable().optional(),
-  team: z.lazy(() => ProjectsTeamSchema).optional(),
-  teamId: z.string().uuid().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
-  updatedAt: z.string().datetime(),
-  user: z.lazy(() => IdentityUsersUserSchema).optional(),
-  userId: z.string().uuid().optional(),
-  version: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsUpdateCollaboratorInput */
@@ -17176,6 +19620,7 @@ ResourcesResourceUsageTypeSchema = z.enum([
   'AssetTransformations',
   'AiRequests',
   'AiTokens',
+  'Teams',
 ]);
 
 /** Zod schema for ResourcesSetQuotaInput */
@@ -17595,6 +20040,101 @@ SocialReactionsTargetReactionSummarySchema = z.object({
 /** Zod schema for SystemDayOfWeek */
 SystemDayOfWeekSchema = z.enum(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
 
+/** Zod schema for TeamsTeam */
+TeamsTeamSchema = z.object({
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  description: z.string().max(2000).nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  invitations: z
+    .array(z.lazy(() => TeamsTeamInvitationSchema))
+    .nullable()
+    .optional(),
+  isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  isPersonal: z.boolean().optional(),
+  members: z
+    .array(z.lazy(() => TeamsTeamMemberSchema))
+    .nullable()
+    .optional(),
+  name: z.string().min(1).max(200),
+  slug: z.string().min(1).max(200),
+  status: z.lazy(() => TeamsTeamStatusSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
+  visibility: z.lazy(() => TeamsTeamVisibilitySchema).optional(),
+});
+
+/** Zod schema for TeamsTeamInvitation */
+TeamsTeamInvitationSchema = z.object({
+  acceptedByUserId: z.string().uuid().nullable().optional(),
+  authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  expiresAt: z.string().datetime().optional(),
+  id: z.string().uuid().optional(),
+  invitedByUserId: z.string().uuid().optional(),
+  invitedEmail: z.string().max(255).nullable().optional(),
+  invitedUserId: z.string().uuid().nullable().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  revokedAt: z.string().datetime().nullable().optional(),
+  team: z.lazy(() => TeamsTeamSchema).optional(),
+  teamId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  tokenHash: z.string().min(1).max(64),
+  updatedAt: z.string().datetime(),
+  usedAt: z.string().datetime().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for TeamsTeamMember */
+TeamsTeamMemberSchema = z.object({
+  authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
+  createdAt: z.string().datetime(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  id: z.string().uuid().optional(),
+  isActive: z.boolean().optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  joinedAt: z.string().datetime().optional(),
+  leftAt: z.string().datetime().nullable().optional(),
+  professionalTitle: z.string().max(150).nullable().optional(),
+  team: z.lazy(() => TeamsTeamSchema).optional(),
+  teamId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  user: z.lazy(() => IdentityUsersUserSchema).optional(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for TeamsTeamMemberAuthority */
+TeamsTeamMemberAuthoritySchema = z.enum(['Viewer', 'Member', 'Manager', 'Owner']);
+
+/** Zod schema for TeamsTeamStatus */
+TeamsTeamStatusSchema = z.enum(['Active', 'Archived']);
+
+/** Zod schema for TeamsTeamVisibility */
+TeamsTeamVisibilitySchema = z.enum(['Private', 'Tenant', 'Public']);
+
 /** Zod schema for TenantInfo */
 TenantInfoSchema = z.object({
   id: z.string().uuid().optional(),
@@ -17974,7 +20514,31 @@ TestingLabSubmitTestingEventFeedbackInputSchema = z.object({
 TestingLabSubmitTestingProjectApplicationInputSchema = z.object({
   preferredAvailability: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
-  projectVersionId: z.string().uuid().nullable().optional(),
+  projectVersionId: z.string().uuid().optional(),
+  submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for TestingLabTestingApplicationReviewAssetProjection */
+TestingLabTestingApplicationReviewAssetProjectionSchema = z.object({
+  accessUrl: z.string().nullable().optional(),
+  assetReferenceId: z.string().uuid().optional(),
+  displayName: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  mimeType: z.string().nullable().optional(),
+});
+
+/** Zod schema for TestingLabTestingApplicationReviewPackageProjection */
+TestingLabTestingApplicationReviewPackageProjectionSchema = z.object({
+  applicationId: z.string().uuid().optional(),
+  assets: z
+    .array(z.lazy(() => TestingLabTestingApplicationReviewAssetProjectionSchema))
+    .nullable()
+    .optional(),
+  projectId: z.string().uuid().optional(),
+  projectVersionId: z.string().uuid().optional(),
+  releaseNotes: z.string().nullable().optional(),
+  versionNumber: z.string().nullable().optional(),
+  versionStatus: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingApplicationStatus */
@@ -18734,6 +21298,8 @@ TestingLabTestingProjectApplicationSchema = z.object({
   projectVersion: z.lazy(() => ProjectsProjectVersionSchema).optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
   status: z.lazy(() => TestingLabTestingApplicationStatusSchema).optional(),
+  submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
+  submittedAssetReferenceIdsJson: z.string().max(10000).nullable().optional(),
   submittedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
   submittedByUserId: z.string().uuid().optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -18757,6 +21323,7 @@ TestingLabTestingProjectApplicationProjectionSchema = z.object({
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
   status: z.lazy(() => TestingLabTestingApplicationStatusSchema).optional(),
+  submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
   submittedByUserId: z.string().uuid().optional(),
   votes: z
     .array(z.lazy(() => TestingLabTestingApplicationVoteProjectionSchema))

@@ -196,13 +196,13 @@ public sealed class CanonicalSnapshotEntitySetTests
             "GameGuild.Projects.ProjectStoreProduct",
             "GameGuild.Compliance.Audit.AuditLog",
             "GameGuild.Commerce.Orders.Order",
-            "GameGuild.Identity.Authorization.PermissionTemplate"
+            "GameGuild.Identity.Authorization.PermissionTemplate",
+            "GameGuild.Assets.AssetContent",
+            "GameGuild.Localization.Language"
         });
         entities.Should().NotContain(new[]
         {
-            "GameGuild.Analytics.AnalyticsEvent",
-            "GameGuild.Assets.AssetContent",
-            "GameGuild.Localization.Language"
+            "GameGuild.Analytics.AnalyticsEvent"
         });
     }
 

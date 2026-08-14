@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using FluentAssertions;
 using GameGuild.CQRS;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
@@ -8,6 +10,46 @@ namespace GameGuild.Identity.Authentication.UnitTests.Controllers;
 
 public class AuthControllerTests
 {
+    [Fact]
+    public async Task ChangePassword_ShouldUseMappedNameIdentifierClaim()
+    {
+        var userId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(
+                It.Is<ChangePasswordCommand>(command => command.UserId == userId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PasswordChangeResult
+            {
+                Success = true,
+                Message = "Password changed successfully"
+            });
+
+        var controller = new AuthController(sender.Object)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                        [new Claim(ClaimTypes.NameIdentifier, userId.ToString())],
+                        "Bearer"))
+                }
+            }
+        };
+
+        var result = await controller.ChangePassword(new PasswordChangeRequest
+        {
+            CurrentPassword = "Old!Password123",
+            NewPassword = "New!Password123",
+            ConfirmPassword = "New!Password123",
+            RevokeOtherSessions = false
+        }, CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+        sender.VerifyAll();
+    }
+
     [Fact]
     public async Task RefreshToken_ShouldReturnUnauthorized_WhenSenderThrowsUnauthorizedAccessException()
     {

@@ -107,6 +107,7 @@ async function signUpAndIn(creds = freshCredentials()) {
 
 describe(
   'Token revocation',
+  { timeout: 60_000 },
   () => {
     let accessToken: string;
     let refreshToken: string;
@@ -162,8 +163,7 @@ describe(
         expect(res.error?.status).toBe(401);
       }
     });
-  },
-  { timeout: 60_000 }
+  }
 );
 
 // ═══════════════════════════════════════════════════════════════════
@@ -172,6 +172,7 @@ describe(
 
 describe(
   'Password change',
+  { timeout: 90_000 },
   () => {
     const creds = freshCredentials();
     let accessToken: string;
@@ -266,8 +267,7 @@ describe(
         expect(res.error?.status).toBe(401);
       }
     });
-  },
-  { timeout: 90_000 }
+  }
 );
 
 // ═══════════════════════════════════════════════════════════════════
@@ -276,6 +276,7 @@ describe(
 
 describe(
   'Password reset request',
+  { timeout: 60_000 },
   () => {
     it('accepts a password reset request for existing email', async () => {
       const creds = freshCredentials();
@@ -342,8 +343,7 @@ describe(
 
       expect(res.ok).toBe(false);
     });
-  },
-  { timeout: 60_000 }
+  }
 );
 
 // ═══════════════════════════════════════════════════════════════════
@@ -352,6 +352,7 @@ describe(
 
 describe(
   'Email verification',
+  { timeout: 60_000 },
   () => {
     it('sends verification email request', async () => {
       const creds = freshCredentials();
@@ -385,8 +386,7 @@ describe(
 
       expect(res.ok).toBe(false);
     });
-  },
-  { timeout: 60_000 }
+  }
 );
 
 // ═══════════════════════════════════════════════════════════════════
@@ -395,6 +395,7 @@ describe(
 
 describe(
   'Session management',
+  { timeout: 60_000 },
   () => {
     let accessToken: string;
 
@@ -487,14 +488,14 @@ describe(
         expect(res.error?.status).toBe(401);
       }
     });
-  },
-  { timeout: 60_000 }
+  }
 );
 
 // ─── 5b. Session termination (separate user to avoid invalidating other tests) ──
 
 describe(
   'Session termination',
+  { timeout: 90_000 },
   () => {
     it('terminates all other sessions', async () => {
       const creds = freshCredentials();
@@ -577,8 +578,7 @@ describe(
         expect(typeof res.ok).toBe('boolean');
       }
     }, 30_000);
-  },
-  { timeout: 90_000 }
+  }
 );
 
 // ═══════════════════════════════════════════════════════════════════
@@ -587,6 +587,7 @@ describe(
 
 describe(
   'API keys',
+  { timeout: 60_000 },
   () => {
     let accessToken: string;
 
@@ -713,8 +714,7 @@ describe(
         expect(res.error?.status).toBe(401);
       }
     });
-  },
-  { timeout: 60_000 }
+  }
 );
 
 // ═══════════════════════════════════════════════════════════════════
@@ -723,6 +723,7 @@ describe(
 
 describe(
   'MFA configuration',
+  { timeout: 60_000 },
   () => {
     let accessToken: string;
 
@@ -802,8 +803,7 @@ describe(
         expect(res.error?.status).toBe(401);
       }
     });
-  },
-  { timeout: 60_000 }
+  }
 );
 
 // ═══════════════════════════════════════════════════════════════════
@@ -812,6 +812,7 @@ describe(
 
 describe(
   'Trusted devices',
+  { timeout: 60_000 },
   () => {
     let accessToken: string;
 
@@ -916,8 +917,7 @@ describe(
         expect(res.error?.status).toBe(401);
       }
     });
-  },
-  { timeout: 60_000 }
+  }
 );
 
 // ═══════════════════════════════════════════════════════════════════
@@ -926,6 +926,7 @@ describe(
 
 describe(
   'Password change with session revocation',
+  { timeout: 60_000 },
   () => {
     it('changes password and revokes other sessions', async () => {
       const creds = freshCredentials();
@@ -969,8 +970,7 @@ describe(
       expect(res.data.success).toBe(true);
       expect(typeof res.data.sessionsRevoked).toBe('number');
     }, 30_000);
-  },
-  { timeout: 60_000 }
+  }
 );
 
 // ═══════════════════════════════════════════════════════════════════
@@ -979,6 +979,7 @@ describe(
 
 describe(
   'Auth guard edge cases',
+  { timeout: 60_000 },
   () => {
     it('rejects requests with an expired/invalid access token', async () => {
       const client = authedClient('invalid.jwt.token');
@@ -1065,6 +1066,5 @@ describe(
 
       expect(res.ok).toBe(false);
     });
-  },
-  { timeout: 60_000 }
+  }
 );

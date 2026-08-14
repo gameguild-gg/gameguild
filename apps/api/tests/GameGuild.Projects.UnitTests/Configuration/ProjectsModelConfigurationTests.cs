@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore.Metadata;
+using GameGuild.Teams;
 
 namespace GameGuild.Projects.UnitTests.Configuration;
 
@@ -36,12 +37,14 @@ public sealed class ProjectsModelConfigurationTests
 
         new ProjectsModelConfiguration().Configure(modelBuilder);
 
+        new TeamsModelConfiguration().Configure(modelBuilder);
+
         Entity<Team>(modelBuilder).GetTableName().Should().Be("project_collaboration_teams");
         Entity<TeamMember>(modelBuilder).GetTableName().Should().Be("project_collaboration_team_members");
 
         Entity<Team>(modelBuilder).FindProperty(nameof(Team.Name))!.GetMaxLength().Should().Be(200);
         Entity<Team>(modelBuilder).FindProperty(nameof(Team.Description))!.GetMaxLength().Should().Be(2000);
-        Entity<TeamMember>(modelBuilder).FindProperty(nameof(TeamMember.Role))!.GetMaxLength().Should().Be(100);
+        Entity<TeamMember>(modelBuilder).FindProperty(nameof(TeamMember.Authority))!.GetMaxLength().Should().Be(30);
 
         Entity<ProjectTeam>(modelBuilder).GetForeignKeys().Should().Contain(foreignKey =>
             foreignKey.PrincipalEntityType.ClrType == typeof(Team) &&

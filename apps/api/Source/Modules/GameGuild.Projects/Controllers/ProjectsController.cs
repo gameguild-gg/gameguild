@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
+using GameGuild.Identity.Users;
 using PermissionType = GameGuild.Identity.Authorization.PermissionType;
 
 
@@ -16,6 +19,7 @@ namespace GameGuild.Projects;
 [Route("v{version:apiVersion}/projects")]
 [Authorize]
 public class ProjectsController : BaseApiController {
+  private static readonly TimeSpan RecentAuthenticationWindow = TimeSpan.FromMinutes(15);
   private readonly ILogger<ProjectsController> _logger;
 
   private readonly IMediator _mediator;
@@ -44,7 +48,7 @@ public class ProjectsController : BaseApiController {
   /// </remarks>
   [HttpGet]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetProjects(
+  public async Task<ActionResult<IEnumerable<ProjectApiResponse>>> GetProjects(
     [FromQuery] ProjectType? type = null,
     [FromQuery] ContentStatus? status = null,
     [FromQuery] ContentVisibility? visibility = null,
@@ -79,40 +83,112 @@ public class ProjectsController : BaseApiController {
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
+    return projects.IsSuccess
+      ? Ok(projects.Value.Select(ProjectApiResponse.FromProject))
+      : ToActionResult(Result.Failure<IEnumerable<ProjectApiResponse>>(projects.Error));
+  }
+
+  [HttpGet("accessible-versions")]
+  public async Task<ActionResult<IReadOnlyList<ProjectVersionOptionProjection>>> GetAccessibleProjectVersions(
+    [FromQuery] int take = 200) {
+    if (!_actorContextAccessor.ActorContext.IsAuthenticated) return Unauthorized();
+    var projects = _authorizationService.ApplyWorkspaceAccess(
+      _context.Set<Project>().AsNoTracking().Where(project => project.DeletedAt == null));
+    var accessibleProjects = await projects
+      .Select(project => new { project.Id, project.Title })
+      .ToListAsync()
+      .ConfigureAwait(false);
+    var projectIds = accessibleProjects.Select(project => project.Id).ToArray();
+    var projectTitles = accessibleProjects.ToDictionary(project => project.Id, project => project.Title);
+    var rows = await _context.Set<ProjectVersion>().AsNoTracking()
+      .Where(version => projectIds.Contains(version.ProjectId) && version.DeletedAt == null)
+      .OrderByDescending(version => version.UpdatedAt)
+      .Take(Math.Clamp(take, 1, 500))
+      .ToListAsync()
+      .ConfigureAwait(false);
+    var versions = rows.Select(version => new ProjectVersionOptionProjection(
+      version.Id,
+      version.ProjectId,
+      projectTitles.GetValueOrDefault(version.ProjectId, string.Empty),
+      version.VersionNumber,
+      version.Status,
+      version.UpdatedAt)).ToList();
+    return Ok(versions);
   }
 
   /// <summary> Get project by ID </summary>
   [HttpGet("{id:guid}")]
   [AllowAnonymous]
-  public async Task<ActionResult<Project>> GetProject(Guid id, [FromQuery] bool includeTeam = true, [FromQuery] bool includeReleases = true, [FromQuery] bool includeCollaborators = true, [FromQuery] bool includeStatistics = false) {
+  public async Task<ActionResult<ProjectApiResponse>> GetProject(Guid id, [FromQuery] bool includeTeam = true, [FromQuery] bool includeReleases = true, [FromQuery] bool includeCollaborators = true, [FromQuery] bool includeStatistics = false) {
     var query = new GetProjectByIdQuery { ProjectId = id, IncludeTeam = includeTeam, IncludeReleases = includeReleases, IncludeCollaborators = includeCollaborators, IncludeStatistics = includeStatistics };
 
     var project = await _mediator.Send(query).ConfigureAwait(false);
 
-    if (project.IsFailure) return ToActionResult(Result.Failure<Project>(project.Error));
+    if (project.IsFailure) return ToActionResult(Result.Failure<ProjectApiResponse>(project.Error));
     if (project.Value == null) { return NotFound(); }
 
-    return Ok(project.Value);
+    return Ok(ProjectApiResponse.FromProject(project.Value));
+  }
+
+  [HttpGet("{id:guid}/versions")]
+  public async Task<ActionResult<IReadOnlyList<ProjectVersionApiResponse>>> GetProjectVersions(Guid id) {
+    if (!await _authorizationService.HasPermissionAsync(id, PermissionType.Read).ConfigureAwait(false)) return NotFound();
+    var versions = await _context.Set<ProjectVersion>()
+      .AsNoTracking()
+      .Where(version => version.ProjectId == id && version.DeletedAt == null)
+      .OrderByDescending(version => version.CreatedAt)
+      .ToListAsync()
+      .ConfigureAwait(false);
+    return Ok(versions.Select(ProjectVersionApiResponse.FromEntity).ToArray());
+  }
+
+  [HttpPost("{id:guid}/versions")]
+  public async Task<ActionResult<ProjectVersionApiResponse>> CreateProjectVersion(Guid id, [FromBody] CreateProjectVersionRequest request) {
+    if (!await _authorizationService.HasPermissionAsync(id, PermissionType.Edit).ConfigureAwait(false)) return NotFound();
+    if (string.IsNullOrWhiteSpace(request.VersionNumber))
+      return UnprocessableEntity(new { code = "Projects.VersionNumberRequired" });
+    var project = await _context.Set<Project>().AsNoTracking()
+      .Where(candidate => candidate.Id == id && candidate.DeletedAt == null)
+      .Select(candidate => new { candidate.Id, candidate.TenantId })
+      .SingleOrDefaultAsync()
+      .ConfigureAwait(false);
+    if (project == null) return NotFound();
+    var normalizedVersion = request.VersionNumber.Trim();
+    if (await _context.Set<ProjectVersion>().AnyAsync(version =>
+        version.ProjectId == id && version.VersionNumber == normalizedVersion && version.DeletedAt == null).ConfigureAwait(false))
+      return Conflict(new { code = "Projects.VersionExists" });
+    if (_actorContextAccessor.ActorContext.SubjectIdAsGuid is not { } actorId) return Unauthorized();
+    var version = new ProjectVersion {
+      Id = Guid.NewGuid(),
+      TenantId = project.TenantId,
+      ProjectId = id,
+      VersionNumber = normalizedVersion,
+      Status = string.IsNullOrWhiteSpace(request.Status) ? "draft" : request.Status.Trim(),
+      ReleaseNotes = string.IsNullOrWhiteSpace(request.ReleaseNotes) ? null : request.ReleaseNotes.Trim(),
+      CreatedById = actorId,
+    };
+    _context.Set<ProjectVersion>().Add(version);
+    await _context.SaveChangesAsync().ConfigureAwait(false);
+    return CreatedAtAction(nameof(GetProjectVersions), new { id }, ProjectVersionApiResponse.FromEntity(version));
   }
 
   /// <summary> Get project by slug </summary>
   [HttpGet("slug/{slug}")]
   [AllowAnonymous]
-  public async Task<ActionResult<Project>> GetProjectBySlug(string slug, [FromQuery] bool includeTeam = true, [FromQuery] bool includeReleases = true, [FromQuery] bool includeCollaborators = true) {
+  public async Task<ActionResult<ProjectApiResponse>> GetProjectBySlug(string slug, [FromQuery] bool includeTeam = true, [FromQuery] bool includeReleases = true, [FromQuery] bool includeCollaborators = true) {
     var query = new GetProjectBySlugQuery { Slug = slug, IncludeTeam = includeTeam, IncludeReleases = includeReleases, IncludeCollaborators = includeCollaborators };
 
     var project = await _mediator.Send(query).ConfigureAwait(false);
 
-    if (project.IsFailure) return ToActionResult(Result.Failure<Project>(project.Error));
+    if (project.IsFailure) return ToActionResult(Result.Failure<ProjectApiResponse>(project.Error));
     if (project.Value == null) { return NotFound(); }
 
-    return Ok(project.Value);
+    return Ok(ProjectApiResponse.FromProject(project.Value));
   }
 
   /// <summary> Create a new project </summary>
   [HttpPost]
-  public async Task<ActionResult<Project>> CreateProject([FromBody] CreateProjectRequest request) {
+  public async Task<ActionResult<ProjectApiResponse>> CreateProject([FromBody] CreateProjectRequest request) {
     if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
     var command = new CreateProjectCommand {
@@ -130,19 +206,20 @@ public class ProjectsController : BaseApiController {
       Status = request.Status,
       Tags = request.Tags,
       TenantId = _actorContextAccessor.ActorContext.TenantId,
+      OwnerTeamId = request.OwnerTeamId,
     };
 
     var result = await _mediator.Send(command).ConfigureAwait(false);
 
     if (result.IsSuccess)
-      return CreatedAtAction(nameof(GetProject), new { id = result.Value.Id }, result.Value);
+      return CreatedAtAction(nameof(GetProject), new { id = result.Value.Id }, ProjectApiResponse.FromProject(result.Value));
 
-    return ToActionResult(result);
+    return ToActionResult(Result.Failure<ProjectApiResponse>(result.Error));
   }
 
   /// <summary> Update an existing project </summary>
   [HttpPut("{id:guid}")]
-  public async Task<ActionResult<Project>> UpdateProject(Guid id, [FromBody] UpdateProjectRequest request) {
+  public async Task<ActionResult<ProjectApiResponse>> UpdateProject(Guid id, [FromBody] UpdateProjectRequest request) {
     var command = new UpdateProjectCommand {
       ProjectId = id,
       Title = request.Title,
@@ -162,12 +239,16 @@ public class ProjectsController : BaseApiController {
 
     var result = await _mediator.Send(command).ConfigureAwait(false);
 
-    return ToActionResult(result);
+    return result.IsSuccess
+      ? Ok(ProjectApiResponse.FromProject(result.Value))
+      : ToActionResult(Result.Failure<ProjectApiResponse>(result.Error));
   }
 
   /// <summary> Delete a project </summary>
   [HttpDelete("{id:guid}")]
   public async Task<ActionResult<bool>> DeleteProject(Guid id, [FromQuery] bool softDelete = true, [FromQuery] string? reason = null) {
+    if (!softDelete && !await HasSensitiveActionAssuranceAsync().ConfigureAwait(false)) return Forbid();
+
     var command = new DeleteProjectCommand { ProjectId = id, DeletedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty, SoftDelete = softDelete, Reason = reason };
 
     var result = await _mediator.Send(command).ConfigureAwait(false);
@@ -175,40 +256,79 @@ public class ProjectsController : BaseApiController {
     return ToActionResult(result);
   }
 
+  private async Task<bool> HasSensitiveActionAssuranceAsync() {
+    var actor = _actorContextAccessor.ActorContext;
+    if (actor.SubjectIdAsGuid is not { } actorId ||
+        actor.TypedAttributes.AuthenticatedAt is not { } authenticatedAt ||
+        authenticatedAt < DateTimeOffset.UtcNow.Subtract(RecentAuthenticationWindow))
+      return false;
+
+    var hasMfa = await _context.Set<UserMfaConfiguration>().AsNoTracking()
+      .AnyAsync(configuration => configuration.UserId == actorId && configuration.IsEnabled)
+      .ConfigureAwait(false);
+    return !hasMfa || actor.IsMfaVerified;
+  }
+
   /// <summary> Publish a project </summary>
   [HttpPost("{id:guid}:publish")]
-  public async Task<ActionResult<Project>> PublishProject(Guid id) {
+  public async Task<ActionResult<ProjectApiResponse>> PublishProject(Guid id) {
     var command = new PublishProjectCommand { ProjectId = id, PublishedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
     var result = await _mediator.Send(command).ConfigureAwait(false);
 
-    return ToActionResult(result);
+    return result.IsSuccess
+      ? Ok(ProjectApiResponse.FromProject(result.Value))
+      : ToActionResult(Result.Failure<ProjectApiResponse>(result.Error));
   }
 
   /// <summary> Unpublish a project </summary>
   [HttpPost("{id:guid}:unpublish")]
-  public async Task<ActionResult<Project>> UnpublishProject(Guid id) {
+  public async Task<ActionResult<ProjectApiResponse>> UnpublishProject(Guid id) {
     var command = new UnpublishProjectCommand { ProjectId = id, UnpublishedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
     var result = await _mediator.Send(command).ConfigureAwait(false);
 
-    return ToActionResult(result);
+    return result.IsSuccess
+      ? Ok(ProjectApiResponse.FromProject(result.Value))
+      : ToActionResult(Result.Failure<ProjectApiResponse>(result.Error));
   }
 
   /// <summary> Archive a project </summary>
   [HttpPost("{id:guid}:archive")]
-  public async Task<ActionResult<Project>> ArchiveProject(Guid id) {
+  public async Task<ActionResult<ProjectApiResponse>> ArchiveProject(Guid id) {
     var command = new ArchiveProjectCommand { ProjectId = id, ArchivedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
     var result = await _mediator.Send(command).ConfigureAwait(false);
 
-    return ToActionResult(result);
+    return result.IsSuccess
+      ? Ok(ProjectApiResponse.FromProject(result.Value))
+      : ToActionResult(Result.Failure<ProjectApiResponse>(result.Error));
+  }
+
+  /// <summary> Restore a soft-deleted project </summary>
+  [HttpPost("{id:guid}:restore")]
+  public async Task<ActionResult<ProjectApiResponse>> RestoreProject(Guid id, CancellationToken cancellationToken) {
+    if (!await _authorizationService
+          .HasPermissionIncludingDeletedAsync(id, PermissionType.Restore, cancellationToken)
+          .ConfigureAwait(false))
+      return NotFound();
+
+    var project = await _context.Set<Project>()
+      .IgnoreQueryFilters()
+      .SingleOrDefaultAsync(candidate => candidate.Id == id && candidate.DeletedAt != null, cancellationToken)
+      .ConfigureAwait(false);
+    if (project == null) return NotFound();
+
+    project.Restore();
+    project.Touch();
+    await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    return Ok(ProjectApiResponse.FromProject(project));
   }
 
   /// <summary> Search projects </summary>
   [HttpGet("search")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> SearchProjects(
+  public async Task<ActionResult<IEnumerable<ProjectApiResponse>>> SearchProjects(
     [FromQuery] string searchTerm,
     [FromQuery] ProjectType? type = null,
     [FromQuery] Guid? categoryId = null,
@@ -223,40 +343,48 @@ public class ProjectsController : BaseApiController {
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
+    return projects.IsSuccess
+      ? Ok(projects.Value.Select(ProjectApiResponse.FromProject))
+      : ToActionResult(Result.Failure<IEnumerable<ProjectApiResponse>>(projects.Error));
   }
 
   /// <summary> Get popular projects </summary>
   [HttpGet("popular")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetPopularProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
+  public async Task<ActionResult<IEnumerable<ProjectApiResponse>>> GetPopularProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
     var query = new GetPopularProjectsQuery { Type = type, Take = Math.Min(take, 50) };
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
+    return projects.IsSuccess
+      ? Ok(projects.Value.Select(ProjectApiResponse.FromProject))
+      : ToActionResult(Result.Failure<IEnumerable<ProjectApiResponse>>(projects.Error));
   }
 
   /// <summary> Get recent projects </summary>
   [HttpGet("recent")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetRecentProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
+  public async Task<ActionResult<IEnumerable<ProjectApiResponse>>> GetRecentProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
     var query = new GetRecentProjectsQuery { Type = type, Take = Math.Min(take, 50) };
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
+    return projects.IsSuccess
+      ? Ok(projects.Value.Select(ProjectApiResponse.FromProject))
+      : ToActionResult(Result.Failure<IEnumerable<ProjectApiResponse>>(projects.Error));
   }
 
   /// <summary> Get featured projects </summary>
   [HttpGet("featured")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetFeaturedProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
+  public async Task<ActionResult<IEnumerable<ProjectApiResponse>>> GetFeaturedProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
     var query = new GetFeaturedProjectsQuery { Type = type, Take = Math.Min(take, 50) };
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
+    return projects.IsSuccess
+      ? Ok(projects.Value.Select(ProjectApiResponse.FromProject))
+      : ToActionResult(Result.Failure<IEnumerable<ProjectApiResponse>>(projects.Error));
   }
 
   /// <summary> Get project statistics </summary>
@@ -273,23 +401,27 @@ public class ProjectsController : BaseApiController {
   /// <summary> Get projects by category </summary>
   [HttpGet("category/{categoryId:guid}")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCategory(Guid categoryId, [FromQuery] ContentStatus? status = null, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProjectApiResponse>>> GetProjectsByCategory(Guid categoryId, [FromQuery] ContentStatus? status = null, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var query = new GetProjectsByCategoryQuery { CategoryId = categoryId, Status = status, Skip = skip, Take = Math.Min(take, 100) };
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
+    return projects.IsSuccess
+      ? Ok(projects.Value.Select(ProjectApiResponse.FromProject))
+      : ToActionResult(Result.Failure<IEnumerable<ProjectApiResponse>>(projects.Error));
   }
 
   /// <summary> Get projects by creator </summary>
   [HttpGet("creator/{creatorId:guid}")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCreator(Guid creatorId, [FromQuery] ContentStatus? status = null, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProjectApiResponse>>> GetProjectsByCreator(Guid creatorId, [FromQuery] ContentStatus? status = null, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var query = new GetProjectsByCreatorQuery { CreatorId = creatorId, Status = status, Skip = skip, Take = Math.Min(take, 100) };
 
     var projects = await _mediator.Send(query).ConfigureAwait(false);
 
-    return projects.IsSuccess ? Ok(projects.Value) : ToActionResult(projects);
+    return projects.IsSuccess
+      ? Ok(projects.Value.Select(ProjectApiResponse.FromProject))
+      : ToActionResult(Result.Failure<IEnumerable<ProjectApiResponse>>(projects.Error));
   }
 
   /// <summary> Get available role templates for projects </summary>
@@ -313,12 +445,22 @@ public class ProjectsController : BaseApiController {
   public async Task<ActionResult<IEnumerable<ProjectInvitationDto>>> GetMyProjectInvitations() {
     var actor = _actorContextAccessor.ActorContext;
     var userId = actor.SubjectIdAsGuid;
-    if (!userId.HasValue) return Unauthorized();
+    if (!userId.HasValue || !actor.TenantId.HasValue) return Unauthorized();
+    var email = await _context.Set<User>().AsNoTracking()
+      .Where(user => user.Id == userId.Value && user.IsActive && user.DeletedAt == null)
+      .Select(user => user.Email)
+      .SingleOrDefaultAsync().ConfigureAwait(false);
+    var normalizedEmail = email?.Trim().ToLower();
 
     var invitations = await _context.Set<ProjectInvitation>()
       .AsNoTracking()
       .Include(invitation => invitation.Project)
-      .Where(invitation => invitation.InvitedUserId == userId.Value && invitation.Status == ProjectInvitationStatus.Pending)
+      .Where(invitation =>
+        invitation.TenantId == actor.TenantId &&
+        invitation.Status == ProjectInvitationStatus.Pending &&
+        (invitation.InvitedUserId == userId.Value ||
+         (invitation.InvitedUserId == null && normalizedEmail != null && invitation.InvitedEmail != null &&
+          invitation.InvitedEmail.ToLower() == normalizedEmail)))
       .OrderByDescending(invitation => invitation.InvitedAt)
       .ToListAsync()
       .ConfigureAwait(false);
@@ -355,7 +497,9 @@ public class ProjectsController : BaseApiController {
 
     var actor = _actorContextAccessor.ActorContext;
     var userId = actor.SubjectIdAsGuid;
-    if (!userId.HasValue || invitation.InvitedUserId != userId.Value) return Forbid();
+    if (!userId.HasValue || !await CanRespondToInvitationAsync(invitation, userId.Value).ConfigureAwait(false)) return Forbid();
+    if (!TryNormalizeProjectPermissions(invitation.Permissions, [], out var invitationPermissions))
+      return UnprocessableEntity(new { Code = "Projects.InvalidProjectPermissions" });
 
     invitation.Accept();
 
@@ -365,10 +509,11 @@ public class ProjectsController : BaseApiController {
 
     if (collaborator == null) {
       collaborator = new ProjectCollaborator {
+        TenantId = invitation.Project.TenantId,
         ProjectId = invitation.ProjectId,
         UserId = userId.Value,
         Role = invitation.Role,
-        Permissions = invitation.Permissions,
+        Permissions = invitationPermissions,
         IsActive = true,
         JoinedAt = SystemClock.UtcNow
       };
@@ -376,7 +521,7 @@ public class ProjectsController : BaseApiController {
     }
     else {
       collaborator.Role = invitation.Role;
-      collaborator.Permissions = invitation.Permissions;
+      collaborator.Permissions = invitationPermissions;
       collaborator.IsActive = true;
       collaborator.LeftAt = null;
     }
@@ -395,7 +540,7 @@ public class ProjectsController : BaseApiController {
 
     var actor = _actorContextAccessor.ActorContext;
     var userId = actor.SubjectIdAsGuid;
-    if (!userId.HasValue || invitation.InvitedUserId != userId.Value) return Forbid();
+    if (!userId.HasValue || !await CanRespondToInvitationAsync(invitation, userId.Value).ConfigureAwait(false)) return Forbid();
 
     invitation.Decline();
     await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -434,6 +579,13 @@ public class ProjectsController : BaseApiController {
 
     var actor = _actorContextAccessor.ActorContext;
     var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
+    if (!TryNormalizeProjectPermissions(
+          request.Permissions,
+          [PermissionType.Read, PermissionType.Comment],
+          out var permissions))
+      return UnprocessableEntity(new { Code = "Projects.InvalidProjectPermissions" });
+    if (!await IsActiveProjectTenantMemberAsync(project, request.UserId).ConfigureAwait(false))
+      return UnprocessableEntity(new { Code = "Projects.ActiveTenantMembershipRequired" });
 
     // Check if user is already a collaborator
     var exists = await _context.Set<ProjectCollaborator>()
@@ -441,10 +593,11 @@ public class ProjectsController : BaseApiController {
     if (exists) return Conflict(new { Message = "User is already a collaborator" });
 
     var collaborator = new ProjectCollaborator {
+      TenantId = project.TenantId,
       ProjectId = id,
       UserId = request.UserId,
       Role = request.Role ?? "Collaborator",
-      Permissions = request.Permissions ?? "read,comment",
+      Permissions = permissions,
       IsActive = true,
       JoinedAt = SystemClock.UtcNow
     };
@@ -475,7 +628,11 @@ public class ProjectsController : BaseApiController {
     var userId = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
 
     if (request.Role != null) collaborator.Role = request.Role;
-    if (request.Permissions != null) collaborator.Permissions = request.Permissions;
+    if (request.Permissions != null) {
+      if (!TryNormalizeProjectPermissions(request.Permissions, [], out var permissions))
+        return UnprocessableEntity(new { Code = "Projects.InvalidProjectPermissions" });
+      collaborator.Permissions = permissions;
+    }
 
     await _context.SaveChangesAsync().ConfigureAwait(false);
 
@@ -520,6 +677,10 @@ public class ProjectsController : BaseApiController {
 
     var actor = _actorContextAccessor.ActorContext;
     var userId = actor.SubjectIdAsGuid ?? Guid.Empty;
+    if (!TryNormalizeProjectPermissions(request.Permissions, [PermissionType.Read], out var permissions))
+      return UnprocessableEntity(new { Code = "Projects.InvalidProjectPermissions" });
+    if (!await IsActiveProjectTenantMemberAsync(project, request.UserId).ConfigureAwait(false))
+      return UnprocessableEntity(new { Code = "Projects.ActiveTenantMembershipRequired" });
     // Check if already shared
     var existing = await _context.Set<ProjectCollaborator>()
       .FirstOrDefaultAsync(c => c.ProjectId == id && c.UserId == request.UserId).ConfigureAwait(false);
@@ -528,14 +689,16 @@ public class ProjectsController : BaseApiController {
       // Re-activate if previously removed, or update role
       existing.IsActive = true;
       existing.Role = request.Role ?? "Viewer";
-      existing.Permissions = request.Permissions ?? "read";
+      existing.Permissions = permissions;
+      existing.TenantId = project.TenantId;
       existing.LeftAt = null;
     } else {
       var collaborator = new ProjectCollaborator {
+        TenantId = project.TenantId,
         ProjectId = id,
         UserId = request.UserId,
         Role = request.Role ?? "Viewer",
-        Permissions = request.Permissions ?? "read",
+        Permissions = permissions,
         IsActive = true,
         JoinedAt = SystemClock.UtcNow
       };
@@ -561,14 +724,20 @@ public class ProjectsController : BaseApiController {
     if (!request.UserId.HasValue && string.IsNullOrWhiteSpace(request.Email)) {
       return BadRequest(new { Message = "Provide either a user id or an email address." });
     }
+    if (!TryNormalizeProjectPermissions(request.Permissions, [PermissionType.Read], out var permissions))
+      return UnprocessableEntity(new { Code = "Projects.InvalidProjectPermissions" });
+    if (request.UserId.HasValue &&
+        !await IsActiveProjectTenantMemberAsync(project, request.UserId.Value).ConfigureAwait(false))
+      return UnprocessableEntity(new { Code = "Projects.ActiveTenantMembershipRequired" });
 
     var invitation = new ProjectInvitation {
+      TenantId = project.TenantId,
       ProjectId = id,
       InvitedUserId = request.UserId,
       InvitedEmail = request.Email?.Trim(),
       InvitedByUserId = userId,
       Role = request.Role ?? "Viewer",
-      Permissions = request.Permissions ?? "read",
+      Permissions = permissions,
       ExpiresAt = request.ExpiresAt,
       Token = Guid.NewGuid().ToString("N"),
     };
@@ -584,6 +753,58 @@ public class ProjectsController : BaseApiController {
       .Include(invitation => invitation.Project)
       .FirstOrDefaultAsync(invitation => invitation.Token == invitationToken)
       .ConfigureAwait(false);
+  }
+
+  private async Task<bool> CanRespondToInvitationAsync(ProjectInvitation invitation, Guid userId) {
+    var actor = _actorContextAccessor.ActorContext;
+    var projectTenantId = invitation.Project.TenantId;
+    if (!projectTenantId.HasValue || actor.TenantId != projectTenantId ||
+        !await IsActiveProjectTenantMemberAsync(invitation.Project, userId).ConfigureAwait(false))
+      return false;
+
+    if (invitation.InvitedUserId.HasValue) return invitation.InvitedUserId == userId;
+    if (string.IsNullOrWhiteSpace(invitation.InvitedEmail)) return false;
+
+    var email = await _context.Set<User>().AsNoTracking()
+      .Where(user => user.Id == userId && user.IsActive && user.DeletedAt == null)
+      .Select(user => user.Email)
+      .SingleOrDefaultAsync()
+      .ConfigureAwait(false);
+    return email != null && string.Equals(email, invitation.InvitedEmail, StringComparison.OrdinalIgnoreCase);
+  }
+
+  private Task<bool> IsActiveProjectTenantMemberAsync(Project project, Guid userId) {
+    if (!project.TenantId.HasValue) return Task.FromResult(false);
+    return _context.Set<TenantMember>().AsNoTracking().AnyAsync(member =>
+      member.UserId == userId &&
+      member.TenantId == project.TenantId.Value &&
+      member.IsActive &&
+      member.DeletedAt == null);
+  }
+
+  private static bool TryNormalizeProjectPermissions(
+    string? rawPermissions,
+    IReadOnlyCollection<PermissionType> defaults,
+    out string normalized) {
+    var tokens = string.IsNullOrWhiteSpace(rawPermissions)
+      ? []
+      : rawPermissions
+        .Split([',', ';', '|'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+    var parsed = ProjectPermissionSet.Parse(tokens);
+    if (tokens.Length > 0 && parsed.Length != tokens.Length) {
+      normalized = string.Empty;
+      return false;
+    }
+
+    var effective = parsed.Length > 0 ? parsed : defaults.Distinct().ToArray();
+    if (effective.Length == 0 || effective.Any(permission => !ProjectPermissionSet.All.Contains(permission))) {
+      normalized = string.Empty;
+      return false;
+    }
+    normalized = string.Join(',', ProjectPermissionSet.Names(effective));
+    return true;
   }
 }
 
@@ -614,7 +835,23 @@ public sealed record CreateProjectRequest {
   public ContentStatus Status { get; init; } = ContentStatus.Draft;
 
   public List<string>? Tags { get; init; }
+
+  public Guid? OwnerTeamId { get; init; }
 }
+
+public sealed class CreateProjectVersionRequest {
+  [Required, MaxLength(50)] public string VersionNumber { get; set; } = string.Empty;
+  [MaxLength(50)] public string? Status { get; set; }
+  [MaxLength(10000)] public string? ReleaseNotes { get; set; }
+}
+
+public sealed record ProjectVersionOptionProjection(
+  Guid Id,
+  Guid ProjectId,
+  string ProjectTitle,
+  string VersionNumber,
+  string Status,
+  DateTime UpdatedAt);
 
 public sealed record UpdateProjectRequest {
   public string? Title { get; init; }

@@ -627,7 +627,8 @@ public class LocalAuthServiceTests
             Token = "replacement-hash",
             ExpiresAt = SystemClock.UtcNow.AddDays(5),
             IsRevoked = false,
-            CreatedByIp = "127.0.0.1"
+            CreatedByIp = "127.0.0.1",
+            CreatedAt = SystemClock.UtcNow.AddMinutes(-10)
         };
 
         _refreshTokenHasherMock.Setup(x => x.HashToken("rotated-token")).Returns("old-hash");
@@ -635,7 +636,7 @@ public class LocalAuthServiceTests
         _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("old-hash", default)).ReturnsAsync(rotatedToken);
         _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("replacement-hash", default)).ReturnsAsync(replacementToken);
         _jwtTokenServiceMock
-            .Setup(x => x.GenerateAccessTokenAsync(userId, It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.GenerateAccessTokenAsync(userId, It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("replacement-access-token");
 
         var result = await _sut.RefreshTokenAsync(new RefreshTokenRequest { RefreshToken = "rotated-token" });
@@ -643,7 +644,7 @@ public class LocalAuthServiceTests
         result.AccessToken.Should().Be("replacement-access-token");
         result.RefreshToken.Should().Be("replacement-token");
         _jwtTokenServiceMock.Verify(
-            x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()),
+            x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _refreshTokenRepoMock.Verify(x => x.UpdateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -703,15 +704,16 @@ public class LocalAuthServiceTests
             Token = "hashed",
             ExpiresAt = DateTime.UtcNow.AddDays(5),
             IsRevoked = false,
-            CreatedByIp = "127.0.0.1"
+            CreatedByIp = "127.0.0.1",
+            CreatedAt = DateTime.UtcNow.AddHours(-3)
         };
 
         _refreshTokenHasherMock.Setup(x => x.HashToken("valid-token")).Returns("hashed");
         _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("hashed", default)).ReturnsAsync(storedToken);
 
-        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(userId, It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(userId, It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.Is<DateTimeOffset>(value => value.UtcDateTime == storedToken.CreatedAt), It.IsAny<CancellationToken>()))
             .ReturnsAsync("new-access-token");
-        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(userId, It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(userId, It.IsAny<DeviceInfo>(), It.Is<DateTimeOffset>(value => value.UtcDateTime == storedToken.CreatedAt), It.IsAny<CancellationToken>()))
             .ReturnsAsync("new-refresh-token");
 
         _refreshTokenRepoMock.Setup(x => x.UpdateAsync(It.IsAny<RefreshToken>(), default))
@@ -744,7 +746,8 @@ public class LocalAuthServiceTests
             UserId = user.Id,
             Token = "hashed",
             ExpiresAt = SystemClock.UtcNow.AddDays(5),
-            IsRevoked = false
+            IsRevoked = false,
+            CreatedAt = SystemClock.UtcNow.AddMinutes(-5)
         };
         AddTenantMemberCommand? capturedCommand = null;
 
@@ -768,9 +771,9 @@ public class LocalAuthServiceTests
             .Setup(x => x.Send(It.IsAny<AddTenantMemberCommand>(), It.IsAny<CancellationToken>()))
             .Callback<IRequest<AddTenantMemberResponse>, CancellationToken>((request, _) => capturedCommand = (AddTenantMemberCommand)request)
             .ReturnsAsync(new AddTenantMemberResponse { Success = true, MemberId = Guid.NewGuid() });
-        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(user.Id, user.Email, It.IsAny<string[]>(), defaultTenant.Id, It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(user.Id, user.Email, It.IsAny<string[]>(), defaultTenant.Id, It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("new-access-token");
-        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(user.Id, It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(user.Id, It.IsAny<DeviceInfo>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("new-refresh-token");
         _refreshTokenRepoMock.Setup(x => x.UpdateAsync(It.IsAny<RefreshToken>(), default)).ReturnsAsync(storedToken);
 
@@ -791,15 +794,16 @@ public class LocalAuthServiceTests
             Token = "hashed",
             ExpiresAt = DateTime.UtcNow.AddDays(5),
             IsRevoked = false,
-            CreatedByIp = "127.0.0.1"
+            CreatedByIp = "127.0.0.1",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-5)
         };
 
         _refreshTokenHasherMock.Setup(x => x.HashToken(It.IsAny<string>())).Returns("hashed");
         _refreshTokenRepoMock.Setup(x => x.GetByTokenAsync("hashed", default)).ReturnsAsync(storedToken);
 
-        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("at");
-        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
+        _jwtTokenServiceMock.Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("new-rt");
         _refreshTokenRepoMock.Setup(x => x.UpdateAsync(It.IsAny<RefreshToken>(), default))
             .ReturnsAsync(storedToken);

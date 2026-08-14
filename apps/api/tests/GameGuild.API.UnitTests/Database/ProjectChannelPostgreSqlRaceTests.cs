@@ -617,7 +617,7 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
             .Returns(Task.CompletedTask);
         return await new CreateTestingRequestCommandHandler(
                 Mock.Of<ITestingRequestRepository>(),
-                new TestingRequestService(context, operations),
+                new TestingRequestService(operations, Mock.Of<ITestingParticipantOperations>()),
                 mediator.Object)
             .Handle(new CreateTestingRequestCommand(
                 projectVersionId,

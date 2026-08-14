@@ -342,6 +342,10 @@ public class LocalAuthService(
 
         // Create device info for refresh token
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
+        var authenticatedAt = new DateTimeOffset(
+            DateTime.SpecifyKind(
+                activeToken.CreatedAt > DateTime.UnixEpoch ? activeToken.CreatedAt : now,
+                DateTimeKind.Utc));
 
         // Generate new tokens (token rotation)
         var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
@@ -350,6 +354,7 @@ public class LocalAuthService(
             tenantAccessContext.Roles.ToArray(),
             tenantAccessContext.TenantId,
             tokenVersion,
+            authenticatedAt,
             cancellationToken).ConfigureAwait(false);
         var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
         string newRefreshToken;
@@ -362,7 +367,7 @@ public class LocalAuthService(
         }
         else
         {
-            newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
+            newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, authenticatedAt, cancellationToken).ConfigureAwait(false);
             refreshTokenExpiresAt = now.AddDays(refreshTokenExpiryDays);
 
             // Revoke old token (token rotation for security)

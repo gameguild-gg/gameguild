@@ -6,15 +6,59 @@ public class UploadAssetCommandHandlerTests
 {
     private readonly Mock<IAssetUploadService> _uploadServiceMock;
     private readonly Mock<IAssetContentRepository> _contentRepositoryMock;
+    private readonly Mock<IAssetUploadAuthorizationService> _authorizationServiceMock;
     private readonly UploadAssetHandler _handler;
 
     public UploadAssetCommandHandlerTests()
     {
         _uploadServiceMock = new Mock<IAssetUploadService>();
         _contentRepositoryMock = new Mock<IAssetContentRepository>();
+        _authorizationServiceMock = new Mock<IAssetUploadAuthorizationService>();
+        _authorizationServiceMock.Setup(service => service.CanUploadAsync(
+                It.IsAny<string?>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<Guid>(),
+                It.IsAny<Guid?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _handler = new UploadAssetHandler(
             _uploadServiceMock.Object,
-            _contentRepositoryMock.Object);
+            _contentRepositoryMock.Object,
+            _authorizationServiceMock.Object);
+    }
+
+    [Fact]
+    public async Task Handle_ParentAuthorizationDenied_DoesNotUpload()
+    {
+        using var stream = new MemoryStream([1, 2, 3]);
+        var command = new UploadAssetCommand(
+            stream,
+            "private-build.zip",
+            "application/zip",
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            ParentResourceType: "Project",
+            ParentResourceId: Guid.NewGuid());
+        _authorizationServiceMock.Setup(service => service.CanUploadAsync(
+                command.ParentResourceType,
+                command.ParentResourceId,
+                command.FolderId,
+                command.UserId,
+                command.TenantId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.Error.Should().Be("Forbidden");
+        _uploadServiceMock.Verify(service => service.UploadAsync(
+            It.IsAny<Stream>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<Guid>(),
+            It.IsAny<UploadAssetOptions>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -211,6 +255,7 @@ public class UploadAssetCommandHandlerTests
     {
         // Arrange
         var parentResourceId = Guid.NewGuid();
+        var folderId = Guid.NewGuid();
         using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
         var command = new UploadAssetCommand(
             stream,
@@ -221,7 +266,8 @@ public class UploadAssetCommandHandlerTests
             DisplayName: "My Document",
             AccessPolicy: AssetAccessPolicy.Public,
             ParentResourceType: "Course",
-            ParentResourceId: parentResourceId);
+            ParentResourceId: parentResourceId,
+            FolderId: folderId);
 
         UploadAssetOptions? capturedOptions = null;
         var uploadResult = new AssetUploadResult(true, Guid.NewGuid(), Guid.NewGuid(), null);
@@ -252,6 +298,8 @@ public class UploadAssetCommandHandlerTests
         capturedOptions.AccessPolicy.Should().Be(AssetAccessPolicy.Public);
         capturedOptions.ParentResourceType.Should().Be("Course");
         capturedOptions.ParentResourceId.Should().Be(parentResourceId);
+        capturedOptions.FolderId.Should().Be(folderId);
+        capturedOptions.TenantId.Should().Be(command.TenantId);
     }
 
     [Fact]

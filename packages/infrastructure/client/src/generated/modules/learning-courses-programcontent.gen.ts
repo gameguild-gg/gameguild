@@ -17,7 +17,7 @@ export class LearningCoursesProgramcontentModule {
 
   /**
    */
-  async getCoursesByProgramIdContent(programId: string, query?: { level?: string }): Promise<Result<Array<Types.LearningCoursesProgramContent>, ApiError>> {
+  async getCoursesContent(programId: string, query?: { level?: string }): Promise<Result<Array<Types.LearningCoursesProgramContent>, ApiError>> {
     const url = `/v1/courses/${programId}/content`;
 
     const result = await this.client.request({
@@ -163,7 +163,7 @@ export class LearningCoursesProgramcontentModule {
 
   /**
    */
-  async getCoursesByProgramIdContentById(programId: string, id: string): Promise<Result<Types.LearningCoursesProgramContent, ApiError>> {
+  async getCoursesContentById(programId: string, id: string): Promise<Result<Types.LearningCoursesProgramContent, ApiError>> {
     const url = `/v1/courses/${programId}/content/${id}`;
 
     const result = await this.client.request({

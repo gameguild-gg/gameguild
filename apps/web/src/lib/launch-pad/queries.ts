@@ -1,4 +1,4 @@
-import { getToken } from '@/auth';
+import { auth, getToken } from '@/auth';
 import { cache } from 'react';
 
 export type LaunchPlanStatus = 'Draft' | 'Preparing' | 'Ready' | 'Launched' | 'Paused' | number;
@@ -45,8 +45,12 @@ export interface LaunchProjectOption {
 async function launchPadApiGet<T>(path: string, revalidate = 30): Promise<T | null> {
   const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   const token = await getToken();
+  const tenantId = (await auth().catch(() => null))?.tenantId;
   const response = await fetch(`${apiUrl}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(tenantId ? { 'X-Tenant-Id': tenantId } : {}),
+    },
     next: { revalidate },
   });
 
@@ -59,6 +63,94 @@ async function launchPadApiGet<T>(path: string, revalidate = 30): Promise<T | nu
 
   return (await response.json()) as T;
 }
+
+export type LaunchPadEventStatus = 'Draft' | 'ApplicationsOpen' | 'ApplicationsClosed' | 'Scheduled' | 'Active' | 'Completed' | 'Cancelled' | 'Archived' | number;
+export type LaunchPadApplicationStatus = 'Draft' | 'Submitted' | 'UnderReview' | 'Waitlisted' | 'Approved' | 'Rejected' | 'Withdrawn' | number;
+export type LaunchPadParticipantStatus = 'Registered' | 'Waitlisted' | 'CheckedIn' | 'Attended' | 'Completed' | 'Cancelled' | 'NoShow' | number;
+
+export interface LaunchPadEvent {
+  id: string;
+  name: string;
+  description?: string | null;
+  startsAt: string;
+  endsAt: string;
+  status: LaunchPadEventStatus;
+  applicationsOpenAt?: string | null;
+  applicationsCloseAt?: string | null;
+}
+
+export interface LaunchPadSlot {
+  id: string;
+  eventId: string;
+  name: string;
+  role: string | number;
+  capacity: number;
+  reservedCount: number;
+  startsAt: string;
+  endsAt: string;
+}
+
+export interface LaunchPadEventDetail {
+  event: LaunchPadEvent;
+  slots: LaunchPadSlot[];
+}
+
+export interface LaunchPadApplication {
+  id: string;
+  eventId: string;
+  projectId: string;
+  projectVersionId: string;
+  submittedByUserId: string;
+  status: LaunchPadApplicationStatus;
+  pitch?: string | null;
+  submittedAt: string;
+}
+
+export interface LaunchPadRegistration {
+  id: string;
+  slotId: string;
+  userId: string;
+  status: LaunchPadParticipantStatus;
+  registeredAt: string;
+}
+
+export interface LaunchPadAnalytics {
+  events: number;
+  completedEvents: number;
+  applications: number;
+  approvedApplications: number;
+  registrations: number;
+  completedRegistrations: number;
+}
+
+export const getPublicLaunchPadEvents = cache(async (): Promise<LaunchPadEvent[]> =>
+  (await launchPadApiGet<LaunchPadEvent[]>('/v1/launch-pad/events/public', 30)) ?? []);
+
+export const getPublicLaunchPadEvent = cache(async (eventId: string): Promise<LaunchPadEventDetail | null> =>
+  launchPadApiGet<LaunchPadEventDetail>(`/v1/launch-pad/events/public/${eventId}`, 15));
+
+export const getManagedLaunchPadEvents = cache(async (): Promise<LaunchPadEvent[]> =>
+  (await launchPadApiGet<LaunchPadEvent[]>('/v1/launch-pad/events/management', 0)) ?? []);
+
+export const getManagedLaunchPadEvent = cache(async (eventId: string): Promise<LaunchPadEventDetail | null> =>
+  launchPadApiGet<LaunchPadEventDetail>(`/v1/launch-pad/events/${eventId}/management`, 0));
+
+export const getMyLaunchPadApplications = cache(async (): Promise<LaunchPadApplication[]> =>
+  (await launchPadApiGet<LaunchPadApplication[]>('/v1/launch-pad/events/applications/me', 0)) ?? []);
+
+export const getMyLaunchPadRegistrations = cache(async (): Promise<LaunchPadRegistration[]> =>
+  (await launchPadApiGet<LaunchPadRegistration[]>('/v1/launch-pad/events/registrations/me', 0)) ?? []);
+
+export const getManagedLaunchPadApplications = cache(async (eventIds: string[]): Promise<LaunchPadApplication[]> =>
+  (await Promise.all(eventIds.map((eventId) => launchPadApiGet<LaunchPadApplication[]>(`/v1/launch-pad/events/${eventId}/applications/management`, 0))))
+    .flatMap((items) => items ?? []));
+
+export const getManagedLaunchPadRegistrations = cache(async (eventIds: string[]): Promise<LaunchPadRegistration[]> =>
+  (await Promise.all(eventIds.map((eventId) => launchPadApiGet<LaunchPadRegistration[]>(`/v1/launch-pad/events/${eventId}/registrations/management`, 0))))
+    .flatMap((items) => items ?? []));
+
+export const getLaunchPadAnalytics = cache(async (): Promise<LaunchPadAnalytics | null> =>
+  launchPadApiGet<LaunchPadAnalytics>('/v1/launch-pad/events/analytics', 30));
 
 export const getLaunchPadDashboard = cache(async (): Promise<LaunchPlan[]> => {
   return (await launchPadApiGet<LaunchPlan[]>('/v1/launch-pad', 30)) ?? [];

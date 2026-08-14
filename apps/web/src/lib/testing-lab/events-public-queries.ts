@@ -29,6 +29,14 @@ export interface PublicTestingEventsDirectoryOptions {
   take?: number;
 }
 
+export interface TestingParticipationOverview {
+  applications: TestingLabTestingProjectApplicationProjection[];
+  registrations: TestingLabTestingSlotRegistrationProjection[];
+  feedbackObligations: TestingLabTestingFeedbackObligationProjection[];
+  isAuthenticated: boolean;
+  accessIssues: string[];
+}
+
 function createPublicModules() {
   const client = createServerClient({
     baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
@@ -125,5 +133,28 @@ export async function getPublicTestingEventExperience(
       registrationsResult.issue,
       obligationsResult.issue,
     ].filter((issue): issue is string => Boolean(issue)),
+  };
+}
+
+export async function getTestingParticipationOverview(): Promise<TestingParticipationOverview> {
+  const session = await auth().catch(() => null);
+  if (!session?.user) {
+    return { applications: [], registrations: [], feedbackObligations: [], isAuthenticated: false, accessIssues: [] };
+  }
+
+  const api = createAuthenticatedModules();
+  const [applicationsResult, registrationsResult, obligationsResult] = await Promise.all([
+    read(api.events.getTestingEventsApplicationsMe(), 'Your project applications'),
+    read(api.participation.getTestingEventsRegistrationsMe(), 'Your tester registrations'),
+    read(api.participation.getTestingEventsFeedbackObligationsMe(), 'Your feedback obligations'),
+  ]);
+
+  return {
+    applications: applicationsResult.data ?? [],
+    registrations: registrationsResult.data ?? [],
+    feedbackObligations: obligationsResult.data ?? [],
+    isAuthenticated: true,
+    accessIssues: [applicationsResult.issue, registrationsResult.issue, obligationsResult.issue]
+      .filter((issue): issue is string => Boolean(issue)),
   };
 }

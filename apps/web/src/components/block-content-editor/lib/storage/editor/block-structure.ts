@@ -18,21 +18,20 @@ import {
   type TypedBlock,
   type TypedBlockList,
   type TypedBlockStorage,
-} from "@game-guild/block-list"
-import type { AudioData } from "../../../nodes/audio-node"
-import type { GalleryData } from "../../../nodes/gallery-node"
-import type { HeaderData } from "../../../nodes/header-node"
-import type { HTMLData } from "../../../nodes/html-node"
-import type { ImageData } from "../../../nodes/image-node"
-import type { MarkdownData } from "../../../nodes/markdown-node"
-import type { MermaidData } from "../../../nodes/mermaid-node"
-import type { ProjectData as ProjectNodeData } from "../../../nodes/project-node"
-import type { RichTextData } from "../../../nodes/rich-text-node"
-import type { SourceData } from "../../../nodes/source-node"
-import type { VegaLiteData } from "../../../nodes/vega-lite-node"
-import type { VideoData } from "../../../nodes/video-node"
-import type { CodeStudioData } from "../../../extras/code-studio/types"
-import type { QuizEntry } from "../../../extras/quiz"
+} from "@game-guild/block-list";
+import type { AudioData } from "../../../nodes/audio-node";
+import type { GalleryData } from "../../../nodes/gallery-node";
+import type { HeaderData } from "../../../nodes/header-node";
+import type { HTMLData } from "../../../nodes/html-node";
+import type { ImageData } from "../../../nodes/image-node";
+import type { MarkdownData } from "../../../nodes/markdown-node";
+import type { MermaidData, VegaLiteData } from "@game-guild/lexical-surface";
+import type { ProjectData as ProjectNodeData } from "../../../nodes/project-node";
+import type { RichTextData } from "../../../nodes/rich-text-node";
+import type { SourceData } from "../../../nodes/source-node";
+import type { VideoData } from "../../../nodes/video-node";
+import type { CodeStudioData } from "../../../extras/code-studio/types";
+import type { QuizEntry } from "../../../extras/quiz";
 
 // ============================================================================
 // Block types — the 21 decorator kinds supported by the engine
@@ -54,30 +53,30 @@ export const BLOCK_CELL_TYPES = [
   "rich-text",
   "header",
   "project",
-] as const
+] as const;
 
-export type BlockCellType = (typeof BLOCK_CELL_TYPES)[number]
+export type BlockCellType = (typeof BLOCK_CELL_TYPES)[number];
 
 // ============================================================================
 // BlockDataMap — type-level mapping from BlockCellType to its data shape
 // ============================================================================
 
 export interface BlockDataMap {
-  "quiz": QuizEntry
-  "code-studio": CodeStudioData
-  "image": ImageData
-  "video": VideoData
-  "audio": AudioData
-  "gallery": GalleryData
-  "mermaid": MermaidData
-  "vega-lite": VegaLiteData
-  "presentation": unknown
-  "source": SourceData
-  "markdown": MarkdownData
-  "html": HTMLData
-  "rich-text": RichTextData
-  "header": HeaderData
-  "project": ProjectNodeData
+  quiz: QuizEntry;
+  "code-studio": CodeStudioData;
+  image: ImageData;
+  video: VideoData;
+  audio: AudioData;
+  gallery: GalleryData;
+  mermaid: MermaidData;
+  "vega-lite": VegaLiteData;
+  presentation: unknown;
+  source: SourceData;
+  markdown: MarkdownData;
+  html: HTMLData;
+  "rich-text": RichTextData;
+  header: HeaderData;
+  project: ProjectNodeData;
 }
 
 // ============================================================================
@@ -87,9 +86,9 @@ export interface BlockDataMap {
 export type Block<T extends BlockCellType = BlockCellType> = Extract<
   TypedBlock<BlockDataMap>,
   { type: T }
->
+>;
 
-export type BlockArray = TypedBlockList<BlockDataMap>
+export type BlockArray = TypedBlockList<BlockDataMap>;
 
 // ============================================================================
 // BlockStorage — persistence format
@@ -99,11 +98,12 @@ export type BlockArray = TypedBlockList<BlockDataMap>
 // ============================================================================
 
 /** `[id, type]` pair — one per block, in render order. */
-export type BlockOrderEntry<T extends BlockCellType = BlockCellType> = BlockListOrderEntry<T>
+export type BlockOrderEntry<T extends BlockCellType = BlockCellType> =
+  BlockListOrderEntry<T>;
 
 /** Union of every possible block data payload (one per known block type). */
-export type AnyBlockData = BlockDataMap[BlockCellType]
+export type AnyBlockData = BlockDataMap[BlockCellType];
 
-export type BlockStorage = TypedBlockStorage<BlockDataMap>
+export type BlockStorage = TypedBlockStorage<BlockDataMap>;
 
-export { nextBlockId } from "@game-guild/block-list"
+export { nextBlockId } from "@game-guild/block-list";

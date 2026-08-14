@@ -44,6 +44,7 @@ const apiProject = {
   updatedAt: "2026-08-13T00:00:00.000Z",
   releases: [],
   collaborators: [],
+  creator: { id: "creator-1", name: "API Creator" },
 };
 
 describe("public Projects API queries", () => {
@@ -71,6 +72,7 @@ describe("public Projects API queries", () => {
       expect.objectContaining({
         slug: "api-project",
         title: "API Project",
+        creator: "API Creator",
         status: "Beta",
         tags: ["Testing Lab", "Public"],
         feedbackCount: 3,

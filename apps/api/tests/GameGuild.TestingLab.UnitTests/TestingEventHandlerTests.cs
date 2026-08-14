@@ -111,10 +111,11 @@ public sealed class TestingEventHandlerTests : IDisposable
         var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
         var slot = AddSlot(testingEvent.Id, maxProjects: 1);
         var project = AddProject(_managerId);
+        var projectVersion = AddProjectVersion(project, _managerId);
         await _context.SaveChangesAsync();
 
         var result = await CreateApplicationHandler().Handle(
-            new SubmitTestingProjectApplicationCommand(testingEvent.Id, project.Id, null, "Evening"),
+            new SubmitTestingProjectApplicationCommand(testingEvent.Id, project.Id, projectVersion.Id, "Evening"),
             default);
 
         result.IsSuccess.Should().BeTrue();
@@ -131,7 +132,7 @@ public sealed class TestingEventHandlerTests : IDisposable
         await _context.SaveChangesAsync();
 
         var result = await CreateApplicationHandler().Handle(
-            new SubmitTestingProjectApplicationCommand(testingEvent.Id, project.Id, null, null),
+            new SubmitTestingProjectApplicationCommand(testingEvent.Id, project.Id, Guid.NewGuid(), null),
             default);
 
         result.IsFailure.Should().BeTrue();
@@ -567,7 +568,7 @@ public sealed class TestingEventHandlerTests : IDisposable
 
 
     [Fact]
-    public async Task GetMyApplications_ReturnsOnlyCurrentActorApplicationsForEvent()
+    public async Task GetMyApplications_ReturnsApplicationsOwnedByAccessibleProjects_NotBySubmitter()
     {
         var applicantId = Guid.NewGuid();
         AddActor(applicantId, TenantRole.Member);
@@ -575,8 +576,8 @@ public sealed class TestingEventHandlerTests : IDisposable
         var managerProject = AddProject(_managerId);
         var otherProject = AddProject(applicantId);
         _context.AddRange(
-            TestingProjectApplication.Submit(testingEvent.Id, managerProject.Id, null, _managerId, null, _tenantId),
-            TestingProjectApplication.Submit(testingEvent.Id, otherProject.Id, null, applicantId, null, _tenantId));
+            TestingProjectApplication.Submit(testingEvent.Id, managerProject.Id, null, applicantId, null, _tenantId),
+            TestingProjectApplication.Submit(testingEvent.Id, otherProject.Id, null, _managerId, null, _tenantId));
         await _context.SaveChangesAsync();
         SetActor(_managerId);
 
@@ -585,7 +586,60 @@ public sealed class TestingEventHandlerTests : IDisposable
             default);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().ContainSingle().Which.SubmittedByUserId.Should().Be(_managerId);
+        result.Value.Should().ContainSingle().Which.ProjectId.Should().Be(managerProject.Id);
+        result.Value.Single().SubmittedByUserId.Should().Be(applicantId);
+    }
+
+    [Fact]
+    public async Task SystemAdmin_CannotManageTestingLabWithoutActiveSelectedTenantMembership()
+    {
+        var systemAdminId = Guid.NewGuid();
+        _context.Add(new User
+        {
+            Id = systemAdminId,
+            Email = $"{systemAdminId:N}@example.com",
+            Name = "Stale system admin",
+            IsActive = true
+        });
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        await _context.SaveChangesAsync();
+        SetActor(systemAdminId, "SystemAdmin");
+
+        var result = await CreateEventHandler().Handle(new UpdateTestingEventCommand(
+            testingEvent.Id,
+            testingEvent.Name,
+            testingEvent.Description,
+            testingEvent.Mode,
+            testingEvent.ApprovalMode,
+            testingEvent.ApplicationsOpenAt,
+            testingEvent.ApplicationsCloseAt,
+            testingEvent.StartsAt,
+            testingEvent.EndsAt,
+            testingEvent.RequiresFeedback), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Unauthorized);
+    }
+
+    [Fact]
+    public async Task WithdrawApplication_AllowsAnotherAuthorizedProjectMember()
+    {
+        var applicantId = Guid.NewGuid();
+        AddActor(applicantId, TenantRole.Member);
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var project = AddProject(_managerId);
+        var application = TestingProjectApplication.Submit(
+            testingEvent.Id, project.Id, null, applicantId, null, _tenantId);
+        _context.Add(application);
+        await _context.SaveChangesAsync();
+        SetActor(_managerId);
+
+        var result = await CreateApplicationHandler().Handle(
+            new WithdrawTestingProjectApplicationCommand(application.Id),
+            default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Status.Should().Be(TestingApplicationStatus.Withdrawn);
     }
     private TestingEventHandlers CreateEventHandler() => new(_context, _actorAccessor);
 
@@ -643,6 +697,21 @@ public sealed class TestingEventHandlerTests : IDisposable
         };
         _context.Add(project);
         return project;
+    }
+
+    private ProjectVersion AddProjectVersion(Project project, Guid createdById)
+    {
+        var version = new ProjectVersion
+        {
+            TenantId = _tenantId,
+            ProjectId = project.Id,
+            Project = project,
+            VersionNumber = "1.0.0",
+            Status = "ready",
+            CreatedById = createdById
+        };
+        _context.Add(version);
+        return version;
     }
 
     private void AddActor(Guid userId, string role)
