@@ -30,7 +30,7 @@ interface VegaLiteLexicalComponentProps {
   theme: NonNullable<VegaLiteData["theme"]>;
   themeMode: NonNullable<VegaLiteData["themeMode"]>;
   layout: NonNullable<VegaLiteData["layout"]>;
-  data: Record<string, string>;
+  attachments: NonNullable<VegaLiteData["attachments"]>;
   nodeKey: string;
 }
 
@@ -42,7 +42,7 @@ export function VegaLiteLexicalComponent({
   theme,
   themeMode,
   layout,
-  data,
+  attachments,
   nodeKey,
 }: VegaLiteLexicalComponentProps): React.JSX.Element {
   const [editor] = useLexicalComposerContext();
@@ -124,7 +124,7 @@ export function VegaLiteLexicalComponent({
         node.setTheme(newData.theme || "default");
         node.setThemeMode(newData.themeMode || "system");
         node.setLayout(newData.layout || "rectangular");
-        node.setData(newData.data || {});
+        node.setAttachments(newData.attachments || {});
       }
     });
   };
@@ -139,9 +139,9 @@ export function VegaLiteLexicalComponent({
       theme,
       themeMode,
       layout,
-      data,
+      attachments,
     }),
-    [spec, title, caption, size, theme, themeMode, layout, data],
+    [spec, title, caption, size, theme, themeMode, layout, attachments],
   );
 
   return (
@@ -207,7 +207,7 @@ export function VegaLiteLexicalComponent({
               size={100}
               showControls={true}
               allowFullscreen={true}
-              data={data}
+              attachments={attachments}
             />
           </div>
         </div>

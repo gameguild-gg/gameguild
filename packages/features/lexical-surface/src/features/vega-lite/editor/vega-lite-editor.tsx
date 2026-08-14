@@ -70,7 +70,7 @@ const EMPTY_VEGA_DATA: VegaLiteData = {
   theme: "default",
   themeMode: "system",
   layout: "rectangular",
-  data: {},
+  attachments: {},
 };
 
 export function VegaLiteEditor({
@@ -161,8 +161,8 @@ export function VegaLiteEditor({
         !showTemplates && (
           <>
             <VegaLiteManager
-              data={data.data ?? {}}
-              onDataChange={(nextData) => updateData({ data: nextData })}
+              attachments={data.attachments ?? {}}
+              onAttachmentsChange={(attachments) => updateData({ attachments })}
             />
             <VegaLiteExport
               spec={previewData.spec}
@@ -171,7 +171,7 @@ export function VegaLiteEditor({
               layout={previewData.layout}
               title={previewData.title}
               isValid={validation.isValid}
-              data={previewData.data}
+              attachments={previewData.attachments}
             />
             <Button
               variant="outline"
@@ -382,7 +382,7 @@ export function VegaLiteEditor({
                   showControls
                   allowFullscreen={false}
                   className="min-h-full"
-                  data={previewData.data}
+                  attachments={previewData.attachments}
                   updateTrigger={previewKey}
                 />
               </div>

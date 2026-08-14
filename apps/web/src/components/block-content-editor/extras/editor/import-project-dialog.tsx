@@ -13,6 +13,10 @@ import { ProjectImporter, type ImportedProjectData } from "@/components/block-co
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
+import { findAssetUris } from "@game-guild/assets"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
+
+const assetRepository = getDefaultBrowserAssetRepository()
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
@@ -278,23 +282,22 @@ export function ImportProjectDialog({
         importedProject.preferences || importedProject.metadata?.preferences
       )
 
-      // Import assets if present
-      if (importedProject.assets && importedProject.assetIndex) {
-        const { ProjectImporter } = await import("@/components/block-content-editor/lib/interopAdapter/project-importer")
-        const importResult = await ProjectImporter.importProjectAssets(
-          importedProject,
-          newProjectId
-        )
+      const importedUris = findAssetUris(JSON.parse(importedProject.data) as unknown)
+      await assetRepository.reconcileUsage(
+        { type: "project", id: newProjectId },
+        importedUris.map((uri, index) => ({
+          uri,
+          consumerId: `imported-reference:${index}`,
+          role: "project-content",
+        })),
+      )
 
-        console.log("Assets import result:", importResult)
-        
-        if (importResult.imported > 0 || importResult.updated > 0) {
-          toast.info("Assets imported", {
-            description: `${importResult.imported} new assets, ${importResult.updated} updated`,
-            duration: 3000,
-            icon: "📦",
-          })
-        }
+      if (importedProject.assetsImported > 0) {
+        toast.info("Assets imported", {
+          description: `${importedProject.assetsImported} assets restored from the project bundle`,
+          duration: 3000,
+          icon: "📦",
+        })
       }
 
       const projectData = {
@@ -333,12 +336,19 @@ export function ImportProjectDialog({
   }
 
   const handleCancel = () => {
+    if (importedProject?.importedAssetUris.length) {
+      void Promise.all(
+        importedProject.importedAssetUris.map((uri) =>
+          assetRepository.remove(uri, { force: true }).catch(() => undefined),
+        ),
+      )
+    }
     resetForm()
     onOpenChange(false)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(nextOpen) => nextOpen ? onOpenChange(true) : handleCancel()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Import Project</DialogTitle>

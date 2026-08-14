@@ -2,7 +2,6 @@
 
 import type { SerializedEditorState } from "lexical";
 import { LexicalSurface } from "@game-guild/lexical-surface";
-import { lexicalSurfaceViewerAdapters } from "@/components/block-content-editor/lexical-surface-viewer-adapters";
 
 interface LexicalLessonRendererProps {
   content: unknown;
@@ -51,7 +50,6 @@ export function LexicalLessonRenderer({
       accessibleLabel="Lesson content"
       contentClassName="max-w-none"
       features={{ pageLayout: false }}
-      adapters={lexicalSurfaceViewerAdapters}
     />
   );
 }

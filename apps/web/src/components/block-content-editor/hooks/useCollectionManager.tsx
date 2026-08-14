@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Edit, Trash } from "lucide-react"
-import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import { collectionRepository } from "@/components/block-content-editor/extras/code-studio/file-system/collection-repository"
 import {
   applySorting,
   type ManagerCard,
@@ -10,6 +10,9 @@ import {
   type FilterConfig,
 } from "@/components/block-content-editor/extras/manager-page"
 import { toast } from "sonner"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
+
+const assetRepository = getDefaultBrowserAssetRepository()
 
 interface CollectionItem {
   id: string
@@ -61,9 +64,7 @@ function calculateTotalSize(structure: any): number {
   let size = 0
   if (structure.files) {
     structure.files.forEach((file: any) => {
-      if (file.content) {
-        size += new TextEncoder().encode(file.content).length
-      }
+      size += file.size ?? 0
     })
   }
   if (structure.folders) {
@@ -88,14 +89,12 @@ export function useCollectionManager({
 
   const loadCollections = useCallback(async () => {
     try {
-      console.log("Loading collections...")
-      const collectionList = await assetManager.listCollections()
-      console.log("Collections loaded:", collectionList)
+      const collectionList = await collectionRepository.list()
 
       const collectionsWithDetails = await Promise.all(
         collectionList.map(async (collection) => {
           try {
-            const manifest = await assetManager.getCollection(collection.id)
+            const manifest = await collectionRepository.get(collection.id)
             if (manifest) {
               const fileCount = countFilesInStructure(manifest.structure)
               const totalSize = calculateTotalSize(manifest.structure)
@@ -128,7 +127,6 @@ export function useCollectionManager({
       )
 
       setCollections(collectionsWithDetails)
-      console.log("Collections state updated:", collectionsWithDetails)
     } catch (error) {
       console.error("Failed to load collections:", error)
       toast.error("Failed to load collections", {
@@ -139,9 +137,7 @@ export function useCollectionManager({
 
   // Load collections when switching to collections context
   useEffect(() => {
-    console.log("Collection context effect:", { activeContext, isDbInitialized })
     if (activeContext === 'collections' && isDbInitialized) {
-      console.log("Loading collections now...")
       loadCollections()
     }
   }, [activeContext, isDbInitialized, loadCollections])
@@ -180,7 +176,11 @@ export function useCollectionManager({
   const handleConfirmCollectionDelete = useCallback(async () => {
     if (!collectionToDelete) return
     try {
-      await assetManager.deleteCollection(collectionToDelete.id)
+      await collectionRepository.remove(collectionToDelete.id)
+      await assetRepository.reconcileUsage(
+        { type: "code-studio-collection", id: collectionToDelete.id },
+        [],
+      )
       toast.success("Collection deleted successfully")
       await loadCollections()
       setCollectionToDelete(null)
@@ -193,7 +193,7 @@ export function useCollectionManager({
   const handleConfirmCollectionEdit = useCallback(async () => {
     if (!collectionToEdit || !newCollectionName.trim()) return
     try {
-      const success = await assetManager.renameCollection(collectionToEdit.id, newCollectionName.trim())
+      const success = await collectionRepository.rename(collectionToEdit.id, newCollectionName.trim())
       if (success) {
         toast.success("Collection renamed successfully")
         await loadCollections()

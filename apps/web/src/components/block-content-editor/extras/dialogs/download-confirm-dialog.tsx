@@ -84,8 +84,8 @@ export function DownloadConfirmDialog({
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <FileJson className="h-3 w-3" />
-              <span>asset_index.json</span>
-              <span className="text-xs text-muted-foreground/70">(Asset tracking)</span>
+              <span>assets/manifest.json</span>
+              <span className="text-xs text-muted-foreground/70">(Stable references and bundled files)</span>
             </div>
           </div>
         </div>

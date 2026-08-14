@@ -1,25 +1,6 @@
-import { useEffect, useState } from 'react'
-import { assetManager } from '@/components/block-content-editor/lib/storage/assets/asset-manager'
+import { useResolvedAssetUrl } from '@game-guild/assets/react'
 
 export function useAssetPreview(assetId: string, mimeType: string) {
-  const [assetDataUrl, setAssetDataUrl] = useState<string | null>(null)
-
-  useEffect(() => {
-    const loadAssetData = async () => {
-      if (mimeType.startsWith('image/')) {
-        try {
-          const assetData = await assetManager.getAsset(assetId)
-          if (assetData && assetData.data) {
-            setAssetDataUrl(assetData.data)
-          }
-        } catch (error) {
-          console.error(`Failed to load asset ${assetId}:`, error)
-        }
-      }
-    }
-
-    loadAssetData()
-  }, [assetId, mimeType])
-
-  return assetDataUrl
+  const { url } = useResolvedAssetUrl(mimeType.startsWith('image/') ? assetId : null)
+  return url || null
 }

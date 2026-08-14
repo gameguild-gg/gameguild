@@ -20,6 +20,7 @@ import {
   type QuizAnswerState,
   type QuizEntry,
   type QuizFeedback,
+  type QuizLearnerAttachments,
   type RatingEntry,
   type ShortAnswerEntry,
   type SingleChoiceEntry,
@@ -28,8 +29,9 @@ import {
 
 type LearnerFeedback = Pick<QuizFeedback, "general">
 
-type LearnerEntry<T, Omitted extends keyof T> = Omit<T, Omitted | "feedback"> & {
+type LearnerEntry<T, Omitted extends keyof T> = Omit<T, Omitted | "feedback" | "attachments"> & {
   feedback?: LearnerFeedback
+  attachments?: QuizLearnerAttachments
 }
 
 export type QuizAuthoringEntry = QuizEntry
@@ -453,6 +455,9 @@ function learnerBase(entry: QuizAuthoringEntry) {
     points: cloneValue(entry.points),
     feedback: entry.feedback?.general !== undefined
       ? { general: cloneValue(entry.feedback.general) }
+      : undefined,
+    attachments: entry.attachments?.learnerVisible?.length
+      ? { learnerVisible: cloneValue(entry.attachments.learnerVisible) }
       : undefined,
   })
 }

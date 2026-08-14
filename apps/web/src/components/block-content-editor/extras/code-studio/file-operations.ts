@@ -1,6 +1,10 @@
 import type { CodeStudioData, CodeFile, FileTreeFolder } from "./types"
 import { LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
 import { openFile } from "./editor-state-utils"
+import { isAssetUri, toAssetUri } from "@game-guild/assets"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
+
+const assetRepository = getDefaultBrowserAssetRepository()
 
 export function createFile(
   draft: CodeStudioData,
@@ -270,7 +274,7 @@ export function addFileFromAsset(
   const newFile: CodeFile = {
     id: newFileId,
     name: fileName,
-    content: `asset://${assetId}`, // Referência ao asset, não o conteúdo completo
+    content: assetId,
     language,
     isFile: 'f', // Arquivo padrão
     isVisible: true,
@@ -295,36 +299,19 @@ export function markFileAsModified(
   }
 }
 
-export function createCopyOnSave(
-  draft: CodeStudioData,
-  fileId: string
-): string | null {
-  const file = draft.files.find(f => f.id === fileId)
-  if (!file || !file.assetId || !file.isModified) {
-    return null // Não precisa processar
-  }
-
-  // Simplesmente remover a referência ao asset, mantendo o mesmo nome
-  // O arquivo passa a ser local com o conteúdo já modificado
-  file.assetId = undefined
-  file.isModified = false
-  
-  return fileId // Retorna o mesmo ID pois não criamos novo arquivo
-}
-
 /**
  * Verifica se o content é uma referência a asset e retorna true
  */
 export function isAssetReference(content: string): boolean {
-  return content.startsWith('asset://')
+  return isAssetUri(content)
 }
 
 /**
- * Extrai o assetId de uma referência asset://id
+ * Returns the stable asset URI stored in file content.
  */
 export function extractAssetId(content: string): string | null {
   if (!isAssetReference(content)) return null
-  return content.replace('asset://', '')
+  return content
 }
 
 /**
@@ -337,28 +324,10 @@ export async function resolveFileContent(file: CodeFile): Promise<string> {
   }
   
   // É referência a asset, buscar o conteúdo
-  const assetId = extractAssetId(file.content)
-  if (!assetId) return file.content
+  const assetUri = extractAssetId(file.content)
+  if (!assetUri) return file.content
   
-  try {
-    const { assetManager } = await import("@/components/block-content-editor/lib/storage/assets/asset-manager")
-    const assetData = await assetManager.getAsset(assetId)
-    
-    if (assetData?.data) {
-      // Se for um dataURL, converter para texto
-      if (assetData.data.startsWith("data:")) {
-        const base64Data = assetData.data.split(",")[1]
-        if (base64Data) {
-          return atob(base64Data)
-        }
-      }
-      return assetData.data
-    }
-  } catch (error) {
-    console.error('Failed to resolve asset content:', error)
-  }
-  
-  return '' // Fallback para string vazia se falhar
+  return assetRepository.readText(toAssetUri(assetUri))
 }
 
 export function toggleFileVisibility(

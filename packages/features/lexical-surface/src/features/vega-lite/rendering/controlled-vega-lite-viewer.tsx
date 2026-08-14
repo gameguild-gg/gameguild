@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useRef } from "react";
 import { VegaLiteViewer } from "./vega-lite-viewer";
-import { loadCsvDataIntoSpec } from "../data/vega-csv-loader";
+import type { VegaDataAttachment } from "../vega-lite-data";
+
+const EMPTY_ATTACHMENTS: Record<string, VegaDataAttachment> = {};
 
 interface ControlledVegaLiteViewerProps {
   spec: string;
@@ -16,7 +18,7 @@ interface ControlledVegaLiteViewerProps {
   allowFullscreen?: boolean;
   className?: string;
   updateTrigger: string | number; // When this changes, update the chart
-  data?: Record<string, string>; // Data files for inline loading (CSV/JSON)
+  attachments?: Record<string, VegaDataAttachment>;
 }
 
 export function ControlledVegaLiteViewer({
@@ -31,7 +33,7 @@ export function ControlledVegaLiteViewer({
   allowFullscreen = true,
   className = "",
   updateTrigger,
-  data = {},
+  attachments = EMPTY_ATTACHMENTS,
 }: ControlledVegaLiteViewerProps) {
   const [currentSpec, setCurrentSpec] = useState(spec);
   const [currentLayout, setCurrentLayout] = useState(layout);
@@ -39,23 +41,10 @@ export function ControlledVegaLiteViewer({
   const [currentThemeDark, setCurrentThemeDark] = useState(themeDark);
   const [currentTitle, setCurrentTitle] = useState(title);
   const [currentCaption, setCurrentCaption] = useState(caption);
+  const [currentAttachments, setCurrentAttachments] = useState(attachments);
   const [containerHeight, setContainerHeight] = useState<number | null>(null);
   const previousUpdateTrigger = useRef(updateTrigger);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Process spec with data files (CSV and JSON)
-  const processedSpec = (() => {
-    try {
-      if (Object.keys(data).length > 0) {
-        const processed = loadCsvDataIntoSpec(currentSpec, data);
-        return JSON.stringify(processed);
-      }
-      return currentSpec;
-    } catch (error) {
-      console.error("Erro ao processar dados:", error);
-      return currentSpec;
-    }
-  })();
 
   // Capture initial container height
   useEffect(() => {
@@ -86,6 +75,7 @@ export function ControlledVegaLiteViewer({
       setCurrentThemeDark(themeDark);
       setCurrentTitle(title);
       setCurrentCaption(caption);
+      setCurrentAttachments(attachments);
       previousUpdateTrigger.current = updateTrigger;
     }
   }, [
@@ -96,6 +86,7 @@ export function ControlledVegaLiteViewer({
     themeDark,
     title,
     caption,
+    attachments,
     containerHeight,
   ]);
 
@@ -109,7 +100,7 @@ export function ControlledVegaLiteViewer({
       }}
     >
       <VegaLiteViewer
-        spec={processedSpec}
+        spec={currentSpec}
         layout={currentLayout}
         themeLight={currentThemeLight}
         themeDark={currentThemeDark}
@@ -119,6 +110,7 @@ export function ControlledVegaLiteViewer({
         showControls={showControls}
         allowFullscreen={allowFullscreen}
         className={className}
+        attachments={currentAttachments}
       />
     </div>
   );

@@ -4,7 +4,6 @@ import { lazy, Suspense, useCallback } from "react";
 import { Label } from "@game-guild/ui/components/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type LexicalSurfaceFeatures } from "@game-guild/lexical-surface";
-import { lexicalSurfaceAdapters } from "@/components/block-content-editor/lexical-surface-adapters";
 import type { SerializedEditorState } from "lexical";
 
 const LexicalSurface = lazy(async () => {
@@ -88,7 +87,6 @@ export function LessonContentEditor({
             placeholder="Start writing your lesson content..."
             contentStyle={{ minHeight: "400px" }}
             contentClassName="max-w-none"
-            adapters={lexicalSurfaceAdapters}
             features={LESSON_EDITOR_FEATURES}
           />
         </Suspense>

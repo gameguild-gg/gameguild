@@ -1,23 +1,22 @@
-/**
- * Project Importer Utility
- * Handles importing project data from standardized format
- * Works for both Google Drive and local file imports
- */
-
-import JSZip from "jszip"
-import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
-import type { AssetData, AssetUsage } from "@/components/block-content-editor/lib/storage/assets/types"
+import JSZip, { type JSZipObject } from "jszip"
+import { findAssetUris, isAssetUri, parseAssetUri, type AssetUri } from "@game-guild/assets"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
 import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 import type { ProjectExportInput, ProjectExportMetadata } from "./interop-types"
 
 export type { ProjectExportInput, ProjectExportMetadata } from "./interop-types"
-/** @deprecated Use {@link StorageType} from `lib/storage/editor/storage-types`. */
 export type ProjectStorageType = StorageType
-/** @deprecated Use {@link ProjectExportInput} */
 export type ProjectData = ProjectExportInput
-/** @deprecated Use {@link ProjectExportMetadata} */
 export type ProjectMetadata = ProjectExportMetadata
+
+interface AssetBundleManifestEntry {
+  uri: AssetUri
+  name: string
+  mimeType: string
+  size: number
+  path: string
+}
 
 export interface ImportedProjectData {
   id: string
@@ -25,8 +24,8 @@ export interface ImportedProjectData {
   data: string
   tags: string[]
   metadata: ProjectExportMetadata | null
-  assets?: Record<string, AssetData>
-  assetIndex?: Record<string, AssetUsage[]>
+  assetsImported: number
+  importedAssetUris: AssetUri[]
   preferences?: ProjectPreferences
 }
 
@@ -36,364 +35,268 @@ export interface FolderStructureData {
   folderName: string
 }
 
+const assetRepository = getDefaultBrowserAssetRepository()
+
+function rewriteAssetUris(value: unknown, replacements: Map<AssetUri, AssetUri>): unknown {
+  if (isAssetUri(value)) return replacements.get(value) ?? value
+  if (Array.isArray(value)) return value.map((item) => rewriteAssetUris(item, replacements))
+  if (!value || typeof value !== "object") return value
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+      key,
+      rewriteAssetUris(item, replacements),
+    ]),
+  )
+}
+
 export class ProjectImporter {
-  private static readonly SUPPORTED_EXTENSIONS = ['.zip', '.block-content-editor']
-  private static readonly METADATA_FILENAME = 'index.json'
-  private static readonly DATA_FILENAME = 'data.block-content-editor'
-  private static readonly ASSETS_FOLDER = 'assets'
-  private static readonly ASSET_INDEX_FILENAME = 'asset_index.json'
+  private static readonly SUPPORTED_EXTENSIONS = [".zip", ".block-content-editor"]
+  private static readonly METADATA_FILENAME = "index.json"
+  private static readonly DATA_FILENAME = "data.block-content-editor"
+  private static readonly ASSETS_FOLDER = "assets"
+  private static readonly ASSET_MANIFEST_FILENAME = "manifest.json"
+  private static readonly MAX_ASSET_COUNT = 2000
+  private static readonly MAX_ASSET_SIZE = 250 * 1024 * 1024
+  private static readonly MAX_BUNDLE_ASSET_BYTES = 1024 * 1024 * 1024
 
-  /**
-   * Import from file (ZIP or .block-content-editor)
-   */
   static async importFromFile(file: File): Promise<ImportedProjectData> {
-    const fileName = file.name.toLowerCase()
-    const fileExtension = '.' + fileName.split('.').pop()
-
-    if (!ProjectImporter.SUPPORTED_EXTENSIONS.includes(fileExtension)) {
-      throw new Error(`Unsupported file format. Supported: ${ProjectImporter.SUPPORTED_EXTENSIONS.join(', ')}`)
+    const extension = `.${file.name.toLowerCase().split(".").pop()}`
+    if (!ProjectImporter.SUPPORTED_EXTENSIONS.includes(extension)) {
+      throw new Error(`Unsupported file format. Supported: ${ProjectImporter.SUPPORTED_EXTENSIONS.join(", ")}`)
     }
-
-    if (fileExtension === '.zip') {
-      return await ProjectImporter.importFromZip(file)
-    } else if (fileExtension === '.block-content-editor') {
-      return await ProjectImporter.importFromBlockContentEditorFile(file)
-    }
-
-    throw new Error('Unexpected file type')
+    return extension === ".zip"
+      ? ProjectImporter.importFromZip(file)
+      : ProjectImporter.importFromBlockContentEditorFile(file)
   }
 
-  /**
-   * Import from ZIP file (projeto-* folder structure)
-   */
-  private static async importFromZip(file: File): Promise<ImportedProjectData> {
-    const zip = new JSZip()
-    const zipContent = await zip.loadAsync(file)
-
-    // Find projeto-* folder
-    const projectFolders = Object.keys(zipContent.files).filter(path => {
-      const parts = path.split('/')
-      const file = zipContent.files[path]
-      return parts.length >= 2 && parts[0]?.startsWith('projeto-') && file && !file.dir
-    })
-
-    if (projectFolders.length === 0) {
-      throw new Error('No projeto-* folder found in ZIP file')
+  private static async importAssetBundle(
+    manifestFile: JSZipObject | File | undefined,
+    readObject: (path: string) => Promise<Blob | null>,
+    requiredUris: readonly AssetUri[],
+  ): Promise<Map<AssetUri, AssetUri>> {
+    const replacements = new Map<AssetUri, AssetUri>()
+    if (!manifestFile) {
+      if (requiredUris.length) throw new Error("Project bundle is missing its asset manifest")
+      return replacements
     }
-
-    // Get the first project folder
-    const firstFolder = projectFolders[0]
-    if (!firstFolder) throw new Error('Invalid folder structure')
-    
-    const projectFolderPath = firstFolder.split('/')[0]
-    const indexPath = `${projectFolderPath}/${ProjectImporter.METADATA_FILENAME}`
-    const dataPath = `${projectFolderPath}/${ProjectImporter.DATA_FILENAME}`
-
-    const indexFile = zipContent.files[indexPath]
-    const dataFile = zipContent.files[dataPath]
-
-    if (!indexFile || !dataFile) {
-      throw new Error('Missing index.json or data.block-content-editor file in projeto folder')
+    const manifestText =
+      "async" in manifestFile ? await manifestFile.async("text") : await manifestFile.text()
+    const parsedManifest = JSON.parse(manifestText) as unknown
+    if (!Array.isArray(parsedManifest)) throw new Error("Invalid asset bundle manifest")
+    const manifest = parsedManifest as AssetBundleManifestEntry[]
+    if (manifest.length > ProjectImporter.MAX_ASSET_COUNT) {
+      throw new Error("Asset bundle contains too many files")
+    }
+    const available = new Set<AssetUri>()
+    let totalSize = 0
+    for (const entry of manifest) {
+      const parsedUri = isAssetUri(entry.uri) ? parseAssetUri(entry.uri) : null
+      if (
+        parsedUri?.source !== "local" ||
+        !entry.name ||
+        !entry.mimeType ||
+        !Number.isSafeInteger(entry.size) ||
+        entry.size <= 0 ||
+        entry.size > ProjectImporter.MAX_ASSET_SIZE ||
+        !/^objects\/[a-zA-Z0-9._-]+$/.test(entry.path)
+      ) {
+        throw new Error("Invalid asset bundle manifest")
+      }
+      if (available.has(entry.uri)) throw new Error("Asset bundle contains duplicate references")
+      available.add(entry.uri)
+      totalSize += entry.size
+      if (totalSize > ProjectImporter.MAX_BUNDLE_ASSET_BYTES) {
+        throw new Error("Asset bundle exceeds the import size limit")
+      }
+    }
+    if (requiredUris.some((uri) => !available.has(uri))) {
+      throw new Error("Project bundle does not contain every local asset")
     }
 
     try {
-      const indexContent = await indexFile.async('text')
-      const dataContent = await dataFile.async('text')
-      
-      const metadata: ProjectMetadata = JSON.parse(indexContent)
-      
-      // Validate metadata structure
-      if (!ProjectImporter.isValidMetadata(metadata)) {
-        throw new Error('Invalid metadata structure')
-      }
-
-      // Validate lexical data
-      JSON.parse(dataContent)
-
-      // Import assets if present
-      const assets: Record<string, AssetData> = {}
-      let assetIndex: Record<string, AssetUsage[]> = {}
-
-      // Check for asset_index.json
-      const assetIndexPath = `${projectFolderPath}/${ProjectImporter.ASSET_INDEX_FILENAME}`
-      const assetIndexFile = zipContent.files[assetIndexPath]
-      
-      if (assetIndexFile) {
-        const assetIndexContent = await assetIndexFile.async('text')
-        assetIndex = JSON.parse(assetIndexContent)
-      }
-
-      // Check for assets folder
-      const assetsPath = `${projectFolderPath}/${ProjectImporter.ASSETS_FOLDER}/`
-      const assetFiles = Object.keys(zipContent.files).filter(path => 
-        path.startsWith(assetsPath) && path.endsWith('.json')
-      )
-
-      for (const assetPath of assetFiles) {
-        const assetFile = zipContent.files[assetPath]
-        if (assetFile && !assetFile.dir) {
-          const assetContent = await assetFile.async('text')
-          const assetData: AssetData = JSON.parse(assetContent)
-          const assetId = assetPath.split('/').pop()?.replace('.json', '')
-          if (assetId) {
-            assets[assetId] = assetData
-          }
+      for (const entry of manifest) {
+        const blob = await readObject(entry.path)
+        if (!blob || blob.size !== entry.size) {
+          throw new Error(`Missing or corrupt bundled asset: ${entry.name}`)
         }
+        const imported = await assetRepository.importBlob(blob, {
+          name: entry.name,
+          mimeType: entry.mimeType,
+          source: { type: "device", value: "project-import" },
+        })
+        replacements.set(entry.uri, imported.uri)
       }
-
-      return {
-        id: metadata.id,
-        name: metadata.name,
-        data: dataContent,
-        tags: metadata.tags,
-        metadata,
-        assets: Object.keys(assets).length > 0 ? assets : undefined,
-        assetIndex: Object.keys(assetIndex).length > 0 ? assetIndex : undefined,
-        preferences: metadata.preferences,
-      }
+      return replacements
     } catch (error) {
-      throw new Error(`Failed to parse project data: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      await Promise.all(
+        Array.from(replacements.values(), (uri) =>
+          assetRepository.remove(uri, { force: true }).catch(() => undefined),
+        ),
+      )
+      throw error
     }
   }
 
-  /**
-   * Import from single .block-content-editor file
-   */
-  private static async importFromBlockContentEditorFile(file: File): Promise<ImportedProjectData> {
-    const content = await file.text()
-    const baseName = file.name.replace(/\.block-content-editor$/, '')
+  private static async importFromZip(file: File): Promise<ImportedProjectData> {
+    const zip = await new JSZip().loadAsync(file)
+    const projectPath = Object.keys(zip.files)
+      .map((path) => path.split("/")[0])
+      .find((path) => path?.startsWith("projeto-"))
+    if (!projectPath) throw new Error("No project folder found in ZIP file")
+    const indexFile = zip.files[`${projectPath}/${ProjectImporter.METADATA_FILENAME}`]
+    const dataFile = zip.files[`${projectPath}/${ProjectImporter.DATA_FILENAME}`]
+    if (!indexFile || !dataFile) throw new Error("Project metadata or document is missing")
 
-    // Validate lexical data
-    try {
-      JSON.parse(content)
-    } catch {
-      throw new Error('Invalid Block Content Editor data format')
-    }
+    const metadata = JSON.parse(await indexFile.async("text")) as ProjectMetadata
+    if (!ProjectImporter.isValidMetadata(metadata)) throw new Error("Invalid metadata structure")
+    const parsed = JSON.parse(await dataFile.async("text")) as unknown
+    const requiredUris = findAssetUris(parsed).filter(
+      (uri) => parseAssetUri(uri)?.source === "local",
+    )
+    const assetsRoot = `${projectPath}/${ProjectImporter.ASSETS_FOLDER}/`
+    const manifestFile = zip.files[`${assetsRoot}${ProjectImporter.ASSET_MANIFEST_FILENAME}`]
+    const replacements = await ProjectImporter.importAssetBundle(manifestFile, async (path) => {
+      const object = zip.files[`${assetsRoot}${path}`]
+      return object ? object.async("blob") : null
+    }, requiredUris)
+    const rewritten = rewriteAssetUris(parsed, replacements)
 
     return {
-      id: '',
-      name: baseName || 'Imported Project',
+      id: metadata.id,
+      name: metadata.name,
+      data: JSON.stringify(rewritten),
+      tags: metadata.tags,
+      metadata,
+      assetsImported: replacements.size,
+      importedAssetUris: Array.from(replacements.values()),
+      preferences: metadata.preferences,
+    }
+  }
+
+  private static async importFromBlockContentEditorFile(file: File): Promise<ImportedProjectData> {
+    const content = await file.text()
+    const parsed = JSON.parse(content) as unknown
+    if (findAssetUris(parsed).some((uri) => parseAssetUri(uri)?.source === "local")) {
+      throw new Error("Documents with local assets must be imported from a ZIP bundle")
+    }
+    return {
+      id: "",
+      name: file.name.replace(/\.block-content-editor$/, "") || "Imported Project",
       data: content,
       tags: [],
-      metadata: null
+      metadata: null,
+      assetsImported: 0,
+      importedAssetUris: [],
     }
   }
 
-  /**
-   * Import from a set of files representing an uncompressed projeto-* folder.
-   * Accepts files from <input webkitdirectory> or extracted from drag-and-drop entries.
-   * Each file should have a relative path (webkitRelativePath) like:
-   *   projeto-<id>/index.json
-   *   projeto-<id>/data.block-content-editor
-   *   projeto-<id>/asset_index.json
-   *   projeto-<id>/assets/<assetId>.json
-   * Bare files (without a parent folder) are also tolerated.
-   */
   static async importFromFolder(files: File[]): Promise<ImportedProjectData> {
-    if (!files || files.length === 0) {
-      throw new Error('No files provided in folder selection')
-    }
-
-    // Build a map keyed by the path *inside* the project folder (or just filename if at root)
+    if (!files.length) throw new Error("No files provided in folder selection")
     const fileMap = new Map<string, File>()
     for (const file of files) {
-      const rel = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name
-      const parts = rel.split('/').filter(Boolean)
-      // Drop the top-level folder name if it exists, so paths are relative to the project root
-      const innerPath = parts.length > 1 ? parts.slice(1).join('/') : parts[0]
-      if (!innerPath) continue
-      fileMap.set(innerPath, file)
+      const relative = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name
+      const parts = relative.split("/").filter(Boolean)
+      const innerPath = parts.length > 1 ? parts.slice(1).join("/") : parts[0]
+      if (innerPath) fileMap.set(innerPath, file)
     }
-
     const indexFile = fileMap.get(ProjectImporter.METADATA_FILENAME)
     const dataFile = fileMap.get(ProjectImporter.DATA_FILENAME)
-
-    if (!indexFile || !dataFile) {
-      throw new Error(`Selected folder must contain both ${ProjectImporter.METADATA_FILENAME} and ${ProjectImporter.DATA_FILENAME}`)
-    }
-
-    try {
-      const indexContent = await indexFile.text()
-      const dataContent = await dataFile.text()
-
-      const metadata: ProjectMetadata = JSON.parse(indexContent)
-
-      if (!ProjectImporter.isValidMetadata(metadata)) {
-        throw new Error('Invalid metadata structure')
-      }
-
-      JSON.parse(dataContent)
-
-      // Optional assets
-      const assets: Record<string, AssetData> = {}
-      let assetIndex: Record<string, AssetUsage[]> = {}
-
-      const assetIndexFile = fileMap.get(ProjectImporter.ASSET_INDEX_FILENAME)
-      if (assetIndexFile) {
-        assetIndex = JSON.parse(await assetIndexFile.text())
-      }
-
-      const assetPrefix = `${ProjectImporter.ASSETS_FOLDER}/`
-      for (const [path, file] of fileMap.entries()) {
-        if (path.startsWith(assetPrefix) && path.endsWith('.json')) {
-          const assetId = path.slice(assetPrefix.length).replace(/\.json$/, '')
-          if (assetId) {
-            assets[assetId] = JSON.parse(await file.text())
-          }
-        }
-      }
-
-      return {
-        id: metadata.id,
-        name: metadata.name,
-        data: dataContent,
-        tags: metadata.tags,
-        metadata,
-        assets: Object.keys(assets).length > 0 ? assets : undefined,
-        assetIndex: Object.keys(assetIndex).length > 0 ? assetIndex : undefined,
-        preferences: metadata.preferences,
-      }
-    } catch (error) {
-      throw new Error(`Failed to parse project folder: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    if (!indexFile || !dataFile) throw new Error("Selected folder is missing project files")
+    const metadata = JSON.parse(await indexFile.text()) as ProjectMetadata
+    if (!ProjectImporter.isValidMetadata(metadata)) throw new Error("Invalid metadata structure")
+    const parsed = JSON.parse(await dataFile.text()) as unknown
+    const requiredUris = findAssetUris(parsed).filter(
+      (uri) => parseAssetUri(uri)?.source === "local",
+    )
+    const root = `${ProjectImporter.ASSETS_FOLDER}/`
+    const replacements = await ProjectImporter.importAssetBundle(
+      fileMap.get(`${root}${ProjectImporter.ASSET_MANIFEST_FILENAME}`),
+      async (path) => fileMap.get(`${root}${path}`) ?? null,
+      requiredUris,
+    )
+    const rewritten = rewriteAssetUris(parsed, replacements)
+    return {
+      id: metadata.id,
+      name: metadata.name,
+      data: JSON.stringify(rewritten),
+      tags: metadata.tags,
+      metadata,
+      assetsImported: replacements.size,
+      importedAssetUris: Array.from(replacements.values()),
+      preferences: metadata.preferences,
     }
   }
 
-  /**
-   * Import from folder structure (for Google Drive)
-   */
   static async importFromFolderStructure(
-    folderData: FolderStructureData
+    folderData: FolderStructureData,
   ): Promise<ImportedProjectData> {
-    try {
-      const metadata: ProjectMetadata = JSON.parse(folderData.indexContent)
-      
-      // Validate metadata structure
-      if (!ProjectImporter.isValidMetadata(metadata)) {
-        throw new Error('Invalid metadata structure')
-      }
-
-      // Validate lexical data
-      JSON.parse(folderData.dataContent)
-
-      return {
-        id: metadata.id,
-        name: metadata.name,
-        data: folderData.dataContent,
-        tags: metadata.tags,
-        metadata,
-        preferences: metadata.preferences,
-      }
-    } catch (error) {
-      throw new Error(`Failed to import from folder structure: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    const metadata = JSON.parse(folderData.indexContent) as ProjectMetadata
+    if (!ProjectImporter.isValidMetadata(metadata)) throw new Error("Invalid metadata structure")
+    const parsed = JSON.parse(folderData.dataContent) as unknown
+    if (findAssetUris(parsed).some((uri) => parseAssetUri(uri)?.source === "local")) {
+      throw new Error("This folder transport cannot carry local asset bytes")
+    }
+    return {
+      id: metadata.id,
+      name: metadata.name,
+      data: folderData.dataContent,
+      tags: metadata.tags,
+      metadata,
+      assetsImported: 0,
+      importedAssetUris: [],
+      preferences: metadata.preferences,
     }
   }
 
-  /**
-   * Convert imported data to standard ProjectData format
-   */
   static convertToProjectData(
     importedData: ImportedProjectData,
     newId?: string,
-    newStorageType?: ProjectStorageType
+    newStorageType?: ProjectStorageType,
   ): ProjectData {
     const now = new Date().toISOString()
-    
     return {
-      id: newId || importedData.id || '',
+      id: newId || importedData.id || "",
       name: importedData.name,
       data: importedData.data,
       tags: importedData.tags,
       size: new Blob([importedData.data]).size,
       createdAt: importedData.metadata?.createdAt || now,
-      updatedAt: now, // Always update to current time on import
+      updatedAt: now,
       hash: importedData.metadata?.hash,
       storageType: newStorageType || (importedData.metadata?.storageType as ProjectStorageType) || "local",
       preferences: importedData.preferences || importedData.metadata?.preferences,
     }
   }
 
-  /**
-   * Import assets into AssetManager for the target project
-   * Returns stats about imported assets
-   */
-  static async importProjectAssets(
-    importedData: ImportedProjectData,
-    targetProjectId: string
-  ): Promise<{ imported: number; skipped: number; updated: number }> {
-    if (!importedData.assets || !importedData.assetIndex) {
-      console.log('[ProjectImporter] No assets to import')
-      return { imported: 0, skipped: 0, updated: 0 }
-    }
-
-    console.log('[ProjectImporter] Importing assets:', {
-      assetsCount: Object.keys(importedData.assets).length,
-      indexCount: Object.keys(importedData.assetIndex).length,
-      targetProjectId
-    })
-
-    try {
-      const result = await assetManager.importProjectAssets(
-        importedData.assets,
-        importedData.assetIndex,
-        targetProjectId
-      )
-
-      console.log('[ProjectImporter] Assets imported successfully:', result)
-      return result
-    } catch (error) {
-      console.error('[ProjectImporter] Failed to import assets:', error)
-      throw error
-    }
-  }
-
-  /**
-   * Validate imported project data
-   */
   static validateImportedData(importedData: ImportedProjectData): boolean {
     try {
-      // Validate basic structure
-      if (!importedData.name || !importedData.data) {
-        return false
-      }
-
-      // Validate lexical data is valid JSON
-      JSON.parse(importedData.data)
-
-      return true
+      return Boolean(importedData.name && importedData.data && JSON.parse(importedData.data))
     } catch {
       return false
     }
   }
 
-  /**
-   * Validate metadata structure
-   */
   private static isValidMetadata(metadata: unknown): metadata is ProjectMetadata {
-    if (!metadata || typeof metadata !== 'object') return false
-    const m = metadata as Record<string, unknown>
-    return !!(
-      m.id &&
-      m.name &&
-      Array.isArray(m.tags) &&
-      m.createdAt &&
-      m.updatedAt &&
-      m.storageType &&
-      m.version
+    if (!metadata || typeof metadata !== "object") return false
+    const value = metadata as Record<string, unknown>
+    return Boolean(
+      value.id &&
+      value.name &&
+      Array.isArray(value.tags) &&
+      value.createdAt &&
+      value.updatedAt &&
+      value.storageType &&
+      value.version,
     )
   }
 
-  /**
-   * Get supported file extensions
-   */
   static getSupportedExtensions(): string[] {
     return [...ProjectImporter.SUPPORTED_EXTENSIONS]
   }
 
-  /**
-   * Check if filename is supported
-   */
   static isSupportedFile(filename: string): boolean {
-    const extension = '.' + filename.toLowerCase().split('.').pop()
-    return ProjectImporter.SUPPORTED_EXTENSIONS.includes(extension)
+    return ProjectImporter.SUPPORTED_EXTENSIONS.includes(
+      `.${filename.toLowerCase().split(".").pop()}`,
+    )
   }
 }
