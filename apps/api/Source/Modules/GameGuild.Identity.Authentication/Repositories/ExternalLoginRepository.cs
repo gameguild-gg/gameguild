@@ -50,6 +50,20 @@ public class ExternalLoginRepository(IApplicationDbContext context) : IExternalL
         return existing;
     }
 
+    public async Task<ExternalLogin> AddAsync(ExternalLogin externalLogin, CancellationToken cancellationToken = default)
+    {
+        var now = SystemClock.UtcNow;
+
+        externalLogin.Id = Guid.NewGuid();
+        externalLogin.CreatedAt = now;
+        externalLogin.UpdatedAt = now;
+
+        ExternalLogins.Add(externalLogin);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return externalLogin;
+    }
+
     public async Task<bool> DeleteAsync(string provider, Guid userId, CancellationToken cancellationToken = default)
     {
         var existing = await ExternalLogins.FirstOrDefaultAsync(

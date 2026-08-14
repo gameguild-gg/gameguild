@@ -28,7 +28,7 @@ public class ExternalLoginHandlersTests
             });
 
         _externalLoginRepoMock
-            .Setup(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ExternalLogin dto, CancellationToken _) => dto);
 
         _userRepoMock
@@ -73,10 +73,11 @@ public class ExternalLoginHandlersTests
 
         _googleVerifierMock.Verify(x => x.VerifyAsync("valid-id-token", It.IsAny<CancellationToken>()), Times.Once);
         _externalLoginRepoMock.Verify(
-            x => x.UpsertAsync(
+            x => x.AddAsync(
                 It.Is<ExternalLogin>(e => e.UserId == userId && e.Provider == "google" && e.ProviderKey == "google-sub-1"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+        _externalLoginRepoMock.Verify(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -90,6 +91,7 @@ public class ExternalLoginHandlersTests
         var handler = new LinkGoogleAccountCommandHandler(_googleVerifierMock.Object, _externalLoginRepoMock.Object);
         await handler.Handle(new LinkGoogleAccountCommand { UserId = userId, IdToken = "valid-id-token" }, CancellationToken.None);
 
+        _externalLoginRepoMock.Verify(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
         _externalLoginRepoMock.Verify(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -107,6 +109,7 @@ public class ExternalLoginHandlersTests
         await act.Should().ThrowAsync<ExternalLoginConflictException>()
             .WithMessage("Social account already linked to another user");
         _externalLoginRepoMock.Verify(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
+        _externalLoginRepoMock.Verify(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -120,6 +123,7 @@ public class ExternalLoginHandlersTests
         var act = () => handler.Handle(new LinkGoogleAccountCommand { UserId = Guid.NewGuid(), IdToken = "forged-token" }, CancellationToken.None);
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Google ID token is invalid");
+        _externalLoginRepoMock.Verify(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
         _externalLoginRepoMock.Verify(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -166,14 +170,50 @@ public class ExternalLoginHandlersTests
         }, CancellationToken.None);
 
         _externalLoginRepoMock.Verify(
-            x => x.UpsertAsync(
+            x => x.AddAsync(
                 It.Is<ExternalLogin>(e => e.UserId == userId && e.Provider == "discord" && e.ProviderKey == "2516582401"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+        _externalLoginRepoMock.Verify(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    ///     F2 defect pin (identity-transfer race): when the pre-check misses but another user's
+    ///     row commits concurrently, the link MUST go through the insert-only path. The old code
+    ///     called UpsertAsync here — its internal read found the winner and silently reassigned
+    ///     ownership via the update branch. Insert-only AddAsync cannot reassign: it either
+    ///     inserts or throws DbUpdateException on the unique index.
+    /// </summary>
+    [Fact]
+    public async Task LinkDiscord_PreCheckMiss_InsertOnlyPath_NeverCallsUpsert()
+    {
+        var userId = Guid.NewGuid();
+        _oauthServiceMock
+            .Setup(x => x.HandleCallbackAsync("discord", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new OAuthUserProfile { ProviderId = "2516582401", Provider = "Discord" });
+        _externalLoginRepoMock
+            .Setup(x => x.GetByProviderKeyAsync("discord", "2516582401", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null);
+
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object);
+        await handler.Handle(new LinkDiscordAccountCommand
+        {
+            UserId = userId,
+            Code = "auth-code",
+            State = "state-1",
+            RedirectUri = "https://app/callback"
+        }, CancellationToken.None);
+
+        _externalLoginRepoMock.Verify(
+            x => x.AddAsync(
+                It.Is<ExternalLogin>(e => e.UserId == userId && e.Provider == "discord" && e.ProviderKey == "2516582401"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _externalLoginRepoMock.Verify(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task LinkDiscord_Race_DbUpdateExceptionThenForeignRow_ThrowsConflict()
+    public async Task LinkDiscord_Race_DbUpdateExceptionFromAddThenForeignRow_ThrowsConflict()
     {
         var userId = Guid.NewGuid();
         _oauthServiceMock
@@ -184,7 +224,7 @@ public class ExternalLoginHandlersTests
             .ReturnsAsync((ExternalLogin?)null)
             .ReturnsAsync(new ExternalLogin { UserId = Guid.NewGuid(), Provider = "discord", ProviderKey = "2516582401" });
         _externalLoginRepoMock
-            .Setup(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DbUpdateException("duplicate key value violates unique constraint"));
 
         var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object);
@@ -198,10 +238,11 @@ public class ExternalLoginHandlersTests
 
         await act.Should().ThrowAsync<ExternalLoginConflictException>()
             .WithMessage("Social account already linked to another user");
+        _externalLoginRepoMock.Verify(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task LinkDiscord_Race_DbUpdateExceptionThenSameUserRow_IsIdempotent()
+    public async Task LinkDiscord_Race_DbUpdateExceptionFromAddThenSameUserRow_IsIdempotent()
     {
         var userId = Guid.NewGuid();
         _oauthServiceMock
@@ -212,7 +253,7 @@ public class ExternalLoginHandlersTests
             .ReturnsAsync((ExternalLogin?)null)
             .ReturnsAsync(new ExternalLogin { UserId = userId, Provider = "discord", ProviderKey = "2516582401" });
         _externalLoginRepoMock
-            .Setup(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DbUpdateException("duplicate key value violates unique constraint"));
 
         var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object);
@@ -225,6 +266,33 @@ public class ExternalLoginHandlersTests
         }, CancellationToken.None);
 
         await act.Should().NotThrowAsync();
+        _externalLoginRepoMock.Verify(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task LinkDiscord_Race_DbUpdateExceptionFromAddThenRefetchNull_Rethrows()
+    {
+        _oauthServiceMock
+            .Setup(x => x.HandleCallbackAsync("discord", It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new OAuthUserProfile { ProviderId = "2516582401", Provider = "Discord" });
+        _externalLoginRepoMock
+            .SetupSequence(x => x.GetByProviderKeyAsync("discord", "2516582401", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ExternalLogin?)null)
+            .ReturnsAsync((ExternalLogin?)null);
+        _externalLoginRepoMock
+            .Setup(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new DbUpdateException("duplicate key value violates unique constraint"));
+
+        var handler = new LinkDiscordAccountCommandHandler(_oauthServiceMock.Object, _externalLoginRepoMock.Object);
+        var act = () => handler.Handle(new LinkDiscordAccountCommand
+        {
+            UserId = Guid.NewGuid(),
+            Code = "auth-code",
+            State = "state-1",
+            RedirectUri = "https://app/callback"
+        }, CancellationToken.None);
+
+        await act.Should().ThrowAsync<DbUpdateException>();
     }
 
     [Fact]
@@ -249,6 +317,7 @@ public class ExternalLoginHandlersTests
 
         await act.Should().ThrowAsync<ExternalLoginConflictException>();
         _externalLoginRepoMock.Verify(x => x.UpsertAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
+        _externalLoginRepoMock.Verify(x => x.AddAsync(It.IsAny<ExternalLogin>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // ── Unlink ──────────────────────────────────────────────────────────
