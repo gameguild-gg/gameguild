@@ -536,14 +536,6 @@ interface ValidationErr {
 function validateAll(state: ValidationState): ValidationErr[] {
   const errors: ValidationErr[] = [];
 
-  if (state.testRows.length === 0) {
-    errors.push({
-      field: "Tests",
-      code: "at_least_one_test",
-      message: "At least one test is required.",
-    });
-  }
-
   // Per-file: Private + Modifiable makes no sense.
   state.fileRows.forEach((f, i) => {
     if (f.visibility === "Private" && f.modifiable) {

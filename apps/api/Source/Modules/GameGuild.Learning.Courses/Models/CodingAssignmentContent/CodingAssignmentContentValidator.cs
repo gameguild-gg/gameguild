@@ -43,13 +43,6 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
             .WithErrorCode("invalid_language")
             .When(x => x.Environment != null);
 
-        // At least one test in Public ∪ Private
-        RuleFor(x => x.Tests)
-            .Must(t => (t.Public?.Count ?? 0) + (t.Private?.Count ?? 0) > 0)
-            .WithMessage("At least one Public or Private test is required")
-            .WithErrorCode("at_least_one_test")
-            .When(x => x.Tests != null);
-
         // Per-test Weight >= 0
         RuleForEach(x => x.Tests.Public)
             .Must(t => t != null && t.Weight >= 0)
