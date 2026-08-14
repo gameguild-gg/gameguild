@@ -117,7 +117,7 @@ StripeProviderConfigurationGuard.ThrowIfInvalid(
     app.Environment.EnvironmentName,
     app.Logger);
 
-if (app.Configuration.GetValue<bool?>("Database:RunStartupInitialization") ?? true)
+if (DatabaseStartupConfiguration.ShouldRunStartupInitialization(app.Configuration, app.Environment.EnvironmentName))
 {
     await RunDatabaseInitializationAsync(app).ConfigureAwait(false);
 }
