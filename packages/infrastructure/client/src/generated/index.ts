@@ -3,7 +3,7 @@
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
- * Generated from: http://127.0.0.1:15099/swagger/v1/swagger.json
+ * Generated from: gameguild-openapi
  *
  * To regenerate, run: pnpm generate
  */
