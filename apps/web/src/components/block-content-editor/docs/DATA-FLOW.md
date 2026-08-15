@@ -460,7 +460,8 @@ Both backends are consulted by hash before uploading to minimize bandwidth.
 projeto-<id>/
 ├── index.json                 ← ProjectMetadata (id, name, tags, metadata, storageType, preferences, exportedAt, …)
 ├── data.block-content-editor  ← serialized BlockStorage (the same string as ProjectData.data)
-├── asset_index.json           ← (optional) referenced asset IDs
+├── assets/manifest.json       ← stable URI metadata for bundled assets
+└── assets/objects/*           ← raw bundled file bytes
 └── assets/
     └── <assetId>.json         ← (optional) per-asset payloads
 ```

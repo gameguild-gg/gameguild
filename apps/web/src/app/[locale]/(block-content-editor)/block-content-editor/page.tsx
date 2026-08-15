@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import React, { useState } from 'react'
+import { AssetPickerDialog, AssetsProvider } from "@game-guild/assets/react"
 import {
   ManagerLayout,
   ManagerFilters,
@@ -11,7 +12,6 @@ import {
   ListView,
   type FilterConfig,
 } from "@/components/block-content-editor/extras/manager-page"
-import { MediaUploadDialog } from "@/components/block-content-editor/extras/media-upload-dialog"
 import { DeleteConfirmDialog } from "@/components/block-content-editor/extras/dialogs/delete-confirm-dialog"
 import { InfoDialog } from "@/components/block-content-editor/extras/editor/info-dialog"
 import { CreateProjectDialog } from "@/components/block-content-editor/extras/editor/create-project-dialog"
@@ -125,7 +125,7 @@ export default function HomePage() {
   const totalPages = Math.ceil(totalItems / itemsPerPage)
 
   return (
-    <>
+    <AssetsProvider>
       <ManagerLayout
         activeContext={activeContext}
         viewMode={viewMode}
@@ -326,16 +326,12 @@ export default function HomePage() {
       />
 
       {/* Upload Assets Dialog */}
-      <MediaUploadDialog
+      <AssetPickerDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
-        onMediaSelected={handleUploadComplete}
+        onSelect={() => void handleUploadComplete()}
         title="Upload Assets"
-        sources={{ files: true }}
         multiple={true}
-        compress={true}
-        allowCompressionToggle={true}
-        hideLocalAssets={true}
       />
 
       {/* Collection Delete Confirmation Dialog */}
@@ -395,6 +391,6 @@ export default function HomePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </AssetsProvider>
   )
 }

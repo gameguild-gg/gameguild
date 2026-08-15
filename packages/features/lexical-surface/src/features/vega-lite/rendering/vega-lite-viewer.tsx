@@ -3,9 +3,14 @@
 import { useEffect, useState, useRef } from "react";
 import { BarChart3, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react";
 import { Button } from "@game-guild/ui/components/button";
+import { useAssetRepository } from "@game-guild/assets/react";
 import { useVegaLiteChart, renderVegaChart } from "./vega-lite-chart";
 import { useDarkMode } from "../../../shared/ui/use-dark-mode";
 import { loadCsvDataIntoSpec } from "../data/vega-csv-loader";
+import { resolveVegaAttachments } from "../data/vega-asset-loader";
+import type { VegaDataAttachment } from "../vega-lite-data";
+
+const EMPTY_ATTACHMENTS: Record<string, VegaDataAttachment> = {};
 
 interface VegaLiteViewerProps {
   spec: string;
@@ -18,7 +23,7 @@ interface VegaLiteViewerProps {
   showControls?: boolean;
   allowFullscreen?: boolean;
   className?: string;
-  data?: Record<string, string>;
+  attachments?: Record<string, VegaDataAttachment>;
 }
 
 export function VegaLiteViewer({
@@ -32,16 +37,34 @@ export function VegaLiteViewer({
   showControls = true,
   allowFullscreen = true,
   className = "",
-  data = {},
+  attachments = EMPTY_ATTACHMENTS,
 }: VegaLiteViewerProps) {
   const isDark = useDarkMode();
   const theme = isDark ? themeDark : themeLight;
+  const repository = useAssetRepository();
+  const [dataFiles, setDataFiles] = useState<Record<string, string>>({});
+  const [attachmentError, setAttachmentError] = useState("");
 
-  // Process spec with data files (CSV and JSON)
+  useEffect(() => {
+    const controller = new AbortController();
+    setAttachmentError("");
+    void resolveVegaAttachments(repository, attachments, controller.signal).then(
+      setDataFiles,
+      (reason: unknown) => {
+        if (controller.signal.aborted) return;
+        setDataFiles({});
+        setAttachmentError(
+          reason instanceof Error ? reason.message : "Unable to resolve chart data",
+        );
+      },
+    );
+    return () => controller.abort();
+  }, [attachments, repository]);
+
   const processedSpec = (() => {
     try {
-      if (Object.keys(data).length > 0) {
-        const processed = loadCsvDataIntoSpec(spec, data);
+      if (Object.keys(dataFiles).length > 0) {
+        const processed = loadCsvDataIntoSpec(spec, dataFiles);
         return JSON.stringify(processed);
       }
       return spec;
@@ -505,7 +528,7 @@ export function VegaLiteViewer({
                 <div
                   ref={vegaRef}
                   className={`absolute inset-0 flex justify-center items-center ${
-                    error || renderError ? "invisible" : ""
+                    error || renderError || attachmentError ? "invisible" : ""
                   }`}
                   style={{
                     transform: `scale(${zoom / 100}) translate(${position.x / (zoom / 100)}px, ${position.y / (zoom / 100)}px)`,
@@ -518,13 +541,13 @@ export function VegaLiteViewer({
                       : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                   }}
                 />
-                {(error || renderError) && (
+                {(error || renderError || attachmentError) && (
                   <div className="z-10 max-w-full rounded-md bg-red-50/50 p-3 text-red-500 dark:bg-red-900/10">
                     <div className="text-sm font-medium">
                       Error rendering chart:
                     </div>
                     <div className="mt-1 text-xs opacity-80">
-                      {error || renderError}
+                      {attachmentError || error || renderError}
                     </div>
                   </div>
                 )}

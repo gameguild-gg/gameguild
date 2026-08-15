@@ -14,8 +14,41 @@ import {
   type MultipleChoiceEntry,
   type SingleChoiceEntry,
 } from "./types"
+import { createLocalAssetUri } from "@game-guild/assets"
 
 describe("quiz contracts", () => {
+  it("keeps learner-visible attachments and redacts author-only attachments", () => {
+    const source: SingleChoiceEntry = {
+      type: QuizEntryType.SingleChoice,
+      stem: "Inspect the diagram.",
+      options: [{ id: "a", text: "A" }],
+      correctOptionId: "a",
+      attachments: {
+        learnerVisible: [{
+          assetUri: createLocalAssetUri("7776453f-1123-4f56-8abc-1234567890ab"),
+          name: "diagram.png",
+          mimeType: "image/png",
+          size: 10,
+          role: "question",
+        }],
+        authorOnly: [{
+          assetUri: createLocalAssetUri("8776453f-1123-4f56-8abc-1234567890ab"),
+          name: "answer-key.pdf",
+          mimeType: "application/pdf",
+          size: 20,
+          role: "answer",
+        }],
+      },
+      settings: { allowRetry: false },
+    }
+
+    const learnerEntry = toQuizLearnerEntry(source)
+    expect(learnerEntry.attachments).toEqual({
+      learnerVisible: [source.attachments!.learnerVisible![0]],
+    })
+    expect("authorOnly" in learnerEntry.attachments!).toBe(false)
+  })
+
   it("redacts answer-key fields from authoring entries", () => {
     const source: MatchingEntry = {
       type: QuizEntryType.Matching,

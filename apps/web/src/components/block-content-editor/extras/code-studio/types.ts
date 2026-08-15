@@ -91,7 +91,7 @@ export interface CodeFile {
   isVisible: boolean
   readonly?: boolean // Se true, o arquivo não pode ser editado
   path: string // Caminho completo incluindo pastas, ex: "src/components/Button.tsx"
-  assetId?: string // ID do asset original se o arquivo veio de assets (para tracking e copy-on-write)
+  assetId?: string // Stable AssetUri for tracking and copy-on-write.
   isModified?: boolean // Flag para indicar se arquivo de asset foi modificado
 }
 

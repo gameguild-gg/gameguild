@@ -30,7 +30,9 @@ import * as PanelOps from "./panel-operations"
 import { UnifiedCodeRunner, setDownloadNotificationCallback } from "./runners"
 import { initializeMonacoFileSystem, syncFilesToMonacoFS, updateMonacoFile, disposeMonacoFileSystem } from "./monaco-file-system"
 import { saveProjectAsCollection, countAssetReferences } from "./file-system/collection-utils"
-import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import { collectionRepository } from "./file-system/collection-repository"
+import { findAssetUris, inferMimeType, isAssetUri, toAssetUri, type AssetUri } from "@game-guild/assets"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
 import { 
   ModalSize, 
   getEditorPreferences, 
@@ -38,6 +40,9 @@ import {
 } from "@/components/block-content-editor/lib/storage/editor/editor-preferences"
 import { useEditorSettings } from "@/components/block-content-editor/extras/settings-menu"
 import { BlockEditorShell } from "@/components/block-content-editor/extras/block-editor-shell"
+import { toast } from "sonner"
+
+const assetRepository = getDefaultBrowserAssetRepository()
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -73,6 +78,7 @@ export function CodeStudioEditor({
     return data
   })
   const [isExecuting, setIsExecuting] = useImmer(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [output, setOutput] = useImmer<string>("")
   const [resolvedContents, setResolvedContents] = useImmer<Record<string, string>>({})
   const settings = useEditorSettings("code-studio")
@@ -195,26 +201,20 @@ export function CodeStudioEditor({
     }
   }, [localData.files, localData.id])
 
-  // Register asset usage for all files with asset:// references
   useEffect(() => {
     if (!projectId || localData.files.length === 0) return
 
-    const registerAssets = async () => {
-      await assetManager.init()
-      
-      for (const file of localData.files) {
-        if (file.content.startsWith('asset://')) {
-          const assetId = file.content.replace('asset://', '')
-          try {
-            await assetManager.registerAssetUsage(assetId, projectId, localData.id)
-          } catch (error) {
-            console.error('Failed to register asset usage for file:', file.name, error)
-          }
-        }
-      }
-    }
-
-    registerAssets()
+    const usages = localData.files
+      .filter((file) => isAssetUri(file.content))
+      .map((file) => ({
+        uri: toAssetUri(file.content),
+        consumerId: file.id,
+        role: "code-file",
+      }))
+    void assetRepository.reconcileUsage(
+      { type: "code-studio", id: `${projectId}:${localData.id}` },
+      usages,
+    )
   }, [localData.files, projectId, localData.id])
 
   // Sincronizar com mudanças externas apenas na primeira montagem
@@ -454,15 +454,6 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    // Register asset usage with this project
-    if (projectId && assetId) {
-      assetManager.init().then(() => {
-        assetManager.registerAssetUsage(assetId, projectId, localData.id).catch((error) => {
-          console.error('Failed to register asset usage:', error)
-        })
-      })
-    }
-
     const hasFocusEditor = displayHasPanelType(activeDisplay, "focus-editor")
     const focusFolder = localData.folders?.find(f => f.isFocusFolder)
     const routeToFocusOnly = !!(hasFocusEditor && focusFolder && path === focusFolder.path)
@@ -604,8 +595,9 @@ export function CodeStudioEditor({
     files: Array<{ name: string; path: string; assetId: string; isFile?: 'f' | 'm' | 't'; readonly?: boolean; isVisible?: boolean }>,
     folderMetadata?: Map<string, { readonly?: boolean; isVisible?: boolean }>
   ) => {
-    console.log('[handleImportCollection] Importing to path:', path, 'files:', files)
-    
+    const invalidFile = files.find((file) => file.assetId && !isAssetUri(file.assetId))
+    if (invalidFile) throw new Error(`Collection contains an invalid asset reference: ${invalidFile.name}`)
+
     // Group files by their directory paths to create folders first
     const foldersNeeded = new Set<string>()
     
@@ -630,24 +622,18 @@ export function CodeStudioEditor({
       return depthA - depthB
     })
 
-    console.log('[handleImportCollection] Creating folders:', sortedFolders)
-
     // Create folders
     setLocalData(draft => {
       for (const folderPath of sortedFolders) {
         // Check if folder already exists
         const exists = draft.folders?.some(f => f.path === folderPath)
         if (exists) {
-          console.log('[handleImportCollection] Folder already exists:', folderPath)
           continue
         }
 
         // Extract parent path and folder name
         const lastSlash = folderPath.lastIndexOf('/')
-        const parentPath = lastSlash >= 0 ? folderPath.substring(0, lastSlash) : ''
         const folderName = lastSlash >= 0 ? folderPath.substring(lastSlash + 1) : folderPath
-
-        console.log('[handleImportCollection] Creating folder:', { folderPath, parentPath, folderName })
 
         // Get metadata for this folder from collection (if available)
         // Need to remove destination path prefix to get original collection path
@@ -656,13 +642,6 @@ export function CodeStudioEditor({
           : folderPath
         const metadata = folderMetadata?.get(relativeFolderPath)
         
-        console.log('[handleImportCollection] Folder metadata lookup:', { 
-          folderPath, 
-          relativeFolderPath, 
-          metadata,
-          hasMetadata: folderMetadata ? `${folderMetadata.size} entries` : 'no metadata'
-        })
-
         const newFolder: FileTreeFolder = {
           id: `${Date.now()}-${Math.random()}`,
           name: folderName,
@@ -683,61 +662,49 @@ export function CodeStudioEditor({
 
     // Import files
     for (const file of files) {
-      try {
-        console.log('[handleImportCollection] Importing file:', file)
+      // Use the stable URI or empty content for empty collection files.
+      const content = file.assetId || ''
 
-        // Use the asset:// URL or empty content for empty files
-        const content = file.assetId ? `asset://${file.assetId}` : ''
-        
-        // Extract folder path and filename from file.path
-        const pathParts = file.path.split('/')
-        const fileName = pathParts.pop() || file.name
-        const relativeFolderPath = pathParts.join('/')
-        const fullPath = path 
-          ? (relativeFolderPath ? `${path}/${relativeFolderPath}/${fileName}` : `${path}/${fileName}`)
-          : (relativeFolderPath ? `${relativeFolderPath}/${fileName}` : fileName)
+      // Extract folder path and filename from file.path
+      const pathParts = file.path.split('/')
+      const fileName = pathParts.pop() || file.name
+      const relativeFolderPath = pathParts.join('/')
+      const fullPath = path
+        ? (relativeFolderPath ? `${path}/${relativeFolderPath}/${fileName}` : `${path}/${fileName}`)
+        : (relativeFolderPath ? `${relativeFolderPath}/${fileName}` : fileName)
 
-        console.log('[handleImportCollection] File paths:', { fileName, relativeFolderPath, fullPath })
+      // Add file directly to draft
+      setLocalData(draft => {
+        const existingFile = draft.files.find(f => f.path === fullPath)
+        if (existingFile) {
+          existingFile.content = content
+          existingFile.assetId = file.assetId
+          existingFile.isModified = false
+          return
+        }
 
-        // Add file directly to draft
-        setLocalData(draft => {
-          // Check if file already exists
-          const existingFile = draft.files.find(f => f.path === fullPath)
-          if (existingFile) {
-            console.log('[handleImportCollection] File already exists, updating content:', fullPath)
-            existingFile.content = content
-            existingFile.assetId = file.assetId
-            existingFile.isModified = false
-            return
-          }
+        const language = getLanguageFromExtension(fileName)
+        const newFile: CodeFile = {
+          id: `${Date.now()}-${Math.random()}`,
+          name: fileName,
+          content,
+          language,
+          isFile: file.isFile || 'f',
+          isVisible: file.isVisible ?? true,
+          readonly: file.readonly,
+          path: fullPath,
+          assetId: file.assetId || undefined,
+          isModified: false,
+        }
 
-          const language = getLanguageFromExtension(fileName)
-          const newFile: CodeFile = {
-            id: `${Date.now()}-${Math.random()}`,
-            name: fileName,
-            content,
-            language,
-            isFile: file.isFile || 'f',
-            isVisible: file.isVisible ?? true,
-            readonly: file.readonly,
-            path: fullPath,
-            assetId: file.assetId || undefined,
-            isModified: false,
-          }
-
-          console.log('[handleImportCollection] Created file:', newFile)
-          draft.files.push(newFile)
-        })
-      } catch (error) {
-        console.error(`Failed to import file ${file.name}:`, error)
-      }
+        draft.files.push(newFile)
+      })
     }
-
-    console.log('[handleImportCollection] Import completed')
   }
 
   const handleSaveAsCollection = async (path: string, folderName?: string): Promise<{ success: boolean; error?: string }> => {
-    console.log('[handleSaveAsCollection] Starting with path:', path, 'folderName:', folderName)
+    const createdAssetUris: AssetUri[] = []
+    let createdCollectionId: string | undefined
     try {
       // Get files and folders for the specified path
       let targetFiles: CodeFile[] = []
@@ -747,22 +714,8 @@ export function CodeStudioEditor({
         // Root: get files and folders that are at root level
         // Root files: path doesn't contain '/' (path = filename)
         // Root folders: path doesn't contain '/' (path = foldername)
-        console.log('[handleSaveAsCollection] All items:', {
-          files: localData.files.map(f => ({ name: f.name, path: f.path })),
-          folders: localData.folders.map(f => ({ name: f.name, path: f.path }))
-        })
-        
         targetFiles = localData.files.filter(f => !f.path.includes('/'))
         targetFolders = localData.folders.filter(f => !f.path.includes('/'))
-        
-        console.log('[handleSaveAsCollection] Root level:', {
-          fileCount: targetFiles.length,
-          folderCount: targetFolders.length,
-          allFiles: localData.files.length,
-          allFolders: localData.folders.length,
-          files: targetFiles.map(f => ({ name: f.name, path: f.path })),
-          folders: targetFolders.map(f => ({ name: f.name, path: f.path }))
-        })
       } else {
         // Specific folder: files and subfolders inside this path
         // Files inside "new": path starts with "new/" (e.g., "new/README.md")
@@ -771,15 +724,8 @@ export function CodeStudioEditor({
         targetFiles = localData.files.filter(f => f.path.startsWith(pathPrefix))
         targetFolders = localData.folders.filter(f => f.path.startsWith(pathPrefix))
         
-        console.log('[handleSaveAsCollection] Folder contents:', path, {
-          fileCount: targetFiles.length,
-          folderCount: targetFolders.length,
-          files: targetFiles.map(f => ({ name: f.name, path: f.path })),
-          folders: targetFolders.map(f => ({ name: f.name, path: f.path }))
-        })
       }
 
-      console.log('[handleSaveAsCollection] Converting files to assets...')
       // Convert local files to assets before saving
       const convertedFiles: CodeFile[] = []
       for (const file of targetFiles) {
@@ -792,55 +738,46 @@ export function CodeStudioEditor({
             ...file,
             content: '',
           })
-          console.log('[handleSaveAsCollection] File is empty, keeping without asset:', file.name)
           continue
         }
         
         // Check if file needs to be converted to a new asset
-        const needsNewAsset = !file.content.startsWith("asset://") || file.isModified
-        
-        if (file.content.startsWith("asset://") && !file.isModified) {
+        if (isAssetUri(file.content) && !file.isModified) {
           // Asset that hasn't been modified - keep reference
           convertedFiles.push(file)
-          console.log('[handleSaveAsCollection] File already asset (unmodified):', file.name)
         } else {
-          // File needs new asset (either local content or modified asset)
-          const reason = !file.content.startsWith("asset://") ? "local content" : "modified asset"
-          console.log(`[handleSaveAsCollection] Converting file to asset (${reason}):`, file.name)
-          
           // Get actual content
           let contentToSave = file.content
-          if (file.content.startsWith("asset://") && file.isModified) {
+          if (isAssetUri(file.content) && file.isModified) {
             // Modified asset - need to get resolved content from resolvedContents
             const resolvedContent = resolvedContents[file.id]
-            if (resolvedContent) {
-              contentToSave = resolvedContent
-              console.log('[handleSaveAsCollection] Using resolved content for modified asset:', file.name)
-            } else {
-              console.warn('[handleSaveAsCollection] No resolved content found for modified asset:', file.name)
+            if (resolvedContent === undefined) {
+              throw new Error(`Cannot save ${file.name}: its asset content is unavailable`)
             }
+            contentToSave = resolvedContent
           }
-          
-          // Create asset from content
-          const result = await assetManager.saveAsset({
-            dataUrl: contentToSave,
-            fileName: file.name,
-            author: "Code Studio Collection Export",
-            type: "bundler",
-            projectId: projectId,
-            nodeId: localData.id, // Use code-studio's own ID as nodeId
-          })
 
-          if (result.success && result.assetId) {
-            // Create new file with asset reference
-            convertedFiles.push({
-              ...file,
-              content: `asset://${result.assetId}`,
-            })
-          } else {
-            console.error(`Failed to create asset for ${file.name}:`, result.error)
-            convertedFiles.push(file) // Keep original
+          if (!contentToSave) {
+            convertedFiles.push({ ...file, content: "", assetId: undefined, isModified: false })
+            continue
           }
+
+          // Create asset from content
+          const result = await assetRepository.importBlob(
+            new Blob([contentToSave], { type: inferMimeType(file.name) }),
+            {
+              name: file.name,
+              source: { type: "generated", value: "code-studio" },
+              scope: { type: "code-studio", id: `${projectId ?? "local"}:${localData.id}` },
+            },
+          )
+          createdAssetUris.push(result.uri)
+          convertedFiles.push({
+            ...file,
+            content: result.uri,
+            assetId: result.uri,
+            isModified: false,
+          })
         }
       }
 
@@ -869,15 +806,6 @@ export function CodeStudioEditor({
           return !relativePath.includes('/')
         })
         
-        console.log('[buildFolderStructure]', folderName, 'at path:', folderPath, {
-          fileCount: folderFiles.length,
-          subfolderCount: subfolders.length,
-          files: folderFiles.map(f => ({ name: f.name, path: f.path })),
-          subfolders: subfolders.map(f => ({ name: f.name, path: f.path })),
-          readonly: originalFolder.readonly,
-          isVisible: originalFolder.isVisible,
-        })
-
         const children: (CodeFile | FileTreeFolder)[] = []
 
         // Convert and add files
@@ -894,37 +822,41 @@ export function CodeStudioEditor({
             continue
           }
           
-          if (file.content.startsWith("asset://") && !file.isModified) {
+          if (isAssetUri(file.content) && !file.isModified) {
             // Asset that hasn't been modified - keep reference
             children.push(file)
           } else {
             // File needs new asset (either local content or modified asset)
             let contentToSave = file.content
-            if (file.content.startsWith("asset://") && file.isModified) {
+            if (isAssetUri(file.content) && file.isModified) {
               // Modified asset - need to get resolved content
               const resolvedContent = resolvedContents[file.id]
-              if (resolvedContent) {
-                contentToSave = resolvedContent
+              if (resolvedContent === undefined) {
+                throw new Error(`Cannot save ${file.name}: its asset content is unavailable`)
               }
+              contentToSave = resolvedContent
             }
-            
-            const result = await assetManager.saveAsset({
-              dataUrl: contentToSave,
-              fileName: file.name,
-              author: "Code Studio Collection Export",
-              type: "bundler",
-              projectId: projectId,
-              nodeId: localData.id,
-            })
 
-            if (result.success && result.assetId) {
-              children.push({
-                ...file,
-                content: `asset://${result.assetId}`,
-              })
-            } else {
-              children.push(file)
+            if (!contentToSave) {
+              children.push({ ...file, content: "", assetId: undefined, isModified: false })
+              continue
             }
+
+            const result = await assetRepository.importBlob(
+              new Blob([contentToSave], { type: inferMimeType(file.name) }),
+              {
+                name: file.name,
+                source: { type: "generated", value: "code-studio" },
+                scope: { type: "code-studio", id: `${projectId ?? "local"}:${localData.id}` },
+              },
+            )
+            createdAssetUris.push(result.uri)
+            children.push({
+              ...file,
+              content: result.uri,
+              assetId: result.uri,
+              isModified: false,
+            })
           }
         }
 
@@ -949,21 +881,9 @@ export function CodeStudioEditor({
       // Build converted folders with proper hierarchy
       const convertedFolders: FileTreeFolder[] = []
       for (const folder of targetFolders) {
-        console.log('[handleSaveAsCollection] Building folder structure for:', folder.name, 'path:', folder.path)
         const builtFolder = await buildFolderStructure(folder.path, folder.name, folder)
         convertedFolders.push(builtFolder)
       }
-
-      console.log('[handleSaveAsCollection] Calling saveProjectAsCollection with:', {
-        name: folderName || "Untitled Collection",
-        folderCount: convertedFolders.length,
-        fileCount: convertedFiles.length,
-        folders: convertedFolders.map(f => ({ 
-          name: f.name, 
-          childCount: f.children.length,
-          children: f.children.map(c => 'children' in c ? `folder:${c.name}` : `file:${c.name}`)
-        }))
-      })
 
       // Now save as collection using converted files
       const result = await saveProjectAsCollection({
@@ -972,8 +892,40 @@ export function CodeStudioEditor({
         files: convertedFiles,
       })
 
+      if (!result.success || !result.collectionId) {
+        await Promise.all(
+          createdAssetUris.map((uri) =>
+            assetRepository.remove(uri, { force: true }).catch(() => undefined),
+          ),
+        )
+        return result
+      }
+      createdCollectionId = result.collectionId
+
+      const referencedUris = findAssetUris({ convertedFiles, convertedFolders })
+      await assetRepository.reconcileUsage(
+        { type: "code-studio-collection", id: result.collectionId },
+        referencedUris.map((uri, index) => ({
+          uri,
+          consumerId: `file:${index}`,
+          role: "file-body",
+        })),
+      )
+
       return result
     } catch (error) {
+      if (createdCollectionId) {
+        await collectionRepository.remove(createdCollectionId).catch(() => undefined)
+        await assetRepository.reconcileUsage(
+          { type: "code-studio-collection", id: createdCollectionId },
+          [],
+        ).catch(() => undefined)
+      }
+      await Promise.all(
+        createdAssetUris.map((uri) =>
+          assetRepository.remove(uri, { force: true }).catch(() => undefined),
+        ),
+      )
       console.error('Failed to save collection:', error)
       return {
         success: false,
@@ -1469,42 +1421,51 @@ export function CodeStudioEditor({
     }
   }
 
-  const handleSaveClick = () => {
-    // Processar arquivos modificados de assets antes de salvar
-    // Agora apenas remove a referência ao asset, mantendo o mesmo nome
-    setLocalData(draft => {
-      // Encontrar todos os arquivos modificados que vieram de assets
-      const modifiedAssetFiles = draft.files.filter(f => f.assetId && f.isModified)
-      
-      // Para cada um, remover referência ao asset (converte para local)
-      for (const file of modifiedAssetFiles) {
-        FileOps.createCopyOnSave(draft, file.id)
-      }
-    })
-    
-    // Aguardar o próximo tick para garantir que o estado foi atualizado
-    setTimeout(() => {
-      // Garantir que activeDisplayId seja sempre display-1 ao salvar
+  const handleSaveClick = async () => {
+    if (isSaving) return
+    setIsSaving(true)
+    const createdAssetUris: AssetUri[] = []
+    const usageScope = { type: "code-studio", id: `${projectId ?? "local"}:${localData.id}` }
+    const previousUris = findAssetUris(localData.files)
+    try {
+      const files = await Promise.all(localData.files.map(async (file): Promise<CodeFile> => {
+        if (!file.content) {
+          return { ...file, assetId: undefined, isModified: false }
+        }
+        if (isAssetUri(file.content) && !file.isModified) return file
+
+        const content = isAssetUri(file.content)
+          ? resolvedContents[file.id]
+          : file.content
+        if (content === undefined) {
+          throw new Error(`Cannot save ${file.name}: its asset content is unavailable`)
+        }
+        if (!content) return { ...file, content: "", assetId: undefined, isModified: false }
+
+        const record = await assetRepository.importBlob(
+          new Blob([content], { type: inferMimeType(file.name) }),
+          {
+            name: file.name,
+            source: { type: "generated", value: "code-studio" },
+            scope: { type: "code-studio", id: `${projectId ?? "local"}:${localData.id}` },
+          },
+        )
+        createdAssetUris.push(record.uri)
+        return { ...file, content: record.uri, assetId: record.uri, isModified: false }
+      }))
+
       const display1 = localData.layout?.displays.find(d => d.id === 'display-1')
-      
-      // Determinar o tipo de editor no display-1
       const isDisplay1Unique = display1 ? !!findUniqueEditorLeaf(display1) : false
-      
-      // Sincronizar activeFileId com a aba ativa apropriada
       let syncedActiveFileId = localData.activeFileId
-      
+
       if (isDisplay1Unique) {
-        // Editor único: usar uniqueActiveFileId do display-1
         if (display1?.uniqueOpenTabs && display1.uniqueOpenTabs.length > 0) {
           syncedActiveFileId = display1.uniqueActiveFileId
         } else {
           syncedActiveFileId = undefined
         }
       } else {
-        // Editor múltiplo: usar openTabs global
         if (localData.openTabs && localData.openTabs.length > 0) {
-          // Se já tem activeFileId e está nas tabs abertas, manter
-          // Senão, usar a última tab aberta
           if (localData.activeFileId && localData.openTabs.includes(localData.activeFileId)) {
             syncedActiveFileId = localData.activeFileId
           } else {
@@ -1514,17 +1475,48 @@ export function CodeStudioEditor({
           syncedActiveFileId = undefined
         }
       }
-      
-      const dataToSave = {
+
+      const dataToSave: CodeStudioData = {
         ...localData,
+        files,
         layout: localData.layout ? {
           ...localData.layout,
           activeDisplayId: 'display-1'
         } : undefined,
         activeFileId: syncedActiveFileId
       }
-      onSave?.(dataToSave)
-    }, 0)
+      await assetRepository.reconcileUsage(
+        usageScope,
+        findAssetUris(files).map((uri, index) => ({
+          uri,
+          consumerId: `file:${index}`,
+          role: "code-file",
+        })),
+      )
+      await onSave?.(dataToSave)
+      setLocalData(draft => {
+        Object.assign(draft, dataToSave)
+      })
+    } catch (error) {
+      await assetRepository.reconcileUsage(
+        usageScope,
+        previousUris.map((uri, index) => ({
+          uri,
+          consumerId: `file:${index}`,
+          role: "code-file",
+        })),
+      ).catch(() => undefined)
+      await Promise.all(
+        createdAssetUris.map((uri) =>
+          assetRepository.remove(uri, { force: true }).catch(() => undefined),
+        ),
+      )
+      toast.error("Failed to save Code Studio", {
+        description: error instanceof Error ? error.message : "Asset persistence failed",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleCancelClick = () => {
@@ -1758,17 +1750,17 @@ export function CodeStudioEditor({
               <Button 
                 variant="outline" 
                 onClick={handleCancelClick}
-                disabled={localData.layout?.editMode}
+                disabled={localData.layout?.editMode || isSaving}
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleSaveClick} 
                 className="flex items-center gap-2"
-                disabled={localData.layout?.editMode}
+                disabled={localData.layout?.editMode || isSaving}
               >
                 <Save className="h-4 w-4" />
-                Save
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>

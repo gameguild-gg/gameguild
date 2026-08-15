@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { Folder, File, ChevronRight, ChevronDown, Package, Trash2, Download, Plus } from "lucide-react"
-import type { CollectionMetadata, CollectionManifest, CollectionFolder, CollectionFile } from "@/components/block-content-editor/lib/storage/assets/collection-types"
-import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import type { CollectionMetadata, CollectionManifest, CollectionFolder, CollectionFile } from "./collection-types"
+import { collectionRepository } from "./collection-repository"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -30,7 +30,7 @@ export function CollectionBrowser({ onImportFiles, onClose }: CollectionBrowserP
   const loadCollections = async () => {
     setIsLoading(true)
     try {
-      const list = await assetManager.listCollections()
+      const list = await collectionRepository.list()
       setCollections(list)
     } catch (error) {
       console.error("Failed to load collections:", error)
@@ -41,7 +41,7 @@ export function CollectionBrowser({ onImportFiles, onClose }: CollectionBrowserP
 
   const handleSelectCollection = async (collectionId: string) => {
     try {
-      const manifest = await assetManager.getCollection(collectionId)
+      const manifest = await collectionRepository.get(collectionId)
       setSelectedCollection(manifest)
       setSelectedFiles(new Set())
       setExpandedFolders(new Set())
@@ -54,7 +54,7 @@ export function CollectionBrowser({ onImportFiles, onClose }: CollectionBrowserP
     if (!confirm("Delete this collection? Referenced assets will not be affected.")) return
 
     try {
-      await assetManager.deleteCollection(collectionId)
+      await collectionRepository.remove(collectionId)
       await loadCollections()
       if (selectedCollection?.metadata.id === collectionId) {
         setSelectedCollection(null)
@@ -110,7 +110,7 @@ export function CollectionBrowser({ onImportFiles, onClose }: CollectionBrowserP
         allFiles.push({
           name: file.name,
           path: file.path,
-          assetId: file.assetId,
+          assetId: file.assetUri ?? "",
           isFile: file.isFile,
           readonly: file.readonly,
           isVisible: file.isVisible,
@@ -128,7 +128,7 @@ export function CollectionBrowser({ onImportFiles, onClose }: CollectionBrowserP
       allFiles.push({
         name: file.name,
         path: file.path,
-        assetId: file.assetId,
+        assetId: file.assetUri ?? "",
         isFile: file.isFile,
         readonly: file.readonly,
         isVisible: file.isVisible,
@@ -165,7 +165,7 @@ export function CollectionBrowser({ onImportFiles, onClose }: CollectionBrowserP
           filesToImport.push({
             name: file.name,
             path: file.path,
-            assetId: file.assetId,
+            assetId: file.assetUri ?? "",
             isFile: file.isFile,
             readonly: file.readonly,
             isVisible: file.isVisible,
@@ -185,7 +185,7 @@ export function CollectionBrowser({ onImportFiles, onClose }: CollectionBrowserP
         filesToImport.push({
           name: file.name,
           path: file.path,
-          assetId: file.assetId,
+          assetId: file.assetUri ?? "",
           isFile: file.isFile,
           readonly: file.readonly,
           isVisible: file.isVisible,

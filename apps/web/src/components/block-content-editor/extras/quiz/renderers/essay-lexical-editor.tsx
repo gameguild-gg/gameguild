@@ -11,7 +11,6 @@ import { useRef } from "react"
 import type { SerializedEditorState } from "lexical"
 
 import { LexicalSurface } from "@game-guild/lexical-surface"
-import { lexicalSurfaceAdapters } from "@/components/block-content-editor/lexical-surface-adapters"
 
 interface EssayLexicalEditorProps {
   initialState?: SerializedEditorState | null
@@ -42,7 +41,6 @@ export function EssayLexicalEditor({
           placeholder={placeholder}
           contentStyle={{ minHeight }}
           contentClassName="resize-y overflow-auto"
-          adapters={lexicalSurfaceAdapters}
           features={{
             toolbar: true,
             draggable: false,

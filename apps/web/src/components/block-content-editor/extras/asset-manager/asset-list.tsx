@@ -8,7 +8,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useEffect, useState } from "react"
-import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import { toAssetUri } from "@game-guild/assets"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
+
+const assetRepository = getDefaultBrowserAssetRepository()
 
 interface Asset {
   id: string
@@ -46,25 +49,33 @@ export function AssetList({ assets, viewMode, gridColumns = 5, listColumns = 1, 
 
   // Load asset data URLs for thumbnails
   useEffect(() => {
+    let active = true
+    const releases: Array<() => void> = []
     const loadAssetData = async () => {
       const urls: Record<string, string> = {}
       for (const asset of assets) {
         if (asset.mimeType.startsWith('image/')) {
           try {
-            const assetData = await assetManager.getAsset(asset.id)
-            if (assetData && assetData.data) {
-              urls[asset.id] = assetData.data
+            const resolved = await assetRepository.createObjectUrl(toAssetUri(asset.id))
+            if (!active) resolved.release()
+            else {
+              urls[asset.id] = resolved.url
+              releases.push(resolved.release)
             }
           } catch (error) {
             console.error(`Failed to load asset ${asset.id}:`, error)
           }
         }
       }
-      setAssetDataUrls(urls)
+      if (active) setAssetDataUrls(urls)
     }
 
     if (assets.length > 0) {
       loadAssetData()
+    }
+    return () => {
+      active = false
+      releases.forEach((release) => release())
     }
   }, [assets])
   const getFileIcon = (mimeType: string) => {

@@ -39,7 +39,7 @@ export class VegaLiteLexicalNode extends DecoratorNode<React.JSX.Element> {
   __theme: NonNullable<VegaLiteData["theme"]>;
   __themeMode: NonNullable<VegaLiteData["themeMode"]>;
   __layout: NonNullable<VegaLiteData["layout"]>;
-  __data: Record<string, string>;
+  __attachments: NonNullable<VegaLiteData["attachments"]>;
 
   static getType() {
     return "lexical-vega-lite";
@@ -54,7 +54,7 @@ export class VegaLiteLexicalNode extends DecoratorNode<React.JSX.Element> {
       node.__theme,
       node.__themeMode,
       node.__layout,
-      node.__data,
+      node.__attachments,
       node.__key,
     );
   }
@@ -67,7 +67,7 @@ export class VegaLiteLexicalNode extends DecoratorNode<React.JSX.Element> {
     theme?: VegaLiteData["theme"],
     themeMode?: VegaLiteData["themeMode"],
     layout?: VegaLiteData["layout"],
-    data?: Record<string, string>,
+    attachments?: VegaLiteData["attachments"],
     key?: NodeKey,
   ) {
     super(key);
@@ -78,7 +78,7 @@ export class VegaLiteLexicalNode extends DecoratorNode<React.JSX.Element> {
     this.__theme = theme ?? "default";
     this.__themeMode = themeMode ?? "system";
     this.__layout = layout ?? "rectangular";
-    this.__data = data ?? {};
+    this.__attachments = attachments ?? {};
   }
 
   static importJSON(
@@ -94,7 +94,7 @@ export class VegaLiteLexicalNode extends DecoratorNode<React.JSX.Element> {
         s.theme,
         s.themeMode,
         s.layout,
-        s.data,
+        s.attachments,
       ),
     );
   }
@@ -109,7 +109,7 @@ export class VegaLiteLexicalNode extends DecoratorNode<React.JSX.Element> {
       theme: this.__theme,
       themeMode: this.__themeMode,
       layout: this.__layout,
-      data: this.__data,
+      attachments: this.__attachments,
     };
   }
 
@@ -187,11 +187,11 @@ export class VegaLiteLexicalNode extends DecoratorNode<React.JSX.Element> {
   setLayout(v: NonNullable<VegaLiteData["layout"]>): void {
     this.getWritable().__layout = v;
   }
-  getData(): Record<string, string> {
-    return this.__data;
+  getAttachments(): NonNullable<VegaLiteData["attachments"]> {
+    return this.__attachments;
   }
-  setData(v: Record<string, string>): void {
-    this.getWritable().__data = v;
+  setAttachments(v: NonNullable<VegaLiteData["attachments"]>): void {
+    this.getWritable().__attachments = v;
   }
 
   decorate(): React.JSX.Element {
@@ -204,7 +204,7 @@ export class VegaLiteLexicalNode extends DecoratorNode<React.JSX.Element> {
         theme={this.__theme}
         themeMode={this.__themeMode}
         layout={this.__layout}
-        data={this.__data}
+        attachments={this.__attachments}
         nodeKey={this.__key}
       />
     );

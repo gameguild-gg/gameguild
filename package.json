@@ -68,6 +68,7 @@
       "@babel/plugin-transform-modules-systemjs": "7.29.7",
       "@tootallnate/once": "2.0.1",
       "@excalidraw/excalidraw>nanoid": "3.3.18",
+      "@excalidraw/mermaid-to-excalidraw>mermaid": "11.16.1",
       "@excalidraw/mermaid-to-excalidraw>nanoid": "5.1.16",
       "dompurify": "3.4.13",
       "lodash-es": "4.18.0",

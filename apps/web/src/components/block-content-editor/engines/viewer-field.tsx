@@ -5,7 +5,6 @@ import { Eye } from "lucide-react"
 import { BlockArrayViewer } from "@/components/block-content-editor/engines/blocks/block-array-viewer"
 import { useViewer } from "./viewer-provider"
 import { LexicalSurface } from "@game-guild/lexical-surface"
-import { lexicalSurfaceAdapters } from "@/components/block-content-editor/lexical-surface-adapters"
 
 export function ViewerField() {
   const { viewer, ui, fieldConfig } = useViewer()
@@ -27,7 +26,6 @@ export function ViewerField() {
             readOnly={true}
             onChange={() => { }}
             className="flex-1 flex flex-col"
-            adapters={lexicalSurfaceAdapters}
             // Keep neutral to preserve fixed page geometry from PagesPlugin.
             contentClassName="max-w-none"
           />
