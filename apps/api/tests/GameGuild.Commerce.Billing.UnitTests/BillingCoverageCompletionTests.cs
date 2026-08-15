@@ -616,17 +616,18 @@ public sealed class BillingCoverageCompletionTests
 
     private static AppleSignerWithChain CreateAppleSignerWithMissingIssuer()
     {
+        var now = DateTimeOffset.UtcNow;
         var leafKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         var issuerKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         var unrelatedKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         var issuerRequest = new CertificateRequest("CN=Apple Missing CA", issuerKey, HashAlgorithmName.SHA256);
         issuerRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
-        using var issuer = issuerRequest.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
+        using var issuer = issuerRequest.CreateSelfSigned(now.AddDays(-1), now.AddDays(2));
         var leafRequest = new CertificateRequest("CN=Apple Leaf", leafKey, HashAlgorithmName.SHA256);
-        var leaf = leafRequest.Create(issuer, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1), Guid.NewGuid().ToByteArray());
+        var leaf = leafRequest.Create(issuer, now.AddDays(-1), now.AddDays(1), Guid.NewGuid().ToByteArray());
         var unrelatedRequest = new CertificateRequest("CN=Apple Missing CA", unrelatedKey, HashAlgorithmName.SHA256);
         unrelatedRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
-        var unrelated = unrelatedRequest.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
+        var unrelated = unrelatedRequest.CreateSelfSigned(now.AddDays(-1), now.AddDays(2));
         return new AppleSignerWithChain(
             leafKey,
             leaf,
@@ -638,14 +639,15 @@ public sealed class BillingCoverageCompletionTests
 
     private static AppleSignerWithChain CreateNonAppleValidChain()
     {
+        var now = DateTimeOffset.UtcNow;
         var leafKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         var issuerKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         var spareKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
         var issuerRequest = new CertificateRequest("CN=Other Root", issuerKey, HashAlgorithmName.SHA256);
         issuerRequest.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
-        var issuer = issuerRequest.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1));
+        var issuer = issuerRequest.CreateSelfSigned(now.AddDays(-1), now.AddDays(2));
         var leafRequest = new CertificateRequest("CN=Other Leaf", leafKey, HashAlgorithmName.SHA256);
-        var leaf = leafRequest.Create(issuer, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1), Guid.NewGuid().ToByteArray());
+        var leaf = leafRequest.Create(issuer, now.AddDays(-1), now.AddDays(1), Guid.NewGuid().ToByteArray());
         return new AppleSignerWithChain(
             leafKey,
             leaf,
