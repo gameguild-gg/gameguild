@@ -98,6 +98,8 @@ export function LearningShell({
   webOrigin = "https://gameguild.gg",
 }: LearningShellProps) {
   const pathname = normalizeLearnerPathname(usePathname());
+  // Regex tests the locale-stripped pathname; coding assessments go edge-to-edge.
+  const wide = /^\/learn\/courses\/[^/]+\/activities\/assessment-/.test(pathname);
   const router = useRouter();
   const { isLoading, signOut } = useAuth();
   const [ready, setReady] = useState(false);
@@ -429,7 +431,13 @@ export function LearningShell({
         tabIndex={-1}
         className="min-w-0 overflow-x-clip lg:pl-64"
       >
-        <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
+        <div
+          className={
+            wide
+              ? "w-full px-4 pt-4 pb-6"
+              : "mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8"
+          }
+        >
           {children}
         </div>
       </main>
