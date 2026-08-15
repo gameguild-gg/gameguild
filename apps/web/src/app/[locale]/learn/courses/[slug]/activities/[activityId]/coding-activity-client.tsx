@@ -2,17 +2,33 @@
 
 import { useRouter } from '@/i18n/navigation';
 import { filesToCodePayload } from '@/lib/coding-assignment/code-payload';
-import type { CodingAssignmentContent } from '@/lib/coding-assignment/types';
-import { computeScore } from '@/lib/emception/scoring';
+import type { CodingAssignmentContent, FileEncoding } from '@/lib/coding-assignment/types';
 import {
   submitAssessment,
   type LearnerMutationResult,
 } from '@/lib/learner/activity-actions';
-import type { GradingCase, GradingPlan, IdeHandle, TestReport } from '@game-guild/emception-ui';
-import type { TestPlan } from 'emception';
+import {
+  ASSIGNMENT_SAMPLES,
+  type CodingLanguage,
+  type GradingCase,
+  type GradingPlan,
+  type IdeHandle,
+  type TestReport,
+  type WorkspaceConfig,
+} from '@game-guild/emception-ui';
 import { Button } from '@game-guild/ui/components/button';
 import Script from 'next/script';
-import { lazy, Suspense, useEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from 'react';
+import { PublicTestEstimateBanner } from './public-test-estimate-banner';
 
 const Ide = lazy(
   () => import('@game-guild/emception-ui').then((m) => ({ default: m.Ide })),
@@ -43,6 +59,7 @@ export interface CodingActivityClientProps {
 function publicSeedFiles(assignment: CodingAssignmentContent): Array<{
   path: string;
   content: string;
+  encoding: FileEncoding;
   modifiable: boolean;
 }> {
   return Object.entries(assignment.Data.Files)
@@ -50,6 +67,7 @@ function publicSeedFiles(assignment: CodingAssignmentContent): Array<{
     .map(([path, meta]) => ({
       path,
       content: meta.Content,
+      encoding: meta.Encoding ?? 'text',
       modifiable: meta.Modifiable,
     }));
 }
@@ -90,6 +108,14 @@ export function CodingActivityClient({
   const [submitting, setSubmitting] = useState(false);
   const [report, setReport] = useState<TestReport | null>(null);
   const [result, setResult] = useState<LearnerMutationResult | null>(null);
+  // Gate for the seeding effect: lazy() mounts <Ide> only after its chunk
+  // loads, so a mount-time effect reading ref.current races the chunk and
+  // sees null. The callback ref flips this flag once the handle exists.
+  const [ideMounted, setIdeMounted] = useState(false);
+  const attachIde = useCallback((handle: IdeHandle | null) => {
+    ref.current = handle;
+    setIdeMounted(Boolean(handle));
+  }, []);
 
   const seedFiles = useRef(publicSeedFiles(assignment));
   const gradingPlan = useRef<GradingPlan>(publicTestsToGradingPlan(assignment));
@@ -100,10 +126,34 @@ export function CodingActivityClient({
   // constant) until T13 wires the course-level field through getCourseLearnerContext.
   const passingScore = 60;
 
+  // Boot config for the IDE: language preset from the assignment (unknown/
+  // legacy languages fall back to cpp) with the Public files swapped in.
+  // Passing workspaceConfig also hides the preset picker — students must
+  // never switch presets (it would wipe the assignment files).
+  const workspaceConfig = useMemo<WorkspaceConfig>(() => {
+    const language = (assignment.Environment.Language as CodingLanguage | undefined) ?? 'cpp';
+    const sample = ASSIGNMENT_SAMPLES[language] ?? ASSIGNMENT_SAMPLES.cpp;
+    const files: WorkspaceConfig['files'] = {};
+    for (const { path, content, encoding } of seedFiles.current) {
+      files[path] = { encoding, content };
+    }
+    return {
+      ...sample.workspaceConfig,
+      // Fall back to the preset files when the assignment has no Public files.
+      files: Object.keys(files).length > 0 ? files : sample.workspaceConfig.files,
+    };
+    // seedFiles.current is a mount-time ref — never reassigned.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignment.Environment.Language]);
+
   // Seed IDE with Public files + apply readOnly meta for non-modifiable files.
   // setFiles/setFileMeta mutate reactive state first; VFS sync happens later
   // when doBootstrap runs syncFilesToVfs(filesRef.current). Safe to call pre-boot.
+  // Gate on ideMounted (flipped by attachIde in the commit phase): when the
+  // lazy chunk resolves synchronously the ref can already be set at first
+  // effect-run — keying the run on the flag keeps seeding exactly-once.
   useEffect(() => {
+    if (!ideMounted) return;
     const handle = ref.current;
     if (!handle) return;
     const files = seedFiles.current;
@@ -122,7 +172,7 @@ export function CodingActivityClient({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [ideMounted]);
 
   if (result?.success) {
     return (
@@ -173,8 +223,10 @@ export function CodingActivityClient({
         <div {...wrapperDataAttrs} className="h-[70vh] min-h-[500px]">
           <Suspense fallback={<IdeSkeleton />}>
             <Ide
-              ref={ref}
-              testPlan={gradingPlan.current}
+              ref={attachIde}
+              workspaceConfig={workspaceConfig}
+              assignmentToken={assessmentId}
+              testPlan={gradingPlan.current.cases.length > 0 ? gradingPlan.current : undefined}
               testMode="public"
               manifestUrl={manifestUrl}
               maxScore={maxScore}
@@ -207,59 +259,5 @@ export function CodingActivityClient({
       <style>{`[data-allow-create-files="false"] button[title^="New "] { display: none !important; }`}</style>
     ) : null}
   </>
-);
-}
-
-function PublicTestEstimateBanner({
-  report,
-  plan,
-  maxScore,
-  passingScore,
-}: {
-  report: TestReport;
-  plan: GradingPlan;
-  maxScore: number;
-  passingScore: number;
-}) {
-  let scoreText: string | null = null;
-  let unavailable = false;
-  try {
-    if (plan.cases.length > 0) {
-      const { score } = computeScore(
-        report,
-        plan as unknown as TestPlan,
-        maxScore,
-        passingScore,
-      );
-      scoreText = Number.isFinite(score) ? `${score}/${maxScore}` : null;
-    }
-    unavailable = scoreText === null;
-  } catch {
-    unavailable = true;
-  }
-
-  if (unavailable) {
-    return (
-      <div
-        role="alert"
-        data-testid="public-test-estimate-unavailable"
-        className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100"
-      >
-        Estimate unavailable.
-      </div>
-    );
-  }
-
-  const total = report.passed + report.failed;
-  return (
-    <div
-      role="status"
-      data-testid="public-test-estimate-banner"
-      className="rounded-md border border-sky-500/30 bg-sky-500/10 p-3 text-sm text-sky-100"
-    >
-      Your public tests: {report.passed}/{total} passed (estimated score:{' '}
-      {scoreText}). This is an estimate based on public tests only — hidden
-      tests may change your final grade.
-    </div>
   );
 }
