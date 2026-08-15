@@ -38,6 +38,10 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 
+vi.mock('@/components/courses/programs-catalog-view', () => ({
+  ProgramsCatalogView: () => <div data-testid="programs-view" />,
+}));
+
 const courseFixtures = [
   {
     id: 'course-python',
@@ -126,5 +130,33 @@ describe('CoursesPage', () => {
     expect(hasStat('0', 'Courses')).toBeInTheDocument();
     expect(screen.queryByText(/showing the imported GameGuild course snapshot/i)).not.toBeInTheDocument();
     expect(publicCourseCatalogMock).toHaveBeenCalledWith([]);
+  });
+
+  it('renders the program packages view via ?type=program', async () => {
+    render(
+      await CoursesPage({
+        searchParams: Promise.resolve({ type: 'program' }),
+      } as never),
+    );
+
+    expect(screen.getByTestId('programs-view')).toBeInTheDocument();
+    expect(getPublicCourseCatalogMock).not.toHaveBeenCalled();
+  });
+
+  it('renders the course catalog for any other type value', async () => {
+    getPublicCourseCatalogMock.mockResolvedValue({
+      success: true,
+      source: 'api',
+      data: courseFixtures,
+    });
+
+    render(
+      await CoursesPage({
+        searchParams: Promise.resolve({ type: 'track' }),
+      } as never),
+    );
+
+    expect(screen.queryByTestId('programs-view')).not.toBeInTheDocument();
+    expect(publicCourseCatalogMock).toHaveBeenCalledWith(courseFixtures);
   });
 });

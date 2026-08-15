@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { usePathname } from 'next/navigation';
 import React, { type FormEvent, useState, useTransition } from 'react';
-import { submitContactLeadAction } from './actions';
+import { submitContactLeadAction } from '@/lib/contact/actions';
 
 type ContactFormState = {
   name: string;
