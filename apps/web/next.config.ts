@@ -78,6 +78,18 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async redirects() {
+    return [
+      { source: "/dashboard/teams/:path*", destination: "/my/teams/:path*", permanent: true },
+      { source: "/dashboard/projects/:path*", destination: "/my/projects/:path*", permanent: true },
+      { source: "/dashboard/invitations", destination: "/my/invitations", permanent: true },
+      { source: "/dashboard/settings/account", destination: "/my/settings/account", permanent: true },
+      { source: "/:locale/dashboard/teams/:path*", destination: "/:locale/my/teams/:path*", permanent: true },
+      { source: "/:locale/dashboard/projects/:path*", destination: "/:locale/my/projects/:path*", permanent: true },
+      { source: "/:locale/dashboard/invitations", destination: "/:locale/my/invitations", permanent: true },
+      { source: "/:locale/dashboard/settings/account", destination: "/:locale/my/settings/account", permanent: true },
+    ];
+  },
   async rewrites() {
     return [
       {

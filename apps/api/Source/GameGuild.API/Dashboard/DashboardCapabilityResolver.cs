@@ -1,4 +1,5 @@
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Authorization;
 using GameGuild.TestingLab;
 
 namespace GameGuild.API.Dashboard;
@@ -8,6 +9,8 @@ public static class DashboardCapabilities
     public const string CommunityManage = "Community.Manage";
     public const string CommunityManageMembers = "Community.ManageMembers";
     public const string CommunityManageSupport = "Community.ManageSupport";
+    public const string CommunityManageTeams = "Community.ManageTeams";
+    public const string CommunityManageProjects = "Community.ManageProjects";
     public const string PlatformManageRoles = "Platform.ManageRoles";
     public const string LearningManage = "Learning.Manage";
     public const string TestingLabManageEvents = "TestingLab.ManageEvents";
@@ -27,6 +30,8 @@ public static class DashboardCapabilities
         CommunityManage,
         CommunityManageMembers,
         CommunityManageSupport,
+        CommunityManageTeams,
+        CommunityManageProjects,
         PlatformManageRoles,
         LearningManage,
         TestingLabManageEvents,
@@ -71,6 +76,12 @@ public static class DashboardCapabilityResolver
 
         if (actor.HasAnyPermission("support:read", "support:update", "tickets:read", "tickets:update"))
             capabilities.Add(DashboardCapabilities.CommunityManageSupport);
+
+        if (actor.HasPermission(TeamPermission.Keys.Admin))
+            capabilities.Add(DashboardCapabilities.CommunityManageTeams);
+
+        if (actor.HasPermission(ProjectPermission.Keys.Admin))
+            capabilities.Add(DashboardCapabilities.CommunityManageProjects);
 
         if (actor.HasAnyPermission("roles:read", "roles:create", "roles:update", "roles:delete", "roles:assign"))
             capabilities.Add(DashboardCapabilities.PlatformManageRoles);

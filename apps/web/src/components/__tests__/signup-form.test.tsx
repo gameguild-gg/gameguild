@@ -66,7 +66,7 @@ describe('SignupForm', () => {
   it('renders navigation links', () => {
     renderWithUser(<SignupForm />);
 
-    expect(screen.getByText('Sign in')).toHaveAttribute('href', '/en-US/sign-in?redirectTo=%2Fdashboard');
+    expect(screen.getByText('Sign in')).toHaveAttribute('href', '/en-US/sign-in?redirectTo=%2Fmy');
     expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/en-US/terms-of-service');
     expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/en-US/polices/privacy');
   });
@@ -204,7 +204,7 @@ describe('SignupForm', () => {
       password: '12345678',
       firstName: 'Jo',
       lastName: 'Do',
-      redirectTo: '/dashboard',
+      redirectTo: '/my',
     });
   }, 10000);
 

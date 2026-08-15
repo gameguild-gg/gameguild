@@ -44,22 +44,30 @@ export async function createTeamForm(data: FormData): Promise<void> {
   const name = text(data, 'name');
   const slug = text(data, 'slug').toLowerCase();
   if (!name || !slug) return;
-  const result = await request<{ slug: string }>('POST', '/v1/teams', { name, slug, visibility: text(data, 'visibility') || 'Private', description: text(data, 'description') || null });
-  revalidatePath('/dashboard');
-  redirect(`/dashboard/teams/${result.slug}`);
+  const result = await request<{ id: string; slug: string }>('POST', '/v1/teams', {
+    name,
+    slug,
+    visibility: text(data, 'visibility') || 'Private',
+    description: text(data, 'description') || null,
+    ownerUserId: text(data, 'ownerUserId') || null,
+  });
+  const management = text(data, 'surface') === 'admin';
+  revalidatePath(management ? '/dashboard/community/teams' : '/my');
+  redirect(management ? `/dashboard/community/teams/${result.id}` : `/my/teams/${result.slug}`);
 }
 
 export async function createProjectForm(data: FormData): Promise<void> {
   const title = text(data, 'title');
   if (!title) return;
   const ownerTeamId = text(data, 'ownerTeamId');
-  const result = await request<{ slug: string }>('POST', '/v1/projects', {
+  const result = await request<{ id: string; slug: string }>('POST', '/v1/projects', {
     title, description: text(data, 'description') || null, shortDescription: text(data, 'shortDescription') || null,
     type: text(data, 'type') || 'Game', visibility: text(data, 'visibility') || 'Private', status: 'Draft',
     ownerTeamId: ownerTeamId || null,
   });
-  revalidatePath('/dashboard');
-  redirect(`/dashboard/projects/${result.slug}`);
+  const management = text(data, 'surface') === 'admin';
+  revalidatePath(management ? '/dashboard/community/projects' : '/my');
+  redirect(management ? `/dashboard/community/projects/${result.id}` : `/my/projects/${result.slug}`);
 }
 
 export async function createProjectVersionForm(data: FormData): Promise<void> {
@@ -139,8 +147,8 @@ export async function acceptTeamInvitationForm(data: FormData): Promise<void> {
   const invitationId = text(data, 'invitationId');
   if (!invitationId) return;
   await request('POST', `/v1/teams/invitations/${invitationId}:accept`);
-  revalidatePath('/dashboard/invitations');
-  revalidatePath('/dashboard');
+  revalidatePath('/my/invitations');
+  revalidatePath('/my');
 }
 
 export async function updateProjectForm(data: FormData): Promise<void> {
@@ -383,23 +391,32 @@ export async function transitionProjectForm(data: FormData): Promise<void> {
   if (!projectId || !['publish', 'unpublish', 'archive', 'restore'].includes(action)) return;
   await request('POST', `/v1/projects/${projectId}:${action}`);
   revalidatePath(text(data, 'returnPath'));
-  revalidatePath('/dashboard');
+  revalidatePath('/my');
 }
 
 export async function deleteProjectForm(data: FormData): Promise<void> {
   const projectId = text(data, 'projectId');
   if (!projectId) return;
   await request('DELETE', `/v1/projects/${projectId}?softDelete=true&reason=${encodeURIComponent(text(data, 'reason') || 'Deleted from Project settings')}`);
-  revalidatePath('/dashboard');
-  redirect('/dashboard');
+  const returnPath = text(data, 'returnPath') || '/my';
+  revalidatePath(returnPath);
+  redirect(returnPath.startsWith('/dashboard/community/') ? '/dashboard/community/projects' : '/my/projects');
 }
 
 export async function archiveTeamForm(data: FormData): Promise<void> {
   const teamId = text(data, 'teamId');
   if (!teamId) return;
   await request('DELETE', `/v1/teams/${teamId}`);
-  revalidatePath('/dashboard');
-  redirect('/dashboard');
+  const returnPath = text(data, 'returnPath') || '/my';
+  revalidatePath(returnPath);
+  redirect(returnPath.startsWith('/dashboard/community/') ? '/dashboard/community/teams' : '/my/teams');
+}
+
+export async function restoreTeamForm(data: FormData): Promise<void> {
+  const teamId = text(data, 'teamId');
+  if (!teamId) return;
+  await request('POST', `/v1/teams/${teamId}:restore`);
+  revalidatePath(text(data, 'returnPath'));
 }
 
 export async function restrictWorkspaceFolderForm(data: FormData): Promise<void> {

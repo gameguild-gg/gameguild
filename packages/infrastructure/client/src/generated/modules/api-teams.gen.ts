@@ -17,12 +17,20 @@ export class ApiTeamsModule {
 
   /**
    */
-  async getTeams(): Promise<Result<Array<Types.APITeamsTeam>, ApiError>> {
+  async getTeams(query?: {
+    search?: string;
+    visibility?: Types.TeamsTeamVisibility;
+    status?: Types.TeamsTeamStatus;
+    includeArchived?: boolean;
+    skip?: number;
+    take?: number;
+  }): Promise<Result<Array<Types.APITeamsTeam>, ApiError>> {
     const url = '/v1/teams';
 
     const result = await this.client.request({
       method: 'GET',
       path: url,
+      params: query,
       requiresAuth: true,
     });
 
@@ -95,6 +103,26 @@ export class ApiTeamsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getTeamsMine(query?: {
+    includeArchived?: boolean;
+    search?: string;
+    skip?: number;
+    take?: number;
+  }): Promise<Result<Array<Types.APITeamsTeam>, ApiError>> {
+    const url = '/v1/teams/mine';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.APITeamsTeam>, ApiError>;
   }
 
   /**
@@ -281,6 +309,26 @@ export class ApiTeamsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postTeamsRestore(teamId: string): Promise<Result<Types.APITeamsTeam, ApiError>> {
+    const url = `/v1/teams/${teamId}:restore`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.APITeamsTeamSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 }
 

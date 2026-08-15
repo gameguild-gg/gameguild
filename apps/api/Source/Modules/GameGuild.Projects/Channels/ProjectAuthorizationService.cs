@@ -5,6 +5,7 @@ using GameGuild.Identity.Users;
 using GameGuild.Teams;
 using Microsoft.EntityFrameworkCore;
 using ResourceTenantId = GameGuild.CQRS.Models.TenantId;
+using ProjectAdminPermission = GameGuild.Identity.Authorization.ProjectPermission;
 
 namespace GameGuild.Projects;
 
@@ -18,6 +19,8 @@ public interface IProjectAuthorizationService
         => HasPermissionAsync(projectId, permission, cancellationToken);
 
     IQueryable<Project> ApplyReadAccess(IQueryable<Project> query) => query;
+
+    IQueryable<Project> ApplyPersonalAccess(IQueryable<Project> query, bool includeDeleted = false) => query.Where(_ => false);
 
     IQueryable<Project> ApplyWorkspaceAccess(IQueryable<Project> query, bool includeDeleted = false) => query.Where(_ => false);
 }
@@ -68,7 +71,7 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
         if (project.TenantId != actor.TenantId)
             return false;
         var actorId = actor.SubjectIdAsGuid!.Value;
-        if (actor.IsSystemAdmin || actor.IsTenantAdmin)
+        if (CanManageProjects(actor))
             return true;
         if (project.CreatedById == actorId)
             return true;
@@ -175,7 +178,7 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
             user.IsActive &&
             !user.IsSuspended &&
             user.DeletedAt == null);
-        if (actor.IsSystemAdmin || actor.IsTenantAdmin)
+        if (CanManageProjects(actor))
             return query.Where(project =>
                 (project.Visibility == ContentVisibility.Public && project.Status == ContentStatus.Published) ||
                 (project.TenantId == tenantId &&
@@ -207,16 +210,18 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
                   collaborator.DeletedAt == null &&
                   collaborator.LeftAt == null &&
                   (collaborator.Role == ProjectRoles.Owner ||
-                   ("," + collaborator.Permissions.Replace(" ", "").Replace(";", ",").Replace("|", ",").ToUpper() + ",")
-                       .Contains(",READ,"))) ||
+                  EF.Functions.Like(
+                      "," + collaborator.Permissions.Replace(" ", "").Replace(";", ",").Replace("|", ",").ToUpper() + ",",
+                      "%,READ,%"))) ||
               context.Set<ProjectTeam>().Any(projectTeam =>
                   projectTeam.ProjectId == project.Id &&
                   projectTeam.IsActive &&
                   projectTeam.DeletedAt == null &&
                   projectTeam.EndedAt == null &&
                   (projectTeam.Role == ProjectTeamRole.Owner ||
-                   ("," + (projectTeam.Permissions ?? string.Empty).Replace(" ", "").Replace(";", ",").Replace("|", ",").ToUpper() + ",")
-                       .Contains(",READ,")) &&
+                  EF.Functions.Like(
+                      "," + (projectTeam.Permissions ?? string.Empty).Replace(" ", "").Replace(";", ",").Replace("|", ",").ToUpper() + ",",
+                      "%,READ,%")) &&
                   context.Set<Team>().Any(team =>
                       team.Id == projectTeam.TeamId &&
                       team.TenantId == project.TenantId &&
@@ -243,23 +248,14 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
                   grant.ResourceId == project.Id.ToString() &&
                   grant.RevokedAt == null &&
                   (!grant.ExpiresAt.HasValue || grant.ExpiresAt > SystemClock.UtcNow) &&
-                  grant.Permissions.Contains(nameof(PermissionType.Read))))));
+                  grant.Permissions.Any(permission => permission == nameof(PermissionType.Read))))));
     }
 
-    public IQueryable<Project> ApplyWorkspaceAccess(IQueryable<Project> query, bool includeDeleted = false)
+    public IQueryable<Project> ApplyPersonalAccess(IQueryable<Project> query, bool includeDeleted = false)
     {
         var actor = actorContextAccessor.ActorContext;
         if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } actorId || actor.TenantId is not { } tenantId)
             return query.Where(_ => false);
-        if (actor.IsSystemAdmin || actor.IsTenantAdmin)
-            return query.Where(project =>
-                project.TenantId == tenantId &&
-                (includeDeleted || project.DeletedAt == null) &&
-                context.Set<TenantMember>().Any(member =>
-                    member.UserId == actorId &&
-                    member.TenantId == tenantId &&
-                    member.IsActive &&
-                    member.DeletedAt == null));
 
         var resourceTenantId = new ResourceTenantId(tenantId);
         return query.Where(project =>
@@ -282,8 +278,9 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
                   projectTeam.DeletedAt == null &&
                   projectTeam.EndedAt == null &&
                   (projectTeam.Role == ProjectTeamRole.Owner ||
-                   ("," + (projectTeam.Permissions ?? string.Empty).Replace(" ", "").Replace(";", ",").Replace("|", ",").ToUpper() + ",")
-                       .Contains(",READ,")) &&
+                  EF.Functions.Like(
+                      "," + (projectTeam.Permissions ?? string.Empty).Replace(" ", "").Replace(";", ",").Replace("|", ",").ToUpper() + ",",
+                      "%,READ,%")) &&
                   context.Set<TeamMember>().Any(member =>
                       member.TeamId == projectTeam.TeamId &&
                      member.UserId == actorId &&
@@ -310,7 +307,25 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
                    grant.ResourceId == project.Id.ToString() &&
                    grant.RevokedAt == null &&
                    (!grant.ExpiresAt.HasValue || grant.ExpiresAt > SystemClock.UtcNow) &&
-                   grant.Permissions.Contains(nameof(PermissionType.Read)))));
+                   grant.Permissions.Any(permission => permission == nameof(PermissionType.Read)))));
+    }
+
+    public IQueryable<Project> ApplyWorkspaceAccess(IQueryable<Project> query, bool includeDeleted = false)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } actorId || actor.TenantId is not { } tenantId)
+            return query.Where(_ => false);
+        if (!CanManageProjects(actor))
+            return ApplyPersonalAccess(query, includeDeleted);
+
+        return query.Where(project =>
+            project.TenantId == tenantId &&
+            (includeDeleted || project.DeletedAt == null) &&
+            context.Set<TenantMember>().Any(member =>
+                member.UserId == actorId &&
+                member.TenantId == tenantId &&
+                member.IsActive &&
+                member.DeletedAt == null));
     }
 
     public async Task<bool> IsActorActiveTenantMemberAsync(CancellationToken cancellationToken = default)
@@ -352,4 +367,7 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
             .Split([',', ';', '|'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Contains(permission.ToString(), StringComparer.OrdinalIgnoreCase);
     }
+
+    private static bool CanManageProjects(ActorContext actor) =>
+        actor.IsTenantAdmin || actor.HasPermission(ProjectAdminPermission.Keys.Admin);
 }

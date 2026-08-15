@@ -28,6 +28,7 @@ export class ProjectsModule {
     popular?: boolean;
     recent?: boolean;
     currentTenantOnly?: boolean;
+    includeArchived?: boolean;
     skip?: number;
     take?: number;
     sortBy?: string;
@@ -173,6 +174,21 @@ export class ProjectsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getProjectsMine(query?: { includeArchived?: boolean; skip?: number; take?: number }): Promise<Result<Array<Types.ProjectsProjectApiOutput>, ApiError>> {
+    const url = '/v1/projects/mine';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.ProjectsProjectApiOutput>, ApiError>;
   }
 
   /**

@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@game-guild/ui/components/dropdown-menu';
-import { LogOut, UserRound } from 'lucide-react';
+import { BriefcaseBusiness, LogOut, Settings } from 'lucide-react';
 import * as React from 'react';
 
 export interface DashboardUser {
@@ -40,7 +40,6 @@ export function DashboardUserMenu({ user }: { user: DashboardUser }) {
   const { signOut, isLoading } = useAuth();
   const [isSigningOut, setIsSigningOut] = React.useState(false);
   const disabled = isLoading || isSigningOut;
-  const profileHref = `/dashboard/community/members/users/${encodeURIComponent(user.id)}`;
 
   const handleSignOut = React.useCallback(async () => {
     if (disabled) return;
@@ -85,9 +84,15 @@ export function DashboardUserMenu({ user }: { user: DashboardUser }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={profileHref}>
-            <UserRound className="size-4" />
-            My profile
+          <Link href="/my">
+            <BriefcaseBusiness className="size-4" />
+            My Workspace
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/my/settings/account">
+            <Settings className="size-4" />
+            Account settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

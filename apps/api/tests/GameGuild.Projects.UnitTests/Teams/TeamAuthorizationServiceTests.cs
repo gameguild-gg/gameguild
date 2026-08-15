@@ -88,6 +88,32 @@ public sealed class TeamAuthorizationServiceTests : IDisposable
         (await CreateService().ApplyMembershipAccess(_context.Set<Team>()).ToListAsync()).Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task ApplyPersonalAccess_Should_Not_Expose_Unrelated_Tenant_Teams_To_A_SystemAdmin()
+    {
+        SetActor("SystemAdmin", _tenantId);
+        AddIdentity(_tenantId);
+        var team = Team.Create(_tenantId, "Other studio", "other-studio", Guid.NewGuid());
+        _context.Set<Team>().Add(team);
+        await _context.SaveChangesAsync();
+
+        var visible = await CreateService().ApplyPersonalAccess(_context.Set<Team>()).ToListAsync();
+
+        visible.Should().NotContain(item => item.Id == team.Id);
+    }
+
+    [Fact]
+    public void Restore_Should_Return_An_Archived_Team_To_The_Active_Workspace()
+    {
+        var team = Team.Create(_tenantId, "Studio", "studio", _actorId);
+        team.Archive();
+
+        team.Restore();
+
+        team.Status.Should().Be(TeamStatus.Active);
+        team.IsActive.Should().BeTrue();
+    }
+
     private TeamAuthorizationService CreateService() => new(_context, _actorAccessor.Object);
 
     private void AddIdentity(Guid tenantId)
