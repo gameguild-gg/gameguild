@@ -66,7 +66,7 @@ describe('GoogleOneTap', () => {
 
   /* ---------- Hook wiring: initialize via shared singleton ---------- */
 
-  it('calls google.accounts.id.initialize with the public client id + auto_select (via shared hook)', async () => {
+  it('calls google.accounts.id.initialize with the public client id, auto-select disabled (via shared hook)', async () => {
     renderWithUser(<GoogleOneTap />);
 
     await waitFor(() => {
@@ -76,7 +76,7 @@ describe('GoogleOneTap', () => {
     const [config] = initializeMock.mock.calls[0];
     expect(config).toMatchObject({
       client_id: 'test-google-client-id',
-      auto_select: true,
+      auto_select: false,
       cancel_on_tap_outside: false,
     });
     expect(typeof config.callback).toBe('function');
