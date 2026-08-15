@@ -329,14 +329,16 @@ test.describe("Coding Assessment E2E", () => {
     await page.getByTestId("standard-stdin-0").fill("world");
     await page.getByTestId("standard-stdout-0").fill("hello world");
 
-    // 4. Save -> success redirects to the assessment page. This proves the
-    //    PUT went through the programId GUID: a slug in programId fails
+    // 4. Save succeeds in place (no redirect): the editor stays on
+    //    /coding-definition and shows the "Saved." indicator. This proves
+    //    the PUT went through the programId GUID: a slug in programId fails
     //    FluentValidation (400) and the editor stays put with an error.
     await waitForSaveEnabled(page);
     await page.getByTestId("save-button").click();
-    await page.waitForURL(`**/assessments/${ASSESSMENT_ID}`, {
+    await expect(page.getByText("Saved.", { exact: true })).toBeVisible({
       timeout: 90_000,
     });
+    await expect(page).toHaveURL(/\/coding-definition/);
   });
 
   test("SDL3 canvas program renders end-to-end", async ({ page }) => {
