@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { InputOTPForm } from '@/components/input-otp-form';
-import { verifyEmailAction, resendVerificationEmailAction } from '../actions';
+import { verifyEmailAction, resendVerificationEmailAction } from '@/lib/auth/password-actions';
 
 export function VerifyPageContent() {
   const searchParams = useSearchParams();
@@ -19,7 +19,7 @@ export function VerifyPageContent() {
     if (!result.success) {
       throw new Error(result.error);
     }
-    router.push('/my');
+    router.push('/');
   }
 
   async function handleResend() {
