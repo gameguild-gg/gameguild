@@ -50,6 +50,10 @@ interface FileExplorerProps {
     onFileMetaChange?: (path: string, patch: Partial<FileMeta>) => void;
     /** Fired when images are picked via the upload button or dropped onto the explorer. */
     onUploadFiles?: (files: File[]) => void;
+    /** Whether new-file/upload controls are available. Runtime gate — authoring mode ignores it. Defaults to true. */
+    allowCreateFiles?: boolean;
+    /** Fired when the instructor flips the compact workspace toggle. Presence = authoring mode. */
+    onAllowCreateFilesChange?: (v: boolean) => void;
 }
 
 export default function FileExplorer({
@@ -66,6 +70,8 @@ export default function FileExplorer({
     fileMeta,
     onFileMetaChange,
     onUploadFiles,
+    allowCreateFiles = true,
+    onAllowCreateFilesChange,
 }: FileExplorerProps) {
     const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; path: string } | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -74,6 +80,9 @@ export default function FileExplorer({
     const dragCounterRef = useRef(0);
 
     const dismissCtx = useCallback(() => setCtxMenu(null), []);
+
+    // Absence of a fileMeta entry means modifiable — only an explicit false locks rename/delete.
+    const selectedLocked = fileMeta?.[selectedPath]?.modifiable === false;
 
     const renderFileNode = (node: TreeNode, depth = 0): JSX.Element => {
         if (node.isDir) {
@@ -248,45 +257,79 @@ export default function FileExplorer({
                 EXPLORER
             </div>
 
-            {/* New file / upload image buttons */}
-            <div style={{ display: 'flex', gap: '0.25rem', padding: '0.35rem 0.5rem', borderBottom: '1px solid #313244', background: '#181825', flexShrink: 0 }}>
-                <button onClick={() => onCreateFile('text')} style={actionBtnStyle} title="New source file (.cpp)" data-testid="explorer-new-file">
-                    📄+
-                </button>
-                <button onClick={() => uploadInputRef.current?.click()} style={actionBtnStyle} title="Upload images" data-testid="explorer-upload">
-                    ⬆
-                </button>
-                <input
-                    ref={uploadInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    hidden
-                    data-testid="explorer-upload-input"
-                    onChange={(e) => {
-                        const images = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith('image/'));
-                        e.target.value = '';
-                        if (images.length > 0) onUploadFiles?.(images);
-                    }}
-                />
-            </div>
+            {/* New file / upload image buttons — hidden in runtime mode when creation is disallowed */}
+            {(onAllowCreateFilesChange || allowCreateFiles) && (
+                <div style={{ display: 'flex', gap: '0.25rem', padding: '0.35rem 0.5rem', borderBottom: '1px solid #313244', background: '#181825', flexShrink: 0 }}>
+                    <button onClick={() => onCreateFile('text')} style={actionBtnStyle} title="New source file (.cpp)" data-testid="explorer-new-file">
+                        📄+
+                    </button>
+                    <button onClick={() => uploadInputRef.current?.click()} style={actionBtnStyle} title="Upload images" data-testid="explorer-upload">
+                        ⬆
+                    </button>
+                    <input
+                        ref={uploadInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        hidden
+                        data-testid="explorer-upload-input"
+                        onChange={(e) => {
+                            const images = Array.from(e.target.files ?? []).filter((f) => f.type.startsWith('image/'));
+                            e.target.value = '';
+                            if (images.length > 0) onUploadFiles?.(images);
+                        }}
+                    />
+                </div>
+            )}
 
-            {/* Workspace label */}
-            <div style={{ fontSize: '0.73rem', color: '#89b4fa', padding: '0.4rem 0.7rem', borderBottom: '1px solid #313244', fontWeight: 600, flexShrink: 0 }}>
-                workspace
+            {/* Workspace label + authoring-mode student-create toggle */}
+            <div
+                style={{
+                    fontSize: '0.73rem',
+                    color: '#89b4fa',
+                    padding: '0.4rem 0.7rem',
+                    borderBottom: '1px solid #313244',
+                    fontWeight: 600,
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                }}
+            >
+                <span>workspace</span>
+                {onAllowCreateFilesChange && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onAllowCreateFilesChange(!allowCreateFiles);
+                        }}
+                        data-testid="allow-student-create"
+                        title="Students can create new files"
+                        aria-pressed={allowCreateFiles ? 'true' : 'false'}
+                        style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '0.1rem', fontSize: '0.75rem', lineHeight: 1 }}
+                    >
+                        {allowCreateFiles ? '🔓' : '🔒'}
+                    </button>
+                )}
             </div>
 
             {/* File tree */}
             <div style={{ flex: 1, overflow: 'auto', paddingTop: '0.2rem' }}>{fileTree.map((node) => renderFileNode(node))}</div>
 
-            {/* Rename / Delete buttons */}
+            {/* Rename / Delete buttons — disabled for read-only (modifiable:false) files */}
             <div style={{ display: 'flex', gap: '0.3rem', padding: '0.4rem 0.5rem', borderTop: '1px solid #313244', background: '#181825', flexShrink: 0 }}>
-                <button onClick={onRename} disabled={!selectedPath || !files[selectedPath]} style={actionBtnStyle}>
+                <button
+                    onClick={onRename}
+                    disabled={!selectedPath || !files[selectedPath] || selectedLocked}
+                    title={selectedLocked ? 'Read-only file — renaming is disabled' : undefined}
+                    style={actionBtnStyle}
+                >
                     Rename
                 </button>
                 <button
                     onClick={onDelete}
-                    disabled={!selectedPath || !files[selectedPath]}
+                    disabled={!selectedPath || !files[selectedPath] || selectedLocked}
+                    title={selectedLocked ? 'Read-only file — deletion is disabled' : undefined}
                     style={{ ...actionBtnStyle, border: '1px solid #7f1d1d', background: '#3b0f19', color: '#f2cdcd' }}
                 >
                     Delete

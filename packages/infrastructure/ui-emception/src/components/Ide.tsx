@@ -114,6 +114,10 @@ export interface IdeProps {
   /** Slot rendered in a collapsible sidebar region (below FileExplorer) when supplied.
    *  Hosts the page-composed StandardTest + FunctionalTestGroup editors. */
   testsPanelSlot?: ReactNode;
+  /** Whether students may create/upload files (runtime gate). Authoring mode always shows the create controls. Defaults to true. */
+  allowCreateFiles?: boolean;
+  /** Fired when the instructor flips the compact workspace toggle. Presence = authoring mode. */
+  onAllowCreateFilesChange?: (v: boolean) => void;
 }
 
 /** Imperative handle exposed by `<Ide ref={...}>`. */
@@ -167,6 +171,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   tests,
   onTestsChange,
   testsPanelSlot,
+  allowCreateFiles = true,
+  onAllowCreateFilesChange,
 }, ref) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
@@ -1219,6 +1225,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
   const createFile = useCallback(
     (kind: TabType) => {
+      // Runtime gate: without the authoring callback, allowCreateFiles=false blocks creation outright.
+      if (!onAllowCreateFilesChange && !allowCreateFiles) return;
       const baseDir = '/user';
       const defaultName = kind === 'canvas' ? 'new-canvas' : kind === 'image' ? 'new-image.svg' : 'new-file.cpp';
       const input = window.prompt(`Create new ${kind} file`, `${baseDir}/${defaultName}`);
@@ -1246,7 +1254,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       setSelectedPath(path);
       ensureOpenTab(path, 'main');
     },
-    [files, ensureOpenTab],
+    [files, ensureOpenTab, allowCreateFiles, onAllowCreateFilesChange],
   );
 
   const renameSelectedFile = useCallback(() => {
@@ -1272,6 +1280,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
   const deleteSelectedFile = useCallback(() => {
     if (!selectedPath || !files[selectedPath]) return;
+    // Read-only guard mirrors the disabled button — the ctx-menu entry bypasses the button.
+    if (fileMeta?.[selectedPath]?.modifiable === false) return;
     if (!window.confirm(`Delete ${selectedPath}?`)) return;
     setFiles((prev) => {
       const c = { ...prev };
@@ -1280,7 +1290,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     });
     closeTab(`tab:${selectedPath}`);
     setSelectedPath(Object.keys(files).find((p) => p !== selectedPath) ?? '');
-  }, [selectedPath, files, closeTab]);
+  }, [selectedPath, files, closeTab, fileMeta]);
 
   const resetWorkspace = useCallback(async () => {
     const confirmMsg = assignmentToken
@@ -2755,6 +2765,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             onUploadFiles={handleUploadFiles}
             fileMeta={fileMeta}
             onFileMetaChange={onFileMetaChange}
+            allowCreateFiles={allowCreateFiles}
+            onAllowCreateFilesChange={onAllowCreateFilesChange}
           />
         </Panel>
 

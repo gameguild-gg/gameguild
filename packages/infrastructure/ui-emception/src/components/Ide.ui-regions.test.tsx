@@ -1,4 +1,5 @@
 import { render, act, screen, within, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { createRef } from 'react';
 
 if (typeof globalThis.TextEncoder === 'undefined') {
@@ -330,6 +331,95 @@ describe('T7 in-IDE authoring regions', () => {
     expect(persisted.files?.['/user/pic.png']).toBeUndefined();
 
     (globalThis as unknown as { FileReader: unknown }).FileReader = RealFileReader;
+  });
+});
+
+describe('allowCreateFiles prop chain', () => {
+  it('workspace toggle renders through Ide in authoring mode and fires the callback', async () => {
+    const onAllowCreateFilesChange = jest.fn();
+    await act(async () => {
+      render(<Ide allowCreateFiles onAllowCreateFilesChange={onAllowCreateFilesChange} />);
+    });
+    const toggle = screen.getByTestId('allow-student-create');
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await act(async () => {
+      fireEvent.click(toggle);
+    });
+    expect(onAllowCreateFilesChange).toHaveBeenCalledWith(false);
+  });
+
+  it('runtime mode (no onAllowCreateFilesChange) renders NO workspace toggle', async () => {
+    await act(async () => {
+      render(<Ide />);
+    });
+    expect(screen.queryByTestId('allow-student-create')).toBeNull();
+  });
+
+  it('runtime mode with allowCreateFiles=false hides the create row — prompt can never fire', async () => {
+    const promptSpy = jest.spyOn(window, 'prompt').mockReturnValue('/user/sneaky.cpp');
+    await act(async () => {
+      render(<Ide allowCreateFiles={false} />);
+    });
+    expect(screen.queryByTestId('explorer-new-file')).toBeNull();
+    expect(screen.queryByTestId('explorer-upload')).toBeNull();
+    expect(promptSpy).not.toHaveBeenCalled();
+    promptSpy.mockRestore();
+  });
+
+  it('authoring mode keeps createFile live even when allowCreateFiles=false', async () => {
+    const promptSpy = jest.spyOn(window, 'prompt').mockReturnValue(null);
+    await act(async () => {
+      render(<Ide allowCreateFiles={false} onAllowCreateFilesChange={() => {}} />);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('explorer-new-file'));
+    });
+    expect(promptSpy).toHaveBeenCalledTimes(1);
+    promptSpy.mockRestore();
+  });
+});
+
+describe('read-only delete/rename guard', () => {
+  it('Rename/Delete buttons disabled for a modifiable:false selected file', async () => {
+    await act(async () => {
+      render(<Ide fileMeta={{ [SEED_FILE]: { visibility: 'Public', modifiable: false } }} />);
+    });
+    expect(screen.getByText('Rename')).toBeDisabled();
+    expect(screen.getByText('Delete')).toBeDisabled();
+  });
+
+  it('delete handler refuses a modifiable:false file even when invoked via the context menu', async () => {
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} fileMeta={{ [SEED_FILE]: { visibility: 'Public', modifiable: false } }} />);
+    });
+    // The ctx-menu entry bypasses footer-button disabling — exercises the handler itself.
+    fireEvent.contextMenu(screen.getByTestId(`file-row-${SEED_FILE}`));
+    await act(async () => {
+      fireEvent.click(screen.getByText('🗑 Delete'));
+    });
+    expect(confirmSpy).not.toHaveBeenCalled();
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === SEED_FILE)).toBeDefined();
+    confirmSpy.mockRestore();
+  });
+
+  it('a modifiable file stays deletable', async () => {
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} fileMeta={{ [SEED_FILE]: { visibility: 'Public', modifiable: true } }} />);
+    });
+    const del = screen.getByText('Delete');
+    expect(del).toBeEnabled();
+    await act(async () => {
+      fireEvent.click(del);
+    });
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === SEED_FILE)).toBeUndefined();
+    confirmSpy.mockRestore();
   });
 });
 
