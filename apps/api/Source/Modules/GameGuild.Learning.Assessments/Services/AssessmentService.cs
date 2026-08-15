@@ -15,15 +15,18 @@ public class AssessmentService : IAssessmentService
     private readonly IApplicationDbContext _context;
     private readonly IProgramContentService _programContentService;
     private readonly ILogger<AssessmentService> _logger;
+    private readonly ILtiScorePassback? _ltiScorePassback;
 
     public AssessmentService(
         IApplicationDbContext context,
         IProgramContentService programContentService,
-        ILogger<AssessmentService> logger)
+        ILogger<AssessmentService> logger,
+        ILtiScorePassback? ltiScorePassback = null)
     {
         _context = context;
         _programContentService = programContentService;
         _logger = logger;
+        _ltiScorePassback = ltiScorePassback;
     }
 
     // ===== ASSESSMENT MANAGEMENT =====
@@ -834,6 +837,18 @@ public class AssessmentService : IAssessmentService
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Submission graded: {SubmissionId} with score {Score}", submissionId, request.Score);
+
+            // LTI AGS score passback (todo 16): fire-and-log for the graded user; the
+            // implementation swallows all platform failures so grading never rolls back.
+            // Extension point (todo 5, group fan-out): once grades are fanned out to sibling
+            // group rows, invoke PostScoreIfMappedAsync once PER GRADED MEMBER — never block
+            // or fail the grade on AGS errors.
+            if (_ltiScorePassback is not null)
+            {
+                await _ltiScorePassback
+                    .PostScoreIfMappedAsync(assessment.Id, submission.UserId, request.Score, assessment.MaxScore)
+                    .ConfigureAwait(false);
+            }
 
             return Result.Success(submission);
         }
