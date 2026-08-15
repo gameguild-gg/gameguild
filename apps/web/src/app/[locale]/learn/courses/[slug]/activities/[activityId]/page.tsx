@@ -170,9 +170,28 @@ export default async function LearnerActivityPage({
   const type = activity.kind === 'assessment'
     ? activity.assessment.type
     : activity.contentType;
+  // learn/layout.tsx already redirects signed-out visitors; the userId
+  // guard keeps the client's user-scoped token well-formed even if that
+  // invariant ever breaks.
+  const codingProps =
+    activity.kind === 'assessment' &&
+    useCodingExperience &&
+    codingAssignment &&
+    activity.assessment.id &&
+    userId
+      ? {
+          assessmentId: activity.assessment.id,
+          assignment: codingAssignment,
+          userId,
+        }
+      : null;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div
+      className={
+        codingProps ? 'w-full space-y-6' : 'mx-auto max-w-4xl space-y-6'
+      }
+    >
       <Button asChild variant="ghost" className="-ml-3">
         <Link href={`/learn/courses/${slug}/activities`}>
           <ArrowLeft className="size-4" />
@@ -225,39 +244,34 @@ export default async function LearnerActivityPage({
           </CardContent>
         </Card>
       ) : null}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Your response</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {activity.kind === 'assessment' &&
-          useCodingExperience &&
-          codingAssignment &&
-          activity.assessment.id &&
-          // learn/layout.tsx already redirects signed-out visitors; the
-          // guard keeps the client's user-scoped token well-formed even if
-          // that invariant ever breaks.
-          userId ? (
-            <CodingActivityClient
-              assessmentId={activity.assessment.id}
-              enrollmentId={access.course.enrollmentId}
-              courseId={access.course.id}
-              slug={slug}
-              assignment={codingAssignment}
-              manifestUrl={process.env.NEXT_PUBLIC_EMCEPTION_MANIFEST_URL}
-              userId={userId}
-              submissionFiles={submissionFiles}
-            />
-          ) : (
+      {codingProps ? (
+        <div data-testid="ide-fullwidth-mount">
+          <CodingActivityClient
+            assessmentId={codingProps.assessmentId}
+            enrollmentId={access.course.enrollmentId}
+            courseId={access.course.id}
+            slug={slug}
+            assignment={codingProps.assignment}
+            manifestUrl={process.env.NEXT_PUBLIC_EMCEPTION_MANIFEST_URL}
+            userId={codingProps.userId}
+            submissionFiles={submissionFiles}
+          />
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Your response</CardTitle>
+          </CardHeader>
+          <CardContent>
             <LearnerActivityForm
               courseId={access.course.id}
               courseSlug={slug}
               enrollmentId={access.course.enrollmentId}
               activity={activity}
             />
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

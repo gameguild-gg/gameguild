@@ -63,6 +63,10 @@ vi.mock('./coding-activity-client', () => ({
   ),
 }));
 
+vi.mock('@/components/learning/learner-activity-form', () => ({
+  LearnerActivityForm: () => <div data-testid="activity-form" />,
+}));
+
 import LearnerActivityPage from './page';
 
 function makeAssessment(overrides: Record<string, unknown> = {}) {
@@ -156,6 +160,13 @@ async function renderCodingPage() {
   render(page);
   const client = await screen.findByTestId('coding-client');
   return JSON.parse(client.dataset.props ?? '{}');
+}
+
+async function renderActivityPage(activityId = 'assessment-assessment-1') {
+  const page = await LearnerActivityPage({
+    params: Promise.resolve({ activityId, slug: 'test-course' }),
+  });
+  return render(page);
 }
 
 describe('last-submission restore (server page)', () => {
@@ -266,5 +277,39 @@ describe('last-submission restore (server page)', () => {
     const props = await renderCodingPage();
 
     expect(props.submissionFiles).toBeNull();
+  });
+});
+
+describe('full-width coding experience (server page)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getCourseAccessData.mockResolvedValue(makeReadyAccess());
+    mocks.getCourseLearnerContext.mockResolvedValue(
+      makeContext(makeAssessment()),
+    );
+    mocks.auth.mockResolvedValue({ user: { id: 'user-1' } });
+    mocks.getToken.mockResolvedValue('token-1');
+    mocks.getMyProjects.mockResolvedValue([]);
+    mocks.getCodingAssignmentPublic.mockResolvedValue(makeAssignment());
+    mocks.getMySubmissions.mockResolvedValue({ ok: true, data: [] });
+  });
+
+  it('mounts the coding experience full-width without a card wrapper', async () => {
+    const { container } = await renderActivityPage();
+
+    expect(screen.getByTestId('ide-fullwidth-mount')).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass('w-full');
+    expect(container.firstElementChild).not.toHaveClass('max-w-4xl');
+    expect(container.firstElementChild).not.toHaveClass('mx-auto');
+  });
+
+  it('keeps the capped wrapper when the coding assignment is not published', async () => {
+    mocks.getCodingAssignmentPublic.mockResolvedValue(null);
+
+    const { container } = await renderActivityPage();
+
+    expect(screen.queryByTestId('ide-fullwidth-mount')).not.toBeInTheDocument();
+    expect(screen.getByTestId('activity-form')).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass('mx-auto', 'max-w-4xl');
   });
 });
