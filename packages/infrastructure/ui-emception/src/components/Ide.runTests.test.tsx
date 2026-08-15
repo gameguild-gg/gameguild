@@ -513,7 +513,7 @@ describe('student bottom tabs: Test Results auto-switch', () => {
     expect(document.querySelector('[data-testid="test-results-panel"]')!.textContent).toContain('Score: 40/100');
   });
 
-  it('does NOT auto-switch in instructor mode (testsPanelSlot present)', async () => {
+  it('auto-switches to results in instructor mode (testsPanelSlot present) — the tests tab hosts the editor, results go to the results slot', async () => {
     const onTestReport = jest.fn();
     const ref = createRef<IdeHandle>();
 
@@ -536,9 +536,10 @@ describe('student bottom tabs: Test Results auto-switch', () => {
     });
     await waitFor(() => expect(onTestReport).toHaveBeenCalledTimes(1));
 
-    // No student results slot is mounted at all, and Terminal stays active.
-    expect(document.querySelector('[data-testid="test-results-slot"]')).toBeNull();
-    const terminalWrapper = (screen.getByTestId('mock-terminal-panel') as HTMLElement).parentElement!;
-    expect(terminalWrapper.style.display).not.toBe('none');
+    // The results slot is mounted and active; the instructor can switch back
+    // to the tests editor via the Tests tab.
+    const slot = document.querySelector('[data-testid="test-results-slot"]') as HTMLElement | null;
+    expect(slot).not.toBeNull();
+    expect(slot!.style.display).not.toBe('none');
   });
 });

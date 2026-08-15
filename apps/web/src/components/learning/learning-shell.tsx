@@ -330,7 +330,13 @@ export function LearningShell({
         </div>
       </header>
 
-      <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r bg-background p-4 lg:flex">
+      <aside
+        className={
+          wide
+            ? "hidden"
+            : "fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r bg-background p-4 lg:flex"
+        }
+      >
         <div className="mb-8 flex h-10 items-center gap-2">
           <Link
             href="/"
@@ -429,7 +435,9 @@ export function LearningShell({
       <main
         id="learning-content"
         tabIndex={-1}
-        className="min-w-0 overflow-x-clip lg:pl-64"
+        className={
+          wide ? "min-w-0 overflow-x-clip" : "min-w-0 overflow-x-clip lg:pl-64"
+        }
       >
         <div
           className={

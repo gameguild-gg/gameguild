@@ -158,14 +158,22 @@ export function CodingActivityClient({
   // assignment files).
   const workspaceConfig = useMemo<WorkspaceConfig>(() => {
     const sample = ASSIGNMENT_SAMPLES[language] ?? ASSIGNMENT_SAMPLES.cpp;
-    const files: WorkspaceConfig['files'] = {};
-    for (const { path, content, encoding } of resolved.files) {
-      files[path] = { encoding, content };
-    }
+    const toConfigFiles = (seed: SeedFile[]): WorkspaceConfig['files'] => {
+      const out: WorkspaceConfig['files'] = {};
+      for (const { path, content, encoding } of seed) {
+        out[path] = { encoding, content };
+      }
+      return out;
+    };
     return {
       ...sample.workspaceConfig,
-      // Fall back to the preset files when there is nothing to seed.
-      files: Object.keys(files).length > 0 ? files : sample.workspaceConfig.files,
+      // Draft mode resolves to [] (the IDE restores its own state) — still pass
+      // the instructor seed so Reset restores the instructor originals, not the
+      // preset sample (which would contradict the reset confirm copy).
+      files:
+        resolved.files.length > 0
+          ? toConfigFiles(resolved.files)
+          : toConfigFiles(seedFiles.current),
     };
   }, [language, resolved]);
 

@@ -299,7 +299,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     }
   }, []);
 
+  // Skip the FIRST persistence write per mount: on load the initial config
+  // files must not clobber a restorable draft before the restore effect
+  // above reads it — persisting the unedited initial state is a no-op anyway.
+  const storageWarmedRef = useRef(false);
+
   useEffect(() => {
+    if (!storageWarmedRef.current) {
+      storageWarmedRef.current = true;
+      return;
+    }
     try {
       // Exclude runtime-only canvas entries and image files (base64 data-URIs
       // would blow the ~5MB localStorage quota) from the persisted workspace.
@@ -745,7 +754,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         cases: reportCases,
       };
       setLastReport(report);
-      if (testsPanelSlot == null) setBottomTab('test-results');
+      setBottomTab('test-results');
       try {
         onTestReportRef.current?.(report);
       } catch {
@@ -763,7 +772,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         cases: [{ name: 'compile', passed: false, durationMs: 0, diagnostic: message }],
       };
       setLastReport(report);
-      if (testsPanelSlot == null) setBottomTab('test-results');
+      setBottomTab('test-results');
     } finally {
       setTestRunning(false);
     }
@@ -2679,7 +2688,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             {status}
           </span>
           {showCompileButton && (
-            <button
+            <button type="button"
               data-testid="compile-button"
               onClick={handleCompile}
               disabled={!canCompile}
@@ -2699,7 +2708,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             </button>
           )}
           {executionPhase === 'running' && (
-            <button
+            <button type="button"
               data-testid="stop-button"
               onClick={handleStop}
               style={{
@@ -2718,7 +2727,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             </button>
           )}
           {resolvedConfig.features.showTestButton && resolvedConfig.test && (
-            <button
+            <button type="button"
               data-testid="test-button"
               onClick={handleTest}
               disabled={executionPhase !== 'idle' || !isReady}
@@ -2738,7 +2747,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             </button>
           )}
           {testPlan && (
-            <button
+            <button type="button"
               data-testid="run-tests-button"
               onClick={handleRunTests}
               disabled={testRunning}
@@ -2757,7 +2766,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
               {testRunning ? 'Running…' : 'Run Tests'}
             </button>
           )}
-          <button
+          <button type="button"
             onClick={resetWorkspace}
             style={{
               height: 24,
@@ -2928,14 +2937,14 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
                   onBootTerminalReady={handleBootTerminalReady}
                 />
               </div>
-              {testPlan != null && testsPanelSlot == null && (
+              {testPlan != null && (
                 <div style={{ flex: 1, display: bottomTab === 'test-cases' ? 'flex' : 'none', flexDirection: 'column', overflow: 'hidden' }}>
                   <TestCasesPanel
                     cases={testMode === 'public' ? testPlan.cases.filter((c) => !c.hidden) : testPlan.cases}
                   />
                 </div>
               )}
-              {testPlan != null && testsPanelSlot == null && (
+              {testPlan != null && (
                 <div
                   data-testid="test-results-slot"
                   style={{ flex: 1, display: bottomTab === 'test-results' ? 'flex' : 'none', flexDirection: 'column', overflow: 'auto', background: '#11111b', padding: '8px' }}

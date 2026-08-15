@@ -90,7 +90,7 @@ export default function FileExplorer({
             const { icon, color } = fileIcon(node.name, true, isOpen);
             return (
                 <div key={node.path}>
-                    <button
+                    <button type="button"
                         onClick={() => onToggleDir(node.path)}
                         style={{
                             width: '100%',
@@ -157,7 +157,7 @@ export default function FileExplorer({
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{fileName(node.path)}</span>
                 {fileMeta && (
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', flexShrink: 0 }} onPointerDown={stopRow} onClick={stopRow}>
-                        <button
+                        <button type="button"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onFileMetaChange?.(node.path, { visibility: (meta?.visibility ?? 'Public') === 'Public' ? 'Private' : 'Public' });
@@ -176,7 +176,7 @@ export default function FileExplorer({
                         >
                             {(meta?.visibility ?? 'Public') === 'Public' ? '👁' : '🙈'}
                         </button>
-                        <button
+                        <button type="button"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onFileMetaChange?.(node.path, { modifiable: !(meta?.modifiable ?? true) });
@@ -260,10 +260,10 @@ export default function FileExplorer({
             {/* New file / upload image buttons — hidden in runtime mode when creation is disallowed */}
             {(onAllowCreateFilesChange || allowCreateFiles) && (
                 <div style={{ display: 'flex', gap: '0.25rem', padding: '0.35rem 0.5rem', borderBottom: '1px solid #313244', background: '#181825', flexShrink: 0 }}>
-                    <button onClick={() => onCreateFile('text')} style={actionBtnStyle} title="New source file (.cpp)" data-testid="explorer-new-file">
+                    <button type="button" onClick={() => onCreateFile('text')} style={actionBtnStyle} title="New source file (.cpp)" data-testid="explorer-new-file">
                         📄+
                     </button>
-                    <button onClick={() => uploadInputRef.current?.click()} style={actionBtnStyle} title="Upload images" data-testid="explorer-upload">
+                    <button type="button" onClick={() => uploadInputRef.current?.click()} style={actionBtnStyle} title="Upload images" data-testid="explorer-upload">
                         ⬆
                     </button>
                     <input
@@ -298,7 +298,7 @@ export default function FileExplorer({
             >
                 <span>workspace</span>
                 {onAllowCreateFilesChange && (
-                    <button
+                    <button type="button"
                         onClick={(e) => {
                             e.stopPropagation();
                             onAllowCreateFilesChange(!allowCreateFiles);
@@ -318,7 +318,7 @@ export default function FileExplorer({
 
             {/* Rename / Delete buttons — disabled for read-only (modifiable:false) files */}
             <div style={{ display: 'flex', gap: '0.3rem', padding: '0.4rem 0.5rem', borderTop: '1px solid #313244', background: '#181825', flexShrink: 0 }}>
-                <button
+                <button type="button"
                     onClick={onRename}
                     disabled={!selectedPath || !files[selectedPath] || selectedLocked}
                     title={selectedLocked ? 'Read-only file — renaming is disabled' : undefined}
@@ -326,7 +326,7 @@ export default function FileExplorer({
                 >
                     Rename
                 </button>
-                <button
+                <button type="button"
                     onClick={onDelete}
                     disabled={!selectedPath || !files[selectedPath] || selectedLocked}
                     title={selectedLocked ? 'Read-only file — deletion is disabled' : undefined}
@@ -384,7 +384,7 @@ export default function FileExplorer({
                             danger: true,
                         },
                     ].map((item) => (
-                        <button
+                        <button type="button"
                             key={item.label}
                             onClick={item.action}
                             style={{
