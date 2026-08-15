@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { DashboardShell } from '@/components/layout';
+import { ConsoleShell } from '@/components/console/console-shell';
 import { redirect } from '@/i18n/navigation';
 import { getDashboardNotificationSummary } from '@/lib/dashboard-notifications';
 import { getDashboardContexts } from '@/lib/dashboard-contexts';
@@ -33,13 +33,13 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   };
 
   return (
-    <DashboardShell
+    <ConsoleShell
       notifications={notifications}
       user={dashboardUser}
       capabilities={dashboardContexts.capabilities}
       contexts={dashboardContexts.contexts}
     >
       {children}
-    </DashboardShell>
+    </ConsoleShell>
   );
 }
