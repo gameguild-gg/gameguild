@@ -3,7 +3,7 @@
  */
 
 import type { OpenAPIV3 } from 'openapi-types';
-import { sanitizeIdentifier, toPascalCase } from '../../utils/naming.js';
+import { resolveKnownSchemaTypeName } from '../../normalize.js';
 
 export interface SchemaTypeMapper {
   canHandle(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): boolean;
@@ -11,6 +11,8 @@ export interface SchemaTypeMapper {
 }
 
 export class ReferenceTypeMapper implements SchemaTypeMapper {
+  constructor(private readonly knownSchemaNames?: Set<string>) {}
+
   canHandle(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): boolean {
     return '$ref' in schema;
   }
@@ -18,8 +20,7 @@ export class ReferenceTypeMapper implements SchemaTypeMapper {
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) {
       const rawTypeName = schema.$ref.replace('#/components/schemas/', '');
-      // Sanitize the type name to match what the generator does
-      return toPascalCase(sanitizeIdentifier(rawTypeName));
+      return resolveKnownSchemaTypeName(rawTypeName, this.knownSchemaNames) ?? 'unknown';
     }
     throw new Error('Not a reference schema');
   }
@@ -39,7 +40,7 @@ export class StringTypeMapper implements SchemaTypeMapper {
 
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
-    
+
     const schemaObj = schema as OpenAPIV3.SchemaObject;
     const nullable = schemaObj.nullable ? ' | null' : '';
 
@@ -88,7 +89,7 @@ export class ArrayTypeMapper implements SchemaTypeMapper {
 
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
-    
+
     const schemaObj = schema as OpenAPIV3.ArraySchemaObject;
     const nullable = schemaObj.nullable ? ' | null' : '';
 
@@ -110,7 +111,7 @@ export class ObjectTypeMapper implements SchemaTypeMapper {
 
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
-    
+
     const schemaObj = schema as OpenAPIV3.SchemaObject;
     const nullable = schemaObj.nullable ? ' | null' : '';
 
@@ -146,11 +147,11 @@ export class UnionTypeMapper implements SchemaTypeMapper {
 
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
-    
+
     const schemaObj = schema as OpenAPIV3.SchemaObject;
     const variants = schemaObj.oneOf || schemaObj.anyOf || [];
     const nullable = schemaObj.nullable ? ' | null' : '';
-    
+
     const types = variants.map((v) => this.typeMapperChain.map(v as OpenAPIV3.SchemaObject)).join(' | ');
     return types + nullable;
   }
@@ -162,18 +163,18 @@ export class UnionTypeMapper implements SchemaTypeMapper {
 export class TypeMapperChain {
   private mappers: SchemaTypeMapper[] = [];
 
-  constructor() {
+  constructor(knownSchemaNames?: Set<string>) {
     // Order matters - check references first
-    this.mappers.push(new ReferenceTypeMapper());
+    this.mappers.push(new ReferenceTypeMapper(knownSchemaNames));
     this.mappers.push(new StringTypeMapper());
     this.mappers.push(new NumberTypeMapper());
     this.mappers.push(new BooleanTypeMapper());
-    
+
     // These need the chain instance
     const arrayMapper = new ArrayTypeMapper(this);
     const objectMapper = new ObjectTypeMapper(this);
     const unionMapper = new UnionTypeMapper(this);
-    
+
     this.mappers.push(unionMapper);
     this.mappers.push(arrayMapper);
     this.mappers.push(objectMapper);
@@ -185,7 +186,7 @@ export class TypeMapperChain {
         return mapper.map(schema);
       }
     }
-    
+
     // Fallback
     const schemaObj = schema as OpenAPIV3.SchemaObject;
     return `unknown${schemaObj.nullable ? ' | null' : ''}`;

@@ -157,7 +157,10 @@ describe('Type Generator', () => {
       components: {
         schemas: {
           Response: {
-            oneOf: [{ $ref: '#/components/schemas/SuccessResponse' }, { $ref: '#/components/schemas/ErrorResponse' }],
+            oneOf: [
+              { $ref: '#/components/schemas/SuccessResponse' },
+              { $ref: '#/components/schemas/ErrorResponse' },
+            ],
           },
           SuccessResponse: {
             type: 'object',

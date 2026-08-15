@@ -48,4 +48,22 @@ public sealed class RolePermissionProviderTests
 
         result.Should().Equal("courses:read");
     }
+
+    [Theory]
+    [InlineData("not-json")]
+    [InlineData("null")]
+    public async Task GetPermissionsAsync_InvalidOrNullJson_ReturnsNoPermissions(string permissions)
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var repository = new Mock<IRoleRepository>();
+        repository
+            .Setup(instance => instance.GetUserRolesAsync(userId, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new Role("Role", "Role", tenantId) { Permissions = permissions }]);
+
+        var result = await new RolePermissionProvider(repository.Object)
+            .GetPermissionsAsync(userId, tenantId);
+
+        result.Should().BeEmpty();
+    }
 }

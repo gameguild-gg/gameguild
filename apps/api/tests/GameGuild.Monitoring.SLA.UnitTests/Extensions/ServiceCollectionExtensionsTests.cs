@@ -51,6 +51,18 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void AddSlaMonitoringApplication_ShouldRegisterPersistenceRepositories()
+    {
+        var services = new ServiceCollection();
+
+        services.AddSlaMonitoringApplication();
+
+        services.Should().Contain(s => s.ServiceType == typeof(IServiceLevelObjectiveRepository) && s.ImplementationType == typeof(ServiceLevelObjectiveRepository));
+        services.Should().Contain(s => s.ServiceType == typeof(IServiceLevelIndicatorRepository) && s.ImplementationType == typeof(ServiceLevelIndicatorRepository));
+        services.Should().Contain(s => s.ServiceType == typeof(ISloViolationRepository) && s.ImplementationType == typeof(SloViolationRepository));
+    }
+
+    [Fact]
     public void AddSlaMonitoringApplication_ShouldReturnServiceCollection()
     {
         var services = new ServiceCollection();

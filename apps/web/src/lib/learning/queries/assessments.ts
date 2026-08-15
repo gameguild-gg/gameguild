@@ -326,7 +326,7 @@ export const getAssessmentDefinition = cache(async (assessmentId: string): Promi
 export const getAssessmentSubmissions = cache(
   async (assessmentId: string): Promise<LearningAssessmentsAssessmentSubmission[]> => {
     try {
-      const result = await createAssessmentsModule().getAssessmentsByAssessmentIdSubmissions(assessmentId);
+      const result = await createAssessmentsModule().getAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissions(assessmentId);
       if (!result.ok) {
         console.error('Failed to fetch assessment submissions:', result.error);
         return [];

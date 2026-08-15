@@ -30,8 +30,8 @@ function createModules() {
     tenant: { getTenantId: async () => (await auth().catch(() => null))?.tenantId ?? null },
   });
   return {
-    events: new GeneratedApi.TestinglabTestingeventsModule(client),
-    participation: new GeneratedApi.TestinglabTestingeventparticipationModule(client),
+    events: new GeneratedApi.TestingLabTestingEventsModule(client),
+    participation: new GeneratedApi.TestingLabTestingEventParticipationModule(client),
   };
 }
 

@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -28,16 +28,19 @@ export class CommercePaymentsModule {
     page?: number;
     pageSize?: number;
   }): Promise<Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>> {
-    const url = '/api/v1/payments';
+    const url = "/api/v1/payments";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>;
+    return result as Result<
+      Array<Types.CommercePaymentsPaymentResult>,
+      ApiError
+    >;
   }
 
   /**
@@ -45,14 +48,20 @@ export class CommercePaymentsModule {
    *
    * Initiates a new payment transaction for a subscription. This endpoint handles the complete payment processing workflow including payment method validation, amount verification, and transaction execution. Returns the payment result immediately with a transaction ID that can be used to track payment status.
    */
-  async postPayments(body: Types.CommercePaymentsPaymentsControllerProcessPaymentInput): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
-    const url = '/api/v1/payments';
+  async postPayments(
+    body: Types.CommercePaymentsPaymentsControllerProcessPaymentInput,
+  ): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
+    const url = "/api/v1/payments";
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerProcessPaymentInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommercePaymentsPaymentsControllerProcessPaymentInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -60,7 +69,11 @@ export class CommercePaymentsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsPaymentResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommercePaymentsPaymentResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -74,14 +87,23 @@ export class CommercePaymentsModule {
    */
   async postPaymentsSetupIntents(
     body: Types.CommercePaymentsPaymentsControllerCreateSetupIntentInput,
-  ): Promise<Result<Types.CommercePaymentsPaymentsControllerCreateSetupIntentOutput, ApiError>> {
-    const url = '/api/v1/payments/setup-intents';
+  ): Promise<
+    Result<
+      Types.CommercePaymentsPaymentsControllerCreateSetupIntentOutput,
+      ApiError
+    >
+  > {
+    const url = "/api/v1/payments/setup-intents";
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerCreateSetupIntentInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommercePaymentsPaymentsControllerCreateSetupIntentInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -89,7 +111,11 @@ export class CommercePaymentsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommercePaymentsPaymentsControllerCreateSetupIntentOutputSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -104,13 +130,17 @@ export class CommercePaymentsModule {
   async postPaymentsSubscriptionCheckoutsComplete(
     body: Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput,
   ): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
-    const url = '/api/v1/payments/subscription-checkouts:complete';
+    const url = "/api/v1/payments/subscription-checkouts:complete";
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -118,7 +148,11 @@ export class CommercePaymentsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsPaymentResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommercePaymentsPaymentResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -130,18 +164,24 @@ export class CommercePaymentsModule {
    *
    * Retrieves detailed information about a specific payment transaction, including its current status, amount, payment method, and processing details. Use this endpoint to track payment progress and verify transaction completion.
    */
-  async getPaymentById(paymentId: string): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
+  async getPaymentById(
+    paymentId: string,
+  ): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
     const url = `/api/v1/payments/${paymentId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsPaymentResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommercePaymentsPaymentResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -156,14 +196,20 @@ export class CommercePaymentsModule {
   async postPaymentsCancel(
     paymentId: string,
     body: Types.CommercePaymentsPaymentsControllerCancelPaymentInput,
-  ): Promise<Result<Types.CommercePaymentsPaymentCancellationResult, ApiError>> {
+  ): Promise<
+    Result<Types.CommercePaymentsPaymentCancellationResult, ApiError>
+  > {
     const url = `/api/v1/payments/${paymentId}:cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerCancelPaymentInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommercePaymentsPaymentsControllerCancelPaymentInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -171,7 +217,11 @@ export class CommercePaymentsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsPaymentCancellationResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommercePaymentsPaymentCancellationResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -190,10 +240,14 @@ export class CommercePaymentsModule {
     const url = `/api/v1/payments/${paymentId}:refund`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentsControllerRefundInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommercePaymentsPaymentsControllerRefundInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -201,7 +255,11 @@ export class CommercePaymentsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsProcessRefundResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommercePaymentsProcessRefundResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -213,18 +271,24 @@ export class CommercePaymentsModule {
    *
    * Retries a failed payment using the original payment method. Custom action per Google API guidelines. Creates a new transaction attempt while maintaining the link to the original payment record.
    */
-  async postPaymentsRetry(paymentId: string): Promise<Result<Types.CommercePaymentsPaymentRetryResult, ApiError>> {
+  async postPaymentsRetry(
+    paymentId: string,
+  ): Promise<Result<Types.CommercePaymentsPaymentRetryResult, ApiError>> {
     const url = `/api/v1/payments/${paymentId}:retry`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommercePaymentsPaymentRetryResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommercePaymentsPaymentRetryResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -232,6 +296,8 @@ export class CommercePaymentsModule {
   }
 }
 
-export function createCommercePaymentsModule(client: ApiClient): CommercePaymentsModule {
+export function createCommercePaymentsModule(
+  client: ApiClient,
+): CommercePaymentsModule {
   return new CommercePaymentsModule(client);
 }

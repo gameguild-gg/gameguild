@@ -168,7 +168,7 @@ function mapProject(project: ProjectsProjectApiOutput): PublicProject {
 export const getPublishedProjects = cache(
   async (): Promise<PublicProject[]> => {
     const projects = await createProjectsModule();
-    const result = await projects.getProjects({
+    const result = await projects.getProjectsForGetProjects({
       status: "Published",
       visibility: "Public",
       skip: 0,

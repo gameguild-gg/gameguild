@@ -10,9 +10,7 @@ public static class DatabaseStartupConfiguration
         ArgumentNullException.ThrowIfNull(configuration);
 
         if (!ShouldRunStartupInitialization(configuration, environmentName) ||
-            AllowsRuntimeFallback(environmentName) ||
-            configuration.GetValue<bool?>("Database:AllowSameMigrationUser") == true ||
-            configuration.GetValue<bool?>("ALLOW_SAME_MIGRATION_USER") == true)
+            AllowsRuntimeFallback(environmentName))
         {
             return [];
         }
@@ -20,26 +18,36 @@ public static class DatabaseStartupConfiguration
         var failures = new List<string>();
         var runtimeConnection = PostgresConnectionString.Resolve(configuration);
         var migrationConnection = ResolveMigrationConnectionString(configuration);
+        var allowSameMigrationUser = AllowsSameMigrationUser(configuration);
 
         if (string.IsNullOrWhiteSpace(runtimeConnection))
             failures.Add("A runtime database connection is required.");
 
+        if (string.IsNullOrWhiteSpace(migrationConnection) && !allowSameMigrationUser)
+            failures.Add("A dedicated migration database connection is required.");
+
         if (failures.Count != 0)
             return failures;
 
+        migrationConnection ??= runtimeConnection;
+
         try
         {
-            var runtimeUser = new NpgsqlConnectionStringBuilder(runtimeConnection).Username;
-            var migrationUser = string.IsNullOrWhiteSpace(migrationConnection)
-                ? runtimeUser
-                : new NpgsqlConnectionStringBuilder(migrationConnection).Username;
+            var runtimeBuilder = new NpgsqlConnectionStringBuilder(runtimeConnection);
+            var migrationBuilder = new NpgsqlConnectionStringBuilder(migrationConnection);
+            var runtimeUser = runtimeBuilder.Username;
+            var migrationUser = migrationBuilder.Username;
 
-            if (string.IsNullOrWhiteSpace(runtimeUser) || string.IsNullOrWhiteSpace(migrationUser))
+            if (string.Equals(runtimeUser, "postgres", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(runtimeBuilder.Password, "postgres", StringComparison.Ordinal))
+            {
+                failures.Add("The runtime database must not use default PostgreSQL credentials.");
+            }
+            else if (string.IsNullOrWhiteSpace(runtimeUser) || string.IsNullOrWhiteSpace(migrationUser))
             {
                 failures.Add("Runtime and migration database connections must identify their roles.");
             }
-            else if (string.Equals(runtimeUser, migrationUser, StringComparison.Ordinal) &&
-                     configuration.GetValue<bool?>("Database:RequireDistinctMigrationUser") == true)
+            else if (string.Equals(runtimeUser, migrationUser, StringComparison.Ordinal) && !allowSameMigrationUser)
             {
                 failures.Add("Runtime and migration database roles must be distinct.");
             }
@@ -84,4 +92,9 @@ public static class DatabaseStartupConfiguration
     private static bool IsTestEnvironment(string environmentName) =>
         string.Equals(environmentName, "Test", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(environmentName, "Testing", StringComparison.OrdinalIgnoreCase);
+
+    private static bool AllowsSameMigrationUser(IConfiguration configuration) =>
+        configuration.GetValue<bool?>("Database:AllowSameMigrationUser") == true ||
+        configuration.GetValue<bool?>("ALLOW_SAME_MIGRATION_USER") == true ||
+        configuration.GetValue<bool?>("Database:RequireDistinctMigrationUser") == false;
 }

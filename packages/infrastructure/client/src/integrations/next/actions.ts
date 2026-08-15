@@ -7,35 +7,13 @@
  * They read/write cookies directly via next/headers and can trigger redirects.
  */
 
-import type {
-  ResolvedAuthConfig,
-  Session,
-  JWTPayload,
-  ProviderResult,
-  CredentialsProviderConfig,
-} from '../../runtime/auth/types.js';
+import type { ResolvedAuthConfig, Session, JWTPayload, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types.js';
 import { decodeJWT } from '../../runtime/auth/jwt.js';
-import {
-  SessionStore,
-  resolveCookieOptions,
-  type CookieSerializeOptions,
-} from '../../runtime/auth/cookies.js';
-import {
-  createJWTPayload,
-  processSession,
-  encodeSession,
-  toSession,
-} from '../../runtime/auth/session.js';
-import {
-  CredentialsSignInError,
-  ProviderNotFoundError,
-  SignUpError,
-} from '../../runtime/auth/errors.js';
+import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies.js';
+import { createJWTPayload, processSession, encodeSession, refreshAccessToken, toSession } from '../../runtime/auth/session.js';
+import { CredentialsSignInError, ProviderNotFoundError, SignUpError } from '../../runtime/auth/errors.js';
 import { parseBackendAuthResponse, serializeCookie } from './handlers.js';
-import {
-  type OAuthProviderWithMethods,
-  getOAuthExchangeToken,
-} from './oauth-helpers.js';
+import { type OAuthProviderWithMethods, getOAuthExchangeToken } from './oauth-helpers.js';
 
 /**
  * Cookie adapter — abstracts next/headers cookies() API.
@@ -70,9 +48,7 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
    * @param cookieAdapter - Optional cookie adapter. If not provided,
    *                        attempts to use next/headers cookies().
    */
-  async function getSession(
-    cookieAdapter?: CookieAdapter
-  ): Promise<Session | null> {
+  async function getSession(cookieAdapter?: CookieAdapter): Promise<Session | null> {
     const adapter = cookieAdapter || (await getNextCookies());
     if (!adapter) return null;
 
@@ -83,20 +59,13 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
 
     if (!encryptedToken) return null;
 
-    const { session, token, updated } = await processSession(
-      encryptedToken,
-      config
-    );
+    const { session, token, updated } = await processSession(encryptedToken, config);
 
     // If refreshed, update the cookie
     if (updated && token) {
       try {
         const newEncrypted = await encodeSession(token, config);
-        const setCookieFn = (
-          name: string,
-          value: string,
-          opts: CookieSerializeOptions
-        ) => {
+        const setCookieFn = (name: string, value: string, opts: CookieSerializeOptions) => {
           adapter.set(name, value, opts);
         };
         sessionStore.write(newEncrypted, setCookieFn);
@@ -108,9 +77,7 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
 
     if (!session) {
       try {
-        sessionStore.delete((name, value, opts) => {
-          adapter.set(name, value, opts);
-        });
+        sessionStore.delete((name) => adapter.delete(name));
       } catch {
         // Server Components can read cookies but cannot mutate them.
       }
@@ -125,15 +92,9 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
    * - auth(handler) → proxy wrapper
    */
   function auth(): Promise<Session | null>;
+  function auth(handler: (request: Request & { auth: Session | null }) => Promise<Response> | Response): (request: Request) => Promise<Response>;
   function auth(
-    handler: (
-      request: Request & { auth: Session | null }
-    ) => Promise<Response> | Response
-  ): (request: Request) => Promise<Response>;
-  function auth(
-    handler?: (
-      request: Request & { auth: Session | null }
-    ) => Promise<Response> | Response
+    handler?: (request: Request & { auth: Session | null }) => Promise<Response> | Response,
   ): Promise<Session | null> | ((request: Request) => Promise<Response>) {
     if (!handler) {
       return getSession();
@@ -141,7 +102,7 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
 
     // Return a proxy wrapper
     return async (request: Request): Promise<Response> => {
-      // Read session from request cookies  
+      // Read session from request cookies
       const { parseCookieHeader } = await import('./handlers.js');
       const cookieHeader = request.headers.get('cookie') || '';
       const cookieMap = parseCookieHeader(cookieHeader);
@@ -176,10 +137,7 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
 
       const response = await handler(augmentedRequest);
       for (const cookie of responseCookies) {
-        response.headers.append(
-          'Set-Cookie',
-          serializeCookie(cookie.name, cookie.value, cookie.options)
-        );
+        response.headers.append('Set-Cookie', serializeCookie(cookie.name, cookie.value, cookie.options));
       }
 
       return response;
@@ -200,7 +158,7 @@ export function createSignInAction(config: ResolvedAuthConfig) {
     options: Record<string, unknown> & {
       redirectTo?: string;
       redirect?: boolean;
-    } = {}
+    } = {},
   ): Promise<void> {
     const { redirectTo, redirect: shouldRedirect = true, ...credentials } = options;
 
@@ -213,19 +171,12 @@ export function createSignInAction(config: ResolvedAuthConfig) {
 
     if (providerConfig.type === 'credentials') {
       const credProvider = providerConfig as CredentialsProviderConfig;
-      result = await credProvider.authorize(
-        { ...credentials, __apiUrl: config.apiUrl },
-        undefined
-      );
+      result = await credProvider.authorize({ ...credentials, __apiUrl: config.apiUrl }, undefined);
     } else {
       const oauthProvider = providerConfig as OAuthProviderWithMethods;
       const exchangeToken = getOAuthExchangeToken(oauthProvider);
       if (exchangeToken) {
-        result = await exchangeToken(
-          credentials.idToken as string,
-          config.apiUrl,
-          credentials.tenantId as string | undefined
-        );
+        result = await exchangeToken(credentials.idToken as string, config.apiUrl, credentials.tenantId as string | undefined);
       }
     }
 
@@ -272,7 +223,7 @@ export function createSignUpAction(config: ResolvedAuthConfig) {
       lastName?: string;
       tenantId?: string;
     },
-    options?: { redirectTo?: string; redirect?: boolean }
+    options?: { redirectTo?: string; redirect?: boolean },
   ): Promise<void> {
     const { redirectTo, redirect: shouldRedirect = true } = options ?? {};
 
@@ -293,10 +244,9 @@ export function createSignUpAction(config: ResolvedAuthConfig) {
 
     if (!response.ok) {
       const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-      throw new SignUpError(
-        (errorData.message as string) || (errorData.detail as string) || 'Sign-up failed',
-        { fieldErrors: errorData.errors as Record<string, string[]> | undefined }
-      );
+      throw new SignUpError((errorData.message as string) || (errorData.detail as string) || 'Sign-up failed', {
+        fieldErrors: errorData.errors as Record<string, string[]> | undefined,
+      });
     }
 
     const data = (await response.json()) as Record<string, unknown>;
@@ -321,9 +271,7 @@ export function createSignUpAction(config: ResolvedAuthConfig) {
 export function createSignOutAction(config: ResolvedAuthConfig) {
   const { sessionStore } = createCookieHelpers(config);
 
-  return async function signOut(
-    options?: { redirectTo?: string; redirect?: boolean }
-  ): Promise<void> {
+  return async function signOut(options?: { redirectTo?: string; redirect?: boolean }): Promise<void> {
     const { redirectTo, redirect: shouldRedirect = true } = options ?? {};
 
     const adapter = await getNextCookies();
@@ -353,11 +301,7 @@ export function createSignOutAction(config: ResolvedAuthConfig) {
       }
 
       // Delete session cookie
-      const deleteCookieFn = (
-        name: string,
-        value: string,
-        opts: CookieSerializeOptions
-      ) => {
+      const deleteCookieFn = (name: string, value: string, opts: CookieSerializeOptions) => {
         adapter.set(name, value, opts);
       };
       sessionStore.delete(deleteCookieFn);
@@ -380,9 +324,7 @@ export function createSignOutAction(config: ResolvedAuthConfig) {
 export function createUpdateAction(config: ResolvedAuthConfig) {
   const { sessionStore } = createCookieHelpers(config);
 
-  return async function update(
-    data?: Partial<Session>
-  ): Promise<Session | null> {
+  return async function update(data?: Partial<Session>): Promise<Session | null> {
     const adapter = await getNextCookies();
     if (!adapter) return null;
 
@@ -400,6 +342,11 @@ export function createUpdateAction(config: ResolvedAuthConfig) {
 
     if (!token) return null;
 
+    const requestedTenantId = data?.tenantId;
+    if (requestedTenantId !== undefined && requestedTenantId !== token.tenantId) {
+      token = await refreshAccessToken({ ...token, tenantId: requestedTenantId ?? null }, config);
+    }
+
     // Run JWT callback with update trigger
     token = await config.callbacks.jwt({
       token,
@@ -409,11 +356,7 @@ export function createUpdateAction(config: ResolvedAuthConfig) {
 
     // Re-encrypt
     const encrypted = await encodeSession(token, config);
-    const setCookieFn = (
-      name: string,
-      value: string,
-      opts: CookieSerializeOptions
-    ) => {
+    const setCookieFn = (name: string, value: string, opts: CookieSerializeOptions) => {
       adapter.set(name, value, opts);
     };
     sessionStore.write(encrypted, setCookieFn);
@@ -463,7 +406,7 @@ async function finalizeServerAction(
   result: ProviderResult,
   trigger: 'signIn' | 'signUp',
   config: ResolvedAuthConfig,
-  sessionStore: SessionStore
+  sessionStore: SessionStore,
 ): Promise<void> {
   let token = createJWTPayload(result, config);
   token = await config.callbacks.jwt({
@@ -508,12 +451,8 @@ async function getNextCookies(): Promise<CookieAdapter | null> {
 function getBaseUrl(): string {
   /* v8 ignore start */
   if (typeof process !== 'undefined') {
-  /* v8 ignore stop */
-    return (
-      process.env?.NEXTAUTH_URL ||
-      process.env?.NEXT_PUBLIC_URL ||
-      'http://localhost:3000'
-    );
+    /* v8 ignore stop */
+    return process.env?.NEXTAUTH_URL || process.env?.NEXT_PUBLIC_URL || 'http://localhost:3000';
   }
   /* v8 ignore start -- typeof process is always defined in Node */
   return 'http://localhost:3000';

@@ -54,4 +54,26 @@ public sealed class AuthorizationTenantResolverTests
         // Then
         resolvedTenantId.Should().Be(tenantId.ToString());
     }
+
+    [Fact]
+    public async Task ResolveTenantIdAsync_WhenNoOtherSource_UsesUserDefaultTenantClaim()
+    {
+        var context = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(new ClaimsIdentity(
+                [new Claim("default_tenant", "tenant-default")],
+                authenticationType: "Bearer"))
+        };
+        IAuthorizationTenantResolver resolver = new AuthorizationTenantResolver(
+            Options.Create(new TenancyOptions()),
+            Options.Create(new AuthorizationTokenOptions
+            {
+                TenantClaimType = "tenant_id",
+                UserDefaultTenantClaimType = "default_tenant"
+            }));
+
+        var resolvedTenantId = await resolver.ResolveTenantIdAsync(context);
+
+        resolvedTenantId.Should().Be("tenant-default");
+    }
 }

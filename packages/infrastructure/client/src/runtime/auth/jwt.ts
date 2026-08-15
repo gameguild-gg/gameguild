@@ -43,13 +43,7 @@ async function deriveEncryptionKey(secret: string): Promise<Uint8Array> {
   const salt = encoder.encode('');
 
   // Import the secret as HKDF key material
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    inputKey,
-    'HKDF',
-    false,
-    ['deriveBits']
-  );
+  const keyMaterial = await crypto.subtle.importKey('raw', inputKey, 'HKDF', false, ['deriveBits']);
 
   // Derive 512 bits (64 bytes) for A256CBC-HS512
   const derivedBits = await crypto.subtle.deriveBits(
@@ -60,7 +54,7 @@ async function deriveEncryptionKey(secret: string): Promise<Uint8Array> {
       info,
     },
     keyMaterial,
-    512
+    512,
   );
 
   const key = new Uint8Array(derivedBits);
@@ -84,11 +78,7 @@ async function deriveEncryptionKey(secret: string): Promise<Uint8Array> {
  * });
  * ```
  */
-export async function encodeJWT(params: {
-  token: JWTPayload;
-  secret: string;
-  maxAge?: number;
-}): Promise<string> {
+export async function encodeJWT(params: { token: JWTPayload; secret: string; maxAge?: number }): Promise<string> {
   const { token, secret, maxAge = DEFAULT_MAX_AGE } = params;
   const encryptionKey = await deriveEncryptionKey(secret);
 
@@ -131,10 +121,7 @@ export async function encodeJWT(params: {
  * }
  * ```
  */
-export async function decodeJWT(params: {
-  token: string;
-  secret: string;
-}): Promise<JWTPayload | null> {
+export async function decodeJWT(params: { token: string; secret: string }): Promise<JWTPayload | null> {
   const { token, secret } = params;
 
   if (!token) return null;

@@ -44,7 +44,7 @@ describe('resolveConfig', () => {
   it('should resolve cookie defaults', () => {
     const result = resolveConfig(makeMinimalConfig());
 
-    expect(result.cookies.name).toBe('__gg');
+    expect(result.cookies.name).toBe('__me');
     expect(result.cookies.secure).toBe(false);
     expect(result.cookies.sameSite).toBe('lax');
     expect(result.cookies.path).toBe('/');
@@ -55,18 +55,14 @@ describe('resolveConfig', () => {
     delete process.env.AUTH_SECRET;
     delete process.env.NEXTAUTH_SECRET;
 
-    expect(() =>
-      resolveConfig({ providers: [], apiUrl: 'http://localhost:5000' })
-    ).toThrow(MissingSecretError);
+    expect(() => resolveConfig({ providers: [], apiUrl: 'http://localhost:5000' })).toThrow(MissingSecretError);
   });
 
   it('should throw ConfigError when no apiUrl available', () => {
     delete process.env.API_URL;
     delete process.env.NEXT_PUBLIC_API_URL;
 
-    expect(() =>
-      resolveConfig({ providers: [], secret: 'test-secret-min-32-chars-long-ok' })
-    ).toThrow(ConfigError);
+    expect(() => resolveConfig({ providers: [], secret: 'test-secret-min-32-chars-long-ok' })).toThrow(ConfigError);
   });
 
   it('should read secret from AUTH_SECRET environment variable', () => {
@@ -124,9 +120,7 @@ describe('resolveConfig', () => {
   });
 
   it('should allow overriding secure in cookies config', () => {
-    const result = resolveConfig(
-      makeMinimalConfig({ cookies: { secure: true } })
-    );
+    const result = resolveConfig(makeMinimalConfig({ cookies: { secure: true } }));
 
     expect(result.cookies.secure).toBe(true);
   });
@@ -137,7 +131,7 @@ describe('resolveConfig', () => {
     const result = resolveConfig(
       makeMinimalConfig({
         callbacks: { jwt: customJwt },
-      })
+      }),
     );
 
     expect(result.callbacks.jwt).toBe(customJwt);
@@ -152,24 +146,20 @@ describe('resolveConfig', () => {
     const result = resolveConfig(
       makeMinimalConfig({
         pages: { signIn: '/login', error: '/auth/error' },
-      })
+      }),
     );
 
     expect(result.pages).toEqual({ signIn: '/login', error: '/auth/error' });
   });
 
   it('should use custom basePath', () => {
-    const result = resolveConfig(
-      makeMinimalConfig({ basePath: '/auth' })
-    );
+    const result = resolveConfig(makeMinimalConfig({ basePath: '/auth' }));
 
     expect(result.basePath).toBe('/auth');
   });
 
   it('should use custom maxAge and updateAge', () => {
-    const result = resolveConfig(
-      makeMinimalConfig({ maxAge: 3600, updateAge: 300 })
-    );
+    const result = resolveConfig(makeMinimalConfig({ maxAge: 3600, updateAge: 300 }));
 
     expect(result.maxAge).toBe(3600);
     expect(result.updateAge).toBe(300);
@@ -186,7 +176,7 @@ describe('resolveConfig', () => {
           maxAge: 7200,
           httpOnly: false,
         },
-      })
+      }),
     );
 
     expect(result.cookies.name).toBe('__custom');

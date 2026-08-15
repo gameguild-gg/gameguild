@@ -130,7 +130,7 @@ export async function getInstructorStats(): Promise<{
 }> {
   try {
     const programs = createCourseProgramsModule();
-    const result = await programs.getCourses({ take: 50 });
+    const result = await programs.getCoursesForGetCourses({ take: 50 });
 
     if (!result.ok || !Array.isArray(result.data)) {
       return { courses: [] };
@@ -175,7 +175,7 @@ export async function getRecentActivity(): Promise<{
 }> {
   try {
     const programs = createCourseProgramsModule();
-    const coursesResult = await programs.getCourses({ take: 20 });
+    const coursesResult = await programs.getCoursesForGetCourses({ take: 20 });
 
     if (!coursesResult.ok || !Array.isArray(coursesResult.data) || coursesResult.data.length === 0) {
       return { activities: [] };

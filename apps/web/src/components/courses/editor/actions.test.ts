@@ -26,7 +26,7 @@ vi.mock('@game-guild/client', () => ({
       putCourses = mocks.putCourses;
       postCourses = mocks.postCourses;
     },
-    LearningCoursesProgramlifecycleModule: class {
+    LearningCoursesProgramLifecycleModule: class {
       postCoursesPublish = mocks.postCoursesPublish;
     },
   },

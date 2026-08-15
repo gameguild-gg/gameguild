@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   postAssessments: vi.fn(),
   putAssessments: vi.fn(),
   deleteAssessments: vi.fn(),
-  getCoursesById: vi.fn(),
+  getCoursesForGetCoursesById: vi.fn(),
   putCourses: vi.fn(),
   postCoursesPublish: vi.fn(),
   postCoursesRestore: vi.fn(),
@@ -20,7 +20,7 @@ const mocks = vi.hoisted(() => ({
   deleteCoursesUsers: vi.fn(),
   postApiLearningEnrollments: vi.fn(),
   clientRequest: vi.fn(),
-  getUsers: vi.fn(),
+  getUsersForGetUsers: vi.fn(),
   postCoursesStudentsMessage: vi.fn(),
   postCoursesSupportTicketsMessages: vi.fn(),
   postCoursesSupportTicketsResolve: vi.fn(),
@@ -65,18 +65,18 @@ vi.mock("@game-guild/client", () => ({
       deleteAssessmentsGroups = mocks.deleteAssessmentsGroups;
     },
     LearningCoursesProgramModule: class {
-      getCoursesById = mocks.getCoursesById;
+      getCoursesForGetCoursesById = mocks.getCoursesForGetCoursesById;
       putCourses = mocks.putCourses;
       postCoursesUsers = mocks.postCoursesUsers;
       deleteCoursesUsers = mocks.deleteCoursesUsers;
     },
-    LearningCoursesProgramcontentModule: class {
+    LearningCoursesProgramContentModule: class {
       postCoursesContent = mocks.postCoursesContent;
       postCoursesContentReorder = mocks.postCoursesContentReorder;
       postCoursesContentMove = mocks.postCoursesContentMove;
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
-    LearningCoursesProgramlifecycleModule: class {
+    LearningCoursesProgramLifecycleModule: class {
       postCoursesPublish = mocks.postCoursesPublish;
       postCoursesRestore = mocks.postCoursesRestore;
     },
@@ -86,7 +86,7 @@ vi.mock("@game-guild/client", () => ({
     LearningCoursesStudentsModule: class {
       postCoursesStudentsMessage = mocks.postCoursesStudentsMessage;
     },
-    LearningCoursesSupportticketsModule: class {
+    LearningCoursesSupportTicketsModule: class {
       postCoursesSupportTicketsMessages =
         mocks.postCoursesSupportTicketsMessages;
       postCoursesSupportTicketsResolve = mocks.postCoursesSupportTicketsResolve;
@@ -112,7 +112,7 @@ vi.mock("@game-guild/client", () => ({
       patchApiSocialReviewsModeration = mocks.patchApiSocialReviewsModeration;
     },
     UsersModule: class {
-      getUsers = mocks.getUsers;
+      getUsersForGetUsers = mocks.getUsersForGetUsers;
     },
   },
 }));
@@ -189,7 +189,7 @@ describe("learning server actions", () => {
     });
     mocks.putAssessments.mockResolvedValue({ ok: true, data: undefined });
     mocks.deleteAssessments.mockResolvedValue({ ok: true, data: undefined });
-    mocks.getCoursesById.mockResolvedValue({
+    mocks.getCoursesForGetCoursesById.mockResolvedValue({
       ok: true,
       data: {
         id: "course-1",
@@ -228,7 +228,7 @@ describe("learning server actions", () => {
         ],
       },
     });
-    mocks.getUsers.mockResolvedValue({
+    mocks.getUsersForGetUsers.mockResolvedValue({
       ok: true,
       data: {
         items: [
@@ -612,7 +612,7 @@ describe("learning server actions", () => {
     );
 
     expect(result).toEqual({ success: true, data: null });
-    expect(mocks.getUsers).toHaveBeenCalledWith({
+    expect(mocks.getUsersForGetUsers).toHaveBeenCalledWith({
       email: "student@example.com",
       limit: 5,
     });

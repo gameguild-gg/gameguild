@@ -199,8 +199,8 @@ async function seedLearnerCourse() {
   }
 
   const programs = new GeneratedApi.LearningCoursesProgramModule(client);
-  const content = new GeneratedApi.LearningCoursesProgramcontentModule(client);
-  const lifecycle = new GeneratedApi.LearningCoursesProgramlifecycleModule(
+  const content = new GeneratedApi.LearningCoursesProgramContentModule(client);
+  const lifecycle = new GeneratedApi.LearningCoursesProgramLifecycleModule(
     client,
   );
   const assessments = new GeneratedApi.LearningAssessmentsModule(client);

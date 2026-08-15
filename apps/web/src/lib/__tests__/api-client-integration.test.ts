@@ -196,28 +196,28 @@ describe('API Client Package Integration', () => {
 
       const modules = {
         ai: new GeneratedApi.AiModule(client),
-        aiPromptTemplates: new GeneratedApi.AiPrompttemplatesModule(client),
+        aiPromptTemplates: new GeneratedApi.AiPromptTemplatesModule(client),
         ferpa: new GeneratedApi.ComplianceFerpaModule(client),
         socialProfiles: new GeneratedApi.SocialProfilesModule(client),
         socialBlog: new GeneratedApi.SocialBlogPostsModule(client),
         socialFeed: new GeneratedApi.SocialFeedModule(client),
-        socialGroups: new GeneratedApi.SocialGroupsSocialgroupsModule(client),
+        socialGroups: new GeneratedApi.SocialGroupsSocialGroupsModule(client),
         socialReactions: new GeneratedApi.SocialReactionsModule(client),
         enrollments: new GeneratedApi.LearningEnrollmentsModule(client),
-        gameJams: new GeneratedApi.GamejamsModule(client),
+        gameJams: new GeneratedApi.GameJamsModule(client),
       };
 
       expect(modules.ai.getAiStatus).toBeTypeOf('function');
-      expect(modules.aiPromptTemplates.getAiPromptTemplates).toBeTypeOf('function');
+      expect(modules.aiPromptTemplates.getAiPromptTemplatesForGetAiPromptTemplates).toBeTypeOf('function');
       expect(modules.ferpa.getApiComplianceFerpaStudentsRecords).toBeTypeOf('function');
       expect(modules.socialProfiles.getApiSocialProfilesUsers).toBeTypeOf('function');
-      expect(modules.socialBlog.getApiSocialBlog).toBeTypeOf('function');
+      expect(modules.socialBlog.getApiSocialBlogForGetApiSocialBlog).toBeTypeOf('function');
       expect(modules.socialFeed.getApiSocialFeedUsers).toBeTypeOf('function');
-      expect(modules.socialGroups.getApiSocialGroups).toBeTypeOf('function');
+      expect(modules.socialGroups.getApiSocialGroupsForGetApiSocialGroups).toBeTypeOf('function');
       expect(modules.socialGroups.postApiSocialGroupsMembers).toBeTypeOf('function');
       expect(modules.socialReactions.getApiSocialReactionsTarget).toBeTypeOf('function');
       expect(modules.enrollments.postApiLearningEnrollments).toBeTypeOf('function');
-      expect(modules.gameJams.getApiGameJams).toBeTypeOf('function');
+      expect(modules.gameJams.getApiGameJamsForGetApiGameJams).toBeTypeOf('function');
     });
   });
 

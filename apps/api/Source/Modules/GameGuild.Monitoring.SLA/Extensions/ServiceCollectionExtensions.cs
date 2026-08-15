@@ -20,6 +20,10 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddSlaMonitoringApplication(this IServiceCollection services)
     {
+        services.AddScoped<IServiceLevelObjectiveRepository, ServiceLevelObjectiveRepository>();
+        services.AddScoped<IServiceLevelIndicatorRepository, ServiceLevelIndicatorRepository>();
+        services.AddScoped<ISloViolationRepository, SloViolationRepository>();
+
         // Register Command Handlers
         services.AddScoped<ICommandHandler<CreateSloCommand, SloDto>, CreateSloCommandHandler>();
         services.AddScoped<ICommandHandler<UpdateSloCommand, SloDto>, UpdateSloCommandHandler>();

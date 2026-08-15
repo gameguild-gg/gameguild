@@ -1,5 +1,6 @@
 using Serilog;
 using Serilog.Events;
+using Serilog.Formatting.Json;
 
 namespace GameGuild.API;
 
@@ -20,11 +21,14 @@ public static class SerilogExtensions
         // Configure Serilog from configuration and code
         builder.Host.UseSerilog((context, services, configuration) =>
         {
+            var structuredLogPath = context.Configuration["StructuredLogging:Path"]
+                                    ?? "logs/game-guild-.ndjson";
+
             configuration
                 // Read from appsettings.json if configured
                 .ReadFrom.Configuration(context.Configuration)
                 .ReadFrom.Services(services)
-                
+
                 // Enrich logs with useful context
                 .Enrich.FromLogContext()
                 .Enrich.WithMachineName()
@@ -32,32 +36,29 @@ public static class SerilogExtensions
                 .Enrich.WithThreadId()
                 .Enrich.WithProperty("Application", "GameGuild.API")
                 .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
-                
+
                 // Set minimum levels
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
                 .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
                 .MinimumLevel.Override("System", LogEventLevel.Warning)
-                
+
                 // Default minimum level based on environment
-                .MinimumLevel.Is(context.HostingEnvironment.IsDevelopment() 
-                    ? LogEventLevel.Debug 
+                .MinimumLevel.Is(context.HostingEnvironment.IsDevelopment()
+                    ? LogEventLevel.Debug
                     : LogEventLevel.Information)
-                
+
                 // Console sink with structured output
                 .WriteTo.Console(
                     outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}{NewLine}      {Message:lj}{NewLine}{Exception}",
-                    theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Code);
-
-            // Add file sink in non-development environments
-            if (!context.HostingEnvironment.IsDevelopment())
-            {
-                configuration.WriteTo.File(
-                    path: "logs/gameguild-.log",
+                    theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Code)
+                .WriteTo.File(
+                    formatter: new JsonFormatter(renderMessage: true),
+                    path: structuredLogPath,
                     rollingInterval: RollingInterval.Day,
                     retainedFileCountLimit: 30,
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}");
-            }
+                    shared: true,
+                    flushToDiskInterval: TimeSpan.FromSeconds(1));
         });
 
         return builder;
@@ -78,7 +79,7 @@ public static class SerilogExtensions
             diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
             diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
             diagnosticContext.Set("ClientIp", httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
-            
+
             // Add correlation ID if available
             if (httpContext.Items.TryGetValue("X-Correlation-Id", out var correlationId) && correlationId is not null)
             {

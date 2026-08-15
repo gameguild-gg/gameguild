@@ -37,7 +37,7 @@ export interface ValidationErrorResponse extends ApiErrorResponse {
  */
 export interface AuthenticationErrorResponse extends ApiErrorResponse {
   status: 401;
-  code?: 'TOKEN_EXPIRED' | 'TOKEN_INVALID' | 'TOKEN_MISSING';
+  code?: "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_MISSING";
 }
 
 /**
@@ -45,7 +45,7 @@ export interface AuthenticationErrorResponse extends ApiErrorResponse {
  */
 export interface AuthorizationErrorResponse extends ApiErrorResponse {
   status: 403;
-  code?: 'FORBIDDEN' | 'INSUFFICIENT_PERMISSIONS' | 'FEATURE_NOT_AVAILABLE';
+  code?: "FORBIDDEN" | "INSUFFICIENT_PERMISSIONS" | "FEATURE_NOT_AVAILABLE";
   requiredPermissions?: string[];
   requiredFeature?: string;
 }
@@ -99,18 +99,18 @@ export type ErrorResponse =
  * Error codes for programmatic handling
  */
 export type ApiErrorCode =
-  | 'VALIDATION_ERROR'
-  | 'AUTHENTICATION_ERROR'
-  | 'TOKEN_EXPIRED'
-  | 'TOKEN_INVALID'
-  | 'TOKEN_MISSING'
-  | 'FORBIDDEN'
-  | 'INSUFFICIENT_PERMISSIONS'
-  | 'FEATURE_NOT_AVAILABLE'
-  | 'NOT_FOUND'
-  | 'CONFLICT'
-  | 'RATE_LIMITED'
-  | 'SERVER_ERROR'
-  | 'NETWORK_ERROR'
-  | 'TIMEOUT'
-  | 'UNKNOWN';
+  | "VALIDATION_ERROR"
+  | "AUTHENTICATION_ERROR"
+  | "TOKEN_EXPIRED"
+  | "TOKEN_INVALID"
+  | "TOKEN_MISSING"
+  | "FORBIDDEN"
+  | "INSUFFICIENT_PERMISSIONS"
+  | "FEATURE_NOT_AVAILABLE"
+  | "NOT_FOUND"
+  | "CONFLICT"
+  | "RATE_LIMITED"
+  | "SERVER_ERROR"
+  | "NETWORK_ERROR"
+  | "TIMEOUT"
+  | "UNKNOWN";
