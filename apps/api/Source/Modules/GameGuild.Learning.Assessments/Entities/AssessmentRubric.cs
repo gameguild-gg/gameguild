@@ -8,6 +8,17 @@ public class AssessmentRubric : EntityBase
 {
     public string Title { get; private set; } = string.Empty;
 
+    public void Replace(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new ArgumentException("Title is required.", nameof(title));
+        }
+
+        Title = title.Trim();
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
     private AssessmentRubric() { } // EF Core
 
     public static AssessmentRubric Create(string title)

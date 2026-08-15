@@ -15,17 +15,20 @@ public class AssessmentService : IAssessmentService
 {
     private readonly IApplicationDbContext _context;
     private readonly IProgramContentService _programContentService;
+    private readonly IRubricService _rubricService;
     private readonly ILogger<AssessmentService> _logger;
     private readonly ILtiScorePassback? _ltiScorePassback;
 
     public AssessmentService(
         IApplicationDbContext context,
         IProgramContentService programContentService,
+        IRubricService rubricService,
         ILogger<AssessmentService> logger,
         ILtiScorePassback? ltiScorePassback = null)
     {
         _context = context;
         _programContentService = programContentService;
+        _rubricService = rubricService;
         _logger = logger;
         _ltiScorePassback = ltiScorePassback;
     }
@@ -928,7 +931,16 @@ public class AssessmentService : IAssessmentService
             }
 
             var absolutePassing = (int)Math.Round(assessment.MaxScore * ((double)program.PassingScore / 100.0));
-            submission.Grade(request.Score, absolutePassing, assessment.MaxScore, request.GradedBy, request.Feedback);
+
+            var rubricValidation = await _rubricService
+                .ValidateScoresAsync(assessment.Id, request.Score, request.RubricScores)
+                .ConfigureAwait(false);
+            if (!rubricValidation.IsSuccess)
+            {
+                return Result.Failure<AssessmentSubmission>(rubricValidation.Error);
+            }
+
+            submission.Grade(request.Score, absolutePassing, assessment.MaxScore, request.GradedBy, request.Feedback, request.RubricScores);
             _context.Set<AssessmentSubmission>().Update(submission);
 
             var gradedUserIds = new List<Guid> { submission.UserId };
@@ -943,8 +955,7 @@ public class AssessmentService : IAssessmentService
 
                 foreach (var sibling in siblings)
                 {
-                    // Identical grade via the 6-arg overload — todo 6 threads RubricScores through here.
-                    sibling.Grade(request.Score, absolutePassing, assessment.MaxScore, request.GradedBy, request.Feedback, rubricScores: null);
+                    sibling.Grade(request.Score, absolutePassing, assessment.MaxScore, request.GradedBy, request.Feedback, request.RubricScores);
                     _context.Set<AssessmentSubmission>().Update(sibling);
                     gradedUserIds.Add(sibling.UserId);
                 }
