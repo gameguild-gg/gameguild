@@ -84,13 +84,13 @@ export function DashboardUserMenu({ user }: { user: DashboardUser }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/my">
+          <Link href="/projects">
             <BriefcaseBusiness className="size-4" />
             My Workspace
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/my/settings/account">
+          <Link href="/settings/account">
             <Settings className="size-4" />
             Account settings
           </Link>

@@ -22,7 +22,7 @@ interface DashboardShellProps {
   contexts?: readonly DashboardContextSummary[];
 }
 
-export function DashboardShell({
+export function ConsoleShell({
   children,
   notifications,
   user,

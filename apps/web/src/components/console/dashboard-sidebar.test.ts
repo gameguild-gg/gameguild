@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: "a",
-  usePathname: () => "/dashboard/testing-lab",
+  usePathname: () => "/dashboard/community/testing-lab",
 }));
 
 import {
@@ -28,18 +28,18 @@ describe("dashboard management navigation", () => {
     expect(
       testingLab?.subGroups?.map(({ title, url }) => ({ title, url })),
     ).toEqual([
-      { title: "Overview", url: "/dashboard/testing-lab" },
-      { title: "Events", url: "/dashboard/testing-lab/events" },
-      { title: "Applications", url: "/dashboard/testing-lab/applications" },
-      { title: "Projects", url: "/dashboard/testing-lab/projects" },
-      { title: "Participants", url: "/dashboard/testing-lab/participants" },
-      { title: "Feedback", url: "/dashboard/testing-lab/feedback" },
-      { title: "Analytics", url: "/dashboard/testing-lab/analytics" },
-      { title: "Locations", url: "/dashboard/testing-lab/locations" },
-      { title: "Access", url: "/dashboard/testing-lab/access" },
-      { title: "Settings", url: "/dashboard/testing-lab/settings" },
+      { title: "Overview", url: "/dashboard/community/testing-lab" },
+      { title: "Events", url: "/dashboard/community/testing-lab/events" },
+      { title: "Applications", url: "/dashboard/community/testing-lab/applications" },
+      { title: "Projects", url: "/dashboard/community/testing-lab/projects" },
+      { title: "Participants", url: "/dashboard/community/testing-lab/participants" },
+      { title: "Feedback", url: "/dashboard/community/testing-lab/feedback" },
+      { title: "Analytics", url: "/dashboard/community/testing-lab/analytics" },
+      { title: "Locations", url: "/dashboard/community/testing-lab/locations" },
+      { title: "Access", url: "/dashboard/community/testing-lab/access" },
+      { title: "Settings", url: "/dashboard/community/testing-lab/settings" },
     ]);
-    expect(launchPad?.url).toBe("/dashboard/launch-pad");
+    expect(launchPad?.url).toBe("/dashboard/community/launch-pad");
     expect(platform?.items.map((item) => item.title)).toEqual([
       "Roles",
       "Learning",

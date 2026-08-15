@@ -21,7 +21,7 @@ const contextMeta: Record<DashboardContextType, { label: string; icon: React.Ele
 };
 
 function isOperationsPath(pathname: string | null): boolean {
-  return Boolean(pathname?.startsWith('/dashboard/testing-lab') || pathname?.startsWith('/dashboard/launch-pad'));
+  return Boolean(pathname?.startsWith('/dashboard/community/testing-lab') || pathname?.startsWith('/dashboard/community/launch-pad'));
 }
 
 export function ContextSwitcher({ contexts }: { contexts: readonly DashboardContextSummary[] }) {

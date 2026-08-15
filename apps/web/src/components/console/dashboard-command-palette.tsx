@@ -38,19 +38,19 @@ type DashboardQuickAction = DashboardNavSubItem & {
 const quickActions: DashboardQuickAction[] = [
   {
     title: 'Create course',
-    url: '/dashboard/learning/courses/new',
+    url: '/dashboard/platform/learning/courses/new',
     icon: Plus,
     requiredCapability: 'Learning.Manage',
   },
   {
     title: 'Review testing lab',
-    url: '/dashboard/testing-lab',
+    url: '/dashboard/community/testing-lab',
     icon: FlaskConical,
     requiredCapability: 'TestingLab.ManageEvents',
   },
   {
     title: 'Open launch pad',
-    url: '/dashboard/launch-pad',
+    url: '/dashboard/community/launch-pad',
     icon: Rocket,
     requiredCapability: 'LaunchPad.ManageEvents',
   },
