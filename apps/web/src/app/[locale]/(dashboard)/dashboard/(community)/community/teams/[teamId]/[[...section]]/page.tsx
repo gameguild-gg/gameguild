@@ -1,4 +1,4 @@
-import { TeamWorkspacePage } from '@/app/[locale]/(community)/my/teams/[slug]/[[...section]]/page';
+import { TeamWorkspacePage } from '@/app/[locale]/(private)/workspace/teams/[slug]/[[...section]]/page';
 import { getDashboardContexts } from '@/lib/dashboard-contexts';
 import { getManagedTeams } from '@/lib/workspaces';
 import { notFound, forbidden } from 'next/navigation';

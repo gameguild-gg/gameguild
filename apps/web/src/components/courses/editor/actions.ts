@@ -235,8 +235,8 @@ export async function saveCourse(course: EditorCourse): Promise<boolean> {
 
     if (!result.ok) return false;
 
-    revalidatePath(`/dashboard/learning/courses/${course.id}`);
-    revalidatePath('/dashboard/learning/courses');
+    revalidatePath(`/dashboard/platform/learning/courses/${course.id}`);
+    revalidatePath('/dashboard/platform/learning/courses');
     return true;
   } catch (error) {
     console.error('[saveCourse] Error:', error);
@@ -268,7 +268,7 @@ export async function createCourse(courseData: Partial<EditorCourse>): Promise<E
 
     if (!result.ok) return null;
 
-    revalidatePath('/dashboard/learning/courses');
+    revalidatePath('/dashboard/platform/learning/courses');
     return mapCourse(result.data);
   } catch (error) {
     console.error('[createCourse] Error:', error);
@@ -285,8 +285,8 @@ export async function publishCourse(courseId: string): Promise<boolean> {
 
     if (!result.ok) return false;
 
-    revalidatePath(`/dashboard/learning/courses/${courseId}`);
-    revalidatePath('/dashboard/learning/courses');
+    revalidatePath(`/dashboard/platform/learning/courses/${courseId}`);
+    revalidatePath('/dashboard/platform/learning/courses');
     return true;
   } catch (error) {
     console.error('[publishCourse] Error:', error);

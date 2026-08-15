@@ -221,7 +221,7 @@ export function PublicCourseCatalog({ initialCourses }: PublicCourseCatalogProps
 
       <div className="flex items-center justify-between gap-4 border-y border-white/10 py-4 text-sm text-slate-400">
         <span>{visibleCourses.length} matching courses</span>
-        <Link href="/programs" className="inline-flex items-center gap-2 font-medium text-slate-200 underline-offset-4 hover:text-white hover:underline">
+        <Link href="/courses?type=program" className="inline-flex items-center gap-2 font-medium text-slate-200 underline-offset-4 hover:text-white hover:underline">
           Compare packages
           <Layers3 className="size-4" />
         </Link>

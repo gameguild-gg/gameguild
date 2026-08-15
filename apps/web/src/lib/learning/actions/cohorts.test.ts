@@ -123,6 +123,6 @@ describe('cohort actions', () => {
       days: 7,
       scope: 'Following',
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/classes/cohort-1/schedule');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/learning/courses/course-1/classes/cohort-1/schedule');
   });
 });

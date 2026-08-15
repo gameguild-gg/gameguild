@@ -7,7 +7,8 @@ import { PUBLIC_PROGRAM_PACKAGES, getCoursesForProgram } from '@/lib/courses/pub
 import { ArrowRight, BookOpen, CheckCircle2, Clock, FlaskConical, GraduationCap, Target } from 'lucide-react';
 import Image from 'next/image';
 
-export default async function ProgramsPage() {
+/** Curated program-packages view rendered by /courses?type=program. */
+export async function ProgramsCatalogView() {
   const catalog = await getPublicCourseCatalog();
   const courses = catalog.data;
 
@@ -31,7 +32,7 @@ export default async function ProgramsPage() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                <Link href="/courses">
+                <Link href="/courses?type=course">
                   View all courses
                   <BookOpen />
                 </Link>

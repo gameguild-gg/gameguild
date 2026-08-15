@@ -61,14 +61,14 @@ describe('BrowseOwnedCoursesPage', () => {
     render(<BrowseOwnedCoursesPage courses={enrolledCourses} />);
 
     await userEvent.click(screen.getAllByRole('button', { name: /continue/i })[0]);
-    expect(push).toHaveBeenCalledWith('/dashboard/learning/courses/course-1/content/lesson-16');
+    expect(push).toHaveBeenCalledWith('/dashboard/platform/learning/courses/course-1/content/lesson-16');
 
     await userEvent.click(screen.getByRole('button', { name: /review course/i }));
-    expect(push).toHaveBeenCalledWith('/dashboard/learning/courses/course-2/content');
+    expect(push).toHaveBeenCalledWith('/dashboard/platform/learning/courses/course-2/content');
 
     await userEvent.click(screen.getByRole('button', { name: /open unity 3d essentials menu/i }));
     await userEvent.click(screen.getByRole('menuitem', { name: /view certificate/i }));
-    expect(push).toHaveBeenCalledWith('/dashboard/learning/courses/course-2/certificates');
+    expect(push).toHaveBeenCalledWith('/dashboard/platform/learning/courses/course-2/certificates');
   });
 
   it('does not render seeded courses when no live data is provided', async () => {

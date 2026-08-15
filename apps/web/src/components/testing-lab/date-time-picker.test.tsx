@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { DateTimePicker } from '@game-guild/ui/components/date-time-picker';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 
 describe('DateTimePicker', () => {
   it('commits the selected wall-clock value to the named form field', () => {
