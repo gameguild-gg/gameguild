@@ -1,3 +1,4 @@
+using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -106,6 +107,69 @@ public class PeerReviewAssignmentService : IPeerReviewAssignmentService
             _logger.LogWarning(ex, "Peer review claim race on assessment {AssessmentId}", assessmentId);
             return Result.Failure<PeerReviewClaimResult>(Error.Failure(RaceErrorCode, "Claim race"));
         }
+    }
+
+    public async Task<AssessmentPeerReview?> GetReviewAsync(Guid reviewId)
+    {
+        return await _context.Set<AssessmentPeerReview>()
+            .FirstOrDefaultAsync(r => r.Id == reviewId && r.DeletedAt == null)
+            .ConfigureAwait(false);
+    }
+
+    public async Task<Result<AssessmentPeerReview>> SubmitReviewAsync(
+        AssessmentPeerReview review, int score, string feedback, string? rubricScores)
+    {
+        try
+        {
+            review.SubmitReview(score, feedback, rubricScores);
+            await _context.SaveChangesAsync().ConfigureAwait(false);
+            return Result.Success(review);
+        }
+        catch (InvalidOperationException)
+        {
+            return Result.Failure<AssessmentPeerReview>(Error.Conflict(
+                "PeerReview.AlreadySubmitted", "Peer review already submitted"));
+        }
+    }
+
+    public async Task<IReadOnlyList<AssessmentPeerReview>> GetReviewsForSubmissionAsync(Guid submissionId)
+    {
+        var submission = await _context.Set<AssessmentSubmission>()
+            .FirstOrDefaultAsync(s => s.Id == submissionId && s.DeletedAt == null)
+            .ConfigureAwait(false);
+        if (submission == null)
+        {
+            return [];
+        }
+
+        // Group members see the union of reviews across the group's rows for that attempt;
+        // individual submissions only ever see their own row.
+        var submissionIds = submission.CourseGroupId is { } groupId
+            ? await _context.Set<AssessmentSubmission>()
+                .Where(s => s.CourseGroupId == groupId &&
+                            s.AttemptNumber == submission.AttemptNumber &&
+                            s.DeletedAt == null)
+                .Select(s => s.Id)
+                .ToListAsync().ConfigureAwait(false)
+            : [submissionId];
+
+        return await _context.Set<AssessmentPeerReview>()
+            .Where(r => submissionIds.Contains(r.SubmissionId) &&
+                        r.Status == PeerReviewStatus.Submitted &&
+                        r.DeletedAt == null)
+            .OrderBy(r => r.SubmittedAt)
+            .ToListAsync().ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> GetReviewerDisplayNamesAsync(
+        IReadOnlyCollection<Guid> userIds)
+    {
+        var users = await _context.Set<User>()
+            .Where(u => userIds.Contains(u.Id) && u.DeletedAt == null)
+            .ToListAsync().ConfigureAwait(false);
+        return users
+            .Where(u => !string.IsNullOrWhiteSpace(u.Name))
+            .ToDictionary(u => u.Id, u => u.Name);
     }
 
     private async Task<AssessmentSubmission?> SelectLeastReviewedTargetAsync(Guid assessmentId, Guid actorUserId)
