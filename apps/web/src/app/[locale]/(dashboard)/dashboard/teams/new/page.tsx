@@ -1,3 +1,3 @@
 import { redirect } from 'next/navigation';
 
-export default function LegacyNewTeamPage(): never { redirect('/my/teams/new'); }
+export default function LegacyNewTeamPage(): never { redirect('/teams/new'); }

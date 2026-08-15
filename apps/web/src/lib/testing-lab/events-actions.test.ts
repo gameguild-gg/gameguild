@@ -95,7 +95,7 @@ describe('Testing Lab event actions', () => {
         startsAt: '2026-08-08T18:00:00.000Z',
       }),
     );
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/testing-lab/events');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/testing-lab/events');
   });
 
   it('archives and restores an event through the generated client', async () => {

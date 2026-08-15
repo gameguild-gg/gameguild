@@ -67,15 +67,15 @@ export function BrowseOwnedCoursesPage({ courses = [] }: BrowseOwnedCoursesPageP
   const handleContinueCourse = (courseId: string) => {
     const course = courses.find((item) => item.id === courseId);
     const nextLessonPath = course?.nextLesson ? `/${course.nextLesson.id}` : '';
-    router.push(`/dashboard/learning/courses/${courseId}/content${nextLessonPath}`);
+    router.push(`/dashboard/platform/learning/courses/${courseId}/content${nextLessonPath}`);
   };
 
   const handleStartCourse = (courseId: string) => {
-    router.push(`/dashboard/learning/courses/${courseId}/content`);
+    router.push(`/dashboard/platform/learning/courses/${courseId}/content`);
   };
 
   const handleViewCertificate = (courseId: string) => {
-    router.push(`/dashboard/learning/courses/${courseId}/certificates`);
+    router.push(`/dashboard/platform/learning/courses/${courseId}/certificates`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -218,7 +218,7 @@ export function BrowseOwnedCoursesPage({ courses = [] }: BrowseOwnedCoursesPageP
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={() => handleContinueCourse(course.id)}>Continue Course</DropdownMenuItem>
                       {course.certificateEarned && <DropdownMenuItem onClick={() => handleViewCertificate(course.id)}>View Certificate</DropdownMenuItem>}
-                      <DropdownMenuItem onClick={() => router.push(`/dashboard/learning/courses/${course.id}/students`)}>View enrollment</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/platform/learning/courses/${course.id}/students`)}>View enrollment</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>

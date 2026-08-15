@@ -16,7 +16,7 @@ import {
 } from '@game-guild/client';
 import { revalidatePath } from 'next/cache';
 
-const EVENTS_PATH = '/dashboard/testing-lab/events';
+const EVENTS_PATH = '/dashboard/community/testing-lab/events';
 
 type ActionData<T> = [T] extends [void] ? null : T | null;
 export type TestingEventActionResult<T = null> =
@@ -64,7 +64,7 @@ function isoDate(formData: FormData, key: string) {
 }
 
 function revalidateEvent(eventId?: string) {
-  revalidatePath('/dashboard/testing-lab');
+  revalidatePath('/dashboard/community/testing-lab');
   revalidatePath(EVENTS_PATH);
   revalidatePath('/testing-lab');
   if (eventId) {

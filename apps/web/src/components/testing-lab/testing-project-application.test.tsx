@@ -65,7 +65,7 @@ describe('TestingProjectApplication', () => {
       />,
     );
 
-    expect(screen.getByRole('link', { name: /browse projects/i })).toHaveAttribute('href', '/projects');
+    expect(screen.getByRole('link', { name: /browse projects/i })).toHaveAttribute('href', '/showcase');
   });
 
   it('shows rejection rationale while still allowing another accessible Project to apply', () => {

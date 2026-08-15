@@ -1,4 +1,4 @@
-import { ProjectWorkspacePage } from '@/app/[locale]/(community)/my/projects/[slug]/[[...section]]/page';
+import { ProjectWorkspacePage } from '@/app/[locale]/(private)/workspace/projects/[slug]/[[...section]]/page';
 import { getDashboardContexts } from '@/lib/dashboard-contexts';
 import { getManagedProjects } from '@/lib/workspaces';
 import { notFound, forbidden } from 'next/navigation';

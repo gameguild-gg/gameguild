@@ -128,7 +128,7 @@ export function CourseEditorSidebar() {
   const params = useParams();
   const courseParam = params.course ?? params.slug;
   const courseId = Array.isArray(courseParam) ? (courseParam[0] ?? '') : (courseParam ?? '');
-  const coursesDashboardHref = '/dashboard/learning/courses' as Route;
+  const coursesDashboardHref = '/dashboard/platform/learning/courses' as Route;
   const { state, validate } = useCourseEditor();
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -142,7 +142,7 @@ export function CourseEditorSidebar() {
     return initial;
   });
 
-  const basePath = `/dashboard/learning/courses/${courseId}`;
+  const basePath = `/dashboard/platform/learning/courses/${courseId}`;
 
   const toggleGroup = (groupLabel: string) => {
     setCollapsedGroups((prev) => ({
