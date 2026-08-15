@@ -11,6 +11,7 @@ public class Assessment : EntityBase
     public Guid CourseId { get; private set; }
     public Guid? ContentId { get; private set; } // Optional: linked to specific content
     public Guid? AssessmentGroupId { get; private set; }
+    public Guid? GroupSetId { get; private set; }
     public AssessmentGroup? AssessmentGroup { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string? Description { get; private set; }
@@ -184,6 +185,12 @@ public class Assessment : EntityBase
     public void AssignToGroup(Guid? assessmentGroupId)
     {
         AssessmentGroupId = assessmentGroupId;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public void AssignToGroupSet(Guid? groupSetId)
+    {
+        GroupSetId = groupSetId;
         UpdatedAt = SystemClock.UtcNow;
     }
 
