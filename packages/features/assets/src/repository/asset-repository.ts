@@ -1,7 +1,6 @@
 import type {
-  AssetCachePolicy,
-  AssetCacheResult,
   AssetImportBlobOptions,
+  AssetImportExternalOptions,
   AssetImportOptions,
   AssetPage,
   AssetPortabilityReport,
@@ -24,6 +23,7 @@ export interface AssetRepository {
     options?: AssetImportOptions,
   ): Promise<AssetRecord[]>;
   importBlob(blob: Blob, options: AssetImportBlobOptions): Promise<AssetRecord>;
+  importExternal(options: AssetImportExternalOptions): Promise<AssetRecord>;
   get(uri: AssetUri): Promise<AssetRecord | null>;
   list(query?: AssetQuery): Promise<AssetPage>;
   listUsedByScope(scope: AssetScope): Promise<AssetRecord[]>;
@@ -40,5 +40,4 @@ export interface AssetRepository {
   ): Promise<void>;
   getStorageStatus(): Promise<AssetStorageStatus>;
   requestPersistentStorage(): Promise<AssetPersistenceResult>;
-  evictRemoteCache?(policy?: AssetCachePolicy): Promise<AssetCacheResult>;
 }

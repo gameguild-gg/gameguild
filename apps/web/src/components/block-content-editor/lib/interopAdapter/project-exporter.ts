@@ -1,5 +1,5 @@
 import JSZip from "jszip"
-import { findAssetUris, parseAssetUri, type AssetRecord, type AssetUri } from "@game-guild/assets"
+import { findAssetUris, type AssetRecord, type AssetUri } from "@game-guild/assets"
 import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
 import type { ProjectExportInput, ProjectExportMetadata } from "./interop-types"
 
@@ -9,7 +9,7 @@ export type ProjectMetadata = ProjectExportMetadata
 
 interface ExportedAsset {
   uri: AssetUri
-  record: AssetRecord
+  record: AssetRecord & { contentHash: string }
   blob: Blob
   path: string
 }
@@ -19,6 +19,7 @@ interface AssetBundleManifestEntry {
   name: string
   mimeType: string
   size: number
+  contentHash: string
   path: string
 }
 
@@ -32,7 +33,7 @@ export interface ExportedProjectStructure {
 const assetRepository = getDefaultBrowserAssetRepository()
 
 export class ProjectExporter {
-  private static readonly EXPORT_VERSION = "3.0"
+  private static readonly EXPORT_VERSION = "4.0"
   private static readonly METADATA_FILENAME = "index.json"
   private static readonly DATA_FILENAME = "data.block-content-editor"
   private static readonly ASSETS_FOLDER = "assets"
@@ -43,20 +44,18 @@ export class ProjectExporter {
     hash: string,
   ): Promise<ExportedProjectStructure> {
     const parsed = JSON.parse(projectData.data) as unknown
-    const uris = findAssetUris(parsed).filter(
-      (uri) => parseAssetUri(uri)?.source === "local",
-    )
     const assets: ExportedAsset[] = []
 
-    for (const [index, uri] of uris.entries()) {
+    for (const uri of findAssetUris(parsed)) {
       const record = await assetRepository.get(uri)
-      if (!record) throw new Error(`Project asset is unavailable: ${uri}`)
+      if (!record || record.location.type !== "local") continue
+      if (!record.contentHash) throw new Error(`Project asset has no content hash: ${uri}`)
       const blob = await assetRepository.readBlob(uri)
       assets.push({
         uri,
-        record,
+        record: { ...record, contentHash: record.contentHash },
         blob,
-        path: `objects/${String(index).padStart(4, "0")}`,
+        path: `objects/${String(assets.length).padStart(4, "0")}`,
       })
     }
 
@@ -117,6 +116,7 @@ export class ProjectExporter {
           name: record.name,
           mimeType: record.mimeType,
           size: record.size,
+          contentHash: record.contentHash,
           path,
         }),
       )
