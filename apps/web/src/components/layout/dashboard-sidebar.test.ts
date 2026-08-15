@@ -50,7 +50,11 @@ describe("dashboard management navigation", () => {
     const navigation = filterDashboardNavigation(dashboardNavigationData, []);
 
     expect(navigation.map((group) => group.label)).toEqual(["Overview"]);
-    expect(navigation[0]?.items.map((item) => item.title)).toEqual(["Dashboard"]);
+    // Tasks is capability-free: instructors and students both use /dashboard/tasks.
+    expect(navigation[0]?.items.map((item) => item.title)).toEqual([
+      "Dashboard",
+      "Tasks",
+    ]);
   });
 
   it("shows only the administrative module granted to the actor", () => {
