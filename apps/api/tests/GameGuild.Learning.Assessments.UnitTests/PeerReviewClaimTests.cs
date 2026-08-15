@@ -280,8 +280,10 @@ public class PeerReviewClaimTests
 
     private readonly Mock<IPeerReviewAssignmentService> _svc = new();
     private readonly Mock<IAssessmentService> _assessments = new();
+    private readonly Mock<IRubricService> _rubrics = new();
     private readonly Mock<IActorContextAccessor> _actor = new();
     private readonly Mock<IProgramCrudService> _programs = new();
+    private readonly Mock<IPermissionQueryService> _permissions = new();
     private readonly Mock<ILogger<PeerReviewsController>> _log = new();
 
     private PeerReviewsController CreateController(Guid? userId = null, Guid? tenantId = null, Guid? programTenantId = null)
@@ -299,8 +301,10 @@ public class PeerReviewClaimTests
         return new PeerReviewsController(
             _svc.Object,
             _assessments.Object,
+            _rubrics.Object,
             _actor.Object,
             _programs.Object,
+            _permissions.Object,
             _log.Object);
     }
 
@@ -324,7 +328,8 @@ public class PeerReviewClaimTests
             Permissions = new HashSet<string>()
         });
         var controller = new PeerReviewsController(
-            _svc.Object, _assessments.Object, _actor.Object, _programs.Object, _log.Object);
+            _svc.Object, _assessments.Object, _rubrics.Object, _actor.Object,
+            _programs.Object, _permissions.Object, _log.Object);
 
         var result = await controller.ClaimPeerReview(Guid.NewGuid());
 
