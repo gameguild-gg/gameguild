@@ -19,9 +19,9 @@ vi.mock('@/i18n/navigation', () => ({
   usePathname: () => '/',
 }));
 
-import LicensesPage from './[locale]/(legal)/licenses/page';
-import FerpaWaiverPage from './[locale]/(legal)/ferpa-waiver/page';
-import AcademicHonestyPage from './[locale]/(legal)/academic-honesty/page';
+import LicensesPage from './[locale]/(legal)/legal/licenses/page';
+import FerpaWaiverPage from './[locale]/(legal)/legal/ferpa-waiver/page';
+import AcademicHonestyPage from './[locale]/(legal)/legal/academic-honesty/page';
 import RoadmapPage from './[locale]/(institutional)/about/(project)/roadmap/page';
 import ContributorsPage from './[locale]/(institutional)/about/(project)/contributors/page';
 import HomeLayout from './[locale]/(site)/layout';
@@ -57,7 +57,7 @@ describe('static legal and project pages', () => {
   });
 
   it('renders FERPA waiver content with consent and revocation guidance', async () => {
-    render(await FerpaWaiverPage({} as PageProps<'/[locale]/ferpa-waiver'>));
+    render(await FerpaWaiverPage({} as PageProps<'/[locale]/legal/ferpa-waiver'>));
 
     expect(screen.getByRole('heading', { name: /ferpa waiver/i })).toBeInTheDocument();
     expect(screen.getAllByText(/education records/i).length).toBeGreaterThan(0);
@@ -66,7 +66,7 @@ describe('static legal and project pages', () => {
   });
 
   it('renders academic honesty policy content', async () => {
-    render(await AcademicHonestyPage({} as PageProps<'/[locale]/academic-honesty'>));
+    render(await AcademicHonestyPage({} as PageProps<'/[locale]/legal/academic-honesty'>));
 
     expect(screen.getByRole('heading', { name: /academic honesty/i })).toBeInTheDocument();
     expect(screen.getAllByText(/plagiarism/i).length).toBeGreaterThan(0);
