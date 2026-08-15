@@ -4472,6 +4472,31 @@ export const getAssessmentsMySubmissionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAssessmentsPeerReviewsInput {
+  reviewId: string;
+}
+export type GetAssessmentsPeerReviewsOutput = Types.LearningAssessmentsAnonymousReviewSubmission;
+export const getAssessmentsPeerReviewsEndpoint = {
+  operationId: 'getAssessmentsPeerReviews' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/peer-reviews/{reviewId}' as const,
+  tags: ['Learning/assessments/peerReviews'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsPeerReviewsSubmitInput {
+  reviewId: string;
+  body?: Types.LearningAssessmentsPeerReviewSubmitInput;
+}
+export type PostAssessmentsPeerReviewsSubmitOutput = void;
+export const postAssessmentsPeerReviewsSubmitEndpoint = {
+  operationId: 'postAssessmentsPeerReviewsSubmit' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/peer-reviews/{reviewId}/submit' as const,
+  tags: ['Learning/assessments/peerReviews'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAssessmentsSubmissionsBySubmissionIdInput {
   submissionId: string;
 }
@@ -4494,6 +4519,30 @@ export const postAssessmentsSubmissionsGradeEndpoint = {
   method: 'POST' as const,
   path: '/v1/assessments/submissions/{submissionId}/grade' as const,
   tags: ['Learning/assessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsSubmissionsPeerReviewsInput {
+  submissionId: string;
+}
+export type GetAssessmentsSubmissionsPeerReviewsOutput = Array<Types.LearningAssessmentsInstructorPeerReview>;
+export const getAssessmentsSubmissionsPeerReviewsEndpoint = {
+  operationId: 'getAssessmentsSubmissionsPeerReviews' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/submissions/{submissionId}/peer-reviews' as const,
+  tags: ['Learning/assessments/peerReviews'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsSubmissionsReceivedPeerReviewsInput {
+  submissionId: string;
+}
+export type GetAssessmentsSubmissionsReceivedPeerReviewsOutput = Array<Types.LearningAssessmentsReceivedPeerReview>;
+export const getAssessmentsSubmissionsReceivedPeerReviewsEndpoint = {
+  operationId: 'getAssessmentsSubmissionsReceivedPeerReviews' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/submissions/{submissionId}/received-peer-reviews' as const,
+  tags: ['Learning/assessments/peerReviews'] as const,
   requiresAuth: true,
 } as const;
 
@@ -4523,6 +4572,18 @@ export const getAssessmentsCanAttemptEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAssessmentsGradingQueueInput {
+  assessmentId: string;
+}
+export type GetAssessmentsGradingQueueOutput = Types.LearningAssessmentsGradingQueue;
+export const getAssessmentsGradingQueueEndpoint = {
+  operationId: 'getAssessmentsGradingQueue' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/{assessmentId}/grading-queue' as const,
+  tags: ['Learning/assessments'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAssessmentsInteractiveVideoCuesContentEnrollmentsInput {
   assessmentId: string;
   contentId: string;
@@ -4534,6 +4595,55 @@ export const getAssessmentsInteractiveVideoCuesContentEnrollmentsEndpoint = {
   method: 'GET' as const,
   path: '/v1/assessments/{assessmentId}/interactive-video-cues/content/{contentId}/enrollments/{enrollmentId}' as const,
   tags: ['Learning/assessments'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsPeerReviewsClaimInput {
+  assessmentId: string;
+}
+export type PostAssessmentsPeerReviewsClaimOutput = Types.LearningAssessmentsPeerReviewClaim;
+export const postAssessmentsPeerReviewsClaimEndpoint = {
+  operationId: 'postAssessmentsPeerReviewsClaim' as const,
+  method: 'POST' as const,
+  path: '/v1/assessments/{assessmentId}/peer-reviews/claim' as const,
+  tags: ['Learning/assessments/peerReviews'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsRubricInput {
+  assessmentId: string;
+}
+export type GetAssessmentsRubricOutput = Types.LearningAssessmentsRubric;
+export const getAssessmentsRubricEndpoint = {
+  operationId: 'getAssessmentsRubric' as const,
+  method: 'GET' as const,
+  path: '/v1/assessments/{assessmentId}/rubric' as const,
+  tags: ['Learning/assessments/rubrics'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAssessmentsRubricInput {
+  assessmentId: string;
+  body?: Types.LearningAssessmentsSaveRubricInput;
+}
+export type PutAssessmentsRubricOutput = Types.LearningAssessmentsRubric;
+export const putAssessmentsRubricEndpoint = {
+  operationId: 'putAssessmentsRubric' as const,
+  method: 'PUT' as const,
+  path: '/v1/assessments/{assessmentId}/rubric' as const,
+  tags: ['Learning/assessments/rubrics'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteAssessmentsRubricInput {
+  assessmentId: string;
+}
+export type DeleteAssessmentsRubricOutput = void;
+export const deleteAssessmentsRubricEndpoint = {
+  operationId: 'deleteAssessmentsRubric' as const,
+  method: 'DELETE' as const,
+  path: '/v1/assessments/{assessmentId}/rubric' as const,
+  tags: ['Learning/assessments/rubrics'] as const,
   requiresAuth: true,
 } as const;
 
@@ -6724,6 +6834,112 @@ export const postCoursesCohortsSchedulePreviewEndpoint = {
   method: 'POST' as const,
   path: '/v1/courses/{courseId}/cohorts/{cohortId}/schedule/preview' as const,
   tags: ['Learning/cohorts/schedules'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesGroupSetsInput {
+  courseId: string;
+}
+export type GetCoursesGroupSetsOutput = Array<Types.LearningAssessmentsGroupSetSummary>;
+export const getCoursesGroupSetsEndpoint = {
+  operationId: 'getCoursesGroupSets' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{courseId}/group-sets' as const,
+  tags: ['Learning/assessments/groupSets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesGroupSetsInput {
+  courseId: string;
+  body?: Types.LearningAssessmentsCreateGroupSetInput;
+}
+export type PostCoursesGroupSetsOutput = Types.LearningAssessmentsGroupSet;
+export const postCoursesGroupSetsEndpoint = {
+  operationId: 'postCoursesGroupSets' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{courseId}/group-sets' as const,
+  tags: ['Learning/assessments/groupSets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesGroupSetsGroupsJoinInput {
+  courseId: string;
+  groupId: string;
+}
+export type PostCoursesGroupSetsGroupsJoinOutput = Types.LearningAssessmentsGroupMembership;
+export const postCoursesGroupSetsGroupsJoinEndpoint = {
+  operationId: 'postCoursesGroupSetsGroupsJoin' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{courseId}/group-sets/groups/{groupId}/join' as const,
+  tags: ['Learning/assessments/groupSets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesGroupSetsGroupsMembersInput {
+  courseId: string;
+  groupId: string;
+  userId: string;
+}
+export type PostCoursesGroupSetsGroupsMembersOutput = Types.LearningAssessmentsGroupMembership;
+export const postCoursesGroupSetsGroupsMembersEndpoint = {
+  operationId: 'postCoursesGroupSetsGroupsMembers' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{courseId}/group-sets/groups/{groupId}/members/{userId}' as const,
+  tags: ['Learning/assessments/groupSets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteCoursesGroupSetsGroupsMembersInput {
+  courseId: string;
+  groupId: string;
+  userId: string;
+}
+export type DeleteCoursesGroupSetsGroupsMembersOutput = void;
+export const deleteCoursesGroupSetsGroupsMembersEndpoint = {
+  operationId: 'deleteCoursesGroupSetsGroupsMembers' as const,
+  method: 'DELETE' as const,
+  path: '/v1/courses/{courseId}/group-sets/groups/{groupId}/members/{userId}' as const,
+  tags: ['Learning/assessments/groupSets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteCoursesGroupSetsGroupsMembershipInput {
+  courseId: string;
+  groupId: string;
+}
+export type DeleteCoursesGroupSetsGroupsMembershipOutput = void;
+export const deleteCoursesGroupSetsGroupsMembershipEndpoint = {
+  operationId: 'deleteCoursesGroupSetsGroupsMembership' as const,
+  method: 'DELETE' as const,
+  path: '/v1/courses/{courseId}/group-sets/groups/{groupId}/membership' as const,
+  tags: ['Learning/assessments/groupSets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesGroupSetsGroupsInput {
+  courseId: string;
+  setId: string;
+}
+export type GetCoursesGroupSetsGroupsOutput = Array<Types.LearningAssessmentsGroupDetail>;
+export const getCoursesGroupSetsGroupsEndpoint = {
+  operationId: 'getCoursesGroupSetsGroups' as const,
+  method: 'GET' as const,
+  path: '/v1/courses/{courseId}/group-sets/{setId}/groups' as const,
+  tags: ['Learning/assessments/groupSets'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesGroupSetsGroupsInput {
+  courseId: string;
+  setId: string;
+  body?: Types.LearningAssessmentsCreateGroupInput;
+}
+export type PostCoursesGroupSetsGroupsOutput = Types.LearningAssessmentsGroup;
+export const postCoursesGroupSetsGroupsEndpoint = {
+  operationId: 'postCoursesGroupSetsGroups' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{courseId}/group-sets/{setId}/groups' as const,
+  tags: ['Learning/assessments/groupSets'] as const,
   requiresAuth: true,
 } as const;
 
@@ -8962,6 +9178,16 @@ export const getMarketingLeadByIdEndpoint = {
   method: 'GET' as const,
   path: '/v1/marketing/leads/{id}' as const,
   tags: ['Content/marketingLeads'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetMeTasksInput = void;
+export type GetMeTasksOutput = Types.LearningAssessmentsTasks;
+export const getMeTasksEndpoint = {
+  operationId: 'getMeTasks' as const,
+  method: 'GET' as const,
+  path: '/v1/me/tasks' as const,
+  tags: ['Learning/assessments/tasks'] as const,
   requiresAuth: true,
 } as const;
 
@@ -16361,11 +16587,20 @@ export const endpoints = {
   putAssessmentsGroups: putAssessmentsGroupsEndpoint,
   deleteAssessmentsGroups: deleteAssessmentsGroupsEndpoint,
   getAssessmentsMySubmissions: getAssessmentsMySubmissionsEndpoint,
+  getAssessmentsPeerReviews: getAssessmentsPeerReviewsEndpoint,
+  postAssessmentsPeerReviewsSubmit: postAssessmentsPeerReviewsSubmitEndpoint,
   getAssessmentsSubmissionsBySubmissionId: getAssessmentsSubmissionsBySubmissionIdEndpoint,
   postAssessmentsSubmissionsGrade: postAssessmentsSubmissionsGradeEndpoint,
+  getAssessmentsSubmissionsPeerReviews: getAssessmentsSubmissionsPeerReviewsEndpoint,
+  getAssessmentsSubmissionsReceivedPeerReviews: getAssessmentsSubmissionsReceivedPeerReviewsEndpoint,
   postAssessmentsSubmissionsSubmit: postAssessmentsSubmissionsSubmitEndpoint,
   getAssessmentsCanAttempt: getAssessmentsCanAttemptEndpoint,
+  getAssessmentsGradingQueue: getAssessmentsGradingQueueEndpoint,
   getAssessmentsInteractiveVideoCuesContentEnrollments: getAssessmentsInteractiveVideoCuesContentEnrollmentsEndpoint,
+  postAssessmentsPeerReviewsClaim: postAssessmentsPeerReviewsClaimEndpoint,
+  getAssessmentsRubric: getAssessmentsRubricEndpoint,
+  putAssessmentsRubric: putAssessmentsRubricEndpoint,
+  deleteAssessmentsRubric: deleteAssessmentsRubricEndpoint,
   getAssessmentsByAssessmentIdSubmissions: getAssessmentsByAssessmentIdSubmissionsEndpoint,
   postAssessmentsSubmissionsStart: postAssessmentsSubmissionsStartEndpoint,
   getAssessments: getAssessmentsEndpoint,
@@ -16512,6 +16747,14 @@ export const endpoints = {
   patchCoursesCohortsScheduleItems: patchCoursesCohortsScheduleItemsEndpoint,
   postCoursesCohortsScheduleItemsShift: postCoursesCohortsScheduleItemsShiftEndpoint,
   postCoursesCohortsSchedulePreview: postCoursesCohortsSchedulePreviewEndpoint,
+  getCoursesGroupSets: getCoursesGroupSetsEndpoint,
+  postCoursesGroupSets: postCoursesGroupSetsEndpoint,
+  postCoursesGroupSetsGroupsJoin: postCoursesGroupSetsGroupsJoinEndpoint,
+  postCoursesGroupSetsGroupsMembers: postCoursesGroupSetsGroupsMembersEndpoint,
+  deleteCoursesGroupSetsGroupsMembers: deleteCoursesGroupSetsGroupsMembersEndpoint,
+  deleteCoursesGroupSetsGroupsMembership: deleteCoursesGroupSetsGroupsMembershipEndpoint,
+  getCoursesGroupSetsGroups: getCoursesGroupSetsGroupsEndpoint,
+  postCoursesGroupSetsGroups: postCoursesGroupSetsGroupsEndpoint,
   postCoursesStudentsMessage: postCoursesStudentsMessageEndpoint,
   getCoursesByCourseIdSupportTickets: getCoursesByCourseIdSupportTicketsEndpoint,
   getCoursesByCourseIdSupportTicketsByTicketId: getCoursesByCourseIdSupportTicketsByTicketIdEndpoint,
@@ -16681,6 +16924,7 @@ export const endpoints = {
   getMarketingLeads: getMarketingLeadsEndpoint,
   postMarketingLeads: postMarketingLeadsEndpoint,
   getMarketingLeadById: getMarketingLeadByIdEndpoint,
+  getMeTasks: getMeTasksEndpoint,
   postOauthToken: postOauthTokenEndpoint,
   getOg: getOgEndpoint,
   postOrders: postOrdersEndpoint,

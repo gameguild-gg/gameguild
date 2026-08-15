@@ -209,12 +209,23 @@ public class AssessmentService : IAssessmentService
                 request.AllowLateSubmissions,
                 request.LateSubmissionDeadline,
                 request.ClearLateSubmissionDeadline,
-                request.GradingMethods);
+                request.GradingMethods,
+                groupSetId: request.GroupSetId,
+                clearGroupSetId: request.ClearGroupSetId,
+                peerReviewsRequiredCount: request.PeerReviewsRequiredCount);
 
             var groupValidation = await EnsureGroupMatchesCourseAsync(assessment.AssessmentGroupId, assessment.CourseId).ConfigureAwait(false);
             if (!groupValidation.IsSuccess)
             {
                 return Result.Failure<Assessment>(groupValidation.Error);
+            }
+
+            var groupSetValidation = await EnsureGroupSetMatchesCourseAsync(
+                request.ClearGroupSetId ? null : assessment.GroupSetId,
+                assessment.CourseId).ConfigureAwait(false);
+            if (!groupSetValidation.IsSuccess)
+            {
+                return Result.Failure<Assessment>(groupSetValidation.Error);
             }
 
             _context.Set<Assessment>().Update(assessment);
@@ -629,6 +640,27 @@ public class AssessmentService : IAssessmentService
         return group.CourseId == courseId
             ? Result.Success()
             : Result.Failure(Error.Validation("AssessmentGroup.CourseMismatch", "Assessment group belongs to another course"));
+    }
+
+    private async Task<Result> EnsureGroupSetMatchesCourseAsync(Guid? groupSetId, Guid courseId)
+    {
+        if (!groupSetId.HasValue)
+        {
+            return Result.Success();
+        }
+
+        var groupSet = await _context.Set<CourseGroupSet>()
+            .FirstOrDefaultAsync(set => set.Id == groupSetId.Value && set.DeletedAt == null)
+            .ConfigureAwait(false);
+
+        if (groupSet == null)
+        {
+            return Result.Failure(Error.NotFound("CourseGroupSet", "Group set not found"));
+        }
+
+        return groupSet.CourseId == courseId
+            ? Result.Success()
+            : Result.Failure(Error.Validation("Assessment.GroupSetCourseMismatch", "Group set belongs to another course"));
     }
 
     private static List<AssessmentScoreFact> BuildScoreFacts(
