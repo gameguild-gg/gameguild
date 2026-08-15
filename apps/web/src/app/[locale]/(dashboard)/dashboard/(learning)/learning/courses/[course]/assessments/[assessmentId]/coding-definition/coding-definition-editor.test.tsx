@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { IdeHandle } from "@game-guild/emception-ui";
@@ -260,12 +260,52 @@ describe("CodingDefinitionEditor", () => {
     // PassingScore was removed from GradingConfig by T4.
     expect(payloadArg.Grading).toEqual({ MaxScore: 100 });
 
-    // Editor redirects back to the assessment page after a successful PUT.
-    await waitFor(() => {
-      expect(routerMocks.push).toHaveBeenCalledWith(
-        "/dashboard/learning/courses/course-1/assessments/assessment-1",
-      );
-    });
+    // Save stays on the page (no redirect) and shows the Saved. indicator.
+    expect(await screen.findByText("Saved.")).toBeInTheDocument();
+    expect(routerMocks.push).not.toHaveBeenCalled();
+  });
+
+  it("autosaves 30s after the last change (debounced) and does not repeat", async () => {
+    vi.useFakeTimers();
+    try {
+      render(<CodingDefinitionEditor {...baseProps} />);
+
+      fireEvent.click(screen.getByTestId("add-standard"));
+      fireEvent.change(screen.getByTestId("standard-stdin-0"), {
+        target: { value: "hi" },
+      });
+      fireEvent.change(screen.getByTestId("standard-stdout-0"), {
+        target: { value: "HI" },
+      });
+
+      // A later change resets the debounce window.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(20_000);
+      });
+      fireEvent.change(screen.getByTestId("standard-stdin-0"), {
+        target: { value: "hi again" },
+      });
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(29_999);
+      });
+      expect(putCodingAssignmentAction).not.toHaveBeenCalled();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+      expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("Saved.")).toBeInTheDocument();
+      expect(routerMocks.push).not.toHaveBeenCalled();
+
+      // Success clears dirty: no further saves without new changes.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(60_000);
+      });
+      expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("round-trips an existing v1 CodingAssignmentContent — preserves buckets", async () => {
