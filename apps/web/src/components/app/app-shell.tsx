@@ -8,10 +8,10 @@ import { PublicAccountMenu } from './public-account-menu';
 
 const primaryNav = [
   { label: 'Courses', href: '/courses' },
-  { label: 'Programs', href: '/programs' },
+  { label: 'Programs', href: '/courses?type=program' },
   { label: 'Testing Lab', href: '/testing-lab' },
   { label: 'Launch Pad', href: '/launch-pad' },
-  { label: 'Projects', href: '/projects' },
+  { label: 'Projects', href: '/showcase' },
   { label: 'Community', href: '/community' },
   { label: 'Jobs', href: '/jobs' },
   { label: 'About', href: '/about' },
@@ -24,7 +24,7 @@ const footerSections = [
     hoverClass: 'hover:text-blue-300',
     links: [
       { label: 'Courses', href: '/courses' },
-      { label: 'Programs', href: '/programs' },
+      { label: 'Programs', href: '/courses?type=program' },
     ],
   },
   {
@@ -34,7 +34,7 @@ const footerSections = [
     links: [
       { label: 'Testing Lab', href: '/testing-lab' },
       { label: 'Launch Pad', href: '/launch-pad' },
-      { label: 'Project showcase', href: '/projects' },
+      { label: 'Project showcase', href: '/showcase' },
     ],
   },
   {
@@ -44,7 +44,7 @@ const footerSections = [
     links: [
       { label: 'Join community', href: '/sign-up' },
       { label: 'Community hub', href: '/community' },
-      { label: 'Feed', href: '/feed' },
+      { label: 'Feed', href: '/' },
       { label: 'Jobs', href: '/jobs' },
     ],
   },
@@ -234,13 +234,13 @@ export function PublicWebsiteFooter() {
           <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-slate-700/50 pt-5 text-sm text-slate-500 sm:flex-row lg:mt-8 lg:pt-6">
             <p className="text-center sm:text-left">© 2026 Game Guild. All rights reserved.</p>
             <nav aria-label="Legal" className="flex flex-wrap justify-center gap-x-6 gap-y-3 sm:justify-end">
-              <Link href="/licenses" className="transition-colors hover:text-blue-300">
+              <Link href="/legal/licenses" className="transition-colors hover:text-blue-300">
                 Licenses
               </Link>
-              <Link href="/terms-of-service" className="transition-colors hover:text-blue-300">
+              <Link href="/legal/terms-of-service" className="transition-colors hover:text-blue-300">
                 Terms of Service
               </Link>
-              <Link href="/polices/privacy" className="transition-colors hover:text-blue-300">
+              <Link href="/legal/privacy" className="transition-colors hover:text-blue-300">
                 Privacy
               </Link>
             </nav>
@@ -252,7 +252,7 @@ export function PublicWebsiteFooter() {
   );
 }
 
-export async function PublicWebsiteShell({ children }: { readonly children: ReactNode }) {
+export async function AppShell({ children }: { readonly children: ReactNode }) {
   const header = await PublicWebsiteHeader();
 
   return (
