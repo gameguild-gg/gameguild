@@ -8,7 +8,6 @@ const mocks = vi.hoisted(() => ({
   getProfileByUserId: vi.fn(),
   getUserFeed: vi.fn(),
   getApiSocialGroupsForGetApiSocialGroups: vi.fn(),
-  getPublicCourseCatalog: vi.fn(),
   getMarketingLeads: vi.fn(),
   getBlogPosts: vi.fn(),
   clientRequest: vi.fn(),
@@ -41,10 +40,6 @@ vi.mock('@game-guild/client', () => ({
   },
 }));
 
-vi.mock('@/lib/courses/services/course.service', () => ({
-  getPublicCourseCatalog: mocks.getPublicCourseCatalog,
-}));
-
 const { getCommunityFeed, getCommunityStats, getGroups, getMember, getMemberAccessDirectory, getMemberProject, getMembers, getPublicMemberProfile, getSupportTickets } = await import('./members');
 
 describe('community member queries', () => {
@@ -61,19 +56,6 @@ describe('community member queries', () => {
     });
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
-    mocks.getPublicCourseCatalog.mockResolvedValue({
-      success: true,
-      source: 'api',
-      data: [
-        {
-          id: 'course-1',
-          title: 'Live AI Gameplay Course',
-          slug: 'live-ai-gameplay-course',
-          description: 'Live API-backed course.',
-          thumbnail: 'https://example.com/course.jpg',
-        },
-      ],
-    });
     mocks.getMarketingLeads.mockResolvedValue({ ok: true, data: [] });
     mocks.getBlogPosts.mockResolvedValue({ ok: true, data: [] });
     mocks.clientRequest.mockResolvedValue({ ok: true, data: { items: [], totalCount: 0 } });
@@ -195,21 +177,13 @@ describe('community member queries', () => {
     ]);
   });
 
-  it('feeds live public courses into discovery when the viewer is signed out', async () => {
+  it('returns an empty discovery feed without course filler when the viewer is signed out', async () => {
     mocks.auth.mockResolvedValue(null);
 
     const feed = await getCommunityFeed('discover');
 
     expect(feed.requiresSignIn).toBe(false);
-    expect(mocks.getPublicCourseCatalog).toHaveBeenCalled();
-    expect(feed.items).toEqual([
-      expect.objectContaining({
-        title: 'Live AI Gameplay Course',
-        contentType: 'Course',
-        href: '/courses/live-ai-gameplay-course',
-        actionLabel: 'View course',
-      }),
-    ]);
+    expect(feed.items).toEqual([]);
   });
 
   it('loads community groups from the generated social groups API', async () => {

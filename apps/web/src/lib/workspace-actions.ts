@@ -52,8 +52,8 @@ export async function createTeamForm(data: FormData): Promise<void> {
     ownerUserId: text(data, 'ownerUserId') || null,
   });
   const management = text(data, 'surface') === 'admin';
-  revalidatePath(management ? '/dashboard/community/teams' : '/my');
-  redirect(management ? `/dashboard/community/teams/${result.id}` : `/my/teams/${result.slug}`);
+  revalidatePath(management ? '/dashboard/community/teams' : '/teams');
+  redirect(management ? `/dashboard/community/teams/${result.id}` : `/teams/${result.slug}`);
 }
 
 export async function createProjectForm(data: FormData): Promise<void> {
@@ -66,8 +66,8 @@ export async function createProjectForm(data: FormData): Promise<void> {
     ownerTeamId: ownerTeamId || null,
   });
   const management = text(data, 'surface') === 'admin';
-  revalidatePath(management ? '/dashboard/community/projects' : '/my');
-  redirect(management ? `/dashboard/community/projects/${result.id}` : `/my/projects/${result.slug}`);
+  revalidatePath(management ? '/dashboard/community/projects' : '/projects');
+  redirect(management ? `/dashboard/community/projects/${result.id}` : `/projects/${result.slug}`);
 }
 
 export async function createProjectVersionForm(data: FormData): Promise<void> {
@@ -147,8 +147,8 @@ export async function acceptTeamInvitationForm(data: FormData): Promise<void> {
   const invitationId = text(data, 'invitationId');
   if (!invitationId) return;
   await request('POST', `/v1/teams/invitations/${invitationId}:accept`);
-  revalidatePath('/my/invitations');
-  revalidatePath('/my');
+  revalidatePath('/invitations');
+  revalidatePath('/projects');
 }
 
 export async function updateProjectForm(data: FormData): Promise<void> {
@@ -391,25 +391,25 @@ export async function transitionProjectForm(data: FormData): Promise<void> {
   if (!projectId || !['publish', 'unpublish', 'archive', 'restore'].includes(action)) return;
   await request('POST', `/v1/projects/${projectId}:${action}`);
   revalidatePath(text(data, 'returnPath'));
-  revalidatePath('/my');
+  revalidatePath('/projects');
 }
 
 export async function deleteProjectForm(data: FormData): Promise<void> {
   const projectId = text(data, 'projectId');
   if (!projectId) return;
   await request('DELETE', `/v1/projects/${projectId}?softDelete=true&reason=${encodeURIComponent(text(data, 'reason') || 'Deleted from Project settings')}`);
-  const returnPath = text(data, 'returnPath') || '/my';
+  const returnPath = text(data, 'returnPath') || '/projects';
   revalidatePath(returnPath);
-  redirect(returnPath.startsWith('/dashboard/community/') ? '/dashboard/community/projects' : '/my/projects');
+  redirect(returnPath.startsWith('/dashboard/community/') ? '/dashboard/community/projects' : '/projects');
 }
 
 export async function archiveTeamForm(data: FormData): Promise<void> {
   const teamId = text(data, 'teamId');
   if (!teamId) return;
   await request('DELETE', `/v1/teams/${teamId}`);
-  const returnPath = text(data, 'returnPath') || '/my';
+  const returnPath = text(data, 'returnPath') || '/projects';
   revalidatePath(returnPath);
-  redirect(returnPath.startsWith('/dashboard/community/') ? '/dashboard/community/teams' : '/my/teams');
+  redirect(returnPath.startsWith('/dashboard/community/') ? '/dashboard/community/teams' : '/teams');
 }
 
 export async function restoreTeamForm(data: FormData): Promise<void> {

@@ -43,7 +43,7 @@ import {
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { DateTimePicker } from '@game-guild/ui/components/date-time-picker';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
