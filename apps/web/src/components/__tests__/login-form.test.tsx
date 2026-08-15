@@ -60,7 +60,7 @@ describe('SignInForm', () => {
   it('renders navigation links', () => {
     renderWithUser(<SignInForm />);
 
-    expect(screen.getByText('Sign up')).toHaveAttribute('href', '/sign-up?redirectTo=%2Fdashboard');
+    expect(screen.getByText('Sign up')).toHaveAttribute('href', '/sign-up?redirectTo=%2Fmy');
     expect(screen.getByText('Forgot your password?')).toHaveAttribute('href', '/forgot-password');
     expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/terms-of-service');
     expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/polices/privacy');
@@ -112,7 +112,7 @@ describe('SignInForm', () => {
     expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', {
       email: 'test@example.com',
       password: 'password123',
-      redirectTo: '/dashboard',
+      redirectTo: '/my',
     });
   });
 

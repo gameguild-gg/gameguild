@@ -22,16 +22,11 @@ describe("dashboard contexts query", () => {
     mocks.createServerClient.mockReturnValue({ request: mocks.request });
   });
 
-  it("loads capabilities from the authenticated contexts endpoint", async () => {
+  it("loads management capabilities without requesting personal workspace contexts", async () => {
     mocks.request.mockResolvedValue({
       ok: true,
       data: {
-        contexts: [
-          { type: "Workspace", id: null, name: "Workspace", route: "/dashboard" },
-          { type: "Operations", id: null, name: "Operations", route: "/dashboard" },
-        ],
         capabilities: ["TestingLab.ManageEvents"],
-        counts: { teams: 2, projects: 4, pendingTasks: 1, invitations: 3 },
       },
     });
 
@@ -39,18 +34,17 @@ describe("dashboard contexts query", () => {
 
     expect(mocks.request).toHaveBeenCalledWith({
       method: "GET",
-      path: "/v1/dashboard/contexts",
+      path: "/v1/access/capabilities",
     });
     expect(result.capabilities).toEqual(["TestingLab.ManageEvents"]);
     expect(result.contexts.map((context) => context.type)).toEqual([
-      "Workspace",
       "Operations",
     ]);
     expect(result.counts).toEqual({
-      teams: 2,
-      projects: 4,
-      pendingTasks: 1,
-      invitations: 3,
+      teams: 0,
+      projects: 0,
+      pendingTasks: 0,
+      invitations: 0,
     });
   });
 
@@ -58,20 +52,10 @@ describe("dashboard contexts query", () => {
     mocks.request.mockResolvedValue({ ok: false, error: { status: 503 } });
 
     await expect(getDashboardContexts()).resolves.toEqual({
-      contexts: [
-        { type: "Workspace", id: null, name: "Workspace", route: "/dashboard" },
-      ],
+      contexts: [],
       capabilities: [],
       counts: { teams: 0, projects: 0, pendingTasks: 0, invitations: 0 },
-      navigation: [
-        {
-          label: "Overview",
-          items: [
-            { title: "Dashboard", route: "/dashboard", children: [] },
-            { title: "Invitations", route: "/dashboard/invitations", children: [] },
-          ],
-        },
-      ],
+      navigation: [],
     });
   });
 

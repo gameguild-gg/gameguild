@@ -342,7 +342,6 @@ public static class InfrastructureLayerExtensions
         services.AddAssetsModule(configuration);
         services.AddTestingLabModule(configuration);
         services.AddLaunchPadModule();
-        services.AddScoped<IDashboardWorkspaceContextService, DashboardWorkspaceContextService>();
         logger.LogInformation("Teams/Projects/Project Work/Assets/Testing Lab/Launch Pad Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10g. Content Pages Module (pages, sections, content resources, OpenGraph)

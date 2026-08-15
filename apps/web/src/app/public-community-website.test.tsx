@@ -2,14 +2,26 @@ import { render, screen, within } from '@testing-library/react';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { authMock, getPublishedProjectsMock, getVisibleProjectMock } = vi.hoisted(() => ({
+const { authMock, getTokenMock, requestMock, getPublishedProjectsMock, getVisibleProjectMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
+  getTokenMock: vi.fn(),
+  requestMock: vi.fn(),
   getPublishedProjectsMock: vi.fn(),
   getVisibleProjectMock: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
   auth: authMock,
+  getToken: getTokenMock,
+}));
+
+vi.mock('@game-guild/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@game-guild/client')>()),
+  createServerClient: () => ({ request: requestMock }),
+}));
+
+vi.mock('@game-guild/client/react', () => ({
+  useAuth: () => ({ signOut: vi.fn() }),
 }));
 
 vi.mock('@/i18n/navigation', () => ({
@@ -19,6 +31,7 @@ vi.mock('@/i18n/navigation', () => ({
     </a>
   ),
   usePathname: () => '/',
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 vi.mock('@/i18n', () => ({
@@ -70,6 +83,11 @@ describe('public community website UX', () => {
     vi.clearAllMocks();
     getPublishedProjectsMock.mockResolvedValue([publishedProject]);
     getVisibleProjectMock.mockResolvedValue(publishedProject);
+    requestMock.mockImplementation(async ({ path }: { path: string }) =>
+      path === '/v1/access/capabilities'
+        ? { ok: true, data: { capabilities: [] } }
+        : { ok: true, data: [] },
+    );
   });
 
   it('exposes the learning-to-community information architecture in the header', async () => {
@@ -105,7 +123,7 @@ describe('public community website UX', () => {
 
     expect(screen.queryByRole('link', { name: /^sign in$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /join community/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /ada lovelace profile/i })).toHaveAttribute('href', '/dashboard');
+    expect(screen.getByRole('button', { name: /open ada lovelace account menu/i })).toBeInTheDocument();
     expect(screen.getByText('AL')).toBeInTheDocument();
   });
 

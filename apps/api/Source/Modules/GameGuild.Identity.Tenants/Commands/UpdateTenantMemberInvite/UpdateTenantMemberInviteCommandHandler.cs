@@ -134,7 +134,7 @@ public sealed class UpdateTenantMemberInviteCommandHandler(
     private string BuildReviewUrl()
     {
         var appBaseUrl = configuration?["App:BaseUrl"] ?? "http://localhost:3000";
-        var callbackPath = "/dashboard/invitations";
+        var callbackPath = "/my/invitations";
         return $"{appBaseUrl.TrimEnd('/')}/sign-in?callbackUrl={Uri.EscapeDataString(callbackPath)}";
     }
 

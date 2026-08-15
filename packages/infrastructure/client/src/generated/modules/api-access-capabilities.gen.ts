@@ -1,5 +1,5 @@
 /**
- * @game-guild/client - ApiDashboardContexts Module
+ * @game-guild/client - ApiAccessCapabilities Module
  *
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
@@ -12,13 +12,13 @@ import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class ApiDashboardContextsModule {
+export class ApiAccessCapabilitiesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
    */
-  async getDashboardContexts(): Promise<Result<Types.APIDashboardDashboardContextsOutput, ApiError>> {
-    const url = '/v1/dashboard/contexts';
+  async getAccessCapabilities(): Promise<Result<Types.APIAccessAccessCapabilitiesOutput, ApiError>> {
+    const url = '/v1/access/capabilities';
 
     const result = await this.client.request({
       method: 'GET',
@@ -28,7 +28,7 @@ export class ApiDashboardContextsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.APIDashboardDashboardContextsOutputSchema, result.data, 'response');
+      const validatedData = safeParse(Types.APIAccessAccessCapabilitiesOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -36,6 +36,6 @@ export class ApiDashboardContextsModule {
   }
 }
 
-export function createApiDashboardContextsModule(client: ApiClient): ApiDashboardContextsModule {
-  return new ApiDashboardContextsModule(client);
+export function createApiAccessCapabilitiesModule(client: ApiClient): ApiAccessCapabilitiesModule {
+  return new ApiAccessCapabilitiesModule(client);
 }
