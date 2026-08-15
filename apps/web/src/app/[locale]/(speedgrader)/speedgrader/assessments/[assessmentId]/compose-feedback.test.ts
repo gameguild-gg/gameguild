@@ -41,7 +41,10 @@ describe('composeFeedback', () => {
   });
 
   it('treats whitespace-only overall as missing', () => {
-    const out = composeFeedback({ overallComment: '   ', autoFeedback: 'auto' });
+    const out = composeFeedback({
+      overallComment: '   ',
+      autoFeedback: 'auto',
+    });
     expect(out).toContain('No overall comment');
   });
 
@@ -60,17 +63,7 @@ describe('composeFeedback', () => {
       autoFeedback: 'auto body',
       perFileComments: { '/p': 'per file body' },
     });
-    const expectedLines = [
-      '## Overall',
-      'overall body',
-      '',
-      '## Auto-generated feedback',
-      'auto body',
-      '',
-      '## Per-file comments',
-      '### /p',
-      'per file body',
-    ];
+    const expectedLines = ['## Overall', 'overall body', '', '## Auto-generated feedback', 'auto body', '', '## Per-file comments', '### /p', 'per file body'];
     expect(out).toBe(expectedLines.join('\n'));
   });
 });
