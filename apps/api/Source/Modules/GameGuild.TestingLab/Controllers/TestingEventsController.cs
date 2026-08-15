@@ -303,6 +303,19 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
         CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingProjectApplicationQuery(applicationId), cancellationToken).ConfigureAwait(false));
 
+    [HttpPut("applications/{applicationId:guid}")]
+    public async Task<ActionResult<TestingProjectApplicationProjection>> UpdateApplication(
+        Guid applicationId,
+        UpdateTestingProjectApplicationRequest request,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new UpdateTestingProjectApplicationCommand(
+                applicationId,
+                request.ProjectVersionId,
+                request.PreferredAvailability,
+                request.SubmittedAssetReferenceIds),
+            cancellationToken).ConfigureAwait(false));
+
     [HttpGet("applications/{applicationId:guid}/review-package")]
     public async Task<ActionResult<TestingApplicationReviewPackageProjection>> GetApplicationReviewPackage(
         Guid applicationId,

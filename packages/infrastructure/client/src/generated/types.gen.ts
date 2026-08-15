@@ -9406,6 +9406,12 @@ export interface TestingLabUpdateTestingLocation {
   virtualUrl?: string | null;
 }
 
+export interface TestingLabUpdateTestingProjectApplicationInput {
+  preferredAvailability?: string | null;
+  projectVersionId?: string;
+  submittedAssetReferenceIds?: Array<string> | null;
+}
+
 export interface TestingLabUpsertTestingEventSlotInput {
   campusName?: string | null;
   endsAt?: string;
@@ -10451,6 +10457,7 @@ export let TestingLabUpdateTestingInputSchema: z.ZodType<TestingLabUpdateTesting
 export let TestingLabUpdateTestingLabRoleInputSchema: z.ZodType<TestingLabUpdateTestingLabRoleInput>;
 export let TestingLabUpdateTestingLabSettingsSchema: z.ZodType<TestingLabUpdateTestingLabSettings>;
 export let TestingLabUpdateTestingLocationSchema: z.ZodType<TestingLabUpdateTestingLocation>;
+export let TestingLabUpdateTestingProjectApplicationInputSchema: z.ZodType<TestingLabUpdateTestingProjectApplicationInput>;
 export let TestingLabUpsertTestingEventSlotInputSchema: z.ZodType<TestingLabUpsertTestingEventSlotInput>;
 export let TestingLabUserTestingLabPermissionsSchema: z.ZodType<TestingLabUserTestingLabPermissions>;
 
@@ -21661,6 +21668,13 @@ TestingLabUpdateTestingLocationSchema = z.object({
   state: z.string().nullable().optional(),
   status: z.lazy(() => TestingLabLocationStatusSchema).optional(),
   virtualUrl: z.string().nullable().optional(),
+});
+
+/** Zod schema for TestingLabUpdateTestingProjectApplicationInput */
+TestingLabUpdateTestingProjectApplicationInputSchema = z.object({
+  preferredAvailability: z.string().nullable().optional(),
+  projectVersionId: z.string().uuid().optional(),
+  submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
 /** Zod schema for TestingLabUpsertTestingEventSlotInput */

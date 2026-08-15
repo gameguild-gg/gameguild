@@ -193,16 +193,12 @@ public sealed class ProjectQueryHandlers
       return Result.Success<IEnumerable<Project>>(Array.Empty<Project>());
     }
 
-    IQueryable<Project> query = _context.Set<Project>()
+    IQueryable<Project> query = _authorizationService.ApplyWorkspaceAccess(_context.Set<Project>()
+      .IgnoreQueryFilters()
       .AsNoTracking()
-      .Where(p => p.DeletedAt != null)
+      .Where(p => p.DeletedAt != null), includeDeleted: true)
       .Include(p => p.CreatedBy)
       .Include(p => p.Category);
-
-    if (!Actor.IsSystemAdmin)
-    {
-      query = query.Where(project => project.TenantId == Actor.TenantId);
-    }
 
     var projects = await query
       .OrderByDescending(p => p.DeletedAt)

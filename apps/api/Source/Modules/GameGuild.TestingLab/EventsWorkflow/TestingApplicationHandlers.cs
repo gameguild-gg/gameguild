@@ -19,6 +19,7 @@ public sealed class TestingApplicationHandlers(
     GameGuild.Assets.IAssetScopedAccessService? assetScopedAccessService = null,
     GameGuild.Assets.IAssetAccessService? assetAccessService = null) :
     ICommandHandler<SubmitTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
+    ICommandHandler<UpdateTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<WithdrawTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<BeginReviewTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<CastTestingApplicationVoteCommand, Result<TestingApplicationVoteProjection>>,
@@ -115,6 +116,70 @@ public sealed class TestingApplicationHandlers(
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Actor {ActorId} submitted project {ProjectId} to Testing Lab event {EventId}", actor.UserId, request.ProjectId, request.EventId);
         return Result.Success(ToProjection(application));
+    }
+
+    public async Task<Result<TestingProjectApplicationProjection>> Handle(
+        UpdateTestingProjectApplicationCommand request,
+        CancellationToken cancellationToken)
+    {
+        var loaded = await LoadApplicationAsync(request.ApplicationId, cancellationToken).ConfigureAwait(false);
+        if (loaded.Error != null) return Result.Failure<TestingProjectApplicationProjection>(loaded.Error);
+        var application = loaded.Application!;
+        var actor = loaded.Actor!;
+
+        if (!await projectAuthorizationService.HasPermissionAsync(
+                application.ProjectId,
+                PermissionType.Edit,
+                cancellationToken).ConfigureAwait(false))
+            return Result.Failure<TestingProjectApplicationProjection>(
+                Error.Forbidden("TestingLab.ProjectEditRequired", "Project edit access is required to update its application."));
+
+        var now = SystemClock.UtcNow;
+        if (application.Event.Status != TestingEventStatus.ApplicationsOpen ||
+            now < application.Event.ApplicationsOpenAt ||
+            now > application.Event.ApplicationsCloseAt)
+            return Result.Failure<TestingProjectApplicationProjection>(Validation("This event is not accepting project application updates."));
+
+        var versionExists = await context.Set<ProjectVersion>().AnyAsync(version =>
+            version.Id == request.ProjectVersionId &&
+            version.ProjectId == application.ProjectId &&
+            version.TenantId == actor.TenantId &&
+            version.DeletedAt == null,
+            cancellationToken).ConfigureAwait(false);
+        if (!versionExists)
+            return Result.Failure<TestingProjectApplicationProjection>(Validation("Project version must be active and belong to the applied project."));
+
+        var submittedAssetIds = request.SubmittedAssetReferenceIds?
+            .Where(id => id != Guid.Empty).Distinct().Take(100).ToArray() ?? [];
+        if (submittedAssetIds.Length > 0)
+        {
+            var validAssetCount = await context.Set<GameGuild.Assets.AssetReference>().AsNoTracking().CountAsync(asset =>
+                submittedAssetIds.Contains(asset.Id) &&
+                asset.TenantId == actor.TenantId &&
+                asset.DeletedAt == null &&
+                ((asset.ParentResourceType == nameof(Project) && asset.ParentResourceId == application.ProjectId) ||
+                 (asset.ParentResourceType == nameof(ProjectVersion) && asset.ParentResourceId == request.ProjectVersionId)),
+                cancellationToken).ConfigureAwait(false);
+            if (validAssetCount != submittedAssetIds.Length)
+                return Result.Failure<TestingProjectApplicationProjection>(
+                    Validation("Every submitted file must belong to the applied project or selected project version."));
+        }
+
+        try
+        {
+            application.UpdateSubmission(request.ProjectVersionId, request.PreferredAvailability, submittedAssetIds);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            logger.LogInformation(
+                "Actor {ActorId} updated Testing Lab application {ApplicationId} for project {ProjectId}",
+                actor.UserId,
+                application.Id,
+                application.ProjectId);
+            return Result.Success(ToProjection(application));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Result.Failure<TestingProjectApplicationProjection>(Validation(exception.Message));
+        }
     }
 
     public async Task<Result<TestingProjectApplicationProjection>> Handle(
