@@ -1,5 +1,6 @@
 using GameGuild.CQRS.Models;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Tenants;
 
 namespace GameGuild.TestingLab;
 
@@ -185,6 +186,7 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
   public async Task AssignRoleToUserAsync(Guid userId, Guid? tenantId, string roleName, DateTime? expiresAt = null) {
     if (expiresAt.HasValue)
       throw new InvalidOperationException("Role expiration is not supported. Use a temporary resource exception instead.");
+    await EnsureActiveTargetTenantMembershipAsync(userId, tenantId).ConfigureAwait(false);
 
     var template = await FindRoleTemplateAsync(roleName).ConfigureAwait(false);
     if (template == null) throw new InvalidOperationException($"Role template '{roleName}' was not found.");
@@ -213,9 +215,9 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
     string? reason = null,
     DateTime? expiresAt = null,
     Guid? grantedByUserId = null) {
-    if (!tenantId.HasValue) throw new InvalidOperationException("A tenant is required for a Testing Lab resource permission.");
+    var targetTenantId = await EnsureActiveTargetTenantMembershipAsync(userId, tenantId).ConfigureAwait(false);
     ValidateResourcePermission(action, resourceType);
-    var resourceTenantId = new TenantId(tenantId.Value);
+    var resourceTenantId = new TenantId(targetTenantId);
 
     var permission = await context.Set<ResourceUserPermission>()
       .FirstOrDefaultAsync(candidate =>
@@ -228,7 +230,7 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
 
     if (permission == null) {
       permission = new ResourceUserPermission {
-        TenantId = tenantId.Value,
+        TenantId = targetTenantId,
         UserId = userId,
         ResourceType = resourceType,
         ResourceId = resourceId.ToString(),
@@ -303,6 +305,23 @@ public sealed class TestingLabPermissionService(IApplicationDbContext context) :
     context.Set<TenantPermission>().Add(permission);
 
     return permission;
+  }
+
+  private async Task<Guid> EnsureActiveTargetTenantMembershipAsync(Guid userId, Guid? tenantId) {
+    if (!tenantId.HasValue)
+      throw new InvalidOperationException("A target tenant is required to manage Testing Lab access.");
+
+    var isActiveMember = await context.Set<TenantMember>()
+      .AsNoTracking()
+      .AnyAsync(member =>
+        member.UserId == userId &&
+        member.TenantId == tenantId.Value &&
+        member.IsActive &&
+        member.DeletedAt == null)
+      .ConfigureAwait(false);
+    if (!isActiveMember)
+      throw new InvalidOperationException("The user must be an active member of the target tenant.");
+    return tenantId.Value;
   }
 
   private async Task<TenantPermission?> FindTenantPermissionsAsync(Guid userId, Guid? tenantId) {

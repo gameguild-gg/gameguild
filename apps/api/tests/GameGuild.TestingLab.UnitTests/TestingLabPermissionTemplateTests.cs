@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Configuration;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Tenants;
 using GameGuild.TestingLab;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -137,7 +138,7 @@ public sealed class TestingLabPermissionTemplateTests
     }
 
     [Fact]
-    public async Task SystemAdmin_Should_Assign_Role_In_Explicit_Tenant_When_Context_Tenant_Differs()
+    public async Task SystemAdmin_Should_Assign_Role_In_An_Explicit_Target_Tenant()
     {
         var contextTenantId = Guid.NewGuid();
         var requestedTenantId = Guid.NewGuid();
@@ -185,13 +186,13 @@ public sealed class TestingLabPermissionTemplateTests
             actorContextAccessor.Object,
             NullLogger<TestingLabPermissionController>.Instance);
 
-        var action = () => controller.AssignTestingLabRole(Guid.NewGuid(), new AssignTestingLabRoleRequest
+        var result = await controller.AssignTestingLabRole(Guid.NewGuid(), new AssignTestingLabRoleRequest
         {
             TenantId = Guid.NewGuid(),
             RoleName = "TestingLab Reviewer"
         });
 
-        await action.Should().ThrowAsync<UnauthorizedAccessException>();
+        result.Should().BeOfType<ForbidResult>();
         permissionService.VerifyNoOtherCalls();
     }
 
@@ -268,6 +269,7 @@ public sealed class TestingLabPermissionTemplateTests
         var service = new TestingLabPermissionService(context);
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
+        AddActiveTenantMember(context, userId, tenantId);
         await service.CreateRoleTemplateAsync(
             "Session facilitator",
             "Runs testing sessions.",
@@ -295,6 +297,7 @@ public sealed class TestingLabPermissionTemplateTests
         var service = new TestingLabPermissionService(context);
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
+        AddActiveTenantMember(context, userId, tenantId);
         await service.CreateRoleTemplateAsync("Event reviewer", "Reviews applications.", []);
         await service.AssignRoleToUserAsync(userId, tenantId, "Event reviewer");
 
@@ -305,6 +308,22 @@ public sealed class TestingLabPermissionTemplateTests
     }
 
     [Fact]
+    public async Task AssignedRole_ShouldRejectAUserWithoutAnActiveTargetTenantMembership()
+    {
+        await using var context = CreateContext();
+        var service = new TestingLabPermissionService(context);
+        await service.CreateRoleTemplateAsync("Event manager", "Manages events.", []);
+
+        var action = () => service.AssignRoleToUserAsync(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Event manager");
+
+        await action.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*active member of the target tenant*");
+    }
+
+    [Fact]
     public async Task ResourcePermission_ShouldTrackExpiryAndPreserveOtherActionsWhenOneIsRevoked()
     {
         await using var context = CreateContext();
@@ -312,6 +331,7 @@ public sealed class TestingLabPermissionTemplateTests
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var resourceId = Guid.NewGuid();
+        AddActiveTenantMember(context, userId, tenantId);
         var expiry = SystemClock.UtcNow.AddDays(2);
 
         await service.GrantPermissionAsync(userId, tenantId, TestingLabActions.Read, TestingLabResourceTypes.Request, resourceId, expiresAt: expiry);
@@ -336,6 +356,7 @@ public sealed class TestingLabPermissionTemplateTests
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var resourceId = Guid.NewGuid();
+        AddActiveTenantMember(context, userId, tenantId);
 
         await service.GrantPermissionAsync(
             userId,
@@ -359,6 +380,7 @@ public sealed class TestingLabPermissionTemplateTests
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var requestId = Guid.NewGuid();
+        AddActiveTenantMember(context, userId, tenantId);
         await service.GrantPermissionAsync(
             userId,
             tenantId,
@@ -405,6 +427,22 @@ public sealed class TestingLabPermissionTemplateTests
         return new TestingLabPermissionDbContext(options);
     }
 
+    private static void AddActiveTenantMember(
+        TestingLabPermissionDbContext context,
+        Guid userId,
+        Guid tenantId)
+    {
+        context.Set<TenantMember>().Add(new TenantMember
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            TenantId = tenantId,
+            Role = "Member",
+            IsActive = true,
+        });
+        context.SaveChanges();
+    }
+
     private static string ToPermissionString(GameGuild.TestingLab.PermissionTemplate template)
         => $"{template.ResourceType}:{template.Action}";
 
@@ -423,6 +461,7 @@ public sealed class TestingLabPermissionTemplateTests
             modelBuilder.ApplyConfiguration(new TenantPermissionConfiguration());
             modelBuilder.ApplyConfiguration(new PermissionTemplateConfiguration());
             modelBuilder.ApplyConfiguration(new ResourceUserPermissionConfiguration());
+            modelBuilder.ApplyConfiguration(new TenantMemberConfiguration());
         }
     }
 }

@@ -9,9 +9,12 @@ export default async function TestingLabLayout({ children }: { children: ReactNo
   const contexts = await getDashboardContexts();
   if (!hasAnyDashboardCapability(
     contexts.capabilities,
-    'TestingLab.Manage',
-    'TestingLab.Review',
+    'TestingLab.ManageEvents',
+    'TestingLab.ReviewApplications',
+    'TestingLab.ManageParticipants',
+    'TestingLab.ManageFeedback',
     'TestingLab.ViewAnalytics',
+    'TestingLab.ManageSettings',
   )) {
     forbidden();
   }

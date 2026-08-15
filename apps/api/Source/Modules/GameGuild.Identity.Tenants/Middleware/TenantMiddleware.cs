@@ -88,9 +88,13 @@ public class TenantMiddleware(
 
         var authenticatedTenantId = Authorization.Utilities.ClaimsExtractor.GetTenantIdAsGuid(context.User);
         var explicitTenantId = GetExplicitTenantId(context);
+        var isSystemAdmin = Authorization.Utilities.ClaimsExtractor
+            .GetRoles(context.User)
+            .Any(role => role.Equals("SystemAdmin", StringComparison.OrdinalIgnoreCase));
         if (authenticatedTenantId.HasValue &&
             explicitTenantId.HasValue &&
-            authenticatedTenantId.Value != explicitTenantId.Value)
+            authenticatedTenantId.Value != explicitTenantId.Value &&
+            !isSystemAdmin)
         {
             await RejectTenantClaimMismatchAsync(
                 context,
@@ -107,7 +111,9 @@ public class TenantMiddleware(
 
         if (tenant is not null)
         {
-            if (authenticatedTenantId.HasValue && tenant.Id != authenticatedTenantId.Value)
+            if (authenticatedTenantId.HasValue &&
+                tenant.Id != authenticatedTenantId.Value &&
+                !isSystemAdmin)
             {
                 await RejectTenantClaimMismatchAsync(
                     context,
@@ -120,9 +126,6 @@ public class TenantMiddleware(
             var userId = GetAuthenticatedUserId(context);
             if (userId.HasValue)
             {
-                var isSystemAdmin = Authorization.Utilities.ClaimsExtractor
-                    .GetRoles(context.User)
-                    .Any(role => role.Equals("SystemAdmin", StringComparison.OrdinalIgnoreCase));
                 var membership = isSystemAdmin
                     ? null
                     : await GetActiveTenantMembershipAsync(

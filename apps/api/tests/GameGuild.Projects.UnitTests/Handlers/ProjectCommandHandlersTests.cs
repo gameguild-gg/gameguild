@@ -182,6 +182,51 @@ public class ProjectHandlersIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task GetDeletedProjects_ShouldScopeSystemAdminToActiveSelectedTenant()
+    {
+        var actorTenantId = Guid.NewGuid();
+        var otherTenantId = Guid.NewGuid();
+        var currentTenantProject = _testDataBuilder.CreateProject(createdById: _testUserId, title: "Deleted current tenant project");
+        currentTenantProject.TenantId = actorTenantId;
+        currentTenantProject.DeletedAt = SystemClock.UtcNow;
+        var otherTenantProject = _testDataBuilder.CreateProject(createdById: _testUserId, title: "Deleted other tenant project");
+        otherTenantProject.TenantId = otherTenantId;
+        otherTenantProject.DeletedAt = SystemClock.UtcNow;
+        _context.Set<GameGuild.Identity.Users.User>().Add(new GameGuild.Identity.Users.User
+        {
+            Id = _testUserId,
+            Email = $"{_testUserId:N}@example.com",
+            Name = "Active system admin",
+            IsActive = true
+        });
+        _context.Set<GameGuild.Identity.Tenants.TenantMember>().Add(new GameGuild.Identity.Tenants.TenantMember
+        {
+            UserId = _testUserId,
+            TenantId = actorTenantId,
+            Role = "SystemAdmin",
+            IsActive = true
+        });
+        _context.Set<Project>().AddRange(currentTenantProject, otherTenantProject);
+        await _context.SaveChangesAsync();
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor.SetupGet(accessor => accessor.ActorContext).Returns(
+            ActorContextBuilder.ForUser(_testUserId)
+                .WithTenantId(actorTenantId)
+                .WithRole("SystemAdmin")
+                .Build());
+        var handler = new ProjectQueryHandlers(
+            _context,
+            actorAccessor.Object,
+            new ProjectAuthorizationService(_context, actorAccessor.Object),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<ProjectQueryHandlers>.Instance);
+
+        var result = await handler.Handle(new GetDeletedProjectsQuery(), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle().Which.Id.Should().Be(currentTenantProject.Id);
+    }
+
+    [Fact]
     public void ProjectSerialization_ShouldNotExposeCreatorAuthenticationData()
     {
         var project = _testDataBuilder.CreateProject(createdById: _testUserId);

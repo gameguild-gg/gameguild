@@ -81,6 +81,33 @@ public sealed class SetTenantMembershipStatusCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_DeactivateDefaultTenantMembership_ShouldBeRejected()
+    {
+        var member = CreateMember("Member");
+        member.Tenant = new Tenant
+        {
+            Id = member.TenantId,
+            Name = "GameGuild Platform",
+            Slug = "gameguild-platform",
+            IsDefault = true,
+            IsActive = true
+        };
+        _repository
+            .Setup(repository => repository.GetByUserAndTenantAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+
+        var handler = new SetTenantMembershipStatusCommandHandler(_repository.Object);
+        var result = await handler.Handle(
+            new SetTenantMembershipStatusCommand(member.TenantId, member.UserId, false),
+            CancellationToken.None);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().Contain("default tenant membership");
+        member.IsActive.Should().BeTrue();
+        _repository.Verify(repository => repository.UpdateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task Handle_MissingMember_ShouldReturnNotFoundFailure()
     {
         _repository

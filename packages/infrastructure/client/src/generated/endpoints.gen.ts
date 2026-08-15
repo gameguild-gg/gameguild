@@ -12970,6 +12970,19 @@ export const getTestingEventsApplicationsByApplicationIdEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PutTestingEventsApplicationsInput {
+  applicationId: string;
+  body?: Types.TestingLabUpdateTestingProjectApplicationInput;
+}
+export type PutTestingEventsApplicationsOutput = Types.TestingLabTestingProjectApplicationProjection;
+export const putTestingEventsApplicationsEndpoint = {
+  operationId: 'putTestingEventsApplications' as const,
+  method: 'PUT' as const,
+  path: '/v1/testing/events/applications/{applicationId}' as const,
+  tags: ['TestingLab/testingEvents'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetTestingEventsApplicationsReviewPackageInput {
   applicationId: string;
 }
@@ -16880,6 +16893,7 @@ export const endpoints = {
   postTestingEvents: postTestingEventsEndpoint,
   getTestingEventsApplicationsMe: getTestingEventsApplicationsMeEndpoint,
   getTestingEventsApplicationsByApplicationId: getTestingEventsApplicationsByApplicationIdEndpoint,
+  putTestingEventsApplications: putTestingEventsApplicationsEndpoint,
   getTestingEventsApplicationsReviewPackage: getTestingEventsApplicationsReviewPackageEndpoint,
   putTestingEventsApplicationsSlot: putTestingEventsApplicationsSlotEndpoint,
   postTestingEventsApplicationsVotes: postTestingEventsApplicationsVotesEndpoint,

@@ -86,6 +86,22 @@ public sealed class TestingProjectApplication : EntityBase
         return normalized is { Length: > 0 } ? JsonSerializer.Serialize(normalized) : null;
     }
 
+    public void UpdateSubmission(
+        Guid projectVersionId,
+        string? preferredAvailability,
+        IReadOnlyCollection<Guid>? submittedAssetReferenceIds = null)
+    {
+        if (Status != TestingApplicationStatus.Pending)
+            throw new InvalidOperationException("Only pending applications can be updated.");
+        if (projectVersionId == Guid.Empty)
+            throw new ArgumentException("Project version is required.", nameof(projectVersionId));
+
+        ProjectVersionId = projectVersionId;
+        PreferredAvailability = string.IsNullOrWhiteSpace(preferredAvailability) ? null : preferredAvailability.Trim();
+        SubmittedAssetReferenceIdsJson = SerializeAssetIds(submittedAssetReferenceIds);
+        Touch();
+    }
+
     public void BeginReview()
     {
         if (Status != TestingApplicationStatus.Pending) throw new InvalidOperationException("Only pending applications can enter review.");
