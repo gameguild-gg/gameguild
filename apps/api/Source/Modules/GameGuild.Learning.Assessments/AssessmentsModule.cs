@@ -21,6 +21,7 @@ public static class AssessmentsModule
         services.AddScoped<IRubricService, RubricService>();
         services.AddScoped<IPeerReviewAssignmentService, PeerReviewAssignmentService>();
         services.AddScoped<IGradingQueueService, GradingQueueService>();
+        services.AddScoped<ITasksService, TasksService>();
         services.AddScoped<IProgramContentLifecycleGuard, AssessmentProgramContentLifecycleGuard>();
         services.AddScoped<GameGuild.Learning.Courses.IAssessmentGradingSync, AssessmentGradingSync>();
 

@@ -1,6 +1,10 @@
 using GameGuild.Identity.Users;
+using GameGuild.Learning.Courses;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NotificationPriority = GameGuild.Notifications.NotificationPriority;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -13,11 +17,16 @@ public class PeerReviewAssignmentService : IPeerReviewAssignmentService
 
     private readonly IApplicationDbContext _context;
     private readonly ILogger<PeerReviewAssignmentService> _logger;
+    private readonly INotificationService? _notifications;
 
-    public PeerReviewAssignmentService(IApplicationDbContext context, ILogger<PeerReviewAssignmentService> logger)
+    public PeerReviewAssignmentService(
+        IApplicationDbContext context,
+        ILogger<PeerReviewAssignmentService> logger,
+        INotificationService? notifications = null)
     {
         _context = context;
         _logger = logger;
+        _notifications = notifications;
     }
 
     public async Task<Result<PeerReviewClaimResult>> ClaimAsync(Guid assessmentId, Guid actorUserId)
@@ -123,12 +132,67 @@ public class PeerReviewAssignmentService : IPeerReviewAssignmentService
         {
             review.SubmitReview(score, feedback, rubricScores);
             await _context.SaveChangesAsync().ConfigureAwait(false);
+
+            if (_notifications is not null)
+            {
+                try
+                {
+                    await NotifyReviewTargetOwnersAsync(review).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Peer feedback notification failed for review {ReviewId}", review.Id);
+                }
+            }
+
             return Result.Success(review);
         }
         catch (InvalidOperationException)
         {
             return Result.Failure<AssessmentPeerReview>(Error.Conflict(
                 "PeerReview.AlreadySubmitted", "Peer review already submitted"));
+        }
+    }
+
+    /// <summary>
+    ///     Every owner of a row sharing the reviewed (CourseGroupId, AttemptNumber) sees the review
+    ///     through the todo-8 union read — so they all get notified. Content is anonymous by
+    ///     construction: the reviewer's identity is never part of the payload.
+    /// </summary>
+    private async Task NotifyReviewTargetOwnersAsync(AssessmentPeerReview review)
+    {
+        var submission = await _context.Set<AssessmentSubmission>()
+            .FirstOrDefaultAsync(s => s.Id == review.SubmissionId && s.DeletedAt == null)
+            .ConfigureAwait(false);
+        if (submission == null)
+        {
+            return;
+        }
+
+        var ownerIds = submission.CourseGroupId is { } groupId
+            ? await _context.Set<AssessmentSubmission>()
+                .Where(s => s.CourseGroupId == groupId &&
+                            s.AttemptNumber == submission.AttemptNumber &&
+                            s.DeletedAt == null)
+                .Select(s => s.UserId)
+                .ToListAsync().ConfigureAwait(false)
+            : [submission.UserId];
+
+        var title = await _context.Set<Assessment>()
+            .Where(a => a.Id == review.AssessmentId && a.DeletedAt == null)
+            .Select(a => a.Title)
+            .FirstOrDefaultAsync().ConfigureAwait(false) ?? "your assessment";
+
+        foreach (var owner in ownerIds.Distinct())
+        {
+            await _notifications!.SendAsync(
+                    owner,
+                    NotificationType.System,
+                    "Peer feedback received",
+                    $"You received peer feedback on {title}",
+                    NotificationChannel.InApp,
+                    actionUrl: "/dashboard/tasks")
+                .ConfigureAwait(false);
         }
     }
 
