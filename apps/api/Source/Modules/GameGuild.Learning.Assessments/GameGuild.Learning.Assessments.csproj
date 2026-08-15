@@ -21,6 +21,7 @@
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
         <ProjectReference Include="..\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
         <ProjectReference Include="..\GameGuild.Learning.Enrollments\GameGuild.Learning.Enrollments.csproj" />
+        <ProjectReference Include="..\GameGuild.Notifications\GameGuild.Notifications.csproj" />
     </ItemGroup>
 
 </Project>

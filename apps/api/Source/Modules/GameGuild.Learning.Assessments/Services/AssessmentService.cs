@@ -3,6 +3,8 @@ using System.Text.Json.Serialization;
 using FluentValidation;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Enrollments;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -18,19 +20,22 @@ public class AssessmentService : IAssessmentService
     private readonly IRubricService _rubricService;
     private readonly ILogger<AssessmentService> _logger;
     private readonly ILtiScorePassback? _ltiScorePassback;
+    private readonly INotificationService? _notifications;
 
     public AssessmentService(
         IApplicationDbContext context,
         IProgramContentService programContentService,
         IRubricService rubricService,
         ILogger<AssessmentService> logger,
-        ILtiScorePassback? ltiScorePassback = null)
+        ILtiScorePassback? ltiScorePassback = null,
+        INotificationService? notifications = null)
     {
         _context = context;
         _programContentService = programContentService;
         _rubricService = rubricService;
         _logger = logger;
         _ltiScorePassback = ltiScorePassback;
+        _notifications = notifications;
     }
 
     // ===== ASSESSMENT MANAGEMENT =====
@@ -819,6 +824,18 @@ public class AssessmentService : IAssessmentService
 
             _logger.LogInformation("Submission submitted: {SubmissionId}", submissionId);
 
+            if (_notifications is not null)
+            {
+                try
+                {
+                    await NotifyManagersOfPendingSubmissionsAsync(assessment).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Grading notification failed for assessment {AssessmentId}", assessment.Id);
+                }
+            }
+
             return Result.Success(submission);
         }
         catch (ArgumentException ex)
@@ -904,6 +921,37 @@ public class AssessmentService : IAssessmentService
         }
     }
 
+    /// <summary>
+    ///     Notifies every course manager once per submit event with the assessment's current
+    ///     pending-grade target count (same dedup as /me/tasks grade items).
+    /// </summary>
+    private async Task NotifyManagersOfPendingSubmissionsAsync(Assessment assessment)
+    {
+        var managers = await CourseManagers.GetManagerUserIdsAsync(_context, assessment.CourseId).ConfigureAwait(false);
+        if (managers.Count == 0)
+        {
+            return;
+        }
+
+        var rows = await _context.Set<AssessmentSubmission>()
+            .Where(s => s.AssessmentId == assessment.Id && s.DeletedAt == null)
+            .ToListAsync().ConfigureAwait(false);
+        var pending = TasksService.CountPendingGradeTargets(rows);
+
+        // Plain text interpolation of the instructor-authored title — no markup, in-app channel only.
+        foreach (var manager in managers)
+        {
+            await _notifications!.SendAsync(
+                    manager,
+                    NotificationType.System,
+                    "Submissions awaiting grading",
+                    $"{pending} submissions awaiting grading on {assessment.Title}",
+                    NotificationChannel.InApp,
+                    actionUrl: "/dashboard/tasks")
+                .ConfigureAwait(false);
+        }
+    }
+
     public async Task<Result<AssessmentSubmission>> GradeSubmissionAsync(Guid submissionId, GradeSubmissionRequest request)
     {
         try
@@ -975,6 +1023,30 @@ public class AssessmentService : IAssessmentService
                     await _ltiScorePassback
                         .PostScoreIfMappedAsync(assessment.Id, gradedUserId, request.Score, assessment.MaxScore)
                         .ConfigureAwait(false);
+                }
+            }
+
+            if (_notifications is not null)
+            {
+                try
+                {
+                    // Titles are instructor-authored and interpolated as PLAIN TEXT (no HTML/markup
+                    // rendering on the client) — in-app channel only, so no injection surface.
+                    foreach (var gradedUserId in gradedUserIds)
+                    {
+                        await _notifications.SendAsync(
+                                gradedUserId,
+                                NotificationType.AssessmentGraded,
+                                "Assessment graded",
+                                $"{assessment.Title} graded — score {request.Score}/{assessment.MaxScore}",
+                                NotificationChannel.InApp,
+                                actionUrl: "/dashboard/tasks")
+                            .ConfigureAwait(false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Graded notification failed for submission {SubmissionId}", submissionId);
                 }
             }
 
