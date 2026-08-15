@@ -104,6 +104,7 @@ jest.mock('@game-guild/ui/components/switch', () => ({
 
 import Ide from './Ide';
 import type { IdeHandle } from './Ide';
+import type { GradingPlan } from './ide-types';
 
 // Smoke test the manual shadcn stubs to catch broken mock wiring early.
 describe('shadcn mock smoke', () => {
@@ -626,5 +627,110 @@ describe('legacy storage key fallback (read migration)', () => {
     } finally {
       getItem.mockRestore();
     }
+  });
+});
+
+// ── Bottom tabs: Test Cases + Test Results (student runtime mode) ──────────
+
+// Mixed plan: named/unnamed, empty stdin, RegExp expectedStdout, default
+// weight, and a hidden case (stripped in public mode).
+const MIXED_PLAN: GradingPlan = {
+  cases: [
+    { kind: 'stdio', name: 'greeter', stdin: 'world', expectedStdout: 'hello world', weight: 2 },
+    { kind: 'stdio', expectedStdout: /^h[aeiou]llo$/ },
+    { kind: 'stdio', name: 'secret-case', expectedStdout: 'answer', hidden: true },
+  ],
+  build: {},
+};
+
+describe('bottom tabs: Test Cases + Test Results', () => {
+  it('(gate) student mode (testPlan, no slot) renders Test Cases + Test Results tabs, no authoring Tests tab', async () => {
+    await act(async () => {
+      render(<Ide testPlan={MIXED_PLAN} />);
+    });
+    expect(screen.getByRole('button', { name: 'Terminal' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Test Cases' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Test Results' })).not.toBeNull();
+    expect(screen.queryByRole('button', { name: 'Tests' })).toBeNull();
+  });
+
+  it('(gate) instructor mode (testPlan + testsPanelSlot) keeps only the authoring Tests tab', async () => {
+    await act(async () => {
+      render(
+        <Ide
+          testPlan={MIXED_PLAN}
+          testsPanelSlot={<div data-testid="slot-content">authoring</div>}
+        />,
+      );
+    });
+    expect(screen.getByRole('button', { name: 'Tests' })).not.toBeNull();
+    expect(screen.queryByRole('button', { name: 'Test Cases' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Test Results' })).toBeNull();
+  });
+
+  it('(gate) no testPlan renders neither new tab', async () => {
+    await act(async () => {
+      render(<Ide />);
+    });
+    expect(screen.queryByRole('button', { name: 'Test Cases' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Test Results' })).toBeNull();
+  });
+
+  it('(table) Test Cases tab renders one read-only row per plan case with fallbacks', async () => {
+    await act(async () => {
+      render(<Ide testPlan={MIXED_PLAN} />);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Test Cases' }));
+    });
+
+    const panel = screen.getByTestId('test-cases-panel');
+    // Default testMode is 'full' — all 3 cases shown.
+    const rows = within(panel).getAllByTestId('test-case-row');
+    expect(rows).toHaveLength(3);
+
+    // Row 0: named, explicit stdin/stdout/weight.
+    expect(within(rows[0]).getByText('greeter')).not.toBeNull();
+    expect(within(rows[0]).getByText('world')).not.toBeNull();
+    expect(within(rows[0]).getByText('hello world')).not.toBeNull();
+    expect(within(rows[0]).getByText('2')).not.toBeNull();
+
+    // Row 1: unnamed → '(unnamed)', no stdin → '(empty)', RegExp → String(v), weight default 1.
+    expect(within(rows[1]).getByText('(unnamed)')).not.toBeNull();
+    expect(within(rows[1]).getByText('(empty)')).not.toBeNull();
+    expect(within(rows[1]).getByText(String(/^h[aeiou]llo$/))).not.toBeNull();
+    expect(within(rows[1]).getByText('1')).not.toBeNull();
+  });
+
+  it('(table) public mode strips hidden cases from the Test Cases table', async () => {
+    await act(async () => {
+      render(<Ide testPlan={MIXED_PLAN} testMode="public" />);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Test Cases' }));
+    });
+    const rows = within(screen.getByTestId('test-cases-panel')).getAllByTestId('test-case-row');
+    expect(rows).toHaveLength(2);
+    expect(screen.queryByText('secret-case')).toBeNull();
+  });
+
+  it('(kept-mounted) Test Results slot stays in the DOM with display:none when switching away', async () => {
+    await act(async () => {
+      render(<Ide testPlan={MIXED_PLAN} />);
+    });
+
+    // Switch to Test Results: slot visible, no panel content yet (no run).
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Test Results' }));
+    });
+    const slot = screen.getByTestId('test-results-slot');
+    expect(slot.style.display).not.toBe('none');
+    expect(screen.queryByTestId('test-results-panel')).toBeNull();
+
+    // Switch back to Terminal: slot unmounts nothing — just hides.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Terminal' }));
+    });
+    expect(screen.getByTestId('test-results-slot').style.display).toBe('none');
   });
 });

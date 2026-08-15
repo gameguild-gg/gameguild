@@ -1,5 +1,5 @@
 import { createRef } from 'react';
-import { render, act, fireEvent } from '@testing-library/react';
+import { render, act, fireEvent, screen, waitFor } from '@testing-library/react';
 
 // Polyfill TextEncoder/TextDecoder for jsdom
 if (typeof globalThis.TextEncoder === 'undefined') {
@@ -444,5 +444,101 @@ describe('Ide runTests doctest branch', () => {
     expect(report.cases[1].diagnostic).toMatch(/not yet supported/);
     // SAMPLE_PLAN has a stdio case → stdio build runs; doctest never reaches wasi-run.
     expect(stubClient.run.mock.calls.map((c: string[]) => c[0])).toEqual(['clang', 'wasm-ld', 'wasi-run']);
+  });
+});
+
+// ── Student bottom tabs: results auto-switch + kept-mounted content ────────
+
+describe('student bottom tabs: Test Results auto-switch', () => {
+  it('auto-switches to the Test Results tab after a run completes in student mode', async () => {
+    const onTestReport = jest.fn();
+    const ref = createRef<IdeHandle>();
+
+    await act(async () => {
+      render(
+        <Ide ref={ref} testPlan={SAMPLE_PLAN} testMode="full" maxScore={100} passingScore={60} onTestReport={onTestReport} />,
+      );
+    });
+
+    // stdio_public passes (expectedStdout='hello'); doctest is unsupported.
+    stubToolDispatch({ exitCode: 0, stdout: 'hello', stderr: '' });
+
+    await act(async () => {
+      fireEvent.click(document.querySelector('[data-testid="run-tests-button"]')!);
+    });
+    await waitFor(() => expect(onTestReport).toHaveBeenCalledTimes(1));
+
+    const slot = document.querySelector('[data-testid="test-results-slot"]') as HTMLElement | null;
+    expect(slot).not.toBeNull();
+    expect(slot!.style.display).not.toBe('none');
+
+    const panel = document.querySelector('[data-testid="test-results-panel"]');
+    expect(panel).not.toBeNull();
+    expect(panel!.textContent).toContain('Score: 40/100');
+  });
+
+  it('keeps the last report in the DOM (display:none) while Terminal is active and on re-show', async () => {
+    const onTestReport = jest.fn();
+    const ref = createRef<IdeHandle>();
+
+    await act(async () => {
+      render(
+        <Ide ref={ref} testPlan={SAMPLE_PLAN} testMode="full" maxScore={100} passingScore={60} onTestReport={onTestReport} />,
+      );
+    });
+
+    stubToolDispatch({ exitCode: 0, stdout: 'hello', stderr: '' });
+
+    await act(async () => {
+      fireEvent.click(document.querySelector('[data-testid="run-tests-button"]')!);
+    });
+    await waitFor(() => expect(onTestReport).toHaveBeenCalledTimes(1));
+
+    // Hide: switch to Terminal — panel must stay mounted, just hidden.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Terminal' }));
+    });
+    const slot = document.querySelector('[data-testid="test-results-slot"]') as HTMLElement;
+    expect(slot.style.display).toBe('none');
+    const hiddenPanel = document.querySelector('[data-testid="test-results-panel"]');
+    expect(hiddenPanel).not.toBeNull();
+    expect(hiddenPanel!.textContent).toContain('Score: 40/100');
+
+    // Re-show: the SAME report is still there — no re-run happened.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Test Results' }));
+    });
+    expect((document.querySelector('[data-testid="test-results-slot"]') as HTMLElement).style.display).not.toBe('none');
+    expect(onTestReport).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('[data-testid="test-results-panel"]')!.textContent).toContain('Score: 40/100');
+  });
+
+  it('does NOT auto-switch in instructor mode (testsPanelSlot present)', async () => {
+    const onTestReport = jest.fn();
+    const ref = createRef<IdeHandle>();
+
+    await act(async () => {
+      render(
+        <Ide
+          ref={ref}
+          testPlan={SAMPLE_PLAN}
+          testMode="full"
+          onTestReport={onTestReport}
+          testsPanelSlot={<div data-testid="slot-content">authoring</div>}
+        />,
+      );
+    });
+
+    stubToolDispatch({ exitCode: 0, stdout: 'hello', stderr: '' });
+
+    await act(async () => {
+      fireEvent.click(document.querySelector('[data-testid="run-tests-button"]')!);
+    });
+    await waitFor(() => expect(onTestReport).toHaveBeenCalledTimes(1));
+
+    // No student results slot is mounted at all, and Terminal stays active.
+    expect(document.querySelector('[data-testid="test-results-slot"]')).toBeNull();
+    const terminalWrapper = (screen.getByTestId('mock-terminal-panel') as HTMLElement).parentElement!;
+    expect(terminalWrapper.style.display).not.toBe('none');
   });
 });
