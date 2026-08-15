@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Asp.Versioning;
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
@@ -34,7 +35,8 @@ public sealed record CreateTeamRequest(
     string Name,
     string Slug,
     TeamVisibility Visibility,
-    string? Description);
+    string? Description,
+    Guid? OwnerUserId = null);
 
 public sealed record UpdateTeamRequest(
     string Name,
@@ -89,13 +91,65 @@ public sealed class TeamsController(
     private static readonly TimeSpan RecentAuthenticationWindow = TimeSpan.FromMinutes(15);
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<TeamDto>>> List(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<TeamDto>>> List(
+        [FromQuery] string? search = null,
+        [FromQuery] TeamVisibility? visibility = null,
+        [FromQuery] TeamStatus? status = null,
+        [FromQuery] bool includeArchived = false,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
     {
-        var teams = await authorization.ApplyMembershipAccess(context.Set<Team>().AsNoTracking())
+        var source = includeArchived
+            ? context.Set<Team>().IgnoreQueryFilters().AsNoTracking()
+            : context.Set<Team>().AsNoTracking();
+        var query = authorization.ApplyMembershipAccess(source, includeArchived);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(team => team.Name.ToLower().Contains(term) || team.Slug.ToLower().Contains(term));
+        }
+        if (visibility.HasValue) query = query.Where(team => team.Visibility == visibility.Value);
+        if (status.HasValue) query = query.Where(team => team.Status == status.Value);
+
+        var teams = await query
             .Include(team => team.Members.Where(member => member.IsActive && member.DeletedAt == null))
             .OrderByDescending(team => team.UpdatedAt)
             .ThenBy(team => team.Name)
-            .Take(100)
+            .Skip(Math.Max(0, skip))
+            .Take(Math.Clamp(take, 1, 100))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return Ok(teams.Select(Map).ToArray());
+    }
+
+    /// <summary>
+    /// Gets Teams where the authenticated user has an active membership.
+    /// This endpoint remains personal even when the actor has administrative capabilities.
+    /// </summary>
+    [HttpGet("mine")]
+    public async Task<ActionResult<IReadOnlyList<TeamDto>>> ListMine(
+        [FromQuery] bool includeArchived = false,
+        [FromQuery] string? search = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var source = includeArchived
+            ? context.Set<Team>().IgnoreQueryFilters().AsNoTracking()
+            : context.Set<Team>().AsNoTracking();
+        var query = authorization.ApplyPersonalAccess(source, includeArchived);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(team => team.Name.ToLower().Contains(term) || team.Slug.ToLower().Contains(term));
+        }
+        var teams = await query
+            .Include(team => team.Members.Where(member => member.IsActive && member.DeletedAt == null))
+            .OrderByDescending(team => team.UpdatedAt)
+            .ThenBy(team => team.Name)
+            .Skip(Math.Max(0, skip))
+            .Take(Math.Clamp(take, 1, 100))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         return Ok(teams.Select(Map).ToArray());
@@ -136,10 +190,21 @@ public sealed class TeamsController(
                 hardLimit,
             });
 
+        var ownerUserId = request.OwnerUserId ?? actorId;
+        if (ownerUserId != actorId && !actor.HasPermission(TeamPermission.Keys.Admin))
+            return Forbid();
+        if (!await context.Set<TenantMember>().AsNoTracking().AnyAsync(member =>
+                member.UserId == ownerUserId &&
+                member.TenantId == tenantId &&
+                member.IsActive &&
+                member.DeletedAt == null,
+                cancellationToken).ConfigureAwait(false))
+            return UnprocessableEntity(new { code = "Teams.OwnerTenantMembershipRequired" });
+
         Team team;
         try
         {
-            team = Team.Create(tenantId, request.Name, normalizedSlug, actorId);
+            team = Team.Create(tenantId, request.Name, normalizedSlug, ownerUserId);
             team.Visibility = request.Visibility;
             team.Description = request.Description?.Trim();
             context.Set<Team>().Add(team);
@@ -194,6 +259,27 @@ public sealed class TeamsController(
         team.Archive();
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return NoContent();
+    }
+
+    [HttpPost("{teamId:guid}:restore")]
+    public async Task<ActionResult<TeamDto>> Restore(Guid teamId, CancellationToken cancellationToken)
+    {
+        if (!await authorization.CanRestoreAsync(teamId, cancellationToken).ConfigureAwait(false))
+            return NotFound();
+        var team = await context.Set<Team>().IgnoreQueryFilters().Include(candidate => candidate.Members)
+            .SingleOrDefaultAsync(candidate => candidate.Id == teamId && candidate.DeletedAt == null, cancellationToken)
+            .ConfigureAwait(false);
+        if (team == null) return NotFound();
+        try
+        {
+            team.Restore();
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new ProblemDetails { Title = exception.Message, Status = StatusCodes.Status409Conflict });
+        }
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Ok(Map(team));
     }
 
     [HttpPost("{teamId:guid}/members")]

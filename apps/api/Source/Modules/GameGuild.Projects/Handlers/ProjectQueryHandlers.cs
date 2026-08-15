@@ -51,6 +51,9 @@ public sealed class ProjectQueryHandlers
 
     // Apply filters
     if (!request.IncludeDeleted) { query = query.Where(p => p.DeletedAt == null); }
+    if (!request.IncludeArchived) {
+      query = query.Where(p => p.Status != ContentStatus.Archived && p.Status != ContentStatus.Deleted);
+    }
 
     if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 

@@ -109,7 +109,7 @@ public sealed class ProjectCommandHandlers
     Team ownerTeam;
     var teamQuotaConsumed = false;
     if (request.OwnerTeamId is { } ownerTeamId) {
-      var canUseOwnerTeam = Actor.IsSystemAdmin || Actor.IsTenantAdmin || await _context.Set<TeamMember>()
+      var canUseOwnerTeam = Actor.IsTenantAdmin || Actor.HasPermission(GameGuild.Identity.Authorization.ProjectPermission.Keys.Admin) || await _context.Set<TeamMember>()
         .AsNoTracking()
         .AnyAsync(member =>
           member.TeamId == ownerTeamId &&

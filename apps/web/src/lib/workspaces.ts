@@ -54,12 +54,23 @@ async function get<T>(path: string): Promise<T | null> {
   return result.ok ? result.data : null;
 }
 
-export const getWorkspaceTeams = cache(async () => (await get<WorkspaceTeam[]>('/v1/teams')) ?? []);
+/** The personal workspace never expands to tenant-wide administrative access. */
+export const getWorkspaceTeams = cache(async () => (await get<WorkspaceTeam[]>('/v1/teams/mine')) ?? []);
 export const getWorkspaceTeam = cache(async (slug: string) => (await getWorkspaceTeams()).find((team) => team.slug === slug) ?? null);
 export const getWorkspaceTeamProjects = cache(async (teamId: string) => (await get<WorkspaceTeamProject[]>(`/v1/teams/${teamId}/projects`)) ?? []);
 export const getWorkspaceTeamInvitations = cache(async (teamId: string) => (await get<WorkspaceTeamInvitation[]>(`/v1/teams/${teamId}/invitations`)) ?? []);
 export const getWorkspaceMyTeamInvitations = cache(async () => (await get<WorkspaceMyTeamInvitation[]>('/v1/teams/my-invitations')) ?? []);
-export const getWorkspaceProject = cache(async (slug: string) => get<WorkspaceProject>(`/v1/projects/slug/${encodeURIComponent(slug)}`));
+export const getWorkspaceProjects = cache(async () => (await get<WorkspaceProject[]>('/v1/projects/mine')) ?? []);
+export const getWorkspaceProject = cache(async (slug: string) =>
+  (await getWorkspaceProjects()).find((project) => project.slug === slug) ?? null,
+);
+/** Tenant-wide list used only by the capability-gated Community Management surface. */
+export const getManagedTeams = cache(async (search = '', includeArchived = false) =>
+  (await get<WorkspaceTeam[]>(`/v1/teams?take=100&includeArchived=${includeArchived}${search ? `&search=${encodeURIComponent(search)}` : ''}`)) ?? [],
+);
+export const getManagedProjects = cache(async (search = '', includeArchived = false) =>
+  (await get<WorkspaceProject[]>(`/v1/projects?currentTenantOnly=true&includeArchived=${includeArchived}&take=100${search ? `&searchTerm=${encodeURIComponent(search)}` : ''}`)) ?? [],
+);
 export const getWorkspaceProjectVersions = cache(async (projectId: string) => (await get<WorkspaceProjectVersion[]>(`/v1/projects/${projectId}/versions`)) ?? []);
 export const getWorkspaceProjectOwnership = cache(async (projectId: string) => get<WorkspaceProjectOwnership>(`/v1/projects/${projectId}/ownership`));
 export const getWorkspaceProjectCollaborators = cache(async (projectId: string) => (await get<WorkspaceProjectCollaborator[]>(`/v1/projects/${projectId}/collaborators`)) ?? []);

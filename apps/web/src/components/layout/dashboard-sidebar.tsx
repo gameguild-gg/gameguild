@@ -29,7 +29,6 @@ import {
   HeadphonesIcon,
   LayoutDashboard,
   MapPin,
-  MailCheck,
   FolderKanban,
   MessageSquareText,
   Rocket,
@@ -86,16 +85,6 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
         url: '/dashboard',
         icon: LayoutDashboard,
       },
-      {
-        title: 'Invitations',
-        url: '/dashboard/invitations',
-        icon: MailCheck,
-      },
-      {
-        title: 'Settings',
-        url: '/dashboard/settings/account',
-        icon: Settings,
-      },
     ],
   },
   {
@@ -141,6 +130,18 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
             requiredCapabilities: ['Community.ManageSupport'],
           },
         ],
+      },
+      {
+        title: 'Teams',
+        url: '/dashboard/community/teams',
+        icon: Users,
+        requiredCapabilities: ['Community.ManageTeams'],
+      },
+      {
+        title: 'Projects',
+        url: '/dashboard/community/projects',
+        icon: FolderKanban,
+        requiredCapabilities: ['Community.ManageProjects'],
       },
       {
         title: 'Testing Lab',

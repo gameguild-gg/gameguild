@@ -22,11 +22,7 @@ interface TaskOutput extends Identified { title: string; status: string | number
 interface FolderOutput extends Identified { name: string; restrictionMode: string | number; }
 interface AssetOutput extends Identified { displayName?: string | null; folderId?: string | null; }
 interface LibraryOutput { folders: FolderOutput[]; assets: AssetOutput[]; }
-interface DashboardContextsOutput {
-  contexts: Array<{ type: string; id?: string | null }>;
-  capabilities: string[];
-  navigation: Array<{ title: string; items: Array<{ title: string; route?: string | null; children: Array<{ route?: string | null }> }> }>;
-}
+interface AccessCapabilitiesOutput { capabilities: string[]; }
 
 const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8080';
 const PASSWORD = 'Str0ng!Passw0rd123!';
@@ -47,7 +43,7 @@ function actorClient(accessToken: string, tenantId?: string) {
   });
 }
 
-describe('Teams, Project ownership, Project Work, files, and dashboard contexts E2E', () => {
+describe('Teams, Project ownership, Project Work, files, and capabilities E2E', () => {
   const anonymous = createClient({ baseUrl: BASE_URL, timeout: 20_000, devtools: { enabled: false } });
   const tag = unique();
   const ownerEmail = `workspace_owner_${tag}@example.com`;
@@ -271,20 +267,11 @@ describe('Teams, Project ownership, Project Work, files, and dashboard contexts 
     }), 'Restore Project file revision');
   });
 
-  it('returns contextual Team/Project workspaces without administrative Operations for a common member', async () => {
-    const contexts = unwrap(await member.request<DashboardContextsOutput>({
-      method: 'GET', path: '/v1/dashboard/contexts', requiresAuth: true,
-    }), 'Read member dashboard contexts');
-    expect(contexts.contexts).toEqual(expect.arrayContaining([
-      expect.objectContaining({ type: 'Team', id: ownerTeam.id }),
-      expect.objectContaining({ type: 'Project', id: projectId }),
-    ]));
-    expect(contexts.contexts.some((context) => context.type === 'Operations')).toBe(false);
-    const memberRoutes = contexts.navigation
-      .flatMap((group) => group.items)
-      .flatMap((item) => [item.route, ...item.children.map((child) => child.route)])
-      .filter((route): route is string => Boolean(route));
-    expect(memberRoutes.some((route) => route.includes('/testing-lab') || route.includes('/launch-pad'))).toBe(false);
+  it('returns no administrative capabilities for a common member', async () => {
+    const capabilities = unwrap(await member.request<AccessCapabilitiesOutput>({
+      method: 'GET', path: '/v1/access/capabilities', requiresAuth: true,
+    }), 'Read member access capabilities');
+    expect(capabilities.capabilities).toEqual([]);
 
     const wrongTenant = actorClient(memberDefaultToken);
     const hidden = await wrongTenant.request<ProjectOutput>({

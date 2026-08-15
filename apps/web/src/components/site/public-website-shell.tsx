@@ -1,8 +1,10 @@
-import { auth } from '@/auth';
+import { auth, getToken } from '@/auth';
+import { createServerClient } from '@game-guild/client';
 import { Link } from '@/i18n/navigation';
 import { FlaskConical, Gamepad2, Github, GraduationCap, Heart, MessageCircle, Rocket, Twitter, Users, Youtube } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { PublicDesktopNav, PublicMobileNav, type PublicWebsiteUser } from './public-website-nav';
+import { PublicAccountMenu } from './public-account-menu';
 
 const primaryNav = [
   { label: 'Courses', href: '/courses' },
@@ -101,11 +103,19 @@ async function getHeaderUser(): Promise<PublicWebsiteUser | null> {
 
     const displayName = user.name?.trim() || user.email?.trim() || 'GameGuild member';
 
+    const client = createServerClient({
+      baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+      auth: { getAccessToken: () => getToken() },
+    });
+    const access = await client.request<{ capabilities?: unknown }>({ method: 'GET', path: '/v1/access/capabilities', requiresAuth: true });
+    const canManage = access.ok && Array.isArray(access.data?.capabilities) && access.data.capabilities.length > 0;
+
     return {
       name: displayName,
       email: user.email?.trim() || null,
       image: user.image?.trim() || null,
       initials: getInitials(displayName),
+      canManage,
     };
   } catch {
     return null;
@@ -133,23 +143,7 @@ export async function PublicWebsiteHeader() {
             <Github className="size-4" aria-hidden="true" />
             GitHub
           </a>
-          {user ? (
-            <Link
-              href="/dashboard"
-              aria-label={`${user.name} profile`}
-              className="hidden min-w-0 items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pr-3 pl-1.5 text-sm font-semibold text-white transition hover:border-sky-300/40 hover:bg-sky-300/10 sm:inline-flex"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sky-300 text-xs font-bold text-slate-950">
-                {user.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.image} alt="" className="size-full object-cover" />
-                ) : (
-                  user.initials
-                )}
-              </span>
-              <span className="hidden max-w-36 truncate lg:inline">{user.name}</span>
-            </Link>
-          ) : (
+          {user ? <PublicAccountMenu user={user} /> : (
             <>
               <Link
                 href="/sign-in"

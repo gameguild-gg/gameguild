@@ -47,6 +47,12 @@ public sealed record GetAllProjectsQuery : IQuery<Result<IEnumerable<Project>>> 
   public bool IncludeDeleted { get; init; } = false;
 
   /// <summary>
+  /// Includes archived lifecycle records. This is an administrative list filter;
+  /// callers without Project administration have the flag ignored by the API.
+  /// </summary>
+  public bool IncludeArchived { get; init; } = false;
+
+  /// <summary>
   /// Restricts results to the actor's active tenant even when the actor is a system administrator.
   /// Intended for tenant-owned workflows such as Testing Lab project selection.
   /// </summary>

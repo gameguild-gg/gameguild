@@ -83,6 +83,16 @@ public sealed class Team : EntityBase
         Touch();
     }
 
+    public new void Restore()
+    {
+        if (Status != TeamStatus.Archived)
+            throw new InvalidOperationException("Only an archived Team can be restored.");
+
+        Status = TeamStatus.Active;
+        IsActive = true;
+        Touch();
+    }
+
     private TeamMember GetActiveMember(Guid userId) => Members.SingleOrDefault(member =>
         member.UserId == userId && member.IsActive && member.DeletedAt == null)
         ?? throw new InvalidOperationException("The user is not an active team member.");

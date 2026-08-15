@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 
 const DASHBOARD_ROLES_PATH = '/dashboard/platform/roles';
 const DASHBOARD_USERS_PATH = '/dashboard/community/members/users';
-const DASHBOARD_INVITATIONS_PATH = '/dashboard/invitations';
+const DASHBOARD_INVITATIONS_PATH = '/my/invitations';
 
 function buildRolesHref(params: { message?: string; error?: string }) {
   const searchParams = new URLSearchParams();

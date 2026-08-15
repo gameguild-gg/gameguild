@@ -299,6 +299,23 @@ public sealed class ProjectAuthorizationServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ApplyPersonalAccess_Should_Not_Expose_Unrelated_Tenant_Projects_To_A_SystemAdmin()
+    {
+        _actorAccessor.SetupGet(accessor => accessor.ActorContext)
+            .Returns(ActorContextBuilder.ForUser(_actorId)
+                .WithTenantId(_tenantId)
+                .WithRole("SystemAdmin")
+                .Build());
+        var project = AddPrivateProject();
+        AddIdentity();
+        await _context.SaveChangesAsync();
+
+        var visible = await CreateService().ApplyPersonalAccess(_context.Set<Project>()).ToListAsync();
+
+        visible.Should().NotContain(item => item.Id == project.Id);
+    }
+
+    [Fact]
     public async Task ApplyWorkspaceAccess_Should_Require_Read_For_A_Direct_Grant()
     {
         var project = AddPrivateProject();

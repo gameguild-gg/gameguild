@@ -176,6 +176,10 @@ export interface AIUpdateAiPromptTemplateInput {
   systemPrompt?: string | null;
 }
 
+export interface APIAccessAccessCapabilitiesOutput {
+  capabilities?: Array<string> | null;
+}
+
 export interface APIControllersApplicationDetails {
   description?: string | null;
   informationalVersion?: string | null;
@@ -265,38 +269,6 @@ export interface APIControllersRuntimeDetails {
   osArchitecture?: string | null;
   osDescription?: string | null;
   processArchitecture?: string | null;
-}
-
-export interface APIDashboardDashboardContextSummary {
-  id?: string | null;
-  name?: string | null;
-  route?: string | null;
-  type?: string | null;
-}
-
-export interface APIDashboardDashboardContextsOutput {
-  capabilities?: Array<string> | null;
-  contexts?: Array<APIDashboardDashboardContextSummary> | null;
-  counts?: APIDashboardDashboardWorkspaceCounts;
-  navigation?: Array<APIDashboardDashboardNavigationGroup> | null;
-}
-
-export interface APIDashboardDashboardNavigationGroup {
-  items?: Array<APIDashboardDashboardNavigationItem> | null;
-  label?: string | null;
-}
-
-export interface APIDashboardDashboardNavigationItem {
-  children?: Array<APIDashboardDashboardNavigationItem> | null;
-  route?: string | null;
-  title?: string | null;
-}
-
-export interface APIDashboardDashboardWorkspaceCounts {
-  invitations?: number;
-  pendingTasks?: number;
-  projects?: number;
-  teams?: number;
 }
 
 export interface APIProjectWorkAddProjectTaskChecklistInput {
@@ -568,6 +540,7 @@ export interface APITeamsChangeTeamMemberInput {
 export interface APITeamsCreateTeamInput {
   description?: string | null;
   name?: string | null;
+  ownerUserId?: string | null;
   slug?: string | null;
   visibility?: TeamsTeamVisibility;
 }
@@ -9452,6 +9425,7 @@ export let AIAiStatusOutputSchema: z.ZodType<AIAiStatusOutput>;
 export let AIAiUsageSchema: z.ZodType<AIAiUsage>;
 export let AICreateAiPromptTemplateInputSchema: z.ZodType<AICreateAiPromptTemplateInput>;
 export let AIUpdateAiPromptTemplateInputSchema: z.ZodType<AIUpdateAiPromptTemplateInput>;
+export let APIAccessAccessCapabilitiesOutputSchema: z.ZodType<APIAccessAccessCapabilitiesOutput>;
 export let APIControllersApplicationDetailsSchema: z.ZodType<APIControllersApplicationDetails>;
 export let APIControllersApplicationInfoOutputSchema: z.ZodType<APIControllersApplicationInfoOutput>;
 export let APIControllersBuildDetailsSchema: z.ZodType<APIControllersBuildDetails>;
@@ -9464,11 +9438,6 @@ export let APIControllersLivenessOutputSchema: z.ZodType<APIControllersLivenessO
 export let APIControllersProcessDetailsSchema: z.ZodType<APIControllersProcessDetails>;
 export let APIControllersReadinessOutputSchema: z.ZodType<APIControllersReadinessOutput>;
 export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDetails>;
-export let APIDashboardDashboardContextSummarySchema: z.ZodType<APIDashboardDashboardContextSummary>;
-export let APIDashboardDashboardContextsOutputSchema: z.ZodType<APIDashboardDashboardContextsOutput>;
-export let APIDashboardDashboardNavigationGroupSchema: z.ZodType<APIDashboardDashboardNavigationGroup>;
-export let APIDashboardDashboardNavigationItemSchema: z.ZodType<APIDashboardDashboardNavigationItem>;
-export let APIDashboardDashboardWorkspaceCountsSchema: z.ZodType<APIDashboardDashboardWorkspaceCounts>;
 export let APIProjectWorkAddProjectTaskChecklistInputSchema: z.ZodType<APIProjectWorkAddProjectTaskChecklistInput>;
 export let APIProjectWorkAddProjectTaskCommentInputSchema: z.ZodType<APIProjectWorkAddProjectTaskCommentInput>;
 export let APIProjectWorkAddProjectTaskDependencyInputSchema: z.ZodType<APIProjectWorkAddProjectTaskDependencyInput>;
@@ -10657,6 +10626,11 @@ AIUpdateAiPromptTemplateInputSchema = z.object({
   systemPrompt: z.string().nullable().optional(),
 });
 
+/** Zod schema for APIAccessAccessCapabilitiesOutput */
+APIAccessAccessCapabilitiesOutputSchema = z.object({
+  capabilities: z.array(z.string()).nullable().optional(),
+});
+
 /** Zod schema for APIControllersApplicationDetails */
 APIControllersApplicationDetailsSchema = z.object({
   description: z.string().nullable().optional(),
@@ -10767,55 +10741,6 @@ APIControllersRuntimeDetailsSchema = z.object({
   osArchitecture: z.string().nullable().optional(),
   osDescription: z.string().nullable().optional(),
   processArchitecture: z.string().nullable().optional(),
-});
-
-/** Zod schema for APIDashboardDashboardContextSummary */
-APIDashboardDashboardContextSummarySchema = z.object({
-  id: z.string().uuid().nullable().optional(),
-  name: z.string().nullable().optional(),
-  route: z.string().nullable().optional(),
-  type: z.string().nullable().optional(),
-});
-
-/** Zod schema for APIDashboardDashboardContextsOutput */
-APIDashboardDashboardContextsOutputSchema = z.object({
-  capabilities: z.array(z.string()).nullable().optional(),
-  contexts: z
-    .array(z.lazy(() => APIDashboardDashboardContextSummarySchema))
-    .nullable()
-    .optional(),
-  counts: z.lazy(() => APIDashboardDashboardWorkspaceCountsSchema).optional(),
-  navigation: z
-    .array(z.lazy(() => APIDashboardDashboardNavigationGroupSchema))
-    .nullable()
-    .optional(),
-});
-
-/** Zod schema for APIDashboardDashboardNavigationGroup */
-APIDashboardDashboardNavigationGroupSchema = z.object({
-  items: z
-    .array(z.lazy(() => APIDashboardDashboardNavigationItemSchema))
-    .nullable()
-    .optional(),
-  label: z.string().nullable().optional(),
-});
-
-/** Zod schema for APIDashboardDashboardNavigationItem */
-APIDashboardDashboardNavigationItemSchema = z.object({
-  children: z
-    .array(z.lazy(() => APIDashboardDashboardNavigationItemSchema))
-    .nullable()
-    .optional(),
-  route: z.string().nullable().optional(),
-  title: z.string().nullable().optional(),
-});
-
-/** Zod schema for APIDashboardDashboardWorkspaceCounts */
-APIDashboardDashboardWorkspaceCountsSchema = z.object({
-  invitations: z.number().int().optional(),
-  pendingTasks: z.number().int().optional(),
-  projects: z.number().int().optional(),
-  teams: z.number().int().optional(),
 });
 
 /** Zod schema for APIProjectWorkAddProjectTaskChecklistInput */
@@ -11158,6 +11083,7 @@ APITeamsChangeTeamMemberInputSchema = z.object({
 APITeamsCreateTeamInputSchema = z.object({
   description: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
+  ownerUserId: z.string().uuid().nullable().optional(),
   slug: z.string().nullable().optional(),
   visibility: z.lazy(() => TeamsTeamVisibilitySchema).optional(),
 });
