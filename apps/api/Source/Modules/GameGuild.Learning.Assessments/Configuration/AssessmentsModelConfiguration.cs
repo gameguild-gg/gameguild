@@ -110,6 +110,30 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             });
         });
 
+        modelBuilder.Entity<CourseGroupSet>(entity =>
+        {
+            entity.ToTable("CourseGroupSets");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(160).IsRequired();
+            entity.HasIndex(e => new { e.CourseId, e.Name }).IsUnique();
+        });
+
+        modelBuilder.Entity<CourseGroup>(entity =>
+        {
+            entity.ToTable("CourseGroups");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(160).IsRequired();
+            entity.HasIndex(e => e.GroupSetId);
+        });
+
+        modelBuilder.Entity<CourseGroupMember>(entity =>
+        {
+            entity.ToTable("CourseGroupMembers");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.GroupId, e.UserId }).IsUnique();
+            entity.HasIndex(e => e.UserId);
+        });
+
         modelBuilder.Entity<InteractiveVideoAssessmentCue>(entity =>
         {
             entity.ToTable("InteractiveVideoAssessmentCues");
