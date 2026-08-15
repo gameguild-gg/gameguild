@@ -24,6 +24,7 @@ public class AssessmentsController : BaseApiController
     private readonly IProgramCrudService _programService;
     private readonly IEnrollmentService _enrollmentService;
     private readonly IPermissionQueryService _permissionQueryService;
+    private readonly IGradingQueueService _gradingQueueService;
     private readonly ILogger<AssessmentsController> _logger;
 
     public AssessmentsController(
@@ -32,6 +33,7 @@ public class AssessmentsController : BaseApiController
         IProgramCrudService programService,
         IEnrollmentService enrollmentService,
         IPermissionQueryService permissionQueryService,
+        IGradingQueueService gradingQueueService,
         ILogger<AssessmentsController> logger)
     {
         _assessmentService = assessmentService;
@@ -39,6 +41,7 @@ public class AssessmentsController : BaseApiController
         _programService = programService;
         _enrollmentService = enrollmentService;
         _permissionQueryService = permissionQueryService;
+        _gradingQueueService = gradingQueueService;
         _logger = logger;
     }
 
@@ -573,6 +576,28 @@ public class AssessmentsController : BaseApiController
 
         var attemptCount = await _assessmentService.GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
         return Ok(new CanAttemptResponse(result.Value, attemptCount));
+    }
+
+    /// <summary>
+    /// Get the SpeedGrader navigation queue for an assessment (instructor-only):
+    /// one item per student/group attempt, excluding InProgress-only entries.
+    /// </summary>
+    [HttpGet("{assessmentId:guid}/grading-queue")]
+    public async Task<ActionResult<GradingQueueDto>> GetGradingQueue(Guid assessmentId)
+    {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        var result = await _gradingQueueService.GetQueueAsync(assessmentId).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
+                : BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
     }
 
     private async Task<Guid?> ResolveEnrollmentUserIdAsync(
