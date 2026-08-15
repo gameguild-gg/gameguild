@@ -41,28 +41,16 @@ const nextConfig: NextConfig = {
     "chevrotain",
   ],
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-      },
-      {
-        protocol: "https",
-        hostname: "i.imgur.com",
-      },
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "cdn.gameguild.gg",
-      },
-      {
-        protocol: "https",
-        hostname: "www.python.org",
-      },
-    ],
+    // ponytail: any https host allowed; tighten back to allowlist if image proxy abuse appears
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
+    // Previous allowlist:
+    // remotePatterns: [
+    //   { protocol: "https", hostname: "placehold.co" },
+    //   { protocol: "https", hostname: "i.imgur.com" },
+    //   { protocol: "https", hostname: "images.unsplash.com" },
+    //   { protocol: "https", hostname: "cdn.gameguild.gg" },
+    //   { protocol: "https", hostname: "www.python.org" },
+    // ],
   },
   experimental: {
     authInterrupts: true,
