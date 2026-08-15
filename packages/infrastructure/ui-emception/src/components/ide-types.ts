@@ -277,7 +277,7 @@ function inferTabType(path: string): TabType {
   return 'text';
 }
 
-const IMAGE_MIME_BY_EXT: Record<string, string> = {
+export const IMAGE_MIME_BY_EXT: Record<string, string> = {
   png: 'image/png',
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',

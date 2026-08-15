@@ -6,7 +6,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
 import type { DockGroup, FileMeta, FileMetaInput, GradingPlan, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
-import { DEFAULT_IMAGE, SDL_CANVAS_PATH, legacyAssignmentToken, parseWorkspaceBundle, resolveArgs, workspaceConfigToState, workspaceStorageKey } from './ide-types';
+import { DEFAULT_IMAGE, SDL_CANVAS_PATH, IMAGE_MIME_BY_EXT, legacyAssignmentToken, parseWorkspaceBundle, resolveArgs, workspaceConfigToState, workspaceStorageKey } from './ide-types';
 import TestResultsPanel from './TestResultsPanel';
 import TestCasesPanel from './TestCasesPanel';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
@@ -128,8 +128,10 @@ export interface IdeHandle {
   getFiles(): Promise<Array<{ path: string; content: string; encoding: 'text' | 'base64' }>>;
   setFiles(files: Array<{ path: string; content: string }>): Promise<void>;
   reset(): Promise<void>;
-  /** Write a single file to reactive state + worker VFS via `client.writeFile`. */
-  addFile(path: string, content: string): Promise<void>;
+  /** Write a single file to reactive state + worker VFS via `client.writeFile`.
+   *  `encoding: 'base64'` stores an image entry instead (data-URI in state,
+   *  never synced to the VFS nor persisted to localStorage). */
+  addFile(path: string, content: string, encoding?: 'text' | 'base64'): Promise<void>;
   /** Remove a single file from reactive state + worker VFS. */
   removeFile(path: string): Promise<void>;
   /** Apply v1 2-tier metadata; translates internally to emception's 3-tier FileEntry. */
@@ -140,6 +142,9 @@ export interface IdeHandle {
   hasStoredDraft(): boolean;
   /** Reset the content-diff baseline to the CURRENT files — post-resync edits alone are diffs. */
   resyncBaseline(): void;
+  /** Pin the content-diff baseline to the GIVEN files (e.g. the instructor
+   *  seed) while the workspace shows other content (restored draft, overlay). */
+  setBaseline(files: Array<{ path: string; content: string }>): void;
   /** Single snapshot for the page's save handler — files + fileMeta + tests + activePresetId. */
   getAuthoredState(): Promise<{
     files: Array<{ path: string; content: string; encoding: 'text' | 'base64' }>;
@@ -977,6 +982,9 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             : { path: f.path, content: f.content, encoding: 'text' as const },
         );
     };
+    const setBaseline = (files: Array<{ path: string; content: string }>) => {
+      seededContentRef.current = new Map(files.map(({ path, content }) => [path, content]));
+    };
     return {
     runTests: async (plan) => {
       const api = apiRef.current;
@@ -1015,7 +1023,18 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     reset: async () => {
       await orchestratorRef.current?.client.resetVfs();
     },
-    addFile: async (path, content) => {
+    addFile: async (path, content, encoding = 'text') => {
+      if (encoding === 'base64') {
+        // Image lifecycle mirrors handleUploadFiles: data-URI in reactive
+        // state, never written to the worker VFS, excluded from localStorage
+        // persistence (type 'image' is filtered out of the write effect).
+        const ext = path.split('.').pop()?.toLowerCase() ?? '';
+        const mime = IMAGE_MIME_BY_EXT[ext] ?? 'image/png';
+        const file: WorkspaceFile = { path, type: 'image', content: `data:${mime};base64,${content}` };
+        setFiles((prev) => ({ ...prev, [path]: file }));
+        filesRef.current = { ...filesRef.current, [path]: file };
+        return;
+      }
       setFiles((prev) => ({ ...prev, [path]: { path, type: 'text', content } }));
       filesRef.current = { ...filesRef.current, [path]: { path, type: 'text', content } };
       const orch = orchestratorRef.current;
@@ -1070,12 +1089,13 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       return false;
     },
     resyncBaseline: () => {
-      seededContentRef.current = new Map(
+      setBaseline(
         Object.values(filesRef.current)
           .filter((f) => f.type === 'text')
-          .map(({ path, content }) => [path, content]),
+          .map(({ path, content }) => ({ path, content })),
       );
     },
+    setBaseline,
     getAuthoredState: async () => {
       const fm = propsRef.current.fileMeta;
       const fileMetaSnapshot: Record<string, { visibility: 'Public' | 'Private'; modifiable: boolean }> = {};
