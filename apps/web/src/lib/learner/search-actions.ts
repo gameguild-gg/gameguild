@@ -44,7 +44,7 @@ export async function searchLearnerWorkspace(query: string): Promise<LearnerSear
       baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
       auth: { getAccessToken: () => getToken() },
     });
-    const result = await new GeneratedApi.LearningWorkspacesLearnerworkspaceModule(
+    const result = await new GeneratedApi.LearningWorkspacesLearnerWorkspaceModule(
       client,
     ).getLearningMeSearch({ q: normalizedQuery, take: 12 });
 

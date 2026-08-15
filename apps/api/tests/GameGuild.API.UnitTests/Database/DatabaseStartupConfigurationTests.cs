@@ -9,22 +9,42 @@ namespace GameGuild.API.UnitTests.Database;
 public sealed class DatabaseStartupConfigurationTests
 {
     [Fact]
-    public void Validate_RejectsSharedRuntimeAndMigrationRoleWhenRequired()
+    public void Validate_RejectsMissingRuntimeConnectionInProduction()
     {
-        var configuration = CreateConfiguration(RuntimeConnection, RuntimeConnection, values: new Dictionary<string, string?>
-        {
-            ["Database:RequireDistinctMigrationUser"] = "true"
-        });
+        var configuration = CreateConfiguration(null, MigrationConnection);
 
         var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
 
-        failures.Should().Contain(message => message.Contains("distinct", StringComparison.OrdinalIgnoreCase));
+        failures.Should().ContainSingle(message => message.Contains("runtime", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
-    public void Validate_AllowsSharedRuntimeAndMigrationRoleByDefault()
+    public void Validate_RejectsMissingMigrationConnectionInProduction()
+    {
+        var configuration = CreateConfiguration(RuntimeConnection);
+
+        var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
+
+        failures.Should().ContainSingle(message => message.Contains("migration", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Validate_RejectsSharedRuntimeAndMigrationRoleByDefault()
     {
         var configuration = CreateConfiguration(RuntimeConnection, RuntimeConnection);
+
+        var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
+
+        failures.Should().ContainSingle(message => message.Contains("distinct", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Validate_AllowsSharedRoleOnlyWhenExplicitlyConfigured()
+    {
+        var configuration = CreateConfiguration(RuntimeConnection, RuntimeConnection, new Dictionary<string, string?>
+        {
+            ["Database:AllowSameMigrationUser"] = "true"
+        });
 
         var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
 
@@ -32,11 +52,31 @@ public sealed class DatabaseStartupConfigurationTests
     }
 
     [Fact]
+    public void Validate_AllowsRuntimeConnectionAsMigrationConnectionWhenExplicitlyConfigured()
+    {
+        var configuration = CreateConfiguration(RuntimeConnection, values: new Dictionary<string, string?>
+        {
+            ["Database:AllowSameMigrationUser"] = "true"
+        });
+
+        DatabaseStartupConfiguration.Validate(configuration, Environments.Production).Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("Host=database;Database=game_guild;Password=runtime-secret", MigrationConnection)]
+    [InlineData(RuntimeConnection, "Host=database;Database=game_guild;Password=migration-secret")]
+    public void Validate_RejectsConnectionsWithoutDatabaseRoles(string runtimeConnection, string migrationConnection)
+    {
+        var configuration = CreateConfiguration(runtimeConnection, migrationConnection);
+
+        DatabaseStartupConfiguration.Validate(configuration, Environments.Production)
+            .Should().ContainSingle(message => message.Contains("identify their roles", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Validate_AcceptsDistinctRuntimeAndMigrationRolesInProduction()
     {
-        var configuration = CreateConfiguration(
-            RuntimeConnection,
-            "Host=database;Database=game_guild;Username=game_guild_migrator;Password=migration-secret");
+        var configuration = CreateConfiguration(RuntimeConnection, MigrationConnection);
 
         var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
 
@@ -48,8 +88,7 @@ public sealed class DatabaseStartupConfigurationTests
     {
         var configuration = CreateConfiguration(RuntimeConnection, values: new Dictionary<string, string?>
         {
-            ["POSTGRES_MIGRATION_CONNECTION"] =
-                "Host=database;Database=game_guild;Username=game_guild_migrator;Password=migration-secret"
+            ["POSTGRES_MIGRATION_CONNECTION"] = MigrationConnection
         });
 
         var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
@@ -73,7 +112,7 @@ public sealed class DatabaseStartupConfigurationTests
     [Fact]
     public void Validate_AllowsExternalMigrationWhenStartupInitializationIsDisabled()
     {
-        var configuration = CreateConfiguration(RuntimeConnection, values: new Dictionary<string, string?>
+        var configuration = CreateConfiguration(null, values: new Dictionary<string, string?>
         {
             ["Database:RunStartupInitialization"] = "false"
         });
@@ -81,6 +120,42 @@ public sealed class DatabaseStartupConfigurationTests
         var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
 
         failures.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Validate_RejectsMalformedConnections()
+    {
+        var configuration = CreateConfiguration("not-a-postgres-connection", "also-invalid");
+
+        var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
+
+        failures.Should().ContainSingle(message => message.Contains("valid PostgreSQL", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Validate_RejectsDefaultPostgresRuntimeCredentialsInProduction()
+    {
+        var configuration = CreateConfiguration(
+            "Host=database;Database=app;Username=postgres;Password=postgres",
+            MigrationConnection);
+
+        var failures = DatabaseStartupConfiguration.Validate(configuration, Environments.Production);
+
+        failures.Should().ContainSingle(message => message.Contains("default PostgreSQL credentials", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void ThrowIfInvalid_RejectsUnsafeConfigurationAndAcceptsValidConfiguration()
+    {
+        var invalid = () => DatabaseStartupConfiguration.ThrowIfInvalid(
+            CreateConfiguration(RuntimeConnection),
+            Environments.Production);
+        var valid = () => DatabaseStartupConfiguration.ThrowIfInvalid(
+            CreateConfiguration(RuntimeConnection, MigrationConnection),
+            Environments.Production);
+
+        invalid.Should().Throw<InvalidOperationException>().WithMessage("*Unsafe database startup configuration*");
+        valid.Should().NotThrow();
     }
 
     [Theory]
@@ -120,9 +195,7 @@ public sealed class DatabaseStartupConfigurationTests
     [Fact]
     public void DesignTimeFactory_PrefersMigrationConnection()
     {
-        const string migrationConnection =
-            "Host=database;Database=game_guild;Username=game_guild_migrator;Password=migration-secret";
-        var configuration = CreateConfiguration(RuntimeConnection, migrationConnection);
+        var configuration = CreateConfiguration(RuntimeConnection, MigrationConnection);
 
         var resolved = DesignTimeDbContextFactory.ResolveConnectionString(configuration);
 
@@ -133,15 +206,17 @@ public sealed class DatabaseStartupConfigurationTests
     private const string RuntimeConnection =
         "Host=database;Database=game_guild;Username=game_guild_runtime;Password=runtime-secret";
 
+    private const string MigrationConnection =
+        "Host=database;Database=game_guild;Username=game_guild_migrator;Password=migration-secret";
+
     private static IConfiguration CreateConfiguration(
-        string runtimeConnection,
+        string? runtimeConnection,
         string? migrationConnection = null,
         IReadOnlyDictionary<string, string?>? values = null)
     {
-        var settings = new Dictionary<string, string?>
-        {
-            ["ConnectionStrings:DefaultConnection"] = runtimeConnection
-        };
+        var settings = new Dictionary<string, string?>();
+        if (runtimeConnection is not null)
+            settings["ConnectionStrings:DefaultConnection"] = runtimeConnection;
         if (migrationConnection is not null)
             settings["ConnectionStrings:MigrationConnection"] = migrationConnection;
         if (values is not null)

@@ -31,32 +31,32 @@ vi.mock('next/cache', () => ({
 vi.mock('@game-guild/client', () => ({
   createServerClient: vi.fn(() => ({})),
   GeneratedApi: {
-    TestinglabTestingrequestsModule: vi.fn(function TestinglabTestingrequestsModule() {
+    TestingLabTestingRequestsModule: vi.fn(function TestingLabTestingRequestsModule() {
       return {
         postTestingSubmitSimple: mocks.postTestingSubmitSimple,
         deleteTestingRequests: mocks.deleteTestingRequests,
         postTestingRequestsRestore: mocks.postTestingRequestsRestore,
       };
     }),
-    TestinglabTestingsessionsModule: vi.fn(function TestinglabTestingsessionsModule() {
+    TestingLabTestingSessionsModule: vi.fn(function TestingLabTestingSessionsModule() {
       return { postTestingSessions: mocks.postTestingSessions };
     }),
-    TestinglabTestinglocationsModule: vi.fn(function TestinglabTestinglocationsModule() {
+    TestingLabTestingLocationsModule: vi.fn(function TestingLabTestingLocationsModule() {
       return { postTestingLocations: mocks.postTestingLocations };
     }),
-    TestinglabTestingparticipantsModule: vi.fn(function TestinglabTestingparticipantsModule() {
+    TestingLabTestingParticipantsModule: vi.fn(function TestingLabTestingParticipantsModule() {
       return {
         postTestingSessionsRegister: mocks.postTestingSessionsRegister,
         postTestingSessionsWaitlist: mocks.postTestingSessionsWaitlist,
       };
     }),
-    TestinglabTestingfeedbackModule: vi.fn(function TestinglabTestingfeedbackModule() {
+    TestingLabTestingFeedbackModule: vi.fn(function TestingLabTestingFeedbackModule() {
       return {};
     }),
-    TestinglabSettingsModule: vi.fn(function TestinglabSettingsModule() {
+    TestingLabSettingsModule: vi.fn(function TestingLabSettingsModule() {
       return { patchApiTestingLabSettings: mocks.patchApiTestingLabSettings };
     }),
-    TestinglabPermissionModule: vi.fn(function TestinglabPermissionModule() {
+    TestingLabPermissionModule: vi.fn(function TestingLabPermissionModule() {
       return {
         postApiTestingLabPermissionsRoleTemplates: mocks.postApiTestingLabPermissionsRoleTemplates,
         postApiTestingLabPermissionsUsersRoles: mocks.postApiTestingLabPermissionsUsersRoles,

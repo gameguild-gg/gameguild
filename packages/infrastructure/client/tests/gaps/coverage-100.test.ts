@@ -207,7 +207,7 @@ describe('fetch.ts — branch gaps', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       interceptors: [{ onError: onErrorSpy }],
     });
 
@@ -227,7 +227,7 @@ describe('fetch.ts — branch gaps', () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('fetch failed'));
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       interceptors: [{ onError: onErrorSpy }],
     });
 
@@ -253,7 +253,7 @@ describe('fetch.ts — branch gaps', () => {
       text: async () => longText,
     });
 
-    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
 
     const result = await transport.request({
       path: '/api/data',
@@ -277,7 +277,7 @@ describe('fetch.ts — branch gaps', () => {
       text: async () => '{"ok":true}',
     });
 
-    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
 
     await transport.request({
       path: 'api/test', // no leading slash
@@ -286,7 +286,7 @@ describe('fetch.ts — branch gaps', () => {
     });
 
     const [url] = (globalThis.fetch as any).mock.calls[0];
-    expect(url).toBe('http://localhost:5000/api/test');
+    expect(url).toBe('http://localhost:8080/api/test');
   });
 
   it('omits query string when all values are undefined (L236)', async () => {
@@ -298,7 +298,7 @@ describe('fetch.ts — branch gaps', () => {
       text: async () => '{}',
     });
 
-    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
 
     await transport.request({
       path: '/api/items',
@@ -308,7 +308,7 @@ describe('fetch.ts — branch gaps', () => {
     });
 
     const [url] = (globalThis.fetch as any).mock.calls[0];
-    expect(url).toBe('http://localhost:5000/api/items');
+    expect(url).toBe('http://localhost:8080/api/items');
   });
 });
 
@@ -465,7 +465,7 @@ describe('credentials provider — fallback chains (L120)', () => {
     });
 
     const provider = CredentialsProvider({
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
     });
 
     const result = await provider.authorize!({ email: 'user@test.com', password: 'password' }, undefined as any);
@@ -508,10 +508,10 @@ describe('github provider — fallback chains (L137-141)', () => {
     const provider = GitHubProvider({
       clientId: 'gh-client',
       clientSecret: 'gh-secret',
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
     });
 
-    const result = await provider.handleCallback('http://localhost:5000', 'code-123', 'state-456');
+    const result = await provider.handleCallback('http://localhost:8080', 'code-123', 'state-456');
 
     expect(result.user.id).toBe('gh-id');
     expect(result.user.email).toBe('gh@email.com');
@@ -548,10 +548,10 @@ describe('google provider — fallback chains (L107)', () => {
     const provider = GoogleProvider({
       clientId: 'goog-client',
       clientSecret: 'goog-secret',
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
     });
 
-    const result = await provider.exchangeToken('id-token-123', 'http://localhost:5000', undefined);
+    const result = await provider.exchangeToken('id-token-123', 'http://localhost:8080', undefined);
 
     expect(result.user.id).toBe('goog-id');
     expect(result.user.email).toBe('goog@email.com');
@@ -574,7 +574,7 @@ describe('extendedOperations — listSessions fallback (L332)', () => {
       json: async () => ({}), // No .sessions property
     });
 
-    const sessions = await listSessions('http://localhost:5000', 'token');
+    const sessions = await listSessions('http://localhost:8080', 'token');
     expect(sessions).toEqual([]);
   });
 });
@@ -597,7 +597,7 @@ describe('session.ts — branch gaps', () => {
     };
 
     const config: any = {
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
     };
 
     await expect(refreshAccessToken(token as any, config)).rejects.toThrow(TokenRefreshError);
@@ -632,7 +632,7 @@ describe('session.ts — branch gaps', () => {
 
     const config: any = {
       secret,
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
       debug: true,
       callbacks: {
         jwt: async ({ token }: any) => token,
@@ -669,7 +669,7 @@ describe('session.ts — branch gaps', () => {
 
     const config: any = {
       secret,
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
       debug: false,
       callbacks: {
         // Return the SAME token reference — should not mark updated

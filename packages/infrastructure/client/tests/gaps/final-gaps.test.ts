@@ -120,7 +120,7 @@ describe('server client — getBaseUrl', () => {
 // Also line 544 in handleUpdateSession
 describe('handlers — form-urlencoded and updateSession gaps', () => {
   it('parses form-urlencoded POST body', async () => {
-    vi.resetModules();   
+    vi.resetModules();
 
     // Mock modules
     vi.doMock('../../src/runtime/auth/jwt.js', () => ({
@@ -192,7 +192,7 @@ describe('handlers — form-urlencoded and updateSession gaps', () => {
       secret: 'test-secret-min-32-chars-long-ok',
       apiUrl: 'http://localhost:5000',
       pages: {},
-      cookies: { name: '__gg', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
+      cookies: { name: '__me', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
       maxAge: 2592000,
       updateAge: 0,
       basePath: '/api/auth',
@@ -213,7 +213,7 @@ describe('handlers — form-urlencoded and updateSession gaps', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        cookie: '__gg.csrf-token=csrf-c',
+        cookie: '__me.csrf-token=csrf-c',
       },
       body: formBody.toString(),
     });
@@ -270,7 +270,7 @@ describe('handlers — form-urlencoded and updateSession gaps', () => {
       secret: 'test-secret-min-32-chars-long-ok',
       apiUrl: 'http://localhost:5000',
       pages: {},
-      cookies: { name: '__gg', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
+      cookies: { name: '__me', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
       maxAge: 2592000,
       updateAge: 0,
       basePath: '/api/auth',
@@ -285,7 +285,7 @@ describe('handlers — form-urlencoded and updateSession gaps', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        cookie: '__gg.session-token=valid-tok',
+        cookie: '__me.session-token=valid-tok',
       },
       body: JSON.stringify({ user: { name: 'New Name' } }),
     });
@@ -320,7 +320,7 @@ describe('actions — createUpdateAction with working adapter', () => {
     };
 
     // Pre-populate session cookie
-    mockCookieStore.set('__gg.session-token', 'encrypted-session');
+    mockCookieStore.set('__me.session-token', 'encrypted-session');
 
     vi.doMock('next/headers', () => ({
       cookies: vi.fn(async () => mockAdapter),
@@ -378,7 +378,7 @@ describe('actions — createUpdateAction with working adapter', () => {
       secret: 'test-secret-min-32-chars-long-ok',
       apiUrl: 'http://localhost:5000',
       pages: { signIn: '/login', newUser: '/welcome' },
-      cookies: { name: '__gg', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
+      cookies: { name: '__me', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
       maxAge: 2592000,
       updateAge: 0,
       basePath: '/api/auth',
@@ -393,7 +393,7 @@ describe('actions — createUpdateAction with working adapter', () => {
     expect(session).toBeDefined();
     expect(session?.user).toBeDefined();
     // Cookie should have been written
-    expect(mockCookieStore.has('__gg.session-token')).toBe(true);
+    expect(mockCookieStore.has('__me.session-token')).toBe(true);
 
     vi.resetModules();
   }, 15000);
@@ -468,7 +468,7 @@ describe('actions — createUpdateAction with working adapter', () => {
       secret: 'test-secret-min-32-chars-long-ok',
       apiUrl: 'http://localhost:5000',
       pages: { signIn: '/login', newUser: '/welcome' },
-      cookies: { name: '__gg', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
+      cookies: { name: '__me', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
       maxAge: 2592000,
       updateAge: 0,
       basePath: '/api/auth',
@@ -487,7 +487,7 @@ describe('actions — createUpdateAction with working adapter', () => {
     });
 
     // Cookie should have been written by finalizeServerAction
-    expect(mockCookieStore.has('__gg.session-token')).toBe(true);
+    expect(mockCookieStore.has('__me.session-token')).toBe(true);
 
     vi.resetModules();
   });

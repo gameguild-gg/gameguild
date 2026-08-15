@@ -8,7 +8,7 @@ namespace GameGuild.Monitoring.SLA;
 /// <summary>
 ///     Repository implementation for Service Level Objective entities.
 /// </summary>
-public abstract class ServiceLevelObjectiveRepository(DbContext context) : IServiceLevelObjectiveRepository
+public class ServiceLevelObjectiveRepository(DbContext context) : IServiceLevelObjectiveRepository
 {
     private readonly DbSet<ServiceLevelObjective> _slos = context.Set<ServiceLevelObjective>();
 

@@ -1,52 +1,31 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.RegularExpressions;
-using GameGuild.AI;
 using GameGuild.API.Context;
+using GameGuild.AI;
+using GameGuild.Analytics;
 using GameGuild.API.Database;
-using GameGuild.API.Dashboard;
 using GameGuild.Assets.Extensions;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Subscriptions;
 using GameGuild.Compliance.Audit;
-using GameGuild.Compliance.FERPA;
-using GameGuild.Economy;
-using GameGuild.Economy.Payouts;
 using GameGuild.Features;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context;
 using GameGuild.Identity.Tenants;
+using GameGuild.Localization;
+using GameGuild.Monitoring.SLA;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
-using GameGuild.Learning.Assessments;
-using GameGuild.Learning.Certificates;
-using GameGuild.Learning.Cohorts;
-using GameGuild.Learning.Courses;
-using GameGuild.Learning.Enrollments;
-using GameGuild.Learning.Experience.Discovery;
-using GameGuild.Learning.Experience.LearningPaths;
-using GameGuild.Learning.Experience.Recommendations;
-using GameGuild.Learning.Workspaces;
 using GameGuild.Content.Pages;
-using GameGuild.Notifications;
 using GameGuild.Resources;
-using GameGuild.GameJams;
-using GameGuild.LaunchPad;
-using GameGuild.Social.Blog;
-using GameGuild.Social.Feed;
-using GameGuild.Social.Groups;
-using GameGuild.Social.Profiles;
-using GameGuild.Social.Reactions;
-using GameGuild.Tags;
-using GameGuild.Projects;
-using GameGuild.ProjectWork;
-using GameGuild.Teams;
-using GameGuild.TestingLab;
+using GameGuild.Resources.Contents;
+using GameGuild.Notifications;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using LearningSocialModule = GameGuild.Learning.Experience.Social.SocialModule;
 
 namespace GameGuild.API.Setup;
 
@@ -169,6 +148,11 @@ public static class InfrastructureLayerExtensions
         services.AddScoped<IRequestContextAccessor, RequestContextAccessor>();
         logger.LogInformation("Identity Context Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
+        // 03y. Compliance Audit Module (unified audit queries + ELK-ready structured audit services)
+        stepStopwatch.Restart();
+        services.AddAuditServices();
+        logger.LogInformation("Compliance Audit Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
         // 03a. Authentication Application (command handlers, validators, core auth services)
         stepStopwatch.Restart();
         services.AddAuthenticationApplication();
@@ -214,72 +198,45 @@ public static class InfrastructureLayerExtensions
         services.AddResourcesInfrastructure(configuration);
         logger.LogInformation("Resources Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10a.1. AI Module (provider adapters, prompt templates, tenant quotas/history)
+        // 10a.0. SLA Monitoring Module (repositories, calculators, alerts, and monitoring service)
+        stepStopwatch.Restart();
+        services.AddSlaMonitoringApplication();
+        logger.LogInformation("SLA Monitoring Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10a.1. Resources Contents Module (templates, contract generation, content versioning)
+        stepStopwatch.Restart();
+        new ContentsModule().ConfigureServices(services, configuration);
+        logger.LogInformation("Resources Contents Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10ab. Analytics Module (events, KPIs, and warehouse materialization)
+        stepStopwatch.Restart();
+        services.AddAnalyticsModule(configuration);
+        logger.LogInformation("Analytics Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10ac. AI Module (provider adapters, history, prompt templates)
         stepStopwatch.Restart();
         services.AddAiModule(configuration);
         logger.LogInformation("AI Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10a.2. Audit Compliance Module (audit logging, querying, reporting)
+        // 10aa. Assets Module (S3 storage, upload/access services, asset security helpers)
         stepStopwatch.Restart();
-        services.AddAuditServices();
-        logger.LogInformation("Audit Compliance Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+        services.AddOrdersModule();
+        logger.LogInformation("Commerce Orders Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10a.3. FERPA Compliance Module (education record protection and disclosure workflows)
+        // 10aa. Assets Module (S3 storage, upload/access services, asset security helpers)
         stepStopwatch.Restart();
-        services.AddFerpaModule();
-        logger.LogInformation("FERPA Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10a.3a. Economy protected-operation contracts remain fail-closed until capability rollout.
-        stepStopwatch.Restart();
-        services.AddEconomyCapabilityComposition(configuration);
-        logger.LogInformation("Economy Risk/FinancialCrime/TrustSafety composition registered in {ElapsedMs}ms",
-            stepStopwatch.ElapsedMilliseconds);
-
-        // The wallet controller is part of the enabled Economy.Core surface. Register its
-        // fail-closed workflows and persistence gateways independently of provider rollout.
-        stepStopwatch.Restart();
-        services.AddEconomyCoreComposition(configuration);
-        logger.LogInformation("Economy Core composition registered in {ElapsedMs}ms",
-            stepStopwatch.ElapsedMilliseconds);
-
-        // Read-only payout status is available with no provider or payout execution enabled.
-        stepStopwatch.Restart();
-        services.AddPayoutsComposition(configuration);
-        logger.LogInformation("Economy Payouts read composition registered in {ElapsedMs}ms",
-            stepStopwatch.ElapsedMilliseconds);
-
-        // 10a.4. Social Profiles Module (public profiles, skills, portfolio, privacy)
-        stepStopwatch.Restart();
-        services.AddSocialProfilesModule();
-        logger.LogInformation("Social Profiles Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10a.4a. Social modules (blog, feed, groups, reactions)
-        stepStopwatch.Restart();
-        services.AddSocialBlogModule();
-        services.AddSocialFeedModule();
-        services.AddSocialGroupsModule();
-        services.AddSocialReactionsModule();
-        logger.LogInformation("Social Blog/Feed/Groups/Reactions Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10a.5. Notifications Module (delivery facade required by billing/subscription workflows)
-        stepStopwatch.Restart();
-        services.AddNotificationsModule();
-        logger.LogInformation("Notifications Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+        services.AddAssetsModule(configuration);
+        logger.LogInformation("Assets Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10b. Commerce Subscriptions Module (must be registered before Billing since Billing depends on it)
         stepStopwatch.Restart();
         services.AddSubscriptionsModule();
         logger.LogInformation("Subscriptions Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10c. Commerce Billing Module (webhook services for Stripe, PayPal, ApplePay)
+        // 10d. Commerce Billing Module (webhook services for Stripe, PayPal, ApplePay)
         stepStopwatch.Restart();
         services.AddBillingModule(configuration);
         logger.LogInformation("Billing Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10d. Commerce Orders Module
-        stepStopwatch.Restart();
-        services.AddOrdersModule();
-        logger.LogInformation("Orders Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10e. Commerce Payments Module (payment gateway, payment services)
         stepStopwatch.Restart();
@@ -291,63 +248,26 @@ public static class InfrastructureLayerExtensions
         services.AddFeaturesModule();
         logger.LogInformation("Features Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10f. Learning Courses Module (programs, content, enrollment, grading)
-        stepStopwatch.Restart();
-        services.AddCoursesModule();
-        logger.LogInformation("Courses Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10f.1. Learning Assessments Module
-        stepStopwatch.Restart();
-        services.AddAssessmentsModule();
-        logger.LogInformation("Learning Assessments Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10f.2. Learning Enrollments Module
-        stepStopwatch.Restart();
-        services.AddLearningEnrollmentsModule();
-        logger.LogInformation("Learning Enrollments Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10f.3. Learning Cohorts Module
-        stepStopwatch.Restart();
-        services.AddCohortsModule();
-        logger.LogInformation("Learning Cohorts Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10f.4. Learning Certificates Module
-        stepStopwatch.Restart();
-        services.AddCertificatesModule();
-        logger.LogInformation("Learning Certificates Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10f.5. Learning Workspaces Module
-        stepStopwatch.Restart();
-        services.AddLearningWorkspacesModule();
-        logger.LogInformation("Learning Workspaces Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10f.6. Learning Experience Modules
-        stepStopwatch.Restart();
-        services.AddDiscoveryModule();
-        services.AddLearningPathsModule();
-        services.AddRecommendationsModule();
-        LearningSocialModule.AddSocialModule(services);
-        logger.LogInformation("Learning Discovery/Paths/Recommendations/Social Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10f.7. Game Jams Module
-        stepStopwatch.Restart();
-        services.AddGameJamsModule();
-        logger.LogInformation("Game Jams Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
-        // 10f.8. Teams, Projects, Project Work, Assets, Testing Lab, and Launch Pad Modules
-        stepStopwatch.Restart();
-        services.AddTeamsModule();
-        services.AddProjectsModule();
-        services.AddProjectWorkModule();
-        services.AddAssetsModule(configuration);
-        services.AddTestingLabModule(configuration);
-        services.AddLaunchPadModule();
-        logger.LogInformation("Teams/Projects/Project Work/Assets/Testing Lab/Launch Pad Modules registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
-
         // 10g. Content Pages Module (pages, sections, content resources, OpenGraph)
         stepStopwatch.Restart();
         services.AddContentPagesModule();
         logger.LogInformation("Content Pages Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10h. Notifications Module (in-app delivery, templates, preferences)
+        stepStopwatch.Restart();
+        services.AddNotificationsModule();
+        logger.LogInformation("Notifications Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10i. Localization Module (request context, language data, sanitization, and translation services)
+        stepStopwatch.Restart();
+        services.AddLocalizationServices();
+        logger.LogInformation("Localization Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10h. Tenants Module - explicit registrations (ITenantResolver doesn't match
+        // the I*Service / I*Repository convention used by AddRepositories)
+        stepStopwatch.Restart();
+        services.AddScoped<ITenantResolver, TenantResolver>();
+        logger.LogInformation("Tenants Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 11. Repositories
         services.AddRepositories(logger);
@@ -415,7 +335,7 @@ public static class InfrastructureLayerExtensions
 
     /// <summary>
     ///     Registers repository, service, and reader implementations by convention from module assemblies.
-    ///     Discovers interfaces matching I{Name}Repository → {Name}Repository,
+    ///     Discovers interfaces matching I{Name}Repository → {Name}Repository and
     ///     I{Name}Service → {Name}Service, and I{Name}Reader → {Name}Reader patterns.
     /// </summary>
     /// <remarks>
@@ -453,10 +373,7 @@ public static class InfrastructureLayerExtensions
 
         foreach (var assembly in assemblies)
         {
-            // Get all concrete types from the assembly
-            var types = assembly.GetTypes()
-                .Where(t => t.IsClass && !t.IsAbstract && t.IsPublic)
-                .ToList();
+            var types = GetLoadablePublicTypes(assembly, logger);
 
             foreach (var implementationType in types)
             {
@@ -492,10 +409,9 @@ public static class InfrastructureLayerExtensions
                             matchedTypes.Add(implementationType);
                         }
                     }
-                    // Match reader pattern: I{Name}Reader -> {Name}Reader
                     else if (interfaceName.StartsWith("I") && interfaceName.EndsWith("Reader"))
                     {
-                        var expectedImplName = interfaceName.Substring(1); // Remove 'I' prefix
+                        var expectedImplName = interfaceName[1..];
                         if (implementationType.Name == expectedImplName)
                         {
                             serviceRegistrations.Add((interfaceType, implementationType));
@@ -505,15 +421,62 @@ public static class InfrastructureLayerExtensions
                 }
             }
 
+            static bool IsSkippableInterface(Type interfaceType)
+            {
+                var interfaceName = interfaceType.Name;
+                return interfaceType.IsGenericType
+                    || interfaceName.StartsWith("IDisposable", StringComparison.Ordinal)
+                    || interfaceName.StartsWith("IAsyncDisposable", StringComparison.Ordinal);
+            }
+
+            bool HasExplicitInterfaceRegistration(Type implementationType)
+            {
+                return implementationType
+                    .GetInterfaces()
+                    .Where(interfaceType => !IsSkippableInterface(interfaceType))
+                    .Any(interfaceType => services.Any(sd => sd.ServiceType == interfaceType));
+            }
+
+            static bool IsDecoratorLike(Type implementationType)
+            {
+                var implementedInterfaces = implementationType
+                    .GetInterfaces()
+                    .Where(interfaceType => !IsSkippableInterface(interfaceType))
+                    .ToHashSet();
+
+                if (implementedInterfaces.Count == 0)
+                {
+                    return false;
+                }
+
+                var constructor = implementationType
+                    .GetConstructors()
+                    .OrderByDescending(currentConstructor => currentConstructor.GetParameters().Length)
+                    .FirstOrDefault();
+
+                if (constructor is null)
+                {
+                    return false;
+                }
+
+                return constructor
+                    .GetParameters()
+                    .Any(parameter => implementedInterfaces.Contains(parameter.ParameterType));
+            }
+
             // ── Validation: warn about unmatched types ───────────────────
             // Log concrete types that look like repositories/services but were not matched.
             // This catches silent failures from naming mismatches (e.g. IFooRepo vs FooRepository).
             var unmatchedTypes = types
                 .Where(t => !matchedTypes.Contains(t))
                 .Where(t => t.Name.EndsWith("Repository") || t.Name.EndsWith("Service") || t.Name.EndsWith("Reader"))
+                .Where(t => !typeof(IHostedService).IsAssignableFrom(t))
                 .Where(t => !t.Name.Contains("Decorator") && !t.Name.Contains("Cached") && !t.Name.Contains("Logging") && !t.Name.Contains("Default"))
-                .Where(t => !IsAlreadyRegistered(services, t))
-                .Where(t => !HasRegisteredAlternativeForServiceContract(services, t))
+                .Where(t => t.Namespace?.Contains(".Decorators", StringComparison.Ordinal) != true)
+                .Where(t => t.Namespace?.Contains(".Examples", StringComparison.Ordinal) != true)
+                .Where(t => !services.Any(sd => sd.ServiceType == t || sd.ImplementationType == t))
+                .Where(t => !HasExplicitInterfaceRegistration(t))
+                .Where(t => !IsDecoratorLike(t))
                 .ToList();
 
             foreach (var unmatched in unmatchedTypes)
@@ -570,27 +533,8 @@ public static class InfrastructureLayerExtensions
 
         foreach (var (interfaceType, implementationType) in serviceRegistrations)
         {
-            var existingDescriptors = services
-                .Where(descriptor => descriptor.ServiceType == interfaceType)
-                .ToArray();
-            var onlyFailClosedMembershipFallbacks =
-                interfaceType == typeof(ITenantMembershipChecker) &&
-                existingDescriptors.Length > 0 &&
-                existingDescriptors.All(descriptor =>
-                    descriptor.ImplementationType == typeof(FailClosedTenantMembershipChecker));
-
-            // The authorization module deliberately registers a fail-closed membership
-            // checker before the Tenants assembly is discovered. Replace that fallback
-            // with the real implementation; keep all other explicit registrations.
-            if (existingDescriptors.Length > 0 && !onlyFailClosedMembershipFallbacks)
-            {
-                logger.LogInformation("Skipped {Service} — already registered",
-                    FormatInterfaceName(interfaceType.Name));
+            if (ShouldSkipServiceRegistration(services, interfaceType, logger))
                 continue;
-            }
-
-            if (onlyFailClosedMembershipFallbacks)
-                services.RemoveAll(interfaceType);
 
             stepStopwatch.Restart();
             services.AddScoped(interfaceType, implementationType);
@@ -598,9 +542,6 @@ public static class InfrastructureLayerExtensions
                 FormatInterfaceName(interfaceType.Name), stepStopwatch.ElapsedMilliseconds);
         }
 
-        // This adapter intentionally has a different name from its authorization
-        // contract, so convention discovery is not sufficient to guarantee that it
-        // replaces the early fail-closed fallback in every host/test load order.
         services.Replace(ServiceDescriptor.Scoped<ITenantMembershipChecker, TenantMembershipChecker>());
 
         totalStopwatch.Stop();
@@ -608,6 +549,66 @@ public static class InfrastructureLayerExtensions
         logger.LogInformation(
             "Convention-based DI registration complete: {RepoCount} repositories, {ServiceCount} services in {ElapsedMs}ms",
             repositoryRegistrations.Count, serviceRegistrations.Count, totalStopwatch.ElapsedMilliseconds);
+    }
+
+    private static bool ShouldSkipServiceRegistration(
+        IServiceCollection services,
+        Type interfaceType,
+        ILogger logger)
+    {
+        var existingDescriptors = services
+            .Where(descriptor => descriptor.ServiceType == interfaceType)
+            .ToArray();
+        var onlyFailClosedMembershipFallbacks =
+            interfaceType == typeof(ITenantMembershipChecker) &&
+            existingDescriptors.Length > 0 &&
+            existingDescriptors.All(descriptor =>
+                descriptor.ImplementationType == typeof(FailClosedTenantMembershipChecker));
+
+        if (existingDescriptors.Length > 0 && !onlyFailClosedMembershipFallbacks)
+        {
+            logger.LogInformation("Skipped {Service} — already registered",
+                FormatInterfaceName(interfaceType.Name));
+            return true;
+        }
+
+        if (onlyFailClosedMembershipFallbacks)
+            services.RemoveAll(interfaceType);
+
+        return false;
+    }
+
+    private static List<Type> GetLoadablePublicTypes(Assembly assembly, ILogger logger)
+    {
+        try
+        {
+            return assembly.GetTypes()
+                .Where(type => type.IsClass && !type.IsAbstract && type.IsPublic)
+                .ToList();
+        }
+        catch (ReflectionTypeLoadException exception)
+        {
+            var loadableTypes = exception.Types
+                .OfType<Type>()
+                .Where(type => type.IsClass && !type.IsAbstract && type.IsPublic)
+                .ToList();
+            logger.LogWarning(
+                exception,
+                "Convention scan: {Assembly} had loadable-type failures. Continuing with {LoadableCount} loadable types.",
+                assembly.GetName().Name,
+                loadableTypes.Count);
+
+            foreach (var loaderException in exception.LoaderExceptions.Where(value => value is not null))
+            {
+                logger.LogWarning(
+                    loaderException,
+                    "Convention scan: Loader exception while scanning {Assembly}: {Message}",
+                    assembly.GetName().Name,
+                    loaderException!.Message);
+            }
+
+            return loadableTypes;
+        }
     }
 
     /// <summary>
@@ -625,26 +626,6 @@ public static class InfrastructureLayerExtensions
         // Also handle consecutive uppercase letters
         formatted = Regex.Replace(formatted, "([A-Z]+)([A-Z][a-z])", "$1 $2");
         return formatted;
-    }
-
-    private static bool IsAlreadyRegistered(IServiceCollection services, Type implementationType)
-    {
-        return services.Any(descriptor =>
-            descriptor.ServiceType == implementationType ||
-            descriptor.ImplementationType == implementationType ||
-            descriptor.ImplementationInstance?.GetType() == implementationType);
-    }
-
-    private static bool HasRegisteredAlternativeForServiceContract(IServiceCollection services, Type implementationType)
-    {
-        var serviceContracts = implementationType.GetInterfaces()
-            .Where(interfaceType => !interfaceType.IsGenericType)
-            .Where(interfaceType => interfaceType.Name.EndsWith("Service", StringComparison.Ordinal))
-            .Where(interfaceType => !interfaceType.Name.Contains("DbContext", StringComparison.Ordinal))
-            .ToArray();
-
-        return serviceContracts.Length > 0 &&
-               services.Any(descriptor => serviceContracts.Contains(descriptor.ServiceType));
     }
 
     #endregion

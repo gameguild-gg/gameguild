@@ -12,7 +12,8 @@ public class ExternalLoginsControllerTests
 {
     private static ExternalLoginsController CreateController(
         Mock<ISender> sender,
-        Guid? userId = null)
+        Guid? userId = null,
+        string claimType = ClaimTypes.NameIdentifier)
     {
         var controller = new ExternalLoginsController(sender.Object)
         {
@@ -22,7 +23,7 @@ public class ExternalLoginsControllerTests
                 {
                     User = userId.HasValue
                         ? new ClaimsPrincipal(new ClaimsIdentity(
-                            [new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString())],
+                            [new Claim(claimType, userId.Value.ToString())],
                             "Bearer"))
                         : new ClaimsPrincipal(new ClaimsIdentity())
                 }
@@ -66,6 +67,25 @@ public class ExternalLoginsControllerTests
         var problem = unauthorized.Value.Should().BeOfType<ProblemDetails>().Subject;
         problem.Status.Should().Be(401);
         sender.Verify(s => s.Send(It.IsAny<GetExternalLoginsQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("sub")]
+    [InlineData("user_id")]
+    public async Task GetExternalLogins_AlternativeUserIdClaim_Returns200(string claimType)
+    {
+        var userId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(instance => instance.Send(
+                It.Is<GetExternalLoginsQuery>(query => query.UserId == userId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var result = await CreateController(sender, userId, claimType)
+            .GetExternalLogins(CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
     }
 
     // ── POST google link ────────────────────────────────────────────────
@@ -121,6 +141,22 @@ public class ExternalLoginsControllerTests
         var problem = conflict.Value.Should().BeOfType<ProblemDetails>().Subject;
         problem.Status.Should().Be(409);
         problem.Detail.Should().Be("Social account already linked to another user");
+    }
+
+    [Fact]
+    public async Task LinkGoogle_UnexpectedFailure_RethrowsOriginalException()
+    {
+        var expected = new ApplicationException("Unexpected failure");
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(instance => instance.Send(It.IsAny<LinkGoogleAccountCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(expected);
+
+        var action = () => CreateController(sender, Guid.NewGuid())
+            .LinkGoogle(new LinkGoogleAccountRequest { IdToken = "valid-id-token" }, CancellationToken.None);
+
+        var thrown = await action.Should().ThrowAsync<ApplicationException>();
+        thrown.Which.Should().BeSameAs(expected);
     }
 
     // ── POST discord link-authorize ─────────────────────────────────────

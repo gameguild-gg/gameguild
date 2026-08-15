@@ -10,6 +10,10 @@ const PRIMITIVE_TYPES = new Set([
   'File', 'ReadableStream', 'ArrayBuffer',
 ]);
 
+const STRING_LITERAL_PATTERN = /^(['"]).*\1$/;
+const NUMBER_LITERAL_PATTERN = /^-?\d+(\.\d+)?$/;
+const BOOLEAN_LITERAL_TYPES = new Set(['true', 'false']);
+
 /**
  * Qualify a type reference with the Types namespace prefix.
  * Primitives and built-in types are left as-is.
@@ -36,12 +40,19 @@ export function qualifyType(type: string, namespace = 'Types'): string {
     return type;
   }
 
-  // Strip nullable suffix for check
-  const baseType = type.replace(/ \| null$/, '');
-  const nullableSuffix = type.endsWith(' | null') ? ' | null' : '';
+  const baseType = type;
 
   // Primitives and built-ins don't need namespace
   if (PRIMITIVE_TYPES.has(baseType)) {
+    return type;
+  }
+
+  // Literal unions generated from OpenAPI enums are already complete types.
+  if (
+    STRING_LITERAL_PATTERN.test(baseType) ||
+    NUMBER_LITERAL_PATTERN.test(baseType) ||
+    BOOLEAN_LITERAL_TYPES.has(baseType)
+  ) {
     return type;
   }
 
@@ -50,5 +61,5 @@ export function qualifyType(type: string, namespace = 'Types'): string {
     return type;
   }
 
-  return `${namespace}.${baseType}${nullableSuffix}`;
+  return `${namespace}.${baseType}`;
 }

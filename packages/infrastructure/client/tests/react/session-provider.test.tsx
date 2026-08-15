@@ -12,7 +12,9 @@ const broadcastMock = vi.hoisted(() => {
   let _onMessage: ((msg: any) => void) | null = null;
   return {
     getOnMessage: () => _onMessage,
-    resetOnMessage: () => { _onMessage = null; },
+    resetOnMessage: () => {
+      _onMessage = null;
+    },
     createAuthBroadcast: vi.fn((onMessage: (msg: any) => void) => {
       _onMessage = onMessage;
       return {
@@ -74,7 +76,7 @@ describe('SessionProvider', () => {
     const { getByTestId } = render(
       <SessionProvider>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     // Initially loading, then authenticated after fetch
@@ -87,7 +89,7 @@ describe('SessionProvider', () => {
     const { getByTestId } = render(
       <SessionProvider session={mockSession as any}>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     expect(getByTestId('status').textContent).toBe('authenticated');
@@ -102,7 +104,7 @@ describe('SessionProvider', () => {
     const { getByTestId } = render(
       <SessionProvider>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => {
@@ -119,7 +121,7 @@ describe('SessionProvider', () => {
     const { getByTestId } = render(
       <SessionProvider>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => {
@@ -133,7 +135,7 @@ describe('SessionProvider', () => {
     const { getByTestId } = render(
       <SessionProvider>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => {
@@ -158,7 +160,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider>
         <Capture />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => {
@@ -183,9 +185,7 @@ describe('SessionProvider', () => {
     expect(updated.user.email).toBe('updated@b.com');
 
     // Verify POST was made
-    const postCall = fetchSpy.mock.calls.find(
-      (c: any[]) => c[1]?.method === 'POST'
-    );
+    const postCall = fetchSpy.mock.calls.find((c: any[]) => c[1]?.method === 'POST');
     expect(postCall).toBeTruthy();
   });
 
@@ -204,7 +204,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider>
         <Capture />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => expect(ctxValue?.status).toBe('authenticated'));
@@ -234,7 +234,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider>
         <Capture />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => expect(ctxValue?.status).toBe('authenticated'));
@@ -264,7 +264,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider>
         <Capture />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => expect(ctxValue?.status).toBe('authenticated'));
@@ -290,7 +290,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider refetchOnWindowFocus={true}>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => {
@@ -319,7 +319,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider refetchOnWindowFocus={false}>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => {
@@ -348,7 +348,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider refetchInterval={1}>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     // Initial fetch
@@ -376,7 +376,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider refetchInterval={1} refetchWhenOffline={false}>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await act(async () => {
@@ -410,7 +410,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => {
@@ -440,11 +440,11 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider>
         <Capture />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => expect(ctxValue?.status).toBe('authenticated'));
-    
+
     const onMessage = broadcastMock.getOnMessage();
     expect(onMessage).toBeTruthy();
 
@@ -468,7 +468,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => {
@@ -484,9 +484,12 @@ describe('SessionProvider', () => {
     });
 
     // Should trigger re-fetch
-    await waitFor(() => {
-      expect(fetchSpy.mock.calls.length).toBeGreaterThanOrEqual(2);
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(fetchSpy.mock.calls.length).toBeGreaterThanOrEqual(2);
+      },
+      { timeout: 3000 },
+    );
   });
 
   it('uses custom basePath for fetch', async () => {
@@ -498,14 +501,11 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider basePath="/custom/auth">
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await waitFor(() => {
-      expect(fetchSpy).toHaveBeenCalledWith(
-        '/custom/auth/session',
-        expect.any(Object)
-      );
+      expect(fetchSpy).toHaveBeenCalledWith('/custom/auth/session', expect.any(Object));
     });
   });
 
@@ -519,7 +519,7 @@ describe('SessionProvider', () => {
     render(
       <SessionProvider refetchInterval={0}>
         <Consumer />
-      </SessionProvider>
+      </SessionProvider>,
     );
 
     await act(async () => {

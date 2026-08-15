@@ -99,6 +99,7 @@ public sealed class RequestContextAccessor(
 
         return null;
     }
+
     private Guid? TryGetClaimGuid(params string[] claimTypes)
     {
         var value = TryGetClaimValue(claimTypes);

@@ -21,7 +21,8 @@
  */
 
 import type { OAuthProviderConfig, ProviderResult, SessionUser } from '../types.js';
-import { OAuthError } from '../errors.js';
+import { OAuthError, parseErrorBody, extractErrorMessage } from '../errors.js';
+import { resolveAuthPermissions, resolveAuthRoles } from '../claims.js';
 
 /**
  * Options for the GitHub provider
@@ -51,16 +52,11 @@ export interface GitHubProviderOptions {
 /**
  * Create a GitHub OAuth provider that bridges to the .NET backend.
  */
-export function GitHubProvider(
-  options: GitHubProviderOptions
-): OAuthProviderConfig & {
+export function GitHubProvider(options: GitHubProviderOptions): OAuthProviderConfig & {
   getAuthorizeUrl: (apiUrl: string, redirectUri?: string) => Promise<string>;
   handleCallback: (apiUrl: string, code: string, state?: string) => Promise<ProviderResult>;
 } {
-  const {
-    authorizePath = '/v1/auth/github:authorize',
-    callbackPath = '/v1/auth/github:callback',
-  } = options;
+  const { authorizePath = '/v1/auth/github:authorize', callbackPath = '/v1/auth/github:callback' } = options;
 
   return {
     id: 'github',
@@ -81,22 +77,17 @@ export function GitHubProvider(
      * Get the GitHub authorization URL from the .NET backend.
      * The backend manages the OAuth state parameter.
      */
-    getAuthorizeUrl: async (
-      apiUrl: string,
-      redirectUri?: string
-    ): Promise<string> => {
+    getAuthorizeUrl: async (apiUrl: string, redirectUri?: string): Promise<string> => {
       const effectiveApiUrl = options.apiUrl || apiUrl;
 
       const params = new URLSearchParams();
       if (redirectUri) params.set('redirectUri', redirectUri);
 
-      const response = await fetch(
-        `${effectiveApiUrl}${authorizePath}?${params.toString()}`,
-        { method: 'GET' }
-      );
+      const response = await fetch(`${effectiveApiUrl}${authorizePath}?${params.toString()}`, { method: 'GET' });
 
       if (!response.ok) {
-        throw new OAuthError('Failed to get GitHub authorization URL');
+        const errorData = await parseErrorBody(response);
+        throw new OAuthError(extractErrorMessage(errorData, 'Failed to get GitHub authorization URL'));
       }
 
       const data = (await response.json()) as Record<string, unknown>;
@@ -106,28 +97,18 @@ export function GitHubProvider(
     /**
      * Complete the GitHub OAuth flow by sending the authorization code to the backend.
      */
-    handleCallback: async (
-      apiUrl: string,
-      code: string,
-      state?: string
-    ): Promise<ProviderResult> => {
+    handleCallback: async (apiUrl: string, code: string, state?: string): Promise<ProviderResult> => {
       const effectiveApiUrl = options.apiUrl || apiUrl;
 
-      const response = await fetch(
-        `${effectiveApiUrl}${callbackPath}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, state }),
-        }
-      );
+      const response = await fetch(`${effectiveApiUrl}${callbackPath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, state }),
+      });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new OAuthError(
-          (errorData as Record<string, unknown>).message as string ||
-            'GitHub sign-in failed'
-        );
+        const errorData = await parseErrorBody(response);
+        throw new OAuthError(extractErrorMessage(errorData, 'GitHub sign-in failed'));
       }
 
       const data = (await response.json()) as Record<string, unknown>;
@@ -136,10 +117,11 @@ export function GitHubProvider(
       const user: SessionUser = {
         /* v8 ignore start */
         id: (data.userId as string) || (backendUser?.id as string) || '',
-        email:
-          (data.email as string) || (backendUser?.email as string) || '',
+        email: (data.email as string) || (backendUser?.email as string) || '',
         name: (backendUser?.displayName as string) || null,
         image: (backendUser?.profilePictureUrl as string) || null,
+        roles: resolveAuthRoles(data, backendUser),
+        permissions: resolveAuthPermissions(data, backendUser),
         /* v8 ignore stop */
       };
 
@@ -155,9 +137,7 @@ export function GitHubProvider(
         user,
         sessionId: data.sessionId as string | undefined,
         tenantId: data.tenantId as string | undefined,
-        availableTenants: data.availableTenants as
-          | Array<{ id: string; name: string }>
-          | undefined,
+        availableTenants: data.availableTenants as Array<{ id: string; name: string }> | undefined,
       };
     },
   };

@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,39 +20,21 @@ export class AuthSessionsModule {
    *
    * Retrieves a list of all active sessions for the current user, including device and location information.
    */
-  async getAuthSessions(): Promise<Result<Array<Types.IdentityAuthenticationSessionOutput>, ApiError>> {
-    const url = '/v1/auth/sessions';
+  async getAuthSessions(): Promise<
+    Result<Array<Types.IdentityAuthenticationSessionOutput>, ApiError>
+  > {
+    const url = "/v1/auth/sessions";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.IdentityAuthenticationSessionOutput>, ApiError>;
-  }
-
-  /**
-   * Terminate a session
-   *
-   * Terminates a specific session by its identifier. The session must belong to the current user.
-   */
-  async deleteAuthSessions(sessionId: string): Promise<Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>> {
-    const url = `/v1/auth/sessions/${sessionId}`;
-
-    const result = await this.client.request({
-      method: 'DELETE',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSessionSuccessOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<
+      Array<Types.IdentityAuthenticationSessionOutput>,
+      ApiError
+    >;
   }
 
   /**
@@ -60,18 +42,24 @@ export class AuthSessionsModule {
    *
    * Analyzes the current session for security risks and provides recommendations.
    */
-  async getAuthSessionsAnalyzeSecurity(): Promise<Result<Types.IdentityAuthenticationSessionSecurityAnalysis, ApiError>> {
-    const url = '/v1/auth/sessions:analyze-security';
+  async getAuthSessionsAnalyzeSecurity(): Promise<
+    Result<Types.IdentityAuthenticationSessionSecurityAnalysis, ApiError>
+  > {
+    const url = "/v1/auth/sessions:analyze-security";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSessionSecurityAnalysisSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationSessionSecurityAnalysisSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -79,45 +67,30 @@ export class AuthSessionsModule {
   }
 
   /**
-   * Refresh current session
+   * Terminate a session
    *
-   * Extends the current session's expiration time.
+   * Terminates a specific session by its identifier. The session must belong to the current user.
    */
-  async postAuthSessionsRefresh(): Promise<Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>> {
-    const url = '/v1/auth/sessions:refresh';
+  async deleteAuthSessions(
+    sessionId: string,
+  ): Promise<
+    Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>
+  > {
+    const url = `/v1/auth/sessions/${sessionId}`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSessionSuccessOutputSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Terminate all sessions
-   *
-   * Terminates all active sessions including the current one. User will need to sign in again.
-   */
-  async postAuthSessionsTerminateAll(): Promise<Result<Types.IdentityAuthenticationSessionTerminationOutput, ApiError>> {
-    const url = '/v1/auth/sessions:terminate-all';
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSessionTerminationOutputSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationSessionSuccessOutputSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -129,18 +102,82 @@ export class AuthSessionsModule {
    *
    * Terminates all active sessions except the current one.
    */
-  async postAuthSessionsTerminateOthers(): Promise<Result<Types.IdentityAuthenticationSessionTerminationOutput, ApiError>> {
-    const url = '/v1/auth/sessions:terminate-others';
+  async postAuthSessionsTerminateOthers(): Promise<
+    Result<Types.IdentityAuthenticationSessionTerminationOutput, ApiError>
+  > {
+    const url = "/v1/auth/sessions:terminate-others";
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityAuthenticationSessionTerminationOutputSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationSessionTerminationOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Terminate all sessions
+   *
+   * Terminates all active sessions including the current one. User will need to sign in again.
+   */
+  async postAuthSessionsTerminateAll(): Promise<
+    Result<Types.IdentityAuthenticationSessionTerminationOutput, ApiError>
+  > {
+    const url = "/v1/auth/sessions:terminate-all";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationSessionTerminationOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Refresh current session
+   *
+   * Extends the current session's expiration time.
+   */
+  async postAuthSessionsRefresh(): Promise<
+    Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>
+  > {
+    const url = "/v1/auth/sessions:refresh";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationSessionSuccessOutputSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -148,6 +185,8 @@ export class AuthSessionsModule {
   }
 }
 
-export function createAuthSessionsModule(client: ApiClient): AuthSessionsModule {
+export function createAuthSessionsModule(
+  client: ApiClient,
+): AuthSessionsModule {
   return new AuthSessionsModule(client);
 }

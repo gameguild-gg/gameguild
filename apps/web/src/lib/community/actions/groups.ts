@@ -69,7 +69,7 @@ export async function createCommunityGroup(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.postApiSocialGroups({
     ownerId,
     tenantId: session?.tenantId || undefined,
@@ -104,7 +104,7 @@ export async function updateCommunityGroup(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.putApiSocialGroups(groupId, {
     name,
     slug: slugify(name),
@@ -132,7 +132,7 @@ export async function archiveCommunityGroup(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.postApiSocialGroupsArchive(groupId);
 
   if (!result.ok) {
@@ -157,7 +157,7 @@ export async function addCommunityGroupMember(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.postApiSocialGroupsMembers(groupId, {
     userId,
     requestedRole: role,
@@ -183,7 +183,7 @@ export async function approveCommunityGroupMember(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.postApiSocialGroupsMembersApprove(groupId, userId, {
     approvedByUserId: approvedByUserId || undefined,
   });
@@ -206,7 +206,7 @@ export async function rejectCommunityGroupMember(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.postApiSocialGroupsMembersReject(groupId, userId);
 
   if (!result.ok) {
@@ -229,7 +229,7 @@ export async function changeCommunityGroupMemberRole(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.putApiSocialGroupsMembersRole(groupId, userId, { role });
 
   if (!result.ok) {
@@ -250,7 +250,7 @@ export async function removeCommunityGroupMember(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.deleteApiSocialGroupsMembers(groupId, userId);
 
   if (!result.ok) {

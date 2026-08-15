@@ -38,8 +38,8 @@ export interface OAuthProviderWithMethods extends OAuthProviderConfig {
   /**
    * Handle the OAuth callback by sending the code to the backend.
    * Used for authorization-code flow providers.
-   * redirectUri and tenantId are optional so providers with shorter
-   * signatures (Google/GitHub bridge) stay structurally compatible.
+   * The redirect URI and tenant are optional so providers with shorter
+   * signatures remain structurally compatible.
    */
   handleCallback?: (
     apiUrl: string,

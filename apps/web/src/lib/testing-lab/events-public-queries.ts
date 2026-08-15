@@ -44,7 +44,7 @@ function createPublicModules() {
   });
 
   return {
-    events: new GeneratedApi.TestinglabTestingeventsModule(client),
+    events: new GeneratedApi.TestingLabTestingEventsModule(client),
   };
 }
 
@@ -56,8 +56,8 @@ function createAuthenticatedModules() {
   });
 
   return {
-    events: new GeneratedApi.TestinglabTestingeventsModule(client),
-    participation: new GeneratedApi.TestinglabTestingeventparticipationModule(client),
+    events: new GeneratedApi.TestingLabTestingEventsModule(client),
+    participation: new GeneratedApi.TestingLabTestingEventParticipationModule(client),
   };
 }
 
@@ -82,7 +82,7 @@ export async function getPublicTestingEventsDirectory(
 ): Promise<PublicTestingEventsDirectory> {
   const api = createPublicModules();
   const result = await read(
-    api.events.getTestingEventsPublic({
+    api.events.getTestingEventsPublicForGetTestingEventsPublic({
       skip: Math.max(0, options.skip ?? 0),
       take: Math.min(100, Math.max(1, options.take ?? 50)),
     }),
@@ -98,7 +98,7 @@ export async function getPublicTestingEventExperience(
   eventId: string,
 ): Promise<PublicTestingEventExperience> {
   const publicApi = createPublicModules();
-  const eventPromise = read(publicApi.events.getTestingEventsPublicByEventId(eventId), 'Public event');
+  const eventPromise = read(publicApi.events.getTestingEventsPublicForGetTestingEventsPublicByEventId(eventId), 'Public event');
   const session = await auth().catch(() => null);
   const eventResult = await eventPromise;
   const isAuthenticated = Boolean(session?.user);

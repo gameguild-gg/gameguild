@@ -1,5 +1,7 @@
 using FluentAssertions;
+using GameGuild.API.Setup;
 using GameGuild.Configuration.PresentationLayer.HealthChecks;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -15,7 +17,14 @@ public sealed class CommerceReadinessHealthCheckRegistrationTests
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().Build();
         services.SetupHealthChecks(configuration, HealthChecksOptions.CreateDefault());
-        using var serviceProvider = services.BuildServiceProvider();
+        var builder = WebApplication.CreateBuilder();
+        foreach (var descriptor in services)
+        {
+            builder.Services.Add(descriptor);
+        }
+
+        ApiProductComposition.Instance.ConfigureServices(builder);
+        using var serviceProvider = builder.Services.BuildServiceProvider();
 
         var registrations = serviceProvider
             .GetRequiredService<IOptions<HealthCheckServiceOptions>>()

@@ -38,14 +38,10 @@ describe('GoogleProvider', () => {
       clientSecret: 'secret',
     });
 
-    expect(provider.authorization.url).toBe(
-      'https://accounts.google.com/o/oauth2/v2/auth',
-    );
+    expect(provider.authorization.url).toBe('https://accounts.google.com/o/oauth2/v2/auth');
     expect(provider.authorization.params.scope).toBe('openid email profile');
     expect(provider.token.url).toBe('https://oauth2.googleapis.com/token');
-    expect(provider.userinfo.url).toBe(
-      'https://www.googleapis.com/oauth2/v3/userinfo',
-    );
+    expect(provider.userinfo.url).toBe('https://www.googleapis.com/oauth2/v3/userinfo');
   });
 
   describe('exchangeToken', () => {
@@ -71,13 +67,10 @@ describe('GoogleProvider', () => {
         clientSecret: 'secret',
       });
 
-      const result = await provider.exchangeToken(
-        'google-id-token',
-        'http://localhost:8080',
-      );
+      const result = await provider.exchangeToken('google-id-token', 'http://localhost:5295');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/v1/auth/google',
+        'http://localhost:5295/v1/auth/google',
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -108,11 +101,7 @@ describe('GoogleProvider', () => {
         clientSecret: 'secret',
       });
 
-      await provider.exchangeToken(
-        'id-token',
-        'http://localhost:8080',
-        'tenant-1',
-      );
+      await provider.exchangeToken('id-token', 'http://localhost:5295', 'tenant-1');
 
       const body = JSON.parse(mockFetch.mock.calls[0][1].body);
       expect(body.tenantId).toBe('tenant-1');
@@ -134,7 +123,7 @@ describe('GoogleProvider', () => {
         tokenExchangePath: '/custom/google/exchange',
       });
 
-      await provider.exchangeToken('id-token', 'http://localhost:8080');
+      await provider.exchangeToken('id-token', 'http://localhost:5295');
 
       const calledUrl = mockFetch.mock.calls[0][0] as string;
       expect(calledUrl).toContain('/custom/google/exchange');
@@ -171,16 +160,16 @@ describe('GoogleProvider', () => {
         clientSecret: 'secret',
       });
 
-      await expect(
-        provider.exchangeToken('bad-token', 'http://localhost:8080'),
-      ).rejects.toThrow(OAuthError);
+      await expect(provider.exchangeToken('bad-token', 'http://localhost:5295')).rejects.toThrow(OAuthError);
     });
 
     it('should throw OAuthError with default message on non-JSON error', async () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 500,
-        json: async () => { throw new Error('not json'); },
+        json: async () => {
+          throw new Error('not json');
+        },
       });
 
       const provider = GoogleProvider({
@@ -188,9 +177,7 @@ describe('GoogleProvider', () => {
         clientSecret: 'secret',
       });
 
-      await expect(
-        provider.exchangeToken('id-token', 'http://localhost:8080'),
-      ).rejects.toThrow('Google sign-in failed');
+      await expect(provider.exchangeToken('id-token', 'http://localhost:5295')).rejects.toThrow('Google sign-in failed');
     });
 
     it('should handle response without user object', async () => {
@@ -210,10 +197,7 @@ describe('GoogleProvider', () => {
         clientSecret: 'secret',
       });
 
-      const result = await provider.exchangeToken(
-        'id-token',
-        'http://localhost:8080',
-      );
+      const result = await provider.exchangeToken('id-token', 'http://localhost:5295');
 
       expect(result.user.id).toBe('user-1');
       expect(result.user.email).toBe('test@gmail.com');
