@@ -68,6 +68,8 @@ const DEFAULT_TOOLS: Record<CodingLanguage, string> = {
 
 const FUNCTION_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
+const AUTOSAVE_DELAY_MS = 30_000;
+
 /** In-memory file row mirrored from initialContent + IDE getAuthoredState(). */
 interface AssignmentFileRow {
   path: string;
@@ -132,6 +134,14 @@ export function CodingDefinitionEditor({
 
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  // ── Autosave bookkeeping ──
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dirtyRef = useRef(false);
+  const savingRef = useRef(false);
+  const hydratedRef = useRef(false);
+  const seededRef = useRef(false);
+  const performSaveRef = useRef<() => Promise<void>>(async () => {});
 
   // ── WorkspaceConfig for the IDE — derive from language preset + files ──
   const workspaceConfig = useMemo<WorkspaceConfig | null>(() => {
@@ -200,6 +210,7 @@ export function CodingDefinitionEditor({
   // header). Seed once on mount so fileRows + testRows aren't empty.
   useEffect(() => {
     if (initialContent) return;
+    seededRef.current = true;
     handleLanguageChange(initialLang);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -300,11 +311,13 @@ export function CodingDefinitionEditor({
     /* no-op */
   }
 
-  async function handleSave() {
+  async function performSave() {
+    if (savingRef.current) return;
     if (!isValid || !contentId) {
       setError(contentId ? "Resolve validation errors before saving." : "No content item linked to this assessment.");
       return;
     }
+    savingRef.current = true;
     setError(null);
     setSaved(false);
 
@@ -374,21 +387,59 @@ export function CodingDefinitionEditor({
       setError(
         "Assignment exceeds 10MB total (texts+images+tests). Remove some files.",
       );
+      savingRef.current = false;
       return;
     }
 
     startTransition(async () => {
-      const result = await putCodingAssignmentAction(programId, contentId, content);
-      if (!result.success) {
-        setError(result.error);
-        return;
+      try {
+        const result = await putCodingAssignmentAction(programId, contentId, content);
+        if (!result.success) {
+          setError(result.error);
+          return;
+        }
+        setSaved(true);
+        dirtyRef.current = false;
+        if (autosaveTimerRef.current) {
+          clearTimeout(autosaveTimerRef.current);
+          autosaveTimerRef.current = null;
+        }
+      } finally {
+        savingRef.current = false;
       }
-      setSaved(true);
-      router.push(
-        `/dashboard/learning/courses/${encodeURIComponent(courseId)}/assessments/${assessmentId}`,
-      );
     });
   }
+
+  useEffect(() => {
+    performSaveRef.current = performSave;
+  });
+
+  // Debounced autosave: 30s after the LAST authored change. The cleanup clears
+  // the pending timer on the next change (reset) and on unmount (teardown).
+  // ponytail: a change landing while a save is in flight gets its timer
+  // canceled by the success path — tiny window, next change re-arms.
+  useEffect(() => {
+    if (!hydratedRef.current) {
+      hydratedRef.current = true;
+      return;
+    }
+    if (seededRef.current) {
+      seededRef.current = false;
+      return;
+    }
+    dirtyRef.current = true;
+    autosaveTimerRef.current = setTimeout(() => {
+      autosaveTimerRef.current = null;
+      if (!isValid || !contentId) return;
+      void performSaveRef.current();
+    }, AUTOSAVE_DELAY_MS);
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current);
+        autosaveTimerRef.current = null;
+      }
+    };
+  }, [testRows, fileRows, language, allowStudentCreateFiles, isValid, contentId]);
 
   function handleBack() {
     router.push(
@@ -415,7 +466,7 @@ export function CodingDefinitionEditor({
         {error && <p className="text-destructive text-sm">{error}</p>}
         <Badge variant="secondary">{language}</Badge>
         <Button
-          onClick={handleSave}
+          onClick={performSave}
           disabled={!isValid || isPending}
           data-testid="save-button"
         >

@@ -273,6 +273,108 @@ describe('coding-assignment type guards', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Wire-casing normalization — the API returns camelCase JSON (AddJsonOptions
+// web defaults); narrow must normalize to the PascalCase guard shape.
+// ---------------------------------------------------------------------------
+
+// Mirrors the proven live wire shape (curl against :8080).
+const camelCaseWirePayload = {
+  type: 'coding-assignment',
+  version: 1,
+  environment: {
+    language: 'cpp',
+    tools: 'clang',
+    libBundle: null,
+    allowStudentCreateFiles: false,
+  },
+  data: {
+    files: {
+      '/user/main.cpp': {
+        content: '#include <iostream>\nint main() { std::string n; std::getline(std::cin, n); std::cout << "hello " << n; }',
+        encoding: 'text',
+        visibility: 'Public',
+        modifiable: true,
+      },
+    },
+  },
+  tests: {
+    public: [
+      {
+        kind: 'standard',
+        weight: 1,
+        name: 'greets the world',
+        stdin: 'world',
+        stdout: 'hello world',
+        stderr: null,
+        exitCode: 0,
+      },
+      {
+        kind: 'functional',
+        weight: 1,
+        name: 'adds integers',
+        function: {
+          functionName: 'add',
+          parameters: [
+            { name: 'a', type: 'integer' },
+            { name: 'b', type: 'integer' },
+          ],
+          returnType: { type: 'integer' },
+        },
+        cases: [
+          {
+            inputs: [
+              { type: 'integer', content: 2 },
+              { type: 'integer', content: 3 },
+            ],
+            expected: { type: 'integer', content: 5 },
+          },
+        ],
+      },
+    ],
+    private: [],
+  },
+  grading: { maxScore: 100 },
+};
+
+describe('narrowCodingAssignmentContent wire-casing normalization', () => {
+  it('accepts the live camelCase payload and returns PascalCase internals', () => {
+    const result = narrowCodingAssignmentContent(camelCaseWirePayload);
+    expect(result).not.toBeNull();
+    expect(result?.Type).toBe('coding-assignment');
+    expect(result?.Version).toBe(1);
+    expect(result?.Environment.Language).toBe('cpp');
+    expect(result?.Environment.Tools).toBe('clang');
+    expect(result?.Environment.AllowStudentCreateFiles).toBe(false);
+    expect(result?.Grading.MaxScore).toBe(100);
+    expect(result?.Tests.Public).toHaveLength(2);
+    const [standard, functional] = result?.Tests.Public ?? [];
+    expect(standard?.kind).toBe('standard');
+    expect(standard?.Stdin).toBe('world');
+    expect(standard?.Stdout).toBe('hello world');
+    expect(standard?.ExitCode).toBe(0);
+    expect(functional?.kind).toBe('functional');
+    expect(functional?.Function.FunctionName).toBe('add');
+    expect(functional?.Function.Parameters[0]?.Name).toBe('a');
+    expect(functional?.Function.ReturnType.Type).toBe('integer');
+    expect(functional?.Cases[0]?.Expected.Content).toBe(5);
+  });
+
+  it('still accepts PascalCase payloads (no regression)', () => {
+    const result = narrowCodingAssignmentContent(fullContent);
+    expect(result).not.toBeNull();
+    expect(result?.Data.Files['main.cpp']?.Content).toBe('int main() { return 0; }');
+    expect(result?.Tests.Public[0]?.Stdout).toBe('hello\n');
+  });
+
+  it('preserves file-path keys inside data.files unchanged', () => {
+    const result = narrowCodingAssignmentContent(camelCaseWirePayload);
+    expect(Object.keys(result?.Data.Files ?? {})).toEqual(['/user/main.cpp']);
+    expect(result?.Data.Files['/user/main.cpp']?.Modifiable).toBe(true);
+    expect(result?.Data.Files['/user/main.cpp']?.Visibility).toBe('Public');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Compile-time check: pinned signatures are enforced by TS at the import site.
 // If the wrapper exports drift, this file fails to typecheck.
 // ---------------------------------------------------------------------------

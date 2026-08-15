@@ -206,19 +206,76 @@ function narrowSuite(raw: unknown): TestSuite | null {
   return { Public: pub, Private: priv };
 }
 
+// ---------------------------------------------------------------------------
+// Wire-casing normalization (camelCase API wire → PascalCase guard shape)
+// ---------------------------------------------------------------------------
+
+/**
+ * The API serializes via AddJsonOptions web defaults (camelCase keys); the
+ * guards above expect the C# PascalCase shape. Fixed known-keys map — never
+ * rename generically: `Data.Files` is keyed by file paths (`/user/main.cpp`)
+ * which must survive untouched. `kind` is lowercase in both casings and is
+ * deliberately absent (passes through).
+ */
+const WIRE_KEY_MAP: Record<string, string> = {
+  type: 'Type', version: 'Version',
+  environment: 'Environment', data: 'Data', tests: 'Tests', grading: 'Grading',
+  files: 'Files',
+  language: 'Language', tools: 'Tools', libBundle: 'LibBundle', allowStudentCreateFiles: 'AllowStudentCreateFiles',
+  content: 'Content', encoding: 'Encoding', visibility: 'Visibility', modifiable: 'Modifiable',
+  public: 'Public', private: 'Private',
+  name: 'Name', weight: 'Weight', stdin: 'Stdin', stdout: 'Stdout', stderr: 'Stderr', exitCode: 'ExitCode',
+  function: 'Function', cases: 'Cases', functionName: 'FunctionName', parameters: 'Parameters', returnType: 'ReturnType',
+  inputs: 'Inputs', expected: 'Expected',
+  maxScore: 'MaxScore',
+};
+
+/**
+ * Deep-walk renaming camelCase wire keys to PascalCase. Rules:
+ * - Object already carrying `Type` → assumed PascalCase, returned as-is
+ *   (fast path; also makes the walk idempotent on PascalCase subtrees).
+ * - Own keys renamed via {@link WIRE_KEY_MAP}; unknown keys pass through.
+ * - The value of `Files`/`files` is a map keyed by file paths — its keys are
+ *   never renamed; only the per-file metadata values are walked.
+ * - Arrays and all other object values recurse normally.
+ */
+function normalizeWireCasing(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(normalizeWireCasing);
+  if (!isRecord(node)) return node;
+  if ('Type' in node) return node;
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(node)) {
+    const renamed = WIRE_KEY_MAP[key] ?? key;
+    if (renamed !== 'Files') {
+      out[renamed] = normalizeWireCasing(value);
+      continue;
+    }
+    const files: Record<string, unknown> = {};
+    const map = isRecord(value) ? value : {};
+    for (const [path, meta] of Object.entries(map)) {
+      files[path] = normalizeWireCasing(meta);
+    }
+    out.Files = files;
+  }
+  return out;
+}
+
 /**
  * Narrow the raw HTTP payload into a typed {@link CodingAssignmentContent}.
+ * camelCase API payloads are normalized to PascalCase first; the single seam
+ * that fixes both the student and instructor read paths.
  * Returns `null` if the shape is wrong (caller should treat as "no content").
  */
 export function narrowCodingAssignmentContent(
   raw: unknown,
 ): CodingAssignmentContent | null {
   if (!isRecord(raw)) return null;
-  if (raw.Type !== 'coding-assignment') return null;
-  if (raw.Version !== 1) return null;
-  const tests = narrowSuite(raw.Tests);
+  const source = normalizeWireCasing(raw) as Record<string, unknown>;
+  if (source.Type !== 'coding-assignment') return null;
+  if (source.Version !== 1) return null;
+  const tests = narrowSuite(source.Tests);
   if (!tests) return null;
   // Environment / Data / Grading are not polymorphic — trust the wire shape,
   // the server validates via FluentValidation.
-  return { ...(raw as unknown as CodingAssignmentContent), Tests: tests };
+  return { ...(source as unknown as CodingAssignmentContent), Tests: tests };
 }
