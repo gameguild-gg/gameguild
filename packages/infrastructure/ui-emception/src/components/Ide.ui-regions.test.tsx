@@ -405,6 +405,24 @@ describe('read-only delete/rename guard', () => {
     confirmSpy.mockRestore();
   });
 
+  it('rename handler refuses a modifiable:false file even when invoked via the context menu', async () => {
+    const promptSpy = jest.spyOn(window, 'prompt').mockReturnValue('/user/renamed.cpp');
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} fileMeta={{ [SEED_FILE]: { visibility: 'Public', modifiable: false } }} />);
+    });
+    // The ctx-menu entry bypasses footer-button disabling — exercises the handler itself.
+    fireEvent.contextMenu(screen.getByTestId(`file-row-${SEED_FILE}`));
+    await act(async () => {
+      fireEvent.click(screen.getByText('✏ Rename'));
+    });
+    expect(promptSpy).not.toHaveBeenCalled();
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === SEED_FILE)).toBeDefined();
+    expect(files.find((f) => f.path === '/user/renamed.cpp')).toBeUndefined();
+    promptSpy.mockRestore();
+  });
+
   it('a modifiable file stays deletable', async () => {
     const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
     const ref = createRef<IdeHandle>();
