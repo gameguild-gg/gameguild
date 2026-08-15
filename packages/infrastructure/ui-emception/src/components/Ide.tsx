@@ -8,6 +8,7 @@ import FileExplorer from './FileExplorer';
 import type { DockGroup, FileMeta, FileMetaInput, GradingPlan, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
 import { DEFAULT_IMAGE, SDL_CANVAS_PATH, legacyAssignmentToken, parseWorkspaceBundle, resolveArgs, workspaceConfigToState, workspaceStorageKey } from './ide-types';
 import TestResultsPanel from './TestResultsPanel';
+import TestCasesPanel from './TestCasesPanel';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import { MINI_DOCTEST_H, parseMiniDoctest } from './doctest-header';
 import TerminalPanel from './TerminalPanel';
@@ -233,7 +234,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   const [isReady, setIsReady] = useState(false);
   const [terminalReady, setTerminalReady] = useState(false);
   const [executionPhase, setExecutionPhase] = useState<'idle' | 'compiling' | 'running'>('idle');
-  const [bottomTab, setBottomTab] = useState<'terminal' | 'tests'>('terminal');
+  const [bottomTab, setBottomTab] = useState<'terminal' | 'test-cases' | 'test-results' | 'tests'>('terminal');
   /** Set to true by handleStop so the catch block in handleCompile knows it was intentional */
   const stoppedRef = useRef(false);
   /** Tracks latest files for use in callbacks that can't close over state */
@@ -739,6 +740,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         cases: reportCases,
       };
       setLastReport(report);
+      if (testsPanelSlot == null) setBottomTab('test-results');
       try {
         onTestReportRef.current?.(report);
       } catch {
@@ -756,10 +758,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         cases: [{ name: 'compile', passed: false, durationMs: 0, diagnostic: message }],
       };
       setLastReport(report);
+      if (testsPanelSlot == null) setBottomTab('test-results');
     } finally {
       setTestRunning(false);
     }
-    }, [testPlan, testMode, syncFilesToVfs]);
+    }, [testPlan, testMode, syncFilesToVfs, testsPanelSlot]);
 
   // ── Apply a workspace config to reactive state + Worker VFS ─────
   const applyWorkspace = useCallback(
@@ -2583,6 +2586,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     transition: 'background 0.15s',
   };
   const resizerVStyle: React.CSSProperties = { ...resizerStyle, width: '100%', height: 4, cursor: 'row-resize' };
+  const bottomTabButtonStyle = (active: boolean): React.CSSProperties => ({
+    padding: '4px 12px',
+    fontSize: '12px',
+    cursor: 'pointer',
+    background: active ? '#1e1e2e' : 'transparent',
+    color: active ? '#cdd6f4' : '#6c7086',
+    border: 'none',
+    borderBottom: active ? '2px solid #89b4fa' : '2px solid transparent',
+  });
+  const studentTabsVisible = testPlan != null && testsPanelSlot == null;
   const canRecompileWhileRunning = executionPhase === 'running' && resolvedConfig.run.type === 'sdl3-canvas';
   const canCompile = isReady && activeFile?.type === 'text' && (executionPhase === 'idle' || canRecompileWhileRunning);
   const showCompileButton = executionPhase !== 'running' || canRecompileWhileRunning;
@@ -2846,38 +2859,40 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
               </>
             )}
 
-            {/* Bottom panel: Terminal + Tests tabs */}
+            {/* Bottom panel: Terminal + (student) Test Cases/Test Results + (instructor) Tests tabs */}
             <PanelResizeHandle style={resizerVStyle} />
             <Panel defaultSize={28} minSize={8} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid #313244', background: '#181825' }}>
                 <button
                   type="button"
                   onClick={() => setBottomTab('terminal')}
-                  style={{
-                    padding: '4px 12px',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    background: bottomTab === 'terminal' ? '#1e1e2e' : 'transparent',
-                    color: bottomTab === 'terminal' ? '#cdd6f4' : '#6c7086',
-                    border: 'none',
-                    borderBottom: bottomTab === 'terminal' ? '2px solid #89b4fa' : '2px solid transparent',
-                  }}
+                  style={bottomTabButtonStyle(bottomTab === 'terminal')}
                 >
                   Terminal
                 </button>
+                {studentTabsVisible && (
+                  <button
+                    type="button"
+                    onClick={() => setBottomTab('test-cases')}
+                    style={bottomTabButtonStyle(bottomTab === 'test-cases')}
+                  >
+                    Test Cases
+                  </button>
+                )}
+                {studentTabsVisible && (
+                  <button
+                    type="button"
+                    onClick={() => setBottomTab('test-results')}
+                    style={bottomTabButtonStyle(bottomTab === 'test-results')}
+                  >
+                    Test Results
+                  </button>
+                )}
                 {testsPanelSlot != null && (
                   <button
                     type="button"
                     onClick={() => setBottomTab('tests')}
-                    style={{
-                      padding: '4px 12px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      background: bottomTab === 'tests' ? '#1e1e2e' : 'transparent',
-                      color: bottomTab === 'tests' ? '#cdd6f4' : '#6c7086',
-                      border: 'none',
-                      borderBottom: bottomTab === 'tests' ? '2px solid #89b4fa' : '2px solid transparent',
-                    }}
+                    style={bottomTabButtonStyle(bottomTab === 'tests')}
                   >
                     Tests
                   </button>
@@ -2893,6 +2908,28 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
                   onBootTerminalReady={handleBootTerminalReady}
                 />
               </div>
+              {testPlan != null && testsPanelSlot == null && (
+                <div style={{ flex: 1, display: bottomTab === 'test-cases' ? 'flex' : 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                  <TestCasesPanel
+                    cases={testMode === 'public' ? testPlan.cases.filter((c) => !c.hidden) : testPlan.cases}
+                  />
+                </div>
+              )}
+              {testPlan != null && testsPanelSlot == null && (
+                <div
+                  data-testid="test-results-slot"
+                  style={{ flex: 1, display: bottomTab === 'test-results' ? 'flex' : 'none', flexDirection: 'column', overflow: 'auto', background: '#11111b', padding: '8px' }}
+                >
+                  {lastReport && (
+                    <TestResultsPanel
+                      report={lastReport}
+                      maxScore={maxScore}
+                      passingScore={passingScore}
+                      weights={testPlan.cases.map((c) => c.weight ?? 1)}
+                    />
+                  )}
+                </div>
+              )}
               {bottomTab === 'tests' && testsPanelSlot != null && (
                 <div
                   data-testid="tests-panel-slot"
@@ -2924,16 +2961,6 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         {activeFile && <span>{activeFile.path}</span>}
         {activeFile?.type === 'text' && <span style={{ marginLeft: 'auto' }}>{inferLanguage(activeFileName).toUpperCase()}</span>}
       </div>
-      {lastReport && (
-        <div style={{ marginTop: '0.5rem' }}>
-          <TestResultsPanel
-            report={lastReport}
-            maxScore={maxScore}
-            passingScore={passingScore}
-            weights={testPlan?.cases.map((c) => c.weight ?? 1)}
-          />
-        </div>
-      )}
     </div>
   );
 });
