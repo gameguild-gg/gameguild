@@ -31,6 +31,12 @@ public sealed record SubmitTestingProjectApplicationCommand(
     string? PreferredAvailability,
     IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null) : ICommand<Result<TestingProjectApplicationProjection>>;
 
+public sealed record UpdateTestingProjectApplicationCommand(
+    Guid ApplicationId,
+    Guid ProjectVersionId,
+    string? PreferredAvailability,
+    IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null) : ICommand<Result<TestingProjectApplicationProjection>>;
+
 public sealed record WithdrawTestingProjectApplicationCommand(Guid ApplicationId)
     : ICommand<Result<TestingProjectApplicationProjection>>;
 
@@ -98,6 +104,11 @@ public sealed record GetTestingApplicationReviewPackageQuery(Guid ApplicationId)
 
 public sealed record SubmitTestingProjectApplicationRequest(
     Guid ProjectId,
+    Guid ProjectVersionId,
+    string? PreferredAvailability,
+    IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null);
+
+public sealed record UpdateTestingProjectApplicationRequest(
     Guid ProjectVersionId,
     string? PreferredAvailability,
     IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null);

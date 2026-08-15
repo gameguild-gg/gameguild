@@ -379,6 +379,23 @@ export async function submitTestingProjectApplication(
   );
 }
 
+export async function updateTestingProjectApplication(
+  formData: FormData,
+): Promise<TestingEventActionResult<{ id?: string }>> {
+  const applicationId = text(formData, 'applicationId');
+  const projectVersionId = text(formData, 'projectVersionId');
+  if (!applicationId || !projectVersionId)
+    return { success: false, error: 'Application and an accessible project version are required.' };
+  return complete(
+    createModules().events.putTestingEventsApplications(applicationId, {
+      projectVersionId,
+      preferredAvailability: optionalText(formData, 'preferredAvailability'),
+    }),
+    'Project application updated.',
+    optionalText(formData, 'eventId') ?? undefined,
+  );
+}
+
 export async function withdrawTestingProjectApplication(formData: FormData): Promise<TestingEventActionResult<{ id?: string }>> {
   const applicationId = text(formData, 'applicationId');
   if (!applicationId) return { success: false, error: 'Application is required.' };

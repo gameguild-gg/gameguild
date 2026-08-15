@@ -179,6 +179,49 @@ public class TenantRepositoryTests
     }
 
     [Fact]
+    public async Task UpdateAsync_ShouldRejectDeactivatingDefaultTenant()
+    {
+        await using var context = CreateContext();
+        var repo = new TenantRepository(context);
+        var tenant = new Tenant
+        {
+            Name = "GameGuild Platform",
+            Slug = "gameguild-platform",
+            IsDefault = true,
+            IsActive = true
+        };
+        context.Set<Tenant>().Add(tenant);
+        await context.SaveChangesAsync();
+        tenant.Deactivate();
+
+        var act = () => repo.UpdateAsync(tenant);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*default tenant must remain active*");
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldRejectDeletingDefaultTenant()
+    {
+        await using var context = CreateContext();
+        var repo = new TenantRepository(context);
+        var tenant = new Tenant
+        {
+            Name = "GameGuild Platform",
+            Slug = "gameguild-platform",
+            IsDefault = true,
+            IsActive = true
+        };
+        context.Set<Tenant>().Add(tenant);
+        await context.SaveChangesAsync();
+
+        var act = () => repo.DeleteAsync(tenant);
+
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*default tenant cannot be deleted*");
+    }
+
+    [Fact]
     public async Task GetAuditLogAsync_Should_Return_Page()
     {
         await using var context = CreateContext();

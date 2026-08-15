@@ -93,6 +93,7 @@ public class TenantRepository(IApplicationDbContext context) : ITenantRepository
 
     public async Task<Tenant> UpdateAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
+        EnsureDefaultTenantRemainsActive(tenant);
         context.Set<Tenant>().Update(tenant);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
@@ -105,6 +106,7 @@ public class TenantRepository(IApplicationDbContext context) : ITenantRepository
 
         if (tenant != null)
         {
+            EnsureTenantCanBeDeleted(tenant);
             tenant.SoftDelete();
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -112,6 +114,7 @@ public class TenantRepository(IApplicationDbContext context) : ITenantRepository
 
     public async Task DeleteAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
+        EnsureTenantCanBeDeleted(tenant);
         tenant.SoftDelete();
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -121,6 +124,18 @@ public class TenantRepository(IApplicationDbContext context) : ITenantRepository
         var query = context.Set<Tenant>().Where(t => t.DeletedAt == null).AsQueryable();
 
         return Task.FromResult(query);
+    }
+
+    private static void EnsureDefaultTenantRemainsActive(Tenant tenant)
+    {
+        if (tenant.IsDefault && (!tenant.IsActive || tenant.DeletedAt != null))
+            throw new InvalidOperationException("The default tenant must remain active.");
+    }
+
+    private static void EnsureTenantCanBeDeleted(Tenant tenant)
+    {
+        if (tenant.IsDefault)
+            throw new InvalidOperationException("The default tenant cannot be deleted.");
     }
 
     public async Task<PagedResult<TenantAuditLogEntry>> GetAuditLogAsync(

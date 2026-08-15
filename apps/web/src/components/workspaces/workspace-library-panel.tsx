@@ -27,7 +27,7 @@ export async function WorkspaceLibraryPanel({ title, library, resourceType, reso
     <CardHeader><CardTitle>{title}</CardTitle><CardDescription>Uploads validate the parent workspace. Binary content is deduplicated while folders, copies and revisions remain logical resources.</CardDescription></CardHeader>
     <CardContent className="space-y-6">
       <div className="grid gap-4 lg:grid-cols-2">
-        <form action={uploadWorkspaceAssetForm} className="space-y-3 rounded-lg border p-4" encType="multipart/form-data">
+        <form action={uploadWorkspaceAssetForm} className="space-y-3 rounded-lg border p-4">
           <input type="hidden" name="resourceType" value={resourceType} /><input type="hidden" name="resourceId" value={resourceId} /><input type="hidden" name="returnPath" value={returnPath} />
           <div><Label htmlFor={`asset-file-${resourceId}`}>Upload file</Label><Input id={`asset-file-${resourceId}`} name="file" type="file" required /></div>
           <div><Label htmlFor={`asset-folder-${resourceId}`}>Folder</Label><select id={`asset-folder-${resourceId}`} name="folderId" className="mt-1 h-9 w-full rounded-md border bg-background px-3 text-sm"><option value="">Library root</option>{library?.folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}</select></div>

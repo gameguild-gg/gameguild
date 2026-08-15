@@ -99,6 +99,43 @@ public class TenantMiddlewareSecurityTests
     }
 
     [Fact]
+    public async Task Should_AllowSystemAdminToSelectAnExplicitTargetTenantWhileKeepingTheBaseTenantClaim()
+    {
+        var userId = Guid.NewGuid();
+        var baseTenantId = Guid.NewGuid();
+        var targetTenantId = Guid.NewGuid();
+        var targetTenant = new Tenant
+        {
+            Id = targetTenantId,
+            Name = "Target tenant",
+            Slug = "target",
+            IsActive = true,
+        };
+        var context = CreateHttpContext(
+            isAuthenticated: true,
+            userId: userId,
+            tenantIdHeader: targetTenantId.ToString(),
+            roles: ["SystemAdmin"],
+            authenticatedTenantId: baseTenantId);
+        _mediatorMock
+            .Setup(m => m.Send(
+                It.Is<GetTenantByIdQuery>(q => q.TenantId == targetTenantId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(targetTenant);
+
+        await _middleware.InvokeAsync(
+            context,
+            _mediatorMock.Object,
+            _domainRepoMock.Object,
+            _memberRepoMock.Object);
+
+        context.Response.StatusCode.Should().Be(StatusCodes.Status200OK);
+        context.Items[HttpContextKeys.AuthorizationTenantId].Should().Be(targetTenantId);
+        _nextMock.Verify(next => next(context), Times.Once);
+        _memberRepoMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
     public async Task Should_NotTreatTenantAdminAsSystemAdmin_WhenNotMemberOfResolvedTenant()
     {
         var userId = Guid.NewGuid();
@@ -397,7 +434,8 @@ public class TenantMiddlewareSecurityTests
         Guid? userId,
         string? tenantIdHeader,
         string path = "/api/test",
-        IEnumerable<string>? roles = null)
+        IEnumerable<string>? roles = null,
+        Guid? authenticatedTenantId = null)
     {
         var context = new DefaultHttpContext();
         context.Request.Path = path;
@@ -413,6 +451,10 @@ public class TenantMiddlewareSecurityTests
             {
                 new(ClaimTypes.NameIdentifier, userId.Value.ToString())
             };
+            if (authenticatedTenantId.HasValue)
+            {
+                claims.Add(new Claim(TenantResolver.TenantIdClaimType, authenticatedTenantId.Value.ToString()));
+            }
             claims.AddRange((roles ?? []).Select(role => new Claim(ClaimTypes.Role, role)));
             context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Test"));
         }

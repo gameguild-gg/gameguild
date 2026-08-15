@@ -28,6 +28,17 @@ public sealed class SetTenantMembershipStatusCommandHandler(ITenantMemberReposit
             return ToResponse(member, "Tenant membership already has the requested status.");
         }
 
+        if (!request.IsActive && member.Tenant?.IsDefault == true)
+        {
+            return new SetTenantMembershipStatusResponse
+            {
+                Success = false,
+                Message = "The default tenant membership must remain active.",
+                MemberId = member.Id,
+                IsActive = true,
+            };
+        }
+
         if (!request.IsActive && IsAdministrator(member.Role))
         {
             var members = await memberRepository

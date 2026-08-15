@@ -26,15 +26,22 @@ public class TestingLabPermissionController : BaseApiController {
     return _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty;
   }
 
-  private Guid? GetEffectiveTenantId(Guid? requestedTenantId) {
+  private bool TryGetEffectiveTenantId(Guid? requestedTenantId, out Guid? effectiveTenantId) {
     var actor = _actorContextAccessor.ActorContext;
     var currentTenantId = actor.TenantId;
-    if (actor.IsSystemAdmin) return requestedTenantId ?? currentTenantId;
+    effectiveTenantId = null;
+    if (!currentTenantId.HasValue) return false;
 
-    if (currentTenantId.HasValue && requestedTenantId.HasValue && currentTenantId != requestedTenantId)
-      throw new UnauthorizedAccessException("Testing Lab access can only be managed inside the current tenant.");
+    if (!requestedTenantId.HasValue || currentTenantId == requestedTenantId) {
+      effectiveTenantId = currentTenantId;
+      return true;
+    }
 
-    return currentTenantId ?? requestedTenantId;
+    // A SystemAdmin remains a member of the protected base tenant. An explicit target
+    // tenant scopes the administrative operation without moving or replacing that membership.
+    if (!actor.IsSystemAdmin) return false;
+    effectiveTenantId = requestedTenantId;
+    return true;
   }
 
   // ===== TESTING LAB ROLE TEMPLATES =====
@@ -133,7 +140,7 @@ public class TestingLabPermissionController : BaseApiController {
   /// <summary> Get TestingLab permissions for a specific user </summary>
   [HttpGet("users/{userId}")]
   public async Task<ActionResult<UserTestingLabPermissions>> GetUserTestingLabPermissions(Guid userId, [FromQuery] Guid? tenantId = null) {
-    var effectiveTenantId = GetEffectiveTenantId(tenantId);
+    if (!TryGetEffectiveTenantId(tenantId, out var effectiveTenantId)) return Forbid();
     var userRoles = await _permissionService.GetUserRolesAsync(userId, effectiveTenantId).ConfigureAwait(false);
     var userPermissions = await _permissionService.GetUserPermissionsAsync(userId, effectiveTenantId).ConfigureAwait(false);
 
@@ -191,7 +198,8 @@ public class TestingLabPermissionController : BaseApiController {
   [HttpPost("users/{userId}/roles")]
   public async Task<ActionResult> AssignTestingLabRole(Guid userId, [FromBody] AssignTestingLabRoleRequest request) {
     try {
-      await _permissionService.AssignRoleToUserAsync(userId, GetEffectiveTenantId(request.TenantId), request.RoleName, request.ExpiresAt).ConfigureAwait(false);
+      if (!TryGetEffectiveTenantId(request.TenantId, out var effectiveTenantId)) return Forbid();
+      await _permissionService.AssignRoleToUserAsync(userId, effectiveTenantId, request.RoleName, request.ExpiresAt).ConfigureAwait(false);
 
       _logger.LogInformation("Admin user {AdminUserId} assigned TestingLab role '{RoleName}' to user {UserId}", GetCurrentUserId(), request.RoleName, userId);
 
@@ -207,7 +215,8 @@ public class TestingLabPermissionController : BaseApiController {
   /// <summary> Revoke a TestingLab role from a user </summary>
   [HttpDelete("users/{userId}/roles/{roleName}")]
   public async Task<ActionResult> RevokeTestingLabRole(Guid userId, string roleName, [FromQuery] Guid? tenantId = null) {
-    await _permissionService.RevokeRoleFromUserAsync(userId, GetEffectiveTenantId(tenantId), roleName).ConfigureAwait(false);
+    if (!TryGetEffectiveTenantId(tenantId, out var effectiveTenantId)) return Forbid();
+    await _permissionService.RevokeRoleFromUserAsync(userId, effectiveTenantId, roleName).ConfigureAwait(false);
 
     _logger.LogInformation("Admin user {AdminUserId} revoked TestingLab role '{RoleName}' from user {UserId}", GetCurrentUserId(), roleName, userId);
 
@@ -221,7 +230,8 @@ public class TestingLabPermissionController : BaseApiController {
   public async Task<ActionResult> GrantResourcePermission(Guid userId, string resourceType, Guid resourceId, [FromBody] GrantResourcePermissionRequest request) {
     if (!IsTestingLabResource(resourceType)) { return BadRequest($"'{resourceType}' is not a valid TestingLab resource type"); }
 
-    await _permissionService.GrantPermissionAsync(userId, GetEffectiveTenantId(request.TenantId), request.Action, resourceType, resourceId, null, request.ExpiresAt, GetCurrentUserId()).ConfigureAwait(false);
+    if (!TryGetEffectiveTenantId(request.TenantId, out var effectiveTenantId)) return Forbid();
+    await _permissionService.GrantPermissionAsync(userId, effectiveTenantId, request.Action, resourceType, resourceId, null, request.ExpiresAt, GetCurrentUserId()).ConfigureAwait(false);
 
     _logger.LogInformation("Admin user {AdminUserId} granted permission '{Action}' on {ResourceType} {ResourceId} to user {UserId}", GetCurrentUserId(), request.Action, resourceType, resourceId, userId);
 
@@ -233,7 +243,8 @@ public class TestingLabPermissionController : BaseApiController {
   public async Task<ActionResult> RevokeResourcePermission(Guid userId, string resourceType, Guid resourceId, [FromQuery] string action, [FromQuery] Guid? tenantId = null) {
     if (!IsTestingLabResource(resourceType)) { return BadRequest($"'{resourceType}' is not a valid TestingLab resource type"); }
 
-    await _permissionService.RevokePermissionAsync(userId, GetEffectiveTenantId(tenantId), action, resourceType, resourceId, GetCurrentUserId()).ConfigureAwait(false);
+    if (!TryGetEffectiveTenantId(tenantId, out var effectiveTenantId)) return Forbid();
+    await _permissionService.RevokePermissionAsync(userId, effectiveTenantId, action, resourceType, resourceId, GetCurrentUserId()).ConfigureAwait(false);
 
     _logger.LogInformation("Admin user {AdminUserId} revoked permission '{Action}' on {ResourceType} {ResourceId} from user {UserId}", GetCurrentUserId(), action, resourceType, resourceId, userId);
 
@@ -247,7 +258,8 @@ public class TestingLabPermissionController : BaseApiController {
   public async Task<ActionResult<bool>> CheckTestingLabPermission(Guid userId, string resourceType, [FromQuery] string action, [FromQuery] Guid? resourceId = null, [FromQuery] Guid? tenantId = null) {
     if (!IsTestingLabResource(resourceType)) { return BadRequest($"'{resourceType}' is not a valid TestingLab resource type"); }
 
-    var hasPermission = await _permissionService.HasPermissionAsync(userId, GetEffectiveTenantId(tenantId), action, resourceType, resourceId).ConfigureAwait(false);
+    if (!TryGetEffectiveTenantId(tenantId, out var effectiveTenantId)) return Forbid();
+    var hasPermission = await _permissionService.HasPermissionAsync(userId, effectiveTenantId, action, resourceType, resourceId).ConfigureAwait(false);
 
     return Ok(hasPermission);
   }

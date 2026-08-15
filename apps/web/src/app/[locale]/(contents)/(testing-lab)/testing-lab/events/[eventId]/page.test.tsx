@@ -16,8 +16,8 @@ vi.mock('@/lib/testing-lab/queries', () => ({
 }));
 
 vi.mock('@/components/testing-lab/testing-project-application', () => ({
-  TestingProjectApplication: ({ application }: { application?: { status?: string } }) => (
-    <div>Application state: {application?.status ?? 'new'}</div>
+  TestingProjectApplication: ({ applications }: { applications?: Array<{ status?: string }> }) => (
+    <div>Application states: {applications?.map((application) => application.status).join(', ') || 'new'}</div>
   ),
 }));
 
@@ -69,7 +69,7 @@ describe('Public Testing Event detail page', () => {
     render(await PublicTestingEventDetailPage({ params: Promise.resolve({ eventId: 'event-1' }) }));
 
     expect(screen.getByRole('heading', { name: 'August campus playtest' })).toBeInTheDocument();
-    expect(screen.getByText('Application state: Pending')).toBeInTheDocument();
+    expect(screen.getByText('Application states: Pending')).toBeInTheDocument();
     expect(screen.getByText('Tester state: Waitlisted')).toBeInTheDocument();
     expect(screen.getByText('Feedback obligations: 1')).toBeInTheDocument();
     expect(mocks.getTestingProjectVersionOptions).toHaveBeenCalledOnce();
@@ -95,7 +95,7 @@ describe('Public Testing Event detail page', () => {
 
     render(await PublicTestingEventDetailPage({ params: Promise.resolve({ eventId: 'event-1' }) }));
 
-    expect(screen.getByText('Application state: new')).toBeInTheDocument();
+    expect(screen.getByText('Application states: new')).toBeInTheDocument();
     expect(mocks.getTestingProjectVersionOptions).not.toHaveBeenCalled();
   });
 
