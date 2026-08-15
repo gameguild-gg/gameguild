@@ -719,7 +719,9 @@ public sealed record AssessmentDto(
     DateTime? DueAt = null,
     bool AllowLateSubmissions = false,
     DateTime? LateSubmissionDeadline = null,
-    AssessmentGradingMethod GradingMethods = AssessmentGradingMethod.InstructorGraded)
+    AssessmentGradingMethod GradingMethods = AssessmentGradingMethod.InstructorGraded,
+    Guid? GroupSetId = null,
+    int PeerReviewsRequiredCount = 0)
 {
     public static AssessmentDto FromEntity(Assessment entity) => new(
         entity.Id,
@@ -745,7 +747,9 @@ public sealed record AssessmentDto(
         entity.DueAt,
         entity.AllowLateSubmissions,
         entity.LateSubmissionDeadline,
-        entity.GradingMethods);
+        entity.GradingMethods,
+        entity.GroupSetId,
+        entity.PeerReviewsRequiredCount);
 }
 
 public sealed record AssessmentDefinitionDto(

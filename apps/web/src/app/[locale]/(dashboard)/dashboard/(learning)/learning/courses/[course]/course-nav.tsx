@@ -29,6 +29,7 @@ import {
   Settings,
   Share2,
   Users,
+  UsersRound,
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -72,6 +73,7 @@ function buildNavItems(features: CourseFeatures): NavItem[] {
     { title: 'Classes', icon: CalendarDays, segment: 'classes', enabled: features.hasClasses },
     { title: 'Assessments', icon: GraduationCap, segment: 'assessments', enabled: features.hasAssessments },
     { title: 'Certificates', icon: Award, segment: 'certificates', enabled: features.hasCertificate },
+    { title: 'Groups', icon: UsersRound, segment: 'groups', enabled: true },
     { title: 'Students', icon: Users, segment: 'students', enabled: true },
     { title: 'Support', icon: MessageSquare, segment: 'support', enabled: true },
     { title: 'Settings', icon: Settings, segment: 'settings', enabled: true },

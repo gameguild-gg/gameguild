@@ -189,7 +189,10 @@ public sealed record UpdateAssessmentRequest(
     bool? AllowLateSubmissions = null,
     DateTime? LateSubmissionDeadline = null,
     bool ClearLateSubmissionDeadline = false,
-    AssessmentGradingMethod? GradingMethods = null
+    AssessmentGradingMethod? GradingMethods = null,
+    Guid? GroupSetId = null,
+    bool ClearGroupSetId = false,
+    int? PeerReviewsRequiredCount = null
 );
 
 /// <summary>

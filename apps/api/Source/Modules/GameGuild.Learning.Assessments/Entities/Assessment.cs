@@ -237,7 +237,10 @@ public class Assessment : EntityBase
         bool? allowLateSubmissions = null,
         DateTime? lateSubmissionDeadline = null,
         bool clearLateSubmissionDeadline = false,
-        AssessmentGradingMethod? gradingMethods = null)
+        AssessmentGradingMethod? gradingMethods = null,
+        Guid? groupSetId = null,
+        bool clearGroupSetId = false,
+        int? peerReviewsRequiredCount = null)
     {
         if (title != null) Title = title;
         Description = description;
@@ -270,6 +273,12 @@ public class Assessment : EntityBase
         if (gradingMethods.HasValue)
         {
             GradingMethods = gradingMethods.Value;
+        }
+        if (clearGroupSetId) GroupSetId = null;
+        else if (groupSetId.HasValue) GroupSetId = groupSetId.Value;
+        if (peerReviewsRequiredCount.HasValue)
+        {
+            SetPeerReviewPolicy(peerReviewsRequiredCount.Value);
         }
 
         UpdatedAt = SystemClock.UtcNow;
