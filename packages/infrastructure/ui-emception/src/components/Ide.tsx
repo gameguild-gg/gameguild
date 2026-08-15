@@ -1259,6 +1259,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
   const renameSelectedFile = useCallback(() => {
     if (!selectedPath || !files[selectedPath]) return;
+    // Read-only guard mirrors the disabled button — the ctx-menu entry bypasses the button.
+    if (fileMeta?.[selectedPath]?.modifiable === false) return;
     const nextPath = window.prompt('Rename file', selectedPath);
     if (!nextPath || nextPath === selectedPath) return;
     if (files[nextPath]) {
@@ -1276,7 +1278,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     setOpenTabs((prev) => prev.map((tab) => (tab.path === selectedPath ? { ...tab, path: norm, id: `tab:${norm}` } : tab)));
     setSelectedPath(norm);
     setActiveTabId((cur) => (cur === `tab:${selectedPath}` ? `tab:${norm}` : cur));
-  }, [selectedPath, files]);
+  }, [selectedPath, files, fileMeta]);
 
   const deleteSelectedFile = useCallback(() => {
     if (!selectedPath || !files[selectedPath]) return;
