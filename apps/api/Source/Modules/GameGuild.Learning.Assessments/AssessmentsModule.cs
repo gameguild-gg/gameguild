@@ -17,6 +17,7 @@ public static class AssessmentsModule
     {
         // Register services
         services.AddScoped<IAssessmentService, AssessmentService>();
+        services.AddScoped<IGroupSetService, GroupSetService>();
         services.AddScoped<IProgramContentLifecycleGuard, AssessmentProgramContentLifecycleGuard>();
         services.AddScoped<GameGuild.Learning.Courses.IAssessmentGradingSync, AssessmentGradingSync>();
 
