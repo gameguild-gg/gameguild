@@ -59,11 +59,14 @@ public class ProjectsController : BaseApiController {
     [FromQuery] bool? popular = null,
     [FromQuery] bool? recent = null,
     [FromQuery] bool currentTenantOnly = false,
+    [FromQuery] bool includeArchived = false,
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50,
     [FromQuery] string? sortBy = "CreatedAt",
     [FromQuery] string? sortDirection = "DESC"
   ) {
+    var actor = _actorContextAccessor.ActorContext;
+    var mayManageProjects = actor.IsTenantAdmin || actor.HasPermission(GameGuild.Identity.Authorization.ProjectPermission.Keys.Admin);
     var query = new GetAllProjectsQuery {
       Type = type,
       Status = status,
@@ -75,6 +78,7 @@ public class ProjectsController : BaseApiController {
       Popular = popular,
       Recent = recent,
       CurrentTenantOnly = currentTenantOnly,
+      IncludeArchived = includeArchived && mayManageProjects,
       Skip = skip,
       Take = Math.Min(take, 100), // Limit max items
       SortBy = sortBy,
@@ -86,6 +90,39 @@ public class ProjectsController : BaseApiController {
     return projects.IsSuccess
       ? Ok(projects.Value.Select(ProjectApiResponse.FromProject))
       : ToActionResult(Result.Failure<IEnumerable<ProjectApiResponse>>(projects.Error));
+  }
+
+  /// <summary>
+  /// Gets the Projects that belong to the authenticated user's actual workspace relationship.
+  /// This scope intentionally does not expand for tenant or system administrators.
+  /// </summary>
+  [HttpGet("mine")]
+  public async Task<ActionResult<IReadOnlyList<ProjectApiResponse>>> GetMyProjects(
+    [FromQuery] bool includeArchived = false,
+    [FromQuery] int skip = 0,
+    [FromQuery] int take = 50,
+    CancellationToken cancellationToken = default) {
+    if (!_actorContextAccessor.ActorContext.IsAuthenticated)
+      return Unauthorized();
+
+    var source = _context.Set<Project>().AsNoTracking();
+    if (!includeArchived)
+      source = source.Where(project => project.Status != ContentStatus.Archived && project.Status != ContentStatus.Deleted);
+    var projects = await _authorizationService.ApplyPersonalAccess(source)
+      .Include(project => project.CreatedBy)
+      .Include(project => project.Category)
+      .Include(project => project.Versions)
+      .Include(project => project.Collaborators)
+      .Include(project => project.Releases)
+      .Include(project => project.Teams)
+        .ThenInclude(team => team.Team)
+      .OrderByDescending(project => project.UpdatedAt)
+      .Skip(Math.Max(skip, 0))
+      .Take(Math.Clamp(take, 1, 100))
+      .ToListAsync(cancellationToken)
+      .ConfigureAwait(false);
+
+    return Ok(projects.Select(ProjectApiResponse.FromProject).ToArray());
   }
 
   [HttpGet("accessible-versions")]

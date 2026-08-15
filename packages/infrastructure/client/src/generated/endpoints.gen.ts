@@ -3927,6 +3927,16 @@ export const getTEndpoint = {
   requiresAuth: true,
 } as const;
 
+export type GetAccessCapabilitiesInput = void;
+export type GetAccessCapabilitiesOutput = Types.APIAccessAccessCapabilitiesOutput;
+export const getAccessCapabilitiesEndpoint = {
+  operationId: 'getAccessCapabilities' as const,
+  method: 'GET' as const,
+  path: '/v1/access/capabilities' as const,
+  tags: ['Api/access/capabilities'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAdminAssetsInput {
   query?: {
     status?: string;
@@ -7622,16 +7632,6 @@ export const postCoursesInteractionsEventsEndpoint = {
   requiresAuth: true,
 } as const;
 
-export type GetDashboardContextsInput = void;
-export type GetDashboardContextsOutput = Types.APIDashboardDashboardContextsOutput;
-export const getDashboardContextsEndpoint = {
-  operationId: 'getDashboardContexts' as const,
-  method: 'GET' as const,
-  path: '/v1/dashboard/contexts' as const,
-  tags: ['Api/dashboard/contexts'] as const,
-  requiresAuth: true,
-} as const;
-
 export interface GetDiscoveryCollectionsInput {
   query?: {
     tenantId?: string;
@@ -9430,6 +9430,7 @@ export interface GetProjectsInput {
     popular?: boolean;
     recent?: boolean;
     currentTenantOnly?: boolean;
+    includeArchived?: boolean;
     skip?: number;
     take?: number;
     sortBy?: string;
@@ -9540,6 +9541,22 @@ export const postProjectsInvitationsDeclineEndpoint = {
   operationId: 'postProjectsInvitationsDecline' as const,
   method: 'POST' as const,
   path: '/v1/projects/invitations/{invitationToken}:decline' as const,
+  tags: ['Projects'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetProjectsMineInput {
+  query?: {
+    includeArchived?: boolean;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetProjectsMineOutput = Array<Types.ProjectsProjectApiOutput>;
+export const getProjectsMineEndpoint = {
+  operationId: 'getProjectsMine' as const,
+  method: 'GET' as const,
+  path: '/v1/projects/mine' as const,
   tags: ['Projects'] as const,
   requiresAuth: true,
 } as const;
@@ -11328,7 +11345,16 @@ export const postSupportTicketsResolveEndpoint = {
   requiresAuth: true,
 } as const;
 
-export type GetTeamsInput = void;
+export interface GetTeamsInput {
+  query?: {
+    search?: string;
+    visibility?: Types.TeamsTeamVisibility;
+    status?: Types.TeamsTeamStatus;
+    includeArchived?: boolean;
+    skip?: number;
+    take?: number;
+  };
+}
 export type GetTeamsOutput = Array<Types.APITeamsTeam>;
 export const getTeamsEndpoint = {
   operationId: 'getTeams' as const,
@@ -11370,6 +11396,23 @@ export const postTeamsInvitationsByInvitationIdAcceptEndpoint = {
   operationId: 'postTeamsInvitationsByInvitationIdAccept' as const,
   method: 'POST' as const,
   path: '/v1/teams/invitations/{invitationId}:accept' as const,
+  tags: ['Api/teams'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetTeamsMineInput {
+  query?: {
+    includeArchived?: boolean;
+    search?: string;
+    skip?: number;
+    take?: number;
+  };
+}
+export type GetTeamsMineOutput = Array<Types.APITeamsTeam>;
+export const getTeamsMineEndpoint = {
+  operationId: 'getTeamsMine' as const,
+  method: 'GET' as const,
+  path: '/v1/teams/mine' as const,
   tags: ['Api/teams'] as const,
   requiresAuth: true,
 } as const;
@@ -11508,6 +11551,18 @@ export const getTeamsProjectsEndpoint = {
   method: 'GET' as const,
   path: '/v1/teams/{teamId}/projects' as const,
   tags: ['Api/teams/projects'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostTeamsRestoreInput {
+  teamId: string;
+}
+export type PostTeamsRestoreOutput = Types.APITeamsTeam;
+export const postTeamsRestoreEndpoint = {
+  operationId: 'postTeamsRestore' as const,
+  method: 'POST' as const,
+  path: '/v1/teams/{teamId}:restore' as const,
+  tags: ['Api/teams'] as const,
   requiresAuth: true,
 } as const;
 
@@ -16263,6 +16318,7 @@ export const endpoints = {
   getMetrics: getMetricsEndpoint,
   getReady: getReadyEndpoint,
   getT: getTEndpoint,
+  getAccessCapabilities: getAccessCapabilitiesEndpoint,
   getAdminAssets: getAdminAssetsEndpoint,
   postAdminAssetsRunGc: postAdminAssetsRunGcEndpoint,
   getAdminAssetsGcCandidates: getAdminAssetsGcCandidatesEndpoint,
@@ -16526,7 +16582,6 @@ export const endpoints = {
   getCoursesContentChildren: getCoursesContentChildrenEndpoint,
   getCoursesInteractionsEvents: getCoursesInteractionsEventsEndpoint,
   postCoursesInteractionsEvents: postCoursesInteractionsEventsEndpoint,
-  getDashboardContexts: getDashboardContextsEndpoint,
   getDiscoveryCollections: getDiscoveryCollectionsEndpoint,
   postDiscoveryCollections: postDiscoveryCollectionsEndpoint,
   getDiscoveryCollectionsCurator: getDiscoveryCollectionsCuratorEndpoint,
@@ -16668,6 +16723,7 @@ export const endpoints = {
   getProjectsFeatured: getProjectsFeaturedEndpoint,
   postProjectsInvitationsAccept: postProjectsInvitationsAcceptEndpoint,
   postProjectsInvitationsDecline: postProjectsInvitationsDeclineEndpoint,
+  getProjectsMine: getProjectsMineEndpoint,
   getProjectsMyInvitations: getProjectsMyInvitationsEndpoint,
   getProjectsPopular: getProjectsPopularEndpoint,
   getProjectsRecent: getProjectsRecentEndpoint,
@@ -16801,6 +16857,7 @@ export const endpoints = {
   postTeams: postTeamsEndpoint,
   postTeamsInvitationsAccept: postTeamsInvitationsAcceptEndpoint,
   postTeamsInvitationsByInvitationIdAccept: postTeamsInvitationsByInvitationIdAcceptEndpoint,
+  getTeamsMine: getTeamsMineEndpoint,
   getTeamsMyInvitations: getTeamsMyInvitationsEndpoint,
   getTeamsByTeamId: getTeamsByTeamIdEndpoint,
   putTeams: putTeamsEndpoint,
@@ -16812,6 +16869,7 @@ export const endpoints = {
   putTeamsMembers: putTeamsMembersEndpoint,
   deleteTeamsMembers: deleteTeamsMembersEndpoint,
   getTeamsProjects: getTeamsProjectsEndpoint,
+  postTeamsRestore: postTeamsRestoreEndpoint,
   getTenants: getTenantsEndpoint,
   postTenants: postTenantsEndpoint,
   getTenantsByTenantId: getTenantsByTenantIdEndpoint,

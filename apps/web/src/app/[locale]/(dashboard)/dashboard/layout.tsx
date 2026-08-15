@@ -3,6 +3,7 @@ import { DashboardShell } from '@/components/layout';
 import { redirect } from '@/i18n/navigation';
 import { getDashboardNotificationSummary } from '@/lib/dashboard-notifications';
 import { getDashboardContexts } from '@/lib/dashboard-contexts';
+import { forbidden } from 'next/navigation';
 import React from 'react';
 
 export default async function Layout({ children, params }: LayoutProps<'/[locale]/dashboard'>): Promise<React.JSX.Element> {
@@ -21,6 +22,9 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
     getDashboardNotificationSummary(session.user.id),
     getDashboardContexts(),
   ]);
+  if (dashboardContexts.capabilities.length === 0) {
+    forbidden();
+  }
   const dashboardUser = {
     id: session.user.id,
     name: session.user.name?.trim() || session.user.email?.split('@')[0] || 'GameGuild user',

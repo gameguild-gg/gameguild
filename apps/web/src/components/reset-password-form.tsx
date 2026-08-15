@@ -47,7 +47,7 @@ export function ResetPasswordForm({ token, onReset }: ResetPasswordFormProps) {
         </CardHeader>
         <CardContent>
           <Button asChild className="w-full">
-            <Link href="/sign-in?callbackUrl=/dashboard/invitations">Continue to sign in</Link>
+            <Link href="/sign-in?callbackUrl=/my/invitations">Continue to sign in</Link>
           </Button>
         </CardContent>
       </Card>

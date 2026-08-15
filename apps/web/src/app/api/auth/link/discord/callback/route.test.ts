@@ -80,7 +80,7 @@ describe('Discord link callback route', () => {
     });
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toBe(
-      'http://localhost/pt-BR/dashboard/settings/account?linked=discord',
+      'http://localhost/pt-BR/my/settings/account?linked=discord',
     );
     expect(mocks.cookieStore.delete).toHaveBeenCalledWith(LINK_STATE_COOKIE_NAME);
   });
@@ -94,7 +94,7 @@ describe('Discord link callback route', () => {
     expect(response.status).toBe(302);
     // Tampered cookie → payload unreadable → locale unknown → unprefixed path.
     expect(response.headers.get('location')).toBe(
-      'http://localhost/dashboard/settings/account?error=state_mismatch',
+      'http://localhost/my/settings/account?error=state_mismatch',
     );
     expect(mocks.cookieStore.delete).toHaveBeenCalledWith(LINK_STATE_COOKIE_NAME);
   });
@@ -118,7 +118,7 @@ describe('Discord link callback route', () => {
     const response = await GET(request(`?code=auth-code&state=${STATE}`));
 
     expect(response.headers.get('location')).toBe(
-      'http://localhost/pt-BR/dashboard/settings/account?error=conflict',
+      'http://localhost/pt-BR/my/settings/account?error=conflict',
     );
   });
 });

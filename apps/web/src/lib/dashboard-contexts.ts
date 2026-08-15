@@ -35,21 +35,11 @@ export interface DashboardWorkspaceCounts {
   invitations: number;
 }
 
-const safeWorkspaceContext: DashboardContexts = {
-  contexts: [
-    { type: 'Workspace', id: null, name: 'Workspace', route: '/dashboard' },
-  ],
+const safeManagementContext: DashboardContexts = {
+  contexts: [],
   capabilities: [],
   counts: { teams: 0, projects: 0, pendingTasks: 0, invitations: 0 },
-  navigation: [
-    {
-      label: 'Overview',
-      items: [
-        { title: 'Dashboard', route: '/dashboard', children: [] },
-        { title: 'Invitations', route: '/dashboard/invitations', children: [] },
-      ],
-    },
-  ],
+  navigation: [],
 };
 
 export function hasAnyDashboardCapability(
@@ -72,29 +62,26 @@ export async function getDashboardContexts(): Promise<DashboardContexts> {
   });
 
   try {
-    const result = await client.request<DashboardContexts>({
+    const result = await client.request<{ capabilities?: unknown }>({
       method: 'GET',
-      path: '/v1/dashboard/contexts',
+      path: '/v1/access/capabilities',
     });
 
-    if (!result.ok || !result.data) return safeWorkspaceContext;
+    if (!result.ok || !result.data) return safeManagementContext;
+
+    const capabilities = Array.isArray(result.data.capabilities)
+      ? result.data.capabilities.filter((capability): capability is string => typeof capability === 'string')
+      : [];
 
     return {
-      contexts: Array.isArray(result.data.contexts)
-        ? result.data.contexts
-        : safeWorkspaceContext.contexts,
-      capabilities: Array.isArray(result.data.capabilities)
-        ? result.data.capabilities
+      contexts: capabilities.length > 0
+        ? [{ type: 'Operations', id: null, name: 'Operations', route: '/dashboard' }]
         : [],
-      counts:
-        result.data.counts && typeof result.data.counts === 'object'
-          ? result.data.counts
-          : safeWorkspaceContext.counts,
-      navigation: Array.isArray(result.data.navigation)
-        ? result.data.navigation
-        : safeWorkspaceContext.navigation,
+      capabilities,
+      counts: safeManagementContext.counts,
+      navigation: safeManagementContext.navigation,
     };
   } catch {
-    return safeWorkspaceContext;
+    return safeManagementContext;
   }
 }

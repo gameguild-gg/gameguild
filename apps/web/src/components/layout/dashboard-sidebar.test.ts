@@ -50,11 +50,7 @@ describe("dashboard management navigation", () => {
     const navigation = filterDashboardNavigation(dashboardNavigationData, []);
 
     expect(navigation.map((group) => group.label)).toEqual(["Overview"]);
-    expect(navigation[0]?.items.map((item) => item.title)).toEqual([
-      "Dashboard",
-      "Invitations",
-      "Settings",
-    ]);
+    expect(navigation[0]?.items.map((item) => item.title)).toEqual(["Dashboard"]);
   });
 
   it("shows only the administrative module granted to the actor", () => {

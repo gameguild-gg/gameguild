@@ -35,7 +35,7 @@ export function SignInForm({ className, ...props }: React.ComponentProps<'div'>)
       await signIn('credentials', {
         email,
         password,
-        redirectTo: '/dashboard',
+        redirectTo: '/my',
       });
     } catch {
       // error state is set by useAuth
@@ -45,7 +45,7 @@ export function SignInForm({ className, ...props }: React.ComponentProps<'div'>)
   async function handleOAuthSignIn(provider: string) {
     clearError();
     try {
-      await signIn(provider, { redirectTo: '/dashboard' });
+      await signIn(provider, { redirectTo: '/my' });
     } catch {
       // error state is set by useAuth
     }
