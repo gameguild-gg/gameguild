@@ -6,7 +6,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
 import type { DockGroup, FileMeta, FileMetaInput, GradingPlan, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
-import { DEFAULT_IMAGE, SDL_CANVAS_PATH, parseWorkspaceBundle, resolveArgs, workspaceConfigToState, workspaceStorageKey } from './ide-types';
+import { DEFAULT_IMAGE, SDL_CANVAS_PATH, legacyAssignmentToken, parseWorkspaceBundle, resolveArgs, workspaceConfigToState, workspaceStorageKey } from './ide-types';
 import TestResultsPanel from './TestResultsPanel';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import { MINI_DOCTEST_H, parseMiniDoctest } from './doctest-header';
@@ -131,6 +131,10 @@ export interface IdeHandle {
   setFileMeta(path: string, meta: FileMetaInput): Promise<void>;
   /** Content-diff against the seeded workspace — returns edited + student-created files. */
   getModifiedFiles(): Promise<Array<{ path: string; content: string; encoding: 'text' }>>;
+  /** Sync probe — true iff a parseable persisted draft exists under the new or legacy key. */
+  hasStoredDraft(): boolean;
+  /** Reset the content-diff baseline to the CURRENT files — post-resync edits alone are diffs. */
+  resyncBaseline(): void;
   /** Single snapshot for the page's save handler — files + fileMeta + tests + activePresetId. */
   getAuthoredState(): Promise<{
     files: Array<{ path: string; content: string; encoding: 'text' | 'base64' }>;
@@ -257,7 +261,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   useEffect(() => {
     try {
       // Read with the mount-time preset id — the initial workspace's key.
-      const raw = window.localStorage.getItem(workspaceStorageKey(assignmentToken, activePresetIdRef.current));
+      // New key first; if absent, retry the legacy pre-namespacing token
+      // (suffix after the last ':') so pre-migration drafts survive. First hit wins.
+      const raw =
+        window.localStorage.getItem(workspaceStorageKey(assignmentToken, activePresetIdRef.current)) ??
+        window.localStorage.getItem(workspaceStorageKey(legacyAssignmentToken(assignmentToken), activePresetIdRef.current));
       if (!raw) return;
       const parsed = JSON.parse(raw) as {
         files?: Record<string, WorkspaceFile>;
@@ -1037,6 +1045,28 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         .filter((f) => f.type === 'text' && f.content !== seeded.get(f.path))
         .map(({ path, content }) => ({ path, content, encoding: 'text' as const }));
     },
+    hasStoredDraft: () => {
+      const token = propsRef.current.assignmentToken;
+      const wsId = activePresetIdRef.current;
+      for (const key of [workspaceStorageKey(token, wsId), workspaceStorageKey(legacyAssignmentToken(token), wsId)]) {
+        const raw = window.localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          JSON.parse(raw);
+          return true;
+        } catch {
+          /* corrupt entry under this key — try the next */
+        }
+      }
+      return false;
+    },
+    resyncBaseline: () => {
+      seededContentRef.current = new Map(
+        Object.values(filesRef.current)
+          .filter((f) => f.type === 'text')
+          .map(({ path, content }) => [path, content]),
+      );
+    },
     getAuthoredState: async () => {
       const fm = propsRef.current.fileMeta;
       const fileMetaSnapshot: Record<string, { visibility: 'Public' | 'Private'; modifiable: boolean }> = {};
@@ -1253,7 +1283,10 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   }, [selectedPath, files, closeTab]);
 
   const resetWorkspace = useCallback(async () => {
-    if (!window.confirm('Reset the workspace to the default demo files and layout?')) return;
+    const confirmMsg = assignmentToken
+      ? "Reset to the instructor's original files? Your local changes will be lost."
+      : 'Reset the workspace to the default demo files and layout?';
+    if (!window.confirm(confirmMsg)) return;
     const P = '[Emception:IDE]';
     console.log(`${P} ===== WORKSPACE RESET =====`);
     // Stop SDL3 loop if running
@@ -1299,6 +1332,12 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     setExpandedDirs(state.expandedDirs);
     setOpenTabs(state.openTabs);
     setActiveTabId(state.activeTabId);
+    // Diff baseline follows the restored config files; fileMetaRef is kept so readOnly survives reset.
+    seededContentRef.current = new Map(
+      Object.values(state.files)
+        .filter((f) => f.type === 'text')
+        .map(({ path, content }) => [path, content]),
+    );
     setTerminalTabs([{ id: 'terminal-1', title: 'bash' }]);
     setActiveTerminalId('terminal-1');
     if (orchestratorRef.current) {
@@ -1308,7 +1347,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       xtermRef.current?.clear();
       xtermRef.current?.writeln('\x1b[32mWorkspace reset.\x1b[0m');
     }
-  }, [resolvedConfig]);
+  }, [resolvedConfig, assignmentToken]);
 
   const createTerminalTab = useCallback(() => {
     setTerminalTabs((prev) => {

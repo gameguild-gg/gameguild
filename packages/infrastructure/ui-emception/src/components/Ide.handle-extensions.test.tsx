@@ -1,5 +1,5 @@
 import { createRef } from 'react';
-import { render, act } from '@testing-library/react';
+import { render, act, screen, fireEvent } from '@testing-library/react';
 
 if (typeof globalThis.TextEncoder === 'undefined') {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -255,5 +255,153 @@ describe('IdeHandle extensions: addFile / removeFile / setFileMeta / getModified
       (call: any[]) => call[0]?.readOnly === false,
     );
     expect(readOnlyFalseCalls.length).toBeGreaterThan(0);
+  });
+});
+
+describe('IdeHandle storage draft + baseline methods', () => {
+  const wsKey = (token: string) => `gameguild.emception.workspace.${token}.ws-a.v2`;
+  const wsConfig = {
+    id: 'ws-a',
+    label: 'WS A',
+    compile: { tool: 'clang', args: [], output: '/home/user/main.wasm' },
+    run: { type: 'wasi-terminal' as const },
+    features: {},
+    layout: { activeFile: '/user/main.cpp', openTabs: [{ path: '/user/main.cpp', group: 'main' as const }] },
+    files: { '/user/main.cpp': { encoding: 'text' as const, content: 'int main(){}' } },
+  };
+
+  async function renderIdeWith(props: { assignmentToken?: string; workspaceConfig?: typeof wsConfig } = {}) {
+    const ref = createRef<IdeHandle>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).__emceptionCapturedEditor = null;
+    modelsByPath.clear();
+    await act(async () => {
+      render(<Ide ref={ref} {...props} />);
+    });
+    return ref;
+  }
+
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+    jest.restoreAllMocks();
+  });
+
+  it('hasStoredDraft returns false when no entry exists', async () => {
+    const ref = await renderIdeWith({ assignmentToken: 'user-1:assess-1', workspaceConfig: wsConfig });
+
+    window.localStorage.clear();
+    expect(ref.current!.hasStoredDraft()).toBe(false);
+  });
+
+  it('hasStoredDraft returns false when both keys hold corrupt JSON', async () => {
+    const ref = await renderIdeWith({ assignmentToken: 'user-1:assess-1', workspaceConfig: wsConfig });
+
+    window.localStorage.clear();
+    window.localStorage.setItem(wsKey('user-1:assess-1'), '{not json');
+    window.localStorage.setItem(wsKey('assess-1'), 'also not json');
+    expect(ref.current!.hasStoredDraft()).toBe(false);
+  });
+
+  it('hasStoredDraft returns true for a parseable entry under the new key', async () => {
+    const ref = await renderIdeWith({ assignmentToken: 'user-1:assess-1', workspaceConfig: wsConfig });
+
+    window.localStorage.clear();
+    window.localStorage.setItem(wsKey('user-1:assess-1'), JSON.stringify({ files: {} }));
+    expect(ref.current!.hasStoredDraft()).toBe(true);
+  });
+
+  it('hasStoredDraft returns true for a parseable entry under the legacy key only', async () => {
+    const ref = await renderIdeWith({ assignmentToken: 'user-1:assess-1', workspaceConfig: wsConfig });
+
+    window.localStorage.clear();
+    window.localStorage.setItem(wsKey('assess-1'), JSON.stringify({ files: {} }));
+    expect(ref.current!.hasStoredDraft()).toBe(true);
+  });
+
+  it('resyncBaseline drops pre-resync edits from getModifiedFiles but keeps later ones', async () => {
+    const ref = await renderIde();
+    await act(async () => {
+      await ref.current!.setFiles([{ path: '/user/A.c', content: 'original' }]);
+    });
+    await act(async () => {
+      await ref.current!.addFile('/user/A.c', 'edited');
+    });
+    expect((await ref.current!.getModifiedFiles()).map((m) => m.path)).toEqual(['/user/A.c']);
+
+    act(() => {
+      ref.current!.resyncBaseline();
+    });
+    expect(await ref.current!.getModifiedFiles()).toHaveLength(0);
+
+    await act(async () => {
+      await ref.current!.addFile('/user/A.c', 'edited-again');
+    });
+    const after = await ref.current!.getModifiedFiles();
+    expect(after.map((m) => m.path)).toEqual(['/user/A.c']);
+    expect(after[0]!.content).toBe('edited-again');
+  });
+
+  it('resetWorkspace resets the diff baseline to the config files', async () => {
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const ref = await renderIdeWith({ workspaceConfig: wsConfig });
+
+    await act(async () => {
+      await ref.current!.setFiles([{ path: '/user/main.cpp', content: 'page-seeded-v1' }]);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByText('Reset'));
+    });
+
+    const files = await ref.current!.getFiles();
+    expect(files.map((f) => f.path)).toEqual(['/user/main.cpp']);
+    expect(files[0]!.content).toBe('int main(){}');
+    expect(await ref.current!.getModifiedFiles()).toHaveLength(0);
+  });
+
+  it('resetWorkspace keeps fileMetaRef entries so readOnly survives reset', async () => {
+    jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const ref = await renderIdeWith({ workspaceConfig: wsConfig });
+
+    await act(async () => {
+      await ref.current!.setFiles([{ path: '/user/main.cpp', content: 'page-seeded-v1' }]);
+      await ref.current!.setFileMeta('/user/main.cpp', { modifiable: false });
+    });
+    const readOnlyCallsBefore = findModel('/user/main.cpp')!.updateOptions.mock.calls
+      .filter((call: any[]) => call[0]?.readOnly === true).length;
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Reset'));
+    });
+
+    const readOnlyCallsAfter = findModel('/user/main.cpp')!.updateOptions.mock.calls
+      .filter((call: any[]) => call[0]?.readOnly === true).length;
+    expect(readOnlyCallsAfter).toBeGreaterThan(readOnlyCallsBefore);
+  });
+
+  it('reset confirm copy names the instructor originals when assignmentToken is set', async () => {
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const ref = await renderIdeWith({ assignmentToken: 'user-1:assess-1', workspaceConfig: wsConfig });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Reset'));
+    });
+
+    expect(confirmSpy).toHaveBeenCalledWith("Reset to the instructor's original files? Your local changes will be lost.");
+    expect((await ref.current!.getFiles()).length).toBeGreaterThan(0);
+  });
+
+  it('reset confirm copy stays the demo copy without assignmentToken', async () => {
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    await renderIdeWith({ workspaceConfig: wsConfig });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Reset'));
+    });
+
+    expect(confirmSpy).toHaveBeenCalledWith('Reset the workspace to the default demo files and layout?');
   });
 });

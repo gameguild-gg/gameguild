@@ -405,3 +405,118 @@ describe('external workspaceConfig sync', () => {
     }
   });
 });
+
+describe('legacy storage key fallback (read migration)', () => {
+  const wsKey = (token: string, ws: string) => `gameguild.emception.workspace.${token}.${ws}.v2`;
+  const wsConfig = {
+    id: 'ws-a',
+    label: 'WS A',
+    compile: { tool: 'clang', args: [], output: '/home/user/main.wasm' },
+    run: { type: 'wasi-terminal' as const },
+    features: {},
+    layout: { activeFile: '/user/main.cpp', openTabs: [{ path: '/user/main.cpp', group: 'main' as const }] },
+    files: { '/user/main.cpp': { encoding: 'text' as const, content: 'int main(){}' } },
+  };
+  const persisted = (content: string) => JSON.stringify({
+    files: { '/user/main.cpp': { path: '/user/main.cpp', type: 'text', content } },
+    selectedPath: '/user/main.cpp',
+    expandedDirs: [],
+    openTabs: [{ id: 'tab:/user/main.cpp', path: '/user/main.cpp', type: 'text', group: 'main' }],
+    activeTabId: 'tab:/user/main.cpp',
+  });
+
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('restores from the legacy post-colon-suffix key when the new key is absent', async () => {
+    window.localStorage.setItem(wsKey('assess-1', 'ws-a'), persisted('legacy-draft'));
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+    });
+
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === '/user/main.cpp')?.content).toBe('legacy-draft');
+
+    // Read migration: the legacy entry is left in place.
+    expect(window.localStorage.getItem(wsKey('assess-1', 'ws-a'))).not.toBeNull();
+  });
+
+  it('writes restored state back under the NEW key, never the legacy key', async () => {
+    window.localStorage.setItem(wsKey('assess-1', 'ws-a'), persisted('legacy-draft'));
+    const setItem = jest.spyOn(Storage.prototype, 'setItem');
+    try {
+      const ref = createRef<IdeHandle>();
+      await act(async () => {
+        render(<Ide ref={ref} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+      });
+
+      expect(setItem).toHaveBeenCalledWith(
+        wsKey('user-1:assess-1', 'ws-a'),
+        expect.stringContaining('legacy-draft'),
+      );
+      expect(setItem).not.toHaveBeenCalledWith(
+        wsKey('assess-1', 'ws-a'),
+        expect.anything(),
+      );
+    } finally {
+      setItem.mockRestore();
+    }
+  });
+
+  it('prefers the new key when both new and legacy entries exist', async () => {
+    window.localStorage.setItem(wsKey('user-1:assess-1', 'ws-a'), persisted('new-draft'));
+    window.localStorage.setItem(wsKey('assess-1', 'ws-a'), persisted('legacy-draft'));
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+    });
+
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === '/user/main.cpp')?.content).toBe('new-draft');
+  });
+
+  it('restore is a no-op without crashing when both keys hold corrupt JSON', async () => {
+    window.localStorage.setItem(wsKey('user-1:assess-1', 'ws-a'), '{not json');
+    window.localStorage.setItem(wsKey('assess-1', 'ws-a'), 'also not json');
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+    });
+
+    // Config-seeded content is untouched by the failed restore.
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === '/user/main.cpp')?.content).toBe('int main(){}');
+  });
+
+  it('reads the legacy key only while the new key is absent (no repeated legacy reads after migration write)', async () => {
+    window.localStorage.setItem(wsKey('assess-1', 'ws-a'), persisted('legacy-draft'));
+    const getItem = jest.spyOn(Storage.prototype, 'getItem');
+    try {
+      const ref = createRef<IdeHandle>();
+      let view: ReturnType<typeof render>;
+      await act(async () => {
+        view = render(<Ide ref={ref} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+      });
+
+      expect(getItem.mock.calls.filter(([k]) => k === wsKey('assess-1', 'ws-a'))).toHaveLength(1);
+      // The mount persistence effect migrated the draft to the new key.
+      expect(window.localStorage.getItem(wsKey('user-1:assess-1', 'ws-a'))).not.toBeNull();
+
+      getItem.mockClear();
+      view!.unmount();
+      const ref2 = createRef<IdeHandle>();
+      await act(async () => {
+        render(<Ide ref={ref2} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+      });
+      expect(getItem.mock.calls.filter(([k]) => k === wsKey('assess-1', 'ws-a'))).toHaveLength(0);
+    } finally {
+      getItem.mockRestore();
+    }
+  });
+});
