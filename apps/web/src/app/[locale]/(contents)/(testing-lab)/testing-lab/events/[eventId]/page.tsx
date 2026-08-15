@@ -55,7 +55,6 @@ export default async function PublicTestingEventDetailPage({
 
   const event = experience.event;
   const projectVersions = experience.isAuthenticated ? await getTestingProjectVersionOptions() : [];
-  const application = experience.applications[0];
   const acceptsApplications = event.status === 'ApplicationsOpen';
 
   return (
@@ -173,11 +172,14 @@ export default async function PublicTestingEventDetailPage({
                 acceptsApplications={acceptsApplications}
                 projectVersions={projectVersions}
                 initialProjectId={projectId}
-                application={application?.id ? {
+                applications={experience.applications.flatMap((application) => application.id ? [{
                   id: application.id,
+                  projectId: application.projectId,
+                  projectVersionId: application.projectVersionId,
+                  preferredAvailability: application.preferredAvailability,
                   status: application.status,
                   decisionRationale: application.decisionRationale,
-                } : undefined}
+                }] : [])}
               />
             </div>
           </section>

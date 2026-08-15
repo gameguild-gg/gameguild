@@ -641,6 +641,40 @@ public sealed class TestingEventHandlerTests : IDisposable
         result.IsSuccess.Should().BeTrue();
         result.Value.Status.Should().Be(TestingApplicationStatus.Withdrawn);
     }
+
+    [Fact]
+    public async Task UpdateApplication_AllowsAnotherAuthorizedProjectMember_WithoutChangingOwnership()
+    {
+        var originalSubmitterId = Guid.NewGuid();
+        AddActor(originalSubmitterId, TenantRole.Member);
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var project = AddProject(_managerId);
+        var firstVersion = AddProjectVersion(project, originalSubmitterId);
+        var replacementVersion = AddProjectVersion(project, _managerId);
+        var application = TestingProjectApplication.Submit(
+            testingEvent.Id,
+            project.Id,
+            firstVersion.Id,
+            originalSubmitterId,
+            "Evening",
+            _tenantId);
+        _context.Add(application);
+        await _context.SaveChangesAsync();
+        SetActor(_managerId);
+
+        var result = await CreateApplicationHandler().Handle(
+            new UpdateTestingProjectApplicationCommand(
+                application.Id,
+                replacementVersion.Id,
+                "Weekend",
+                []),
+            default);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ProjectVersionId.Should().Be(replacementVersion.Id);
+        result.Value.PreferredAvailability.Should().Be("Weekend");
+        result.Value.SubmittedByUserId.Should().Be(originalSubmitterId);
+    }
     private TestingEventHandlers CreateEventHandler() => new(_context, _actorAccessor);
 
     private TestingApplicationHandlers CreateApplicationHandler() => new(

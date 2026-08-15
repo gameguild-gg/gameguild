@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/testing-lab/events-actions', () => ({
   submitTestingProjectApplication: vi.fn(),
+  updateTestingProjectApplication: vi.fn(),
   withdrawTestingProjectApplication: vi.fn(),
 }));
 
@@ -67,13 +68,16 @@ describe('TestingProjectApplication', () => {
     expect(screen.getByRole('link', { name: /browse projects/i })).toHaveAttribute('href', '/projects');
   });
 
-  it('shows rejection rationale and does not render a second application form', () => {
+  it('shows rejection rationale while still allowing another accessible Project to apply', () => {
     render(
       <TestingProjectApplication
         eventId="event-1"
         isAuthenticated
         acceptsApplications
-        projectVersions={[{ id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'published' }]}
+        projectVersions={[
+          { id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'published' },
+          { id: 'version-2', projectId: 'project-2', projectTitle: 'Wayfinder', versionNumber: '2.0.0', status: 'testing' },
+        ]}
         application={{
           id: 'application-1',
           status: 'Rejected',
@@ -84,6 +88,20 @@ describe('TestingProjectApplication', () => {
 
     expect(screen.getByText('Rejected')).toBeInTheDocument();
     expect(screen.getByText('The build is not playable yet.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /submit project application/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /submit another project application/i })).toBeInTheDocument();
+  });
+
+  it('allows an authorized Project member to update an active application', () => {
+    render(
+      <TestingProjectApplication
+        eventId="event-1"
+        isAuthenticated
+        acceptsApplications
+        projectVersions={[{ id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'published' }]}
+        application={{ id: 'application-1', status: 'Pending' }}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /update application/i })).toBeInTheDocument();
   });
 });
