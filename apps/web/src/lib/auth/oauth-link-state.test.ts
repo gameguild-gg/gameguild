@@ -65,8 +65,8 @@ describe('constantTimeEqual', () => {
 
 describe('settingsAccountPath', () => {
   it('prefixes non-default locales and leaves en-US unprefixed', () => {
-    expect(settingsAccountPath('pt-BR')).toBe('/pt-BR/my/settings/account');
-    expect(settingsAccountPath('en-US')).toBe('/my/settings/account');
-    expect(settingsAccountPath(undefined)).toBe('/my/settings/account');
+    expect(settingsAccountPath('pt-BR')).toBe('/pt-BR/settings/account');
+    expect(settingsAccountPath('en-US')).toBe('/settings/account');
+    expect(settingsAccountPath(undefined)).toBe('/settings/account');
   });
 });

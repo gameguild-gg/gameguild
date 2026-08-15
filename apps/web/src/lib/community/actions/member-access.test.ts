@@ -258,7 +258,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('tenantId', 'tenant-1');
 
     await expect(acceptCurrentUserInvite(formData)).rejects.toThrow(
-      'redirect:/my/invitations?message=Invitation+accepted.+Your+workspace+access+is+now+active.',
+      'redirect:/invitations?message=Invitation+accepted.+Your+workspace+access+is+now+active.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
