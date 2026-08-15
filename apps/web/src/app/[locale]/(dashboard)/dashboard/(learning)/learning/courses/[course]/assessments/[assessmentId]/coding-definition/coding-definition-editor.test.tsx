@@ -54,6 +54,8 @@ const assignmentSamplesMock = vi.hoisted(() => ({
 let lastIdeProps: {
   workspaceConfig?: { files?: Record<string, unknown> };
   tests?: { Public?: unknown[]; Private?: unknown[] };
+  allowCreateFiles?: boolean;
+  onAllowCreateFilesChange?: (v: boolean) => void;
 } = {};
 
 Object.defineProperties(HTMLElement.prototype, {
@@ -101,9 +103,25 @@ vi.mock("@game-guild/emception-ui", async () => {
       getModifiedFiles: vi.fn(),
     }));
     lastIdeProps = props as typeof lastIdeProps;
+    // Mirror the package contract (FileExplorer workspace header): the compact
+    // 🔓/🔒 toggle renders only when onAllowCreateFilesChange is present.
+    const createToggle = props.onAllowCreateFilesChange
+      ? React.createElement(
+          "button",
+          {
+            "data-testid": "allow-student-create",
+            onClick: () =>
+              (props.onAllowCreateFilesChange as (v: boolean) => void)(
+                !props.allowCreateFiles,
+              ),
+          },
+          props.allowCreateFiles ? "🔓" : "🔒",
+        )
+      : null;
     return React.createElement(
       "div",
       { "data-testid": "mock-ide" },
+      createToggle,
       (props.testsPanelSlot as React.ReactNode) ?? null,
     );
   });
@@ -441,5 +459,49 @@ describe("CodingDefinitionEditor", () => {
     expect(payloadText).toContain('"Type": "integer"');
     expect(payloadText).toContain('"Name": "a"');
     expect(payloadText).toContain('"Content": 2');
+  });
+
+  it("create-files toggle lives inside the IDE mount — callback round-trips to next render prop", async () => {
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} />);
+
+    const ideMount = await screen.findByTestId("ide-mount");
+    const toggle = await screen.findByTestId("allow-student-create");
+
+    // Toggle moved into the IDE workspace header (no page-level Switch).
+    expect(ideMount).toContainElement(toggle);
+    expect(screen.queryByRole("switch")).toBeNull();
+
+    expect(lastIdeProps.allowCreateFiles).toBe(false);
+    expect(toggle).toHaveTextContent("🔒");
+
+    await user.click(toggle);
+
+    // stale_state guard: callback → state → next render reflects the flip.
+    expect(lastIdeProps.allowCreateFiles).toBe(true);
+    expect(await screen.findByTestId("allow-student-create")).toHaveTextContent(
+      "🔓",
+    );
+  });
+
+  it("flipping the create-files toggle marks content dirty — autosave PUTs AllowStudentCreateFiles", async () => {
+    vi.useFakeTimers();
+    try {
+      render(<CodingDefinitionEditor {...baseProps} />);
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("allow-student-create"));
+      });
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(30_000);
+      });
+
+      expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
+      const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+      expect(payloadArg.Environment.AllowStudentCreateFiles).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
