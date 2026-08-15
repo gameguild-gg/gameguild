@@ -2,18 +2,17 @@ import type { DBSchema } from "idb";
 import type { AssetRecord, AssetScope } from "../core/asset-contracts";
 
 export const ASSET_DATABASE_NAME = "game-guild-assets";
-export const ASSET_DATABASE_VERSION = 1;
+export const ASSET_DATABASE_VERSION = 3;
 
 export interface StoredAssetRecord extends AssetRecord {
-  objectId: string;
+  objectId?: string;
 }
 
 export interface StoredObjectRecord {
   id: string;
   size: number;
-  mimeType: string;
   refCount: number;
-  backend: "opfs" | "indexeddb";
+  blob: Blob;
   createdAt: string;
 }
 
@@ -24,25 +23,6 @@ export interface StoredUsageRecord {
   consumerId: string;
   role?: string;
   scope: AssetScope;
-}
-
-export interface StoredJournalRecord {
-  id: string;
-  objectId: string;
-  assetId: string;
-  stage: "pending" | "object-written";
-  backend?: StoredObjectRecord["backend"];
-  target?: "local" | "remote-cache";
-  startedAt: string;
-}
-
-export interface StoredRemoteCacheRecord {
-  uri: string;
-  objectId: string;
-  record: AssetRecord;
-  size: number;
-  lastAccessedAt: string;
-  pinned: boolean;
 }
 
 export interface AssetDatabaseSchema extends DBSchema {
@@ -59,10 +39,6 @@ export interface AssetDatabaseSchema extends DBSchema {
     key: string;
     value: StoredObjectRecord;
   };
-  fallbackObjects: {
-    key: string;
-    value: Blob;
-  };
   usages: {
     key: string;
     value: StoredUsageRecord;
@@ -70,20 +46,5 @@ export interface AssetDatabaseSchema extends DBSchema {
       "by-scope": string;
       "by-uri": string;
     };
-  };
-  remoteCache: {
-    key: string;
-    value: StoredRemoteCacheRecord;
-    indexes: {
-      "by-last-accessed-at": string;
-    };
-  };
-  journal: {
-    key: string;
-    value: StoredJournalRecord;
-  };
-  settings: {
-    key: string;
-    value: unknown;
   };
 }
