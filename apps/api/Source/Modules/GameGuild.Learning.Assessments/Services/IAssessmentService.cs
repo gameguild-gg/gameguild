@@ -249,7 +249,8 @@ public sealed record SubmitAssessmentRequest(
 public sealed record GradeSubmissionRequest(
     int Score,
     Guid? GradedBy = null,
-    string? Feedback = null
+    string? Feedback = null,
+    string? RubricScores = null
 );
 
 public sealed record AssessmentScoreBucketDto(

@@ -48,8 +48,7 @@ public class GroupSubmissionFanOutTests
         var (aUser, aEnrollment) = fixture.Members[0];
         await StartAndSubmitAsync(db, fixture, memberIndex: 0);
         var lti = new Mock<ILtiScorePassback>();
-        var service = new AssessmentService(
-            db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance, lti.Object);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance, lti.Object);
         var gradedRow = await db.Set<AssessmentSubmission>()
             .SingleAsync(s => s.AssessmentId == fixture.Assessment.Id && s.UserId == aUser);
         var gradedBy = Guid.NewGuid();
@@ -201,7 +200,7 @@ public class GroupSubmissionFanOutTests
     // ===== FIXTURE =====
 
     private static AssessmentService CreateService(TestGroupFanOutDbContext db) =>
-        new(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        new(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
     private static async Task<AssessmentSubmission> StartAndSubmitAsync(
         TestGroupFanOutDbContext db, GroupFanOutFixture fixture, int memberIndex)

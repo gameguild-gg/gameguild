@@ -303,7 +303,7 @@ public class AssessmentServiceRestoreTests
         assessment.SoftDelete();
         db.Set<Assessment>().Add(assessment);
         await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var before = await service.GetAssessmentByIdAsync(assessment.Id);
         before.Should().BeNull();
@@ -321,7 +321,7 @@ public class AssessmentServiceRestoreTests
     public async Task RestoreAssessmentAsync_OnUnknownId_ReturnsNotFound()
     {
         await using var db = CreateContext();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.RestoreAssessmentAsync(Guid.NewGuid());
 
@@ -336,7 +336,7 @@ public class AssessmentServiceRestoreTests
         var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
         db.Set<Assessment>().Add(assessment);
         await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.RestoreAssessmentAsync(assessment.Id);
 
@@ -483,7 +483,7 @@ public class AssessmentSubmissionEntityTests
         historicalSubmission.SoftDelete();
         db.AddRange(assessment, historicalSubmission);
         await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.StartSubmissionAsync(assessment.Id, enrollmentId, Guid.NewGuid());
 
@@ -611,7 +611,7 @@ public sealed class AssessmentServiceAnalyticsTests
         db.Set<AssessmentSubmission>().AddRange(quizSubmission, projectSubmission, ignoredSubmission);
         await db.SaveChangesAsync();
 
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var analytics = await service.GetCourseAssessmentAnalyticsAsync(courseId);
 
