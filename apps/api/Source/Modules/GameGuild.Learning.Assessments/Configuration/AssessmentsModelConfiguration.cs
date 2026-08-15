@@ -80,6 +80,7 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.Property(e => e.MediaPayload).HasMaxLength(2048);
             entity.Property(e => e.ProjectPayload).HasMaxLength(2048);
             entity.Property(e => e.StructuredAnswerPayload).HasColumnType("jsonb");
+            entity.Property(e => e.RubricScoresPayload).HasColumnType("jsonb");
             entity.ToTable(table =>
             {
                 table.HasCheckConstraint(
@@ -147,6 +148,19 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Description).IsRequired();
             entity.HasIndex(e => e.RubricId);
+        });
+
+        modelBuilder.Entity<AssessmentPeerReview>(entity =>
+        {
+            entity.ToTable("AssessmentPeerReviews");
+            entity.HasKey(e => e.Id);
+            // Unique (ReviewerUserId, SubmissionId): race protection for peer-review claim (todo 7).
+            entity.HasIndex(e => new { e.ReviewerUserId, e.SubmissionId }).IsUnique();
+            entity.HasIndex(e => e.SubmissionId);
+            entity.HasIndex(e => e.AssessmentId);
+            entity.HasIndex(e => e.ReviewerUserId);
+            entity.Property(e => e.Feedback).HasColumnType("text");
+            entity.Property(e => e.RubricScoresPayload).HasColumnType("jsonb");
         });
 
         modelBuilder.Entity<InteractiveVideoAssessmentCue>(entity =>

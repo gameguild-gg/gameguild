@@ -377,14 +377,14 @@ public class AssessmentSubmissionEntityTests
     [Fact]
     public void Grade_RequiresAssessmentMaximumScore()
     {
-        var gradeMethods = typeof(AssessmentSubmission)
+        var gradeMethodSignatures = typeof(AssessmentSubmission)
             .GetMethods()
             .Where(method => method.Name == nameof(AssessmentSubmission.Grade))
-            .ToArray();
+            .Select(method => string.Join(",", method.GetParameters().Select(parameter => parameter.ParameterType.Name)))
+            .ToList();
 
-        gradeMethods.Should().ContainSingle()
-            .Which.GetParameters().Select(parameter => parameter.ParameterType)
-            .Should().Equal(typeof(int), typeof(int), typeof(int), typeof(Guid?), typeof(string));
+        gradeMethodSignatures.Should().Contain("Int32,Int32,Int32,Nullable`1,String");
+        gradeMethodSignatures.Should().Contain("Int32,Int32,Int32,Nullable`1,String,String");
     }
 
     [Fact]
