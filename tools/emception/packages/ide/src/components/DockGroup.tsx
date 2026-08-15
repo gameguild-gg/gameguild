@@ -314,13 +314,11 @@ function DockGroupPanelInner({
             <div style={{ flex: 1, minHeight: 80, overflow: 'hidden', position: 'relative' }}>
                 {localFile?.type === 'text' && (
                     <div data-testid="editor-pane" style={{ height: '100%' }}>
-                        {/* Let Monaco own the active model. Replaying React state through `value`
-                            while SDL renders can overwrite queued keystrokes with stale content. */}
                         <Editor
                             height="100%"
                             path={localFile.path}
                             language={inferLanguage(localFile.path)}
-                            defaultValue={localFile.content}
+                            value={localFile.content}
                             theme="vs-dark"
                             onMount={onEditorMount}
                             onChange={(value) => onEditorChange(localFile.path, value ?? '')}
