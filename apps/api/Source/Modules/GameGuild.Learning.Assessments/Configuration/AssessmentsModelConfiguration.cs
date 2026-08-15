@@ -134,6 +134,21 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.HasIndex(e => e.UserId);
         });
 
+        modelBuilder.Entity<AssessmentRubric>(entity =>
+        {
+            entity.ToTable("AssessmentRubrics");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).HasMaxLength(160).IsRequired();
+        });
+
+        modelBuilder.Entity<RubricCriterion>(entity =>
+        {
+            entity.ToTable("RubricCriteria");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Description).IsRequired();
+            entity.HasIndex(e => e.RubricId);
+        });
+
         modelBuilder.Entity<InteractiveVideoAssessmentCue>(entity =>
         {
             entity.ToTable("InteractiveVideoAssessmentCues");
