@@ -28,7 +28,6 @@ export interface LearningNavigationRoutes extends LearnerRoutes {
 
 export function createLearnerRoutes(
   locale: string = routing.defaultLocale,
-  webOrigin = process.env.NEXT_PUBLIC_WEB_URL || "https://gameguild.gg",
 ): LearningNavigationRoutes {
   const resolvedLocale = hasLocale(routing.locales, locale)
     ? locale
@@ -41,7 +40,7 @@ export function createLearnerRoutes(
     calendar: path("/learn/calendar"),
     grades: path("/learn/grades"),
     certificates: path("/learn/certificates"),
-    catalog: new URL("/courses", webOrigin).toString().replace(/\/$/, ""),
+    catalog: "/courses",
     course: (slug) => path(`/learn/courses/${slug}`),
     content: (slug) => path(`/learn/courses/${slug}/content`),
     lesson: (slug, lessonId) =>
