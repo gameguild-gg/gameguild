@@ -1,11 +1,15 @@
-import { publicWebsiteHighlights } from '@/components/site/public-website-shell';
+import { auth } from '@/auth';
+import { publicWebsiteHighlights } from '@/components/app/app-shell';
+import { FeedShell } from '@/components/feed/feed-shell';
 import { Link } from '@/i18n/navigation';
 import { publicActivities, publicMembers, publicPlaytests, publicProjects } from '@/lib/community/public-community';
 import { ArrowRight, CalendarDays, MessageSquare, Sparkles, Users } from 'lucide-react';
 import React from 'react';
 
+/** `/` is contextual: the community feed when signed in, the marketing landing otherwise. */
 export default async function Page({ params }: PageProps<'/[locale]'>): Promise<React.JSX.Element> {
-  await params;
+  const [, session] = await Promise.all([params, auth()]);
+  if (session && typeof session !== 'function') return <FeedShell />;
 
   return (
     <main className="bg-slate-950 text-white">
@@ -32,7 +36,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>): Promise<
                 <ArrowRight className="ml-2 size-4" aria-hidden="true" />
               </Link>
               <Link
-                href="/programs"
+                href="/courses?type=program"
                 className="inline-flex items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10"
               >
                 Explore Programs
@@ -111,7 +115,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>): Promise<
               outcomes become public portfolio evidence.
             </p>
             <Link
-              href="/projects"
+              href="/showcase"
               className="inline-flex items-center rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               View project showcase

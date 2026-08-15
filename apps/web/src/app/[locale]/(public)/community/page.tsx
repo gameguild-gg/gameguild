@@ -22,7 +22,7 @@ export default async function CommunityPage(): Promise<React.JSX.Element> {
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/projects"
+                href="/showcase"
                 className="inline-flex items-center rounded-full bg-sky-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-200"
               >
                 Explore projects

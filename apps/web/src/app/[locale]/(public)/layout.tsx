@@ -1,7 +1,6 @@
-import { PublicWebsiteShell } from '@/components/site/public-website-shell';
-import type React from 'react';
-import type { ReactNode } from 'react';
+import { AppShell } from '@/components/app/app-shell';
+import React from 'react';
 
-export default async function Layout({ children }: { readonly children: ReactNode }): Promise<React.JSX.Element> {
-  return await PublicWebsiteShell({ children });
+export default async function Layout({ children }: LayoutProps<'/[locale]'>): Promise<React.JSX.Element> {
+  return await AppShell({ children });
 }

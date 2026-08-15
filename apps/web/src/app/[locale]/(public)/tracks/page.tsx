@@ -6,5 +6,5 @@ interface TracksPageProps {
 
 export default async function TracksPage({ params }: TracksPageProps) {
   const { locale } = await params;
-  redirect({ href: '/programs', locale });
+  redirect({ href: { pathname: '/courses', query: { type: 'program' } }, locale });
 }

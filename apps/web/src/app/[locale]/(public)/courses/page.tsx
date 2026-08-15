@@ -1,5 +1,6 @@
 import { CourseHighlightCarousel } from '@/components/courses/course-highlight-carousel';
 import { PublicCourseCatalog } from '@/components/courses/public-course-catalog';
+import { ProgramsCatalogView } from '@/components/courses/programs-catalog-view';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import { publicPlaytests, publicProjects } from '@/lib/community/public-community';
@@ -8,7 +9,14 @@ import { PUBLIC_PROGRAM_PACKAGES } from '@/lib/courses/public-programs';
 import { ArrowRight, FlaskConical, Layers3 } from 'lucide-react';
 import Image from 'next/image';
 
-export default async function CoursesPage() {
+type CoursesPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+/** Unified public catalog: courses by default, program packages via ?type=program. */
+export default async function CoursesPage({ searchParams }: CoursesPageProps = {}) {
+  const query = await searchParams;
+  if (query?.type === 'program') return <ProgramsCatalogView />;
   const catalog = await getPublicCourseCatalog();
   const courses = catalog.data;
   const courseCount = courses.length;
@@ -40,7 +48,7 @@ export default async function CoursesPage() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                <Link href="/programs">
+                <Link href="/courses?type=program">
                   View programs
                   <Layers3 />
                 </Link>
@@ -78,7 +86,7 @@ export default async function CoursesPage() {
               </p>
             </div>
             <Button asChild variant="outline" className="w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-              <Link href="/programs">
+              <Link href="/courses?type=program">
                 Browse all programs
                 <ArrowRight />
               </Link>
@@ -120,7 +128,7 @@ export default async function CoursesPage() {
               and launch-ready work becomes portfolio evidence.
             </p>
             <Button asChild variant="outline" className="mt-6 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-              <Link href="/projects">
+              <Link href="/showcase">
                 View student projects
                 <ArrowRight />
               </Link>
