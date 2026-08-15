@@ -47,11 +47,11 @@ vi.mock('@/lib/projects/public-projects', () => ({
   getVisibleProject: getVisibleProjectMock,
 }));
 
-import { PublicWebsiteHeader } from '@/components/site/public-website-shell';
+import { PublicWebsiteHeader } from '@/components/app/app-shell';
 import CommunityPage from './[locale]/(community)/community/page';
 import JobsPage from './[locale]/(contents)/(jobs)/jobs/page';
 import LaunchPadPage from './[locale]/(contents)/(launch-pad)/launch-pad/page';
-import ProjectsPage from './[locale]/(contents)/(projects)/projects/page';
+import ShowcasePage from './[locale]/(contents)/(projects)/showcase/page';
 import ProjectDetailPage from './[locale]/(contents)/(projects)/projects/[project]/page';
 import TestingLabPage from './[locale]/(contents)/(testing-lab)/testing-lab/page';
 import HomePage from './[locale]/(site)/page';
@@ -128,6 +128,8 @@ describe('public community website UX', () => {
   });
 
   it('turns the home page into a community gateway', async () => {
+    authMock.mockResolvedValueOnce(null);
+
     render(await HomePage({ params: Promise.resolve({ locale: 'en-US' }) } as PageProps<'/[locale]'>));
 
     expect(screen.getByRole('heading', { name: /learn, build & connect/i })).toBeInTheDocument();
@@ -138,7 +140,7 @@ describe('public community website UX', () => {
   });
 
   it('renders a public project showcase and detail path', async () => {
-    render(await ProjectsPage());
+    render(await ShowcasePage());
 
     expect(screen.getByRole('heading', { name: /project showcase/i })).toBeInTheDocument();
     expect(screen.getByAltText(/real api project project preview/i)).toBeInTheDocument();
