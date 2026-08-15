@@ -12,3 +12,4 @@ export * from './settings';
 export * from './assessments';
 export * from './content-library';
 export * from './cohorts';
+export * from './tasks';

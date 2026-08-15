@@ -1,7 +1,8 @@
-import { getInstructorStats, getRecentActivity } from '@/lib/learning';
+import { getInstructorStats, getMyTasks, getRecentActivity, sumAwaitingGrading } from '@/lib/learning';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
-import { Activity, BookOpen, Star, TrendingUp, Users } from 'lucide-react';
+import { Activity, BookOpen, ClipboardCheck, Star, TrendingUp, Users } from 'lucide-react';
 import React from 'react';
+import { Link } from '@/i18n/navigation';
 
 function formatActivityType(type: 'enrollment' | 'completion' | 'review' | 'comment' | 'activity'): string {
   switch (type) {
@@ -22,7 +23,12 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
   const { locale } = await params;
   void locale;
 
-  const [stats, activity] = await Promise.all([getInstructorStats(), getRecentActivity()]);
+  const [stats, activity, tasksResult] = await Promise.all([
+    getInstructorStats(),
+    getRecentActivity(),
+    getMyTasks(),
+  ]);
+  const awaitingGrading = tasksResult.ok ? sumAwaitingGrading(tasksResult.tasks) : null;
 
   const totalCourses = stats.courses.length;
   const totalEnrollments = stats.courses.reduce((acc, course) => acc + course.enrolledCount, 0);
@@ -44,6 +50,19 @@ export default async function Page({ params }: PageProps<'/[locale]/dashboard/le
     { label: 'Active Enrollments', value: totalEnrollments, icon: Users, description: 'Current learners across managed courses' },
     { label: 'Avg. Completion', value: avgCompletionRate !== null ? `${Math.round(avgCompletionRate)}%` : '—', icon: TrendingUp, description: 'Average course completion rate' },
     { label: 'Avg. Rating', value: avgRating !== null ? avgRating.toFixed(1) : '—', icon: Star, description: 'Weighted average course rating' },
+    {
+      label: 'Awaiting Grading',
+      value:
+        awaitingGrading === null ? (
+          '—'
+        ) : (
+          <Link href="/dashboard/tasks" className="hover:underline">
+            {awaitingGrading}
+          </Link>
+        ),
+      icon: ClipboardCheck,
+      description: 'Submissions waiting for your grade',
+    },
   ];
 
   return (
