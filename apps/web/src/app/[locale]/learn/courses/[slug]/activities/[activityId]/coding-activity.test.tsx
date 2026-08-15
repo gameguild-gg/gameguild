@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { useLayoutEffect, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -43,6 +43,17 @@ vi.mock('@/i18n/navigation', () => ({
 
 vi.mock('@game-guild/emception-ui', () => ({
   Ide: mocks.IdeRender,
+  // Minimal stand-in for the real presets — the page only reads
+  // workspaceConfig.{id,label,files} off the sample and overrides files.
+  ASSIGNMENT_SAMPLES: {
+    cpp: {
+      workspaceConfig: {
+        id: 'cpp',
+        label: 'C++ Assignment',
+        files: { '/user/main.cpp': { encoding: 'text', content: '// preset' } },
+      },
+    },
+  },
 }));
 
 vi.mock('next/dynamic', () => ({
@@ -143,16 +154,34 @@ function makeAssignment(overrides: Record<string, unknown> = {}) {
   };
 }
 
+/**
+ * Attach an IdeHandle to the page's ref — object refs assign directly,
+ * callback refs (the page's lazy-mount-safe pattern) are invoked post-render
+ * to mirror React's commit-phase ref timing.
+ */
+function attachHandle(
+  ref: unknown,
+  handle: Record<string, unknown>,
+): void {
+  if (typeof ref === 'function') {
+    (ref as (h: unknown) => void)(handle);
+  } else if (ref && typeof ref === 'object') {
+    (ref as { current: unknown }).current = handle;
+  }
+}
+
 function stubIde(getModified: Array<{ path: string; content: string; encoding: 'text' }> = []) {
   mocks.IdeRender.mockImplementation(({ ref, ...rest }) => {
-    if (ref && typeof ref === 'object') {
-      (ref as { current: unknown }).current = {
-        getFiles: async () => getModified,
-        getModifiedFiles: async () => getModified,
-        setFiles: vi.fn(async () => undefined),
-        setFileMeta: vi.fn(async () => undefined),
-      };
-    }
+    const handle = {
+      getFiles: async () => getModified,
+      getModifiedFiles: async () => getModified,
+      setFiles: vi.fn(async () => undefined),
+      setFileMeta: vi.fn(async () => undefined),
+    };
+    useLayoutEffect(() => {
+      attachHandle(ref, handle);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     return (
       <div data-testid="mock-ide" data-props={JSON.stringify(rest)}>
         mocked ide
@@ -187,6 +216,15 @@ describe('coding activity page routing', () => {
     expect(passedProps.maxScore).toBe(100);
     expect(passedProps.passingScore).toBe(60);
     expect(passedProps.manifestUrl).toBeUndefined();
+    // FIX 1: workspaceConfig boots the assignment language + Public files
+    // (hides the preset picker); FIX 2/3: no testPlan with zero tests,
+    // storage namespaced per assessment.
+    expect(passedProps.assignmentToken).toBe('assessment-1');
+    expect(passedProps.testPlan).toBeUndefined();
+    expect(passedProps.workspaceConfig.id).toBe('cpp');
+    expect(passedProps.workspaceConfig.files).toEqual({
+      'main.cpp': { encoding: 'text', content: '// starter' },
+    });
     expect(screen.getByRole('button', { name: /^Submit$/ })).toBeInTheDocument();
   });
 
@@ -298,14 +336,16 @@ describe('coding activity page routing', () => {
     const setFilesMock = vi.fn(async () => undefined);
     const setFileMetaMock = vi.fn(async () => undefined);
     mocks.IdeRender.mockImplementation(({ ref, ...rest }) => {
-      if (ref && typeof ref === 'object') {
-        (ref as { current: unknown }).current = {
-          getFiles: async () => [],
-          getModifiedFiles: async () => [],
-          setFiles: setFilesMock,
-          setFileMeta: setFileMetaMock,
-        };
-      }
+      const handle = {
+        getFiles: async () => [],
+        getModifiedFiles: async () => [],
+        setFiles: setFilesMock,
+        setFileMeta: setFileMetaMock,
+      };
+      useLayoutEffect(() => {
+        attachHandle(ref, handle);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, []);
       return (
         <div data-testid="mock-ide" data-props={JSON.stringify(rest)}>
           mocked ide
@@ -365,6 +405,11 @@ describe('coding activity page routing', () => {
 
     const ide = await screen.findByTestId('mock-ide');
     expect(ide).toBeInTheDocument();
+
+    // FIX 2 counterpart: with 2 standard tests the Run Tests plan IS passed.
+    const passedProps = JSON.parse(ide.dataset.props ?? '{}');
+    expect(passedProps.testPlan.cases).toHaveLength(2);
+    expect(passedProps.testPlan.cases.map((c: { name?: string }) => c.name)).toEqual(['t1', 't2']);
 
     const lastCall = mocks.IdeRender.mock.calls.at(-1);
     const onTestReport = lastCall?.[0]?.onTestReport;
