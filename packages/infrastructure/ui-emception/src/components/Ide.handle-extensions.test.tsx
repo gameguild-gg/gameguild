@@ -217,6 +217,62 @@ describe('IdeHandle extensions: addFile / removeFile / setFileMeta / getModified
     expect(aEntry?.content).toBe('A-edited');
   });
 
+  it('addFile with base64 encoding stores an image entry that getFiles round-trips as base64', async () => {
+    const ref = await renderIde();
+
+    await act(async () => {
+      await ref.current!.addFile('/user/pic.png', 'aGVsbG8=', 'base64');
+    });
+
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === '/user/pic.png')).toEqual({
+      path: '/user/pic.png',
+      content: 'aGVsbG8=',
+      encoding: 'base64',
+    });
+    // Internal representation is a mime-correct data-URI image (rendered via <img src>).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const internal = (window as any).__emception_filesRef__?.current?.['/user/pic.png'];
+    expect(internal?.type).toBe('image');
+    expect(internal?.content).toBe('data:image/png;base64,aGVsbG8=');
+  });
+
+  it('addFile base64 infers the mime from the extension (case-insensitive)', async () => {
+    const ref = await renderIde();
+
+    await act(async () => {
+      await ref.current!.addFile('/user/photo.JPG', 'AAAA', 'base64');
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const internal = (window as any).__emception_filesRef__?.current?.['/user/photo.JPG'];
+    expect(internal?.type).toBe('image');
+    expect(internal?.content).toBe('data:image/jpeg;base64,AAAA');
+  });
+
+  it('setBaseline pins the diff baseline to the GIVEN files, not the current workspace', async () => {
+    const ref = await renderIde();
+
+    await act(async () => {
+      await ref.current!.setFiles([{ path: '/user/A.c', content: 'original' }]);
+      await ref.current!.addFile('/user/A.c', 'edited');
+    });
+
+    act(() => {
+      ref.current!.setBaseline([{ path: '/user/A.c', content: 'edited' }]);
+    });
+    // Zero diffs here also passes under resync-to-current — the second block
+    // (same current files, DIFFERENT given baseline) rules that out.
+    expect(await ref.current!.getModifiedFiles()).toHaveLength(0);
+
+    act(() => {
+      ref.current!.setBaseline([{ path: '/user/A.c', content: 'original' }]);
+    });
+    const modified = await ref.current!.getModifiedFiles();
+    expect(modified.map((m) => m.path)).toEqual(['/user/A.c']);
+    expect(modified[0]!.content).toBe('edited');
+  });
+
   it('setFiles replaces the workspace (not merges) and reseeds the snapshot', async () => {
     const ref = await renderIde();
 

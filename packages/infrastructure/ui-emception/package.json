@@ -12,6 +12,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./ide-types": "./src/components/ide-types.ts",
     "./styles/theme.css": "./src/styles/theme.css"
   },
   "peerDependencies": {
