@@ -1,0 +1,39 @@
+{
+  "name": "@game-guild/assets",
+  "version": "4.0.0",
+  "type": "module",
+  "description": "Browser-first asset storage, resolution, and selection for GameGuild",
+  "license": "UNLICENSED",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./browser": "./src/browser/index.ts",
+    "./providers": "./src/providers/index.ts",
+    "./processing": "./src/processing/index.ts",
+    "./react": "./src/react/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@game-guild/ui": "workspace:^",
+    "idb": "^8.0.3",
+    "lucide-react": "^0.525.0"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@game-guild/typescript-config": "workspace:*",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "fake-indexeddb": "^6.2.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.10"
+  }
+}

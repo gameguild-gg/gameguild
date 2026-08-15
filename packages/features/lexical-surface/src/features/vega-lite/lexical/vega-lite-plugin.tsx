@@ -49,7 +49,7 @@ export function VegaLitePlugin() {
       node.setTheme(data.theme || "default");
       node.setThemeMode(data.themeMode || "system");
       node.setLayout(data.layout || "rectangular");
-      node.setData(data.data || {});
+      node.setAttachments(data.attachments || {});
 
       $insertNodes([node]);
       if ($isRootOrShadowRoot(node.getParentOrThrow())) {

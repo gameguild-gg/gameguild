@@ -10,10 +10,8 @@ import * as React from "react";
 import { useMemo } from "react";
 import type { LexicalEditor, SerializedEditorState } from "lexical";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import {
-  LexicalSurfaceAdaptersProvider,
-  type LexicalSurfaceAdapters,
-} from "../integrations/adapters";
+import type { AssetRepository } from "@game-guild/assets";
+import { AssetsProvider, useHasAssetsProvider } from "@game-guild/assets/react";
 import {
   resolveLexicalSurfaceFeatures,
   type LexicalSurfaceFeatures,
@@ -46,7 +44,7 @@ export interface LexicalSurfaceProps {
   toolbarWrapper?: (toolbar: React.ReactNode) => React.ReactNode;
   contentScrollable?: boolean;
   initialPageSettings?: PageSettings;
-  adapters?: LexicalSurfaceAdapters;
+  assetsRepository?: AssetRepository;
 }
 
 export function LexicalSurface({
@@ -66,12 +64,13 @@ export function LexicalSurface({
   toolbarWrapper,
   contentScrollable,
   initialPageSettings,
-  adapters,
+  assetsRepository,
 }: LexicalSurfaceProps) {
   const resolvedFeatures = useMemo(
     () => resolveLexicalSurfaceFeatures(features, readOnly),
     [features, readOnly],
   );
+  const hasAssetsProvider = useHasAssetsProvider();
   const seedState = readOnly ? stripSelection(initialState) : initialState;
   const initialConfig = useMemo(
     () =>
@@ -85,26 +84,28 @@ export function LexicalSurface({
     [mountKey, readOnly, namespace],
   );
 
-  return (
-    <LexicalSurfaceAdaptersProvider adapters={adapters}>
-      <LexicalComposer key={mountKey} initialConfig={initialConfig}>
-        <ToolbarContextProvider initialPageSettings={initialPageSettings}>
-          <EditorBody
-            features={resolvedFeatures}
-            onChange={onChange}
-            onContentChange={onContentChange}
-            placeholder={placeholder}
-            accessibleLabel={accessibleLabel}
-            readOnly={readOnly}
-            contentClassName={contentClassName}
-            contentStyle={contentStyle}
-            className={className}
-            headerSlot={headerSlot}
-            toolbarWrapper={toolbarWrapper}
-            contentScrollable={contentScrollable}
-          />
-        </ToolbarContextProvider>
-      </LexicalComposer>
-    </LexicalSurfaceAdaptersProvider>
+  const content = (
+    <LexicalComposer key={mountKey} initialConfig={initialConfig}>
+      <ToolbarContextProvider initialPageSettings={initialPageSettings}>
+        <EditorBody
+          features={resolvedFeatures}
+          onChange={onChange}
+          onContentChange={onContentChange}
+          placeholder={placeholder}
+          accessibleLabel={accessibleLabel}
+          readOnly={readOnly}
+          contentClassName={contentClassName}
+          contentStyle={contentStyle}
+          className={className}
+          headerSlot={headerSlot}
+          toolbarWrapper={toolbarWrapper}
+          contentScrollable={contentScrollable}
+        />
+      </ToolbarContextProvider>
+    </LexicalComposer>
   );
+
+  return assetsRepository || !hasAssetsProvider
+    ? <AssetsProvider repository={assetsRepository}>{content}</AssetsProvider>
+    : content;
 }

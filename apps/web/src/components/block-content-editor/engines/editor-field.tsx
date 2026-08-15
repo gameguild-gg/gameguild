@@ -10,7 +10,6 @@ import { BLOCK_REGISTRY } from "@/components/block-content-editor/engines/blocks
 import { nextBlockId } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { useEditor } from "./editor-provider"
 import { LexicalSurface, type PageSettings } from "@game-guild/lexical-surface"
-import { lexicalSurfaceAdapters } from "@/components/block-content-editor/lexical-surface-adapters"
 import { cn } from "@/lib/utils"
 
 export interface EditorFieldToolbarContainerLayout {
@@ -165,7 +164,6 @@ export function EditorField({
             </div>
           )}
           initialPageSettings={initialPageSettings}
-          adapters={lexicalSurfaceAdapters}
           // In paged mode, page geometry/padding is owned by `PagesPlugin`.
           // Keep this class neutral so we don't override fixed sheet sizing.
           contentClassName="max-w-none"

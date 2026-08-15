@@ -1,7 +1,19 @@
 import { toast } from "sonner"
-import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import { findAssetUris } from "@game-guild/assets"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
 import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
+
+const assetRepository = getDefaultBrowserAssetRepository()
+
+async function reconcileProjectAssets(projectId: string, data: string) {
+  const document = JSON.parse(data) as unknown
+  const uris = findAssetUris(document)
+  await assetRepository.reconcileUsage(
+    { type: "project", id: projectId },
+    uris.map((uri, index) => ({ uri, consumerId: `reference-${index}` })),
+  )
+}
 
 export interface SaveParams {
   currentProjectId: string
@@ -62,7 +74,7 @@ export async function handleSave(params: SaveParams): Promise<void> {
 
   try {
     await storageAdapter.save(currentProjectId, currentProjectName, data, projectTags, currentProjectStorageType, preferences)
-    await assetManager.syncProjectAssets(currentProjectId, data)
+    await reconcileProjectAssets(currentProjectId, data)
     await calculateProjectAssetsSize(currentProjectId)
 
     toast.success("Project saved successfully", {
@@ -135,7 +147,7 @@ export async function handleSaveAs(params: SaveAsParams): Promise<void> {
   try {
     const newProjectId = generateProjectId()
     await storageAdapter.save(newProjectId, newProjectName, data, projectTags, storageOption, preferences)
-    await assetManager.syncProjectAssets(newProjectId, data)
+    await reconcileProjectAssets(newProjectId, data)
 
     setCurrentProjectId(newProjectId)
     setCurrentProjectName(newProjectName)

@@ -5,6 +5,7 @@
  */
 
 import type { SerializedEditorState } from "lexical"
+import type { AssetUri } from "@game-guild/assets"
 
 // ============================================================================
 // Question Entry Base
@@ -15,6 +16,7 @@ interface QuizEntryBase {
   points?: number
   feedback?: QuizFeedback
   settings: QuizSettings
+  attachments?: QuizAuthoringAttachments
 }
 
 // ============================================================================
@@ -60,6 +62,23 @@ export interface QuizSettings {
   shuffleOptions?: boolean
   showFeedback?: boolean // Whether to show correct/incorrect feedback after submission
   showCorrectAnswer?: boolean // Whether to reveal the correct answer after submission
+}
+
+export interface QuizAttachment {
+  assetUri: AssetUri
+  name: string
+  mimeType: string
+  size: number
+  role?: "question" | "answer" | "feedback" | "source"
+}
+
+export interface QuizAuthoringAttachments {
+  learnerVisible?: QuizAttachment[]
+  authorOnly?: QuizAttachment[]
+}
+
+export interface QuizLearnerAttachments {
+  learnerVisible: QuizAttachment[]
 }
 
 // ============================================================================

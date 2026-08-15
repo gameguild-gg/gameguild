@@ -5,7 +5,7 @@ import { Play, Pause, Volume2, VolumeX, Maximize, AlertCircle } from "lucide-rea
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import type { BaseMediaData } from "@/components/block-content-editor/nodes/base/media-node-base"
-import { resolveAssetUrl, isAssetUrl } from "@/components/block-content-editor/lib/storage/assets"
+import { useResolvedAssetUrl } from "@game-guild/assets/react"
 import { AssetImage } from "./asset-image"
 
 interface MediaPreviewProps {
@@ -16,34 +16,7 @@ export function MediaPreview({ data }: MediaPreviewProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
-  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null)
-  const [isLoadingAsset, setIsLoadingAsset] = useState(false)
-
-  // Resolve asset URL
-  useEffect(() => {
-    async function loadAsset() {
-      if (!data.src) {
-        setResolvedSrc(null)
-        return
-      }
-
-      if (isAssetUrl(data.src)) {
-        setIsLoadingAsset(true)
-        try {
-          const url = await resolveAssetUrl(data.src)
-          setResolvedSrc(url)
-        } catch (error) {
-          console.error("Failed to resolve asset URL:", error)
-          setResolvedSrc(null)
-        } finally {
-          setIsLoadingAsset(false)
-        }
-      } else {
-        setResolvedSrc(data.src)
-      }
-    }
-    loadAsset()
-  }, [data.src])
+  const { url: resolvedSrc, loading: isLoadingAsset } = useResolvedAssetUrl(data.src)
 
   // Video/Audio player state
   const [isPlaying, setIsPlaying] = useState(false)

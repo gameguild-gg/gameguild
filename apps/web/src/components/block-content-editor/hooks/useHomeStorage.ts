@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { EnhancedStorageAdapter } from "@/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter"
-import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
 import type { ProjectData } from "@/components/block-content-editor/lib/storage/editor/project-data"
 import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
 import { toast } from "sonner"
+
+const assetRepository = getDefaultBrowserAssetRepository()
 
 export interface HomeStorageAdapter {
   load: (id: string) => Promise<ProjectData | null>
@@ -46,7 +48,7 @@ export function useHomeStorage(): UseHomeStorageReturn {
       try {
         console.log("Initializing databases...")
         await dbStorage.current.init()
-        await assetManager.init()
+        await assetRepository.getStorageStatus()
         console.log("Databases initialized")
         setIsDbInitialized(true)
         await loadAvailableTags()

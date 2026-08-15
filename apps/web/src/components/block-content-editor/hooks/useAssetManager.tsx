@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Download, Edit, Trash } from "lucide-react"
-import { assetManager } from "@/components/block-content-editor/lib/storage/assets/asset-manager"
+import { toAssetUri } from "@game-guild/assets"
+import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
 import {
   applySorting,
   type ManagerCard,
@@ -10,7 +11,8 @@ import {
   type FilterConfig,
 } from "@/components/block-content-editor/extras/manager-page"
 import { toast } from "sonner"
-import { MIME_TYPES } from "@/components/block-content-editor/lib/storage/assets/types"
+
+const assetRepository = getDefaultBrowserAssetRepository()
 
 interface AssetItem {
   id: string
@@ -65,22 +67,19 @@ export function useAssetManager({
 
   const loadAssets = useCallback(async () => {
     try {
-      console.log("Loading assets...")
-      const assetList = await assetManager.listAssetsWithUsage()
-      console.log("Assets loaded:", assetList)
+      const assetList = (await assetRepository.list({ limit: 200 })).items
 
       const assetsWithProjects = assetList.map((asset) => ({
-        id: asset.id,
-        name: asset.name || asset.id,
+        id: asset.uri,
+        name: asset.name,
         mimeType: asset.mimeType || 'application/octet-stream',
         size: asset.size || 0,
         createdAt: asset.createdAt || new Date().toISOString(),
-        projects: asset.projects || [],
-        type: asset.type || 'standard',
+        projects: [],
+        type: 'standard' as const,
       }))
 
       setAssets(assetsWithProjects)
-      console.log("Assets state updated:", assetsWithProjects)
     } catch (error) {
       console.error("Failed to load assets:", error)
       toast.error("Failed to load assets", {
@@ -107,13 +106,8 @@ export function useAssetManager({
 
       let matchesMimeType = true
       if (filters.mimeTypes && filters.mimeTypes.length > 0) {
-        const selectedMimeTypes = filters.mimeTypes.map(ext => {
-          const extWithoutDot = ext.substring(1)
-          return MIME_TYPES[extWithoutDot]
-        }).filter(Boolean)
-
         const assetExt = '.' + asset.name.split('.').pop()?.toLowerCase()
-        matchesMimeType = selectedMimeTypes.includes(asset.mimeType) || filters.mimeTypes.includes(assetExt)
+        matchesMimeType = filters.mimeTypes.includes(assetExt)
       }
 
       const assetType = asset.type || 'standard'
@@ -149,7 +143,7 @@ export function useAssetManager({
   const handleConfirmAssetDelete = useCallback(async () => {
     if (!assetToDelete) return
     try {
-      await assetManager.deleteAssetCompletely(assetToDelete.id)
+      await assetRepository.remove(toAssetUri(assetToDelete.id), { force: true })
       toast.success("Asset deleted successfully")
       await loadAssets()
       setAssetToDelete(null)
@@ -162,15 +156,11 @@ export function useAssetManager({
   const handleConfirmAssetEdit = useCallback(async () => {
     if (!assetToEdit || !newAssetName.trim()) return
     try {
-      const success = await assetManager.renameAsset(assetToEdit.id, newAssetName.trim())
-      if (success) {
-        toast.success("Asset renamed successfully")
-        await loadAssets()
-        setAssetToEdit(null)
-        setNewAssetName("")
-      } else {
-        toast.error("Failed to rename asset")
-      }
+      await assetRepository.rename(toAssetUri(assetToEdit.id), newAssetName.trim())
+      toast.success("Asset renamed successfully")
+      await loadAssets()
+      setAssetToEdit(null)
+      setNewAssetName("")
     } catch (error) {
       console.error("Failed to rename asset:", error)
       toast.error("Failed to rename asset")
@@ -179,34 +169,16 @@ export function useAssetManager({
 
   const handleAssetDownload = useCallback(async (assetId: string, assetName: string) => {
     try {
-      const asset = await assetManager.getAsset(assetId)
-      if (!asset || !asset.data) {
-        toast.error("Asset not found")
-        return
-      }
-
-      let downloadUrl: string
-      let shouldRevokeUrl = false
-
-      if (asset.data.startsWith('data:') || asset.data.startsWith('http')) {
-        downloadUrl = asset.data
-      } else {
-        const mimeType = asset.metadata.mimeType || 'text/plain'
-        const blob = new Blob([asset.data], { type: mimeType })
-        downloadUrl = URL.createObjectURL(blob)
-        shouldRevokeUrl = true
-      }
+      const resolved = await assetRepository.createObjectUrl(toAssetUri(assetId))
 
       const link = document.createElement('a')
-      link.href = downloadUrl
+      link.href = resolved.url
       link.download = assetName
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
 
-      if (shouldRevokeUrl) {
-        setTimeout(() => URL.revokeObjectURL(downloadUrl), 100)
-      }
+      setTimeout(resolved.release, 100)
 
       toast.success("Asset downloaded successfully")
     } catch (error) {

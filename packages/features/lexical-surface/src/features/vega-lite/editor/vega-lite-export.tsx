@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@game-guild/ui/components/button";
+import { useAssetRepository } from "@game-guild/assets/react";
 import { Download } from "lucide-react";
 import { useDarkMode } from "../../../shared/ui/use-dark-mode";
 import {
@@ -9,6 +10,8 @@ import {
   LIGHT_THEME_OVERRIDES,
 } from "../theme/vega-theme-overrides";
 import { loadCsvDataIntoSpec } from "../data/vega-csv-loader";
+import { resolveVegaAttachments } from "../data/vega-asset-loader";
+import type { VegaDataAttachment } from "../vega-lite-data";
 
 // Function to create dark version of any theme
 function createDarkTheme(baseTheme: any) {
@@ -53,7 +56,7 @@ interface VegaLiteExportProps {
   isValid: boolean;
   disabled?: boolean;
   className?: string;
-  data?: Record<string, string>;
+  attachments?: Record<string, VegaDataAttachment>;
 }
 
 export function VegaLiteExport({
@@ -65,11 +68,19 @@ export function VegaLiteExport({
   isValid,
   disabled = false,
   className = "",
-  data = {},
+  attachments,
 }: VegaLiteExportProps) {
   const isDark = useDarkMode();
+  const repository = useAssetRepository();
   const theme = isDark ? themeDark : themeLight;
   const isDisabled = disabled || !spec.trim() || !isValid;
+
+  const parseSpec = async () => {
+    const dataFiles = await resolveVegaAttachments(repository, attachments);
+    return Object.keys(dataFiles).length > 0
+      ? loadCsvDataIntoSpec(spec, dataFiles)
+      : JSON.parse(spec);
+  };
 
   const handleDownloadSVG = async () => {
     if (isDisabled) return;
@@ -78,12 +89,7 @@ export function VegaLiteExport({
       // Parse the specification and load data files
       let parsedSpec;
       try {
-        // Process data files if available
-        if (Object.keys(data).length > 0) {
-          parsedSpec = loadCsvDataIntoSpec(spec, data);
-        } else {
-          parsedSpec = typeof spec === "string" ? JSON.parse(spec) : spec;
-        }
+        parsedSpec = await parseSpec();
       } catch (parseError) {
         console.error("Invalid JSON specification for download");
         return;
@@ -219,12 +225,7 @@ export function VegaLiteExport({
       // Parse the specification and load data files
       let parsedSpec;
       try {
-        // Process data files if available
-        if (Object.keys(data).length > 0) {
-          parsedSpec = loadCsvDataIntoSpec(spec, data);
-        } else {
-          parsedSpec = typeof spec === "string" ? JSON.parse(spec) : spec;
-        }
+        parsedSpec = await parseSpec();
       } catch (parseError) {
         console.error("Invalid JSON specification for download");
         return;

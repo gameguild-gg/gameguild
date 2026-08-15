@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { isAssetUrl, resolveAssetUrl } from "@/components/block-content-editor/lib/storage/assets"
+import { useResolvedAssetUrl } from "@game-guild/assets/react"
 
 interface AssetImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string
@@ -12,31 +11,7 @@ interface AssetImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
  * For non-asset URLs, renders normally
  */
 export function AssetImage({ src, ...props }: AssetImageProps) {
-  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-
-  useEffect(() => {
-    if (!src) {
-      setResolvedSrc(null)
-      return
-    }
-
-    if (isAssetUrl(src)) {
-      setIsLoading(true)
-      resolveAssetUrl(src)
-        .then(resolved => {
-          setResolvedSrc(resolved)
-          setIsLoading(false)
-        })
-        .catch(error => {
-          console.error("Failed to resolve asset URL:", error)
-          setResolvedSrc(null)
-          setIsLoading(false)
-        })
-    } else {
-      setResolvedSrc(src)
-    }
-  }, [src])
+  const { url: resolvedSrc, loading: isLoading } = useResolvedAssetUrl(src)
 
   if (!src) return null
   

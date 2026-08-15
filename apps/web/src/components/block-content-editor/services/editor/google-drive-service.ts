@@ -248,6 +248,11 @@ export class GoogleDriveService {
       }
 
       const exportedProject = await ProjectExporter.prepareForExport(projectData, hash)
+      if (exportedProject.assets.length > 0) {
+        throw new Error(
+          "Google Drive folder sync cannot carry browser-local assets yet. Download a ZIP bundle instead.",
+        )
+      }
 
       // 2. Create or find project folder
       let projectFolderId = await this.findProjectFolder(exportedProject.folderName)

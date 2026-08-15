@@ -35,10 +35,11 @@ import {
   Type,
 } from "lucide-react";
 import { cn } from "@game-guild/ui/lib/utils";
+import type { AssetRecord } from "@game-guild/assets";
 import {
-  type MediaUploadResult,
-  useLexicalSurfaceAdapters,
-} from "../../integrations/adapters";
+  AssetPickerDialog,
+  useResolvedAssetUrl,
+} from "@game-guild/assets/react";
 import { DeleteConfirmDialog } from "../../shared/ui/dialogs/delete-confirm-dialog";
 import { useNodeDeleteProtection } from "../../shared/lexical/node-delete-protection";
 import { $isMediaLexicalNode } from "./media-node";
@@ -87,17 +88,9 @@ function ResolvedImage({
   src,
   ...props
 }: React.ImgHTMLAttributes<HTMLImageElement>) {
-  const { assets } = useLexicalSurfaceAdapters();
-  const [resolvedSrc, setResolvedSrc] = useState(src ?? "");
-
-  useEffect(() => {
-    if (typeof src !== "string" || !src || !assets?.isAssetUrl(src)) {
-      setResolvedSrc(src ?? "");
-      return;
-    }
-
-    void assets.resolveAssetUrl(src).then((url) => setResolvedSrc(url ?? ""));
-  }, [assets, src]);
+  const { url: resolvedSrc } = useResolvedAssetUrl(
+    typeof src === "string" ? src : "",
+  );
 
   return <img src={resolvedSrc} {...props} />;
 }
@@ -125,7 +118,7 @@ export function MediaLexicalComponent({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isSelected, setSelected, clearSelection] =
     useLexicalNodeSelection(nodeKey);
-  const { MediaUploadDialog, assets } = useLexicalSurfaceAdapters();
+  const { url: resolvedAssetSrc } = useResolvedAssetUrl(src);
 
   // Upload dialog state
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -150,28 +143,10 @@ export function MediaLexicalComponent({
   // URL input field state
   const [inputUrl, setInputUrl] = useState(src);
 
-  // Resolve assets
   useEffect(() => {
-    async function loadAsset() {
-      if (!src) {
-        setResolvedSrc(null);
-        return;
-      }
-      if (assets?.isAssetUrl(src)) {
-        try {
-          const url = await assets.resolveAssetUrl(src);
-          setResolvedSrc(url);
-        } catch (error) {
-          console.error("Failed to resolve asset URL:", error);
-          setResolvedSrc(null);
-        }
-      } else {
-        setResolvedSrc(src);
-      }
-    }
-    loadAsset();
+    setResolvedSrc(resolvedAssetSrc || null);
     setInputUrl(src);
-  }, [src]);
+  }, [resolvedAssetSrc, src]);
 
   // Sync volume state to video/audio tag
   useEffect(() => {
@@ -295,12 +270,10 @@ export function MediaLexicalComponent({
   };
 
   // Handle media selection from uploader dialog
-  const handleMediaSelected = (
-    result: MediaUploadResult | MediaUploadResult[],
-  ) => {
-    const urls = (
-      Array.isArray(result) ? result.map((item) => item.data) : [result.data]
-    ).filter((url): url is string => Boolean(url));
+  const handleMediaSelected = (result: AssetRecord | AssetRecord[]) => {
+    const urls = Array.isArray(result)
+      ? result.map((item) => item.uri)
+      : [result.uri];
     const firstUrl = urls[0];
     if (!firstUrl) return;
 
@@ -1263,30 +1236,24 @@ export function MediaLexicalComponent({
         confirmText="Remove"
       />
 
-      {/* Media Uploader Dialog */}
-      {MediaUploadDialog && (
-        <MediaUploadDialog
-          open={uploadOpen}
-          onOpenChange={setUploadOpen}
-          onMediaSelected={handleMediaSelected}
-          title={`Add ${uploadTargetIndex !== null ? "image to gallery" : mediaType}`}
-          acceptTypes={
-            uploadTargetIndex !== null || mediaType === "image"
-              ? "image/*"
-              : mediaType === "video"
-                ? "video/*"
-                : "audio/*"
-          }
-          urlPlaceholder={`https://example.com/media.${
-            uploadTargetIndex !== null || mediaType === "image"
-              ? "jpg"
-              : mediaType === "video"
-                ? "mp4"
-                : "mp3"
-          }`}
-          multiple={uploadTargetIndex !== null || mediaType === "image"}
-        />
-      )}
+      <AssetPickerDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        onSelect={handleMediaSelected}
+        title={`Add ${uploadTargetIndex !== null ? "image to gallery" : mediaType}`}
+        accept={
+          uploadTargetIndex !== null || mediaType === "image"
+            ? "image/*"
+            : mediaType === "video"
+              ? "video/*"
+              : "audio/*"
+        }
+        kinds={[
+          uploadTargetIndex !== null ? "image" : mediaType,
+        ]}
+        maxSizeBytes={250 * 1024 * 1024}
+        multiple={uploadTargetIndex !== null || mediaType === "image"}
+      />
     </>
   );
 }
