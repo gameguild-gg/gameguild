@@ -488,13 +488,15 @@ describe('external workspaceConfig sync', () => {
     expect((screen.getByTestId('workspace-picker') as HTMLSelectElement).value).toBe('ws-a');
   });
 
-  it('persists workspace state under the per-preset namespaced localStorage key', async () => {
+  it('skips the initial persistence write so a restorable draft survives mount', async () => {
     const setItem = jest.spyOn(Storage.prototype, 'setItem');
     try {
       const view = render(
         <Ide assignmentToken="tok-1" workspaceConfig={makeConfig('ws-a', '/user/main.cpp')} presetOptions={pickerOptions} />,
       );
-      expect(setItem).toHaveBeenCalledWith(
+      // The unedited initial state is not persisted: writing it on mount
+      // would clobber a restorable draft before the restore effect reads it.
+      expect(setItem).not.toHaveBeenCalledWith(
         'gameguild.emception.workspace.tok-1.ws-a.v2',
         expect.stringContaining('/user/main.cpp'),
       );
@@ -504,6 +506,7 @@ describe('external workspaceConfig sync', () => {
           <Ide assignmentToken="tok-1" workspaceConfig={makeConfig('ws-b', '/user/other.c')} presetOptions={pickerOptions} />,
         );
       });
+      // A real state change (workspace apply) still persists.
       expect(setItem).toHaveBeenCalledWith(
         'gameguild.emception.workspace.tok-1.ws-b.v2',
         expect.stringContaining('/user/other.c'),

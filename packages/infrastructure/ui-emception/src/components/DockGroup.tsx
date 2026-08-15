@@ -264,7 +264,7 @@ function DockGroupPanelInner({
                             >
                                 <span style={{ color, fontSize: '0.75rem', flexShrink: 0 }}>{icon}</span>
                                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 110 }}>{fileName(tab.path)}</span>
-                                <button
+                                <button type="button"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         onCloseTab(tab.id);
@@ -294,7 +294,7 @@ function DockGroupPanelInner({
                         { target: 'right' as DockGroup, icon: '⬌', title: 'Split right' },
                         { target: 'bottom' as DockGroup, icon: '⬍', title: 'Split down' },
                     ]).map(({ target, icon, title }) => (
-                        <button
+                        <button type="button"
                             key={target}
                             onClick={() => onMoveTab(localActive.id, target)}
                             style={{

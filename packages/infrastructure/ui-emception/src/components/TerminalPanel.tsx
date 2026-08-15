@@ -182,7 +182,7 @@ export default function TerminalPanel({
                                 <span style={{ fontSize: '0.5rem', color: isActive ? (isBoot ? '#a6e3a1' : '#89b4fa') : '#6c7086' }}>●</span>
                                 <span>{tab.title}</span>
                                 {terminalTabs.length > 1 && (
-                                    <button
+                                    <button type="button"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             onCloseTerminal(tab.id);
@@ -198,10 +198,10 @@ export default function TerminalPanel({
                     })}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.1rem', padding: '0 0.5rem', color: '#9399b2', fontSize: '0.85rem' }}>
-                    <button onClick={onNewTerminal} style={iconBtnStyle} title="New terminal">
+                    <button type="button" onClick={onNewTerminal} style={iconBtnStyle} title="New terminal">
                         ＋
                     </button>
-                    <button onClick={() => onCloseTerminal(activeTerminalId)} style={iconBtnStyle} title="Kill terminal">
+                    <button type="button" onClick={() => onCloseTerminal(activeTerminalId)} style={iconBtnStyle} title="Kill terminal">
                         🗙
                     </button>
                 </div>
