@@ -13,7 +13,7 @@ const licenseGroups = [
   },
 ];
 
-export default async function LicensesPage({}: PageProps<'/[locale]/legal/licenses'>): Promise<React.JSX.Element> {
+export default async function LicensesPage(_props: PageProps<'/[locale]/legal/licenses'>): Promise<React.JSX.Element> {
   return (
     <article className="flex flex-col gap-8">
       <div className="space-y-3">

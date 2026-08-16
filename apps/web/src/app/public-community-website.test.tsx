@@ -48,13 +48,13 @@ vi.mock('@/lib/projects/public-projects', () => ({
 }));
 
 import { PublicWebsiteHeader } from '@/components/app/app-shell';
-import CommunityPage from './[locale]/(community)/community/page';
-import JobsPage from './[locale]/(contents)/(jobs)/jobs/page';
-import LaunchPadPage from './[locale]/(contents)/(launch-pad)/launch-pad/page';
-import ShowcasePage from './[locale]/(contents)/(projects)/showcase/page';
-import ProjectDetailPage from './[locale]/(contents)/(projects)/projects/[project]/page';
-import TestingLabPage from './[locale]/(contents)/(testing-lab)/testing-lab/page';
-import HomePage from './[locale]/(site)/page';
+import CommunityPage from './[locale]/(public)/community/page';
+import JobsPage from './[locale]/(public)/jobs/page';
+import LaunchPadPage from './[locale]/(public)/launch-pad/page';
+import ShowcasePage from './[locale]/(public)/projects/page';
+import ProjectDetailPage from './[locale]/(public)/projects/[slug]/page';
+import TestingLabPage from './[locale]/(public)/testing-lab/page';
+import HomePage from './[locale]/(public)/page';
 
 const publishedProject = {
   slug: 'real-api-project',
@@ -150,7 +150,7 @@ describe('public community website UX', () => {
   });
 
   it('renders project detail with creator, media, playtest status, and community CTAs', async () => {
-    render(await ProjectDetailPage({ params: Promise.resolve({ project: 'real-api-project' }) }));
+    render(await ProjectDetailPage({ params: Promise.resolve({ slug: 'real-api-project' }) }));
 
     expect(screen.getByRole('heading', { name: /real api project/i })).toBeInTheDocument();
     expect(screen.getByAltText(/real api project project preview/i)).toBeInTheDocument();
