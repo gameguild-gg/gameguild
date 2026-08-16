@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardHeader } from './dashboard-header';
 
 const mocks = vi.hoisted(() => ({
-  pathname: '/dashboard/platform/learning/courses',
+  pathname: '/workspace/learning/courses',
   push: vi.fn(),
   signOut: vi.fn(),
 }));
@@ -37,7 +37,7 @@ vi.mock('@game-guild/ui/components/sidebar', () => ({
 
 describe('DashboardHeader', () => {
   beforeEach(() => {
-    mocks.pathname = '/dashboard/platform/learning/courses';
+    mocks.pathname = '/workspace/learning/courses';
     mocks.push.mockReset();
     mocks.signOut.mockReset();
     mocks.signOut.mockResolvedValue(undefined);

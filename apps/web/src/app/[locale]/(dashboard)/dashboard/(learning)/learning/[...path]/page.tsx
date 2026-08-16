@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 import React from 'react';
 
 /**
- * Legacy /dashboard/platform/learning/* redirect. The learning console moved under
- * Platform Management (/dashboard/platform/learning/*).
+ * Legacy /workspace/learning/* redirect. The learning console moved under
+ * Platform Management (/workspace/learning/*).
  */
 export default async function LegacyLearningRedirectPage({
   params,
@@ -13,5 +13,5 @@ export default async function LegacyLearningRedirectPage({
   const { locale, path } = await params;
   const segments = Array.isArray(path) ? path.map((segment) => encodeURIComponent(segment)) : [];
   const suffix = segments.length ? `/${segments.join('/')}` : '';
-  redirect(`/${locale}/dashboard/platform/learning${suffix}`);
+  redirect(`/${locale}/workspace/learning${suffix}`);
 }

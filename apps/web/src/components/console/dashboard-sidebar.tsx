@@ -40,7 +40,8 @@ import {
 } from 'lucide-react';
 import * as React from 'react';
 import type { DashboardContextSummary } from '@/lib/dashboard-contexts';
-import { ContextSwitcher } from './team-switcher';
+import { GraduationCap } from 'lucide-react';
+import { TenantSwitcher, type Tenant } from './tenant-switcher';
 
 // Types for navigation structure
 export interface DashboardNavSubItem {
@@ -314,28 +315,28 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
         subGroups: [
           {
             title: 'Overview',
-            url: '/dashboard/platform/learning',
+            url: '/workspace/learning',
             icon: LayoutDashboard,
             items: [],
             requiredCapabilities: ['Learning.Manage'],
           },
           {
             title: 'Courses',
-            url: '/dashboard/platform/learning/courses',
+            url: '/workspace/learning/courses',
             icon: BookOpen,
             items: [],
             requiredCapabilities: ['Learning.Manage'],
           },
           {
             title: 'Tutorials',
-            url: '/dashboard/platform/learning/tutorials',
+            url: '/workspace/learning/tutorials',
             icon: FileText,
             items: [],
             requiredCapabilities: ['Learning.Manage'],
           },
           {
             title: 'Resources',
-            url: '/dashboard/platform/learning/resources',
+            url: '/workspace/learning/resources',
             icon: FolderOpen,
             items: [],
             requiredCapabilities: ['Learning.Manage'],
@@ -542,6 +543,11 @@ interface DashboardSidebarProps extends React.ComponentProps<typeof Sidebar> {
   contexts?: readonly DashboardContextSummary[];
 }
 
+/** Default console tenant — GameGuild platform until multi-tenant switching ships. */
+const consoleTenants: Tenant[] = [
+  { id: 'gameguild', name: 'GameGuild', logo: GraduationCap, plan: 'Platform' },
+];
+
 export function DashboardSidebar({
   navigation = filterDashboardNavigation(dashboardNavigationData, []),
   contexts = [],
@@ -550,7 +556,7 @@ export function DashboardSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <ContextSwitcher contexts={contexts} />
+        <TenantSwitcher tenants={consoleTenants} />
       </SidebarHeader>
       <SidebarContent className="gap-0">
         <NavGroups groups={navigation} />

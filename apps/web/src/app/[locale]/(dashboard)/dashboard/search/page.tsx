@@ -76,7 +76,7 @@ export default function DashboardSearchPage() {
                 </p>
               </div>
               <Button asChild variant="outline">
-                <Link href="/dashboard/platform/learning/courses">Open courses</Link>
+                <Link href="/workspace/learning/courses">Open courses</Link>
               </Button>
             </CardContent>
           </Card>

@@ -1,12 +1,6 @@
 import { redirect } from 'next/navigation';
 
-/**
- * L1: Learning Home Redirect
- *
- * Redirects to the overview page which contains the instructor dashboard
- * with KPIs, metrics, and recent activity.
- */
-export default async function Page({ params }: PageProps<'/[locale]/dashboard/platform/learning'>): Promise<never> {
+export default async function LegacyPlatformLearningPage({ params }: { params: Promise<{ locale: string }> }): Promise<never> {
   const { locale } = await params;
-  redirect(`/${locale}/dashboard/platform/learning/overview`);
+  redirect(`/${locale}/workspace/learning`);
 }

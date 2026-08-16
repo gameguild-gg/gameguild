@@ -7,5 +7,5 @@ export default async function LegacyLearningRedirectPage({
   params: Promise<{ locale: string }>;
 }): Promise<never> {
   const { locale } = await params;
-  redirect(`/${locale}/dashboard/platform/learning`);
+  redirect(`/${locale}/workspace/learning`);
 }

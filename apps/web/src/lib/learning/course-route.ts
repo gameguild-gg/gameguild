@@ -55,7 +55,7 @@ export function getCourseLookupSlug(routeParam: string): string {
 
 export function buildDashboardCoursePath(course: CourseRouteSource | string, segment?: string): string {
   const routeParam = typeof course === 'string' ? course : getCourseRouteParam(course);
-  const basePath = `/dashboard/platform/learning/courses/${encodeURIComponent(routeParam)}`;
+  const basePath = `/workspace/learning/courses/${encodeURIComponent(routeParam)}`;
 
   if (!segment) return basePath;
 

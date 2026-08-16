@@ -38,11 +38,11 @@ export const COI_LEARN_RULES: HeaderRule[] = [
   // Instructor coding-definition editor hosts the same emception IDE; without
   // COI the worker degrades WASI stdin to instant EOF and stdio tests fail.
   {
-    source: '/:locale/dashboard/platform/learning/courses/:course/assessments/:assessment/coding-definition',
+    source: '/:locale/workspace/learning/courses/:course/assessments/:assessment/coding-definition',
     headers: COI_LEARN_HEADERS,
   },
   {
-    source: '/dashboard/platform/learning/courses/:course/assessments/:assessment/coding-definition',
+    source: '/workspace/learning/courses/:course/assessments/:assessment/coding-definition',
     headers: COI_LEARN_HEADERS,
   },
 ];
