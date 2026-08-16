@@ -1,7 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
-import { buildDashboardCoursePath } from '@/lib/learning/course-route';
+import { buildPlatformCoursePath } from '@/lib/learning/course-route';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@game-guild/ui/components/card';
@@ -37,9 +37,9 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ course, locale }: CourseCardProps) {
-  const coursePath = buildDashboardCoursePath(course.routeParam ?? course);
-  const previewPath = buildDashboardCoursePath(course.routeParam ?? course, 'preview');
-  const overviewPath = buildDashboardCoursePath(course.routeParam ?? course, 'overview');
+  const coursePath = buildPlatformCoursePath(course.routeParam ?? course);
+  const previewPath = buildPlatformCoursePath(course.routeParam ?? course, 'preview');
+  const overviewPath = buildPlatformCoursePath(course.routeParam ?? course, 'overview');
 
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-lg">
@@ -106,9 +106,9 @@ export function CourseCard({ course, locale }: CourseCardProps) {
 }
 
 export function CourseTableActions({ courseRouteParam, courseTitle, locale }: { courseRouteParam: string; courseTitle: string; locale: string }) {
-  const coursePath = buildDashboardCoursePath(courseRouteParam);
-  const previewPath = buildDashboardCoursePath(courseRouteParam, 'preview');
-  const overviewPath = buildDashboardCoursePath(courseRouteParam, 'overview');
+  const coursePath = buildPlatformCoursePath(courseRouteParam);
+  const previewPath = buildPlatformCoursePath(courseRouteParam, 'preview');
+  const overviewPath = buildPlatformCoursePath(courseRouteParam, 'overview');
 
   return (
     <DropdownMenu>
