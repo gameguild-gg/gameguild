@@ -1,11 +1,13 @@
-import { redirect } from 'next/navigation';
 import React from 'react';
 
-export default async function LegacyTermsOfUseRedirectPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<never> {
-  const { locale } = await params;
-  redirect(`/${locale}/legal/terms-of-use`);
+export default async function Page(): Promise<React.JSX.Element> {
+  return (
+    <>
+      <article>
+        <header>
+          <h1>Terms of Use</h1>
+        </header>
+      </article>
+    </>
+  );
 }

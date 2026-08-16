@@ -32,8 +32,8 @@ const footerRoutes = [
   { href: '/about/contributors', page: '[locale]/(public)/about/(project)/contributors/page.tsx' },
   { href: '/contact', page: '[locale]/(public)/contact/page.tsx' },
   { href: '/legal/licenses', page: '[locale]/(legal)/legal/licenses/page.tsx' },
-  { href: '/legal/terms-of-service', page: '[locale]/(legal)/legal/terms-of-service/page.tsx' },
-  { href: '/legal/privacy', page: '[locale]/(legal)/legal/privacy/page.tsx' },
+  { href: '/terms-of-service', page: '[locale]/(legal)/terms-of-service/page.tsx' },
+  { href: '/polices/privacy', page: '[locale]/(legal)/polices/privacy/page.tsx' },
 ] as const;
 
 describe('PublicWebsiteFooter routes', () => {

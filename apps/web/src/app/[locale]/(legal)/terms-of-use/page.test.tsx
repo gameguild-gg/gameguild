@@ -9,9 +9,9 @@ vi.mock('next/navigation', () => ({
 import Page from './page';
 
 describe('legacy /terms-of-use redirect', () => {
-  it('forwards to /legal/terms-of-use', async () => {
+  it('forwards to /terms-of-use', async () => {
     await expect(
       Page({ params: Promise.resolve({ locale: 'en-US' }) } as never),
-    ).rejects.toThrow('redirect:/en-US/legal/terms-of-use');
+    ).rejects.toThrow('redirect:/en-US/terms-of-use');
   });
 });

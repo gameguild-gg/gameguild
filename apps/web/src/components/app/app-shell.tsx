@@ -237,10 +237,10 @@ export function PublicWebsiteFooter() {
               <Link href="/legal/licenses" className="transition-colors hover:text-blue-300">
                 Licenses
               </Link>
-              <Link href="/legal/terms-of-service" className="transition-colors hover:text-blue-300">
+              <Link href="/terms-of-service" className="transition-colors hover:text-blue-300">
                 Terms of Service
               </Link>
-              <Link href="/legal/privacy" className="transition-colors hover:text-blue-300">
+              <Link href="/polices/privacy" className="transition-colors hover:text-blue-300">
                 Privacy
               </Link>
             </nav>

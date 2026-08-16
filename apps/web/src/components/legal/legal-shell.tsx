@@ -4,10 +4,10 @@ import type React from 'react';
 import type { ReactNode } from 'react';
 
 const legalNavLinks = [
-  { label: 'Terms of Service', href: '/legal/terms-of-service' },
-  { label: 'Terms of Use', href: '/legal/terms-of-use' },
-  { label: 'Privacy', href: '/legal/privacy' },
-  { label: 'Cookies', href: '/legal/cookies' },
+  { label: 'Terms of Service', href: '/terms-of-service' },
+  { label: 'Terms of Use', href: '/terms-of-use' },
+  { label: 'Privacy', href: '/polices/privacy' },
+  { label: 'Cookies', href: '/polices/cookies' },
   { label: 'Licenses', href: '/legal/licenses' },
   { label: 'FERPA Waiver', href: '/legal/ferpa-waiver' },
   { label: 'Academic Honesty', href: '/legal/academic-honesty' },
