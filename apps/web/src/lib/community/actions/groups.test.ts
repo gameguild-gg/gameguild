@@ -103,9 +103,9 @@ describe('createCommunityGroup', () => {
       type: 'StudyGroup',
       visibility: 'InviteOnly',
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/groups');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/members');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/members/groups');
   });
 
   it('redirects with validation errors before calling the API', async () => {

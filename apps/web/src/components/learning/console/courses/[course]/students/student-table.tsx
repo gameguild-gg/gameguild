@@ -408,7 +408,7 @@ export function StudentTable({ courseId, students }: { courseId: string; student
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem asChild>
-                                <Link href={`/dashboard/community/members/users/${student.userId}`}>
+                                <Link href={`/console/community/members/users/${student.userId}`}>
                                   <Eye className="mr-2 size-4" />
                                   View profile
                                 </Link>

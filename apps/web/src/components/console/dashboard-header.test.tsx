@@ -44,7 +44,7 @@ describe('DashboardHeader', () => {
   });
 
   it('updates the accessible breadcrumb when Testing Lab routes change', () => {
-    mocks.pathname = '/dashboard/community/testing-lab/reports';
+    mocks.pathname = '/console/community/testing-lab/reports';
     const { rerender } = render(
       <DashboardHeader
         user={{ id: 'user-123', name: 'Ada Lovelace', email: 'ada@gameguild.gg', image: null }}
@@ -54,7 +54,7 @@ describe('DashboardHeader', () => {
 
     expect(screen.getByRole('navigation', { name: 'Dashboard breadcrumb' })).toHaveTextContent('Reports');
 
-    mocks.pathname = '/dashboard/community/testing-lab/settings/access';
+    mocks.pathname = '/console/community/testing-lab/settings/access';
     rerender(
       <DashboardHeader
         user={{ id: 'user-123', name: 'Ada Lovelace', email: 'ada@gameguild.gg', image: null }}

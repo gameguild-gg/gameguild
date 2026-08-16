@@ -52,8 +52,8 @@ export async function createTeamForm(data: FormData): Promise<void> {
     ownerUserId: text(data, 'ownerUserId') || null,
   });
   const management = text(data, 'surface') === 'admin';
-  revalidatePath(management ? '/dashboard/community/teams' : '/workspace/teams');
-  redirect(management ? `/dashboard/community/teams/${result.id}` : `/workspace/teams/${result.slug}`);
+  revalidatePath(management ? '/console/community/teams' : '/workspace/teams');
+  redirect(management ? `/console/community/teams/${result.id}` : `/workspace/teams/${result.slug}`);
 }
 
 export async function createProjectForm(data: FormData): Promise<void> {
@@ -66,8 +66,8 @@ export async function createProjectForm(data: FormData): Promise<void> {
     ownerTeamId: ownerTeamId || null,
   });
   const management = text(data, 'surface') === 'admin';
-  revalidatePath(management ? '/dashboard/community/projects' : '/workspace/projects');
-  redirect(management ? `/dashboard/community/projects/${result.id}` : `/workspace/projects/${result.slug}`);
+  revalidatePath(management ? '/console/community/projects' : '/workspace/projects');
+  redirect(management ? `/console/community/projects/${result.id}` : `/workspace/projects/${result.slug}`);
 }
 
 export async function createProjectVersionForm(data: FormData): Promise<void> {
@@ -400,7 +400,7 @@ export async function deleteProjectForm(data: FormData): Promise<void> {
   await request('DELETE', `/v1/projects/${projectId}?softDelete=true&reason=${encodeURIComponent(text(data, 'reason') || 'Deleted from Project settings')}`);
   const returnPath = text(data, 'returnPath') || '/workspace/projects';
   revalidatePath(returnPath);
-  redirect(returnPath.startsWith('/dashboard/community/') ? '/dashboard/community/projects' : '/workspace/projects');
+  redirect(returnPath.startsWith('/console/community/') ? '/console/community/projects' : '/workspace/projects');
 }
 
 export async function archiveTeamForm(data: FormData): Promise<void> {
@@ -409,7 +409,7 @@ export async function archiveTeamForm(data: FormData): Promise<void> {
   await request('DELETE', `/v1/teams/${teamId}`);
   const returnPath = text(data, 'returnPath') || '/workspace/projects';
   revalidatePath(returnPath);
-  redirect(returnPath.startsWith('/dashboard/community/') ? '/dashboard/community/teams' : '/workspace/teams');
+  redirect(returnPath.startsWith('/console/community/') ? '/console/community/teams' : '/workspace/teams');
 }
 
 export async function restoreTeamForm(data: FormData): Promise<void> {

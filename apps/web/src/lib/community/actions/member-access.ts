@@ -5,8 +5,8 @@ import { createServerClient, GeneratedApi } from '@game-guild/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-const DASHBOARD_ROLES_PATH = '/dashboard/platform/roles';
-const DASHBOARD_USERS_PATH = '/dashboard/community/members/users';
+const DASHBOARD_ROLES_PATH = '/console/platform/roles';
+const DASHBOARD_USERS_PATH = '/console/community/members/users';
 const DASHBOARD_INVITATIONS_PATH = '/workspace/invitations';
 
 function buildRolesHref(params: { message?: string; error?: string }) {
@@ -79,7 +79,7 @@ export async function updateMemberAccessRole(formData: FormData) {
   }
 
   revalidatePath('/dashboard');
-  revalidatePath('/dashboard/community');
+  revalidatePath('/console/community');
   revalidatePath(DASHBOARD_USERS_PATH);
   revalidatePath(DASHBOARD_ROLES_PATH);
   redirect(buildRolesHref({ message: `Updated member role to ${role}.` }));
@@ -144,7 +144,7 @@ export async function invitePlatformUser(formData: FormData) {
   }
 
   revalidatePath('/dashboard');
-  revalidatePath('/dashboard/community');
+  revalidatePath('/console/community');
   revalidatePath(DASHBOARD_USERS_PATH);
   revalidatePath(DASHBOARD_ROLES_PATH);
   redirect(buildUsersHref({ message: `Invited ${name} as ${role}.` }));
@@ -185,7 +185,7 @@ async function updateInvite(
   }
 
   revalidatePath('/dashboard');
-  revalidatePath('/dashboard/community');
+  revalidatePath('/console/community');
   revalidatePath(DASHBOARD_USERS_PATH);
   revalidatePath(DASHBOARD_ROLES_PATH);
   revalidatePath(DASHBOARD_INVITATIONS_PATH);

@@ -752,7 +752,7 @@ export function TestingEventLifecycleActions({ event }: { event: TestingLabTesti
             submitLabel="Delete draft"
             action={deleteTestingEvent}
             destructive
-            successHref="/dashboard/community/testing-lab/events"
+            successHref="/console/community/testing-lab/events"
           >
             <input type="hidden" name="eventId" value={event.id} />
           </EventActionDialog>
@@ -764,7 +764,7 @@ export function TestingEventLifecycleActions({ event }: { event: TestingLabTesti
             description="The event leaves the active directory while its audit history remains available for restoration."
             submitLabel="Archive event"
             action={archiveTestingEvent}
-            successHref="/dashboard/community/testing-lab/events"
+            successHref="/console/community/testing-lab/events"
           >
             <input type="hidden" name="eventId" value={event.id} />
           </EventActionDialog>

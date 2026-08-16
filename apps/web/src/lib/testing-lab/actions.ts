@@ -18,7 +18,7 @@ import {
 } from '@game-guild/client';
 import { revalidatePath } from 'next/cache';
 
-const DASHBOARD_PATH = '/dashboard/community/testing-lab';
+const DASHBOARD_PATH = '/console/community/testing-lab';
 
 type TestingLabActionData<T> = [T] extends [void] ? null : T | null;
 

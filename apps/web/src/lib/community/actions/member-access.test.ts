@@ -71,9 +71,9 @@ describe('updateMemberAccessRole', () => {
       requiresAuth: true,
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/users');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/roles');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/members/users');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/platform/roles');
   });
 
   it('redirects with an error when required fields are missing', async () => {
@@ -157,8 +157,8 @@ describe('updateMemberAccessRole', () => {
         inviteeName: 'Learner One',
       },
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/users');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/roles');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/members/users');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/platform/roles');
   });
 
   it('reuses an existing user when inviting an email already present in the directory', async () => {
@@ -232,7 +232,7 @@ describe('updateMemberAccessRole', () => {
       body: {},
       requiresAuth: true,
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/users');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/members/users');
   });
 
   it('cancels a pending platform invite through the membership invite endpoint', async () => {

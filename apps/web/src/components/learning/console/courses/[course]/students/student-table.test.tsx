@@ -226,7 +226,7 @@ describe('StudentTable', () => {
     await user.click(screen.getAllByRole('button', { name: 'Actions for Ada Learner' })[0]);
     expect(screen.getByRole('menuitem', { name: 'View profile' })).toHaveAttribute(
       'href',
-      '/dashboard/community/members/users/user-1',
+      '/console/community/members/users/user-1',
     );
     await user.click(screen.getByRole('menuitem', { name: 'View progress' }));
 
