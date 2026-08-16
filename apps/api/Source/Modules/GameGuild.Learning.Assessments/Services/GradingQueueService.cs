@@ -150,9 +150,12 @@ public class GradingQueueService : IGradingQueueService
             }
         }
 
+        // DisplayName ASC, then attempt DESC: instructors grade the student's/group's LATEST
+        // submission first (one grade per assignment; regrades land on a fresh attempt row),
+        // so nav=0 is the most recent gradeable attempt.
         var sorted = items
             .OrderBy(i => i.DisplayName ?? i.GroupName, StringComparer.Ordinal)
-            .ThenBy(i => i.AttemptNumber)
+            .ThenByDescending(i => i.AttemptNumber)
             .ToList();
 
         return Result.Success(new GradingQueueDto(
