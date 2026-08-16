@@ -1,7 +1,7 @@
 'use client';
 
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
-import { buildDashboardCoursePath } from '@/lib/learning/course-route';
+import { buildPlatformCoursePath } from '@/lib/learning/course-route';
 import type { CourseFeatures } from '@/lib/learning/types';
 import { publishCourse, restoreCourse, unpublishCourse } from '@/lib/learning/actions';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -82,7 +82,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
   const pathname = usePathname() ?? '';
   const router = useRouter();
   const publicCourseHref = courseSlug?.trim() ? `/courses/${courseSlug.trim()}` : null;
-  const previewHref = buildDashboardCoursePath(courseRouteParam, 'preview');
+  const previewHref = buildPlatformCoursePath(courseRouteParam, 'preview');
   const [shareLabel, setShareLabel] = useState('Share');
   const [status, setStatus] = useState(courseStatus);
   const [isPending, setIsPending] = useState(false);
@@ -187,7 +187,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
             </Button>
           )}
           <Button variant="outline" size="sm" asChild>
-            <Link href={buildDashboardCoursePath(courseRouteParam, 'settings')} locale={locale} prefetch={false}>
+            <Link href={buildPlatformCoursePath(courseRouteParam, 'settings')} locale={locale} prefetch={false}>
               <Settings className="mr-2 size-4" />
               Settings
             </Link>
@@ -210,7 +210,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
             return (
               <Link
                 key={item.segment}
-                href={buildDashboardCoursePath(courseRouteParam, item.segment)}
+                href={buildPlatformCoursePath(courseRouteParam, item.segment)}
                 locale={locale}
                 prefetch={false}
                 className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -231,7 +231,7 @@ export function CourseNav({ courseTitle, courseDescription, courseStatus, course
               return (
                 <Link
                   key={item.segment}
-                  href={buildDashboardCoursePath(courseRouteParam, item.segment)}
+                  href={buildPlatformCoursePath(courseRouteParam, item.segment)}
                   locale={locale}
                   prefetch={false}
                   className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'

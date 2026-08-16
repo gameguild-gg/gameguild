@@ -67,7 +67,7 @@ export default async function TestingEventWorkspaceLayout({
         <TestingEventLifecycleActions event={event} />
       </section>
 
-      <TestingEventWorkspaceNav eventId={eventId} />
+      <TestingEventWorkspaceNav eventId={eventId} basePath="/dashboard/community/testing-lab" />
 
       {children}
     </div>

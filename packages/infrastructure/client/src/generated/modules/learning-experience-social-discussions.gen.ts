@@ -17,59 +17,6 @@ export class LearningExperienceSocialDiscussionsModule {
 
   /**
    */
-  async getApiSocialCoursesContentDiscussions(
-    courseId: string,
-    contentId: string,
-    query?: { skip?: number; take?: number },
-  ): Promise<
-    Result<
-      Array<Types.LearningExperienceSocialServicesCourseDiscussion>,
-      ApiError
-    >
-  > {
-    const url = `/api/social/courses/${courseId}/content/${contentId}/discussions`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceSocialServicesCourseDiscussion>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getApiSocialCoursesDiscussions(
-    courseId: string,
-    query?: { skip?: number; take?: number; pinnedFirst?: boolean },
-  ): Promise<
-    Result<
-      Array<Types.LearningExperienceSocialServicesCourseDiscussion>,
-      ApiError
-    >
-  > {
-    const url = `/api/social/courses/${courseId}/discussions`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceSocialServicesCourseDiscussion>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async postApiSocialDiscussions(
     body: Types.LearningExperienceSocialServicesCreateDiscussionInput,
   ): Promise<
@@ -150,6 +97,59 @@ export class LearningExperienceSocialDiscussionsModule {
 
   /**
    */
+  async getApiSocialCoursesDiscussions(
+    courseId: string,
+    query?: { skip?: number; take?: number; pinnedFirst?: boolean },
+  ): Promise<
+    Result<
+      Array<Types.LearningExperienceSocialServicesCourseDiscussion>,
+      ApiError
+    >
+  > {
+    const url = `/api/social/courses/${courseId}/discussions`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceSocialServicesCourseDiscussion>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getApiSocialCoursesContentDiscussions(
+    courseId: string,
+    contentId: string,
+    query?: { skip?: number; take?: number },
+  ): Promise<
+    Result<
+      Array<Types.LearningExperienceSocialServicesCourseDiscussion>,
+      ApiError
+    >
+  > {
+    const url = `/api/social/courses/${courseId}/content/${contentId}/discussions`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceSocialServicesCourseDiscussion>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
   async postApiSocialDiscussionsPin(
     id: string,
   ): Promise<
@@ -178,12 +178,12 @@ export class LearningExperienceSocialDiscussionsModule {
 
   /**
    */
-  async postApiSocialDiscussionsResolve(
+  async postApiSocialDiscussionsUnpin(
     id: string,
   ): Promise<
     Result<Types.LearningExperienceSocialServicesCourseDiscussion, ApiError>
   > {
-    const url = `/api/social/discussions/${id}/resolve`;
+    const url = `/api/social/discussions/${id}/unpin`;
 
     const result = await this.client.request({
       method: "POST",
@@ -206,12 +206,12 @@ export class LearningExperienceSocialDiscussionsModule {
 
   /**
    */
-  async postApiSocialDiscussionsUnpin(
+  async postApiSocialDiscussionsResolve(
     id: string,
   ): Promise<
     Result<Types.LearningExperienceSocialServicesCourseDiscussion, ApiError>
   > {
-    const url = `/api/social/discussions/${id}/unpin`;
+    const url = `/api/social/discussions/${id}/resolve`;
 
     const result = await this.client.request({
       method: "POST",
