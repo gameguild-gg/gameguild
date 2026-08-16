@@ -1,7 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
-import { flattenDashboardNavigationItems } from '@/components/layout/dashboard-sidebar';
+import { flattenDashboardNavigationItems } from '@/components/console/dashboard-sidebar';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
