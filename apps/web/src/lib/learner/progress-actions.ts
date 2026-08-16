@@ -21,7 +21,7 @@ function createCourseModules() {
 
   return {
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
-    interactions: new GeneratedApi.LearningCoursesContentinteractionModule(client),
+    interactions: new GeneratedApi.LearningCoursesContentInteractionModule(client),
   };
 }
 

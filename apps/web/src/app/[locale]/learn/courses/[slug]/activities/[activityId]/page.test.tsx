@@ -57,7 +57,7 @@ vi.mock('@/i18n/navigation', () => ({
 
 // Contract per todo-4 spec: userId: string, submissionFiles: files | null.
 // Mocking the client isolates this suite from the concurrent client rewrite.
-vi.mock('./coding-activity-client', () => ({
+vi.mock('@/components/learning/coding-activity-client', () => ({
   CodingActivityClient: (props: Record<string, unknown>) => (
     <div data-testid="coding-client" data-props={JSON.stringify(props)} />
   ),

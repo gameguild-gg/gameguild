@@ -14,7 +14,7 @@ import {
   type MultipleChoiceEntry,
   type SingleChoiceEntry,
 } from "./types"
-import { createLocalAssetUri } from "@game-guild/assets"
+import { createAssetUri } from "@game-guild/assets"
 
 describe("quiz contracts", () => {
   it("keeps learner-visible attachments and redacts author-only attachments", () => {
@@ -25,14 +25,14 @@ describe("quiz contracts", () => {
       correctOptionId: "a",
       attachments: {
         learnerVisible: [{
-          assetUri: createLocalAssetUri("7776453f-1123-4f56-8abc-1234567890ab"),
+          assetUri: createAssetUri("7776453f-1123-4f56-8abc-1234567890ab"),
           name: "diagram.png",
           mimeType: "image/png",
           size: 10,
           role: "question",
         }],
         authorOnly: [{
-          assetUri: createLocalAssetUri("8776453f-1123-4f56-8abc-1234567890ab"),
+          assetUri: createAssetUri("8776453f-1123-4f56-8abc-1234567890ab"),
           name: "answer-key.pdf",
           mimeType: "application/pdf",
           size: 20,

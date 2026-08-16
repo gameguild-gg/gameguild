@@ -4,125 +4,36 @@ networks:
   public:
     name: game-guild-public-network
     driver: bridge
-    internal: false
+
+  internal:
+    name: game-guild-internal-network
+    driver: bridge
+    internal: true
 
   database:
-    name: game-guild-internal-network
+    name: web-development-public
+    external: true
 
 services:
-  postgres:
-    image: postgres:17-alpine
-    container_name: game-guild-postgres
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB:-gameguild}
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_HOST_AUTH_METHOD=scram-sha-256
-      - TZ=${POSTGRES_TIMEZONE:-UTC}
-    ports:
-      - "${POSTGRES_HOST_PORT:-5432}:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      database:
-        aliases:
-          - postgres
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-gameguild}"]
-      start_interval: ${HEALTHCHECK_START_INTERVAL:-5s}
-      start_period: ${HEALTHCHECK_START_PERIOD:-10s}
-      interval: ${HEALTHCHECK_INTERVAL:-10s}
-      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
-      retries: ${HEALTHCHECK_RETRIES:-10}
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    labels:
-      - "com.game-guild.app=postgres"
-      - "com.game-guild.tier=infrastructure"
-
-  redis:
-    image: redis:7-alpine
-    container_name: game-guild-redis
-    command: ["redis-server", "--appendonly", "yes"]
-    ports:
-      - "${REDIS_HOST_PORT:-6379}:6379"
-    volumes:
-      - redis-data:/data
-    networks:
-      database:
-        aliases:
-          - redis
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      start_interval: ${HEALTHCHECK_START_INTERVAL:-5s}
-      start_period: ${HEALTHCHECK_START_PERIOD:-10s}
-      interval: ${HEALTHCHECK_INTERVAL:-10s}
-      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
-      retries: ${HEALTHCHECK_RETRIES:-10}
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    labels:
-      - "com.game-guild.app=redis"
-      - "com.game-guild.tier=infrastructure"
-
-  garage:
-    image: dxflrs/garage:v2.3.0
-    container_name: game-guild-garage
-    environment:
-      - GARAGE_CONFIG_FILE=/etc/garage/garage.toml
-      - GARAGE_RPC_SECRET=${GARAGE_RPC_SECRET:-b9e16720fc8b6b5f8472a2dfac5076ad78d9bb336e9de11978793a2d2f8a9e88}
-      - GARAGE_ADMIN_TOKEN=${GARAGE_ADMIN_TOKEN:-development-garage-admin-token}
-      - GARAGE_METRICS_TOKEN=${GARAGE_METRICS_TOKEN:-development-garage-metrics-token}
-    volumes:
-      - garage-data:/var/lib/garage/data
-      - ./scripts/garage/garage.toml:/etc/garage/garage.toml:ro
-    ports:
-      - "${GARAGE_S3_HOST_PORT:-3900}:3900"
-      - "${GARAGE_RPC_HOST_PORT:-3901}:3901"
-      - "${GARAGE_WEB_HOST_PORT:-3902}:3902"
-      - "${GARAGE_ADMIN_HOST_PORT:-3903}:3903"
-    networks:
-      database:
-        aliases:
-          - garage
-    healthcheck:
-      test: ["CMD", "/garage", "-c", "/etc/garage/garage.toml", "status"]
-      interval: 5s
-      timeout: 5s
-      retries: 30
-      start_period: 5s
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    labels:
-      - "com.game-guild.app=garage"
-      - "com.game-guild.tier=infrastructure"
-
   api:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
     image: game-guild-api
     container_name: game-guild-api
-    profiles: ["app"]
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
       - DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
-      - ConnectionStrings__DefaultConnection=Host=${POSTGRES_CONTAINER_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-gameguild};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Include Error Detail=true;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
-      - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_CONTAINER_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-gameguild};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres};Include Error Detail=true;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
+      - ConnectionStrings__DefaultConnection=Host=${POSTGRES_CONTAINER_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-game_guild};Username=${POSTGRES_USER:-game_guild};Password=${POSTGRES_PASSWORD:-game_guild_dev_password};Include Error Detail=true;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
+      - ConnectionStrings__AuthenticationDb=Host=${POSTGRES_CONTAINER_HOST:-postgres};Port=${POSTGRES_PORT:-5432};Database=${POSTGRES_DB:-game_guild};Username=${POSTGRES_USER:-game_guild};Password=${POSTGRES_PASSWORD:-game_guild_dev_password};Include Error Detail=true;Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300
+      - ConnectionStrings__MigrationConnection=${POSTGRES_MIGRATION_CONNECTION:-}
+      - Database__RunStartupInitialization=true
+      - Database__GrantRuntimeRoleAfterMigrations=${DATABASE_GRANT_RUNTIME_ROLE_AFTER_MIGRATIONS:-true}
+      - Database__FailStartupOnMigrationFailure=${DATABASE_FAIL_STARTUP_ON_MIGRATION_FAILURE:-false}
+      - Database__FailStartupOnSeedFailure=${DATABASE_FAIL_STARTUP_ON_SEED_FAILURE:-false}
+      - Database__FailStartupOnGrantFailure=${DATABASE_FAIL_STARTUP_ON_GRANT_FAILURE:-false}
       - Jwt__SecretKey=${JWT_SECRET_KEY:-development-secret-key-at-least-32-characters-long-for-local-testing}
       - Jwt__Issuer=${JWT_ISSUER:-GameGuild}
       - Jwt__Audience=${JWT_AUDIENCE:-GameGuild.Users}
@@ -130,17 +41,31 @@ services:
       - Authentication__JwtIssuer=${JWT_ISSUER:-GameGuild}
       - Authentication__JwtAudience=${JWT_AUDIENCE:-GameGuild.Users}
       - Authentication__JwtExpiration=${JWT_EXPIRATION:-24:00:00}
-      - Encryption__Key=${ENCRYPTION_KEY:-development-encryption-key-at-least-32-characters-long}
       - Encryption__EncryptionKey=${ENCRYPTION_KEY:-development-encryption-key-at-least-32-characters-long}
+      - Encryption__Key=${ENCRYPTION_KEY:-development-encryption-key-at-least-32-characters-long}
       - Redis__Enabled=${REDIS_ENABLED:-true}
       - Redis__ConnectionString=${REDIS_CONNECTION_STRING:-redis:6379}
-      - Redis__InstanceName=${REDIS_INSTANCE_NAME:-gg:}
+      - Redis__InstanceName=${REDIS_INSTANCE_NAME:-game-guild:}
+      - StatementEmails__ConsoleBaseUrl=${STATEMENTEMAILS__CONSOLEBASEURL:-http://localhost:3000}
+      - EmailDelivery__Enabled=${EMAILDELIVERY__ENABLED:-true}
+      - EmailDelivery__Provider=${EMAILDELIVERY__PROVIDER:-Smtp}
+      - EmailDelivery__FromEmail=${EMAILDELIVERY__FROMEMAIL:-no-reply@example.com}
+      - EmailDelivery__FromName=${EMAILDELIVERY__FROMNAME:-GameGuild}
+      - EmailDelivery__SendGridApiKey=${EMAILDELIVERY__SENDGRIDAPIKEY:-}
+      - EmailDelivery__SmtpHost=${EMAILDELIVERY__SMTPHOST:-mailhog}
+      - EmailDelivery__SmtpPort=${EMAILDELIVERY__SMTPPORT:-1025}
+      - EmailDelivery__SmtpUsername=${EMAILDELIVERY__SMTPUSERNAME:-}
+      - EmailDelivery__SmtpPassword=${EMAILDELIVERY__SMTPPASSWORD:-}
+      - EmailDelivery__SmtpUseSsl=${EMAILDELIVERY__SMTPUSESSL:-false}
       - Assets__Storage__BucketName=${S3_BUCKET:-gameguild-assets}
+      - Assets__Storage__TransformedBucketName=${S3_BUCKET_TRANSFORMED:-}
+      - Assets__Storage__QuarantineBucketName=${S3_BUCKET_QUARANTINE:-}
       - Assets__Storage__ServiceUrl=${S3_CONTAINER_SERVICE_URL:-http://garage:3900}
       - Assets__Storage__AccessKey=${S3_ACCESS_KEY:-GK111111111111111111111111}
       - Assets__Storage__SecretKey=${S3_SECRET_KEY:-2222222222222222222222222222222222222222222222222222222222222222}
       - Assets__Storage__Region=${S3_REGION:-garage}
       - Assets__Storage__ForcePathStyle=true
+      - Assets__Storage__PresignedUrlExpiryMinutes=${S3_PRESIGNED_EXPIRY:-60}
       - SeedData__ImportSnapshotCourses=${SEED_SNAPSHOT_COURSES:-true}
       - OAuth__Google__ClientId=${GOOGLE_CLIENT_ID:-}
       - OAuth__Google__ClientSecret=${GOOGLE_CLIENT_SECRET:-}
@@ -151,21 +76,24 @@ services:
     security_opt:
       - no-new-privileges:true
     ports:
-      - "${API_PORT:-8080}:8080"
+      - '${API_PORT:-8080}:8080'
     networks:
       public:
+        aliases:
+          - api
+      internal:
         aliases:
           - api
       database:
         aliases:
           - api
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/live || exit 1"]
-      start_interval: ${HEALTHCHECK_START_INTERVAL:-5s}
-      start_period: ${HEALTHCHECK_START_PERIOD:-90s}
+      start_interval: ${HEALTHCHECK_START_INTERVAL:-45s}
+      start_period: ${HEALTHCHECK_START_PERIOD:-60s}
       interval: ${HEALTHCHECK_INTERVAL:-30s}
       timeout: ${HEALTHCHECK_TIMEOUT:-10s}
-      retries: ${HEALTHCHECK_RETRIES:-5}
+      retries: ${HEALTHCHECK_RETRIES:-3}
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/live || exit 1"]
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -175,13 +103,6 @@ services:
     labels:
       - "com.game-guild.app=api"
       - "com.game-guild.tier=backend"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      garage-init:
-        condition: service_healthy
 
   web:
     build:
@@ -189,7 +110,6 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         GIT_HASH: ${GIT_HASH:-}
-        NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
         AUTH_SECRET: ${AUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
         API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8080}
         API_PUBLIC_URL: ${API_PUBLIC_URL:-http://localhost:8080}
@@ -197,7 +117,6 @@ services:
         AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
     image: game-guild-web
     container_name: game-guild-web
-    profiles: ["app"]
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -208,15 +127,17 @@ services:
       - WEB_PUBLIC_URL=${WEB_PUBLIC_URL:-http://localhost:3000}
       - AUTH_COOKIE_DOMAIN=${AUTH_COOKIE_DOMAIN:-}
       - NEXTAUTH_URL=${WEB_PUBLIC_URL:-http://localhost:3000}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
       - AUTH_SECRET=${AUTH_SECRET:-local-game-guild-auth-secret-at-least-32-characters}
       - AUTH_TRUST_HOST=true
     security_opt:
       - no-new-privileges:true
     ports:
-      - "${WEB_PORT:-3000}:3000"
+      - '${WEB_PORT:-3000}:3000'
     networks:
       public:
+        aliases:
+          - web
+      internal:
         aliases:
           - web
     healthcheck:
@@ -244,49 +165,7 @@ services:
       api:
         condition: service_started
 
-  garage-init:
-    image: curlimages/curl:8.20.0
-    container_name: game-guild-garage-init
-    environment:
-      - GARAGE_HOST=garage
-      - GARAGE_ADMIN_PORT=3903
-      - GARAGE_ADMIN_TOKEN=${GARAGE_ADMIN_TOKEN:-development-garage-admin-token}
-      - GARAGE_S3_BUCKET=${S3_BUCKET:-gameguild-assets}
-      - GARAGE_KEY_ID=${S3_ACCESS_KEY:-GK111111111111111111111111}
-      - GARAGE_KEY_SECRET=${S3_SECRET_KEY:-2222222222222222222222222222222222222222222222222222222222222222}
-      - GARAGE_KEY_NAME=gameguild-api
-      - GARAGE_ZONE=local
-      - GARAGE_CAPACITY=1000000000
-    volumes:
-      - ./scripts/garage/init.sh:/init.sh:ro
-    # ponytail: idle after provisioning instead of exiting — compose up --wait
-    # (docker/compose#10596) treats any exited container as failure, and
-    # default `ps` hides exited one-shots; api waits on service_healthy below.
-    entrypoint: ["/bin/sh", "-c", "sh /init.sh && exec sleep infinity"]
-    networks:
-      - database
-    depends_on:
-      garage:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS -H \"Authorization: Bearer $${GARAGE_ADMIN_TOKEN}\" http://garage:3903/v2/GetClusterHealth >/dev/null || exit 1"]
-      start_interval: ${HEALTHCHECK_START_INTERVAL:-5s}
-      start_period: ${HEALTHCHECK_START_PERIOD:-30s}
-      interval: ${HEALTHCHECK_INTERVAL:-30s}
-      timeout: ${HEALTHCHECK_TIMEOUT:-10s}
-      retries: ${HEALTHCHECK_RETRIES:-5}
-    restart: unless-stopped
-
 volumes:
   dataprotection-keys:
     name: game-guild-dataprotection-keys
-    driver: local
-  garage-data:
-    name: game-guild-garage-data
-    driver: local
-  postgres-data:
-    name: game-guild-postgres-data
-    driver: local
-  redis-data:
-    name: game-guild-redis-data
     driver: local

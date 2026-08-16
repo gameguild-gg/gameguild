@@ -25,11 +25,11 @@ describe('createServerClient', () => {
 
   it('should create a client with baseUrl', () => {
     const client = createServerClient({
-      baseUrl: 'http://localhost:8080',
+      baseUrl: 'http://localhost:5295',
     });
 
     expect(client).toBeDefined();
-    expect(client.getBaseUrl()).toBe('http://localhost:8080');
+    expect(client.getBaseUrl()).toBe('http://localhost:5295');
     expect(typeof client.request).toBe('function');
   });
 
@@ -37,7 +37,7 @@ describe('createServerClient', () => {
     const interceptor = vi.fn();
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:8080',
+      baseUrl: 'http://localhost:5295',
       interceptors: [interceptor],
     });
 
@@ -50,7 +50,7 @@ describe('createServerClient', () => {
     };
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:8080',
+      baseUrl: 'http://localhost:5295',
       auth,
     });
 
@@ -63,7 +63,7 @@ describe('createServerClient', () => {
     };
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:8080',
+      baseUrl: 'http://localhost:5295',
       tenant,
     });
 
@@ -72,7 +72,7 @@ describe('createServerClient', () => {
 
   it('should make successful requests', async () => {
     const client = createServerClient({
-      baseUrl: 'http://localhost:8080',
+      baseUrl: 'http://localhost:5295',
     });
 
     const result = await client.request({
@@ -93,7 +93,7 @@ describe('createServerClient', () => {
     };
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:8080',
+      baseUrl: 'http://localhost:5295',
       auth,
     });
 
@@ -117,7 +117,7 @@ describe('createServerClient', () => {
     };
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:8080',
+      baseUrl: 'http://localhost:5295',
       auth,
     });
 
@@ -132,7 +132,7 @@ describe('createServerClient', () => {
 
   it('should skip auth check when no auth provider configured', async () => {
     const client = createServerClient({
-      baseUrl: 'http://localhost:8080',
+      baseUrl: 'http://localhost:5295',
     });
 
     // Should not throw even with requiresAuth=true if no auth provider
@@ -147,15 +147,15 @@ describe('createServerClient', () => {
 
   it('should create client without optional fields', () => {
     const client = createServerClient({
-      baseUrl: 'http://localhost:8080',
+      baseUrl: 'http://localhost:5295',
     });
 
-    expect(client.getBaseUrl()).toBe('http://localhost:8080');
+    expect(client.getBaseUrl()).toBe('http://localhost:5295');
   });
 
   it('should accept timeout configuration', () => {
     const client = createServerClient({
-      baseUrl: 'http://localhost:8080',
+      baseUrl: 'http://localhost:5295',
       timeout: 5000,
     });
 

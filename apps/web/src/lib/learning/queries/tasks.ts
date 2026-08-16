@@ -43,7 +43,7 @@ async function getCourseSlugById(): Promise<Map<string, string>> {
 
   try {
     const programs = new GeneratedApi.LearningCoursesProgramModule(getApiClient());
-    const result = await programs.getCourses({ take: 100 });
+    const result = await programs.getCoursesForGetCourses({ take: 100 });
 
     if (result.ok && Array.isArray(result.data)) {
       for (const program of result.data) {

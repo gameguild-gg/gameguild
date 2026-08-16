@@ -52,20 +52,14 @@ export {
 export { createCSRFToken, validateCSRFToken } from './csrf.js';
 
 // Session management
-export {
-  createJWTPayload,
-  toSession,
-  shouldRefreshToken,
-  refreshAccessToken,
-  processSession,
-  encodeSession,
-} from './session.js';
+export { createJWTPayload, toSession, shouldRefreshToken, refreshAccessToken, processSession, encodeSession } from './session.js';
 
 // Error types
 export {
   AuthError,
   CredentialsSignInError,
   AccountLockedError,
+  AuthServiceUnavailableError,
   MfaRequiredError,
   SignUpError,
   SessionExpiredError,

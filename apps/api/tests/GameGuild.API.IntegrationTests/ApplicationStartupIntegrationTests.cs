@@ -240,7 +240,26 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
     {
         var values = new Dictionary<string, string?>
         {
+            ["ConnectionStrings:DefaultConnection"] =
+                "Host=127.0.0.1;Port=1;Database=gameguild_startup;Username=gameguild_runtime;Password=runtime-startup-test;Timeout=1;Command Timeout=1;Pooling=false",
+            ["ConnectionStrings:MigrationConnection"] =
+                "Host=127.0.0.1;Port=1;Database=gameguild_startup;Username=gameguild_migrator;Password=migration-startup-test;Timeout=1;Command Timeout=1;Pooling=false",
             ["Database:RunStartupInitialization"] = "false",
+            ["Jwt:SecretKey"] = "startup-test-jwt-secret-with-forty-characters",
+            ["Jwt:Issuer"] = "GameGuild.StartupTests",
+            ["Jwt:Audience"] = "GameGuild.StartupTests.Users",
+            ["Encryption:EncryptionKey"] = "startup-test-encryption-key-32-chars",
+            ["Redis:Enabled"] = "true",
+            ["Redis:ConnectionString"] = "127.0.0.1:1,abortConnect=false",
+            ["EmailDelivery:Enabled"] = "true",
+            ["EmailDelivery:FromEmail"] = "startup-tests@gameguild.gg",
+            ["EmailDelivery:Provider"] = "Smtp",
+            ["EmailDelivery:SmtpHost"] = "127.0.0.1",
+            ["EmailDelivery:SmtpPort"] = "25",
+            ["Assets:Storage:ServiceUrl"] = "http://127.0.0.1:1",
+            ["Assets:Storage:AccessKey"] = "startup-test-access-key",
+            ["Assets:Storage:SecretKey"] = "startup-test-secret-key",
+            ["Assets:Storage:BucketName"] = "startup-tests",
             ["PaymentGateways:Stripe:IsEnabled"] = "true",
             ["PaymentGateways:Stripe:UseSimulation"] = "false",
             ["PaymentGateways:Stripe:ApiKey"] = environmentName == "Production" ? "sk_live_startup_test" : "sk_test_startup_test",
@@ -259,6 +278,13 @@ public class ApplicationStartupIntegrationTests : IClassFixture<WebApplicationFa
         return new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment(environmentName);
+            foreach (var (key, value) in values)
+            {
+                if (value is not null)
+                {
+                    builder.UseSetting(key, value);
+                }
+            }
             builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(values));
         });
     }

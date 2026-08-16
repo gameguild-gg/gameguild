@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AssetRepository } from "../repository/asset-repository";
 import type { RemoteAssetProvider } from "../providers/remote-asset-provider";
+import { createAssetUri, parseAssetUri } from "../core/asset-uri";
 
 export function describeAssetRepositoryContract(
   name: string,
@@ -39,6 +40,23 @@ export function describeAssetRepositoryContract(
       expect(first.contentHash).toBe(second.contentHash);
       expect((await repository.getStorageStatus()).localBytes).toBe(blob.size);
     });
+
+    it("stores external references behind source-neutral logical identities", async () => {
+      const repository = createRepository();
+      const record = await repository.importExternal({
+        name: "External video",
+        providerKey: "youtube",
+        reference: "https://www.youtube.com/watch?v=example",
+        kind: "video",
+      });
+      expect(record.uri).toBe(`asset://${record.id}`);
+      expect(record.location).toEqual({
+        type: "external",
+        providerKey: "youtube",
+        reference: "https://www.youtube.com/watch?v=example",
+      });
+      expect(await repository.get(record.uri)).toEqual(record);
+    });
   });
 }
 
@@ -50,15 +68,20 @@ export function describeRemoteAssetProviderContract(
     it("uploads, lists, downloads, resolves, and deletes", async () => {
       const provider = createProvider();
       const blob = new Blob(["remote body"], { type: "text/plain" });
+      const uri = createAssetUri();
       const [record] = await provider.upload(
-        [{ blob, name: "remote.txt", mimeType: blob.type }],
+        [{ id: parseAssetUri(uri)!.id, uri, blob, name: "remote.txt", mimeType: blob.type }],
         { scope: { type: "test", id: "remote" } },
       );
       expect(record).toBeDefined();
       expect((await provider.get(record!.uri, {}))?.name).toBe("remote.txt");
       expect((await provider.list({ search: "remote" }, {})).items).toHaveLength(1);
-      expect(await (await provider.download(record!.uri, {})).blob.text()).toBe("remote body");
-      await provider.delete?.(record!.uri, {});
+      expect(record!.uri).toBe(uri);
+      expect(await (await provider.download(record!, {})).blob.text()).toBe("remote body");
+      const resolved = await provider.resolveUrl(record!, {});
+      expect(await (await fetch(resolved.url)).text()).toBe("remote body");
+      resolved.release();
+      await provider.delete?.(record!, {});
       expect(await provider.get(record!.uri, {})).toBeNull();
     });
 
@@ -66,8 +89,9 @@ export function describeRemoteAssetProviderContract(
       const provider = createProvider();
       const controller = new AbortController();
       controller.abort();
+      const uri = createAssetUri();
       await expect(provider.upload(
-        [{ blob: new Blob(["x"]), name: "x.txt", mimeType: "text/plain" }],
+        [{ id: parseAssetUri(uri)!.id, uri, blob: new Blob(["x"]), name: "x.txt", mimeType: "text/plain" }],
         { signal: controller.signal },
       )).rejects.toMatchObject({ name: "AbortError" });
     });

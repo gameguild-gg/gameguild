@@ -154,6 +154,15 @@ public class EntityBaseToStringTests
 public class EntityBaseFactoryTests
 {
     [Fact]
+    public void PartialConstructor_WithNull_DoesNotApplyProperties()
+    {
+        var entity = new TestEntity(null!);
+
+        entity.Name.Should().BeEmpty();
+        entity.Id.Should().NotBeEmpty();
+    }
+
+    [Fact]
     public void Create_Generic_ShouldReturnInstance()
     {
         var entity = EntityBase.Create<TestEntity>();
@@ -229,6 +238,10 @@ public class EntityBaseSetPropertiesTests
 /// <summary>Test entity for unit testing EntityBase functionality</summary>
 public class TestEntity : EntityBase
 {
+    public TestEntity() { }
+
+    public TestEntity(object partial) : base(partial) { }
+
     public string Name { get; set; } = string.Empty;
 }
 

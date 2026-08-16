@@ -8,7 +8,7 @@ namespace GameGuild.Monitoring.SLA;
 /// <summary>
 ///     Repository implementation for SLO Violation entities.
 /// </summary>
-public abstract class SloViolationRepository(DbContext context) : ISloViolationRepository
+public class SloViolationRepository(DbContext context) : ISloViolationRepository
 {
     private readonly DbSet<SloViolation> _violations = context.Set<SloViolation>();
 

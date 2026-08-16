@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,229 +17,24 @@ export class ApiProjectsOwnershipModule {
 
   /**
    */
-  async getProjectsOwnership(projectId: string): Promise<Result<Types.APIProjectsProjectOwnership, ApiError>> {
+  async getProjectsOwnership(
+    projectId: string,
+  ): Promise<Result<Types.APIProjectsProjectOwnership, ApiError>> {
     const url = `/v1/projects/${projectId}/ownership`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectOwnershipSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postProjectsOwnershipAgreements(
-    projectId: string,
-    body: Types.APIProjectsCreateProjectTeamAgreementInput,
-  ): Promise<Result<Types.APIProjectsProjectTeamAgreement, ApiError>> {
-    const url = `/v1/projects/${projectId}/ownership/agreements`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.APIProjectsCreateProjectTeamAgreementInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectTeamAgreementSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postProjectsOwnershipAgreementsAccept(projectId: string, agreementId: string): Promise<Result<Types.APIProjectsProjectTeamAgreement, ApiError>> {
-    const url = `/v1/projects/${projectId}/ownership/agreements/${agreementId}/accept`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectTeamAgreementSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postProjectsOwnershipAgreementsCancel(projectId: string, agreementId: string): Promise<Result<Types.APIProjectsProjectTeamAgreement, ApiError>> {
-    const url = `/v1/projects/${projectId}/ownership/agreements/${agreementId}/cancel`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectTeamAgreementSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postProjectsOwnershipAgreementsComplete(projectId: string, agreementId: string): Promise<Result<Types.APIProjectsProjectTeamAgreement, ApiError>> {
-    const url = `/v1/projects/${projectId}/ownership/agreements/${agreementId}/complete`;
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectTeamAgreementSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postProjectsOwnershipAgreementsCounter(
-    projectId: string,
-    agreementId: string,
-    body: Types.APIProjectsCounterProjectTeamAgreementInput,
-  ): Promise<Result<Types.APIProjectsProjectTeamAgreement, ApiError>> {
-    const url = `/v1/projects/${projectId}/ownership/agreements/${agreementId}/counter`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.APIProjectsCounterProjectTeamAgreementInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectTeamAgreementSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postProjectsOwnershipAllocations(
-    projectId: string,
-    body: Types.APIProjectsCreateProjectAllocationInput,
-  ): Promise<Result<Types.APIProjectsProjectAllocation, ApiError>> {
-    const url = `/v1/projects/${projectId}/ownership/allocations`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.APIProjectsCreateProjectAllocationInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectAllocationSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putProjectsOwnershipAllocations(
-    projectId: string,
-    allocationId: string,
-    body: Types.APIProjectsUpdateProjectAllocationInput,
-  ): Promise<Result<Types.APIProjectsProjectAllocation, ApiError>> {
-    const url = `/v1/projects/${projectId}/ownership/allocations/${allocationId}`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.APIProjectsUpdateProjectAllocationInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'PUT',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectAllocationSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async deleteProjectsOwnershipAllocations(projectId: string, allocationId: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/projects/${projectId}/ownership/allocations/${allocationId}`;
-
-    const result = await this.client.request({
-      method: 'DELETE',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postProjectsOwnershipOwnerTeam(
-    projectId: string,
-    body: Types.APIProjectsTransferProjectOwnerTeamInput,
-  ): Promise<Result<Types.APIProjectsProjectOwnership, ApiError>> {
-    const url = `/v1/projects/${projectId}/ownership/owner-team`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.APIProjectsTransferProjectOwnerTeamInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectOwnershipSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.APIProjectsProjectOwnershipSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -255,10 +50,14 @@ export class ApiProjectsOwnershipModule {
     const url = `/v1/projects/${projectId}/ownership/teams`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIProjectsAddProjectTeamInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.APIProjectsAddProjectTeamInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -266,7 +65,11 @@ export class ApiProjectsOwnershipModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectTeamOwnershipSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.APIProjectsProjectTeamOwnershipSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -283,10 +86,14 @@ export class ApiProjectsOwnershipModule {
     const url = `/v1/projects/${projectId}/ownership/teams/${projectTeamId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.APIProjectsUpdateProjectTeamInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.APIProjectsUpdateProjectTeamInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "PUT",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -294,7 +101,11 @@ export class ApiProjectsOwnershipModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.APIProjectsProjectTeamOwnershipSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.APIProjectsProjectTeamOwnershipSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -303,19 +114,299 @@ export class ApiProjectsOwnershipModule {
 
   /**
    */
-  async deleteProjectsOwnershipTeams(projectId: string, projectTeamId: string): Promise<Result<void, ApiError>> {
+  async deleteProjectsOwnershipTeams(
+    projectId: string,
+    projectTeamId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/projects/${projectId}/ownership/teams/${projectTeamId}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
 
     return result as Result<void, ApiError>;
   }
+
+  /**
+   */
+  async postProjectsOwnershipOwnerTeam(
+    projectId: string,
+    body: Types.APIProjectsTransferProjectOwnerTeamInput,
+  ): Promise<Result<Types.APIProjectsProjectOwnership, ApiError>> {
+    const url = `/v1/projects/${projectId}/ownership/owner-team`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.APIProjectsTransferProjectOwnerTeamInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APIProjectsProjectOwnershipSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postProjectsOwnershipAllocations(
+    projectId: string,
+    body: Types.APIProjectsCreateProjectAllocationInput,
+  ): Promise<Result<Types.APIProjectsProjectAllocation, ApiError>> {
+    const url = `/v1/projects/${projectId}/ownership/allocations`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.APIProjectsCreateProjectAllocationInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APIProjectsProjectAllocationSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putProjectsOwnershipAllocations(
+    projectId: string,
+    allocationId: string,
+    body: Types.APIProjectsUpdateProjectAllocationInput,
+  ): Promise<Result<Types.APIProjectsProjectAllocation, ApiError>> {
+    const url = `/v1/projects/${projectId}/ownership/allocations/${allocationId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.APIProjectsUpdateProjectAllocationInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APIProjectsProjectAllocationSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteProjectsOwnershipAllocations(
+    projectId: string,
+    allocationId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/projects/${projectId}/ownership/allocations/${allocationId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postProjectsOwnershipAgreements(
+    projectId: string,
+    body: Types.APIProjectsCreateProjectTeamAgreementInput,
+  ): Promise<Result<Types.APIProjectsProjectTeamAgreement, ApiError>> {
+    const url = `/v1/projects/${projectId}/ownership/agreements`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.APIProjectsCreateProjectTeamAgreementInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APIProjectsProjectTeamAgreementSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postProjectsOwnershipAgreementsCounter(
+    projectId: string,
+    agreementId: string,
+    body: Types.APIProjectsCounterProjectTeamAgreementInput,
+  ): Promise<Result<Types.APIProjectsProjectTeamAgreement, ApiError>> {
+    const url = `/v1/projects/${projectId}/ownership/agreements/${agreementId}/counter`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.APIProjectsCounterProjectTeamAgreementInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APIProjectsProjectTeamAgreementSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postProjectsOwnershipAgreementsAccept(
+    projectId: string,
+    agreementId: string,
+  ): Promise<Result<Types.APIProjectsProjectTeamAgreement, ApiError>> {
+    const url = `/v1/projects/${projectId}/ownership/agreements/${agreementId}/accept`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APIProjectsProjectTeamAgreementSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postProjectsOwnershipAgreementsCancel(
+    projectId: string,
+    agreementId: string,
+  ): Promise<Result<Types.APIProjectsProjectTeamAgreement, ApiError>> {
+    const url = `/v1/projects/${projectId}/ownership/agreements/${agreementId}/cancel`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APIProjectsProjectTeamAgreementSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postProjectsOwnershipAgreementsComplete(
+    projectId: string,
+    agreementId: string,
+  ): Promise<Result<Types.APIProjectsProjectTeamAgreement, ApiError>> {
+    const url = `/v1/projects/${projectId}/ownership/agreements/${agreementId}/complete`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APIProjectsProjectTeamAgreementSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
-export function createApiProjectsOwnershipModule(client: ApiClient): ApiProjectsOwnershipModule {
+export function createApiProjectsOwnershipModule(
+  client: ApiClient,
+): ApiProjectsOwnershipModule {
   return new ApiProjectsOwnershipModule(client);
 }

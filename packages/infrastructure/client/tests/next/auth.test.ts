@@ -20,7 +20,7 @@ vi.mock('../../src/integrations/next/config.js', () => ({
     apiUrl: config.apiUrl || 'http://localhost:5000',
     pages: config.pages ?? {},
     cookies: {
-      name: '__gg',
+      name: '__me',
       secure: false,
       sameSite: 'lax',
       path: '/',

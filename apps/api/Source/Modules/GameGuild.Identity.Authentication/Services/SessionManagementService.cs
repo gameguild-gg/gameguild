@@ -11,24 +11,49 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
 {
     public async Task<UserSession> CreateSessionAsync(Guid userId, string ipAddress, string userAgent, string? deviceFingerprint = null, CancellationToken cancellationToken = default)
     {
+        var now = SystemClock.UtcNow;
+
+        return await CreateSessionAsync(
+            Guid.NewGuid(),
+            userId,
+            ipAddress,
+            userAgent,
+            string.Empty,
+            now.AddDays(30),
+            deviceFingerprint,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<UserSession> CreateSessionAsync(
+        Guid sessionId,
+        Guid userId,
+        string ipAddress,
+        string userAgent,
+        string refreshTokenHash,
+        DateTime expiresAt,
+        string? deviceFingerprint = null,
+        CancellationToken cancellationToken = default)
+    {
         logger.LogInformation("Creating session for user {UserId}", userId);
 
         deviceFingerprint ??= GenerateDeviceFingerprint(ipAddress, userAgent);
-
+        var now = SystemClock.UtcNow;
         var session = new UserSession
         {
-            Id = Guid.NewGuid(),
+            Id = sessionId,
             UserId = userId,
+            RefreshToken = refreshTokenHash,
             IpAddress = ipAddress,
             UserAgent = userAgent,
-            DeviceFingerprint = deviceFingerprint, LastUsedAt = SystemClock.UtcNow,
-            ExpiresAt = SystemClock.UtcNow.AddDays(30),
+            DeviceFingerprint = deviceFingerprint,
+            CreatedAt = now,
+            UpdatedAt = now,
+            LastUsedAt = now,
+            ExpiresAt = expiresAt,
             IsActive = true
         };
 
-        await sessionRepository.CreateAsync(session, cancellationToken).ConfigureAwait(false);
-
-        return session;
+        return await sessionRepository.CreateAsync(session, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<UserSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default) { return await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false); }
@@ -69,6 +94,21 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
 
         session.LastUsedAt = SystemClock.UtcNow;
         session.ExpiresAt = SystemClock.UtcNow.AddDays(30);
+
+        await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
+
+        return true;
+    }
+
+    public async Task<bool> RefreshSessionAsync(Guid sessionId, string refreshTokenHash, DateTime expiresAt, CancellationToken cancellationToken = default)
+    {
+        var session = await sessionRepository.GetByIdAsync(sessionId, cancellationToken).ConfigureAwait(false);
+
+        if (session is not { IsActive: true }) return false;
+
+        session.RefreshToken = refreshTokenHash;
+        session.LastUsedAt = SystemClock.UtcNow;
+        session.ExpiresAt = expiresAt;
 
         await sessionRepository.UpdateAsync(session, cancellationToken).ConfigureAwait(false);
 

@@ -1,61 +1,89 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
+using GameGuild.API.Setup;
+using GameGuild.CQRS;
 
 namespace GameGuild.API.Database;
 
 /// <summary>
-///     Thin-shell database context that delegates all module-specific configuration
+///     Thin-shell database context that delegates module-specific configuration
 ///     to <see cref="IModelConfiguration"/> implementations discovered via assembly scanning.
-///     Modules own their own entity mappings — adding a new module never requires editing this file.
 /// </summary>
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IPublisher? publisher = null)
     : DbContext(options), IApplicationDbContext
 {
-    /// <inheritdoc />
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Auto-increment Version on all tracked EntityBase instances for optimistic concurrency
+        var domainEventEntities = ChangeTracker.Entries()
+            .Select(entry => entry.Entity)
+            .OfType<IHasDomainEvents>()
+            .Where(entity => entity.DomainEvents.Count > 0)
+            .Distinct()
+            .ToList();
+
         foreach (var entry in ChangeTracker.Entries())
         {
             if (entry.Entity is EntityBase<Guid> entity &&
-                (entry.State == EntityState.Added || entry.State == EntityState.Modified))
+                entry.State is EntityState.Added or EntityState.Modified)
             {
                 entry.Property(nameof(EntityBase<Guid>.Version)).CurrentValue =
                     (int)entry.Property(nameof(EntityBase<Guid>.Version)).CurrentValue! + 1;
             }
         }
 
-        return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        var affectedRows = await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        if (domainEventEntities.Count == 0)
+        {
+            return affectedRows;
+        }
+
+        var eventPublisher = publisher;
+        if (eventPublisher is null)
+        {
+            try
+            {
+                eventPublisher = this.GetService<IPublisher>();
+            }
+            catch (InvalidOperationException)
+            {
+                return affectedRows;
+            }
+        }
+
+        var domainEvents = domainEventEntities
+            .SelectMany(entity => entity.DomainEvents)
+            .ToList();
+
+        foreach (var entity in domainEventEntities)
+        {
+            entity.ClearDomainEvents();
+        }
+
+        foreach (var domainEvent in domainEvents)
+        {
+            await eventPublisher.Publish(domainEvent, cancellationToken).ConfigureAwait(false);
+        }
+
+        return affectedRows;
     }
 
-    /// <inheritdoc />
     public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
         return await Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    /// <summary>
-    ///     Discovers and invokes all <see cref="IModelConfiguration"/> implementations
-    ///     from referenced assemblies to build the EF Core model.
-    /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
-        // Discover all IModelConfiguration implementations from GameGuild assemblies.
-        // Referenced module assemblies are not guaranteed to be loaded before EF builds
-        // the model, especially in tests and design-time tooling.
         var configurations = GetGameGuildAssemblies()
-            .Where(a => a.FullName?.StartsWith("GameGuild", StringComparison.Ordinal) == true)
-            .SelectMany(a =>
-            {
-                try { return a.GetTypes(); }
-                catch (ReflectionTypeLoadException ex) { return ex.Types.OfType<Type>(); }
-            })
-            .Where(t => t is { IsClass: true, IsAbstract: false }
-                         && typeof(IModelConfiguration).IsAssignableFrom(t)
-                         && t.GetConstructor(Type.EmptyTypes) is not null)
+            .SelectMany(LoadTypes)
+            .Where(type => type is { IsClass: true, IsAbstract: false }
+                           && typeof(IModelConfiguration).IsAssignableFrom(type)
+                           && type.GetConstructor(Type.EmptyTypes) is not null)
             .Select(Activator.CreateInstance)
             .OfType<IModelConfiguration>()
             .OrderBy(configuration => configuration.GetType().FullName, StringComparer.Ordinal)
@@ -69,38 +97,88 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         base.OnModelCreating(modelBuilder);
     }
 
-    private static IEnumerable<Assembly> GetGameGuildAssemblies()
+    private static IEnumerable<Type> LoadTypes(Assembly assembly)
     {
-        ForceLoadGameGuildAssemblies();
-
-        return AppDomain.CurrentDomain
-            .GetAssemblies()
-            .Where(a => a.FullName?.StartsWith("GameGuild", StringComparison.Ordinal) == true);
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException exception)
+        {
+            return exception.Types.OfType<Type>();
+        }
     }
 
-    private static void ForceLoadGameGuildAssemblies()
+    private static IReadOnlyCollection<Assembly> GetGameGuildAssemblies()
     {
-        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        ForceLoadGameGuildAssembliesFromOutput();
 
-        foreach (var dll in Directory.GetFiles(baseDir, "GameGuild.*.dll", SearchOption.TopDirectoryOnly))
+        var assembliesByName = AppDomain.CurrentDomain
+            .GetAssemblies()
+            .Where(assembly => IsGameGuildAssemblyName(assembly.GetName().Name))
+            .GroupBy(assembly => assembly.GetName().Name!, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+
+        var pending = new Queue<Assembly>(assembliesByName.Values);
+        while (pending.Count > 0)
+        {
+            var assembly = pending.Dequeue();
+            foreach (var reference in assembly.GetReferencedAssemblies()
+                         .Where(reference => IsGameGuildAssemblyName(reference.Name)))
+            {
+                TryLoadReferencedAssembly(reference, assembliesByName, pending, Assembly.Load);
+            }
+        }
+
+        return assembliesByName.Values.ToArray();
+    }
+
+    private static bool IsGameGuildAssemblyName(string? name) =>
+        name?.StartsWith("GameGuild", StringComparison.Ordinal) == true;
+
+    private static void TryLoadReferencedAssembly(
+        AssemblyName reference,
+        IDictionary<string, Assembly> assembliesByName,
+        Queue<Assembly> pending,
+        Func<AssemblyName, Assembly> loadAssembly)
+    {
+        var referenceName = reference.Name!;
+        if (assembliesByName.ContainsKey(referenceName))
+            return;
+
+        try
+        {
+            var loaded = loadAssembly(reference);
+            assembliesByName[referenceName] = loaded;
+            pending.Enqueue(loaded);
+        }
+        catch
+        {
+            // Optional modules may be absent from focused test and design-time hosts.
+        }
+    }
+
+    private static void ForceLoadGameGuildAssembliesFromOutput()
+    {
+        var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        foreach (var dll in Directory.GetFiles(baseDirectory, "GameGuild.*.dll", SearchOption.TopDirectoryOnly))
         {
             try
             {
                 var name = AssemblyName.GetAssemblyName(dll);
-
-                if (name.Name?.Contains("Tests", StringComparison.OrdinalIgnoreCase) == true)
+                if (ModuleConfiguration.IsTestAssembly(name.Name))
                 {
                     continue;
                 }
 
-                if (AppDomain.CurrentDomain.GetAssemblies().All(a => a.FullName != name.FullName))
+                if (AppDomain.CurrentDomain.GetAssemblies().All(assembly => assembly.FullName != name.FullName))
                 {
                     Assembly.LoadFrom(dll);
                 }
             }
             catch
             {
-                // Ignore optional module assemblies that cannot be loaded in a given runtime.
+                // Optional modules may be absent from focused test and design-time hosts.
             }
         }
     }

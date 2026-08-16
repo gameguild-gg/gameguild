@@ -232,10 +232,7 @@ class EndpointsGenerator extends BaseGenerator {
     }
 
     // Input type
-    const inputType = this.generateInputType(endpoint);
-    if (inputType) {
-      lines.push(inputType);
-    }
+    lines.push(this.generateInputType(endpoint));
 
     // Output type (success response)
     const successResponse = endpoint.responses.find((r) => r.statusCode.startsWith(SUCCESS_STATUS_PREFIX));
@@ -258,7 +255,7 @@ class EndpointsGenerator extends BaseGenerator {
   /**
    * Generate input type for endpoint
    */
-  private generateInputType(endpoint: EndpointInfo): string | null {
+  private generateInputType(endpoint: EndpointInfo): string {
     const pathParams = endpoint.parameters.filter((p) => p.in === PARAMETER_LOCATIONS.PATH);
     const queryParams = endpoint.parameters.filter((p) => p.in === PARAMETER_LOCATIONS.QUERY);
     const hasBody = !!endpoint.requestBody;
@@ -272,8 +269,7 @@ class EndpointsGenerator extends BaseGenerator {
 
     // Path parameters
     for (const param of pathParams) {
-      const optional = param.required ? '' : '?';
-      lines.push(`  ${param.name}${optional}: ${qualifyType(param.type)};`);
+      lines.push(`  ${param.name}: ${qualifyType(param.type)};`);
     }
 
     // Query parameters
