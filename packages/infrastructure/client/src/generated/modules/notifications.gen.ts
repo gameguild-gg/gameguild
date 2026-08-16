@@ -41,6 +41,132 @@ export class NotificationsModule {
 
   /**
    */
+  async getApiNotificationsPreferences(): Promise<
+    Result<Types.NotificationsControllersNotificationPreference, ApiError>
+  > {
+    const url = "/api/notifications/preferences";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersNotificationPreferenceSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putApiNotificationsPreferences(
+    body: Types.NotificationsControllersUpdatePreferencesInput,
+  ): Promise<
+    Result<Types.NotificationsControllersNotificationPreference, ApiError>
+  > {
+    const url = "/api/notifications/preferences";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.NotificationsControllersUpdatePreferencesInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersNotificationPreferenceSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putApiNotificationsPreferencesQuietHours(
+    body: Types.NotificationsControllersSetQuietHoursInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/api/notifications/preferences/quiet-hours";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.NotificationsControllersSetQuietHoursInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async deleteApiNotificationsRead(): Promise<
+    Result<Types.NotificationsControllersDeletedCountOutput, ApiError>
+  > {
+    const url = "/api/notifications/read";
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersDeletedCountOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postApiNotificationsReadAll(): Promise<Result<void, ApiError>> {
+    const url = "/api/notifications/read-all";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getApiNotificationsUnreadCount(): Promise<
     Result<Types.NotificationsControllersUnreadCountOutput, ApiError>
   > {
@@ -121,20 +247,6 @@ export class NotificationsModule {
 
   /**
    */
-  async postApiNotificationsReadAll(): Promise<Result<void, ApiError>> {
-    const url = "/api/notifications/read-all";
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postApiNotificationsUnread(
     id: string,
   ): Promise<Result<void, ApiError>> {
@@ -143,118 +255,6 @@ export class NotificationsModule {
     const result = await this.client.request({
       method: "POST",
       path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async deleteApiNotificationsRead(): Promise<
-    Result<Types.NotificationsControllersDeletedCountOutput, ApiError>
-  > {
-    const url = "/api/notifications/read";
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.NotificationsControllersDeletedCountOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiNotificationsPreferences(): Promise<
-    Result<Types.NotificationsControllersNotificationPreference, ApiError>
-  > {
-    const url = "/api/notifications/preferences";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.NotificationsControllersNotificationPreferenceSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putApiNotificationsPreferences(
-    body: Types.NotificationsControllersUpdatePreferencesInput,
-  ): Promise<
-    Result<Types.NotificationsControllersNotificationPreference, ApiError>
-  > {
-    const url = "/api/notifications/preferences";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.NotificationsControllersUpdatePreferencesInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "PUT",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.NotificationsControllersNotificationPreferenceSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putApiNotificationsPreferencesQuietHours(
-    body: Types.NotificationsControllersSetQuietHoursInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/api/notifications/preferences/quiet-hours";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.NotificationsControllersSetQuietHoursInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "PUT",
-      path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 

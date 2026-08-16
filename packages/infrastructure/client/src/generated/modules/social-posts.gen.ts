@@ -59,6 +59,97 @@ export class SocialPostsModule {
 
   /**
    */
+  async getPostsAuthor(
+    authorId: string,
+    query?: { skip?: number; take?: number },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/posts/author/${authorId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getPostsFeed(query?: {
+    skip?: number;
+    take?: number;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/posts/feed";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getPostsMy(query?: {
+    skip?: number;
+    take?: number;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/posts/my";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getPostsSearch(query?: {
+    q?: string;
+    skip?: number;
+    take?: number;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/posts/search";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getPostsTrending(query?: {
+    skip?: number;
+    take?: number;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/posts/trending";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getPostsForGetPostsByPostId(
     postId: string,
   ): Promise<Result<void, ApiError>> {
@@ -106,97 +197,6 @@ export class SocialPostsModule {
     const result = await this.client.request({
       method: "DELETE",
       path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getPostsFeed(query?: {
-    skip?: number;
-    take?: number;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/posts/feed";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getPostsTrending(query?: {
-    skip?: number;
-    take?: number;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/posts/trending";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getPostsAuthor(
-    authorId: string,
-    query?: { skip?: number; take?: number },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/posts/author/${authorId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getPostsMy(query?: {
-    skip?: number;
-    take?: number;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/posts/my";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getPostsSearch(query?: {
-    q?: string;
-    skip?: number;
-    take?: number;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/posts/search";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
       requiresAuth: true,
     });
 
