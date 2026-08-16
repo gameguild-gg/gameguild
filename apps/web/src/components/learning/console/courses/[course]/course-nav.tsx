@@ -32,6 +32,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 interface CourseNavProps {
   courseTitle: string;
@@ -79,6 +80,7 @@ function buildNavItems(features: CourseFeatures): NavItem[] {
 }
 
 export function CourseNav({ courseTitle, courseDescription, courseStatus, courseSlug, courseRouteParam, locale, features, children }: CourseNavProps) {
+  const learningBase = useLearningBase();
   const pathname = usePathname() ?? '';
   const router = useRouter();
   const publicCourseHref = courseSlug?.trim() ? `/courses/${courseSlug.trim()}` : null;

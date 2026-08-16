@@ -246,7 +246,7 @@ export function CourseContentSidebar({ courseSlug, courseTitle, content }: Cours
                 asChild
                 className="text-muted-foreground hover:text-foreground"
               >
-                <Link href="/courses?type=program">
+                <Link href="/courses">
                   ← Courses
                 </Link>
               </Button>

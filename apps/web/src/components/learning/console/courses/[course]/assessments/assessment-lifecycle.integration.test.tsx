@@ -93,7 +93,8 @@ vi.mock("@/lib/learning/queries/course", () => ({
   resolveCourseId: wireMocks.resolveCourseId,
 }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => routerMocks }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => '/workspace/learning', useRouter: () => routerMocks }));
 vi.mock("@/i18n/navigation", () => ({
   Link: ({
     href,

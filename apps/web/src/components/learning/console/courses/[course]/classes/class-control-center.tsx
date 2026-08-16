@@ -12,6 +12,7 @@ import { AlertTriangle, CalendarDays, Clock3, Search, Users } from 'lucide-react
 import { useMemo, useState } from 'react';
 
 import { NewClassSheet } from './new-class-sheet';
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 interface ClassControlCenterProps {
   courseId: string;
@@ -37,6 +38,7 @@ function CohortStatusBadge({ status }: { status: CourseCohortSummary['status'] }
 }
 
 export function ClassControlCenter({ courseId, cohorts }: ClassControlCenterProps) {
+  const learningBase = useLearningBase();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
 
@@ -62,7 +64,7 @@ export function ClassControlCenter({ courseId, cohorts }: ClassControlCenterProp
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
-            <Link href={`/workspace/learning/courses/${courseId}/classes/calendar`}>
+            <Link href={`${learningBase}/courses/${courseId}/classes/calendar`}>
               <CalendarDays className="size-4" />
               General calendar
             </Link>
@@ -133,7 +135,7 @@ export function ClassControlCenter({ courseId, cohorts }: ClassControlCenterProp
                 {visible.map((cohort) => (
                   <TableRow key={cohort.id}>
                     <TableCell className="max-w-72 whitespace-normal">
-                      <Link href={`/workspace/learning/courses/${courseId}/classes/${cohort.id}/schedule`} className="font-medium hover:underline">
+                      <Link href={`${learningBase}/courses/${courseId}/classes/${cohort.id}/schedule`} className="font-medium hover:underline">
                         {cohort.name}
                       </Link>
                     </TableCell>
@@ -151,7 +153,7 @@ export function ClassControlCenter({ courseId, cohorts }: ClassControlCenterProp
 
           <div className="grid gap-3 md:hidden">
             {visible.map((cohort) => (
-              <Link key={cohort.id} href={`/workspace/learning/courses/${courseId}/classes/${cohort.id}/schedule`} className="rounded-lg border p-4 transition-colors hover:bg-muted/40">
+              <Link key={cohort.id} href={`${learningBase}/courses/${courseId}/classes/${cohort.id}/schedule`} className="rounded-lg border p-4 transition-colors hover:bg-muted/40">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{cohort.name}</p>

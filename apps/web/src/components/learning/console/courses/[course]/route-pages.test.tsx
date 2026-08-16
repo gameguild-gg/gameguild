@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   redirect: mocks.redirect,
   notFound: mocks.notFound,
 }));
@@ -125,15 +126,15 @@ vi.mock('./listing/listing-launch-form', () => ({
   ListingLaunchForm: ({ course }: { course: { id: string } }) => <div data-testid="listing-launch-form">{course.id}</div>,
 }));
 
-import CourseRouteLayout from '@/app/[locale]/(private)/workspace/learning/courses/[course]/layout';
-import CourseRouteRedirectPage from '@/app/[locale]/(private)/workspace/learning/courses/[course]/page';
-import OverviewPage from '@/app/[locale]/(private)/workspace/learning/courses/[course]/overview/page';
-import ContentPage from '@/app/[locale]/(private)/workspace/learning/courses/[course]/content/page';
-import AssessmentsPage from '@/app/[locale]/(private)/workspace/learning/courses/[course]/assessments/page';
-import ClassesPage from '@/app/[locale]/(private)/workspace/learning/courses/[course]/classes/page';
-import StudentsPage from '@/app/[locale]/(private)/workspace/learning/courses/[course]/students/page';
-import CertificatesPage from '@/app/[locale]/(private)/workspace/learning/courses/[course]/certificates/page';
-import ListingPage from '@/app/[locale]/(private)/workspace/learning/courses/[course]/listing/page';
+import CourseRouteLayout from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/layout';
+import CourseRouteRedirectPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/page';
+import OverviewPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/overview/page';
+import ContentPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/page';
+import AssessmentsPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/assessments/page';
+import ClassesPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/classes/page';
+import StudentsPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/students/page';
+import CertificatesPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/certificates/page';
+import ListingPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/page';
 
 const params = (path = 'advanced-game-ai') => Promise.resolve({ locale: 'en-US', course: path });
 

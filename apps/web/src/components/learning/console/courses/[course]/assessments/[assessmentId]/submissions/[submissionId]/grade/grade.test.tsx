@@ -18,6 +18,7 @@ const gradeActionMock = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   useRouter: () => routerMocks,
 }));
 

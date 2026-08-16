@@ -8,6 +8,7 @@ import { manualEnrollStudent, removeCourseStudents, sendCourseStudentMessage } f
 const refreshMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   useRouter: () => ({ refresh: refreshMock }),
 }));
 

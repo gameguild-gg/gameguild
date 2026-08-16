@@ -17,12 +17,14 @@ import {
 import { Textarea } from "@game-guild/ui/components/textarea";
 import { ArrowRight, Loader2, Plus } from "lucide-react";
 import { FormEvent, useState, useTransition } from "react";
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 interface NewClassSheetProps {
   courseId: string;
 }
 
 export function NewClassSheet({ courseId }: NewClassSheetProps) {
+  const learningBase = useLearningBase();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -55,7 +57,7 @@ export function NewClassSheet({ courseId }: NewClassSheetProps) {
 
       setOpen(false);
       router.push(
-        `/workspace/learning/courses/${courseId}/classes/${result.data.id}/schedule`,
+        `${learningBase}/courses/${courseId}/classes/${result.data.id}/schedule`,
       );
     });
   };

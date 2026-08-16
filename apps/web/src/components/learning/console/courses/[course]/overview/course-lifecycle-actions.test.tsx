@@ -9,6 +9,7 @@ const refreshMock = vi.fn();
 const pushMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   useRouter: () => ({
     refresh: refreshMock,
     push: pushMock,

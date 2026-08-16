@@ -11,23 +11,23 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 
-import CourseLoading from '@/app/[locale]/(private)/workspace/learning/courses/[course]/loading';
-import CourseError from '@/app/[locale]/(private)/workspace/learning/courses/[course]/error';
-import CourseNotFound from '@/app/[locale]/(private)/workspace/learning/courses/[course]/not-found';
-import CourseForbidden from '@/app/[locale]/(private)/workspace/learning/courses/[course]/forbidden';
+import CourseLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/loading';
+import CourseError from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/error';
+import CourseNotFound from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/not-found';
+import CourseForbidden from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/forbidden';
 import CourseUnauthorized from './unauthorized';
-import CoursesLoading from '@/app/[locale]/(private)/workspace/learning/courses/loading';
-import OverviewLoading from '@/app/[locale]/(private)/workspace/learning/courses/[course]/overview/loading';
-import ClassesLoading from '@/app/[locale]/(private)/workspace/learning/courses/[course]/classes/loading';
-import ClassDetailError from '@/app/[locale]/(private)/workspace/learning/courses/[course]/classes/[classId]/error';
-import ClassDetailLoading from '@/app/[locale]/(private)/workspace/learning/courses/[course]/classes/[classId]/loading';
-import ClassDetailNotFound from '@/app/[locale]/(private)/workspace/learning/courses/[course]/classes/[classId]/not-found';
-import ContentLoading from '@/app/[locale]/(private)/workspace/learning/courses/[course]/content/loading';
-import ContentItemError from '@/app/[locale]/(private)/workspace/learning/courses/[course]/content/[contentId]/error';
-import ContentItemLoading from '@/app/[locale]/(private)/workspace/learning/courses/[course]/content/[contentId]/loading';
-import ContentItemNotFound from '@/app/[locale]/(private)/workspace/learning/courses/[course]/content/[contentId]/not-found';
-import SettingsLoading from '@/app/[locale]/(private)/workspace/learning/courses/[course]/settings/loading';
-import StudentsLoading from '@/app/[locale]/(private)/workspace/learning/courses/[course]/students/loading';
+import CoursesLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/loading';
+import OverviewLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/overview/loading';
+import ClassesLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/classes/loading';
+import ClassDetailError from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/classes/[classId]/error';
+import ClassDetailLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/classes/[classId]/loading';
+import ClassDetailNotFound from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/classes/[classId]/not-found';
+import ContentLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/loading';
+import ContentItemError from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentId]/error';
+import ContentItemLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentId]/loading';
+import ContentItemNotFound from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentId]/not-found';
+import SettingsLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/settings/loading';
+import StudentsLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/students/loading';
 
 describe('course-management loading and boundary screens', () => {
   beforeEach(() => {

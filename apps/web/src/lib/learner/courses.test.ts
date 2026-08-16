@@ -22,6 +22,7 @@ vi.mock("@game-guild/client", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => '/workspace/learning',
   unstable_rethrow: vi.fn(),
 }));
 

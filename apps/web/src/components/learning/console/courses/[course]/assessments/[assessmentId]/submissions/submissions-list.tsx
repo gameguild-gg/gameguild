@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@game-guild/ui/components/table';
 import type { LearningAssessmentsAssessmentSubmission } from '@game-guild/client';
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 // ponytail: simple list render; add server-side pagination when submission count exceeds 200
 
@@ -63,6 +64,7 @@ export function SubmissionsList({
   error,
   isLoading = false,
 }: SubmissionsListProps): React.JSX.Element {
+  const learningBase = useLearningBase();
   if (isLoading) {
     return (
       <div data-testid="submissions-loading" className="flex items-center gap-2 text-muted-foreground">
@@ -129,6 +131,7 @@ function SubmissionRow({
   assessmentId,
   maxScore,
 }: SubmissionRowProps): React.JSX.Element {
+  const learningBase = useLearningBase();
   const studentLabel =
     submission.userId && submission.userId.length > 8
       ? `${submission.userId.slice(0, 8)}…`
@@ -145,7 +148,7 @@ function SubmissionRow({
   const scoreLabel =
     submission.score != null ? `${submission.score}/${maxScore}` : '—';
 
-  const gradeHref = `/workspace/learning/courses/${courseSlug}/assessments/${assessmentId}/submissions/${submission.id}/grade`;
+  const gradeHref = `${learningBase}/courses/${courseSlug}/assessments/${assessmentId}/submissions/${submission.id}/grade`;
 
   return (
     <TableRow data-testid={`submission-row-${submission.id}`}>

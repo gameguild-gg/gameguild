@@ -20,6 +20,7 @@ vi.mock('@/lib/community/queries/members', () => ({
   getMembers: mocks.getMembers,
 }));
 vi.mock('next/navigation', async (importOriginal) => ({
+  usePathname: () => '/workspace/learning',
   ...(await importOriginal<typeof import('next/navigation')>()),
   useRouter: () => ({ push: mocks.push }),
 }));

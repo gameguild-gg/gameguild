@@ -27,6 +27,7 @@ import type { CodingAssignmentContent } from '@/lib/coding-assignment/client';
 import { composeFeedback } from './compose-feedback';
 import { Button } from '@game-guild/ui/components/button';
 import { Loader2 } from 'lucide-react';
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 type GradeState = 'idle' | 'grading' | 'ready' | 'posting' | 'done';
 
@@ -71,6 +72,7 @@ export function mergeWorkspaceWithSubmission(
   assignment: CodingAssignmentContent,
   submittedFiles: CodeFile[],
 ): CodeFile[] {
+  const learningBase = useLearningBase();
   const privatePaths = buildPrivatePaths(assignment);
   const merged = new Map<string, string>();
   for (const [path, meta] of Object.entries(assignment.Data.Files)) {
@@ -100,6 +102,7 @@ export function GradeClient({
   maxScore,
   manifestUrl,
 }: GradeClientProps): React.JSX.Element {
+  const learningBase = useLearningBase();
   const router = useRouter();
   const ideRef = useRef<IdeHandle>(null);
   const [gradeState, setGradeState] = useState<GradeState>('idle');
@@ -198,7 +201,7 @@ export function GradeClient({
       }
       setGradeState('done');
       router.push(
-        `/workspace/learning/courses/${encodeURIComponent(courseSlug)}/assessments/${encodeURIComponent(assessmentId)}`,
+        `${learningBase}/courses/${encodeURIComponent(courseSlug)}/assessments/${encodeURIComponent(assessmentId)}`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

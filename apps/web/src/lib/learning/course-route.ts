@@ -53,9 +53,13 @@ export function getCourseLookupSlug(routeParam: string): string {
   return value.slice(0, separatorIndex);
 }
 
-export function buildDashboardCoursePath(course: CourseRouteSource | string, segment?: string): string {
+export function buildDashboardCoursePath(
+  course: CourseRouteSource | string,
+  segment?: string,
+  surface: 'workspace' | 'console' = 'workspace',
+): string {
   const routeParam = typeof course === 'string' ? course : getCourseRouteParam(course);
-  const basePath = `/workspace/learning/courses/${encodeURIComponent(routeParam)}`;
+  const basePath = `/${surface}/learning/courses/${encodeURIComponent(routeParam)}`;
 
   if (!segment) return basePath;
 

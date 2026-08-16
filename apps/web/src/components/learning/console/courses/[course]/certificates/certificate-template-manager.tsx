@@ -12,6 +12,7 @@ import { Textarea } from '@game-guild/ui/components/textarea';
 import { Award, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 interface CertificateTemplateManagerProps {
   courseId: string;
@@ -29,6 +30,7 @@ const defaultTemplateHtml = `
 `.trim();
 
 export function CertificateTemplateManager({ courseId, templates }: CertificateTemplateManagerProps) {
+  const learningBase = useLearningBase();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [items, setItems] = useState(templates);
@@ -100,7 +102,7 @@ export function CertificateTemplateManager({ courseId, templates }: CertificateT
           ) : (
             items.map((template) => (
               <div key={template.id} className="flex min-w-0 flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
-                <Link href={`/workspace/learning/courses/${courseId}/certificates/${template.id}`} className="min-w-0 flex-1 space-y-1">
+                <Link href={`${learningBase}/courses/${courseId}/certificates/${template.id}`} className="min-w-0 flex-1 space-y-1">
                   <p className="break-words font-medium">{template.name}</p>
                   <p className="break-words text-sm text-muted-foreground">{template.description ?? 'No description'}</p>
                 </Link>

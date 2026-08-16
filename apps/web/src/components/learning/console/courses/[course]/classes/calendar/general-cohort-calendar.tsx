@@ -7,6 +7,7 @@ import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { CalendarDays, Clock3 } from 'lucide-react';
 import { useState } from 'react';
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 interface GeneralCohortCalendarProps {
   courseId: string;
@@ -23,6 +24,7 @@ const laneColors = [
 const dateTimeFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'UTC' });
 
 export function GeneralCohortCalendar({ courseId, cohorts, entries }: GeneralCohortCalendarProps) {
+  const learningBase = useLearningBase();
   const [mode, setMode] = useState<'week' | 'month'>('week');
 
   return (
@@ -52,7 +54,7 @@ export function GeneralCohortCalendar({ courseId, cohorts, entries }: GeneralCoh
             >
               <header className="flex flex-col gap-2 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <Link href={`/workspace/learning/courses/${courseId}/classes/${cohort.id}/schedule`} className="font-medium hover:underline">{cohort.name}</Link>
+                  <Link href={`${learningBase}/courses/${courseId}/classes/${cohort.id}/schedule`} className="font-medium hover:underline">{cohort.name}</Link>
                   <p className="mt-0.5 text-xs text-muted-foreground">{cohort.meetingPattern ?? 'Meeting pattern not configured'}</p>
                 </div>
                 <Badge variant="outline">{cohortEntries.length} scheduled items</Badge>
@@ -68,7 +70,7 @@ export function GeneralCohortCalendar({ courseId, cohorts, entries }: GeneralCoh
                   return (
                     <Link
                       key={entry.itemId ?? `${cohort.id}-${itemIndex}`}
-                      href={`/workspace/learning/courses/${courseId}/classes/${cohort.id}/schedule#item-${entry.itemId ?? itemIndex}`}
+                      href={`${learningBase}/courses/${courseId}/classes/${cohort.id}/schedule#item-${entry.itemId ?? itemIndex}`}
                       className="min-w-0 rounded-md border bg-background p-3 transition-colors hover:bg-muted/50"
                     >
                       <p className="truncate text-sm font-medium">{entry.title || 'Untitled schedule item'}</p>

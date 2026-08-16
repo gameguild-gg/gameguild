@@ -92,7 +92,7 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
       if (result.success) {
         setSuccess(true);
         if (course) {
-          router.replace(buildDashboardCoursePath({ ...course, slug: slug.trim() }, 'listing/info'));
+          router.replace(buildDashboardCoursePath({ ...course, slug: slug.trim() }, 'listing/info', 'console'));
         }
         router.refresh();
       } else {

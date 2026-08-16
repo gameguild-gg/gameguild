@@ -6,7 +6,8 @@ const { redirect } = vi.hoisted(() => ({
   }),
 }));
 
-vi.mock("next/navigation", () => ({ redirect }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => '/workspace/learning', redirect }));
 
 import TestingLabSessionsPage from "./page";
 

@@ -47,6 +47,7 @@ import type {
 } from "emception/testing";
 import { StandardTestEditor } from "./standard-test-editor";
 import { FunctionalTestEditor } from "./functional-test-editor";
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 // ponytail: direct import (matches grade-client pattern). The IDE manages
 // its own worker boot client-side; Next's transpilePackages list already
@@ -101,6 +102,7 @@ export function CodingDefinitionEditor({
   assessmentTitle,
   initialContent,
 }: EditorProps): ReactElement {
+  const learningBase = useLearningBase();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const ideRef = useRef<IdeHandle | null>(null);
@@ -443,7 +445,7 @@ export function CodingDefinitionEditor({
 
   function handleBack() {
     router.push(
-      `/workspace/learning/courses/${encodeURIComponent(courseId)}/assessments/${assessmentId}`,
+      `${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessmentId}`,
     );
   }
 

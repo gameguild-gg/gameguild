@@ -23,6 +23,7 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   redirect: mocks.redirect,
 }));
 

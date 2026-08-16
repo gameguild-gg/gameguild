@@ -15,7 +15,7 @@ describe('legacy /programs redirect', () => {
     await expect(
       ProgramsRedirectPage({ params: Promise.resolve({ locale: 'pt-BR' }) } as never),
     ).rejects.toThrow(
-      'redirect:{"href":{"pathname":"/courses","query":{"type":"program"}},"locale":"pt-BR"}',
+      'redirect:{"href":"/courses","locale":"pt-BR"}',
     );
   });
 });

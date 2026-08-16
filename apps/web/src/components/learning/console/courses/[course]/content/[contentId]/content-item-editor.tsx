@@ -57,6 +57,7 @@ import { LessonContentEditor } from "./lesson-content-editor";
 import { LessonCodeEditor } from "./lesson-code-editor";
 import { LessonVideoEditor } from "./lesson-video-editor";
 import { QuizContentEditor } from "./quiz-content-editor";
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 function formatContentTypeLabel(type: ContentItemDetail["type"]) {
   if (type === "Questionnaire") return "Quiz";
@@ -84,6 +85,7 @@ export function ContentItemEditor({
   linkedAssessmentGradingMethods,
   initialCodingDefinition,
 }: ContentItemEditorProps) {
+  const learningBase = useLearningBase();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 

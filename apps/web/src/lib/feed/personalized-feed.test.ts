@@ -82,7 +82,7 @@ describe('getPersonalizedFeed', () => {
         title: 'Learning path for you',
         reason: null,
         kind: 'Learning path',
-        href: '/courses?type=program',
+        href: '/courses',
         relevanceScore: 0,
         isViewed: true,
         createdAt: null,
