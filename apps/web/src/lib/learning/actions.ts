@@ -1667,6 +1667,62 @@ export async function removeGroupMember(
   }
 }
 
+// ── Student group self-signup actions (todo 4 endpoints) ──
+
+export async function joinGroup(
+  courseId: string,
+  groupId: string,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupsetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.postCoursesGroupSetsGroupsJoin(
+      resolvedCourseId,
+      groupId,
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export async function leaveGroup(
+  courseId: string,
+  groupId: string,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupsetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.deleteCoursesGroupSetsGroupsMembership(
+      resolvedCourseId,
+      groupId,
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
 // ── Assessment rubric actions (todo 6 endpoints) ──
 
 export interface SaveRubricCriterionInput {
