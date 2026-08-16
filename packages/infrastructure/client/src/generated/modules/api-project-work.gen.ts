@@ -131,6 +131,98 @@ export class ApiProjectWorkModule {
 
   /**
    */
+  async getProjectsWorkHistory(
+    projectId: string,
+    query?: { take?: number },
+  ): Promise<Result<Array<Types.APIProjectWorkProjectWorkHistory>, ApiError>> {
+    const url = `/v1/projects/${projectId}/work/history`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.APIProjectWorkProjectWorkHistory>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getProjectsWorkLabels(
+    projectId: string,
+  ): Promise<Result<Array<Types.APIProjectWorkProjectTaskLabel>, ApiError>> {
+    const url = `/v1/projects/${projectId}/work/labels`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.APIProjectWorkProjectTaskLabel>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async postProjectsWorkLabels(
+    projectId: string,
+    body: Types.APIProjectWorkCreateProjectTaskLabelInput,
+  ): Promise<Result<Types.APIProjectWorkProjectTaskLabel, ApiError>> {
+    const url = `/v1/projects/${projectId}/work/labels`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.APIProjectWorkCreateProjectTaskLabelInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APIProjectWorkProjectTaskLabelSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteProjectsWorkLabels(
+    projectId: string,
+    labelId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/projects/${projectId}/work/labels/${labelId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getProjectsWorkMilestones(
     projectId: string,
   ): Promise<Result<Array<Types.APIProjectWorkProjectMilestone>, ApiError>> {
@@ -353,16 +445,43 @@ export class ApiProjectWorkModule {
 
   /**
    */
-  async putProjectsWorkTasksMove(
+  async postProjectsWorkTasksChecklist(
     projectId: string,
     taskId: string,
-    body: Types.APIProjectWorkMoveProjectWorkTaskInput,
-  ): Promise<Result<Types.APIProjectWorkProjectWorkTask, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/move`;
+    body: Types.APIProjectWorkAddProjectTaskChecklistInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/checklist`;
 
     // Validate request body
     const validatedBody = safeParse(
-      Types.APIProjectWorkMoveProjectWorkTaskInputSchema,
+      Types.APIProjectWorkAddProjectTaskChecklistInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async putProjectsWorkTasksChecklist(
+    projectId: string,
+    taskId: string,
+    itemId: string,
+    body: Types.APIProjectWorkUpdateProjectTaskChecklistInput,
+  ): Promise<Result<Types.APIProjectWorkProjectChecklistItem, ApiError>> {
+    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/checklist/${itemId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.APIProjectWorkUpdateProjectTaskChecklistInputSchema,
       body,
       "request",
     );
@@ -377,7 +496,7 @@ export class ApiProjectWorkModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.APIProjectWorkProjectWorkTaskSchema,
+        Types.APIProjectWorkProjectChecklistItemSchema,
         result.data,
         "response",
       );
@@ -389,145 +508,12 @@ export class ApiProjectWorkModule {
 
   /**
    */
-  async postProjectsWorkTasksDependencies(
+  async deleteProjectsWorkTasksChecklist(
     projectId: string,
     taskId: string,
-    body: Types.APIProjectWorkAddProjectTaskDependencyInput,
+    itemId: string,
   ): Promise<Result<void, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/dependencies`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.APIProjectWorkAddProjectTaskDependencyInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async deleteProjectsWorkTasksDependencies(
-    projectId: string,
-    taskId: string,
-    dependencyId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/dependencies/${dependencyId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsWorkLabels(
-    projectId: string,
-  ): Promise<Result<Array<Types.APIProjectWorkProjectTaskLabel>, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/labels`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.APIProjectWorkProjectTaskLabel>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async postProjectsWorkLabels(
-    projectId: string,
-    body: Types.APIProjectWorkCreateProjectTaskLabelInput,
-  ): Promise<Result<Types.APIProjectWorkProjectTaskLabel, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/labels`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.APIProjectWorkCreateProjectTaskLabelInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.APIProjectWorkProjectTaskLabelSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async deleteProjectsWorkLabels(
-    projectId: string,
-    labelId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/labels/${labelId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postProjectsWorkTasksLabels(
-    projectId: string,
-    taskId: string,
-    labelId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/labels/${labelId}`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async deleteProjectsWorkTasksLabels(
-    projectId: string,
-    taskId: string,
-    labelId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/labels/${labelId}`;
+    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/checklist/${itemId}`;
 
     const result = await this.client.request({
       method: "DELETE",
@@ -621,16 +607,16 @@ export class ApiProjectWorkModule {
 
   /**
    */
-  async postProjectsWorkTasksChecklist(
+  async postProjectsWorkTasksDependencies(
     projectId: string,
     taskId: string,
-    body: Types.APIProjectWorkAddProjectTaskChecklistInput,
+    body: Types.APIProjectWorkAddProjectTaskDependencyInput,
   ): Promise<Result<void, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/checklist`;
+    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/dependencies`;
 
     // Validate request body
     const validatedBody = safeParse(
-      Types.APIProjectWorkAddProjectTaskChecklistInputSchema,
+      Types.APIProjectWorkAddProjectTaskDependencyInputSchema,
       body,
       "request",
     );
@@ -647,17 +633,70 @@ export class ApiProjectWorkModule {
 
   /**
    */
-  async putProjectsWorkTasksChecklist(
+  async deleteProjectsWorkTasksDependencies(
     projectId: string,
     taskId: string,
-    itemId: string,
-    body: Types.APIProjectWorkUpdateProjectTaskChecklistInput,
-  ): Promise<Result<Types.APIProjectWorkProjectChecklistItem, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/checklist/${itemId}`;
+    dependencyId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/dependencies/${dependencyId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postProjectsWorkTasksLabels(
+    projectId: string,
+    taskId: string,
+    labelId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/labels/${labelId}`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async deleteProjectsWorkTasksLabels(
+    projectId: string,
+    taskId: string,
+    labelId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/labels/${labelId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async putProjectsWorkTasksMove(
+    projectId: string,
+    taskId: string,
+    body: Types.APIProjectWorkMoveProjectWorkTaskInput,
+  ): Promise<Result<Types.APIProjectWorkProjectWorkTask, ApiError>> {
+    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/move`;
 
     // Validate request body
     const validatedBody = safeParse(
-      Types.APIProjectWorkUpdateProjectTaskChecklistInputSchema,
+      Types.APIProjectWorkMoveProjectWorkTaskInputSchema,
       body,
       "request",
     );
@@ -672,7 +711,7 @@ export class ApiProjectWorkModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.APIProjectWorkProjectChecklistItemSchema,
+        Types.APIProjectWorkProjectWorkTaskSchema,
         result.data,
         "response",
       );
@@ -680,45 +719,6 @@ export class ApiProjectWorkModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async deleteProjectsWorkTasksChecklist(
-    projectId: string,
-    taskId: string,
-    itemId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/tasks/${taskId}/checklist/${itemId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsWorkHistory(
-    projectId: string,
-    query?: { take?: number },
-  ): Promise<Result<Array<Types.APIProjectWorkProjectWorkHistory>, ApiError>> {
-    const url = `/v1/projects/${projectId}/work/history`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.APIProjectWorkProjectWorkHistory>,
-      ApiError
-    >;
   }
 }
 

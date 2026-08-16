@@ -55,6 +55,30 @@ export class ComplianceAuditModule {
 
   /**
    */
+  async postAdminAuditLogsExport(
+    body: Types.ComplianceAuditAuditExportInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/v1/admin/audit-logs/:export";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.ComplianceAuditAuditExportInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getAdminAuditLogsStatistics(query?: {
     StartDate?: string;
     EndDate?: string;
@@ -79,30 +103,6 @@ export class ComplianceAuditModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async postAdminAuditLogsExport(
-    body: Types.ComplianceAuditAuditExportInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/admin/audit-logs/:export";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.ComplianceAuditAuditExportInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 }
 
