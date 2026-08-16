@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AssessmentEditor } from "./assessment-editor";
 import { deleteAssessment, updateAssessment } from "@/lib/learning/actions";
@@ -31,6 +32,21 @@ global.ResizeObserver = class ResizeObserver {
 
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMocks,
+}));
+
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock("@/lib/learning/actions", () => ({
@@ -363,5 +379,39 @@ describe("AssessmentEditor", () => {
       .closest("div")
       ?.querySelector('[role="combobox"]');
     expect(typeTrigger).toBeDisabled();
+  });
+
+  it("renders the grade submissions link in the header for instructors", () => {
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+        canManage
+      />,
+    );
+
+    const gradeButton = screen.getByTestId("grade-submissions-button");
+    expect(gradeButton).toHaveAttribute(
+      "href",
+      "/dashboard/learning/courses/course-1/assessments/assessment-1/submissions",
+    );
+    expect(gradeButton).toHaveTextContent(/grade submissions/i);
+  });
+
+  it("hides the grade submissions link from non-instructors", () => {
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+      />,
+    );
+
+    expect(
+      screen.queryByTestId("grade-submissions-button"),
+    ).not.toBeInTheDocument();
   });
 });
