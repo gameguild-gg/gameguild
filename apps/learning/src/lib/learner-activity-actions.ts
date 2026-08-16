@@ -112,7 +112,7 @@ export async function submitContentActivity(formData: FormData): Promise<Learner
 
         const authenticated = await authenticatedClient();
         if (!authenticated) return { success: false, error: 'Your session expired. Sign in again.' };
-        const interactions = new GeneratedApi.LearningCoursesContentinteractionModule(authenticated.client);
+        const interactions = new GeneratedApi.LearningCoursesContentInteractionModule(authenticated.client);
         let interaction = await interactions.getCourseInteractionsUserContent(enrollmentId, contentId, { programId: courseId });
         if (!interaction.ok) {
             interaction = await interactions.postCourseInteractions({ contentId, programUserId: enrollmentId }, { programId: courseId });

@@ -12,7 +12,6 @@ export type AssetKind =
 
 export type AssetAvailability =
   | "local-only"
-  | "cached-remote"
   | "remote"
   | "pending-upload"
   | "unavailable"
@@ -28,6 +27,11 @@ export interface AssetSource {
   value?: string;
 }
 
+export type AssetLocation =
+  | { type: "local" }
+  | { type: "provider"; providerKey: string; providerAssetId?: string }
+  | { type: "external"; providerKey: string; reference: string };
+
 export interface AssetRecord {
   id: string;
   uri: AssetUri;
@@ -36,6 +40,7 @@ export interface AssetRecord {
   mimeType: string;
   size: number;
   contentHash?: string;
+  location: AssetLocation;
   availability: AssetAvailability;
   createdAt: string;
   updatedAt: string;
@@ -53,22 +58,22 @@ export interface AssetImportOptions {
 }
 
 export interface AssetImportBlobOptions extends AssetImportOptions {
+  id?: string;
   name: string;
   mimeType?: string;
 }
 
+export interface AssetImportExternalOptions extends AssetImportOptions {
+  id?: string;
+  name: string;
+  providerKey: string;
+  reference: string;
+  mimeType?: string;
+  kind?: AssetKind;
+}
+
 export interface AssetReadOptions {
   signal?: AbortSignal;
-}
-
-export interface AssetCachePolicy {
-  maxBytes?: number;
-  maxEntries?: number;
-}
-
-export interface AssetCacheResult {
-  entriesRemoved: number;
-  bytesRemoved: number;
 }
 
 export interface AssetReadTextOptions extends AssetReadOptions {
@@ -95,6 +100,7 @@ export interface AssetPage {
 export interface ResolvedAssetUrl {
   url: string;
   release: () => void;
+  expiresAt?: string;
 }
 
 export interface AssetUsageInput {
@@ -109,13 +115,12 @@ export interface AssetRemoveOptions {
 }
 
 export interface AssetStorageStatus {
-  backend: "opfs" | "indexeddb" | "memory";
+  backend: "indexeddb" | "memory";
   available: boolean;
   persisted: boolean | null;
   usage?: number;
   quota?: number;
   localBytes: number;
-  cacheBytes: number;
 }
 
 export interface AssetPersistenceResult {
@@ -133,8 +138,6 @@ export type AssetEvent =
   | { type: "import-started"; name: string; size: number }
   | { type: "import-completed"; record: AssetRecord }
   | { type: "import-failed"; name: string; error: Error }
-  | { type: "cache-evicted"; uri: AssetUri; size: number }
-  | { type: "persistence-result"; result: AssetPersistenceResult }
-  | { type: "recovery-failed"; error: Error };
+  | { type: "persistence-result"; result: AssetPersistenceResult };
 
 export type AssetEventListener = (event: AssetEvent) => void;

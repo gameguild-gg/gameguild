@@ -19,13 +19,13 @@ export async function recordLessonEvent(input: LessonEventInput): Promise<{ succ
         const token = await getToken();
         if (!token) return { success: false, error: 'Your session expired.' };
         const client = createServerClient({ baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080', auth: { getAccessToken: async () => token } });
-        const interactions = new GeneratedApi.LearningCoursesContentinteractionModule(client);
+        const interactions = new GeneratedApi.LearningCoursesContentInteractionModule(client);
         let interactionResult = await interactions.getCourseInteractionsUserContent(input.enrollmentId, input.contentId, { programId: input.courseId });
         if (!interactionResult.ok) {
             interactionResult = await interactions.postCourseInteractions({ contentId: input.contentId, programUserId: input.enrollmentId }, { programId: input.courseId });
         }
         if (!interactionResult.ok || !interactionResult.data.id) return { success: false, error: 'Unable to start lesson tracking.' };
-        const events = new GeneratedApi.LearningCoursesLessoninteractioneventsModule(client);
+        const events = new GeneratedApi.LearningCoursesLessonInteractionEventsModule(client);
         const eventResult = await events.postCoursesInteractionsEvents(input.courseId, interactionResult.data.id, {
             type: input.type,
             occurredAt: new Date().toISOString(),

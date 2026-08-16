@@ -8,10 +8,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.ts', 'src/**/*.tsx'],
+      include: ['src/**/*.ts', 'src/**/*.tsx', 'scripts/**/*.ts'],
       exclude: [
         'src/generated/**',
         'src/**/*.d.ts',
+        // CLI orchestrator: exercised through generated artifacts, not useful as unit coverage.
+        'scripts/generate.ts',
         // Type-only files (emit no runtime JS)
         'src/runtime/client.ts',
         'src/runtime/auth/types.ts',

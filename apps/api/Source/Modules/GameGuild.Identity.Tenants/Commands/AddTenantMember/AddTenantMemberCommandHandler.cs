@@ -149,7 +149,10 @@ public sealed class AddTenantMemberCommandHandler(
     private string BuildReviewUrl()
     {
         var appBaseUrl = configuration?["App:BaseUrl"] ?? "http://localhost:3000";
-        var callbackPath = "/my/invitations";
+        var configuredPath = configuration?["Identity:Invitations:ReviewPath"];
+        var callbackPath = string.IsNullOrWhiteSpace(configuredPath)
+            ? "/invitations"
+            : $"/{configuredPath.Trim().TrimStart('/')}";
         return $"{appBaseUrl.TrimEnd('/')}/sign-in?callbackUrl={Uri.EscapeDataString(callbackPath)}";
     }
 

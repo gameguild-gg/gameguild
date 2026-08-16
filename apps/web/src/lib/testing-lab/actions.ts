@@ -32,13 +32,13 @@ function createModules() {
   });
 
   return {
-    requests: new GeneratedApi.TestinglabTestingrequestsModule(client),
-    sessions: new GeneratedApi.TestinglabTestingsessionsModule(client),
-    locations: new GeneratedApi.TestinglabTestinglocationsModule(client),
-    participants: new GeneratedApi.TestinglabTestingparticipantsModule(client),
-    feedback: new GeneratedApi.TestinglabTestingfeedbackModule(client),
-    settings: new GeneratedApi.TestinglabSettingsModule(client),
-    permissions: new GeneratedApi.TestinglabPermissionModule(client),
+    requests: new GeneratedApi.TestingLabTestingRequestsModule(client),
+    sessions: new GeneratedApi.TestingLabTestingSessionsModule(client),
+    locations: new GeneratedApi.TestingLabTestingLocationsModule(client),
+    participants: new GeneratedApi.TestingLabTestingParticipantsModule(client),
+    feedback: new GeneratedApi.TestingLabTestingFeedbackModule(client),
+    settings: new GeneratedApi.TestingLabSettingsModule(client),
+    permissions: new GeneratedApi.TestingLabPermissionModule(client),
   };
 }
 
@@ -139,7 +139,7 @@ export async function updateTestingRequest(formData: FormData): Promise<TestingL
 
   const requestId = text(formData, 'requestId');
   const api = createModules();
-  const current = await api.requests.getTestingRequestsById(requestId);
+  const current = await api.requests.getTestingRequestsForGetTestingRequestsById(requestId);
   if (!current.ok) return { success: false, error: current.error.message };
 
   const startDate = isoDate(formData, 'startDate') ?? current.data.startDate;
@@ -227,7 +227,7 @@ export async function updateTestingSession(formData: FormData): Promise<TestingL
   const sessionId = text(formData, 'sessionId');
   if (!sessionId) return { success: false, error: 'Session is required.' };
   const api = createModules();
-  const current = await api.sessions.getTestingSessionsById(sessionId);
+  const current = await api.sessions.getTestingSessionsForGetTestingSessionsById(sessionId);
   if (!current.ok) return { success: false, error: current.error.message };
 
   return complete(

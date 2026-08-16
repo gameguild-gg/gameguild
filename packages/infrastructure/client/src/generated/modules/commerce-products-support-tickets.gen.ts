@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -25,11 +25,13 @@ export class CommerceProductsSupportTicketsModule {
     skip?: number;
     take?: number;
     customerId?: string;
-  }): Promise<Result<Types.PagedResultOfGameGuildCommerceProductsSupportTicketDto, ApiError>> {
-    const url = '/v1/support/tickets';
+  }): Promise<
+    Result<Types.PagedResultOfCommerceProductsSupportTicket, ApiError>
+  > {
+    const url = "/v1/support/tickets";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -37,7 +39,11 @@ export class CommerceProductsSupportTicketsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultOfGameGuildCommerceProductsSupportTicketDtoSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.PagedResultOfCommerceProductsSupportTicketSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -46,14 +52,20 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async postSupportTickets(body: Types.CommerceProductsCreateSupportTicketInput): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = '/v1/support/tickets';
+  async postSupportTickets(
+    body: Types.CommerceProductsCreateSupportTicketInput,
+  ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
+    const url = "/v1/support/tickets";
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCreateSupportTicketInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceProductsCreateSupportTicketInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -61,7 +73,11 @@ export class CommerceProductsSupportTicketsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsSupportTicketSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsSupportTicketSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -70,11 +86,14 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async getSupportTicketById(ticketId: string, query?: { tenantId?: string }): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
+  async getSupportTicketById(
+    ticketId: string,
+    query?: { tenantId?: string },
+  ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
     const url = `/v1/support/tickets/${ticketId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -82,7 +101,11 @@ export class CommerceProductsSupportTicketsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsSupportTicketSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsSupportTicketSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -98,10 +121,14 @@ export class CommerceProductsSupportTicketsModule {
     const url = `/v1/support/tickets/${ticketId}/messages`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsAddSupportTicketMessageInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceProductsAddSupportTicketMessageInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -109,7 +136,11 @@ export class CommerceProductsSupportTicketsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsSupportTicketSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsSupportTicketSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -125,10 +156,14 @@ export class CommerceProductsSupportTicketsModule {
     const url = `/v1/support/tickets/${ticketId}:assign`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsAssignSupportTicketInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceProductsAssignSupportTicketInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -136,34 +171,11 @@ export class CommerceProductsSupportTicketsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsSupportTicketSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postSupportTicketsClose(
-    ticketId: string,
-    body: Types.CommerceProductsCloseSupportTicketInput,
-  ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/support/tickets/${ticketId}:close`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsCloseSupportTicketInputSchema, body, 'request');
-
-    const result = await this.client.request({
-      method: 'POST',
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsSupportTicketSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsSupportTicketSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -179,10 +191,14 @@ export class CommerceProductsSupportTicketsModule {
     const url = `/v1/support/tickets/${ticketId}:resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceProductsResolveSupportTicketInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceProductsResolveSupportTicketInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -190,7 +206,46 @@ export class CommerceProductsSupportTicketsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceProductsSupportTicketSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceProductsSupportTicketSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postSupportTicketsClose(
+    ticketId: string,
+    body: Types.CommerceProductsCloseSupportTicketInput,
+  ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
+    const url = `/v1/support/tickets/${ticketId}:close`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.CommerceProductsCloseSupportTicketInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceProductsSupportTicketSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -198,6 +253,8 @@ export class CommerceProductsSupportTicketsModule {
   }
 }
 
-export function createCommerceProductsSupportTicketsModule(client: ApiClient): CommerceProductsSupportTicketsModule {
+export function createCommerceProductsSupportTicketsModule(
+  client: ApiClient,
+): CommerceProductsSupportTicketsModule {
   return new CommerceProductsSupportTicketsModule(client);
 }

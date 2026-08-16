@@ -5,14 +5,14 @@ const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   getToken: vi.fn(),
   createServerClient: vi.fn(),
-  requests: { getTestingRequests: vi.fn(), getTestingRequestsById: vi.fn() },
+  requests: { getTestingRequestsForGetTestingRequests: vi.fn(), getTestingRequestsForGetTestingRequestsById: vi.fn() },
   sessions: {
-    getTestingSessions: vi.fn(),
+    getTestingSessionsForGetTestingSessions: vi.fn(),
     getTestingPublicSessions: vi.fn(),
   },
-  locations: { getTestingLocations: vi.fn() },
+  locations: { getTestingLocationsForGetTestingLocations: vi.fn() },
   analytics: {},
-  projects: { getProjects: vi.fn(), getProjectsById: vi.fn() },
+  projects: { getProjectsForGetProjects: vi.fn(), getProjectsForGetProjectsById: vi.fn() },
 }));
 
 vi.mock('@/auth', () => ({
@@ -23,28 +23,28 @@ vi.mock('@/auth', () => ({
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
-    TestinglabTestingrequestsModule: vi.fn(function TestinglabTestingrequestsModule() {
+    TestingLabTestingRequestsModule: vi.fn(function TestingLabTestingRequestsModule() {
       return mocks.requests;
     }),
-    TestinglabTestingsessionsModule: vi.fn(function TestinglabTestingsessionsModule() {
+    TestingLabTestingSessionsModule: vi.fn(function TestingLabTestingSessionsModule() {
       return mocks.sessions;
     }),
-    TestinglabTestinglocationsModule: vi.fn(function TestinglabTestinglocationsModule() {
+    TestingLabTestingLocationsModule: vi.fn(function TestingLabTestingLocationsModule() {
       return mocks.locations;
     }),
-    TestinglabTestingparticipantsModule: vi.fn(function TestinglabTestingparticipantsModule() {
+    TestingLabTestingParticipantsModule: vi.fn(function TestingLabTestingParticipantsModule() {
       return {};
     }),
-    TestinglabTestingfeedbackModule: vi.fn(function TestinglabTestingfeedbackModule() {
+    TestingLabTestingFeedbackModule: vi.fn(function TestingLabTestingFeedbackModule() {
       return mocks.feedback;
     }),
-    TestinglabTestinganalyticsModule: vi.fn(function TestinglabTestinganalyticsModule() {
+    TestingLabTestingAnalyticsModule: vi.fn(function TestingLabTestingAnalyticsModule() {
       return mocks.analytics;
     }),
-    TestinglabSettingsModule: vi.fn(function TestinglabSettingsModule() {
+    TestingLabSettingsModule: vi.fn(function TestingLabSettingsModule() {
       return {};
     }),
-    TestinglabPermissionModule: vi.fn(function TestinglabPermissionModule() {
+    TestingLabPermissionModule: vi.fn(function TestingLabPermissionModule() {
       return {};
     }),
     ProjectsModule: vi.fn(function ProjectsModule() {
@@ -82,11 +82,11 @@ describe('testing lab queries', () => {
         take: 20,
       },
     });
-    mocks.requests.getTestingRequests.mockResolvedValue({
+    mocks.requests.getTestingRequestsForGetTestingRequests.mockResolvedValue({
       ok: true,
       data: [{ id: 'request-1', title: 'Build test', status: 'Open' }],
     });
-    mocks.sessions.getTestingSessions.mockResolvedValue({
+    mocks.sessions.getTestingSessionsForGetTestingSessions.mockResolvedValue({
       ok: true,
       data: [{ id: 'session-1', sessionName: 'Friday lab', status: 'Scheduled' }],
     });
@@ -94,15 +94,15 @@ describe('testing lab queries', () => {
       ok: true,
       data: [{ id: 'session-1', sessionName: 'Friday lab', status: 'Scheduled' }],
     });
-    mocks.locations.getTestingLocations.mockResolvedValue({
+    mocks.locations.getTestingLocationsForGetTestingLocations.mockResolvedValue({
       ok: true,
       data: [{ id: 'location-1', name: 'Remote lab', status: 'Active' }],
     });
-    mocks.projects.getProjects.mockResolvedValue({
+    mocks.projects.getProjectsForGetProjects.mockResolvedValue({
       ok: true,
       data: [{ id: 'project-1', tenantId: 'tenant-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' }],
     });
-    mocks.projects.getProjectsById.mockResolvedValue({
+    mocks.projects.getProjectsForGetProjectsById.mockResolvedValue({
       ok: true,
       data: {
         id: 'project-1',
@@ -157,14 +157,14 @@ describe('testing lab queries', () => {
       auth: { getAccessToken: expect.any(Function) },
       tenant: { getTenantId: expect.any(Function) },
     });
-    expect(mocks.requests.getTestingRequests).toHaveBeenCalledWith({ skip: 0, take: 200, includeArchived: true });
-    expect(mocks.sessions.getTestingSessions).toHaveBeenCalledWith({ skip: 0, take: 200 });
+    expect(mocks.requests.getTestingRequestsForGetTestingRequests).toHaveBeenCalledWith({ skip: 0, take: 200, includeArchived: true });
+    expect(mocks.sessions.getTestingSessionsForGetTestingSessions).toHaveBeenCalledWith({ skip: 0, take: 200 });
     expect(mocks.sessions.getTestingPublicSessions).toHaveBeenCalledWith({ take: 200 });
-    expect(mocks.locations.getTestingLocations).toHaveBeenCalledWith({ skip: 0, take: 200 });
+    expect(mocks.locations.getTestingLocationsForGetTestingLocations).toHaveBeenCalledWith({ skip: 0, take: 200 });
   });
 
   it('keeps project context from the stable Testing Lab request projection', async () => {
-    mocks.requests.getTestingRequests.mockResolvedValue({
+    mocks.requests.getTestingRequestsForGetTestingRequests.mockResolvedValue({
       ok: true,
       data: [
         {
@@ -231,7 +231,7 @@ describe('testing lab queries', () => {
   });
 
   it('loads the administration location directory including archived locations', async () => {
-    mocks.locations.getTestingLocations.mockResolvedValue({
+    mocks.locations.getTestingLocationsForGetTestingLocations.mockResolvedValue({
       ok: true,
       data: [
         {
@@ -249,7 +249,7 @@ describe('testing lab queries', () => {
 
     const directory = await getTestingLabLocations();
 
-    expect(mocks.locations.getTestingLocations).toHaveBeenCalledWith({ skip: 0, take: 200, includeArchived: true });
+    expect(mocks.locations.getTestingLocationsForGetTestingLocations).toHaveBeenCalledWith({ skip: 0, take: 200, includeArchived: true });
     expect(directory.locations).toEqual([
       expect.objectContaining({
         id: 'location-archived',
@@ -268,7 +268,7 @@ describe('testing lab queries', () => {
     expect(directory.projects).toEqual([{ id: 'project-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' }]);
     expect(directory.accessIssues).toEqual([]);
     expect(mocks.sessions.getTestingPublicSessions).toHaveBeenCalledWith({ take: 100 });
-    expect(mocks.projects.getProjects).toHaveBeenCalledWith({
+    expect(mocks.projects.getProjectsForGetProjects).toHaveBeenCalledWith({
       skip: 0,
       take: 100,
       sortBy: 'UpdatedAt',
@@ -277,7 +277,7 @@ describe('testing lab queries', () => {
   });
 
   it('loads Testing Lab project options through the generated Projects module', async () => {
-    mocks.projects.getProjects.mockResolvedValue({
+    mocks.projects.getProjectsForGetProjects.mockResolvedValue({
       ok: true,
       data: [
         { id: 'project-1', tenantId: 'tenant-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' },
@@ -289,7 +289,7 @@ describe('testing lab queries', () => {
     const projects = await getTestingProjectOptions();
 
     expect(projects).toEqual([{ id: 'project-1', title: 'Arena Tactics', slug: 'arena-tactics', status: 'Published' }]);
-    expect(mocks.projects.getProjects).toHaveBeenCalledWith({
+    expect(mocks.projects.getProjectsForGetProjects).toHaveBeenCalledWith({
       currentTenantOnly: true,
       skip: 0,
       take: 50,
@@ -299,7 +299,7 @@ describe('testing lab queries', () => {
   });
 
   it('resolves a shared project without treating it as a missing Testing Lab request', async () => {
-    mocks.requests.getTestingRequests.mockResolvedValue({ ok: true, data: [] });
+    mocks.requests.getTestingRequestsForGetTestingRequests.mockResolvedValue({ ok: true, data: [] });
 
     const detail = await getTestingLabProjectDetail('project-1');
 
@@ -310,12 +310,12 @@ describe('testing lab queries', () => {
     });
     expect(detail.request).toBeNull();
     expect(detail.accessIssues).toEqual([]);
-    expect(mocks.projects.getProjectsById).toHaveBeenCalledWith('project-1', {
+    expect(mocks.projects.getProjectsForGetProjectsById).toHaveBeenCalledWith('project-1', {
       includeTeam: false,
       includeReleases: true,
       includeCollaborators: false,
       includeStatistics: true,
     });
-    expect(mocks.requests.getTestingRequestsById).not.toHaveBeenCalled();
+    expect(mocks.requests.getTestingRequestsForGetTestingRequestsById).not.toHaveBeenCalled();
   });
 });

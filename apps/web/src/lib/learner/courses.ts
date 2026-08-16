@@ -108,8 +108,8 @@ function createCourseModules(getAccessToken?: () => Promise<string | null>) {
 
   return {
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
-    content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
-    workspaces: new GeneratedApi.LearningWorkspacesLearnerworkspaceModule(
+    content: new GeneratedApi.LearningCoursesProgramContentModule(client),
+    workspaces: new GeneratedApi.LearningWorkspacesLearnerWorkspaceModule(
       client,
     ),
   };

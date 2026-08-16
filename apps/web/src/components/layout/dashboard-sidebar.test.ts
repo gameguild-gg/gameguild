@@ -8,7 +8,7 @@ vi.mock("@/i18n/navigation", () => ({
 import {
   dashboardNavigationData,
   filterDashboardNavigation,
-} from "./dashboard-sidebar";
+} from "@/components/console/dashboard-sidebar";
 
 describe("dashboard management navigation", () => {
   it("places Testing Lab and Launch Pad under Community Management", () => {

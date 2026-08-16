@@ -131,6 +131,36 @@ public class MethodCoverageTests
     }
 
     [Fact]
+    public void HandleInvalidationEvent_ClearsTrackedPatternAndIgnoresUnknownType()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var svc = CreateCacheInvalidationService();
+        svc.TrackKey(tenantId, $"perm:{tenantId}:{userId}:v1");
+
+        svc.HandleInvalidationEvent(new CacheInvalidationEvent
+        {
+            TenantId = tenantId,
+            UserId = userId,
+            Type = CacheInvalidationType.User,
+            OriginInstanceId = "remote"
+        });
+        svc.HandleInvalidationEvent(new CacheInvalidationEvent
+        {
+            TenantId = Guid.NewGuid(),
+            UserId = userId,
+            Type = CacheInvalidationType.User,
+            OriginInstanceId = "remote"
+        });
+        svc.HandleInvalidationEvent(new CacheInvalidationEvent
+        {
+            TenantId = tenantId,
+            Type = (CacheInvalidationType)int.MaxValue,
+            OriginInstanceId = "remote"
+        });
+    }
+
+    [Fact]
     public async Task PublishInvalidationAsync_DoesNotThrow()
     {
         var svc = CreateCacheInvalidationService();

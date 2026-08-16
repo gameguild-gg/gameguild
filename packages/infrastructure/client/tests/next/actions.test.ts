@@ -114,7 +114,7 @@ function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig
     apiUrl: 'http://localhost:5000',
     pages: {},
     cookies: {
-      name: '__gg',
+      name: '__me',
       secure: false,
       sameSite: 'lax',
       path: '/',
@@ -167,7 +167,7 @@ describe('createAuthFunction', () => {
     const config = makeConfig();
     const authFn = createAuthFunction(config);
     const adapter = createMockCookieAdapter({
-      '__gg.session-token': 'encrypted-session',
+      '__me.session-token': 'encrypted-session',
     });
 
     // Internal getSession accepts an optional CookieAdapter
@@ -213,7 +213,7 @@ describe('createAuthFunction', () => {
 
     const wrapper = authFn(handler);
     const request = new Request('http://localhost:3000/api/data', {
-      headers: { cookie: '__gg.session-token=encrypted-session' },
+      headers: { cookie: '__me.session-token=encrypted-session' },
     });
 
     const response = await wrapper(request);
@@ -233,9 +233,7 @@ describe('createSignInAction', () => {
     const config = makeConfig();
     const signIn = createSignInAction(config);
 
-    await expect(
-      signIn('unknown-provider', { redirect: false })
-    ).rejects.toThrow('unknown-provider');
+    await expect(signIn('unknown-provider', { redirect: false })).rejects.toThrow('unknown-provider');
   });
 
   it('should throw CredentialsSignInError for null authorize result', async () => {
@@ -251,9 +249,7 @@ describe('createSignInAction', () => {
     });
     const signIn = createSignInAction(config);
 
-    await expect(
-      signIn('credentials', { redirect: false })
-    ).rejects.toThrow();
+    await expect(signIn('credentials', { redirect: false })).rejects.toThrow();
   });
 
   it('should throw when signIn callback denies', async () => {
@@ -268,9 +264,7 @@ describe('createSignInAction', () => {
     });
     const signIn = createSignInAction(config);
 
-    await expect(
-      signIn('credentials', { redirect: false, email: 'a@b.com', password: 'pw' })
-    ).rejects.toThrow('Sign-in denied');
+    await expect(signIn('credentials', { redirect: false, email: 'a@b.com', password: 'pw' })).rejects.toThrow('Sign-in denied');
   });
 });
 
@@ -282,9 +276,7 @@ describe('createSignUpAction', () => {
   });
 
   it('should throw on failed sign-up API call', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ message: 'Email taken' }), { status: 400 })
-    );
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify({ message: 'Email taken' }), { status: 400 }));
 
     const config = makeConfig();
     const signUp = createSignUpAction(config);
@@ -295,16 +287,14 @@ describe('createSignUpAction', () => {
         email: 'test@example.com',
         password: 'password',
         redirect: false,
-      })
+      }),
     ).rejects.toThrow('Email taken');
 
     vi.restoreAllMocks();
   });
 
   it('should throw on unparseable error response', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response('not json', { status: 500 })
-    );
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response('not json', { status: 500 }));
 
     const config = makeConfig();
     const signUp = createSignUpAction(config);
@@ -315,7 +305,7 @@ describe('createSignUpAction', () => {
         email: 'test@example.com',
         password: 'password',
         redirect: false,
-      })
+      }),
     ).rejects.toThrow();
 
     vi.restoreAllMocks();

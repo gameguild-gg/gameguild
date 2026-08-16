@@ -21,7 +21,9 @@ public sealed class MonthlyStatementLinkBuilder(IOptions<SubscriptionNotificatio
     public string GetBillingDashboardPath() => options.Value.BillingDashboardPath;
 
     private static string ExpandTemplate(string template, DateOnly fromDate, DateOnly toDate)
-        => template
+    {
+        return template
             .Replace("{from}", fromDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), StringComparison.Ordinal)
             .Replace("{to}", toDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), StringComparison.Ordinal);
+    }
 }

@@ -19,7 +19,7 @@ vi.mock('@game-guild/client', () => ({
     LearningCoursesProgramModule: class {
       getCoursesSlug = mocks.getCoursesSlug;
     },
-    LearningCoursesProgramcontentModule: class {
+    LearningCoursesProgramContentModule: class {
       postCoursesContentSubmit = mocks.postCoursesContentSubmit;
     },
   },

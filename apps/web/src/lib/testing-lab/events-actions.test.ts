@@ -31,10 +31,10 @@ vi.mock('next/cache', () => ({
 vi.mock('@game-guild/client', () => ({
   createServerClient: vi.fn(() => ({})),
   GeneratedApi: {
-    TestinglabTestingeventsModule: vi.fn(function TestinglabTestingeventsModule() {
+    TestingLabTestingEventsModule: vi.fn(function TestingLabTestingEventsModule() {
       return mocks.events;
     }),
-    TestinglabTestingeventparticipationModule: vi.fn(function TestinglabTestingeventparticipationModule() {
+    TestingLabTestingEventParticipationModule: vi.fn(function TestingLabTestingEventParticipationModule() {
       return mocks.participation;
     }),
   },

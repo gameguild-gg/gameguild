@@ -219,7 +219,7 @@ describe('createAuthRetryPlugin — authRefreshFailed (line 155)', () => {
   it('returns authRefreshFailed metadata when refresh returns false', async () => {
     const refreshToken = vi.fn().mockResolvedValue(false);
     const onAuthRequired = vi.fn();
-    
+
     const plugin = createAuthRetryPlugin({
       refreshToken,
       maxRetries: 1,
@@ -267,11 +267,11 @@ describe('DevTools — gap coverage (line 62)', () => {
 
     // logRequestStart should call logger methods
     devtools.logRequestStart({ path: '/test', method: 'GET', headers: {} });
-    
+
     // At error level, warn calls should be suppressed
     // The ConsoleLogger.warn checks logLevel !== 'silent' && logLevel !== 'error'
     // So at 'error' level, warn is suppressed
-    
+
     warnSpy.mockRestore();
     logSpy.mockRestore();
     groupSpy.mockRestore();
@@ -311,15 +311,12 @@ describe('DevTools — gap coverage (line 62)', () => {
     const devtools = new DevTools({ enabled: true, logLevel: 'debug' });
 
     // Log successful completion
-    devtools.logRequestComplete(
-      { path: '/test', method: 'GET', headers: {} },
-      { ok: true, data: { data: 'ok', status: 200, headers: new Headers() } }
-    );
+    devtools.logRequestComplete({ path: '/test', method: 'GET', headers: {} }, { ok: true, data: { data: 'ok', status: 200, headers: new Headers() } });
 
     // Log error completion
     devtools.logRequestComplete(
       { path: '/test', method: 'GET', headers: {} },
-      { ok: false, error: { name: 'ApiError', status: 500, code: 'ERROR', message: 'fail' } }
+      { ok: false, error: { name: 'ApiError', status: 500, code: 'ERROR', message: 'fail' } },
     );
 
     logSpy.mockRestore();

@@ -265,7 +265,7 @@ export async function getCourseLearnerContext(
   if (!client) return emptyContext();
 
   const result =
-    await new GeneratedApi.LearningWorkspacesLearnerworkspaceModule(
+    await new GeneratedApi.LearningWorkspacesLearnerWorkspaceModule(
       client,
     ).getLearningCoursesWorkspace(courseId);
   return result.ok

@@ -7,6 +7,35 @@ namespace GameGuild.Identity.Authorization.UnitTests.Services;
 
 public sealed class SoDServiceTests
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("[]")]
+    public void ParseConflictingPermissions_EmptyInputs_ReturnEmpty(string? raw)
+    {
+        ParseConflictingPermissions(raw).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ParseConflictingPermissions_NormalizesJsonAndDelimitedFallback()
+    {
+        ParseConflictingPermissions("""[" ","read","READ"]""").Should().Equal("read");
+        ParseConflictingPermissions("read, write;READ").Should().Equal("read", "write");
+    }
+
+    [Fact]
+    public void HasPermissionConflict_WithFewerThanTwoConfiguredPermissions_ReturnsFalse()
+    {
+        var method = typeof(SoDService).GetMethod(
+            "HasPermissionConflict",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        var rule = new SoDRule { ConflictingPermissions = """["read"]""" };
+
+        var result = (bool)method.Invoke(null, [rule, new[] { "read" }])!;
+
+        result.Should().BeFalse();
+    }
+
     [Fact]
     public async Task DetectViolationsAsync_CreatesViolation_WhenEffectivePermissionsConflict()
     {
@@ -128,4 +157,12 @@ public sealed class SoDServiceTests
             IsEnabled = true,
             ConflictingPermissions = """["payments:create","payments:approve"]"""
         };
+
+    private static string[] ParseConflictingPermissions(string? raw)
+    {
+        var method = typeof(SoDService).GetMethod(
+            "ParseConflictingPermissions",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        return (string[])method.Invoke(null, [raw])!;
+    }
 }

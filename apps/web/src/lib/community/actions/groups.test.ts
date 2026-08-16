@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   putApiSocialGroupsMembersRole: vi.fn(),
   deleteApiSocialGroupsMembers: vi.fn(),
   postApiSocialGroupsArchive: vi.fn(),
-  SocialGroupsSocialgroupsModule: vi.fn(),
+  SocialGroupsSocialGroupsModule: vi.fn(),
   redirect: vi.fn((href: string) => {
     throw new Error(`redirect:${href}`);
   }),
@@ -28,7 +28,7 @@ vi.mock('@/auth', () => ({
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
-    SocialGroupsSocialgroupsModule: mocks.SocialGroupsSocialgroupsModule,
+    SocialGroupsSocialGroupsModule: mocks.SocialGroupsSocialGroupsModule,
   },
 }));
 
@@ -60,7 +60,7 @@ describe('createCommunityGroup', () => {
     });
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({ request: vi.fn() });
-    mocks.SocialGroupsSocialgroupsModule.mockImplementation(function SocialGroupsSocialgroupsModule() {
+    mocks.SocialGroupsSocialGroupsModule.mockImplementation(function SocialGroupsSocialGroupsModule() {
       return {
       postApiSocialGroups: mocks.postApiSocialGroups,
       putApiSocialGroups: mocks.putApiSocialGroups,

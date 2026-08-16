@@ -3,7 +3,7 @@ import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import { PUBLIC_PROGRAM_PACKAGES } from '@/lib/courses/public-programs';
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://gameguild.gg';
-const staticRoutes = ['', '/sign-in', '/sign-up', '/courses', '/programs', '/about/roadmap', '/about/contributors', '/licenses', '/ferpa-waiver', '/academic-honesty'];
+const staticRoutes = ['', '/sign-in', '/sign-up', '/courses', '/programs', '/about/roadmap', '/about/contributors', '/legal/licenses', '/legal/ferpa-waiver', '/legal/academic-honesty'];
 
 export async function generateSitemaps() {
   return [{ id: 0 }];

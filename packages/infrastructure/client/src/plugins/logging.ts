@@ -80,10 +80,7 @@ function defaultLogger(level: LogLevel, message: string, data?: unknown): void {
 /**
  * Redact sensitive headers from a Record
  */
-function redactHeaders(
-  headers: Record<string, string> | undefined,
-  redactList: string[]
-): Record<string, string> {
+function redactHeaders(headers: Record<string, string> | undefined, redactList: string[]): Record<string, string> {
   if (!headers) return {};
 
   const redacted: Record<string, string> = {};

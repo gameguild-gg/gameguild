@@ -33,6 +33,7 @@ vi.mock('../../src/runtime/auth/jwt.js', () => ({
         user: { id: '1', email: 'test@example.com', name: 'Test', image: null },
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
+        tenantId: 'tenant-1',
         accessTokenExpires: Date.now() + 3600000,
         iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + 86400,
@@ -82,6 +83,7 @@ vi.mock('../../src/runtime/auth/session.js', () => ({
     return { session: null, token: null, updated: false };
   }),
   encodeSession: vi.fn(async () => 'new-encrypted-token'),
+  refreshAccessToken: vi.fn(async (token: any) => token),
   toSession: vi.fn((token: any) => ({
     user: token.user,
     expires: new Date(Date.now() + 86400000).toISOString(),
@@ -101,8 +103,8 @@ vi.mock('../../src/integrations/next/handlers.js', () => ({
     tokens: { accessToken: data.accessToken || 'at', refreshToken: data.refreshToken || 'rt', tokenType: 'Bearer' },
     user: { id: data.userId || '1', email: email || '', name: name || null, image: null },
   })),
-  serializeCookie: vi.fn((name: string, value: string, options: Record<string, unknown>) =>
-    `${name}=${value}; Path=${options.path ?? '/'}; Max-Age=${options.maxAge ?? ''}`,
+  serializeCookie: vi.fn(
+    (name: string, value: string, options: Record<string, unknown>) => `${name}=${value}; Path=${options.path ?? '/'}; Max-Age=${options.maxAge ?? ''}`,
   ),
 }));
 
@@ -143,10 +145,10 @@ function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig
       authorized: async ({ auth }) => !!auth,
     },
     secret: 'test-secret-min-32-chars-long-ok',
-    apiUrl: 'http://localhost:5000',
+    apiUrl: 'http://localhost:8080',
     pages: {},
     cookies: {
-      name: '__gg',
+      name: '__me',
       secure: false,
       sameSite: 'lax',
       path: '/',
@@ -170,7 +172,7 @@ describe('createAuthFunction — extended', () => {
   });
 
   it('should return session when adapter has valid token', async () => {
-    const adapter = createMockAdapter({ '__gg.session-token': 'encrypted-session' });
+    const adapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
     mockCookieAdapter = adapter;
 
     const config = makeConfig();
@@ -192,7 +194,7 @@ describe('createAuthFunction — extended', () => {
   });
 
   it('should update cookie when session is refreshed', async () => {
-    const adapter = createMockAdapter({ '__gg.session-token': 'updated-session' });
+    const adapter = createMockAdapter({ '__me.session-token': 'updated-session' });
     mockCookieAdapter = adapter;
 
     const config = makeConfig();
@@ -225,28 +227,26 @@ describe('createAuthFunction — extended', () => {
     const wrapper = auth(async () => new Response('ok'));
     const response = await wrapper(
       new Request('http://localhost:3000/dashboard', {
-        headers: { cookie: '__gg.session-token=updated-session' },
+        headers: { cookie: '__me.session-token=updated-session' },
       }),
     );
 
     const setCookie = response.headers.get('set-cookie');
-    expect(setCookie).toContain('__gg.session-token=new-encrypted-token');
+    expect(setCookie).toContain('__me.session-token=new-encrypted-token');
     expect(setCookie).toContain('Max-Age=2592000');
   });
 
   it('proxy wrapper should expire a session cookie that can no longer be authenticated', async () => {
     const auth = createAuthFunction(makeConfig());
-    const wrapper = auth(async (request) =>
-      new Response(JSON.stringify({ authenticated: request.auth !== null })),
-    );
+    const wrapper = auth(async (request) => new Response(JSON.stringify({ authenticated: request.auth !== null })));
     const response = await wrapper(
       new Request('http://localhost:3000/dashboard', {
-        headers: { cookie: '__gg.session-token=invalid-session' },
+        headers: { cookie: '__me.session-token=invalid-session' },
       }),
     );
 
     expect(await response.json()).toEqual({ authenticated: false });
-    expect(response.headers.get('set-cookie')).toContain('__gg.session-token=; Path=/; Max-Age=0');
+    expect(response.headers.get('set-cookie')).toContain('__me.session-token=; Path=/; Max-Age=0');
   });
 });
 
@@ -286,7 +286,7 @@ describe('createSignInAction — extended', () => {
         password: 'pwd',
         redirectTo: '/dashboard',
         redirect: true,
-      })
+      }),
     ).rejects.toThrow('REDIRECT');
   });
 
@@ -347,28 +347,24 @@ describe('createSignUpAction — extended', () => {
 
   it('should sign up successfully and set session cookie', async () => {
     fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({
-        accessToken: 'at',
-        refreshToken: 'rt',
-        userId: '1',
-      }), { status: 200 })
+      new Response(
+        JSON.stringify({
+          accessToken: 'at',
+          refreshToken: 'rt',
+          userId: '1',
+        }),
+        { status: 200 },
+      ),
     );
 
     const config = makeConfig();
     const signUp = createSignUpAction(config);
 
-    await expect(
-      signUp(
-        { username: 'testuser', email: 'test@example.com', password: 'Password1!' },
-        { redirect: false },
-      )
-    ).resolves.not.toThrow();
+    await expect(signUp({ username: 'testuser', email: 'test@example.com', password: 'Password1!' }, { redirect: false })).resolves.not.toThrow();
   });
 
   it('should send optional fields in sign-up body', async () => {
-    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt' }), { status: 200 })
-    );
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt' }), { status: 200 }));
 
     const config = makeConfig();
     const signUp = createSignUpAction(config);
@@ -393,32 +389,29 @@ describe('createSignUpAction — extended', () => {
   });
 
   it('should redirect after successful signup by default', async () => {
-    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt' }), { status: 200 })
-    );
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response(JSON.stringify({ accessToken: 'at', refreshToken: 'rt' }), { status: 200 }));
 
     const config = makeConfig();
     const signUp = createSignUpAction(config);
 
-    await expect(
-      signUp({ username: 'testuser', email: 'test@example.com', password: 'Password1!' })
-    ).rejects.toThrow('REDIRECT');
+    await expect(signUp({ username: 'testuser', email: 'test@example.com', password: 'Password1!' })).rejects.toThrow('REDIRECT');
   });
 
   it('should throw with field errors for sign-up API error', async () => {
     fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({
-        message: 'Validation failed',
-        errors: { email: ['Already in use'] },
-      }), { status: 400 })
+      new Response(
+        JSON.stringify({
+          message: 'Validation failed',
+          errors: { email: ['Already in use'] },
+        }),
+        { status: 400 },
+      ),
     );
 
     const config = makeConfig();
     const signUp = createSignUpAction(config);
 
-    await expect(
-      signUp({ username: 'testuser', email: 'taken@example.com', password: 'pw' }, { redirect: false })
-    ).rejects.toThrow('Validation failed');
+    await expect(signUp({ username: 'testuser', email: 'taken@example.com', password: 'pw' }, { redirect: false })).rejects.toThrow('Validation failed');
   });
 });
 
@@ -435,12 +428,10 @@ describe('createSignOutAction — extended', () => {
   });
 
   it('should sign out and delete cookies', async () => {
-    const adapter = createMockAdapter({ '__gg.session-token': 'encrypted-session' });
+    const adapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
     mockCookieAdapter = adapter;
 
-    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response('{}', { status: 200 })
-    );
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response('{}', { status: 200 }));
 
     const config = makeConfig();
     const signOut = createSignOutAction(config);
@@ -459,10 +450,8 @@ describe('createSignOutAction — extended', () => {
   });
 
   it('should redirect after signout by default', async () => {
-    mockCookieAdapter = createMockAdapter({ '__gg.session-token': 'encrypted-session' });
-    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response('{}', { status: 200 })
-    );
+    mockCookieAdapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response('{}', { status: 200 }));
 
     const config = makeConfig();
     const signOut = createSignOutAction(config);
@@ -480,7 +469,7 @@ describe('createSignOutAction — extended', () => {
   });
 
   it('should continue even if token revocation fails', async () => {
-    mockCookieAdapter = createMockAdapter({ '__gg.session-token': 'encrypted-session' });
+    mockCookieAdapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
     fetchSpy = vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('network'));
 
     const config = makeConfig();
@@ -528,7 +517,7 @@ describe('createUpdateAction — extended', () => {
   });
 
   it('should return null when decodeJWT returns null', async () => {
-    mockCookieAdapter = createMockAdapter({ '__gg.session-token': 'invalid-token' });
+    mockCookieAdapter = createMockAdapter({ '__me.session-token': 'invalid-token' });
 
     const config = makeConfig();
     const update = createUpdateAction(config);
@@ -538,7 +527,7 @@ describe('createUpdateAction — extended', () => {
   });
 
   it('should update session and write new cookie', async () => {
-    const adapter = createMockAdapter({ '__gg.session-token': 'encrypted-session' });
+    const adapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
     mockCookieAdapter = adapter;
 
     const config = makeConfig();
@@ -548,5 +537,30 @@ describe('createUpdateAction — extended', () => {
     expect(result).toBeDefined();
     expect(result?.user).toBeDefined();
     expect(adapter.set).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['tenant-2', 'tenant-2'],
+    [null, null],
+  ])('should refresh the access token when tenant changes to %s', async (tenantId, expectedTenantId) => {
+    const adapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
+    mockCookieAdapter = adapter;
+    const config = makeConfig();
+    const { refreshAccessToken } = await import('../../src/runtime/auth/session.js');
+
+    await createUpdateAction(config)({ tenantId } as any);
+
+    expect(refreshAccessToken).toHaveBeenCalledWith(expect.objectContaining({ tenantId: expectedTenantId }), config);
+  });
+
+  it('should not refresh the access token when tenant is unchanged', async () => {
+    const adapter = createMockAdapter({ '__me.session-token': 'encrypted-session' });
+    mockCookieAdapter = adapter;
+    const config = makeConfig();
+    const { refreshAccessToken } = await import('../../src/runtime/auth/session.js');
+
+    await createUpdateAction(config)({ tenantId: 'tenant-1' } as any);
+
+    expect(refreshAccessToken).not.toHaveBeenCalled();
   });
 });

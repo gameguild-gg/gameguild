@@ -38,7 +38,7 @@ function extractApiError(err: unknown): string {
 /** Claim a peer review target (todo 7 endpoint): least-reviewed random pick. */
 export async function claimPeerReview(assessmentId: string): Promise<ActionResult<{ reviewId: string }>> {
   try {
-    const module = new GeneratedApi.LearningAssessmentsPeerreviewsModule(getApiClient());
+    const module = new GeneratedApi.LearningAssessmentsPeerReviewsModule(getApiClient());
     const result = await module.postAssessmentsPeerReviewsClaim(assessmentId);
 
     if (!result.ok) {
@@ -60,7 +60,7 @@ export async function claimPeerReview(assessmentId: string): Promise<ActionResul
 /** Anonymous review workspace payload (todo 8a endpoint) — carries no identity fields. */
 export async function fetchPeerReviewWorkspace(reviewId: string): Promise<ReviewWorkspaceResult> {
   try {
-    const module = new GeneratedApi.LearningAssessmentsPeerreviewsModule(getApiClient());
+    const module = new GeneratedApi.LearningAssessmentsPeerReviewsModule(getApiClient());
     const result = await module.getAssessmentsPeerReviews(reviewId);
 
     if (!result.ok) {
@@ -86,7 +86,7 @@ export async function submitPeerReview(reviewId: string, input: SubmitPeerReview
   };
 
   try {
-    const module = new GeneratedApi.LearningAssessmentsPeerreviewsModule(getApiClient());
+    const module = new GeneratedApi.LearningAssessmentsPeerReviewsModule(getApiClient());
     const result = await module.postAssessmentsPeerReviewsSubmit(reviewId, body);
 
     if (!result.ok) {
@@ -104,7 +104,7 @@ export async function submitPeerReview(reviewId: string, input: SubmitPeerReview
 /** Received (anonymized) peer reviews for one of the actor's own submissions (todo 8c endpoint). */
 export async function fetchReceivedPeerReviews(submissionId: string): Promise<ReceivedPeerReviewsResult> {
   try {
-    const module = new GeneratedApi.LearningAssessmentsPeerreviewsModule(getApiClient());
+    const module = new GeneratedApi.LearningAssessmentsPeerReviewsModule(getApiClient());
     const result = await module.getAssessmentsSubmissionsReceivedPeerReviews(submissionId);
 
     if (!result.ok) {

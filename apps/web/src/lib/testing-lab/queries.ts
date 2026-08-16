@@ -139,14 +139,14 @@ function createTestingLabModules() {
 
   return {
     client,
-    requests: new GeneratedApi.TestinglabTestingrequestsModule(client),
-    sessions: new GeneratedApi.TestinglabTestingsessionsModule(client),
-    locations: new GeneratedApi.TestinglabTestinglocationsModule(client),
-    participants: new GeneratedApi.TestinglabTestingparticipantsModule(client),
-    feedback: new GeneratedApi.TestinglabTestingfeedbackModule(client),
-    analytics: new GeneratedApi.TestinglabTestinganalyticsModule(client),
-    settings: new GeneratedApi.TestinglabSettingsModule(client),
-    permissions: new GeneratedApi.TestinglabPermissionModule(client),
+    requests: new GeneratedApi.TestingLabTestingRequestsModule(client),
+    sessions: new GeneratedApi.TestingLabTestingSessionsModule(client),
+    locations: new GeneratedApi.TestingLabTestingLocationsModule(client),
+    participants: new GeneratedApi.TestingLabTestingParticipantsModule(client),
+    feedback: new GeneratedApi.TestingLabTestingFeedbackModule(client),
+    analytics: new GeneratedApi.TestingLabTestingAnalyticsModule(client),
+    settings: new GeneratedApi.TestingLabSettingsModule(client),
+    permissions: new GeneratedApi.TestingLabPermissionModule(client),
     projects: new GeneratedApi.ProjectsModule(client),
   };
 }
@@ -252,9 +252,9 @@ function compact<T>(values: Array<T | null>): T[] {
 export const getTestingLabDashboard = cache(async (): Promise<TestingLabDashboardData> => {
   const api = createTestingLabModules();
   const [requests, sessions, locations, publicSessions] = await Promise.all([
-    readResult(api.requests.getTestingRequests({ skip: 0, take: 200, includeArchived: true }), 'Testing requests'),
-    readResult(api.sessions.getTestingSessions({ skip: 0, take: 200 }), 'Testing sessions'),
-    readResult(api.locations.getTestingLocations({ skip: 0, take: 200 }), 'Testing locations'),
+    readResult(api.requests.getTestingRequestsForGetTestingRequests({ skip: 0, take: 200, includeArchived: true }), 'Testing requests'),
+    readResult(api.sessions.getTestingSessionsForGetTestingSessions({ skip: 0, take: 200 }), 'Testing sessions'),
+    readResult(api.locations.getTestingLocationsForGetTestingLocations({ skip: 0, take: 200 }), 'Testing locations'),
     readResult(api.sessions.getTestingPublicSessions({ take: 200 }), 'Public testing sessions'),
   ]);
 
@@ -275,7 +275,7 @@ export interface TestingLabLocationDirectory {
 export const getTestingLabLocations = cache(async (): Promise<TestingLabLocationDirectory> => {
   const api = createTestingLabModules();
   const locations = await readResult(
-    api.locations.getTestingLocations({ skip: 0, take: 200, includeArchived: true }),
+    api.locations.getTestingLocationsForGetTestingLocations({ skip: 0, take: 200, includeArchived: true }),
     'Testing locations',
   );
 
@@ -294,7 +294,7 @@ export const getPublicTestingLabDirectory = cache(async (): Promise<PublicTestin
   const api = createTestingLabModules();
   const [sessions, projects] = await Promise.all([
     readResult(api.sessions.getTestingPublicSessions({ take: 100 }), 'Public testing sessions'),
-    readResult(api.projects.getProjects({ skip: 0, take: 100, sortBy: 'UpdatedAt', sortDirection: 'DESC' }), 'Testable projects'),
+    readResult(api.projects.getProjectsForGetProjects({ skip: 0, take: 100, sortBy: 'UpdatedAt', sortDirection: 'DESC' }), 'Testable projects'),
   ]);
 
   return {
@@ -309,7 +309,7 @@ export const getTestingProjectOptions = cache(async (): Promise<TestingProjectOp
 
   const api = createTestingLabModules();
   const projects = await readResult(
-    api.projects.getProjects({ currentTenantOnly: true, skip: 0, take: 50, sortBy: 'UpdatedAt', sortDirection: 'DESC' }),
+    api.projects.getProjectsForGetProjects({ currentTenantOnly: true, skip: 0, take: 50, sortBy: 'UpdatedAt', sortDirection: 'DESC' }),
     'Projects',
   );
 
@@ -424,7 +424,7 @@ export const getTestingRequestDetail = cache(async (requestId: string): Promise<
   const api = createTestingLabModules();
   const [request, sessions, participants, feedback] = await Promise.all([
     readResult(
-      api.requests.getTestingRequestsById(requestId),
+      api.requests.getTestingRequestsForGetTestingRequestsById(requestId),
       'Testing request',
     ),
     readResult(api.sessions.getTestingSessionsByRequest(requestId), 'Request sessions'),
@@ -473,7 +473,7 @@ function mapProjectDetail(project: ProjectsProjectApiOutput): TestingProjectDeta
 export const getTestingLabProjectDetail = cache(async (projectOrRequestId: string): Promise<TestingLabProjectDetailData> => {
   const api = createTestingLabModules();
   const projectResult = await readResult(
-    api.projects.getProjectsById(projectOrRequestId, {
+    api.projects.getProjectsForGetProjectsById(projectOrRequestId, {
       includeTeam: false,
       includeReleases: true,
       includeCollaborators: false,
@@ -484,7 +484,7 @@ export const getTestingLabProjectDetail = cache(async (projectOrRequestId: strin
 
   if (projectResult.data) {
     const project = mapProjectDetail(projectResult.data);
-    const requestsResult = await readResult(api.requests.getTestingRequests({ skip: 0, take: 200 }), 'Testing requests');
+    const requestsResult = await readResult(api.requests.getTestingRequestsForGetTestingRequests({ skip: 0, take: 200 }), 'Testing requests');
     const linkedRequest = compact((requestsResult.data ?? []).map(mapRequest)).find(
       (request) => request.projectVersion?.projectId === project?.id,
     );
@@ -508,7 +508,7 @@ export const getTestingLabProjectDetail = cache(async (projectOrRequestId: strin
     };
   }
 
-  const requestResult = await readResult(api.requests.getTestingRequestsById(projectOrRequestId), 'Testing request');
+  const requestResult = await readResult(api.requests.getTestingRequestsForGetTestingRequestsById(projectOrRequestId), 'Testing request');
   if (requestResult.data) {
     const requestDetail = await getTestingRequestDetail(projectOrRequestId);
     const requestProject = requestDetail.request?.projectVersion?.project;
@@ -549,7 +549,7 @@ export interface TestingSessionDetailData {
 export const getTestingSessionDetail = cache(async (sessionId: string): Promise<TestingSessionDetailData> => {
   const api = createTestingLabModules();
   const [session, registrations, waitlist, projects] = await Promise.all([
-    readResult(api.sessions.getTestingSessionsById(sessionId), 'Testing session'),
+    readResult(api.sessions.getTestingSessionsForGetTestingSessionsById(sessionId), 'Testing session'),
     readResult(api.participants.getTestingSessionsRegistrations(sessionId), 'Session registrations'),
     readResult(api.participants.getTestingSessionsWaitlist(sessionId), 'Session waitlist'),
     readResult(api.sessions.getTestingSessionsProjects(sessionId, { includeInactive: true }), 'Session projects'),

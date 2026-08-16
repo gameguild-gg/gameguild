@@ -216,6 +216,38 @@ public class PermissionGrantServiceTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task SetGlobalDefaultPermissionsAsync_SystemAdministrator_IsAuthorized()
+    {
+        _actorAccessorMock.Setup(instance => instance.ActorContext)
+            .Returns(ActorContextBuilder.ForSystem("authorization-tests").Build());
+        _repoMock.Setup(instance => instance.GetByUserAndTenantAsync(null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission?)null);
+        _repoMock.Setup(instance => instance.CreateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission permission, CancellationToken _) => permission);
+
+        var action = () => _sut.SetGlobalDefaultPermissionsAsync(["read"]);
+
+        await action.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task SetGlobalDefaultPermissionsAsync_ExplicitPermission_IsAuthorized()
+    {
+        _actorAccessorMock.Setup(instance => instance.ActorContext)
+            .Returns(ActorContextBuilder.ForUser(Guid.NewGuid())
+                .WithPermission(SystemPermission.Keys.ManageGlobalDefaults)
+                .Build());
+        _repoMock.Setup(instance => instance.GetByUserAndTenantAsync(null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission?)null);
+        _repoMock.Setup(instance => instance.CreateAsync(It.IsAny<TenantPermission>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TenantPermission permission, CancellationToken _) => permission);
+
+        var action = () => _sut.SetGlobalDefaultPermissionsAsync(["read"]);
+
+        await action.Should().NotThrowAsync();
+    }
+
     // ── SetTenantDefaultPermissionsAsync ──────────────────────
 
     [Fact]

@@ -333,6 +333,26 @@ public class AuthControllerBaseCovTests
     }
 
     [Fact]
+    public void GetCurrentUserId_SubClaim_ReturnsGuid()
+    {
+        var userId = Guid.NewGuid();
+        var controller = new TestAuthController
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                        [new Claim("sub", userId.ToString())],
+                        "Test"))
+                }
+            }
+        };
+
+        controller.TestGetCurrentUserId().Should().Be(userId);
+    }
+
+    [Fact]
     public void GetCurrentUserId_NoClaim_Throws()
     {
         var controller = new TestAuthController();
@@ -383,6 +403,25 @@ public class AuthControllerBaseCovTests
         };
 
         controller.TestGetCurrentUserEmail().Should().Be("test@example.com");
+    }
+
+    [Fact]
+    public void GetCurrentUserEmail_JwtEmailClaim_ReturnsEmail()
+    {
+        var controller = new TestAuthController
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(
+                        [new Claim("email", "jwt@example.com")],
+                        "Test"))
+                }
+            }
+        };
+
+        controller.TestGetCurrentUserEmail().Should().Be("jwt@example.com");
     }
 
     [Fact]

@@ -9,6 +9,25 @@ public class AccessControlListEntryTests
     private readonly Guid _userId = Guid.NewGuid();
     private readonly Guid _grantedBy = Guid.NewGuid();
 
+#pragma warning disable CS0618
+    [Fact]
+    public void UserId_BackwardCompatibility_MapsOnlyUserPrincipals()
+    {
+        var userId = Guid.NewGuid();
+        var entry = new AccessControlListEntry { UserId = userId };
+
+        entry.PrincipalType.Should().Be(AclPrincipalType.User);
+        entry.PrincipalId.Should().Be(userId);
+        entry.UserId.Should().Be(userId);
+
+        entry.PrincipalType = AclPrincipalType.Role;
+        entry.UserId.Should().BeEmpty();
+        entry.PrincipalType = AclPrincipalType.User;
+        entry.PrincipalId = null;
+        entry.UserId.Should().BeEmpty();
+    }
+#pragma warning restore CS0618
+
     [Fact]
     public void AccessControlListEntry_DefaultValues_ShouldBeCorrect()
     {

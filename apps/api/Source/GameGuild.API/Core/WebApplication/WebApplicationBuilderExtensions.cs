@@ -1,5 +1,8 @@
 ﻿namespace GameGuild.API;
 
+using Microsoft.Extensions.Configuration.EnvironmentVariables;
+using Microsoft.Extensions.Configuration.Json;
+
 /// <summary>
 ///     Extension methods for WebApplicationBuilder following SOLID principles.
 ///     Provides fluent configuration with clean separation of concerns.
@@ -17,9 +20,28 @@ public static class WebApplicationBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Configuration.SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", true, true)
-            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+        var environmentSettings = $"appsettings.{builder.Environment.EnvironmentName}.json";
+        var hasApplicationSettings = builder.Configuration.Sources
+            .OfType<JsonConfigurationSource>()
+            .Any(source => string.Equals(source.Path, "appsettings.json", StringComparison.OrdinalIgnoreCase));
+        var hasEnvironmentSettings = builder.Configuration.Sources
+            .OfType<JsonConfigurationSource>()
+            .Any(source => string.Equals(source.Path, environmentSettings, StringComparison.OrdinalIgnoreCase));
+
+        if (!hasApplicationSettings || !hasEnvironmentSettings)
+        {
+            builder.Configuration.SetBasePath(AppContext.BaseDirectory);
+        }
+
+        if (!hasApplicationSettings)
+        {
+            builder.Configuration.AddJsonFile("appsettings.json", true, true);
+        }
+
+        if (!hasEnvironmentSettings)
+        {
+            builder.Configuration.AddJsonFile(environmentSettings, true, true);
+        }
 
         return builder;
     }
@@ -34,7 +56,14 @@ public static class WebApplicationBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Configuration.AddEnvironmentVariables();
+        var hasUnprefixedEnvironmentVariables = builder.Configuration.Sources
+            .OfType<EnvironmentVariablesConfigurationSource>()
+            .Any(source => string.IsNullOrEmpty(source.Prefix));
+
+        if (!hasUnprefixedEnvironmentVariables)
+        {
+            builder.Configuration.AddEnvironmentVariables();
+        }
 
         return builder;
     }
