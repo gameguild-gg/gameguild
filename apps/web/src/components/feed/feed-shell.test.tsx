@@ -3,19 +3,21 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  getPersonalizedFeed: vi.fn(),
-  getCommunityFeed: vi.fn(),
+  loadPosts: vi.fn(),
 }));
 
-vi.mock('@/lib/feed/personalized-feed', () => ({
-  getPersonalizedFeed: mocks.getPersonalizedFeed,
+vi.mock('@/lib/posts/queries', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/posts/queries')>()),
+  loadPosts: mocks.loadPosts,
 }));
-vi.mock('@/lib/community/queries/members', () => ({
-  getCommunityFeed: mocks.getCommunityFeed,
-}));
-vi.mock('@/components/feed/feed-update-card', () => ({
-  FeedUpdateCard: ({ item }: { item: { id: string } }) => (
-    <div data-testid={`feed-update-${item.id}`} />
+vi.mock('@/components/feed/infinite-post-feed', () => ({
+  InfinitePostFeed: ({ stream, initialItems, initialNextSkip }: { stream: string; initialItems: unknown[]; initialNextSkip: number | null }) => (
+    <div
+      data-testid="infinite-feed"
+      data-stream={stream}
+      data-count={initialItems.length}
+      data-next-skip={initialNextSkip ?? 'null'}
+    />
   ),
 }));
 vi.mock('@/components/feed/upcoming-playtests', () => ({
@@ -23,9 +25,6 @@ vi.mock('@/components/feed/upcoming-playtests', () => ({
 }));
 vi.mock('@/components/feed/featured-projects', () => ({
   FeaturedProjects: () => <div data-testid="featured-rail" />,
-}));
-vi.mock('next/image', () => ({
-  default: (props: Record<string, unknown>) => <img alt="" {...props} />,
 }));
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
@@ -35,97 +34,64 @@ vi.mock('@/i18n/navigation', () => ({
 
 import { FeedShell } from './feed-shell';
 
-const communityItems = [
-  {
-    id: 'item-1',
-    title: 'Neon Racer devlog #4',
-    contentType: 'Project',
-    contentId: 'neon-racer',
-    authorId: 'ada-builder',
-    reason: 'Recommended',
-    relevanceScore: 9,
-    isRead: false,
-    createdAt: new Date().toISOString(),
-    summary: 'New build drops Friday.',
-    href: '/projects/neon-racer',
-    imageUrl: 'https://example.com/cover.jpg',
-    actionLabel: 'View project',
-  },
-  {
-    id: 'item-2',
-    title: 'Playtest recap',
-    contentType: 'Post',
-    contentId: 'post-2',
-    authorId: 'grace-tester',
-    reason: 'Trending',
-    relevanceScore: 7,
-    isRead: true,
-    createdAt: new Date().toISOString(),
-    summary: null,
-  },
-];
+const posts = Array.from({ length: 6 }, (_, i) => ({
+  id: `post-${i}`,
+  authorId: 'a',
+  authorName: null,
+  content: 'x',
+  mediaUrl: null,
+  mediaType: null,
+  likesCount: 0,
+  commentsCount: 0,
+  createdAt: new Date().toISOString(),
+}));
 
 describe('FeedShell', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.getCommunityFeed.mockResolvedValue({ kind: 'trending', requiresSignIn: false, items: communityItems });
-    mocks.getPersonalizedFeed.mockResolvedValue({ requiresSignIn: false, items: [] });
-  });
+  beforeEach(() => vi.clearAllMocks());
   afterEach(cleanup);
 
   it('renders all four tabs with the active one marked', async () => {
+    mocks.loadPosts.mockResolvedValue([]);
+
     render(await FeedShell({ tab: 'trending' }));
 
-    const active = screen.getByRole('link', { name: 'Trending', current: 'page' });
-    expect(active).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Trending', current: 'page' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'For You' })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: 'Following' })).toHaveAttribute('href', '/?tab=following');
   });
 
-  it('streams community items as cards for social tabs', async () => {
+  it('maps each tab to its posts stream with the SSR page', async () => {
+    mocks.loadPosts.mockResolvedValue(posts);
+
     render(await FeedShell({ tab: 'trending' }));
 
-    expect(mocks.getCommunityFeed).toHaveBeenCalledWith('trending', { take: 12 });
-    expect(screen.getAllByTestId('feed-card')).toHaveLength(2);
-    expect(screen.getByRole('link', { name: /neon racer devlog #4/i })).toHaveAttribute(
-      'href',
-      '/projects/neon-racer',
-    );
+    expect(mocks.loadPosts).toHaveBeenCalledWith('trending', 0);
+    expect(screen.getByTestId('infinite-feed')).toHaveAttribute('data-stream', 'trending');
+    expect(screen.getByTestId('infinite-feed')).toHaveAttribute('data-count', '6');
   });
 
-  it('renders personalized update cards for the foryou tab', async () => {
-    mocks.getPersonalizedFeed.mockResolvedValue({
-      requiresSignIn: false,
-      items: [
-        { id: 'p-1', title: 'New course', reason: 'r', kind: 'New course', href: null, relevanceScore: 1, isViewed: false, createdAt: null },
-      ],
-    });
-
-    render(await FeedShell({ tab: 'foryou' }));
-
-    expect(mocks.getPersonalizedFeed).toHaveBeenCalledWith(12);
-    expect(screen.getByTestId('feed-update-p-1')).toBeInTheDocument();
-    expect(screen.queryByTestId('feed-card')).not.toBeInTheDocument();
-  });
-
-  it('shows the sign-in prompt when following requires auth', async () => {
-    mocks.getCommunityFeed.mockResolvedValue({ kind: 'following', requiresSignIn: true, items: [] });
-
-    render(await FeedShell({ tab: 'following' }));
-
-    expect(screen.getByText('Sign in to load this feed')).toBeInTheDocument();
-  });
-
-  it('shows an empty state per tab when no items exist', async () => {
-    mocks.getCommunityFeed.mockResolvedValue({ kind: 'discover', requiresSignIn: false, items: [] });
+  it('passes a null next page when the first page is short', async () => {
+    mocks.loadPosts.mockResolvedValue(posts.slice(0, 3));
 
     render(await FeedShell({ tab: 'discover' }));
 
-    expect(screen.getByText(/recommended community updates will appear here/i)).toBeInTheDocument();
+    expect(mocks.loadPosts).toHaveBeenCalledWith('public', 0);
+    expect(screen.getByTestId('infinite-feed')).toHaveAttribute('data-next-skip', 'null');
+  });
+
+  it('shows the building-feed empty state for personal tabs without posts', async () => {
+    mocks.loadPosts.mockResolvedValue([]);
+
+    render(await FeedShell({ tab: 'foryou' }));
+
+    expect(screen.getByText('Your feed is building')).toBeInTheDocument();
+    expect(screen.queryByTestId('infinite-feed')).not.toBeInTheDocument();
   });
 
   it('renders the suggestions rail', async () => {
-    render(await FeedShell({ tab: 'trending' }));
+    mocks.loadPosts.mockResolvedValue(posts);
+
+    render(await FeedShell({ tab: 'foryou' }));
 
     expect(screen.getByTestId('playtests-rail')).toBeInTheDocument();
     expect(screen.getByTestId('featured-rail')).toBeInTheDocument();
