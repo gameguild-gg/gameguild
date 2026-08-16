@@ -84,7 +84,7 @@ public class GradingQueueTests
     }
 
     [Fact]
-    public async Task Group_TwoAttempts_ProducesTwoItemsSortedByAttempt()
+    public async Task Group_TwoAttempts_ProducesTwoItems_LatestAttemptFirst()
     {
         await using var db = CreateContext();
         var assessment = await SeedAssessmentAsync(db);
@@ -100,10 +100,10 @@ public class GradingQueueTests
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var queue = ok.Value.Should().BeOfType<GradingQueueDto>().Subject;
         queue.Items.Should().HaveCount(2);
-        queue.Items.Select(i => i.AttemptNumber).Should().ContainInOrder(1, 2);
-        queue.Items[0].Status.Should().Be(SubmissionStatus.Submitted);
-        queue.Items[1].Status.Should().Be(SubmissionStatus.Graded);
-        queue.Items[1].Score.Should().Be(88);
+        queue.Items.Select(i => i.AttemptNumber).Should().ContainInOrder(2, 1);
+        queue.Items[0].Status.Should().Be(SubmissionStatus.Graded);
+        queue.Items[0].Score.Should().Be(88);
+        queue.Items[1].Status.Should().Be(SubmissionStatus.Submitted);
     }
 
     [Fact]
