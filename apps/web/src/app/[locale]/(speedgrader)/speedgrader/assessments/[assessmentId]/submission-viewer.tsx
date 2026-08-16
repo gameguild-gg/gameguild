@@ -87,6 +87,7 @@ export function SubmissionViewer({
           submittedFiles={safeParseCodeFiles(submission.codePayload)}
           maxScore={codingAssignment.Grading.MaxScore}
           manifestUrl={manifestUrl}
+          submissionId={submissionId}
           onComputedScore={onComputedScore}
         />
       ) : (
