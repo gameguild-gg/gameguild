@@ -1,6 +1,6 @@
 import React from 'react';
 import { getCourseAssessmentAnalytics, getCourseAssessmentGroups, getCourseAssessments } from '@/lib/learning';
-import { AssessmentsList } from './assessments-list';
+import { AssessmentsList } from '@/components/learning/console/courses/[course]/assessments/assessments-list';
 
 /**
  * Assessments List Page

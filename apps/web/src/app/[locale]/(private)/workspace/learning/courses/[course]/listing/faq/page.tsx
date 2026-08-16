@@ -1,6 +1,6 @@
 import React from 'react';
 import { getCourseFaq } from '@/lib/learning';
-import { FaqEditorForm } from './faq-editor-form';
+import { FaqEditorForm } from '@/components/learning/console/courses/[course]/listing/faq/faq-editor-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { HelpCircle } from 'lucide-react';
 

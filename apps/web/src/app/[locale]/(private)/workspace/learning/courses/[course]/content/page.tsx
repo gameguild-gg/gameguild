@@ -5,8 +5,8 @@ import {
 import { CheckCircle2, Clock } from "lucide-react";
 import { notFound } from "next/navigation";
 import React from "react";
-import { ContentTree } from "./content-tree";
-import { buildContentTreeModel } from "./content-tree-model";
+import { ContentTree } from "@/components/learning/console/courses/[course]/content/content-tree";
+import { buildContentTreeModel } from "@/components/learning/console/courses/[course]/content/content-tree-model";
 
 export default async function ContentPage({
   params,

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { getAssessment, getAssessmentSubmissions } from '@/lib/learning';
-import { SubmissionsList } from './submissions-list';
+import { SubmissionsList } from '@/components/learning/console/courses/[course]/assessments/[assessmentId]/submissions/submissions-list';
 
 /**
  * Instructor view: list of submissions for an assessment.

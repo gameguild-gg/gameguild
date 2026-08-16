@@ -1,6 +1,6 @@
 import React from 'react';
 import { getCourse, getCourseDiscussions } from '@/lib/learning';
-import { CourseDiscussionsManager } from './course-discussions-manager';
+import { CourseDiscussionsManager } from '@/components/learning/console/courses/[course]/support/discussions/course-discussions-manager';
 
 /**
  * Discussions Page

@@ -1,6 +1,6 @@
 import React from 'react';
 import { getCourseIntegrationSettings } from '@/lib/learning';
-import { IntegrationSettingsEditor } from './integration-settings-editor';
+import { IntegrationSettingsEditor } from '@/components/learning/console/courses/[course]/settings/integrations/integration-settings-editor';
 
 /**
  * Integration Settings Page

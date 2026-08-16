@@ -1,7 +1,7 @@
 import { getCohort, getCohortSchedule } from '@/lib/learning';
 import { notFound } from 'next/navigation';
 
-import { CohortScheduleWorkspace } from './cohort-schedule-workspace';
+import { CohortScheduleWorkspace } from '@/components/learning/console/courses/[course]/classes/[classId]/schedule/cohort-schedule-workspace';
 
 export default async function CohortSchedulePage({
   params,

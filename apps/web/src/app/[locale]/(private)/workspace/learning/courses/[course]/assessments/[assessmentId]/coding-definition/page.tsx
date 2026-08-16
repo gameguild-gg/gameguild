@@ -2,7 +2,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { getAssessment } from "@/lib/learning";
 import { getCodingAssignmentFull } from "@/lib/coding-assignment/client";
-import { CodingDefinitionEditor } from "./coding-definition-editor";
+import { CodingDefinitionEditor } from "@/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor";
 
 /**
  * Instructor-only coding-definition authoring route.

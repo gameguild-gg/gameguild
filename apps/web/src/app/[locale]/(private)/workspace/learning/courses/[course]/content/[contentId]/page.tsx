@@ -6,7 +6,7 @@ import {
   getCourseAssessments,
   getCodingDefinitionPublic,
 } from '@/lib/learning';
-import { ContentItemEditor } from './content-item-editor';
+import { ContentItemEditor } from '@/components/learning/console/courses/[course]/content/[contentId]/content-item-editor';
 
 export default async function ContentItemPage({
   params,

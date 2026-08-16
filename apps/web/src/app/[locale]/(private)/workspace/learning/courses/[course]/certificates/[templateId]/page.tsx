@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { getCertificateTemplate } from '@/lib/learning';
-import { CertificateTemplateEditor } from './certificate-template-editor';
+import { CertificateTemplateEditor } from '@/components/learning/console/courses/[course]/certificates/[templateId]/certificate-template-editor';
 
 /**
  * Certificate Template Editor Page

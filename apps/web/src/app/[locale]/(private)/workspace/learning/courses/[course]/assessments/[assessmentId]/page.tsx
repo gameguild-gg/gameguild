@@ -5,7 +5,7 @@ import {
   getCourseAssessmentGroups,
   getCourseContent,
 } from "@/lib/learning";
-import { AssessmentEditor } from "./assessment-editor";
+import { AssessmentEditor } from "@/components/learning/console/courses/[course]/assessments/[assessmentId]/assessment-editor";
 
 /**
  * Assessment Detail/Editor Page

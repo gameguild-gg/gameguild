@@ -2,7 +2,7 @@ import { getCourseRouteParam } from '@/lib/learning/course-route';
 import { getCourse, getCourseAnalytics, getCourseCohorts, getCourseContent, getCourseStudents } from '@/lib/learning';
 import { notFound } from 'next/navigation';
 import React from 'react';
-import { CourseNav } from './course-nav';
+import { CourseNav } from '@/components/learning/console/courses/[course]/course-nav';
 
 /**
  * Course Detail Layout
