@@ -28,12 +28,16 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 
-vi.mock('@/lib/learning/course-route', () => ({
-  buildDashboardCoursePath: (course: string | { id: string; routeParam?: string }, path = '') => {
+vi.mock('@/lib/learning/course-route', () => {
+  const buildPlatformPath = (course: string | { id: string; routeParam?: string }, path = '') => {
     const id = typeof course === 'string' ? course : course.routeParam || course.id;
     return `/dashboard/platform/learning/courses/${id}${path ? `/${path}` : ''}`;
-  },
-}));
+  };
+  return {
+    buildDashboardCoursePath: buildPlatformPath,
+    buildPlatformCoursePath: buildPlatformPath,
+  };
+});
 
 const courses = [
   {
