@@ -680,6 +680,9 @@ public class AssessmentsController : BaseApiController
 
     private async Task<bool> CanReviewCourseAsync(Guid courseId)
     {
+        // Managers (creator, tenant/system admin, Edit/Create/Delete permission) can review and grade.
+        if (await CanManageCourseAsync(courseId).ConfigureAwait(false)) return true;
+
         var actor = _actorContextAccessor.ActorContext;
         if (!actor.SubjectIdAsGuid.HasValue) return false;
         if (!await IsActorInProgramTenantAsync(courseId).ConfigureAwait(false)) return false;
