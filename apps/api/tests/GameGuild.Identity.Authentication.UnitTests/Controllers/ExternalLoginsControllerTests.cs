@@ -32,17 +32,19 @@ public class ExternalLoginsControllerTests
         return controller;
     }
 
-    // ── GET list ────────────────────────────────────────────────────────
+    // ── HEAD list ───────────────────────────────────────────────────────
 
     [Fact]
-    public async Task GetExternalLogins_Returns200_WithProviderList()
+    public async Task GetExternalLogins_Returns200_WithProvidersInHeader()
     {
         var userId = Guid.NewGuid();
         var sender = new Mock<ISender>();
+        var discordLinkedAt = DateTime.UtcNow;
+        var googleLinkedAt = DateTime.UtcNow.AddHours(-2);
         var dtos = new List<ExternalLoginDto>
         {
-            new() { Provider = "discord", CreatedAt = DateTime.UtcNow },
-            new() { Provider = "google", CreatedAt = DateTime.UtcNow.AddHours(-2) }
+            new() { Provider = "discord", CreatedAt = discordLinkedAt },
+            new() { Provider = "google", CreatedAt = googleLinkedAt }
         };
         sender
             .Setup(s => s.Send(
@@ -50,10 +52,32 @@ public class ExternalLoginsControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(dtos);
 
-        var result = await CreateController(sender, userId).GetExternalLogins(CancellationToken.None);
+        var controller = CreateController(sender, userId);
+        var result = await controller.GetExternalLogins(CancellationToken.None);
 
-        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
-        ok.Value.Should().BeEquivalentTo(dtos);
+        result.Should().BeOfType<OkResult>();
+        var header = controller.Response.Headers["X-Linked-Providers"].ToString();
+        header.Should().Be(
+            $"discord={DateTime.SpecifyKind(discordLinkedAt, DateTimeKind.Utc):O}," +
+            $"google={DateTime.SpecifyKind(googleLinkedAt, DateTimeKind.Utc):O}");
+    }
+
+    [Fact]
+    public async Task GetExternalLogins_NoLinkedProviders_OmitsHeader()
+    {
+        var userId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(
+                It.Is<GetExternalLoginsQuery>(q => q.UserId == userId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var controller = CreateController(sender, userId);
+        var result = await controller.GetExternalLogins(CancellationToken.None);
+
+        result.Should().BeOfType<OkResult>();
+        controller.Response.Headers.ContainsKey("X-Linked-Providers").Should().BeFalse();
     }
 
     [Fact]
@@ -85,7 +109,7 @@ public class ExternalLoginsControllerTests
         var result = await CreateController(sender, userId, claimType)
             .GetExternalLogins(CancellationToken.None);
 
-        result.Should().BeOfType<OkObjectResult>();
+        result.Should().BeOfType<OkResult>();
     }
 
     // ── POST google link ────────────────────────────────────────────────
