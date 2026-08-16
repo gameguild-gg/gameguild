@@ -218,7 +218,7 @@ jobs:
 
   deploy-pages:
     name: Deploy Emception IDE and CDN
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build-test-package.outputs.wasm-available == 'true'
+    if: needs.build-test-package.outputs.wasm-available == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch')
     needs: build-test-package
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -268,7 +268,7 @@ jobs:
 
   publish-packages:
     name: Publish Emception packages to npm
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_packages && needs.build-test-package.outputs.wasm-available == 'true'
+    if: needs.build-test-package.outputs.wasm-available == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.publish_packages))
     needs: build-test-package
     runs-on: ubuntu-latest
     timeout-minutes: 30
