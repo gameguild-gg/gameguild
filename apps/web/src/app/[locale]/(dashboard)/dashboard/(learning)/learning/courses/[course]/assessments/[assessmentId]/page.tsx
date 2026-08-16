@@ -2,8 +2,10 @@ import React from "react";
 import { notFound } from "next/navigation";
 import {
   getAssessment,
+  getAssessmentRubric,
   getCourseAssessmentGroups,
   getCourseContent,
+  getCourseGroupSets,
 } from "@/lib/learning";
 import { AssessmentEditor } from "./assessment-editor";
 
@@ -17,11 +19,14 @@ export default async function AssessmentDetailPage({
 }: PageProps<"/[locale]/dashboard/learning/courses/[course]/assessments/[assessmentId]">): Promise<React.JSX.Element> {
   const { course: courseId, assessmentId } = await params;
 
-  const [assessment, assessmentGroups, courseContent] = await Promise.all([
-    getAssessment(assessmentId),
-    getCourseAssessmentGroups(courseId),
-    getCourseContent(courseId),
-  ]);
+  const [assessment, assessmentGroups, courseContent, groupSets, rubric] =
+    await Promise.all([
+      getAssessment(assessmentId),
+      getCourseAssessmentGroups(courseId),
+      getCourseContent(courseId),
+      getCourseGroupSets(courseId),
+      getAssessmentRubric(assessmentId),
+    ]);
 
   if (!assessment) {
     notFound();
@@ -33,6 +38,9 @@ export default async function AssessmentDetailPage({
       assessment={assessment}
       assessmentGroups={assessmentGroups}
       courseContent={courseContent.items}
+      groupSets={groupSets.map((set) => ({ id: set.id, name: set.name }))}
+      rubric={rubric.rubric}
+      rubricLocked={rubric.locked}
     />
   );
 }

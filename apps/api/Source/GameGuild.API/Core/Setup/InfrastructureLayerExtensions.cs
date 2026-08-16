@@ -17,6 +17,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context;
 using GameGuild.Identity.Tenants;
 using GameGuild.Localization;
+using GameGuild.Lti;
 using GameGuild.Monitoring.SLA;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
@@ -247,6 +248,11 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddFeaturesModule();
         logger.LogInformation("Features Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f.1a. LTI 1.3 tool module (launch and AGS score passback).
+        stepStopwatch.Restart();
+        services.AddLtiModule();
+        logger.LogInformation("LTI Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10g. Content Pages Module (pages, sections, content resources, OpenGraph)
         stepStopwatch.Restart();

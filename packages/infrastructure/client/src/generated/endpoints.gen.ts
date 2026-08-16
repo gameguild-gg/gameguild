@@ -1883,6 +1883,19 @@ export const getAssessmentsCanAttemptEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAssessmentsGradingQueueInput {
+  assessmentId: string;
+}
+export type GetAssessmentsGradingQueueOutput =
+  Types.LearningAssessmentsGradingQueue;
+export const getAssessmentsGradingQueueEndpoint = {
+  operationId: "getAssessmentsGradingQueue" as const,
+  method: "GET" as const,
+  path: "/v1/assessments/{assessmentId}/grading-queue" as const,
+  tags: ["LearningAssessments"] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAssetLibrariesInput {
   resourceType: string;
   resourceId: string;
@@ -7917,6 +7930,116 @@ export const postApiGameJamsSubmissionsScoresEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetCoursesGroupSetsInput {
+  courseId: string;
+}
+export type GetCoursesGroupSetsOutput =
+  Array<Types.LearningAssessmentsGroupSetSummary>;
+export const getCoursesGroupSetsEndpoint = {
+  operationId: "getCoursesGroupSets" as const,
+  method: "GET" as const,
+  path: "/v1/courses/{courseId}/group-sets" as const,
+  tags: ["LearningAssessmentsGroupSets"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesGroupSetsInput {
+  courseId: string;
+  body?: Types.LearningAssessmentsCreateGroupSetInput;
+}
+export type PostCoursesGroupSetsOutput = Types.LearningAssessmentsGroupSet;
+export const postCoursesGroupSetsEndpoint = {
+  operationId: "postCoursesGroupSets" as const,
+  method: "POST" as const,
+  path: "/v1/courses/{courseId}/group-sets" as const,
+  tags: ["LearningAssessmentsGroupSets"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetCoursesGroupSetsGroupsInput {
+  courseId: string;
+  setId: string;
+}
+export type GetCoursesGroupSetsGroupsOutput =
+  Array<Types.LearningAssessmentsGroupDetail>;
+export const getCoursesGroupSetsGroupsEndpoint = {
+  operationId: "getCoursesGroupSetsGroups" as const,
+  method: "GET" as const,
+  path: "/v1/courses/{courseId}/group-sets/{setId}/groups" as const,
+  tags: ["LearningAssessmentsGroupSets"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesGroupSetsGroupsInput {
+  courseId: string;
+  setId: string;
+  body?: Types.LearningAssessmentsCreateGroupInput;
+}
+export type PostCoursesGroupSetsGroupsOutput = Types.LearningAssessmentsGroup;
+export const postCoursesGroupSetsGroupsEndpoint = {
+  operationId: "postCoursesGroupSetsGroups" as const,
+  method: "POST" as const,
+  path: "/v1/courses/{courseId}/group-sets/{setId}/groups" as const,
+  tags: ["LearningAssessmentsGroupSets"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesGroupSetsGroupsJoinInput {
+  courseId: string;
+  groupId: string;
+}
+export type PostCoursesGroupSetsGroupsJoinOutput =
+  Types.LearningAssessmentsGroupMembership;
+export const postCoursesGroupSetsGroupsJoinEndpoint = {
+  operationId: "postCoursesGroupSetsGroupsJoin" as const,
+  method: "POST" as const,
+  path: "/v1/courses/{courseId}/group-sets/groups/{groupId}/join" as const,
+  tags: ["LearningAssessmentsGroupSets"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteCoursesGroupSetsGroupsMembershipInput {
+  courseId: string;
+  groupId: string;
+}
+export type DeleteCoursesGroupSetsGroupsMembershipOutput = void;
+export const deleteCoursesGroupSetsGroupsMembershipEndpoint = {
+  operationId: "deleteCoursesGroupSetsGroupsMembership" as const,
+  method: "DELETE" as const,
+  path: "/v1/courses/{courseId}/group-sets/groups/{groupId}/membership" as const,
+  tags: ["LearningAssessmentsGroupSets"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostCoursesGroupSetsGroupsMembersInput {
+  courseId: string;
+  groupId: string;
+  userId: string;
+}
+export type PostCoursesGroupSetsGroupsMembersOutput =
+  Types.LearningAssessmentsGroupMembership;
+export const postCoursesGroupSetsGroupsMembersEndpoint = {
+  operationId: "postCoursesGroupSetsGroupsMembers" as const,
+  method: "POST" as const,
+  path: "/v1/courses/{courseId}/group-sets/groups/{groupId}/members/{userId}" as const,
+  tags: ["LearningAssessmentsGroupSets"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteCoursesGroupSetsGroupsMembersInput {
+  courseId: string;
+  groupId: string;
+  userId: string;
+}
+export type DeleteCoursesGroupSetsGroupsMembersOutput = void;
+export const deleteCoursesGroupSetsGroupsMembersEndpoint = {
+  operationId: "deleteCoursesGroupSetsGroupsMembers" as const,
+  method: "DELETE" as const,
+  path: "/v1/courses/{courseId}/group-sets/groups/{groupId}/members/{userId}" as const,
+  tags: ["LearningAssessmentsGroupSets"] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * Application information endpoint
  *
@@ -9462,6 +9585,71 @@ export const postPaymentsRetryEndpoint = {
   method: "POST" as const,
   path: "/api/v1/payments/{paymentId}:retry" as const,
   tags: ["CommercePayments"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsPeerReviewsClaimInput {
+  assessmentId: string;
+}
+export type PostAssessmentsPeerReviewsClaimOutput =
+  Types.LearningAssessmentsPeerReviewClaim;
+export const postAssessmentsPeerReviewsClaimEndpoint = {
+  operationId: "postAssessmentsPeerReviewsClaim" as const,
+  method: "POST" as const,
+  path: "/v1/assessments/{assessmentId}/peer-reviews/claim" as const,
+  tags: ["LearningAssessmentsPeerReviews"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsPeerReviewsInput {
+  reviewId: string;
+}
+export type GetAssessmentsPeerReviewsOutput =
+  Types.LearningAssessmentsAnonymousReviewSubmission;
+export const getAssessmentsPeerReviewsEndpoint = {
+  operationId: "getAssessmentsPeerReviews" as const,
+  method: "GET" as const,
+  path: "/v1/assessments/peer-reviews/{reviewId}" as const,
+  tags: ["LearningAssessmentsPeerReviews"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAssessmentsPeerReviewsSubmitInput {
+  reviewId: string;
+  body?: Types.LearningAssessmentsPeerReviewSubmitInput;
+}
+export type PostAssessmentsPeerReviewsSubmitOutput = void;
+export const postAssessmentsPeerReviewsSubmitEndpoint = {
+  operationId: "postAssessmentsPeerReviewsSubmit" as const,
+  method: "POST" as const,
+  path: "/v1/assessments/peer-reviews/{reviewId}/submit" as const,
+  tags: ["LearningAssessmentsPeerReviews"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsSubmissionsReceivedPeerReviewsInput {
+  submissionId: string;
+}
+export type GetAssessmentsSubmissionsReceivedPeerReviewsOutput =
+  Array<Types.LearningAssessmentsReceivedPeerReview>;
+export const getAssessmentsSubmissionsReceivedPeerReviewsEndpoint = {
+  operationId: "getAssessmentsSubmissionsReceivedPeerReviews" as const,
+  method: "GET" as const,
+  path: "/v1/assessments/submissions/{submissionId}/received-peer-reviews" as const,
+  tags: ["LearningAssessmentsPeerReviews"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAssessmentsSubmissionsPeerReviewsInput {
+  submissionId: string;
+}
+export type GetAssessmentsSubmissionsPeerReviewsOutput =
+  Array<Types.LearningAssessmentsInstructorPeerReview>;
+export const getAssessmentsSubmissionsPeerReviewsEndpoint = {
+  operationId: "getAssessmentsSubmissionsPeerReviews" as const,
+  method: "GET" as const,
+  path: "/v1/assessments/submissions/{submissionId}/peer-reviews" as const,
+  tags: ["LearningAssessmentsPeerReviews"] as const,
   requiresAuth: true,
 } as const;
 
@@ -13040,6 +13228,43 @@ export const patchApiSocialReviewsModerationEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAssessmentsRubricInput {
+  assessmentId: string;
+}
+export type GetAssessmentsRubricOutput = Types.LearningAssessmentsRubric;
+export const getAssessmentsRubricEndpoint = {
+  operationId: "getAssessmentsRubric" as const,
+  method: "GET" as const,
+  path: "/v1/assessments/{assessmentId}/rubric" as const,
+  tags: ["LearningAssessmentsRubrics"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutAssessmentsRubricInput {
+  assessmentId: string;
+  body?: Types.LearningAssessmentsSaveRubricInput;
+}
+export type PutAssessmentsRubricOutput = Types.LearningAssessmentsRubric;
+export const putAssessmentsRubricEndpoint = {
+  operationId: "putAssessmentsRubric" as const,
+  method: "PUT" as const,
+  path: "/v1/assessments/{assessmentId}/rubric" as const,
+  tags: ["LearningAssessmentsRubrics"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteAssessmentsRubricInput {
+  assessmentId: string;
+}
+export type DeleteAssessmentsRubricOutput = void;
+export const deleteAssessmentsRubricEndpoint = {
+  operationId: "deleteAssessmentsRubric" as const,
+  method: "DELETE" as const,
+  path: "/v1/assessments/{assessmentId}/rubric" as const,
+  tags: ["LearningAssessmentsRubrics"] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetApiSocialProfilesUsersInput {
   userId: string;
 }
@@ -13512,6 +13737,16 @@ export const postSupportTicketsMineMessagesEndpoint = {
   method: "POST" as const,
   path: "/v1/support/tickets/mine/{ticketId}/messages" as const,
   tags: ["CommerceProductsSupportTicketsSelfService"] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetMeTasksInput = void;
+export type GetMeTasksOutput = Types.LearningAssessmentsTasks;
+export const getMeTasksEndpoint = {
+  operationId: "getMeTasks" as const,
+  method: "GET" as const,
+  path: "/v1/me/tasks" as const,
+  tags: ["LearningAssessmentsTasks"] as const,
   requiresAuth: true,
 } as const;
 
@@ -19231,6 +19466,7 @@ export const endpoints = {
     getAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissionsEndpoint,
   getAssessmentsMySubmissions: getAssessmentsMySubmissionsEndpoint,
   getAssessmentsCanAttempt: getAssessmentsCanAttemptEndpoint,
+  getAssessmentsGradingQueue: getAssessmentsGradingQueueEndpoint,
   getAssetLibraries: getAssetLibrariesEndpoint,
   postAssetLibrariesFolders: postAssetLibrariesFoldersEndpoint,
   putAssetLibrariesFoldersRestriction:
@@ -19688,6 +19924,16 @@ export const endpoints = {
   getApiGameJamsCriteria: getApiGameJamsCriteriaEndpoint,
   postApiGameJamsCriteria: postApiGameJamsCriteriaEndpoint,
   postApiGameJamsSubmissionsScores: postApiGameJamsSubmissionsScoresEndpoint,
+  getCoursesGroupSets: getCoursesGroupSetsEndpoint,
+  postCoursesGroupSets: postCoursesGroupSetsEndpoint,
+  getCoursesGroupSetsGroups: getCoursesGroupSetsGroupsEndpoint,
+  postCoursesGroupSetsGroups: postCoursesGroupSetsGroupsEndpoint,
+  postCoursesGroupSetsGroupsJoin: postCoursesGroupSetsGroupsJoinEndpoint,
+  deleteCoursesGroupSetsGroupsMembership:
+    deleteCoursesGroupSetsGroupsMembershipEndpoint,
+  postCoursesGroupSetsGroupsMembers: postCoursesGroupSetsGroupsMembersEndpoint,
+  deleteCoursesGroupSetsGroupsMembers:
+    deleteCoursesGroupSetsGroupsMembersEndpoint,
   getInfo: getInfoEndpoint,
   getHealth: getHealthEndpoint,
   getApiHealth: getApiHealthEndpoint,
@@ -19813,6 +20059,13 @@ export const endpoints = {
   postPaymentsCancel: postPaymentsCancelEndpoint,
   postPaymentsRefund: postPaymentsRefundEndpoint,
   postPaymentsRetry: postPaymentsRetryEndpoint,
+  postAssessmentsPeerReviewsClaim: postAssessmentsPeerReviewsClaimEndpoint,
+  getAssessmentsPeerReviews: getAssessmentsPeerReviewsEndpoint,
+  postAssessmentsPeerReviewsSubmit: postAssessmentsPeerReviewsSubmitEndpoint,
+  getAssessmentsSubmissionsReceivedPeerReviews:
+    getAssessmentsSubmissionsReceivedPeerReviewsEndpoint,
+  getAssessmentsSubmissionsPeerReviews:
+    getAssessmentsSubmissionsPeerReviewsEndpoint,
   getPostsComments: getPostsCommentsEndpoint,
   postPostsComments: postPostsCommentsEndpoint,
   putPostsComments: putPostsCommentsEndpoint,
@@ -20100,6 +20353,9 @@ export const endpoints = {
   postApiSocialReviewsApprove: postApiSocialReviewsApproveEndpoint,
   postApiSocialReviewsFeature: postApiSocialReviewsFeatureEndpoint,
   patchApiSocialReviewsModeration: patchApiSocialReviewsModerationEndpoint,
+  getAssessmentsRubric: getAssessmentsRubricEndpoint,
+  putAssessmentsRubric: putAssessmentsRubricEndpoint,
+  deleteAssessmentsRubric: deleteAssessmentsRubricEndpoint,
   getApiSocialProfilesUsers: getApiSocialProfilesUsersEndpoint,
   putApiSocialProfilesUsers: putApiSocialProfilesUsersEndpoint,
   getApiSocialProfiles: getApiSocialProfilesEndpoint,
@@ -20136,6 +20392,7 @@ export const endpoints = {
   getSupportTicketsMine: getSupportTicketsMineEndpoint,
   postSupportTicketsMine: postSupportTicketsMineEndpoint,
   postSupportTicketsMineMessages: postSupportTicketsMineMessagesEndpoint,
+  getMeTasks: getMeTasksEndpoint,
   getTaxJurisdictionsForGetTaxJurisdictions:
     getTaxJurisdictionsForGetTaxJurisdictionsEndpoint,
   postTaxJurisdictions: postTaxJurisdictionsEndpoint,

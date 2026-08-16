@@ -2,7 +2,7 @@
 
 import { useRouter } from '@/i18n/navigation';
 import { filesToCodePayload } from '@/lib/coding-assignment/code-payload';
-import type { CodingAssignmentContent, FileEncoding } from '@/lib/coding-assignment/types';
+import type { CodingAssignmentContent } from '@/lib/coding-assignment/types';
 import {
   submitAssessment,
   type LearnerMutationResult,
@@ -29,6 +29,12 @@ import {
   type FormEvent,
 } from 'react';
 import { PublicTestEstimateBanner } from './public-test-estimate-banner';
+import {
+  hasRestorableDraft,
+  publicSeedFiles,
+  resolveSeed,
+  type SeedFile,
+} from './resolve-seed';
 
 const Ide = lazy(
   () => import('@game-guild/emception-ui').then((m) => ({ default: m.Ide })),
@@ -53,23 +59,12 @@ export interface CodingActivityClientProps {
   /** v1 CodingAssignmentContent (Public-only — server strips Private). */
   assignment: CodingAssignmentContent;
   manifestUrl?: string;
-}
-
-/** Build the IDE-seedable file list from v1 Data.Files, defensively filtering Public. */
-function publicSeedFiles(assignment: CodingAssignmentContent): Array<{
-  path: string;
-  content: string;
-  encoding: FileEncoding;
-  modifiable: boolean;
-}> {
-  return Object.entries(assignment.Data.Files)
-    .filter(([, meta]) => meta.Visibility === 'Public')
-    .map(([path, meta]) => ({
-      path,
-      content: meta.Content,
-      encoding: meta.Encoding ?? 'text',
-      modifiable: meta.Modifiable,
-    }));
+  /** Namespaces the draft-storage token per user (page supplies; optional so
+   *  the page can wire it independently — a bare assessmentId keeps the
+   *  pre-namespacing keys, still reachable via the legacy fallback read). */
+  userId?: string;
+  /** Prior submission files for overlay restore; null = no submission yet. */
+  submissionFiles?: SeedFile[] | null;
 }
 
 /**
@@ -102,6 +97,8 @@ export function CodingActivityClient({
   slug,
   assignment,
   manifestUrl,
+  userId,
+  submissionFiles,
 }: CodingActivityClientProps) {
   const ref = useRef<IdeHandle>(null);
   const router = useRouter();
@@ -126,43 +123,100 @@ export function CodingActivityClient({
   // constant) until T13 wires the course-level field through getCourseLearnerContext.
   const passingScore = 60;
 
-  // Boot config for the IDE: language preset from the assignment (unknown/
-  // legacy languages fall back to cpp) with the Public files swapped in.
-  // Passing workspaceConfig also hides the preset picker — students must
-  // never switch presets (it would wipe the assignment files).
-  const workspaceConfig = useMemo<WorkspaceConfig>(() => {
-    const language = (assignment.Environment.Language as CodingLanguage | undefined) ?? 'cpp';
-    const sample = ASSIGNMENT_SAMPLES[language] ?? ASSIGNMENT_SAMPLES.cpp;
-    const files: WorkspaceConfig['files'] = {};
-    for (const { path, content, encoding } of seedFiles.current) {
-      files[path] = { encoding, content };
-    }
-    return {
-      ...sample.workspaceConfig,
-      // Fall back to the preset files when the assignment has no Public files.
-      files: Object.keys(files).length > 0 ? files : sample.workspaceConfig.files,
-    };
+  const language = (assignment.Environment.Language as CodingLanguage | undefined) ?? 'cpp';
+  // Draft detection MUST run BEFORE the lazy <Ide> mounts: the IDE's
+  // persistence effect writes initial state on mount, so any post-mount
+  // probe is trivially true. The ref-init pattern reads storage exactly
+  // once per mount — StrictMode's second render sees a non-null ref and
+  // skips; a double-MOUNT re-inits but is still pre-Ide-mount (Suspense
+  // re-suspends and the restore effect has not run yet either).
+  const draftExistsRef = useRef<boolean | null>(null);
+  if (draftExistsRef.current === null) {
+    draftExistsRef.current = hasRestorableDraft(
+      userId ? `${userId}:${assessmentId}` : assessmentId,
+      (ASSIGNMENT_SAMPLES[language] ?? ASSIGNMENT_SAMPLES.cpp).workspaceConfig.id,
+    );
+  }
+  const resolved = useMemo(
+    () =>
+      resolveSeed({
+        draftExists: draftExistsRef.current ?? false,
+        submissionFiles: submissionFiles ?? null,
+        seedFiles: seedFiles.current,
+      }),
     // seedFiles.current is a mount-time ref — never reassigned.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assignment.Environment.Language]);
+    [draftExistsRef.current, submissionFiles],
+  );
 
-  // Seed IDE with Public files + apply readOnly meta for non-modifiable files.
-  // setFiles/setFileMeta mutate reactive state first; VFS sync happens later
-  // when doBootstrap runs syncFilesToVfs(filesRef.current). Safe to call pre-boot.
-  // Gate on ideMounted (flipped by attachIde in the commit phase): when the
-  // lazy chunk resolves synchronously the ref can already be set at first
-  // effect-run — keying the run on the flag keeps seeding exactly-once.
+  // Boot config for the IDE: language preset from the assignment (unknown/
+  // legacy languages fall back to cpp) with the resolved files swapped in so
+  // the FIRST paint already shows the seed/submission overlay. Draft mode
+  // resolves to [] → preset sample files (the IDE's restore effect overrides
+  // the config files at mount anyway). Passing workspaceConfig also hides the
+  // preset picker — students must never switch presets (it would wipe the
+  // assignment files).
+  const workspaceConfig = useMemo<WorkspaceConfig>(() => {
+    const sample = ASSIGNMENT_SAMPLES[language] ?? ASSIGNMENT_SAMPLES.cpp;
+    const toConfigFiles = (seed: SeedFile[]): WorkspaceConfig['files'] => {
+      const out: WorkspaceConfig['files'] = {};
+      for (const { path, content, encoding } of seed) {
+        out[path] = { encoding, content };
+      }
+      return out;
+    };
+    return {
+      ...sample.workspaceConfig,
+      // Draft mode resolves to [] (the IDE restores its own state) — still pass
+      // the instructor seed so Reset restores the instructor originals, not the
+      // preset sample (which would contradict the reset confirm copy).
+      files:
+        resolved.files.length > 0
+          ? toConfigFiles(resolved.files)
+          : toConfigFiles(seedFiles.current),
+    };
+  }, [language, resolved]);
+
+  // Load-order seeding (gated on ideMounted as today: the callback ref flips
+  // it in the commit phase, keeping seeding exactly-once):
+  // - seed: setFiles seeds both the workspace AND the diff baseline.
+  // - submission: setFiles overlays the prior submission, then the baseline is
+  //   re-pinned to the INSTRUCTOR seed — submissions are content-diffs vs the
+  //   assignment, not vs the overlay.
+  // - draft: the IDE restored its own state; the baseline is pinned to the
+  //   instructor seed for the same reason (resync-to-current would make a
+  //   restore-then-submit-without-edits send an empty payload and lose the
+  //   student's work).
+  // Image seeds are re-merged in every mode: they are excluded from draft
+  // persistence (localStorage quota) and from setFiles (text-only).
   useEffect(() => {
     if (!ideMounted) return;
     const handle = ref.current;
     if (!handle) return;
-    const files = seedFiles.current;
-    if (files.length === 0) return;
+    const seed = seedFiles.current;
+    const seedText = seed.filter((f) => f.encoding === 'text').map(({ path, content }) => ({ path, content }));
     let cancelled = false;
     (async () => {
-      await handle.setFiles(files.map(({ path, content }) => ({ path, content })));
+      if (resolved.mode !== 'draft' && resolved.files.length > 0) {
+        await handle.setFiles(
+          resolved.files
+            .filter((file) => file.encoding === 'text')
+            .map(({ path, content }) => ({ path, content })),
+        );
+      }
+      if (resolved.mode === 'submission' || resolved.mode === 'draft') {
+        handle.setBaseline(seedText);
+      }
+      const imageSeeds = seed.filter((file) => file.encoding !== 'text');
+      if (imageSeeds.length > 0) {
+        const current = await handle.getFiles();
+        for (const { path, content, encoding } of imageSeeds) {
+          if (current.some((file) => file.path === path)) continue;
+          await handle.addFile(path, content, encoding);
+        }
+      }
       if (cancelled) return;
-      for (const { path, modifiable } of files) {
+      for (const { path, modifiable } of seed) {
         if (!modifiable) {
           // per-file Monaco readOnly via Task 5 setFileMeta
           await handle.setFileMeta(path, { modifiable: false });
@@ -172,7 +226,7 @@ export function CodingActivityClient({
     return () => {
       cancelled = true;
     };
-  }, [ideMounted]);
+  }, [ideMounted, resolved]);
 
   if (result?.success) {
     return (
@@ -209,23 +263,17 @@ export function CodingActivityClient({
     }
   }
 
-  // ponytail: <Ide> has no "hide new file button" prop. Gate via a wrapper
-  // data-attribute + CSS rule. Upgrade path: Task 5 IdeHandle could expose
-  // an allowCreateFiles prop, or FileExplorer could read it via context.
-  const wrapperDataAttrs = {
-    'data-allow-create-files': allowCreateFiles ? 'true' : 'false',
-  };
-
   return (
     <>
       <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div {...wrapperDataAttrs} className="h-[70vh] min-h-[500px]">
+        <div className="h-[70vh] min-h-[500px]">
           <Suspense fallback={<IdeSkeleton />}>
             <Ide
               ref={attachIde}
               workspaceConfig={workspaceConfig}
-              assignmentToken={assessmentId}
+              assignmentToken={userId ? `${userId}:${assessmentId}` : assessmentId}
+              allowCreateFiles={allowCreateFiles}
               testPlan={gradingPlan.current.cases.length > 0 ? gradingPlan.current : undefined}
               testMode="public"
               manifestUrl={manifestUrl}
@@ -254,10 +302,6 @@ export function CodingActivityClient({
         </Button>
       </div>
     </form>
-    {/* Hide the IDE's internal "New File" buttons when students may not create files. */}
-    {!allowCreateFiles ? (
-      <style>{`[data-allow-create-files="false"] button[title^="New "] { display: none !important; }`}</style>
-    ) : null}
-  </>
+    </>
   );
 }

@@ -7,7 +7,9 @@ const mocks = vi.hoisted(() => ({
   getCourseLearnerContext: vi.fn(),
   getMyProjects: vi.fn(),
   auth: vi.fn(),
+  getToken: vi.fn(),
   getCodingAssignmentPublic: vi.fn(),
+  getMySubmissions: vi.fn(),
   submitAssessment: vi.fn(),
   useRouterPush: vi.fn(),
   IdeRender: vi.fn(),
@@ -21,7 +23,22 @@ vi.mock('@/lib/learner/records', () => ({
   getCourseLearnerContext: mocks.getCourseLearnerContext,
   getMyProjects: mocks.getMyProjects,
 }));
-vi.mock('@/auth', () => ({ auth: mocks.auth }));
+vi.mock('@/auth', () => ({ auth: mocks.auth, getToken: mocks.getToken }));
+vi.mock('@game-guild/client', async (importOriginal) => {
+  // Stub only the method the page's loadLastSubmissionFiles calls; the rest
+  // stays real so co-importers keep their bindings (same pattern as page.test.tsx).
+  const actual = await importOriginal<typeof import('@game-guild/client')>();
+  class LearningAssessmentsModuleStub {
+    getAssessmentsMySubmissions = mocks.getMySubmissions;
+  }
+  return {
+    ...actual,
+    GeneratedApi: {
+      ...actual.GeneratedApi,
+      LearningAssessmentsModule: LearningAssessmentsModuleStub,
+    },
+  };
+});
 vi.mock('@/lib/coding-assignment/client', () => ({
   getCodingAssignmentPublic: mocks.getCodingAssignmentPublic,
 }));
@@ -72,7 +89,12 @@ vi.mock('next/dynamic', () => ({
   },
 }));
 
+// Real (unmocked) key math — same module hasRestorableDraft reads through.
+import { workspaceStorageKey } from '@game-guild/emception-ui/ide-types';
+import type { CodingAssignmentContent } from '@/lib/coding-assignment/types';
 import LearnerActivityPage from './page';
+import { CodingActivityClient } from '@/components/learning/coding-activity-client';
+import type { SeedFile } from '@/components/learning/resolve-seed';
 
 function makeAssessment(overrides: Record<string, unknown> = {}) {
   return {
@@ -177,6 +199,8 @@ function stubIde(getModified: Array<{ path: string; content: string; encoding: '
       getModifiedFiles: async () => getModified,
       setFiles: vi.fn(async () => undefined),
       setFileMeta: vi.fn(async () => undefined),
+      setBaseline: vi.fn(),
+      addFile: vi.fn(async () => undefined),
     };
     useLayoutEffect(() => {
       attachHandle(ref, handle);
@@ -190,14 +214,42 @@ function stubIde(getModified: Array<{ path: string; content: string; encoding: '
   });
 }
 
+/** Client-level stub: same attach pattern, but every handle method is a
+ *  spy so load-order tests can assert call shapes (and non-calls). */
+function stubClientIde(current: Array<{ path: string; content: string }> = []) {
+  const handle = {
+    getFiles: vi.fn(async () => current),
+    getModifiedFiles: vi.fn(async () => []),
+    setFiles: vi.fn(async () => undefined),
+    setFileMeta: vi.fn(async () => undefined),
+    setBaseline: vi.fn(),
+    addFile: vi.fn(async () => undefined),
+  };
+  mocks.IdeRender.mockImplementation(({ ref, ...rest }) => {
+    useLayoutEffect(() => {
+      attachHandle(ref, handle);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    return (
+      <div data-testid="mock-ide" data-props={JSON.stringify(rest)}>
+        mocked ide
+      </div>
+    );
+  });
+  return handle;
+}
+
 describe('coding activity page routing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
     mocks.getCourseAccessData.mockResolvedValue(makeReadyAccess());
     mocks.getCourseLearnerContext.mockResolvedValue(
       makeContext(makeAssessment()),
     );
-    mocks.auth.mockResolvedValue(null);
+    mocks.auth.mockResolvedValue({ user: { id: 'user-1' } });
+    mocks.getToken.mockResolvedValue('token-1');
+    mocks.getMySubmissions.mockResolvedValue({ ok: true, data: [] });
     mocks.getMyProjects.mockResolvedValue([]);
     mocks.computeScore.mockReturnValue({ score: 0, passed: false, feedback: '' });
     stubIde();
@@ -218,8 +270,8 @@ describe('coding activity page routing', () => {
     expect(passedProps.manifestUrl).toBeUndefined();
     // FIX 1: workspaceConfig boots the assignment language + Public files
     // (hides the preset picker); FIX 2/3: no testPlan with zero tests,
-    // storage namespaced per assessment.
-    expect(passedProps.assignmentToken).toBe('assessment-1');
+    // storage namespaced per user + assessment.
+    expect(passedProps.assignmentToken).toBe('user-1:assessment-1');
     expect(passedProps.testPlan).toBeUndefined();
     expect(passedProps.workspaceConfig.id).toBe('cpp');
     expect(passedProps.workspaceConfig.files).toEqual({
@@ -367,7 +419,7 @@ describe('coding activity page routing', () => {
     expect(setFileMetaMock).toHaveBeenCalledWith('readonly.h', { modifiable: false });
   });
 
-  it('hides the New File button (data-allow-create-files=false) when AllowStudentCreateFiles is false', async () => {
+  it('passes allowCreateFiles=false as a real prop when AllowStudentCreateFiles is false', async () => {
     mocks.getCodingAssignmentPublic.mockResolvedValue(
       makeAssignment({
         Environment: { Language: 'cpp', Tools: '', AllowStudentCreateFiles: false },
@@ -376,13 +428,12 @@ describe('coding activity page routing', () => {
 
     render(await LearnerActivityPage(pageParams()));
 
-    await screen.findByTestId('mock-ide');
-    const wrapper = document.querySelector('[data-allow-create-files="false"]');
-    expect(wrapper).not.toBeNull();
-    // <style> rule (CSS gate for the IDE's internal New File buttons) is rendered
-    // as a sibling of the form when AllowStudentCreateFiles === false.
-    const styleRule = document.querySelector('style');
-    expect(styleRule?.textContent).toContain('[data-allow-create-files="false"]');
+    const ide = await screen.findByTestId('mock-ide');
+    const passedProps = JSON.parse(ide.dataset.props ?? '{}');
+    expect(passedProps.allowCreateFiles).toBe(false);
+    // CSS-hack deletion: no wrapper data-attribute and no injected <style> rule.
+    expect(document.querySelector('[data-allow-create-files]')).toBeNull();
+    expect(document.querySelector('style')).toBeNull();
   });
 
   it('renders the public-test estimate banner with computed score when Ide fires onTestReport', async () => {
@@ -465,5 +516,173 @@ describe('coding activity page routing', () => {
     );
     expect(unavailable.textContent).toContain('Estimate unavailable');
     expect(screen.queryByTestId('public-test-estimate-banner')).toBeNull();
+  });
+});
+
+describe('CodingActivityClient draft/submission/seed load order', () => {
+  const TOKEN = 'user-1:assessment-1';
+
+  function makeImageAssignment() {
+    return makeAssignment({
+      Data: {
+        Files: {
+          'main.cpp': {
+            Content: '// starter',
+            Encoding: 'text',
+            Visibility: 'Public',
+            Modifiable: true,
+          },
+          'logo.png': {
+            Content: 'aGVsbG8=',
+            Encoding: 'base64',
+            Visibility: 'Public',
+            Modifiable: false,
+          },
+        },
+      },
+    });
+  }
+
+  function renderClient(props: {
+    userId?: string;
+    submissionFiles?: SeedFile[] | null;
+    assignment?: ReturnType<typeof makeAssignment>;
+  } = {}) {
+    return render(
+      <CodingActivityClient
+        assessmentId="assessment-1"
+        enrollmentId="enrollment-1"
+        courseId="course-1"
+        slug="test-course"
+        assignment={(props.assignment ?? makeAssignment()) as unknown as CodingAssignmentContent}
+        userId={props.userId}
+        submissionFiles={props.submissionFiles ?? null}
+      />,
+    );
+  }
+
+  function seedDraftEntry(token: string, raw: string) {
+    window.localStorage.setItem(workspaceStorageKey(token, 'cpp'), raw);
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.localStorage.clear();
+    mocks.submitAssessment.mockResolvedValue({ success: true });
+    stubClientIde();
+  });
+
+  it('namespaces the storage token as userId:assessmentId, falling back to the bare assessment id', async () => {
+    const first = renderClient({ userId: 'user-1' });
+    let ide = await screen.findByTestId('mock-ide');
+    expect(JSON.parse(ide.dataset.props ?? '{}').assignmentToken).toBe(TOKEN);
+    first.unmount();
+
+    const second = renderClient();
+    ide = await screen.findByTestId('mock-ide');
+    expect(JSON.parse(ide.dataset.props ?? '{}').assignmentToken).toBe('assessment-1');
+    second.unmount();
+  });
+
+  it('seed mode: setFiles with the seed texts, no setBaseline, no addFile', async () => {
+    const handle = stubClientIde();
+    renderClient({ userId: 'user-1' });
+    await screen.findByTestId('mock-ide');
+
+    await waitFor(() => expect(handle.setFiles).toHaveBeenCalledTimes(1));
+    expect(handle.setFiles).toHaveBeenCalledWith([
+      { path: 'main.cpp', content: '// starter' },
+    ]);
+    expect(handle.setBaseline).not.toHaveBeenCalled();
+    expect(handle.addFile).not.toHaveBeenCalled();
+  });
+
+  it('submission mode: setFiles overlay + setBaseline pinned to the instructor seed', async () => {
+    const handle = stubClientIde();
+    renderClient({
+      userId: 'user-1',
+      submissionFiles: [
+        { path: 'main.cpp', content: 'int main(){}', encoding: 'text' },
+        { path: 'extra.py', content: 'print()', encoding: 'text' },
+      ],
+    });
+    const ide = await screen.findByTestId('mock-ide');
+
+    await waitFor(() => expect(handle.setFiles).toHaveBeenCalledTimes(1));
+    expect(handle.setFiles).toHaveBeenCalledWith([
+      { path: 'main.cpp', content: 'int main(){}' },
+      { path: 'extra.py', content: 'print()' },
+    ]);
+    await waitFor(() => expect(handle.setBaseline).toHaveBeenCalledTimes(1));
+    expect(handle.setBaseline).toHaveBeenCalledWith([
+      { path: 'main.cpp', content: '// starter' },
+    ]);
+    // First paint already shows the overlay via workspaceConfig.
+    const passedProps = JSON.parse(ide.dataset.props ?? '{}');
+    expect(passedProps.workspaceConfig.files['main.cpp']).toEqual({
+      encoding: 'text',
+      content: 'int main(){}',
+    });
+    expect(passedProps.workspaceConfig.files['extra.py']).toEqual({
+      encoding: 'text',
+      content: 'print()',
+    });
+  });
+
+  it('draft mode: skips setFiles, merges missing image seeds, pins baseline to the instructor seed', async () => {
+    seedDraftEntry(TOKEN, JSON.stringify({ files: { 'main.cpp': { type: 'text', content: '// draft' } } }));
+    const handle = stubClientIde([{ path: 'main.cpp', content: '// draft' }]);
+    renderClient({ userId: 'user-1', assignment: makeImageAssignment() });
+    await screen.findByTestId('mock-ide');
+
+    await waitFor(() => expect(handle.setBaseline).toHaveBeenCalledTimes(1));
+    expect(handle.setFiles).not.toHaveBeenCalled();
+    expect(handle.addFile).toHaveBeenCalledWith('logo.png', 'aGVsbG8=', 'base64');
+    expect(handle.setBaseline).toHaveBeenCalledWith([
+      { path: 'main.cpp', content: '// starter' },
+    ]);
+    // readOnly meta applies in draft mode too (logo.png is non-modifiable).
+    await waitFor(() =>
+      expect(handle.setFileMeta).toHaveBeenCalledWith('logo.png', { modifiable: false }),
+    );
+  });
+
+  it('draft detection also reads the legacy token key when the new key is absent', async () => {
+    seedDraftEntry('assessment-1', JSON.stringify({ files: {} }));
+    const handle = stubClientIde();
+    renderClient({ userId: 'user-1' });
+    await screen.findByTestId('mock-ide');
+
+    await waitFor(() => expect(handle.setBaseline).toHaveBeenCalledTimes(1));
+    expect(handle.setFiles).not.toHaveBeenCalled();
+  });
+
+  it('corrupt JSON under both keys falls back to seed mode without crashing', async () => {
+    seedDraftEntry(TOKEN, '{not json');
+    seedDraftEntry('assessment-1', 'also not json');
+    const handle = stubClientIde();
+    renderClient({ userId: 'user-1' });
+    await screen.findByTestId('mock-ide');
+
+    await waitFor(() => expect(handle.setFiles).toHaveBeenCalledTimes(1));
+    expect(handle.setBaseline).not.toHaveBeenCalled();
+  });
+
+  it('reads storage exactly once per mount (new-key hit short-circuits the legacy read)', async () => {
+    seedDraftEntry(TOKEN, JSON.stringify({ files: {} }));
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem');
+    const handle = stubClientIde();
+    renderClient({ userId: 'user-1' });
+    await screen.findByTestId('mock-ide');
+
+    await waitFor(() => expect(handle.setBaseline).toHaveBeenCalledTimes(1));
+    expect(getItemSpy).toHaveBeenCalledTimes(1);
+    expect(getItemSpy).toHaveBeenCalledWith(workspaceStorageKey(TOKEN, 'cpp'));
+  });
+
+  it('passes allowCreateFiles=true through as a real prop by default', async () => {
+    renderClient({ userId: 'user-1' });
+    const ide = await screen.findByTestId('mock-ide');
+    expect(JSON.parse(ide.dataset.props ?? '{}').allowCreateFiles).toBe(true);
   });
 });

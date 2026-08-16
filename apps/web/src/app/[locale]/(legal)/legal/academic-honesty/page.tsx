@@ -7,7 +7,7 @@ const standards = [
   'Use AI assistance only when the course or challenge allows it and disclose material AI-generated contributions.',
 ];
 
-export default async function Page({}: PageProps<'/[locale]/academic-honesty'>): Promise<React.JSX.Element> {
+export default async function Page({}: PageProps<'/[locale]/legal/academic-honesty'>): Promise<React.JSX.Element> {
   return (
     <main className="min-h-screen bg-background">
       <section className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-10">
