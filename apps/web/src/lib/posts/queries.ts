@@ -10,6 +10,9 @@ export interface PostCardData {
   mediaType: string | null;
   likesCount: number;
   commentsCount: number;
+  sharesCount: number;
+  isEdited: boolean;
+  isPinned: boolean;
   createdAt: string;
 }
 
@@ -23,6 +26,9 @@ interface PostDto {
   mediaType?: string | null;
   likesCount?: number;
   commentsCount?: number;
+  sharesCount?: number;
+  isEdited?: boolean;
+  isPinned?: boolean;
   createdAt?: string;
 }
 
@@ -86,6 +92,9 @@ export async function loadPosts(stream: PostsStream, skip: number, take = POSTS_
       mediaType: post.mediaType ?? null,
       likesCount: post.likesCount ?? 0,
       commentsCount: post.commentsCount ?? 0,
+      sharesCount: post.sharesCount ?? 0,
+      isEdited: Boolean(post.isEdited),
+      isPinned: Boolean(post.isPinned),
       createdAt: post.createdAt ?? new Date().toISOString(),
     }));
   } catch {

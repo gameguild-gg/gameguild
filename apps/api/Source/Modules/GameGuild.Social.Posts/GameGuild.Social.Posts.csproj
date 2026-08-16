@@ -9,7 +9,9 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="GameGuild.Social.Posts.UnitTests" />
-    </ItemGroup>
+      <ProjectReference Include="..\GameGuild.Notifications\GameGuild.Notifications.csproj" />
+  <ProjectReference Include="..\GameGuild.Social.Follows\GameGuild.Social.Follows.csproj" />
+</ItemGroup>
 
     <ItemGroup>
     </ItemGroup>

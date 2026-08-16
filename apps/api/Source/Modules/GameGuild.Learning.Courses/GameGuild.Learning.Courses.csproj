@@ -9,7 +9,8 @@
     <ItemGroup>
         <PackageReference Include="FluentValidation" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    </ItemGroup>
+      <ProjectReference Include="..\GameGuild.Social.Posts\GameGuild.Social.Posts.csproj" />
+</ItemGroup>
 
     <ItemGroup>
         <InternalsVisibleTo Include="GameGuild.Learning.Courses.UnitTests" />

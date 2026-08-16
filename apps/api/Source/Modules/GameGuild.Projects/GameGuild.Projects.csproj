@@ -13,7 +13,9 @@
         <PackageReference Include="HotChocolate.AspNetCore.Authorization" />
         <PackageReference Include="HotChocolate.Data.EntityFramework" />
         <PackageReference Include="HotChocolate.Types.Analyzers" />
-    </ItemGroup>
+      <ProjectReference Include="..\GameGuild.Social.Posts\GameGuild.Social.Posts.csproj" />
+  <ProjectReference Include="..\GameGuild.Notifications\GameGuild.Notifications.csproj" />
+</ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />

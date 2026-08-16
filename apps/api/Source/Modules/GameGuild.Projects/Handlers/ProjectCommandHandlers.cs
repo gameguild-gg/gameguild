@@ -279,6 +279,10 @@ public sealed class ProjectCommandHandlers
 
     await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+    if (_publicationAnnouncer is not null) {
+      await _publicationAnnouncer.AnnounceProjectPublishedAsync(request.PublishedBy, project.Title, project.Slug, project.Id, project.TenantId, cancellationToken).ConfigureAwait(false);
+    }
+
     return Result.Success(project);
   }
 
