@@ -70,7 +70,7 @@ export const CreateCourseForm = (): React.JSX.Element => {
       }
 
       const courseRouteParam = result.data.routeParam || getCourseRouteParam(result.data);
-      router.push(`/dashboard/platform/learning/courses/${courseRouteParam}` as Parameters<typeof router.push>[0]);
+      router.push(`/workspace/learning/courses/${courseRouteParam}` as Parameters<typeof router.push>[0]);
     } catch (err) {
       console.error('Error creating course:', err);
 

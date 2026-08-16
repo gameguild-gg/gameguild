@@ -38,7 +38,7 @@ type DashboardQuickAction = DashboardNavSubItem & {
 const quickActions: DashboardQuickAction[] = [
   {
     title: 'Create course',
-    url: '/dashboard/platform/learning/courses/new',
+    url: '/workspace/learning/courses/new',
     icon: Plus,
     requiredCapability: 'Learning.Manage',
   },

@@ -1,8 +1,9 @@
 import { auth } from '@/auth';
 import { redirect } from '@/i18n/navigation';
 import { WorkspaceShell } from '@/components/workspace/workspace-shell';
-import { getWorkspaceTeams } from '@/lib/workspaces';
 import { getDashboardContexts } from '@/lib/dashboard-contexts';
+import { getDashboardNotificationSummary } from '@/lib/dashboard-notifications';
+import { getWorkspaceTeams } from '@/lib/workspaces';
 import React from 'react';
 
 function initials(name: string): string {
@@ -27,7 +28,11 @@ export default async function PrivateLayout({
   }
 
   const displayName = session.user.name?.trim() || session.user.email?.split('@')[0] || 'Member';
-  const [contexts, teams] = await Promise.all([getDashboardContexts(), getWorkspaceTeams()]);
+  const [contexts, teams, notifications] = await Promise.all([
+    getDashboardContexts(),
+    getWorkspaceTeams(),
+    getDashboardNotificationSummary(session.user.id).catch(() => ({ items: [], unreadCount: 0 })),
+  ]);
 
   return (
     <WorkspaceShell
@@ -38,6 +43,7 @@ export default async function PrivateLayout({
         canManage: contexts.capabilities.length > 0,
       }}
       teams={teams.map((team) => ({ id: team.id, slug: team.slug, name: team.name, isPersonal: team.isPersonal }))}
+      notifications={notifications}
     >
       {children}
     </WorkspaceShell>

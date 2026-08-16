@@ -76,11 +76,11 @@ function validatePeriod(startDate: string | undefined, endDate: string | undefin
 }
 
 function revalidateCohortPaths(courseIdentifier: string, cohortId?: string) {
-  revalidatePath(`/dashboard/platform/learning/courses/${courseIdentifier}/classes`);
-  revalidatePath(`/dashboard/platform/learning/courses/${courseIdentifier}/classes/calendar`);
+  revalidatePath(`/workspace/learning/courses/${courseIdentifier}/classes`);
+  revalidatePath(`/workspace/learning/courses/${courseIdentifier}/classes/calendar`);
   if (cohortId) {
-    revalidatePath(`/dashboard/platform/learning/courses/${courseIdentifier}/classes/${cohortId}`);
-    revalidatePath(`/dashboard/platform/learning/courses/${courseIdentifier}/classes/${cohortId}/schedule`);
+    revalidatePath(`/workspace/learning/courses/${courseIdentifier}/classes/${cohortId}`);
+    revalidatePath(`/workspace/learning/courses/${courseIdentifier}/classes/${cohortId}/schedule`);
   }
 }
 
