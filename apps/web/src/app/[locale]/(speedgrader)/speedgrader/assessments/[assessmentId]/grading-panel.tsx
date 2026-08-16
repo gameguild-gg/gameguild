@@ -182,7 +182,7 @@ export function GradingPanel({ item, assessment, computedScore }: GradingPanelPr
     <div data-testid="grading-panel" className="h-full space-y-4 overflow-auto p-4">
       {/* Attempt meta */}
       <div data-testid="attempt-meta" className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <span>attempt {item.attemptNumber ?? 1}</span>
+        <span>attempt {item.attemptNumber ?? 1}{item.attemptCount ? ` of ${item.attemptCount}` : ''}</span>
         {item.submittedAt && <span>· {dateFormatter.format(new Date(item.submittedAt))}</span>}
         {item.isLate && (
           <Badge data-testid="late-badge" variant="destructive">
@@ -190,6 +190,16 @@ export function GradingPanel({ item, assessment, computedScore }: GradingPanelPr
           </Badge>
         )}
         {item.status && <Badge variant="outline">{item.status}</Badge>}
+        {item.assignmentScore != null && (
+          <Badge data-testid="assignment-score-badge" variant="secondary">
+            Assignment: {item.assignmentScore}/{maxScore}
+          </Badge>
+        )}
+        {item.assignmentPassed != null && (
+          <Badge data-testid="assignment-passed-badge" variant={item.assignmentPassed ? 'default' : 'destructive'}>
+            {item.assignmentPassed ? 'Passed' : 'Not passed'}
+          </Badge>
+        )}
       </div>
 
       {/* Group banner */}

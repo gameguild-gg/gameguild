@@ -26,13 +26,16 @@ import {
 export function itemLabel(
   item: LearningAssessmentsGradingQueueItem,
 ): string {
+  const attempt = item.attemptCount
+    ? `attempt ${item.attemptNumber ?? 1} of ${item.attemptCount}`
+    : `attempt ${item.attemptNumber ?? 1}`;
   if (item.isGroup) {
     const members = item.memberNames?.length
       ? ` (${item.memberNames.join(', ')})`
       : '';
-    return `Group: ${item.groupName ?? 'Unnamed group'}${members}`;
+    return `Group: ${item.groupName ?? 'Unnamed group'}${members} — ${attempt} — ${item.status ?? 'InProgress'}`;
   }
-  return `${item.displayName ?? 'Unknown student'} — attempt ${item.attemptNumber ?? 1} — ${item.status ?? 'InProgress'}`;
+  return `${item.displayName ?? 'Unknown student'} — ${attempt} — ${item.status ?? 'InProgress'}`;
 }
 
 export interface SpeedgraderShellProps {
