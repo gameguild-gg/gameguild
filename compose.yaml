@@ -172,8 +172,8 @@ services:
     # starts with `docker compose --profile app up` (dev:compose / production).
     profiles: ["app"]
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
     image: game-guild-api
     container_name: game-guild-api
     environment:
