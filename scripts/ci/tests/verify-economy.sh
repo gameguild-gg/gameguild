@@ -82,6 +82,14 @@ test_release_gate_uses_resolvable_workflow_file_ids() {
   ! grep -Fq 'workflow_id: wfName' "$workflow"
 }
 
+test_release_action_matches_changesets_cli_major() {
+  local workflow="$repository_root/.github/workflows/release.yml"
+
+  grep -Eq '"@changesets/cli": "[~^]?2\.' "$repository_root/package.json" || return 1
+  grep -Fq 'uses: changesets/action@v1' "$workflow" || return 1
+  ! grep -Fq 'uses: changesets/action@v2' "$workflow"
+}
+
 test_emception_emits_a_gate_result_for_every_main_push() {
   local workflow="$repository_root/.github/workflows/emception.yml"
   local trigger
@@ -367,6 +375,7 @@ test_canonical_json_preserves_arrays() {
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
 run_test 'release gate uses resolvable workflow file IDs' test_release_gate_uses_resolvable_workflow_file_ids
+run_test 'release action matches the Changesets CLI major' test_release_action_matches_changesets_cli_major
 run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
