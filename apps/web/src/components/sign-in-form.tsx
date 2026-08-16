@@ -163,8 +163,8 @@ export function SignInForm({
       </Card>
       <FieldDescription className="px-6 text-center text-slate-400">
         By clicking continue, you agree to our{" "}
-        <Link href="/legal/terms-of-service" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
-        <Link href="/legal/privacy" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
+        <Link href="/terms-of-service" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Terms of Service</Link> and{" "}
+        <Link href="/polices/privacy" locale={locale} className="text-sky-200 underline-offset-4 hover:underline">Privacy Policy</Link>.
       </FieldDescription>
     </div>
   )
