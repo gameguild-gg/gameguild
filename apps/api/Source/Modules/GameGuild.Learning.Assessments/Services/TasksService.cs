@@ -33,6 +33,20 @@ public class TasksService(
             .ToListAsync().ConfigureAwait(false);
         var enrolledCourseIds = enrollments.Select(e => e.CourseId).Distinct().ToList();
 
+        var courseTitles = managedCourses.ToDictionary(kv => kv.Key, kv => kv.Value);
+        var missingTitleIds = enrolledCourseIds.Where(id => !courseTitles.ContainsKey(id)).ToList();
+        if (missingTitleIds.Count > 0)
+        {
+            var enrolledTitles = await context.Set<Program>()
+                .Where(p => missingTitleIds.Contains(p.Id) && p.DeletedAt == null)
+                .Select(p => new { p.Id, p.Title })
+                .ToListAsync().ConfigureAwait(false);
+            foreach (var program in enrolledTitles)
+            {
+                courseTitles[program.Id] = program.Title;
+            }
+        }
+
         var courseIds = managedCourses.Keys.Concat(enrolledCourseIds).Distinct().ToList();
         var assessments = courseIds.Count == 0
             ? []
@@ -92,7 +106,7 @@ public class TasksService(
                     items.Add(new TaskItemDto(
                         "do",
                         assessment.CourseId,
-                        managedCourses.GetValueOrDefault(assessment.CourseId) ?? assessment.CourseId.ToString(),
+                        courseTitles.GetValueOrDefault(assessment.CourseId) ?? assessment.CourseId.ToString(),
                         assessment.Id,
                         assessment.Title,
                         assessment.DueAt));
@@ -107,7 +121,7 @@ public class TasksService(
                     items.Add(new TaskItemDto(
                         "review",
                         assessment.CourseId,
-                        managedCourses.GetValueOrDefault(assessment.CourseId) ?? assessment.CourseId.ToString(),
+                        courseTitles.GetValueOrDefault(assessment.CourseId) ?? assessment.CourseId.ToString(),
                         assessment.Id,
                         assessment.Title,
                         // Reviews run to the assessment close — same asymmetry as the todo-8 read endpoints.
