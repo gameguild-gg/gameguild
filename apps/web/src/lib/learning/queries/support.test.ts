@@ -4,17 +4,17 @@ const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   getToken: vi.fn(),
   resolveCourseId: vi.fn(),
-  getCoursesByCourseIdSupportTickets: vi.fn(),
-  getCoursesByCourseIdSupportTicketsByTicketId: vi.fn(),
+  getCoursesSupportTicketsForGetCoursesByCourseIdSupportTickets: vi.fn(),
+  getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsByTicketId: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({ getToken: mocks.getToken }));
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
-    LearningCoursesSupportticketsModule: class {
-      getCoursesByCourseIdSupportTickets = mocks.getCoursesByCourseIdSupportTickets;
-      getCoursesByCourseIdSupportTicketsByTicketId = mocks.getCoursesByCourseIdSupportTicketsByTicketId;
+    LearningCoursesSupportTicketsModule: class {
+      getCoursesSupportTicketsForGetCoursesByCourseIdSupportTickets = mocks.getCoursesSupportTicketsForGetCoursesByCourseIdSupportTickets;
+      getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsByTicketId = mocks.getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsByTicketId;
     },
     LearningExperienceSocialDiscussionsModule: class {},
     LearningExperienceSocialRepliesModule: class {},
@@ -33,7 +33,7 @@ describe('course support ticket queries', () => {
   });
 
   it('loads the persisted course ticket queue through the generated module', async () => {
-    mocks.getCoursesByCourseIdSupportTickets.mockResolvedValue({
+    mocks.getCoursesSupportTicketsForGetCoursesByCourseIdSupportTickets.mockResolvedValue({
       ok: true,
       data: {
         items: [{
@@ -57,7 +57,7 @@ describe('course support ticket queries', () => {
 
     const result = await getCourseSupportTickets('course-slug');
 
-    expect(mocks.getCoursesByCourseIdSupportTickets).toHaveBeenCalledWith('course-1', { skip: 0, take: 100 });
+    expect(mocks.getCoursesSupportTicketsForGetCoursesByCourseIdSupportTickets).toHaveBeenCalledWith('course-1', { skip: 0, take: 100 });
     expect(result).toMatchObject({ total: 1, openCount: 0, inProgressCount: 1, resolvedCount: 0 });
     expect(result.tickets[0]).toMatchObject({
       id: 'ticket-1',
@@ -71,7 +71,7 @@ describe('course support ticket queries', () => {
   });
 
   it('loads persisted ticket messages through the generated course-scoped endpoint', async () => {
-    mocks.getCoursesByCourseIdSupportTicketsByTicketId.mockResolvedValue({
+    mocks.getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsByTicketId.mockResolvedValue({
       ok: true,
       data: {
         id: 'ticket-1',
@@ -100,7 +100,7 @@ describe('course support ticket queries', () => {
 
     const result = await getSupportTicket('course-slug', 'ticket-1');
 
-    expect(mocks.getCoursesByCourseIdSupportTicketsByTicketId).toHaveBeenCalledWith('course-1', 'ticket-1');
+    expect(mocks.getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsByTicketId).toHaveBeenCalledWith('course-1', 'ticket-1');
     expect(result?.messages).toEqual([expect.objectContaining({
       id: 'message-1',
       authorRole: 'student',

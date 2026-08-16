@@ -4,16 +4,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   client: { request: vi.fn() },
   requests: {
-    getTestingRequestsById: vi.fn(),
-    getTestingRequests: vi.fn(),
+    getTestingRequestsForGetTestingRequestsById: vi.fn(),
+    getTestingRequestsForGetTestingRequests: vi.fn(),
   },
   sessions: {
-    getTestingSessionsById: vi.fn(),
+    getTestingSessionsForGetTestingSessionsById: vi.fn(),
     getTestingSessionsByRequest: vi.fn(),
-    getTestingSessions: vi.fn(),
+    getTestingSessionsForGetTestingSessions: vi.fn(),
     getTestingSessionsProjects: vi.fn(),
   },
-  locations: { getTestingLocations: vi.fn() },
+  locations: { getTestingLocationsForGetTestingLocations: vi.fn() },
   participants: {
     getTestingRequestsParticipants: vi.fn(),
     getTestingSessionsRegistrations: vi.fn(),
@@ -27,30 +27,30 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/auth', () => ({ getToken: vi.fn(async () => 'token') }));
 vi.mock('@game-guild/client', () => ({
-  createServerClient: vi.fn(() => ({ request: mocks.requests.getTestingRequestsById })),
+  createServerClient: vi.fn(() => ({ request: mocks.requests.getTestingRequestsForGetTestingRequestsById })),
   GeneratedApi: {
-    TestinglabTestingrequestsModule: vi.fn(function TestinglabTestingrequestsModule() {
+    TestingLabTestingRequestsModule: vi.fn(function TestingLabTestingRequestsModule() {
       return mocks.requests;
     }),
-    TestinglabTestingsessionsModule: vi.fn(function TestinglabTestingsessionsModule() {
+    TestingLabTestingSessionsModule: vi.fn(function TestingLabTestingSessionsModule() {
       return mocks.sessions;
     }),
-    TestinglabTestinglocationsModule: vi.fn(function TestinglabTestinglocationsModule() {
+    TestingLabTestingLocationsModule: vi.fn(function TestingLabTestingLocationsModule() {
       return mocks.locations;
     }),
-    TestinglabTestingparticipantsModule: vi.fn(function TestinglabTestingparticipantsModule() {
+    TestingLabTestingParticipantsModule: vi.fn(function TestingLabTestingParticipantsModule() {
       return mocks.participants;
     }),
-    TestinglabTestingfeedbackModule: vi.fn(function TestinglabTestingfeedbackModule() {
+    TestingLabTestingFeedbackModule: vi.fn(function TestingLabTestingFeedbackModule() {
       return mocks.feedback;
     }),
-    TestinglabTestinganalyticsModule: vi.fn(function TestinglabTestinganalyticsModule() {
+    TestingLabTestingAnalyticsModule: vi.fn(function TestingLabTestingAnalyticsModule() {
       return mocks.analytics;
     }),
-    TestinglabSettingsModule: vi.fn(function TestinglabSettingsModule() {
+    TestingLabSettingsModule: vi.fn(function TestingLabSettingsModule() {
       return mocks.settings;
     }),
-    TestinglabPermissionModule: vi.fn(function TestinglabPermissionModule() {
+    TestingLabPermissionModule: vi.fn(function TestingLabPermissionModule() {
       return mocks.permissions;
     }),
     ProjectsModule: vi.fn(function ProjectsModule() {
@@ -70,11 +70,11 @@ import {
 describe('Testing Lab operational queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requests.getTestingRequestsById.mockResolvedValue({
+    mocks.requests.getTestingRequestsForGetTestingRequestsById.mockResolvedValue({
       ok: true,
       data: { id: 'request-1', title: 'Arena playtest', status: 'Open', projectVersion: null },
     });
-    mocks.requests.getTestingRequestsById.mockResolvedValue({
+    mocks.requests.getTestingRequestsForGetTestingRequestsById.mockResolvedValue({
       ok: true,
       data: { id: 'request-1', title: 'Arena playtest', status: 'Open' },
     });
@@ -101,7 +101,7 @@ describe('Testing Lab operational queries', () => {
         },
       ],
     });
-    mocks.sessions.getTestingSessionsById.mockResolvedValue({
+    mocks.sessions.getTestingSessionsForGetTestingSessionsById.mockResolvedValue({
       ok: true,
       data: { id: 'session-1', sessionName: 'Friday lab', status: 'Scheduled' },
     });
@@ -125,21 +125,21 @@ describe('Testing Lab operational queries', () => {
       ok: true,
       data: [{ id: 'role-1', name: 'Facilitator', permissions: { canViewSessions: true } }],
     });
-    mocks.requests.getTestingRequests.mockResolvedValue({
+    mocks.requests.getTestingRequestsForGetTestingRequests.mockResolvedValue({
       ok: true,
       data: [
         { id: 'request-1', title: 'Arena playtest', status: 'Open', currentTesterCount: 1, maxTesters: 8 },
         { id: 'request-2', title: 'Racing playtest', status: 'Completed', currentTesterCount: 4, maxTesters: 4 },
       ],
     });
-    mocks.sessions.getTestingSessions.mockResolvedValue({
+    mocks.sessions.getTestingSessionsForGetTestingSessions.mockResolvedValue({
       ok: true,
       data: [
         { id: 'session-1', sessionName: 'Friday lab', status: 'Scheduled', registeredTesterCount: 1, maxTesters: 8 },
         { id: 'session-2', sessionName: 'Saturday lab', status: 'Completed', registeredTesterCount: 4, maxTesters: 4 },
       ],
     });
-    mocks.locations.getTestingLocations.mockResolvedValue({
+    mocks.locations.getTestingLocationsForGetTestingLocations.mockResolvedValue({
       ok: true,
       data: [{ id: 'location-1', name: 'Remote', status: 'Active' }],
     });
@@ -192,11 +192,11 @@ describe('Testing Lab operational queries', () => {
       projectVersion: null,
     });
     expect(detail.accessIssues).toEqual([]);
-    expect(mocks.requests.getTestingRequestsById).toHaveBeenCalledWith("request-1");
+    expect(mocks.requests.getTestingRequestsForGetTestingRequestsById).toHaveBeenCalledWith("request-1");
   });
 
   it('rejects an unknown request status instead of treating it as a valid detail', async () => {
-    mocks.requests.getTestingRequestsById.mockResolvedValue({
+    mocks.requests.getTestingRequestsForGetTestingRequestsById.mockResolvedValue({
       ok: true,
       data: { id: 'request-1', title: 'Arena playtest', status: 'UnexpectedStatus' },
     });
@@ -207,7 +207,7 @@ describe('Testing Lab operational queries', () => {
   });
 
   it('preserves structured transport validation messages for request details', async () => {
-    mocks.requests.getTestingRequestsById.mockRejectedValue({
+    mocks.requests.getTestingRequestsForGetTestingRequestsById.mockRejectedValue({
       name: 'ApiError',
       code: 'VALIDATION_ERROR',
       status: 400,

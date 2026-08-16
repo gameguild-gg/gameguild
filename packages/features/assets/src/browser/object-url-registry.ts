@@ -32,17 +32,6 @@ export class ObjectUrlRegistry {
     };
   }
 
-  invalidate(objectId: string): void {
-    const entry = this.entries.get(objectId);
-    if (!entry) return;
-    URL.revokeObjectURL(entry.url);
-    this.entries.delete(objectId);
-  }
-
-  hasLease(objectId: string): boolean {
-    return (this.entries.get(objectId)?.leases ?? 0) > 0;
-  }
-
   clear(): void {
     for (const entry of this.entries.values()) URL.revokeObjectURL(entry.url);
     this.entries.clear();

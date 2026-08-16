@@ -1,95 +1,58 @@
 namespace GameGuild.API.Setup;
 
 /// <summary>
-///     Configuration for module discovery and registration.
-///     Follows Open/Closed Principle - extend by adding to configuration, not modifying code.
+///     Configuration for deterministic module discovery and registration.
 /// </summary>
 public sealed class ModuleConfiguration
 {
     /// <summary>
-    ///     Default enabled modules for the application.
+    ///     Modules that form the shared application platform.
     /// </summary>
-    public static readonly string[] DefaultEnabledModules =
+    public static readonly string[] CommonEnabledModules =
     [
         "AI",
-        "Assessments",
+        "Analytics",
         "Assets",
-        "Authentication",
-        "Authorization",
-        "Billing",
-        "Compliance.FERPA",
-        "ContentPages",
-        "Courses",
-        "Economy.Core",
+        "Commerce",
+        "Commerce.Billing",
+        "Commerce.Orders",
+        "Commerce.Payments",
+        "Commerce.Products",
+        "Commerce.Subscriptions",
+        "Compliance.Audit",
+        "Compliance.Consent",
+        "Compliance.KYC",
+        "Content.Pages",
         "Features",
-        "GameJams",
-        "Learning.Certificates",
-        "Learning.Cohorts",
-        "Learning.Enrollments",
-        "Learning.Experience.Discovery",
-        "Learning.Experience.LearningPaths",
-        "Learning.Experience.Recommendations",
-        "Learning.Experience.Social",
-        "Learning.Workspaces",
+        "Identity.Authentication",
+        "Identity.Authorization",
+        "Identity.Context",
+        "Identity.Tenants",
+        "Identity.Users",
+        "Localization",
+        "Monitoring.SLA",
         "Notifications",
-        "Orders",
-        "Payments",
-        "Economy.Payouts",
-        "Products",
-        "Projects",
-        "TestingLab",
-        "LaunchPad",
         "Resources",
-        "Social.Blog",
-        "Social.Feed",
-        "Social.Groups",
-        "Social.Profiles",
-        "Social.Reactions",
-        "Subscriptions",
-        "Tags",
-        "Tenants",
-        "Users"
+        "Resources.Contents",
+        "SharedKernel",
+        "Tags"
     ];
 
-    /// <summary>
-    ///     Known capability modules that are present in the host but must be explicitly enabled.
-    /// </summary>
+    public static readonly string[] DefaultEnabledModules =
+        [.. CommonEnabledModules, .. ApiProductComposition.Instance.EnabledModules];
+
     public static readonly string[] DefaultDisabledModules =
-    [
-        "Economy.AdRewards",
-        "Economy.Bounties",
-        "Economy.Marketplace",
-        "Economy.Treasury",
-        "Compliance.FinancialCrime",
-        "TrustSafety"
-    ];
+        [.. ApiProductComposition.Instance.DisabledModules];
 
-    /// <summary>
-    ///     Gets or sets the list of enabled module names.
-    /// </summary>
     public string[] EnabledModules { get; set; } = DefaultEnabledModules;
 
-    /// <summary>
-    ///     Gets or sets the assembly name prefix pattern for module discovery.
-    /// </summary>
     public string AssemblyPrefix { get; set; } = "GameGuild.";
 
-    /// <summary>
-    ///     Gets or sets whether to exclude test assemblies from discovery.
-    /// </summary>
     public bool ExcludeTestAssemblies { get; set; } = true;
 
-    /// <summary>
-    ///     Handler interface type names used for counting/logging purposes.
-    /// </summary>
     public static readonly string[] HandlerTypeNames =
         ["ICommandHandler", "IQueryHandler", "IRequestHandler"];
 
-    /// <summary>
-    ///     Determines whether an assembly name belongs to one of the enabled modules.
-    ///     Module aliases may use compact names such as ContentPages while assemblies use
-    ///     dotted names such as GameGuild.Content.Pages.
-    /// </summary>
     public bool IsEnabledAssembly(string? assemblyName)
     {
         if (string.IsNullOrWhiteSpace(assemblyName))
@@ -114,6 +77,7 @@ public sealed class ModuleConfiguration
             .Any(segment => segment.Equals("Tests", StringComparison.OrdinalIgnoreCase) ||
                             segment.EndsWith("Tests", StringComparison.OrdinalIgnoreCase));
     }
+
     private static string NormalizeModuleName(string value)
         => value
             .Replace(".", string.Empty, StringComparison.Ordinal)

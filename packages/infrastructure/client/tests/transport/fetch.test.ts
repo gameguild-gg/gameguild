@@ -21,7 +21,7 @@ describe('Fetch Transport - Request ID', () => {
 
   it('should generate request ID automatically', async () => {
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     const request: RequestConfig = {
@@ -35,19 +35,17 @@ describe('Fetch Transport - Request ID', () => {
       expect.any(String),
       expect.objectContaining({
         headers: expect.any(Headers),
-      })
+      }),
     );
 
     const headers = (global.fetch as any).mock.calls[0][1].headers as Headers;
     expect(headers.get('X-Request-Id')).toBeTruthy();
-    expect(headers.get('X-Request-Id')).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    );
+    expect(headers.get('X-Request-Id')).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
   });
 
   it('should use provided request ID', async () => {
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     const customId = 'custom-request-id-12345';
@@ -65,7 +63,7 @@ describe('Fetch Transport - Request ID', () => {
 
   it('should disable request ID generation when configured', async () => {
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       generateRequestId: false,
     });
 
@@ -83,7 +81,7 @@ describe('Fetch Transport - Request ID', () => {
   it('should use custom request ID generator', async () => {
     let counter = 0;
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       requestIdGenerator: () => `custom-${++counter}`,
     });
 
@@ -109,7 +107,7 @@ describe('Fetch Transport - Request ID', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     const result = await transport.request({
@@ -126,15 +124,12 @@ describe('Fetch Transport - Request ID', () => {
 
   it('propagates the transport cache policy to fetch', async () => {
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       cache: 'no-store',
     });
 
     await transport.request({ method: 'GET', path: '/dynamic' });
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:5000/dynamic',
-      expect.objectContaining({ cache: 'no-store' }),
-    );
+    expect(global.fetch).toHaveBeenCalledWith('http://localhost:8080/dynamic', expect.objectContaining({ cache: 'no-store' }));
   });
 });

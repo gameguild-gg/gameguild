@@ -17,7 +17,7 @@ import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { ArrowLeft, CalendarClock, ClipboardCheck } from 'lucide-react';
 import { notFound } from 'next/navigation';
-import { CodingActivityClient } from './coding-activity-client';
+import { CodingActivityClient } from '@/components/learning/coding-activity-client';
 
 interface SubmissionFile {
   path: string;

@@ -4,12 +4,12 @@
  * Generates module-grouped endpoint files based on OpenAPI tags.
  */
 
-import type { OpenAPIV3 } from 'openapi-types';
 import type { OpenApiSpec } from '../fetch-spec.js';
-import { toCamelCase, toPascalCase } from '../utils/naming.js';
+import type { OpenAPIV3 } from 'openapi-types';
+import { toPascalCase, toCamelCase } from '../utils/naming.js';
 import { qualifyType } from '../utils/type-qualify.js';
-import { HTTP_METHODS } from './constants.js';
 import { TypeMapperChain } from './strategies/SchemaTypeMapper.js';
+import { HTTP_METHODS } from './constants.js';
 
 interface ModuleEndpoint {
   operationId: string;
@@ -29,10 +29,6 @@ interface ModuleEndpoint {
   responseSchema?: string;
   requiresAuth: boolean;
 }
-
-type OperationWithExtensions = OpenAPIV3.OperationObject & {
-  'x-gameguild-allow-anonymous'?: boolean;
-};
 
 /**
  * Generate module files grouped by OpenAPI tags
@@ -134,8 +130,7 @@ function extractModuleEndpoint(
   }
 
   // Check if auth is required
-  const allowAnonymous = (operation as OperationWithExtensions)['x-gameguild-allow-anonymous'] === true;
-  const security = allowAnonymous ? [] : operation.security || spec.security || [];
+  const security = operation.security || spec.security || [];
   const requiresAuth = security.length > 0;
 
   return {
@@ -284,16 +279,17 @@ function generateEndpointMethod(endpoint: ModuleEndpoint): string {
  * Build method parameter string
  */
 function buildMethodParams(endpoint: ModuleEndpoint): string {
-  const params: string[] = [];
+  const requiredParams: string[] = [];
+  const optionalParams: string[] = [];
 
   // Path parameters
   for (const param of endpoint.parameters.filter((p) => p.in === 'path')) {
-    params.push(`${param.name}: ${qualifyType(param.type)}`);
+    requiredParams.push(`${param.name}: ${qualifyType(param.type)}`);
   }
 
   // Request body
   if (endpoint.requestBodyType) {
-    params.push(`body: ${qualifyType(endpoint.requestBodyType)}`);
+    requiredParams.push(`body: ${qualifyType(endpoint.requestBodyType)}`);
   }
 
   // Query parameters
@@ -305,17 +301,18 @@ function buildMethodParams(endpoint: ModuleEndpoint): string {
         return `${p.name}${optional}: ${qualifyType(p.type)}`;
       })
       .join('; ');
-    const queryOptional = queryParams.some((p) => p.required) ? '' : '?';
-    params.push(`query${queryOptional}: { ${queryType} }`);
+    optionalParams.push(`query?: { ${queryType} }`);
   }
 
-  return params.join(', ');
+  return [...requiredParams, ...optionalParams].join(', ');
 }
 
 // Utility function
 
 function toModuleName(tag: string): string {
   return tag
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');

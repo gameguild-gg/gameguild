@@ -3,10 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  createFetchTransport,
-  createHeaderInterceptor,
-} from '../../src/runtime/transport/fetch.js';
+import { createFetchTransport, createHeaderInterceptor } from '../../src/runtime/transport/fetch.js';
 
 describe('createFetchTransport — extended', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -29,7 +26,7 @@ describe('createFetchTransport — extended', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     const result = await transport.request({
@@ -57,7 +54,7 @@ describe('createFetchTransport — extended', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     const result = await transport.request<Blob>({
@@ -68,9 +65,7 @@ describe('createFetchTransport — extended', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.data).toBeInstanceOf(Blob);
-      await expect(result.data.data.text()).resolves.toBe(
-        'event,applications\nAugust lab,2',
-      );
+      await expect(result.data.data.text()).resolves.toBe('event,applications\nAugust lab,2');
     }
   });
 
@@ -80,7 +75,7 @@ describe('createFetchTransport — extended', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     const result = await transport.request({
@@ -104,7 +99,7 @@ describe('createFetchTransport — extended', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     const result = await transport.request({
@@ -132,7 +127,7 @@ describe('createFetchTransport — extended', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       timeout: 50,
     });
 
@@ -155,7 +150,7 @@ describe('createFetchTransport — extended', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     await transport.request({
@@ -178,7 +173,7 @@ describe('createFetchTransport — extended', () => {
         headers: { 'Content-Type': 'application/json' },
       });
     });
-    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
 
     await transport.request({
       path: '/api/eligibility',
@@ -187,6 +182,27 @@ describe('createFetchTransport — extended', () => {
     });
 
     expect(capturedUrl).toContain('testerUserIds=tester-1&testerUserIds=tester-2');
+  });
+
+  it('should omit undefined array query values without dropping defined values', async () => {
+    let capturedUrl = '';
+    globalThis.fetch = vi.fn(async (url: any) => {
+      capturedUrl = url.toString();
+      return new Response(JSON.stringify({ data: 'ok' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
+
+    await transport.request({
+      path: '/api/tags',
+      method: 'GET',
+      params: { tag: ['one', undefined, 'two'] },
+    });
+
+    expect(capturedUrl).toContain('tag=one&tag=two');
+    expect(capturedUrl).not.toContain('undefined');
   });
 
   it('should send request body as JSON for POST', async () => {
@@ -200,7 +216,7 @@ describe('createFetchTransport — extended', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     await transport.request({
@@ -216,17 +232,14 @@ describe('createFetchTransport — extended', () => {
 
   it('should handle non-ok HTTP responses', async () => {
     globalThis.fetch = vi.fn(async () => {
-      return new Response(
-        JSON.stringify({ message: 'Not Found' }),
-        {
-          status: 404,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return new Response(JSON.stringify({ message: 'Not Found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     const result = await transport.request({
@@ -246,7 +259,7 @@ describe('createFetchTransport — extended', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     const result = await transport.request({
@@ -268,7 +281,7 @@ describe('createFetchTransport — extended', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     await transport.request({
@@ -290,7 +303,7 @@ describe('createFetchTransport — extended', () => {
     });
 
     const transport = createFetchTransport({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     const result = await transport.request({
@@ -349,7 +362,7 @@ describe('createFetchTransport — metrics key propagation', () => {
       });
     });
 
-    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
 
     const result = await transport.request({
       path: '/api/data',
@@ -372,7 +385,7 @@ describe('createFetchTransport — metrics key propagation', () => {
       });
     });
 
-    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
 
     const result = await transport.request({
       path: '/api/data',
@@ -394,7 +407,7 @@ describe('createFetchTransport — metrics key propagation', () => {
       });
     });
 
-    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
 
     const result = await transport.request({
       path: '/api/data',
@@ -419,7 +432,7 @@ describe('createFetchTransport — metrics key propagation', () => {
       });
     });
 
-    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
 
     await transport.request({
       path: '/api/data',
@@ -437,7 +450,7 @@ describe('createFetchTransport — metrics key propagation', () => {
       return new Response(null, { status: 200 });
     });
 
-    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
 
     await transport.request({
       path: '/api/data',
@@ -456,7 +469,7 @@ describe('createFetchTransport — metrics key propagation', () => {
       });
     });
 
-    const transport = createFetchTransport({ baseUrl: 'http://localhost:5000' });
+    const transport = createFetchTransport({ baseUrl: 'http://localhost:8080' });
 
     const result = await transport.request({
       path: '/api/data',

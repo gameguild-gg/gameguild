@@ -6,7 +6,7 @@ collections. `@game-guild/assets` owns immutable file bodies.
 Saved `CodeFile.content` values may contain a complete stable URI such as:
 
 ```text
-asset://local/7776453f-1123-4f56-8abc-1234567890ab
+asset://7776453f-1123-4f56-8abc-1234567890ab
 ```
 
 The `assetId` field currently carries that same complete URI. It is retained as

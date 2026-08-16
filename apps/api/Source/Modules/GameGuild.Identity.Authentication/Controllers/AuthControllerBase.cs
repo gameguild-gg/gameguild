@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using GameGuild.Identity.Authorization.Utilities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Identity.Authentication;
@@ -16,11 +16,11 @@ public abstract class AuthControllerBase : BaseApiController
     /// <exception cref="UnauthorizedAccessException">Thrown when user ID is not found in token</exception>
     protected Guid GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = ClaimsExtractor.GetUserIdAsGuid(User);
 
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { throw new UnauthorizedAccessException("User ID not found in token"); }
+        if (!userId.HasValue) { throw new UnauthorizedAccessException("User ID not found in token"); }
 
-        return userId;
+        return userId.Value;
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ public abstract class AuthControllerBase : BaseApiController
     /// <exception cref="UnauthorizedAccessException">Thrown when email is not found in token</exception>
     protected string GetCurrentUserEmail()
     {
-        var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
+        var emailClaim = ClaimsExtractor.GetEmail(User);
 
         if (string.IsNullOrEmpty(emailClaim)) { throw new UnauthorizedAccessException("Email not found in token"); }
 

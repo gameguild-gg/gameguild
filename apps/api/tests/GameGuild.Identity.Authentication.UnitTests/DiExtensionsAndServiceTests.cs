@@ -89,8 +89,8 @@ public class DiExtensionsAndServiceTests
     {
         var svc = new OAuthAuthService(
             Mock.Of<IUserRepository>(),
-            Mock.Of<IRefreshTokenRepository>(),
             Mock.Of<IJwtTokenService>(),
+            Mock.Of<IRefreshTokenHasher>(),
             Mock.Of<IOAuthService>(),
             Mock.Of<IGoogleIdTokenVerifier>(),
             Mock.Of<IExternalLoginRepository>(),
@@ -98,6 +98,7 @@ public class DiExtensionsAndServiceTests
             Mock.Of<IAuthAttemptService>(),
             Mock.Of<IHttpContextAccessor>(),
             Mock.Of<GameGuild.CQRS.ISender>(),
+            Mock.Of<ISessionManagementService>(),
             NullLogger<OAuthAuthService>.Instance);
 
         svc.Should().NotBeNull();

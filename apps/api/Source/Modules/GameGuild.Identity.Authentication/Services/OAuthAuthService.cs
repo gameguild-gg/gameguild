@@ -13,8 +13,8 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public class OAuthAuthService(
     IUserRepository userRepository,
-    IRefreshTokenRepository refreshTokenRepository,
     IJwtTokenService jwtTokenService,
+    IRefreshTokenHasher refreshTokenHasher,
     IOAuthService oauthService,
     IGoogleIdTokenVerifier googleIdTokenVerifier,
     IExternalLoginRepository externalLoginRepository,
@@ -22,6 +22,7 @@ public class OAuthAuthService(
     IAuthAttemptService authAttemptService,
     IHttpContextAccessor httpContextAccessor,
     ISender sender,
+    ISessionManagementService sessionManagementService,
     ILogger<OAuthAuthService> logger
 ) : IOAuthAuthService
 {
@@ -31,9 +32,10 @@ public class OAuthAuthService(
 
         var githubUser = await oauthService.GetUserProfileAsync("github", request.AccessToken).ConfigureAwait(false);
 
-        var userId = Guid.NewGuid();
         var email = githubUser.Email ?? throw new UnauthorizedAccessException("Email not available from GitHub profile");
-        var roles = new[] { "User" };
+        var user = await ResolveExternalUserAsync("github", email, githubUser.ProviderId, githubUser.Name, githubUser.EmailVerified, cancellationToken).ConfigureAwait(false);
+        await DefaultTenantMembershipProvisioner.EnsureAsync(sender, user.Id, cancellationToken).ConfigureAwait(false);
+        var tenantAccessContext = await ResolveTenantAccessContextAsync(user.Id, request.TenantId, cancellationToken).ConfigureAwait(false);
 
         var httpContext = httpContextAccessor.HttpContext;
         var ipAddress = authAttemptService.GetClientIpAddress(httpContext);
@@ -41,39 +43,9 @@ public class OAuthAuthService(
 
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
 
-        var jwtToken = jwtTokenService.GenerateAccessToken(userId, email, roles);
-        var refreshTokenValue = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
-        var refreshExpiresInDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
-        var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshExpiresInDays);
-
-        var refreshToken = new RefreshToken
-        {
-            UserId = userId,
-            Token = refreshTokenValue,
-            ExpiresAt = refreshTokenExpiresAt,
-            IsRevoked = false,
-            CreatedByIp = ipAddress
-        };
-        await refreshTokenRepository.CreateAsync(refreshToken).ConfigureAwait(false);
-
         logger.LogInformation("GitHub OAuth sign-in successful for {Email}", email);
 
-        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
-
-        return new SignInResponse
-        {
-            Success = true,
-            Message = "GitHub sign-in successful",
-            AccessToken = jwtToken,
-            RefreshToken = refreshTokenValue,
-            ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = accessTokenExpirationMinutes * 60,
-            AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
-            RefreshTokenExpiresAt = refreshTokenExpiresAt,
-            UserId = userId,
-            Email = email,
-            SessionId = refreshToken.Id
-        };
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> GoogleSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
@@ -82,9 +54,10 @@ public class OAuthAuthService(
 
         var googleUser = await oauthService.GetUserProfileAsync("google", request.AccessToken).ConfigureAwait(false);
 
-        var userId = Guid.NewGuid();
         var email = googleUser.Email ?? throw new UnauthorizedAccessException("Email not available from Google profile");
-        var roles = new[] { "User" };
+        var user = await ResolveExternalUserAsync("google", email, googleUser.ProviderId, googleUser.Name, googleUser.EmailVerified, cancellationToken).ConfigureAwait(false);
+        await DefaultTenantMembershipProvisioner.EnsureAsync(sender, user.Id, cancellationToken).ConfigureAwait(false);
+        var tenantAccessContext = await ResolveTenantAccessContextAsync(user.Id, request.TenantId, cancellationToken).ConfigureAwait(false);
 
         var httpContext = httpContextAccessor.HttpContext;
         var ipAddress = authAttemptService.GetClientIpAddress(httpContext);
@@ -92,39 +65,9 @@ public class OAuthAuthService(
 
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
 
-        var jwtToken = jwtTokenService.GenerateAccessToken(userId, email, roles);
-        var refreshTokenValue = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
-        var refreshExpiresInDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
-        var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshExpiresInDays);
-
-        var refreshToken = new RefreshToken
-        {
-            UserId = userId,
-            Token = refreshTokenValue,
-            ExpiresAt = refreshTokenExpiresAt,
-            IsRevoked = false,
-            CreatedByIp = ipAddress
-        };
-        await refreshTokenRepository.CreateAsync(refreshToken).ConfigureAwait(false);
-
         logger.LogInformation("Google OAuth sign-in successful for {Email}", email);
 
-        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
-
-        return new SignInResponse
-        {
-            Success = true,
-            Message = "Google sign-in successful",
-            AccessToken = jwtToken,
-            RefreshToken = refreshTokenValue,
-            ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = accessTokenExpirationMinutes * 60,
-            AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
-            RefreshTokenExpiresAt = refreshTokenExpiresAt,
-            UserId = userId,
-            Email = email,
-            SessionId = refreshToken.Id
-        };
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google sign-in successful", cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> GoogleIdTokenSignInAsync(GoogleIdTokenRequest request, CancellationToken cancellationToken = default)
@@ -150,40 +93,9 @@ public class OAuthAuthService(
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
 
-        // GenerateAccessTokenAsync: async overload that emits tenant_id + token_version claims.
-        // GenerateRefreshTokenAsync: persists exactly ONE hashed refresh row (no second plaintext insert).
-        var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
-            userId,
-            user.Email,
-            tenantAccessContext.Roles.ToArray(),
-            tenantAccessContext.TenantId,
-            user.TokenVersion,
-            cancellationToken).ConfigureAwait(false);
-        var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
-
-        var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
-        var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
-
         logger.LogInformation("Google ID token sign-in successful for {Email}", email);
 
-        var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
-
-        return new SignInResponse
-        {
-            Success = true,
-            Message = "Google ID token sign-in successful",
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            ExpiresAt = refreshTokenExpiresAt,
-            ExpiresIn = accessTokenExpirationMinutes * 60,
-            AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
-            RefreshTokenExpiresAt = refreshTokenExpiresAt,
-            UserId = userId,
-            Email = user.Email,
-            SessionId = Guid.NewGuid(),
-            TenantId = tenantAccessContext.TenantId,
-            AvailableTenants = tenantAccessContext.AvailableTenants
-        };
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google ID token sign-in successful", cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> DiscordSignInAsync(DiscordSignInRequest request, CancellationToken cancellationToken = default)
@@ -210,35 +122,59 @@ public class OAuthAuthService(
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "OAuth Device", DeviceType = "Web" };
 
+        logger.LogInformation("Discord OAuth sign-in successful for {Email}", email);
+
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Discord sign-in successful", cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<SignInResponse> CompleteSignInAsync(
+        User user,
+        TenantAccessContext tenantAccessContext,
+        DeviceInfo deviceInfo,
+        string? ipAddress,
+        string? userAgent,
+        string successMessage,
+        CancellationToken cancellationToken)
+    {
+        var refreshTokenExpiryDays = int.Parse(
+            configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7",
+            CultureInfo.InvariantCulture);
+        var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
+        var sessionId = Guid.NewGuid();
+        var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(user.Id, deviceInfo, cancellationToken).ConfigureAwait(false);
         var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
-            userId,
+            user.Id,
             user.Email,
             tenantAccessContext.Roles.ToArray(),
             tenantAccessContext.TenantId,
             user.TokenVersion,
+            sessionId,
             cancellationToken).ConfigureAwait(false);
-        var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
-
-        var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7", CultureInfo.InvariantCulture);
-        var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
-
-        logger.LogInformation("Discord OAuth sign-in successful for {Email}", email);
+        await sessionManagementService.CreateSessionAsync(
+            sessionId,
+            user.Id,
+            ipAddress ?? "unknown",
+            userAgent ?? string.Empty,
+            refreshTokenHasher.HashToken(refreshToken),
+            refreshTokenExpiresAt,
+            deviceInfo.Fingerprint,
+            cancellationToken).ConfigureAwait(false);
 
         var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60", CultureInfo.InvariantCulture);
 
         return new SignInResponse
         {
             Success = true,
-            Message = "Discord sign-in successful",
+            Message = successMessage,
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             ExpiresAt = refreshTokenExpiresAt,
             ExpiresIn = accessTokenExpirationMinutes * 60,
             AccessTokenExpiresAt = SystemClock.UtcNow.AddMinutes(accessTokenExpirationMinutes),
             RefreshTokenExpiresAt = refreshTokenExpiresAt,
-            UserId = userId,
+            UserId = user.Id,
             Email = user.Email,
-            SessionId = Guid.NewGuid(),
+            SessionId = sessionId,
             TenantId = tenantAccessContext.TenantId,
             AvailableTenants = tenantAccessContext.AvailableTenants
         };
@@ -251,7 +187,7 @@ public class OAuthAuthService(
     ///     the same identity race the unique (Provider, ProviderKey) index — on collision the
     ///     losing insert is caught and the winning rows are refetched (idempotent resume).
     /// </summary>
-    private async Task<User> ResolveExternalUserAsync(string provider, string email, string providerKey, string name, bool emailVerified, CancellationToken cancellationToken)
+    private async Task<User> ResolveExternalUserAsync(string provider, string email, string providerKey, string? name, bool emailVerified, CancellationToken cancellationToken)
     {
         var existingLink = await externalLoginRepository
             .GetByProviderKeyAsync(provider, providerKey, cancellationToken)

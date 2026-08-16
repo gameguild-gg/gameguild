@@ -3,14 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  processSession,
-  encodeSession,
-  refreshAccessToken,
-  createJWTPayload,
-  toSession,
-  shouldRefreshToken,
-} from '../../src/runtime/auth/session.js';
+import { processSession, encodeSession, refreshAccessToken, createJWTPayload, toSession, shouldRefreshToken } from '../../src/runtime/auth/session.js';
 import type { JWTPayload, ResolvedAuthConfig, ProviderResult } from '../../src/runtime/auth/types.js';
 import { TokenRefreshError } from '../../src/runtime/auth/errors.js';
 
@@ -63,10 +56,10 @@ function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig
       authorized: async ({ auth }) => !!auth,
     },
     secret: 'test-secret-32-chars-long-enough',
-    apiUrl: 'http://localhost:5000',
+    apiUrl: 'http://localhost:8080',
     pages: {},
     cookies: {
-      name: '__gg',
+      name: '__me',
       secure: false,
       sameSite: 'lax',
       path: '/',
@@ -118,8 +111,8 @@ describe('processSession', () => {
           refreshToken: 'new-rt',
           expiresIn: 3600,
         }),
-        { status: 200 }
-      )
+        { status: 200 },
+      ),
     );
 
     const result = await processSession('needs-refresh', makeConfig());
@@ -131,9 +124,7 @@ describe('processSession', () => {
   });
 
   it('should still return session if refresh fails (outer JWT valid)', async () => {
-    const mockFetch = vi.spyOn(global, 'fetch').mockRejectedValueOnce(
-      new Error('Network error')
-    );
+    const mockFetch = vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('Network error'));
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const result = await processSession('needs-refresh', makeConfig({ debug: true }));
@@ -204,12 +195,10 @@ describe('refreshAccessToken', () => {
           expiresIn: 3600,
           refreshTokenExpiresAt: '2025-12-31T00:00:00Z',
           tenantId: 'tenant-2',
-          availableTenants: [
-            { id: 'tenant-2', name: 'Production' },
-          ],
+          availableTenants: [{ id: 'tenant-2', name: 'Production' }],
         }),
-        { status: 200 }
-      )
+        { status: 200 },
+      ),
     );
 
     const token = {
@@ -229,7 +218,7 @@ describe('refreshAccessToken', () => {
     expect(result.tenantId).toBe('tenant-2');
     expect(result.availableTenants).toEqual([{ id: 'tenant-2', name: 'Production' }]);
     expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:5000/v1/auth/tokens:refresh',
+      'http://localhost:8080/v1/auth/tokens:refresh',
       expect.objectContaining({ body: JSON.stringify({ refreshToken: 'old-rt', tenantId: 'tenant-1' }) }),
     );
 
@@ -237,9 +226,7 @@ describe('refreshAccessToken', () => {
   });
 
   it('should throw TokenRefreshError on non-ok response', async () => {
-    const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response('', { status: 401 })
-    );
+    const mockFetch = vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response('', { status: 401 }));
 
     const token = { refreshToken: 'rt' } as JWTPayload;
 
@@ -249,9 +236,7 @@ describe('refreshAccessToken', () => {
   });
 
   it('should throw TokenRefreshError on network error', async () => {
-    const mockFetch = vi.spyOn(global, 'fetch').mockRejectedValueOnce(
-      new Error('Network error')
-    );
+    const mockFetch = vi.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('Network error'));
 
     const token = { refreshToken: 'rt' } as JWTPayload;
 
@@ -268,8 +253,8 @@ describe('refreshAccessToken', () => {
           accessToken: 'new-at',
           accessTokenExpiresAt: futureDate,
         }),
-        { status: 200 }
-      )
+        { status: 200 },
+      ),
     );
 
     const token = { refreshToken: 'rt', accessToken: 'at' } as JWTPayload;
@@ -287,8 +272,8 @@ describe('refreshAccessToken', () => {
         JSON.stringify({
           accessToken: 'new-at',
         }),
-        { status: 200 }
-      )
+        { status: 200 },
+      ),
     );
 
     const token = { refreshToken: 'rt', accessToken: 'at' } as JWTPayload;
@@ -309,8 +294,8 @@ describe('refreshAccessToken', () => {
           accessToken: 'new-at',
           expiresIn: 3600,
         }),
-        { status: 200 }
-      )
+        { status: 200 },
+      ),
     );
 
     const token = { refreshToken: 'keep-this-rt', accessToken: 'at' } as JWTPayload;
@@ -449,5 +434,120 @@ describe('shouldRefreshToken', () => {
       accessTokenExpires: Date.now() - 1000,
     } as JWTPayload;
     expect(shouldRefreshToken(token)).toBe(true);
+  });
+});
+
+
+describe('refreshAccessToken coverage completion', () => {
+  function completeToken(refreshToken: string): JWTPayload {
+    return {
+      user: {
+        id: 'existing-id',
+        email: 'existing@example.com',
+        name: 'Existing User',
+        image: 'https://example.com/existing.png',
+        roles: ['existing-role'],
+        permissions: ['existing:read'],
+      },
+      accessToken: 'old-access',
+      refreshToken,
+      accessTokenExpires: Date.now() - 1,
+      tenantId: 'tenant-1',
+    };
+  }
+
+  it('deduplicates concurrent refresh requests for the same token', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ accessToken: 'new-access', expiresIn: 3600 }), { status: 200 }),
+    );
+    const token = completeToken('shared-refresh');
+
+    const [first, second] = await Promise.all([refreshAccessToken(token, makeConfig()), refreshAccessToken(token, makeConfig())]);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(first.accessToken).toBe('new-access');
+    expect(second).toEqual(first);
+    fetchSpy.mockRestore();
+  });
+
+  it('maps refreshed user metadata and preserves every supported fallback', async () => {
+    const responses = [
+      {
+        accessToken: 'access-1',
+        user: {
+          id: 'new-id',
+          email: 'new@example.com',
+          displayName: 'Display Name',
+          profilePictureUrl: 'https://example.com/profile.png',
+        },
+        roles: ['admin'],
+        permissions: ['users:write'],
+      },
+      {
+        accessToken: 'access-2',
+        user: {
+          email: 42,
+          username: 'username-fallback',
+          image: 'https://example.com/image.png',
+        },
+      },
+      {
+        accessToken: 'access-3',
+        user: {
+          email: null,
+          name: null,
+          image: null,
+        },
+      },
+      {
+        accessToken: 'access-4',
+        user: {},
+      },
+      {
+        accessToken: 'access-5',
+        user: [],
+      },
+      {
+        accessToken: 'access-6',
+        user: null,
+      },
+    ];
+
+    const fetchSpy = vi.spyOn(global, 'fetch');
+    for (const response of responses) {
+      fetchSpy.mockResolvedValueOnce(new Response(JSON.stringify(response), { status: 200 }));
+    }
+
+    const display = await refreshAccessToken(completeToken('refresh-1'), makeConfig());
+    const username = await refreshAccessToken(completeToken('refresh-2'), makeConfig());
+    const nullable = await refreshAccessToken(completeToken('refresh-3'), makeConfig());
+    const empty = await refreshAccessToken(completeToken('refresh-4'), makeConfig());
+    const arrayUser = await refreshAccessToken(completeToken('refresh-5'), makeConfig());
+    const nullUser = await refreshAccessToken(completeToken('refresh-6'), makeConfig());
+
+    expect(display.user).toMatchObject({
+      id: 'new-id',
+      email: 'new@example.com',
+      name: 'Display Name',
+      image: 'https://example.com/profile.png',
+      roles: ['admin'],
+      permissions: ['users:write'],
+    });
+    expect(username.user).toMatchObject({
+      id: 'existing-id',
+      email: 'existing@example.com',
+      name: 'username-fallback',
+      image: 'https://example.com/image.png',
+    });
+    expect(nullable.user).toMatchObject({ email: null, name: null, image: null });
+    expect(empty.user).toMatchObject({
+      id: 'existing-id',
+      email: 'existing@example.com',
+      name: 'Existing User',
+      image: 'https://example.com/existing.png',
+    });
+    expect(arrayUser.user).toEqual(completeToken('ignored').user);
+    expect(nullUser.user).toEqual(completeToken('ignored').user);
+    fetchSpy.mockRestore();
   });
 });

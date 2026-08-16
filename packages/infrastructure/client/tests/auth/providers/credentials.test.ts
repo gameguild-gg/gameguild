@@ -4,12 +4,12 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CredentialsProvider } from '../../../src/runtime/auth/providers/credentials.js';
-import {
-  AccountLockedError,
-  AuthServiceUnavailableError,
-  CredentialsSignInError,
-  MfaRequiredError,
-} from '../../../src/runtime/auth/errors.js';
+import { CredentialsSignInError, AccountLockedError, AuthServiceUnavailableError, MfaRequiredError } from '../../../src/runtime/auth/errors.js';
+
+function makeUnsignedJwt(payload: Record<string, unknown>): string {
+  const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode(payload)}.`;
+}
 
 describe('CredentialsProvider', () => {
   let originalFetch: typeof globalThis.fetch;
@@ -40,10 +40,7 @@ describe('CredentialsProvider', () => {
 
     const provider = CredentialsProvider({ authorize: customAuthorize });
 
-    const result = await provider.authorize(
-      { email: 'a@b.com', password: 'pass' },
-      undefined as any,
-    );
+    const result = await provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any);
 
     expect(customAuthorize).toHaveBeenCalled();
     expect(result?.tokens.accessToken).toBe('custom');
@@ -52,25 +49,19 @@ describe('CredentialsProvider', () => {
   it('should throw if no apiUrl', async () => {
     const provider = CredentialsProvider();
 
-    await expect(
-      provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
-    ).rejects.toThrow(CredentialsSignInError);
+    await expect(provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any)).rejects.toThrow(CredentialsSignInError);
   });
 
   it('should throw if email is missing', async () => {
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
-    await expect(
-      provider.authorize({ email: '', password: 'pass' }, undefined as any),
-    ).rejects.toThrow(CredentialsSignInError);
+    await expect(provider.authorize({ email: '', password: 'pass' }, undefined as any)).rejects.toThrow(CredentialsSignInError);
   });
 
   it('should throw if password is missing', async () => {
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
-    await expect(
-      provider.authorize({ email: 'a@b.com', password: '' }, undefined as any),
-    ).rejects.toThrow(CredentialsSignInError);
+    await expect(provider.authorize({ email: 'a@b.com', password: '' }, undefined as any)).rejects.toThrow(CredentialsSignInError);
   });
 
   it('should call sign-in endpoint on successful auth', async () => {
@@ -82,16 +73,15 @@ describe('CredentialsProvider', () => {
         expiresIn: 3600,
         userId: 'user-1',
         email: 'test@example.com',
+        roles: ['Admin', 'User'],
+        permissions: ['users:read', 'users:create'],
         user: { displayName: 'Test', profilePictureUrl: 'https://img.com/pic.png' },
       }),
     });
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
-    const result = await provider.authorize(
-      { email: 'test@example.com', password: 'password123' },
-      undefined as any,
-    );
+    const result = await provider.authorize({ email: 'test@example.com', password: 'password123' }, undefined as any);
 
     expect(mockFetch).toHaveBeenCalledWith(
       'http://localhost:8080/v1/auth/sign-in',
@@ -108,6 +98,33 @@ describe('CredentialsProvider', () => {
     expect(result!.user.email).toBe('test@example.com');
     expect(result!.user.name).toBe('Test');
     expect(result!.user.image).toBe('https://img.com/pic.png');
+    expect(result!.user.roles).toEqual(['Admin', 'User']);
+    expect(result!.user.permissions).toEqual(['users:read', 'users:create']);
+  });
+
+  it('should derive roles and permissions from access token claims when response omits arrays', async () => {
+    const accessToken = makeUnsignedJwt({
+      'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': ['Admin', 'User'],
+      scope: 'users:read users:create',
+    });
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        accessToken,
+        refreshToken: 'refresh-token',
+        expiresIn: 3600,
+        userId: 'user-1',
+        email: 'test@example.com',
+        user: { username: 'admin' },
+      }),
+    });
+    globalThis.fetch = mockFetch;
+
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
+    const result = await provider.authorize({ email: 'test@example.com', password: 'password123' }, undefined as any);
+
+    expect(result!.user.roles).toEqual(['Admin', 'User']);
+    expect(result!.user.permissions).toEqual(['users:read', 'users:create']);
   });
 
   it('should use custom signInPath', async () => {
@@ -124,15 +141,9 @@ describe('CredentialsProvider', () => {
       apiUrl: 'http://localhost:8080',
       signInPath: '/custom/sign-in',
     });
-    await provider.authorize(
-      { email: 'a@b.com', password: 'pass' },
-      undefined as any,
-    );
+    await provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:8080/custom/sign-in',
-      expect.anything(),
-    );
+    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/custom/sign-in', expect.anything());
   });
 
   it('should include tenantId in request body when provided', async () => {
@@ -143,10 +154,7 @@ describe('CredentialsProvider', () => {
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
-    await provider.authorize(
-      { email: 'a@b.com', password: 'pass', tenantId: 'tenant-1' },
-      undefined as any,
-    );
+    await provider.authorize({ email: 'a@b.com', password: 'pass', tenantId: 'tenant-1' }, undefined as any);
 
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
     expect(body.tenantId).toBe('tenant-1');
@@ -161,9 +169,7 @@ describe('CredentialsProvider', () => {
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
-    await expect(
-      provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
-    ).rejects.toThrow(AccountLockedError);
+    await expect(provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any)).rejects.toThrow(AccountLockedError);
   });
 
   it('should throw CredentialsSignInError on 401 response', async () => {
@@ -175,9 +181,7 @@ describe('CredentialsProvider', () => {
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
-    await expect(
-      provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
-    ).rejects.toThrow(CredentialsSignInError);
+    await expect(provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any)).rejects.toThrow(CredentialsSignInError);
   });
 
   it('should throw MfaRequiredError when response has requiresMfa', async () => {
@@ -191,23 +195,21 @@ describe('CredentialsProvider', () => {
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
-    await expect(
-      provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
-    ).rejects.toThrow(MfaRequiredError);
+    await expect(provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any)).rejects.toThrow(MfaRequiredError);
   });
 
   it('should handle non-JSON error response', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 500,
-      json: async () => { throw new Error('not JSON'); },
+      json: async () => {
+        throw new Error('not JSON');
+      },
     });
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
-    await expect(
-      provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
-    ).rejects.toThrow(AuthServiceUnavailableError);
+    await expect(provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any)).rejects.toThrow(AuthServiceUnavailableError);
   });
 
   it('should throw service unavailable on backend 500 instead of credentials error', async () => {
@@ -219,19 +221,26 @@ describe('CredentialsProvider', () => {
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
-    await expect(
-      provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
-    ).rejects.toThrow(AuthServiceUnavailableError);
+    await expect(provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any)).rejects.toThrow(AuthServiceUnavailableError);
   });
 
   it('should throw service unavailable when the auth API cannot be reached', async () => {
-    globalThis.fetch = vi.fn().mockRejectedValue(new Error('connection refused'));
+    globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('fetch failed'));
 
     const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
 
-    await expect(
-      provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any),
-    ).rejects.toThrow(AuthServiceUnavailableError);
+    await expect(provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any)).rejects.toThrow(AuthServiceUnavailableError);
+  });
+
+  it('should classify non-Error transport failures as service unavailable', async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue('connection refused');
+
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
+
+    await expect(provider.authorize({ email: 'a@b.com', password: 'pass' }, undefined as any)).rejects.toMatchObject({
+      name: 'AuthServiceUnavailableError',
+      cause: undefined,
+    });
   });
 
   it('should use __apiUrl from credentials as fallback', async () => {
@@ -242,15 +251,9 @@ describe('CredentialsProvider', () => {
     globalThis.fetch = mockFetch;
 
     const provider = CredentialsProvider(); // no apiUrl in options
-    await provider.authorize(
-      { email: 'a@b.com', password: 'pass', __apiUrl: 'http://injected:5295' },
-      undefined as any,
-    );
+    await provider.authorize({ email: 'a@b.com', password: 'pass', __apiUrl: 'http://injected:5295' }, undefined as any);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      'http://injected:5295/v1/auth/sign-in',
-      expect.anything(),
-    );
+    expect(mockFetch).toHaveBeenCalledWith('http://injected:5295/v1/auth/sign-in', expect.anything());
   });
 });
 

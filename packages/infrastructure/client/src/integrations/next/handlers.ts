@@ -15,40 +15,14 @@
  *   GET  /api/auth/callback/:provider — OAuth callback
  */
 
-import type {
-  ResolvedAuthConfig,
-  Session,
-  JWTPayload,
-  ProviderResult,
-  CredentialsProviderConfig,
-} from '../../runtime/auth/types.js';
-import {
-  SessionStore,
-  CsrfStore,
-  resolveCookieOptions,
-  type CookieSerializeOptions,
-} from '../../runtime/auth/cookies.js';
-import {
-  createJWTPayload,
-  processSession,
-  encodeSession,
-  toSession,
-} from '../../runtime/auth/session.js';
+import type { ResolvedAuthConfig, Session, JWTPayload, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types.js';
+import { SessionStore, CsrfStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies.js';
+import { createJWTPayload, processSession, encodeSession, toSession } from '../../runtime/auth/session.js';
 import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf.js';
 import { decodeJWT } from '../../runtime/auth/jwt.js';
-import {
-  AuthError,
-  CredentialsSignInError,
-  ProviderNotFoundError,
-  CSRFError,
-  SignUpError,
-} from '../../runtime/auth/errors.js';
-import {
-  type OAuthProviderWithMethods,
-  getOAuthExchangeToken,
-  getOAuthAuthorizeUrl,
-  getOAuthHandleCallback,
-} from './oauth-helpers.js';
+import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims.js';
+import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError } from '../../runtime/auth/errors.js';
+import { type OAuthProviderWithMethods, getOAuthExchangeToken, getOAuthAuthorizeUrl, getOAuthHandleCallback } from './oauth-helpers.js';
 import {
   STATE_COOKIE_MAX_AGE,
   constantTimeEqual,
@@ -80,11 +54,7 @@ function createResponseCookies(): ResponseCookies {
 /**
  * Serialize a cookie to a Set-Cookie header string
  */
-export function serializeCookie(
-  name: string,
-  value: string,
-  options: CookieSerializeOptions
-): string {
+export function serializeCookie(name: string, value: string, options: CookieSerializeOptions): string {
   let str = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
 
   /* v8 ignore start -- cookie option branches depend on caller config */
@@ -129,10 +99,7 @@ export function parseCookieHeader(cookieHeader: string): Map<string, string> {
   for (const pair of cookieHeader.split(';')) {
     const [name, ...rest] = pair.trim().split('=');
     if (name) {
-      cookies.set(
-        decodeURIComponent(name.trim()),
-        decodeURIComponent(rest.join('=').trim())
-      );
+      cookies.set(decodeURIComponent(name.trim()), decodeURIComponent(rest.join('=').trim()));
     }
   }
 
@@ -144,18 +111,13 @@ export function parseCookieHeader(cookieHeader: string): Map<string, string> {
  *
  * Example: /api/auth/signin/google → { action: 'signin', providerId: 'google' }
  */
-function parseAuthAction(
-  url: string,
-  basePath: string
-): { action: string; providerId?: string } {
+function parseAuthAction(url: string, basePath: string): { action: string; providerId?: string } {
   const urlObj = new URL(url, 'http://localhost');
   const pathname = urlObj.pathname;
 
   // Remove basePath prefix
   /* v8 ignore start */
-  const relativePath = pathname.startsWith(basePath)
-    ? pathname.slice(basePath.length)
-    : pathname;
+  const relativePath = pathname.startsWith(basePath) ? pathname.slice(basePath.length) : pathname;
   /* v8 ignore stop */
 
   // Split: /signin/google → ['', 'signin', 'google']
@@ -178,7 +140,7 @@ async function finalizeAuth(
   trigger: 'signIn' | 'signUp',
   config: ResolvedAuthConfig,
   sessionStore: SessionStore,
-  responseCookies: ResponseCookies
+  responseCookies: ResponseCookies,
 ): Promise<Session> {
   let token = createJWTPayload(result, config);
 
@@ -201,11 +163,7 @@ async function finalizeAuth(
  * Parse a backend API response into a ProviderResult.
  * Shared between signUp handler and signUp action.
  */
-export function parseBackendAuthResponse(
-  data: Record<string, unknown>,
-  fallbackEmail?: string,
-  fallbackName?: string | null
-): ProviderResult {
+export function parseBackendAuthResponse(data: Record<string, unknown>, fallbackEmail?: string, fallbackName?: string | null): ProviderResult {
   const backendUser = data.user as Record<string, unknown> | undefined;
 
   return {
@@ -222,14 +180,12 @@ export function parseBackendAuthResponse(
       email: (data.email as string) || (backendUser?.email as string) || fallbackEmail || '',
       name: (backendUser?.displayName as string) || (backendUser?.username as string) || fallbackName || null,
       image: (backendUser?.profilePictureUrl as string) || null,
-      roles: (data.roles as string[]) || (backendUser?.roles as string[]) || undefined,
-      permissions: (data.permissions as string[]) || (backendUser?.permissions as string[]) || undefined,
+      roles: resolveAuthRoles(data, backendUser),
+      permissions: resolveAuthPermissions(data, backendUser),
     },
     sessionId: data.sessionId as string | undefined,
     tenantId: data.tenantId as string | undefined,
-    availableTenants: data.availableTenants as
-      | Array<{ id: string; name: string }>
-      | undefined,
+    availableTenants: data.availableTenants as Array<{ id: string; name: string }> | undefined,
   };
 }
 
@@ -245,38 +201,28 @@ export function createHandlers(config: ResolvedAuthConfig) {
    * Build a Response with Set-Cookie headers.
    * Single shared builder — all handlers use this.
    */
-  function buildResponse(
-    body: unknown,
-    status: number,
-    responseCookies: ResponseCookies
-  ): Response {
+  function buildResponse(body: unknown, status: number, responseCookies: ResponseCookies): Response {
     const headers = new Headers({
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store, max-age=0',
     });
 
     for (const cookie of responseCookies.cookies) {
-      headers.append(
-        'Set-Cookie',
-        serializeCookie(cookie.name, cookie.value, cookie.options)
-      );
+      headers.append('Set-Cookie', serializeCookie(cookie.name, cookie.value, cookie.options));
     }
 
     return new Response(
       /* v8 ignore start */
       body !== undefined ? JSON.stringify(body) : null,
       /* v8 ignore stop */
-      { status, headers }
+      { status, headers },
     );
   }
 
   /**
    * Build a redirect Response with Set-Cookie headers.
    */
-  function buildRedirect(
-    url: string,
-    responseCookies: ResponseCookies
-  ): Response {
+  function buildRedirect(url: string, responseCookies: ResponseCookies): Response {
     const headers = new Headers({ Location: url });
     for (const c of responseCookies.cookies) {
       headers.append('Set-Cookie', serializeCookie(c.name, c.value, c.options));
@@ -377,15 +323,12 @@ export function createHandlers(config: ResolvedAuthConfig) {
 
   // ─── Handler Implementations (inside closure — access buildResponse) ───
 
-  async function handleGetSession(
-    cookies: Map<string, string>,
-    responseCookies: ResponseCookies
-  ): Promise<Response> {
+  async function handleGetSession(cookies: Map<string, string>, responseCookies: ResponseCookies): Promise<Response> {
     const encryptedToken = sessionStore.read((name) => cookies.get(name));
 
     /* v8 ignore start */
     if (!encryptedToken) {
-    /* v8 ignore stop */
+      /* v8 ignore stop */
       /* v8 ignore start -- tested via dynamic imports */
       return buildResponse({}, 200, responseCookies);
       /* v8 ignore stop */
@@ -403,17 +346,13 @@ export function createHandlers(config: ResolvedAuthConfig) {
     /* v8 ignore stop */
   }
 
-  async function handleGetCSRF(
-    responseCookies: ResponseCookies
-  ): Promise<Response> {
+  async function handleGetCSRF(responseCookies: ResponseCookies): Promise<Response> {
     const { cookie, token } = await createCSRFToken(config.secret);
     csrfStore.write(cookie, responseCookies.set.bind(responseCookies));
     return buildResponse({ csrfToken: token }, 200, responseCookies);
   }
 
-  function handleGetProviders(
-    responseCookies: ResponseCookies
-  ): Response {
+  function handleGetProviders(responseCookies: ResponseCookies): Response {
     const providers = config.providers.map((p) => ({
       id: p.id,
       name: p.name,
@@ -422,12 +361,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     return buildResponse(providers, 200, responseCookies);
   }
 
-  async function handleSignIn(
-    providerId: string,
-    body: Record<string, unknown>,
-    request: Request,
-    responseCookies: ResponseCookies
-  ): Promise<Response> {
+  async function handleSignIn(providerId: string, body: Record<string, unknown>, request: Request, responseCookies: ResponseCookies): Promise<Response> {
     const provider = config.providers.find((p) => p.id === providerId);
     if (!provider) throw new ProviderNotFoundError(providerId);
 
@@ -447,7 +381,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
         if (!idToken) throw new CredentialsSignInError('OAuth ID token is required');
         result = await exchangeToken(idToken, config.apiUrl, body.tenantId as string | undefined);
       } else {
-        // Try getAuthorizeUrl (GitHub-style: redirect to OAuth provider)
+        // Try getAuthorizeUrl (provider-managed redirect flow)
         const getAuthorizeUrl = getOAuthAuthorizeUrl(oauthProvider);
         /* v8 ignore start */
         if (getAuthorizeUrl) {
@@ -492,10 +426,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     return buildResponse(session, 200, responseCookies);
   }
 
-  async function handleSignUp(
-    body: Record<string, unknown>,
-    responseCookies: ResponseCookies
-  ): Promise<Response> {
+  async function handleSignUp(body: Record<string, unknown>, responseCookies: ResponseCookies): Promise<Response> {
     const { username, email, password, firstName, lastName, tenantId } = body as {
       username?: string;
       email?: string;
@@ -531,10 +462,9 @@ export function createHandlers(config: ResolvedAuthConfig) {
     if (!response.ok) {
       /* v8 ignore start -- error response parsing */
       const errorData = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-      throw new SignUpError(
-        (errorData.message as string) || (errorData.detail as string) || 'Sign-up failed',
-        { fieldErrors: errorData.errors as Record<string, string[]> | undefined }
-      );
+      throw new SignUpError((errorData.message as string) || (errorData.detail as string) || 'Sign-up failed', {
+        fieldErrors: errorData.errors as Record<string, string[]> | undefined,
+      });
       /* v8 ignore stop */
     }
 
@@ -545,10 +475,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     return buildResponse(session, 200, responseCookies);
   }
 
-  async function handleSignOut(
-    cookies: Map<string, string>,
-    responseCookies: ResponseCookies
-  ): Promise<Response> {
+  async function handleSignOut(cookies: Map<string, string>, responseCookies: ResponseCookies): Promise<Response> {
     // Best-effort revoke the refresh token on the backend
     const encryptedToken = sessionStore.read((name) => cookies.get(name));
     if (encryptedToken) {
@@ -574,11 +501,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     return buildResponse({ ok: true }, 200, responseCookies);
   }
 
-  async function handleUpdateSession(
-    body: Record<string, unknown>,
-    cookies: Map<string, string>,
-    responseCookies: ResponseCookies
-  ): Promise<Response> {
+  async function handleUpdateSession(body: Record<string, unknown>, cookies: Map<string, string>, responseCookies: ResponseCookies): Promise<Response> {
     const encryptedToken = sessionStore.read((name) => cookies.get(name));
 
     /* v8 ignore start -- tested via dynamic imports */
@@ -610,40 +533,23 @@ export function createHandlers(config: ResolvedAuthConfig) {
     /* v8 ignore stop */
   }
 
-  /**
-   * GET /api/auth/signin/:provider — OAuth redirect sign-in.
-   *
-   * For oauth-type providers with a getAuthorizeUrl bridge: fetch the
-   * authorization URL from the backend, stash CSRF state + redirect target
-   * in a signed short-lived cookie, and 302 to the provider.
-   */
   async function handleOAuthSignInRedirect(
     request: Request,
     providerId: string,
-    responseCookies: ResponseCookies
+    responseCookies: ResponseCookies,
   ): Promise<Response> {
-    const provider = config.providers.find((p) => p.id === providerId);
+    const provider = config.providers.find((candidate) => candidate.id === providerId);
     if (!provider) throw new ProviderNotFoundError(providerId);
 
     const getAuthorizeUrl = getOAuthAuthorizeUrl(provider as OAuthProviderWithMethods);
     if (!getAuthorizeUrl) {
-      return buildResponse(
-        { error: 'Provider does not support redirect sign-in' },
-        400,
-        responseCookies
-      );
+      return buildResponse({ error: 'Provider does not support redirect sign-in' }, 400, responseCookies);
     }
 
     const url = new URL(request.url);
     const redirectUri = `${url.origin}${config.basePath}/callback/${providerId}`;
-    const redirectTo = resolveAllowedRedirect(
-      url.searchParams.get('redirectTo'),
-      config.pages.signIn || '/'
-    );
-
+    const redirectTo = resolveAllowedRedirect(url.searchParams.get('redirectTo'), config.pages.signIn || '/');
     const authUrl = await getAuthorizeUrl(config.apiUrl, redirectUri);
-    // The backend embeds the state in the authUrl; read it back so the
-    // callback can constant-time compare it against the query param.
     const state = new URL(authUrl).searchParams.get('state') ?? '';
 
     responseCookies.set(
@@ -657,20 +563,15 @@ export function createHandlers(config: ResolvedAuthConfig) {
           flow: 'signin',
           exp: Date.now() + STATE_COOKIE_MAX_AGE * 1000,
         },
-        config.secret
+        config.secret,
       ),
-      stateCookieOptions()
+      stateCookieOptions(),
     );
 
     return buildRedirect(authUrl, responseCookies);
   }
 
-  async function handleOAuthCallback(
-    request: Request,
-    providerId: string,
-    cookies: Map<string, string>,
-    responseCookies: ResponseCookies
-  ): Promise<Response> {
+  async function handleOAuthCallback(request: Request, providerId: string, cookies: Map<string, string>, responseCookies: ResponseCookies): Promise<Response> {
     const provider = config.providers.find((p) => p.id === providerId);
     if (!provider) throw new ProviderNotFoundError(providerId);
 
@@ -688,25 +589,14 @@ export function createHandlers(config: ResolvedAuthConfig) {
       return Response.redirect(`${url.origin}${errorPage}?error=missing_code`);
     }
 
-    // CSRF gate: the signed state cookie from GET /signin/:provider must
-    // verify (HMAC + expiry), be a live sign-in flow, and match the
-    // provider-returned state param in constant time.
     const cookieName = stateCookieName(providerId);
     const payload = await verifyStateCookie(cookies.get(cookieName), config.secret);
-
-    if (
-      !payload ||
-      payload.flow !== 'signin' ||
-      state === null ||
-      !constantTimeEqual(payload.state, state)
-    ) {
+    if (!payload || payload.flow !== 'signin' || state === null || !constantTimeEqual(payload.state, state)) {
       responseCookies.set(cookieName, '', stateCookieOptions(0));
       return buildRedirect(`${url.origin}${errorPage}?error=state_mismatch`, responseCookies);
     }
 
-    // Single-use: consume the cookie once verified.
     responseCookies.set(cookieName, '', stateCookieOptions(0));
-
     const redirectUri = `${url.origin}${config.basePath}/callback/${providerId}`;
 
     const oauthProvider = provider as OAuthProviderWithMethods;
@@ -720,7 +610,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     /* v8 ignore stop */
 
     if (!result) {
-      return buildRedirect(`${url.origin}${errorPage}?error=callback_failed`, responseCookies);
+      return Response.redirect(`${url.origin}${errorPage}?error=callback_failed`);
     }
 
     await finalizeAuth(result, 'signIn', config, sessionStore, responseCookies);

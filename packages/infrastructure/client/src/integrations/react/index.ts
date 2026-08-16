@@ -10,10 +10,8 @@ import type { ApiError } from '../../runtime/errors/types.js';
 import { useMutation as useReactMutation, useQuery as useReactQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, createElement, useContext, useEffect, useRef, type ReactNode } from 'react';
 
-// Export React Query hooks
 export * from './query-hooks.js';
 
-// Export Auth components and hooks
 export { SessionProvider } from './session-provider.js';
 export { SessionContext } from './session-provider.js';
 export type { SessionContextValue } from './session-provider.js';
@@ -22,9 +20,6 @@ export { useAuth } from './use-auth.js';
 export { createAuthBroadcast } from './broadcast.js';
 export type { AuthBroadcastMessage } from './broadcast.js';
 
-/**
- * Query state for async operations
- */
 export interface QueryState<T> {
   data: T | undefined;
   error: ApiError | undefined;
@@ -33,9 +28,6 @@ export interface QueryState<T> {
   isSuccess: boolean;
 }
 
-/**
- * Mutation state for async operations
- */
 export interface MutationState<T, TVariables> {
   data: T | undefined;
   error: ApiError | undefined;
@@ -46,83 +38,30 @@ export interface MutationState<T, TVariables> {
   reset: () => void;
 }
 
-/**
- * Options for useQuery hook
- */
 export interface UseQueryOptions<T> {
-  /** Enable/disable the query */
   enabled?: boolean;
-  /** Refetch interval in ms */
   refetchInterval?: number;
-  /** Refetch on window focus */
   refetchOnWindowFocus?: boolean;
-  /** Retry count on failure */
   retry?: number | boolean;
-  /** Callback on success */
   onSuccess?: (data: T) => void;
-  /** Callback on error */
   onError?: (error: ApiError) => void;
 }
 
-/**
- * Options for useMutation hook
- */
 export interface UseMutationOptions<T, TVariables> {
-  /** Callback on success */
   onSuccess?: (data: T, variables: TVariables) => void;
-  /** Callback on error */
   onError?: (error: ApiError, variables: TVariables) => void;
-  /** Callback on settle (success or error) */
   onSettled?: (data: T | undefined, error: ApiError | undefined, variables: TVariables) => void;
 }
 
-// Re-export types for consumers
 export type { ApiClient, Result, ApiError };
 
 /**
- * The actual hook implementations require React.
- * These are type-only exports for documentation purposes.
- *
- * Usage example:
- * ```tsx
- * import { ApiClientProvider, useApiClient, useQuery, useMutation } from '@game-guild/client/react';
- *
- * // Wrap your app with the provider
- * function App() {
- *   const client = createClient({ baseUrl: 'https://api.example.com' });
- *   return (
- *     <ApiClientProvider client={client}>
- *       <MyComponent />
- *     </ApiClientProvider>
- *   );
- * }
- *
- * // Use hooks in components
- * function MyComponent() {
- *   const client = useApiClient();
- *   const { data, isLoading, error } = useQuery(
- *     ['user', userId],
- *     () => client.users.get(userId)
- *   );
- *
- *   if (isLoading) return <Loading />;
- *   if (error) return <Error error={error} />;
- *   return <User data={data} />;
- * }
- * ```
- */
-
-/**
- * Props for ApiClientProvider
+ * Props for ApiClientProvider.
  */
 export interface ApiClientProviderProps {
   client: ApiClient;
   children: ReactNode;
 }
-
-// ============================================================================
-// Hook implementations (require React runtime)
-// ============================================================================
 
 export const ApiClientContext = createContext<ApiClient | undefined>(undefined);
 ApiClientContext.displayName = 'ApiClientContext';
@@ -139,10 +78,6 @@ function unwrapResult<T>(result: Result<T, ApiError>): T {
   throw result.error;
 }
 
-/**
- * Hook to access the API client from context
- * @throws If used outside of ApiClientProvider
- */
 export function useApiClient(): ApiClient {
   const client = useContext(ApiClientContext);
 
@@ -153,13 +88,6 @@ export function useApiClient(): ApiClient {
   return client;
 }
 
-/**
- * Hook for data fetching with caching and automatic refetching
- *
- * @param queryKey - Unique key for the query (used for caching)
- * @param queryFn - Function that returns a Promise<Result<T, ApiError>>
- * @param options - Query options
- */
 export function useQuery<T>(_queryKey: unknown[], _queryFn: () => Promise<Result<T, ApiError>>, _options?: UseQueryOptions<T>): QueryState<T> {
   const query = useReactQuery<T, ApiError>({
     queryKey: _queryKey,
@@ -191,12 +119,6 @@ export function useQuery<T>(_queryKey: unknown[], _queryFn: () => Promise<Result
   };
 }
 
-/**
- * Hook for data mutations (create, update, delete)
- *
- * @param mutationFn - Function that performs the mutation
- * @param options - Mutation options
- */
 export function useMutation<T, TVariables>(
   _mutationFn: (variables: TVariables) => Promise<Result<T, ApiError>>,
   _options?: UseMutationOptions<T, TVariables>,
@@ -226,11 +148,6 @@ export function useMutation<T, TVariables>(
   };
 }
 
-/**
- * Hook for optimistic updates
- *
- * @param queryKey - Key of the query to update optimistically
- */
 export function useOptimisticUpdate<T>(_queryKey: unknown[]): {
   update: (updater: (old: T | undefined) => T) => void;
   rollback: () => void;

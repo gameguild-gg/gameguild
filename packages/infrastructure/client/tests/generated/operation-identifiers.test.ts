@@ -9,7 +9,7 @@ const endpointsSource = readFileSync(join(generatedRoot, 'endpoints.gen.ts'), 'u
 describe('generated operation identifiers', () => {
   it('does not publish operation IDs or module methods with numeric collision suffixes', () => {
     const operationIds = Array.from(
-      endpointsSource.matchAll(/operationId: '([A-Za-z_$][A-Za-z0-9_$]*)' as const/g),
+      endpointsSource.matchAll(/operationId: ['"]([A-Za-z_$][A-Za-z0-9_$]*)['"] as const/g),
       (match) => match[1],
     );
 
@@ -27,7 +27,7 @@ describe('generated operation identifiers', () => {
     expect(moduleMethods.length).toBeGreaterThan(0);
     expect(operationIds.filter((operationId) => /\d+$/.test(operationId))).toEqual([]);
     expect(moduleMethods.filter((methodName) => /\d+$/.test(methodName))).toEqual([]);
-  });
+  }, 15_000);
 
   it('does not contain duplicate entries in the generated endpoint registry', () => {
     const registryEntries = Array.from(

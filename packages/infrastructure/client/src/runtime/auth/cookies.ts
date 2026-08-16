@@ -15,7 +15,7 @@ import type { CookieConfig } from './types.js';
 const MAX_COOKIE_SIZE = 3800;
 
 /** Default cookie name prefix */
-const DEFAULT_COOKIE_NAME = '__gg';
+const DEFAULT_COOKIE_NAME = '__me';
 
 /**
  * Resolved cookie options with all defaults applied
@@ -68,9 +68,9 @@ export function getCookieName(baseName: string, secure: boolean): string {
  * SessionStore — reads and writes session cookies with chunking support.
  *
  * Large JWTs (> 4KB) are split across numbered cookies:
- * - `__gg.session-token` (or `__Secure-__gg.session-token`)
- * - `__gg.session-token.1`
- * - `__gg.session-token.2`
+ * - `__me.session-token` (or `__Secure-__me.session-token`)
+ * - `__me.session-token.1`
+ * - `__me.session-token.2`
  * - etc.
  */
 export class SessionStore {

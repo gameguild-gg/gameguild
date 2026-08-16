@@ -16,49 +16,14 @@ namespace GameGuild.Tests.Authentication.Integration;
 /// Integration tests for authentication features
 /// Tests JWT token generation, refresh, and validation
 /// </summary>
-public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
+public class AuthenticationIntegrationTests : IClassFixture<AuthenticationApiFactory>, IDisposable
 {
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly HttpClient _client;
     private readonly IServiceScope _scope;
-    private static readonly string DatabaseName = $"AuthTestDb_{Guid.NewGuid()}";
-
-    public AuthenticationIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
+    public AuthenticationIntegrationTests(AuthenticationApiFactory factory)
     {
-        // Set environment variable before factory initialization
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
-        Environment.SetEnvironmentVariable("Jwt__SecretKey", "ThisIsASecretKeyForIntegrationTestingThatIsLongEnoughToProhibitErrors");
-        Environment.SetEnvironmentVariable("Jwt__Issuer", "GameGuild");
-        Environment.SetEnvironmentVariable("Jwt__Audience", "GameGuild.Users");
-
-        _factory = factory.WithWebHostBuilder(builder => {
-            builder.UseEnvironment("Testing");
-
-            builder.ConfigureTestServices(services =>
-            {
-                // Remove existing DbContext registrations
-                var descriptorsToRemove = services
-                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                                d.ServiceType == typeof(ApplicationDbContext) ||
-                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
-                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
-                    .ToList();
-
-                foreach (var descriptor in descriptorsToRemove)
-                {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database with shared name for all requests
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase(DatabaseName);
-                });
-
-                // Add HTTP logging services (required by the pipeline)
-                services.AddHttpLogging(o => { });
-            });
-        });
+        _factory = factory;
 
         _client = _factory.CreateClient();
         _scope = _factory.Services.CreateScope();

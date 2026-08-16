@@ -41,7 +41,7 @@ function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig
     apiUrl: 'http://localhost:5000',
     pages: {},
     cookies: {
-      name: '__gg',
+      name: '__me',
       secure: false,
       sameSite: 'lax',
       path: '/',
@@ -86,7 +86,7 @@ describe('createProxy', () => {
     const proxyHandler = withAuth();
 
     const request = new Request('http://localhost:3000/dashboard', {
-      headers: { cookie: '__gg.session-token=valid-token' },
+      headers: { cookie: '__me.session-token=valid-token' },
     });
 
     const response = await proxyHandler(request);
@@ -97,18 +97,16 @@ describe('createProxy', () => {
     const config = makeConfig();
     const withAuth = createProxy(config);
 
-    const handler = vi.fn(
-      async (req: Request & { auth: Session | null }) => {
-        return new Response(JSON.stringify({ user: req.auth?.user }), {
-          status: 200,
-        });
-      }
-    );
+    const handler = vi.fn(async (req: Request & { auth: Session | null }) => {
+      return new Response(JSON.stringify({ user: req.auth?.user }), {
+        status: 200,
+      });
+    });
 
     const proxyHandler = withAuth(handler);
 
     const request = new Request('http://localhost:3000/api/data', {
-      headers: { cookie: '__gg.session-token=valid-token' },
+      headers: { cookie: '__me.session-token=valid-token' },
     });
 
     const response = await proxyHandler(request);
@@ -130,11 +128,9 @@ describe('createProxy', () => {
     });
     const withAuth = createProxy(config);
 
-    const handler = vi.fn(
-      async (req: Request & { auth: Session | null }) => {
-        return new Response(JSON.stringify({ auth: req.auth }), { status: 200 });
-      }
-    );
+    const handler = vi.fn(async (req: Request & { auth: Session | null }) => {
+      return new Response(JSON.stringify({ auth: req.auth }), { status: 200 });
+    });
 
     const proxyHandler = withAuth(handler);
     const request = new Request('http://localhost:3000/api/data');

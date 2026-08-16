@@ -48,7 +48,7 @@ export async function fetchPeerReviewsAction(submissionId: string): Promise<Peer
     auth: { getAccessToken: () => getToken() },
   });
   try {
-    const reviews = new GeneratedApi.LearningAssessmentsPeerreviewsModule(client);
+    const reviews = new GeneratedApi.LearningAssessmentsPeerReviewsModule(client);
     const result = await reviews.getAssessmentsSubmissionsPeerReviews(submissionId);
     if (!result.ok) {
       return { ok: false, error: 'Failed to load peer reviews.' };

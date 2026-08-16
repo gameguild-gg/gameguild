@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   getToken: vi.fn(),
-  getUsersByUserIdNotifications: vi.fn(),
+  getUsersNotificationsForGetUsersByUserIdNotifications: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({
@@ -14,7 +14,7 @@ vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
     UsersNotificationsModule: class {
-      getUsersByUserIdNotifications = mocks.getUsersByUserIdNotifications;
+      getUsersNotificationsForGetUsersByUserIdNotifications = mocks.getUsersNotificationsForGetUsersByUserIdNotifications;
     },
   },
 }));
@@ -29,7 +29,7 @@ describe('dashboard notification summary', () => {
   });
 
   it('loads recent notifications and unread count from the user notifications API', async () => {
-    mocks.getUsersByUserIdNotifications
+    mocks.getUsersNotificationsForGetUsersByUserIdNotifications
       .mockResolvedValueOnce({
         ok: true,
         data: {
@@ -57,14 +57,14 @@ describe('dashboard notification summary', () => {
 
     const summary = await getDashboardNotificationSummary('user-1');
 
-    expect(mocks.getUsersByUserIdNotifications).toHaveBeenNthCalledWith(1, 'user-1', {
+    expect(mocks.getUsersNotificationsForGetUsersByUserIdNotifications).toHaveBeenNthCalledWith(1, 'user-1', {
       page: 1,
       pageSize: 5,
       isArchived: false,
       sortBy: 'createdAt',
       sortDirection: 'desc',
     });
-    expect(mocks.getUsersByUserIdNotifications).toHaveBeenNthCalledWith(2, 'user-1', {
+    expect(mocks.getUsersNotificationsForGetUsersByUserIdNotifications).toHaveBeenNthCalledWith(2, 'user-1', {
       page: 1,
       pageSize: 1,
       isArchived: false,
@@ -89,7 +89,7 @@ describe('dashboard notification summary', () => {
   it('falls back to an empty summary when the user is missing or the API fails', async () => {
     await expect(getDashboardNotificationSummary('')).resolves.toEqual({ items: [], unreadCount: 0 });
 
-    mocks.getUsersByUserIdNotifications.mockRejectedValue(new Error('network failed'));
+    mocks.getUsersNotificationsForGetUsersByUserIdNotifications.mockRejectedValue(new Error('network failed'));
 
     await expect(getDashboardNotificationSummary('user-2')).resolves.toEqual({ items: [], unreadCount: 0 });
   });

@@ -52,12 +52,17 @@ describe('createAuthBroadcast', () => {
     vi.stubGlobal('window', { location: {} });
 
     const mockChannel = {
-      postMessage: vi.fn(() => { throw new Error('Channel closed'); }),
+      postMessage: vi.fn(() => {
+        throw new Error('Channel closed');
+      }),
       close: vi.fn(),
       onmessage: null as any,
     };
 
-    vi.stubGlobal('BroadcastChannel', vi.fn(() => mockChannel));
+    vi.stubGlobal(
+      'BroadcastChannel',
+      vi.fn(() => mockChannel),
+    );
 
     vi.resetModules();
     const { createAuthBroadcast } = await import('../../src/integrations/react/broadcast.js');
@@ -71,11 +76,16 @@ describe('createAuthBroadcast', () => {
 
     const mockChannel = {
       postMessage: vi.fn(),
-      close: vi.fn(() => { throw new Error('Already closed'); }),
+      close: vi.fn(() => {
+        throw new Error('Already closed');
+      }),
       onmessage: null as any,
     };
 
-    vi.stubGlobal('BroadcastChannel', vi.fn(() => mockChannel));
+    vi.stubGlobal(
+      'BroadcastChannel',
+      vi.fn(() => mockChannel),
+    );
 
     vi.resetModules();
     const { createAuthBroadcast } = await import('../../src/integrations/react/broadcast.js');
@@ -86,7 +96,12 @@ describe('createAuthBroadcast', () => {
 
   it('should handle BroadcastChannel constructor error', async () => {
     vi.stubGlobal('window', { location: {} });
-    vi.stubGlobal('BroadcastChannel', vi.fn(() => { throw new Error('Not supported'); }));
+    vi.stubGlobal(
+      'BroadcastChannel',
+      vi.fn(() => {
+        throw new Error('Not supported');
+      }),
+    );
 
     vi.resetModules();
     const { createAuthBroadcast } = await import('../../src/integrations/react/broadcast.js');

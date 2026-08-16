@@ -50,11 +50,11 @@ describe('Generation Pipeline Integration', () => {
     });
 
     const { fetchOpenApiSpec } = await import('../../scripts/fetch-spec.js');
-    const spec = await fetchOpenApiSpec('http://localhost:8080/openapi/v1.json');
+    const spec = await fetchOpenApiSpec('http://localhost:5295/openapi/v1.json');
 
     expect(spec).toEqual(mockSpec);
     expect(global.fetch).toHaveBeenCalledWith(
-      'http://localhost:8080/openapi/v1.json',
+      'http://localhost:5295/openapi/v1.json',
       expect.objectContaining({
         headers: { Accept: 'application/json' },
       })
@@ -80,7 +80,7 @@ describe('Generation Pipeline Integration', () => {
 
     const { fetchOpenApiSpec } = await import('../../scripts/fetch-spec.js');
 
-    await expect(fetchOpenApiSpec('http://localhost:8080/invalid')).rejects.toThrow(
+    await expect(fetchOpenApiSpec('http://localhost:5295/invalid')).rejects.toThrow(
       /Failed to fetch OpenAPI spec/
     );
   });
@@ -106,7 +106,7 @@ describe('Generation Pipeline Integration', () => {
     const { fetchOpenApiSpec } = await import('../../scripts/fetch-spec.js');
 
     // Error message is slightly different
-    await expect(fetchOpenApiSpec('http://localhost:8080/openapi/v1.json')).rejects.toThrow(
+    await expect(fetchOpenApiSpec('http://localhost:5295/openapi/v1.json')).rejects.toThrow(
       /Invalid OpenAPI spec/
     );
   });
@@ -185,7 +185,7 @@ describe('Generation Pipeline Integration', () => {
 
     const { fetchOpenApiSpec } = await import('../../scripts/fetch-spec.js');
 
-    await expect(fetchOpenApiSpec('http://localhost:8080/openapi/v1.json')).rejects.toThrow(
+    await expect(fetchOpenApiSpec('http://localhost:5295/openapi/v1.json')).rejects.toThrow(
       'Network error'
     );
   });
@@ -201,6 +201,6 @@ describe('Generation Pipeline Integration', () => {
 
     const { fetchOpenApiSpec } = await import('../../scripts/fetch-spec.js');
 
-    await expect(fetchOpenApiSpec('http://localhost:8080/openapi/v1.json')).rejects.toThrow();
+    await expect(fetchOpenApiSpec('http://localhost:5295/openapi/v1.json')).rejects.toThrow();
   });
 });
