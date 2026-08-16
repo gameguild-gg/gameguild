@@ -76,7 +76,7 @@ vi.mock('@game-guild/client/react', () => ({
 }));
 
 const { VerifyPageContent } = await import(
-  '@/app/[locale]/(auth)/verify/verify-page-content'
+  '@/components/auth/verify-page-content'
 );
 
 /* ------------------------------------------------------------------ */

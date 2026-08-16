@@ -87,9 +87,13 @@ describe('DashboardHeader', () => {
     await user.click(menuTrigger);
 
     expect(screen.getByText('ada@gameguild.gg')).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: /my profile/i })).toHaveAttribute(
+    expect(screen.getByRole('menuitem', { name: /my workspace/i })).toHaveAttribute(
       'href',
-      '/dashboard/community/members/users/user-123',
+      '/workspace',
+    );
+    expect(screen.getByRole('menuitem', { name: /account settings/i })).toHaveAttribute(
+      'href',
+      '/workspace/settings/account',
     );
 
     await user.click(screen.getByRole('menuitem', { name: /sign out/i }));

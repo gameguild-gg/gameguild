@@ -114,6 +114,6 @@ async function hmacHex(payload: string, secret: string): Promise<string> {
  */
 export function settingsAccountPath(locale: string | undefined): string {
   return locale && locale !== 'en-US'
-    ? `/${locale}/settings/account`
+    ? `/${locale}/workspace/settings/account`
     : '/workspace/settings/account';
 }

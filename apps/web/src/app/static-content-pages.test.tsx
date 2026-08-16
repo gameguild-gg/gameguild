@@ -22,10 +22,10 @@ vi.mock('@/i18n/navigation', () => ({
 import LicensesPage from './[locale]/(legal)/legal/licenses/page';
 import FerpaWaiverPage from './[locale]/(legal)/legal/ferpa-waiver/page';
 import AcademicHonestyPage from './[locale]/(legal)/legal/academic-honesty/page';
-import RoadmapPage from './[locale]/(institutional)/about/(project)/roadmap/page';
-import ContributorsPage from './[locale]/(institutional)/about/(project)/contributors/page';
-import HomeLayout from './[locale]/(site)/layout';
-import HomePage from './[locale]/(site)/page';
+import RoadmapPage from './[locale]/(public)/about/(project)/roadmap/page';
+import ContributorsPage from './[locale]/(public)/about/(project)/contributors/page';
+import HomeLayout from './[locale]/(public)/layout';
+import HomePage from './[locale]/(public)/page';
 
 describe('static legal and project pages', () => {
   it('renders the public home page with a website header and footer', async () => {
