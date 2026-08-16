@@ -179,6 +179,18 @@ public class StaticsAndFacadeTests
         ClaimNames.GetUserId(principal).Should().BeNull();
     }
 
+    [Theory]
+    [InlineData(ClaimNames.Subject)]
+    [InlineData(ClaimNames.NameIdentifier)]
+    public void ClaimNames_GetUserId_UsesEveryFallbackClaim(string claimType)
+    {
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(claimType, "user-value")],
+            "test"));
+
+        ClaimNames.GetUserId(principal).Should().Be("user-value");
+    }
+
     [Fact]
     public void ClaimNames_GetTenantId_ReturnsTenantId()
     {
@@ -189,6 +201,16 @@ public class StaticsAndFacadeTests
         }, "test");
         var principal = new ClaimsPrincipal(identity);
         ClaimNames.GetTenantId(principal).Should().Be(tenantId.ToString());
+    }
+
+    [Fact]
+    public void ClaimNames_GetTenantId_UsesAlternateClaim()
+    {
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimNames.TenantIdAlt, "tenant-value")],
+            "test"));
+
+        ClaimNames.GetTenantId(principal).Should().Be("tenant-value");
     }
 
     [Fact]

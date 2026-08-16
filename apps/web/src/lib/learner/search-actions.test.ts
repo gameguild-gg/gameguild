@@ -10,7 +10,7 @@ vi.mock('@/auth', () => ({ getToken: mocks.getToken }));
 vi.mock('@game-guild/client', () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
-    LearningWorkspacesLearnerworkspaceModule: class {
+    LearningWorkspacesLearnerWorkspaceModule: class {
       getLearningMeSearch = mocks.getLearningMeSearch;
     },
   },

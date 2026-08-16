@@ -295,7 +295,7 @@ describe('GET /api/auth/callback/:provider (state cookie verification)', () => {
     const config = makeConfig();
     const { GET } = createHandlers(config);
 
-    const expired = makeStateCookie({ exp: Date.now() - 1000 });
+    const expired = await makeStateCookie({ exp: Date.now() - 1000 });
 
     const response = await GET(callbackRequest(expired));
 
@@ -308,7 +308,7 @@ describe('GET /api/auth/callback/:provider (state cookie verification)', () => {
     const config = makeConfig();
     const { GET } = createHandlers(config);
 
-    const wrongFlow = makeStateCookie({ flow: 'link' as OAuthStatePayload['flow'] });
+    const wrongFlow = await makeStateCookie({ flow: 'link' as OAuthStatePayload['flow'] });
 
     const response = await GET(callbackRequest(wrongFlow));
 

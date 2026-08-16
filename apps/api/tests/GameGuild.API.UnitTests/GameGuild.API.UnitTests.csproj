@@ -20,10 +20,8 @@
         <Threshold>80</Threshold>
         <ThresholdType>line,branch,method</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
-        <!-- The API host shell is bootstrap/presentation composition validated by unit smoke tests and E2E.
-             Module/domain coverage is enforced in each module test project; this project measures API integration handlers. -->
-        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**,**/Source/GameGuild.API/Core/Extensions/**,**/Source/GameGuild.API/Core/Setup/**,**/Source/GameGuild.API/Core/Endpoints/**,**/Source/GameGuild.API/Endpoints/**,**/Source/GameGuild.API/Core/Commands/**,**/Source/GameGuild.API/Core/Configuration/**,**/Source/GameGuild.API/Core/WebApplication/**,**/Source/GameGuild.API/Database/SnapshotCourseSeeder.cs,**/Source/GameGuild.API/Database/DesignTimeDbContextFactory.cs,**/Source/GameGuild.API/Database/DatabaseConnectivityProbe.cs,**/Source/GameGuild.API/Core/Context/**,**/Source/GameGuild.API/Core/Controllers/**,**/Source/GameGuild.API/Core/Services/**,**/Source/GameGuild.API/Core/DependencyInjection.cs</ExcludeByFile>
-        <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
+        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
+        <ExcludeByAttribute>GeneratedCodeAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
         <Include>[GameGuild.API]*</Include>
     </PropertyGroup>
 
@@ -45,6 +43,7 @@
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
         <PackageReference Include="Testcontainers.PostgreSql" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     </ItemGroup>
 
     <ItemGroup>

@@ -772,6 +772,39 @@ public sealed class AuthenticationCoverageCompletionTests
     }
 
     [Fact]
+    public async Task UserSessionRepository_CreateAsync_PreservesProvidedSessionId()
+    {
+        var sessionId = Guid.NewGuid();
+        var session = new UserSession { Id = sessionId, UserId = Guid.NewGuid() };
+        var set = new Mock<DbSet<UserSession>>();
+        var context = new Mock<IApplicationDbContext>();
+        context.Setup(x => x.Set<UserSession>()).Returns(set.Object);
+        context.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        var repository = new UserSessionRepository(context.Object);
+
+        var result = await repository.CreateAsync(session);
+
+        result.Id.Should().Be(sessionId);
+        set.Verify(x => x.Add(session), Times.Once);
+    }
+
+    [Fact]
+    public async Task UserSessionRepository_CreateAsync_GeneratesIdWhenMissing()
+    {
+        var session = new UserSession { UserId = Guid.NewGuid() };
+        var set = new Mock<DbSet<UserSession>>();
+        var context = new Mock<IApplicationDbContext>();
+        context.Setup(x => x.Set<UserSession>()).Returns(set.Object);
+        context.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        var repository = new UserSessionRepository(context.Object);
+
+        var result = await repository.CreateAsync(session);
+
+        result.Id.Should().NotBeEmpty();
+        set.Verify(x => x.Add(session), Times.Once);
+    }
+
+    [Fact]
     public void CommandAndEventHandlerConstructors_AreCovered()
     {
         var dbContext = Mock.Of<IApplicationDbContext>();

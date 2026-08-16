@@ -9,7 +9,6 @@ using GameGuild.Configuration.PresentationLayer.RequestContext;
 using GameGuild.Configuration.PresentationLayer.ResponseCompression;
 using GameGuild.Configuration.PresentationLayer.SignalR;
 using GameGuild.API.Database;
-using GameGuild.API.HealthChecks;
 using GameGuild.Features;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Localization;
@@ -68,7 +67,7 @@ public static class InfrastructureServiceCollectionExtensions
                     if (context.Exception is not null && IsDatabaseSchemaNotReadyException(context.Exception))
                     {
                         context.HttpContext.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                        context.ProblemDetails.Type = "https://gameguild.gg/problems/database-schema-not-ready";
+                        context.ProblemDetails.Type = "urn:problem-type:database-schema-not-ready";
                         context.ProblemDetails.Title = "Database Schema Not Ready";
                         context.ProblemDetails.Status = StatusCodes.Status503ServiceUnavailable;
                         context.ProblemDetails.Detail = "Database schema is not ready. Apply pending migrations before retrying.";
@@ -200,15 +199,6 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddHealthChecks()
             .AddCheck<DatabaseReadinessHealthCheck>(
                 "database",
-                tags: ["ready", "dependency"])
-            .AddCheck<PaymentProviderReadinessHealthCheck>(
-                "payment-provider",
-                tags: ["ready", "dependency"])
-            .AddCheck<EconomyCapabilityReadinessHealthCheck>(
-                "economy-capabilities",
-                tags: ["dependency"])
-            .AddCheck<BillingInboxReadinessHealthCheck>(
-                "billing-inbox",
                 tags: ["ready", "dependency"]);
 
         return services;
@@ -258,17 +248,20 @@ internal sealed class DatabaseReadinessHealthCheck(ApplicationDbContext dbContex
                 return HealthCheckResult.Unhealthy("Application database is unreachable.");
             }
 
-            var appliedMigrationCount = dbContext.Database.IsRelational()
+            var isRelational = dbContext.Database.IsRelational();
+            var appliedMigrationCount = isRelational
                 ? (await dbContext.Database.GetAppliedMigrationsAsync(cancellationToken).ConfigureAwait(false)).Count()
                 : 0;
 
-            var pendingMigrationCount = dbContext.Database.IsRelational()
+            var pendingMigrationCount = isRelational
                 ? (await dbContext.Database.GetPendingMigrationsAsync(cancellationToken).ConfigureAwait(false)).Count()
                 : 0;
 
             var data = new Dictionary<string, object>
             {
-                ["database"] = dbContext.Database.GetDbConnection().Database,
+                ["database"] = isRelational
+                    ? dbContext.Database.GetDbConnection().Database
+                    : dbContext.Database.ProviderName ?? "Unknown",
                 ["appliedMigrations"] = appliedMigrationCount,
                 ["pendingMigrations"] = pendingMigrationCount,
             };

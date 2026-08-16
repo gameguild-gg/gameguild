@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using GameGuild.Email;
 using Moq;
 using Xunit;
@@ -58,7 +59,16 @@ public class UpdateTenantMemberInviteCommandHandlerTests
         var member = CreatePendingInvite();
         var emailSender = new Mock<IEmailSender>();
         EmailMessage? sentMessage = null;
-        var handler = new UpdateTenantMemberInviteCommandHandler(_memberRepositoryMock.Object, emailSender.Object);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Identity:Invitations:ReviewPath"] = "/account/invitations"
+            })
+            .Build();
+        var handler = new UpdateTenantMemberInviteCommandHandler(
+            _memberRepositoryMock.Object,
+            emailSender.Object,
+            configuration);
 
         _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(member);
@@ -78,6 +88,7 @@ public class UpdateTenantMemberInviteCommandHandlerTests
         sentMessage!.ToEmail.Should().Be("learner@example.com");
         sentMessage.ToName.Should().Be("Learner One");
         sentMessage.Subject.Should().Contain("GameGuild Studio");
+        sentMessage.PlainTextContent.Should().Contain("callbackUrl=%2Faccount%2Finvitations");
     }
 
     [Fact]

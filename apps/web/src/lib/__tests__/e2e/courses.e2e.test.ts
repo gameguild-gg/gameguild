@@ -157,8 +157,8 @@ const unique = () => `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 const createCourseModules = (client: ReturnType<typeof createClient>) => ({
   programs: new GeneratedApi.LearningCoursesProgramModule(client),
-  content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
-  lifecycle: new GeneratedApi.LearningCoursesProgramlifecycleModule(client),
+  content: new GeneratedApi.LearningCoursesProgramContentModule(client),
+  lifecycle: new GeneratedApi.LearningCoursesProgramLifecycleModule(client),
 });
 
 const enableCapability = async (
@@ -309,7 +309,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 2. Read the course back ─────────────────────────────────────────────
   it('reads the created course by ID', async () => {
-    const result = await programs.getCoursesById(courseId);
+    const result = await programs.getCoursesForGetCoursesById(courseId);
 
     const course = unwrap(result, 'Get course by ID');
 
@@ -389,7 +389,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(course.skillsRequired).toBe('portfolio fundamentals, peer critique');
     expect(course.skillsProvided).toBe('boss AI systems, Steam launch planning');
 
-    const readResult = await programs.getCoursesById(courseId);
+    const readResult = await programs.getCoursesForGetCoursesById(courseId);
     const persistedCourse = unwrap(readResult, 'Read storefront metadata');
     const persistedMetadata = JSON.parse(persistedCourse.metadata ?? '{}');
 
@@ -711,7 +711,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 7. List courses ─────────────────────────────────────────────────────
   it('lists courses and the new course appears', async () => {
-    const result = await programs.getCourses({ take: 100 });
+    const result = await programs.getCoursesForGetCourses({ take: 100 });
 
     const courses = unwrap(result, 'List courses');
 
@@ -1465,7 +1465,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 19. Filter: published courses ──────────────────────────────────────
   it('lists published courses and the course appears', async () => {
-    const result = await programs.getCourses({ status: 'published' });
+    const result = await programs.getCoursesForGetCourses({ status: 'published' });
 
     const courses = unwrap(result, 'List published courses');
     expect(Array.isArray(courses)).toBe(true);
@@ -1500,7 +1500,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 23. Search ─────────────────────────────────────────────────────────
   it('searches courses by keyword', async () => {
-    const result = await programs.getCourses({ q: 'Game Dev' });
+    const result = await programs.getCoursesForGetCourses({ q: 'Game Dev' });
 
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -1510,7 +1510,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 24. Filter by category ─────────────────────────────────────────────
   it('filters courses by category', async () => {
-    const result = await programs.getCourses({ category: 'General' });
+    const result = await programs.getCoursesForGetCourses({ category: 'General' });
 
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -1520,7 +1520,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 25. Filter by difficulty ───────────────────────────────────────────
   it('filters courses by difficulty', async () => {
-    const result = await programs.getCourses({ difficulty: 'Beginner' });
+    const result = await programs.getCoursesForGetCourses({ difficulty: 'Beginner' });
 
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -1530,13 +1530,13 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
 
   // ── 26. Sort popular / recent ──────────────────────────────────────────
   it('lists popular courses', async () => {
-    const result = await programs.getCourses({ sort: 'popular' });
+    const result = await programs.getCoursesForGetCourses({ sort: 'popular' });
 
     expect(result.ok).toBe(true);
   });
 
   it('lists recent courses', async () => {
-    const result = await programs.getCourses({ sort: 'recent' });
+    const result = await programs.getCoursesForGetCourses({ sort: 'recent' });
 
     expect(result.ok).toBe(true);
   });
@@ -1566,7 +1566,7 @@ describe('Courses E2E — full CRUD + lifecycle + content', () => {
     expect(result.ok).toBe(true);
 
     // Verify it's gone
-    const getResult = await programs.getCoursesById(courseId);
+    const getResult = await programs.getCoursesForGetCoursesById(courseId);
     expect(getResult.ok).toBe(false);
   });
 

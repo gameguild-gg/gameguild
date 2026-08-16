@@ -53,7 +53,7 @@ function createCourseModules() {
 
   return {
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
-    lifecycle: new GeneratedApi.LearningCoursesProgramlifecycleModule(client),
+    lifecycle: new GeneratedApi.LearningCoursesProgramLifecycleModule(client),
   };
 }
 

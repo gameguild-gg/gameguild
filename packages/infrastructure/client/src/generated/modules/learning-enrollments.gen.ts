@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,44 +17,16 @@ export class LearningEnrollmentsModule {
 
   /**
    */
-  async postApiLearningEnrollments(body: Types.LearningEnrollmentsEnrollUserInput): Promise<Result<Types.LearningEnrollmentsEnrollment, ApiError>> {
-    const url = '/api/learning/enrollments';
-
-    // Validate request body
-    const validatedBody = safeParse(Types.LearningEnrollmentsEnrollUserInputSchema, body, 'request');
+  async getApiLearningEnrollments(id: string): Promise<Result<void, ApiError>> {
+    const url = `/api/learning/enrollments/${id}`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "GET",
       path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.LearningEnrollmentsEnrollmentSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiLearningEnrollmentsCourses(
-    courseId: string,
-    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
-  ): Promise<Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>> {
-    const url = `/api/learning/enrollments/courses/${courseId}`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>;
+    return result as Result<void, ApiError>;
   }
 
   /**
@@ -66,39 +38,90 @@ export class LearningEnrollmentsModule {
     const url = `/api/learning/enrollments/users/${userId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>;
+    return result as Result<
+      Array<Types.LearningEnrollmentsEnrollment>,
+      ApiError
+    >;
   }
 
   /**
    */
-  async getApiLearningEnrollments(id: string): Promise<Result<void, ApiError>> {
-    const url = `/api/learning/enrollments/${id}`;
+  async getApiLearningEnrollmentsCourses(
+    courseId: string,
+    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
+  ): Promise<Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>> {
+    const url = `/api/learning/enrollments/courses/${courseId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
+      params: query,
       requiresAuth: true,
     });
 
-    return result as Result<void, ApiError>;
+    return result as Result<
+      Array<Types.LearningEnrollmentsEnrollment>,
+      ApiError
+    >;
   }
 
   /**
    */
-  async patchApiLearningEnrollmentsProgress(id: string, body: Types.LearningEnrollmentsUpdateEnrollmentProgressInput): Promise<Result<void, ApiError>> {
+  async postApiLearningEnrollments(
+    body: Types.LearningEnrollmentsEnrollUserInput,
+  ): Promise<Result<Types.LearningEnrollmentsEnrollment, ApiError>> {
+    const url = "/api/learning/enrollments";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.LearningEnrollmentsEnrollUserInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningEnrollmentsEnrollmentSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async patchApiLearningEnrollmentsProgress(
+    id: string,
+    body: Types.LearningEnrollmentsUpdateEnrollmentProgressInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/learning/enrollments/${id}/progress`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningEnrollmentsUpdateEnrollmentProgressInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.LearningEnrollmentsUpdateEnrollmentProgressInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PATCH',
+      method: "PATCH",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -109,11 +132,14 @@ export class LearningEnrollmentsModule {
 
   /**
    */
-  async postApiLearningEnrollmentsStatus(id: string, status: Types.LearningEnrollmentsEnrollmentStatus): Promise<Result<void, ApiError>> {
+  async postApiLearningEnrollmentsStatus(
+    id: string,
+    status: Types.LearningEnrollmentsEnrollmentStatus,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/learning/enrollments/${id}/status/${status}`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -122,6 +148,8 @@ export class LearningEnrollmentsModule {
   }
 }
 
-export function createLearningEnrollmentsModule(client: ApiClient): LearningEnrollmentsModule {
+export function createLearningEnrollmentsModule(
+  client: ApiClient,
+): LearningEnrollmentsModule {
   return new LearningEnrollmentsModule(client);
 }

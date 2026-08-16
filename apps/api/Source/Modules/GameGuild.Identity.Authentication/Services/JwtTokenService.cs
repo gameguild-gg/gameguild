@@ -29,13 +29,34 @@ public sealed class JwtTokenService(
     /// </summary>
     public Task<string> GenerateAccessTokenAsync(Guid userId, string email, string[ ] roles, Guid? tenantId, int tokenVersion = 1, CancellationToken cancellationToken = default)
     {
-        return GenerateAccessTokenAsync(
+        return GenerateAccessTokenCoreAsync(
             userId,
             email,
             roles,
             tenantId,
             tokenVersion,
             new DateTimeOffset(DateTime.SpecifyKind(SystemClock.UtcNow, DateTimeKind.Utc)),
+            null,
+            cancellationToken);
+    }
+
+    public Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        return GenerateAccessTokenCoreAsync(
+            userId,
+            email,
+            roles,
+            tenantId,
+            tokenVersion,
+            new DateTimeOffset(DateTime.SpecifyKind(SystemClock.UtcNow, DateTimeKind.Utc)),
+            sessionId,
             cancellationToken);
     }
 
@@ -47,6 +68,32 @@ public sealed class JwtTokenService(
         int tokenVersion,
         DateTimeOffset authenticatedAt,
         CancellationToken cancellationToken = default)
+    {
+        return GenerateAccessTokenCoreAsync(userId, email, roles, tenantId, tokenVersion, authenticatedAt, null, cancellationToken);
+    }
+
+    public Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        DateTimeOffset authenticatedAt,
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        return GenerateAccessTokenCoreAsync(userId, email, roles, tenantId, tokenVersion, authenticatedAt, sessionId, cancellationToken);
+    }
+
+    private Task<string> GenerateAccessTokenCoreAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        DateTimeOffset authenticatedAt,
+        Guid? sessionId,
+        CancellationToken cancellationToken)
     {
         if (roles == null) throw new ArgumentNullException(nameof(roles));
 
@@ -72,6 +119,8 @@ public sealed class JwtTokenService(
 
             // Add tenant claim if multi-tenant
             if (tenantId.HasValue) { claims.Add(new Claim("tenant_id", tenantId.Value.ToString())); }
+
+            if (sessionId.HasValue) { claims.Add(new Claim(JwtClaimTypes.SessionId, sessionId.Value.ToString())); }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)) { KeyId = "GameGuild-jwt-key" };
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -154,6 +155,61 @@ public class HealthControllerTests
         var response = okResult.Value.Should().BeOfType<ReadinessResponse>().Subject;
         response.Status.Should().Be("Healthy");
         response.Ready.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HealthEndpoints_WhenDependencyIsDegraded_ShouldRemainAvailable()
+    {
+        var healthReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>
+            {
+                ["Database"] = new HealthReportEntry(
+                    HealthStatus.Degraded,
+                    "Pending migrations",
+                    TimeSpan.FromMilliseconds(10),
+                    null,
+                    null)
+            },
+            TimeSpan.FromMilliseconds(10));
+
+        _healthCheckServiceMock
+            .Setup(x => x.CheckHealthAsync(It.IsAny<Func<HealthCheckRegistration, bool>?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(healthReport);
+
+        var health = await _controller.GetHealth();
+        var readiness = await _controller.GetReadiness();
+        var dependencies = await _controller.GetDependencyHealth();
+
+        health.Result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(200);
+        readiness.Result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(200);
+        readiness.Result.Should().BeOfType<ObjectResult>().Which.Value
+            .Should().BeOfType<ReadinessResponse>().Which.Ready.Should().BeTrue();
+        dependencies.Result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(200);
+    }
+
+    [Fact]
+    public async Task GetDependencyHealth_WhenDependencyIsUnhealthy_ShouldReturnServiceUnavailable()
+    {
+        var healthReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>
+            {
+                ["Database"] = new HealthReportEntry(
+                    HealthStatus.Unhealthy,
+                    "Database unavailable",
+                    TimeSpan.FromMilliseconds(10),
+                    new InvalidOperationException("offline"),
+                    null)
+            },
+            TimeSpan.FromMilliseconds(10));
+
+        _healthCheckServiceMock
+            .Setup(x => x.CheckHealthAsync(It.IsAny<Func<HealthCheckRegistration, bool>?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(healthReport);
+
+        var result = await _controller.GetDependencyHealth();
+
+        result.Result.Should().BeOfType<ObjectResult>().Which.StatusCode
+            .Should().Be(StatusCodes.Status503ServiceUnavailable);
     }
 
     [Fact]

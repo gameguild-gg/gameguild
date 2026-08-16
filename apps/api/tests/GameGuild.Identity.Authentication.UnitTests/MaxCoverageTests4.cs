@@ -262,8 +262,8 @@ public sealed class OAuthAuthServiceUrlTests
 
         _sut = new OAuthAuthService(
             Mock.Of<IUserRepository>(),
-            Mock.Of<IRefreshTokenRepository>(),
             Mock.Of<IJwtTokenService>(),
+            Mock.Of<IRefreshTokenHasher>(),
             Mock.Of<IOAuthService>(),
             Mock.Of<IGoogleIdTokenVerifier>(),
             Mock.Of<IExternalLoginRepository>(),
@@ -271,6 +271,7 @@ public sealed class OAuthAuthServiceUrlTests
             Mock.Of<IAuthAttemptService>(),
             Mock.Of<IHttpContextAccessor>(),
             Mock.Of<ISender>(),
+            Mock.Of<ISessionManagementService>(),
             Mock.Of<ILogger<OAuthAuthService>>());
     }
 

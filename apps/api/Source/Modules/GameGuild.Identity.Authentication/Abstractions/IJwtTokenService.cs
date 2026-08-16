@@ -27,7 +27,26 @@ public interface IJwtTokenService
         string[ ] roles,
         Guid? tenantId,
         int tokenVersion,
+        Guid sessionId,
+        CancellationToken cancellationToken = default);
+
+    Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
         DateTimeOffset authenticatedAt,
+        CancellationToken cancellationToken = default);
+
+    Task<string> GenerateAccessTokenAsync(
+        Guid userId,
+        string email,
+        string[ ] roles,
+        Guid? tenantId,
+        int tokenVersion,
+        DateTimeOffset authenticatedAt,
+        Guid sessionId,
         CancellationToken cancellationToken = default);
 
     Task<string> GenerateRefreshTokenAsync(Guid userId, DeviceInfo deviceInfo, CancellationToken cancellationToken = default);

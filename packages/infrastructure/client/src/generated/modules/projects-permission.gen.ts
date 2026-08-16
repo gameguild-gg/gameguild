@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,43 +17,37 @@ export class ProjectsPermissionModule {
 
   /**
    */
-  async postProjectsPermissionsShareWithRole(
+  async getProjectsPermissionsMyPermissions(
     projectId: string,
-    body: Types.ProjectsShareProjectWithRoleInput,
-  ): Promise<Result<Types.ProjectsShareResult, ApiError>> {
-    const url = `/v1/projects/${projectId}/permissions/:share-with-role`;
-
-    // Validate request body
-    const validatedBody = safeParse(Types.ProjectsShareProjectWithRoleInputSchema, body, 'request');
+  ): Promise<Result<Array<Types.ProjectsEffectivePermission>, ApiError>> {
+    const url = `/v1/projects/${projectId}/permissions/my-permissions`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "GET",
       path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(Types.ProjectsShareResultSchema, result.data, 'response');
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<Array<Types.ProjectsEffectivePermission>, ApiError>;
   }
 
   /**
    */
-  async getProjectsPermissionsCollaborators(projectId: string): Promise<Result<Array<Types.ProjectsProjectCollaboratorDto>, ApiError>> {
+  async getProjectsPermissionsCollaborators(
+    projectId: string,
+  ): Promise<Result<Array<Types.ProjectsProjectCollaboratorDto>, ApiError>> {
     const url = `/v1/projects/${projectId}/permissions/collaborators`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.ProjectsProjectCollaboratorDto>, ApiError>;
+    return result as Result<
+      Array<Types.ProjectsProjectCollaboratorDto>,
+      ApiError
+    >;
   }
 
   /**
@@ -65,10 +59,14 @@ export class ProjectsPermissionModule {
     const url = `/v1/projects/${projectId}/permissions/collaborators`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsAddCollaboratorInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.ProjectsAddCollaboratorInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -76,7 +74,11 @@ export class ProjectsPermissionModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.ProjectsInvitationResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.ProjectsInvitationResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -93,10 +95,14 @@ export class ProjectsPermissionModule {
     const url = `/v1/projects/${projectId}/permissions/collaborators/${collaboratorUserId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ProjectsUpdateCollaboratorInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.ProjectsUpdateCollaboratorInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "PUT",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -104,7 +110,11 @@ export class ProjectsPermissionModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.ProjectsPermissionUpdateResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.ProjectsPermissionUpdateResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -113,18 +123,25 @@ export class ProjectsPermissionModule {
 
   /**
    */
-  async deleteProjectsPermissionsCollaborators(projectId: string, collaboratorUserId: string): Promise<Result<Types.ProjectsPermissionUpdateResult, ApiError>> {
+  async deleteProjectsPermissionsCollaborators(
+    projectId: string,
+    collaboratorUserId: string,
+  ): Promise<Result<Types.ProjectsPermissionUpdateResult, ApiError>> {
     const url = `/v1/projects/${projectId}/permissions/collaborators/${collaboratorUserId}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.ProjectsPermissionUpdateResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.ProjectsPermissionUpdateResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -133,33 +150,58 @@ export class ProjectsPermissionModule {
 
   /**
    */
-  async getProjectsPermissionsMyPermissions(projectId: string): Promise<Result<Array<Types.ProjectsEffectivePermission>, ApiError>> {
-    const url = `/v1/projects/${projectId}/permissions/my-permissions`;
-
-    const result = await this.client.request({
-      method: 'GET',
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.ProjectsEffectivePermission>, ApiError>;
-  }
-
-  /**
-   */
-  async getProjectsPermissionsRoleTemplates(projectId: string): Promise<Result<Array<Types.ProjectsProjectRoleTemplate>, ApiError>> {
+  async getProjectsPermissionsRoleTemplates(
+    projectId: string,
+  ): Promise<Result<Array<Types.ProjectsProjectRoleTemplate>, ApiError>> {
     const url = `/v1/projects/${projectId}/permissions/role-templates`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     return result as Result<Array<Types.ProjectsProjectRoleTemplate>, ApiError>;
   }
+
+  /**
+   */
+  async postProjectsPermissionsShareWithRole(
+    projectId: string,
+    body: Types.ProjectsShareProjectWithRoleInput,
+  ): Promise<Result<Types.ProjectsShareResult, ApiError>> {
+    const url = `/v1/projects/${projectId}/permissions/:share-with-role`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.ProjectsShareProjectWithRoleInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ProjectsShareResultSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
-export function createProjectsPermissionModule(client: ApiClient): ProjectsPermissionModule {
+export function createProjectsPermissionModule(
+  client: ApiClient,
+): ProjectsPermissionModule {
   return new ProjectsPermissionModule(client);
 }

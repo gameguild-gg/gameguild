@@ -3,8 +3,7 @@ using Asp.Versioning.ApiExplorer;
 using GameGuild.Configuration;
 using GameGuild.Configuration.PresentationLayer.ApiVersioning;
 using GameGuild.Configuration.PresentationLayer.OpenAPI;
-using GameGuild.Learning.Assessments;
-using GameGuild.Learning.Courses;
+using GameGuild.API.Setup;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Any;
@@ -126,12 +125,12 @@ public static class OpenApiExtensions
                         var genericTypeName = type.Name.Split('`')[0];
                         var genericArgs = string.Join("", type.GetGenericArguments().Select(t => t.Name));
 
-                        // Find module path (everything between "GameGuild" and the type name)
-                        var gameGuildIndex = Array.IndexOf(parts, "GameGuild");
-                        if (gameGuildIndex >= 0 && parts.Length > gameGuildIndex + 2)
+                        // Find module path (everything between the product prefix and the type name)
+                        var productAssemblyIndex = Array.IndexOf(parts, "GameGuild");
+                        if (productAssemblyIndex >= 0 && parts.Length > productAssemblyIndex + 2)
                         {
-                            // Join all parts between GameGuild and the type name with underscores
-                            var modulePath = string.Join("_", parts.Skip(gameGuildIndex + 1).Take(parts.Length - gameGuildIndex - 2));
+                            // Join all module path parts with underscores.
+                            var modulePath = string.Join("_", parts.Skip(productAssemblyIndex + 1).Take(parts.Length - productAssemblyIndex - 2));
                             return $"{modulePath}_{genericTypeName}{genericArgs}";
                         }
 
@@ -173,8 +172,7 @@ public static class OpenApiExtensions
                 c.OperationFilter<ModuleControllerTagOperationFilter>();
                 c.OperationFilter<AllowAnonymousOperationFilter>();
                 c.SchemaFilter<FlagsEnumSchemaFilter>();
-                c.SchemaFilter<LegacyAssessmentTypeSchemaFilter>();
-                c.SchemaFilter<LegacyProgramContentTypeSchemaFilter>();
+                ApiProductComposition.Instance.ConfigureOpenApi(c);
 
                 // Add security definition for JWT Bearer token
                 c.AddSecurityDefinition(
@@ -207,23 +205,6 @@ public static class OpenApiExtensions
         );
 
         return services;
-    }
-
-    /// <summary>
-    ///     Helper function to normalize schema names.
-    ///     Note: We intentionally keep the "Dto" suffix to avoid schema ID conflicts
-    ///     between entities (e.g., TenantSettings) and their DTOs (e.g., TenantSettingsDto).
-    /// </summary>
-    private static string NormalizeSchemaName(string name)
-    {
-        // DO NOT strip "Dto" suffix - keeping it prevents conflicts between
-        // entities and DTOs with similar names (e.g., TenantSettings vs TenantSettingsDto)
-
-        // Convert "Result" suffix to "Response" for consistency
-        if (name.EndsWith("Result", StringComparison.Ordinal))
-            name = name[..^6] + "Response";
-
-        return name;
     }
 
     /// <summary>
@@ -299,49 +280,6 @@ internal sealed class FlagsEnumSchemaFilter : ISchemaFilter
     }
 }
 
-/// <summary>
-/// Keeps historical database enum values readable while preventing new API clients from
-/// authoring obsolete content types. The write/mapping layer still accepts and normalizes
-/// Page and Challenge records created before the migration.
-/// </summary>
-internal sealed class LegacyProgramContentTypeSchemaFilter : ISchemaFilter
-{
-    private static readonly HashSet<string> LegacyValues =
-    [
-        nameof(ProgramContentType.Page),
-        nameof(ProgramContentType.Challenge),
-    ];
-
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
-    {
-        if (context.Type != typeof(ProgramContentType) || schema.Enum is null)
-            return;
-
-        schema.Enum = schema.Enum
-            .Where(value => value is not OpenApiString text || !LegacyValues.Contains(text.Value))
-            .ToList();
-        schema.Description = $"{schema.Description} Legacy values Page and Challenge are normalized on read and are not valid for new content.".Trim();
-    }
-}
-
-/// <summary>
-/// Keeps the historical Exam database enum slot readable while preventing new API
-/// clients from authoring it. The domain normalizes it to Quiz at the boundary.
-/// </summary>
-internal sealed class LegacyAssessmentTypeSchemaFilter : ISchemaFilter
-{
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
-    {
-        if (context.Type != typeof(AssessmentType) || schema.Enum is null)
-            return;
-
-        schema.Enum = schema.Enum
-            .Where(value => value is not OpenApiString text || text.Value != nameof(AssessmentType.Exam))
-            .ToList();
-        schema.Description = (schema.Description + " Legacy value Exam is normalized on read and is not valid for new assessments.").Trim();
-    }
-}
-
 internal sealed class OpenApiDocumentTransformer : Microsoft.AspNetCore.OpenApi.IOpenApiDocumentTransformer
 {
     public Task TransformAsync(Microsoft.OpenApi.Models.OpenApiDocument document, Microsoft.AspNetCore.OpenApi.OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
@@ -394,7 +332,7 @@ internal sealed class ModuleControllerTagOperationFilter : IOperationFilter
         return controllerAction.ControllerTypeInfo
             .GetCustomAttributes(typeof(Microsoft.AspNetCore.Http.TagsAttribute), inherit: false)
             .OfType<Microsoft.AspNetCore.Http.TagsAttribute>()
-            .SelectMany(attribute => attribute.Tags ?? Array.Empty<string>())
+            .SelectMany(attribute => attribute.Tags)
             .FirstOrDefault(tag => !string.IsNullOrWhiteSpace(tag));
     }
 
@@ -518,9 +456,6 @@ internal sealed class ModuleControllerTagOperationFilter : IOperationFilter
         if (explicitSegments.Count == 1)
         {
             var collapsed = CollapseDuplicatePrefixToken(explicitSegments[0], lastPrefixSegment);
-            if (string.IsNullOrWhiteSpace(collapsed))
-                return prefix;
-
             return collapsed == lastPrefixSegment
                 ? prefix
                 : string.Join("/", prefixSegments.Append(collapsed));

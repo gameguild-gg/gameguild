@@ -21,14 +21,15 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 public class DiscordSignInTests
 {
     private readonly Mock<IUserRepository> _userRepoMock = new();
-    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepoMock = new();
     private readonly Mock<IJwtTokenService> _jwtTokenServiceMock = new();
+    private readonly Mock<IRefreshTokenHasher> _refreshTokenHasherMock = new();
     private readonly Mock<IOAuthService> _oauthServiceMock = new();
     private readonly Mock<IGoogleIdTokenVerifier> _googleVerifierMock = new();
     private readonly Mock<IExternalLoginRepository> _externalLoginRepoMock = new();
     private readonly Mock<IAuthAttemptService> _authAttemptServiceMock = new();
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
     private readonly Mock<ISender> _senderMock = new();
+    private readonly Mock<ISessionManagementService> _sessionManagementServiceMock = new();
     private readonly IConfiguration _configuration;
 
     private const string RedirectUri = "https://web.example.com/api/auth/callback/discord";
@@ -61,6 +62,9 @@ public class DiscordSignInTests
         httpContext.Request.Headers.UserAgent = "TestAgent/1.0";
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
         _authAttemptServiceMock.Setup(x => x.GetClientIpAddress(It.IsAny<HttpContext>())).Returns("127.0.0.1");
+        _refreshTokenHasherMock
+            .Setup(x => x.HashToken(It.IsAny<string>()))
+            .Returns((string token) => $"hash-{token}");
 
         _userRepoMock.Setup(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -85,7 +89,7 @@ public class DiscordSignInTests
             .ReturnsAsync((Tenant?)null);
 
         _jwtTokenServiceMock
-            .Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("access-token");
         _jwtTokenServiceMock
             .Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
@@ -94,8 +98,8 @@ public class DiscordSignInTests
 
     private OAuthAuthService CreateSut() => new(
         _userRepoMock.Object,
-        _refreshTokenRepoMock.Object,
         _jwtTokenServiceMock.Object,
+        _refreshTokenHasherMock.Object,
         _oauthServiceMock.Object,
         _googleVerifierMock.Object,
         _externalLoginRepoMock.Object,
@@ -103,6 +107,7 @@ public class DiscordSignInTests
         _authAttemptServiceMock.Object,
         _httpContextAccessorMock.Object,
         _senderMock.Object,
+        _sessionManagementServiceMock.Object,
         NullLogger<OAuthAuthService>.Instance);
 
     private static DiscordSignInRequest Request(Guid? tenantId = null) =>
@@ -136,12 +141,19 @@ public class DiscordSignInTests
         _externalLoginRepoMock.Verify(
             x => x.UpsertAsync(It.Is<ExternalLogin>(e => e.Provider == "discord" && e.ProviderKey == "discord-snowflake-1"), It.IsAny<CancellationToken>()),
             Times.Once);
-        // Exactly one refresh row — parity with the Google pipeline.
-        _refreshTokenRepoMock.Verify(
-            x => x.CreateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()),
-            Times.Never);
         _jwtTokenServiceMock.Verify(
             x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        _sessionManagementServiceMock.Verify(
+            x => x.CreateSessionAsync(
+                result.SessionId,
+                result.UserId,
+                "127.0.0.1",
+                "TestAgent/1.0",
+                "hash-refresh-token",
+                It.IsAny<DateTime>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -370,6 +382,7 @@ public class DiscordSignInTests
                 It.IsAny<string[]>(),
                 studioTenantId,
                 It.IsAny<int>(),
+                It.IsAny<Guid>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

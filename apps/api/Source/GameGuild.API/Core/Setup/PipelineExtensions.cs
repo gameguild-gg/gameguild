@@ -22,8 +22,8 @@ public static class PipelineExtensions
 
         // Request pipeline middleware order matters for correct behavior.
 
-        // 01. Developer Exception Page (detailed errors in development only)
-        if (app.Environment.IsDevelopment()) app.UseDeveloperExceptionPage();
+        // 01. Exception Handling (consistent RFC 7807 error responses in all environments)
+        app.UseMiddleware<ExceptionHandlingMiddleware>();
 
         // 02. Forwarded Headers (proxy/load balancer support, must be early)
         app.UseForwardedHeaders();
@@ -35,74 +35,72 @@ public static class PipelineExtensions
         if (!app.Environment.IsDevelopment())
         {
             app.UseWhen(
-                context => !IsLoopbackRequest(context),
+                ShouldRedirectToHttps,
                 branch => branch.UseHttpsRedirection());
         }
 
-        // 05. Exception Handler (typed 401/403/4xx/5xx problem details in every environment)
-        app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-        // 06. Correlation ID (distributed tracing, reads/generates X-Correlation-Id header)
+        // 05. Correlation ID (distributed tracing, reads/generates X-Correlation-Id header)
         app.UseCorrelationId();
 
-        // 07. Serilog Request Logging (structured request/response logs with enrichment)
+        // 06. Serilog Request Logging (structured request/response logs with enrichment)
         app.UseSerilogRequestLogging(SerilogExtensions.ConfigureRequestLogging);
 
-        // 08. HTTP Logging (ASP.NET Core built-in request/response diagnostics)
+        // 07. HTTP Logging (ASP.NET Core built-in request/response diagnostics)
         if (app.Configuration.GetValue<bool>("PresentationLayer:EnableHttpLogging"))
         {
             app.UseHttpLogging();
         }
 
-        // 09. Request Localization (culture/language resolution)
+        // 08. Request Localization (culture/language resolution)
         app.UseRequestLocalization();
 
-        // 10. Security Headers (X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, etc.)
+        // 09. Security Headers (X-Content-Type-Options, X-Frame-Options, CSP, Referrer-Policy, etc.)
         app.UseSecurityHeaders();
 
-        // 11. Routing (endpoint matching, required before auth)
+        // 10. Routing (endpoint matching, required before auth)
         app.UseRouting();
 
-        // 12. CORS (Cross-Origin Resource Sharing, after routing)
+        // 11. CORS (Cross-Origin Resource Sharing, after routing)
         app.UseCors();
 
-        // 13. Response Caching (HTTP cache headers)
+        // 12. Response Caching (HTTP cache headers)
         // WARNING: With JWT + multi-tenant, ensure proper Vary headers or restrict to public endpoints
         app.UseResponseCaching();
 
-        // 14. Response Compression (gzip/brotli for smaller payloads)
+        // 13. Response Compression (gzip/brotli for smaller payloads)
         app.UseResponseCompression();
 
-        // 15. Authentication (identify user from JWT/cookies before validating tenant membership)
+        // 14. Authentication (identify user from JWT/cookies)
+        // SECURITY: Tenant resolution validates authenticated membership and therefore needs the ClaimsPrincipal first.
         app.UseAuthentication();
 
-        // 16. Tenant Resolution (multi-tenant context, after authentication)
-        // Resolves tenant from: X-Tenant-Id header > Host domain > Query string > Default tenant
-        // SECURITY: Authenticated users are checked against the resolved tenant membership.
+        // 15. Tenant Resolution (multi-tenant context, after routing and authentication)
+        // Resolves tenant from: header > domain > query > route > authenticated claim > anonymous default.
         app.UseTenantResolution();
 
-        // 17. Actor Context (build immutable ActorContext from authenticated claims + tenant)
+        // 16. Actor Context (build immutable ActorContext from claims + tenant)
+        // SECURITY: Must be after Authentication (needs ClaimsPrincipal) and Tenant Resolution
         // SECURITY: Must be before Authorization (authorization handlers use ActorContext)
         app.UseActorContext();
 
-        // 18. Authorization (enforce permissions after user is identified)
+        // 17. Authorization (enforce permissions after user is identified)
         app.UseAuthorization();
 
-        // 19. Rate Limiting (throttle requests per client/endpoint)
+        // 18. Rate Limiting (throttle requests per client/endpoint)
         if (app.Configuration.GetValue<bool>("PresentationLayer:EnableRateLimiting"))
         {
             app.UseRateLimiter();
         }
 
-        // 20. Controller Endpoints (REST API routes via [ApiController])
+        // 19. Controller Endpoints (REST API routes via [ApiController])
         app.MapControllers();
 
-        // 21. Health Check Endpoints (disabled - HealthController provides /health, /ready, /live instead)
+        // 20. Health Check Endpoints (disabled - HealthController provides /health, /ready, /live instead)
         // We use a controller instead of MapHealthChecks() for more control over response format,
         // HTTP status codes, and Kubernetes probe semantics.
         // app.MapHealthChecks("/health");
 
-        // 22. Minimal API Endpoints (IEndpoint implementations, including RootRedirectEndpoint)
+        // 21. Minimal API Endpoints (IEndpoint implementations, including RootRedirectEndpoint)
         app.MapEndpoints(null);
 
         // 23. Swagger JSON (Swashbuckle middleware generates /swagger/{version}/swagger.json)
@@ -112,7 +110,7 @@ public static class PipelineExtensions
         }
 
         // 24. Compatibility OpenAPI URL.
-        // The native .NET OpenAPI document generator currently over-recurses on this API surface.
+        // The native .NET OpenAPI document generator can over-recurse on a large modular API surface.
         // Keep /openapi/{document}.json stable by pointing callers to the Swashbuckle document.
         app.MapGet("/openapi/{documentName}.json",
             (string documentName) => Results.Redirect($"/swagger/{documentName}/swagger.json"));
@@ -141,6 +139,17 @@ public static class PipelineExtensions
         }
 
         return app;
+    }
+
+    internal static bool ShouldRedirectToHttps(HttpContext context) =>
+        !IsLoopbackRequest(context) && !IsHealthRequest(context);
+
+    private static bool IsHealthRequest(HttpContext context)
+    {
+        var path = context.Request.Path;
+        return path.StartsWithSegments("/health")
+               || path.StartsWithSegments("/ready")
+               || path.StartsWithSegments("/live");
     }
 
     private static bool IsLoopbackRequest(HttpContext context)

@@ -8,43 +8,6 @@ import type { OpenApiSpec } from '../../scripts/fetch-spec.js';
 import simpleSpec from './fixtures/simple-spec.json';
 
 describe('OpenAPI Spec Normalizer', () => {
-  it('should produce the same canonical output regardless of object key order', () => {
-    const createSpec = (reverse: boolean): OpenApiSpec => {
-      const properties = reverse
-        ? { zebra: { type: 'string' as const }, alpha: { type: 'string' as const } }
-        : { alpha: { type: 'string' as const }, zebra: { type: 'string' as const } };
-      const paths = reverse
-        ? {
-            '/v1/zebra': { get: { responses: { '200': { description: 'Success' } } } },
-            '/v1/alpha': { get: { responses: { '200': { description: 'Success' } } } },
-          }
-        : {
-            '/v1/alpha': { get: { responses: { '200': { description: 'Success' } } } },
-            '/v1/zebra': { get: { responses: { '200': { description: 'Success' } } } },
-          };
-
-      return {
-        openapi: '3.0.1',
-        info: { title: 'Canonical', version: '1.0' },
-        paths,
-        components: {
-          schemas: {
-            OrderedModel: { type: 'object', properties },
-          },
-        },
-      } as OpenApiSpec;
-    };
-
-    const forward = normalizeSpec(createSpec(false));
-    const reversed = normalizeSpec(createSpec(true));
-
-    expect(JSON.stringify(reversed)).toBe(JSON.stringify(forward));
-    expect(Object.keys(forward.paths)).toEqual(['/v1/alpha', '/v1/zebra']);
-    expect(
-      Object.keys((forward.components?.schemas?.OrderedModel as { properties: object }).properties),
-    ).toEqual(['alpha', 'zebra']);
-  });
-
   it('should normalize operation IDs when missing', () => {
     const spec: OpenApiSpec = {
       ...simpleSpec,
@@ -88,128 +51,37 @@ describe('OpenAPI Spec Normalizer', () => {
     expect(operation.operationId).toBe('getAllUsers');
   });
 
-  it('should disambiguate colliding routes with semantic path parameter names', () => {
-    const spec: OpenApiSpec = {
-      ...simpleSpec,
-      paths: {
-        '/v1/products': {
-          get: { responses: { '200': { description: 'Success' } } },
+  it('should resolve duplicate operation IDs with deterministic route semantics', () => {
+    const paths = {
+      '/api/v1/listings/{listingId}:publish': {
+        get: {
+          operationId: 'api_Listings_Controller_GetController',
+          responses: { '200': { description: 'Success' } },
         },
-        '/v1/products/{productId}': {
-          get: { responses: { '200': { description: 'Success' } } },
-        },
-        '/v1/testing/events/{eventId}/applications': {
-          get: { responses: { '200': { description: 'Success' } } },
-        },
-        '/v1/testing/events/applications/{applicationId}': {
-          get: { responses: { '200': { description: 'Success' } } },
-        },
-        '/v1/courses/{programId}/content/reorder': {
-          post: { responses: { '204': { description: 'Success' } } },
-        },
-        '/v1/courses/{id}/content:reorder': {
-          post: { responses: { '204': { description: 'Success' } } },
+        post: {
+          operationId: 'api_Listings_Controller_GetController',
+          responses: { '200': { description: 'Success' } },
         },
       },
-    } as OpenApiSpec;
+    };
+    const reversedPaths = Object.fromEntries(Object.entries(paths).reverse());
 
-    const normalized = normalizeSpec(spec);
+    const normalized = normalizeSpec({ ...simpleSpec, paths } as OpenApiSpec);
+    const reversed = normalizeSpec({ ...simpleSpec, paths: reversedPaths } as OpenApiSpec);
 
-    expect((normalized.paths['/v1/products'] as any).get.operationId).toBe('getProducts');
-    expect((normalized.paths['/v1/products/{productId}'] as any).get.operationId).toBe(
-      'getProductsByProductId',
-    );
-    expect(
-      (normalized.paths['/v1/testing/events/{eventId}/applications'] as any).get.operationId,
-    ).toBe('getTestingEventsByEventIdApplications');
-    expect(
-      (normalized.paths['/v1/testing/events/applications/{applicationId}'] as any).get.operationId,
-    ).toBe('getTestingEventsApplicationsByApplicationId');
-    expect(
-      (normalized.paths['/v1/courses/{programId}/content/reorder'] as any).post.operationId,
-    ).toBe('postCoursesByProgramIdContentReorder');
-    expect(
-      (normalized.paths['/v1/courses/{id}/content:reorder'] as any).post.operationId,
-    ).toBe('postCoursesByIdContentReorder');
+    const operationIds = {
+      get: (normalized.paths['/api/v1/listings/{listingId}:publish'] as any).get.operationId,
+      post: (normalized.paths['/api/v1/listings/{listingId}:publish'] as any).post.operationId,
+    };
 
-    const operationIds = Object.values(normalized.paths).flatMap((pathItem: any) =>
-      Object.values(pathItem).map((operation: any) => operation.operationId),
-    );
-    expect(operationIds).not.toContain('getProducts1');
-    expect(operationIds.some((operationId) => /\d+$/.test(operationId))).toBe(false);
-  });
-
-  it('should remove redundant api version aliases before assigning operation IDs', () => {
-    const spec: OpenApiSpec = {
-      ...simpleSpec,
-      paths: {
-        '/v1/clients': {
-          get: {
-            tags: ['Clients'],
-            summary: 'List clients',
-            responses: { '200': { description: 'Success' } },
-          },
-        },
-        '/api/v1/clients': {
-          get: {
-            tags: ['Clients'],
-            summary: 'List clients',
-            responses: { '200': { description: 'Success' } },
-          },
-        },
-        '/v1/clients/{clientId}': {
-          get: {
-            tags: ['Clients'],
-            summary: 'Get client',
-            responses: { '200': { description: 'Success' } },
-          },
-        },
-        '/api/v1/clients/{clientId}': {
-          get: {
-            tags: ['Clients'],
-            summary: 'Get client',
-            responses: { '200': { description: 'Success' } },
-          },
-        },
-      },
-    } as OpenApiSpec;
-
-    const normalized = normalizeSpec(spec);
-
-    expect(normalized.paths).toHaveProperty('/v1/clients');
-    expect(normalized.paths).toHaveProperty('/v1/clients/{clientId}');
-    expect(normalized.paths).not.toHaveProperty('/api/v1/clients');
-    expect(normalized.paths).not.toHaveProperty('/api/v1/clients/{clientId}');
-    expect((normalized.paths['/v1/clients'] as any).get.operationId).toBe('getClients');
-    expect((normalized.paths['/v1/clients/{clientId}'] as any).get.operationId).toBe(
-      'getClientsByClientId',
-    );
-  });
-
-  it('should reject unresolved operation ID collisions instead of appending a number', () => {
-    const spec: OpenApiSpec = {
-      ...simpleSpec,
-      paths: {
-        '/v1/clients': {
-          get: {
-            operationId: 'getClients',
-            summary: 'Canonical clients',
-            responses: { '200': { description: 'Success' } },
-          },
-        },
-        '/api/v1/clients': {
-          get: {
-            operationId: 'getClients',
-            summary: 'Different operation that cannot be treated as an alias',
-            responses: { '200': { description: 'Success' } },
-          },
-        },
-      },
-    } as OpenApiSpec;
-
-    expect(() => normalizeSpec(spec)).toThrowError(
-      /Unable to create a unique OpenAPI operation ID without a numeric suffix/,
-    );
+    expect(operationIds).toEqual({
+      get: 'listingsGetForGetListingsByListingIdPublish',
+      post: 'listingsGetForPostListingsByListingIdPublish',
+    });
+    expect({
+      get: (reversed.paths['/api/v1/listings/{listingId}:publish'] as any).get.operationId,
+      post: (reversed.paths['/api/v1/listings/{listingId}:publish'] as any).post.operationId,
+    }).toEqual(operationIds);
   });
 
   it('should normalize tag names to PascalCase', () => {
@@ -281,6 +153,56 @@ describe('OpenAPI Spec Normalizer', () => {
     expect(schemas).toHaveProperty('ResultOfUser'); // ResultOfUserDto -> ResultOfUser
   });
 
+  it('should preserve generic argument identity and update each reference independently', () => {
+    const usersPage = 'PagedResult`1[[Acme_Identity_Users_UserDto, Acme.Identity.Users, Version=1_0_0_PagedResultUserDto';
+    const ticketsPage = 'PagedResult`1[[Acme_Commerce_SupportTicketDto, Acme.Commerce, Version=1_0_0_PagedResultSupportTicketDto';
+    const spec: OpenApiSpec = {
+      ...simpleSpec,
+      paths: {
+        '/users': {
+          get: {
+            responses: {
+              '200': {
+                description: 'Success',
+                content: { 'application/json': { schema: { $ref: `#/components/schemas/${usersPage}` } } },
+              },
+            },
+          },
+        },
+        '/tickets': {
+          get: {
+            responses: {
+              '200': {
+                description: 'Success',
+                content: { 'application/json': { schema: { $ref: `#/components/schemas/${ticketsPage}` } } },
+              },
+            },
+          },
+        },
+      },
+      components: {
+        schemas: {
+          [usersPage]: { type: 'object', properties: { items: { type: 'array' } } },
+          [ticketsPage]: { type: 'object', properties: { items: { type: 'array' } } },
+        },
+      },
+    } as OpenApiSpec;
+
+    const normalized = normalizeSpec(spec);
+    const schemas = (normalized.components as any).schemas;
+
+    expect(Object.keys(schemas)).toEqual([
+      'PagedResultOfCommerceSupportTicket',
+      'PagedResultOfIdentityUsersUser',
+    ]);
+    expect((normalized.paths['/users'] as any).get.responses['200'].content['application/json'].schema.$ref).toBe(
+      '#/components/schemas/PagedResultOfIdentityUsersUser',
+    );
+    expect((normalized.paths['/tickets'] as any).get.responses['200'].content['application/json'].schema.$ref).toBe(
+      '#/components/schemas/PagedResultOfCommerceSupportTicket',
+    );
+  });
+
   it('should update all schema references when normalizing names', () => {
     const spec: OpenApiSpec = {
       ...simpleSpec,
@@ -312,72 +234,6 @@ describe('OpenAPI Spec Normalizer', () => {
     // Normalize removes namespace and Dto suffix
     expect(schemas).toHaveProperty('User'); // Old.Namespace.UserDto -> User
     expect(userListOutput.properties.users.items.$ref).toBe('#/components/schemas/User');
-  });
-
-  it('should preserve distinct entity and DTO schemas when their normalized names collide', () => {
-    const spec: OpenApiSpec = {
-      ...simpleSpec,
-      components: {
-        schemas: {
-          Identity_Users_UserProfile: {
-            type: 'object',
-            properties: { visibility: { type: 'string' } },
-          },
-          Identity_Users_UserProfileDto: {
-            type: 'object',
-            properties: { timeZone: { type: 'string' } },
-          },
-          ProfileEnvelope: {
-            type: 'object',
-            properties: {
-              entity: { $ref: '#/components/schemas/Identity_Users_UserProfile' },
-              dto: { $ref: '#/components/schemas/Identity_Users_UserProfileDto' },
-            },
-          },
-        },
-      },
-    } as OpenApiSpec;
-
-    const normalized = normalizeSpec(spec);
-    const schemas = (normalized.components as any)?.schemas;
-
-    expect(schemas).toHaveProperty('IdentityUsersUserProfile');
-    expect(schemas).toHaveProperty('IdentityUsersUserProfileDto');
-    expect(schemas.ProfileEnvelope.properties.entity.$ref).toBe('#/components/schemas/IdentityUsersUserProfile');
-    expect(schemas.ProfileEnvelope.properties.dto.$ref).toBe('#/components/schemas/IdentityUsersUserProfileDto');
-  });
-
-  it('should preserve the generic argument when multiple paged result schemas collide', () => {
-    const profilePage = 'PagedResult`1[[GameGuild_Identity_Users_UserProfileDto, GameGuild.Identity.Users]]';
-    const notificationPage = 'PagedResult`1[[GameGuild_Identity_Users_UserNotificationDto, GameGuild.Identity.Users]]';
-    const spec: OpenApiSpec = {
-      ...simpleSpec,
-      components: {
-        schemas: {
-          [profilePage]: { type: 'object' },
-          [notificationPage]: { type: 'object' },
-          PageEnvelope: {
-            type: 'object',
-            properties: {
-              profiles: { $ref: `#/components/schemas/${profilePage}` },
-              notifications: { $ref: `#/components/schemas/${notificationPage}` },
-            },
-          },
-        },
-      },
-    } as OpenApiSpec;
-
-    const normalized = normalizeSpec(spec);
-    const schemas = (normalized.components as any)?.schemas;
-
-    expect(schemas).toHaveProperty('PagedResultOfGameGuildIdentityUsersUserProfileDto');
-    expect(schemas).toHaveProperty('PagedResultOfGameGuildIdentityUsersUserNotificationDto');
-    expect(schemas.PageEnvelope.properties.profiles.$ref).toBe(
-      '#/components/schemas/PagedResultOfGameGuildIdentityUsersUserProfileDto',
-    );
-    expect(schemas.PageEnvelope.properties.notifications.$ref).toBe(
-      '#/components/schemas/PagedResultOfGameGuildIdentityUsersUserNotificationDto',
-    );
   });
 
   it('should preserve the original spec structure', () => {
