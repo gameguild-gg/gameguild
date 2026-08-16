@@ -14,8 +14,8 @@ type CoursesPageProps = {
 };
 
 /** Unified public catalog: courses by default, program packages via ?type=program. */
-export default async function CoursesPage({ searchParams }: CoursesPageProps = {}) {
-  const query = await searchParams;
+export default async function CoursesPage({ searchParams }: CoursesPageProps) {
+  const query = (await searchParams) ?? {};
   if (query?.type === 'program') return <ProgramsCatalogView />;
   const catalog = await getPublicCourseCatalog();
   const courses = catalog.data;
