@@ -10,6 +10,9 @@ const evidencePath = process.env.PLAYWRIGHT_JSON_OUTPUT_NAME;
 const publicRoutes = [
   ['Home', '/'],
   ['Courses', '/courses'],
+  ['Legacy course content', '/courses/ai4games/content'],
+  ['Legacy course activities', '/courses/ai4games/activities'],
+  ['Legacy course grades', '/courses/ai4games/grades'],
   ['Programs', '/programs'],
   ['Testing Lab', '/testing-lab'],
   ['Launch Pad', '/launch-pad'],
@@ -26,10 +29,10 @@ const footerRoutes = [
   ['Roadmap', '/about/roadmap'],
   ['Contributors', '/about/contributors'],
   ['Contact', '/contact'],
-  ['Licenses', '/licenses'],
-  ['Terms', '/terms-of-service'],
-  ['Privacy', '/polices/privacy'],
-  ['Cookies', '/polices/cookies'],
+  ['Licenses', '/legal/licenses'],
+  ['Terms', '/legal/terms-of-service'],
+  ['Privacy', '/legal/privacy'],
+  ['Cookies', '/legal/cookies'],
 ];
 
 const dashboardRoutes = [
