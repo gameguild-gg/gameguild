@@ -1,4 +1,4 @@
-import { parseAssetUri, type AssetUri } from "../core/asset-uri";
+import type { AssetRecord } from "../core/asset-contracts";
 import type { RemoteAssetProvider } from "./remote-asset-provider";
 
 export class RemoteAssetProviderRegistry {
@@ -22,8 +22,9 @@ export class RemoteAssetProviderRegistry {
     return Array.from(this.providers.values());
   }
 
-  forUri(uri: AssetUri): RemoteAssetProvider | undefined {
-    const parsed = parseAssetUri(uri);
-    return parsed?.source === "remote" ? this.providers.get(parsed.providerKey) : undefined;
+  forRecord(record: AssetRecord): RemoteAssetProvider | undefined {
+    return record.location.type === "local"
+      ? undefined
+      : this.providers.get(record.location.providerKey);
   }
 }

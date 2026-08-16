@@ -3,13 +3,16 @@ import type {
   AssetQuery,
   AssetRecord,
   AssetScope,
+  ResolvedAssetUrl,
 } from "../core/asset-contracts";
 import type { AssetUri } from "../core/asset-uri";
 
 export interface RemoteAssetProviderCapabilities {
   upload: boolean;
+  lookup: boolean;
   list: boolean;
   download: boolean;
+  resolveUrl: boolean;
   delete?: boolean;
   revisions?: boolean;
   transforms?: boolean;
@@ -22,6 +25,8 @@ export interface AssetProviderContext {
 }
 
 export interface AssetUploadInput {
+  id: string;
+  uri: AssetUri;
   blob: Blob;
   name: string;
   mimeType: string;
@@ -41,6 +46,7 @@ export interface RemoteAssetProvider {
   ): Promise<AssetRecord[]>;
   get(uri: AssetUri, context: AssetProviderContext): Promise<AssetRecord | null>;
   list(query: AssetQuery, context: AssetProviderContext): Promise<AssetPage>;
-  download(uri: AssetUri, context: AssetProviderContext): Promise<AssetDownload>;
-  delete?(uri: AssetUri, context: AssetProviderContext): Promise<void>;
+  download(record: AssetRecord, context: AssetProviderContext): Promise<AssetDownload>;
+  resolveUrl(record: AssetRecord, context: AssetProviderContext): Promise<ResolvedAssetUrl>;
+  delete?(record: AssetRecord, context: AssetProviderContext): Promise<void>;
 }

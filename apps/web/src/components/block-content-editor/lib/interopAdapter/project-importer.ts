@@ -1,5 +1,11 @@
 import JSZip, { type JSZipObject } from "jszip"
-import { findAssetUris, isAssetUri, parseAssetUri, type AssetUri } from "@game-guild/assets"
+import {
+  computeAssetContentHash,
+  findAssetUris,
+  isAssetUri,
+  parseAssetUri,
+  type AssetUri,
+} from "@game-guild/assets"
 import { getDefaultBrowserAssetRepository } from "@game-guild/assets/browser"
 import type { ProjectPreferences } from "@/components/block-content-editor/lib/storage/editor/project-preferences"
 import type { StorageType } from "@/components/block-content-editor/lib/storage/editor/storage-types"
@@ -15,6 +21,7 @@ interface AssetBundleManifestEntry {
   name: string
   mimeType: string
   size: number
+  contentHash: string
   path: string
 }
 
@@ -56,7 +63,7 @@ export class ProjectImporter {
   private static readonly ASSETS_FOLDER = "assets"
   private static readonly ASSET_MANIFEST_FILENAME = "manifest.json"
   private static readonly MAX_ASSET_COUNT = 2000
-  private static readonly MAX_ASSET_SIZE = 250 * 1024 * 1024
+  private static readonly MAX_ASSET_SIZE = 64 * 1024 * 1024
   private static readonly MAX_BUNDLE_ASSET_BYTES = 1024 * 1024 * 1024
 
   static async importFromFile(file: File): Promise<ImportedProjectData> {
@@ -72,13 +79,10 @@ export class ProjectImporter {
   private static async importAssetBundle(
     manifestFile: JSZipObject | File | undefined,
     readObject: (path: string) => Promise<Blob | null>,
-    requiredUris: readonly AssetUri[],
+    documentUris: readonly AssetUri[],
   ): Promise<Map<AssetUri, AssetUri>> {
     const replacements = new Map<AssetUri, AssetUri>()
-    if (!manifestFile) {
-      if (requiredUris.length) throw new Error("Project bundle is missing its asset manifest")
-      return replacements
-    }
+    if (!manifestFile) return replacements
     const manifestText =
       "async" in manifestFile ? await manifestFile.async("text") : await manifestFile.text()
     const parsedManifest = JSON.parse(manifestText) as unknown
@@ -88,13 +92,16 @@ export class ProjectImporter {
       throw new Error("Asset bundle contains too many files")
     }
     const available = new Set<AssetUri>()
+    const referenced = new Set(documentUris)
     let totalSize = 0
     for (const entry of manifest) {
       const parsedUri = isAssetUri(entry.uri) ? parseAssetUri(entry.uri) : null
       if (
-        parsedUri?.source !== "local" ||
+        !parsedUri ||
+        !referenced.has(entry.uri) ||
         !entry.name ||
         !entry.mimeType ||
+        !/^sha256:[0-9a-f]{64}$/.test(entry.contentHash) ||
         !Number.isSafeInteger(entry.size) ||
         entry.size <= 0 ||
         entry.size > ProjectImporter.MAX_ASSET_SIZE ||
@@ -109,27 +116,37 @@ export class ProjectImporter {
         throw new Error("Asset bundle exceeds the import size limit")
       }
     }
-    if (requiredUris.some((uri) => !available.has(uri))) {
-      throw new Error("Project bundle does not contain every local asset")
-    }
-
+    const created: AssetUri[] = []
     try {
       for (const entry of manifest) {
         const blob = await readObject(entry.path)
         if (!blob || blob.size !== entry.size) {
           throw new Error(`Missing or corrupt bundled asset: ${entry.name}`)
         }
+        if (await computeAssetContentHash(blob) !== entry.contentHash) {
+          throw new Error(`Bundled asset failed its integrity check: ${entry.name}`)
+        }
+        const existed = await assetRepository.get(entry.uri)
+        if (existed) {
+          if (existed.contentHash !== entry.contentHash) {
+            throw new Error(`Asset identity conflicts with existing content: ${entry.uri}`)
+          }
+          replacements.set(entry.uri, existed.uri)
+          continue
+        }
         const imported = await assetRepository.importBlob(blob, {
+          id: parseAssetUri(entry.uri)!.id,
           name: entry.name,
           mimeType: entry.mimeType,
           source: { type: "device", value: "project-import" },
         })
         replacements.set(entry.uri, imported.uri)
+        created.push(imported.uri)
       }
       return replacements
     } catch (error) {
       await Promise.all(
-        Array.from(replacements.values(), (uri) =>
+        created.map((uri) =>
           assetRepository.remove(uri, { force: true }).catch(() => undefined),
         ),
       )
@@ -150,15 +167,13 @@ export class ProjectImporter {
     const metadata = JSON.parse(await indexFile.async("text")) as ProjectMetadata
     if (!ProjectImporter.isValidMetadata(metadata)) throw new Error("Invalid metadata structure")
     const parsed = JSON.parse(await dataFile.async("text")) as unknown
-    const requiredUris = findAssetUris(parsed).filter(
-      (uri) => parseAssetUri(uri)?.source === "local",
-    )
+    const documentUris = findAssetUris(parsed)
     const assetsRoot = `${projectPath}/${ProjectImporter.ASSETS_FOLDER}/`
     const manifestFile = zip.files[`${assetsRoot}${ProjectImporter.ASSET_MANIFEST_FILENAME}`]
     const replacements = await ProjectImporter.importAssetBundle(manifestFile, async (path) => {
       const object = zip.files[`${assetsRoot}${path}`]
       return object ? object.async("blob") : null
-    }, requiredUris)
+    }, documentUris)
     const rewritten = rewriteAssetUris(parsed, replacements)
 
     return {
@@ -176,9 +191,6 @@ export class ProjectImporter {
   private static async importFromBlockContentEditorFile(file: File): Promise<ImportedProjectData> {
     const content = await file.text()
     const parsed = JSON.parse(content) as unknown
-    if (findAssetUris(parsed).some((uri) => parseAssetUri(uri)?.source === "local")) {
-      throw new Error("Documents with local assets must be imported from a ZIP bundle")
-    }
     return {
       id: "",
       name: file.name.replace(/\.block-content-editor$/, "") || "Imported Project",
@@ -205,14 +217,12 @@ export class ProjectImporter {
     const metadata = JSON.parse(await indexFile.text()) as ProjectMetadata
     if (!ProjectImporter.isValidMetadata(metadata)) throw new Error("Invalid metadata structure")
     const parsed = JSON.parse(await dataFile.text()) as unknown
-    const requiredUris = findAssetUris(parsed).filter(
-      (uri) => parseAssetUri(uri)?.source === "local",
-    )
+    const documentUris = findAssetUris(parsed)
     const root = `${ProjectImporter.ASSETS_FOLDER}/`
     const replacements = await ProjectImporter.importAssetBundle(
       fileMap.get(`${root}${ProjectImporter.ASSET_MANIFEST_FILENAME}`),
       async (path) => fileMap.get(`${root}${path}`) ?? null,
-      requiredUris,
+      documentUris,
     )
     const rewritten = rewriteAssetUris(parsed, replacements)
     return {
@@ -232,10 +242,7 @@ export class ProjectImporter {
   ): Promise<ImportedProjectData> {
     const metadata = JSON.parse(folderData.indexContent) as ProjectMetadata
     if (!ProjectImporter.isValidMetadata(metadata)) throw new Error("Invalid metadata structure")
-    const parsed = JSON.parse(folderData.dataContent) as unknown
-    if (findAssetUris(parsed).some((uri) => parseAssetUri(uri)?.source === "local")) {
-      throw new Error("This folder transport cannot carry local asset bytes")
-    }
+    JSON.parse(folderData.dataContent)
     return {
       id: metadata.id,
       name: metadata.name,
