@@ -764,6 +764,24 @@ public sealed class JwtTokenServiceCoverageTests
     }
 
     [Fact]
+    public async Task GenerateAccessToken_WithSessionId_EmitsSessionClaim()
+    {
+        var sessionId = Guid.NewGuid();
+
+        var token = await _sut.GenerateAccessTokenAsync(
+            Guid.NewGuid(),
+            "a@b.c",
+            ["User"],
+            null,
+            1,
+            sessionId,
+            CancellationToken.None);
+        var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
+
+        jwt.Claims.Single(claim => claim.Type == "session_id").Value.Should().Be(sessionId.ToString());
+    }
+
+    [Fact]
     public async Task GenerateAccessToken_NullRoles_Throws() =>
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
             _sut.GenerateAccessTokenAsync(Guid.NewGuid(), "a@b.c", null!, null));

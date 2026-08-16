@@ -147,7 +147,7 @@ function createCourseModules() {
 
     return {
         programs: new GeneratedApi.LearningCoursesProgramModule(client),
-        content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
+        content: new GeneratedApi.LearningCoursesProgramContentModule(client),
     };
 }
 
@@ -480,7 +480,7 @@ export async function getCourseProgress(_courseId: string): Promise<CourseProgre
         const { programs, content } = createCourseModules();
         const userId = await getCurrentUserId();
         const [courseResult, contentResult, progressResult] = await Promise.all([
-            programs.getCoursesById(_courseId),
+            programs.getCoursesForGetCoursesById(_courseId),
             content.getCoursesContent(_courseId),
             userId ? programs.getCoursesMeProgress(_courseId) : Promise.resolve(undefined),
         ]);

@@ -19,13 +19,7 @@ afterEach(() => {
 });
 
 // Helper component to capture useAuth return
-function AuthConsumer({
-  onResult,
-  basePath,
-}: {
-  onResult: (auth: ReturnType<typeof useAuth>) => void;
-  basePath?: string;
-}) {
+function AuthConsumer({ onResult, basePath }: { onResult: (auth: ReturnType<typeof useAuth>) => void; basePath?: string }) {
   const auth = useAuth({ basePath });
   React.useEffect(() => {
     onResult(auth);
@@ -44,13 +38,15 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
     return render(
       <SessionContext.Provider value={mockSessionContext}>
         <AuthConsumer onResult={onResult} />
-      </SessionContext.Provider>
+      </SessionContext.Provider>,
     );
   }
 
   it('signIn redirects to OAuth URL when response has url (line 173)', async () => {
     let auth: ReturnType<typeof useAuth> | undefined;
-    renderWithContext((a) => { auth = a; });
+    renderWithContext((a) => {
+      auth = a;
+    });
 
     // Mock CSRF token fetch
     mockFetch.mockResolvedValueOnce({
@@ -75,7 +71,9 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
 
   it('signIn throws and sets error on non-ok response', async () => {
     let auth: ReturnType<typeof useAuth> | undefined;
-    renderWithContext((a) => { auth = a; });
+    renderWithContext((a) => {
+      auth = a;
+    });
 
     // CSRF
     mockFetch.mockResolvedValueOnce({
@@ -103,7 +101,9 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
 
   it('signIn throws generic error when response.json fails', async () => {
     let auth: ReturnType<typeof useAuth> | undefined;
-    renderWithContext((a) => { auth = a; });
+    renderWithContext((a) => {
+      auth = a;
+    });
 
     // CSRF
     mockFetch.mockResolvedValueOnce({
@@ -114,7 +114,9 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
     // Failed sign-in, json parsing also fails
     mockFetch.mockResolvedValueOnce({
       ok: false,
-      json: async () => { throw new Error('parse error'); },
+      json: async () => {
+        throw new Error('parse error');
+      },
     });
 
     await act(async () => {
@@ -128,7 +130,9 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
 
   it('signUp succeeds and updates session (line 234)', async () => {
     let auth: ReturnType<typeof useAuth> | undefined;
-    renderWithContext((a) => { auth = a; });
+    renderWithContext((a) => {
+      auth = a;
+    });
 
     // CSRF
     mockFetch.mockResolvedValueOnce({
@@ -156,7 +160,9 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
 
   it('signUp throws on non-ok response', async () => {
     let auth: ReturnType<typeof useAuth> | undefined;
-    renderWithContext((a) => { auth = a; });
+    renderWithContext((a) => {
+      auth = a;
+    });
 
     // CSRF
     mockFetch.mockResolvedValueOnce({
@@ -186,7 +192,9 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
 
   it('signOut succeeds and updates session (line 285)', async () => {
     let auth: ReturnType<typeof useAuth> | undefined;
-    renderWithContext((a) => { auth = a; });
+    renderWithContext((a) => {
+      auth = a;
+    });
 
     // CSRF
     mockFetch.mockResolvedValueOnce({
@@ -209,7 +217,9 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
 
   it('signOut throws on non-ok response', async () => {
     let auth: ReturnType<typeof useAuth> | undefined;
-    renderWithContext((a) => { auth = a; });
+    renderWithContext((a) => {
+      auth = a;
+    });
 
     // CSRF
     mockFetch.mockResolvedValueOnce({
@@ -233,7 +243,9 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
 
   it('clearError resets error state', async () => {
     let auth: ReturnType<typeof useAuth> | undefined;
-    renderWithContext((a) => { auth = a; });
+    renderWithContext((a) => {
+      auth = a;
+    });
 
     // CSRF
     mockFetch.mockResolvedValueOnce({
@@ -264,7 +276,9 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
 
   it('CSRF token is cached and reused', async () => {
     let auth: ReturnType<typeof useAuth> | undefined;
-    renderWithContext((a) => { auth = a; });
+    renderWithContext((a) => {
+      auth = a;
+    });
 
     // First CSRF fetch
     mockFetch.mockResolvedValueOnce({
@@ -304,7 +318,9 @@ describe('useAuth — gap coverage (lines 173, 234, 285)', () => {
 
   it('CSRF token fetch failure throws', async () => {
     let auth: ReturnType<typeof useAuth> | undefined;
-    renderWithContext((a) => { auth = a; });
+    renderWithContext((a) => {
+      auth = a;
+    });
 
     // Failed CSRF fetch
     mockFetch.mockResolvedValueOnce({

@@ -1,5 +1,5 @@
-using Npgsql;
 using Microsoft.Extensions.Configuration;
+using Npgsql;
 
 namespace GameGuild.API.Database;
 

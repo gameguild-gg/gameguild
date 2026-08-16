@@ -7,7 +7,7 @@ namespace GameGuild.Monitoring.SLA;
 /// <summary>
 ///     Repository implementation for Service Level Indicator (SLI metric) entities.
 /// </summary>
-public abstract class ServiceLevelIndicatorRepository(DbContext context) : IServiceLevelIndicatorRepository
+public class ServiceLevelIndicatorRepository(DbContext context) : IServiceLevelIndicatorRepository
 {
     private readonly DbSet<ServiceLevelIndicator> _metrics = context.Set<ServiceLevelIndicator>();
 

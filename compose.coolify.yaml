@@ -26,6 +26,9 @@
 #     Full PostgreSQL connection string for a DDL-capable migration role.
 #     Its username must differ from POSTGRES_USER. Startup initialization uses
 #     this connection; runtime traffic always uses POSTGRES_USER.
+#     Before the first migration, a PostgreSQL administrator must run:
+#       psql -v migration_role=<role> -d <database> \
+#         -f apps/api/scripts/bootstrap-economy-database.sql
 #
 # Coolify owns SERVICE_FQDN_* / SERVICE_URL_* variables and service routing.
 # Application containers consume explicit public URLs only. Do not pass
@@ -39,10 +42,10 @@ services:
       dockerfile: Dockerfile
     image: game-guild-api
     ports:
-      - '3000'
+      - '8080'
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Staging}
-      - ASPNETCORE_HTTP_PORTS=3000
+      - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
       - DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys
       - SeedData__ImportSnapshotCourses=${SEED_SNAPSHOT_COURSES:-true}
@@ -52,7 +55,10 @@ services:
       - ConnectionStrings__MigrationConnection=${POSTGRES_MIGRATION_CONNECTION:?set POSTGRES_MIGRATION_CONNECTION with a role distinct from POSTGRES_USER}
       - POSTGRES_MIGRATION_CONNECTION=${POSTGRES_MIGRATION_CONNECTION:?set POSTGRES_MIGRATION_CONNECTION with a role distinct from POSTGRES_USER}
       - Database__RunStartupInitialization=true
+      - Database__GrantRuntimeRoleAfterMigrations=true
       - Database__FailStartupOnMigrationFailure=true
+      - Database__FailStartupOnSeedFailure=true
+      - Database__FailStartupOnGrantFailure=true
       # JWT configuration consumed by the API and auth services
       - Jwt__SecretKey=${JWT_SECRET_KEY:?set JWT_SECRET_KEY}
       - Jwt__Issuer=${JWT_ISSUER:-GameGuild}
@@ -63,6 +69,29 @@ services:
       - Authentication__JwtExpiration=${JWT_EXPIRATION:-24:00:00}
       - Encryption__Key=${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
       - Encryption__EncryptionKey=${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
+      - Redis__Enabled=true
+      - Redis__ConnectionString=${REDIS_CONNECTION_STRING:?set REDIS_CONNECTION_STRING}
+      - Redis__InstanceName=${REDIS_INSTANCE_NAME:-game-guild:}
+      - Assets__Storage__ServiceUrl=${S3_SERVICE_URL:?set S3_SERVICE_URL}
+      - Assets__Storage__AccessKey=${S3_ACCESS_KEY:?set S3_ACCESS_KEY}
+      - Assets__Storage__SecretKey=${S3_SECRET_KEY:?set S3_SECRET_KEY}
+      - Assets__Storage__Region=${S3_REGION:-garage}
+      - Assets__Storage__BucketName=${S3_BUCKET:?set S3_BUCKET}
+      - Assets__Storage__TransformedBucketName=${S3_BUCKET_TRANSFORMED:-}
+      - Assets__Storage__QuarantineBucketName=${S3_BUCKET_QUARANTINE:-}
+      - Assets__Storage__ForcePathStyle=true
+      - Assets__Storage__PresignedUrlExpiryMinutes=${S3_PRESIGNED_EXPIRY:-60}
+      - StatementEmails__ConsoleBaseUrl=${STATEMENTEMAILS__CONSOLEBASEURL:-}
+      - EmailDelivery__Enabled=${EMAILDELIVERY__ENABLED:-true}
+      - EmailDelivery__Provider=${EMAILDELIVERY__PROVIDER:-Smtp}
+      - EmailDelivery__FromEmail=${EMAILDELIVERY__FROMEMAIL:?set EMAILDELIVERY__FROMEMAIL}
+      - EmailDelivery__FromName=${EMAILDELIVERY__FROMNAME:-GameGuild}
+      - EmailDelivery__SendGridApiKey=${EMAILDELIVERY__SENDGRIDAPIKEY:-}
+      - EmailDelivery__SmtpHost=${EMAILDELIVERY__SMTPHOST:-mailhog}
+      - EmailDelivery__SmtpPort=${EMAILDELIVERY__SMTPPORT:-1025}
+      - EmailDelivery__SmtpUsername=${EMAILDELIVERY__SMTPUSERNAME:-}
+      - EmailDelivery__SmtpPassword=${EMAILDELIVERY__SMTPPASSWORD:-}
+      - EmailDelivery__SmtpUseSsl=${EMAILDELIVERY__SMTPUSESSL:-false}
       # Canonical Stripe sections consumed by Payments and Billing.
       - PaymentGateways__Stripe__IsEnabled=true
       - PaymentGateways__Stripe__UseSimulation=false
@@ -83,7 +112,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:3000/live || exit 1']
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:8080/live || exit 1']
       start_interval: 5s
       start_period: 180s
       interval: 30s
@@ -122,7 +151,7 @@ services:
       args:
         GIT_HASH: ${GIT_HASH:-}
         AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
-        API_INTERNAL_URL: http://backend:3000
+        API_INTERNAL_URL: http://backend:8080
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
         AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
@@ -133,7 +162,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
-      - API_URL=http://backend:3000
+      - API_URL=http://backend:8080
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXT_PUBLIC_APP_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
       - WEB_PUBLIC_URL=${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
@@ -187,7 +216,7 @@ services:
       args:
         GIT_HASH: ${GIT_HASH:-}
         AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
-        API_INTERNAL_URL: http://backend:3000
+        API_INTERNAL_URL: http://backend:8080
         API_PUBLIC_URL: ${API_PUBLIC_URL:?set API_PUBLIC_URL}
         LEARNING_PUBLIC_URL: ${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
         WEB_PUBLIC_URL: ${WEB_PUBLIC_URL:?set WEB_PUBLIC_URL}
@@ -199,7 +228,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
-      - API_URL=http://backend:3000
+      - API_URL=http://backend:8080
       - NEXT_PUBLIC_API_URL=${API_PUBLIC_URL:?set API_PUBLIC_URL}
       - NEXTAUTH_URL=${LEARNING_PUBLIC_URL:?set LEARNING_PUBLIC_URL}
       - AUTH_SECRET=${AUTH_SECRET:?set AUTH_SECRET}

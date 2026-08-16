@@ -98,7 +98,7 @@ export async function invitePlatformUser(formData: FormData) {
 
   const client = createClient();
   const users = new GeneratedApi.UsersModule(client);
-  const lookupResult = await users.getUsers({ email, limit: 2 });
+  const lookupResult = await users.getUsersForGetUsers({ email, limit: 2 });
   if (!lookupResult.ok) {
     redirect(buildUsersHref({ error: lookupResult.error.message }));
   }

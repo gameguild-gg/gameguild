@@ -183,8 +183,8 @@ describe('Auth Error Types', () => {
 
   describe('ProviderNotFoundError', () => {
     it('should include provider name in message', () => {
-      const error = new ProviderNotFoundError('github');
-      expect(error.message).toContain('github');
+      const error = new ProviderNotFoundError('custom-oauth');
+      expect(error.message).toContain('custom-oauth');
       expect(error.type).toBe('ProviderNotFound');
       expect(error.status).toBe(400);
     });
@@ -287,9 +287,7 @@ describe('Error Helpers', () => {
     });
 
     it('should prefer message over detail', () => {
-      expect(
-        extractErrorMessage({ message: 'msg', detail: 'dtl' }, 'fallback'),
-      ).toBe('msg');
+      expect(extractErrorMessage({ message: 'msg', detail: 'dtl' }, 'fallback')).toBe('msg');
     });
 
     it('should return fallback when no recognized field', () => {

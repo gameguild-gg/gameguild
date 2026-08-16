@@ -12,26 +12,22 @@ export function openAssetDatabase(): Promise<IDBPDatabase<AssetDatabaseSchema>> 
     ASSET_DATABASE_NAME,
     ASSET_DATABASE_VERSION,
     {
-      upgrade(database) {
+      upgrade(database, oldVersion) {
+        if (oldVersion >= 3) return;
+        for (const storeName of Array.from(database.objectStoreNames)) {
+          database.deleteObjectStore(storeName);
+        }
+
         const assets = database.createObjectStore("assets", { keyPath: "id" });
         assets.createIndex("by-created-at", "createdAt");
         assets.createIndex("by-kind", "kind");
         assets.createIndex("by-name", "name");
 
         database.createObjectStore("objects", { keyPath: "id" });
-        database.createObjectStore("fallbackObjects");
 
         const usages = database.createObjectStore("usages", { keyPath: "key" });
         usages.createIndex("by-scope", "scopeKey");
         usages.createIndex("by-uri", "uri");
-
-        const remoteCache = database.createObjectStore("remoteCache", {
-          keyPath: "uri",
-        });
-        remoteCache.createIndex("by-last-accessed-at", "lastAccessedAt");
-
-        database.createObjectStore("journal", { keyPath: "id" });
-        database.createObjectStore("settings");
       },
       blocking() {
         databasePromise?.then((database) => database.close());

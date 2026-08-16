@@ -2,15 +2,7 @@
  * Tests for Authorization Utilities
  */
 import { describe, it, expect } from 'vitest';
-import {
-  hasRole,
-  hasAllRoles,
-  hasAnyRole,
-  hasPermission,
-  hasAllPermissions,
-  hasAnyPermission,
-  can,
-} from '../../src/runtime/auth/authorization.js';
+import { hasRole, hasAllRoles, hasAnyRole, hasPermission, hasAllPermissions, hasAnyPermission, can } from '../../src/runtime/auth/authorization.js';
 import type { Session, SessionUser } from '../../src/runtime/auth/types.js';
 
 const adminUser: SessionUser = {
@@ -165,7 +157,7 @@ describe('Authorization Utilities', () => {
 
   describe('can', () => {
     it('maps action+resource to permission string', () => {
-      expect(can(adminUser, 'write', 'content')).toBe(true);  // checks 'content:write'
+      expect(can(adminUser, 'write', 'content')).toBe(true); // checks 'content:write'
       expect(can(adminUser, 'delete', 'content')).toBe(true);
       expect(can(adminUser, 'manage', 'user')).toBe(true);
     });

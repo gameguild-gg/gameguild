@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { RouteLayoutContent } from "./route-layout-content";
+import { RouteLayoutContent } from "@/components/block-content-editor/route-layout-content";
 import React from 'react';
 
 export const metadata: Metadata = {

@@ -8,6 +8,16 @@ public interface ISessionManagementService
 {
     Task<UserSession> CreateSessionAsync(Guid userId, string ipAddress, string userAgent, string? deviceFingerprint = null, CancellationToken cancellationToken = default);
 
+    Task<UserSession> CreateSessionAsync(
+        Guid sessionId,
+        Guid userId,
+        string ipAddress,
+        string userAgent,
+        string refreshTokenHash,
+        DateTime expiresAt,
+        string? deviceFingerprint = null,
+        CancellationToken cancellationToken = default);
+
     Task<UserSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
 
     Task<UserSession?> GetSessionByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
@@ -17,6 +27,8 @@ public interface ISessionManagementService
     Task<bool> ValidateSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
 
     Task<bool> RefreshSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
+
+    Task<bool> RefreshSessionAsync(Guid sessionId, string refreshTokenHash, DateTime expiresAt, CancellationToken cancellationToken = default);
 
     Task<bool> TerminateSessionAsync(Guid sessionId, SessionTerminationReason reason, CancellationToken cancellationToken = default);
 

@@ -31,7 +31,7 @@ export function AssetStorageStatus({
     <div className={`flex min-w-0 items-center gap-2 text-xs text-muted-foreground ${className ?? ""}`}>
       <Database className="h-4 w-4 shrink-0" />
       <span className="truncate">
-        {status.backend === "opfs" ? "Browser files" : "Browser database"}
+        {status.backend === "memory" ? "Temporary memory" : "Browser database"}
         {status.localBytes ? ` · ${formatBytes(status.localBytes)}` : ""}
       </span>
       {durable ? (

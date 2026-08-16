@@ -52,7 +52,7 @@ describe('createServerClient — extended', () => {
     };
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       auth,
     });
 
@@ -62,13 +62,33 @@ describe('createServerClient — extended', () => {
     expect(result).toBeDefined();
   });
 
+  it('should reuse the token fetched for the auth precheck in the request interceptor', async () => {
+    const auth = {
+      getAccessToken: vi.fn(async () => 'cached-token'),
+      getRefreshToken: vi.fn(async () => null),
+    };
+
+    const client = createServerClient({
+      baseUrl: 'http://localhost:8080',
+      auth,
+    });
+
+    const result = await client.request({ path: '/secure', method: 'GET', requiresAuth: true });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data).toEqual({ Authorization: 'Bearer cached-token' });
+    }
+    expect(auth.getAccessToken).toHaveBeenCalledTimes(1);
+  });
+
   it('should add tenant interceptor when tenant provider is given', async () => {
     const tenant = {
       getTenantId: vi.fn(async () => 'tenant-123'),
     };
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       tenant,
     });
 
@@ -87,7 +107,7 @@ describe('createServerClient — extended', () => {
     };
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       auth,
       tenant,
     });
@@ -104,7 +124,7 @@ describe('createServerClient — extended', () => {
     };
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       auth,
     });
 
@@ -119,7 +139,7 @@ describe('createServerClient — extended', () => {
     };
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       tenant,
     });
 
@@ -133,7 +153,7 @@ describe('createServerClient — extended', () => {
     };
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       tenant,
       tenantHeader: 'X-Custom-Tenant',
     });
@@ -143,7 +163,7 @@ describe('createServerClient — extended', () => {
 
   it('should pass timeout to transport', () => {
     const client = createServerClient({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       timeout: 5000,
     });
 
@@ -154,7 +174,7 @@ describe('createServerClient — extended', () => {
     const { createFetchTransport } = await import('../../src/runtime/transport/fetch.js');
 
     const client = createServerClient({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
     });
 
     // Get the latest mock transport returned by createFetchTransport

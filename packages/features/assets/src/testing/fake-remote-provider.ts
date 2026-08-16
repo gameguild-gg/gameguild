@@ -1,6 +1,7 @@
 import type { AssetPage, AssetQuery, AssetRecord } from "../core/asset-contracts";
-import { createRemoteAssetUri, type AssetUri } from "../core/asset-uri";
+import type { AssetUri } from "../core/asset-uri";
 import { classifyAssetKind, inferMimeType } from "../core/mime";
+import { hashBlob } from "../browser/content-hashing";
 import type {
   AssetDownload,
   AssetProviderContext,
@@ -12,39 +13,43 @@ export class FakeRemoteAssetProvider implements RemoteAssetProvider {
   readonly key = "fake";
   readonly capabilities = {
     upload: true,
+    lookup: true,
     list: true,
     download: true,
+    resolveUrl: true,
     delete: true,
   } as const;
 
   private readonly values = new Map<AssetUri, AssetDownload>();
+  downloadCalls = 0;
+  resolveUrlCalls = 0;
 
   async upload(
     files: readonly AssetUploadInput[],
     context: AssetProviderContext,
   ): Promise<AssetRecord[]> {
     if (context.signal?.aborted) throw new DOMException("Aborted", "AbortError");
-    return files.map((file) => {
-      const id = crypto.randomUUID();
-      const uri = createRemoteAssetUri(this.key, id);
+    return Promise.all(files.map(async (file) => {
       const now = new Date().toISOString();
       const mimeType = inferMimeType(file.name, file.mimeType || file.blob.type);
       const record: AssetRecord = {
-        id,
-        uri,
+        id: file.id,
+        uri: file.uri,
         name: file.name,
         kind: classifyAssetKind(mimeType, file.name),
         mimeType,
         size: file.blob.size,
+        contentHash: await hashBlob(file.blob, context.signal),
+        location: { type: "provider", providerKey: this.key, providerAssetId: file.id },
         availability: "remote",
         createdAt: now,
         updatedAt: now,
         source: { type: "remote", value: this.key },
         scope: context.scope,
       };
-      this.values.set(uri, { blob: file.blob, record });
+      this.values.set(file.uri, { blob: file.blob, record });
       return structuredClone(record);
-    });
+    }));
   }
 
   async get(uri: AssetUri): Promise<AssetRecord | null> {
@@ -63,14 +68,31 @@ export class FakeRemoteAssetProvider implements RemoteAssetProvider {
     return { items: structuredClone(items) };
   }
 
-  async download(uri: AssetUri): Promise<AssetDownload> {
-    const value = this.values.get(uri);
-    if (!value) throw new Error(`Remote asset not found: ${uri}`);
+  async download(record: AssetRecord): Promise<AssetDownload> {
+    this.downloadCalls += 1;
+    const value = this.values.get(record.uri);
+    if (!value) throw new Error(`Remote asset not found: ${record.uri}`);
     return value;
   }
 
-  async delete(uri: AssetUri): Promise<void> {
-    this.values.delete(uri);
+  async resolveUrl(record: AssetRecord) {
+    this.resolveUrlCalls += 1;
+    const value = this.values.get(record.uri);
+    if (!value) throw new Error(`Remote asset not found: ${record.uri}`);
+    const url = URL.createObjectURL(value.blob);
+    let released = false;
+    return {
+      url,
+      release: () => {
+        if (released) return;
+        released = true;
+        URL.revokeObjectURL(url);
+      },
+    };
+  }
+
+  async delete(record: AssetRecord): Promise<void> {
+    this.values.delete(record.uri);
   }
 
   seed(uri: AssetUri, download: AssetDownload): void {

@@ -58,12 +58,8 @@ describe('useAuth', () => {
 
   it('signIn should fetch CSRF and then sign in', async () => {
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok123' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ user: { id: '1' } }), { status: 200 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok123' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ user: { id: '1' } }), { status: 200 }));
 
     const result = useAuth();
 
@@ -81,40 +77,26 @@ describe('useAuth', () => {
 
   it('signIn should throw on failed response', async () => {
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok123' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ message: 'Bad creds' }), { status: 401 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok123' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ message: 'Bad creds' }), { status: 401 }));
 
     const result = useAuth();
 
-    await expect(
-      result.signIn('credentials', { redirect: false })
-    ).rejects.toThrow('Bad creds');
+    await expect(result.signIn('credentials', { redirect: false })).rejects.toThrow('Bad creds');
   });
 
   it('signIn should handle CSRF fetch failure', async () => {
-    mockFetch.mockResolvedValueOnce(
-      new Response('', { status: 500 })
-    );
+    mockFetch.mockResolvedValueOnce(new Response('', { status: 500 }));
 
     const result = useAuth();
 
-    await expect(
-      result.signIn('credentials', { redirect: false })
-    ).rejects.toThrow('Failed to fetch CSRF token');
+    await expect(result.signIn('credentials', { redirect: false })).rejects.toThrow('Failed to fetch CSRF token');
   });
 
   it('signUp should fetch CSRF and then sign up', async () => {
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok456' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ user: { id: '1' } }), { status: 200 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok456' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ user: { id: '1' } }), { status: 200 }));
 
     const result = useAuth();
 
@@ -131,12 +113,8 @@ describe('useAuth', () => {
 
   it('signUp should throw on error', async () => {
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ message: 'Email taken' }), { status: 400 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ message: 'Email taken' }), { status: 400 }));
 
     const result = useAuth();
 
@@ -146,18 +124,14 @@ describe('useAuth', () => {
         email: 'e@e.com',
         password: 'p',
         redirect: false,
-      })
+      }),
     ).rejects.toThrow('Email taken');
   });
 
   it('signOut should fetch CSRF and then sign out', async () => {
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok789' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ ok: true }), { status: 200 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok789' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
 
     const result = useAuth();
 
@@ -169,18 +143,12 @@ describe('useAuth', () => {
 
   it('signOut should throw on failure', async () => {
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response('', { status: 500 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response('', { status: 500 }));
 
     const result = useAuth();
 
-    await expect(
-      result.signOut({ redirect: false })
-    ).rejects.toThrow('Sign-out failed');
+    await expect(result.signOut({ redirect: false })).rejects.toThrow('Sign-out failed');
   });
 
   it('signIn should handle non-Error throws', async () => {
@@ -188,9 +156,7 @@ describe('useAuth', () => {
 
     const result = useAuth();
 
-    await expect(
-      result.signIn('credentials', { redirect: false })
-    ).rejects.toThrow('Sign-in failed');
+    await expect(result.signIn('credentials', { redirect: false })).rejects.toThrow('Sign-in failed');
   });
 
   it('signUp should handle non-Error throws', async () => {
@@ -204,7 +170,7 @@ describe('useAuth', () => {
         email: 'e@e.com',
         password: 'p',
         redirect: false,
-      })
+      }),
     ).rejects.toThrow('Sign-up failed');
   });
 
@@ -213,28 +179,20 @@ describe('useAuth', () => {
 
     const result = useAuth();
 
-    await expect(
-      result.signOut({ redirect: false })
-    ).rejects.toThrow('Sign-out failed');
+    await expect(result.signOut({ redirect: false })).rejects.toThrow('Sign-out failed');
   });
 
   it('signIn should handle failed response body parse', async () => {
-    mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response('not json', {
-          status: 401,
-          headers: { 'Content-Type': 'text/plain' },
-        })
-      );
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })).mockResolvedValueOnce(
+      new Response('not json', {
+        status: 401,
+        headers: { 'Content-Type': 'text/plain' },
+      }),
+    );
 
     const result = useAuth();
 
-    await expect(
-      result.signIn('credentials', { redirect: false })
-    ).rejects.toThrow('Sign-in failed');
+    await expect(result.signIn('credentials', { redirect: false })).rejects.toThrow('Sign-in failed');
   });
 
   it('signIn should redirect to OAuth URL when response has url', async () => {
@@ -244,12 +202,8 @@ describe('useAuth', () => {
     (globalThis as any).window = { location: locationMock };
 
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ url: 'https://github.com/login/oauth?client_id=abc' }), { status: 200 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://github.com/login/oauth?client_id=abc' }), { status: 200 }));
 
     const result = useAuth();
     await result.signIn('github', { redirect: false });
@@ -264,12 +218,8 @@ describe('useAuth', () => {
     (globalThis as any).window = { location: locationMock };
 
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ user: { id: '1' } }), { status: 200 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ user: { id: '1' } }), { status: 200 }));
 
     const result = useAuth();
     await result.signIn('credentials', {
@@ -289,12 +239,8 @@ describe('useAuth', () => {
     (globalThis as any).window = { location: locationMock };
 
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ user: { id: '1' } }), { status: 200 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ user: { id: '1' } }), { status: 200 }));
 
     const result = useAuth();
     await result.signUp({
@@ -315,12 +261,8 @@ describe('useAuth', () => {
     (globalThis as any).window = { location: locationMock };
 
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ ok: true }), { status: 200 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
 
     const result = useAuth();
     await result.signOut(); // default redirect=true
@@ -335,12 +277,8 @@ describe('useAuth', () => {
     (globalThis as any).window = { location: locationMock };
 
     mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ ok: true }), { status: 200 })
-      );
+      .mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
 
     const result = useAuth();
     await result.signOut({ redirectTo: '/login', redirect: true });
@@ -351,16 +289,12 @@ describe('useAuth', () => {
   });
 
   it('signUp should handle failed response body parse', async () => {
-    mockFetch
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })
-      )
-      .mockResolvedValueOnce(
-        new Response('not json', {
-          status: 400,
-          headers: { 'Content-Type': 'text/plain' },
-        })
-      );
+    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ csrfToken: 'tok' }), { status: 200 })).mockResolvedValueOnce(
+      new Response('not json', {
+        status: 400,
+        headers: { 'Content-Type': 'text/plain' },
+      }),
+    );
 
     const result = useAuth();
 
@@ -370,7 +304,7 @@ describe('useAuth', () => {
         email: 'e@e.com',
         password: 'p',
         redirect: false,
-      })
+      }),
     ).rejects.toThrow('Sign-up failed');
   });
 });

@@ -188,10 +188,7 @@ export interface CredentialsProviderConfig extends ProviderConfig {
    * Authenticate with credentials.
    * Called with the form data from sign-in.
    */
-  authorize: (
-    credentials: Record<string, unknown>,
-    request?: Request
-  ) => Promise<ProviderResult | null>;
+  authorize: (credentials: Record<string, unknown>, request?: Request) => Promise<ProviderResult | null>;
 }
 
 /**
@@ -248,37 +245,25 @@ export interface AuthCallbacks {
    * @param params.token - The JWT payload (contains tokens)
    * @returns The session to expose to the client
    */
-  session?: (params: {
-    session: Session;
-    token: JWTPayload;
-  }) => Promise<Session> | Session;
+  session?: (params: { session: Session; token: JWTPayload }) => Promise<Session> | Session;
 
   /**
    * Called when sign-in is attempted.
    * Return true to allow, false to deny, or a URL to redirect.
    */
-  signIn?: (params: {
-    user: SessionUser;
-    provider: string;
-  }) => Promise<boolean | string> | boolean | string;
+  signIn?: (params: { user: SessionUser; provider: string }) => Promise<boolean | string> | boolean | string;
 
   /**
    * Called on redirect.
    * Use to validate and modify redirect URLs.
    */
-  redirect?: (params: {
-    url: string;
-    baseUrl: string;
-  }) => Promise<string> | string;
+  redirect?: (params: { url: string; baseUrl: string }) => Promise<string> | string;
 
   /**
    * Called when the proxy's `authorized` callback runs.
    * Return true to allow access, false to deny.
    */
-  authorized?: (params: {
-    auth: Session | null;
-    request: Request;
-  }) => Promise<boolean> | boolean;
+  authorized?: (params: { auth: Session | null; request: Request }) => Promise<boolean> | boolean;
 }
 
 // ─── Auth Configuration ──────────────────────────────────────────
@@ -287,7 +272,7 @@ export interface AuthCallbacks {
  * Cookie configuration
  */
 export interface CookieConfig {
-  /** Cookie name prefix (default: '__gg') */
+  /** Cookie name prefix (default: '__me') */
   name?: string;
   /** Use secure cookies (default: auto-detect from NEXTAUTH_URL) */
   secure?: boolean;
@@ -301,6 +286,20 @@ export interface CookieConfig {
   maxAge?: number;
   /** HttpOnly flag (default: true) */
   httpOnly?: boolean;
+}
+
+/**
+ * Cookie configuration after defaults are applied.
+ * Domain remains optional because host-only cookies are valid and commonly used.
+ */
+export interface ResolvedCookieConfig {
+  name: string;
+  secure: boolean;
+  sameSite: 'lax' | 'strict' | 'none';
+  path: string;
+  domain?: string;
+  maxAge: number;
+  httpOnly: boolean;
 }
 
 /**
@@ -413,11 +412,7 @@ export interface AuthInstance {
    */
   auth: {
     (): Promise<Session | null>;
-    (
-      handler: (
-        request: Request & { auth: Session | null }
-      ) => Promise<Response> | Response
-    ): (request: Request) => Promise<Response>;
+    (handler: (request: Request & { auth: Session | null }) => Promise<Response> | Response): (request: Request) => Promise<Response>;
   };
 
   /**
@@ -431,7 +426,7 @@ export interface AuthInstance {
     options?: Record<string, unknown> & {
       redirectTo?: string;
       redirect?: boolean;
-    }
+    },
   ) => Promise<Response | ProviderResult | void>;
 
   /**
@@ -446,16 +441,13 @@ export interface AuthInstance {
       lastName?: string;
       tenantId?: string;
     },
-    options?: { redirectTo?: string; redirect?: boolean }
+    options?: { redirectTo?: string; redirect?: boolean },
   ) => Promise<Response | ProviderResult | void>;
 
   /**
    * Sign out (Server Action)
    */
-  signOut: (options?: {
-    redirectTo?: string;
-    redirect?: boolean;
-  }) => Promise<Response | void>;
+  signOut: (options?: { redirectTo?: string; redirect?: boolean }) => Promise<Response | void>;
 
   /**
    * Update the session (Server Action).
@@ -478,7 +470,7 @@ export interface ResolvedAuthConfig {
   secret: string;
   apiUrl: string;
   pages: PagesConfig;
-  cookies: Omit<Required<CookieConfig>, 'domain'> & Pick<CookieConfig, 'domain'>;
+  cookies: ResolvedCookieConfig;
   maxAge: number;
   updateAge: number;
   basePath: string;

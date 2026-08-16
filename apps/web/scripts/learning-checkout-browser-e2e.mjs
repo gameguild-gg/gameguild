@@ -65,8 +65,8 @@ function createApiClient(accessToken, tenantId) {
 function createCourseModules(client) {
   return {
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
-    content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
-    lifecycle: new GeneratedApi.LearningCoursesProgramlifecycleModule(client),
+    content: new GeneratedApi.LearningCoursesProgramContentModule(client),
+    lifecycle: new GeneratedApi.LearningCoursesProgramLifecycleModule(client),
   };
 }
 

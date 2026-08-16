@@ -457,6 +457,8 @@ public class CacheEmailAndBuilderCoverageTests
         var options = new EmailDeliveryOptions
         {
             Enabled = true,
+            Provider = "SendGrid",
+            SendGridApiKey = "api-key",
             FromEmail = "from@example.com",
             FromName = "GameGuild",
             SmtpHost = "smtp.example.com",
@@ -465,9 +467,18 @@ public class CacheEmailAndBuilderCoverageTests
             SmtpPassword = "secret",
             SmtpUseSsl = true
         };
-        var message = new EmailMessage("to@example.com", "Subject", "plain", "<b>html</b>", "Ada");
+        var attachment = new EmailAttachment("statement.pdf", "application/pdf", [1, 2, 3]);
+        var message = new EmailMessage(
+            "to@example.com",
+            "Subject",
+            "plain",
+            "<b>html</b>",
+            "Ada",
+            [attachment]);
 
         options.Enabled.Should().BeTrue();
+        options.Provider.Should().Be("SendGrid");
+        options.SendGridApiKey.Should().Be("api-key");
         options.FromEmail.Should().Be("from@example.com");
         options.FromName.Should().Be("GameGuild");
         options.SmtpHost.Should().Be("smtp.example.com");
@@ -480,6 +491,7 @@ public class CacheEmailAndBuilderCoverageTests
         message.PlainTextContent.Should().Be("plain");
         message.HtmlContent.Should().Be("<b>html</b>");
         message.ToName.Should().Be("Ada");
+        message.Attachments.Should().ContainSingle().Which.Should().Be(attachment);
     }
 
     [Fact]

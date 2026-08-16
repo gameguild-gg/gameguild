@@ -24,7 +24,7 @@ vi.mock("@/lib/learner/courses", () => ({
 vi.mock("@game-guild/client", () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
-    LearningWorkspacesLearnerworkspaceModule: class {
+    LearningWorkspacesLearnerWorkspaceModule: class {
       getLearningCoursesWorkspace = mocks.getLearningCoursesWorkspace;
     },
     LearningExperienceSocialDiscussionsModule: class {

@@ -44,7 +44,7 @@ describe('updateMemberAccessRole', () => {
     mocks.createServerClient.mockReturnValue({ request: mocks.request });
     mocks.request.mockResolvedValue({ ok: true, data: { success: true } });
     mocks.UsersModule.mockImplementation(function UsersModule() {
-      return { getUsers: mocks.usersGetUsers, postUsers: mocks.usersPostUsers };
+      return { getUsersForGetUsers: mocks.usersGetUsers, postUsers: mocks.usersPostUsers };
     });
     mocks.UsersMembershipsModule.mockImplementation(function UsersMembershipsModule() {
       return { postUsersMemberships: mocks.usersMembershipsPost };

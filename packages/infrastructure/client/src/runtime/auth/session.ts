@@ -11,6 +11,7 @@
 import type { JWTPayload, Session, SessionUser, ProviderResult, ResolvedAuthConfig } from './types.js';
 import { encodeJWT, decodeJWT } from './jwt.js';
 import { TokenRefreshError } from './errors.js';
+import { resolveAuthPermissions, resolveAuthRoles } from './claims.js';
 
 /** Threshold before access token expiry to trigger refresh (30 seconds) */
 const REFRESH_THRESHOLD_MS = 30_000;
@@ -156,19 +157,13 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
       refreshTokenExpires = new Date(data.refreshTokenExpiresAt as string).getTime();
     }
 
-    const refreshedUser =
-      typeof data.user === 'object' && data.user !== null && !Array.isArray(data.user)
-        ? (data.user as Record<string, unknown>)
-        : undefined;
+    const refreshedUser = typeof data.user === 'object' && data.user !== null && !Array.isArray(data.user) ? (data.user as Record<string, unknown>) : undefined;
 
     const user = refreshedUser
       ? {
           ...token.user,
           id: typeof refreshedUser.id === 'string' ? refreshedUser.id : token.user.id,
-          email:
-            typeof refreshedUser.email === 'string' || refreshedUser.email === null
-              ? (refreshedUser.email as string | null)
-              : token.user.email,
+          email: typeof refreshedUser.email === 'string' || refreshedUser.email === null ? (refreshedUser.email as string | null) : token.user.email,
           name:
             typeof refreshedUser.displayName === 'string'
               ? refreshedUser.displayName
@@ -183,8 +178,14 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
               : typeof refreshedUser.image === 'string' || refreshedUser.image === null
                 ? (refreshedUser.image as string | null)
                 : token.user.image,
+          roles: resolveAuthRoles(data, refreshedUser),
+          permissions: resolveAuthPermissions(data, refreshedUser),
         }
-      : token.user;
+      : {
+          ...token.user,
+          roles: resolveAuthRoles(data) ?? token.user?.roles,
+          permissions: resolveAuthPermissions(data) ?? token.user?.permissions,
+        };
 
     return {
       ...token,
@@ -193,11 +194,8 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
       refreshToken: (data.refreshToken as string) || token.refreshToken,
       accessTokenExpires,
       refreshTokenExpires: refreshTokenExpires ?? token.refreshTokenExpires,
-      tenantId:
-        typeof data.tenantId === 'string' || data.tenantId === null ? (data.tenantId as string | null) : token.tenantId,
-      availableTenants: Array.isArray(data.availableTenants)
-        ? (data.availableTenants as Array<{ id: string; name: string }>)
-        : token.availableTenants,
+      tenantId: typeof data.tenantId === 'string' || data.tenantId === null ? (data.tenantId as string | null) : token.tenantId,
+      availableTenants: Array.isArray(data.availableTenants) ? (data.availableTenants as Array<{ id: string; name: string }>) : token.availableTenants,
     };
   } catch (error) {
     if (error instanceof TokenRefreshError) throw error;

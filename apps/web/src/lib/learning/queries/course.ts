@@ -61,7 +61,7 @@ function createCourseModules() {
 
   return {
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
-    content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
+    content: new GeneratedApi.LearningCoursesProgramContentModule(client),
     users: new GeneratedApi.UsersModule(client),
   };
 }
@@ -134,7 +134,7 @@ async function resolveCreatorHandle(
   const { users } = createCourseModules();
 
   try {
-    const result = await users.getUsersByUserId(creatorId);
+    const result = await users.getUsersForGetUsersByUserId(creatorId);
     if (!result.ok) return fallback;
 
     return (
@@ -215,7 +215,7 @@ async function fetchCourseById(
 ): Promise<CourseViewModel | null> {
   try {
     const { programs } = createCourseModules();
-    const result = await programs.getCoursesById(courseId);
+    const result = await programs.getCoursesForGetCoursesById(courseId);
     if (!result.ok) return null;
 
     return mapProgramDtoToCourseViewModel(
@@ -454,7 +454,7 @@ export const getCourseStudents = cache(
 
           if (dto.userId) {
             try {
-              const userResult = await users.getUsersByUserId(dto.userId);
+              const userResult = await users.getUsersForGetUsersByUserId(dto.userId);
               if (userResult.ok) identity = userResult.data;
             } catch {
               // The roster remains usable if an individual identity lookup fails.

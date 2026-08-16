@@ -183,7 +183,7 @@ export async function getCourses(): Promise<{
 }> {
   try {
     const programs = createCourseProgramsModule();
-    const result = await programs.getCourses({ take: 50 });
+    const result = await programs.getCoursesForGetCourses({ take: 50 });
 
     if (result.ok && Array.isArray(result.data)) {
       const creatorHandles = await getCreatorHandles(result.data);

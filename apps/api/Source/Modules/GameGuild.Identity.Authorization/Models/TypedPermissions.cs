@@ -191,32 +191,6 @@ public sealed class ContentPermission : Permission
 }
 
 /// <summary>
-///     Strongly-typed permissions for Team operations.
-/// </summary>
-public sealed class TeamPermission : Permission
-{
-    private TeamPermission(string key, string description)
-        : base(
-            resource: key.Split(':')[0],
-            action: key.Split(':')[1],
-            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
-            description: description)
-    {
-    }
-
-    public static class Keys
-    {
-        public const string Read = "team:read";
-        public const string Write = "team:write";
-        public const string Admin = "team:admin";
-    }
-
-    public static readonly TeamPermission Read = new(Keys.Read, "Read Teams");
-    public static readonly TeamPermission Write = new(Keys.Write, "Write Teams");
-    public static readonly TeamPermission Admin = new(Keys.Admin, "Administer Teams");
-}
-
-/// <summary>
 ///     Strongly-typed permissions for project operations.
 ///     Provides compile-time safety for permission checks.
 /// </summary>

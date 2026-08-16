@@ -26,7 +26,8 @@ public class LocalAuthService(
     IHttpContextAccessor httpContextAccessor,
     ILogger<LocalAuthService> logger,
     IPublisher publisher,
-    ISender sender
+    ISender sender,
+    ISessionManagementService sessionManagementService
 ) : ILocalAuthService
 {
     public async Task<SignInResponse> LocalSignInAsync(LocalSignInRequest request, CancellationToken cancellationToken = default)
@@ -130,21 +131,30 @@ public class LocalAuthService(
             var tenantAccessContext = await ResolveTenantAccessContextAsync(userId.Value, request.TenantId, cancellationToken).ConfigureAwait(false);
             RequireActiveTenantAccess(tenantAccessContext);
 
-            // Create tokens and response
+            var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+            var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
+            var sessionId = Guid.NewGuid();
+            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId.Value, deviceInfo, cancellationToken).ConfigureAwait(false);
             var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
                 userId.Value,
                 authenticatedUser?.Email ?? request.Email,
                 tenantAccessContext.Roles.ToArray(),
                 tenantAccessContext.TenantId,
                 tokenVersion,
+                sessionId,
                 cancellationToken).ConfigureAwait(false);
-            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId.Value, deviceInfo, cancellationToken).ConfigureAwait(false);
-
-            var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-            var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
+            await sessionManagementService.CreateSessionAsync(
+                sessionId,
+                userId.Value,
+                ipAddress ?? "unknown",
+                userAgent ?? string.Empty,
+                refreshTokenHasher.HashToken(refreshToken),
+                refreshTokenExpiresAt,
+                deviceInfo.Fingerprint,
+                cancellationToken).ConfigureAwait(false);
 
             // Record successful login attempt
-            await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId.Value, ipAddress, userAgent, stopwatch.Elapsed).ConfigureAwait(false);
+            await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId.Value, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
 
             var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
 
@@ -160,7 +170,7 @@ public class LocalAuthService(
                 RefreshTokenExpiresAt = refreshTokenExpiresAt,
                 UserId = userId.Value,
                 Email = authenticatedUser?.Email ?? request.Email,
-                SessionId = Guid.NewGuid(),
+                SessionId = sessionId,
                 TenantId = tenantAccessContext.TenantId,
                 AvailableTenants = tenantAccessContext.AvailableTenants
             };
@@ -226,21 +236,30 @@ public class LocalAuthService(
 
             var tenantAccessContext = await ResolveTenantAccessContextAsync(userId, request.TenantId, cancellationToken).ConfigureAwait(false);
 
-            // Create tokens (new users have TokenVersion = 1)
+            var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+            var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
+            var sessionId = Guid.NewGuid();
+            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
             var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
                 userId,
                 newUser.Email,
                 tenantAccessContext.Roles.ToArray(),
                 tenantAccessContext.TenantId,
                 newUser.TokenVersion,
+                sessionId,
                 cancellationToken).ConfigureAwait(false);
-            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken).ConfigureAwait(false);
-
-            var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-            var refreshTokenExpiresAt = SystemClock.UtcNow.AddDays(refreshTokenExpiryDays);
+            await sessionManagementService.CreateSessionAsync(
+                sessionId,
+                userId,
+                ipAddress ?? "unknown",
+                userAgent ?? string.Empty,
+                refreshTokenHasher.HashToken(refreshToken),
+                refreshTokenExpiresAt,
+                deviceInfo.Fingerprint,
+                cancellationToken).ConfigureAwait(false);
 
             // Record successful registration
-            await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress, userAgent, stopwatch.Elapsed).ConfigureAwait(false);
+            await authAttemptService.RecordSuccessfulAttemptAsync(request.Email, userId, ipAddress ?? "unknown", userAgent, stopwatch.Elapsed).ConfigureAwait(false);
 
             await publisher.Publish(
                 new UserSignedUpNotification
@@ -268,7 +287,7 @@ public class LocalAuthService(
                 RefreshTokenExpiresAt = refreshTokenExpiresAt,
                 UserId = userId,
                 Email = newUser.Email,
-                SessionId = Guid.NewGuid(),
+                SessionId = sessionId,
                 TenantId = tenantAccessContext.TenantId,
                 AvailableTenants = tenantAccessContext.AvailableTenants
             };
@@ -312,27 +331,19 @@ public class LocalAuthService(
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
-        var activeToken = storedToken;
-        string? reusedReplacementToken = null;
         if (!storedToken.IsActive)
         {
-            activeToken = await ResolveRecentRotationRetryAsync(storedToken, ipAddress, now, cancellationToken).ConfigureAwait(false);
-            if (activeToken == null)
-            {
-                logger.LogWarning(
-                    "Rejected refresh token replay from {IpAddress}. RevokedAt: {RevokedAt}, RevokedByIp: {RevokedByIp}",
-                    ipAddress,
-                    storedToken.RevokedAt,
-                    storedToken.RevokedByIp
-                );
+            logger.LogWarning(
+                "Rejected refresh token replay from {IpAddress}. RevokedAt: {RevokedAt}, RevokedByIp: {RevokedByIp}",
+                ipAddress,
+                storedToken.RevokedAt,
+                storedToken.RevokedByIp
+            );
 
-                throw new UnauthorizedAccessException("Invalid refresh token");
-            }
-
-            reusedReplacementToken = storedToken.ReplacedByToken;
+            throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
-        var userId = activeToken.UserId;
+        var userId = storedToken.UserId;
         var user = await userRepository.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         var tokenVersion = user?.TokenVersion ?? 1;
         await DefaultTenantMembershipProvisioner.EnsureAsync(sender, userId, cancellationToken).ConfigureAwait(false);
@@ -344,10 +355,15 @@ public class LocalAuthService(
         var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
         var authenticatedAt = new DateTimeOffset(
             DateTime.SpecifyKind(
-                activeToken.CreatedAt > DateTime.UnixEpoch ? activeToken.CreatedAt : now,
+                storedToken.CreatedAt > DateTime.UnixEpoch ? storedToken.CreatedAt : now,
                 DateTimeKind.Utc));
 
-        // Generate new tokens (token rotation)
+        var existingSession = await sessionManagementService.GetSessionByRefreshTokenAsync(hashedToken, cancellationToken).ConfigureAwait(false);
+        var sessionId = existingSession?.Id ?? Guid.NewGuid();
+        var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+        var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, authenticatedAt, cancellationToken).ConfigureAwait(false);
+        var refreshTokenExpiresAt = now.AddDays(refreshTokenExpiryDays);
+        var replacementTokenHash = refreshTokenHasher.HashToken(newRefreshToken);
         var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
             userId,
             userEmail,
@@ -355,30 +371,33 @@ public class LocalAuthService(
             tenantAccessContext.TenantId,
             tokenVersion,
             authenticatedAt,
+            sessionId,
             cancellationToken).ConfigureAwait(false);
-        var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-        string newRefreshToken;
-        DateTime refreshTokenExpiresAt;
-        if (reusedReplacementToken != null)
+
+        storedToken.IsRevoked = true;
+        storedToken.RevokedAt = now;
+        storedToken.RevokedByIp = ipAddress;
+        storedToken.ReplacedByToken = replacementTokenHash;
+        await refreshTokenRepository.UpdateAsync(storedToken).ConfigureAwait(false);
+
+        if (existingSession == null)
         {
-            newRefreshToken = reusedReplacementToken;
-            refreshTokenExpiresAt = activeToken.ExpiresAt;
-            logger.LogInformation("Recent refresh rotation retry recovered for user {UserId}", userId);
+            await sessionManagementService.CreateSessionAsync(
+                sessionId,
+                userId,
+                ipAddress ?? "unknown",
+                userAgent ?? string.Empty,
+                replacementTokenHash,
+                refreshTokenExpiresAt,
+                deviceInfo.Fingerprint,
+                cancellationToken).ConfigureAwait(false);
         }
         else
         {
-            newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, authenticatedAt, cancellationToken).ConfigureAwait(false);
-            refreshTokenExpiresAt = now.AddDays(refreshTokenExpiryDays);
-
-            // Revoke old token (token rotation for security)
-            storedToken.IsRevoked = true;
-            storedToken.RevokedAt = now;
-            storedToken.RevokedByIp = ipAddress;
-            storedToken.ReplacedByToken = newRefreshToken;
-            await refreshTokenRepository.UpdateAsync(storedToken).ConfigureAwait(false);
-
-            logger.LogInformation("Refresh token rotated for user {UserId}", userId);
+            await sessionManagementService.RefreshSessionAsync(sessionId, replacementTokenHash, refreshTokenExpiresAt, cancellationToken).ConfigureAwait(false);
         }
+
+        logger.LogInformation("Refresh token rotated for user {UserId}", userId);
 
         var accessTokenExpirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60");
 
@@ -394,40 +413,10 @@ public class LocalAuthService(
             RefreshTokenExpiresAt = refreshTokenExpiresAt,
             UserId = userId,
             Email = userEmail,
-            SessionId = Guid.NewGuid(),
+            SessionId = sessionId,
             TenantId = tenantAccessContext.TenantId,
             AvailableTenants = tenantAccessContext.AvailableTenants
         };
-    }
-
-    private async Task<RefreshToken?> ResolveRecentRotationRetryAsync(
-        RefreshToken rotatedToken,
-        string ipAddress,
-        DateTime now,
-        CancellationToken cancellationToken)
-    {
-        var graceSeconds = int.TryParse(configuration["Jwt:RefreshTokenRotationGraceSeconds"], out var configuredGrace)
-            ? Math.Max(0, configuredGrace)
-            : 30;
-        var elapsed = rotatedToken.RevokedAt.HasValue ? now - rotatedToken.RevokedAt.Value : TimeSpan.MaxValue;
-        if (
-            !rotatedToken.IsRevoked ||
-            elapsed < TimeSpan.Zero ||
-            elapsed > TimeSpan.FromSeconds(graceSeconds) ||
-            !string.Equals(rotatedToken.RevokedByIp, ipAddress, StringComparison.Ordinal) ||
-            string.IsNullOrWhiteSpace(rotatedToken.ReplacedByToken))
-        {
-            return null;
-        }
-
-        var replacementHash = refreshTokenHasher.HashToken(rotatedToken.ReplacedByToken);
-        var replacement = await refreshTokenRepository.GetByTokenAsync(replacementHash, cancellationToken).ConfigureAwait(false);
-        if (replacement == null || replacement.UserId != rotatedToken.UserId || !replacement.IsActive)
-        {
-            return null;
-        }
-
-        return replacement;
     }
 
     private static TenantAccessContext RequireActiveTenantAccess(TenantAccessContext tenantAccessContext)
@@ -459,5 +448,11 @@ public class LocalAuthService(
         refreshToken.UpdatedAt = SystemClock.UtcNow;
 
         await refreshTokenRepository.UpdateAsync(refreshToken).ConfigureAwait(false);
+
+        var session = await sessionManagementService.GetSessionByRefreshTokenAsync(hashedToken, cancellationToken).ConfigureAwait(false);
+        if (session != null)
+        {
+            await sessionManagementService.TerminateSessionAsync(session.Id, SessionTerminationReason.UserLogout, cancellationToken).ConfigureAwait(false);
+        }
     }
 }

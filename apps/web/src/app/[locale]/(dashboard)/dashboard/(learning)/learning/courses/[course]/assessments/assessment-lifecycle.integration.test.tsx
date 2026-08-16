@@ -72,13 +72,13 @@ vi.mock("@game-guild/client", () => ({
       postAssessments = wireMocks.postAssessments;
     },
     LearningCoursesProgramModule: class {},
-    LearningCoursesProgramcontentModule: class {
+    LearningCoursesProgramContentModule: class {
       postCoursesContent = wireMocks.postCoursesContent;
     },
-    LearningCoursesProgramlifecycleModule: class {},
+    LearningCoursesProgramLifecycleModule: class {},
     LearningEnrollmentsModule: class {},
     LearningCoursesStudentsModule: class {},
-    LearningCoursesSupportticketsModule: class {},
+    LearningCoursesSupportTicketsModule: class {},
     LearningCertificatesModule: class {},
     LearningExperienceSocialDiscussionsModule: class {},
     LearningExperienceSocialRepliesModule: class {},

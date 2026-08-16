@@ -52,7 +52,7 @@ export interface UseAuthReturn {
     options?: Record<string, unknown> & {
       redirectTo?: string;
       redirect?: boolean;
-    }
+    },
   ) => Promise<void>;
 
   /** Sign up with credentials */
@@ -68,10 +68,7 @@ export interface UseAuthReturn {
   }) => Promise<void>;
 
   /** Sign out */
-  signOut: (options?: {
-    redirectTo?: string;
-    redirect?: boolean;
-  }) => Promise<void>;
+  signOut: (options?: { redirectTo?: string; redirect?: boolean }) => Promise<void>;
 
   /** Whether an auth action is in progress */
   isLoading: boolean;
@@ -128,7 +125,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
       actionOptions?: Record<string, unknown> & {
         redirectTo?: string;
         redirect?: boolean;
-      }
+      },
     ): Promise<void> => {
       setIsLoading(true);
       setError(null);
@@ -137,31 +134,24 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
         const csrfToken = await getCSRFToken();
         const { redirectTo, redirect = true, ...credentials } = actionOptions ?? {};
 
-        const response = await fetch(
-          `${basePathRef.current}/signin/${provider}`,
-          {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...credentials,
-              csrfToken,
-              redirectTo,
-              redirect: false, // Always handle redirect client-side
-            }),
-          }
-        );
+        const response = await fetch(`${basePathRef.current}/signin/${provider}`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...credentials,
+            csrfToken,
+            redirectTo,
+            redirect: false, // Always handle redirect client-side
+          }),
+        });
 
         // Clear cached CSRF token after use
         csrfTokenRef.current = null;
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            (errorData as Record<string, string>).message ||
-            (errorData as Record<string, string>).detail ||
-            'Sign-in failed'
-          );
+          throw new Error((errorData as Record<string, string>).message || (errorData as Record<string, string>).detail || 'Sign-in failed');
         }
 
         const data = await response.json();
@@ -182,15 +172,14 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
           window.location.href = redirectTo;
         }
       } catch (err) {
-        const authError =
-          err instanceof Error ? err : new Error('Sign-in failed');
+        const authError = err instanceof Error ? err : new Error('Sign-in failed');
         setError(authError);
         throw authError;
       } finally {
         setIsLoading(false);
       }
     },
-    [getCSRFToken, sessionContext]
+    [getCSRFToken, sessionContext],
   );
 
   /**
@@ -228,11 +217,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            (errorData as Record<string, string>).message ||
-            (errorData as Record<string, string>).detail ||
-            'Sign-up failed'
-          );
+          throw new Error((errorData as Record<string, string>).message || (errorData as Record<string, string>).detail || 'Sign-up failed');
         }
 
         // Update session context
@@ -244,25 +229,21 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
           window.location.href = redirectTo;
         }
       } catch (err) {
-        const authError =
-          err instanceof Error ? err : new Error('Sign-up failed');
+        const authError = err instanceof Error ? err : new Error('Sign-up failed');
         setError(authError);
         throw authError;
       } finally {
         setIsLoading(false);
       }
     },
-    [getCSRFToken, sessionContext]
+    [getCSRFToken, sessionContext],
   );
 
   /**
    * Sign out
    */
   const signOut = useCallback(
-    async (signOutOptions?: {
-      redirectTo?: string;
-      redirect?: boolean;
-    }): Promise<void> => {
+    async (signOutOptions?: { redirectTo?: string; redirect?: boolean }): Promise<void> => {
       setIsLoading(true);
       setError(null);
 
@@ -295,15 +276,14 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
           window.location.href = redirectTo ?? '/';
         }
       } catch (err) {
-        const authError =
-          err instanceof Error ? err : new Error('Sign-out failed');
+        const authError = err instanceof Error ? err : new Error('Sign-out failed');
         setError(authError);
         throw authError;
       } finally {
         setIsLoading(false);
       }
     },
-    [getCSRFToken, sessionContext]
+    [getCSRFToken, sessionContext],
   );
 
   const clearError = useCallback(() => setError(null), []);

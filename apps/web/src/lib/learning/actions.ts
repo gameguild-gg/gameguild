@@ -83,12 +83,12 @@ function createCourseModules() {
   return {
     client,
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
-    content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
-    lifecycle: new GeneratedApi.LearningCoursesProgramlifecycleModule(client),
+    content: new GeneratedApi.LearningCoursesProgramContentModule(client),
+    lifecycle: new GeneratedApi.LearningCoursesProgramLifecycleModule(client),
     assessments: new GeneratedApi.LearningAssessmentsModule(client),
     enrollments: new GeneratedApi.LearningEnrollmentsModule(client),
     students: new GeneratedApi.LearningCoursesStudentsModule(client),
-    supportTickets: new GeneratedApi.LearningCoursesSupportticketsModule(
+    supportTickets: new GeneratedApi.LearningCoursesSupportTicketsModule(
       client,
     ),
     certificates: new GeneratedApi.LearningCertificatesModule(client),
@@ -674,7 +674,7 @@ async function resolveEnrollmentUserId(
   const query = value.includes("@")
     ? { email: value, limit: 5 }
     : { q: value, limit: 5 };
-  const result = await users.getUsers(query);
+  const result = await users.getUsersForGetUsers(query);
 
   if (!result.ok) {
     return { success: false, error: extractError(result.error) };
@@ -901,7 +901,7 @@ async function updateCourseMetadataSection(
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { programs } = createCourseModules();
-    const courseResult = await programs.getCoursesById(resolvedCourseId);
+    const courseResult = await programs.getCoursesForGetCoursesById(resolvedCourseId);
     if (!courseResult.ok)
       return { success: false, error: extractError(courseResult.error) };
 
@@ -1529,7 +1529,7 @@ export async function createGroupSet(
 
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const groupSets = new GeneratedApi.LearningAssessmentsGroupsetsModule(
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
       getApiClient(),
     );
     const result = await groupSets.postCoursesGroupSets(resolvedCourseId, {
@@ -1569,7 +1569,7 @@ export async function createCourseGroup(
 
   try {
     const resolvedCourseId = await resolveCourseMutationId(input.courseId);
-    const groupSets = new GeneratedApi.LearningAssessmentsGroupsetsModule(
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
       getApiClient(),
     );
     const result = await groupSets.postCoursesGroupSetsGroups(
@@ -1612,7 +1612,7 @@ export async function addGroupMember(
       return resolvedUser;
     }
 
-    const groupSets = new GeneratedApi.LearningAssessmentsGroupsetsModule(
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
       getApiClient(),
     );
     const result = await groupSets.postCoursesGroupSetsGroupsMembers(
@@ -1645,7 +1645,7 @@ export async function removeGroupMember(
 ): Promise<ActionResult<null>> {
   try {
     const resolvedCourseId = await resolveCourseMutationId(input.courseId);
-    const groupSets = new GeneratedApi.LearningAssessmentsGroupsetsModule(
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
       getApiClient(),
     );
     const result = await groupSets.deleteCoursesGroupSetsGroupsMembers(
@@ -1675,7 +1675,7 @@ export async function joinGroup(
 ): Promise<ActionResult<null>> {
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const groupSets = new GeneratedApi.LearningAssessmentsGroupsetsModule(
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
       getApiClient(),
     );
     const result = await groupSets.postCoursesGroupSetsGroupsJoin(
@@ -1702,7 +1702,7 @@ export async function leaveGroup(
 ): Promise<ActionResult<null>> {
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const groupSets = new GeneratedApi.LearningAssessmentsGroupsetsModule(
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
       getApiClient(),
     );
     const result = await groupSets.deleteCoursesGroupSetsGroupsMembership(
