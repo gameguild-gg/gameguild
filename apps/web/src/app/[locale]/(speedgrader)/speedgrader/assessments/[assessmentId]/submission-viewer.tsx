@@ -31,7 +31,7 @@ export interface SubmissionViewerProps {
 export function SubmissionViewer({
   submissionId,
   codingAssignment,
-  manifestUrl = '/cdn/manifest.json',
+  manifestUrl = '/emception/manifest.json',
   onComputedScore,
 }: SubmissionViewerProps): React.JSX.Element {
   const [submission, setSubmission] = useState<LearningAssessmentsAssessmentSubmission | null>(null);
