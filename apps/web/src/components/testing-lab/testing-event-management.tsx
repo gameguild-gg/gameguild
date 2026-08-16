@@ -36,7 +36,7 @@ import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@game-guild/ui/components/alert-dialog';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
-import { DateTimePicker } from '@game-guild/ui/components/date-time-picker';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import {
   Dialog,
   DialogContent,

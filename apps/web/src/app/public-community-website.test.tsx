@@ -47,14 +47,14 @@ vi.mock('@/lib/projects/public-projects', () => ({
   getVisibleProject: getVisibleProjectMock,
 }));
 
-import { PublicWebsiteHeader } from '@/components/site/public-website-shell';
-import CommunityPage from './[locale]/(community)/community/page';
-import JobsPage from './[locale]/(contents)/(jobs)/jobs/page';
-import LaunchPadPage from './[locale]/(contents)/(launch-pad)/launch-pad/page';
+import { PublicWebsiteHeader } from '@/components/app/app-shell';
+import CommunityPage from './[locale]/(public)/community/page';
+import JobsPage from './[locale]/(public)/jobs/page';
+import LaunchPadPage from './[locale]/(public)/launch-pad/page';
 import ProjectsPage from './[locale]/(contents)/(projects)/projects/page';
 import ProjectDetailPage from './[locale]/(contents)/(projects)/projects/[project]/page';
-import TestingLabPage from './[locale]/(contents)/(testing-lab)/testing-lab/page';
-import HomePage from './[locale]/(site)/page';
+import TestingLabPage from './[locale]/(public)/testing-lab/page';
+import HomePage from './[locale]/(public)/page';
 
 const publishedProject = {
   slug: 'real-api-project',
