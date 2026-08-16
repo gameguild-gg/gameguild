@@ -107,7 +107,7 @@ describe('CoursesPage', () => {
       data: courseFixtures,
     });
 
-    render(await CoursesPage());
+    render(await CoursesPage({ searchParams: Promise.resolve({}) } as never));
 
     expect(screen.getByText('Build the game development portfolio you want to be known for.')).toBeInTheDocument();
     expect(hasStat('2', 'Courses')).toBeInTheDocument();
@@ -125,7 +125,7 @@ describe('CoursesPage', () => {
       data: [],
     });
 
-    render(await CoursesPage());
+    render(await CoursesPage({ searchParams: Promise.resolve({}) } as never));
 
     expect(hasStat('0', 'Courses')).toBeInTheDocument();
     expect(screen.queryByText(/showing the imported GameGuild course snapshot/i)).not.toBeInTheDocument();
