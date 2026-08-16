@@ -70,6 +70,22 @@ export class TestingLabPermissionModule {
 
   /**
    */
+  async deleteApiTestingLabPermissionsRoleTemplatesByName(
+    name: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/testing-lab/permissions/role-templates/by-name/${name}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async putApiTestingLabPermissionsRoleTemplates(
     idOrName: string,
     body: Types.TestingLabUpdateTestingLabRoleInput,
@@ -121,22 +137,6 @@ export class TestingLabPermissionModule {
 
   /**
    */
-  async deleteApiTestingLabPermissionsRoleTemplatesByName(
-    name: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/testing-lab/permissions/role-templates/by-name/${name}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getApiTestingLabPermissionsUsers(
     userId: string,
     query?: { tenantId?: string },
@@ -165,46 +165,21 @@ export class TestingLabPermissionModule {
 
   /**
    */
-  async postApiTestingLabPermissionsUsersRoles(
+  async getApiTestingLabPermissionsUsersCheck(
     userId: string,
-    body: Types.TestingLabAssignTestingLabRoleInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/testing-lab/permissions/users/${userId}/roles`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabAssignTestingLabRoleInputSchema,
-      body,
-      "request",
-    );
+    resourceType: string,
+    query?: { action?: string; resourceId?: string; tenantId?: string },
+  ): Promise<Result<boolean, ApiError>> {
+    const url = `/api/testing-lab/permissions/users/${userId}/check/${resourceType}`;
 
     const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async deleteApiTestingLabPermissionsUsersRoles(
-    userId: string,
-    roleName: string,
-    query?: { tenantId?: string },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/testing-lab/permissions/users/${userId}/roles/${roleName}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<void, ApiError>;
+    return result as Result<boolean, ApiError>;
   }
 
   /**
@@ -256,21 +231,46 @@ export class TestingLabPermissionModule {
 
   /**
    */
-  async getApiTestingLabPermissionsUsersCheck(
+  async postApiTestingLabPermissionsUsersRoles(
     userId: string,
-    resourceType: string,
-    query?: { action?: string; resourceId?: string; tenantId?: string },
-  ): Promise<Result<boolean, ApiError>> {
-    const url = `/api/testing-lab/permissions/users/${userId}/check/${resourceType}`;
+    body: Types.TestingLabAssignTestingLabRoleInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/testing-lab/permissions/users/${userId}/roles`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.TestingLabAssignTestingLabRoleInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: "GET",
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async deleteApiTestingLabPermissionsUsersRoles(
+    userId: string,
+    roleName: string,
+    query?: { tenantId?: string },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/testing-lab/permissions/users/${userId}/roles/${roleName}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<boolean, ApiError>;
+    return result as Result<void, ApiError>;
   }
 }
 

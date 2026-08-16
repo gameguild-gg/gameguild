@@ -51,6 +51,32 @@ export class CommerceOrdersModule {
 
   /**
    */
+  async getOrders(
+    orderId: string,
+  ): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
+    const url = `/v1/orders/${orderId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceOrdersOrderSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postOrdersItems(
     orderId: string,
     body: Types.CommerceOrdersAddOrderItemInput,
@@ -68,67 +94,6 @@ export class CommerceOrdersModule {
       method: "POST",
       path: url,
       body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommerceOrdersOrderSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postOrdersComplete(
-    orderId: string,
-    body: Types.CommerceOrdersCompleteOrderInput,
-  ): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
-    const url = `/v1/orders/${orderId}:complete`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.CommerceOrdersCompleteOrderInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommerceOrdersOrderSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getOrders(
-    orderId: string,
-  ): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
-    const url = `/v1/orders/${orderId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
       requiresAuth: true,
     });
 
@@ -171,6 +136,41 @@ export class CommerceOrdersModule {
     if (result.ok) {
       const validatedData = safeParse(
         Types.CommerceOrdersOrderCaptureSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postOrdersComplete(
+    orderId: string,
+    body: Types.CommerceOrdersCompleteOrderInput,
+  ): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
+    const url = `/v1/orders/${orderId}:complete`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.CommerceOrdersCompleteOrderInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceOrdersOrderSchema,
         result.data,
         "response",
       );
