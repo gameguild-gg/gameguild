@@ -10,9 +10,11 @@ public sealed class DockerDeploymentContractTests
         var repositoryRoot = FindRepositoryRoot();
         var dockerfile = File.ReadAllText(Path.Combine(repositoryRoot, "apps", "api", "Dockerfile"));
 
-        dockerfile.Should().Contain("COPY GameGuild.sln Directory.Build.props Directory.Packages.props global.json ./");
-        dockerfile.Should().Contain("COPY Source/ Source/");
+        dockerfile.Should().Contain("COPY apps/api/GameGuild.sln apps/api/Directory.Build.props apps/api/Directory.Packages.props apps/api/global.json ./");
+        dockerfile.Should().Contain("COPY apps/api/Source/ Source/");
         dockerfile.Should().NotContain("COPY . .");
+        dockerfile.Should().Contain("--disable-parallel");
+        dockerfile.Should().Contain("-m:1");
         dockerfile.Should().Contain("USER appuser");
         dockerfile.Should().Contain("EXPOSE 8080");
         dockerfile.Should().Contain("ASPNETCORE_HTTP_PORTS=8080");
@@ -22,18 +24,22 @@ public sealed class DockerDeploymentContractTests
     }
 
     [Fact]
-    public void LocalCompose_UsesSharedDevelopmentInfrastructure()
+    public void LocalCompose_ProvidesDevelopmentInfrastructure()
     {
         var repositoryRoot = FindRepositoryRoot();
-        var compose = File.ReadAllText(Path.Combine(repositoryRoot, "compose.yaml"));
+        var compose = File.ReadAllText(Path.Combine(repositoryRoot, "compose.yaml")).ReplaceLineEndings("\n");
         var apiSection = SliceService(compose, "api", "web");
 
         compose.Should().Contain("name: web-development-public");
         compose.Should().Contain("external: true");
-        compose.Should().NotContain("  postgres:\n");
-        compose.Should().NotContain("  redis:\n");
-        compose.Should().NotContain("  garage:\n");
-        compose.Should().NotContain("  mailhog:\n");
+        compose.Should().Contain("  postgres:\n");
+        compose.Should().Contain("  redis:\n");
+        compose.Should().Contain("  garage:\n");
+        compose.Should().Contain("  garage-init:\n");
+        compose.Should().Contain("  mailhog:\n");
+        apiSection.Should().Contain("context: .");
+        apiSection.Should().Contain("dockerfile: apps/api/Dockerfile");
+        apiSection.Should().Contain("depends_on:");
         apiSection.Should().Contain("ConnectionStrings__MigrationConnection");
         apiSection.Should().Contain("Database__GrantRuntimeRoleAfterMigrations");
         apiSection.Should().Contain("Database__FailStartupOnMigrationFailure");
