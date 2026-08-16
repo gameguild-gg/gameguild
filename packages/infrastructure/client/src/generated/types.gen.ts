@@ -6195,6 +6195,33 @@ export interface LaunchPadUpdateLaunchPadEventInput {
   applicationsCloseAt?: string | null;
 }
 
+export interface LearningAssessmentsAnonymousReviewAssessment {
+  id?: string;
+  title?: string | null;
+  maxScore?: number;
+}
+
+export interface LearningAssessmentsAnonymousReviewRubric {
+  criteria?: Array<LearningAssessmentsRubricCriterion> | null;
+}
+
+export interface LearningAssessmentsAnonymousReviewSubmission {
+  reviewId?: string;
+  status?: LearningAssessmentsPeerReviewStatus;
+  assessment?: LearningAssessmentsAnonymousReviewAssessment;
+  rubric?: LearningAssessmentsAnonymousReviewRubric;
+  attemptNumber?: number;
+  submittedAt?: string | null;
+  submissionStatus?: LearningAssessmentsSubmissionStatus;
+  textPayload?: string | null;
+  urlPayload?: string | null;
+  codePayload?: string | null;
+  mediaPayload?: string | null;
+  filePayload?: string | null;
+  projectPayload?: string | null;
+  structuredAnswerPayload?: string | null;
+}
+
 export interface LearningAssessmentsAssessment {
   id?: string;
   courseId?: string;
@@ -6220,6 +6247,8 @@ export interface LearningAssessmentsAssessment {
   allowLateSubmissions?: boolean;
   lateSubmissionDeadline?: string | null;
   gradingMethods?: LearningAssessmentsAssessmentGradingMethod;
+  groupSetId?: string | null;
+  peerReviewsRequiredCount?: number;
 }
 
 export interface LearningAssessmentsAssessmentDefinition {
@@ -6341,10 +6370,111 @@ export interface LearningAssessmentsCreateAssessmentInput {
   gradingMethods?: LearningAssessmentsAssessmentGradingMethod;
 }
 
+export interface LearningAssessmentsCreateGroupInput {
+  name?: string | null;
+  capacity?: number;
+}
+
+export interface LearningAssessmentsCreateGroupSetInput {
+  name?: string | null;
+}
+
 export interface LearningAssessmentsGradeSubmissionInput {
   score?: number;
   gradedBy?: string | null;
   feedback?: string | null;
+  rubricScores?: string | null;
+}
+
+export interface LearningAssessmentsGradingQueue {
+  assessment?: LearningAssessmentsGradingQueueAssessment;
+  items?: Array<LearningAssessmentsGradingQueueItem> | null;
+  total?: number;
+  needsGrading?: number;
+}
+
+export interface LearningAssessmentsGradingQueueAssessment {
+  id?: string;
+  title?: string | null;
+  type?: LearningAssessmentsAssessmentType;
+  maxScore?: number;
+  gradingMethods?: string | null;
+  groupSetId?: string | null;
+  peerReviewsRequiredCount?: number;
+  hasRubric?: boolean;
+  rubric?: LearningAssessmentsRubric;
+}
+
+export interface LearningAssessmentsGradingQueueItem {
+  submissionId?: string;
+  canonicalSubmissionId?: string;
+  attemptNumber?: number;
+  status?: LearningAssessmentsSubmissionStatus;
+  score?: number | null;
+  isLate?: boolean;
+  submittedAt?: string | null;
+  isGroup?: boolean;
+  userId?: string | null;
+  displayName?: string | null;
+  groupId?: string | null;
+  groupName?: string | null;
+  memberNames?: Array<string> | null;
+}
+
+export interface LearningAssessmentsGroup {
+  id?: string;
+  groupSetId?: string;
+  name?: string | null;
+  capacity?: number;
+}
+
+export interface LearningAssessmentsGroupDetail {
+  id?: string;
+  name?: string | null;
+  capacity?: number;
+  memberCount?: number;
+  members?: Array<LearningAssessmentsGroupMember> | null;
+}
+
+export interface LearningAssessmentsGroupMember {
+  userId?: string;
+  displayName?: string | null;
+}
+
+export interface LearningAssessmentsGroupMembership {
+  id?: string;
+  groupId?: string;
+  userId?: string;
+  joinedAt?: string;
+}
+
+export interface LearningAssessmentsGroupSet {
+  id?: string;
+  courseId?: string;
+  name?: string | null;
+}
+
+export interface LearningAssessmentsGroupSetSummary {
+  id?: string;
+  name?: string | null;
+  groups?: Array<LearningAssessmentsGroupSummary> | null;
+}
+
+export interface LearningAssessmentsGroupSummary {
+  id?: string;
+  name?: string | null;
+  capacity?: number;
+  memberCount?: number;
+}
+
+export interface LearningAssessmentsInstructorPeerReview {
+  reviewId?: string;
+  score?: number | null;
+  feedback?: string | null;
+  rubricScoresPayload?: string | null;
+  submittedAt?: string | null;
+  reviewerUserId?: string;
+  reviewerName?: string | null;
 }
 
 export interface LearningAssessmentsInteractiveVideoAssessmentCue {
@@ -6393,6 +6523,51 @@ export interface LearningAssessmentsLinkInteractiveVideoCueInput {
   cuePositionSeconds?: number | null;
 }
 
+export interface LearningAssessmentsPeerReviewClaim {
+  reviewId?: string;
+  maskedSubmission?: string | null;
+}
+
+export type LearningAssessmentsPeerReviewStatus = "Assigned" | "Submitted";
+
+export interface LearningAssessmentsPeerReviewSubmitInput {
+  score?: number | null;
+  feedback?: string | null;
+  rubricScores?: string | null;
+}
+
+export interface LearningAssessmentsReceivedPeerReview {
+  reviewId?: string;
+  score?: number | null;
+  feedback?: string | null;
+  rubricScoresPayload?: string | null;
+  submittedAt?: string | null;
+}
+
+export interface LearningAssessmentsRubric {
+  id?: string;
+  title?: string | null;
+  criteria?: Array<LearningAssessmentsRubricCriterion> | null;
+}
+
+export interface LearningAssessmentsRubricCriterion {
+  id?: string;
+  description?: string | null;
+  points?: number;
+  order?: number;
+}
+
+export interface LearningAssessmentsSaveRubricCriterionInput {
+  description?: string | null;
+  points?: number;
+  order?: number;
+}
+
+export interface LearningAssessmentsSaveRubricInput {
+  title?: string | null;
+  criteria?: Array<LearningAssessmentsSaveRubricCriterionInput> | null;
+}
+
 export interface LearningAssessmentsStartSubmissionInput {
   enrollmentId?: string;
 }
@@ -6411,6 +6586,22 @@ export interface LearningAssessmentsSubmitAssessmentInput {
   mediaPayload?: string | null;
   projectPayload?: string | null;
   structuredAnswerPayload?: string | null;
+}
+
+export interface LearningAssessmentsTaskItem {
+  type?: string | null;
+  courseId?: string;
+  courseTitle?: string | null;
+  assessmentId?: string;
+  assessmentTitle?: string | null;
+  dueAt?: string | null;
+  countSubmitted?: number | null;
+  reviewsCompleted?: number | null;
+  reviewsRequired?: number | null;
+}
+
+export interface LearningAssessmentsTasks {
+  items?: Array<LearningAssessmentsTaskItem> | null;
 }
 
 export interface LearningAssessmentsUpdateAssessmentGroupInput {
@@ -6441,6 +6632,9 @@ export interface LearningAssessmentsUpdateAssessmentInput {
   lateSubmissionDeadline?: string | null;
   clearLateSubmissionDeadline?: boolean;
   gradingMethods?: LearningAssessmentsAssessmentGradingMethod;
+  groupSetId?: string | null;
+  clearGroupSetId?: boolean;
+  peerReviewsRequiredCount?: number | null;
 }
 
 export interface LearningCertificatesCertificate {
@@ -11890,6 +12084,9 @@ export let LaunchPadTransitionLaunchPadEventInputSchema: z.ZodType<LaunchPadTran
 export let LaunchPadTransitionLaunchPadRegistrationInputSchema: z.ZodType<LaunchPadTransitionLaunchPadRegistrationInput>;
 export let LaunchPadUpdateLaunchPadApplicationInputSchema: z.ZodType<LaunchPadUpdateLaunchPadApplicationInput>;
 export let LaunchPadUpdateLaunchPadEventInputSchema: z.ZodType<LaunchPadUpdateLaunchPadEventInput>;
+export let LearningAssessmentsAnonymousReviewAssessmentSchema: z.ZodType<LearningAssessmentsAnonymousReviewAssessment>;
+export let LearningAssessmentsAnonymousReviewRubricSchema: z.ZodType<LearningAssessmentsAnonymousReviewRubric>;
+export let LearningAssessmentsAnonymousReviewSubmissionSchema: z.ZodType<LearningAssessmentsAnonymousReviewSubmission>;
 export let LearningAssessmentsAssessmentSchema: z.ZodType<LearningAssessmentsAssessment>;
 export let LearningAssessmentsAssessmentDefinitionSchema: z.ZodType<LearningAssessmentsAssessmentDefinition>;
 export let LearningAssessmentsAssessmentGradingMethodSchema: z.ZodType<LearningAssessmentsAssessmentGradingMethod>;
@@ -11904,16 +12101,39 @@ export let LearningAssessmentsCanAttemptOutputSchema: z.ZodType<LearningAssessme
 export let LearningAssessmentsCourseAssessmentAnalyticsSchema: z.ZodType<LearningAssessmentsCourseAssessmentAnalytics>;
 export let LearningAssessmentsCreateAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsCreateAssessmentGroupInput>;
 export let LearningAssessmentsCreateAssessmentInputSchema: z.ZodType<LearningAssessmentsCreateAssessmentInput>;
+export let LearningAssessmentsCreateGroupInputSchema: z.ZodType<LearningAssessmentsCreateGroupInput>;
+export let LearningAssessmentsCreateGroupSetInputSchema: z.ZodType<LearningAssessmentsCreateGroupSetInput>;
 export let LearningAssessmentsGradeSubmissionInputSchema: z.ZodType<LearningAssessmentsGradeSubmissionInput>;
+export let LearningAssessmentsGradingQueueSchema: z.ZodType<LearningAssessmentsGradingQueue>;
+export let LearningAssessmentsGradingQueueAssessmentSchema: z.ZodType<LearningAssessmentsGradingQueueAssessment>;
+export let LearningAssessmentsGradingQueueItemSchema: z.ZodType<LearningAssessmentsGradingQueueItem>;
+export let LearningAssessmentsGroupSchema: z.ZodType<LearningAssessmentsGroup>;
+export let LearningAssessmentsGroupDetailSchema: z.ZodType<LearningAssessmentsGroupDetail>;
+export let LearningAssessmentsGroupMemberSchema: z.ZodType<LearningAssessmentsGroupMember>;
+export let LearningAssessmentsGroupMembershipSchema: z.ZodType<LearningAssessmentsGroupMembership>;
+export let LearningAssessmentsGroupSetSchema: z.ZodType<LearningAssessmentsGroupSet>;
+export let LearningAssessmentsGroupSetSummarySchema: z.ZodType<LearningAssessmentsGroupSetSummary>;
+export let LearningAssessmentsGroupSummarySchema: z.ZodType<LearningAssessmentsGroupSummary>;
+export let LearningAssessmentsInstructorPeerReviewSchema: z.ZodType<LearningAssessmentsInstructorPeerReview>;
 export let LearningAssessmentsInteractiveVideoAssessmentCueSchema: z.ZodType<LearningAssessmentsInteractiveVideoAssessmentCue>;
 export let LearningAssessmentsLearnerAssessmentAttemptSchema: z.ZodType<LearningAssessmentsLearnerAssessmentAttempt>;
 export let LearningAssessmentsLearnerAssessmentSubmissionSchema: z.ZodType<LearningAssessmentsLearnerAssessmentSubmission>;
 export let LearningAssessmentsLearnerInteractiveVideoAssessmentCueSchema: z.ZodType<LearningAssessmentsLearnerInteractiveVideoAssessmentCue>;
 export let LearningAssessmentsLinkInteractiveVideoCueInputSchema: z.ZodType<LearningAssessmentsLinkInteractiveVideoCueInput>;
+export let LearningAssessmentsPeerReviewClaimSchema: z.ZodType<LearningAssessmentsPeerReviewClaim>;
+export let LearningAssessmentsPeerReviewStatusSchema: z.ZodType<LearningAssessmentsPeerReviewStatus>;
+export let LearningAssessmentsPeerReviewSubmitInputSchema: z.ZodType<LearningAssessmentsPeerReviewSubmitInput>;
+export let LearningAssessmentsReceivedPeerReviewSchema: z.ZodType<LearningAssessmentsReceivedPeerReview>;
+export let LearningAssessmentsRubricSchema: z.ZodType<LearningAssessmentsRubric>;
+export let LearningAssessmentsRubricCriterionSchema: z.ZodType<LearningAssessmentsRubricCriterion>;
+export let LearningAssessmentsSaveRubricCriterionInputSchema: z.ZodType<LearningAssessmentsSaveRubricCriterionInput>;
+export let LearningAssessmentsSaveRubricInputSchema: z.ZodType<LearningAssessmentsSaveRubricInput>;
 export let LearningAssessmentsStartSubmissionInputSchema: z.ZodType<LearningAssessmentsStartSubmissionInput>;
 export let LearningAssessmentsSubmissionModalitySchema: z.ZodType<LearningAssessmentsSubmissionModality>;
 export let LearningAssessmentsSubmissionStatusSchema: z.ZodType<LearningAssessmentsSubmissionStatus>;
 export let LearningAssessmentsSubmitAssessmentInputSchema: z.ZodType<LearningAssessmentsSubmitAssessmentInput>;
+export let LearningAssessmentsTaskItemSchema: z.ZodType<LearningAssessmentsTaskItem>;
+export let LearningAssessmentsTasksSchema: z.ZodType<LearningAssessmentsTasks>;
 export let LearningAssessmentsUpdateAssessmentGroupInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentGroupInput>;
 export let LearningAssessmentsUpdateAssessmentInputSchema: z.ZodType<LearningAssessmentsUpdateAssessmentInput>;
 export let LearningCertificatesCertificateSchema: z.ZodType<LearningCertificatesCertificate>;
@@ -20239,6 +20459,45 @@ LaunchPadUpdateLaunchPadEventInputSchema = z.object({
   applicationsCloseAt: z.string().datetime().nullable().optional(),
 });
 
+/** Zod schema for LearningAssessmentsAnonymousReviewAssessment */
+LearningAssessmentsAnonymousReviewAssessmentSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  maxScore: z.number().int().optional(),
+});
+
+/** Zod schema for LearningAssessmentsAnonymousReviewRubric */
+LearningAssessmentsAnonymousReviewRubricSchema = z.object({
+  criteria: z
+    .array(z.lazy(() => LearningAssessmentsRubricCriterionSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningAssessmentsAnonymousReviewSubmission */
+LearningAssessmentsAnonymousReviewSubmissionSchema = z.object({
+  reviewId: z.string().uuid().optional(),
+  status: z.lazy(() => LearningAssessmentsPeerReviewStatusSchema).optional(),
+  assessment: z
+    .lazy(() => LearningAssessmentsAnonymousReviewAssessmentSchema)
+    .optional(),
+  rubric: z
+    .lazy(() => LearningAssessmentsAnonymousReviewRubricSchema)
+    .optional(),
+  attemptNumber: z.number().int().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
+  submissionStatus: z
+    .lazy(() => LearningAssessmentsSubmissionStatusSchema)
+    .optional(),
+  textPayload: z.string().nullable().optional(),
+  urlPayload: z.string().nullable().optional(),
+  codePayload: z.string().nullable().optional(),
+  mediaPayload: z.string().nullable().optional(),
+  filePayload: z.string().nullable().optional(),
+  projectPayload: z.string().nullable().optional(),
+  structuredAnswerPayload: z.string().nullable().optional(),
+});
+
 /** Zod schema for LearningAssessmentsAssessment */
 LearningAssessmentsAssessmentSchema = z.object({
   id: z.string().uuid().optional(),
@@ -20271,6 +20530,8 @@ LearningAssessmentsAssessmentSchema = z.object({
   gradingMethods: z
     .lazy(() => LearningAssessmentsAssessmentGradingMethodSchema)
     .optional(),
+  groupSetId: z.string().uuid().nullable().optional(),
+  peerReviewsRequiredCount: z.number().int().optional(),
 });
 
 /** Zod schema for LearningAssessmentsAssessmentDefinition */
@@ -20427,11 +20688,136 @@ LearningAssessmentsCreateAssessmentInputSchema = z.object({
     .optional(),
 });
 
+/** Zod schema for LearningAssessmentsCreateGroupInput */
+LearningAssessmentsCreateGroupInputSchema = z.object({
+  name: z.string().nullable().optional(),
+  capacity: z.number().int().optional(),
+});
+
+/** Zod schema for LearningAssessmentsCreateGroupSetInput */
+LearningAssessmentsCreateGroupSetInputSchema = z.object({
+  name: z.string().nullable().optional(),
+});
+
 /** Zod schema for LearningAssessmentsGradeSubmissionInput */
 LearningAssessmentsGradeSubmissionInputSchema = z.object({
   score: z.number().int().optional(),
   gradedBy: z.string().uuid().nullable().optional(),
   feedback: z.string().nullable().optional(),
+  rubricScores: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsGradingQueue */
+LearningAssessmentsGradingQueueSchema = z.object({
+  assessment: z
+    .lazy(() => LearningAssessmentsGradingQueueAssessmentSchema)
+    .optional(),
+  items: z
+    .array(z.lazy(() => LearningAssessmentsGradingQueueItemSchema))
+    .nullable()
+    .optional(),
+  total: z.number().int().optional(),
+  needsGrading: z.number().int().optional(),
+});
+
+/** Zod schema for LearningAssessmentsGradingQueueAssessment */
+LearningAssessmentsGradingQueueAssessmentSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
+  maxScore: z.number().int().optional(),
+  gradingMethods: z.string().nullable().optional(),
+  groupSetId: z.string().uuid().nullable().optional(),
+  peerReviewsRequiredCount: z.number().int().optional(),
+  hasRubric: z.boolean().optional(),
+  rubric: z.lazy(() => LearningAssessmentsRubricSchema).optional(),
+});
+
+/** Zod schema for LearningAssessmentsGradingQueueItem */
+LearningAssessmentsGradingQueueItemSchema = z.object({
+  submissionId: z.string().uuid().optional(),
+  canonicalSubmissionId: z.string().uuid().optional(),
+  attemptNumber: z.number().int().optional(),
+  status: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
+  score: z.number().int().nullable().optional(),
+  isLate: z.boolean().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
+  isGroup: z.boolean().optional(),
+  userId: z.string().uuid().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  groupId: z.string().uuid().nullable().optional(),
+  groupName: z.string().nullable().optional(),
+  memberNames: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsGroup */
+LearningAssessmentsGroupSchema = z.object({
+  id: z.string().uuid().optional(),
+  groupSetId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  capacity: z.number().int().optional(),
+});
+
+/** Zod schema for LearningAssessmentsGroupDetail */
+LearningAssessmentsGroupDetailSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  capacity: z.number().int().optional(),
+  memberCount: z.number().int().optional(),
+  members: z
+    .array(z.lazy(() => LearningAssessmentsGroupMemberSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningAssessmentsGroupMember */
+LearningAssessmentsGroupMemberSchema = z.object({
+  userId: z.string().uuid().optional(),
+  displayName: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsGroupMembership */
+LearningAssessmentsGroupMembershipSchema = z.object({
+  id: z.string().uuid().optional(),
+  groupId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  joinedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for LearningAssessmentsGroupSet */
+LearningAssessmentsGroupSetSchema = z.object({
+  id: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsGroupSetSummary */
+LearningAssessmentsGroupSetSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  groups: z
+    .array(z.lazy(() => LearningAssessmentsGroupSummarySchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningAssessmentsGroupSummary */
+LearningAssessmentsGroupSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().nullable().optional(),
+  capacity: z.number().int().optional(),
+  memberCount: z.number().int().optional(),
+});
+
+/** Zod schema for LearningAssessmentsInstructorPeerReview */
+LearningAssessmentsInstructorPeerReviewSchema = z.object({
+  reviewId: z.string().uuid().optional(),
+  score: z.number().int().nullable().optional(),
+  feedback: z.string().nullable().optional(),
+  rubricScoresPayload: z.string().nullable().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
+  reviewerUserId: z.string().uuid().optional(),
+  reviewerName: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsInteractiveVideoAssessmentCue */
@@ -20489,6 +20875,65 @@ LearningAssessmentsLinkInteractiveVideoCueInputSchema = z.object({
   cuePositionSeconds: z.number().nullable().optional(),
 });
 
+/** Zod schema for LearningAssessmentsPeerReviewClaim */
+LearningAssessmentsPeerReviewClaimSchema = z.object({
+  reviewId: z.string().uuid().optional(),
+  maskedSubmission: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsPeerReviewStatus */
+LearningAssessmentsPeerReviewStatusSchema = z.enum(["Assigned", "Submitted"]);
+
+/** Zod schema for LearningAssessmentsPeerReviewSubmitInput */
+LearningAssessmentsPeerReviewSubmitInputSchema = z.object({
+  score: z.number().int().nullable().optional(),
+  feedback: z.string().nullable().optional(),
+  rubricScores: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsReceivedPeerReview */
+LearningAssessmentsReceivedPeerReviewSchema = z.object({
+  reviewId: z.string().uuid().optional(),
+  score: z.number().int().nullable().optional(),
+  feedback: z.string().nullable().optional(),
+  rubricScoresPayload: z.string().nullable().optional(),
+  submittedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsRubric */
+LearningAssessmentsRubricSchema = z.object({
+  id: z.string().uuid().optional(),
+  title: z.string().nullable().optional(),
+  criteria: z
+    .array(z.lazy(() => LearningAssessmentsRubricCriterionSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for LearningAssessmentsRubricCriterion */
+LearningAssessmentsRubricCriterionSchema = z.object({
+  id: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  points: z.number().int().optional(),
+  order: z.number().int().optional(),
+});
+
+/** Zod schema for LearningAssessmentsSaveRubricCriterionInput */
+LearningAssessmentsSaveRubricCriterionInputSchema = z.object({
+  description: z.string().nullable().optional(),
+  points: z.number().int().optional(),
+  order: z.number().int().optional(),
+});
+
+/** Zod schema for LearningAssessmentsSaveRubricInput */
+LearningAssessmentsSaveRubricInputSchema = z.object({
+  title: z.string().nullable().optional(),
+  criteria: z
+    .array(z.lazy(() => LearningAssessmentsSaveRubricCriterionInputSchema))
+    .nullable()
+    .optional(),
+});
+
 /** Zod schema for LearningAssessmentsStartSubmissionInput */
 LearningAssessmentsStartSubmissionInputSchema = z.object({
   enrollmentId: z.string().uuid().optional(),
@@ -20515,6 +20960,27 @@ LearningAssessmentsSubmitAssessmentInputSchema = z.object({
   mediaPayload: z.string().nullable().optional(),
   projectPayload: z.string().nullable().optional(),
   structuredAnswerPayload: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsTaskItem */
+LearningAssessmentsTaskItemSchema = z.object({
+  type: z.string().nullable().optional(),
+  courseId: z.string().uuid().optional(),
+  courseTitle: z.string().nullable().optional(),
+  assessmentId: z.string().uuid().optional(),
+  assessmentTitle: z.string().nullable().optional(),
+  dueAt: z.string().datetime().nullable().optional(),
+  countSubmitted: z.number().int().nullable().optional(),
+  reviewsCompleted: z.number().int().nullable().optional(),
+  reviewsRequired: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for LearningAssessmentsTasks */
+LearningAssessmentsTasksSchema = z.object({
+  items: z
+    .array(z.lazy(() => LearningAssessmentsTaskItemSchema))
+    .nullable()
+    .optional(),
 });
 
 /** Zod schema for LearningAssessmentsUpdateAssessmentGroupInput */
@@ -20553,6 +21019,9 @@ LearningAssessmentsUpdateAssessmentInputSchema = z.object({
   gradingMethods: z
     .lazy(() => LearningAssessmentsAssessmentGradingMethodSchema)
     .optional(),
+  groupSetId: z.string().uuid().nullable().optional(),
+  clearGroupSetId: z.boolean().optional(),
+  peerReviewsRequiredCount: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for LearningCertificatesCertificate */

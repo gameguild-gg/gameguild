@@ -1,5 +1,5 @@
 import { Button } from "@game-guild/ui/components/button";
-import { ArrowRight, BookOpen, Clock3 } from "lucide-react";
+import { ArrowRight, BookOpen, Clock3, ListChecks } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -9,16 +9,24 @@ import {
   type LearnerRoutes,
 } from "./types";
 
+export interface LearnerTasksSummary {
+  doCount: number;
+  reviewCount: number;
+  href: string;
+}
+
 export interface LearnerDashboardProps {
   learnerName: string;
   courses: LearnerCourse[];
   routes?: LearnerRoutes;
+  tasks?: LearnerTasksSummary;
 }
 
 export function LearnerDashboard({
   learnerName,
   courses,
   routes = defaultLearnerRoutes,
+  tasks,
 }: LearnerDashboardProps) {
   if (courses.length === 0) {
     return (
@@ -66,6 +74,31 @@ export function LearnerDashboard({
           <Link href={routes.catalog}>Browse catalog</Link>
         </Button>
       </header>
+
+      {tasks && (
+        <section
+          aria-labelledby="tasks-heading"
+          className="flex flex-wrap items-center justify-between gap-3 border-y bg-muted/30 px-6 py-4"
+        >
+          <div className="flex items-center gap-2">
+            <ListChecks className="size-5 text-primary" />
+            <h2 id="tasks-heading" className="text-lg font-semibold">
+              Your tasks
+            </h2>
+          </div>
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <span>
+              <span className="font-medium text-foreground">{tasks.doCount}</span> to do
+            </span>
+            <span>
+              <span className="font-medium text-foreground">{tasks.reviewCount}</span> to review
+            </span>
+            <Button asChild variant="outline" size="sm">
+              <Link href={tasks.href}>View tasks</Link>
+            </Button>
+          </div>
+        </section>
+      )}
 
       <section
         aria-labelledby="continue-heading"

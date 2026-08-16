@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const signOut = vi.fn().mockResolvedValue(undefined);
 const navigation = vi.hoisted(() => ({
@@ -24,7 +24,67 @@ vi.mock("@/components/ui/theme-toggle", () => ({
 
 const { LearningShell } = await import("./learning-shell");
 
+function renderShell() {
+  return render(
+    <LearningShell
+      user={{ id: "user-1", name: "Ada Learner", email: "ada@example.com" }}
+    >
+      <p>Content</p>
+    </LearningShell>,
+  );
+}
+
+function mainContainer(container: HTMLElement) {
+  return container.querySelector("main#learning-content > div");
+}
+
 describe("LearningShell", () => {
+  beforeEach(() => {
+    navigation.pathname = "/learn/courses/game-ai";
+  });
+
+  it("renders the coding assessment route in wide mode", () => {
+    navigation.pathname = "/learn/courses/game-ai/activities/assessment-1";
+    const { container } = renderShell();
+
+    expect(mainContainer(container)).toHaveClass(
+      "w-full",
+      "px-4",
+      "pt-4",
+      "pb-6",
+    );
+    expect(mainContainer(container)).not.toHaveClass("max-w-[1600px]");
+    expect(mainContainer(container)).not.toHaveClass("mx-auto");
+  });
+
+  it("keeps the capped container on non-assessment activity routes", () => {
+    navigation.pathname = "/learn/courses/game-ai/activities/content-1";
+    const { container } = renderShell();
+
+    expect(mainContainer(container)).toHaveClass(
+      "mx-auto",
+      "w-full",
+      "max-w-[1600px]",
+      "p-4",
+      "sm:p-6",
+      "lg:p-8",
+    );
+  });
+
+  it("keeps the capped container on other learner routes", () => {
+    navigation.pathname = "/learn/other";
+    const { container } = renderShell();
+
+    expect(mainContainer(container)).toHaveClass(
+      "mx-auto",
+      "w-full",
+      "max-w-[1600px]",
+      "p-4",
+      "sm:p-6",
+      "lg:p-8",
+    );
+  });
+
   it("exposes the learner navigation with native App Router URLs", () => {
     render(
       <LearningShell

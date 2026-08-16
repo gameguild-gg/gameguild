@@ -6,8 +6,9 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup';
 import FileExplorer from './FileExplorer';
 import type { DockGroup, FileMeta, FileMetaInput, GradingPlan, OpenTab, TabType, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types';
-import { DEFAULT_IMAGE, SDL_CANVAS_PATH, parseWorkspaceBundle, resolveArgs, workspaceConfigToState, workspaceStorageKey } from './ide-types';
+import { DEFAULT_IMAGE, SDL_CANVAS_PATH, IMAGE_MIME_BY_EXT, legacyAssignmentToken, parseWorkspaceBundle, resolveArgs, workspaceConfigToState, workspaceStorageKey } from './ide-types';
 import TestResultsPanel from './TestResultsPanel';
+import TestCasesPanel from './TestCasesPanel';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, toWorkspaceFsPath } from './ide-utils';
 import { MINI_DOCTEST_H, parseMiniDoctest } from './doctest-header';
 import TerminalPanel from './TerminalPanel';
@@ -114,6 +115,10 @@ export interface IdeProps {
   /** Slot rendered in a collapsible sidebar region (below FileExplorer) when supplied.
    *  Hosts the page-composed StandardTest + FunctionalTestGroup editors. */
   testsPanelSlot?: ReactNode;
+  /** Whether students may create/upload files (runtime gate). Authoring mode always shows the create controls. Defaults to true. */
+  allowCreateFiles?: boolean;
+  /** Fired when the instructor flips the compact workspace toggle. Presence = authoring mode. */
+  onAllowCreateFilesChange?: (v: boolean) => void;
 }
 
 /** Imperative handle exposed by `<Ide ref={...}>`. */
@@ -123,14 +128,23 @@ export interface IdeHandle {
   getFiles(): Promise<Array<{ path: string; content: string; encoding: 'text' | 'base64' }>>;
   setFiles(files: Array<{ path: string; content: string }>): Promise<void>;
   reset(): Promise<void>;
-  /** Write a single file to reactive state + worker VFS via `client.writeFile`. */
-  addFile(path: string, content: string): Promise<void>;
+  /** Write a single file to reactive state + worker VFS via `client.writeFile`.
+   *  `encoding: 'base64'` stores an image entry instead (data-URI in state,
+   *  never synced to the VFS nor persisted to localStorage). */
+  addFile(path: string, content: string, encoding?: 'text' | 'base64'): Promise<void>;
   /** Remove a single file from reactive state + worker VFS. */
   removeFile(path: string): Promise<void>;
   /** Apply v1 2-tier metadata; translates internally to emception's 3-tier FileEntry. */
   setFileMeta(path: string, meta: FileMetaInput): Promise<void>;
   /** Content-diff against the seeded workspace — returns edited + student-created files. */
   getModifiedFiles(): Promise<Array<{ path: string; content: string; encoding: 'text' }>>;
+  /** Sync probe — true iff a parseable persisted draft exists under the new or legacy key. */
+  hasStoredDraft(): boolean;
+  /** Reset the content-diff baseline to the CURRENT files — post-resync edits alone are diffs. */
+  resyncBaseline(): void;
+  /** Pin the content-diff baseline to the GIVEN files (e.g. the instructor
+   *  seed) while the workspace shows other content (restored draft, overlay). */
+  setBaseline(files: Array<{ path: string; content: string }>): void;
   /** Single snapshot for the page's save handler — files + fileMeta + tests + activePresetId. */
   getAuthoredState(): Promise<{
     files: Array<{ path: string; content: string; encoding: 'text' | 'base64' }>;
@@ -163,6 +177,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   tests,
   onTestsChange,
   testsPanelSlot,
+  allowCreateFiles = true,
+  onAllowCreateFilesChange,
 }, ref) {
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
@@ -223,7 +239,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   const [isReady, setIsReady] = useState(false);
   const [terminalReady, setTerminalReady] = useState(false);
   const [executionPhase, setExecutionPhase] = useState<'idle' | 'compiling' | 'running'>('idle');
-  const [bottomTab, setBottomTab] = useState<'terminal' | 'tests'>('terminal');
+  const [bottomTab, setBottomTab] = useState<'terminal' | 'test-cases' | 'test-results' | 'tests'>('terminal');
   /** Set to true by handleStop so the catch block in handleCompile knows it was intentional */
   const stoppedRef = useRef(false);
   /** Tracks latest files for use in callbacks that can't close over state */
@@ -257,7 +273,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
   useEffect(() => {
     try {
       // Read with the mount-time preset id — the initial workspace's key.
-      const raw = window.localStorage.getItem(workspaceStorageKey(assignmentToken, activePresetIdRef.current));
+      // New key first; if absent, retry the legacy pre-namespacing token
+      // (suffix after the last ':') so pre-migration drafts survive. First hit wins.
+      const raw =
+        window.localStorage.getItem(workspaceStorageKey(assignmentToken, activePresetIdRef.current)) ??
+        window.localStorage.getItem(workspaceStorageKey(legacyAssignmentToken(assignmentToken), activePresetIdRef.current));
       if (!raw) return;
       const parsed = JSON.parse(raw) as {
         files?: Record<string, WorkspaceFile>;
@@ -279,7 +299,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     }
   }, []);
 
+  // Skip the FIRST persistence write per mount: on load the initial config
+  // files must not clobber a restorable draft before the restore effect
+  // above reads it — persisting the unedited initial state is a no-op anyway.
+  const storageWarmedRef = useRef(false);
+
   useEffect(() => {
+    if (!storageWarmedRef.current) {
+      storageWarmedRef.current = true;
+      return;
+    }
     try {
       // Exclude runtime-only canvas entries and image files (base64 data-URIs
       // would blow the ~5MB localStorage quota) from the persisted workspace.
@@ -725,6 +754,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         cases: reportCases,
       };
       setLastReport(report);
+      setBottomTab('test-results');
       try {
         onTestReportRef.current?.(report);
       } catch {
@@ -742,10 +772,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         cases: [{ name: 'compile', passed: false, durationMs: 0, diagnostic: message }],
       };
       setLastReport(report);
+      setBottomTab('test-results');
     } finally {
       setTestRunning(false);
     }
-    }, [testPlan, testMode, syncFilesToVfs]);
+    }, [testPlan, testMode, syncFilesToVfs, testsPanelSlot]);
 
   // ── Apply a workspace config to reactive state + Worker VFS ─────
   const applyWorkspace = useCallback(
@@ -960,6 +991,9 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             : { path: f.path, content: f.content, encoding: 'text' as const },
         );
     };
+    const setBaseline = (files: Array<{ path: string; content: string }>) => {
+      seededContentRef.current = new Map(files.map(({ path, content }) => [path, content]));
+    };
     return {
     runTests: async (plan) => {
       const api = apiRef.current;
@@ -998,7 +1032,18 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     reset: async () => {
       await orchestratorRef.current?.client.resetVfs();
     },
-    addFile: async (path, content) => {
+    addFile: async (path, content, encoding = 'text') => {
+      if (encoding === 'base64') {
+        // Image lifecycle mirrors handleUploadFiles: data-URI in reactive
+        // state, never written to the worker VFS, excluded from localStorage
+        // persistence (type 'image' is filtered out of the write effect).
+        const ext = path.split('.').pop()?.toLowerCase() ?? '';
+        const mime = IMAGE_MIME_BY_EXT[ext] ?? 'image/png';
+        const file: WorkspaceFile = { path, type: 'image', content: `data:${mime};base64,${content}` };
+        setFiles((prev) => ({ ...prev, [path]: file }));
+        filesRef.current = { ...filesRef.current, [path]: file };
+        return;
+      }
       setFiles((prev) => ({ ...prev, [path]: { path, type: 'text', content } }));
       filesRef.current = { ...filesRef.current, [path]: { path, type: 'text', content } };
       const orch = orchestratorRef.current;
@@ -1037,6 +1082,29 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         .filter((f) => f.type === 'text' && f.content !== seeded.get(f.path))
         .map(({ path, content }) => ({ path, content, encoding: 'text' as const }));
     },
+    hasStoredDraft: () => {
+      const token = propsRef.current.assignmentToken;
+      const wsId = activePresetIdRef.current;
+      for (const key of [workspaceStorageKey(token, wsId), workspaceStorageKey(legacyAssignmentToken(token), wsId)]) {
+        const raw = window.localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+          JSON.parse(raw);
+          return true;
+        } catch {
+          /* corrupt entry under this key — try the next */
+        }
+      }
+      return false;
+    },
+    resyncBaseline: () => {
+      setBaseline(
+        Object.values(filesRef.current)
+          .filter((f) => f.type === 'text')
+          .map(({ path, content }) => ({ path, content })),
+      );
+    },
+    setBaseline,
     getAuthoredState: async () => {
       const fm = propsRef.current.fileMeta;
       const fileMetaSnapshot: Record<string, { visibility: 'Public' | 'Private'; modifiable: boolean }> = {};
@@ -1189,6 +1257,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
   const createFile = useCallback(
     (kind: TabType) => {
+      // Runtime gate: without the authoring callback, allowCreateFiles=false blocks creation outright.
+      if (!onAllowCreateFilesChange && !allowCreateFiles) return;
       const baseDir = '/user';
       const defaultName = kind === 'canvas' ? 'new-canvas' : kind === 'image' ? 'new-image.svg' : 'new-file.cpp';
       const input = window.prompt(`Create new ${kind} file`, `${baseDir}/${defaultName}`);
@@ -1216,11 +1286,13 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       setSelectedPath(path);
       ensureOpenTab(path, 'main');
     },
-    [files, ensureOpenTab],
+    [files, ensureOpenTab, allowCreateFiles, onAllowCreateFilesChange],
   );
 
   const renameSelectedFile = useCallback(() => {
     if (!selectedPath || !files[selectedPath]) return;
+    // Read-only guard mirrors the disabled button — the ctx-menu entry bypasses the button.
+    if (fileMeta?.[selectedPath]?.modifiable === false) return;
     const nextPath = window.prompt('Rename file', selectedPath);
     if (!nextPath || nextPath === selectedPath) return;
     if (files[nextPath]) {
@@ -1238,10 +1310,12 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     setOpenTabs((prev) => prev.map((tab) => (tab.path === selectedPath ? { ...tab, path: norm, id: `tab:${norm}` } : tab)));
     setSelectedPath(norm);
     setActiveTabId((cur) => (cur === `tab:${selectedPath}` ? `tab:${norm}` : cur));
-  }, [selectedPath, files]);
+  }, [selectedPath, files, fileMeta]);
 
   const deleteSelectedFile = useCallback(() => {
     if (!selectedPath || !files[selectedPath]) return;
+    // Read-only guard mirrors the disabled button — the ctx-menu entry bypasses the button.
+    if (fileMeta?.[selectedPath]?.modifiable === false) return;
     if (!window.confirm(`Delete ${selectedPath}?`)) return;
     setFiles((prev) => {
       const c = { ...prev };
@@ -1250,10 +1324,13 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     });
     closeTab(`tab:${selectedPath}`);
     setSelectedPath(Object.keys(files).find((p) => p !== selectedPath) ?? '');
-  }, [selectedPath, files, closeTab]);
+  }, [selectedPath, files, closeTab, fileMeta]);
 
   const resetWorkspace = useCallback(async () => {
-    if (!window.confirm('Reset the workspace to the default demo files and layout?')) return;
+    const confirmMsg = assignmentToken
+      ? "Reset to the instructor's original files? Your local changes will be lost."
+      : 'Reset the workspace to the default demo files and layout?';
+    if (!window.confirm(confirmMsg)) return;
     const P = '[Emception:IDE]';
     console.log(`${P} ===== WORKSPACE RESET =====`);
     // Stop SDL3 loop if running
@@ -1299,6 +1376,12 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     setExpandedDirs(state.expandedDirs);
     setOpenTabs(state.openTabs);
     setActiveTabId(state.activeTabId);
+    // Diff baseline follows the restored config files; fileMetaRef is kept so readOnly survives reset.
+    seededContentRef.current = new Map(
+      Object.values(state.files)
+        .filter((f) => f.type === 'text')
+        .map(({ path, content }) => [path, content]),
+    );
     setTerminalTabs([{ id: 'terminal-1', title: 'bash' }]);
     setActiveTerminalId('terminal-1');
     if (orchestratorRef.current) {
@@ -1308,7 +1391,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       xtermRef.current?.clear();
       xtermRef.current?.writeln('\x1b[32mWorkspace reset.\x1b[0m');
     }
-  }, [resolvedConfig]);
+  }, [resolvedConfig, assignmentToken]);
 
   const createTerminalTab = useCallback(() => {
     setTerminalTabs((prev) => {
@@ -2532,6 +2615,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     transition: 'background 0.15s',
   };
   const resizerVStyle: React.CSSProperties = { ...resizerStyle, width: '100%', height: 4, cursor: 'row-resize' };
+  const bottomTabButtonStyle = (active: boolean): React.CSSProperties => ({
+    padding: '4px 12px',
+    fontSize: '12px',
+    cursor: 'pointer',
+    background: active ? '#1e1e2e' : 'transparent',
+    color: active ? '#cdd6f4' : '#6c7086',
+    border: 'none',
+    borderBottom: active ? '2px solid #89b4fa' : '2px solid transparent',
+  });
+  const studentTabsVisible = testPlan != null && testsPanelSlot == null;
   const canRecompileWhileRunning = executionPhase === 'running' && resolvedConfig.run.type === 'sdl3-canvas';
   const canCompile = isReady && activeFile?.type === 'text' && (executionPhase === 'idle' || canRecompileWhileRunning);
   const showCompileButton = executionPhase !== 'running' || canRecompileWhileRunning;
@@ -2595,7 +2688,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             {status}
           </span>
           {showCompileButton && (
-            <button
+            <button type="button"
               data-testid="compile-button"
               onClick={handleCompile}
               disabled={!canCompile}
@@ -2615,7 +2708,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             </button>
           )}
           {executionPhase === 'running' && (
-            <button
+            <button type="button"
               data-testid="stop-button"
               onClick={handleStop}
               style={{
@@ -2634,7 +2727,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             </button>
           )}
           {resolvedConfig.features.showTestButton && resolvedConfig.test && (
-            <button
+            <button type="button"
               data-testid="test-button"
               onClick={handleTest}
               disabled={executionPhase !== 'idle' || !isReady}
@@ -2654,7 +2747,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             </button>
           )}
           {testPlan && (
-            <button
+            <button type="button"
               data-testid="run-tests-button"
               onClick={handleRunTests}
               disabled={testRunning}
@@ -2673,7 +2766,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
               {testRunning ? 'Running…' : 'Run Tests'}
             </button>
           )}
-          <button
+          <button type="button"
             onClick={resetWorkspace}
             style={{
               height: 24,
@@ -2716,6 +2809,8 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             onUploadFiles={handleUploadFiles}
             fileMeta={fileMeta}
             onFileMetaChange={onFileMetaChange}
+            allowCreateFiles={allowCreateFiles}
+            onAllowCreateFilesChange={onAllowCreateFilesChange}
           />
         </Panel>
 
@@ -2793,38 +2888,40 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
               </>
             )}
 
-            {/* Bottom panel: Terminal + Tests tabs */}
+            {/* Bottom panel: Terminal + (student) Test Cases/Test Results + (instructor) Tests tabs */}
             <PanelResizeHandle style={resizerVStyle} />
             <Panel defaultSize={28} minSize={8} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid #313244', background: '#181825' }}>
                 <button
                   type="button"
                   onClick={() => setBottomTab('terminal')}
-                  style={{
-                    padding: '4px 12px',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    background: bottomTab === 'terminal' ? '#1e1e2e' : 'transparent',
-                    color: bottomTab === 'terminal' ? '#cdd6f4' : '#6c7086',
-                    border: 'none',
-                    borderBottom: bottomTab === 'terminal' ? '2px solid #89b4fa' : '2px solid transparent',
-                  }}
+                  style={bottomTabButtonStyle(bottomTab === 'terminal')}
                 >
                   Terminal
                 </button>
+                {studentTabsVisible && (
+                  <button
+                    type="button"
+                    onClick={() => setBottomTab('test-cases')}
+                    style={bottomTabButtonStyle(bottomTab === 'test-cases')}
+                  >
+                    Test Cases
+                  </button>
+                )}
+                {studentTabsVisible && (
+                  <button
+                    type="button"
+                    onClick={() => setBottomTab('test-results')}
+                    style={bottomTabButtonStyle(bottomTab === 'test-results')}
+                  >
+                    Test Results
+                  </button>
+                )}
                 {testsPanelSlot != null && (
                   <button
                     type="button"
                     onClick={() => setBottomTab('tests')}
-                    style={{
-                      padding: '4px 12px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      background: bottomTab === 'tests' ? '#1e1e2e' : 'transparent',
-                      color: bottomTab === 'tests' ? '#cdd6f4' : '#6c7086',
-                      border: 'none',
-                      borderBottom: bottomTab === 'tests' ? '2px solid #89b4fa' : '2px solid transparent',
-                    }}
+                    style={bottomTabButtonStyle(bottomTab === 'tests')}
                   >
                     Tests
                   </button>
@@ -2840,6 +2937,28 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
                   onBootTerminalReady={handleBootTerminalReady}
                 />
               </div>
+              {testPlan != null && (
+                <div style={{ flex: 1, display: bottomTab === 'test-cases' ? 'flex' : 'none', flexDirection: 'column', overflow: 'hidden' }}>
+                  <TestCasesPanel
+                    cases={testMode === 'public' ? testPlan.cases.filter((c) => !c.hidden) : testPlan.cases}
+                  />
+                </div>
+              )}
+              {testPlan != null && (
+                <div
+                  data-testid="test-results-slot"
+                  style={{ flex: 1, display: bottomTab === 'test-results' ? 'flex' : 'none', flexDirection: 'column', overflow: 'auto', background: '#11111b', padding: '8px' }}
+                >
+                  {lastReport && (
+                    <TestResultsPanel
+                      report={lastReport}
+                      maxScore={maxScore}
+                      passingScore={passingScore}
+                      weights={testPlan.cases.map((c) => c.weight ?? 1)}
+                    />
+                  )}
+                </div>
+              )}
               {bottomTab === 'tests' && testsPanelSlot != null && (
                 <div
                   data-testid="tests-panel-slot"
@@ -2871,16 +2990,6 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         {activeFile && <span>{activeFile.path}</span>}
         {activeFile?.type === 'text' && <span style={{ marginLeft: 'auto' }}>{inferLanguage(activeFileName).toUpperCase()}</span>}
       </div>
-      {lastReport && (
-        <div style={{ marginTop: '0.5rem' }}>
-          <TestResultsPanel
-            report={lastReport}
-            maxScore={maxScore}
-            passingScore={passingScore}
-            weights={testPlan?.cases.map((c) => c.weight ?? 1)}
-          />
-        </div>
-      )}
     </div>
   );
 });

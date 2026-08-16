@@ -22,6 +22,7 @@ public class ControllerAndModuleTests
     private readonly Mock<IProgramCrudService> _programs = new();
     private readonly Mock<IEnrollmentService> _enrollments = new();
     private readonly Mock<IPermissionQueryService> _permissions = new();
+    private readonly Mock<IGradingQueueService> _gradingQueue = new();
     private readonly Mock<ILogger<AssessmentsController>> _log = new();
 
     private AssessmentsController CreateController(Guid? userId = null, bool isSystemAdmin = false, Guid? tenantId = null)
@@ -42,6 +43,7 @@ public class ControllerAndModuleTests
             _programs.Object,
             _enrollments.Object,
             _permissions.Object,
+            _gradingQueue.Object,
             _log.Object);
     }
 

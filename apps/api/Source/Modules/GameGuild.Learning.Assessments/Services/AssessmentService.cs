@@ -2,6 +2,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using FluentValidation;
 using GameGuild.Learning.Courses;
+using GameGuild.Learning.Enrollments;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -14,16 +17,25 @@ public class AssessmentService : IAssessmentService
 {
     private readonly IApplicationDbContext _context;
     private readonly IProgramContentService _programContentService;
+    private readonly IRubricService _rubricService;
     private readonly ILogger<AssessmentService> _logger;
+    private readonly ILtiScorePassback? _ltiScorePassback;
+    private readonly INotificationService? _notifications;
 
     public AssessmentService(
         IApplicationDbContext context,
         IProgramContentService programContentService,
-        ILogger<AssessmentService> logger)
+        IRubricService rubricService,
+        ILogger<AssessmentService> logger,
+        ILtiScorePassback? ltiScorePassback = null,
+        INotificationService? notifications = null)
     {
         _context = context;
         _programContentService = programContentService;
+        _rubricService = rubricService;
         _logger = logger;
+        _ltiScorePassback = ltiScorePassback;
+        _notifications = notifications;
     }
 
     // ===== ASSESSMENT MANAGEMENT =====
@@ -197,12 +209,23 @@ public class AssessmentService : IAssessmentService
                 request.AllowLateSubmissions,
                 request.LateSubmissionDeadline,
                 request.ClearLateSubmissionDeadline,
-                request.GradingMethods);
+                request.GradingMethods,
+                groupSetId: request.GroupSetId,
+                clearGroupSetId: request.ClearGroupSetId,
+                peerReviewsRequiredCount: request.PeerReviewsRequiredCount);
 
             var groupValidation = await EnsureGroupMatchesCourseAsync(assessment.AssessmentGroupId, assessment.CourseId).ConfigureAwait(false);
             if (!groupValidation.IsSuccess)
             {
                 return Result.Failure<Assessment>(groupValidation.Error);
+            }
+
+            var groupSetValidation = await EnsureGroupSetMatchesCourseAsync(
+                request.ClearGroupSetId ? null : assessment.GroupSetId,
+                assessment.CourseId).ConfigureAwait(false);
+            if (!groupSetValidation.IsSuccess)
+            {
+                return Result.Failure<Assessment>(groupSetValidation.Error);
             }
 
             _context.Set<Assessment>().Update(assessment);
@@ -619,6 +642,27 @@ public class AssessmentService : IAssessmentService
             : Result.Failure(Error.Validation("AssessmentGroup.CourseMismatch", "Assessment group belongs to another course"));
     }
 
+    private async Task<Result> EnsureGroupSetMatchesCourseAsync(Guid? groupSetId, Guid courseId)
+    {
+        if (!groupSetId.HasValue)
+        {
+            return Result.Success();
+        }
+
+        var groupSet = await _context.Set<CourseGroupSet>()
+            .FirstOrDefaultAsync(set => set.Id == groupSetId.Value && set.DeletedAt == null)
+            .ConfigureAwait(false);
+
+        if (groupSet == null)
+        {
+            return Result.Failure(Error.NotFound("CourseGroupSet", "Group set not found"));
+        }
+
+        return groupSet.CourseId == courseId
+            ? Result.Success()
+            : Result.Failure(Error.Validation("Assessment.GroupSetCourseMismatch", "Group set belongs to another course"));
+    }
+
     private static List<AssessmentScoreFact> BuildScoreFacts(
         IReadOnlyCollection<Assessment> assessments,
         IReadOnlyCollection<AssessmentSubmission> submissions)
@@ -734,14 +778,32 @@ public class AssessmentService : IAssessmentService
             return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment", "Assessment is not currently available"));
         }
 
+        Guid? courseGroupId = null;
+        if (assessment.GroupSetId.HasValue)
+        {
+            courseGroupId = await ResolveActorCourseGroupIdAsync(assessment.GroupSetId.Value, userId).ConfigureAwait(false);
+            if (courseGroupId is null)
+            {
+                return Result.Failure<AssessmentSubmission>(Error.Validation(
+                    "Submission.GroupRequired",
+                    "Join a group before attempting this assessment"));
+            }
+        }
+
         var attemptCount = await GetAttemptCountAsync(assessmentId, enrollmentId).ConfigureAwait(false);
         if (assessment.MaxAttempts.HasValue && attemptCount >= assessment.MaxAttempts.Value)
         {
             return Result.Failure<AssessmentSubmission>(Error.Validation("Assessment.MaxAttemptsReached", "Maximum attempts reached"));
         }
 
-        var highestAttemptNumber = await GetHighestAttemptNumberAsync(assessmentId, enrollmentId).ConfigureAwait(false);
+        var highestAttemptNumber = courseGroupId.HasValue
+            ? await GetHighestGroupAttemptNumberAsync(assessmentId, courseGroupId.Value).ConfigureAwait(false)
+            : await GetHighestAttemptNumberAsync(assessmentId, enrollmentId).ConfigureAwait(false);
         var submission = AssessmentSubmission.Start(assessmentId, enrollmentId, userId, highestAttemptNumber + 1);
+        if (courseGroupId.HasValue)
+        {
+            submission.StampCourseGroup(courseGroupId.Value);
+        }
 
         _context.Set<AssessmentSubmission>().Add(submission);
         await _context.SaveChangesAsync().ConfigureAwait(false);
@@ -784,10 +846,27 @@ public class AssessmentService : IAssessmentService
 
             submission.Submit(isLate, submittedAt);
 
+            if (submission.CourseGroupId.HasValue)
+            {
+                await FanOutGroupSubmitAsync(submission, assessment, request, isLate, submittedAt).ConfigureAwait(false);
+            }
+
             _context.Set<AssessmentSubmission>().Update(submission);
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Submission submitted: {SubmissionId}", submissionId);
+
+            if (_notifications is not null)
+            {
+                try
+                {
+                    await NotifyManagersOfPendingSubmissionsAsync(assessment).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Grading notification failed for assessment {AssessmentId}", assessment.Id);
+                }
+            }
 
             return Result.Success(submission);
         }
@@ -795,10 +874,113 @@ public class AssessmentService : IAssessmentService
         {
             return Result.Failure<AssessmentSubmission>(Error.Validation("Submission.Invalid", ex.Message));
         }
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        {
+            // ponytail: first-writer-wins via UX_AssessmentSubmissions_Assessment_Enrollment_Attempt — two members
+            // submitting the same group attempt concurrently is out of scope v1; the index makes the loser retry.
+            _logger.LogWarning(ex, "Concurrent group submit detected for submission {SubmissionId}", submissionId);
+            return Result.Failure<AssessmentSubmission>(Error.Conflict(
+                "Submission.GroupConcurrentSubmit",
+                "Groupmate is submitting concurrently, try again"));
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error submitting {SubmissionId}", submissionId);
             return Result.Failure<AssessmentSubmission>(Error.Failure("Submit", "Failed to submit"));
+        }
+    }
+
+    /// <summary>
+    ///     One-submission-per-group: after the submitting member's row is submitted, bring every other
+    ///     active group member to the same submitted state at the same attempt. The UX unique index
+    ///     (AssessmentId, EnrollmentId, AttemptNumber) forbids naive cloning — members who clicked
+    ///     Start first hold an InProgress row at this attempt that must be REUSED, never duplicated.
+    ///     Membership snapshot = active members at submit time; members joining later are not covered
+    ///     retroactively, and members with dropped enrollments get no row.
+    /// </summary>
+    private async Task FanOutGroupSubmitAsync(
+        AssessmentSubmission submission,
+        Assessment assessment,
+        SubmitAssessmentRequest? request,
+        bool isLate,
+        DateTime submittedAt)
+    {
+        var groupId = submission.CourseGroupId!.Value;
+
+        var memberUserIds = await _context.Set<CourseGroupMember>()
+            .Where(m => m.GroupId == groupId && m.DeletedAt == null && m.UserId != submission.UserId)
+            .Select(m => m.UserId)
+            .ToListAsync().ConfigureAwait(false);
+
+        var memberEnrollments = await _context.Set<Enrollment>()
+            .Where(e => e.CourseId == assessment.CourseId &&
+                        e.Status == GameGuild.Learning.Enrollments.EnrollmentStatus.Active &&
+                        e.DeletedAt == null &&
+                        memberUserIds.Contains(e.UserId))
+            .ToListAsync().ConfigureAwait(false);
+
+        foreach (var enrollment in memberEnrollments)
+        {
+            var existing = await _context.Set<AssessmentSubmission>()
+                .FirstOrDefaultAsync(s => s.AssessmentId == assessment.Id &&
+                                          s.EnrollmentId == enrollment.Id &&
+                                          s.AttemptNumber == submission.AttemptNumber)
+                .ConfigureAwait(false);
+
+            if (existing is null)
+            {
+                var clone = AssessmentSubmission.Start(assessment.Id, enrollment.Id, enrollment.UserId, submission.AttemptNumber);
+                if (request != null)
+                {
+                    clone.SetPayload(request, assessment.SubmissionModalities);
+                }
+
+                clone.StampCourseGroup(groupId);
+                clone.Submit(isLate, submittedAt);
+                _context.Set<AssessmentSubmission>().Add(clone);
+            }
+            else if (existing.Status == SubmissionStatus.InProgress)
+            {
+                if (request != null)
+                {
+                    existing.SetPayload(request, assessment.SubmissionModalities);
+                }
+
+                existing.Submit(isLate, submittedAt);
+                _context.Set<AssessmentSubmission>().Update(existing);
+            }
+            // Submitted/Late/Graded: the member already holds this attempt — skip, never duplicate.
+        }
+    }
+
+    /// <summary>
+    ///     Notifies every course manager once per submit event with the assessment's current
+    ///     pending-grade target count (same dedup as /me/tasks grade items).
+    /// </summary>
+    private async Task NotifyManagersOfPendingSubmissionsAsync(Assessment assessment)
+    {
+        var managers = await CourseManagers.GetManagerUserIdsAsync(_context, assessment.CourseId).ConfigureAwait(false);
+        if (managers.Count == 0)
+        {
+            return;
+        }
+
+        var rows = await _context.Set<AssessmentSubmission>()
+            .Where(s => s.AssessmentId == assessment.Id && s.DeletedAt == null)
+            .ToListAsync().ConfigureAwait(false);
+        var pending = TasksService.CountPendingGradeTargets(rows);
+
+        // Plain text interpolation of the instructor-authored title — no markup, in-app channel only.
+        foreach (var manager in managers)
+        {
+            await _notifications!.SendAsync(
+                    manager,
+                    NotificationType.System,
+                    "Submissions awaiting grading",
+                    $"{pending} submissions awaiting grading on {assessment.Title}",
+                    NotificationChannel.InApp,
+                    actionUrl: "/dashboard/tasks")
+                .ConfigureAwait(false);
         }
     }
 
@@ -829,11 +1011,76 @@ public class AssessmentService : IAssessmentService
             }
 
             var absolutePassing = (int)Math.Round(assessment.MaxScore * ((double)program.PassingScore / 100.0));
-            submission.Grade(request.Score, absolutePassing, assessment.MaxScore, request.GradedBy, request.Feedback);
+
+            var rubricValidation = await _rubricService
+                .ValidateScoresAsync(assessment.Id, request.Score, request.RubricScores)
+                .ConfigureAwait(false);
+            if (!rubricValidation.IsSuccess)
+            {
+                return Result.Failure<AssessmentSubmission>(rubricValidation.Error);
+            }
+
+            submission.Grade(request.Score, absolutePassing, assessment.MaxScore, request.GradedBy, request.Feedback, request.RubricScores);
             _context.Set<AssessmentSubmission>().Update(submission);
+
+            var gradedUserIds = new List<Guid> { submission.UserId };
+            if (submission.CourseGroupId.HasValue)
+            {
+                var siblings = await _context.Set<AssessmentSubmission>()
+                    .Where(s => s.CourseGroupId == submission.CourseGroupId &&
+                                s.AttemptNumber == submission.AttemptNumber &&
+                                s.Id != submission.Id &&
+                                (s.Status == SubmissionStatus.Submitted || s.Status == SubmissionStatus.Late))
+                    .ToListAsync().ConfigureAwait(false);
+
+                foreach (var sibling in siblings)
+                {
+                    sibling.Grade(request.Score, absolutePassing, assessment.MaxScore, request.GradedBy, request.Feedback, request.RubricScores);
+                    _context.Set<AssessmentSubmission>().Update(sibling);
+                    gradedUserIds.Add(sibling.UserId);
+                }
+            }
+
             await _context.SaveChangesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Submission graded: {SubmissionId} with score {Score}", submissionId, request.Score);
+
+            // LTI AGS score passback (todo 16): fire-and-log per graded user; the
+            // implementation swallows all platform failures so grading never rolls back.
+            // Group fan-out (todo 5): invoked once PER GRADED MEMBER (original + siblings).
+            if (_ltiScorePassback is not null)
+            {
+                foreach (var gradedUserId in gradedUserIds)
+                {
+                    await _ltiScorePassback
+                        .PostScoreIfMappedAsync(assessment.Id, gradedUserId, request.Score, assessment.MaxScore)
+                        .ConfigureAwait(false);
+                }
+            }
+
+            if (_notifications is not null)
+            {
+                try
+                {
+                    // Titles are instructor-authored and interpolated as PLAIN TEXT (no HTML/markup
+                    // rendering on the client) — in-app channel only, so no injection surface.
+                    foreach (var gradedUserId in gradedUserIds)
+                    {
+                        await _notifications.SendAsync(
+                                gradedUserId,
+                                NotificationType.AssessmentGraded,
+                                "Assessment graded",
+                                $"{assessment.Title} graded — score {request.Score}/{assessment.MaxScore}",
+                                NotificationChannel.InApp,
+                                actionUrl: "/dashboard/tasks")
+                            .ConfigureAwait(false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Graded notification failed for submission {SubmissionId}", submissionId);
+                }
+            }
 
             return Result.Success(submission);
         }
@@ -891,6 +1138,33 @@ public class AssessmentService : IAssessmentService
             .Select(s => (int?)s.AttemptNumber)
             .MaxAsync()
             .ConfigureAwait(false) ?? 0;
+    }
+
+    // Group attempt numbering ignores InProgress rows: members who clicked Start hold the CURRENT
+    // group attempt open (all at the same number — the reuse path in FanOutGroupSubmitAsync depends
+    // on it); a new attempt number only opens once a group attempt is submitted.
+    private async Task<int> GetHighestGroupAttemptNumberAsync(Guid assessmentId, Guid courseGroupId)
+    {
+        return await _context.Set<AssessmentSubmission>()
+            .Where(s => s.AssessmentId == assessmentId &&
+                        s.CourseGroupId == courseGroupId &&
+                        s.Status != SubmissionStatus.InProgress)
+            .Select(s => (int?)s.AttemptNumber)
+            .MaxAsync()
+            .ConfigureAwait(false) ?? 0;
+    }
+
+    private async Task<Guid?> ResolveActorCourseGroupIdAsync(Guid groupSetId, Guid userId)
+    {
+        var setGroupIds = await _context.Set<CourseGroup>()
+            .Where(g => g.GroupSetId == groupSetId && g.DeletedAt == null)
+            .Select(g => g.Id)
+            .ToListAsync().ConfigureAwait(false);
+
+        return await _context.Set<CourseGroupMember>()
+            .Where(m => m.UserId == userId && m.DeletedAt == null && setGroupIds.Contains(m.GroupId))
+            .Select(m => (Guid?)m.GroupId)
+            .FirstOrDefaultAsync().ConfigureAwait(false);
     }
 
     private static bool IsUniqueConstraintViolation(DbUpdateException exception)

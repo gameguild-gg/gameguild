@@ -50,8 +50,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7 # v4
         with:
-          fetch-depth: 0
-          fetch-tags: true
+          fetch-depth: 1
           lfs: false
 
       - name: Set up pnpm
@@ -149,15 +148,15 @@ jobs:
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: pnpm --dir tools/emception exec playwright install --with-deps chromium
 
-      - name: Run browser C++ compilation smoke test
-        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
-        run: pnpm run test:emception:e2e
-
       - name: Stage CDN into packages and demo applications
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: |
           node scripts/sync-emception-cdn.mjs demos/emception-ide-react
           pnpm --dir tools/emception run stage:core:cdn
+
+      - name: Run browser C++ compilation smoke test
+        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
+        run: pnpm run test:emception:e2e
 
       - name: Build Emception web consumers
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'

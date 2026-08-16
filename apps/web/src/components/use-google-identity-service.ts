@@ -162,7 +162,11 @@ export function useGoogleIdentityService({
             callback: ({ credential }) => {
               if (credential) callbackRef.current(credential)
             },
-            auto_select: true,
+            // ponytail: no auto_select — it silently re-signs-in the previous
+            // Google account on /sign-in and hijacks manual credential logins
+            // (bug: admin login landing as old account -> dashboard 403).
+            // One Tap prompt + button still work via explicit click.
+            auto_select: false,
             cancel_on_tap_outside: false,
           })
           initialized = true

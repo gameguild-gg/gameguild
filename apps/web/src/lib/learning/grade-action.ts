@@ -27,11 +27,16 @@ function getApiClient() {
  * Backend `POST /v1.0/assessments/submissions/{id}/grade` enforces
  * `CanReviewCourseAsync`; the actor's `gradedBy` is taken from auth context,
  * not the request body, so the body's `gradedBy` is omitted.
+ *
+ * `rubricScores` — rubric-graded assessments only: JSON string of
+ * `{"<criterionId>": {"points": number, "comment": string}}`. The server
+ * validates per-criterion [0..Points] and Σ points == score.
  */
 export async function gradeSubmission(input: {
   submissionId: string;
   score: number;
   feedback: string;
+  rubricScores?: string;
 }): Promise<ActionResult<{ submissionId: string }>> {
   const client = getApiClient();
   const assessments = new GeneratedApi.LearningAssessmentsModule(client);
@@ -40,6 +45,7 @@ export async function gradeSubmission(input: {
     {
       score: input.score,
       feedback: input.feedback,
+      rubricScores: input.rubricScores ?? null,
     },
   );
   if (!result.ok) {
