@@ -30,7 +30,7 @@ public class PostEngagementService : IPostEngagementService
     public async Task<Result<bool>> TogglePostLikeAsync(Guid postId, Guid userId, string reactionType = "like", CancellationToken cancellationToken = default)
     {
         var post = await _context.Set<Post>()
-            .FirstOrDefaultAsync(p => p.Id == postId && !p.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == postId && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (post is null)
             return Result.Failure<bool>(PostErrors.NotFound);
@@ -58,7 +58,7 @@ public class PostEngagementService : IPostEngagementService
     public async Task<Result<bool>> TogglePostPinAsync(Guid postId, CancellationToken cancellationToken = default)
     {
         var post = await _context.Set<Post>()
-            .FirstOrDefaultAsync(p => p.Id == postId && !p.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == postId && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (post is null)
             return Result.Failure<bool>(PostErrors.NotFound);
@@ -76,7 +76,7 @@ public class PostEngagementService : IPostEngagementService
     public async Task<Result> SharePostAsync(Guid postId, CancellationToken cancellationToken = default)
     {
         var post = await _context.Set<Post>()
-            .FirstOrDefaultAsync(p => p.Id == postId && !p.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == postId && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (post is null)
             return Result.Failure(PostErrors.NotFound);
@@ -112,7 +112,7 @@ public class PostEngagementService : IPostEngagementService
         CancellationToken cancellationToken = default)
     {
         var post = await _context.Set<Post>()
-            .FirstOrDefaultAsync(p => p.Id == postId && !p.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == postId && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (post is null)
             return Result.Failure(PostErrors.NotFound);
@@ -196,7 +196,7 @@ public class PostEngagementService : IPostEngagementService
     public async Task<Result<int>> RecalculateAllTrendingScoresAsync(CancellationToken cancellationToken = default)
     {
         var posts = await _context.Set<Post>()
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var statistics = await _context.Set<PostStatistics>()
@@ -240,7 +240,7 @@ public class PostEngagementService : IPostEngagementService
         CancellationToken cancellationToken = default)
     {
         var post = await _context.Set<Post>()
-            .FirstOrDefaultAsync(p => p.Id == postId && !p.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == postId && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (post is null)
             return Result.Failure<PostFollower>(PostErrors.NotFound);
