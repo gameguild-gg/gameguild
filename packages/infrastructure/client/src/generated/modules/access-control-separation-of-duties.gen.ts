@@ -147,28 +147,6 @@ export class AccessControlSeparationOfDutiesModule {
 
   /**
    */
-  async getSodViolationsActive(query?: {
-    tenantId?: string;
-  }): Promise<
-    Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>
-  > {
-    const url = "/v1/sod/violations/active";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.IdentityAuthorizationSoDViolation>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async getSodViolationsDetect(
     userId: string,
     query?: { tenantId?: string },
@@ -211,15 +189,37 @@ export class AccessControlSeparationOfDutiesModule {
 
   /**
    */
-  async postSodViolationsException(
+  async getSodViolationsActive(query?: {
+    tenantId?: string;
+  }): Promise<
+    Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>
+  > {
+    const url = "/v1/sod/violations/active";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.IdentityAuthorizationSoDViolation>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async postSodViolationsResolve(
     id: string,
-    body: Types.IdentityAuthorizationControllersGrantExceptionInput,
+    body: Types.IdentityAuthorizationControllersResolveViolationInput,
   ): Promise<Result<Types.IdentityAuthorizationSoDViolation, ApiError>> {
-    const url = `/v1/sod/violations/${id}:exception`;
+    const url = `/v1/sod/violations/${id}:resolve`;
 
     // Validate request body
     const validatedBody = safeParse(
-      Types.IdentityAuthorizationControllersGrantExceptionInputSchema,
+      Types.IdentityAuthorizationControllersResolveViolationInputSchema,
       body,
       "request",
     );
@@ -246,15 +246,15 @@ export class AccessControlSeparationOfDutiesModule {
 
   /**
    */
-  async postSodViolationsResolve(
+  async postSodViolationsException(
     id: string,
-    body: Types.IdentityAuthorizationControllersResolveViolationInput,
+    body: Types.IdentityAuthorizationControllersGrantExceptionInput,
   ): Promise<Result<Types.IdentityAuthorizationSoDViolation, ApiError>> {
-    const url = `/v1/sod/violations/${id}:resolve`;
+    const url = `/v1/sod/violations/${id}:exception`;
 
     // Validate request body
     const validatedBody = safeParse(
-      Types.IdentityAuthorizationControllersResolveViolationInputSchema,
+      Types.IdentityAuthorizationControllersGrantExceptionInputSchema,
       body,
       "request",
     );

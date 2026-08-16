@@ -165,29 +165,24 @@ export class AuthServiceAccountsModule {
   }
 
   /**
-   * Get service account audit log
-   *
-   * Retrieves the audit log of actions performed on or by a service account.
    */
-  async getAuthServiceAccountsAuditLog(
+  async postAuthServiceAccountsRotateSecret(
     serviceAccountId: string,
-    query?: { page?: number; pageSize?: number },
   ): Promise<
-    Result<Types.IdentityAuthenticationServiceAccountAuditLogOutput, ApiError>
+    Result<Types.IdentityAuthenticationSecretRotationOutput, ApiError>
   > {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}/audit-log`;
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:rotate-secret`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: "POST",
       path: url,
-      params: query,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.IdentityAuthenticationServiceAccountAuditLogOutputSchema,
+        Types.IdentityAuthenticationSecretRotationOutputSchema,
         result.data,
         "response",
       );
@@ -199,35 +194,10 @@ export class AuthServiceAccountsModule {
 
   /**
    */
-  async patchAuthServiceAccountsScopes(
-    serviceAccountId: string,
-    body: Types.IdentityAuthenticationUpdateScopesInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}/scopes`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationUpdateScopesInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "PATCH",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAuthServiceAccountsDeactivate(
+  async postAuthServiceAccountsUnlock(
     serviceAccountId: string,
   ): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:deactivate`;
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:unlock`;
 
     const result = await this.client.request({
       method: "POST",
@@ -267,6 +237,55 @@ export class AuthServiceAccountsModule {
   }
 
   /**
+   * Get service account audit log
+   *
+   * Retrieves the audit log of actions performed on or by a service account.
+   */
+  async getAuthServiceAccountsAuditLog(
+    serviceAccountId: string,
+    query?: { page?: number; pageSize?: number },
+  ): Promise<
+    Result<Types.IdentityAuthenticationServiceAccountAuditLogOutput, ApiError>
+  > {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}/audit-log`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationServiceAccountAuditLogOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAuthServiceAccountsDeactivate(
+    serviceAccountId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:deactivate`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    */
   async postAuthServiceAccountsReactivate(
     serviceAccountId: string,
@@ -284,42 +303,23 @@ export class AuthServiceAccountsModule {
 
   /**
    */
-  async postAuthServiceAccountsRotateSecret(
+  async patchAuthServiceAccountsScopes(
     serviceAccountId: string,
-  ): Promise<
-    Result<Types.IdentityAuthenticationSecretRotationOutput, ApiError>
-  > {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:rotate-secret`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSecretRotationOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postAuthServiceAccountsUnlock(
-    serviceAccountId: string,
+    body: Types.IdentityAuthenticationUpdateScopesInput,
   ): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:unlock`;
+    const url = `/v1/auth/service-accounts/${serviceAccountId}/scopes`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationUpdateScopesInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: "POST",
+      method: "PATCH",
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 

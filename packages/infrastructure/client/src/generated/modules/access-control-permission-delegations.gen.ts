@@ -53,36 +53,46 @@ export class AccessControlPermissionDelegationsModule {
 
   /**
    */
-  async postPermissionDelegationsCleanup(): Promise<Result<number, ApiError>> {
-    const url = "/v1/permission-delegations/:cleanup";
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<number, ApiError>;
-  }
-
-  /**
-   */
-  async getPermissionDelegationsCheck(query?: {
-    delegateUserId?: string;
-    permission?: string;
-    tenantId?: string;
-    resourceId?: string;
-  }): Promise<Result<boolean, ApiError>> {
-    const url = "/v1/permission-delegations/check";
+  async getPermissionDelegations(
+    id: string,
+  ): Promise<
+    Result<Types.IdentityAuthorizationPermissionDelegation, ApiError>
+  > {
+    const url = `/v1/permission-delegations/${id}`;
 
     const result = await this.client.request({
       method: "GET",
       path: url,
-      params: query,
       requiresAuth: true,
     });
 
-    return result as Result<boolean, ApiError>;
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthorizationPermissionDelegationSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deletePermissionDelegations(
+    id: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/permission-delegations/${id}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 
   /**
@@ -133,46 +143,36 @@ export class AccessControlPermissionDelegationsModule {
 
   /**
    */
-  async getPermissionDelegations(
-    id: string,
-  ): Promise<
-    Result<Types.IdentityAuthorizationPermissionDelegation, ApiError>
-  > {
-    const url = `/v1/permission-delegations/${id}`;
+  async getPermissionDelegationsCheck(query?: {
+    delegateUserId?: string;
+    permission?: string;
+    tenantId?: string;
+    resourceId?: string;
+  }): Promise<Result<boolean, ApiError>> {
+    const url = "/v1/permission-delegations/check";
 
     const result = await this.client.request({
       method: "GET",
       path: url,
+      params: query,
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationPermissionDelegationSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<boolean, ApiError>;
   }
 
   /**
    */
-  async deletePermissionDelegations(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/permission-delegations/${id}`;
+  async postPermissionDelegationsCleanup(): Promise<Result<number, ApiError>> {
+    const url = "/v1/permission-delegations/:cleanup";
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<void, ApiError>;
+    return result as Result<number, ApiError>;
   }
 }
 

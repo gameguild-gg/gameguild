@@ -37,7 +37,7 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 
 vi.mock('@/lib/learning/course-route', () => ({
-  buildDashboardCoursePath: (course: string, path = '') => `/dashboard/platform/learning/courses/${course}${path ? `/${path}` : ''}`,
+  buildPlatformCoursePath: (course: string, path = '') => `/dashboard/platform/learning/courses/${course}${path ? `/${path}` : ''}`,
   getCourseRouteParam: (course: { slug?: string | null; id: string }) => course.slug || course.id,
 }));
 

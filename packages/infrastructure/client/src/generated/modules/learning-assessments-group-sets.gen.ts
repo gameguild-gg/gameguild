@@ -73,96 +73,6 @@ export class LearningAssessmentsGroupSetsModule {
 
   /**
    */
-  async postCoursesGroupSetsGroupsJoin(
-    courseId: string,
-    groupId: string,
-  ): Promise<Result<Types.LearningAssessmentsGroupMembership, ApiError>> {
-    const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/join`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsGroupMembershipSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postCoursesGroupSetsGroupsMembers(
-    courseId: string,
-    groupId: string,
-    userId: string,
-  ): Promise<Result<Types.LearningAssessmentsGroupMembership, ApiError>> {
-    const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/members/${userId}`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsGroupMembershipSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async deleteCoursesGroupSetsGroupsMembers(
-    courseId: string,
-    groupId: string,
-    userId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/members/${userId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async deleteCoursesGroupSetsGroupsMembership(
-    courseId: string,
-    groupId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/membership`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getCoursesGroupSetsGroups(
     courseId: string,
     setId: string,
@@ -215,6 +125,96 @@ export class LearningAssessmentsGroupSetsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async postCoursesGroupSetsGroupsJoin(
+    courseId: string,
+    groupId: string,
+  ): Promise<Result<Types.LearningAssessmentsGroupMembership, ApiError>> {
+    const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/join`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningAssessmentsGroupMembershipSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteCoursesGroupSetsGroupsMembership(
+    courseId: string,
+    groupId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/membership`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postCoursesGroupSetsGroupsMembers(
+    courseId: string,
+    groupId: string,
+    userId: string,
+  ): Promise<Result<Types.LearningAssessmentsGroupMembership, ApiError>> {
+    const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/members/${userId}`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningAssessmentsGroupMembershipSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteCoursesGroupSetsGroupsMembers(
+    courseId: string,
+    groupId: string,
+    userId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/members/${userId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 }
 

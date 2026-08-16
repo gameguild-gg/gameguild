@@ -111,20 +111,6 @@ export class TestingLabSettingsModule {
 
   /**
    */
-  async getApiTestingLabSettingsExists(): Promise<Result<boolean, ApiError>> {
-    const url = "/api/testing-lab/settings/exists";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
   async postApiTestingLabSettingsReset(): Promise<
     Result<Types.TestingLabTestingLabSettings, ApiError>
   > {
@@ -147,6 +133,20 @@ export class TestingLabSettingsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiTestingLabSettingsExists(): Promise<Result<boolean, ApiError>> {
+    const url = "/api/testing-lab/settings/exists";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<boolean, ApiError>;
   }
 }
 

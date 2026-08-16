@@ -48,17 +48,14 @@ public class GradingQueueService : IGradingQueueService
             .Where(s => s.AssessmentId == assessmentId && s.DeletedAt == null)
             .ToListAsync().ConfigureAwait(false);
 
-        // One bucket per (student | group) × attempt, keeping only gradeable rows:
-        // attempts whose only rows are InProgress are excluded from the queue entirely.
-        var attempts = new List<(List<AssessmentSubmission> Gradeable, Guid? GroupId)>();
+        // ONE item per target (student | group) representing the target's LATEST gradeable
+        // attempt — one grade per assignment: older attempts are history, regrades land on a
+        // fresh submission, and targets whose only rows are InProgress stay out of the queue.
+        var targets = new List<(List<AssessmentSubmission> TargetRows, Guid? GroupId)>();
         foreach (var userRows in rows.Where(r => r.CourseGroupId == null)
-                     .GroupBy(r => (r.UserId, r.AttemptNumber)))
+                     .GroupBy(r => r.UserId))
         {
-            var gradeable = userRows.Where(r => r.Status != SubmissionStatus.InProgress).ToList();
-            if (gradeable.Count > 0)
-            {
-                attempts.Add((gradeable, null));
-            }
+            targets.Add((userRows.ToList(), null));
         }
 
         var groupIds = rows.Where(r => r.CourseGroupId != null)
@@ -73,13 +70,9 @@ public class GradingQueueService : IGradingQueueService
                 .ConfigureAwait(false);
 
         foreach (var groupRows in rows.Where(r => r.CourseGroupId != null)
-                     .GroupBy(r => (GroupId: r.CourseGroupId!.Value, r.AttemptNumber)))
+                     .GroupBy(r => r.CourseGroupId!.Value))
         {
-            var gradeable = groupRows.Where(r => r.Status != SubmissionStatus.InProgress).ToList();
-            if (gradeable.Count > 0)
-            {
-                attempts.Add((gradeable, groupRows.Key.GroupId));
-            }
+            targets.Add((groupRows.ToList(), groupRows.Key));
         }
 
         // Group members are resolved at query time (active membership), matching GroupSetService.
@@ -90,9 +83,9 @@ public class GradingQueueService : IGradingQueueService
                 .ToListAsync().ConfigureAwait(false);
 
         // Batched display-name lookup for every user the queue can name (GroupSetService pattern).
-        var userIds = attempts
-            .Where(a => a.GroupId == null)
-            .SelectMany(a => a.Gradeable.Select(r => r.UserId))
+        var userIds = targets
+            .Where(t => t.GroupId == null)
+            .SelectMany(t => t.TargetRows.Select(r => r.UserId))
             .Concat(members.Select(m => m.UserId))
             .Distinct()
             .ToList();
@@ -106,19 +99,48 @@ public class GradingQueueService : IGradingQueueService
                 : userId.ToString();
 
         var items = new List<GradingQueueItemDto>();
-        foreach (var (gradeable, groupId) in attempts)
+        foreach (var (targetRows, groupId) in targets)
         {
+            // Gradeable attempts = attempts with at least one non-InProgress row.
+            var gradeableAttempts = targetRows
+                .GroupBy(r => r.AttemptNumber)
+                .Where(g => g.Any(r => r.Status != SubmissionStatus.InProgress))
+                .ToList();
+            if (gradeableAttempts.Count == 0)
+            {
+                continue; // InProgress-only target: absent from the queue.
+            }
+
+            var latestAttempt = gradeableAttempts.Max(g => g.Key);
+            var latestRows = gradeableAttempts.Single(g => g.Key == latestAttempt)
+                .Where(r => r.Status != SubmissionStatus.InProgress)
+                .ToList();
+
+            // Assignment-level grade: canonical row of the target's LATEST GRADED attempt.
+            // It persists across resubmissions until a newer attempt is graded.
+            var gradedRows = targetRows.Where(r => r.Status == SubmissionStatus.Graded).ToList();
+            AssessmentSubmission? gradedMeta = null;
+            if (gradedRows.Count > 0)
+            {
+                var gradedAttempt = gradedRows.Max(r => r.AttemptNumber);
+                gradedMeta = PeerReviewAssignmentService.CanonicalRow(
+                    gradedRows.Where(r => r.AttemptNumber == gradedAttempt));
+            }
+
+            var attemptCount = targetRows.Select(r => r.AttemptNumber).Distinct().Count();
             if (groupId == null)
             {
-                var row = gradeable[0];
+                var row = latestRows[0];
                 items.Add(new GradingQueueItemDto(
                     row.Id,
                     row.Id,
-                    row.AttemptNumber,
-                    AggregateStatus(gradeable),
-                    row.Score,
-                    gradeable.Any(r => r.IsLate),
-                    gradeable.Max(r => r.SubmittedAt),
+                    latestAttempt,
+                    attemptCount,
+                    AggregateStatus(latestRows),
+                    latestRows.Any(r => r.IsLate),
+                    latestRows.Max(r => r.SubmittedAt),
+                    gradedMeta?.Score,
+                    gradedMeta?.Passed,
                     IsGroup: false,
                     UserId: row.UserId,
                     DisplayName: DisplayName(row.UserId)));
@@ -128,16 +150,18 @@ public class GradingQueueService : IGradingQueueService
                 // Canonical row rule shared with peer-review assignment: Min(Id) among the rows
                 // sharing (CourseGroupId, AttemptNumber) — clones share timestamps, so Id is the
                 // only deterministic tiebreak.
-                var canonical = PeerReviewAssignmentService.CanonicalRow(gradeable);
+                var canonical = PeerReviewAssignmentService.CanonicalRow(latestRows);
                 var group = groups.GetValueOrDefault(groupId.Value);
                 items.Add(new GradingQueueItemDto(
                     canonical.Id,
                     canonical.Id,
-                    canonical.AttemptNumber,
-                    AggregateStatus(gradeable),
-                    canonical.Score,
-                    gradeable.Any(r => r.IsLate),
-                    gradeable.Max(r => r.SubmittedAt),
+                    latestAttempt,
+                    attemptCount,
+                    AggregateStatus(latestRows),
+                    latestRows.Any(r => r.IsLate),
+                    latestRows.Max(r => r.SubmittedAt),
+                    gradedMeta?.Score,
+                    gradedMeta?.Passed,
                     IsGroup: true,
                     GroupId: groupId,
                     GroupName: group?.Name ?? groupId.Value.ToString(),
@@ -150,9 +174,10 @@ public class GradingQueueService : IGradingQueueService
             }
         }
 
+        // DisplayName ASC: nav walks students/groups — attempts are no longer nav items,
+        // each item carries its target's latest attempt and assignment-level grade.
         var sorted = items
             .OrderBy(i => i.DisplayName ?? i.GroupName, StringComparer.Ordinal)
-            .ThenBy(i => i.AttemptNumber)
             .ToList();
 
         return Result.Success(new GradingQueueDto(
@@ -173,7 +198,7 @@ public class GradingQueueService : IGradingQueueService
     }
 
     /// <summary>
-    /// Status precedence (deterministic, worst-pending-first): an attempt shows its
+    /// Status precedence (deterministic, worst-pending-first): the latest attempt shows its
     /// least-advanced row status — Submitted &lt; Late &lt; Graded — so a group attempt with
     /// any ungraded row stays pending in the queue.
     /// </summary>

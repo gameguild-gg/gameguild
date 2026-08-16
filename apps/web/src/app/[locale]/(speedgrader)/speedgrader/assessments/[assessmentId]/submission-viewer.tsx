@@ -31,7 +31,7 @@ export interface SubmissionViewerProps {
 export function SubmissionViewer({
   submissionId,
   codingAssignment,
-  manifestUrl = '/cdn/manifest.json',
+  manifestUrl = '/emception/manifest.json',
   onComputedScore,
 }: SubmissionViewerProps): React.JSX.Element {
   const [submission, setSubmission] = useState<LearningAssessmentsAssessmentSubmission | null>(null);
@@ -87,6 +87,7 @@ export function SubmissionViewer({
           submittedFiles={safeParseCodeFiles(submission.codePayload)}
           maxScore={codingAssignment.Grading.MaxScore}
           manifestUrl={manifestUrl}
+          submissionId={submissionId}
           onComputedScore={onComputedScore}
         />
       ) : (

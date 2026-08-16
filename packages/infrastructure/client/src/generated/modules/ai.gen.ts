@@ -17,6 +17,30 @@ export class AiModule {
 
   /**
    */
+  async getAiStatus(): Promise<Result<Types.AIAiStatusOutput, ApiError>> {
+    const url = "/v1/ai/status";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.AIAiStatusOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAiChat(
     body: Types.AIAiChatInput,
   ): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
@@ -24,74 +48,6 @@ export class AiModule {
 
     // Validate request body
     const validatedBody = safeParse(Types.AIAiChatInputSchema, body, "request");
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.AIAiCompletionOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postAiEmail(
-    body: Types.AIAiGeneratedContentDraftInput,
-  ): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
-    const url = "/v1/ai/email";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AIAiGeneratedContentDraftInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.AIAiCompletionOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postAiGenerate(
-    body: Types.AIAiGenerateInput,
-  ): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
-    const url = "/v1/ai/generate";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AIAiGenerateInputSchema,
-      body,
-      "request",
-    );
 
     const result = await this.client.request({
       method: "POST",
@@ -183,10 +139,10 @@ export class AiModule {
 
   /**
    */
-  async postAiGenerateContentListingDescription(
+  async postAiEmail(
     body: Types.AIAiGeneratedContentDraftInput,
   ): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
-    const url = "/v1/ai/generate-content/listing-description";
+    const url = "/v1/ai/email";
 
     // Validate request body
     const validatedBody = safeParse(
@@ -225,6 +181,108 @@ export class AiModule {
     // Validate request body
     const validatedBody = safeParse(
       Types.AIAiGeneratedContentDraftInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.AIAiCompletionOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAiReport(
+    body: Types.AIAiGeneratedContentDraftInput,
+  ): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+    const url = "/v1/ai/report";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AIAiGeneratedContentDraftInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.AIAiCompletionOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAiGenerateContentListingDescription(
+    body: Types.AIAiGeneratedContentDraftInput,
+  ): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+    const url = "/v1/ai/generate-content/listing-description";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AIAiGeneratedContentDraftInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.AIAiCompletionOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAiGenerate(
+    body: Types.AIAiGenerateInput,
+  ): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+    const url = "/v1/ai/generate";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AIAiGenerateInputSchema,
       body,
       "request",
     );
@@ -302,64 +360,6 @@ export class AiModule {
     if (result.ok) {
       const validatedData = safeParse(
         Types.AIAiQuotaStatusOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postAiReport(
-    body: Types.AIAiGeneratedContentDraftInput,
-  ): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
-    const url = "/v1/ai/report";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AIAiGeneratedContentDraftInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.AIAiCompletionOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getAiStatus(): Promise<Result<Types.AIAiStatusOutput, ApiError>> {
-    const url = "/v1/ai/status";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.AIAiStatusOutputSchema,
         result.data,
         "response",
       );

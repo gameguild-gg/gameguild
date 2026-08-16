@@ -17,39 +17,6 @@ export class TestingLabTestingParticipantsModule {
 
   /**
    */
-  async getTestingAttendanceStudents(): Promise<Result<void, ApiError>> {
-    const url = "/v1/testing/attendance/students";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getTestingRequestsParticipants(
-    requestId: string,
-  ): Promise<Result<Array<Types.TestingLabTestingParticipant>, ApiError>> {
-    const url = `/v1/testing/requests/${requestId}/participants`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.TestingLabTestingParticipant>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async postTestingRequestsParticipants(
     requestId: string,
     userId: string,
@@ -92,6 +59,25 @@ export class TestingLabTestingParticipantsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getTestingRequestsParticipants(
+    requestId: string,
+  ): Promise<Result<Array<Types.TestingLabTestingParticipant>, ApiError>> {
+    const url = `/v1/testing/requests/${requestId}/participants`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.TestingLabTestingParticipant>,
+      ApiError
+    >;
   }
 
   /**
@@ -254,6 +240,20 @@ export class TestingLabTestingParticipantsModule {
     userId: string,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/testing/users/${userId}/activity`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getTestingAttendanceStudents(): Promise<Result<void, ApiError>> {
+    const url = "/v1/testing/attendance/students";
 
     const result = await this.client.request({
       method: "GET",

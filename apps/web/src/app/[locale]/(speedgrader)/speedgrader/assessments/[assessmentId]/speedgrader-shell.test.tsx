@@ -104,6 +104,19 @@ const groupItems = [
   },
 ] satisfies LearningAssessmentsGradingQueueItem[];
 
+const itemsWithAttemptCount = [
+  {
+    submissionId: "sub-1",
+    canonicalSubmissionId: "sub-1",
+    userId: "user-1",
+    displayName: "Ada Lovelace",
+    attemptNumber: 3,
+    attemptCount: 3,
+    status: "Submitted",
+    isGroup: false,
+  },
+] satisfies LearningAssessmentsGradingQueueItem[];
+
 function renderShell(
   items: LearningAssessmentsGradingQueueItem[],
   props: Partial<React.ComponentProps<typeof SpeedgraderShell>> = {},
@@ -222,6 +235,16 @@ describe("SpeedgraderShell", () => {
     expect(screen.getByTestId("viewer-slot")).toHaveTextContent(
       "Group: Team Rocket (Ada Lovelace, Grace Hopper)",
     );
+  });
+
+  it("shows attempt X of Y when attemptCount is present", async () => {
+    const user = userEvent.setup();
+    renderShell(itemsWithAttemptCount);
+
+    await user.click(screen.getByRole("combobox", { name: /submission/i }));
+    expect(
+      screen.getByRole("option", { name: "Ada Lovelace — attempt 3 of 3 — Submitted" }),
+    ).toBeInTheDocument();
   });
 
   it("renders the empty state with a back link when there are no items", () => {

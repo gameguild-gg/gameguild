@@ -14,41 +14,56 @@ using Xunit;
 namespace GameGuild.Learning.Assessments.Tests;
 
 /// <summary>
-/// SpeedGrader navigation bundle: instructor-only queue with one item per student/group attempt
-/// (InProgress-only entries excluded), canonical Min(Id) group rows, counts, and sort.
+/// SpeedGrader navigation bundle: instructor-only queue with ONE item per student/group
+/// (the target's LATEST attempt; InProgress-only targets excluded), canonical Min(Id) group
+/// rows, assignment-level grade persisted across resubmissions, counts, and sort.
 /// </summary>
 public class GradingQueueTests
 {
     [Fact]
-    public async Task Individual_Assessment_ListsAttemptsPerStudent_ExcludesInProgressOnly_SortsByNameThenAttempt()
+    public async Task Individual_Assessment_OneItemPerStudent_LatestAttemptWithPersistedAssignmentGrade()
     {
         await using var db = CreateContext();
         var assessment = await SeedAssessmentAsync(db);
-        var (aliceId, aliceRow) = await SeedRowAsync(db, assessment.Id, "Alice", 1, SubmissionStatus.Graded, score: 90);
+        var (aliceId, _) = await SeedRowAsync(db, assessment.Id, "Alice", 1, SubmissionStatus.Graded, score: 70);
+        var aliceResubmit = await SeedRowAsync(db, assessment.Id, aliceId, "Alice", 2, SubmissionStatus.Submitted);
         var (bobId, bobRow) = await SeedRowAsync(db, assessment.Id, "Bob", 1, SubmissionStatus.Submitted);
+        var (daveId, daveRow) = await SeedRowAsync(db, assessment.Id, "Dave", 1, SubmissionStatus.Graded, score: 90);
+        await SeedRowAsync(db, assessment.Id, "Carol", 1, SubmissionStatus.InProgress);
 
         var result = await CreateController(db, instructorId: Guid.NewGuid()).GetGradingQueue(assessment.Id);
 
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var queue = ok.Value.Should().BeOfType<GradingQueueDto>().Subject;
-        queue.Items.Should().HaveCount(2, "the InProgress-only student is absent");
-        queue.Items.Select(i => (i.DisplayName, i.AttemptNumber))
-            .Should().ContainInOrder(("Alice", 1), ("Bob", 1));
+        queue.Items.Should().HaveCount(3, "one item per student; the InProgress-only student is absent");
+        queue.Items.Select(i => i.DisplayName).Should().ContainInOrder("Alice", "Bob", "Dave");
         var alice = queue.Items[0];
-        alice.SubmissionId.Should().Be(aliceRow.Id);
-        alice.CanonicalSubmissionId.Should().Be(aliceRow.Id);
+        alice.SubmissionId.Should().Be(aliceResubmit.Id, "nav opens the student's LATEST attempt");
+        alice.CanonicalSubmissionId.Should().Be(aliceResubmit.Id);
         alice.UserId.Should().Be(aliceId);
-        alice.Status.Should().Be(SubmissionStatus.Graded);
-        alice.Score.Should().Be(90);
+        alice.AttemptNumber.Should().Be(2);
+        alice.AttemptCount.Should().Be(2);
+        alice.Status.Should().Be(SubmissionStatus.Submitted);
+        alice.SubmittedAt.Should().Be(aliceResubmit.SubmittedAt);
+        alice.AssignmentScore.Should().Be(70, "graded attempt-1 score persists across the resubmission");
+        alice.AssignmentPassed.Should().BeTrue();
         alice.IsLate.Should().BeFalse();
-        alice.SubmittedAt.Should().Be(aliceRow.SubmittedAt);
         alice.IsGroup.Should().BeFalse();
         var bob = queue.Items[1];
         bob.SubmissionId.Should().Be(bobRow.Id);
         bob.UserId.Should().Be(bobId);
         bob.Status.Should().Be(SubmissionStatus.Submitted);
-        bob.Score.Should().BeNull();
+        bob.AssignmentScore.Should().BeNull();
+        bob.AttemptCount.Should().Be(1);
         bob.IsGroup.Should().BeFalse();
+        var dave = queue.Items[2];
+        dave.SubmissionId.Should().Be(daveRow.Id);
+        dave.UserId.Should().Be(daveId);
+        dave.Status.Should().Be(SubmissionStatus.Graded, "latest graded with no newer submission");
+        dave.AssignmentScore.Should().Be(90);
+        dave.AttemptCount.Should().Be(1);
+        queue.Total.Should().Be(3);
+        queue.NeedsGrading.Should().Be(2, "Alice (latest attempt submitted) + Bob; Dave's latest attempt is graded");
     }
 
     [Fact]
@@ -77,33 +92,44 @@ public class GradingQueueTests
         item.GroupName.Should().Be(group.GroupName);
         item.MemberNames.Should().BeEquivalentTo(["Alice", "Bob", "Carol"]);
         item.AttemptNumber.Should().Be(1);
+        item.AttemptCount.Should().Be(1);
         item.Status.Should().Be(SubmissionStatus.Submitted);
+        item.AssignmentScore.Should().BeNull();
         item.IsGroup.Should().BeTrue();
         item.UserId.Should().BeNull();
         queue.Assessment.GroupSetId.Should().Be(group.SetId);
     }
 
     [Fact]
-    public async Task Group_TwoAttempts_ProducesTwoItemsSortedByAttempt()
+    public async Task Group_TwoAttempts_CollapseToOneLatestItem_WithPersistedAssignmentGrade()
     {
         await using var db = CreateContext();
         var assessment = await SeedAssessmentAsync(db);
         var group = await SeedGroupAsync(db, assessment, "Alice", "Bob");
+        var attempt1Rows = new List<AssessmentSubmission>();
+        var attempt2Rows = new List<AssessmentSubmission>();
         foreach (var (userId, _) in group.Members)
         {
-            await SeedGroupRowAsync(db, assessment.Id, userId, 1, SubmissionStatus.Submitted, group.GroupId);
-            await SeedGroupRowAsync(db, assessment.Id, userId, 2, SubmissionStatus.Graded, group.GroupId, score: 88);
+            attempt1Rows.Add(await SeedGroupRowAsync(db, assessment.Id, userId, 1, SubmissionStatus.Graded, group.GroupId, score: 88));
+            attempt2Rows.Add(await SeedGroupRowAsync(db, assessment.Id, userId, 2, SubmissionStatus.Submitted, group.GroupId));
         }
 
         var result = await CreateController(db, instructorId: Guid.NewGuid()).GetGradingQueue(assessment.Id);
 
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var queue = ok.Value.Should().BeOfType<GradingQueueDto>().Subject;
-        queue.Items.Should().HaveCount(2);
-        queue.Items.Select(i => i.AttemptNumber).Should().ContainInOrder(1, 2);
-        queue.Items[0].Status.Should().Be(SubmissionStatus.Submitted);
-        queue.Items[1].Status.Should().Be(SubmissionStatus.Graded);
-        queue.Items[1].Score.Should().Be(88);
+        queue.Items.Should().ContainSingle("both group attempts collapse into ONE item — the latest");
+        var item = queue.Items[0];
+        var canonicalId = attempt2Rows.Min(r => r.Id);
+        item.CanonicalSubmissionId.Should().Be(canonicalId, "canonical = Min(Id) among the LATEST attempt's rows");
+        item.SubmissionId.Should().Be(canonicalId);
+        item.AttemptNumber.Should().Be(2);
+        item.AttemptCount.Should().Be(2);
+        item.Status.Should().Be(SubmissionStatus.Submitted);
+        item.AssignmentScore.Should().Be(88, "graded attempt-1 score persists across the resubmission");
+        item.AssignmentPassed.Should().BeTrue();
+        item.IsGroup.Should().BeTrue();
+        queue.NeedsGrading.Should().Be(1);
     }
 
     [Fact]
@@ -128,13 +154,19 @@ public class GradingQueueTests
         await SeedRowAsync(db, assessment.Id, "Bob", 1, SubmissionStatus.Submitted);
         await SeedRowAsync(db, assessment.Id, "Carol", 1, SubmissionStatus.Late, isLate: true);
         await SeedRowAsync(db, assessment.Id, "Dave", 1, SubmissionStatus.InProgress);
+        var (eveId, _) = await SeedRowAsync(db, assessment.Id, "Eve", 1, SubmissionStatus.Submitted);
+        await SeedRowAsync(db, assessment.Id, eveId, "Eve", 2, SubmissionStatus.Graded, score: 50);
 
         var result = await CreateController(db, instructorId: Guid.NewGuid()).GetGradingQueue(assessment.Id);
 
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var queue = ok.Value.Should().BeOfType<GradingQueueDto>().Subject;
-        queue.Total.Should().Be(3);
-        queue.NeedsGrading.Should().Be(2, "Submitted + Late need grading; Graded and InProgress-only do not");
+        queue.Total.Should().Be(4);
+        queue.NeedsGrading.Should().Be(2, "Bob + Carol; Eve's stale attempt-1 submission is irrelevant — her latest attempt is graded");
+        var eve = queue.Items.Single(i => i.DisplayName == "Eve");
+        eve.Status.Should().Be(SubmissionStatus.Graded);
+        eve.AttemptNumber.Should().Be(2);
+        eve.AssignmentScore.Should().Be(50);
         queue.Items.Single(i => i.DisplayName == "Carol").Status.Should().Be(SubmissionStatus.Late);
         queue.Items.Single(i => i.DisplayName == "Carol").IsLate.Should().BeTrue();
     }
@@ -259,6 +291,17 @@ public class GradingQueueTests
         var row = await BuildRowAsync(db, assessmentId, userId, attempt, status, null, score, isLate);
         return (userId, row);
     }
+
+    private static Task<AssessmentSubmission> SeedRowAsync(
+        TestGradingQueueDbContext db,
+        Guid assessmentId,
+        Guid userId,
+        string displayName,
+        int attempt,
+        SubmissionStatus status,
+        int? score = null,
+        bool isLate = false) =>
+        BuildRowAsync(db, assessmentId, userId, attempt, status, null, score, isLate);
 
     private static async Task<AssessmentSubmission> SeedGroupRowAsync(
         TestGradingQueueDbContext db,
