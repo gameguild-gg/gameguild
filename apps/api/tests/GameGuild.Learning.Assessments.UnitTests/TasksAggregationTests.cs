@@ -123,6 +123,29 @@ public class TasksAggregationTests
     }
 
     [Fact]
+    public async Task Student_DoAndReviewItems_CarryRealCourseTitle_NotGuid()
+    {
+        await using var db = CreateContext();
+        var courseId = Guid.NewGuid();
+        var studentId = Guid.NewGuid();
+        await SeedCourseAsync(db, courseId, "Organic Chemistry", creatorId: Guid.NewGuid());
+        db.Add(Enrollment.Create(courseId, studentId));
+        await db.SaveChangesAsync();
+
+        var todo = await SeedAssessmentAsync(db, courseId, "Lab Report");
+        var peer = await SeedAssessmentAsync(db, courseId, "Peer Essay",
+            gradingMethods: AssessmentGradingMethod.PeerReview);
+        peer.SetPeerReviewPolicy(2);
+        await db.SaveChangesAsync();
+
+        var dto = await CreateService(db, studentId).GetTasksAsync(studentId, TenantId, isSystemAdmin: false);
+
+        dto.Items.Should().HaveCount(3, "the peer assessment yields both a do and a review item");
+        dto.Items.Should().OnlyContain(i => i.CourseTitle == "Organic Chemistry",
+            "enrolled-but-not-managed courses resolve titles via the Program lookup, not a GUID fallback");
+    }
+
+    [Fact]
     public async Task ClosedAssessment_ExcludedFromDoTasks()
     {
         await using var db = CreateContext();
