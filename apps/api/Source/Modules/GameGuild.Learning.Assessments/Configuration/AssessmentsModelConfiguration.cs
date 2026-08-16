@@ -80,6 +80,7 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.Property(e => e.MediaPayload).HasMaxLength(2048);
             entity.Property(e => e.ProjectPayload).HasMaxLength(2048);
             entity.Property(e => e.StructuredAnswerPayload).HasColumnType("jsonb");
+            entity.Property(e => e.RubricScoresPayload).HasColumnType("jsonb");
             entity.ToTable(table =>
             {
                 table.HasCheckConstraint(
@@ -108,6 +109,58 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
                     "(\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0) AND " +
                     "(\"StructuredAnswerPayload\" IS NULL OR (\"SubmittedModalities\" & 64) <> 0)");
             });
+        });
+
+        modelBuilder.Entity<CourseGroupSet>(entity =>
+        {
+            entity.ToTable("CourseGroupSets");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(160).IsRequired();
+            entity.HasIndex(e => new { e.CourseId, e.Name }).IsUnique();
+        });
+
+        modelBuilder.Entity<CourseGroup>(entity =>
+        {
+            entity.ToTable("CourseGroups");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(160).IsRequired();
+            entity.HasIndex(e => e.GroupSetId);
+        });
+
+        modelBuilder.Entity<CourseGroupMember>(entity =>
+        {
+            entity.ToTable("CourseGroupMembers");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.GroupId, e.UserId }).IsUnique();
+            entity.HasIndex(e => e.UserId);
+        });
+
+        modelBuilder.Entity<AssessmentRubric>(entity =>
+        {
+            entity.ToTable("AssessmentRubrics");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).HasMaxLength(160).IsRequired();
+        });
+
+        modelBuilder.Entity<RubricCriterion>(entity =>
+        {
+            entity.ToTable("RubricCriteria");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Description).IsRequired();
+            entity.HasIndex(e => e.RubricId);
+        });
+
+        modelBuilder.Entity<AssessmentPeerReview>(entity =>
+        {
+            entity.ToTable("AssessmentPeerReviews");
+            entity.HasKey(e => e.Id);
+            // Unique (ReviewerUserId, SubmissionId): race protection for peer-review claim (todo 7).
+            entity.HasIndex(e => new { e.ReviewerUserId, e.SubmissionId }).IsUnique();
+            entity.HasIndex(e => e.SubmissionId);
+            entity.HasIndex(e => e.AssessmentId);
+            entity.HasIndex(e => e.ReviewerUserId);
+            entity.Property(e => e.Feedback).HasColumnType("text");
+            entity.Property(e => e.RubricScoresPayload).HasColumnType("jsonb");
         });
 
         modelBuilder.Entity<InteractiveVideoAssessmentCue>(entity =>

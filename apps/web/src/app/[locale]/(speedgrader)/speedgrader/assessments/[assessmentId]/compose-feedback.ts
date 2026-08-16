@@ -36,21 +36,7 @@ export function composeFeedback(opts: ComposeFeedbackOptions): string {
   const overall = opts.overallComment?.trim() || 'No overall comment';
   const perFile = opts.perFileComments ?? {};
   const paths = Object.keys(perFile).sort();
-  const perFileBlock =
-    paths.length === 0
-      ? 'No per-file comments.'
-      : paths
-          .map((p) => `### ${p}\n${perFile[p]?.trim() || 'No comment'}`)
-          .join('\n\n');
+  const perFileBlock = paths.length === 0 ? 'No per-file comments.' : paths.map((p) => `### ${p}\n${perFile[p]?.trim() || 'No comment'}`).join('\n\n');
 
-  return [
-    '## Overall',
-    overall,
-    '',
-    '## Auto-generated feedback',
-    opts.autoFeedback,
-    '',
-    '## Per-file comments',
-    perFileBlock,
-  ].join('\n');
+  return ['## Overall', overall, '', '## Auto-generated feedback', opts.autoFeedback, '', '## Per-file comments', perFileBlock].join('\n');
 }

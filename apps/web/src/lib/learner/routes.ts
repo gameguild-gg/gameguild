@@ -23,6 +23,7 @@ export interface LearningNavigationRoutes extends LearnerRoutes {
   calendar: string;
   grades: string;
   certificates: string;
+  tasks: string;
   lesson: (slug: string, lessonId: string) => string;
 }
 
@@ -40,6 +41,7 @@ export function createLearnerRoutes(
     calendar: path("/learn/calendar"),
     grades: path("/learn/grades"),
     certificates: path("/learn/certificates"),
+    tasks: path("/dashboard/tasks"),
     catalog: "/courses",
     course: (slug) => path(`/learn/courses/${slug}`),
     content: (slug) => path(`/learn/courses/${slug}/content`),
