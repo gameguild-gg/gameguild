@@ -17,126 +17,6 @@ export class AccessControlTenantPermissionsModule {
 
   /**
    */
-  async postAuthorizationTenantsGrant(
-    body: Types.IdentityAuthorizationGrantTenantPermissionCommand,
-  ): Promise<Result<string, ApiError>> {
-    const url = "/api/v1/authorization/tenants/grant";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationGrantTenantPermissionCommandSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<string, ApiError>;
-  }
-
-  /**
-   */
-  async postAuthorizationTenantsRevoke(
-    body: Types.IdentityAuthorizationRevokeTenantPermissionCommand,
-  ): Promise<Result<boolean, ApiError>> {
-    const url = "/api/v1/authorization/tenants/revoke";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationRevokeTenantPermissionCommandSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
-  async getAuthorizationTenantsPermissions(
-    tenantId: string,
-    query?: { userId?: string; includeEffective?: boolean },
-  ): Promise<
-    Result<Types.IdentityAuthorizationGetTenantPermissionsOutput, ApiError>
-  > {
-    const url = `/api/v1/authorization/tenants/${tenantId}/permissions`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationGetTenantPermissionsOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getAuthorizationTenantsHasPermission(
-    tenantId: string,
-    query?: { permission?: string; userId?: string },
-  ): Promise<Result<boolean, ApiError>> {
-    const url = `/api/v1/authorization/tenants/${tenantId}/has-permission`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
-  async postAuthorizationTenantsGlobalDefaults(
-    body: Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommand,
-  ): Promise<Result<boolean, ApiError>> {
-    const url = "/api/v1/authorization/tenants/global/defaults";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommandSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
   async postAuthorizationTenantsDefaults(
     body: Types.IdentityAuthorizationSetTenantDefaultPermissionsCommand,
   ): Promise<Result<boolean, ApiError>> {
@@ -205,6 +85,126 @@ export class AccessControlTenantPermissionsModule {
     });
 
     return result as Result<boolean, ApiError>;
+  }
+
+  /**
+   */
+  async postAuthorizationTenantsGlobalDefaults(
+    body: Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommand,
+  ): Promise<Result<boolean, ApiError>> {
+    const url = "/api/v1/authorization/tenants/global/defaults";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommandSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<boolean, ApiError>;
+  }
+
+  /**
+   */
+  async postAuthorizationTenantsGrant(
+    body: Types.IdentityAuthorizationGrantTenantPermissionCommand,
+  ): Promise<Result<string, ApiError>> {
+    const url = "/api/v1/authorization/tenants/grant";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityAuthorizationGrantTenantPermissionCommandSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<string, ApiError>;
+  }
+
+  /**
+   */
+  async postAuthorizationTenantsRevoke(
+    body: Types.IdentityAuthorizationRevokeTenantPermissionCommand,
+  ): Promise<Result<boolean, ApiError>> {
+    const url = "/api/v1/authorization/tenants/revoke";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityAuthorizationRevokeTenantPermissionCommandSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<boolean, ApiError>;
+  }
+
+  /**
+   */
+  async getAuthorizationTenantsHasPermission(
+    tenantId: string,
+    query?: { permission?: string; userId?: string },
+  ): Promise<Result<boolean, ApiError>> {
+    const url = `/api/v1/authorization/tenants/${tenantId}/has-permission`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<boolean, ApiError>;
+  }
+
+  /**
+   */
+  async getAuthorizationTenantsPermissions(
+    tenantId: string,
+    query?: { userId?: string; includeEffective?: boolean },
+  ): Promise<
+    Result<Types.IdentityAuthorizationGetTenantPermissionsOutput, ApiError>
+  > {
+    const url = `/api/v1/authorization/tenants/${tenantId}/permissions`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthorizationGetTenantPermissionsOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 }
 

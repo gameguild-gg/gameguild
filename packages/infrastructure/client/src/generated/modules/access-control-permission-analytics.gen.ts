@@ -17,14 +17,13 @@ export class AccessControlPermissionAnalyticsModule {
 
   /**
    */
-  async getPermissionAnalyticsUsage(query?: {
+  async getPermissionAnalyticsAnomalies(query?: {
     tenantId?: string;
     fromDate?: string;
-    toDate?: string;
   }): Promise<
-    Result<Array<Types.IdentityAuthorizationPermissionUsageMetrics>, ApiError>
+    Result<Array<Types.IdentityAuthorizationPermissionAnomaly>, ApiError>
   > {
-    const url = "/v1/permission-analytics/usage";
+    const url = "/v1/permission-analytics/anomalies";
 
     const result = await this.client.request({
       method: "GET",
@@ -34,22 +33,21 @@ export class AccessControlPermissionAnalyticsModule {
     });
 
     return result as Result<
-      Array<Types.IdentityAuthorizationPermissionUsageMetrics>,
+      Array<Types.IdentityAuthorizationPermissionAnomaly>,
       ApiError
     >;
   }
 
   /**
    */
-  async getPermissionAnalyticsUserActivity(query?: {
+  async getPermissionAnalyticsReport(query?: {
     tenantId?: string;
-    top?: number;
-    fromDate?: string;
-    toDate?: string;
+    periodStart?: string;
+    periodEnd?: string;
   }): Promise<
-    Result<Array<Types.IdentityAuthorizationUserActivitySummary>, ApiError>
+    Result<Types.IdentityAuthorizationPermissionAnalyticsReport, ApiError>
   > {
-    const url = "/v1/permission-analytics/user-activity";
+    const url = "/v1/permission-analytics/report";
 
     const result = await this.client.request({
       method: "GET",
@@ -58,10 +56,17 @@ export class AccessControlPermissionAnalyticsModule {
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.IdentityAuthorizationUserActivitySummary>,
-      ApiError
-    >;
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthorizationPermissionAnalyticsReportSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
@@ -115,13 +120,14 @@ export class AccessControlPermissionAnalyticsModule {
 
   /**
    */
-  async getPermissionAnalyticsAnomalies(query?: {
+  async getPermissionAnalyticsUsage(query?: {
     tenantId?: string;
     fromDate?: string;
+    toDate?: string;
   }): Promise<
-    Result<Array<Types.IdentityAuthorizationPermissionAnomaly>, ApiError>
+    Result<Array<Types.IdentityAuthorizationPermissionUsageMetrics>, ApiError>
   > {
-    const url = "/v1/permission-analytics/anomalies";
+    const url = "/v1/permission-analytics/usage";
 
     const result = await this.client.request({
       method: "GET",
@@ -131,21 +137,22 @@ export class AccessControlPermissionAnalyticsModule {
     });
 
     return result as Result<
-      Array<Types.IdentityAuthorizationPermissionAnomaly>,
+      Array<Types.IdentityAuthorizationPermissionUsageMetrics>,
       ApiError
     >;
   }
 
   /**
    */
-  async getPermissionAnalyticsReport(query?: {
+  async getPermissionAnalyticsUserActivity(query?: {
     tenantId?: string;
-    periodStart?: string;
-    periodEnd?: string;
+    top?: number;
+    fromDate?: string;
+    toDate?: string;
   }): Promise<
-    Result<Types.IdentityAuthorizationPermissionAnalyticsReport, ApiError>
+    Result<Array<Types.IdentityAuthorizationUserActivitySummary>, ApiError>
   > {
-    const url = "/v1/permission-analytics/report";
+    const url = "/v1/permission-analytics/user-activity";
 
     const result = await this.client.request({
       method: "GET",
@@ -154,17 +161,10 @@ export class AccessControlPermissionAnalyticsModule {
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationPermissionAnalyticsReportSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<
+      Array<Types.IdentityAuthorizationUserActivitySummary>,
+      ApiError
+    >;
   }
 }
 
