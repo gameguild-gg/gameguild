@@ -17,6 +17,117 @@ export class SocialProfilesModule {
 
   /**
    */
+  async getApiSocialProfiles(
+    handle: string,
+  ): Promise<Result<Types.SocialProfilesSocialProfile, ApiError>> {
+    const url = `/api/social/profiles/@${handle}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.SocialProfilesSocialProfileSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putApiSocialProfilesPortfolio(
+    itemId: string,
+    body: Types.SocialProfilesUpdateProfilePortfolioItemBody,
+  ): Promise<Result<Types.SocialProfilesProfilePortfolioItem, ApiError>> {
+    const url = `/api/social/profiles/portfolio/${itemId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.SocialProfilesUpdateProfilePortfolioItemBodySchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.SocialProfilesProfilePortfolioItemSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteApiSocialProfilesPortfolio(
+    itemId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/social/profiles/portfolio/${itemId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getApiSocialProfilesSearch(query?: {
+    query?: string;
+    take?: number;
+  }): Promise<Result<Array<Types.SocialProfilesSocialProfile>, ApiError>> {
+    const url = "/api/social/profiles/search";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.SocialProfilesSocialProfile>, ApiError>;
+  }
+
+  /**
+   */
+  async deleteApiSocialProfilesSkills(
+    skillId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/social/profiles/skills/${skillId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getApiSocialProfilesUsers(
     userId: string,
   ): Promise<Result<Types.SocialProfilesSocialProfile, ApiError>> {
@@ -74,50 +185,6 @@ export class SocialProfilesModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async getApiSocialProfiles(
-    handle: string,
-  ): Promise<Result<Types.SocialProfilesSocialProfile, ApiError>> {
-    const url = `/api/social/profiles/@${handle}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialProfilesSocialProfileSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiSocialProfilesSearch(query?: {
-    query?: string;
-    take?: number;
-  }): Promise<Result<Array<Types.SocialProfilesSocialProfile>, ApiError>> {
-    const url = "/api/social/profiles/search";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.SocialProfilesSocialProfile>, ApiError>;
   }
 
   /**
@@ -192,57 +259,6 @@ export class SocialProfilesModule {
 
   /**
    */
-  async postApiSocialProfilesSkills(
-    profileId: string,
-    body: Types.SocialProfilesAddProfileSkillBody,
-  ): Promise<Result<Types.SocialProfilesProfileSkill, ApiError>> {
-    const url = `/api/social/profiles/${profileId}/skills`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialProfilesAddProfileSkillBodySchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialProfilesProfileSkillSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async deleteApiSocialProfilesSkills(
-    skillId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/social/profiles/skills/${skillId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postApiSocialProfilesPortfolio(
     profileId: string,
     body: Types.SocialProfilesAddProfilePortfolioItemBody,
@@ -278,21 +294,21 @@ export class SocialProfilesModule {
 
   /**
    */
-  async putApiSocialProfilesPortfolio(
-    itemId: string,
-    body: Types.SocialProfilesUpdateProfilePortfolioItemBody,
-  ): Promise<Result<Types.SocialProfilesProfilePortfolioItem, ApiError>> {
-    const url = `/api/social/profiles/portfolio/${itemId}`;
+  async postApiSocialProfilesSkills(
+    profileId: string,
+    body: Types.SocialProfilesAddProfileSkillBody,
+  ): Promise<Result<Types.SocialProfilesProfileSkill, ApiError>> {
+    const url = `/api/social/profiles/${profileId}/skills`;
 
     // Validate request body
     const validatedBody = safeParse(
-      Types.SocialProfilesUpdateProfilePortfolioItemBodySchema,
+      Types.SocialProfilesAddProfileSkillBodySchema,
       body,
       "request",
     );
 
     const result = await this.client.request({
-      method: "PUT",
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -301,7 +317,7 @@ export class SocialProfilesModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.SocialProfilesProfilePortfolioItemSchema,
+        Types.SocialProfilesProfileSkillSchema,
         result.data,
         "response",
       );
@@ -309,22 +325,6 @@ export class SocialProfilesModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async deleteApiSocialProfilesPortfolio(
-    itemId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/social/profiles/portfolio/${itemId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 }
 

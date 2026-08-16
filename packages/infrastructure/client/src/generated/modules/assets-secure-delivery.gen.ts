@@ -17,24 +17,6 @@ export class AssetsSecureDeliveryModule {
 
   /**
    */
-  async getApiAssetsContent(
-    assetId: string,
-    query?: { token?: string; transform?: string },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/assets/${assetId}/content`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postApiAssetsAccessUrl(
     assetId: string,
     body: Types.AssetsSecurityAccessUrlInput,
@@ -66,6 +48,24 @@ export class AssetsSecureDeliveryModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiAssetsContent(
+    assetId: string,
+    query?: { token?: string; transform?: string },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/assets/${assetId}/content`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 }
 

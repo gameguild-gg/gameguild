@@ -17,10 +17,10 @@ export class LearningCertificatesModule {
 
   /**
    */
-  async getApiCertificatesMy(): Promise<
-    Result<Array<Types.LearningCertificatesCertificate>, ApiError>
-  > {
-    const url = "/api/certificates/my";
+  async getApiCertificatesCourse(
+    courseId: string,
+  ): Promise<Result<Array<Types.LearningCertificatesCertificate>, ApiError>> {
+    const url = `/api/certificates/course/${courseId}`;
 
     const result = await this.client.request({
       method: "GET",
@@ -36,56 +36,22 @@ export class LearningCertificatesModule {
 
   /**
    */
-  async getApiCertificates(
-    id: string,
-  ): Promise<Result<Types.LearningCertificatesCertificate, ApiError>> {
-    const url = `/api/certificates/${id}`;
+  async getApiCertificatesExpiring(query?: {
+    days?: number;
+  }): Promise<Result<Array<Types.LearningCertificatesCertificate>, ApiError>> {
+    const url = "/api/certificates/expiring";
 
     const result = await this.client.request({
       method: "GET",
       path: url,
+      params: query,
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningCertificatesCertificateSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiCertificatesVerify(
-    certificateNumber: string,
-  ): Promise<
-    Result<Types.LearningCertificatesCertificateVerificationResult, ApiError>
-  > {
-    const url = `/api/certificates/verify/${certificateNumber}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningCertificatesCertificateVerificationResultSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<
+      Array<Types.LearningCertificatesCertificate>,
+      ApiError
+    >;
   }
 
   /**
@@ -124,35 +90,10 @@ export class LearningCertificatesModule {
 
   /**
    */
-  async postApiCertificatesRevoke(
-    id: string,
-    body: Types.LearningCertificatesRevokeCertificateInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/certificates/${id}/revoke`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningCertificatesRevokeCertificateInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getApiCertificatesCourse(
-    courseId: string,
-  ): Promise<Result<Array<Types.LearningCertificatesCertificate>, ApiError>> {
-    const url = `/api/certificates/course/${courseId}`;
+  async getApiCertificatesMy(): Promise<
+    Result<Array<Types.LearningCertificatesCertificate>, ApiError>
+  > {
+    const url = "/api/certificates/my";
 
     const result = await this.client.request({
       method: "GET",
@@ -164,6 +105,42 @@ export class LearningCertificatesModule {
       Array<Types.LearningCertificatesCertificate>,
       ApiError
     >;
+  }
+
+  /**
+   */
+  async postApiCertificatesTemplates(
+    body: Types.LearningCertificatesCreateCertificateTemplateInput,
+  ): Promise<
+    Result<Types.LearningCertificatesCertificateTemplateDetail, ApiError>
+  > {
+    const url = "/api/certificates/templates";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.LearningCertificatesCreateCertificateTemplateInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningCertificatesCertificateTemplateDetailSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
@@ -270,31 +247,23 @@ export class LearningCertificatesModule {
 
   /**
    */
-  async postApiCertificatesTemplates(
-    body: Types.LearningCertificatesCreateCertificateTemplateInput,
+  async getApiCertificatesVerify(
+    certificateNumber: string,
   ): Promise<
-    Result<Types.LearningCertificatesCertificateTemplateDetail, ApiError>
+    Result<Types.LearningCertificatesCertificateVerificationResult, ApiError>
   > {
-    const url = "/api/certificates/templates";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningCertificatesCreateCertificateTemplateInputSchema,
-      body,
-      "request",
-    );
+    const url = `/api/certificates/verify/${certificateNumber}`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: "GET",
       path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.LearningCertificatesCertificateTemplateDetailSchema,
+        Types.LearningCertificatesCertificateVerificationResultSchema,
         result.data,
         "response",
       );
@@ -306,22 +275,53 @@ export class LearningCertificatesModule {
 
   /**
    */
-  async getApiCertificatesExpiring(query?: {
-    days?: number;
-  }): Promise<Result<Array<Types.LearningCertificatesCertificate>, ApiError>> {
-    const url = "/api/certificates/expiring";
+  async getApiCertificates(
+    id: string,
+  ): Promise<Result<Types.LearningCertificatesCertificate, ApiError>> {
+    const url = `/api/certificates/${id}`;
 
     const result = await this.client.request({
       method: "GET",
       path: url,
-      params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningCertificatesCertificate>,
-      ApiError
-    >;
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningCertificatesCertificateSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postApiCertificatesRevoke(
+    id: string,
+    body: Types.LearningCertificatesRevokeCertificateInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/certificates/${id}/revoke`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.LearningCertificatesRevokeCertificateInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 }
 
