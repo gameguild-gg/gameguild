@@ -107,6 +107,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
     {
         builder.Services.AddFerpaModule();
         builder.Services.AddKycComposition(builder.Configuration);
+        builder.Services.AddSingleton<IDatabaseMigrationPrerequisite, EconomyMigrationPrerequisite>();
         builder.Services.AddEconomyCapabilityComposition(builder.Configuration);
         builder.Services.AddEconomyCoreComposition(builder.Configuration);
         builder.Services.AddScoped<global::GameGuild.Compliance.KYC.IKycEvidenceStore, global::GameGuild.API.Core.Integration.EconomyKycEvidenceStore>();
