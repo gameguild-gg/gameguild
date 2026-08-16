@@ -1,4 +1,4 @@
-import { getToken } from "@/auth";
+import { auth, getToken } from "@/auth";
 import { readContentGradingDefinition } from "@game-guild/grading";
 import {
   createServerClient,
@@ -252,6 +252,24 @@ export const resolveCourseId = cache(
     return course?.id ?? courseIdentifier;
   },
 );
+
+/**
+ * True when the current viewer manages the course (course creator).
+ */
+export async function canManageCourse(
+  courseIdentifier: string,
+): Promise<boolean> {
+  try {
+    const [course, session] = await Promise.all([
+      getCourse(courseIdentifier),
+      auth(),
+    ]);
+
+    return Boolean(course?.creatorId && course.creatorId === session?.user?.id);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Fetch course analytics data from the API.

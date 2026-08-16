@@ -23,7 +23,7 @@ import {
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
 import { Separator } from "@game-guild/ui/components/separator";
-import { ArrowLeft, Clock, Code, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, Clock, Code, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import type {
   Assessment,
   AssessmentGroup,
@@ -37,6 +37,7 @@ import {
   type AssessmentGradingMethodFlag,
 } from "@/lib/learning/assessment-grading-methods";
 import type { CourseContentItemViewModel } from "@/lib/learning/queries/course";
+import { Link } from "@/i18n/navigation";
 import {
   deleteAssessment,
   deleteRubric,
@@ -83,6 +84,7 @@ interface AssessmentEditorProps {
   groupSets?: GroupSetOption[];
   rubric?: RubricViewModel | null;
   rubricLocked?: boolean;
+  canManage?: boolean;
 }
 
 function formatWeight(weightPercent: number) {
@@ -97,6 +99,7 @@ export function AssessmentEditor({
   groupSets = [],
   rubric = null,
   rubricLocked = false,
+  canManage = false,
 }: AssessmentEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -486,6 +489,17 @@ export function AssessmentEditor({
           <p className="text-muted-foreground text-sm">Assessment Editor</p>
           <h1 className="text-2xl font-bold">{assessment.title}</h1>
         </div>
+        {canManage && (
+          <Button variant="outline" size="sm" asChild>
+            <Link
+              href={`/dashboard/learning/courses/${encodeURIComponent(courseId)}/assessments/${assessment.id}/submissions`}
+              data-testid="grade-submissions-button"
+            >
+              <ClipboardCheck className="mr-2 h-4 w-4" />
+              Grade submissions
+            </Link>
+          </Button>
+        )}
         <Badge variant="secondary">{typeLabel}</Badge>
       </div>
 
