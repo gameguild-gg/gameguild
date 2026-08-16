@@ -71,7 +71,7 @@ export default async function SpeedgraderAssessmentPage({
       courseSlug={courseParam}
       initialIndex={initialIndex}
       codingAssignment={codingAssignment}
-      manifestUrl="/cdn/manifest.json"
+      manifestUrl={process.env.NEXT_PUBLIC_EMCEPTION_MANIFEST_URL ?? '/emception/manifest.json'}
     />
   );
 }
