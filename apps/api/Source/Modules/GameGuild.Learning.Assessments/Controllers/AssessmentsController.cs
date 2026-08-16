@@ -580,7 +580,8 @@ public class AssessmentsController : BaseApiController
 
     /// <summary>
     /// Get the SpeedGrader navigation queue for an assessment (instructor-only):
-    /// one item per student/group attempt, excluding InProgress-only entries.
+    /// one item per student/group representing the target's latest gradeable attempt,
+    /// excluding InProgress-only targets.
     /// </summary>
     [HttpGet("{assessmentId:guid}/grading-queue")]
     public async Task<ActionResult<GradingQueueDto>> GetGradingQueue(Guid assessmentId)
