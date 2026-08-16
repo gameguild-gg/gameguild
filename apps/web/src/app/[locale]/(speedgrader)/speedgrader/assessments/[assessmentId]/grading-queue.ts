@@ -37,8 +37,10 @@ export type SpeedgraderGradingQueue = {
     memberNames?: string[] | null;
     groupId?: string | null;
     attemptNumber?: number;
+    attemptCount?: number;
     status?: 'InProgress' | 'Submitted' | 'Graded' | 'Returned' | 'Late';
-    score?: number | null;
+    assignmentScore?: number | null;
+    assignmentPassed?: boolean | null;
     isLate?: boolean;
     submittedAt?: string | null;
     isGroup?: boolean;

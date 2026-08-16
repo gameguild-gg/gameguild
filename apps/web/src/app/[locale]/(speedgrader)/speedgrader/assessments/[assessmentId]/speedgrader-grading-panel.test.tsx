@@ -322,6 +322,31 @@ describe('GradingPanel — group + meta + peers', () => {
     expect(screen.queryByTestId('peer-reviews')).not.toBeInTheDocument();
   });
 
+  it('shows assignment score badge when assignmentScore is set', () => {
+    renderPanel({ item: { ...individualItem, assignmentScore: 75 } });
+
+    expect(screen.getByTestId('assignment-score-badge')).toHaveTextContent('Assignment: 75/100');
+  });
+
+  it('shows passed badge when assignmentPassed is true', () => {
+    renderPanel({ item: { ...individualItem, assignmentPassed: true } });
+
+    expect(screen.getByTestId('assignment-passed-badge')).toHaveTextContent('Passed');
+  });
+
+  it('shows not-passed badge when assignmentPassed is false', () => {
+    renderPanel({ item: { ...individualItem, assignmentPassed: false } });
+
+    expect(screen.getByTestId('assignment-passed-badge')).toHaveTextContent('Not passed');
+  });
+
+  it('omits assignment badges when fields are null', () => {
+    renderPanel({ item: { ...individualItem, assignmentScore: null, assignmentPassed: null } });
+
+    expect(screen.queryByTestId('assignment-score-badge')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('assignment-passed-badge')).not.toBeInTheDocument();
+  });
+
   it('renders an alert when the action fails', async () => {
     const user = userEvent.setup();
     vi.mocked(gradeSubmission).mockResolvedValue({

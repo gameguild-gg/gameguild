@@ -5164,7 +5164,10 @@ export interface LearningAssessmentsGradingQueueAssessment {
 }
 
 export interface LearningAssessmentsGradingQueueItem {
+  attemptCount?: number;
   attemptNumber?: number;
+  assignmentPassed?: boolean | null;
+  assignmentScore?: number | null;
   canonicalSubmissionId?: string;
   displayName?: string | null;
   groupId?: string | null;
@@ -5172,7 +5175,6 @@ export interface LearningAssessmentsGradingQueueItem {
   isGroup?: boolean;
   isLate?: boolean;
   memberNames?: Array<string> | null;
-  score?: number | null;
   status?: LearningAssessmentsSubmissionStatus;
   submissionId?: string;
   submittedAt?: string | null;
@@ -16750,7 +16752,10 @@ LearningAssessmentsGradingQueueAssessmentSchema = z.object({
 
 /** Zod schema for LearningAssessmentsGradingQueueItem */
 LearningAssessmentsGradingQueueItemSchema = z.object({
+  attemptCount: z.number().int().optional(),
   attemptNumber: z.number().int().optional(),
+  assignmentPassed: z.boolean().nullable().optional(),
+  assignmentScore: z.number().int().nullable().optional(),
   canonicalSubmissionId: z.string().uuid().optional(),
   displayName: z.string().nullable().optional(),
   groupId: z.string().uuid().nullable().optional(),
@@ -16758,7 +16763,6 @@ LearningAssessmentsGradingQueueItemSchema = z.object({
   isGroup: z.boolean().optional(),
   isLate: z.boolean().optional(),
   memberNames: z.array(z.string()).nullable().optional(),
-  score: z.number().int().nullable().optional(),
   status: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
   submissionId: z.string().uuid().optional(),
   submittedAt: z.string().datetime().nullable().optional(),
