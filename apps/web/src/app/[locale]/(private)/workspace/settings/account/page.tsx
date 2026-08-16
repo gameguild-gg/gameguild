@@ -35,7 +35,7 @@ export default async function AccountSettingsPage({
 
   const session = await auth();
   if (!session || typeof session === 'function') {
-    redirect({ href: { pathname: '/sign-in', query: { callbackUrl: '/settings/account' } }, locale });
+    redirect({ href: { pathname: '/sign-in', query: { callbackUrl: '/workspace/settings/account' } }, locale });
     throw new Error('Unauthenticated dashboard access');
   }
 

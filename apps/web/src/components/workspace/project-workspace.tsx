@@ -54,19 +54,28 @@ const sections = ['Overview', 'Work', 'People', 'Versions/Builds', 'Files', 'Dis
 const slugFor = (value: string) => value.toLowerCase().replaceAll('/', '-').replaceAll(' ', '-');
 const sectionSlugs = new Set(sections.map(slugFor));
 
-export async function ProjectWorkspacePage({
-  params,
+export type ProjectWorkspaceSection =
+  | 'overview' | 'work' | 'people' | 'versions-builds' | 'files' | 'distribution' | 'access' | 'settings';
+
+export function isProjectWorkspaceSection(value: string): value is ProjectWorkspaceSection {
+  return sectionSlugs.has(value);
+}
+
+export async function ProjectWorkspaceView({
+  slug,
+  section = 'overview',
+  taskId,
   project: suppliedProject,
   surface = 'member',
 }: {
-  params: Promise<{ slug: string; section?: string[] }>;
+  slug: string;
+  section?: ProjectWorkspaceSection;
+  taskId?: string;
   project?: Awaited<ReturnType<typeof getWorkspaceProject>>;
   surface?: 'member' | 'admin';
 }) {
-  const { slug, section = [] } = await params;
-  const active = section[0] ?? 'overview';
-  if (section.length > 2 || (section.length > 1 && active !== 'work') || !sectionSlugs.has(active)) notFound();
-  const selectedTaskId = active === 'work' ? section[1] : undefined;
+  const active = section;
+  const selectedTaskId = active === 'work' ? taskId : undefined;
   const project = suppliedProject ?? await getWorkspaceProject(slug);
   if (!project) notFound();
   const [ownership, versions, board, library] = await Promise.all([
@@ -87,7 +96,7 @@ export async function ProjectWorkspacePage({
       ])
     : [[], [], [], null];
   const collaborators = active === 'access' ? await getWorkspaceProjectCollaborators(project.id) : [];
-  const base = surface === 'admin' ? `/dashboard/community/projects/${project.id}` : `/projects/${project.slug}`;
+  const base = surface === 'admin' ? `/dashboard/community/projects/${project.id}` : `/workspace/projects/${project.slug}`;
 
   return <div className="space-y-6 p-6">
     <header><div className="flex items-center gap-2"><FolderKanban className="size-5" /><Badge variant="outline">Project</Badge><Badge>{String(project.status)}</Badge></div><h1 className="mt-2 text-3xl font-semibold">{project.title}</h1><p className="mt-1 max-w-3xl text-muted-foreground">{project.shortDescription || project.description || 'Project workspace for people, work, versions, files and distribution.'}</p></header>
@@ -121,7 +130,7 @@ export async function ProjectWorkspacePage({
   </div>;
 }
 
-export default ProjectWorkspacePage;
+export default ProjectWorkspaceView;
 
 function Metric({ title, value }: { title: string; value: number }) { return <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle></CardHeader><CardContent><p className="text-2xl font-semibold">{value}</p></CardContent></Card>; }
 function Empty({ message }: { message: string }) { return <p className="py-8 text-center text-sm text-muted-foreground">{message}</p>; }

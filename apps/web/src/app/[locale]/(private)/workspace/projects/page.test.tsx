@@ -42,7 +42,7 @@ describe('member projects list page', () => {
     expect(screen.getByRole('heading', { name: 'Projects' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Neon Racer/ })).toHaveAttribute(
       'href',
-      '/projects/neon-racer',
+      '/workspace/projects/neon-racer',
     );
   });
 
@@ -51,7 +51,7 @@ describe('member projects list page', () => {
 
     expect(screen.getByRole('link', { name: /Create Project/ })).toHaveAttribute(
       'href',
-      '/projects/new',
+      '/workspace/projects/new',
     );
   });
 

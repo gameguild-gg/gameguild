@@ -116,7 +116,7 @@ export function PublicMobileNav({
           {user ? (
             <SheetClose asChild>
               <Link
-                href="/projects"
+                href="/workspace"
                 aria-label={`${user.name} profile`}
                 className="inline-flex min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-left text-sm font-semibold text-white transition hover:bg-white/10"
               >

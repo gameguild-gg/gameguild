@@ -53,7 +53,7 @@ vi.mock('@/components/workspaces/workspace-library-panel', () => ({
   WorkspaceLibraryPanel: () => <div data-testid="library-panel" />,
 }));
 
-import TeamWorkspacePage from './page';
+import TeamWorkspaceView from './team-workspace';
 
 const team = {
   id: 'team-1',
@@ -66,8 +66,8 @@ const team = {
   members: [{ userId: 'u1', isActive: true, authority: 'Owner', professionalTitle: 'Lead' }],
 };
 
-function params(slug: string, section?: string[]) {
-  return { params: Promise.resolve({ slug, section }) };
+function props(slug: string, section?: string) {
+  return { slug, section };
 }
 
 describe('team workspace page (member surface)', () => {
@@ -82,52 +82,40 @@ describe('team workspace page (member surface)', () => {
   afterEach(cleanup);
 
   it('uses /teams/:slug as the member base route', async () => {
-    render(await TeamWorkspacePage(params('alpha-team') as never));
+    render(await TeamWorkspaceView(props('alpha-team') as never));
 
-    expect(screen.getByTestId('workspace-nav')).toHaveAttribute('data-base', '/teams/alpha-team');
+    expect(screen.getByTestId('workspace-nav')).toHaveAttribute('data-base', '/workspace/teams/alpha-team');
     expect(screen.getByTestId('workspace-nav')).toHaveAttribute('data-active', 'overview');
   });
 
   it('links team projects to /projects/:slug', async () => {
-    render(await TeamWorkspacePage(params('alpha-team', ['projects']) as never));
+    render(await TeamWorkspaceView(props('alpha-team', 'projects') as never));
 
     expect(screen.getByRole('link', { name: /Neon Racer/ })).toHaveAttribute(
       'href',
-      '/projects/neon-racer',
+      '/workspace/projects/neon-racer',
     );
   });
 
   it('links project creation to the member /projects/new route', async () => {
-    render(await TeamWorkspacePage(params('alpha-team') as never));
+    render(await TeamWorkspaceView(props('alpha-team') as never));
 
     expect(screen.getByRole('link', { name: 'Create project' })).toHaveAttribute(
       'href',
-      '/projects/new',
+      '/workspace/projects/new',
     );
   });
 
   it('falls back to the overview section when none is given', async () => {
-    render(await TeamWorkspacePage(params('alpha-team', []) as never));
+    render(await TeamWorkspaceView(props('alpha-team') as never));
 
     expect(screen.getByTestId('workspace-nav')).toHaveAttribute('data-active', 'overview');
     expect(screen.getByText('Active members')).toBeInTheDocument();
   });
 
-  it('returns not-found for unknown sections', async () => {
-    await expect(TeamWorkspacePage(params('alpha-team', ['bogus']) as never)).rejects.toThrow(
-      'not-found',
-    );
-  });
-
-  it('returns not-found for nested unknown sections', async () => {
-    await expect(
-      TeamWorkspacePage(params('alpha-team', ['members', 'extra']) as never),
-    ).rejects.toThrow('not-found');
-  });
-
   it('returns not-found when the team does not exist', async () => {
     mocks.getWorkspaceTeam.mockResolvedValue(null);
 
-    await expect(TeamWorkspacePage(params('ghost') as never)).rejects.toThrow('not-found');
+    await expect(TeamWorkspaceView(props('ghost') as never)).rejects.toThrow('not-found');
   });
 });

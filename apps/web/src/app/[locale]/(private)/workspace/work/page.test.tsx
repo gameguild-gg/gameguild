@@ -47,7 +47,7 @@ describe('member work page', () => {
     expect(screen.queryByText('Ship demo')).not.toBeInTheDocument();
 
     const link = screen.getByRole('link', { name: /Design HUD/ });
-    expect(link).toHaveAttribute('href', '/projects/neon-racer/work/task-1');
+    expect(link).toHaveAttribute('href', '/workspace/projects/neon-racer/work/task-1');
   });
 
   it('shows the empty state when no board exists', async () => {
