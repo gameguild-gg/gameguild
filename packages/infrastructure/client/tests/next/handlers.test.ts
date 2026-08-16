@@ -3,13 +3,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  parseCookieHeader,
-  parseCookies,
-  parseBackendAuthResponse,
-  createHandlers,
-} from '../../src/integrations/next/handlers.js';
+import { parseCookieHeader, parseCookies, parseBackendAuthResponse, createHandlers } from '../../src/integrations/next/handlers.js';
 import type { ResolvedAuthConfig, ProviderResult } from '../../src/runtime/auth/types.js';
+
+function makeUnsignedJwt(payload: Record<string, unknown>): string {
+  const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode(payload)}.`;
+}
 
 // Mock the auth modules
 vi.mock('../../src/runtime/auth/jwt.js', () => ({
@@ -95,9 +95,7 @@ describe('parseCookieHeader', () => {
   });
 
   it('should handle URL-encoded names and values', () => {
-    const result = parseCookieHeader(
-      `${encodeURIComponent('my cookie')}=${encodeURIComponent('hello world')}`
-    );
+    const result = parseCookieHeader(`${encodeURIComponent('my cookie')}=${encodeURIComponent('hello world')}`);
     expect(result.get('my cookie')).toBe('hello world');
   });
 
@@ -141,6 +139,23 @@ describe('parseBackendAuthResponse', () => {
     const result = parseBackendAuthResponse(data, 'email@example.com', 'Name');
     expect(result.user.email).toBe('email@example.com');
   });
+
+  it('should parse roles and permissions from access token claims', () => {
+    const data = {
+      accessToken: makeUnsignedJwt({
+        'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': ['Admin', 'User'],
+        permissions: ['users:read', 'users:create'],
+      }),
+      refreshToken: 'rt',
+      userId: '1',
+      email: 'test@test.com',
+    };
+
+    const result = parseBackendAuthResponse(data);
+
+    expect(result.user.roles).toEqual(['Admin', 'User']);
+    expect(result.user.permissions).toEqual(['users:read', 'users:create']);
+  });
 });
 
 function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig {
@@ -164,10 +179,10 @@ function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig
       authorized: async ({ auth }) => !!auth,
     },
     secret: 'test-secret-min-32-chars-long-ok',
-    apiUrl: 'http://localhost:5000',
+    apiUrl: 'http://localhost:8080',
     pages: {},
     cookies: {
-      name: '__gg',
+      name: '__me',
       secure: false,
       sameSite: 'lax',
       path: '/',
@@ -196,7 +211,7 @@ describe('createHandlers', () => {
 
       const request = new Request('http://localhost/api/auth/session', {
         headers: {
-          cookie: '__gg.session-token=valid-encrypted-token',
+          cookie: '__me.session-token=valid-encrypted-token',
         },
       });
 
@@ -275,7 +290,7 @@ describe('createHandlers', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          cookie: '__gg.csrf-token=csrf-cookie-value',
+          cookie: '__me.csrf-token=csrf-cookie-value',
         },
         body: JSON.stringify({ csrfToken: 'wrong-token' }),
       });
@@ -289,15 +304,13 @@ describe('createHandlers', () => {
       const { POST } = createHandlers(config);
 
       // Mock fetch for token revocation
-      vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-        new Response('{}', { status: 200 })
-      );
+      vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response('{}', { status: 200 }));
 
       const request = new Request('http://localhost/api/auth/signout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          cookie: '__gg.csrf-token=csrf-cookie-value',
+          cookie: '__me.csrf-token=csrf-cookie-value',
         },
         body: JSON.stringify({ csrfToken: 'csrf-token-value' }),
       });
@@ -316,7 +329,7 @@ describe('createHandlers', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          cookie: '__gg.csrf-token=csrf-cookie-value',
+          cookie: '__me.csrf-token=csrf-cookie-value',
         },
         body: JSON.stringify({ csrfToken: 'csrf-token-value' }),
       });
@@ -333,7 +346,7 @@ describe('createHandlers', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          cookie: '__gg.session-token=valid-encrypted-token',
+          cookie: '__me.session-token=valid-encrypted-token',
         },
         body: JSON.stringify({ name: 'Updated Name' }),
       });
@@ -352,7 +365,7 @@ describe('createHandlers', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          cookie: '__gg.csrf-token=csrf-cookie-value',
+          cookie: '__me.csrf-token=csrf-cookie-value',
         },
         body: JSON.stringify({
           csrfToken: 'csrf-token-value',
@@ -373,8 +386,8 @@ describe('createHandlers', () => {
       const config = makeConfig({
         providers: [
           {
-            id: 'github',
-            name: 'GitHub',
+            id: 'google',
+            name: 'Google',
             type: 'oauth',
             handleCallback: vi.fn(),
           } as any,
@@ -382,9 +395,7 @@ describe('createHandlers', () => {
       });
       const { GET } = createHandlers(config);
 
-      const request = new Request(
-        'http://localhost/api/auth/callback/github?error=access_denied&error_description=User%20denied'
-      );
+      const request = new Request('http://localhost/api/auth/callback/google?error=access_denied&error_description=User%20denied');
 
       const response = await GET(request);
       // Error param => redirect to error page
@@ -396,8 +407,8 @@ describe('createHandlers', () => {
       const config = makeConfig({
         providers: [
           {
-            id: 'github',
-            name: 'GitHub',
+            id: 'google',
+            name: 'Google',
             type: 'oauth',
             handleCallback: vi.fn(),
           } as any,
@@ -405,9 +416,7 @@ describe('createHandlers', () => {
       });
       const { GET } = createHandlers(config);
 
-      const request = new Request(
-        'http://localhost/api/auth/callback/github'
-      );
+      const request = new Request('http://localhost/api/auth/callback/google');
 
       const response = await GET(request);
       // Missing code => redirect to error page
@@ -419,9 +428,7 @@ describe('createHandlers', () => {
       const config = makeConfig();
       const { GET } = createHandlers(config);
 
-      const request = new Request(
-        'http://localhost/api/auth/callback/nonexistent?code=abc'
-      );
+      const request = new Request('http://localhost/api/auth/callback/nonexistent?code=abc');
 
       const response = await GET(request);
       expect(response.status).toBeGreaterThanOrEqual(400);

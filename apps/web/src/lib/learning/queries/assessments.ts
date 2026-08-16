@@ -330,7 +330,7 @@ export const getAssessmentDefinition = cache(async (assessmentId: string): Promi
 export const getAssessmentSubmissions = cache(
   async (assessmentId: string): Promise<LearningAssessmentsAssessmentSubmission[]> => {
     try {
-      const result = await createAssessmentsModule().getAssessmentsByAssessmentIdSubmissions(assessmentId);
+      const result = await createAssessmentsModule().getAssessmentsSubmissionsForGetAssessmentsByAssessmentIdSubmissions(assessmentId);
       if (!result.ok) {
         console.error('Failed to fetch assessment submissions:', result.error);
         return [];
@@ -482,7 +482,7 @@ export const getCourseGroupSets = cache(
   async (courseId: string): Promise<CourseGroupSetSummary[]> => {
     try {
       const resolvedCourseId = await resolveCourseId(courseId);
-      const module = new GeneratedApi.LearningAssessmentsGroupsetsModule(getApiClient());
+      const module = new GeneratedApi.LearningAssessmentsGroupSetsModule(getApiClient());
       const result = await module.getCoursesGroupSets(resolvedCourseId);
       if (!result.ok) {
         console.error('Failed to fetch course group sets:', result.error);
@@ -509,7 +509,7 @@ export const getGroupSetGroups = cache(
   async (courseId: string, setId: string): Promise<CourseGroupDetail[]> => {
     try {
       const resolvedCourseId = await resolveCourseId(courseId);
-      const module = new GeneratedApi.LearningAssessmentsGroupsetsModule(getApiClient());
+      const module = new GeneratedApi.LearningAssessmentsGroupSetsModule(getApiClient());
       const result = await module.getCoursesGroupSetsGroups(resolvedCourseId, setId);
       if (!result.ok) {
         console.error('Failed to fetch group set groups:', result.error);

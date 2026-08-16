@@ -90,19 +90,6 @@ public static class Permissions
     public const string ContentAdmin = ContentPermission.Keys.Admin;
 
     // ========================
-    // TEAM PERMISSIONS
-    // ========================
-
-    /// <summary>Read Teams</summary>
-    public const string TeamRead = TeamPermission.Keys.Read;
-
-    /// <summary>Write Teams</summary>
-    public const string TeamWrite = TeamPermission.Keys.Write;
-
-    /// <summary>Administer Teams</summary>
-    public const string TeamAdmin = TeamPermission.Keys.Admin;
-
-    // ========================
     // PROJECT PERMISSIONS
     // ========================
 

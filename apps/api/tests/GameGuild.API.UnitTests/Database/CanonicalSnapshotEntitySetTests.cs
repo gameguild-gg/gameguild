@@ -184,7 +184,7 @@ public sealed class CanonicalSnapshotEntitySetTests
             "GameGuild.Identity.Authentication.ApiKey",
             "GameGuild.Tags.Tag",
             "GameGuild.Tags.TagRelationship",
-            "GameGuild.Tags.CertificateTag",
+            "GameGuild.Learning.Certificates.CertificateTag",
             "GameGuild.Tags.TagProficiency",
             "GameGuild.Commerce.Products.SupportTicket",
             "GameGuild.Commerce.Products.SupportTicketMessage",
@@ -194,15 +194,12 @@ public sealed class CanonicalSnapshotEntitySetTests
             "GameGuild.Notifications.NotificationPreference",
             "GameGuild.Notifications.NotificationTemplate",
             "GameGuild.Projects.ProjectStoreProduct",
+            "GameGuild.Analytics.AnalyticsEvent",
             "GameGuild.Compliance.Audit.AuditLog",
             "GameGuild.Commerce.Orders.Order",
             "GameGuild.Identity.Authorization.PermissionTemplate",
             "GameGuild.Assets.AssetContent",
             "GameGuild.Localization.Language"
-        });
-        entities.Should().NotContain(new[]
-        {
-            "GameGuild.Analytics.AnalyticsEvent"
         });
     }
 

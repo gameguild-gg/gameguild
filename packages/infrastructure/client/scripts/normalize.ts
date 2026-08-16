@@ -14,10 +14,7 @@ import { HTTP_METHODS, ASP_NET_PATTERNS } from './codegen/constants.js';
  * Normalize the OpenAPI specification
  */
 export function normalizeSpec(spec: OpenApiSpec): OpenApiSpec {
-  const normalized = sortObjectKeys(structuredClone(spec));
-
-  // Keep compatibility aliases in the API, but expose only the canonical route in the SDK.
-  removeRedundantApiVersionAliases(normalized);
+  const normalized = structuredClone(spec);
 
   // Normalize operation IDs
   normalizeOperationIds(normalized);
@@ -31,85 +28,21 @@ export function normalizeSpec(spec: OpenApiSpec): OpenApiSpec {
   // Clean up Microsoft/ASP.NET specific patterns
   cleanAspNetPatterns(normalized);
 
-  return sortObjectKeys(normalized);
+  return normalized;
 }
 
 /**
- * OpenAPI object key order has no semantic meaning. Sorting recursively keeps generated output
- * identical whether the specification comes directly from Swagger or from a canonical CI artifact.
- */
-function sortObjectKeys<T>(value: T): T {
-  if (Array.isArray(value)) {
-    return value.map((item) => sortObjectKeys(item)) as T;
-  }
-
-  if (value === null || typeof value !== 'object') {
-    return value;
-  }
-
-  const entries = Object.entries(value as Record<string, unknown>)
-    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-    .map(([key, entryValue]) => [key, sortObjectKeys(entryValue)]);
-
-  return Object.fromEntries(entries) as T;
-}
-
-/**
- * Remove exact /api/vN aliases when the same operation is also exposed at /vN.
- *
- * Some controllers retain both routes for backwards compatibility. Generating both into the
- * SDK creates duplicate methods for the same action, so prefer the canonical non-/api route.
- */
-function removeRedundantApiVersionAliases(spec: OpenApiSpec): void {
-  const paths = spec.paths ?? {};
-
-  for (const [path, pathItem] of Object.entries(paths)) {
-    if (!pathItem || !/^\/api\/v\d+(?:\/|$)/i.test(path)) continue;
-
-    const canonicalPath = path.replace(/^\/api(?=\/v\d+(?:\/|$))/i, '');
-    const canonicalPathItem = paths[canonicalPath];
-    if (!canonicalPathItem) continue;
-
-    if (areEquivalentRouteAliases(pathItem, canonicalPathItem)) {
-      delete paths[path];
-    }
-  }
-}
-
-function areEquivalentRouteAliases(
-  alias: OpenAPIV3.PathItemObject,
-  canonical: OpenAPIV3.PathItemObject,
-): boolean {
-  const comparable = (pathItem: OpenAPIV3.PathItemObject): string => {
-    const clone = structuredClone(pathItem) as OpenAPIV3.PathItemObject;
-
-    for (const method of HTTP_METHODS) {
-      const operation = clone[method] as OpenAPIV3.OperationObject | undefined;
-      if (operation) delete operation.operationId;
-    }
-
-    return JSON.stringify(clone);
-  };
-
-  return comparable(alias) === comparable(canonical);
-}
-
-interface OperationIdCandidate {
-  path: string;
-  method: string;
-  operation: OpenAPIV3.OperationObject;
-  baseId: string;
-}
-
-/**
- * Ensure all operations have stable, semantic, camelCase operation IDs.
- *
- * Path parameters are omitted while an ID is unique so existing concise names remain stable.
- * When paths collide, every member of that group is regenerated with its parameter names.
- * Unresolved collisions are rejected instead of silently publishing getThing1/getThing2.
+ * Ensure all operations have unique, camelCase operation IDs
  */
 function normalizeOperationIds(spec: OpenApiSpec): void {
-  const candidates: OperationIdCandidate[] = [];
+  const entries: Array<{
+    key: string;
+    path: string;
+    method: string;
+    operation: OpenAPIV3.OperationObject;
+    baseId: string;
+    resolvedId: string;
+  }> = [];
 
   for (const [path, pathItem] of Object.entries(spec.paths || {})) {
     if (!pathItem) continue;
@@ -120,109 +53,97 @@ function normalizeOperationIds(spec: OpenApiSpec): void {
 
       const baseId = operation.operationId
         ? normalizeOperationIdName(operation.operationId)
-        : generateOperationId(path, method, operation.tags?.[0], false);
-
-      candidates.push({ path, method, operation, baseId });
+        : generateOperationId(path, method, operation.tags?.[0]);
+      const key = `${method.toLowerCase()} ${path}`;
+      entries.push({ key, path, method, operation, baseId, resolvedId: baseId });
     }
   }
 
-  const groups = new Map<string, OperationIdCandidate[]>();
-  for (const candidate of candidates) {
-    const group = groups.get(candidate.baseId) ?? [];
-    group.push(candidate);
-    groups.set(candidate.baseId, group);
+  entries.sort((left, right) => left.key.localeCompare(right.key));
+
+  const entriesByBaseId = new Map<string, typeof entries>();
+  for (const entry of entries) {
+    const group = entriesByBaseId.get(entry.baseId) ?? [];
+    group.push(entry);
+    entriesByBaseId.set(entry.baseId, group);
   }
 
-  for (const group of groups.values()) {
-    if (group.length === 1) {
-      group[0].operation.operationId = group[0].baseId;
-      continue;
-    }
+  for (const group of entriesByBaseId.values()) {
+    if (group.length < 2) continue;
 
-    for (const candidate of group) {
-      candidate.operation.operationId = generateOperationId(
-        candidate.path,
-        candidate.method,
-        candidate.operation.tags?.[0],
-        true,
-      );
+    for (const entry of group) {
+      entry.resolvedId = `${entry.baseId}For${generateOperationDiscriminator(entry.path, entry.method)}`;
     }
   }
 
-  const assigned = new Map<string, OperationIdCandidate>();
-  for (const candidate of candidates) {
-    const operationId = candidate.operation.operationId!;
-    const previous = assigned.get(operationId);
-    if (previous) {
-      throw new Error(
-        `Unable to create a unique OpenAPI operation ID without a numeric suffix: ` +
-          `${previous.method.toUpperCase()} ${previous.path} and ` +
-          `${candidate.method.toUpperCase()} ${candidate.path} both resolve to ${operationId}. ` +
-          `Assign explicit unique operationIds or remove the duplicate route.`,
-      );
+  // A semantic name can still equal another explicit operation ID. Resolve every
+  // member of such a collision from its complete method and route, which is stable
+  // regardless of the input JSON property order.
+  while (true) {
+    const entriesByResolvedId = new Map<string, typeof entries>();
+    for (const entry of entries) {
+      const group = entriesByResolvedId.get(entry.resolvedId) ?? [];
+      group.push(entry);
+      entriesByResolvedId.set(entry.resolvedId, group);
     }
 
-    assigned.set(operationId, candidate);
+    const collisions = [...entriesByResolvedId.values()].filter((group) => group.length > 1);
+    if (collisions.length === 0) break;
+
+    for (const group of collisions) {
+      for (const entry of group) {
+        entry.resolvedId = `operationForCode${encodeOperationKey(entry.key)}Route`;
+      }
+    }
   }
+
+  for (const entry of entries) {
+    entry.operation.operationId = entry.resolvedId;
+  }
+}
+
+function generateOperationDiscriminator(path: string, method: string): string {
+  const cleanPath = path
+    .replace(/^\/api\/v\d+\/?/i, '')
+    .replace(/^\/v\d+\/?/i, '')
+    .replace(/\{([^}]+)\}/g, '_by_$1_')
+    .replace(/:/g, '_')
+    .replace(/\//g, '_')
+    .replace(/^_|_$/g, '');
+  const pathParts = sanitizeIdentifier(cleanPath).split('_').filter(Boolean);
+  const resource = pathParts.length === 0 ? 'Root' : pathParts.map(toPascalCase).join('');
+
+  return `${toPascalCase(method.toLowerCase())}${resource}`;
+}
+
+function encodeOperationKey(key: string): string {
+  return Array.from(key, (character) => character.codePointAt(0)!.toString(16)).join('X');
 }
 
 /**
  * Generate operation ID from path and method
  */
-function generateOperationId(
-  path: string,
-  method: string,
-  tag?: string,
-  includePathParameters = false,
-): string {
-  if (!includePathParameters) {
-    // Preserve the established concise names for operations that do not collide.
-    const cleanPath = path
-      .replace(/\{[^}]+\}/g, '')
-      .replace(/^\/api\/v\d+\/?/, '')
-      .replace(/^\/v\d+\/?/, '')
-      .replace(/:/g, '_')
-      .replace(/\//g, '_')
-      .replace(/^_|_$/g, '');
-    const parts = sanitizeIdentifier(cleanPath).split('_').filter(Boolean);
-
-    let conciseName: string;
-    if (parts.length === 0) {
-      conciseName = tag ? `${method}${tag}` : method;
-    } else {
-      conciseName = `${method}${parts.map(capitalize).join('')}`;
-    }
-
-    return toCamelCase(conciseName);
-  }
-
-  // Remove API version prefixes and split route segments, preserving custom actions.
+function generateOperationId(path: string, method: string, tag?: string): string {
+  // Remove path parameters and clean up
   const cleanPath = path
+    .replace(/\{[^}]+\}/g, '') // Remove {param}
     .replace(/^\/api\/v\d+\/?/, '') // Remove /api/v1/
     .replace(/^\/v\d+\/?/, '') // Remove /v1/
-    .replace(/^\/+|\/+$/g, '');
+    .replace(/:/g, '_') // Convert custom action separators (:revoke) to _
+    .replace(/\//g, '_') // Replace / with _
+    .replace(/^_|_$/g, ''); // Remove leading/trailing _
 
-  const parts: string[] = [];
-  for (const segment of cleanPath.split('/').filter(Boolean)) {
-    for (const token of segment.split(':').filter(Boolean)) {
-      const parameterMatch = token.match(/^\{([^}:]+)(?::[^}]+)?\}$/);
-      if (parameterMatch) {
-        if (includePathParameters) {
-          parts.push('By', sanitizeIdentifier(parameterMatch[1]));
-        }
-        continue;
-      }
+  // Sanitize to valid identifier (handles dashes, remaining special chars)
+  const sanitized = sanitizeIdentifier(cleanPath);
 
-      parts.push(...sanitizeIdentifier(token).split('_').filter(Boolean));
-    }
-  }
+  const parts = sanitized.split('_').filter(Boolean);
 
   // Build operation name
   let name: string;
   if (parts.length === 0) {
     name = tag ? `${method}${tag}` : method;
   } else {
-    const resource = parts.map(toPascalCase).join('');
+    const resource = parts.map(capitalize).join('');
     name = `${method}${resource}`;
   }
 
@@ -278,85 +199,56 @@ function normalizeTagNames(spec: OpenApiSpec): void {
  * Normalize schema names (remove Dto suffix, clean Microsoft namespaces)
  */
 function normalizeSchemaNames(spec: OpenApiSpec): void {
-  const components = spec.components as OpenAPIV3.ComponentsObject | undefined;
-  const schemas = components?.schemas;
+  const schemas = (spec.components as OpenAPIV3.ComponentsObject)?.schemas;
   if (!schemas) return;
 
   const schemaMapping = new Map<string, string>();
-  const preferredNames = new Map<string, string>();
-  const preferredNameCounts = new Map<string, number>();
-  const assignedNames = new Set<string>();
+  const originalEntries = Object.entries(schemas);
+  const originalNames = new Set(originalEntries.map(([name]) => name));
+  const usedNames = new Set<string>();
+  const renamedEntries: Array<[string, OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject]> = [];
 
-  // Determine preferred names first so collisions can be disambiguated without
-  // making the result depend on the order of schemas in the OpenAPI document.
-  for (const name of Object.keys(schemas)) {
-    const preferredName = normalizeSchemaName(name);
-    preferredNames.set(name, preferredName);
-    preferredNameCounts.set(preferredName, (preferredNameCounts.get(preferredName) ?? 0) + 1);
-  }
+  for (const [oldName, schema] of originalEntries.sort(([left], [right]) => left.localeCompare(right))) {
+    const candidate = normalizeSchemaName(oldName);
+    let newName = candidate;
 
-  const assignName = (oldName: string, candidate: string): void => {
-    let uniqueName = candidate;
-    let suffix = 2;
-
-    while (assignedNames.has(uniqueName)) {
-      uniqueName = `${candidate}${suffix}`;
-      suffix += 1;
+    if (usedNames.has(newName) || (originalNames.has(newName) && newName !== oldName)) {
+      const rawName = toPascalCase(sanitizeIdentifier(oldName));
+      newName = usedNames.has(rawName) ? `${candidate}From${rawName}` : rawName;
     }
 
-    assignedNames.add(uniqueName);
-    schemaMapping.set(oldName, uniqueName);
-  };
-
-  // Preserve the concise name for schemas that do not collide.
-  for (const [oldName, preferredName] of preferredNames) {
-    if (preferredNameCounts.get(preferredName) === 1) {
-      assignName(oldName, preferredName);
-    }
+    usedNames.add(newName);
+    renamedEntries.push([newName, schema]);
+    if (newName !== oldName) schemaMapping.set(oldName, newName);
   }
 
-  // Entity/DTO pairs and closed generic types need a stable semantic suffix.
-  for (const [oldName, preferredName] of preferredNames) {
-    if (preferredNameCounts.get(preferredName) !== 1) {
-      assignName(oldName, normalizeCollidingSchemaName(oldName));
-    }
+  for (const name of Object.keys(schemas)) delete schemas[name];
+  for (const [name, schema] of renamedEntries.sort(([left], [right]) => left.localeCompare(right))) {
+    schemas[name] = schema;
   }
-
-  const renamedSchemas: Record<string, OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject> = {};
-  for (const [oldName, schema] of Object.entries(schemas)) {
-    renamedSchemas[schemaMapping.get(oldName) ?? oldName] = schema;
-  }
-  components.schemas = renamedSchemas;
 
   // Update all $ref references
   updateSchemaRefs(spec, schemaMapping);
 }
 
 /**
- * Produce a stable unique name when lossy normalization maps multiple schemas
- * to the same value (for example UserProfile and UserProfileDto).
- */
-function normalizeCollidingSchemaName(name: string): string {
-  const genericMatch = name.match(/^(.+?)`\d+\[\[([^,\]]+)/);
-  if (genericMatch) {
-    return `${toPascalCase(genericMatch[1])}Of${toPascalCase(genericMatch[2])}`;
-  }
-
-  const lastDotIndex = name.lastIndexOf('.');
-  const localName = lastDotIndex === -1 ? name : name.substring(lastDotIndex + 1);
-  return toPascalCase(localName.replace(/\+/g, ''));
-}
-
-/**
  * Normalize a single schema name
  */
-function normalizeSchemaName(name: string): string {
-  let normalized = name;
+export function normalizeSchemaName(name: string): string {
+  const generic = name.match(/^(.+?)`\d+\[\[([^,\]]+)/);
+  if (generic) {
+    const baseName = normalizeSimpleSchemaName(generic[1]);
+    const argumentParts = generic[2].split(/[._]+/).filter(Boolean);
+    const productAgnosticParts = argumentParts.length > 1 ? argumentParts.slice(1) : argumentParts;
+    const argumentName = normalizeSimpleSchemaName(productAgnosticParts.join('_'));
+    return `${baseName}Of${argumentName}`;
+  }
 
-  // Strip .NET generic arity and type parameters
-  // e.g. "PagedResult`1[[GameGuild_Identity_Users_UserDto, ..." -> "PagedResult"
-  // Note: ASP.NET may not close the brackets, so match from backtick to end
-  normalized = normalized.replace(/`\d+.*$/, '');
+  return normalizeSimpleSchemaName(name);
+}
+
+function normalizeSimpleSchemaName(name: string): string {
+  let normalized = name;
 
   // Remove any dotted namespace prefix (e.g., GameGuild.Identity.Users.UserDto -> UserDto)
   const lastDotIndex = normalized.lastIndexOf('.');
@@ -374,6 +266,29 @@ function normalizeSchemaName(name: string): string {
 
   // Ensure PascalCase
   return toPascalCase(normalized);
+}
+
+export function toSchemaTypeName(name: string): string {
+  return toPascalCase(sanitizeIdentifier(normalizeSchemaName(name)));
+}
+
+export function resolveKnownSchemaTypeName(name: string, knownSchemaNames?: Set<string>): string | undefined {
+  const normalizedName = toSchemaTypeName(name);
+  const sanitizedRawName = toPascalCase(sanitizeIdentifier(name));
+
+  if (!knownSchemaNames) {
+    return sanitizedRawName;
+  }
+
+  if (knownSchemaNames.has(normalizedName)) {
+    return normalizedName;
+  }
+
+  if (knownSchemaNames.has(sanitizedRawName)) {
+    return sanitizedRawName;
+  }
+
+  return undefined;
 }
 
 /**
@@ -423,4 +338,3 @@ function cleanAspNetPatterns(spec: OpenApiSpec): void {
     delete schemas[name];
   }
 }
-

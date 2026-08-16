@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   getProfileByHandle: vi.fn(),
   getProfileByUserId: vi.fn(),
   getUserFeed: vi.fn(),
-  getSocialGroups: vi.fn(),
+  getApiSocialGroupsForGetApiSocialGroups: vi.fn(),
   getPublicCourseCatalog: vi.fn(),
   getMarketingLeads: vi.fn(),
   getBlogPosts: vi.fn(),
@@ -29,14 +29,14 @@ vi.mock('@game-guild/client', () => ({
     SocialFeedModule: class {
       getApiSocialFeedUsers = mocks.getUserFeed;
     },
-    SocialGroupsSocialgroupsModule: class {
-      getApiSocialGroups = mocks.getSocialGroups;
+    SocialGroupsSocialGroupsModule: class {
+      getApiSocialGroupsForGetApiSocialGroups = mocks.getApiSocialGroupsForGetApiSocialGroups;
     },
-    ContentMarketingleadsModule: class {
+    ContentMarketingLeadsModule: class {
       getMarketingLeads = mocks.getMarketingLeads;
     },
     SocialBlogPostsModule: class {
-      getApiSocialBlog = mocks.getBlogPosts;
+      getApiSocialBlogForGetApiSocialBlog = mocks.getBlogPosts;
     },
   },
 }));
@@ -213,7 +213,7 @@ describe('community member queries', () => {
   });
 
   it('loads community groups from the generated social groups API', async () => {
-    mocks.getSocialGroups.mockResolvedValue({
+    mocks.getApiSocialGroupsForGetApiSocialGroups.mockResolvedValue({
       ok: true,
       data: [
         {
@@ -229,7 +229,7 @@ describe('community member queries', () => {
 
     const result = await getGroups({ limit: 10, search: 'arcade' });
 
-    expect(mocks.getSocialGroups).toHaveBeenCalledWith({
+    expect(mocks.getApiSocialGroupsForGetApiSocialGroups).toHaveBeenCalledWith({
       search: 'arcade',
       skip: 0,
       take: 10,
@@ -285,7 +285,7 @@ describe('community member queries', () => {
         ],
       },
     });
-    mocks.getSocialGroups.mockResolvedValue({
+    mocks.getApiSocialGroupsForGetApiSocialGroups.mockResolvedValue({
       ok: true,
       data: [{ id: 'group-1' }, { id: 'group-2' }],
     });
@@ -306,7 +306,7 @@ describe('community member queries', () => {
       params: { limit: 500 },
       requiresAuth: true,
     });
-    expect(mocks.getSocialGroups).toHaveBeenCalledWith({ skip: 0, take: 500 });
+    expect(mocks.getApiSocialGroupsForGetApiSocialGroups).toHaveBeenCalledWith({ skip: 0, take: 500 });
     expect(mocks.getMarketingLeads).toHaveBeenCalledWith({
       source: 'contact',
       topic: 'support',
@@ -330,7 +330,7 @@ describe('community member queries', () => {
       ok: false,
       error: { message: 'Forbidden' },
     });
-    mocks.getSocialGroups.mockResolvedValue({ ok: true, data: [] });
+    mocks.getApiSocialGroupsForGetApiSocialGroups.mockResolvedValue({ ok: true, data: [] });
     mocks.getMarketingLeads.mockResolvedValue({ ok: true, data: [] });
     mocks.getBlogPosts.mockResolvedValue({ ok: true, data: [] });
 
@@ -345,7 +345,7 @@ describe('community member queries', () => {
       ok: false,
       error: { message: 'Forbidden' },
     });
-    mocks.getSocialGroups.mockRejectedValue(new Error('Groups unavailable'));
+    mocks.getApiSocialGroupsForGetApiSocialGroups.mockRejectedValue(new Error('Groups unavailable'));
 
     const stats = await getCommunityStats();
 
@@ -648,7 +648,7 @@ describe('community member queries', () => {
 
   it('wires the tenant provider into the community API client', async () => {
     mocks.clientRequest.mockResolvedValue({ ok: true, data: { items: [], totalCount: 0 } });
-    mocks.getSocialGroups.mockResolvedValue({ ok: true, data: [] });
+    mocks.getApiSocialGroupsForGetApiSocialGroups.mockResolvedValue({ ok: true, data: [] });
 
     await getMemberAccessDirectory({ limit: 1 });
 

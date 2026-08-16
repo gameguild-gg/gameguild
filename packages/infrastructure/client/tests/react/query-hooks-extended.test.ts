@@ -33,12 +33,7 @@ vi.mock('@tanstack/react-query', () => ({
   })),
 }));
 
-import {
-  generateQueryKey,
-  createApiClientHooks,
-  createQueryHook,
-  createMutationHook,
-} from '../../src/integrations/react/query-hooks.js';
+import { generateQueryKey, createApiClientHooks, createQueryHook, createMutationHook } from '../../src/integrations/react/query-hooks.js';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ApiError } from '../../src/runtime/errors/types.js';
 
@@ -97,7 +92,7 @@ describe('createQueryHook', () => {
     expect(useQuery).toHaveBeenCalledWith(
       expect.objectContaining({
         queryKey: ['users', 'user-123'],
-      })
+      }),
     );
   });
 
@@ -135,7 +130,7 @@ describe('createQueryHook', () => {
       expect.objectContaining({
         staleTime: 5000,
         enabled: false,
-      })
+      }),
     );
   });
 });

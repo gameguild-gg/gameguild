@@ -19,14 +19,15 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 public class OAuthAuthServiceTests
 {
     private readonly Mock<IUserRepository> _userRepoMock = new();
-    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepoMock = new();
     private readonly Mock<IJwtTokenService> _jwtTokenServiceMock = new();
+    private readonly Mock<IRefreshTokenHasher> _refreshTokenHasherMock = new();
     private readonly Mock<IOAuthService> _oauthServiceMock = new();
     private readonly Mock<IGoogleIdTokenVerifier> _googleVerifierMock = new();
     private readonly Mock<IExternalLoginRepository> _externalLoginRepoMock = new();
     private readonly Mock<IAuthAttemptService> _authAttemptServiceMock = new();
     private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock = new();
     private readonly Mock<ISender> _senderMock = new();
+    private readonly Mock<ISessionManagementService> _sessionManagementServiceMock = new();
     private readonly IConfiguration _configuration;
 
     public OAuthAuthServiceTests()
@@ -59,6 +60,9 @@ public class OAuthAuthServiceTests
         httpContext.Request.Headers.UserAgent = "TestAgent/1.0";
         _httpContextAccessorMock.Setup(x => x.HttpContext).Returns(httpContext);
         _authAttemptServiceMock.Setup(x => x.GetClientIpAddress(It.IsAny<HttpContext>())).Returns("127.0.0.1");
+        _refreshTokenHasherMock
+            .Setup(x => x.HashToken(It.IsAny<string>()))
+            .Returns((string token) => $"hash-{token}");
 
         _googleVerifierMock
             .Setup(x => x.VerifyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -93,7 +97,7 @@ public class OAuthAuthServiceTests
             .ReturnsAsync((Tenant?)null);
 
         _jwtTokenServiceMock
-            .Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("access-token");
         _jwtTokenServiceMock
             .Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
@@ -102,8 +106,8 @@ public class OAuthAuthServiceTests
 
     private OAuthAuthService CreateSut() => new(
         _userRepoMock.Object,
-        _refreshTokenRepoMock.Object,
         _jwtTokenServiceMock.Object,
+        _refreshTokenHasherMock.Object,
         _oauthServiceMock.Object,
         _googleVerifierMock.Object,
         _externalLoginRepoMock.Object,
@@ -111,6 +115,7 @@ public class OAuthAuthServiceTests
         _authAttemptServiceMock.Object,
         _httpContextAccessorMock.Object,
         _senderMock.Object,
+        _sessionManagementServiceMock.Object,
         NullLogger<OAuthAuthService>.Instance);
 
     private static GoogleIdTokenRequest Request(string idToken = "fake-id-token", Guid? tenantId = null) =>
@@ -136,14 +141,19 @@ public class OAuthAuthServiceTests
         result.Email.Should().Be("user@example.com");
         result.SessionId.Should().NotBe(Guid.Empty);
 
-        // Exactly ONE refresh row: GenerateRefreshTokenAsync (mocked here) handles persistence
-        // in production. OAuthAuthService must NOT call CreateAsync directly (the old plaintext
-        // second-row bug).
-        _refreshTokenRepoMock.Verify(
-            x => x.CreateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()),
-            Times.Never);
         _jwtTokenServiceMock.Verify(
             x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        _sessionManagementServiceMock.Verify(
+            x => x.CreateSessionAsync(
+                result.SessionId,
+                result.UserId,
+                "127.0.0.1",
+                "TestAgent/1.0",
+                "hash-refresh-token",
+                It.IsAny<DateTime>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
             Times.Once);
 
         // Verifier invoked (not the dead tokeninfo path).
@@ -407,6 +417,7 @@ public class OAuthAuthServiceTests
                 It.Is<string[]>(roles => roles.Contains("User")),
                 null,
                 It.IsAny<int>(),
+                It.IsAny<Guid>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -454,6 +465,7 @@ public class OAuthAuthServiceTests
                 It.Is<string[]>(roles => roles.Contains("Admin") && roles.Contains("User")),
                 tenantId,
                 It.IsAny<int>(),
+                It.IsAny<Guid>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -741,8 +753,8 @@ public class OAuthAuthServiceTests
 
         string[]? capturedRoles = null;
         Guid? capturedTenantId = null;
-        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .Callback<Guid, string, string[], Guid?, int, CancellationToken>((_, _, roles, tenantId, _, _) => { capturedRoles = roles; capturedTenantId = tenantId; })
+        _jwtTokenServiceMock.Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Callback<Guid, string, string[], Guid?, int, Guid, CancellationToken>((_, _, roles, tenantId, _, _, _) => { capturedRoles = roles; capturedTenantId = tenantId; })
             .ReturnsAsync("access");
 
         await CreateSut().GoogleIdTokenSignInAsync(Request(tenantId: requestedTenantId));
@@ -754,8 +766,8 @@ public class OAuthAuthServiceTests
 
     private OAuthAuthService CreateSutWithConfig(IConfiguration config) => new(
         _userRepoMock.Object,
-        _refreshTokenRepoMock.Object,
         _jwtTokenServiceMock.Object,
+        _refreshTokenHasherMock.Object,
         _oauthServiceMock.Object,
         _googleVerifierMock.Object,
         _externalLoginRepoMock.Object,
@@ -763,6 +775,7 @@ public class OAuthAuthServiceTests
         _authAttemptServiceMock.Object,
         _httpContextAccessorMock.Object,
         _senderMock.Object,
+        _sessionManagementServiceMock.Object,
         NullLogger<OAuthAuthService>.Instance);
 
     private static IConfiguration BuildConfig(string accessTokenMinutes = "60", string refreshDays = "7") =>
@@ -883,8 +896,8 @@ public class OAuthAuthServiceTests
         string[]? capturedRoles = null;
         Guid? capturedTenantId = null;
         var jwt = new Mock<IJwtTokenService>();
-        jwt.Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .Callback<Guid, string, string[], Guid?, int, CancellationToken>((_, _, roles, tenantId, _, _) => { capturedRoles = roles; capturedTenantId = tenantId; })
+        jwt.Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Callback<Guid, string, string[], Guid?, int, Guid, CancellationToken>((_, _, roles, tenantId, _, _, _) => { capturedRoles = roles; capturedTenantId = tenantId; })
             .ReturnsAsync("access");
         jwt.Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("rt");
@@ -901,7 +914,8 @@ public class OAuthAuthServiceTests
             httpCtx.Object,
             NullLogger<LocalAuthService>.Instance,
             publisher.Object,
-            sender.Object);
+            sender.Object,
+            Mock.Of<ISessionManagementService>());
 
         await sut.LocalSignUpAsync(new LocalSignUpRequest
         {

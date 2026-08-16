@@ -73,7 +73,7 @@ export function createFetchTransport(config: TransportConfig): Transport {
           for (const interceptor of config.interceptors || []) {
             /* v8 ignore start */
             if (interceptor.onError && !errorResult.ok) {
-            /* v8 ignore stop */
+              /* v8 ignore stop */
               errorResult = await interceptor.onError(errorResult.error);
             }
           }
@@ -87,7 +87,7 @@ export function createFetchTransport(config: TransportConfig): Transport {
         for (const interceptor of config.interceptors || []) {
           /* v8 ignore start */
           if (interceptor.onError && !errorResult.ok) {
-          /* v8 ignore stop */
+            /* v8 ignore stop */
             errorResult = await interceptor.onError(errorResult.error);
           }
         }
@@ -100,10 +100,7 @@ export function createFetchTransport(config: TransportConfig): Transport {
 /**
  * Execute the HTTP request
  */
-async function executeRequest<T>(
-  transportConfig: TransportConfig,
-  requestConfig: RequestConfig
-): Promise<Result<ApiResponse<T>, ApiError>> {
+async function executeRequest<T>(transportConfig: TransportConfig, requestConfig: RequestConfig): Promise<Result<ApiResponse<T>, ApiError>> {
   // Build URL
   const url = buildUrl(transportConfig.baseUrl, requestConfig.path, requestConfig.params);
 
@@ -193,9 +190,7 @@ async function executeRequest<T>(
       } else {
         // Non-JSON response
         const contentDisposition = response.headers.get('Content-Disposition');
-        data = contentDisposition?.toLowerCase().includes('attachment')
-          ? ((await response.blob()) as T)
-          : ((await response.text()) as T);
+        data = contentDisposition?.toLowerCase().includes('attachment') ? ((await response.blob()) as T) : ((await response.text()) as T);
       }
     }
 

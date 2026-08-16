@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using GameGuild.Email;
 using Moq;
 using Xunit;
@@ -325,7 +326,17 @@ public class AddTenantMemberCommandHandlerTests
         var emailSender = new Mock<IEmailSender>();
         EmailMessage? sentMessage = null;
         TenantMember? capturedMember = null;
-        var handler = new AddTenantMemberCommandHandler(_tenantRepositoryMock.Object, _memberRepositoryMock.Object, emailSender.Object);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Identity:Invitations:ReviewPath"] = "/account/invitations"
+            })
+            .Build();
+        var handler = new AddTenantMemberCommandHandler(
+            _tenantRepositoryMock.Object,
+            _memberRepositoryMock.Object,
+            emailSender.Object,
+            configuration);
 
         _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenant);
@@ -356,6 +367,7 @@ public class AddTenantMemberCommandHandlerTests
         sentMessage.ToName.Should().Be("Learner One");
         sentMessage.Subject.Should().Contain("GameGuild Studio");
         sentMessage.PlainTextContent.Should().Contain("Moderator");
+        sentMessage.PlainTextContent.Should().Contain("callbackUrl=%2Faccount%2Finvitations");
         capturedMember!.Metadata.Should().Contain("\"inviteeEmail\":\"learner@example.com\"");
         capturedMember.Metadata.Should().Contain("\"inviteeName\":\"Learner One\"");
     }

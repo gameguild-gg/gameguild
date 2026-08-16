@@ -2,7 +2,7 @@
  * @vitest-environment happy-dom
  *
  * Tests for React Integration Index
- * 
+ *
  * Tests the runtime React hook implementations and type exports.
  */
 
@@ -10,14 +10,7 @@ import { describe, it, expect } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement, type ReactNode } from 'react';
-import {
-  ApiClientProvider,
-  useApiClient,
-  useQuery,
-  useMutation,
-  useOptimisticUpdate,
-  ApiClientContext,
-} from '../../src/integrations/react/index.js';
+import { ApiClientProvider, useApiClient, useQuery, useMutation, useOptimisticUpdate, ApiClientContext } from '../../src/integrations/react/index.js';
 import type { ApiClient } from '../../src/runtime/client.js';
 
 function createWrapper(client: ApiClient) {
@@ -29,11 +22,7 @@ function createWrapper(client: ApiClient) {
   });
 
   return function Wrapper({ children }: { children: ReactNode }) {
-    return createElement(
-      QueryClientProvider,
-      { client: queryClient },
-      createElement(ApiClientProvider, { client }, children),
-    );
+    return createElement(QueryClientProvider, { client: queryClient }, createElement(ApiClientProvider, { client }, children));
   };
 }
 
@@ -61,10 +50,7 @@ describe('React Integration', () => {
 
   describe('useQuery', () => {
     it('loads result data through React Query', async () => {
-      const { result } = renderHook(
-        () => useQuery(['key'], async () => ({ ok: true, data: 'loaded' })),
-        { wrapper: createWrapper(apiClient) },
-      );
+      const { result } = renderHook(() => useQuery(['key'], async () => ({ ok: true, data: 'loaded' })), { wrapper: createWrapper(apiClient) });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(result.current.data).toBe('loaded');
@@ -74,10 +60,9 @@ describe('React Integration', () => {
 
   describe('useMutation', () => {
     it('executes mutations and exposes result state', async () => {
-      const { result } = renderHook(
-        () => useMutation(async (value: string) => ({ ok: true, data: value.toUpperCase() })),
-        { wrapper: createWrapper(apiClient) },
-      );
+      const { result } = renderHook(() => useMutation(async (value: string) => ({ ok: true, data: value.toUpperCase() })), {
+        wrapper: createWrapper(apiClient),
+      });
 
       const mutation = await result.current.mutate('saved');
 
@@ -101,11 +86,11 @@ describe('React Integration', () => {
     });
 
     it('throws outside the API client provider', () => {
-      expect(() => renderHook(() => useApiClient(), {
-        wrapper: ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client: new QueryClient() }, children),
-      })).toThrow(
-        'useApiClient must be used within an <ApiClientProvider>.',
-      );
+      expect(() =>
+        renderHook(() => useApiClient(), {
+          wrapper: ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client: new QueryClient() }, children),
+        }),
+      ).toThrow('useApiClient must be used within an <ApiClientProvider>.');
     });
   });
 });

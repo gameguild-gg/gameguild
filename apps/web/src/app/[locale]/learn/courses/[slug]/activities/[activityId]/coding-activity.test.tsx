@@ -93,8 +93,8 @@ vi.mock('next/dynamic', () => ({
 import { workspaceStorageKey } from '@game-guild/emception-ui/ide-types';
 import type { CodingAssignmentContent } from '@/lib/coding-assignment/types';
 import LearnerActivityPage from './page';
-import { CodingActivityClient } from './coding-activity-client';
-import type { SeedFile } from './resolve-seed';
+import { CodingActivityClient } from '@/components/learning/coding-activity-client';
+import type { SeedFile } from '@/components/learning/resolve-seed';
 
 function makeAssessment(overrides: Record<string, unknown> = {}) {
   return {

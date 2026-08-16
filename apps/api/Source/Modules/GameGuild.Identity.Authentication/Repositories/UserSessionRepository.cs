@@ -28,7 +28,7 @@ public class UserSessionRepository(IApplicationDbContext context) : IUserSession
 
     public async Task<UserSession> CreateAsync(UserSession session, CancellationToken cancellationToken = default)
     {
-        session.Id = Guid.NewGuid();
+        if (session.Id == Guid.Empty) session.Id = Guid.NewGuid();
         session.UpdatedAt = SystemClock.UtcNow;
         session.LastUsedAt = SystemClock.UtcNow;
 

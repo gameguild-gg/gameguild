@@ -1,11 +1,11 @@
 /**
  * Zod Schema Mapper - Strategy Pattern for Runtime Validation
- * 
+ *
  * Generates Zod schema definitions from OpenAPI schemas for runtime validation.
  */
 
 import type { OpenAPIV3 } from 'openapi-types';
-import { sanitizeIdentifier, toPascalCase } from '../../utils/naming.js';
+import { resolveKnownSchemaTypeName } from '../../normalize.js';
 
 export interface ZodSchemaMapper {
   canHandle(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): boolean;
@@ -13,6 +13,8 @@ export interface ZodSchemaMapper {
 }
 
 export class ZodReferenceMapper implements ZodSchemaMapper {
+  constructor(private readonly knownSchemaNames?: Set<string>) {}
+
   canHandle(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): boolean {
     return '$ref' in schema;
   }
@@ -20,8 +22,10 @@ export class ZodReferenceMapper implements ZodSchemaMapper {
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) {
       const rawTypeName = schema.$ref.replace('#/components/schemas/', '');
-      // Sanitize the type name to match what the generator does
-      const typeName = toPascalCase(sanitizeIdentifier(rawTypeName));
+      const typeName = resolveKnownSchemaTypeName(rawTypeName, this.knownSchemaNames);
+      if (!typeName) {
+        return 'z.unknown()';
+      }
       // Use z.lazy() to defer evaluation and handle circular/forward references
       return `z.lazy(() => ${typeName}Schema)`;
     }
@@ -45,7 +49,7 @@ export class ZodStringMapper implements ZodSchemaMapper {
 
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
-    
+
     const schemaObj = schema as OpenAPIV3.SchemaObject;
     let zodSchema = 'z.string()';
 
@@ -87,7 +91,7 @@ export class ZodNumberMapper implements ZodSchemaMapper {
 
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
-    
+
     const schemaObj = schema as OpenAPIV3.SchemaObject;
     let zodSchema = schemaObj.type === 'integer' ? 'z.number().int()' : 'z.number()';
 
@@ -115,7 +119,7 @@ export class ZodBooleanMapper implements ZodSchemaMapper {
 
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
-    
+
     const schemaObj = schema as OpenAPIV3.SchemaObject;
     let zodSchema = 'z.boolean()';
 
@@ -136,7 +140,7 @@ export class ZodArrayMapper implements ZodSchemaMapper {
 
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
-    
+
     const schemaObj = schema as OpenAPIV3.ArraySchemaObject;
     let zodSchema: string;
 
@@ -172,7 +176,7 @@ export class ZodObjectMapper implements ZodSchemaMapper {
 
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
-    
+
     const schemaObj = schema as OpenAPIV3.SchemaObject;
     let zodSchema: string;
 
@@ -213,10 +217,10 @@ export class ZodUnionMapper implements ZodSchemaMapper {
 
   map(schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject): string {
     if ('$ref' in schema) throw new Error('Reference schema');
-    
+
     const schemaObj = schema as OpenAPIV3.SchemaObject;
     const variants = schemaObj.oneOf || schemaObj.anyOf || [];
-    
+
     const schemas = variants.map((v) => this.zodMapperChain.map(v as OpenAPIV3.SchemaObject));
     let zodSchema: string;
 
@@ -242,18 +246,18 @@ export class ZodUnionMapper implements ZodSchemaMapper {
 export class ZodSchemaMapperChain {
   private mappers: ZodSchemaMapper[] = [];
 
-  constructor() {
+  constructor(knownSchemaNames?: Set<string>) {
     // Order matters - check references first
-    this.mappers.push(new ZodReferenceMapper());
+    this.mappers.push(new ZodReferenceMapper(knownSchemaNames));
     this.mappers.push(new ZodStringMapper());
     this.mappers.push(new ZodNumberMapper());
     this.mappers.push(new ZodBooleanMapper());
-    
+
     // These need the chain instance
     const arrayMapper = new ZodArrayMapper(this);
     const objectMapper = new ZodObjectMapper(this);
     const unionMapper = new ZodUnionMapper(this);
-    
+
     this.mappers.push(unionMapper);
     this.mappers.push(arrayMapper);
     this.mappers.push(objectMapper);
@@ -265,7 +269,7 @@ export class ZodSchemaMapperChain {
         return mapper.map(schema);
       }
     }
-    
+
     // Fallback
     const schemaObj = schema as OpenAPIV3.SchemaObject;
     return `z.unknown()${schemaObj.nullable ? '.nullable()' : ''}`;

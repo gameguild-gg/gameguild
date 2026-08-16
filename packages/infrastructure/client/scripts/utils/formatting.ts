@@ -17,8 +17,6 @@ export async function formatOutput(code: string, filepath: string): Promise<stri
       ...config,
       filepath,
       parser: 'typescript',
-      printWidth: config?.printWidth ?? 160,
-      singleQuote: config?.singleQuote ?? true,
     });
   } catch {
     // If Prettier fails, return unformatted code

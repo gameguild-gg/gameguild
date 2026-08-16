@@ -705,8 +705,8 @@ export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take
 export async function getCommunityStats(): Promise<CommunityStats> {
   try {
     const client = getApiClient();
-    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
-    const marketingLeads = new GeneratedApi.ContentMarketingleadsModule(client);
+    const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
+    const marketingLeads = new GeneratedApi.ContentMarketingLeadsModule(client);
     const blogPosts = new GeneratedApi.SocialBlogPostsModule(client);
     const now = new Date();
 
@@ -718,7 +718,7 @@ export async function getCommunityStats(): Promise<CommunityStats> {
         params: { limit: 500 },
         requiresAuth: true,
       }),
-      socialGroups.getApiSocialGroups({ skip: 0, take: 500 }),
+      socialGroups.getApiSocialGroupsForGetApiSocialGroups({ skip: 0, take: 500 }),
       marketingLeads.getMarketingLeads({
         source: 'contact',
         topic: 'support',
@@ -726,7 +726,7 @@ export async function getCommunityStats(): Promise<CommunityStats> {
         skip: 0,
         take: 500,
       }),
-      blogPosts.getApiSocialBlog({ skip: 0, take: 500 }),
+      blogPosts.getApiSocialBlogForGetApiSocialBlog({ skip: 0, take: 500 }),
     ]);
 
     const fallbackMemberCount = session?.user?.id ? 1 : 0;
@@ -965,8 +965,8 @@ export async function getGroups(options?: { page?: number; limit?: number; searc
   try {
     const limit = options?.limit ?? 20;
     const client = getApiClient();
-    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
-    const result = await socialGroups.getApiSocialGroups({
+    const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
+    const result = await socialGroups.getApiSocialGroupsForGetApiSocialGroups({
       search: options?.search || undefined,
       skip: Math.max(0, ((options?.page ?? 1) - 1) * limit),
       take: limit,
@@ -984,8 +984,8 @@ export async function getGroups(options?: { page?: number; limit?: number; searc
 export async function getGroup(groupId: string): Promise<{ group: MemberGroup | null; error?: string | null }> {
   try {
     const client = getApiClient();
-    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
-    const result = await socialGroups.getApiSocialGroupsById(groupId);
+    const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
+    const result = await socialGroups.getApiSocialGroupsForGetApiSocialGroupsById(groupId);
 
     if (!result.ok) return { group: null, error: result.error.message };
 
@@ -1001,7 +1001,7 @@ export async function getGroupMembers(
 ): Promise<{ members: MemberGroupMember[]; error?: string | null }> {
   try {
     const client = getApiClient();
-    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+    const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
     const [membersResult, directory] = await Promise.all([
       socialGroups.getApiSocialGroupsMembers(groupId, {
         status: options?.status,
@@ -1035,7 +1035,7 @@ export async function getSupportTickets(options?: {
   try {
     const limit = options?.limit ?? 20;
     const client = getApiClient();
-    const marketingLeads = new GeneratedApi.ContentMarketingleadsModule(client);
+    const marketingLeads = new GeneratedApi.ContentMarketingLeadsModule(client);
     const result = await marketingLeads.getMarketingLeads({
       source: 'contact',
       topic: 'support',

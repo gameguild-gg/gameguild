@@ -5,6 +5,7 @@ using GameGuild.Configuration.PresentationLayer.ResponseCaching;
 using GameGuild.CQRS;
 using GameGuild.CQRS.Implementation;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using StackExchange.Redis;
 
 namespace GameGuild.API;
@@ -28,6 +29,11 @@ public static class CachingExtensions
             MemoryCachingOptions.CreateDefault);
         options.Validate();
 
+        var redisOptions = OptionBuilderUtilities.CreateAndBind(
+            configuration,
+            RedisCachingOptions.SectionName,
+            RedisCachingOptions.CreateDefault);
+
         services.AddMemoryCache(cacheOptions =>
             {
                 cacheOptions.SizeLimit = options.SizeLimit;
@@ -35,11 +41,6 @@ public static class CachingExtensions
                 cacheOptions.ExpirationScanFrequency = options.ExpirationScanFrequency;
             }
         );
-
-        var redisOptions = OptionBuilderUtilities.CreateAndBind(
-            configuration,
-            RedisCachingOptions.SectionName,
-            RedisCachingOptions.CreateDefault);
 
         if (redisOptions.Enabled)
         {
@@ -57,10 +58,22 @@ public static class CachingExtensions
             });
 
             services.TryAddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configurationOptions));
-            services.AddSingleton<ICacheService, DistributedCacheService>();
+            services.AddSingleton(redisOptions);
+            services.AddSingleton<ICacheService, RedisCacheService>();
+
+            if (redisOptions.EnableHealthChecks)
+            {
+                services.AddHealthChecks()
+                    .AddCheck<RedisReadinessHealthCheck>(
+                        "redis",
+                        failureStatus: HealthStatus.Unhealthy,
+                        tags: ["ready", "dependency"]);
+            }
         }
         else
         {
+            // Provide a local in-process IDistributedCache implementation for modules
+            // that require shared-cache abstractions during startup validation.
             services.AddDistributedMemoryCache();
             services.AddSingleton<ICacheService, MemoryCacheService>();
         }

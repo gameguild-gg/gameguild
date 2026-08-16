@@ -3,20 +3,14 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  resolveCookieOptions,
-  getCookieName,
-  SessionStore,
-  CsrfStore,
-  CallbackStore,
-} from '../../src/runtime/auth/cookies.js';
+import { resolveCookieOptions, getCookieName, SessionStore, CsrfStore, CallbackStore } from '../../src/runtime/auth/cookies.js';
 
 describe('Cookie Management', () => {
   describe('resolveCookieOptions', () => {
     it('should return defaults when no config provided', () => {
       const options = resolveCookieOptions();
 
-      expect(options.name).toBe('__gg');
+      expect(options.name).toBe('__me');
       expect(options.secure).toBe(false);
       expect(options.sameSite).toBe('lax');
       expect(options.path).toBe('/');
@@ -63,11 +57,11 @@ describe('Cookie Management', () => {
 
   describe('getCookieName', () => {
     it('should return plain name when not secure', () => {
-      expect(getCookieName('__gg.session-token', false)).toBe('__gg.session-token');
+      expect(getCookieName('__me.session-token', false)).toBe('__me.session-token');
     });
 
     it('should add __Secure- prefix when secure', () => {
-      expect(getCookieName('__gg.session-token', true)).toBe('__Secure-__gg.session-token');
+      expect(getCookieName('__me.session-token', true)).toBe('__Secure-__me.session-token');
     });
 
     it('should handle empty base name', () => {
@@ -81,13 +75,13 @@ describe('Cookie Management', () => {
 
     it('should generate correct cookie name', () => {
       const store = new SessionStore(defaultOptions);
-      expect(store.getCookieName()).toBe('__gg.session-token');
+      expect(store.getCookieName()).toBe('__me.session-token');
     });
 
     it('should generate secure cookie name', () => {
       const secureOptions = resolveCookieOptions({ secure: true });
       const store = new SessionStore(secureOptions);
-      expect(store.getCookieName()).toBe('__Secure-__gg.session-token');
+      expect(store.getCookieName()).toBe('__Secure-__me.session-token');
     });
 
     describe('read', () => {
@@ -101,7 +95,7 @@ describe('Cookie Management', () => {
       it('should return value from single cookie', () => {
         const store = new SessionStore(defaultOptions);
         const getCookie = (name: string) => {
-          if (name === '__gg.session-token') return 'jwt-token-value';
+          if (name === '__me.session-token') return 'jwt-token-value';
           return undefined;
         };
 
@@ -111,9 +105,9 @@ describe('Cookie Management', () => {
       it('should reassemble chunked cookies', () => {
         const store = new SessionStore(defaultOptions);
         const cookies: Record<string, string> = {
-          '__gg.session-token': 'chunk0',
-          '__gg.session-token.1': 'chunk1',
-          '__gg.session-token.2': 'chunk2',
+          '__me.session-token': 'chunk0',
+          '__me.session-token.1': 'chunk1',
+          '__me.session-token.2': 'chunk2',
         };
         const getCookie = (name: string) => cookies[name];
 
@@ -123,10 +117,10 @@ describe('Cookie Management', () => {
       it('should stop reading chunks at first missing index', () => {
         const store = new SessionStore(defaultOptions);
         const cookies: Record<string, string> = {
-          '__gg.session-token': 'chunk0',
-          '__gg.session-token.1': 'chunk1',
+          '__me.session-token': 'chunk0',
+          '__me.session-token.1': 'chunk1',
           // missing .2
-          '__gg.session-token.3': 'chunk3',
+          '__me.session-token.3': 'chunk3',
         };
         const getCookie = (name: string) => cookies[name];
 
@@ -136,7 +130,7 @@ describe('Cookie Management', () => {
       it('should return null for empty main cookie', () => {
         const store = new SessionStore(defaultOptions);
         const getCookie = (name: string) => {
-          if (name === '__gg.session-token') return '';
+          if (name === '__me.session-token') return '';
           return undefined;
         };
 
@@ -155,7 +149,7 @@ describe('Cookie Management', () => {
         store.write('small-token', setCookie);
 
         // Should write main cookie + cleanup chunks
-        const mainCookie = written.find((c) => c.name === '__gg.session-token');
+        const mainCookie = written.find((c) => c.name === '__me.session-token');
         expect(mainCookie).toBeDefined();
         expect(mainCookie!.value).toBe('small-token');
       });
@@ -172,19 +166,16 @@ describe('Cookie Management', () => {
         store.write(largeValue, setCookie);
 
         // Should have main cookie + at least one chunk
-        const mainCookie = written.find((c) => c.name === '__gg.session-token');
-        const chunk1 = written.find((c) => c.name === '__gg.session-token.1');
-        const chunk2 = written.find((c) => c.name === '__gg.session-token.2');
+        const mainCookie = written.find((c) => c.name === '__me.session-token');
+        const chunk1 = written.find((c) => c.name === '__me.session-token.1');
+        const chunk2 = written.find((c) => c.name === '__me.session-token.2');
 
         expect(mainCookie).toBeDefined();
         expect(chunk1).toBeDefined();
         expect(chunk2).toBeDefined();
 
         // Reassembled should equal original
-        const reassembled =
-          (mainCookie?.value ?? '') +
-          (chunk1?.value ?? '') +
-          (chunk2?.value ?? '');
+        const reassembled = (mainCookie?.value ?? '') + (chunk1?.value ?? '') + (chunk2?.value ?? '');
         expect(reassembled).toBe(largeValue);
       });
     });
@@ -199,7 +190,7 @@ describe('Cookie Management', () => {
 
         store.delete(setCookie);
 
-        expect(deleted).toContain('__gg.session-token');
+        expect(deleted).toContain('__me.session-token');
         // Should also try to clear chunks
         expect(deleted.length).toBeGreaterThan(1);
       });
@@ -211,19 +202,19 @@ describe('Cookie Management', () => {
 
     it('should generate correct cookie name', () => {
       const store = new CsrfStore(options);
-      expect(store.getCookieName()).toBe('__gg.csrf-token');
+      expect(store.getCookieName()).toBe('__me.csrf-token');
     });
 
     it('should generate secure cookie name', () => {
       const secureOptions = resolveCookieOptions({ secure: true });
       const store = new CsrfStore(secureOptions);
-      expect(store.getCookieName()).toBe('__Secure-__gg.csrf-token');
+      expect(store.getCookieName()).toBe('__Secure-__me.csrf-token');
     });
 
     it('should read cookie value', () => {
       const store = new CsrfStore(options);
       const getCookie = (name: string) => {
-        if (name === '__gg.csrf-token') return 'csrf-value';
+        if (name === '__me.csrf-token') return 'csrf-value';
         return undefined;
       };
 
@@ -246,7 +237,7 @@ describe('Cookie Management', () => {
 
       store.write('csrf-token-value', setCookie);
 
-      expect(writtenName).toBe('__gg.csrf-token');
+      expect(writtenName).toBe('__me.csrf-token');
       expect(writtenValue).toBe('csrf-token-value');
     });
 
@@ -268,13 +259,13 @@ describe('Cookie Management', () => {
 
     it('should generate correct cookie name', () => {
       const store = new CallbackStore(options);
-      expect(store.getCookieName()).toBe('__gg.callback-url');
+      expect(store.getCookieName()).toBe('__me.callback-url');
     });
 
     it('should generate secure cookie name', () => {
       const secureOptions = resolveCookieOptions({ secure: true });
       const store = new CallbackStore(secureOptions);
-      expect(store.getCookieName()).toBe('__Secure-__gg.callback-url');
+      expect(store.getCookieName()).toBe('__Secure-__me.callback-url');
     });
 
     it('should read and write values', () => {
