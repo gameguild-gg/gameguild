@@ -59,7 +59,7 @@ describe('platform role actions', () => {
       },
       requiresAuth: true,
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/roles');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/platform/roles');
   });
 
   it('updates a role permission matrix and active state', async () => {

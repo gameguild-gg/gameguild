@@ -30,6 +30,7 @@ import {
   LayoutDashboard,
   MapPin,
   FolderKanban,
+  MailCheck,
   MessageSquareText,
   Rocket,
   Settings,
@@ -79,12 +80,37 @@ export interface DashboardNavGroup {
 // Routes map to: /[locale]/(dashboard)/dashboard/...
 export const dashboardNavigationData: DashboardNavGroup[] = [
   {
-    label: 'Overview',
+    label: 'My Workspace',
     items: [
       {
-        title: 'Dashboard',
-        url: '/dashboard',
+        title: 'Home',
+        url: '/workspace',
         icon: LayoutDashboard,
+      },
+      {
+        title: 'Projects',
+        url: '/workspace/projects',
+        icon: FolderKanban,
+      },
+      {
+        title: 'Teams',
+        url: '/workspace/teams',
+        icon: Users,
+      },
+      {
+        title: 'Learning',
+        url: '/workspace/learning',
+        icon: BookOpen,
+      },
+      {
+        title: 'Invitations',
+        url: '/workspace/invitations',
+        icon: MailCheck,
+      },
+      {
+        title: 'Settings',
+        url: '/workspace/settings/account',
+        icon: Settings,
       },
     ],
   },
@@ -93,7 +119,7 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
     items: [
       {
         title: 'Overview',
-        url: '/dashboard/community',
+        url: '/console/community',
         icon: LayoutDashboard,
         requiredCapabilities: ['Community.Manage'],
       },
@@ -104,28 +130,28 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
         subGroups: [
           {
             title: 'Overview',
-            url: '/dashboard/community/members',
+            url: '/console/community/members',
             icon: LayoutDashboard,
             items: [],
             requiredCapabilities: ['Community.ManageMembers'],
           },
           {
             title: 'Users',
-            url: '/dashboard/community/members/users',
+            url: '/console/community/members/users',
             icon: UserCog,
             items: [],
             requiredCapabilities: ['Community.ManageMembers'],
           },
           {
             title: 'Groups',
-            url: '/dashboard/community/members/groups',
+            url: '/console/community/members/groups',
             icon: Users,
             items: [],
             requiredCapabilities: ['Community.ManageMembers'],
           },
           {
             title: 'Support',
-            url: '/dashboard/community/members/support',
+            url: '/console/community/members/support',
             icon: HeadphonesIcon,
             items: [],
             requiredCapabilities: ['Community.ManageSupport'],
@@ -134,13 +160,13 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
       },
       {
         title: 'Teams',
-        url: '/dashboard/community/teams',
+        url: '/console/community/teams',
         icon: Users,
         requiredCapabilities: ['Community.ManageTeams'],
       },
       {
         title: 'Projects',
-        url: '/dashboard/community/projects',
+        url: '/console/community/projects',
         icon: FolderKanban,
         requiredCapabilities: ['Community.ManageProjects'],
       },
@@ -158,7 +184,7 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
         subGroups: [
           {
             title: 'Overview',
-            url: '/dashboard/community/testing-lab',
+            url: '/console/community/testing-lab',
             icon: LayoutDashboard,
             items: [],
             requiredCapabilities: [
@@ -172,63 +198,63 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
           },
           {
             title: 'Events',
-            url: '/dashboard/community/testing-lab/events',
+            url: '/console/community/testing-lab/events',
             icon: FlaskConical,
             items: [],
             requiredCapabilities: ['TestingLab.ManageEvents'],
           },
           {
             title: 'Applications',
-            url: '/dashboard/community/testing-lab/applications',
+            url: '/console/community/testing-lab/applications',
             icon: ClipboardList,
             items: [],
             requiredCapabilities: ['TestingLab.ReviewApplications'],
           },
           {
             title: 'Projects',
-            url: '/dashboard/community/testing-lab/projects',
+            url: '/console/community/testing-lab/projects',
             icon: FolderKanban,
             items: [],
             requiredCapabilities: ['TestingLab.ReviewApplications'],
           },
           {
             title: 'Participants',
-            url: '/dashboard/community/testing-lab/participants',
+            url: '/console/community/testing-lab/participants',
             icon: Users,
             items: [],
             requiredCapabilities: ['TestingLab.ManageParticipants'],
           },
           {
             title: 'Feedback',
-            url: '/dashboard/community/testing-lab/feedback',
+            url: '/console/community/testing-lab/feedback',
             icon: MessageSquareText,
             items: [],
             requiredCapabilities: ['TestingLab.ManageFeedback'],
           },
           {
             title: 'Analytics',
-            url: '/dashboard/community/testing-lab/analytics',
+            url: '/console/community/testing-lab/analytics',
             icon: BarChart3,
             items: [],
             requiredCapabilities: ['TestingLab.ViewAnalytics'],
           },
           {
             title: 'Locations',
-            url: '/dashboard/community/testing-lab/locations',
+            url: '/console/community/testing-lab/locations',
             icon: MapPin,
             items: [],
             requiredCapabilities: ['TestingLab.ManageSettings'],
           },
           {
             title: 'Access',
-            url: '/dashboard/community/testing-lab/access',
+            url: '/console/community/testing-lab/access',
             icon: ShieldCheck,
             items: [],
             requiredCapabilities: ['TestingLab.ManageSettings'],
           },
           {
             title: 'Settings',
-            url: '/dashboard/community/testing-lab/settings',
+            url: '/console/community/testing-lab/settings',
             icon: Settings,
             items: [],
             requiredCapabilities: ['TestingLab.ManageSettings'],
@@ -237,7 +263,7 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
       },
       {
         title: 'Launch Pad',
-        url: '/dashboard/community/launch-pad',
+        url: '/console/community/launch-pad',
         icon: Rocket,
         requiredCapabilities: [
           'LaunchPad.ManageEvents',
@@ -249,7 +275,7 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
         subGroups: [
           {
             title: 'Overview',
-            url: '/dashboard/community/launch-pad',
+            url: '/console/community/launch-pad',
             icon: LayoutDashboard,
             items: [],
             requiredCapabilities: [
@@ -262,38 +288,73 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
           },
           {
             title: 'Events',
-            url: '/dashboard/community/launch-pad/events',
+            url: '/console/community/launch-pad/events',
             icon: Rocket,
             items: [],
             requiredCapabilities: ['LaunchPad.ManageEvents'],
           },
           {
             title: 'Applications',
-            url: '/dashboard/community/launch-pad/applications',
+            url: '/console/community/launch-pad/applications',
             icon: ClipboardList,
             items: [],
             requiredCapabilities: ['LaunchPad.ReviewApplications'],
           },
           {
             title: 'Participants',
-            url: '/dashboard/community/launch-pad/participants',
+            url: '/console/community/launch-pad/participants',
             icon: Users,
             items: [],
             requiredCapabilities: ['LaunchPad.ManageParticipants'],
           },
           {
             title: 'Analytics',
-            url: '/dashboard/community/launch-pad/analytics',
+            url: '/console/community/launch-pad/analytics',
             icon: BarChart3,
             items: [],
             requiredCapabilities: ['LaunchPad.ViewAnalytics'],
           },
           {
             title: 'Settings',
-            url: '/dashboard/community/launch-pad/settings',
+            url: '/console/community/launch-pad/settings',
             icon: Settings,
             items: [],
             requiredCapabilities: ['LaunchPad.ManageSettings'],
+          },
+        ],
+      },
+      {
+        title: 'Learning',
+        icon: BookOpen,
+        requiredCapabilities: ['Learning.Manage'],
+        subGroups: [
+          {
+            title: 'Overview',
+            url: '/console/learning',
+            icon: LayoutDashboard,
+            items: [],
+            requiredCapabilities: ['Learning.Manage'],
+          },
+          {
+            title: 'Courses',
+            url: '/console/learning/courses',
+            icon: BookOpen,
+            items: [],
+            requiredCapabilities: ['Learning.Manage'],
+          },
+          {
+            title: 'Tutorials',
+            url: '/console/learning/tutorials',
+            icon: FileText,
+            items: [],
+            requiredCapabilities: ['Learning.Manage'],
+          },
+          {
+            title: 'Resources',
+            url: '/console/learning/resources',
+            icon: FolderOpen,
+            items: [],
+            requiredCapabilities: ['Learning.Manage'],
           },
         ],
       },
@@ -304,44 +365,9 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
     items: [
       {
         title: 'Roles',
-        url: '/dashboard/platform/roles',
+        url: '/console/platform/roles',
         icon: ShieldCheck,
         requiredCapabilities: ['Platform.ManageRoles'],
-      },
-      {
-        title: 'Learning',
-        icon: BookOpen,
-        requiredCapabilities: ['Learning.Manage'],
-        subGroups: [
-          {
-            title: 'Overview',
-            url: '/workspace/learning',
-            icon: LayoutDashboard,
-            items: [],
-            requiredCapabilities: ['Learning.Manage'],
-          },
-          {
-            title: 'Courses',
-            url: '/workspace/learning/courses',
-            icon: BookOpen,
-            items: [],
-            requiredCapabilities: ['Learning.Manage'],
-          },
-          {
-            title: 'Tutorials',
-            url: '/workspace/learning/tutorials',
-            icon: FileText,
-            items: [],
-            requiredCapabilities: ['Learning.Manage'],
-          },
-          {
-            title: 'Resources',
-            url: '/workspace/learning/resources',
-            icon: FolderOpen,
-            items: [],
-            requiredCapabilities: ['Learning.Manage'],
-          },
-        ],
       },
     ],
   },

@@ -58,7 +58,7 @@ describe('TestingLabConfirmAction', () => {
         title="Archive this testing request?"
         description="The request is hidden from active operations."
         confirmLabel="Archive request"
-        successHref="/dashboard/community/testing-lab/projects"
+        successHref="/console/community/testing-lab/projects"
       />,
     );
 
@@ -66,7 +66,7 @@ describe('TestingLabConfirmAction', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Archive request' }));
 
     await waitFor(() => {
-      expect(mocks.push).toHaveBeenCalledWith('/dashboard/community/testing-lab/projects');
+      expect(mocks.push).toHaveBeenCalledWith('/console/community/testing-lab/projects');
     });
   });
 });

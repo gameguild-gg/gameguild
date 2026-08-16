@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: "a",
-  usePathname: () => "/dashboard/community/testing-lab",
+  usePathname: () => "/console/community/testing-lab",
 }));
 
 import {
@@ -28,18 +28,18 @@ describe("dashboard management navigation", () => {
     expect(
       testingLab?.subGroups?.map(({ title, url }) => ({ title, url })),
     ).toEqual([
-      { title: "Overview", url: "/dashboard/community/testing-lab" },
-      { title: "Events", url: "/dashboard/community/testing-lab/events" },
-      { title: "Applications", url: "/dashboard/community/testing-lab/applications" },
-      { title: "Projects", url: "/dashboard/community/testing-lab/projects" },
-      { title: "Participants", url: "/dashboard/community/testing-lab/participants" },
-      { title: "Feedback", url: "/dashboard/community/testing-lab/feedback" },
-      { title: "Analytics", url: "/dashboard/community/testing-lab/analytics" },
-      { title: "Locations", url: "/dashboard/community/testing-lab/locations" },
-      { title: "Access", url: "/dashboard/community/testing-lab/access" },
-      { title: "Settings", url: "/dashboard/community/testing-lab/settings" },
+      { title: "Overview", url: "/console/community/testing-lab" },
+      { title: "Events", url: "/console/community/testing-lab/events" },
+      { title: "Applications", url: "/console/community/testing-lab/applications" },
+      { title: "Projects", url: "/console/community/testing-lab/projects" },
+      { title: "Participants", url: "/console/community/testing-lab/participants" },
+      { title: "Feedback", url: "/console/community/testing-lab/feedback" },
+      { title: "Analytics", url: "/console/community/testing-lab/analytics" },
+      { title: "Locations", url: "/console/community/testing-lab/locations" },
+      { title: "Access", url: "/console/community/testing-lab/access" },
+      { title: "Settings", url: "/console/community/testing-lab/settings" },
     ]);
-    expect(launchPad?.url).toBe("/dashboard/community/launch-pad");
+    expect(launchPad?.url).toBe("/console/community/launch-pad");
     expect(platform?.items.map((item) => item.title)).toEqual([
       "Roles",
       "Learning",

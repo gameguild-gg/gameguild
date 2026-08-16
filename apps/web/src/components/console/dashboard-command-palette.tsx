@@ -44,19 +44,19 @@ const quickActions: DashboardQuickAction[] = [
   },
   {
     title: 'Review testing lab',
-    url: '/dashboard/community/testing-lab',
+    url: '/console/community/testing-lab',
     icon: FlaskConical,
     requiredCapability: 'TestingLab.ManageEvents',
   },
   {
     title: 'Open launch pad',
-    url: '/dashboard/community/launch-pad',
+    url: '/console/community/launch-pad',
     icon: Rocket,
     requiredCapability: 'LaunchPad.ManageEvents',
   },
   {
     title: 'Manage members',
-    url: '/dashboard/community/members/users',
+    url: '/console/community/members/users',
     icon: ArrowRight,
     requiredCapability: 'Community.ManageMembers',
   },
