@@ -5,6 +5,7 @@ import { createServerClient, GeneratedApi, type LearningAssessmentsGradingQueue 
 import { Link } from '@/i18n/navigation';
 import { getCodingAssignmentFull } from '@/lib/coding-assignment/client';
 import type { CodingAssignmentContent } from '@/lib/coding-assignment/client';
+import { fetchGradingQueue } from './grading-queue';
 import { parseSubmittedModalities } from './submitted-modalities';
 import { SpeedgraderWorkspace } from './speedgrader-workspace';
 
@@ -62,7 +63,10 @@ export default async function SpeedgraderAssessmentPage({
 
   return (
     <SpeedgraderWorkspace
-      queue={data}
+      // Cast: workspace props use the generated type, whose `rubric` field
+      // wrongly excludes null (the API sends null for rubric-less
+      // assessments) — grading-queue.ts holds the accurate contract.
+      queue={data as LearningAssessmentsGradingQueue}
       assessmentId={assessmentId}
       courseSlug={courseParam}
       initialIndex={initialIndex}
@@ -70,36 +74,6 @@ export default async function SpeedgraderAssessmentPage({
       manifestUrl="/cdn/manifest.json"
     />
   );
-}
-
-type QueueResult = { ok: true; data: LearningAssessmentsGradingQueue } | { ok: false; status?: number; message: string };
-
-/** Fetch the grading-queue bundle (instructor-only endpoint). */
-async function fetchGradingQueue(assessmentId: string): Promise<QueueResult> {
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-  const client = createServerClient({
-    baseUrl: apiUrl,
-    auth: { getAccessToken: () => getToken() },
-  });
-  const assessments = new GeneratedApi.LearningAssessmentsModule(client);
-  try {
-    const result = await assessments.getAssessmentsGradingQueue(assessmentId);
-    if (result.ok) {
-      return { ok: true, data: result.data };
-    }
-    return {
-      ok: false,
-      status: result.error?.status,
-      message:
-        result.error?.status === 403 ? 'You do not have permission to grade this assessment.' : 'The grading queue could not be loaded. Try again in a moment.',
-    };
-  } catch (err) {
-    console.error('Error fetching grading queue:', err);
-    return {
-      ok: false,
-      message: 'The grading queue could not be loaded. Try again in a moment.',
-    };
-  }
 }
 
 /**
