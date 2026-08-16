@@ -31,6 +31,7 @@ import {
   MapPin,
   FolderKanban,
   MailCheck,
+  Plus,
   MessageSquareText,
   Rocket,
   Settings,
@@ -89,18 +90,29 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
       },
       {
         title: 'Projects',
-        url: '/workspace/projects',
         icon: FolderKanban,
+        subGroups: [
+          { title: 'Overview', url: '/workspace/projects', icon: LayoutDashboard, items: [] },
+          { title: 'New project', url: '/workspace/projects/new', icon: Plus, items: [] },
+        ],
       },
       {
         title: 'Teams',
-        url: '/workspace/teams',
         icon: Users,
+        subGroups: [
+          { title: 'Overview', url: '/workspace/teams', icon: LayoutDashboard, items: [] },
+          { title: 'New team', url: '/workspace/teams/new', icon: Plus, items: [] },
+        ],
       },
       {
         title: 'Learning',
-        url: '/workspace/learning',
         icon: BookOpen,
+        subGroups: [
+          { title: 'Overview', url: '/workspace/learning', icon: LayoutDashboard, items: [] },
+          { title: 'Courses', url: '/workspace/learning/courses', icon: BookOpen, items: [] },
+          { title: 'Tutorials', url: '/workspace/learning/tutorials', icon: FileText, items: [] },
+          { title: 'Resources', url: '/workspace/learning/resources', icon: FolderOpen, items: [] },
+        ],
       },
       {
         title: 'Invitations',
@@ -109,8 +121,10 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
       },
       {
         title: 'Settings',
-        url: '/workspace/settings/account',
         icon: Settings,
+        subGroups: [
+          { title: 'Account', url: '/workspace/settings/account', icon: UserCog, items: [] },
+        ],
       },
     ],
   },

@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
 vi.mock('@/components/feed/feed-shell', () => ({
-  FeedShell: () => <div data-testid="feed-shell" />,
+  FeedShell: ({ tab }: { tab?: string }) => <div data-testid="feed-shell" data-tab={tab ?? 'foryou'} />,
 }));
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -29,7 +29,20 @@ describe('contextual root page', () => {
 
     render(await RootPage(props));
 
-    expect(screen.getByTestId('feed-shell')).toBeInTheDocument();
+    expect(screen.getByTestId('feed-shell')).toHaveAttribute('data-tab', 'foryou');
+  });
+
+  it('passes the requested tab to the feed', async () => {
+    mocks.auth.mockResolvedValue({ user: { id: 'user-1' } });
+
+    render(
+      await RootPage({
+        params: Promise.resolve({ locale: 'en-US' }),
+        searchParams: Promise.resolve({ tab: 'trending' }),
+      } as never),
+    );
+
+    expect(screen.getByTestId('feed-shell')).toHaveAttribute('data-tab', 'trending');
   });
 
   it('renders the marketing landing for anonymous visitors', async () => {
