@@ -73,6 +73,27 @@ test_contributors_visualization_uses_native_xvfb() {
   ! grep -Fq 'coactions/setup-xvfb' "$workflow"
 }
 
+test_release_gate_uses_resolvable_workflow_file_ids() {
+  local workflow="$repository_root/.github/workflows/release.yml"
+
+  grep -Fq "{ name: 'Main', id: 'main.yml' }" "$workflow" || return 1
+  grep -Fq "{ name: 'Emception CI/CD', id: 'emception.yml' }" "$workflow" || return 1
+  grep -Fq 'workflow_id: workflow.id' "$workflow" || return 1
+  ! grep -Fq 'workflow_id: wfName' "$workflow"
+}
+
+test_emception_emits_a_gate_result_for_every_main_push() {
+  local workflow="$repository_root/.github/workflows/emception.yml"
+  local trigger
+  trigger="$(sed -n '/^on:/,/^permissions:/p' "$workflow")"
+
+  ! grep -Fq 'paths:' <<< "$trigger" || return 1
+  grep -Fq 'detect-emception-changes:' "$workflow" || return 1
+  grep -Fq 'required: ${{ steps.changes.outputs.required }}' "$workflow" || return 1
+  grep -Fq 'needs: detect-emception-changes' "$workflow" || return 1
+  grep -Fq "if: needs.detect-emception-changes.outputs.required == 'true'" "$workflow"
+}
+
 test_web_vitest_uses_direct_exec_for_json_evidence() {
   grep -q 'pnpm --filter @game-guild/web exec vitest run --reporter=json' "$ci_dir/verify-economy.sh" || return 1
   ! grep -q 'pnpm --filter @game-guild/web run test --' "$ci_dir/verify-economy.sh"
@@ -345,6 +366,8 @@ test_canonical_json_preserves_arrays() {
 
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
+run_test 'release gate uses resolvable workflow file IDs' test_release_gate_uses_resolvable_workflow_file_ids
+run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
 run_test 'standalone web server uses an origin-safe bind address' test_standalone_web_server_uses_origin_safe_bind_address
