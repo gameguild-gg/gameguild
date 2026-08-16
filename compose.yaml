@@ -17,8 +17,8 @@ networks:
 services:
   api:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
     image: game-guild-api
     container_name: game-guild-api
     environment:

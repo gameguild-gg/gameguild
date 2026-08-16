@@ -38,8 +38,8 @@
 services:
   backend:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
     image: game-guild-api
     ports:
       - '8080'
