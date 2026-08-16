@@ -83,16 +83,19 @@ jobs:
 
             // Find the most recent run of EACH required workflow for this SHA.
             // workflow_run.head_sha is the commit each workflow ran against.
-            const requiredWorkflows = ['Main', 'Emception CI/CD'];
+            const requiredWorkflows = [
+              { name: 'Main', id: 'main.yml' },
+              { name: 'Emception CI/CD', id: 'emception.yml' },
+            ];
             const statuses = {};
 
-            for (const wfName of requiredWorkflows) {
+            for (const workflow of requiredWorkflows) {
               // List the latest runs of this workflow, filtered by head_sha.
               // GitHub returns up to 100 most recent; we scan for our SHA.
               const runs = await github.rest.actions.listWorkflowRuns({
                 owner,
                 repo,
-                workflow_id: wfName,  // resolves by name or filename
+                workflow_id: workflow.id,
                 head_sha: headSha,
                 per_page: 50,
               });
@@ -102,15 +105,15 @@ jobs:
               );
 
               if (matching.length === 0) {
-                core.info(`No completed run of '${wfName}' found for ${headSha.substring(0, 8)} yet.`);
-                statuses[wfName] = 'missing';
+                core.info(`No run of '${workflow.name}' found for ${headSha.substring(0, 8)} yet.`);
+                statuses[workflow.name] = 'missing';
                 continue;
               }
 
               // Take the latest by created_at; if multiple runs (re-runs),
               // any conclusion='success' among them satisfies the gate.
               const anySuccess = matching.some((r) => r.conclusion === 'success');
-              statuses[wfName] = anySuccess ? 'success' : matching[0].conclusion;
+              statuses[workflow.name] = anySuccess ? 'success' : matching[0].conclusion;
             }
 
             core.info(`Workflow statuses for ${headSha.substring(0, 8)}: ${JSON.stringify(statuses)}`);
