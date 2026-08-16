@@ -82,7 +82,7 @@ vi.mock('@/components/workspaces/workspace-library-panel', () => ({
   WorkspaceLibraryPanel: () => <div data-testid="library-panel" />,
 }));
 
-import ProjectWorkspacePage from './page';
+import ProjectWorkspaceView from './project-workspace';
 
 const project = {
   id: 'project-1',
@@ -94,8 +94,8 @@ const project = {
   description: null,
 };
 
-function params(slug: string, section?: string[]) {
-  return { params: Promise.resolve({ slug, section }) };
+function props(slug: string, section?: string) {
+  return { slug, section };
 }
 
 describe('project workspace page (member surface)', () => {
@@ -116,14 +116,14 @@ describe('project workspace page (member surface)', () => {
   afterEach(cleanup);
 
   it('uses /projects/:slug as the member base route', async () => {
-    render(await ProjectWorkspacePage(params('neon-racer') as never));
+    render(await ProjectWorkspaceView(props('neon-racer') as never));
 
-    expect(screen.getByTestId('workspace-nav')).toHaveAttribute('data-base', '/projects/neon-racer');
+    expect(screen.getByTestId('workspace-nav')).toHaveAttribute('data-base', '/workspace/projects/neon-racer');
     expect(screen.getByRole('heading', { name: 'Neon Racer' })).toBeInTheDocument();
   });
 
   it('links testing lab and launch pad from the distribution section', async () => {
-    render(await ProjectWorkspacePage(params('neon-racer', ['distribution']) as never));
+    render(await ProjectWorkspaceView(props('neon-racer', 'distribution') as never));
 
     const links = screen
       .getAllByRole('link', { name: 'Open community events' })
@@ -135,27 +135,15 @@ describe('project workspace page (member surface)', () => {
   });
 
   it('renders versions list on the versions-builds section', async () => {
-    render(await ProjectWorkspacePage(params('neon-racer', ['versions-builds']) as never));
+    render(await ProjectWorkspaceView(props('neon-racer', 'versions-builds') as never));
 
     expect(screen.getByText('0.1.0')).toBeInTheDocument();
     expect(screen.getByText('First build')).toBeInTheDocument();
   });
 
-  it('returns not-found for unknown sections', async () => {
-    await expect(ProjectWorkspacePage(params('neon-racer', ['bogus']) as never)).rejects.toThrow(
-      'not-found',
-    );
-  });
-
-  it('returns not-found when only non-work sections have nesting', async () => {
-    await expect(
-      ProjectWorkspacePage(params('neon-racer', ['settings', 'extra']) as never),
-    ).rejects.toThrow('not-found');
-  });
-
   it('returns not-found when the project does not exist', async () => {
     mocks.getWorkspaceProject.mockResolvedValue(null);
 
-    await expect(ProjectWorkspacePage(params('ghost') as never)).rejects.toThrow('not-found');
+    await expect(ProjectWorkspaceView(props('ghost') as never)).rejects.toThrow('not-found');
   });
 });

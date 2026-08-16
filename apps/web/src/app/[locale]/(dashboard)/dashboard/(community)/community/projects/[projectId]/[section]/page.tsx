@@ -1,12 +1,17 @@
-import { ProjectWorkspacePage } from '@/app/[locale]/(private)/workspace/projects/[slug]/[[...section]]/page';
+import {
+  ProjectWorkspaceView,
+  isProjectWorkspaceSection,
+} from '@/components/workspace/project-workspace';
 import { getDashboardContexts } from '@/lib/dashboard-contexts';
 import { getManagedProjects } from '@/lib/workspaces';
 import { notFound, forbidden } from 'next/navigation';
+import React from 'react';
 
-export default async function ManagedProjectDetailPage({ params }: { params: Promise<{ projectId: string; section?: string[] }> }) {
+export default async function Page({ params }: PageProps<'/[locale]/dashboard/community/projects/[projectId]/[section]'>): Promise<React.JSX.Element> {
   const [{ capabilities }, route] = await Promise.all([getDashboardContexts(), params]);
   if (!capabilities.includes('Community.ManageProjects')) forbidden();
+  if (!isProjectWorkspaceSection(route.section)) notFound();
   const project = (await getManagedProjects()).find((candidate) => candidate.id === route.projectId);
   if (!project) notFound();
-  return <ProjectWorkspacePage params={Promise.resolve({ slug: project.slug, section: route.section })} project={project} surface="admin" />;
+  return <ProjectWorkspaceView slug={project.slug} project={project} surface="admin" section={route.section} />;
 }

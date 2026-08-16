@@ -31,18 +31,25 @@ import { notFound } from 'next/navigation';
 const sections = ['Overview', 'Members', 'Projects', 'Workload', 'Files', 'Invitations', 'Agreements', 'Settings'];
 const sectionSlugs = new Set(sections.map((section) => section.toLowerCase().replaceAll(' ', '-')));
 
-export async function TeamWorkspacePage({
-  params,
+export type TeamWorkspaceSection =
+  | 'overview' | 'members' | 'projects' | 'workload' | 'files' | 'invitations' | 'agreements' | 'settings';
+
+export function isTeamWorkspaceSection(value: string): value is TeamWorkspaceSection {
+  return sectionSlugs.has(value);
+}
+
+export async function TeamWorkspaceView({
+  slug,
+  section = 'overview',
   team: suppliedTeam,
   surface = 'member',
 }: {
-  params: Promise<{ slug: string; section?: string[] }>;
+  slug: string;
+  section?: TeamWorkspaceSection;
   team?: Awaited<ReturnType<typeof getWorkspaceTeam>>;
   surface?: 'member' | 'admin';
 }) {
-  const { slug, section = [] } = await params;
-  const active = section[0] ?? 'overview';
-  if (section.length > 1 || !sectionSlugs.has(active)) notFound();
+  const active = section;
   const team = suppliedTeam ?? await getWorkspaceTeam(slug);
   if (!team) notFound();
   const projects = await getWorkspaceTeamProjects(team.id);
@@ -51,8 +58,8 @@ export async function TeamWorkspacePage({
     : [];
   const library = active === 'files' ? await getWorkspaceLibrary('Team', team.id) : null;
   const invitations = active === 'invitations' ? await getWorkspaceTeamInvitations(team.id) : [];
-  const base = surface === 'admin' ? `/dashboard/community/teams/${team.id}` : `/teams/${team.slug}`;
-  const projectRoot = surface === 'admin' ? '/dashboard/community/projects' : '/projects';
+  const base = surface === 'admin' ? `/dashboard/community/teams/${team.id}` : `/workspace/teams/${team.slug}`;
+  const projectRoot = surface === 'admin' ? '/dashboard/community/projects' : '/workspace/projects';
   const isArchived = String(team.status).toLowerCase() === 'archived' || Number(team.status) === 1;
 
   return (
@@ -78,7 +85,7 @@ export async function TeamWorkspacePage({
         <Card><CardHeader><CardTitle>Add tenant member</CardTitle><CardDescription>Only an active member of this tenant can be added.</CardDescription></CardHeader><CardContent><form action={addTeamMemberForm} className="space-y-3"><input type="hidden" name="teamId" value={team.id} /><input type="hidden" name="returnPath" value={`${base}/members`} /><div><Label htmlFor="new-member-id">User ID</Label><Input id="new-member-id" name="userId" required /></div><div><Label htmlFor="new-member-authority">Authority</Label><select id="new-member-authority" name="authority" defaultValue="Member" className="mt-1 h-9 w-full rounded-md border bg-background px-3 text-sm"><option>Owner</option><option>Manager</option><option>Member</option><option>Viewer</option></select></div><div><Label htmlFor="new-member-title">Professional title</Label><Input id="new-member-title" name="professionalTitle" /></div><Button type="submit">Add member</Button></form></CardContent></Card>
       </div>}
 
-      {active === 'projects' && <Card><CardHeader><CardTitle>Team projects</CardTitle><CardDescription>Ownership and participation are explicit for every project.</CardDescription></CardHeader><CardContent className="grid gap-3 md:grid-cols-2">{projects.length ? projects.map((project) => <Link key={project.id} href={surface === 'admin' ? `/dashboard/community/projects/${project.id}` : `/projects/${project.slug}`} className="rounded-lg border p-4 transition-colors hover:bg-muted/50"><div className="flex items-center justify-between gap-2"><h2 className="font-medium">{project.title}</h2><Badge>{String(project.teamRole)}</Badge></div><p className="mt-2 text-sm text-muted-foreground">{String(project.status)} · {String(project.participationMode)}</p></Link>) : <Empty message="This Team does not participate in a Project yet." />}</CardContent></Card>}
+      {active === 'projects' && <Card><CardHeader><CardTitle>Team projects</CardTitle><CardDescription>Ownership and participation are explicit for every project.</CardDescription></CardHeader><CardContent className="grid gap-3 md:grid-cols-2">{projects.length ? projects.map((project) => <Link key={project.id} href={surface === 'admin' ? `/dashboard/community/projects/${project.id}` : `/workspace/projects/${project.slug}`} className="rounded-lg border p-4 transition-colors hover:bg-muted/50"><div className="flex items-center justify-between gap-2"><h2 className="font-medium">{project.title}</h2><Badge>{String(project.teamRole)}</Badge></div><p className="mt-2 text-sm text-muted-foreground">{String(project.status)} · {String(project.participationMode)}</p></Link>) : <Empty message="This Team does not participate in a Project yet." />}</CardContent></Card>}
 
       {active === 'workload' && <Card><CardHeader><CardTitle>Workload</CardTitle><CardDescription>Only active, allocated members can receive new project tasks.</CardDescription></CardHeader><CardContent className="space-y-3">{ownerships.flatMap((ownership) => ownership?.allocations ?? []).filter((allocation) => allocation.isActive).map((allocation) => <div key={allocation.id} className="grid gap-2 rounded-lg border p-4 md:grid-cols-[1fr_auto_auto]"><div><p className="font-medium">{allocation.function}</p><p className="text-sm text-muted-foreground">{allocation.userId}</p></div><span>{allocation.capacityPercentage}% capacity</span><Badge variant="outline">Active</Badge></div>)}{!ownerships.some((ownership) => ownership?.allocations.some((allocation) => allocation.isActive)) && <Empty message="No active allocations for this Team." />}</CardContent></Card>}
 
@@ -96,7 +103,7 @@ export async function TeamWorkspacePage({
   );
 }
 
-export default TeamWorkspacePage;
+export default TeamWorkspaceView;
 
 function Metric({ title, value, icon }: { title: string; value: string | number; icon: React.ReactNode }) { return <Card><CardHeader className="flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle>{icon}</CardHeader><CardContent><p className="text-2xl font-semibold">{value}</p></CardContent></Card>; }
 function Empty({ message }: { message: string }) { return <p className="py-8 text-center text-sm text-muted-foreground">{message}</p>; }
