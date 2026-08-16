@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   redirect: vi.fn((args: unknown) => {
     throw new Error(`redirect:${JSON.stringify(args)}`);
   }),
+  getDashboardContexts: vi.fn(),
+  getWorkspaceTeams: vi.fn(),
 }));
 
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
@@ -17,9 +19,17 @@ vi.mock('@/i18n/navigation', () => ({
     <a href={href}>{children}</a>
   ),
 }));
-vi.mock('@/components/app/app-shell', () => ({
-  AppShell: async ({ children }: { children: ReactNode }) => (
-    <div data-testid="public-shell">{children}</div>
+vi.mock('@/lib/dashboard-contexts', () => ({
+  getDashboardContexts: mocks.getDashboardContexts,
+}));
+vi.mock('@/lib/workspaces', () => ({
+  getWorkspaceTeams: mocks.getWorkspaceTeams,
+}));
+vi.mock('@/components/workspace/workspace-shell', () => ({
+  WorkspaceShell: ({ children, user, teams }: { children: ReactNode; user: { name: string }; teams: unknown[] }) => (
+    <div data-testid="workspace-shell" data-user={user.name} data-teams={teams.length}>
+      {children}
+    </div>
   ),
 }));
 
@@ -31,7 +41,13 @@ const layoutProps = {
 };
 
 describe('private layout auth gate', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getDashboardContexts.mockResolvedValue({ capabilities: [], contexts: [] });
+    mocks.getWorkspaceTeams.mockResolvedValue([
+      { id: 'team-1', slug: 'personal', name: 'Personal', isPersonal: true },
+    ]);
+  });
   afterEach(cleanup);
 
   it('redirects anonymous users to sign-in', async () => {
@@ -48,13 +64,15 @@ describe('private layout auth gate', () => {
     await expect(PrivateLayout(layoutProps as never)).rejects.toThrow('redirect:');
   });
 
-  it('renders children inside the public shell for authenticated users', async () => {
-    mocks.auth.mockResolvedValue({ user: { id: 'user-1', name: 'Ada' } });
+  it('renders children inside the workspace shell with teams for the switcher', async () => {
+    mocks.auth.mockResolvedValue({ user: { id: 'user-1', name: 'Ada Lovelace' } });
 
     const ui = await PrivateLayout(layoutProps as never);
     render(ui);
 
-    expect(screen.getByTestId('public-shell')).toBeInTheDocument();
+    const shell = screen.getByTestId('workspace-shell');
+    expect(shell).toHaveAttribute('data-user', 'Ada Lovelace');
+    expect(shell).toHaveAttribute('data-teams', '1');
     expect(screen.getByTestId('private-content')).toBeInTheDocument();
   });
 });

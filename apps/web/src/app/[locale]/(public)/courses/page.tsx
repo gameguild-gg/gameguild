@@ -128,7 +128,7 @@ export default async function CoursesPage({ searchParams }: CoursesPageProps) {
               and launch-ready work becomes portfolio evidence.
             </p>
             <Button asChild variant="outline" className="mt-6 w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-              <Link href="/showcase">
+              <Link href="/projects">
                 View student projects
                 <ArrowRight />
               </Link>

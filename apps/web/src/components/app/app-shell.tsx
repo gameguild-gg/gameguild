@@ -11,7 +11,7 @@ const primaryNav = [
   { label: 'Programs', href: '/courses?type=program' },
   { label: 'Testing Lab', href: '/testing-lab' },
   { label: 'Launch Pad', href: '/launch-pad' },
-  { label: 'Projects', href: '/showcase' },
+  { label: 'Projects', href: '/projects' },
   { label: 'Community', href: '/community' },
   { label: 'Jobs', href: '/jobs' },
   { label: 'About', href: '/about' },
@@ -34,7 +34,7 @@ const footerSections = [
     links: [
       { label: 'Testing Lab', href: '/testing-lab' },
       { label: 'Launch Pad', href: '/launch-pad' },
-      { label: 'Project showcase', href: '/showcase' },
+      { label: 'Project showcase', href: '/projects' },
     ],
   },
   {

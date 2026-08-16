@@ -5,8 +5,8 @@ import { ArrowRight, CheckCircle2, ClipboardList, FlaskConical, UserRound } from
 import { notFound } from 'next/navigation';
 import React from 'react';
 
-export async function generateMetadata({ params }: { params: Promise<{ project: string }> }) {
-  const { project: slug } = await params;
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const project = await getVisibleProject(slug);
 
   return {
@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: { params: Promise<{ project: 
   };
 }
 
-export default async function Page({ params }: { readonly params: Promise<{ project: string }> }): Promise<React.JSX.Element> {
-  const { project: slug } = await params;
+export default async function Page({ params }: { readonly params: Promise<{ slug: string }> }): Promise<React.JSX.Element> {
+  const { slug } = await params;
   const project = await getVisibleProject(slug);
 
   if (!project) notFound();

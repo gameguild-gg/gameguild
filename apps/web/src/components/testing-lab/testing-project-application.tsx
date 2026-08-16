@@ -263,7 +263,7 @@ export function TestingProjectApplication({
           <p className="text-sm text-muted-foreground">
             Create an accessible project version before applying to this Testing Lab event.
           </p>
-          <Button asChild variant="outline"><Link href="/showcase">Browse projects</Link></Button>
+          <Button asChild variant="outline"><Link href="/projects">Browse projects</Link></Button>
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">Every accessible Project already has an active application for this event.</p>

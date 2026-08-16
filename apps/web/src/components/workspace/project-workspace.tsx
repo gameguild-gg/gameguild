@@ -98,7 +98,7 @@ export async function ProjectWorkspaceView({
   const collaborators = active === 'access' ? await getWorkspaceProjectCollaborators(project.id) : [];
   const base = surface === 'admin' ? `/dashboard/community/projects/${project.id}` : `/workspace/projects/${project.slug}`;
 
-  return <div className="space-y-6 p-6">
+  return <div className="space-y-6">
     <header><div className="flex items-center gap-2"><FolderKanban className="size-5" /><Badge variant="outline">Project</Badge><Badge>{String(project.status)}</Badge></div><h1 className="mt-2 text-3xl font-semibold">{project.title}</h1><p className="mt-1 max-w-3xl text-muted-foreground">{project.shortDescription || project.description || 'Project workspace for people, work, versions, files and distribution.'}</p></header>
     <ContextWorkspaceNav base={base} active={active} items={sections} />
 

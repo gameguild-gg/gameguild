@@ -20,7 +20,7 @@ export default async function InvitationsPage({ searchParams }: Props): Promise<
   const warning = query?.error ?? result.error;
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       <div className="flex items-start gap-3">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <MailCheck className="size-5" />

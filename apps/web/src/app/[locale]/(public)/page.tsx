@@ -115,7 +115,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>): Promise<
               outcomes become public portfolio evidence.
             </p>
             <Link
-              href="/showcase"
+              href="/projects"
               className="inline-flex items-center rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               View project showcase
