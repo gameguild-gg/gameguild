@@ -1,33 +1,17 @@
-import React from 'react';
 import { notFound } from 'next/navigation';
+import { redirect } from '@/i18n/navigation';
 import { getToken } from '@/auth';
-import {
-  createServerClient,
-  type LearningAssessmentsAssessmentSubmission,
-} from '@game-guild/client';
-import { getAssessment } from '@/lib/learning';
-import { getCodingAssignmentFull } from '@/lib/coding-assignment/client';
-import {
-  codePayloadToFiles,
-  type CodeFile,
-} from '@/lib/coding-assignment/code-payload';
-import { GradeClient } from './grade-client';
+import { createServerClient, GeneratedApi, type LearningAssessmentsAssessmentSubmission, type LearningAssessmentsGradingQueueItem } from '@game-guild/client';
+import { resolveNavIndex } from './resolve-nav-index';
 
 /**
- * Instructor grading IDE for a coding-assessment submission.
+ * Legacy grading route → SpeedGrader redirect shim.
  *
  * Route: `/dashboard/learning/courses/[course]/assessments/[assessmentId]/submissions/[submissionId]/grade`
  *
- * Server Component — fetches:
- *  1. The v1 `CodingAssignmentContent` via the Task 4 wrapper
- *     `getCodingAssignmentFull(programId, contentId)` (instructor view → has
- *     both Public + Private tests + all files).
- *  2. The submission's raw `CodePayload` JSON via the existing
- *     `GET /v1.0/assessments/submissions/{id}` endpoint, parsed by Task 9
- *     `codePayloadToFiles`.
- *
- * Both are passed to {@link GradeClient} which merges them with the
- * Private-collision guard (Metis #30) before seeding the IDE.
+ * Server-side: load the submission row, load the grading queue, resolve the
+ * queue index for this submission, then redirect to
+ * `/speedgrader/assessments/{assessmentId}?course=<slug>&nav=<index>`.
  */
 export default async function GradeSubmissionPage({
   params,
@@ -38,68 +22,36 @@ export default async function GradeSubmissionPage({
     assessmentId: string;
     submissionId: string;
   }>;
-}): Promise<React.JSX.Element> {
-  const { course, assessmentId, submissionId } = await params;
+}): Promise<void> {
+  const { locale, course, submissionId } = await params;
 
-  // Translate the Next.js route param into the v1 ProgramContent address.
-  // `courseId` IS `programId` in this stack (per Task 8 learnings).
-  const assessment = await getAssessment(assessmentId);
-  if (!assessment || !assessment.contentId) {
+  const submission = await fetchSubmission(submissionId);
+  if (!submission?.assessmentId || !submission.id) {
     notFound();
   }
+  const assessmentId = submission.assessmentId;
 
-  const [assignment, submission] = await Promise.all([
-    getCodingAssignmentFull(assessment.courseId, assessment.contentId),
-    fetchSubmission(submissionId),
-  ]);
+  const items = await fetchQueueItems(assessmentId);
+  const index = resolveNavIndex(items, {
+    submissionId: submission.id,
+    userId: submission.userId ?? undefined,
+    attemptNumber: submission.attemptNumber,
+  });
 
-  if (!assignment || !submission) {
-    notFound();
-  }
-
-  const submittedFiles = parseSubmittedFiles(submission);
-
-  return (
-    <GradeClient
-      courseSlug={course}
-      assessmentId={assessmentId}
-      submissionId={submissionId}
-      assignment={assignment}
-      submittedFiles={submittedFiles}
-      maxScore={assignment.Grading.MaxScore}
-      manifestUrl="/cdn/manifest.json"
-    />
-  );
+  redirect({
+    href: `/speedgrader/assessments/${assessmentId}?course=${encodeURIComponent(course)}&nav=${index}`,
+    locale,
+  });
 }
 
-/** Parse `AssessmentSubmission.codePayload` into `{path, content}[]`. Tolerant of legacy v0 shape. */
-function parseSubmittedFiles(
-  submission: LearningAssessmentsAssessmentSubmission,
-): CodeFile[] {
-  const codePayload = submission.codePayload ?? '';
-  if (!codePayload) return [];
-  try {
-    return codePayloadToFiles(codePayload);
-  } catch (err) {
-    console.error('Failed to parse submission codePayload:', err);
-    return [];
-  }
-}
-
-/** Fetch a single submission including its codePayload. */
-async function fetchSubmission(
-  submissionId: string,
-): Promise<LearningAssessmentsAssessmentSubmission | null> {
-  const apiUrl =
-    process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+/** Fetch a single submission row via the raw request channel (same as the legacy grade page). */
+async function fetchSubmission(submissionId: string): Promise<LearningAssessmentsAssessmentSubmission | null> {
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   const client = createServerClient({
     baseUrl: apiUrl,
     auth: { getAccessToken: () => getToken() },
   });
   try {
-    // `getAssessmentsSubmissionsBySubmissionId` is typed `Result<void>` in the
-    // generated client (response schema not described in OpenAPI). Use the raw
-    // `request<unknown>` channel and cast to the submission shape.
     const result = await client.request<LearningAssessmentsAssessmentSubmission>({
       method: 'GET',
       path: `/v1.0/assessments/submissions/${submissionId}`,
@@ -108,7 +60,22 @@ async function fetchSubmission(
     if (!result.ok) return null;
     return result.data;
   } catch (err) {
-    console.error('Error fetching submission for grading:', err);
+    console.error('Error fetching submission for redirect:', err);
     return null;
+  }
+}
+
+async function fetchQueueItems(assessmentId: string): Promise<LearningAssessmentsGradingQueueItem[]> {
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  const client = createServerClient({
+    baseUrl: apiUrl,
+    auth: { getAccessToken: () => getToken() },
+  });
+  try {
+    const result = await new GeneratedApi.LearningAssessmentsModule(client).getAssessmentsGradingQueue(assessmentId);
+    if (!result.ok) return [];
+    return result.data.items ?? [];
+  } catch {
+    return [];
   }
 }

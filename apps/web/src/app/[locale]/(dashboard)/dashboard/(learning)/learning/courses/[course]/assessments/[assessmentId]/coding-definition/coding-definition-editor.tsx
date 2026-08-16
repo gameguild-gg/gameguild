@@ -36,7 +36,7 @@ import {
   type Test,
 } from "@/lib/coding-assignment/actions";
 import type { FileEncoding } from "@/lib/coding-assignment/types";
-// ponytail: same import path + cast bridge as grade-client.tsx. The web
+// ponytail: same import path + cast bridge as the speedgrader code-grader-panel. The web
 // CodingAssignmentContent uses readonly arrays; the emception mapper input
 // uses mutable arrays. Wire shape is identical at runtime.
 import { buildTestPlan } from "emception/testing";
@@ -46,7 +46,7 @@ import type {
 import { StandardTestEditor } from "./standard-test-editor";
 import { FunctionalTestEditor } from "./functional-test-editor";
 
-// ponytail: direct import (matches grade-client pattern). The IDE manages
+// ponytail: direct import (matches code-grader-panel pattern). The IDE manages
 // its own worker boot client-side; Next's transpilePackages list already
 // includes @game-guild/emception-ui so this resolves at build time.
 

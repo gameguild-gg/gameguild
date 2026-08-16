@@ -66,6 +66,8 @@ export interface Assessment {
   isAvailable: boolean;
   // ponytail: [Flags] enum serializes as comma-separated string ("PeerReview,AutoGraded")
   gradingMethods: string;
+  groupSetId: string | null;
+  peerReviewsRequiredCount: number;
 }
 
 // Re-export so server-only callers can import everything from queries/assessments.
@@ -170,6 +172,8 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
     lateSubmissionDeadline: dto.lateSubmissionDeadline ?? null,
     isAvailable: dto.isAvailable ?? true,
     gradingMethods: dto.gradingMethods ?? "",
+    groupSetId: dto.groupSetId ?? null,
+    peerReviewsRequiredCount: dto.peerReviewsRequiredCount ?? 0,
   };
 }
 
@@ -448,6 +452,135 @@ export const getCodingDefinitionPublic = cache(
     } catch (err) {
       console.error('Error fetching public coding definition:', err);
       return null;
+    }
+  },
+);
+
+// =============================================================================
+// COURSE GROUP SETS (todo 4 endpoints)
+// =============================================================================
+
+export interface CourseGroupSetSummary {
+  id: string;
+  name: string;
+  groups: { id: string; name: string; capacity: number; memberCount: number }[];
+}
+
+export interface CourseGroupDetail {
+  id: string;
+  name: string;
+  capacity: number;
+  memberCount: number;
+  members: { userId: string; displayName: string }[];
+}
+
+export interface CourseGroupSetView extends CourseGroupSetSummary {
+  groups: CourseGroupDetail[];
+}
+
+export const getCourseGroupSets = cache(
+  async (courseId: string): Promise<CourseGroupSetSummary[]> => {
+    try {
+      const resolvedCourseId = await resolveCourseId(courseId);
+      const module = new GeneratedApi.LearningAssessmentsGroupsetsModule(getApiClient());
+      const result = await module.getCoursesGroupSets(resolvedCourseId);
+      if (!result.ok) {
+        console.error('Failed to fetch course group sets:', result.error);
+        return [];
+      }
+      return (result.data ?? []).map((set) => ({
+        id: set.id ?? '',
+        name: set.name ?? '',
+        groups: (set.groups ?? []).map((group) => ({
+          id: group.id ?? '',
+          name: group.name ?? '',
+          capacity: group.capacity ?? 0,
+          memberCount: group.memberCount ?? 0,
+        })),
+      }));
+    } catch (err) {
+      console.error('Error fetching course group sets:', err);
+      return [];
+    }
+  },
+);
+
+export const getGroupSetGroups = cache(
+  async (courseId: string, setId: string): Promise<CourseGroupDetail[]> => {
+    try {
+      const resolvedCourseId = await resolveCourseId(courseId);
+      const module = new GeneratedApi.LearningAssessmentsGroupsetsModule(getApiClient());
+      const result = await module.getCoursesGroupSetsGroups(resolvedCourseId, setId);
+      if (!result.ok) {
+        console.error('Failed to fetch group set groups:', result.error);
+        return [];
+      }
+      return (result.data ?? []).map((group) => ({
+        id: group.id ?? '',
+        name: group.name ?? '',
+        capacity: group.capacity ?? 0,
+        memberCount: group.memberCount ?? 0,
+        members: (group.members ?? []).map((member) => ({
+          userId: member.userId ?? '',
+          displayName: member.displayName ?? member.userId ?? '',
+        })),
+      }));
+    } catch (err) {
+      console.error('Error fetching group set groups:', err);
+      return [];
+    }
+  },
+);
+
+export const getCourseGroupSetViews = cache(
+  async (courseId: string): Promise<CourseGroupSetView[]> => {
+    const sets = await getCourseGroupSets(courseId);
+    const details = await Promise.all(
+      sets.map((set) => getGroupSetGroups(courseId, set.id)),
+    );
+    return sets.map((set, index) => ({ ...set, groups: details[index] ?? [] }));
+  },
+);
+
+// =============================================================================
+// ASSESSMENT RUBRIC (todo 6 endpoints)
+// =============================================================================
+
+export interface AssessmentRubricView {
+  id: string;
+  title: string;
+  criteria: { description: string; points: number; order: number }[];
+}
+
+export const getAssessmentRubric = cache(
+  async (assessmentId: string): Promise<{ rubric: AssessmentRubricView | null; locked: boolean }> => {
+    try {
+      const module = new GeneratedApi.LearningAssessmentsRubricsModule(getApiClient());
+      const result = await module.getAssessmentsRubric(assessmentId);
+      if (result.ok) {
+        const rubric = result.data;
+        return {
+          rubric: {
+            id: rubric.id ?? '',
+            title: rubric.title ?? '',
+            criteria: (rubric.criteria ?? []).map((criterion) => ({
+              description: criterion.description ?? '',
+              points: criterion.points ?? 0,
+              order: criterion.order ?? 0,
+            })),
+          },
+          locked: false,
+        };
+      }
+      // 404 = no rubric assigned yet; 409 = locked after grading started.
+      const status = (result.error as { status?: number } | undefined)?.status;
+      if (status === 409) {
+        return { rubric: null, locked: true };
+      }
+      return { rubric: null, locked: false };
+    } catch (err) {
+      console.error('Error fetching assessment rubric:', err);
+      return { rubric: null, locked: false };
     }
   },
 );

@@ -256,6 +256,26 @@ export class LearningAssessmentsModule {
 
   /**
    */
+  async getAssessmentsGradingQueue(assessmentId: string): Promise<Result<Types.LearningAssessmentsGradingQueue, ApiError>> {
+    const url = `/v1/assessments/${assessmentId}/grading-queue`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningAssessmentsGradingQueueSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getAssessmentsInteractiveVideoCuesContentEnrollments(
     assessmentId: string,
     contentId: string,

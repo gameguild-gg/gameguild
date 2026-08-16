@@ -189,7 +189,10 @@ public sealed record UpdateAssessmentRequest(
     bool? AllowLateSubmissions = null,
     DateTime? LateSubmissionDeadline = null,
     bool ClearLateSubmissionDeadline = false,
-    AssessmentGradingMethod? GradingMethods = null
+    AssessmentGradingMethod? GradingMethods = null,
+    Guid? GroupSetId = null,
+    bool ClearGroupSetId = false,
+    int? PeerReviewsRequiredCount = null
 );
 
 /// <summary>
@@ -249,7 +252,8 @@ public sealed record SubmitAssessmentRequest(
 public sealed record GradeSubmissionRequest(
     int Score,
     Guid? GradedBy = null,
-    string? Feedback = null
+    string? Feedback = null,
+    string? RubricScores = null
 );
 
 public sealed record AssessmentScoreBucketDto(

@@ -23,7 +23,7 @@ import {
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
 import { Separator } from "@game-guild/ui/components/separator";
-import { ArrowLeft, Clock, Code, Loader2, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Clock, Code, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import type {
   Assessment,
   AssessmentGroup,
@@ -37,7 +37,12 @@ import {
   type AssessmentGradingMethodFlag,
 } from "@/lib/learning/assessment-grading-methods";
 import type { CourseContentItemViewModel } from "@/lib/learning/queries/course";
-import { updateAssessment, deleteAssessment } from "@/lib/learning/actions";
+import {
+  deleteAssessment,
+  deleteRubric,
+  saveRubric,
+  updateAssessment,
+} from "@/lib/learning/actions";
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: "Quiz", label: "Quiz" },
@@ -49,11 +54,35 @@ const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
 
 const LINKED_CONTENT_NONE = "none";
 
+const GROUP_SET_NONE = "none";
+
+const RUBRIC_LOCK_MESSAGE = "Rubric locked after grading started";
+
+const DEFAULT_PEER_REVIEWS = 3;
+
+export interface GroupSetOption {
+  id: string;
+  name: string;
+}
+
+export interface RubricCriterionRow {
+  description: string;
+  points: number | null;
+}
+
+export interface RubricViewModel {
+  title: string;
+  criteria: { description: string; points: number; order: number }[];
+}
+
 interface AssessmentEditorProps {
   courseId: string;
   assessment: Assessment;
   assessmentGroups?: AssessmentGroup[];
   courseContent?: CourseContentItemViewModel[];
+  groupSets?: GroupSetOption[];
+  rubric?: RubricViewModel | null;
+  rubricLocked?: boolean;
 }
 
 function formatWeight(weightPercent: number) {
@@ -65,12 +94,17 @@ export function AssessmentEditor({
   assessment,
   assessmentGroups = [],
   courseContent = [],
+  groupSets = [],
+  rubric = null,
+  rubricLocked = false,
 }: AssessmentEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
   const [isLinkPending, startLinkTransition] = useTransition();
   const [isGradingPending, startGradingTransition] = useTransition();
+  const [isPolicyPending, startPolicyTransition] = useTransition();
+  const [isRubricPending, startRubricTransition] = useTransition();
   const isQuiz = assessment.type === "Quiz";
 
   const [title, setTitle] = useState(assessment.title);
@@ -105,6 +139,27 @@ export function AssessmentEditor({
   const [gradingMethods, setGradingMethods] = useState<Set<AssessmentGradingMethodFlag>>(
     () => parseGradingMethods(assessment.gradingMethods),
   );
+  const [groupSetId, setGroupSetId] = useState(
+    assessment.groupSetId ?? GROUP_SET_NONE,
+  );
+  const [groupAssignmentOn, setGroupAssignmentOn] = useState(
+    assessment.groupSetId != null,
+  );
+  const [peerReviewsRequired, setPeerReviewsRequired] = useState(
+    String(assessment.peerReviewsRequiredCount || DEFAULT_PEER_REVIEWS),
+  );
+  const [rubricOn, setRubricOn] = useState(rubric != null);
+  const [rubricTitle] = useState(rubric?.title ?? "Rubric");
+  const [criteria, setCriteria] = useState<RubricCriterionRow[]>(() =>
+    rubric != null && rubric.criteria.length > 0
+      ? rubric.criteria.map((criterion) => ({
+          description: criterion.description,
+          points: criterion.points,
+        }))
+      : [{ description: "", points: null }],
+  );
+  const [rubricLockedLocal, setRubricLockedLocal] = useState(rubricLocked);
+  const [rubricSaved, setRubricSaved] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -220,6 +275,201 @@ export function AssessmentEditor({
     });
   }
 
+  function handleGroupAssignmentToggle(checked: boolean) {
+    setGroupAssignmentOn(checked);
+    setError(null);
+
+    if (checked || groupSetId === GROUP_SET_NONE) {
+      return;
+    }
+
+    const previous = groupSetId;
+    setGroupSetId(GROUP_SET_NONE);
+
+    startPolicyTransition(async () => {
+      const result = await updateAssessment({
+        courseId,
+        assessmentId: assessment.id,
+        groupSetId: null,
+        clearGroupSetId: true,
+      });
+
+      if (!result.success) {
+        setGroupSetId(previous);
+        setGroupAssignmentOn(true);
+        setError(result.error);
+        return;
+      }
+
+      router.refresh();
+    });
+  }
+
+  function handleGroupSetChange(value: string) {
+    const previous = groupSetId;
+    setGroupSetId(value);
+    setError(null);
+
+    startPolicyTransition(async () => {
+      const result = await updateAssessment({
+        courseId,
+        assessmentId: assessment.id,
+        groupSetId: value === GROUP_SET_NONE ? null : value,
+        clearGroupSetId: value === GROUP_SET_NONE,
+      });
+
+      if (!result.success) {
+        setGroupSetId(previous);
+        setError(result.error);
+        return;
+      }
+
+      router.refresh();
+    });
+  }
+
+  function handlePeerReviewToggle(checked: boolean) {
+    const next = new Set(gradingMethods);
+    if (checked) next.add("PeerReview");
+    else next.delete("PeerReview");
+
+    const previous = gradingMethods;
+    setGradingMethods(next);
+    setError(null);
+
+    startPolicyTransition(async () => {
+      const result = await updateAssessment(
+        checked
+          ? {
+              courseId,
+              assessmentId: assessment.id,
+              gradingMethods: serializeGradingMethods(next),
+              peerReviewsRequiredCount: Math.max(
+                1,
+                Number(peerReviewsRequired) || DEFAULT_PEER_REVIEWS,
+              ),
+            }
+          : {
+              courseId,
+              assessmentId: assessment.id,
+              gradingMethods: serializeGradingMethods(next),
+            },
+      );
+
+      if (!result.success) {
+        setGradingMethods(previous);
+        setError(result.error);
+        return;
+      }
+
+      router.refresh();
+    });
+  }
+
+  function handlePeerReviewsBlur() {
+    const count = Number(peerReviewsRequired);
+    if (!Number.isInteger(count) || count < 1) {
+      return;
+    }
+    if (count === assessment.peerReviewsRequiredCount) {
+      return;
+    }
+
+    startPolicyTransition(async () => {
+      const result = await updateAssessment({
+        courseId,
+        assessmentId: assessment.id,
+        peerReviewsRequiredCount: count,
+      });
+
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      router.refresh();
+    });
+  }
+
+  const rubricLockedNow = rubricLockedLocal;
+  const criteriaPointsSum = criteria.reduce(
+    (sum, row) => sum + (row.points ?? 0),
+    0,
+  );
+  const criteriaValid =
+    criteria.length > 0 &&
+    criteria.every(
+      (row) => row.description.trim() !== "" && row.points != null && row.points > 0,
+    );
+  const rubricSumMatches = criteriaPointsSum === assessment.maxScore;
+  const canSaveRubric = criteriaValid && rubricSumMatches && !rubricLockedNow;
+
+  function addCriterionRow() {
+    setCriteria((rows) => [...rows, { description: "", points: null }]);
+  }
+
+  function removeCriterionRow(index: number) {
+    setCriteria((rows) =>
+      rows.length > 1
+        ? rows.filter((_, rowIndex) => rowIndex !== index)
+        : [{ description: "", points: null }],
+    );
+  }
+
+  function handleSaveRubric() {
+    setError(null);
+    setRubricSaved(false);
+
+    startRubricTransition(async () => {
+      const result = await saveRubric({
+        assessmentId: assessment.id,
+        title: rubricTitle,
+        criteria: criteria.map((row, index) => ({
+          description: row.description.trim(),
+          points: row.points ?? 0,
+          order: index,
+        })),
+      });
+
+      if (!result.success) {
+        if (result.error.includes(RUBRIC_LOCK_MESSAGE)) {
+          setRubricLockedLocal(true);
+          setError(null);
+          return;
+        }
+        setError(result.error);
+        return;
+      }
+
+      setRubricSaved(true);
+      router.refresh();
+    });
+  }
+
+  function handleDeleteRubric() {
+    if (!confirm("Are you sure you want to remove the rubric from this assessment?")) {
+      return;
+    }
+
+    startRubricTransition(async () => {
+      const result = await deleteRubric(assessment.id);
+
+      if (!result.success) {
+        if (result.error.includes(RUBRIC_LOCK_MESSAGE)) {
+          setRubricLockedLocal(true);
+          setError(null);
+          return;
+        }
+        setError(result.error);
+        return;
+      }
+
+      setRubricOn(false);
+      setCriteria([{ description: "", points: null }]);
+      router.refresh();
+    });
+  }
+
   const typeLabel =
     ASSESSMENT_TYPE_OPTIONS.find((o) => o.value === assessment.type)?.label ??
     assessment.type;
@@ -308,6 +558,165 @@ export function AssessmentEditor({
                 %).
               </p>
             </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Rubric</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Label
+                    htmlFor="grade-by-rubric"
+                    className="text-sm font-normal text-muted-foreground"
+                  >
+                    Grade by rubric
+                  </Label>
+                  <Switch
+                    id="grade-by-rubric"
+                    checked={rubricOn}
+                    onCheckedChange={(checked) => setRubricOn(checked === true)}
+                    disabled={rubricLockedNow}
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            {rubricOn && (
+              <CardContent className="space-y-4">
+                {rubricLockedNow && (
+                  <p className="text-destructive text-sm" role="alert">
+                    {RUBRIC_LOCK_MESSAGE}
+                  </p>
+                )}
+                <div className="space-y-3">
+                  {criteria.map((row, index) => (
+                    <div
+                      key={index}
+                      className="flex items-end gap-2"
+                    >
+                          <div className="flex-1 space-y-1">
+                            <Label htmlFor={`criterion-${index + 1}-description`}>
+                              Criterion {index + 1} description
+                            </Label>
+                            <Input
+                              id={`criterion-${index + 1}-description`}
+                              value={row.description}
+                              onChange={(e) =>
+                                setCriteria((rows) =>
+                                  rows.map((current, rowIndex) =>
+                                    rowIndex === index
+                                      ? { ...current, description: e.target.value }
+                                      : current,
+                                  ),
+                                )
+                              }
+                              placeholder="What this criterion assesses"
+                              disabled={isRubricPending || rubricLockedNow}
+                            />
+                          </div>
+                          <div className="w-24 space-y-1">
+                            <Label htmlFor={`criterion-${index + 1}-points`}>
+                              Criterion {index + 1} points
+                            </Label>
+                            <Input
+                              id={`criterion-${index + 1}-points`}
+                              type="number"
+                              min={1}
+                              value={row.points ?? ""}
+                              onChange={(e) =>
+                                setCriteria((rows) =>
+                                  rows.map((current, rowIndex) =>
+                                    rowIndex === index
+                                      ? {
+                                          ...current,
+                                          points: e.target.value
+                                            ? Number(e.target.value)
+                                            : null,
+                                        }
+                                      : current,
+                                  ),
+                                )
+                              }
+                              disabled={isRubricPending || rubricLockedNow}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Remove criterion ${index + 1}`}
+                            onClick={() => removeCriterionRow(index)}
+                            disabled={isRubricPending}
+                          >
+                            <X className="size-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addCriterionRow}
+                        disabled={isRubricPending}
+                      >
+                        <Plus className="mr-2 size-4" />
+                        Add criterion
+                      </Button>
+                      <p
+                        data-testid="rubric-sum"
+                        className={`text-sm font-semibold ${
+                          rubricSumMatches
+                            ? "text-green-600"
+                            : "text-destructive"
+                        }`}
+                      >
+                        Σ {criteriaPointsSum} / {assessment.maxScore}
+                        {!rubricSumMatches && (
+                          <span>
+                            {" "}
+                            ({criteriaPointsSum > assessment.maxScore ? "+" : ""}
+                            {criteriaPointsSum - assessment.maxScore})
+                          </span>
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        onClick={handleSaveRubric}
+                        disabled={!canSaveRubric || isRubricPending}
+                      >
+                        {isRubricPending ? (
+                          <Loader2 className="mr-2 size-4 animate-spin" />
+                        ) : (
+                          <Save className="mr-2 size-4" />
+                        )}
+                        Save rubric
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleDeleteRubric}
+                        disabled={isRubricPending}
+                      >
+                        <Trash2 className="mr-2 size-4" />
+                        Delete rubric
+                      </Button>
+                      {rubricSaved && (
+                        <span className="text-sm text-green-600">
+                          Rubric saved.
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground text-xs">
+                      Criterion points must sum to the assessment max score.
+                      Locked after grading starts.
+                    </p>
+              </CardContent>
+            )}
           </Card>
 
           <Card>
@@ -448,6 +857,82 @@ export function AssessmentEditor({
                 <p className="text-muted-foreground text-xs">
                   How this assessment can be graded. Multiple allowed.
                 </p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="group-assignment">Group assignment</Label>
+                  <Switch
+                    id="group-assignment"
+                    checked={groupAssignmentOn}
+                    onCheckedChange={handleGroupAssignmentToggle}
+                    disabled={isPolicyPending}
+                  />
+                </div>
+                {groupAssignmentOn && (
+                  <div className="space-y-2">
+                    <Label htmlFor="group-set">Group set</Label>
+                    <Select
+                      value={groupSetId}
+                      onValueChange={handleGroupSetChange}
+                      disabled={isPolicyPending}
+                    >
+                      <SelectTrigger id="group-set">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={GROUP_SET_NONE}>
+                          No group set
+                        </SelectItem>
+                        {groupSets.map((set) => (
+                          <SelectItem key={set.id} value={set.id}>
+                            {set.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-muted-foreground text-xs">
+                      Students submit once per group; the grade applies to every
+                      member.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="peer-review">Peer review</Label>
+                  <Switch
+                    id="peer-review"
+                    checked={gradingMethods.has("PeerReview")}
+                    onCheckedChange={(checked) =>
+                      handlePeerReviewToggle(checked === true)
+                    }
+                    disabled={isPolicyPending}
+                  />
+                </div>
+                {gradingMethods.has("PeerReview") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="required-reviews">Required reviews</Label>
+                    <Input
+                      id="required-reviews"
+                      type="number"
+                      min={1}
+                      value={peerReviewsRequired}
+                      onChange={(e) => setPeerReviewsRequired(e.target.value)}
+                      onBlur={handlePeerReviewsBlur}
+                      disabled={isPolicyPending}
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      Each student reviews this many peers before the assessment
+                      closes.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <Separator />

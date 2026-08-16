@@ -34,6 +34,7 @@ using GameGuild.Notifications;
 using GameGuild.Resources;
 using GameGuild.GameJams;
 using GameGuild.LaunchPad;
+using GameGuild.Lti;
 using GameGuild.Social.Blog;
 using GameGuild.Social.Feed;
 using GameGuild.Social.Groups;
@@ -300,6 +301,11 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddAssessmentsModule();
         logger.LogInformation("Learning Assessments Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10f.1a. LTI 1.3 tool Module (launch + AGS score passback; implements Assessments' ILtiScorePassback)
+        stepStopwatch.Restart();
+        services.AddLtiModule();
+        logger.LogInformation("LTI Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 10f.2. Learning Enrollments Module
         stepStopwatch.Restart();
