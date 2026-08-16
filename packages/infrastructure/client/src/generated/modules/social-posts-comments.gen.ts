@@ -17,6 +17,42 @@ export class SocialPostsCommentsModule {
 
   /**
    */
+  async getPostsTagsPopular(query?: {
+    count?: number;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/posts/tags/popular";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getPostsTagsSearch(query?: {
+    tags?: Array<string>;
+    skip?: number;
+    take?: number;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/posts/tags/search";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getPostsComments(
     postId: string,
     query?: { skip?: number; take?: number },
@@ -103,48 +139,12 @@ export class SocialPostsCommentsModule {
 
   /**
    */
-  async getPostsTagsPopular(query?: {
-    count?: number;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/posts/tags/popular";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getPostsTags(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/tags`;
 
     const result = await this.client.request({
       method: "GET",
       path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getPostsTagsSearch(query?: {
-    tags?: Array<string>;
-    skip?: number;
-    take?: number;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/posts/tags/search";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
       requiresAuth: true,
     });
 
