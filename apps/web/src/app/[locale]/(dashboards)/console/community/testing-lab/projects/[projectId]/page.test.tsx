@@ -20,6 +20,7 @@ vi.mock('@/i18n/navigation', () => ({
   Link: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   notFound: vi.fn(),
   useRouter: () => ({ push: mocks.push }),
 }));

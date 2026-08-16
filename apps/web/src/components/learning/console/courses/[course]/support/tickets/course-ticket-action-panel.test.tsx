@@ -6,7 +6,8 @@ import { addCourseSupportTicketMessage, resolveCourseSupportTicket } from '@/lib
 import { CourseTicketActionPanel } from './course-ticket-action-panel';
 
 const refresh = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning', useRouter: () => ({ refresh }) }));
 vi.mock('@/lib/learning/actions', () => ({
   addCourseSupportTicketMessage: vi.fn(),
   resolveCourseSupportTicket: vi.fn(),

@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redirect = vi.hoisted(() => vi.fn());
 
-vi.mock('next/navigation', () => ({ redirect }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning', redirect }));
 
 import TestingEventPage from './page';
 

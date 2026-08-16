@@ -1,17 +1,14 @@
-import { describe, expect, it, vi } from 'vitest';
-
-vi.mock('next/navigation', () => ({
-  redirect: vi.fn((href: string) => {
-    throw new Error(`redirect:${href}`);
-  }),
-}));
+import '@testing-library/jest-dom/vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import Page from './page';
 
-describe('legacy /terms-of-service redirect', () => {
-  it('forwards to /terms-of-service', async () => {
-    await expect(
-      Page({ params: Promise.resolve({ locale: 'en-US' }) } as never),
-    ).rejects.toThrow('redirect:/en-US/terms-of-service');
+describe('/terms-of-service', () => {
+  afterEach(cleanup);
+
+  it('renders the policy page', async () => {
+    render(await Page({ params: Promise.resolve({ locale: 'en-US' }) } as never));
+    expect(screen.getByRole('heading')).toBeInTheDocument();
   });
 });

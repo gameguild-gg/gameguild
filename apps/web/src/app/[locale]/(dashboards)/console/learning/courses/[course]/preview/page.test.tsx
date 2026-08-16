@@ -19,6 +19,7 @@ vi.mock('@/components/courses/course/course-landing-page', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   notFound: vi.fn(() => {
     throw new Error('not-found');
   }),

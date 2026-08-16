@@ -36,7 +36,7 @@ const KIND_LABELS: Record<string, string> = {
 
 function itemHref(item: LearningExperienceSocialServicesPersonalizedFeedItem): string | null {
   if (item.courseId) return `/courses/${item.courseId}`;
-  if (item.learningPathId) return '/courses?type=program';
+  if (item.learningPathId) return '/courses';
   return null;
 }
 

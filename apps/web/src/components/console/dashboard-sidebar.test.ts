@@ -40,17 +40,28 @@ describe("dashboard management navigation", () => {
       { title: "Settings", url: "/console/community/testing-lab/settings" },
     ]);
     expect(launchPad?.url).toBe("/console/community/launch-pad");
-    expect(platform?.items.map((item) => item.title)).toEqual([
-      "Roles",
-      "Learning",
+    expect(platform?.items.map((item) => item.title)).toEqual(["Roles"]);
+    const learning = community?.items.find((item) => item.title === "Learning");
+    expect(learning?.subGroups?.map(({ url }) => url)).toEqual([
+      "/console/learning",
+      "/console/learning/courses",
+      "/console/learning/tutorials",
+      "/console/learning/resources",
     ]);
   });
 
   it("hides administrative modules from a regular member", () => {
     const navigation = filterDashboardNavigation(dashboardNavigationData, []);
 
-    expect(navigation.map((group) => group.label)).toEqual(["Overview"]);
-    expect(navigation[0]?.items.map((item) => item.title)).toEqual(["Dashboard"]);
+    expect(navigation.map((group) => group.label)).toEqual(["My Workspace"]);
+    expect(navigation[0]?.items.map((item) => item.title)).toEqual([
+      "Home",
+      "Projects",
+      "Teams",
+      "Learning",
+      "Invitations",
+      "Settings",
+    ]);
   });
 
   it("shows only the administrative module granted to the actor", () => {

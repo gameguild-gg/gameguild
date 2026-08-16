@@ -36,7 +36,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>): Promise<
                 <ArrowRight className="ml-2 size-4" aria-hidden="true" />
               </Link>
               <Link
-                href="/courses?type=program"
+                href="/courses"
                 className="inline-flex items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10"
               >
                 Explore Programs

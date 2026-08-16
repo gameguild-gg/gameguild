@@ -146,10 +146,10 @@ export default async function Page({ params }: PageProps<'/[locale]/console/lear
     ...check,
     href:
       check.key === 'thumbnail'
-        ? buildDashboardCoursePath(courseRouteParam, 'listing/media')
+        ? buildDashboardCoursePath(courseRouteParam, 'listing/media', 'console')
         : check.key === 'module' || check.key === 'lesson'
-          ? buildDashboardCoursePath(courseRouteParam, 'content')
-          : buildDashboardCoursePath(courseRouteParam, 'listing/info'),
+          ? buildDashboardCoursePath(courseRouteParam, 'content', 'console')
+          : buildDashboardCoursePath(courseRouteParam, 'listing/info', 'console'),
     icon:
       check.key === 'thumbnail'
         ? Image
@@ -414,25 +414,25 @@ export default async function Page({ params }: PageProps<'/[locale]/console/lear
             </CardHeader>
             <CardContent className="space-y-2">
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={buildDashboardCoursePath(courseRouteParam, 'listing')} locale={locale} prefetch={false}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'listing', 'console')} locale={locale} prefetch={false}>
                   <Edit className="mr-2 size-4" />
                   Open Listing Controls
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={buildDashboardCoursePath(courseRouteParam, 'content')} locale={locale} prefetch={false}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'content', 'console')} locale={locale} prefetch={false}>
                   <BookOpen className="mr-2 size-4" />
                   Manage Content
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={buildDashboardCoursePath(courseRouteParam, 'students')} locale={locale} prefetch={false}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'students', 'console')} locale={locale} prefetch={false}>
                   <Users className="mr-2 size-4" />
                   Manage Students
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings')} locale={locale} prefetch={false}>
+                <Link href={buildDashboardCoursePath(courseRouteParam, 'settings', 'console')} locale={locale} prefetch={false}>
                   <Settings className="mr-2 size-4" />
                   Course Settings
                 </Link>

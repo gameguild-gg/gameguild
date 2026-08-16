@@ -20,6 +20,7 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   notFound: mocks.notFound,
 }));
 

@@ -17,6 +17,7 @@ import { Textarea } from '@game-guild/ui/components/textarea';
 import { CheckCircle2, Loader2, MessageSquare, Pin, Plus, Reply, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 interface CourseDiscussionsManagerProps {
   courseId: string;
@@ -25,6 +26,7 @@ interface CourseDiscussionsManagerProps {
 }
 
 export function CourseDiscussionsManager({ courseId, courseTitle, threads }: CourseDiscussionsManagerProps) {
+  const learningBase = useLearningBase();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [items, setItems] = useState(threads);
@@ -138,7 +140,7 @@ export function CourseDiscussionsManager({ courseId, courseTitle, threads }: Cou
             items.map((thread) => (
               <div key={thread.id} className="min-w-0 space-y-3 rounded-lg border p-4">
                 <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <Link href={`/workspace/learning/courses/${courseId}/support/discussions/${thread.id}`} className="min-w-0 flex-1 space-y-1">
+                  <Link href={`${learningBase}/courses/${courseId}/support/discussions/${thread.id}`} className="min-w-0 flex-1 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="break-words font-medium">{thread.title}</p>
                       {thread.pinned ? <Badge variant="outline"><Pin className="mr-1 size-3" />Pinned</Badge> : null}

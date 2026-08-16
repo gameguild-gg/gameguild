@@ -38,6 +38,7 @@ import {
 } from "@/lib/learning/assessment-grading-methods";
 import type { CourseContentItemViewModel } from "@/lib/learning/queries/course";
 import { updateAssessment, deleteAssessment } from "@/lib/learning/actions";
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: "Quiz", label: "Quiz" },
@@ -66,6 +67,7 @@ export function AssessmentEditor({
   assessmentGroups = [],
   courseContent = [],
 }: AssessmentEditorProps) {
+  const learningBase = useLearningBase();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
@@ -153,7 +155,7 @@ export function AssessmentEditor({
       const result = await deleteAssessment(courseId, assessment.id);
       if (result.success) {
         router.push(
-          `/workspace/learning/courses/${encodeURIComponent(courseId)}/assessments`,
+          `${learningBase}/courses/${encodeURIComponent(courseId)}/assessments`,
         );
       } else {
         setError(result.error);
@@ -163,7 +165,7 @@ export function AssessmentEditor({
 
   function handleBack() {
     router.push(
-      `/workspace/learning/courses/${encodeURIComponent(courseId)}/assessments`,
+      `${learningBase}/courses/${encodeURIComponent(courseId)}/assessments`,
     );
   }
 
@@ -527,7 +529,7 @@ export function AssessmentEditor({
                 className="w-full"
                 onClick={() =>
                   router.push(
-                    `/workspace/learning/courses/${encodeURIComponent(courseId)}/assessments/${assessment.id}/coding-definition`,
+                    `${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessment.id}/coding-definition`,
                   )
                 }
               >

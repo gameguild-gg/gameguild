@@ -54,8 +54,10 @@ function revalidateCoursePath(
   const suffix = segment ? `/${segment.replace(/^\/+/, "")}` : "";
 
   revalidatePath(`/workspace/learning/courses/${courseId}${suffix}`);
+  revalidatePath(`/console/learning/courses/${courseId}${suffix}`);
   if (resolvedCourseId !== courseId) {
     revalidatePath(`/workspace/learning/courses/${resolvedCourseId}${suffix}`);
+  revalidatePath(`/console/learning/courses/${resolvedCourseId}${suffix}`);
   }
 }
 
@@ -388,6 +390,7 @@ export async function createCourse(
       const createdSlug = result.data.slug?.trim() || slug.trim();
 
       revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return {
         success: true,
         data: {
@@ -456,7 +459,9 @@ export async function updateCourse(
 
     if (result.ok) {
       revalidatePath(`/workspace/learning/courses/${courseId}`);
+  revalidatePath(`/console/learning/courses/${courseId}`);
       revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -506,6 +511,7 @@ export async function publishCourse(
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
       revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -530,6 +536,7 @@ export async function unpublishCourse(
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
       revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -554,6 +561,7 @@ export async function restoreCourse(
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
       revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -596,6 +604,7 @@ export async function transferCourseOwnership(
     revalidateCoursePath(courseId, resolvedCourseId);
     revalidateCoursePath(courseId, resolvedCourseId, "settings/danger");
     revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
     return { success: true, data: null };
   } catch (e) {
     return {
@@ -616,6 +625,7 @@ export async function archiveCourse(
     if (result.ok) {
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -638,6 +648,7 @@ export async function deleteCourse(
 
     if (result.ok) {
       revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -1173,6 +1184,7 @@ export async function cloneCourse(
 
     if (result.ok) {
       revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: { id: result.data.id! } };
     }
 
@@ -1384,6 +1396,7 @@ export async function deleteAssessmentGroup(
       return { success: false, error: extractError(result.error) };
 
     revalidatePath(`/workspace/learning/courses/${courseId}`);
+  revalidatePath(`/console/learning/courses/${courseId}`);
     revalidatePath(`/workspace/learning/courses/${courseId}/assessments`);
     return { success: true, data: null };
   } catch (e) {

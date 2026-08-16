@@ -32,6 +32,7 @@ vi.mock('@/lib/emception/scoring', () => ({
   computeScore: mocks.computeScore,
 }));
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   notFound: () => {
     throw new Error('not-found');
   },

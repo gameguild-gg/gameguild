@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useLearningBase } from '@/lib/learning/use-learning-base';
 
 interface CohortWorkspaceNavProps {
   courseRoute: string;
@@ -49,9 +50,10 @@ const sections: WorkspaceSection[] = [
 const periodFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
 export function CohortWorkspaceNav({ courseRoute, courseTitle, cohort, cohorts, children }: CohortWorkspaceNavProps) {
+  const learningBase = useLearningBase();
   const pathname = usePathname() ?? '';
   const router = useRouter();
-  const basePath = `/workspace/learning/courses/${courseRoute}/classes/${cohort.id}`;
+  const basePath = `${learningBase}/courses/${courseRoute}/classes/${cohort.id}`;
   const activeSegment = sections.find((section) => pathname.includes(`/${section.segment}`))?.segment ?? 'schedule';
 
   return (
@@ -64,7 +66,7 @@ export function CohortWorkspaceNav({ courseRoute, courseTitle, cohort, cohorts, 
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <Link href={`/workspace/learning/courses/${courseRoute}/classes`} className="hover:text-foreground hover:underline">{courseTitle}</Link>
+                <Link href={`${learningBase}/courses/${courseRoute}/classes`} className="hover:text-foreground hover:underline">{courseTitle}</Link>
                 <span aria-hidden="true">/</span>
                 <span>Classes</span>
               </div>
@@ -90,7 +92,7 @@ export function CohortWorkspaceNav({ courseRoute, courseTitle, cohort, cohorts, 
                 <DropdownMenuItem
                   key={item.id}
                   disabled={item.id === cohort.id}
-                  onSelect={() => router.push(`/workspace/learning/courses/${courseRoute}/classes/${item.id}/schedule`)}
+                  onSelect={() => router.push(`${learningBase}/courses/${courseRoute}/classes/${item.id}/schedule`)}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{item.name}</span>

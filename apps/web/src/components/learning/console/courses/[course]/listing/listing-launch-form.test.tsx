@@ -23,6 +23,7 @@ beforeAll(() => {
 });
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   useRouter: () => ({
     refresh: refreshMock,
   }),

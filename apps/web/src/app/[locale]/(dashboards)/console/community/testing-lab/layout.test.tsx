@@ -8,7 +8,8 @@ const mocks = vi.hoisted(() => ({
   getDashboardContexts: vi.fn(),
 }));
 
-vi.mock('next/navigation', () => ({ forbidden: mocks.forbidden }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning', forbidden: mocks.forbidden }));
 vi.mock('@/lib/dashboard-contexts', () => ({
   getDashboardContexts: mocks.getDashboardContexts,
   hasAnyDashboardCapability: (capabilities: string[], ...required: string[]) =>

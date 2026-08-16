@@ -201,7 +201,7 @@ export default async function ListingPage({
                 </div>
                 <p className="text-sm text-muted-foreground">Title, slug, description, category, difficulty, and outcomes.</p>
                 <Button asChild variant="outline" className="mt-4 w-full justify-start">
-                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/info')} locale={locale}>Open identity editor</Link>
+                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/info', 'console')} locale={locale}>Open identity editor</Link>
                 </Button>
               </div>
               <div className="rounded-lg border p-4">
@@ -211,7 +211,7 @@ export default async function ListingPage({
                 </div>
                 <p className="text-sm text-muted-foreground">Cover image and promo video used across catalog and landing pages.</p>
                 <Button asChild variant="outline" className="mt-4 w-full justify-start">
-                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/media')} locale={locale}>Open media editor</Link>
+                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/media', 'console')} locale={locale}>Open media editor</Link>
                 </Button>
               </div>
               <div className="rounded-lg border p-4">
@@ -221,7 +221,7 @@ export default async function ListingPage({
                 </div>
                 <p className="text-sm text-muted-foreground">Portfolio project slides shown on the public course landing page.</p>
                 <Button asChild variant="outline" className="mt-4 w-full justify-start">
-                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/projects')} locale={locale}>Open project editor</Link>
+                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/projects', 'console')} locale={locale}>Open project editor</Link>
                 </Button>
               </div>
               <div className="rounded-lg border p-4">
@@ -231,7 +231,7 @@ export default async function ListingPage({
                 </div>
                 <p className="text-sm text-muted-foreground">Visibility, enrollment status, seat cap, and enrollment deadline.</p>
                 <Button asChild variant="outline" className="mt-4 w-full justify-start">
-                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/access')} locale={locale}>Open access controls</Link>
+                  <Link href={buildDashboardCoursePath(courseRouteParam, 'listing/access', 'console')} locale={locale}>Open access controls</Link>
                 </Button>
               </div>
             </div>

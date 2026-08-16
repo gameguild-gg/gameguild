@@ -11,7 +11,8 @@ const mocks = vi.hoisted(() => ({
   }),
 }));
 
-vi.mock('next/navigation', () => ({ notFound: mocks.notFound }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning', notFound: mocks.notFound }));
 vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
     <a href={href}>{children}</a>
