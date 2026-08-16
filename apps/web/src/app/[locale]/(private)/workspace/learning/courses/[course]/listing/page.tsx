@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game
 import { AlertCircle, BookOpen, Edit, Globe, ImageIcon, Images, Rocket, Shield, Users } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import React from 'react';
-import { ListingLaunchForm } from './listing-launch-form';
+import { ListingLaunchForm } from '@/components/learning/console/courses/[course]/listing/listing-launch-form';
 
 const storefrontStateMeta: Record<StorefrontState, { label: string; description: string; className: string }> = {
   hidden: {

@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game
 import { Images } from 'lucide-react';
 import React from 'react';
 import { getCourseLandingProjects } from '@/lib/learning';
-import { ProjectCarouselEditorForm } from './project-carousel-editor-form';
+import { ProjectCarouselEditorForm } from '@/components/learning/console/courses/[course]/listing/projects/project-carousel-editor-form';
 
 /**
  * Listing Projects Page

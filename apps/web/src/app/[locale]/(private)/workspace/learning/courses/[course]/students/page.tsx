@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { getCourse, getCourseStudents } from '@/lib/learning';
 import { Card, CardContent } from '@game-guild/ui/components/card';
 import { CheckCircle2, Clock, TrendingUp, Users } from 'lucide-react';
-import { StudentTable } from './student-table';
+import { StudentTable } from '@/components/learning/console/courses/[course]/students/student-table';
 
 export default async function Page({ params }: PageProps<'/[locale]/workspace/learning/courses/[course]/students'>): Promise<React.JSX.Element> {
   const { course: courseId } = await params;

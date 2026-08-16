@@ -1,7 +1,7 @@
 import { getCohort } from '@/lib/learning';
 import { notFound } from 'next/navigation';
 
-import { CohortSettingsForm } from './cohort-settings-form';
+import { CohortSettingsForm } from '@/components/learning/console/courses/[course]/classes/[classId]/settings/cohort-settings-form';
 
 export default async function CohortSettingsPage({
   params,

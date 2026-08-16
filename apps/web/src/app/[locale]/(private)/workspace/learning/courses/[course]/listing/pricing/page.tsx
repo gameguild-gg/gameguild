@@ -2,7 +2,7 @@ import React from 'react';
 import { getCourse, getCoursePricing } from '@/lib/learning';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CreditCard, Receipt } from 'lucide-react';
-import { PricingEditorForm } from './pricing-editor-form';
+import { PricingEditorForm } from '@/components/learning/console/courses/[course]/listing/pricing/pricing-editor-form';
 
 /**
  * Listing Pricing Page

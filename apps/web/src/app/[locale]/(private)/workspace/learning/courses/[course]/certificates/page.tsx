@@ -3,7 +3,7 @@ import { getCourseCertificates } from '@/lib/learning';
 import { Card, CardContent } from '@game-guild/ui/components/card';
 import { Button } from '@game-guild/ui/components/button';
 import { Award, FileCheck2, Plus } from 'lucide-react';
-import { CertificateTemplateManager } from './certificate-template-manager';
+import { CertificateTemplateManager } from '@/components/learning/console/courses/[course]/certificates/certificate-template-manager';
 
 /**
  * Certificates List Page

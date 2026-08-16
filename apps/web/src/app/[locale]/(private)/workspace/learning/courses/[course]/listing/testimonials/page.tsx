@@ -1,6 +1,6 @@
 import React from 'react';
 import { getCourseTestimonials } from '@/lib/learning';
-import { TestimonialsManager } from './testimonials-manager';
+import { TestimonialsManager } from '@/components/learning/console/courses/[course]/listing/testimonials/testimonials-manager';
 
 /**
  * Listing Testimonials Page

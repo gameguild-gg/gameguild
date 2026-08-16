@@ -4,7 +4,7 @@ import { getCourse, getDiscussionThread } from '@/lib/learning';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { CheckCircle2, MessageSquare } from 'lucide-react';
-import { ThreadActionPanel } from '../../thread-action-panel';
+import { ThreadActionPanel } from '@/components/learning/console/courses/[course]/support/thread-action-panel';
 
 /**
  * Discussion Thread Detail Page

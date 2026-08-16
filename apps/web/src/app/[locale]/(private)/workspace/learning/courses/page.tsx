@@ -4,7 +4,7 @@ import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
 import { AlertTriangle, ArrowLeft, BarChart3, BookOpen, Eye, Plus, RefreshCw } from 'lucide-react';
 import React from 'react';
-import { CourseList } from './course-list';
+import { CourseList } from '@/components/learning/console/courses/course-list';
 
 export default async function Page({ params }: PageProps<'/[locale]/workspace/learning/courses'>): Promise<React.JSX.Element> {
   const { locale } = await params;

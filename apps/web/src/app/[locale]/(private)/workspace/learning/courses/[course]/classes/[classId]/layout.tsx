@@ -2,7 +2,7 @@ import { getCohort, getCourse, getCourseCohorts } from '@/lib/learning';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-import { CohortWorkspaceNav } from './cohort-workspace-nav';
+import { CohortWorkspaceNav } from '@/components/learning/console/courses/[course]/classes/[classId]/cohort-workspace-nav';
 
 export default async function CohortWorkspaceLayout({
   children,

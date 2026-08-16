@@ -2,8 +2,8 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import AccessSettingsPage from '../listing/access/page';
-import DangerPage from './danger/page';
+import AccessSettingsPage from '@/app/[locale]/(private)/workspace/learning/courses/[course]/listing/access/page';
+import DangerPage from '@/app/[locale]/(private)/workspace/learning/courses/[course]/settings/danger/page';
 import { archiveCourse, deleteCourse, fetchCourse, transferCourseOwnership, updateCourse } from '@/lib/learning/actions';
 
 const refreshMock = vi.fn();

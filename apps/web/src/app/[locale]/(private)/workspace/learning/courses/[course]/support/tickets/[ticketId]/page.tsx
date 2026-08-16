@@ -4,7 +4,7 @@ import { getSupportTicket } from '@/lib/learning';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { MessageSquare } from 'lucide-react';
-import { CourseTicketActionPanel } from '../course-ticket-action-panel';
+import { CourseTicketActionPanel } from '@/components/learning/console/courses/[course]/support/tickets/course-ticket-action-panel';
 
 /**
  * Support Ticket Detail Page

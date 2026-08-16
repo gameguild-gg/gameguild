@@ -1,7 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { getCourse, getCourseCohorts } from '@/lib/learning';
-import { ClassControlCenter } from './class-control-center';
+import { ClassControlCenter } from '@/components/learning/console/courses/[course]/classes/class-control-center';
 
 /**
  * L6: Course Classes/Schedule Page

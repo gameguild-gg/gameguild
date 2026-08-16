@@ -1,6 +1,6 @@
 import React from 'react';
 import { getCourseNotificationSettings } from '@/lib/learning';
-import { NotificationSettingsEditor } from './notification-settings-editor';
+import { NotificationSettingsEditor } from '@/components/learning/console/courses/[course]/settings/notifications/notification-settings-editor';
 
 /**
  * Notification Settings Page

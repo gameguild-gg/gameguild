@@ -11,7 +11,7 @@ import {
   codePayloadToFiles,
   type CodeFile,
 } from '@/lib/coding-assignment/code-payload';
-import { GradeClient } from './grade-client';
+import { GradeClient } from '@/components/learning/console/courses/[course]/assessments/[assessmentId]/submissions/[submissionId]/grade/grade-client';
 
 /**
  * Instructor grading IDE for a coding-assessment submission.

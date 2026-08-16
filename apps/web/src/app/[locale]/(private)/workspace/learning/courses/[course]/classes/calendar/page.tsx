@@ -1,6 +1,6 @@
 import { getCourseCohortCalendar, getCourseCohorts } from '@/lib/learning';
 
-import { GeneralCohortCalendar } from './general-cohort-calendar';
+import { GeneralCohortCalendar } from '@/components/learning/console/courses/[course]/classes/calendar/general-cohort-calendar';
 
 export default async function ClassesCalendarPage({
   params,

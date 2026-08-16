@@ -162,32 +162,32 @@ vi.mock("./support/tickets/course-ticket-action-panel", () => ({
   ),
 }));
 
-import AnalyticsLayout from "./analytics/layout";
-import AnalyticsRedirectPage from "./analytics/page";
-import CompletionAnalyticsPage from "./analytics/completion/page";
-import EngagementAnalyticsPage from "./analytics/engagement/page";
-import RevenueAnalyticsPage from "./analytics/revenue/page";
-import AssessmentsLayout from "./assessments/layout";
-import AssessmentDetailPage from "./assessments/[assessmentId]/page";
-import CertificatesLayout from "./certificates/layout";
-import CertificateTemplateDetailPage from "./certificates/[templateId]/page";
-import ContentItemPage from "./content/[contentId]/page";
-import ListingLayout from "./listing/layout";
-import ListingFaqPage from "./listing/faq/page";
-import ListingPricingPage from "./listing/pricing/page";
-import ListingProjectsPage from "./listing/projects/page";
-import ListingTestimonialsPage from "./listing/testimonials/page";
-import SettingsLayout from "./settings/layout";
-import SettingsRedirectPage from "./settings/page";
-import GeneralSettingsPage from "./settings/general/page";
-import IntegrationSettingsPage from "./settings/integrations/page";
-import NotificationSettingsPage from "./settings/notifications/page";
-import SupportLayout from "./support/layout";
-import SupportRedirectPage from "./support/page";
-import DiscussionsPage from "./support/discussions/page";
-import DiscussionThreadPage from "./support/discussions/[threadId]/page";
-import SupportTicketsPage from "./support/tickets/page";
-import SupportTicketDetailPage from "./support/tickets/[ticketId]/page";
+import AnalyticsLayout from "@/app/[locale]/(private)/workspace/learning/courses/[course]/analytics/layout";
+import AnalyticsRedirectPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/analytics/page";
+import CompletionAnalyticsPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/analytics/completion/page";
+import EngagementAnalyticsPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/analytics/engagement/page";
+import RevenueAnalyticsPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/analytics/revenue/page";
+import AssessmentsLayout from "@/app/[locale]/(private)/workspace/learning/courses/[course]/assessments/layout";
+import AssessmentDetailPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/assessments/[assessmentId]/page";
+import CertificatesLayout from "@/app/[locale]/(private)/workspace/learning/courses/[course]/certificates/layout";
+import CertificateTemplateDetailPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/certificates/[templateId]/page";
+import ContentItemPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/content/[contentId]/page";
+import ListingLayout from "@/app/[locale]/(private)/workspace/learning/courses/[course]/listing/layout";
+import ListingFaqPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/listing/faq/page";
+import ListingPricingPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/listing/pricing/page";
+import ListingProjectsPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/listing/projects/page";
+import ListingTestimonialsPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/listing/testimonials/page";
+import SettingsLayout from "@/app/[locale]/(private)/workspace/learning/courses/[course]/settings/layout";
+import SettingsRedirectPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/settings/page";
+import GeneralSettingsPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/settings/general/page";
+import IntegrationSettingsPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/settings/integrations/page";
+import NotificationSettingsPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/settings/notifications/page";
+import SupportLayout from "@/app/[locale]/(private)/workspace/learning/courses/[course]/support/layout";
+import SupportRedirectPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/support/page";
+import DiscussionsPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/support/discussions/page";
+import DiscussionThreadPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/support/discussions/[threadId]/page";
+import SupportTicketsPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/support/tickets/page";
+import SupportTicketDetailPage from "@/app/[locale]/(private)/workspace/learning/courses/[course]/support/tickets/[ticketId]/page";
 
 const course = {
   id: "course-1",
