@@ -63,7 +63,7 @@ export async function TeamWorkspaceView({
   const isArchived = String(team.status).toLowerCase() === 'archived' || Number(team.status) === 1;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2"><Users className="size-5" /><Badge variant="outline">Team</Badge>{team.isPersonal && <Badge>Personal</Badge>}</div>

@@ -5,7 +5,7 @@ import {
   type SettingsBanner,
 } from '@/components/connected-accounts-card';
 import { redirect } from '@/i18n/navigation';
-import { createServerClient, GeneratedApi } from '@game-guild/client';
+import { createServerClient } from '@game-guild/client';
 import { getTranslations } from 'next-intl/server';
 import React from 'react';
 
@@ -23,9 +23,20 @@ const ERROR_BANNER_KEYS: Record<
 /**
  * Account settings — Connected Accounts card for Google + Discord link /
  * unlink. Authentication is guarded here (mirroring the dashboard layout) and
- * the linked-provider list is fetched server-side with the session's bearer
- * via the generated typed client.
+ * the linked-provider metadata is fetched server-side with the session's
+ * bearer via HEAD /v1/auth/external-logins (no body; providers arrive in the
+ * X-Linked-Providers header as 'provider=iso-timestamp' pairs).
  */
+function parseLinkedProviders(header: string): LinkedAccount[] {
+  return header
+    .split(',')
+    .filter(Boolean)
+    .map((pair) => {
+      const [provider, linkedAt] = pair.split('=');
+      return { provider, linkedAt: linkedAt ?? '' };
+    })
+    .filter((row) => row.provider !== '' && row.linkedAt !== '');
+}
 export default async function AccountSettingsPage({
   params,
   searchParams,
@@ -43,19 +54,21 @@ export default async function AccountSettingsPage({
     process.env.API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
     'http://localhost:8080';
-  const authModule = new GeneratedApi.AuthModule(
-    createServerClient({
-      baseUrl: apiUrl,
-      auth: { getAccessToken: () => getToken() },
-    }),
-  );
+  const client = createServerClient({
+    baseUrl: apiUrl,
+    auth: { getAccessToken: () => getToken() },
+  });
 
   let linkedAccounts: LinkedAccount[] = [];
-  const result = await authModule.getAuthExternalLogins();
+  const result = await client.requestRaw<void>({
+    method: 'HEAD',
+    path: '/v1/auth/external-logins',
+    requiresAuth: true,
+  });
   if (result.ok) {
-    linkedAccounts = result.data
-      .filter((row) => row.provider === 'google' || row.provider === 'discord')
-      .map((row) => ({ provider: row.provider as string, linkedAt: row.createdAt }));
+    linkedAccounts = parseLinkedProviders(
+      result.data.headers.get('x-linked-providers') ?? '',
+    ).filter((row) => row.provider === 'google' || row.provider === 'discord');
   }
 
   let banner: SettingsBanner = null;

@@ -41,7 +41,7 @@ export default async function JobsPage(): Promise<React.JSX.Element> {
                 <ArrowRight className="ml-2 size-4" aria-hidden="true" />
               </Link>
               <Link
-                href="/showcase"
+                href="/projects"
                 className="inline-flex items-center rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
               >
                 Review projects

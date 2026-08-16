@@ -1,7 +1,16 @@
 import { auth } from '@/auth';
 import { redirect } from '@/i18n/navigation';
 import { WorkspaceShell } from '@/components/workspace/workspace-shell';
+import { getWorkspaceTeams } from '@/lib/workspaces';
+import { getDashboardContexts } from '@/lib/dashboard-contexts';
 import React from 'react';
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'GG';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
 
 /**
  * Member-private surface (/workspace/*). The layout owns the auth context:
@@ -17,5 +26,20 @@ export default async function PrivateLayout({
     throw new Error('Unauthenticated private area access');
   }
 
-  return await WorkspaceShell({ children });
+  const displayName = session.user.name?.trim() || session.user.email?.split('@')[0] || 'Member';
+  const [contexts, teams] = await Promise.all([getDashboardContexts(), getWorkspaceTeams()]);
+
+  return (
+    <WorkspaceShell
+      user={{
+        name: displayName,
+        email: session.user.email ?? '',
+        initials: initials(displayName),
+        canManage: contexts.capabilities.length > 0,
+      }}
+      teams={teams.map((team) => ({ id: team.id, slug: team.slug, name: team.name, isPersonal: team.isPersonal }))}
+    >
+      {children}
+    </WorkspaceShell>
+  );
 }
