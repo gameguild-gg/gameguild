@@ -5164,10 +5164,10 @@ export interface LearningAssessmentsGradingQueueAssessment {
 }
 
 export interface LearningAssessmentsGradingQueueItem {
-  attemptCount?: number;
-  attemptNumber?: number;
   assignmentPassed?: boolean | null;
   assignmentScore?: number | null;
+  attemptCount?: number;
+  attemptNumber?: number;
   canonicalSubmissionId?: string;
   displayName?: string | null;
   groupId?: string | null;
@@ -16752,10 +16752,10 @@ LearningAssessmentsGradingQueueAssessmentSchema = z.object({
 
 /** Zod schema for LearningAssessmentsGradingQueueItem */
 LearningAssessmentsGradingQueueItemSchema = z.object({
-  attemptCount: z.number().int().optional(),
-  attemptNumber: z.number().int().optional(),
   assignmentPassed: z.boolean().nullable().optional(),
   assignmentScore: z.number().int().nullable().optional(),
+  attemptCount: z.number().int().optional(),
+  attemptNumber: z.number().int().optional(),
   canonicalSubmissionId: z.string().uuid().optional(),
   displayName: z.string().nullable().optional(),
   groupId: z.string().uuid().nullable().optional(),
