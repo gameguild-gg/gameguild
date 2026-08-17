@@ -1,5 +1,5 @@
 import { ResetPasswordForm } from '@/components/reset-password-form';
-import { completePasswordResetAction } from '../actions';
+import { completePasswordResetAction } from '@/lib/auth/password-actions';
 
 interface Props {
   searchParams?: Promise<{ token?: string }>;

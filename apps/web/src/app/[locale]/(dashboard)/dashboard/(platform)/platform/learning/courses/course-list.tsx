@@ -1,7 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
-import { buildDashboardCoursePath } from '@/lib/learning/course-route';
+import { buildPlatformCoursePath } from '@/lib/learning/course-route';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@game-guild/ui/components/card';
@@ -241,7 +241,7 @@ export function CourseList({ courses, locale }: { courses: EnrichedCourse[]; loc
                   {filtered.map((course) => (
                     <TableRow key={course.id} className="cursor-pointer">
                       <TableCell>
-                        <Link href={buildDashboardCoursePath(course.routeParam ?? course)} locale={locale} className="flex items-center gap-3">
+                        <Link href={buildPlatformCoursePath(course.routeParam ?? course)} locale={locale} className="flex items-center gap-3">
                           <div className="flex size-10 shrink-0 items-center justify-center rounded bg-muted">
                             <BookOpen className="size-5 text-muted-foreground" />
                           </div>

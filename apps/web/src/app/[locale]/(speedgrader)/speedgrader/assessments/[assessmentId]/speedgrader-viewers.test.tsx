@@ -27,13 +27,13 @@ vi.mock('./speedgrader-actions', () => ({
 
 vi.mock('@game-guild/emception-ui', () => {
   const React = require('react') as typeof import('react');
-  const Ide = React.forwardRef<IdeHandle>((_props, ref) => {
+  const Ide = React.forwardRef<IdeHandle, { manifestUrl?: string }>((props, ref) => {
     React.useImperativeHandle(ref, () => ({
       setFiles: ideMock.setFiles,
       getFiles: ideMock.getFiles,
       runTests: ideMock.runTests,
     }));
-    return React.createElement('div', { 'data-testid': 'mock-ide' });
+    return React.createElement('div', { 'data-testid': 'mock-ide', 'data-manifest-url': props.manifestUrl });
   });
   Ide.displayName = 'Ide';
   const TestResultsPanel = ({ report, maxScore }: { report: { cases: { name: string; passed: boolean }[] }; maxScore?: number }) =>
@@ -166,7 +166,7 @@ describe('SubmissionViewer — modality switch', () => {
       codePayload: JSON.stringify([{ path: '/home/user/main.cpp', content: '// student main' }]),
     });
 
-    render(<SubmissionViewer submissionId="sub-1" codingAssignment={sampleAssignment} manifestUrl="/cdn/manifest.json" />);
+    render(<SubmissionViewer submissionId="sub-1" codingAssignment={sampleAssignment} manifestUrl="/emception/manifest.json" />);
 
     await waitFor(() => expect(screen.getByTestId('code-grader-panel')).toBeInTheDocument());
   });
@@ -189,6 +189,44 @@ describe('SubmissionViewer — modality switch', () => {
     render(<SubmissionViewer submissionId="sub-1" />);
 
     expect(await screen.findByTestId('viewer-error')).toHaveTextContent('boom');
+  });
+});
+
+// --- Manifest URL resolution -----------------------------------------------
+
+describe('manifest URL resolution', () => {
+  beforeEach(() => {
+    actionsMock.fetchSubmission.mockReset();
+  });
+
+  it('defaults the manifest URL to the self-hosted /emception/ path', async () => {
+    resolveSubmission({
+      submittedModalities: 'Code',
+      codePayload: JSON.stringify([{ path: '/home/user/main.cpp', content: '// student main' }]),
+    });
+
+    render(<SubmissionViewer submissionId="sub-1" codingAssignment={sampleAssignment} />);
+
+    const ide = await screen.findByTestId('mock-ide');
+    expect(ide).toHaveAttribute('data-manifest-url', '/emception/manifest.json');
+  });
+
+  it('passes an explicit manifestUrl through to the Ide', async () => {
+    resolveSubmission({
+      submittedModalities: 'Code',
+      codePayload: JSON.stringify([{ path: '/home/user/main.cpp', content: '// student main' }]),
+    });
+
+    render(
+      <SubmissionViewer
+        submissionId="sub-1"
+        codingAssignment={sampleAssignment}
+        manifestUrl="https://cdn.example.test/emception/manifest.json"
+      />,
+    );
+
+    const ide = await screen.findByTestId('mock-ide');
+    expect(ide).toHaveAttribute('data-manifest-url', 'https://cdn.example.test/emception/manifest.json');
   });
 });
 
@@ -383,7 +421,7 @@ describe('CodeGraderPanel', () => {
           { path: '/home/user/secret.cpp', content: '// ATTEMPT' },
         ]}
         maxScore={100}
-        manifestUrl="/cdn/manifest.json"
+        manifestUrl="/emception/manifest.json"
       />,
     );
 
@@ -403,7 +441,7 @@ describe('CodeGraderPanel', () => {
         assignment={sampleAssignment}
         submittedFiles={[{ path: '/home/user/main.cpp', content: '// student main' }]}
         maxScore={100}
-        manifestUrl="/cdn/manifest.json"
+        manifestUrl="/emception/manifest.json"
         onComputedScore={onComputedScore}
       />,
     );
@@ -421,7 +459,7 @@ describe('CodeGraderPanel', () => {
   it('shows an error alert when run tests rejects', async () => {
     ideMock.runTests.mockRejectedValue(new Error('boot failed'));
 
-    render(<CodeGraderPanel assignment={sampleAssignment} submittedFiles={[]} maxScore={100} manifestUrl="/cdn/manifest.json" />);
+    render(<CodeGraderPanel assignment={sampleAssignment} submittedFiles={[]} maxScore={100} manifestUrl="/emception/manifest.json" />);
     await waitFor(() => expect(ideMock.setFiles).toHaveBeenCalled());
 
     fireEvent.click(screen.getByTestId('run-tests-button'));

@@ -38,6 +38,8 @@ public class TasksAggregationTests
         await SeedRowAsync(db, individual.Id, "Bob", 1, SubmissionStatus.Late, isLate: true);
         await SeedRowAsync(db, individual.Id, "Carol", 1, SubmissionStatus.InProgress); // never counts
         await SeedRowAsync(db, individual.Id, "Dave", 1, SubmissionStatus.Graded, score: 90); // already graded
+        var (eveId, _) = await SeedRowAsync(db, individual.Id, "Eve", 1, SubmissionStatus.Submitted);
+        await SeedUserRowAsync(db, individual.Id, eveId, "Eve", 2, SubmissionStatus.Graded, score: 50); // latest graded
 
         var groupAssessment = await SeedAssessmentAsync(db, courseId, "Group Project");
         var group = await SeedGroupAsync(db, groupAssessment, "Alice", "Bob", "Carol");
@@ -56,7 +58,7 @@ public class TasksAggregationTests
         var homework = gradeItems.Single(i => i.AssessmentTitle == "Homework");
         homework.CourseId.Should().Be(courseId);
         homework.CourseTitle.Should().Be("Physics");
-        homework.CountSubmitted.Should().Be(2, "InProgress never counts and Graded is done");
+        homework.CountSubmitted.Should().Be(2, "InProgress never counts, Graded is done, and Eve's stale attempt-1 submission under her graded attempt 2 does not count either");
         homework.DueAt.Should().Be(individual.DueAt);
         var project = gradeItems.Single(i => i.AssessmentTitle == "Group Project");
         project.CountSubmitted.Should().Be(1, "three member rows of one group attempt count as one target");

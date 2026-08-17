@@ -18,7 +18,7 @@ import {
   flattenDashboardNavigationItems,
   type DashboardNavGroup,
   type DashboardNavSubItem,
-} from './dashboard-sidebar';
+} from '@/components/console/dashboard-sidebar';
 
 export const DASHBOARD_COMMAND_PALETTE_OPEN_EVENT = 'gameguild:open-dashboard-command-palette';
 

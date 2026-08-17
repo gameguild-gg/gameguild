@@ -261,6 +261,10 @@ public sealed class DatabaseStartupInitializerTests
             EnvironmentName = "Testing",
             ApplicationName = typeof(DatabaseStartupInitializer).Assembly.FullName
         });
+        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["ConnectionStrings:MigrationConnection"] = string.Empty
+        });
         builder.Configuration.AddInMemoryCollection(settings);
         builder.Services.AddSingleton<DatabaseConnectivityProbe>();
         configureServices?.Invoke(builder.Services);

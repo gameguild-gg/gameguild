@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@game-guild/ui/components/badge';
 import { Loader2, Save } from 'lucide-react';
 import { updateCourse, fetchCourse } from '@/lib/learning/actions';
-import { buildDashboardCoursePath } from '@/lib/learning/course-route';
+import { buildPlatformCoursePath } from '@/lib/learning/course-route';
 import type { CourseDetails } from '@/lib/learning/types';
 import {
   PROGRAM_CATEGORIES,
@@ -92,7 +92,7 @@ export default function ListingInfoPage({ params }: { params: Promise<{ locale: 
       if (result.success) {
         setSuccess(true);
         if (course) {
-          router.replace(buildDashboardCoursePath({ ...course, slug: slug.trim() }, 'listing/info'));
+          router.replace(buildPlatformCoursePath({ ...course, slug: slug.trim() }, 'listing/info'));
         }
         router.refresh();
       } else {

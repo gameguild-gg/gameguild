@@ -580,7 +580,8 @@ public class AssessmentsController : BaseApiController
 
     /// <summary>
     /// Get the SpeedGrader navigation queue for an assessment (instructor-only):
-    /// one item per student/group attempt, excluding InProgress-only entries.
+    /// one item per student/group representing the target's latest gradeable attempt,
+    /// excluding InProgress-only targets.
     /// </summary>
     [HttpGet("{assessmentId:guid}/grading-queue")]
     public async Task<ActionResult<GradingQueueDto>> GetGradingQueue(Guid assessmentId)
@@ -680,6 +681,9 @@ public class AssessmentsController : BaseApiController
 
     private async Task<bool> CanReviewCourseAsync(Guid courseId)
     {
+        // Managers (creator, tenant/system admin, Edit/Create/Delete permission) can review and grade.
+        if (await CanManageCourseAsync(courseId).ConfigureAwait(false)) return true;
+
         var actor = _actorContextAccessor.ActorContext;
         if (!actor.SubjectIdAsGuid.HasValue) return false;
         if (!await IsActorInProgramTenantAsync(courseId).ConfigureAwait(false)) return false;

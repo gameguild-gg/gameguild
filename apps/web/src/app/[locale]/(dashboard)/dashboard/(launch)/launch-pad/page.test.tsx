@@ -26,7 +26,7 @@ vi.mock('@/lib/dashboard-contexts', () => ({
   hasAnyDashboardCapability: (capabilities: string[], capability: string) => capabilities.includes(capability),
 }));
 
-vi.mock('@game-guild/ui/components/date-time-picker', () => ({
+vi.mock('@/components/ui/date-time-picker', () => ({
   DateTimePicker: ({ id, name, required }: { id: string; name: string; required?: boolean }) => <input id={id} name={name} required={required} />,
 }));
 

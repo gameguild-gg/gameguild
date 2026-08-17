@@ -27,6 +27,8 @@ export interface CodeGraderPanelProps {
   submittedFiles: CodeFile[];
   maxScore: number;
   manifestUrl: string;
+  /** Submission id — namespaces Ide localStorage per submission to prevent stale-data blink. */
+  submissionId?: string;
   /** Run-tests result seeds the grading panel's score input. */
   onComputedScore?: (result: ComputedScore) => void;
 }
@@ -83,7 +85,7 @@ export function mergeWorkspaceWithSubmission(assignment: CodingAssignmentContent
  * the full (Public + Private) test-run flow. Moved from the legacy
  * `grade-client.tsx`; the score/feedback/submit UX lives in the grading panel.
  */
-export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifestUrl, onComputedScore }: CodeGraderPanelProps): React.JSX.Element {
+export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifestUrl, submissionId, onComputedScore }: CodeGraderPanelProps): React.JSX.Element {
   const ideRef = useRef<IdeHandle>(null);
   const [gradeState, setGradeState] = useState<GradeState>('idle');
   const [report, setReport] = useState<TestReport | null>(null);
@@ -174,7 +176,7 @@ export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifest
       {report && <TestResultsPanel report={report} maxScore={maxScore} />}
 
       <div className="min-h-[400px] flex-1 border">
-        <Ide ref={ideRef} manifestUrl={manifestUrl} maxScore={maxScore} />
+        <Ide ref={ideRef} manifestUrl={manifestUrl} maxScore={maxScore} assignmentToken={submissionId} />
       </div>
     </div>
   );

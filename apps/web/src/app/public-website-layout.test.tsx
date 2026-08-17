@@ -19,7 +19,7 @@ vi.mock('@/i18n/navigation', () => ({
   usePathname: () => '/',
 }));
 
-import InstitutionalLayout from './[locale]/(institutional)/layout';
+import InstitutionalLayout from './[locale]/(public)/layout';
 
 describe('public website layouts', () => {
   it('wraps public routes with the website header and footer', async () => {

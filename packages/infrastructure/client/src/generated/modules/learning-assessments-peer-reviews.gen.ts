@@ -17,32 +17,6 @@ export class LearningAssessmentsPeerReviewsModule {
 
   /**
    */
-  async postAssessmentsPeerReviewsClaim(
-    assessmentId: string,
-  ): Promise<Result<Types.LearningAssessmentsPeerReviewClaim, ApiError>> {
-    const url = `/v1/assessments/${assessmentId}/peer-reviews/claim`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsPeerReviewClaimSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async getAssessmentsPeerReviews(
     reviewId: string,
   ): Promise<
@@ -96,6 +70,27 @@ export class LearningAssessmentsPeerReviewsModule {
 
   /**
    */
+  async getAssessmentsSubmissionsPeerReviews(
+    submissionId: string,
+  ): Promise<
+    Result<Array<Types.LearningAssessmentsInstructorPeerReview>, ApiError>
+  > {
+    const url = `/v1/assessments/submissions/${submissionId}/peer-reviews`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningAssessmentsInstructorPeerReview>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
   async getAssessmentsSubmissionsReceivedPeerReviews(
     submissionId: string,
   ): Promise<
@@ -117,23 +112,28 @@ export class LearningAssessmentsPeerReviewsModule {
 
   /**
    */
-  async getAssessmentsSubmissionsPeerReviews(
-    submissionId: string,
-  ): Promise<
-    Result<Array<Types.LearningAssessmentsInstructorPeerReview>, ApiError>
-  > {
-    const url = `/v1/assessments/submissions/${submissionId}/peer-reviews`;
+  async postAssessmentsPeerReviewsClaim(
+    assessmentId: string,
+  ): Promise<Result<Types.LearningAssessmentsPeerReviewClaim, ApiError>> {
+    const url = `/v1/assessments/${assessmentId}/peer-reviews/claim`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningAssessmentsInstructorPeerReview>,
-      ApiError
-    >;
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningAssessmentsPeerReviewClaimSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 }
 

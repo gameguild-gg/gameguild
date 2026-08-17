@@ -53,6 +53,28 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
+  async getAccessReviewsCampaignsActive(query?: {
+    tenantId?: string;
+  }): Promise<
+    Result<Array<Types.IdentityAuthorizationAccessReviewCampaign>, ApiError>
+  > {
+    const url = "/v1/access-reviews/campaigns/active";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.IdentityAuthorizationAccessReviewCampaign>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
   async getAccessReviewsCampaigns(
     id: string,
   ): Promise<
@@ -81,32 +103,10 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async getAccessReviewsCampaignsActive(query?: {
-    tenantId?: string;
-  }): Promise<
-    Result<Array<Types.IdentityAuthorizationAccessReviewCampaign>, ApiError>
-  > {
-    const url = "/v1/access-reviews/campaigns/active";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.IdentityAuthorizationAccessReviewCampaign>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async postAccessReviewsCampaignsStart(
+  async postAccessReviewsCampaignsCancel(
     id: string,
   ): Promise<Result<void, ApiError>> {
-    const url = `/v1/access-reviews/campaigns/${id}:start`;
+    const url = `/v1/access-reviews/campaigns/${id}:cancel`;
 
     const result = await this.client.request({
       method: "POST",
@@ -144,10 +144,26 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async postAccessReviewsCampaignsCancel(
+  async postAccessReviewsCampaignsSendReminders(
+    id: string,
+  ): Promise<Result<number, ApiError>> {
+    const url = `/v1/access-reviews/campaigns/${id}:send-reminders`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<number, ApiError>;
+  }
+
+  /**
+   */
+  async postAccessReviewsCampaignsStart(
     id: string,
   ): Promise<Result<void, ApiError>> {
-    const url = `/v1/access-reviews/campaigns/${id}:cancel`;
+    const url = `/v1/access-reviews/campaigns/${id}:start`;
 
     const result = await this.client.request({
       method: "POST",
@@ -160,10 +176,10 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async postAccessReviewsCampaignsSendReminders(
-    id: string,
-  ): Promise<Result<number, ApiError>> {
-    const url = `/v1/access-reviews/campaigns/${id}:send-reminders`;
+  async postAccessReviewsCampaignsProcessExpired(): Promise<
+    Result<number, ApiError>
+  > {
+    const url = "/v1/access-reviews/campaigns:process-expired";
 
     const result = await this.client.request({
       method: "POST",
@@ -265,22 +281,6 @@ export class AccessControlAccessReviewsModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async postAccessReviewsCampaignsProcessExpired(): Promise<
-    Result<number, ApiError>
-  > {
-    const url = "/v1/access-reviews/campaigns:process-expired";
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<number, ApiError>;
   }
 }
 

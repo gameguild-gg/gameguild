@@ -29,7 +29,7 @@ import {
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { AlertTriangle, BarChart3, ChevronDown, ClipboardList, GripVertical, Loader2, Pencil, Plus, Target, Trash2, Trophy, Wand2 } from 'lucide-react';
+import { AlertTriangle, BarChart3, ChevronDown, ClipboardCheck, ClipboardList, GripVertical, Loader2, Pencil, Plus, Target, Trash2, Trophy, Wand2 } from 'lucide-react';
 import React, { useState, useTransition } from 'react';
 
 function typeIcon(type: AssessmentType) {
@@ -73,6 +73,7 @@ interface AssessmentsListProps {
   total: number;
   assessmentGroups?: AssessmentGroup[];
   analytics?: CourseAssessmentAnalytics | null;
+  canManage?: boolean;
 }
 
 interface AssessmentGroupView {
@@ -251,6 +252,7 @@ export function AssessmentsList({
   total,
   assessmentGroups = [],
   analytics = null,
+  canManage = false,
 }: AssessmentsListProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -617,31 +619,44 @@ export function AssessmentsList({
                   <div className="divide-y">
                     {group.assessments.map((assessment) => (
                       <DraggableAssessmentRow key={assessment.id} id={`${ASSESSMENT_DRAG_PREFIX}${assessment.id}`}>
-                        <Link
-                          href={`${pathname}/${assessment.id}`}
-                          className="group flex min-h-16 items-center gap-3 px-4 py-3 transition hover:bg-muted/45"
-                        >
-                          <GripVertical className="text-muted-foreground/70 size-4 shrink-0 cursor-grab" aria-hidden="true" />
-                          <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
-                            {typeIcon(assessment.type)}
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-semibold underline-offset-2 group-hover:underline">
-                              {assessment.title}
+                        <div className="flex items-center">
+                          <Link
+                            href={`${pathname}/${assessment.id}`}
+                            className="group flex min-h-16 flex-1 items-center gap-3 px-4 py-3 transition hover:bg-muted/45"
+                          >
+                            <GripVertical className="text-muted-foreground/70 size-4 shrink-0 cursor-grab" aria-hidden="true" />
+                            <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
+                              {typeIcon(assessment.type)}
                             </span>
-                            <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                              {assessment.timeLimitMinutes && <span>{assessment.timeLimitMinutes}m</span>}
-                              {assessment.maxAttempts && <span>{assessment.maxAttempts} attempts</span>}
-                              <span>{assessment.maxScore} pts</span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-semibold underline-offset-2 group-hover:underline">
+                                {assessment.title}
+                              </span>
+                              <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                                {assessment.timeLimitMinutes && <span>{assessment.timeLimitMinutes}m</span>}
+                                {assessment.maxAttempts && <span>{assessment.maxAttempts} attempts</span>}
+                                <span>{assessment.maxScore} pts</span>
+                              </span>
                             </span>
-                          </span>
-                          <Badge variant={typeBadgeVariant(assessment.type)} className="hidden shrink-0 sm:inline-flex">
-                            {assessment.type}
-                          </Badge>
-                          <Badge variant={assessment.isAvailable ? 'secondary' : 'outline'} className="hidden shrink-0 sm:inline-flex">
-                            {assessment.isAvailable ? 'available' : 'scheduled'}
-                          </Badge>
-                        </Link>
+                            <Badge variant={typeBadgeVariant(assessment.type)} className="hidden shrink-0 sm:inline-flex">
+                              {assessment.type}
+                            </Badge>
+                            <Badge variant={assessment.isAvailable ? 'secondary' : 'outline'} className="hidden shrink-0 sm:inline-flex">
+                              {assessment.isAvailable ? 'available' : 'scheduled'}
+                            </Badge>
+                          </Link>
+                          {canManage && (
+                            <Button asChild variant="outline" size="sm" className="mr-4 shrink-0">
+                              <Link
+                                href={`${pathname}/${assessment.id}/submissions`}
+                                data-testid={`grade-link-${assessment.id}`}
+                              >
+                                <ClipboardCheck className="mr-2 h-4 w-4" />
+                                Grade
+                              </Link>
+                            </Button>
+                          )}
+                        </div>
                       </DraggableAssessmentRow>
                     ))}
                   </div>

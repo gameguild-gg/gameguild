@@ -38,7 +38,7 @@ export default async function TestingLabPage() {
         icon={FlaskConical}
         title="Testing Lab"
         description="Operate real project testing from build intake through moderated sessions, participant attendance, feedback, and evidence-backed reports."
-        navigation={<TestingLabOperationsNavigation />}
+        navigation={<TestingLabOperationsNavigation basePath="/dashboard/community/testing-lab" />}
         actions={
           <>
             <Button asChild variant="outline">

@@ -1,5 +1,5 @@
 import { ForgotPasswordForm } from '@/components/forgot-password-form';
-import { requestPasswordResetAction } from '../actions';
+import { requestPasswordResetAction } from '@/lib/auth/password-actions';
 
 interface Props {
   searchParams?: Promise<{ email?: string }>;
