@@ -23,6 +23,7 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   redirect: mocks.redirect,
 }));
 
@@ -51,7 +52,7 @@ describe('workspace form date serialization', () => {
     formData.set('email', 'member@example.test');
     formData.set('authority', 'Member');
     formData.set('expiresAt', '2026-08-21T12:00');
-    formData.set('returnPath', '/my/teams/team-1/invitations');
+    formData.set('returnPath', '/teams/team-1/invitations');
 
     await createTeamInvitationForm(formData);
 
@@ -75,13 +76,13 @@ describe('workspace form date serialization', () => {
     task.set('title', 'Prepare QA build');
     task.set('priority', 'Medium');
     task.set('dueAt', '2026-08-22T09:30');
-    task.set('returnPath', '/my/projects/project-1/work');
+    task.set('returnPath', '/projects/project-1/work');
 
     const milestone = new FormData();
     milestone.set('projectId', 'project-1');
     milestone.set('name', 'QA complete');
     milestone.set('dueAt', '2026-08-23T18:45');
-    milestone.set('returnPath', '/my/projects/project-1/work');
+    milestone.set('returnPath', '/projects/project-1/work');
 
     await createProjectTaskForm(task);
     await createProjectMilestoneForm(milestone);
@@ -111,7 +112,7 @@ describe('workspace form date serialization', () => {
     allocation.set('function', 'Tester');
     allocation.set('startsAt', '2026-08-24T08:00');
     allocation.set('endsAt', '2026-08-25T17:00');
-    allocation.set('returnPath', '/my/projects/project-1/people');
+    allocation.set('returnPath', '/projects/project-1/people');
 
     const agreement = new FormData();
     agreement.set('projectId', 'project-1');
@@ -121,7 +122,7 @@ describe('workspace form date serialization', () => {
     agreement.set('deliverables', 'Verified build');
     agreement.set('startsAt', '2026-08-26T10:00');
     agreement.set('endsAt', '2026-08-27T19:15');
-    agreement.set('returnPath', '/my/projects/project-1/access');
+    agreement.set('returnPath', '/projects/project-1/access');
 
     await createProjectAllocationForm(allocation);
     await createProjectAgreementForm(agreement);
@@ -154,7 +155,7 @@ describe('workspace form date serialization', () => {
     formData.set('deliverables', 'Verified revised build');
     formData.set('startsAt', '2026-08-28T11:00');
     formData.set('endsAt', '2026-08-29T20:30');
-    formData.set('returnPath', '/my/projects/project-1/access');
+    formData.set('returnPath', '/projects/project-1/access');
 
     await counterProjectAgreementForm(formData);
 
@@ -172,7 +173,7 @@ describe('workspace form date serialization', () => {
     const formData = new FormData();
     formData.set('projectId', 'project-1');
     formData.set('projectAction', 'restore');
-    formData.set('returnPath', '/my/projects/project-1/settings');
+    formData.set('returnPath', '/projects/project-1/settings');
 
     await transitionProjectForm(formData);
 

@@ -5,7 +5,7 @@ import { createServerClient } from '@game-guild/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-const DASHBOARD_ROLES_PATH = '/dashboard/platform/roles';
+const DASHBOARD_ROLES_PATH = '/console/platform/roles';
 
 function buildRolesHref(params: { message?: string; error?: string }) {
   const searchParams = new URLSearchParams();

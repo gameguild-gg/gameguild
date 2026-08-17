@@ -50,7 +50,7 @@ export async function putCodingAssignmentAction(
   const result = await putCodingAssignmentClient(programId, contentId, content);
   if (result.success) {
     revalidatePath(
-      `/dashboard/learning/courses/${programId}/content/${contentId}`,
+      `/workspace/learning/courses/${programId}/content/${contentId}`,
     );
   }
   return result;

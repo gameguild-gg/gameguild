@@ -37,6 +37,7 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   redirect: mocks.redirect,
 }));
 
@@ -91,7 +92,7 @@ describe('createCommunityGroup', () => {
     formData.set('visibility', 'InviteOnly');
 
     await expect(createCommunityGroup(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups?message=Created+Pixel+Art+Mentors.',
+      'redirect:/console/community/members/groups?message=Created+Pixel+Art+Mentors.',
     );
 
     expect(mocks.postApiSocialGroups).toHaveBeenCalledWith({
@@ -103,16 +104,16 @@ describe('createCommunityGroup', () => {
       type: 'StudyGroup',
       visibility: 'InviteOnly',
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/groups');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/members');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/members/groups');
   });
 
   it('redirects with validation errors before calling the API', async () => {
     const formData = new FormData();
 
     await expect(createCommunityGroup(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups?error=Group+name+is+required.',
+      'redirect:/console/community/members/groups?error=Group+name+is+required.',
     );
 
     expect(mocks.postApiSocialGroups).not.toHaveBeenCalled();
@@ -125,7 +126,7 @@ describe('createCommunityGroup', () => {
     formData.set('visibility', 'BadVisibility');
 
     await expect(createCommunityGroup(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups?message=Created+General.',
+      'redirect:/console/community/members/groups?message=Created+General.',
     );
 
     expect(mocks.postApiSocialGroups).toHaveBeenCalledWith({
@@ -145,7 +146,7 @@ describe('createCommunityGroup', () => {
     formData.set('name', 'Pixel Art Mentors');
 
     await expect(createCommunityGroup(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups?error=Slug+already+exists.',
+      'redirect:/console/community/members/groups?error=Slug+already+exists.',
     );
 
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
@@ -157,7 +158,7 @@ describe('createCommunityGroup', () => {
     formData.set('name', 'Anonymous Group');
 
     await expect(createCommunityGroup(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups?error=Authentication+is+required+to+create+a+group.',
+      'redirect:/console/community/members/groups?error=Authentication+is+required+to+create+a+group.',
     );
 
     expect(mocks.postApiSocialGroups).not.toHaveBeenCalled();
@@ -172,7 +173,7 @@ describe('createCommunityGroup', () => {
     formData.set('visibility', 'Private');
 
     await expect(updateCommunityGroup(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups/group-1?message=Updated+Mentor+Guild.',
+      'redirect:/console/community/members/groups/group-1?message=Updated+Mentor+Guild.',
     );
 
     expect(mocks.putApiSocialGroups).toHaveBeenCalledWith('group-1', {
@@ -191,7 +192,7 @@ describe('createCommunityGroup', () => {
     addForm.set('role', 'Moderator');
 
     await expect(addCommunityGroupMember(addForm)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups/group-1?message=Added+member+to+group.',
+      'redirect:/console/community/members/groups/group-1?message=Added+member+to+group.',
     );
     expect(mocks.postApiSocialGroupsMembers).toHaveBeenCalledWith('group-1', {
       userId: 'user-1',
@@ -203,7 +204,7 @@ describe('createCommunityGroup', () => {
     approveForm.set('userId', 'user-1');
     approveForm.set('approvedByUserId', 'admin-1');
     await expect(approveCommunityGroupMember(approveForm)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups/group-1?message=Approved+group+member.',
+      'redirect:/console/community/members/groups/group-1?message=Approved+group+member.',
     );
     expect(mocks.postApiSocialGroupsMembersApprove).toHaveBeenCalledWith('group-1', 'user-1', {
       approvedByUserId: 'admin-1',
@@ -213,7 +214,7 @@ describe('createCommunityGroup', () => {
     rejectForm.set('groupId', 'group-1');
     rejectForm.set('userId', 'user-2');
     await expect(rejectCommunityGroupMember(rejectForm)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups/group-1?message=Rejected+group+request.',
+      'redirect:/console/community/members/groups/group-1?message=Rejected+group+request.',
     );
     expect(mocks.postApiSocialGroupsMembersReject).toHaveBeenCalledWith('group-1', 'user-2');
 
@@ -222,7 +223,7 @@ describe('createCommunityGroup', () => {
     roleForm.set('userId', 'user-1');
     roleForm.set('role', 'Admin');
     await expect(changeCommunityGroupMemberRole(roleForm)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups/group-1?message=Updated+member+role+to+Admin.',
+      'redirect:/console/community/members/groups/group-1?message=Updated+member+role+to+Admin.',
     );
     expect(mocks.putApiSocialGroupsMembersRole).toHaveBeenCalledWith('group-1', 'user-1', { role: 'Admin' });
 
@@ -230,14 +231,14 @@ describe('createCommunityGroup', () => {
     removeForm.set('groupId', 'group-1');
     removeForm.set('userId', 'user-1');
     await expect(removeCommunityGroupMember(removeForm)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups/group-1?message=Removed+group+member.',
+      'redirect:/console/community/members/groups/group-1?message=Removed+group+member.',
     );
     expect(mocks.deleteApiSocialGroupsMembers).toHaveBeenCalledWith('group-1', 'user-1');
 
     const archiveForm = new FormData();
     archiveForm.set('groupId', 'group-1');
     await expect(archiveCommunityGroup(archiveForm)).rejects.toThrow(
-      'redirect:/dashboard/community/members/groups?message=Archived+group.',
+      'redirect:/console/community/members/groups?message=Archived+group.',
     );
     expect(mocks.postApiSocialGroupsArchive).toHaveBeenCalledWith('group-1');
   });

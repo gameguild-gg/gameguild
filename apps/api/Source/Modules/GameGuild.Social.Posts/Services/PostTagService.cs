@@ -25,7 +25,7 @@ public class PostTagService : IPostTagService
     public async Task<Result> AddTagsToPostAsync(Guid postId, string[] tagNames, CancellationToken cancellationToken = default)
     {
         var post = await _context.Set<Post>()
-            .FirstOrDefaultAsync(p => p.Id == postId && !p.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == postId && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (post is null)
             return Result.Failure(PostErrors.NotFound);

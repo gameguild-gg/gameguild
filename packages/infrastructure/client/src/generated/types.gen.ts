@@ -10274,6 +10274,7 @@ export interface TestingLabCreateTestingLabSettings {
   description?: string | null;
   enableNotifications?: boolean;
   labName: string;
+  reminderDaysBefore?: string | null;
   maxSimultaneousSessions: number;
   requireApproval?: boolean;
   timezone: string;
@@ -10622,6 +10623,8 @@ export interface TestingLabTestingEvent {
   recurrenceOccurrenceCount?: number | null;
   recurrenceSeriesId?: string | null;
   requiresFeedback?: boolean;
+  reminderDaysBeforeOverride?: string | null;
+  sentReminderDays?: string | null;
   slots?: Array<TestingLabTestingEventSlot> | null;
   startsAt?: string;
   status?: TestingLabTestingEventStatus;
@@ -11030,6 +11033,7 @@ export interface TestingLabTestingLabSettings {
   enableNotifications?: boolean;
   id?: string;
   labName?: string | null;
+  reminderDaysBefore?: string | null;
   maxSimultaneousSessions?: number;
   requireApproval?: boolean;
   tenantId?: string | null;
@@ -11350,6 +11354,7 @@ export interface TestingLabUpdateTestingLabSettings {
   description?: string | null;
   enableNotifications?: boolean | null;
   labName?: string | null;
+  reminderDaysBefore?: string | null;
   maxSimultaneousSessions?: number | null;
   requireApproval?: boolean | null;
   timezone?: string | null;
@@ -25661,6 +25666,7 @@ TestingLabCreateTestingLabSettingsSchema = z.object({
   description: z.string().max(1000).nullable().optional(),
   enableNotifications: z.boolean().optional(),
   labName: z.string().min(1).max(255),
+  reminderDaysBefore: z.string().nullable().optional(),
   maxSimultaneousSessions: z.number().int().min(1).max(100),
   requireApproval: z.boolean().optional(),
   timezone: z.string().min(1).max(50),
@@ -26115,6 +26121,8 @@ TestingLabTestingEventSchema = z.object({
   recurrenceOccurrenceCount: z.number().int().nullable().optional(),
   recurrenceSeriesId: z.string().uuid().nullable().optional(),
   requiresFeedback: z.boolean().optional(),
+  reminderDaysBeforeOverride: z.string().max(64).nullable().optional(),
+  sentReminderDays: z.string().max(128).nullable().optional(),
   slots: z
     .array(z.lazy(() => TestingLabTestingEventSlotSchema))
     .nullable()
@@ -26628,6 +26636,7 @@ TestingLabTestingLabSettingsSchema = z.object({
   enableNotifications: z.boolean().optional(),
   id: z.string().uuid().optional(),
   labName: z.string().nullable().optional(),
+  reminderDaysBefore: z.string().nullable().optional(),
   maxSimultaneousSessions: z.number().int().optional(),
   requireApproval: z.boolean().optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -27022,6 +27031,7 @@ TestingLabUpdateTestingLabSettingsSchema = z.object({
   description: z.string().max(1000).nullable().optional(),
   enableNotifications: z.boolean().nullable().optional(),
   labName: z.string().max(255).nullable().optional(),
+  reminderDaysBefore: z.string().nullable().optional(),
   maxSimultaneousSessions: z
     .number()
     .int()

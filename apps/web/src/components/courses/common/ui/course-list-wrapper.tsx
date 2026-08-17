@@ -21,11 +21,11 @@ export const CourseListWrapper = ({ courses }: CourseListWrapperProps): React.JS
 
   const navigateToCourse = (course: CourseCardCourse, suffix = '') => {
     const identifier = getCourseIdentifier(course);
-    router.push(`/dashboard/learning/courses/${identifier}${suffix}` as Parameters<typeof router.push>[0]);
+    router.push(`/workspace/learning/courses/${identifier}${suffix}` as Parameters<typeof router.push>[0]);
   };
 
   const handleCreateCourse = () => {
-    router.push('/dashboard/learning/courses/new' as Parameters<typeof router.push>[0]);
+    router.push('/workspace/learning/courses/new' as Parameters<typeof router.push>[0]);
   };
 
   const handleEditCourse = (course: CourseCardCourse) => {

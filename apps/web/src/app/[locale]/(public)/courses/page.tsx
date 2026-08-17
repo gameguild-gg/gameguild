@@ -40,7 +40,7 @@ export default async function CoursesPage() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                <Link href="/programs">
+                <Link href="/courses">
                   View programs
                   <Layers3 />
                 </Link>
@@ -78,7 +78,7 @@ export default async function CoursesPage() {
               </p>
             </div>
             <Button asChild variant="outline" className="w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-              <Link href="/programs">
+              <Link href="/courses">
                 Browse all programs
                 <ArrowRight />
               </Link>

@@ -73,8 +73,6 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
         var actorId = actor.SubjectIdAsGuid!.Value;
         if (CanManageProjects(actor))
             return true;
-        if (project.CreatedById == actorId)
-            return true;
 
         var collaborators = await context.Set<ProjectCollaborator>()
             .AsNoTracking()
@@ -203,8 +201,7 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
                  member.TenantId == tenantId &&
                  member.IsActive &&
                  member.DeletedAt == null) &&
-             (project.CreatedById == actorId ||
-              project.Collaborators.Any(collaborator =>
+             (project.Collaborators.Any(collaborator =>
                   collaborator.UserId == actorId &&
                   collaborator.IsActive &&
                   collaborator.DeletedAt == null &&
@@ -266,8 +263,7 @@ public sealed class ProjectAuthorizationService(IApplicationDbContext context, I
                 member.TenantId == tenantId &&
                 member.IsActive &&
                 member.DeletedAt == null) &&
-            (project.CreatedById == actorId ||
-             project.Collaborators.Any(collaborator =>
+            (project.Collaborators.Any(collaborator =>
                  collaborator.UserId == actorId &&
                  collaborator.IsActive &&
                  collaborator.DeletedAt == null &&

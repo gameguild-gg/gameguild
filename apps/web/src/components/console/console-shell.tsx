@@ -5,12 +5,12 @@ import {
   dashboardNavigationData,
   filterDashboardNavigation,
 } from './dashboard-sidebar';
-import { DashboardHeader } from '@/components/layout/dashboard-header';
-import { DashboardCommandPalette } from '@/components/layout/dashboard-command-palette';
+import { DashboardHeader } from './dashboard-header';
+import { DashboardCommandPalette } from './dashboard-command-palette';
 import { cn } from '@game-guild/ui/lib/utils';
 import { SidebarInset, SidebarProvider } from '@game-guild/ui/components/sidebar';
 import type { DashboardNotificationSummary } from '@/lib/dashboard-notifications';
-import type { DashboardUser } from '@/components/layout/dashboard-user-menu';
+import type { DashboardUser } from './dashboard-user-menu';
 import { Toaster } from '@/components/ui/sonner';
 import type { DashboardContextSummary } from '@/lib/dashboard-contexts';
 
@@ -22,7 +22,7 @@ interface DashboardShellProps {
   contexts?: readonly DashboardContextSummary[];
 }
 
-export function DashboardShell({
+export function ConsoleShell({
   children,
   notifications,
   user,
