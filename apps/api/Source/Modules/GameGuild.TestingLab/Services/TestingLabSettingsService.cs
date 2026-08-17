@@ -62,6 +62,7 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
     settings.RequireApproval = dto.RequireApproval;
     settings.EnableNotifications = dto.EnableNotifications;
     settings.MaxSimultaneousSessions = dto.MaxSimultaneousSessions;
+    settings.ReminderDaysBefore = dto.ReminderDaysBefore;
 
     await _dbContext.SaveChangesAsync().ConfigureAwait(false);
 
@@ -136,6 +137,7 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
       AllowPublicSignups = settings.AllowPublicSignups,
       RequireApproval = settings.RequireApproval,
       EnableNotifications = settings.EnableNotifications,
+      ReminderDaysBefore = settings.ReminderDaysBefore,
       MaxSimultaneousSessions = settings.MaxSimultaneousSessions,
       TenantId = settings.Tenant?.Id,
       CreatedAt = settings.CreatedAt,

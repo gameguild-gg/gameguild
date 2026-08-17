@@ -15,7 +15,6 @@ public static class PostsModule
     {
         // Register focused sub-services
         services.AddScoped<IPostCrudService, PostCrudService>();
-        services.AddScoped<IPublicationAnnouncer, PublicationAnnouncerService>();
         services.AddScoped<IPostEngagementService, PostEngagementService>();
         services.AddScoped<IPostCommentService, PostCommentService>();
         services.AddScoped<IPostTagService, PostTagService>();

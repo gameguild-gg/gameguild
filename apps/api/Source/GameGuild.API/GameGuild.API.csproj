@@ -14,7 +14,9 @@
         <InternalsVisibleTo Include="GameGuild.Commerce.Billing.IntegrationTests" />
         <InternalsVisibleTo Include="GameGuild.API.UnitTests" />
         <InternalsVisibleTo Include="GameGuild.API.IntegrationTests" />
-    </ItemGroup>
+        <ProjectReference Include="..\Modules\GameGuild.Announcements.Contracts\GameGuild.Announcements.Contracts.csproj" />
+    <ProjectReference Include="..\Modules\GameGuild.Social.Announcements\GameGuild.Social.Announcements.csproj" />
+  </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />

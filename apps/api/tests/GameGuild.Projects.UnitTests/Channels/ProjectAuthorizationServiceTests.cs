@@ -167,6 +167,37 @@ public sealed class ProjectAuthorizationServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Creator_Without_Owner_Grant_Should_Be_Denied()
+    {
+        var project = AddPrivateProject();
+        project.CreatedById = _actorId;
+        AddIdentity();
+        await _context.SaveChangesAsync();
+
+        (await CreateService().HasPermissionAsync(project.Id, PermissionType.Edit)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Owner_Collaborator_Grants_Access_Without_Creator_Identity()
+    {
+        var project = AddPrivateProject();
+        AddIdentity();
+        _context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = project.Id,
+            UserId = _actorId,
+            Role = ProjectRoles.Owner,
+            Permissions = "Read,Edit",
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+
+        // Owner is a full-access grant; the permissions CSV does not cap it.
+        (await CreateService().HasPermissionAsync(project.Id, PermissionType.Edit)).Should().BeTrue();
+        (await CreateService().HasPermissionAsync(project.Id, PermissionType.Delete)).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Direct_Grant_Should_Not_Reactivate_A_Removed_Collaborator()
     {
         var project = AddCreatorProject();
@@ -378,6 +409,14 @@ public sealed class ProjectAuthorizationServiceTests : IDisposable
             CreatedById = _actorId
         };
         _context.Set<Project>().Add(project);
+        _context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = project.Id,
+            UserId = _actorId,
+            Role = ProjectRoles.Owner,
+            Permissions = "Read,Edit,Delete,Publish,Unpublish,Archive,Create,Approve,Manage",
+            IsActive = true
+        });
         return project;
     }
 

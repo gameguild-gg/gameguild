@@ -38,6 +38,7 @@ public sealed class ProjectCommandHandlers
   private readonly IProjectAuthorizationService _authorizationService;
 
   private readonly IResourceQuotaEnforcer? _quotaEnforcer;
+  private readonly GameGuild.CQRS.IMediator? _publicationMediator;
 
   public ProjectCommandHandlers(
     IApplicationDbContext context,
@@ -45,7 +46,8 @@ public sealed class ProjectCommandHandlers
     ILogger<ProjectCommandHandlers> logger,
     IProjectLifecycleCoordinator? lifecycleCoordinator = null,
     IProjectAuthorizationService? authorizationService = null,
-    IResourceQuotaEnforcer? quotaEnforcer = null) {
+    IResourceQuotaEnforcer? quotaEnforcer = null,
+    GameGuild.CQRS.IMediator? publicationMediator = null) {
     _context = context;
     _actorContextAccessor = actorContextAccessor;
     _logger = logger;
@@ -54,6 +56,7 @@ public sealed class ProjectCommandHandlers
       [new ProjectStoreProductLifecycleParticipant(context)]);
     _authorizationService = authorizationService ?? new ProjectAuthorizationService(context, actorContextAccessor);
     _quotaEnforcer = quotaEnforcer;
+    _publicationMediator = publicationMediator;
   }
 
   private ActorContext Actor => _actorContextAccessor.ActorContext;
@@ -167,7 +170,7 @@ public sealed class ProjectCommandHandlers
       Id = Guid.NewGuid(),
       ProjectId = project.Id,
       UserId = UserId!.Value,
-      Role = ProjectRoles.Editor,
+      Role = ProjectRoles.Owner,
       Permissions = FormatOwnerPermissions(),
       IsActive = true,
       JoinedAt = SystemClock.UtcNow
@@ -279,8 +282,15 @@ public sealed class ProjectCommandHandlers
 
     await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-    if (_publicationAnnouncer is not null) {
-      await _publicationAnnouncer.AnnounceProjectPublishedAsync(request.PublishedBy, project.Title, project.Slug, project.Id, project.TenantId, cancellationToken).ConfigureAwait(false);
+    if (_publicationMediator is not null) {
+      await _publicationMediator.Send(new GameGuild.Announcements.Contracts.AnnouncePublicationCommand {
+        Kind = GameGuild.Announcements.Contracts.PublicationKind.ProjectPublished,
+        ActorId = request.PublishedBy,
+        Title = project.Title,
+        EntityId = project.Id,
+        Slug = project.Slug,
+        TenantId = project.TenantId,
+      }, cancellationToken).ConfigureAwait(false);
     }
 
     return Result.Success(project);
