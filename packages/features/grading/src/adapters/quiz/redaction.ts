@@ -1,3 +1,4 @@
+import { toQuizLearnerEntry, type QuizAuthoringEntry } from '@game-guild/quiz';
 import { validateGradingDefinition } from '../../config';
 import type { ContentGradingDefinition } from '../../types';
 import type { QuizBlockLike, QuizBlockStorageLike, QuizQuestionLike } from './types';
@@ -50,6 +51,9 @@ function redactQuizQuestion(value: unknown): unknown {
   const question = asQuizQuestion(value);
   const type = getQuizQuestionType(question);
   if (!question || !type) return redactUnknownQuestion(value);
+  if (isCompleteDomainShape(question)) {
+    return toQuizLearnerEntry(question as unknown as QuizAuthoringEntry);
+  }
 
   // Each known quiz type keeps only the fields needed to render and collect a
   // learner answer. Correct answers stay in authoring/server-owned storage.
@@ -143,7 +147,7 @@ function redactQuizQuestion(value: unknown): unknown {
 
     case 'HOTSPOT':
       return withDefinedFields(base, {
-        imageUrl: cloneValue(question.imageUrl),
+        imageAssetUri: cloneValue(question.imageAssetUri),
         imageWidth: cloneValue(question.imageWidth),
         imageHeight: cloneValue(question.imageHeight),
       });
@@ -155,6 +159,38 @@ function redactQuizQuestion(value: unknown): unknown {
 
     default:
       return redactUnknownQuestion(value);
+  }
+}
+
+function isCompleteDomainShape(question: QuizQuestionLike): boolean {
+  if (typeof question.stem !== 'string' || !asRecord(question.settings)) return false;
+  switch (question.type) {
+    case 'SINGLE_CHOICE':
+    case 'MULTIPLE_CHOICE':
+      return Array.isArray(question.options);
+    case 'FILL_IN_THE_BLANK':
+      return Array.isArray(question.blanks);
+    case 'MATCHING':
+      return Array.isArray(question.pairs);
+    case 'ORDERING':
+      return Array.isArray(question.items);
+    case 'CATEGORIZATION':
+      return Array.isArray(question.categories) && Array.isArray(question.items);
+    case 'RATING':
+      return Boolean(asRecord(question.scale));
+    case 'NUMERIC':
+    case 'FORMULA':
+      return Array.isArray(question.variables);
+    case 'HOTSPOT':
+      return Array.isArray(question.hotspots);
+    case 'HIGHLIGHT':
+      return typeof question.plainText === 'string' && Array.isArray(question.highlights);
+    case 'TRUE_FALSE':
+    case 'SHORT_ANSWER':
+    case 'ESSAY':
+      return true;
+    default:
+      return false;
   }
 }
 

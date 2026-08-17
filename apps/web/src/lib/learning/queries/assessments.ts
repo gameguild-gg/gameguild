@@ -6,6 +6,7 @@ import {
   type LearningAssessmentsAssessmentDefinition,
   type LearningAssessmentsAssessmentGroup,
   type LearningAssessmentsAssessmentPresentationMode,
+  type LearningAssessmentsAssessmentResultUse,
   type LearningAssessmentsAssessmentScoreBucket,
   type LearningAssessmentsAssessmentSubmission,
   type LearningAssessmentsAssessmentType,
@@ -39,6 +40,7 @@ function createAssessmentsModule() {
 
 export type AssessmentType = LearningAssessmentsAssessmentType;
 export type AssessmentPresentationMode = LearningAssessmentsAssessmentPresentationMode;
+export type AssessmentResultUse = LearningAssessmentsAssessmentResultUse;
 
 export interface Assessment {
   id: string;
@@ -66,6 +68,7 @@ export interface Assessment {
   isAvailable: boolean;
   // ponytail: [Flags] enum serializes as comma-separated string ("PeerReview,AutoGraded")
   gradingMethods: string;
+  resultUse: AssessmentResultUse;
 }
 
 // Re-export so server-only callers can import everything from queries/assessments.
@@ -170,6 +173,7 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
     lateSubmissionDeadline: dto.lateSubmissionDeadline ?? null,
     isAvailable: dto.isAvailable ?? true,
     gradingMethods: dto.gradingMethods ?? "",
+    resultUse: dto.resultUse ?? "Gradebook",
   };
 }
 

@@ -237,6 +237,9 @@ export function AssessmentEditor({
           <h1 className="text-2xl font-bold">{assessment.title}</h1>
         </div>
         <Badge variant="secondary">{typeLabel}</Badge>
+        <Badge variant={assessment.resultUse === "Feedback" ? "outline" : "default"}>
+          {assessment.resultUse === "Feedback" ? "Feedback only" : "Gradebook"}
+        </Badge>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -370,28 +373,35 @@ export function AssessmentEditor({
 
               <Separator />
 
-              <div className="space-y-2">
-                <Label htmlFor="grade-group">Grade group</Label>
-                <Select
-                  value={assessmentGroupId}
-                  onValueChange={setAssessmentGroupId}
-                >
-                  <SelectTrigger id="grade-group">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No group</SelectItem>
-                    {assessmentGroups.map((group) => (
-                      <SelectItem key={group.id} value={group.id}>
-                        {group.name} ({formatWeight(group.weightPercent)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-muted-foreground text-xs">
-                  Choose the weighted block this activity contributes to.
-                </p>
-              </div>
+              {assessment.resultUse !== "Feedback" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="grade-group">Grade group</Label>
+                  <Select
+                    value={assessmentGroupId}
+                    onValueChange={setAssessmentGroupId}
+                  >
+                    <SelectTrigger id="grade-group">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No group</SelectItem>
+                      {assessmentGroups.map((group) => (
+                        <SelectItem key={group.id} value={group.id}>
+                          {group.name} ({formatWeight(group.weightPercent)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-muted-foreground text-xs">
+                    Choose the weighted block this activity contributes to.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>Result destination</Label>
+                  <Input value="Feedback only" readOnly className="bg-muted" />
+                </div>
+              )}
 
               <Separator />
 

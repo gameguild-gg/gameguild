@@ -415,7 +415,7 @@ describe('quiz grading adapter', () => {
           data: {
             type: 'HOTSPOT',
             stem: 'Click',
-            imageUrl: '/img.png',
+            imageAssetUri: 'asset://7776453f-1123-4f56-8abc-1234567890ab',
             imageWidth: 100,
             imageHeight: 100,
             hotspots: [{ id: 'h1', x: 50, y: 50, zones: [{ radius: 10, label: 'Hit' }] }],
@@ -468,7 +468,7 @@ describe('quiz grading adapter', () => {
     expect(redacted.find((block) => block.id === 'hotspot')?.data).toEqual({
       type: 'HOTSPOT',
       stem: 'Click',
-      imageUrl: '/img.png',
+      imageAssetUri: 'asset://7776453f-1123-4f56-8abc-1234567890ab',
       imageWidth: 100,
       imageHeight: 100,
     });
@@ -529,7 +529,7 @@ describe('quiz grading adapter', () => {
     });
     expect(answerKey.items.fill).toEqual({
       type: 'FILL_IN_THE_BLANK',
-      blanks: [{ id: 'b1', input: { type: 'DROPDOWN', correctValue: 'Paris' } }],
+      blanks: [{ id: 'b1', input: { type: 'DROPDOWN', options: ['Paris'] } }],
     });
     expect(JSON.stringify(answerKey.items.matching)).not.toContain('France');
     expect(JSON.stringify(answerKey.items.single)).not.toContain('options');

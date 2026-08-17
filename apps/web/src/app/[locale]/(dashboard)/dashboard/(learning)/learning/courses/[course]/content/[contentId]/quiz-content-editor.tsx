@@ -1,6 +1,10 @@
 "use client";
 
-import { lazy, Suspense, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import {
+  QuizCollectionEditor,
+  type QuizCollectionItem,
+} from "@game-guild/quiz-surface/editor";
 import type {
   ContentGradingDefinition,
   GradingResultUse,
@@ -24,7 +28,6 @@ import {
   SelectValue,
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   blocksToStorage,
   storageToBlocks,
@@ -33,28 +36,18 @@ import type {
   BlockArray,
   BlockStorage,
 } from "@/components/block-content-editor/lib/storage/editor/block-structure";
+import { nextBlockId } from "@/components/block-content-editor/lib/storage/editor/block-structure";
 
-const BlockArrayEditor = lazy(async () => {
-  const mod =
-    await import("@/components/block-content-editor/engines/blocks/block-array-editor");
-  return { default: mod.BlockArrayEditor };
-});
-
-function EditorLoadingState() {
-  return (
-    <div className="space-y-3 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-[300px] w-full" />
-    </div>
-  );
-}
+type QuizEditorMode = "edit" | "preview";
 
 interface ParsedQuizContent {
   blocks: BlockArray;
   grading: ContentGradingDefinition;
 }
 
-function parseQuizContent(raw: Record<string, unknown> | null | undefined): ParsedQuizContent {
+function parseQuizContent(
+  raw: Record<string, unknown> | null | undefined,
+): ParsedQuizContent {
   const fallback = {
     blocks: [],
     grading: createDisabledGradingDefinition(),
@@ -64,7 +57,8 @@ function parseQuizContent(raw: Record<string, unknown> | null | undefined): Pars
 
   return {
     blocks: storageToBlocks(raw),
-    grading: readContentGradingDefinition(raw) ?? createDisabledGradingDefinition(),
+    grading:
+      readContentGradingDefinition(raw) ?? createDisabledGradingDefinition(),
   };
 }
 
@@ -73,10 +67,10 @@ function isBlockStorage(value: unknown): value is BlockStorage {
 
   return Boolean(
     candidate &&
-      Array.isArray(candidate.order) &&
-      candidate.blocks &&
-      typeof candidate.blocks === "object" &&
-      !Array.isArray(candidate.blocks),
+    Array.isArray(candidate.order) &&
+    candidate.blocks &&
+    typeof candidate.blocks === "object" &&
+    !Array.isArray(candidate.blocks),
   );
 }
 
@@ -108,11 +102,13 @@ function ensureQuizGradingDefinition(
 interface QuizContentEditorProps {
   initialContent: Record<string, unknown> | null | undefined;
   onChange: (content: Record<string, unknown>) => void;
+  mode?: QuizEditorMode;
 }
 
 export function QuizContentEditor({
   initialContent,
   onChange,
+  mode = "edit",
 }: QuizContentEditorProps) {
   const initialQuizContent = useMemo(
     () => parseQuizContent(initialContent),
@@ -132,7 +128,9 @@ export function QuizContentEditor({
   );
   const gradedItemCount = Object.keys(syncedGradingConfig.items).length;
   const gradedPoints = sumGradedItemPoints(syncedGradingConfig);
-  const resultUse: GradingResultUse = syncedGradingConfig.outcome.uses.includes("gradebook")
+  const resultUse: GradingResultUse = syncedGradingConfig.outcome.uses.includes(
+    "gradebook",
+  )
     ? "gradebook"
     : "feedback";
 
@@ -156,7 +154,9 @@ export function QuizContentEditor({
   );
 
   const updateGrading = useCallback(
-    (updater: (current: ContentGradingDefinition) => ContentGradingDefinition) => {
+    (
+      updater: (current: ContentGradingDefinition) => ContentGradingDefinition,
+    ) => {
       setGradingConfig((current) => {
         const next = updater(current);
         emitChange(blocks, next);
@@ -252,6 +252,41 @@ export function QuizContentEditor({
     [blocks, updateGrading],
   );
 
+  const quizItems = useMemo<QuizCollectionItem[]>(
+    () =>
+      blocks.flatMap((block) =>
+        block.type === "quiz" ? [{ id: block.id, entry: block.data }] : [],
+      ),
+    [blocks],
+  );
+
+  const handleQuizItemsChange = useCallback(
+    (items: QuizCollectionItem[]) => {
+      handleBlocksChange(
+        items.map((item) => ({
+          id: item.id,
+          type: "quiz" as const,
+          data: item.entry,
+        })),
+      );
+    },
+    [handleBlocksChange],
+  );
+
+  if (mode === "preview") {
+    return (
+      <QuizCollectionEditor
+        items={quizItems}
+        onChange={handleQuizItemsChange}
+        createItemId={() => nextBlockId(blocks)}
+        submissionMode={
+          syncedGradingConfig.enabled ? "server-graded" : "local-practice"
+        }
+        readOnly={true}
+      />
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -288,16 +323,18 @@ export function QuizContentEditor({
         {syncedGradingConfig.enabled && (
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="quiz-result-use">Result use</Label>
+              <Label htmlFor="quiz-result-use">Result destination</Label>
               <Select
                 value={resultUse}
-                onValueChange={(value) => handleResultUseChange(value as GradingResultUse)}
+                onValueChange={(value) =>
+                  handleResultUseChange(value as GradingResultUse)
+                }
               >
                 <SelectTrigger id="quiz-result-use">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="feedback">Feedback</SelectItem>
+                  <SelectItem value="feedback">Feedback only</SelectItem>
                   <SelectItem value="gradebook">Gradebook</SelectItem>
                 </SelectContent>
               </Select>
@@ -333,34 +370,22 @@ export function QuizContentEditor({
 
         {syncedGradingConfig.enabled && (
           <div className="mt-3 flex flex-wrap gap-2">
+            <Badge variant="outline">Assessment</Badge>
             <Badge variant="outline">
-              {resultUse === "gradebook" ? "Gradebook" : "Feedback"}
-            </Badge>
-            <Badge variant="outline">
-              {syncedGradingConfig.outcome.gradebook?.includeInFinalGrade
-                ? "Final grade"
-                : "No gradebook"}
+              {resultUse === "gradebook" ? "Gradebook" : "Feedback only"}
             </Badge>
           </div>
         )}
       </div>
 
-      <div className="min-h-[400px] overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="max-h-[600px] overflow-y-auto">
-          <div className="w-full bg-white p-4 dark:bg-gray-900">
-            <Suspense fallback={<EditorLoadingState />}>
-              <BlockArrayEditor
-                blocks={blocks}
-                onChange={handleBlocksChange}
-                projectType="quiz"
-                quizSubmissionMode={
-                  syncedGradingConfig.enabled ? "server-graded" : "local-practice"
-                }
-              />
-            </Suspense>
-          </div>
-        </div>
-      </div>
+      <QuizCollectionEditor
+        items={quizItems}
+        onChange={handleQuizItemsChange}
+        createItemId={() => nextBlockId(blocks)}
+        submissionMode={
+          syncedGradingConfig.enabled ? "server-graded" : "local-practice"
+        }
+      />
     </div>
   );
 }

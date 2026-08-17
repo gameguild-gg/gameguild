@@ -135,8 +135,8 @@ function buildGroupedAssessments(assessments: Assessment[], assessmentGroups: As
     }));
 }
 
-function DraggableAssessmentRow({ id, children }: { id: string; children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+function DraggableAssessmentRow({ id, disabled, children }: { id: string; disabled?: boolean; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled });
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.4 : undefined,
@@ -480,6 +480,7 @@ export function AssessmentsList({
     const assessmentId = activeId.slice(ASSESSMENT_DRAG_PREFIX.length);
     const assessment = assessments.find((a) => a.id === assessmentId);
     if (!assessment) return;
+    if (assessment.resultUse === 'Feedback') return;
     const currentGroupId = assessment.assessmentGroupId ?? UNGROUPED_ID;
 
     let targetGroupId: string;
@@ -616,12 +617,21 @@ export function AssessmentsList({
                 <DroppableGroupBody id={`${GROUP_DROP_PREFIX}${group.id}`}>
                   <div className="divide-y">
                     {group.assessments.map((assessment) => (
-                      <DraggableAssessmentRow key={assessment.id} id={`${ASSESSMENT_DRAG_PREFIX}${assessment.id}`}>
+                      <DraggableAssessmentRow
+                        key={assessment.id}
+                        id={`${ASSESSMENT_DRAG_PREFIX}${assessment.id}`}
+                        disabled={assessment.resultUse === 'Feedback'}
+                      >
                         <Link
                           href={`${pathname}/${assessment.id}`}
                           className="group flex min-h-16 items-center gap-3 px-4 py-3 transition hover:bg-muted/45"
                         >
-                          <GripVertical className="text-muted-foreground/70 size-4 shrink-0 cursor-grab" aria-hidden="true" />
+                          <GripVertical
+                            className={assessment.resultUse === 'Feedback'
+                              ? 'text-muted-foreground/35 size-4 shrink-0'
+                              : 'text-muted-foreground/70 size-4 shrink-0 cursor-grab'}
+                            aria-hidden="true"
+                          />
                           <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
                             {typeIcon(assessment.type)}
                           </span>
@@ -637,6 +647,12 @@ export function AssessmentsList({
                           </span>
                           <Badge variant={typeBadgeVariant(assessment.type)} className="hidden shrink-0 sm:inline-flex">
                             {assessment.type}
+                          </Badge>
+                          <Badge
+                            variant={assessment.resultUse === 'Feedback' ? 'outline' : 'default'}
+                            className="shrink-0"
+                          >
+                            {assessment.resultUse === 'Feedback' ? 'Feedback only' : 'Gradebook'}
                           </Badge>
                           <Badge variant={assessment.isAvailable ? 'secondary' : 'outline'} className="hidden shrink-0 sm:inline-flex">
                             {assessment.isAvailable ? 'available' : 'scheduled'}
