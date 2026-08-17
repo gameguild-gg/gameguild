@@ -73,13 +73,19 @@ test_contributors_visualization_uses_native_xvfb() {
   ! grep -Fq 'coactions/setup-xvfb' "$workflow"
 }
 
-test_release_gate_uses_resolvable_workflow_file_ids() {
-  local workflow="$repository_root/.github/workflows/release.yml"
+test_main_calls_release_from_the_verified_main_context() {
+  local main_workflow="$repository_root/.github/workflows/main.yml"
+  local release_workflow="$repository_root/.github/workflows/release.yml"
 
-  grep -Fq "{ name: 'Main', id: 'main.yml' }" "$workflow" || return 1
-  grep -Fq "{ name: 'Emception CI/CD', id: 'emception.yml' }" "$workflow" || return 1
-  grep -Fq 'workflow_id: workflow.id' "$workflow" || return 1
-  ! grep -Fq 'workflow_id: wfName' "$workflow"
+  grep -Fq 'needs: [economy-gate, contributors]' "$main_workflow" || return 1
+  grep -Fq 'uses: ./.github/workflows/release.yml' "$main_workflow" || return 1
+  grep -Fq 'sha: ${{ github.sha }}' "$main_workflow" || return 1
+  grep -Fq 'branch: ${{ github.ref_name }}' "$main_workflow" || return 1
+  grep -Fq 'secrets: inherit' "$main_workflow" || return 1
+  grep -Fq 'workflow_call:' "$release_workflow" || return 1
+  ! grep -Fq 'workflow_run:' "$release_workflow" || return 1
+  grep -Fq 'ref: ${{ inputs.sha }}' "$release_workflow" || return 1
+  grep -Fq "workflow_id: 'emception.yml'" "$release_workflow"
 }
 
 test_release_action_matches_changesets_cli_major() {
@@ -93,7 +99,7 @@ test_release_action_matches_changesets_cli_major() {
 test_release_action_targets_the_upstream_branch() {
   local workflow="$repository_root/.github/workflows/release.yml"
 
-  grep -Fq 'branch: ${{ needs.gate.outputs.branch }}' "$workflow"
+  grep -Fq 'branch: ${{ inputs.branch }}' "$workflow"
 }
 
 test_changesets_config_matches_lockstep_workspace() {
@@ -427,7 +433,7 @@ test_canonical_json_preserves_arrays() {
 
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
-run_test 'release gate uses resolvable workflow file IDs' test_release_gate_uses_resolvable_workflow_file_ids
+run_test 'Main calls Release from its verified main context' test_main_calls_release_from_the_verified_main_context
 run_test 'release action matches the Changesets CLI major' test_release_action_matches_changesets_cli_major
 run_test 'release action targets the upstream branch' test_release_action_targets_the_upstream_branch
 run_test 'Changesets config matches the lockstep workspace policy' test_changesets_config_matches_lockstep_workspace
