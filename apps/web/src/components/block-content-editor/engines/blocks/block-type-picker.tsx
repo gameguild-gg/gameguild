@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { BLOCK_REGISTRY, BLOCK_CELL_TYPES, type BlockCellType } from "./block-component-registry"
 import type { Block } from "@/components/block-content-editor/lib/storage/editor/block-structure"
 import { Search, LayoutGrid, FileText } from "lucide-react"
-import { QUIZ_TEMPLATES, type QuizTypeTemplate } from "@/components/block-content-editor/extras/quiz/quiz-type-selector"
+import { QUIZ_TEMPLATES, type QuizTypeTemplate } from "@game-guild/quiz-surface/templates"
 
 // ============================================================================
 // Block categories for better organization

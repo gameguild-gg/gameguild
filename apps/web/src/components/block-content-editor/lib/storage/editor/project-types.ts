@@ -41,7 +41,7 @@ export function getProjectTypeStructure(type: ProjectType): ProjectTypeStructure
     case "document":
       return { singleBlockMode: true, allowedBlockTypes: ["rich-text"] }
     case "quiz":
-      return { allowedBlockTypes: [] }
+      return { allowedBlockTypes: ["quiz"] }
     case "general":
     default:
       return {}

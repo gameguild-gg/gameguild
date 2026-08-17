@@ -41,6 +41,8 @@
     "@game-guild/community-members": "workspace:*",
     "@game-guild/content-rendering": "workspace:*",
     "@game-guild/lexical-surface": "workspace:*",
+    "@game-guild/quiz": "workspace:*",
+    "@game-guild/quiz-surface": "workspace:*",
     "@game-guild/courses": "workspace:*",
     "@game-guild/dotnet-wasm": "workspace:^",
     "@game-guild/emception-ui": "workspace:*",

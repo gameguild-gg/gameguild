@@ -4976,6 +4976,7 @@ export interface LearningAssessmentsAssessment {
   maxScore?: number;
   order?: number;
   presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  resultUse?: LearningAssessmentsAssessmentResultUse;
   submissionModalities?: LearningAssessmentsSubmissionModality;
   timeLimitMinutes?: number | null;
   title?: string | null;
@@ -5013,6 +5014,8 @@ export interface LearningAssessmentsAssessmentGroupAnalytics {
 }
 
 export type LearningAssessmentsAssessmentPresentationMode = 'SingleStep' | 'Continuous';
+
+export type LearningAssessmentsAssessmentResultUse = 'Feedback' | 'Gradebook';
 
 export interface LearningAssessmentsAssessmentScoreBucket {
   count?: number;
@@ -5093,6 +5096,7 @@ export interface LearningAssessmentsCreateAssessmentInput {
   maxAttempts?: number | null;
   maxScore?: number;
   presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  resultUse?: LearningAssessmentsAssessmentResultUse;
   submissionModalities?: LearningAssessmentsSubmissionModality;
   timeLimitMinutes?: number | null;
   title?: string | null;
@@ -5195,6 +5199,7 @@ export interface LearningAssessmentsUpdateAssessmentInput {
   maxAttempts?: number | null;
   maxScore?: number | null;
   presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  resultUse?: LearningAssessmentsAssessmentResultUse;
   submissionModalities?: LearningAssessmentsSubmissionModality;
   timeLimitMinutes?: number | null;
   title?: string | null;
@@ -9981,6 +9986,7 @@ export let LearningAssessmentsAssessmentGradingMethodSchema: z.ZodType<LearningA
 export let LearningAssessmentsAssessmentGroupSchema: z.ZodType<LearningAssessmentsAssessmentGroup>;
 export let LearningAssessmentsAssessmentGroupAnalyticsSchema: z.ZodType<LearningAssessmentsAssessmentGroupAnalytics>;
 export let LearningAssessmentsAssessmentPresentationModeSchema: z.ZodType<LearningAssessmentsAssessmentPresentationMode>;
+export let LearningAssessmentsAssessmentResultUseSchema: z.ZodType<LearningAssessmentsAssessmentResultUse>;
 export let LearningAssessmentsAssessmentScoreBucketSchema: z.ZodType<LearningAssessmentsAssessmentScoreBucket>;
 export let LearningAssessmentsAssessmentSubmissionSchema: z.ZodType<LearningAssessmentsAssessmentSubmission>;
 export let LearningAssessmentsAssessmentTypeSchema: z.ZodType<LearningAssessmentsAssessmentType>;
@@ -16307,6 +16313,7 @@ LearningAssessmentsAssessmentSchema = z.object({
   maxScore: z.number().int().optional(),
   order: z.number().int().optional(),
   presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
+  resultUse: z.lazy(() => LearningAssessmentsAssessmentResultUseSchema).optional(),
   submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
   timeLimitMinutes: z.number().int().nullable().optional(),
   title: z.string().nullable().optional(),
@@ -16351,6 +16358,9 @@ LearningAssessmentsAssessmentGroupAnalyticsSchema = z.object({
 
 /** Zod schema for LearningAssessmentsAssessmentPresentationMode */
 LearningAssessmentsAssessmentPresentationModeSchema = z.enum(['SingleStep', 'Continuous']);
+
+/** Zod schema for LearningAssessmentsAssessmentResultUse */
+LearningAssessmentsAssessmentResultUseSchema = z.enum(['Feedback', 'Gradebook']);
 
 /** Zod schema for LearningAssessmentsAssessmentScoreBucket */
 LearningAssessmentsAssessmentScoreBucketSchema = z.object({
@@ -16444,6 +16454,7 @@ LearningAssessmentsCreateAssessmentInputSchema = z.object({
   maxAttempts: z.number().int().nullable().optional(),
   maxScore: z.number().int().optional(),
   presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
+  resultUse: z.lazy(() => LearningAssessmentsAssessmentResultUseSchema).optional(),
   submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
   timeLimitMinutes: z.number().int().nullable().optional(),
   title: z.string().nullable().optional(),
@@ -16557,6 +16568,7 @@ LearningAssessmentsUpdateAssessmentInputSchema = z.object({
   maxAttempts: z.number().int().nullable().optional(),
   maxScore: z.number().int().nullable().optional(),
   presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
+  resultUse: z.lazy(() => LearningAssessmentsAssessmentResultUseSchema).optional(),
   submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
   timeLimitMinutes: z.number().int().nullable().optional(),
   title: z.string().nullable().optional(),

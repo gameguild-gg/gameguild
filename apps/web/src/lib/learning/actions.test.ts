@@ -1215,4 +1215,22 @@ describe("learning server actions", () => {
     expect(result).toEqual({ success: true, data: { id: "content-1" } });
     expect(mocks.postAssessments).not.toHaveBeenCalled();
   });
+
+  it("waits for quiz grading to be enabled before creating an assessment", async () => {
+    const result = await addContent({
+      courseId: "course-1",
+      title: "Knowledge check",
+      type: "Questionnaire",
+    });
+
+    expect(result).toEqual({ success: true, data: { id: "content-1" } });
+    expect(mocks.postCoursesContent).toHaveBeenCalledWith(
+      "course-1",
+      expect.objectContaining({
+        type: "Questionnaire",
+        jsonBody: { order: [], blocks: {} },
+      }),
+    );
+    expect(mocks.postAssessments).not.toHaveBeenCalled();
+  });
 });

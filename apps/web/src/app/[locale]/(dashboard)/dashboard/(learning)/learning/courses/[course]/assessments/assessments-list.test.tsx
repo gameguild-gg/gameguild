@@ -288,6 +288,20 @@ describe('AssessmentsList weighted groups', () => {
     expect(within(ungrouped).getByText('Assignment')).toBeInTheDocument();
   });
 
+  it('keeps feedback-only assessments visible and identifies their destination', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={[{ ...assignmentAssessment, resultUse: 'Feedback' }]}
+        total={1}
+      />,
+    );
+
+    const ungrouped = screen.getByTestId('assessment-group-ungrouped');
+    expect(within(ungrouped).getByRole('link', { name: /environment setup/i })).toBeInTheDocument();
+    expect(within(ungrouped).getByText('Feedback only')).toBeInTheDocument();
+  });
+
   it('renders the empty state without offering direct assessment creation', () => {
     render(<AssessmentsList courseId="course-1" assessments={[]} total={0} />);
 
