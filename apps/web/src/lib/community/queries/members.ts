@@ -4,8 +4,6 @@
 
 import { auth, getToken } from '@/auth';
 import { createServerClient, GeneratedApi } from '@game-guild/client';
-import { getCourseShowcase } from '@/lib/courses/public-programs';
-import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import type {
   IdentityTenantsGetUserMembershipsOutput,
   IdentityTenantsUserMembership,
@@ -576,51 +574,6 @@ function mapLeadToSupportTicket(lead: GeneratedApi.ContentPagesMarketingLead): S
   };
 }
 
-function getCourseFeedReason(kind: CommunityFeedKind) {
-  switch (kind) {
-    case 'trending':
-      return 'Trending course';
-    case 'discover':
-      return 'Recommended course';
-    case 'following':
-    default:
-      return 'Course';
-  }
-}
-
-async function getCourseFeedItems(kind: CommunityFeedKind, take = 6): Promise<CommunityFeedItem[]> {
-  if (kind === 'following') {
-    return [];
-  }
-
-  const catalog = await getPublicCourseCatalog();
-  if (!catalog.success || catalog.data.length === 0) {
-    return [];
-  }
-
-  return catalog.data.slice(0, take).map((course, index) => {
-    const slug = String(course.slug ?? course.id ?? `course-${index + 1}`);
-    const showcase = getCourseShowcase(slug);
-    const thumbnail = typeof course.thumbnail === 'string' ? course.thumbnail : undefined;
-
-    return {
-      id: `course-${slug}`,
-      title: course.title ?? 'GameGuild course',
-      contentType: 'Course',
-      contentId: slug,
-      authorId: 'gameguild-learning',
-      reason: getCourseFeedReason(kind),
-      relevanceScore: Math.max(0, 10 - index),
-      isRead: false,
-      createdAt: '2026-01-01T00:00:00.000Z',
-      summary: showcase?.headline ?? course.description ?? 'Explore a GameGuild course landing page.',
-      href: `/courses/${slug}`,
-      imageUrl: thumbnail,
-      actionLabel: 'View course',
-    };
-  });
-}
-
 export async function getPublicMemberProfile(member: string): Promise<PublicMemberProfile | null> {
   try {
     const client = getApiClient();
@@ -655,15 +608,7 @@ export async function getMemberProject(
 export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take?: number; includeRead?: boolean }): Promise<CommunityFeedResult> {
   const session = await getSessionClaims();
   if (!session.userId) {
-    if (kind !== 'following') {
-      return {
-        kind,
-        requiresSignIn: false,
-        items: await getCourseFeedItems(kind, options?.take ?? 6),
-      };
-    }
-
-    return { kind, requiresSignIn: true, items: [] };
+    return { kind, requiresSignIn: kind === 'following', items: [] };
   }
 
   try {
@@ -676,26 +621,13 @@ export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take
     });
 
     if (!result.ok) {
-      return {
-        kind,
-        requiresSignIn: false,
-        items: await getCourseFeedItems(kind, options?.take ?? 6),
-      };
+      return { kind, requiresSignIn: false, items: [] };
     }
 
     const items = (result.data ?? []).filter((item) => reasonMatches(kind, item.reason)).map(mapFeedItem);
-
-    return {
-      kind,
-      requiresSignIn: false,
-      items: items.length > 0 ? items : await getCourseFeedItems(kind, options?.take ?? 6),
-    };
+    return { kind, requiresSignIn: false, items };
   } catch {
-    return {
-      kind,
-      requiresSignIn: false,
-      items: await getCourseFeedItems(kind, options?.take ?? 6),
-    };
+    return { kind, requiresSignIn: false, items: [] };
   }
 }
 
@@ -705,8 +637,8 @@ export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take
 export async function getCommunityStats(): Promise<CommunityStats> {
   try {
     const client = getApiClient();
-    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
-    const marketingLeads = new GeneratedApi.ContentMarketingleadsModule(client);
+    const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
+    const marketingLeads = new GeneratedApi.ContentMarketingLeadsModule(client);
     const blogPosts = new GeneratedApi.SocialBlogPostsModule(client);
     const now = new Date();
 
@@ -718,7 +650,7 @@ export async function getCommunityStats(): Promise<CommunityStats> {
         params: { limit: 500 },
         requiresAuth: true,
       }),
-      socialGroups.getApiSocialGroups({ skip: 0, take: 500 }),
+      socialGroups.getApiSocialGroupsForGetApiSocialGroups({ skip: 0, take: 500 }),
       marketingLeads.getMarketingLeads({
         source: 'contact',
         topic: 'support',
@@ -726,7 +658,7 @@ export async function getCommunityStats(): Promise<CommunityStats> {
         skip: 0,
         take: 500,
       }),
-      blogPosts.getApiSocialBlog({ skip: 0, take: 500 }),
+      blogPosts.getApiSocialBlogForGetApiSocialBlog({ skip: 0, take: 500 }),
     ]);
 
     const fallbackMemberCount = session?.user?.id ? 1 : 0;
@@ -965,8 +897,8 @@ export async function getGroups(options?: { page?: number; limit?: number; searc
   try {
     const limit = options?.limit ?? 20;
     const client = getApiClient();
-    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
-    const result = await socialGroups.getApiSocialGroups({
+    const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
+    const result = await socialGroups.getApiSocialGroupsForGetApiSocialGroups({
       search: options?.search || undefined,
       skip: Math.max(0, ((options?.page ?? 1) - 1) * limit),
       take: limit,
@@ -984,8 +916,8 @@ export async function getGroups(options?: { page?: number; limit?: number; searc
 export async function getGroup(groupId: string): Promise<{ group: MemberGroup | null; error?: string | null }> {
   try {
     const client = getApiClient();
-    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
-    const result = await socialGroups.getApiSocialGroupsById(groupId);
+    const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
+    const result = await socialGroups.getApiSocialGroupsForGetApiSocialGroupsById(groupId);
 
     if (!result.ok) return { group: null, error: result.error.message };
 
@@ -1001,7 +933,7 @@ export async function getGroupMembers(
 ): Promise<{ members: MemberGroupMember[]; error?: string | null }> {
   try {
     const client = getApiClient();
-    const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+    const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
     const [membersResult, directory] = await Promise.all([
       socialGroups.getApiSocialGroupsMembers(groupId, {
         status: options?.status,
@@ -1035,7 +967,7 @@ export async function getSupportTickets(options?: {
   try {
     const limit = options?.limit ?? 20;
     const client = getApiClient();
-    const marketingLeads = new GeneratedApi.ContentMarketingleadsModule(client);
+    const marketingLeads = new GeneratedApi.ContentMarketingLeadsModule(client);
     const result = await marketingLeads.getMarketingLeads({
       source: 'contact',
       topic: 'support',

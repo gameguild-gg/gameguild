@@ -39,14 +39,14 @@ public sealed class SecurityServiceCollectionExtensionsTests
             .GetRequiredService<IOptionsMonitor<JwtBearerOptions>>()
             .Get(JwtBearerDefaults.AuthenticationScheme);
 
-        Assert.Equal(ClaimTypes.Role, jwtOptions.TokenValidationParameters.RoleClaimType);
+        Assert.False(jwtOptions.MapInboundClaims);
+        Assert.Equal("role", jwtOptions.TokenValidationParameters.RoleClaimType);
     }
 
     [Theory]
     [InlineData("Admin")]
     [InlineData("SystemAdmin")]
     [InlineData("TenantAdmin")]
-    [InlineData("Owner")]
     public async Task UserManagementPolicies_ShouldAuthorizeAdministrativeRoles(string role)
     {
         using var serviceProvider = BuildServiceProvider();
@@ -99,6 +99,21 @@ public sealed class SecurityServiceCollectionExtensionsTests
         var result = await AuthorizeAsync(serviceProvider, CreatePrincipal(role), Policies.SystemAdmin);
 
         Assert.False(result.Succeeded);
+    }
+
+    [Theory]
+    [InlineData("User", true)]
+    [InlineData("TenantAdmin", true)]
+    [InlineData("Owner", false)]
+    public async Task RequireUserRolePolicy_ShouldAcceptUsersAndTenantAdministrators(
+        string role,
+        bool expected)
+    {
+        using var serviceProvider = BuildServiceProvider();
+
+        var result = await AuthorizeAsync(serviceProvider, CreatePrincipal(role), "RequireUserRole");
+
+        Assert.Equal(expected, result.Succeeded);
     }
 
     private static ServiceProvider BuildServiceProvider()

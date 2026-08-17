@@ -31,10 +31,10 @@ vi.mock('next/cache', () => ({
 vi.mock('@game-guild/client', () => ({
   createServerClient: vi.fn(() => ({})),
   GeneratedApi: {
-    TestinglabTestingeventsModule: vi.fn(function TestinglabTestingeventsModule() {
+    TestingLabTestingEventsModule: vi.fn(function TestingLabTestingEventsModule() {
       return mocks.events;
     }),
-    TestinglabTestingeventparticipationModule: vi.fn(function TestinglabTestingeventparticipationModule() {
+    TestingLabTestingEventParticipationModule: vi.fn(function TestingLabTestingEventParticipationModule() {
       return mocks.participation;
     }),
   },
@@ -95,7 +95,7 @@ describe('Testing Lab event actions', () => {
         startsAt: '2026-08-08T18:00:00.000Z',
       }),
     );
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/testing-lab/events');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/testing-lab/events');
   });
 
   it('archives and restores an event through the generated client', async () => {

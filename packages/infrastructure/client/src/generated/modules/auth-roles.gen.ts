@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,11 +17,14 @@ export class AuthRolesModule {
 
   /**
    */
-  async getRoles(query?: { tenantId?: string; includeInactive?: boolean }): Promise<Result<void, ApiError>> {
-    const url = '/v1/roles';
+  async getRolesForGetRoles(query?: {
+    tenantId?: string;
+    includeInactive?: boolean;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/v1/roles";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -32,14 +35,20 @@ export class AuthRolesModule {
 
   /**
    */
-  async postRoles(body: Types.IdentityAuthenticationCreateRoleInput): Promise<Result<void, ApiError>> {
-    const url = '/v1/roles';
+  async postRoles(
+    body: Types.IdentityAuthenticationCreateRoleInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/v1/roles";
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCreateRoleInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationCreateRoleInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -50,14 +59,20 @@ export class AuthRolesModule {
 
   /**
    */
-  async postRolesAssign(body: Types.IdentityAuthenticationAssignRoleToUserInput): Promise<Result<void, ApiError>> {
-    const url = '/v1/roles/:assign';
+  async postRolesAssign(
+    body: Types.IdentityAuthenticationAssignRoleToUserInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/v1/roles/:assign";
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationAssignRoleToUserInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationAssignRoleToUserInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -68,14 +83,20 @@ export class AuthRolesModule {
 
   /**
    */
-  async postRolesRemove(body: Types.IdentityAuthenticationRemoveRoleFromUserInput): Promise<Result<void, ApiError>> {
-    const url = '/v1/roles/:remove';
+  async postRolesRemove(
+    body: Types.IdentityAuthenticationRemoveRoleFromUserInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/v1/roles/:remove";
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRemoveRoleFromUserInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationRemoveRoleFromUserInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -86,11 +107,14 @@ export class AuthRolesModule {
 
   /**
    */
-  async getRolesUser(userId: string, query?: { includeExpired?: boolean }): Promise<Result<void, ApiError>> {
+  async getRolesUser(
+    userId: string,
+    query?: { includeExpired?: boolean },
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/roles/user/${userId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -101,11 +125,13 @@ export class AuthRolesModule {
 
   /**
    */
-  async getRolesByRoleId(roleId: string): Promise<Result<void, ApiError>> {
+  async getRolesForGetRolesByRoleId(
+    roleId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/roles/${roleId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -115,14 +141,21 @@ export class AuthRolesModule {
 
   /**
    */
-  async putRoles(roleId: string, body: Types.IdentityAuthenticationUpdateRoleInput): Promise<Result<void, ApiError>> {
+  async putRoles(
+    roleId: string,
+    body: Types.IdentityAuthenticationUpdateRoleInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/roles/${roleId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationUpdateRoleInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationUpdateRoleInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "PUT",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -137,7 +170,7 @@ export class AuthRolesModule {
     const url = `/v1/roles/${roleId}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });

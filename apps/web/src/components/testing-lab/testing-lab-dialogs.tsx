@@ -19,7 +19,7 @@ import type { TestingLabTestingLabRoleTemplate } from '@game-guild/client';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Button } from '@game-guild/ui/components/button';
 import { Checkbox } from '@game-guild/ui/components/checkbox';
-import { DateTimePicker } from '@game-guild/ui/components/date-time-picker';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@game-guild/ui/components/dialog';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';

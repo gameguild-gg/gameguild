@@ -105,7 +105,7 @@ class TypesGenerator extends BaseGenerator {
    * Generate enum type
    */
   private generateEnumType(name: string, schema: OpenAPIV3.SchemaObject): string {
-    const values = schema.enum || [];
+    const values = schema.enum!;
     const description = schema.description ? `/** ${schema.description} */\n` : '';
 
     // Check if all values are strings
@@ -119,7 +119,7 @@ class TypesGenerator extends BaseGenerator {
 
     // For numeric enums, generate a type union instead of enum
     // This avoids issues with numeric enum member names
-    const literals = values.map((v) => String(v)).join(' | ');
+    const literals = values.map((v) => (typeof v === 'string' ? `'${v}'` : JSON.stringify(v))).join(' | ');
     return `${description}export type ${name} = ${literals};`;
   }
 
@@ -127,7 +127,7 @@ class TypesGenerator extends BaseGenerator {
    * Generate union type from oneOf/anyOf
    */
   private generateUnionType(name: string, schema: OpenAPIV3.SchemaObject): string {
-    const variants = schema.oneOf || schema.anyOf || [];
+    const variants = schema.oneOf ?? schema.anyOf!;
     const description = schema.description ? `/** ${schema.description} */\n` : '';
 
     const types = variants.map((variant) => this.typeMapper.map(variant as OpenAPIV3.SchemaObject)).join(' | ');
@@ -142,7 +142,7 @@ class TypesGenerator extends BaseGenerator {
     name: string,
     schema: OpenAPIV3.SchemaObject
   ): string {
-    const parts = schema.allOf || [];
+    const parts = schema.allOf!;
     const description = schema.description ? `/** ${schema.description} */\n` : '';
 
     const types = parts.map((part) => this.typeMapper.map(part as OpenAPIV3.SchemaObject)).join(' & ');
@@ -248,7 +248,7 @@ class TypesGenerator extends BaseGenerator {
    * Generate Zod enum schema
    */
   private generateZodEnum(name: string, schema: OpenAPIV3.SchemaObject): string {
-    const values = schema.enum || [];
+    const values = schema.enum!;
     const description = schema.description ? `/** Zod schema for ${name}. ${schema.description} */\n` : `/** Zod schema for ${name} */\n`;
 
     // Check if all values are strings
@@ -283,7 +283,7 @@ class TypesGenerator extends BaseGenerator {
    * Generate Zod intersection schema using merge()
    */
   private generateZodIntersection(name: string, schema: OpenAPIV3.SchemaObject): string {
-    const parts = schema.allOf || [];
+    const parts = schema.allOf!;
     const description = schema.description ? `/** Zod schema for ${name}. ${schema.description} */\n` : `/** Zod schema for ${name} */\n`;
 
     if (parts.length === 0) {

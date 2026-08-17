@@ -1,4 +1,4 @@
-import { getToken } from "@/auth";
+import { auth, getToken } from "@/auth";
 import { readContentGradingDefinition } from "@game-guild/grading";
 import {
   createServerClient,
@@ -61,7 +61,7 @@ function createCourseModules() {
 
   return {
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
-    content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
+    content: new GeneratedApi.LearningCoursesProgramContentModule(client),
     users: new GeneratedApi.UsersModule(client),
   };
 }
@@ -134,7 +134,7 @@ async function resolveCreatorHandle(
   const { users } = createCourseModules();
 
   try {
-    const result = await users.getUsersByUserId(creatorId);
+    const result = await users.getUsersForGetUsersByUserId(creatorId);
     if (!result.ok) return fallback;
 
     return (
@@ -215,7 +215,7 @@ async function fetchCourseById(
 ): Promise<CourseViewModel | null> {
   try {
     const { programs } = createCourseModules();
-    const result = await programs.getCoursesById(courseId);
+    const result = await programs.getCoursesForGetCoursesById(courseId);
     if (!result.ok) return null;
 
     return mapProgramDtoToCourseViewModel(
@@ -252,6 +252,24 @@ export const resolveCourseId = cache(
     return course?.id ?? courseIdentifier;
   },
 );
+
+/**
+ * True when the current viewer manages the course (course creator).
+ */
+export async function canManageCourse(
+  courseIdentifier: string,
+): Promise<boolean> {
+  try {
+    const [course, session] = await Promise.all([
+      getCourse(courseIdentifier),
+      auth(),
+    ]);
+
+    return Boolean(course?.creatorId && course.creatorId === session?.user?.id);
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Fetch course analytics data from the API.
@@ -436,7 +454,7 @@ export const getCourseStudents = cache(
 
           if (dto.userId) {
             try {
-              const userResult = await users.getUsersByUserId(dto.userId);
+              const userResult = await users.getUsersForGetUsersByUserId(dto.userId);
               if (userResult.ok) identity = userResult.data;
             } catch {
               // The roster remains usable if an individual identity lookup fails.

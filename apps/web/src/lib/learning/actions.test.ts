@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   postAssessments: vi.fn(),
   putAssessments: vi.fn(),
   deleteAssessments: vi.fn(),
-  getCoursesById: vi.fn(),
+  getCoursesForGetCoursesById: vi.fn(),
   putCourses: vi.fn(),
   postCoursesPublish: vi.fn(),
   postCoursesRestore: vi.fn(),
@@ -20,7 +20,7 @@ const mocks = vi.hoisted(() => ({
   deleteCoursesUsers: vi.fn(),
   postApiLearningEnrollments: vi.fn(),
   clientRequest: vi.fn(),
-  getUsers: vi.fn(),
+  getUsersForGetUsers: vi.fn(),
   postCoursesStudentsMessage: vi.fn(),
   postCoursesSupportTicketsMessages: vi.fn(),
   postCoursesSupportTicketsResolve: vi.fn(),
@@ -65,18 +65,18 @@ vi.mock("@game-guild/client", () => ({
       deleteAssessmentsGroups = mocks.deleteAssessmentsGroups;
     },
     LearningCoursesProgramModule: class {
-      getCoursesById = mocks.getCoursesById;
+      getCoursesForGetCoursesById = mocks.getCoursesForGetCoursesById;
       putCourses = mocks.putCourses;
       postCoursesUsers = mocks.postCoursesUsers;
       deleteCoursesUsers = mocks.deleteCoursesUsers;
     },
-    LearningCoursesProgramcontentModule: class {
+    LearningCoursesProgramContentModule: class {
       postCoursesContent = mocks.postCoursesContent;
       postCoursesContentReorder = mocks.postCoursesContentReorder;
       postCoursesContentMove = mocks.postCoursesContentMove;
       deleteCoursesContent = mocks.deleteCoursesContent;
     },
-    LearningCoursesProgramlifecycleModule: class {
+    LearningCoursesProgramLifecycleModule: class {
       postCoursesPublish = mocks.postCoursesPublish;
       postCoursesRestore = mocks.postCoursesRestore;
     },
@@ -86,7 +86,7 @@ vi.mock("@game-guild/client", () => ({
     LearningCoursesStudentsModule: class {
       postCoursesStudentsMessage = mocks.postCoursesStudentsMessage;
     },
-    LearningCoursesSupportticketsModule: class {
+    LearningCoursesSupportTicketsModule: class {
       postCoursesSupportTicketsMessages =
         mocks.postCoursesSupportTicketsMessages;
       postCoursesSupportTicketsResolve = mocks.postCoursesSupportTicketsResolve;
@@ -112,7 +112,7 @@ vi.mock("@game-guild/client", () => ({
       patchApiSocialReviewsModeration = mocks.patchApiSocialReviewsModeration;
     },
     UsersModule: class {
-      getUsers = mocks.getUsers;
+      getUsersForGetUsers = mocks.getUsersForGetUsers;
     },
   },
 }));
@@ -189,7 +189,7 @@ describe("learning server actions", () => {
     });
     mocks.putAssessments.mockResolvedValue({ ok: true, data: undefined });
     mocks.deleteAssessments.mockResolvedValue({ ok: true, data: undefined });
-    mocks.getCoursesById.mockResolvedValue({
+    mocks.getCoursesForGetCoursesById.mockResolvedValue({
       ok: true,
       data: {
         id: "course-1",
@@ -228,7 +228,7 @@ describe("learning server actions", () => {
         ],
       },
     });
-    mocks.getUsers.mockResolvedValue({
+    mocks.getUsersForGetUsers.mockResolvedValue({
       ok: true,
       data: {
         items: [
@@ -396,16 +396,16 @@ describe("learning server actions", () => {
     expect(result).toEqual({ success: true, data: null });
     expect(mocks.postCoursesPublish).toHaveBeenCalledWith("resolved-course-id");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/boss-ai-by-instructor-one",
+      "/workspace/learning/courses/boss-ai-by-instructor-one",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/resolved-course-id",
+      "/workspace/learning/courses/resolved-course-id",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/boss-ai-by-instructor-one/overview",
+      "/workspace/learning/courses/boss-ai-by-instructor-one/overview",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/resolved-course-id/overview",
+      "/workspace/learning/courses/resolved-course-id/overview",
     );
   });
 
@@ -417,16 +417,16 @@ describe("learning server actions", () => {
     expect(result).toEqual({ success: true, data: null });
     expect(mocks.postCoursesRestore).toHaveBeenCalledWith("resolved-course-id");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/boss-ai-by-instructor-one",
+      "/workspace/learning/courses/boss-ai-by-instructor-one",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/resolved-course-id",
+      "/workspace/learning/courses/resolved-course-id",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/boss-ai-by-instructor-one/overview",
+      "/workspace/learning/courses/boss-ai-by-instructor-one/overview",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/resolved-course-id/overview",
+      "/workspace/learning/courses/resolved-course-id/overview",
     );
   });
 
@@ -474,7 +474,7 @@ describe("learning server actions", () => {
       "Course update",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/settings/notifications",
+      "/workspace/learning/courses/course-1/settings/notifications",
     );
   });
 
@@ -527,7 +527,7 @@ describe("learning server actions", () => {
       "course.updated",
     ]);
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/settings/integrations",
+      "/workspace/learning/courses/course-1/settings/integrations",
     );
   });
 
@@ -558,7 +558,7 @@ describe("learning server actions", () => {
       },
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/listing/testimonials",
+      "/workspace/learning/courses/course-1/listing/testimonials",
     );
   });
 
@@ -612,7 +612,7 @@ describe("learning server actions", () => {
     );
 
     expect(result).toEqual({ success: true, data: null });
-    expect(mocks.getUsers).toHaveBeenCalledWith({
+    expect(mocks.getUsersForGetUsers).toHaveBeenCalledWith({
       email: "student@example.com",
       limit: 5,
     });
@@ -620,7 +620,7 @@ describe("learning server actions", () => {
       creatorId: "user-1",
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/boss-ai-by-instructor-one/settings/danger",
+      "/workspace/learning/courses/boss-ai-by-instructor-one/settings/danger",
     );
   });
 
@@ -719,10 +719,10 @@ describe("learning server actions", () => {
       "9ec3b854-89ca-4757-83fb-cfc823da1a5e",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/creature-design-by-admin",
+      "/workspace/learning/courses/creature-design-by-admin",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333",
+      "/workspace/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333",
     );
   });
 
@@ -749,10 +749,10 @@ describe("learning server actions", () => {
       }),
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/creature-design-by-admin/content",
+      "/workspace/learning/courses/creature-design-by-admin/content",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content",
+      "/workspace/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content",
     );
   });
 
@@ -823,10 +823,10 @@ describe("learning server actions", () => {
       { contentIds: ["module-2", "module-1"] },
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/creature-design-by-admin/content",
+      "/workspace/learning/courses/creature-design-by-admin/content",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content",
+      "/workspace/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content",
     );
   });
 
@@ -847,10 +847,10 @@ describe("learning server actions", () => {
       { contentId: 'content-9', newParentId: 'parent-2', newSortOrder: 3 },
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      '/dashboard/learning/courses/creature-design-by-admin/content',
+      '/workspace/learning/courses/creature-design-by-admin/content',
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      '/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content',
+      '/workspace/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/content',
     );
   });
 
@@ -908,10 +908,10 @@ describe("learning server actions", () => {
       }),
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/creature-design-by-admin/assessments",
+      "/workspace/learning/courses/creature-design-by-admin/assessments",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/assessments",
+      "/workspace/learning/courses/1caa16bb-6810-4e53-bb0d-91f0d5702333/assessments",
     );
   });
 
@@ -943,7 +943,7 @@ describe("learning server actions", () => {
       templateHtml: "<section>{{recipientName}}</section>",
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/certificates",
+      "/workspace/learning/courses/course-1/certificates",
     );
   });
 
@@ -957,7 +957,7 @@ describe("learning server actions", () => {
       "template-1",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/certificates",
+      "/workspace/learning/courses/course-1/certificates",
     );
   });
 
@@ -1000,10 +1000,10 @@ describe("learning server actions", () => {
       },
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/certificates",
+      "/workspace/learning/courses/course-1/certificates",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/certificates/template-1",
+      "/workspace/learning/courses/course-1/certificates/template-1",
     );
   });
 
@@ -1029,10 +1029,10 @@ describe("learning server actions", () => {
       contentId: null,
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/support/discussions",
+      "/workspace/learning/courses/course-1/support/discussions",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/support/discussions/thread-1",
+      "/workspace/learning/courses/course-1/support/discussions/thread-1",
     );
   });
 
@@ -1063,10 +1063,10 @@ describe("learning server actions", () => {
       },
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/support/tickets/thread-1",
+      "/workspace/learning/courses/course-1/support/tickets/thread-1",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/support/discussions/thread-1",
+      "/workspace/learning/courses/course-1/support/discussions/thread-1",
     );
   });
 
@@ -1120,10 +1120,10 @@ describe("learning server actions", () => {
       order: 2,
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1",
+      "/workspace/learning/courses/course-1",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/assessments",
+      "/workspace/learning/courses/course-1/assessments",
     );
   });
 
@@ -1150,10 +1150,10 @@ describe("learning server actions", () => {
     expect(result).toEqual({ success: true, data: null });
     expect(mocks.deleteAssessmentsGroups).toHaveBeenCalledWith("group-1");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1",
+      "/workspace/learning/courses/course-1",
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
-      "/dashboard/learning/courses/course-1/assessments",
+      "/workspace/learning/courses/course-1/assessments",
     );
   });
 

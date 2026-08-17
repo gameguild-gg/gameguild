@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,11 +20,13 @@ export class UsersResourcesSettingsModule {
    *
    * Retrieves all resource setting overrides for a specific user.
    */
-  async getUsersByUserIdResourcesSettings(userId: string): Promise<Result<Array<Types.ResourcesResourceSettings>, ApiError>> {
+  async getUsersResourcesSettingsForGetUsersByUserIdResourcesSettings(
+    userId: string,
+  ): Promise<Result<Array<Types.ResourcesResourceSettings>, ApiError>> {
     const url = `/v1/users/${userId}/resources/settings`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -37,18 +39,25 @@ export class UsersResourcesSettingsModule {
    *
    * Retrieves a specific resource setting override by its key for a user.
    */
-  async getUsersByUserIdResourcesSettingsByKey(userId: string, key: string): Promise<Result<Types.ResourcesResourceSettings, ApiError>> {
+  async getUsersResourcesSettingsForGetUsersByUserIdResourcesSettingsByKey(
+    userId: string,
+    key: string,
+  ): Promise<Result<Types.ResourcesResourceSettings, ApiError>> {
     const url = `/v1/users/${userId}/resources/settings/${key}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.ResourcesResourceSettingsSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.ResourcesResourceSettingsSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -68,10 +77,14 @@ export class UsersResourcesSettingsModule {
     const url = `/v1/users/${userId}/resources/settings/${key}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesSetUserResourceSettingsInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.ResourcesSetUserResourceSettingsInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "PUT",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -79,7 +92,11 @@ export class UsersResourcesSettingsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.ResourcesResourceSettingsSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.ResourcesResourceSettingsSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -87,6 +104,8 @@ export class UsersResourcesSettingsModule {
   }
 }
 
-export function createUsersResourcesSettingsModule(client: ApiClient): UsersResourcesSettingsModule {
+export function createUsersResourcesSettingsModule(
+  client: ApiClient,
+): UsersResourcesSettingsModule {
   return new UsersResourcesSettingsModule(client);
 }

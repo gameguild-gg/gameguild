@@ -1,4 +1,5 @@
 import { render, act, screen, within, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { createRef } from 'react';
 
 if (typeof globalThis.TextEncoder === 'undefined') {
@@ -103,6 +104,7 @@ jest.mock('@game-guild/ui/components/switch', () => ({
 
 import Ide from './Ide';
 import type { IdeHandle } from './Ide';
+import type { GradingPlan } from './ide-types';
 
 // Smoke test the manual shadcn stubs to catch broken mock wiring early.
 describe('shadcn mock smoke', () => {
@@ -333,6 +335,113 @@ describe('T7 in-IDE authoring regions', () => {
   });
 });
 
+describe('allowCreateFiles prop chain', () => {
+  it('workspace toggle renders through Ide in authoring mode and fires the callback', async () => {
+    const onAllowCreateFilesChange = jest.fn();
+    await act(async () => {
+      render(<Ide allowCreateFiles onAllowCreateFilesChange={onAllowCreateFilesChange} />);
+    });
+    const toggle = screen.getByTestId('allow-student-create');
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await act(async () => {
+      fireEvent.click(toggle);
+    });
+    expect(onAllowCreateFilesChange).toHaveBeenCalledWith(false);
+  });
+
+  it('runtime mode (no onAllowCreateFilesChange) renders NO workspace toggle', async () => {
+    await act(async () => {
+      render(<Ide />);
+    });
+    expect(screen.queryByTestId('allow-student-create')).toBeNull();
+  });
+
+  it('runtime mode with allowCreateFiles=false hides the create row — prompt can never fire', async () => {
+    const promptSpy = jest.spyOn(window, 'prompt').mockReturnValue('/user/sneaky.cpp');
+    await act(async () => {
+      render(<Ide allowCreateFiles={false} />);
+    });
+    expect(screen.queryByTestId('explorer-new-file')).toBeNull();
+    expect(screen.queryByTestId('explorer-upload')).toBeNull();
+    expect(promptSpy).not.toHaveBeenCalled();
+    promptSpy.mockRestore();
+  });
+
+  it('authoring mode keeps createFile live even when allowCreateFiles=false', async () => {
+    const promptSpy = jest.spyOn(window, 'prompt').mockReturnValue(null);
+    await act(async () => {
+      render(<Ide allowCreateFiles={false} onAllowCreateFilesChange={() => {}} />);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('explorer-new-file'));
+    });
+    expect(promptSpy).toHaveBeenCalledTimes(1);
+    promptSpy.mockRestore();
+  });
+});
+
+describe('read-only delete/rename guard', () => {
+  it('Rename/Delete buttons disabled for a modifiable:false selected file', async () => {
+    await act(async () => {
+      render(<Ide fileMeta={{ [SEED_FILE]: { visibility: 'Public', modifiable: false } }} />);
+    });
+    expect(screen.getByText('Rename')).toBeDisabled();
+    expect(screen.getByText('Delete')).toBeDisabled();
+  });
+
+  it('delete handler refuses a modifiable:false file even when invoked via the context menu', async () => {
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} fileMeta={{ [SEED_FILE]: { visibility: 'Public', modifiable: false } }} />);
+    });
+    // The ctx-menu entry bypasses footer-button disabling — exercises the handler itself.
+    fireEvent.contextMenu(screen.getByTestId(`file-row-${SEED_FILE}`));
+    await act(async () => {
+      fireEvent.click(screen.getByText('🗑 Delete'));
+    });
+    expect(confirmSpy).not.toHaveBeenCalled();
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === SEED_FILE)).toBeDefined();
+    confirmSpy.mockRestore();
+  });
+
+  it('rename handler refuses a modifiable:false file even when invoked via the context menu', async () => {
+    const promptSpy = jest.spyOn(window, 'prompt').mockReturnValue('/user/renamed.cpp');
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} fileMeta={{ [SEED_FILE]: { visibility: 'Public', modifiable: false } }} />);
+    });
+    // The ctx-menu entry bypasses footer-button disabling — exercises the handler itself.
+    fireEvent.contextMenu(screen.getByTestId(`file-row-${SEED_FILE}`));
+    await act(async () => {
+      fireEvent.click(screen.getByText('✏ Rename'));
+    });
+    expect(promptSpy).not.toHaveBeenCalled();
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === SEED_FILE)).toBeDefined();
+    expect(files.find((f) => f.path === '/user/renamed.cpp')).toBeUndefined();
+    promptSpy.mockRestore();
+  });
+
+  it('a modifiable file stays deletable', async () => {
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} fileMeta={{ [SEED_FILE]: { visibility: 'Public', modifiable: true } }} />);
+    });
+    const del = screen.getByText('Delete');
+    expect(del).toBeEnabled();
+    await act(async () => {
+      fireEvent.click(del);
+    });
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === SEED_FILE)).toBeUndefined();
+    confirmSpy.mockRestore();
+  });
+});
+
 describe('external workspaceConfig sync', () => {
   const makeConfig = (id: string, entry: string) => ({
     id,
@@ -379,13 +488,15 @@ describe('external workspaceConfig sync', () => {
     expect((screen.getByTestId('workspace-picker') as HTMLSelectElement).value).toBe('ws-a');
   });
 
-  it('persists workspace state under the per-preset namespaced localStorage key', async () => {
+  it('skips the initial persistence write so a restorable draft survives mount', async () => {
     const setItem = jest.spyOn(Storage.prototype, 'setItem');
     try {
       const view = render(
         <Ide assignmentToken="tok-1" workspaceConfig={makeConfig('ws-a', '/user/main.cpp')} presetOptions={pickerOptions} />,
       );
-      expect(setItem).toHaveBeenCalledWith(
+      // The unedited initial state is not persisted: writing it on mount
+      // would clobber a restorable draft before the restore effect reads it.
+      expect(setItem).not.toHaveBeenCalledWith(
         'gameguild.emception.workspace.tok-1.ws-a.v2',
         expect.stringContaining('/user/main.cpp'),
       );
@@ -395,6 +506,7 @@ describe('external workspaceConfig sync', () => {
           <Ide assignmentToken="tok-1" workspaceConfig={makeConfig('ws-b', '/user/other.c')} presetOptions={pickerOptions} />,
         );
       });
+      // A real state change (workspace apply) still persists.
       expect(setItem).toHaveBeenCalledWith(
         'gameguild.emception.workspace.tok-1.ws-b.v2',
         expect.stringContaining('/user/other.c'),
@@ -403,5 +515,225 @@ describe('external workspaceConfig sync', () => {
       setItem.mockRestore();
       window.localStorage.clear();
     }
+  });
+});
+
+describe('legacy storage key fallback (read migration)', () => {
+  const wsKey = (token: string, ws: string) => `gameguild.emception.workspace.${token}.${ws}.v2`;
+  const wsConfig = {
+    id: 'ws-a',
+    label: 'WS A',
+    compile: { tool: 'clang', args: [], output: '/home/user/main.wasm' },
+    run: { type: 'wasi-terminal' as const },
+    features: {},
+    layout: { activeFile: '/user/main.cpp', openTabs: [{ path: '/user/main.cpp', group: 'main' as const }] },
+    files: { '/user/main.cpp': { encoding: 'text' as const, content: 'int main(){}' } },
+  };
+  const persisted = (content: string) => JSON.stringify({
+    files: { '/user/main.cpp': { path: '/user/main.cpp', type: 'text', content } },
+    selectedPath: '/user/main.cpp',
+    expandedDirs: [],
+    openTabs: [{ id: 'tab:/user/main.cpp', path: '/user/main.cpp', type: 'text', group: 'main' }],
+    activeTabId: 'tab:/user/main.cpp',
+  });
+
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('restores from the legacy post-colon-suffix key when the new key is absent', async () => {
+    window.localStorage.setItem(wsKey('assess-1', 'ws-a'), persisted('legacy-draft'));
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+    });
+
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === '/user/main.cpp')?.content).toBe('legacy-draft');
+
+    // Read migration: the legacy entry is left in place.
+    expect(window.localStorage.getItem(wsKey('assess-1', 'ws-a'))).not.toBeNull();
+  });
+
+  it('writes restored state back under the NEW key, never the legacy key', async () => {
+    window.localStorage.setItem(wsKey('assess-1', 'ws-a'), persisted('legacy-draft'));
+    const setItem = jest.spyOn(Storage.prototype, 'setItem');
+    try {
+      const ref = createRef<IdeHandle>();
+      await act(async () => {
+        render(<Ide ref={ref} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+      });
+
+      expect(setItem).toHaveBeenCalledWith(
+        wsKey('user-1:assess-1', 'ws-a'),
+        expect.stringContaining('legacy-draft'),
+      );
+      expect(setItem).not.toHaveBeenCalledWith(
+        wsKey('assess-1', 'ws-a'),
+        expect.anything(),
+      );
+    } finally {
+      setItem.mockRestore();
+    }
+  });
+
+  it('prefers the new key when both new and legacy entries exist', async () => {
+    window.localStorage.setItem(wsKey('user-1:assess-1', 'ws-a'), persisted('new-draft'));
+    window.localStorage.setItem(wsKey('assess-1', 'ws-a'), persisted('legacy-draft'));
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+    });
+
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === '/user/main.cpp')?.content).toBe('new-draft');
+  });
+
+  it('restore is a no-op without crashing when both keys hold corrupt JSON', async () => {
+    window.localStorage.setItem(wsKey('user-1:assess-1', 'ws-a'), '{not json');
+    window.localStorage.setItem(wsKey('assess-1', 'ws-a'), 'also not json');
+    const ref = createRef<IdeHandle>();
+    await act(async () => {
+      render(<Ide ref={ref} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+    });
+
+    // Config-seeded content is untouched by the failed restore.
+    const files = await ref.current!.getFiles();
+    expect(files.find((f) => f.path === '/user/main.cpp')?.content).toBe('int main(){}');
+  });
+
+  it('reads the legacy key only while the new key is absent (no repeated legacy reads after migration write)', async () => {
+    window.localStorage.setItem(wsKey('assess-1', 'ws-a'), persisted('legacy-draft'));
+    const getItem = jest.spyOn(Storage.prototype, 'getItem');
+    try {
+      const ref = createRef<IdeHandle>();
+      let view: ReturnType<typeof render>;
+      await act(async () => {
+        view = render(<Ide ref={ref} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+      });
+
+      expect(getItem.mock.calls.filter(([k]) => k === wsKey('assess-1', 'ws-a'))).toHaveLength(1);
+      // The mount persistence effect migrated the draft to the new key.
+      expect(window.localStorage.getItem(wsKey('user-1:assess-1', 'ws-a'))).not.toBeNull();
+
+      getItem.mockClear();
+      view!.unmount();
+      const ref2 = createRef<IdeHandle>();
+      await act(async () => {
+        render(<Ide ref={ref2} assignmentToken="user-1:assess-1" workspaceConfig={wsConfig} />);
+      });
+      expect(getItem.mock.calls.filter(([k]) => k === wsKey('assess-1', 'ws-a'))).toHaveLength(0);
+    } finally {
+      getItem.mockRestore();
+    }
+  });
+});
+
+// ── Bottom tabs: Test Cases + Test Results (student runtime mode) ──────────
+
+// Mixed plan: named/unnamed, empty stdin, RegExp expectedStdout, default
+// weight, and a hidden case (stripped in public mode).
+const MIXED_PLAN: GradingPlan = {
+  cases: [
+    { kind: 'stdio', name: 'greeter', stdin: 'world', expectedStdout: 'hello world', weight: 2 },
+    { kind: 'stdio', expectedStdout: /^h[aeiou]llo$/ },
+    { kind: 'stdio', name: 'secret-case', expectedStdout: 'answer', hidden: true },
+  ],
+  build: {},
+};
+
+describe('bottom tabs: Test Cases + Test Results', () => {
+  it('(gate) student mode (testPlan, no slot) renders Test Cases + Test Results tabs, no authoring Tests tab', async () => {
+    await act(async () => {
+      render(<Ide testPlan={MIXED_PLAN} />);
+    });
+    expect(screen.getByRole('button', { name: 'Terminal' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Test Cases' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Test Results' })).not.toBeNull();
+    expect(screen.queryByRole('button', { name: 'Tests' })).toBeNull();
+  });
+
+  it('(gate) instructor mode (testPlan + testsPanelSlot) keeps only the authoring Tests tab', async () => {
+    await act(async () => {
+      render(
+        <Ide
+          testPlan={MIXED_PLAN}
+          testsPanelSlot={<div data-testid="slot-content">authoring</div>}
+        />,
+      );
+    });
+    expect(screen.getByRole('button', { name: 'Tests' })).not.toBeNull();
+    expect(screen.queryByRole('button', { name: 'Test Cases' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Test Results' })).toBeNull();
+  });
+
+  it('(gate) no testPlan renders neither new tab', async () => {
+    await act(async () => {
+      render(<Ide />);
+    });
+    expect(screen.queryByRole('button', { name: 'Test Cases' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Test Results' })).toBeNull();
+  });
+
+  it('(table) Test Cases tab renders one read-only row per plan case with fallbacks', async () => {
+    await act(async () => {
+      render(<Ide testPlan={MIXED_PLAN} />);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Test Cases' }));
+    });
+
+    const panel = screen.getByTestId('test-cases-panel');
+    // Default testMode is 'full' — all 3 cases shown.
+    const rows = within(panel).getAllByTestId('test-case-row');
+    expect(rows).toHaveLength(3);
+
+    // Row 0: named, explicit stdin/stdout/weight.
+    expect(within(rows[0]).getByText('greeter')).not.toBeNull();
+    expect(within(rows[0]).getByText('world')).not.toBeNull();
+    expect(within(rows[0]).getByText('hello world')).not.toBeNull();
+    expect(within(rows[0]).getByText('2')).not.toBeNull();
+
+    // Row 1: unnamed → '(unnamed)', no stdin → '(empty)', RegExp → String(v), weight default 1.
+    expect(within(rows[1]).getByText('(unnamed)')).not.toBeNull();
+    expect(within(rows[1]).getByText('(empty)')).not.toBeNull();
+    expect(within(rows[1]).getByText(String(/^h[aeiou]llo$/))).not.toBeNull();
+    expect(within(rows[1]).getByText('1')).not.toBeNull();
+  });
+
+  it('(table) public mode strips hidden cases from the Test Cases table', async () => {
+    await act(async () => {
+      render(<Ide testPlan={MIXED_PLAN} testMode="public" />);
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Test Cases' }));
+    });
+    const rows = within(screen.getByTestId('test-cases-panel')).getAllByTestId('test-case-row');
+    expect(rows).toHaveLength(2);
+    expect(screen.queryByText('secret-case')).toBeNull();
+  });
+
+  it('(kept-mounted) Test Results slot stays in the DOM with display:none when switching away', async () => {
+    await act(async () => {
+      render(<Ide testPlan={MIXED_PLAN} />);
+    });
+
+    // Switch to Test Results: slot visible, no panel content yet (no run).
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Test Results' }));
+    });
+    const slot = screen.getByTestId('test-results-slot');
+    expect(slot.style.display).not.toBe('none');
+    expect(screen.queryByTestId('test-results-panel')).toBeNull();
+
+    // Switch back to Terminal: slot unmounts nothing — just hides.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Terminal' }));
+    });
+    expect(screen.getByTestId('test-results-slot').style.display).toBe('none');
   });
 });

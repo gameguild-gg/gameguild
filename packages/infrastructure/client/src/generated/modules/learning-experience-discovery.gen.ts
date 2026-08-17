@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,22 +17,27 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async getDiscoveryCollections(query?: {
+  async getDiscoveryCollectionsForGetDiscoveryCollections(query?: {
     tenantId?: string;
     type?: Types.LearningExperienceDiscoveryCollectionType;
     skip?: number;
     take?: number;
-  }): Promise<Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>> {
-    const url = '/v1/discovery/collections';
+  }): Promise<
+    Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>
+  > {
+    const url = "/v1/discovery/collections";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>;
+    return result as Result<
+      Array<Types.LearningExperienceDiscoveryCourseCollection>,
+      ApiError
+    >;
   }
 
   /**
@@ -40,14 +45,20 @@ export class LearningExperienceDiscoveryModule {
   async postDiscoveryCollections(
     body: Types.LearningExperienceDiscoveryCreateCourseCollection,
     query?: { curatorId?: string; tenantId?: string },
-  ): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
-    const url = '/v1/discovery/collections';
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
+    const url = "/v1/discovery/collections";
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryCreateCourseCollectionSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.LearningExperienceDiscoveryCreateCourseCollectionSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       params: query,
       body: validatedBody,
@@ -56,7 +67,11 @@ export class LearningExperienceDiscoveryModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryCourseCollectionSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -68,17 +83,22 @@ export class LearningExperienceDiscoveryModule {
   async getDiscoveryCollectionsCurator(
     curatorId: string,
     query?: { includeUnpublished?: boolean; skip?: number; take?: number },
-  ): Promise<Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>> {
+  ): Promise<
+    Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>
+  > {
     const url = `/v1/discovery/collections/curator/${curatorId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>;
+    return result as Result<
+      Array<Types.LearningExperienceDiscoveryCourseCollection>,
+      ApiError
+    >;
   }
 
   /**
@@ -86,26 +106,36 @@ export class LearningExperienceDiscoveryModule {
   async getDiscoveryCollectionsFeatured(query?: {
     tenantId?: string;
     take?: number;
-  }): Promise<Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>> {
-    const url = '/v1/discovery/collections/featured';
+  }): Promise<
+    Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>
+  > {
+    const url = "/v1/discovery/collections/featured";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>;
+    return result as Result<
+      Array<Types.LearningExperienceDiscoveryCourseCollection>,
+      ApiError
+    >;
   }
 
   /**
    */
-  async getDiscoveryCollectionsSlug(slug: string, query?: { tenantId?: string }): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
+  async getDiscoveryCollectionsSlug(
+    slug: string,
+    query?: { tenantId?: string },
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
     const url = `/v1/discovery/collections/slug/${slug}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -113,7 +143,11 @@ export class LearningExperienceDiscoveryModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryCourseCollectionSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -122,18 +156,26 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async getDiscoveryCollectionsById(id: string): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
+  async getDiscoveryCollectionsForGetDiscoveryCollectionsById(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
     const url = `/v1/discovery/collections/${id}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryCourseCollectionSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -145,14 +187,20 @@ export class LearningExperienceDiscoveryModule {
   async putDiscoveryCollections(
     id: string,
     body: Types.LearningExperienceDiscoveryUpdateCourseCollection,
-  ): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
     const url = `/v1/discovery/collections/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryUpdateCourseCollectionSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.LearningExperienceDiscoveryUpdateCourseCollectionSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "PUT",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -160,7 +208,11 @@ export class LearningExperienceDiscoveryModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryCourseCollectionSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -169,11 +221,13 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async deleteDiscoveryCollections(id: string): Promise<Result<void, ApiError>> {
+  async deleteDiscoveryCollections(
+    id: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/discovery/collections/${id}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -183,18 +237,26 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async postDiscoveryCollectionsPublish(id: string): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
+  async postDiscoveryCollectionsPublish(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
     const url = `/v1/discovery/collections/${id}/publish`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryCourseCollectionSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -203,18 +265,26 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async postDiscoveryCollectionsUnpublish(id: string): Promise<Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>> {
+  async postDiscoveryCollectionsUnpublish(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
     const url = `/v1/discovery/collections/${id}/unpublish`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryCourseCollectionSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -223,21 +293,26 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async getDiscoveryFeatured(query?: {
+  async getDiscoveryFeaturedForGetDiscoveryFeatured(query?: {
     tenantId?: string;
     skip?: number;
     take?: number;
-  }): Promise<Result<Array<Types.LearningExperienceDiscoveryFeaturedContent>, ApiError>> {
-    const url = '/v1/discovery/featured';
+  }): Promise<
+    Result<Array<Types.LearningExperienceDiscoveryFeaturedContent>, ApiError>
+  > {
+    const url = "/v1/discovery/featured";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceDiscoveryFeaturedContent>, ApiError>;
+    return result as Result<
+      Array<Types.LearningExperienceDiscoveryFeaturedContent>,
+      ApiError
+    >;
   }
 
   /**
@@ -245,14 +320,20 @@ export class LearningExperienceDiscoveryModule {
   async postDiscoveryFeatured(
     body: Types.LearningExperienceDiscoveryCreateFeaturedContent,
     query?: { tenantId?: string },
-  ): Promise<Result<Types.LearningExperienceDiscoveryFeaturedContent, ApiError>> {
-    const url = '/v1/discovery/featured';
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryFeaturedContent, ApiError>
+  > {
+    const url = "/v1/discovery/featured";
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryCreateFeaturedContentSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.LearningExperienceDiscoveryCreateFeaturedContentSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       params: query,
       body: validatedBody,
@@ -261,7 +342,11 @@ export class LearningExperienceDiscoveryModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryFeaturedContentSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryFeaturedContentSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -273,33 +358,46 @@ export class LearningExperienceDiscoveryModule {
   async getDiscoveryFeaturedType(
     type: Types.LearningExperienceDiscoveryFeaturedContentType,
     query?: { tenantId?: string; skip?: number; take?: number },
-  ): Promise<Result<Array<Types.LearningExperienceDiscoveryFeaturedContent>, ApiError>> {
+  ): Promise<
+    Result<Array<Types.LearningExperienceDiscoveryFeaturedContent>, ApiError>
+  > {
     const url = `/v1/discovery/featured/type/${type}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceDiscoveryFeaturedContent>, ApiError>;
+    return result as Result<
+      Array<Types.LearningExperienceDiscoveryFeaturedContent>,
+      ApiError
+    >;
   }
 
   /**
    */
-  async getDiscoveryFeaturedById(id: string): Promise<Result<Types.LearningExperienceDiscoveryFeaturedContent, ApiError>> {
+  async getDiscoveryFeaturedForGetDiscoveryFeaturedById(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryFeaturedContent, ApiError>
+  > {
     const url = `/v1/discovery/featured/${id}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryFeaturedContentSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryFeaturedContentSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -311,14 +409,20 @@ export class LearningExperienceDiscoveryModule {
   async putDiscoveryFeatured(
     id: string,
     body: Types.LearningExperienceDiscoveryUpdateFeaturedContent,
-  ): Promise<Result<Types.LearningExperienceDiscoveryFeaturedContent, ApiError>> {
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryFeaturedContent, ApiError>
+  > {
     const url = `/v1/discovery/featured/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryUpdateFeaturedContentSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.LearningExperienceDiscoveryUpdateFeaturedContentSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "PUT",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -326,7 +430,11 @@ export class LearningExperienceDiscoveryModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryFeaturedContentSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryFeaturedContentSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -339,7 +447,7 @@ export class LearningExperienceDiscoveryModule {
     const url = `/v1/discovery/featured/${id}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -349,11 +457,16 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async patchDiscoveryFeaturedToggle(id: string, query?: { isActive?: boolean }): Promise<Result<Types.LearningExperienceDiscoveryFeaturedContent, ApiError>> {
+  async patchDiscoveryFeaturedToggle(
+    id: string,
+    query?: { isActive?: boolean },
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryFeaturedContent, ApiError>
+  > {
     const url = `/v1/discovery/featured/${id}/toggle`;
 
     const result = await this.client.request({
-      method: 'PATCH',
+      method: "PATCH",
       path: url,
       params: query,
       requiresAuth: true,
@@ -361,7 +474,11 @@ export class LearningExperienceDiscoveryModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoveryFeaturedContentSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryFeaturedContentSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -370,17 +487,25 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async getDiscoverySearchHistory(userId: string, query?: { take?: number }): Promise<Result<Array<Types.LearningExperienceDiscoverySearchHistory>, ApiError>> {
+  async getDiscoverySearchHistory(
+    userId: string,
+    query?: { take?: number },
+  ): Promise<
+    Result<Array<Types.LearningExperienceDiscoverySearchHistory>, ApiError>
+  > {
     const url = `/v1/discovery/search/history/${userId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceDiscoverySearchHistory>, ApiError>;
+    return result as Result<
+      Array<Types.LearningExperienceDiscoverySearchHistory>,
+      ApiError
+    >;
   }
 
   /**
@@ -388,17 +513,25 @@ export class LearningExperienceDiscoveryModule {
   async getDiscoverySearchPopular(query?: {
     daysBack?: number;
     take?: number;
-  }): Promise<Result<Array<Types.LearningExperienceDiscoveryPopularSearchResult>, ApiError>> {
-    const url = '/v1/discovery/search/popular';
+  }): Promise<
+    Result<
+      Array<Types.LearningExperienceDiscoveryPopularSearchResult>,
+      ApiError
+    >
+  > {
+    const url = "/v1/discovery/search/popular";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceDiscoveryPopularSearchResult>, ApiError>;
+    return result as Result<
+      Array<Types.LearningExperienceDiscoveryPopularSearchResult>,
+      ApiError
+    >;
   }
 
   /**
@@ -407,13 +540,17 @@ export class LearningExperienceDiscoveryModule {
     body: Types.LearningExperienceDiscoveryRecordSearch,
     query?: { userId?: string },
   ): Promise<Result<Types.LearningExperienceDiscoverySearchHistory, ApiError>> {
-    const url = '/v1/discovery/search/record';
+    const url = "/v1/discovery/search/record";
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryRecordSearchSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.LearningExperienceDiscoveryRecordSearchSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       params: query,
       body: validatedBody,
@@ -422,7 +559,11 @@ export class LearningExperienceDiscoveryModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceDiscoverySearchHistorySchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoverySearchHistorySchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -431,14 +572,21 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async postDiscoverySearchClick(searchId: string, body: Types.LearningExperienceDiscoveryRecordSearchClick): Promise<Result<void, ApiError>> {
+  async postDiscoverySearchClick(
+    searchId: string,
+    body: Types.LearningExperienceDiscoveryRecordSearchClick,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/discovery/search/${searchId}/click`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceDiscoveryRecordSearchClickSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.LearningExperienceDiscoveryRecordSearchClickSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -448,6 +596,8 @@ export class LearningExperienceDiscoveryModule {
   }
 }
 
-export function createLearningExperienceDiscoveryModule(client: ApiClient): LearningExperienceDiscoveryModule {
+export function createLearningExperienceDiscoveryModule(
+  client: ApiClient,
+): LearningExperienceDiscoveryModule {
   return new LearningExperienceDiscoveryModule(client);
 }

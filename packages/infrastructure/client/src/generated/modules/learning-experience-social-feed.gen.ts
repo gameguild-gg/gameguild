@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -21,26 +21,34 @@ export class LearningExperienceSocialFeedModule {
     skip?: number;
     take?: number;
     filterByType?: Types.LearningExperienceSocialFeedItemType;
-  }): Promise<Result<Array<Types.LearningExperienceSocialServicesPersonalizedFeedItem>, ApiError>> {
-    const url = '/api/social/feed/me';
+  }): Promise<
+    Result<
+      Array<Types.LearningExperienceSocialServicesPersonalizedFeedItem>,
+      ApiError
+    >
+  > {
+    const url = "/api/social/feed/me";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceSocialServicesPersonalizedFeedItem>, ApiError>;
+    return result as Result<
+      Array<Types.LearningExperienceSocialServicesPersonalizedFeedItem>,
+      ApiError
+    >;
   }
 
   /**
    */
   async postApiSocialFeedMeGenerate(): Promise<Result<number, ApiError>> {
-    const url = '/api/social/feed/me/generate';
+    const url = "/api/social/feed/me/generate";
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -50,18 +58,26 @@ export class LearningExperienceSocialFeedModule {
 
   /**
    */
-  async postApiSocialFeedDismiss(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>> {
+  async postApiSocialFeedDismiss(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>
+  > {
     const url = `/api/social/feed/${id}/dismiss`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceSocialServicesPersonalizedFeedItemSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceSocialServicesPersonalizedFeedItemSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -70,18 +86,26 @@ export class LearningExperienceSocialFeedModule {
 
   /**
    */
-  async postApiSocialFeedViewed(id: string): Promise<Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>> {
+  async postApiSocialFeedViewed(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceSocialServicesPersonalizedFeedItem, ApiError>
+  > {
     const url = `/api/social/feed/${id}/viewed`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceSocialServicesPersonalizedFeedItemSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceSocialServicesPersonalizedFeedItemSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -89,6 +113,8 @@ export class LearningExperienceSocialFeedModule {
   }
 }
 
-export function createLearningExperienceSocialFeedModule(client: ApiClient): LearningExperienceSocialFeedModule {
+export function createLearningExperienceSocialFeedModule(
+  client: ApiClient,
+): LearningExperienceSocialFeedModule {
   return new LearningExperienceSocialFeedModule(client);
 }

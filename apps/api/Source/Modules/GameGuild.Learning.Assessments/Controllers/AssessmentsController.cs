@@ -24,6 +24,7 @@ public class AssessmentsController : BaseApiController
     private readonly IProgramCrudService _programService;
     private readonly IEnrollmentService _enrollmentService;
     private readonly IPermissionQueryService _permissionQueryService;
+    private readonly IGradingQueueService _gradingQueueService;
     private readonly ILogger<AssessmentsController> _logger;
 
     public AssessmentsController(
@@ -32,6 +33,7 @@ public class AssessmentsController : BaseApiController
         IProgramCrudService programService,
         IEnrollmentService enrollmentService,
         IPermissionQueryService permissionQueryService,
+        IGradingQueueService gradingQueueService,
         ILogger<AssessmentsController> logger)
     {
         _assessmentService = assessmentService;
@@ -39,6 +41,7 @@ public class AssessmentsController : BaseApiController
         _programService = programService;
         _enrollmentService = enrollmentService;
         _permissionQueryService = permissionQueryService;
+        _gradingQueueService = gradingQueueService;
         _logger = logger;
     }
 
@@ -575,6 +578,29 @@ public class AssessmentsController : BaseApiController
         return Ok(new CanAttemptResponse(result.Value, attemptCount));
     }
 
+    /// <summary>
+    /// Get the SpeedGrader navigation queue for an assessment (instructor-only):
+    /// one item per student/group representing the target's latest gradeable attempt,
+    /// excluding InProgress-only targets.
+    /// </summary>
+    [HttpGet("{assessmentId:guid}/grading-queue")]
+    public async Task<ActionResult<GradingQueueDto>> GetGradingQueue(Guid assessmentId)
+    {
+        var assessment = await _assessmentService.GetAssessmentByIdAsync(assessmentId).ConfigureAwait(false);
+        if (assessment == null) return NotFound();
+        if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
+
+        var result = await _gradingQueueService.GetQueueAsync(assessmentId).ConfigureAwait(false);
+        if (!result.IsSuccess)
+        {
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
+                : BadRequest(result.Error);
+        }
+
+        return Ok(result.Value);
+    }
+
     private async Task<Guid?> ResolveEnrollmentUserIdAsync(
         Guid courseId,
         Guid enrollmentId,
@@ -655,6 +681,9 @@ public class AssessmentsController : BaseApiController
 
     private async Task<bool> CanReviewCourseAsync(Guid courseId)
     {
+        // Managers (creator, tenant/system admin, Edit/Create/Delete permission) can review and grade.
+        if (await CanManageCourseAsync(courseId).ConfigureAwait(false)) return true;
+
         var actor = _actorContextAccessor.ActorContext;
         if (!actor.SubjectIdAsGuid.HasValue) return false;
         if (!await IsActorInProgramTenantAsync(courseId).ConfigureAwait(false)) return false;
@@ -694,7 +723,9 @@ public sealed record AssessmentDto(
     DateTime? DueAt = null,
     bool AllowLateSubmissions = false,
     DateTime? LateSubmissionDeadline = null,
-    AssessmentGradingMethod GradingMethods = AssessmentGradingMethod.InstructorGraded)
+    AssessmentGradingMethod GradingMethods = AssessmentGradingMethod.InstructorGraded,
+    Guid? GroupSetId = null,
+    int PeerReviewsRequiredCount = 0)
 {
     public static AssessmentDto FromEntity(Assessment entity) => new(
         entity.Id,
@@ -720,7 +751,9 @@ public sealed record AssessmentDto(
         entity.DueAt,
         entity.AllowLateSubmissions,
         entity.LateSubmissionDeadline,
-        entity.GradingMethods);
+        entity.GradingMethods,
+        entity.GroupSetId,
+        entity.PeerReviewsRequiredCount);
 }
 
 public sealed record AssessmentDefinitionDto(

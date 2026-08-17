@@ -27,7 +27,7 @@ public class PostCrudService : IPostCrudService
     public async Task<Result<Post>> GetPostByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var post = await _context.Set<Post>()
-            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         return post is null
             ? Result.Failure<Post>(PostErrors.NotFound)
@@ -42,7 +42,7 @@ public class PostCrudService : IPostCrudService
     public async Task<Result<IEnumerable<Post>>> GetPostsAsync(int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
         var posts = await _context.Set<Post>()
-            .Where(p => !p.IsDeleted)
+            .Where(p => p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -77,7 +77,7 @@ public class PostCrudService : IPostCrudService
     public async Task<Result<Post>> UpdatePostAsync(Guid postId, string content, CancellationToken cancellationToken = default)
     {
         var post = await _context.Set<Post>()
-            .FirstOrDefaultAsync(p => p.Id == postId && !p.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == postId && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (post is null)
             return Result.Failure<Post>(PostErrors.NotFound);
@@ -130,7 +130,7 @@ public class PostCrudService : IPostCrudService
     public async Task<Result<IEnumerable<Post>>> GetPostsByAuthorAsync(Guid authorId, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
         var posts = await _context.Set<Post>()
-            .Where(p => p.AuthorId == authorId && !p.IsDeleted)
+            .Where(p => p.AuthorId == authorId && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -142,7 +142,7 @@ public class PostCrudService : IPostCrudService
     public async Task<Result<IEnumerable<Post>>> GetPostsByVisibilityAsync(PostVisibility visibility, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
         var posts = await _context.Set<Post>()
-            .Where(p => p.Visibility == visibility && !p.IsDeleted)
+            .Where(p => p.Visibility == visibility && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -154,7 +154,7 @@ public class PostCrudService : IPostCrudService
     public async Task<Result<IEnumerable<Post>>> GetPinnedPostsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
     {
         var query = _context.Set<Post>()
-            .Where(p => p.IsPinned && !p.IsDeleted);
+            .Where(p => p.IsPinned && p.DeletedAt == null);
 
         if (tenantId.HasValue)
             query = query.Where(p => p.TenantId == tenantId.Value);
@@ -169,7 +169,7 @@ public class PostCrudService : IPostCrudService
     public async Task<Result<IEnumerable<Post>>> GetPublicPostsAsync(int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
         var posts = await _context.Set<Post>()
-            .Where(p => p.Visibility == PostVisibility.Public && !p.IsDeleted)
+            .Where(p => p.Visibility == PostVisibility.Public && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -181,7 +181,7 @@ public class PostCrudService : IPostCrudService
     public async Task<Result<IEnumerable<Post>>> GetPostsByTenantAsync(Guid tenantId, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
         var posts = await _context.Set<Post>()
-            .Where(p => p.TenantId == tenantId && !p.IsDeleted)
+            .Where(p => p.TenantId == tenantId && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -197,7 +197,7 @@ public class PostCrudService : IPostCrudService
     public async Task<Result<IEnumerable<Post>>> SearchPostsAsync(string searchTerm, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
         var posts = await _context.Set<Post>()
-            .Where(p => !p.IsDeleted && p.Content.Contains(searchTerm))
+            .Where(p => p.DeletedAt == null && p.Content.Contains(searchTerm))
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -221,7 +221,7 @@ public class PostCrudService : IPostCrudService
             .ToListAsync(cancellationToken);
 
         var posts = await _context.Set<Post>()
-            .Where(p => postIds.Contains(p.Id) && !p.IsDeleted)
+            .Where(p => postIds.Contains(p.Id) && p.DeletedAt == null)
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -240,7 +240,7 @@ public class PostCrudService : IPostCrudService
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var posts = await _context.Set<Post>()
-            .Where(p => postIds.Contains(p.Id) && !p.IsDeleted)
+            .Where(p => postIds.Contains(p.Id) && p.DeletedAt == null)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var orderedPosts = postIds
@@ -255,7 +255,7 @@ public class PostCrudService : IPostCrudService
     public async Task<Result<IEnumerable<Post>>> GetFeedPostsAsync(Guid userId, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
         var posts = await _context.Set<Post>()
-            .Where(p => !p.IsDeleted &&
+            .Where(p => p.DeletedAt == null &&
                        (p.Visibility == PostVisibility.Public || p.AuthorId == userId))
             .OrderByDescending(p => p.CreatedAt)
             .Skip(skip)

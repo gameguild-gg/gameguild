@@ -86,8 +86,8 @@ function createModules() {
   });
 
   return {
-    events: new GeneratedApi.TestinglabTestingeventsModule(client),
-    participation: new GeneratedApi.TestinglabTestingeventparticipationModule(client),
+    events: new GeneratedApi.TestingLabTestingEventsModule(client),
+    participation: new GeneratedApi.TestingLabTestingEventParticipationModule(client),
   };
 }
 
@@ -123,7 +123,7 @@ export async function getTestingEventsDirectory(
 ): Promise<TestingEventsDirectory> {
   const api = createModules();
   const result = await read(
-    api.events.getTestingEvents({
+    api.events.getTestingEventsForGetTestingEvents({
       status: options.status,
       skip: Math.max(0, options.skip ?? 0),
       take: Math.min(100, Math.max(1, options.take ?? 50)),
@@ -158,7 +158,7 @@ export async function getTestingApplicationsDirectory(
 ): Promise<TestingApplicationsDirectory> {
   const api = createModules();
   const eventsResult = await read(
-    api.events.getTestingEvents({ skip: 0, take: 100 }),
+    api.events.getTestingEventsForGetTestingEvents({ skip: 0, take: 100 }),
     'Events',
   );
   const events = eventsResult.data ?? [];
@@ -170,7 +170,7 @@ export async function getTestingApplicationsDirectory(
       .map(async (event) => ({
         event,
         result: await read(
-          api.events.getTestingEventsByEventIdApplications(event.id, {
+          api.events.getTestingEventsApplicationsForGetTestingEventsByEventIdApplications(event.id, {
             status: options.status,
             skip: 0,
             take: 100,
@@ -216,10 +216,10 @@ export async function getTestingEventManagerData(
 ): Promise<TestingEventManagerData> {
   const api = createModules();
   const [eventResult, slotsResult, applicationsResult, committeeResult] = await Promise.all([
-    read(api.events.getTestingEventsByEventId(eventId), 'Event'),
+    read(api.events.getTestingEventsForGetTestingEventsByEventId(eventId), 'Event'),
     read(api.events.getTestingEventsSlots(eventId), 'Slots'),
     read(
-      api.events.getTestingEventsByEventIdApplications(eventId, {
+      api.events.getTestingEventsApplicationsForGetTestingEventsByEventIdApplications(eventId, {
         status: options.applicationStatus,
         skip: 0,
         take: 100,

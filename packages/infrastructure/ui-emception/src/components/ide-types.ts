@@ -44,6 +44,17 @@ export function workspaceStorageKey(assignmentToken?: string, workspaceId?: stri
     : WORKSPACE_STORAGE_KEY;
 }
 
+/**
+ * Token shape before userId-namespacing: the raw suffix after the LAST ':'.
+ * `userId:assessmentId` → `assessmentId`; a bare token maps to itself, so the
+ * legacy read is a no-op for consumers that never namespaced (instructor editor).
+ */
+export function legacyAssignmentToken(assignmentToken?: string): string | undefined {
+  if (!assignmentToken) return undefined;
+  const idx = assignmentToken.lastIndexOf(':');
+  return idx === -1 ? assignmentToken : assignmentToken.slice(idx + 1);
+}
+
 export interface WorkspaceFile {
   path: string;
   type: TabType;
@@ -266,7 +277,7 @@ function inferTabType(path: string): TabType {
   return 'text';
 }
 
-const IMAGE_MIME_BY_EXT: Record<string, string> = {
+export const IMAGE_MIME_BY_EXT: Record<string, string> = {
   png: 'image/png',
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',

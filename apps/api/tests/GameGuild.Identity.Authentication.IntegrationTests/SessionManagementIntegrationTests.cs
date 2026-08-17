@@ -15,7 +15,7 @@ namespace GameGuild.Tests.Authentication.Integration;
 /// Integration tests for Session Management features
 /// Tests concurrent session handling, security mechanisms, anomaly detection, and edge cases
 /// </summary>
-public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
+public class SessionManagementIntegrationTests : IClassFixture<AuthenticationApiFactory>, IDisposable
 {
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly IServiceScope _scope;
@@ -24,38 +24,9 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
     private readonly IAuthService _authService;
     private readonly IAuthenticationAnomalyDetectionService _anomalyService;
 
-    public SessionManagementIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
+    public SessionManagementIntegrationTests(AuthenticationApiFactory factory)
     {
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
-
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Testing");
-            builder.ConfigureTestServices(services =>
-            {
-                // Remove existing DbContext registrations
-                var descriptorsToRemove = services
-                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                                d.ServiceType == typeof(ApplicationDbContext) ||
-                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
-                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
-                    .ToList();
-
-                foreach (var descriptor in descriptorsToRemove)
-                {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase($"SessionTestDb_{Guid.NewGuid()}");
-                });
-
-                // Add HTTP logging services (required by the pipeline)
-                services.AddHttpLogging(o => { });
-            });
-        });
+        _factory = factory;
 
         _scope = _factory.Services.CreateScope();
         _dbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

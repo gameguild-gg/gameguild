@@ -7,6 +7,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { resolveAllowedAuthRedirect } from '@/lib/auth/cross-domain-auth';
 import { auth } from '@/auth';
+import { AuthErrorNotice } from '@/components/auth/auth-error-notice';
 
 export default async function Page({
   params,
@@ -17,6 +18,7 @@ export default async function Page({
     searchParams,
     getTranslations('signIn'),
   ]);
+  const errorCode = typeof query?.error === 'string' ? query.error : undefined;
   const session = await auth();
   // authenticated suppresses the One Tap prompt; signed-in users landing
   // on /sign-in don't get pestered, and GIS forbids prompt() in that case.
@@ -31,6 +33,7 @@ export default async function Page({
   return (
     <>
       <GoogleOneTap authenticated={Boolean(session)} redirectTo={redirectTo} />
+      <AuthErrorNotice errorCode={errorCode} />
       <SignInForm
         providers={
           <div className="flex flex-col gap-3">

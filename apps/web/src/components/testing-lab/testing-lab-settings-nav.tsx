@@ -7,17 +7,17 @@ import { MapPin, Settings, ShieldCheck } from "lucide-react";
 const sections = [
   {
     label: "General",
-    href: "/dashboard/testing-lab/settings/general",
+    href: "/console/community/testing-lab/settings/general",
     icon: Settings,
   },
   {
     label: "Locations",
-    href: "/dashboard/testing-lab/settings/locations",
+    href: "/console/community/testing-lab/settings/locations",
     icon: MapPin,
   },
   {
     label: "Access",
-    href: "/dashboard/testing-lab/settings/access",
+    href: "/console/community/testing-lab/settings/access",
     icon: ShieldCheck,
   },
 ] as const;

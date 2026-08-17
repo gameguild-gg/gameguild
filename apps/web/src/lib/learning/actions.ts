@@ -53,9 +53,11 @@ function revalidateCoursePath(
 ) {
   const suffix = segment ? `/${segment.replace(/^\/+/, "")}` : "";
 
-  revalidatePath(`/dashboard/learning/courses/${courseId}${suffix}`);
+  revalidatePath(`/workspace/learning/courses/${courseId}${suffix}`);
+  revalidatePath(`/console/learning/courses/${courseId}${suffix}`);
   if (resolvedCourseId !== courseId) {
-    revalidatePath(`/dashboard/learning/courses/${resolvedCourseId}${suffix}`);
+    revalidatePath(`/workspace/learning/courses/${resolvedCourseId}${suffix}`);
+  revalidatePath(`/console/learning/courses/${resolvedCourseId}${suffix}`);
   }
 }
 
@@ -83,12 +85,12 @@ function createCourseModules() {
   return {
     client,
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
-    content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
-    lifecycle: new GeneratedApi.LearningCoursesProgramlifecycleModule(client),
+    content: new GeneratedApi.LearningCoursesProgramContentModule(client),
+    lifecycle: new GeneratedApi.LearningCoursesProgramLifecycleModule(client),
     assessments: new GeneratedApi.LearningAssessmentsModule(client),
     enrollments: new GeneratedApi.LearningEnrollmentsModule(client),
     students: new GeneratedApi.LearningCoursesStudentsModule(client),
-    supportTickets: new GeneratedApi.LearningCoursesSupportticketsModule(
+    supportTickets: new GeneratedApi.LearningCoursesSupportTicketsModule(
       client,
     ),
     certificates: new GeneratedApi.LearningCertificatesModule(client),
@@ -386,7 +388,8 @@ export async function createCourse(
       const id = result.data.id!;
       const createdSlug = result.data.slug?.trim() || slug.trim();
 
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return {
         success: true,
         data: {
@@ -454,8 +457,10 @@ export async function updateCourse(
     const result = await programs.putCourses(resolvedCourseId, updateFields);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath(`/workspace/learning/courses/${courseId}`);
+  revalidatePath(`/console/learning/courses/${courseId}`);
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -504,7 +509,8 @@ export async function publishCourse(
     if (result.ok) {
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -528,7 +534,8 @@ export async function unpublishCourse(
     if (result.ok) {
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -552,7 +559,8 @@ export async function restoreCourse(
     if (result.ok) {
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -594,7 +602,8 @@ export async function transferCourseOwnership(
 
     revalidateCoursePath(courseId, resolvedCourseId);
     revalidateCoursePath(courseId, resolvedCourseId, "settings/danger");
-    revalidatePath("/dashboard/learning/courses");
+    revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
     return { success: true, data: null };
   } catch (e) {
     return {
@@ -614,7 +623,8 @@ export async function archiveCourse(
 
     if (result.ok) {
       revalidateCoursePath(courseId, resolvedCourseId);
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -636,7 +646,8 @@ export async function deleteCourse(
     const result = await programs.deleteCourses(resolvedCourseId);
 
     if (result.ok) {
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -673,7 +684,7 @@ async function resolveEnrollmentUserId(
   const query = value.includes("@")
     ? { email: value, limit: 5 }
     : { q: value, limit: 5 };
-  const result = await users.getUsers(query);
+  const result = await users.getUsersForGetUsers(query);
 
   if (!result.ok) {
     return { success: false, error: extractError(result.error) };
@@ -900,7 +911,7 @@ async function updateCourseMetadataSection(
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
     const { programs } = createCourseModules();
-    const courseResult = await programs.getCoursesById(resolvedCourseId);
+    const courseResult = await programs.getCoursesForGetCoursesById(resolvedCourseId);
     if (!courseResult.ok)
       return { success: false, error: extractError(courseResult.error) };
 
@@ -1019,7 +1030,7 @@ export async function updateCourseReviewModeration(
   if (!result.ok) return { success: false, error: extractError(result.error) };
 
   revalidatePath(
-    `/dashboard/learning/courses/${courseId}/listing/testimonials`,
+    `/workspace/learning/courses/${courseId}/listing/testimonials`,
   );
   revalidatePath(`/courses/${courseId}`);
   return { success: true, data: null };
@@ -1121,9 +1132,9 @@ export async function updateCoursePricing(
 
       if (result.ok) {
         revalidatePath(
-          `/dashboard/learning/courses/${input.courseId}/listing/pricing`,
+          `/workspace/learning/courses/${input.courseId}/listing/pricing`,
         );
-        revalidatePath(`/dashboard/learning/courses/${input.courseId}/listing`);
+        revalidatePath(`/workspace/learning/courses/${input.courseId}/listing`);
         return { success: true, data: null };
       }
 
@@ -1145,9 +1156,9 @@ export async function updateCoursePricing(
 
     if (result.ok) {
       revalidatePath(
-        `/dashboard/learning/courses/${input.courseId}/listing/pricing`,
+        `/workspace/learning/courses/${input.courseId}/listing/pricing`,
       );
-      revalidatePath(`/dashboard/learning/courses/${input.courseId}/listing`);
+      revalidatePath(`/workspace/learning/courses/${input.courseId}/listing`);
       return { success: true, data: null };
     }
 
@@ -1171,7 +1182,8 @@ export async function cloneCourse(
     } satisfies LearningCoursesCloneProgram);
 
     if (result.ok) {
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: { id: result.data.id! } };
     }
 
@@ -1319,8 +1331,8 @@ export async function createAssessmentGroup(
     if (!result.ok)
       return { success: false, error: extractError(result.error) };
 
-    revalidatePath(`/dashboard/learning/courses/${input.courseId}`);
-    revalidatePath(`/dashboard/learning/courses/${input.courseId}/assessments`);
+    revalidatePath(`/workspace/learning/courses/${input.courseId}`);
+    revalidatePath(`/workspace/learning/courses/${input.courseId}/assessments`);
     return { success: true, data: { id: result.data.id! } };
   } catch (e) {
     return {
@@ -1356,8 +1368,8 @@ export async function updateAssessmentGroup(
     if (!result.ok)
       return { success: false, error: extractError(result.error) };
 
-    revalidatePath(`/dashboard/learning/courses/${input.courseId}`);
-    revalidatePath(`/dashboard/learning/courses/${input.courseId}/assessments`);
+    revalidatePath(`/workspace/learning/courses/${input.courseId}`);
+    revalidatePath(`/workspace/learning/courses/${input.courseId}/assessments`);
     return { success: true, data: { id: result.data.id! } };
   } catch (e) {
     return {
@@ -1382,8 +1394,9 @@ export async function deleteAssessmentGroup(
     if (!result.ok)
       return { success: false, error: extractError(result.error) };
 
-    revalidatePath(`/dashboard/learning/courses/${courseId}`);
-    revalidatePath(`/dashboard/learning/courses/${courseId}/assessments`);
+    revalidatePath(`/workspace/learning/courses/${courseId}`);
+  revalidatePath(`/console/learning/courses/${courseId}`);
+    revalidatePath(`/workspace/learning/courses/${courseId}/assessments`);
     return { success: true, data: null };
   } catch (e) {
     return {
@@ -1411,6 +1424,9 @@ export interface UpdateAssessmentInput {
   clearAssessmentGroupId?: boolean;
   presentationMode?: AssessmentPresentationMode;
   gradingMethods?: string;
+  groupSetId?: string | null;
+  clearGroupSetId?: boolean;
+  peerReviewsRequiredCount?: number;
 }
 
 export async function updateAssessment(
@@ -1440,6 +1456,9 @@ export async function updateAssessment(
       clearAssessmentGroupId: fields.clearAssessmentGroupId ?? false,
       presentationMode: fields.presentationMode,
       gradingMethods: fields.gradingMethods ?? undefined,
+      groupSetId: fields.groupSetId ?? null,
+      clearGroupSetId: fields.clearGroupSetId ?? false,
+      peerReviewsRequiredCount: fields.peerReviewsRequiredCount ?? null,
     };
 
     const { assessments } = createCourseModules();
@@ -1509,6 +1528,276 @@ export async function restoreAssessment(
   }
 }
 
+// ── Course group set actions (todo 4 endpoints) ──
+
+export async function createGroupSet(
+  courseId: string,
+  name: string,
+): Promise<ActionResult<null>> {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return { success: false, error: "Group set name is required." };
+  }
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.postCoursesGroupSets(resolvedCourseId, {
+      name: trimmed,
+    });
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export interface CreateCourseGroupInput {
+  courseId: string;
+  setId: string;
+  name: string;
+  capacity: number;
+}
+
+export async function createCourseGroup(
+  input: CreateCourseGroupInput,
+): Promise<ActionResult<null>> {
+  const name = input.name.trim();
+  if (!name) {
+    return { success: false, error: "Group name is required." };
+  }
+  if (!Number.isInteger(input.capacity) || input.capacity < 2) {
+    return { success: false, error: "Capacity must be at least 2." };
+  }
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.postCoursesGroupSetsGroups(
+      resolvedCourseId,
+      input.setId,
+      { name, capacity: input.capacity },
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(input.courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export interface GroupMemberInput {
+  courseId: string;
+  groupId: string;
+  userReference: string;
+}
+
+export async function addGroupMember(
+  input: GroupMemberInput,
+): Promise<ActionResult<null>> {
+  const reference = input.userReference.trim();
+  if (!reference) {
+    return { success: false, error: "User email or ID is required." };
+  }
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+    const resolvedUser = await resolveEnrollmentUserId(reference);
+    if (!resolvedUser.success) {
+      return resolvedUser;
+    }
+
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.postCoursesGroupSetsGroupsMembers(
+      resolvedCourseId,
+      input.groupId,
+      resolvedUser.data.userId,
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(input.courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export interface RemoveGroupMemberInput {
+  courseId: string;
+  groupId: string;
+  userId: string;
+}
+
+export async function removeGroupMember(
+  input: RemoveGroupMemberInput,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.deleteCoursesGroupSetsGroupsMembers(
+      resolvedCourseId,
+      input.groupId,
+      input.userId,
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(input.courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+// ── Student group self-signup actions (todo 4 endpoints) ──
+
+export async function joinGroup(
+  courseId: string,
+  groupId: string,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.postCoursesGroupSetsGroupsJoin(
+      resolvedCourseId,
+      groupId,
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export async function leaveGroup(
+  courseId: string,
+  groupId: string,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.deleteCoursesGroupSetsGroupsMembership(
+      resolvedCourseId,
+      groupId,
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+// ── Assessment rubric actions (todo 6 endpoints) ──
+
+export interface SaveRubricCriterionInput {
+  description: string;
+  points: number;
+  order: number;
+}
+
+export interface SaveRubricInputAction {
+  assessmentId: string;
+  title: string;
+  criteria: SaveRubricCriterionInput[];
+}
+
+export async function saveRubric(
+  input: SaveRubricInputAction,
+): Promise<ActionResult<null>> {
+  try {
+    const rubrics = new GeneratedApi.LearningAssessmentsRubricsModule(
+      getApiClient(),
+    );
+    const result = await rubrics.putAssessmentsRubric(input.assessmentId, {
+      title: input.title,
+      criteria: input.criteria.map((criterion) => ({
+        description: criterion.description,
+        points: criterion.points,
+        order: criterion.order,
+      })),
+    });
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export async function deleteRubric(
+  assessmentId: string,
+): Promise<ActionResult<null>> {
+  try {
+    const rubrics = new GeneratedApi.LearningAssessmentsRubricsModule(
+      getApiClient(),
+    );
+    const result = await rubrics.deleteAssessmentsRubric(assessmentId);
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
 // ── Certificate template actions ──
 
 export interface CreateCertificateTemplateInput {
@@ -1561,7 +1850,7 @@ export async function createCertificateTemplate(
       return { success: false, error: extractError(result.error) };
 
     revalidatePath(
-      `/dashboard/learning/courses/${input.courseId}/certificates`,
+      `/workspace/learning/courses/${input.courseId}/certificates`,
     );
     return { success: true, data: { id: result.data.id! } };
   } catch (e) {
@@ -1621,10 +1910,10 @@ export async function updateCertificateTemplate(
       return { success: false, error: extractError(result.error) };
 
     revalidatePath(
-      `/dashboard/learning/courses/${input.courseId}/certificates`,
+      `/workspace/learning/courses/${input.courseId}/certificates`,
     );
     revalidatePath(
-      `/dashboard/learning/courses/${input.courseId}/certificates/${input.templateId}`,
+      `/workspace/learning/courses/${input.courseId}/certificates/${input.templateId}`,
     );
     return { success: true, data: null };
   } catch (e) {
@@ -1645,7 +1934,7 @@ export async function deleteCertificateTemplate(
       await certificates.deleteApiCertificatesTemplates(templateId);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}/certificates`);
+      revalidatePath(`/workspace/learning/courses/${courseId}/certificates`);
       return { success: true, data: null };
     }
 
@@ -1675,16 +1964,16 @@ export interface CreateDiscussionReplyInput {
 }
 
 function revalidateCourseSupport(courseId: string, discussionId?: string) {
-  revalidatePath(`/dashboard/learning/courses/${courseId}/support`);
-  revalidatePath(`/dashboard/learning/courses/${courseId}/support/tickets`);
-  revalidatePath(`/dashboard/learning/courses/${courseId}/support/discussions`);
+  revalidatePath(`/workspace/learning/courses/${courseId}/support`);
+  revalidatePath(`/workspace/learning/courses/${courseId}/support/tickets`);
+  revalidatePath(`/workspace/learning/courses/${courseId}/support/discussions`);
 
   if (discussionId) {
     revalidatePath(
-      `/dashboard/learning/courses/${courseId}/support/tickets/${discussionId}`,
+      `/workspace/learning/courses/${courseId}/support/tickets/${discussionId}`,
     );
     revalidatePath(
-      `/dashboard/learning/courses/${courseId}/support/discussions/${discussionId}`,
+      `/workspace/learning/courses/${courseId}/support/discussions/${discussionId}`,
     );
   }
 }

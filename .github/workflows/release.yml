@@ -1,14 +1,14 @@
 name: Release
 
-# Auto-version packages when BOTH the Main (economy) and Emception CI/CD
-# workflows complete successfully on the same commit, on main or develop.
+# Auto-version packages after the Main workflow has completed its economy and
+# contributors jobs for a main push. Main calls this workflow directly so the
+# reusable workflow inherits the verified caller SHA instead of the repository
+# default branch SHA used by workflow_run.
 #
 # Flow:
-#   1. workflow_run triggers when Main OR Emception CI/CD finishes.
-#   2. Guard job checks: triggered branch is main/develop, the triggering
-#      workflow succeeded, AND the OTHER required workflow also succeeded
-#      for the same SHA.
-#   3. release job:
+#   1. Main calls this reusable workflow after its required jobs pass.
+#   2. The guard waits for Emception CI/CD to pass on the same SHA.
+#   3. The release job:
 #      - runs scripts/devops/auto-changeset.mjs to convert conventional
 #        commits since the last tag into a .changeset/auto-*.md file
 #      - runs changesets/action which either:
@@ -20,10 +20,16 @@ name: Release
 # See scripts/devops/auto-changeset.mjs for the full classification rules.
 
 on:
-  workflow_run:
-    workflows: [Main, Emception CI/CD]
-    types: [completed]
-    branches: [main]
+  workflow_call:
+    inputs:
+      sha:
+        description: Verified commit SHA from the caller workflow
+        required: true
+        type: string
+      branch:
+        description: Release base branch from the caller workflow
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -31,7 +37,7 @@ permissions:
   packages: write
 
 concurrency:
-  group: release-${{ github.event.workflow_run.head_sha }}
+  group: release-${{ inputs.sha }}
   cancel-in-progress: false
 
 env:
@@ -39,60 +45,32 @@ env:
   PNPM_VERSION: '10.0.0'
 
 jobs:
-  # Gate: only proceed when the triggering run succeeded AND the sibling
-  # workflow also succeeded for this SHA. workflow_run fires once per
-  # upstream completion — without this gate we'd release on whichever
-  # finishes first.
-  gate:
-    name: Both CIs passed
+  wait-for-emception:
+    name: Emception CI passed
     runs-on: ubuntu-latest
-    outputs:
-      proceed: ${{ steps.check.outputs.proceed }}
-      sha: ${{ github.event.workflow_run.head_sha }}
-      branch: ${{ steps.check.outputs.branch }}
+    timeout-minutes: 130
     steps:
-      - name: Check both workflows succeeded for this SHA
-        id: check
+      - name: Wait for Emception CI on the verified SHA
         uses: actions/github-script@v9 # v7
         with:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const headSha = context.payload.workflow_run.head_sha;
-            const headBranch = context.payload.workflow_run.head_branch;
-            const triggerConclusion = context.payload.workflow_run.conclusion;
-            const triggerWorkflow = context.payload.workflow_run.name;
+            const headSha = '${{ inputs.sha }}';
+            const headBranch = '${{ inputs.branch }}';
+            const terminalStatuses = new Set(['completed']);
+            const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-            core.info(`Triggered by ${triggerWorkflow} on ${headBranch} @ ${headSha.substring(0, 8)} → ${triggerConclusion}`);
-
-            // Hard fail: the workflow that fired this event didn't succeed.
-            if (triggerConclusion !== 'success') {
-              core.info(`Skipping: triggering run conclusion was '${triggerConclusion}'.`);
-              core.setOutput('proceed', 'false');
-              core.setOutput('branch', headBranch);
+            if (headBranch !== 'main') {
+              core.setFailed(`Release is restricted to main, received '${headBranch}'.`);
               return;
             }
 
-            // Only main and develop are releasable.
-            if (headBranch !== 'main' && headBranch !== 'develop') {
-              core.info(`Skipping: branch '${headBranch}' is not main or develop.`);
-              core.setOutput('proceed', 'false');
-              core.setOutput('branch', headBranch);
-              return;
-            }
-
-            // Find the most recent run of EACH required workflow for this SHA.
-            // workflow_run.head_sha is the commit each workflow ran against.
-            const requiredWorkflows = ['Main', 'Emception CI/CD'];
-            const statuses = {};
-
-            for (const wfName of requiredWorkflows) {
-              // List the latest runs of this workflow, filtered by head_sha.
-              // GitHub returns up to 100 most recent; we scan for our SHA.
+            for (let attempt = 1; attempt <= 260; attempt += 1) {
               const runs = await github.rest.actions.listWorkflowRuns({
                 owner,
                 repo,
-                workflow_id: wfName,  // resolves by name or filename
+                workflow_id: 'emception.yml',
                 head_sha: headSha,
                 per_page: 50,
               });
@@ -100,38 +78,28 @@ jobs:
               const matching = runs.data.workflow_runs.filter(
                 (r) => r.head_sha === headSha && r.event !== 'pull_request'
               );
-
-              if (matching.length === 0) {
-                core.info(`No completed run of '${wfName}' found for ${headSha.substring(0, 8)} yet.`);
-                statuses[wfName] = 'missing';
-                continue;
+              if (matching.some((run) => run.conclusion === 'success')) {
+                core.info(`Emception CI/CD passed for ${headSha.substring(0, 8)}.`);
+                return;
               }
 
-              // Take the latest by created_at; if multiple runs (re-runs),
-              // any conclusion='success' among them satisfies the gate.
-              const anySuccess = matching.some((r) => r.conclusion === 'success');
-              statuses[wfName] = anySuccess ? 'success' : matching[0].conclusion;
+              const active = matching.some((run) => !terminalStatuses.has(run.status));
+              if (matching.length > 0 && !active) {
+                const conclusions = matching.map((run) => run.conclusion ?? run.status);
+                core.setFailed(`Emception CI/CD did not pass for ${headSha.substring(0, 8)}: ${conclusions.join(', ')}.`);
+                return;
+              }
+
+              core.info(`Waiting for Emception CI/CD on ${headSha.substring(0, 8)} (attempt ${attempt}/260).`);
+              await sleep(30000);
             }
 
-            core.info(`Workflow statuses for ${headSha.substring(0, 8)}: ${JSON.stringify(statuses)}`);
-
-            const allGreen = Object.values(statuses).every((s) => s === 'success');
-            if (!allGreen) {
-              core.info(`Skipping: not all required workflows are green for ${headSha.substring(0, 8)}.`);
-              core.setOutput('proceed', 'false');
-              core.setOutput('branch', headBranch);
-              return;
-            }
-
-            core.info(`All required workflows green for ${headSha.substring(0, 8)} — proceeding.`);
-            core.setOutput('proceed', 'true');
-            core.setOutput('branch', headBranch);
+            core.setFailed(`Timed out waiting for Emception CI/CD on ${headSha.substring(0, 8)}.`);
 
   release:
     name: Auto-version and publish
     runs-on: ubuntu-latest
-    needs: gate
-    if: needs.gate.outputs.proceed == 'true'
+    needs: wait-for-emception
     timeout-minutes: 30
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -140,12 +108,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7 # v4
         with:
-          # changesets/action pushes commits back to the same branch.
-          # Use a Personal Access Token with contents:write permission if
-          # GITHUB_TOKEN's default trigger cannot re-run workflows on push.
-          # For develop branch version-PRs, the default GITHUB_TOKEN is fine.
+          # The reusable caller grants the token write access for the verified
+          # main commit and passes that exact SHA here.
           fetch-depth: 0
-          ref: ${{ needs.gate.outputs.sha }}
+          ref: ${{ inputs.sha }}
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6 # v6.0.9
@@ -183,8 +149,9 @@ jobs:
 
       - name: Create Release Pull Request or Publish
         if: steps.has-changeset.outputs.proceed == 'true'
-        uses: changesets/action@v2 # v1
+        uses: changesets/action@v1 # v1
         with:
+          branch: ${{ inputs.branch }}
           publish: pnpm run release
           version: pnpm run version
           title: 'chore(release): version packages'

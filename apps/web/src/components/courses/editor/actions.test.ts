@@ -26,7 +26,7 @@ vi.mock('@game-guild/client', () => ({
       putCourses = mocks.putCourses;
       postCourses = mocks.postCourses;
     },
-    LearningCoursesProgramlifecycleModule: class {
+    LearningCoursesProgramLifecycleModule: class {
       postCoursesPublish = mocks.postCoursesPublish;
     },
   },
@@ -109,7 +109,7 @@ describe('course editor actions', () => {
       skillsProvided: 'unity, csharp',
       skillsRequired: 'Unity',
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/workspace/learning/courses/course-1');
   });
 
   it('publishes through the generated lifecycle API', async () => {
@@ -122,7 +122,7 @@ describe('course editor actions', () => {
 
     expect(result).toBe(true);
     expect(mocks.postCoursesPublish).toHaveBeenCalledWith('course-1');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses/course-1');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/learning/courses');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/workspace/learning/courses/course-1');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/workspace/learning/courses');
   });
 });

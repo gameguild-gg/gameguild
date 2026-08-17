@@ -30,7 +30,7 @@ function createCourseModules() {
 
   return {
     programs: new GeneratedApi.LearningCoursesProgramModule(client),
-    content: new GeneratedApi.LearningCoursesProgramcontentModule(client),
+    content: new GeneratedApi.LearningCoursesProgramContentModule(client),
   };
 }
 
@@ -72,7 +72,7 @@ export const getLearningContentLibrary = cache(async (): Promise<{
 }> => {
   try {
     const { programs, content } = createCourseModules();
-    const coursesResult = await programs.getCourses({ take: 100 });
+    const coursesResult = await programs.getCoursesForGetCourses({ take: 100 });
 
     if (!coursesResult.ok) {
       const err = coursesResult.error as { status?: number; code?: string; message?: string; detail?: string } | undefined;

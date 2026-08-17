@@ -65,15 +65,13 @@ describe('createNextAuthTokenProvider', () => {
   });
 
   it('should have onAuthenticationRequired that logs a warning', async () => {
-    const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const getSession = vi.fn(async () => null);
 
     const provider = createNextAuthTokenProvider(getSession);
     await provider.onAuthenticationRequired!();
 
-    expect(spy).toHaveBeenCalledWith(
-      '[client] Authentication required but no session available'
-    );
+    expect(spy).toHaveBeenCalledWith('[client] Authentication required but no session available');
     spy.mockRestore();
   });
 });
@@ -89,15 +87,13 @@ describe('createNextTenantProvider', () => {
   });
 
   it('should have onTenantRequired that logs a warning', async () => {
-    const spy = vi.spyOn(console, 'warn').mockImplementation(() => { });
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const getTenantId = vi.fn(async () => null);
 
     const provider = createNextTenantProvider(getTenantId);
     await provider.onTenantRequired!();
 
-    expect(spy).toHaveBeenCalledWith(
-      '[client] Tenant ID required but not available'
-    );
+    expect(spy).toHaveBeenCalledWith('[client] Tenant ID required but not available');
     spy.mockRestore();
   });
 });

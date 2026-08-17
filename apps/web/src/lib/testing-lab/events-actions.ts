@@ -16,7 +16,7 @@ import {
 } from '@game-guild/client';
 import { revalidatePath } from 'next/cache';
 
-const EVENTS_PATH = '/dashboard/testing-lab/events';
+const EVENTS_PATH = '/console/community/testing-lab/events';
 
 type ActionData<T> = [T] extends [void] ? null : T | null;
 export type TestingEventActionResult<T = null> =
@@ -30,8 +30,8 @@ function createModules() {
     tenant: { getTenantId: async () => (await auth().catch(() => null))?.tenantId ?? null },
   });
   return {
-    events: new GeneratedApi.TestinglabTestingeventsModule(client),
-    participation: new GeneratedApi.TestinglabTestingeventparticipationModule(client),
+    events: new GeneratedApi.TestingLabTestingEventsModule(client),
+    participation: new GeneratedApi.TestingLabTestingEventParticipationModule(client),
   };
 }
 
@@ -64,7 +64,7 @@ function isoDate(formData: FormData, key: string) {
 }
 
 function revalidateEvent(eventId?: string) {
-  revalidatePath('/dashboard/testing-lab');
+  revalidatePath('/console/community/testing-lab');
   revalidatePath(EVENTS_PATH);
   revalidatePath('/testing-lab');
   if (eventId) {

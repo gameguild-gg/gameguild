@@ -94,7 +94,7 @@ export function resolveConfig(
     apiUrl,
     pages: config.pages ?? {},
     cookies: {
-      name: config.cookies?.name ?? '__gg',
+      name: config.cookies?.name ?? '__me',
       secure: isSecure,
       sameSite: config.cookies?.sameSite ?? 'lax',
       path: config.cookies?.path ?? '/',

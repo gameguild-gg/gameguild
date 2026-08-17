@@ -8,13 +8,7 @@ import { SessionContext } from '../../src/integrations/react/session-provider.js
 import { useSession } from '../../src/integrations/react/use-session.js';
 
 // Helper component that uses useSession with options
-function SessionConsumer({
-  required,
-  onUnauthenticated,
-}: {
-  required?: boolean;
-  onUnauthenticated?: () => void;
-}) {
+function SessionConsumer({ required, onUnauthenticated }: { required?: boolean; onUnauthenticated?: () => void }) {
   const session = useSession({ required, onUnauthenticated });
   return <span data-testid="status">{session.status}</span>;
 }
@@ -51,7 +45,7 @@ describe('useSession — gap coverage (lines 81-82)', () => {
       },
       writable: true,
     });
-    
+
     // We need to intercept the redirect. Use a spy on location.href setter.
     const mockLocation = {
       href: 'http://localhost:3000/dashboard',
@@ -70,7 +64,7 @@ describe('useSession — gap coverage (lines 81-82)', () => {
     render(
       <SessionContext.Provider value={unauthContext}>
         <SessionConsumer required={true} />
-      </SessionContext.Provider>
+      </SessionContext.Provider>,
     );
 
     await waitFor(() => {
@@ -91,7 +85,7 @@ describe('useSession — gap coverage (lines 81-82)', () => {
     render(
       <SessionContext.Provider value={unauthContext}>
         <SessionConsumer required={true} onUnauthenticated={onUnauth} />
-      </SessionContext.Provider>
+      </SessionContext.Provider>,
     );
 
     await waitFor(() => {
@@ -109,7 +103,7 @@ describe('useSession — gap coverage (lines 81-82)', () => {
     const { getByTestId } = render(
       <SessionContext.Provider value={unauthContext}>
         <SessionConsumer required={false} />
-      </SessionContext.Provider>
+      </SessionContext.Provider>,
     );
 
     expect(getByTestId('status').textContent).toBe('unauthenticated');
@@ -125,7 +119,7 @@ describe('useSession — gap coverage (lines 81-82)', () => {
     const { getByTestId } = render(
       <SessionContext.Provider value={loadingContext}>
         <SessionConsumer required={true} />
-      </SessionContext.Provider>
+      </SessionContext.Provider>,
     );
 
     expect(getByTestId('status').textContent).toBe('loading');

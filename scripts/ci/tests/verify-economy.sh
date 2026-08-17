@@ -73,6 +73,94 @@ test_contributors_visualization_uses_native_xvfb() {
   ! grep -Fq 'coactions/setup-xvfb' "$workflow"
 }
 
+test_main_calls_release_from_the_verified_main_context() {
+  local main_workflow="$repository_root/.github/workflows/main.yml"
+  local release_workflow="$repository_root/.github/workflows/release.yml"
+
+  grep -Fq 'needs: [economy-gate, contributors]' "$main_workflow" || return 1
+  grep -Fq 'uses: ./.github/workflows/release.yml' "$main_workflow" || return 1
+  grep -Fq 'sha: ${{ github.sha }}' "$main_workflow" || return 1
+  grep -Fq 'branch: ${{ github.ref_name }}' "$main_workflow" || return 1
+  grep -Fq 'secrets: inherit' "$main_workflow" || return 1
+  grep -Fq 'workflow_call:' "$release_workflow" || return 1
+  ! grep -Fq 'workflow_run:' "$release_workflow" || return 1
+  grep -Fq 'ref: ${{ inputs.sha }}' "$release_workflow" || return 1
+  grep -Fq "workflow_id: 'emception.yml'" "$release_workflow"
+}
+
+test_release_action_matches_changesets_cli_major() {
+  local workflow="$repository_root/.github/workflows/release.yml"
+
+  grep -Eq '"@changesets/cli": "[~^]?2\.' "$repository_root/package.json" || return 1
+  grep -Fq 'uses: changesets/action@v1' "$workflow" || return 1
+  ! grep -Fq 'uses: changesets/action@v2' "$workflow"
+}
+
+test_release_action_targets_the_upstream_branch() {
+  local workflow="$repository_root/.github/workflows/release.yml"
+
+  grep -Fq 'branch: ${{ inputs.branch }}' "$workflow"
+}
+
+test_changesets_config_matches_lockstep_workspace() {
+  local config="$repository_root/.changeset/config.json"
+  local workspace_packages="$fixture_root/workspace-packages.json"
+
+  (cd "$repository_root" && pnpm list -r --depth -1 --json) > "$workspace_packages" || return 1
+  "$PYTHON_BIN" - "$repository_root/package.json" "$config" "$workspace_packages" <<'PY' || return 1
+import collections
+import json
+import sys
+
+root_manifest_path, config_path, workspace_path = sys.argv[1:]
+with open(root_manifest_path, encoding="utf-8") as handle:
+    root_name = json.load(handle)["name"]
+with open(config_path, encoding="utf-8") as handle:
+    config = json.load(handle)
+with open(workspace_path, encoding="utf-8") as handle:
+    workspace = {
+        package["name"] for package in json.load(handle)
+        if package["name"] != root_name
+    }
+
+fixed = [package for group in config.get("fixed", []) for package in group]
+linked = [package for group in config.get("linked", []) for package in group]
+duplicates = sorted(
+    package for package, count in collections.Counter(fixed).items() if count > 1
+)
+missing = sorted(workspace - set(fixed))
+unknown = sorted(set(fixed) - workspace)
+
+errors = []
+if len(config.get("fixed", [])) != 1:
+    errors.append("the lockstep policy requires exactly one fixed group")
+if linked:
+    errors.append(f"linked packages conflict with the lockstep fixed policy: {sorted(linked)}")
+if duplicates:
+    errors.append(f"duplicate fixed packages: {duplicates}")
+if missing:
+    errors.append(f"workspace packages missing from the fixed group: {missing}")
+if unknown:
+    errors.append(f"unknown packages in the fixed group: {unknown}")
+if errors:
+    raise SystemExit("; ".join(errors))
+PY
+
+  (cd "$repository_root" && pnpm exec changeset status >/dev/null)
+}
+
+test_emception_emits_a_gate_result_for_every_main_push() {
+  local workflow="$repository_root/.github/workflows/emception.yml"
+  local trigger
+  trigger="$(sed -n '/^on:/,/^permissions:/p' "$workflow")"
+
+  ! grep -Fq 'paths:' <<< "$trigger" || return 1
+  grep -Fq 'detect-emception-changes:' "$workflow" || return 1
+  grep -Fq 'required: ${{ steps.changes.outputs.required }}' "$workflow" || return 1
+  grep -Fq 'needs: detect-emception-changes' "$workflow" || return 1
+  grep -Fq "if: needs.detect-emception-changes.outputs.required == 'true'" "$workflow"
+}
+
 test_web_vitest_uses_direct_exec_for_json_evidence() {
   grep -q 'pnpm --filter @game-guild/web exec vitest run --reporter=json' "$ci_dir/verify-economy.sh" || return 1
   ! grep -q 'pnpm --filter @game-guild/web run test --' "$ci_dir/verify-economy.sh"
@@ -345,6 +433,11 @@ test_canonical_json_preserves_arrays() {
 
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
+run_test 'Main calls Release from its verified main context' test_main_calls_release_from_the_verified_main_context
+run_test 'release action matches the Changesets CLI major' test_release_action_matches_changesets_cli_major
+run_test 'release action targets the upstream branch' test_release_action_targets_the_upstream_branch
+run_test 'Changesets config matches the lockstep workspace policy' test_changesets_config_matches_lockstep_workspace
+run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
 run_test 'standalone web server uses an origin-safe bind address' test_standalone_web_server_uses_origin_safe_bind_address

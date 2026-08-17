@@ -9,10 +9,7 @@
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { createClientFromCookies } from '../../src/integrations/next/index.js';
-import {
-  stateCookieName,
-  signStatePayload,
-} from '../../src/integrations/next/oauth-state.js';
+import { signStatePayload, stateCookieName } from '../../src/integrations/next/oauth-state.js';
 
 // ─── handlers.ts L507 — handleSignUp non-200 response ─────────────────
 
@@ -62,7 +59,7 @@ describe('handlers — signUp non-200 response (L507)', () => {
         authorized: async () => true,
       },
       secret: 'test-secret-min-32-chars-long-ok',
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
       pages: {},
       cookies: { name: '__gg', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
       maxAge: 2592000,
@@ -144,7 +141,7 @@ describe('handlers — signOut without refreshToken (L528)', () => {
         authorized: async () => true,
       },
       secret: 'test-secret-min-32-chars-long-ok',
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
       pages: {},
       cookies: { name: '__gg', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
       maxAge: 2592000,
@@ -206,8 +203,8 @@ describe('handlers — OAuth callback null result (L609)', () => {
     const config: any = {
       providers: [
         {
-          id: 'github',
-          name: 'GitHub',
+          id: 'google',
+          name: 'Google',
           type: 'oauth',
           // handleCallback returns null
           handleCallback: vi.fn(async () => null),
@@ -221,7 +218,7 @@ describe('handlers — OAuth callback null result (L609)', () => {
         authorized: async () => true,
       },
       secret: 'test-secret-min-32-chars-long-ok',
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
       pages: { error: '/auth/error' },
       cookies: { name: '__gg', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
       maxAge: 2592000,
@@ -234,13 +231,14 @@ describe('handlers — OAuth callback null result (L609)', () => {
 
     const { GET } = createHandlers(config);
 
-    const stateCookie = await signStatePayload(
-      { state: 'xyz', redirectTo: '/', flow: 'signin', exp: Date.now() + 600000 },
-      'test-secret-min-32-chars-long-ok',
-    );
-    const request = new Request('http://localhost/api/auth/callback/github?code=abc&state=xyz', {
-      method: 'GET',
-      headers: { cookie: `${stateCookieName('github')}=${stateCookie}` },
+    const stateCookie = await signStatePayload({
+      state: 'xyz',
+      redirectTo: '/',
+      flow: 'signin',
+      exp: Date.now() + 600_000,
+    }, config.secret);
+    const request = new Request('http://localhost/api/auth/callback/google?code=abc&state=xyz', {
+      headers: { cookie: `${stateCookieName('google')}=${stateCookie}` },
     });
 
     const response = await GET(request);
@@ -319,7 +317,7 @@ describe('actions — signOut without refreshToken (L316)', () => {
         authorized: async () => true,
       },
       secret: 'test-secret-min-32-chars-long-ok',
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
       pages: { signIn: '/login', newUser: '/welcome' },
       cookies: { name: '__gg', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
       maxAge: 2592000,
@@ -361,7 +359,7 @@ describe('next/index — createClientFromCookies missing cookies (L181-185)', ()
     });
 
     const client = await createClientFromCookies({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       getCookies: async () => ({
         get: () => {
           // Return undefined for both cookies — L181-185
@@ -372,7 +370,7 @@ describe('next/index — createClientFromCookies missing cookies (L181-185)', ()
 
     // Client should be created but with null session info
     expect(client).toBeDefined();
-    expect(client.getBaseUrl()).toBe('http://localhost:5000');
+    expect(client.getBaseUrl()).toBe('http://localhost:8080');
 
     globalThis.fetch = originalFetch;
   });
@@ -388,7 +386,7 @@ describe('next/index — createClientFromCookies missing cookies (L181-185)', ()
     });
 
     const client = await createClientFromCookies({
-      baseUrl: 'http://localhost:5000',
+      baseUrl: 'http://localhost:8080',
       getCookies: async () => ({
         get: (name: string) => {
           if (name === 'access_token') return { value: 'tok' };
@@ -464,7 +462,7 @@ describe('handlers — additional branch paths', () => {
         authorized: async () => true,
       },
       secret: 'test-secret-min-32-chars-long-ok',
-      apiUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:8080',
       pages: {},
       cookies: { name: '__gg', secure: false, sameSite: 'lax', path: '/', maxAge: 2592000, httpOnly: true },
       maxAge: 2592000,

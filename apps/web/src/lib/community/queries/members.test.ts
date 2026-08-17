@@ -7,8 +7,7 @@ const mocks = vi.hoisted(() => ({
   getProfileByHandle: vi.fn(),
   getProfileByUserId: vi.fn(),
   getUserFeed: vi.fn(),
-  getSocialGroups: vi.fn(),
-  getPublicCourseCatalog: vi.fn(),
+  getApiSocialGroupsForGetApiSocialGroups: vi.fn(),
   getMarketingLeads: vi.fn(),
   getBlogPosts: vi.fn(),
   clientRequest: vi.fn(),
@@ -29,20 +28,16 @@ vi.mock('@game-guild/client', () => ({
     SocialFeedModule: class {
       getApiSocialFeedUsers = mocks.getUserFeed;
     },
-    SocialGroupsSocialgroupsModule: class {
-      getApiSocialGroups = mocks.getSocialGroups;
+    SocialGroupsSocialGroupsModule: class {
+      getApiSocialGroupsForGetApiSocialGroups = mocks.getApiSocialGroupsForGetApiSocialGroups;
     },
-    ContentMarketingleadsModule: class {
+    ContentMarketingLeadsModule: class {
       getMarketingLeads = mocks.getMarketingLeads;
     },
     SocialBlogPostsModule: class {
-      getApiSocialBlog = mocks.getBlogPosts;
+      getApiSocialBlogForGetApiSocialBlog = mocks.getBlogPosts;
     },
   },
-}));
-
-vi.mock('@/lib/courses/services/course.service', () => ({
-  getPublicCourseCatalog: mocks.getPublicCourseCatalog,
 }));
 
 const { getCommunityFeed, getCommunityStats, getGroups, getMember, getMemberAccessDirectory, getMemberProject, getMembers, getPublicMemberProfile, getSupportTickets } = await import('./members');
@@ -61,19 +56,6 @@ describe('community member queries', () => {
     });
     mocks.getToken.mockResolvedValue('access-token');
     mocks.createServerClient.mockReturnValue({ request: mocks.clientRequest });
-    mocks.getPublicCourseCatalog.mockResolvedValue({
-      success: true,
-      source: 'api',
-      data: [
-        {
-          id: 'course-1',
-          title: 'Live AI Gameplay Course',
-          slug: 'live-ai-gameplay-course',
-          description: 'Live API-backed course.',
-          thumbnail: 'https://example.com/course.jpg',
-        },
-      ],
-    });
     mocks.getMarketingLeads.mockResolvedValue({ ok: true, data: [] });
     mocks.getBlogPosts.mockResolvedValue({ ok: true, data: [] });
     mocks.clientRequest.mockResolvedValue({ ok: true, data: { items: [], totalCount: 0 } });
@@ -195,25 +177,17 @@ describe('community member queries', () => {
     ]);
   });
 
-  it('feeds live public courses into discovery when the viewer is signed out', async () => {
+  it('returns an empty discovery feed without course filler when the viewer is signed out', async () => {
     mocks.auth.mockResolvedValue(null);
 
     const feed = await getCommunityFeed('discover');
 
     expect(feed.requiresSignIn).toBe(false);
-    expect(mocks.getPublicCourseCatalog).toHaveBeenCalled();
-    expect(feed.items).toEqual([
-      expect.objectContaining({
-        title: 'Live AI Gameplay Course',
-        contentType: 'Course',
-        href: '/courses/live-ai-gameplay-course',
-        actionLabel: 'View course',
-      }),
-    ]);
+    expect(feed.items).toEqual([]);
   });
 
   it('loads community groups from the generated social groups API', async () => {
-    mocks.getSocialGroups.mockResolvedValue({
+    mocks.getApiSocialGroupsForGetApiSocialGroups.mockResolvedValue({
       ok: true,
       data: [
         {
@@ -229,7 +203,7 @@ describe('community member queries', () => {
 
     const result = await getGroups({ limit: 10, search: 'arcade' });
 
-    expect(mocks.getSocialGroups).toHaveBeenCalledWith({
+    expect(mocks.getApiSocialGroupsForGetApiSocialGroups).toHaveBeenCalledWith({
       search: 'arcade',
       skip: 0,
       take: 10,
@@ -285,7 +259,7 @@ describe('community member queries', () => {
         ],
       },
     });
-    mocks.getSocialGroups.mockResolvedValue({
+    mocks.getApiSocialGroupsForGetApiSocialGroups.mockResolvedValue({
       ok: true,
       data: [{ id: 'group-1' }, { id: 'group-2' }],
     });
@@ -306,7 +280,7 @@ describe('community member queries', () => {
       params: { limit: 500 },
       requiresAuth: true,
     });
-    expect(mocks.getSocialGroups).toHaveBeenCalledWith({ skip: 0, take: 500 });
+    expect(mocks.getApiSocialGroupsForGetApiSocialGroups).toHaveBeenCalledWith({ skip: 0, take: 500 });
     expect(mocks.getMarketingLeads).toHaveBeenCalledWith({
       source: 'contact',
       topic: 'support',
@@ -330,7 +304,7 @@ describe('community member queries', () => {
       ok: false,
       error: { message: 'Forbidden' },
     });
-    mocks.getSocialGroups.mockResolvedValue({ ok: true, data: [] });
+    mocks.getApiSocialGroupsForGetApiSocialGroups.mockResolvedValue({ ok: true, data: [] });
     mocks.getMarketingLeads.mockResolvedValue({ ok: true, data: [] });
     mocks.getBlogPosts.mockResolvedValue({ ok: true, data: [] });
 
@@ -345,7 +319,7 @@ describe('community member queries', () => {
       ok: false,
       error: { message: 'Forbidden' },
     });
-    mocks.getSocialGroups.mockRejectedValue(new Error('Groups unavailable'));
+    mocks.getApiSocialGroupsForGetApiSocialGroups.mockRejectedValue(new Error('Groups unavailable'));
 
     const stats = await getCommunityStats();
 
@@ -648,7 +622,7 @@ describe('community member queries', () => {
 
   it('wires the tenant provider into the community API client', async () => {
     mocks.clientRequest.mockResolvedValue({ ok: true, data: { items: [], totalCount: 0 } });
-    mocks.getSocialGroups.mockResolvedValue({ ok: true, data: [] });
+    mocks.getApiSocialGroupsForGetApiSocialGroups.mockResolvedValue({ ok: true, data: [] });
 
     await getMemberAccessDirectory({ limit: 1 });
 

@@ -15,7 +15,7 @@ describe('TokenRefreshManager', () => {
 
   it('should use configurable refresh endpoint', async () => {
     const customEndpoint = '/custom/token/refresh';
-    
+
     (global.fetch as any).mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -42,7 +42,7 @@ describe('TokenRefreshManager', () => {
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({ refreshToken: 'current-refresh-token' }),
-      })
+      }),
     );
   });
 
@@ -62,12 +62,12 @@ describe('TokenRefreshManager', () => {
     };
 
     const manager = new TokenRefreshManager(provider, 'http://localhost:5000');
-    
+
     manager.setExpiry(20); // Expire in 20 seconds
     expect(manager.shouldRefresh()).toBe(true);
 
     const result = await manager.refreshIfNeeded();
-    
+
     expect(result).not.toBeNull();
     expect(result?.accessToken).toBe('new-token');
     expect(provider.onTokenRefresh).toHaveBeenCalled();
@@ -79,12 +79,12 @@ describe('TokenRefreshManager', () => {
     };
 
     const manager = new TokenRefreshManager(provider, 'http://localhost:5000');
-    
+
     manager.setExpiry(60); // Expire in 60 seconds (more than threshold)
     expect(manager.shouldRefresh()).toBe(false);
 
     const result = await manager.refreshIfNeeded();
-    
+
     expect(result).toBeNull();
     expect(global.fetch).not.toHaveBeenCalled();
   });
@@ -117,18 +117,18 @@ describe('TokenRefreshManager', () => {
     });
 
     const result = await manager.refresh();
-    
+
     expect(result).not.toBeNull();
     expect(attempts).toBe(3);
   });
 
   it('should prevent concurrent refresh calls (mutex)', async () => {
     let refreshCalls = 0;
-    
+
     (global.fetch as any).mockImplementation(async () => {
       refreshCalls++;
       // Simulate slow network
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       return {
         ok: true,
         json: async () => ({
@@ -145,17 +145,13 @@ describe('TokenRefreshManager', () => {
     };
 
     const manager = new TokenRefreshManager(provider, 'http://localhost:5000');
-    
+
     // Trigger multiple concurrent refreshes
-    const results = await Promise.all([
-      manager.refresh(),
-      manager.refresh(),
-      manager.refresh(),
-    ]);
+    const results = await Promise.all([manager.refresh(), manager.refresh(), manager.refresh()]);
 
     // Should only make one actual refresh call due to mutex
     expect(refreshCalls).toBe(1);
     expect(results).toHaveLength(3);
-    expect(results.every(r => r?.accessToken === 'new-token')).toBe(true);
+    expect(results.every((r) => r?.accessToken === 'new-token')).toBe(true);
   });
 });

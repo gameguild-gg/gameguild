@@ -6,7 +6,6 @@ export interface CourseRouteSource {
   creatorName?: string | null;
   creatorEmail?: string | null;
 }
-
 const COURSE_AUTHOR_SEPARATOR = '-by-';
 
 export function slugifyRoutePart(value: string): string {
@@ -53,11 +52,15 @@ export function getCourseLookupSlug(routeParam: string): string {
   return value.slice(0, separatorIndex);
 }
 
-export function buildDashboardCoursePath(course: CourseRouteSource | string, segment?: string): string {
+export function buildDashboardCoursePath(
+  course: CourseRouteSource | string,
+  segment?: string,
+  surface: 'workspace' | 'console' = 'workspace',
+): string {
   const routeParam = typeof course === 'string' ? course : getCourseRouteParam(course);
-  const basePath = `/dashboard/learning/courses/${encodeURIComponent(routeParam)}`;
+  const coursePath = `/${surface}/learning/courses/${encodeURIComponent(routeParam)}`;
 
-  if (!segment) return basePath;
+  if (!segment) return coursePath;
 
-  return `${basePath}/${segment.replace(/^\/+/, '')}`;
+  return `${coursePath}/${segment.replace(/^\/+/, '')}`;
 }

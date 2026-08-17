@@ -4,6 +4,7 @@ import { GoogleOneTap } from '@/components/google-one-tap';
 import { GoogleSignInButton } from '@/components/google-sign-in-button';
 import { resolveAllowedAuthRedirect } from '@/lib/auth/cross-domain-auth';
 import { auth } from '@/auth';
+import { AuthErrorNotice } from '@/components/auth/auth-error-notice';
 
 export default async function Page({
   searchParams,
@@ -11,10 +12,12 @@ export default async function Page({
   const params = await searchParams;
   const session = await auth();
   const redirectTo = resolveAllowedAuthRedirect(params?.redirectTo);
+  const errorCode = typeof params?.error === 'string' ? params.error : undefined;
 
   return (
     <>
       <GoogleOneTap authenticated={Boolean(session)} redirectTo={redirectTo} />
+      <AuthErrorNotice errorCode={errorCode} />
       <SignupForm
         providers={<GoogleSignInButton options={{ text: 'signup_with' }} redirectTo={redirectTo} />}
         redirectTo={redirectTo}

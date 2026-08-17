@@ -17,45 +17,16 @@ namespace GameGuild.Tests.Authentication.Integration;
 /// Integration tests for Role Management functionality
 /// Tests role-user assignments, temporary role expiration, and multi-tenancy isolation
 /// </summary>
-public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
+public class RoleManagementIntegrationTests : IClassFixture<AuthenticationApiFactory>, IDisposable
 {
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly IServiceScope _scope;
     private readonly IRoleRepository _roleRepository;
     private readonly ApplicationDbContext _dbContext;
 
-    public RoleManagementIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
+    public RoleManagementIntegrationTests(AuthenticationApiFactory factory)
     {
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
-
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Testing");
-            builder.ConfigureTestServices(services =>
-            {
-                // Remove existing DbContext registrations
-                var descriptorsToRemove = services
-                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                                d.ServiceType == typeof(ApplicationDbContext) ||
-                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
-                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
-                    .ToList();
-
-                foreach (var descriptor in descriptorsToRemove)
-                {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase($"RoleTestDb_{Guid.NewGuid()}");
-                });
-
-                // Add HTTP logging services (required by the pipeline)
-                services.AddHttpLogging(o => { });
-            });
-        });
+        _factory = factory;
 
         _scope = _factory.Services.CreateScope();
         _dbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

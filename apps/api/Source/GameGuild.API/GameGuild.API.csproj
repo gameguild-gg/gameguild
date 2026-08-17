@@ -12,8 +12,11 @@
         <InternalsVisibleTo Include="GameGuild.Commerce.Payments.IntegrationTests" />
         <InternalsVisibleTo Include="GameGuild.Commerce.Subscriptions.IntegrationTests" />
         <InternalsVisibleTo Include="GameGuild.Commerce.Billing.IntegrationTests" />
+        <InternalsVisibleTo Include="GameGuild.API.UnitTests" />
         <InternalsVisibleTo Include="GameGuild.API.IntegrationTests" />
-    </ItemGroup>
+        <ProjectReference Include="..\Modules\GameGuild.Announcements.Contracts\GameGuild.Announcements.Contracts.csproj" />
+    <ProjectReference Include="..\Modules\GameGuild.Social.Announcements\GameGuild.Social.Announcements.csproj" />
+  </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
@@ -27,15 +30,28 @@
         <PackageReference Include="Serilog.Enrichers.Environment" />
         <PackageReference Include="Serilog.Enrichers.Process" />
         <PackageReference Include="Serilog.Enrichers.Thread" />
+        <PackageReference Include="SendGrid" />
+        <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
+        <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+        <PackageReference Include="OpenTelemetry.Exporter.Console" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Modules\GameGuild.AI\GameGuild.AI.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Analytics\GameGuild.Analytics.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Assets\GameGuild.Assets.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Commerce\GameGuild.Commerce.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Compliance.Audit\GameGuild.Compliance.Audit.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Compliance.Consent\GameGuild.Compliance.Consent.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Compliance.FERPA\GameGuild.Compliance.FERPA.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Compliance.FinancialCrime\GameGuild.Compliance.FinancialCrime.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Compliance.KYC\GameGuild.Compliance.KYC.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Authentication\GameGuild.Identity.Authentication.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Billing\GameGuild.Commerce.Billing.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Orders\GameGuild.Commerce.Orders.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Economy\GameGuild.Economy.csproj" />
@@ -45,8 +61,8 @@
         <ProjectReference Include="..\Modules\GameGuild.Economy.Payouts\GameGuild.Economy.Payouts.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Economy.Treasury\GameGuild.Economy.Treasury.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Features\GameGuild.Features.csproj" />
-        <!-- Orphaned: SLA module is not in EnabledModules and has no DI registration -->
-        <!-- <ProjectReference Include="..\Modules\GameGuild.Monitoring.SLA\GameGuild.Monitoring.SLA.csproj" /> -->
+        <ProjectReference Include="..\Modules\GameGuild.Localization\GameGuild.Localization.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Monitoring.SLA\GameGuild.Monitoring.SLA.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Notifications\GameGuild.Notifications.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj" />
@@ -55,6 +71,7 @@
         <ProjectReference Include="..\Modules\GameGuild.Learning.TestingLab\GameGuild.Learning.TestingLab.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Cohorts\GameGuild.Learning.Cohorts.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Lti\GameGuild.Lti.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Certificates\GameGuild.Learning.Certificates.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Workspaces\GameGuild.Learning.Workspaces.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Discovery\GameGuild.Learning.Experience.Discovery.csproj" />
@@ -79,6 +96,7 @@
         <ProjectReference Include="..\Modules\GameGuild.TrustSafety\GameGuild.TrustSafety.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Content.Pages\GameGuild.Content.Pages.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Resources\GameGuild.Resources.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Resources.Contents\GameGuild.Resources.Contents.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Subscriptions\GameGuild.Commerce.Subscriptions.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Tenants\GameGuild.Identity.Tenants.csproj" />

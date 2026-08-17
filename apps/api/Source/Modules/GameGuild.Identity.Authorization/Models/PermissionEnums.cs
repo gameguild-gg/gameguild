@@ -2,7 +2,7 @@ namespace GameGuild.Identity.Authorization;
 
 /// <summary>
 ///     Permission layer in the 3-layer DAC (Discretionary Access Control) system
-///     Matches Game Guild's authorization model
+///     Matches the platform authorization model
 /// </summary>
 public enum PermissionLayer
 {
@@ -119,7 +119,7 @@ public enum SoDViolationAction
 /// <summary>
 ///     Comprehensive enumeration of permission types in the GameGuild system
 ///     Represents the various operations that can be controlled through permissions
-///     Based on Game Guild's 251-value permission system with full feature parity
+///     Defines the complete platform permission system
 /// </summary>
 public enum PermissionType
 {

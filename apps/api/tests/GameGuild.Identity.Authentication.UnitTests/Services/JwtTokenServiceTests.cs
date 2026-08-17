@@ -97,6 +97,29 @@ public class JwtTokenServiceTests
     }
 
     [Fact]
+    public async Task GenerateAccessTokenAsync_WithAuthenticationTimeAndSession_ShouldPreserveBothClaims()
+    {
+        var authenticatedAt = DateTimeOffset.UtcNow.AddMinutes(-4);
+        var sessionId = Guid.NewGuid();
+
+        var token = await _service.GenerateAccessTokenAsync(
+            Guid.NewGuid(),
+            "test@example.com",
+            ["User"],
+            Guid.NewGuid(),
+            2,
+            authenticatedAt,
+            sessionId,
+            CancellationToken.None);
+
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+        jwt.Claims.Single(candidate => candidate.Type == "session_id").Value.Should().Be(sessionId.ToString());
+        var claim = long.Parse(jwt.Claims.Single(candidate => candidate.Type == "auth_time").Value);
+        DateTimeOffset.FromUnixTimeSeconds(claim)
+            .Should().Be(authenticatedAt.AddTicks(-(authenticatedAt.Ticks % TimeSpan.TicksPerSecond)));
+    }
+
+    [Fact]
     public async Task GenerateAccessTokenAsync_WithoutTenantId_ShouldReturnToken()
     {
         // Arrange

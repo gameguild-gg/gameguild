@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,7 +20,7 @@ export class CommerceSubscriptionsModule {
    *
    * Retrieves a paginated list of subscriptions with optional filtering. Use query parameters: status (active, trialing, cancelled, etc.), tenantId, planId, and expiring=true for expiring subscriptions.
    */
-  async getSubscriptions(query?: {
+  async getSubscriptionsForGetSubscriptions(query?: {
     page?: number;
     pageSize?: number;
     status?: Types.CommerceSubscriptionsSubscriptionStatus;
@@ -29,10 +29,10 @@ export class CommerceSubscriptionsModule {
     expiring?: boolean;
     expiringDays?: number;
   }): Promise<Result<void, ApiError>> {
-    const url = '/api/v1/subscriptions';
+    const url = "/api/v1/subscriptions";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -46,14 +46,20 @@ export class CommerceSubscriptionsModule {
    *
    * Creates a new subscription with the provided information.
    */
-  async postSubscriptions(body: Types.CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput): Promise<Result<void, ApiError>> {
-    const url = '/api/v1/subscriptions';
+  async postSubscriptions(
+    body: Types.CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/subscriptions";
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -67,11 +73,13 @@ export class CommerceSubscriptionsModule {
    *
    * Retrieves detailed information for a specific subscription.
    */
-  async getSubscriptionsBySubscriptionId(subscriptionId: string): Promise<Result<void, ApiError>> {
+  async getSubscriptionsForGetSubscriptionsBySubscriptionId(
+    subscriptionId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -91,10 +99,14 @@ export class CommerceSubscriptionsModule {
     const url = `/api/v1/subscriptions/${subscriptionId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PUT',
+      method: "PUT",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -108,11 +120,13 @@ export class CommerceSubscriptionsModule {
    *
    * Permanently deletes a subscription. Use cancel action for soft removal.
    */
-  async deleteSubscriptions(subscriptionId: string): Promise<Result<void, ApiError>> {
+  async deleteSubscriptions(
+    subscriptionId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -132,10 +146,14 @@ export class CommerceSubscriptionsModule {
     const url = `/api/v1/subscriptions/${subscriptionId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'PATCH',
+      method: "PATCH",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -149,11 +167,13 @@ export class CommerceSubscriptionsModule {
    *
    * Checks if a subscription exists by ID without returning the body.
    */
-  async headSubscriptions(subscriptionId: string): Promise<Result<void, ApiError>> {
+  async headSubscriptions(
+    subscriptionId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}`;
 
     const result = await this.client.request({
-      method: 'HEAD',
+      method: "HEAD",
       path: url,
       requiresAuth: true,
     });
@@ -166,16 +186,23 @@ export class CommerceSubscriptionsModule {
    *
    * Retrieves billing history for a specific subscription.
    */
-  async getSubscriptionsBillingHistory(subscriptionId: string): Promise<Result<Array<Types.CommerceSubscriptionsBillingHistory>, ApiError>> {
+  async getSubscriptionsBillingHistory(
+    subscriptionId: string,
+  ): Promise<
+    Result<Array<Types.CommerceSubscriptionsBillingHistory>, ApiError>
+  > {
     const url = `/api/v1/subscriptions/${subscriptionId}/billing-history`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<Array<Types.CommerceSubscriptionsBillingHistory>, ApiError>;
+    return result as Result<
+      Array<Types.CommerceSubscriptionsBillingHistory>,
+      ApiError
+    >;
   }
 
   /**
@@ -183,11 +210,14 @@ export class CommerceSubscriptionsModule {
    *
    * Retrieves the invoice history for a specific subscription.
    */
-  async getSubscriptionsInvoices(subscriptionId: string, query?: { page?: number; pageSize?: number }): Promise<Result<void, ApiError>> {
+  async getSubscriptionsInvoices(
+    subscriptionId: string,
+    query?: { page?: number; pageSize?: number },
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}/invoices`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -201,18 +231,24 @@ export class CommerceSubscriptionsModule {
    *
    * Retrieves usage information and limits for a specific subscription.
    */
-  async getSubscriptionsUsage(subscriptionId: string): Promise<Result<Types.CommerceSubscriptionsSubscriptionUsage, ApiError>> {
+  async getSubscriptionsUsage(
+    subscriptionId: string,
+  ): Promise<Result<Types.CommerceSubscriptionsSubscriptionUsage, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}/usage`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceSubscriptionsSubscriptionUsageSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceSubscriptionsSubscriptionUsageSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -224,11 +260,13 @@ export class CommerceSubscriptionsModule {
    *
    * Activates a subscription by ID.
    */
-  async postSubscriptionsActivate(subscriptionId: string): Promise<Result<void, ApiError>> {
+  async postSubscriptionsActivate(
+    subscriptionId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}:activate`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -248,10 +286,14 @@ export class CommerceSubscriptionsModule {
     const url = `/api/v1/subscriptions/${subscriptionId}:auto-renew`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -272,10 +314,14 @@ export class CommerceSubscriptionsModule {
     const url = `/api/v1/subscriptions/${subscriptionId}:cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -292,14 +338,20 @@ export class CommerceSubscriptionsModule {
   async postSubscriptionsDowngrade(
     subscriptionId: string,
     body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput,
-  ): Promise<Result<Types.CommerceSubscriptionsSubscriptionDowngradeResult, ApiError>> {
+  ): Promise<
+    Result<Types.CommerceSubscriptionsSubscriptionDowngradeResult, ApiError>
+  > {
     const url = `/api/v1/subscriptions/${subscriptionId}:downgrade`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -307,7 +359,11 @@ export class CommerceSubscriptionsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceSubscriptionsSubscriptionDowngradeResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceSubscriptionsSubscriptionDowngradeResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -326,10 +382,14 @@ export class CommerceSubscriptionsModule {
     const url = `/api/v1/subscriptions/${subscriptionId}:end-trial`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -350,10 +410,14 @@ export class CommerceSubscriptionsModule {
     const url = `/api/v1/subscriptions/${subscriptionId}:external-ids`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -374,10 +438,14 @@ export class CommerceSubscriptionsModule {
     const url = `/api/v1/subscriptions/${subscriptionId}:pause`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -391,11 +459,13 @@ export class CommerceSubscriptionsModule {
    *
    * Reactivates a suspended or cancelled subscription.
    */
-  async postSubscriptionsReactivate(subscriptionId: string): Promise<Result<void, ApiError>> {
+  async postSubscriptionsReactivate(
+    subscriptionId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}:reactivate`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -408,11 +478,13 @@ export class CommerceSubscriptionsModule {
    *
    * Manually renews a subscription for another billing cycle.
    */
-  async postSubscriptionsRenew(subscriptionId: string): Promise<Result<void, ApiError>> {
+  async postSubscriptionsRenew(
+    subscriptionId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}:renew`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -425,11 +497,13 @@ export class CommerceSubscriptionsModule {
    *
    * Resumes billing for a paused subscription.
    */
-  async postSubscriptionsResume(subscriptionId: string): Promise<Result<void, ApiError>> {
+  async postSubscriptionsResume(
+    subscriptionId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/subscriptions/${subscriptionId}:resume`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -449,10 +523,14 @@ export class CommerceSubscriptionsModule {
     const url = `/api/v1/subscriptions/${subscriptionId}:start-trial`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -473,10 +551,14 @@ export class CommerceSubscriptionsModule {
     const url = `/api/v1/subscriptions/${subscriptionId}:suspend`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -493,14 +575,20 @@ export class CommerceSubscriptionsModule {
   async postSubscriptionsUpgrade(
     subscriptionId: string,
     body: Types.CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput,
-  ): Promise<Result<Types.CommerceSubscriptionsSubscriptionUpgradeResult, ApiError>> {
+  ): Promise<
+    Result<Types.CommerceSubscriptionsSubscriptionUpgradeResult, ApiError>
+  > {
     const url = `/api/v1/subscriptions/${subscriptionId}:upgrade`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -508,7 +596,11 @@ export class CommerceSubscriptionsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.CommerceSubscriptionsSubscriptionUpgradeResultSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.CommerceSubscriptionsSubscriptionUpgradeResultSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -521,10 +613,10 @@ export class CommerceSubscriptionsModule {
    * Retrieves subscription metrics and analytics.
    */
   async getSubscriptionsGetMetrics(): Promise<Result<void, ApiError>> {
-    const url = '/api/v1/subscriptions:get-metrics';
+    const url = "/api/v1/subscriptions:get-metrics";
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -533,6 +625,8 @@ export class CommerceSubscriptionsModule {
   }
 }
 
-export function createCommerceSubscriptionsModule(client: ApiClient): CommerceSubscriptionsModule {
+export function createCommerceSubscriptionsModule(
+  client: ApiClient,
+): CommerceSubscriptionsModule {
   return new CommerceSubscriptionsModule(client);
 }
