@@ -5,10 +5,7 @@ import {
   QuizCollectionEditor,
   type QuizCollectionItem,
 } from "@game-guild/quiz-surface/editor";
-import type {
-  ContentGradingDefinition,
-  GradingResultUse,
-} from "@game-guild/grading";
+import type { ContentGradingDefinition } from "@game-guild/grading";
 import {
   createDisabledGradingDefinition,
   createQuizGradingDefinition,
@@ -20,13 +17,6 @@ import {
 import { Badge } from "@game-guild/ui/components/badge";
 import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
 import {
   blocksToStorage,
@@ -128,11 +118,6 @@ export function QuizContentEditor({
   );
   const gradedItemCount = Object.keys(syncedGradingConfig.items).length;
   const gradedPoints = sumGradedItemPoints(syncedGradingConfig);
-  const resultUse: GradingResultUse = syncedGradingConfig.outcome.uses.includes(
-    "gradebook",
-  )
-    ? "gradebook"
-    : "feedback";
 
   const emitChange = useCallback(
     (nextBlocks: BlockArray, nextGrading: ContentGradingDefinition) => {
@@ -175,38 +160,6 @@ export function QuizContentEditor({
       );
     },
     [blocks, updateGrading],
-  );
-
-  const handleResultUseChange = useCallback(
-    (nextUse: GradingResultUse) => {
-      updateGrading((current) => {
-        const synced = ensureQuizGradingDefinition(blocks, current);
-        const uses: GradingResultUse[] =
-          nextUse === "gradebook" ? ["feedback", "gradebook"] : ["feedback"];
-
-        return {
-          ...synced,
-          outcome: {
-            uses,
-            gradebook:
-              nextUse === "gradebook"
-                ? {
-                    groupId: synced.outcome.gradebook?.groupId ?? null,
-                    weight: synced.outcome.gradebook?.weight,
-                    required: synced.outcome.gradebook?.required ?? true,
-                    includeInFinalGrade:
-                      synced.outcome.gradebook?.includeInFinalGrade ?? true,
-                  }
-                : null,
-          },
-          score: {
-            ...synced.score,
-            maxScore: Math.max(1, synced.score.maxScore || gradedPoints || 1),
-          },
-        };
-      });
-    },
-    [blocks, gradedPoints, updateGrading],
   );
 
   const handleMaxScoreChange = useCallback(
@@ -321,25 +274,7 @@ export function QuizContentEditor({
         </div>
 
         {syncedGradingConfig.enabled && (
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="quiz-result-use">Result destination</Label>
-              <Select
-                value={resultUse}
-                onValueChange={(value) =>
-                  handleResultUseChange(value as GradingResultUse)
-                }
-              >
-                <SelectTrigger id="quiz-result-use">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="feedback">Feedback only</SelectItem>
-                  <SelectItem value="gradebook">Gradebook</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="quiz-max-score">Max score</Label>
               <Input
@@ -371,9 +306,6 @@ export function QuizContentEditor({
         {syncedGradingConfig.enabled && (
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge variant="outline">Assessment</Badge>
-            <Badge variant="outline">
-              {resultUse === "gradebook" ? "Gradebook" : "Feedback only"}
-            </Badge>
           </div>
         )}
       </div>

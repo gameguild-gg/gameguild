@@ -63,7 +63,7 @@ const GRADING_METHOD_FLAGS: AssessmentGradingMethodFlag[] = [
 const NO_GROUP_VALUE = '__none__';
 const UNGROUPED_ID = 'ungrouped';
 const UNGROUPED_NAME = 'Unassigned';
-const UNGROUPED_DESCRIPTION = 'Activities that do not yet count toward a weighted grade group.';
+const UNGROUPED_DESCRIPTION = 'Activities that still need a grading group.';
 const ASSESSMENT_DRAG_PREFIX = 'assessment-';
 const GROUP_DROP_PREFIX = 'group-drop-';
 
@@ -85,8 +85,13 @@ interface AssessmentGroupView {
 }
 
 function formatWeight(weightPercent: number | null) {
-  if (weightPercent == null) return 'Ungraded';
+  if (weightPercent == null) return 'Unconfigured';
   return `${formatPercent(weightPercent)} of Total`;
+}
+
+function formatAssessmentRole(weightPercent: number | null) {
+  if (weightPercent == null) return 'Unconfigured';
+  return weightPercent === 0 ? 'Practice' : 'Gradebook';
 }
 
 function formatPercent(value: number) {
@@ -135,8 +140,8 @@ function buildGroupedAssessments(assessments: Assessment[], assessmentGroups: As
     }));
 }
 
-function DraggableAssessmentRow({ id, disabled, children }: { id: string; disabled?: boolean; children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled });
+function DraggableAssessmentRow({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.4 : undefined,
@@ -225,7 +230,7 @@ function AssessmentAnalyticsPanel({ analytics }: { analytics: CourseAssessmentAn
                     {group.gradedCount} graded · {group.ungradedCount} ungraded
                   </p>
                 </div>
-                <Badge variant="outline">{group.weightPercent == null ? 'Ungraded' : formatPercent(group.weightPercent)}</Badge>
+                <Badge variant="outline">{group.weightPercent == null ? 'Unconfigured' : formatPercent(group.weightPercent)}</Badge>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                 <div>
@@ -480,7 +485,6 @@ export function AssessmentsList({
     const assessmentId = activeId.slice(ASSESSMENT_DRAG_PREFIX.length);
     const assessment = assessments.find((a) => a.id === assessmentId);
     if (!assessment) return;
-    if (assessment.resultUse === 'Feedback') return;
     const currentGroupId = assessment.assessmentGroupId ?? UNGROUPED_ID;
 
     let targetGroupId: string;
@@ -620,16 +624,13 @@ export function AssessmentsList({
                       <DraggableAssessmentRow
                         key={assessment.id}
                         id={`${ASSESSMENT_DRAG_PREFIX}${assessment.id}`}
-                        disabled={assessment.resultUse === 'Feedback'}
                       >
                         <Link
                           href={`${pathname}/${assessment.id}`}
                           className="group flex min-h-16 items-center gap-3 px-4 py-3 transition hover:bg-muted/45"
                         >
                           <GripVertical
-                            className={assessment.resultUse === 'Feedback'
-                              ? 'text-muted-foreground/35 size-4 shrink-0'
-                              : 'text-muted-foreground/70 size-4 shrink-0 cursor-grab'}
+                            className="text-muted-foreground/70 size-4 shrink-0 cursor-grab"
                             aria-hidden="true"
                           />
                           <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
@@ -649,10 +650,10 @@ export function AssessmentsList({
                             {assessment.type}
                           </Badge>
                           <Badge
-                            variant={assessment.resultUse === 'Feedback' ? 'outline' : 'default'}
+                            variant={group.weightPercent == null || group.weightPercent === 0 ? 'outline' : 'default'}
                             className="shrink-0"
                           >
-                            {assessment.resultUse === 'Feedback' ? 'Feedback only' : 'Gradebook'}
+                            {formatAssessmentRole(group.weightPercent)}
                           </Badge>
                           <Badge variant={assessment.isAvailable ? 'secondary' : 'outline'} className="hidden shrink-0 sm:inline-flex">
                             {assessment.isAvailable ? 'available' : 'scheduled'}

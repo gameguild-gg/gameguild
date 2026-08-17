@@ -5,7 +5,7 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentsList } from './assessments-list';
 import { createAssessment, createAssessmentGroup, deleteAssessmentGroup, updateAssessmentGroup } from '@/lib/learning/actions';
-import type { Assessment, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
+import type { Assessment, AssessmentGroup, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
 
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
@@ -268,7 +268,7 @@ describe('AssessmentsList weighted groups', () => {
     expect(screen.getByText('No graded scores yet')).toBeInTheDocument();
     expect(screen.getByText(/score distribution appears after submissions are graded/i)).toBeInTheDocument();
     expect(screen.getByText('Ungrouped activities')).toBeInTheDocument();
-    expect(screen.getAllByText('Ungraded').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Unconfigured').length).toBeGreaterThan(0);
   });
 
   it('renders ungrouped assignments with schedule and attempt metadata', () => {
@@ -281,25 +281,41 @@ describe('AssessmentsList weighted groups', () => {
     );
 
     const ungrouped = screen.getByTestId('assessment-group-ungrouped');
-    expect(within(ungrouped).getByText('Activities that do not yet count toward a weighted grade group.')).toBeInTheDocument();
+    expect(within(ungrouped).getByText('Activities that still need a grading group.')).toBeInTheDocument();
     expect(within(ungrouped).getByText('45m')).toBeInTheDocument();
     expect(within(ungrouped).getByText('2 attempts')).toBeInTheDocument();
     expect(within(ungrouped).getByText('scheduled')).toBeInTheDocument();
     expect(within(ungrouped).getByText('Assignment')).toBeInTheDocument();
   });
 
-  it('keeps feedback-only assessments visible and identifies their destination', () => {
+  it('keeps practice assessments visible and identifies their role', () => {
+    const practiceGroup = {
+      id: 'group-practice',
+      courseId: 'course-1',
+      name: 'Exercises',
+      description: null,
+      weightPercent: 0,
+      order: 1,
+    } satisfies AssessmentGroup;
+
     render(
       <AssessmentsList
         courseId="course-1"
-        assessments={[{ ...assignmentAssessment, resultUse: 'Feedback' }]}
+        assessments={[{
+          ...assignmentAssessment,
+          assessmentGroupId: practiceGroup.id,
+          assessmentGroupName: practiceGroup.name,
+          assessmentGroupWeightPercent: 0,
+          assessmentGroupOrder: practiceGroup.order,
+        }]}
         total={1}
+        assessmentGroups={[practiceGroup]}
       />,
     );
 
-    const ungrouped = screen.getByTestId('assessment-group-ungrouped');
-    expect(within(ungrouped).getByRole('link', { name: /environment setup/i })).toBeInTheDocument();
-    expect(within(ungrouped).getByText('Feedback only')).toBeInTheDocument();
+    const practice = screen.getByTestId('assessment-group-group-practice');
+    expect(within(practice).getByRole('link', { name: /environment setup/i })).toBeInTheDocument();
+    expect(within(practice).getByText('Practice')).toBeInTheDocument();
   });
 
   it('renders the empty state without offering direct assessment creation', () => {

@@ -349,17 +349,12 @@ describe("ContentItemEditor", () => {
     const jsonBody = vi.mocked(updateContent).mock.calls[0]![0].jsonBody as {
       grading?: {
         enabled?: boolean;
-        outcome?: { uses?: string[]; gradebook?: unknown };
         score?: { maxScore?: number };
       };
     };
     expect(vi.mocked(updateContent).mock.calls[0]![0].body).toBeUndefined();
     expect(jsonBody.grading).toMatchObject({
       enabled: true,
-      outcome: {
-        uses: ["feedback"],
-        gradebook: null,
-      },
       score: {
         maxScore: 1,
       },
@@ -371,12 +366,11 @@ describe("ContentItemEditor", () => {
         type: "Quiz",
         submissionModalities: "StructuredAnswer",
         gradingMethods: "AutoGraded,InstructorGraded",
-        resultUse: "Feedback",
       }),
     );
   });
 
-  it("keeps one linked assessment for feedback grading and removes it only when grading is disabled", async () => {
+  it("keeps one linked assessment while grading is enabled and removes it only when grading is disabled", async () => {
     const user = userEvent.setup();
     render(
       <ContentItemEditor
@@ -397,7 +391,6 @@ describe("ContentItemEditor", () => {
           assessmentId: "asmnt-quiz",
           contentId: "content-1",
           gradingMethods: "AutoGraded,InstructorGraded",
-          resultUse: "Feedback",
         }),
       );
     });
@@ -411,7 +404,7 @@ describe("ContentItemEditor", () => {
     });
   });
 
-  it("uses the same assessment lifecycle when the quiz result goes to the gradebook", async () => {
+  it("leaves result placement to assessment groups", async () => {
     const user = userEvent.setup();
     render(
       <ContentItemEditor
@@ -422,22 +415,25 @@ describe("ContentItemEditor", () => {
     );
 
     await user.click(screen.getByRole("switch", { name: /grading/i }));
-    await user.click(
-      screen.getByRole("combobox", { name: /result destination/i }),
-    );
-    await user.click(screen.getByRole("option", { name: /^gradebook$/i }));
+    expect(
+      screen.queryByRole("combobox", { name: /result destination/i }),
+    ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => expect(createAssessment).toHaveBeenCalledOnce());
     expect(createAssessment).toHaveBeenCalledWith(
-      expect.objectContaining({ resultUse: "Gradebook" }),
+      expect.objectContaining({
+        courseId: "course-1",
+        contentId: "content-1",
+        type: "Quiz",
+      }),
     );
     expect(deleteAssessment).not.toHaveBeenCalled();
 
     const jsonBody = vi.mocked(updateContent).mock.calls[0]![0].jsonBody as {
-      grading?: { outcome?: { uses?: string[] } };
+      grading?: Record<string, unknown>;
     };
-    expect(jsonBody.grading?.outcome?.uses).toEqual(["feedback", "gradebook"]);
+    expect(jsonBody.grading).not.toHaveProperty("outcome");
   });
 
   it("shows update errors and routes cancel back to the course content deterministically", async () => {

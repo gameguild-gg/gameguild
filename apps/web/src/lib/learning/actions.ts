@@ -4,7 +4,6 @@ import { getToken } from "@/auth";
 import { getCourseRouteParam } from "@/lib/learning/course-route";
 import type {
   AssessmentPresentationMode,
-  AssessmentResultUse,
   AssessmentType,
 } from "@/lib/learning/queries/assessments";
 import type {
@@ -1206,7 +1205,6 @@ export interface CreateAssessmentInput {
   // (see queries/assessments.ts and learner activity page). submissionModalities e.g. "Code"; gradingMethods e.g. "AutoGraded,InstructorGraded".
   submissionModalities?: string;
   gradingMethods?: string;
-  resultUse?: AssessmentResultUse;
 }
 
 export async function createAssessment(
@@ -1242,7 +1240,6 @@ export async function createAssessment(
       contentId: rest.contentId ?? null,
       submissionModalities: rest.submissionModalities,
       gradingMethods: rest.gradingMethods,
-      ...(rest.resultUse ? { resultUse: rest.resultUse } : {}),
     };
 
     const { assessments } = createCourseModules();
@@ -1414,7 +1411,6 @@ export interface UpdateAssessmentInput {
   clearAssessmentGroupId?: boolean;
   presentationMode?: AssessmentPresentationMode;
   gradingMethods?: string;
-  resultUse?: AssessmentResultUse;
 }
 
 export async function updateAssessment(
@@ -1444,7 +1440,6 @@ export async function updateAssessment(
       clearAssessmentGroupId: fields.clearAssessmentGroupId ?? false,
       presentationMode: fields.presentationMode,
       gradingMethods: fields.gradingMethods ?? undefined,
-      ...(fields.resultUse ? { resultUse: fields.resultUse } : {}),
     };
 
     const { assessments } = createCourseModules();

@@ -223,6 +223,14 @@ export function AssessmentEditor({
   const typeLabel =
     ASSESSMENT_TYPE_OPTIONS.find((o) => o.value === assessment.type)?.label ??
     assessment.type;
+  const selectedAssessmentGroup = assessmentGroups.find(
+    (group) => group.id === assessmentGroupId,
+  );
+  const assessmentRole = !selectedAssessmentGroup
+    ? "Unconfigured"
+    : selectedAssessmentGroup.weightPercent === 0
+      ? "Practice"
+      : "Gradebook";
 
   return (
     <div className="space-y-6">
@@ -237,8 +245,8 @@ export function AssessmentEditor({
           <h1 className="text-2xl font-bold">{assessment.title}</h1>
         </div>
         <Badge variant="secondary">{typeLabel}</Badge>
-        <Badge variant={assessment.resultUse === "Feedback" ? "outline" : "default"}>
-          {assessment.resultUse === "Feedback" ? "Feedback only" : "Gradebook"}
+        <Badge variant={assessmentRole === "Gradebook" ? "default" : "outline"}>
+          {assessmentRole}
         </Badge>
       </div>
 
@@ -373,35 +381,33 @@ export function AssessmentEditor({
 
               <Separator />
 
-              {assessment.resultUse !== "Feedback" ? (
-                <div className="space-y-2">
-                  <Label htmlFor="grade-group">Grade group</Label>
-                  <Select
-                    value={assessmentGroupId}
-                    onValueChange={setAssessmentGroupId}
-                  >
-                    <SelectTrigger id="grade-group">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No group</SelectItem>
-                      {assessmentGroups.map((group) => (
-                        <SelectItem key={group.id} value={group.id}>
-                          {group.name} ({formatWeight(group.weightPercent)})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-muted-foreground text-xs">
-                    Choose the weighted block this activity contributes to.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label>Result destination</Label>
-                  <Input value="Feedback only" readOnly className="bg-muted" />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="grade-group">Grading group</Label>
+                <Select
+                  value={assessmentGroupId}
+                  onValueChange={setAssessmentGroupId}
+                >
+                  <SelectTrigger id="grade-group">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No group</SelectItem>
+                    {assessmentGroups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name} ({formatWeight(group.weightPercent)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-muted-foreground text-xs">
+                  Zero-weight groups are practice activities. Positive-weight groups contribute to the gradebook.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Assessment role</Label>
+                <Input value={assessmentRole} readOnly className="bg-muted" />
+              </div>
 
               <Separator />
 

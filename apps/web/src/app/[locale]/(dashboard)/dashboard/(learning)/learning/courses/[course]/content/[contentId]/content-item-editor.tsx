@@ -281,9 +281,6 @@ export function ContentItemEditor({
           ? ("SingleStep" as const)
           : ("Continuous" as const),
       gradingMethods: "AutoGraded,InstructorGraded",
-      resultUse: grading.outcome.uses.includes("gradebook")
-        ? ("Gradebook" as const)
-        : ("Feedback" as const),
     };
 
     if (assessmentId) {

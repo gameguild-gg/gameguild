@@ -63,7 +63,6 @@ const assessment = {
   lateSubmissionDeadline: null,
   isAvailable: true,
   gradingMethods: "InstructorGraded",
-  resultUse: "Gradebook",
 } satisfies Assessment;
 
 const groups = [
