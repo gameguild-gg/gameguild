@@ -4,7 +4,7 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/dashboard/learning/courses',
+  usePathname: () => '/workspace/learning/courses',
   useRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),
@@ -19,7 +19,7 @@ vi.mock('@/i18n/navigation', () => ({
       {children}
     </a>
   ),
-  usePathname: () => '/dashboard/learning/courses',
+  usePathname: () => '/workspace/learning/courses',
   useRouter: () => ({
     push: vi.fn(),
     replace: vi.fn(),

@@ -22,7 +22,7 @@ const items = [
 
 export function TestingEventWorkspaceNav({ eventId }: { eventId: string }) {
   const pathname = usePathname() ?? '';
-  const base = `/dashboard/testing-lab/events/${eventId}`;
+  const base = `/console/community/testing-lab/events/${eventId}`;
 
   return (
     <nav

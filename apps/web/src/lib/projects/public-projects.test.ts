@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   createServerClient: vi.fn(),
-  getProjects: vi.fn(),
+  getProjectsForGetProjects: vi.fn(),
   getProjectsSlug: vi.fn(),
   getToken: vi.fn(),
 }));
@@ -17,7 +17,7 @@ vi.mock("@game-guild/client", () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
     ProjectsModule: class {
-      getProjects = mocks.getProjects;
+      getProjectsForGetProjects = mocks.getProjectsForGetProjects;
       getProjectsSlug = mocks.getProjectsSlug;
     },
   },
@@ -56,11 +56,11 @@ describe("public Projects API queries", () => {
   });
 
   it("loads only published public projects and maps their API fields", async () => {
-    mocks.getProjects.mockResolvedValue({ ok: true, data: [apiProject] });
+    mocks.getProjectsForGetProjects.mockResolvedValue({ ok: true, data: [apiProject] });
 
     const result = await getPublishedProjects();
 
-    expect(mocks.getProjects).toHaveBeenCalledWith({
+    expect(mocks.getProjectsForGetProjects).toHaveBeenCalledWith({
       status: "Published",
       visibility: "Public",
       skip: 0,

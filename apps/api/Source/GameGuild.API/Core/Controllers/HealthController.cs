@@ -10,6 +10,7 @@ namespace GameGuild.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("[controller]")]
+[Route("api/[controller]")]
 [Tags("health")]
 [AllowAnonymous]
 public class HealthController(
@@ -97,6 +98,7 @@ public class HealthController(
     ///     Checks services tagged with "ready" in health check registration.
     /// </remarks>
     [HttpGet("/ready")]
+    [HttpGet("/api/ready")]
     [EndpointSummary("Readiness probe for traffic routing decisions")]
     [EndpointDescription("Kubernetes-style readiness probe that determines whether the application is ready to serve traffic. Checks all dependencies and services required for proper request handling.")]
     [ProducesResponseType<ReadinessResponse>(200)]
@@ -140,6 +142,7 @@ public class HealthController(
     ///     This check is intentionally simple and should not depend on external services.
     /// </remarks>
     [HttpGet("/live")]
+    [HttpGet("/api/live")]
     [EndpointSummary("Liveness probe for container restart decisions")]
     [EndpointDescription("Kubernetes-style liveness probe that indicates whether the application process is running correctly. Used by orchestration platforms to determine if containers should be restarted.")]
     [ProducesResponseType<LivenessResponse>(200)]
@@ -151,7 +154,7 @@ public class HealthController(
             Alive = true,
             Timestamp = SystemClock.UtcNow,
             Uptime = SystemClock.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime(),
-            Version = GetType().Assembly.GetName().Version?.ToString() ?? "Unknown"
+            Version = GetType().Assembly.GetName().Version!.ToString()
         };
 
         return Ok(response);
@@ -176,6 +179,7 @@ public class HealthController(
     ///     - Error information if unhealthy
     /// </remarks>
     [HttpGet("/health/dependencies")]
+    [HttpGet("/api/health/dependencies")]
     [EndpointSummary("Detailed dependency health check")]
     [EndpointDescription("Provides comprehensive health status of all external dependencies including databases, APIs, caches, and message queues.")]
     [ProducesResponseType<DependencyHealthResponse>(200)]

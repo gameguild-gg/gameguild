@@ -12,17 +12,18 @@
       "@game-guild/learning",
       "@game-guild/ops",
       "@game-guild/web",
-      "@game-guild/emception-demo-next",
-      "@game-guild/emception-demo-react",
       "@game-guild/analytics",
+      "@game-guild/assets",
       "@game-guild/auth-components",
       "@game-guild/block-content-editor",
+      "@game-guild/block-list",
       "@game-guild/community-members",
       "@game-guild/content-rendering",
       "@game-guild/cookies",
       "@game-guild/courses",
       "@game-guild/errors",
       "@game-guild/grading",
+      "@game-guild/lexical-surface",
       "@game-guild/client",
       "@game-guild/emception-ui",
       "@game-guild/ui",
@@ -45,15 +46,7 @@
       "@gameguild/emception-xterm"
     ]
   ],
-  "linked": [
-    [
-      "@game-guild/eslint-config",
-      "@game-guild/prettier-config",
-      "@game-guild/typescript-config",
-      "@game-guild/tailwind-config",
-      "@game-guild/jest-config"
-    ]
-  ],
+  "linked": [],
   "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",

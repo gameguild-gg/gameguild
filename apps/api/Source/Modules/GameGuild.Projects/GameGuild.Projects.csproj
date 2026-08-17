@@ -13,7 +13,8 @@
         <PackageReference Include="HotChocolate.AspNetCore.Authorization" />
         <PackageReference Include="HotChocolate.Data.EntityFramework" />
         <PackageReference Include="HotChocolate.Types.Analyzers" />
-    </ItemGroup>
+      <ProjectReference Include="..\GameGuild.Announcements.Contracts\GameGuild.Announcements.Contracts.csproj" />
+</ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />

@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,17 +20,25 @@ export class LearningExperienceSocialRepliesModule {
   async getApiSocialDiscussionsReplies(
     discussionId: string,
     query?: { skip?: number; take?: number },
-  ): Promise<Result<Array<Types.LearningExperienceSocialServicesDiscussionReply>, ApiError>> {
+  ): Promise<
+    Result<
+      Array<Types.LearningExperienceSocialServicesDiscussionReply>,
+      ApiError
+    >
+  > {
     const url = `/api/social/discussions/${discussionId}/replies`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
-      requiresAuth: false,
+      requiresAuth: true,
     });
 
-    return result as Result<Array<Types.LearningExperienceSocialServicesDiscussionReply>, ApiError>;
+    return result as Result<
+      Array<Types.LearningExperienceSocialServicesDiscussionReply>,
+      ApiError
+    >;
   }
 
   /**
@@ -38,14 +46,20 @@ export class LearningExperienceSocialRepliesModule {
   async postApiSocialDiscussionsReplies(
     discussionId: string,
     body: Types.LearningExperienceSocialServicesCreateReplyInput,
-  ): Promise<Result<Types.LearningExperienceSocialServicesDiscussionReply, ApiError>> {
+  ): Promise<
+    Result<Types.LearningExperienceSocialServicesDiscussionReply, ApiError>
+  > {
     const url = `/api/social/discussions/${discussionId}/replies`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.LearningExperienceSocialServicesCreateReplyInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.LearningExperienceSocialServicesCreateReplyInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -53,7 +67,11 @@ export class LearningExperienceSocialRepliesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceSocialServicesDiscussionReplySchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceSocialServicesDiscussionReplySchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -66,7 +84,7 @@ export class LearningExperienceSocialRepliesModule {
     const url = `/api/social/replies/${id}`;
 
     const result = await this.client.request({
-      method: 'DELETE',
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
@@ -76,18 +94,26 @@ export class LearningExperienceSocialRepliesModule {
 
   /**
    */
-  async postApiSocialRepliesAccept(id: string): Promise<Result<Types.LearningExperienceSocialServicesDiscussionReply, ApiError>> {
+  async postApiSocialRepliesAccept(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceSocialServicesDiscussionReply, ApiError>
+  > {
     const url = `/api/social/replies/${id}/accept`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceSocialServicesDiscussionReplySchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceSocialServicesDiscussionReplySchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -96,18 +122,26 @@ export class LearningExperienceSocialRepliesModule {
 
   /**
    */
-  async postApiSocialRepliesUpvote(id: string): Promise<Result<Types.LearningExperienceSocialServicesDiscussionReply, ApiError>> {
+  async postApiSocialRepliesUpvote(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceSocialServicesDiscussionReply, ApiError>
+  > {
     const url = `/api/social/replies/${id}/upvote`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.LearningExperienceSocialServicesDiscussionReplySchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.LearningExperienceSocialServicesDiscussionReplySchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -115,6 +149,8 @@ export class LearningExperienceSocialRepliesModule {
   }
 }
 
-export function createLearningExperienceSocialRepliesModule(client: ApiClient): LearningExperienceSocialRepliesModule {
+export function createLearningExperienceSocialRepliesModule(
+  client: ApiClient,
+): LearningExperienceSocialRepliesModule {
   return new LearningExperienceSocialRepliesModule(client);
 }

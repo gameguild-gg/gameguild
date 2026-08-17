@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -63,7 +63,7 @@ export class TenantsResourcesModule {
     const url = `/v1/tenants/${tenantId}/resources/limits`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -113,12 +113,18 @@ export class TenantsResourcesModule {
    */
   async getTenantsResourcesUsageRecords(
     tenantId: string,
-    query?: { usageType?: Types.ResourcesResourceUsageType; startDate?: string; endDate?: string; pageNumber?: number; pageSize?: number },
+    query?: {
+      usageType?: Types.ResourcesResourceUsageType;
+      startDate?: string;
+      endDate?: string;
+      pageNumber?: number;
+      pageSize?: number;
+    },
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources/usage-records`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -174,7 +180,7 @@ export class TenantsResourcesModule {
     const url = `/v1/tenants/${tenantId}/resources/usage-summary`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -221,14 +227,21 @@ export class TenantsResourcesModule {
    *
    * Records a new resource usage entry for the specified tenant.
    */
-  async postTenantsResourcesRecord(tenantId: string, body: Types.ResourcesRecordTenantResourceUsageInput): Promise<Result<void, ApiError>> {
+  async postTenantsResourcesRecord(
+    tenantId: string,
+    body: Types.ResourcesRecordTenantResourceUsageInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources:record`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesRecordTenantResourceUsageInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.ResourcesRecordTenantResourceUsageInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -242,14 +255,21 @@ export class TenantsResourcesModule {
    *
    * Records a new resource usage entry after verifying it doesn't exceed configured quotas. Returns 429 if quota would be exceeded.
    */
-  async postTenantsResourcesRecordWithQuotaCheck(tenantId: string, body: Types.ResourcesRecordTenantResourceUsageInput): Promise<Result<void, ApiError>> {
+  async postTenantsResourcesRecordWithQuotaCheck(
+    tenantId: string,
+    body: Types.ResourcesRecordTenantResourceUsageInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources:record-with-quota-check`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesRecordTenantResourceUsageInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.ResourcesRecordTenantResourceUsageInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -263,11 +283,14 @@ export class TenantsResourcesModule {
    *
    * Resets the resource usage counters for a specific tenant and resource type to zero.
    */
-  async postTenantsResourcesReset(tenantId: string, query?: { usageType?: Types.ResourcesResourceUsageType }): Promise<Result<void, ApiError>> {
+  async postTenantsResourcesReset(
+    tenantId: string,
+    query?: { usageType?: Types.ResourcesResourceUsageType },
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources:reset`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       params: query,
       requiresAuth: true,
@@ -277,6 +300,8 @@ export class TenantsResourcesModule {
   }
 }
 
-export function createTenantsResourcesModule(client: ApiClient): TenantsResourcesModule {
+export function createTenantsResourcesModule(
+  client: ApiClient,
+): TenantsResourcesModule {
   return new TenantsResourcesModule(client);
 }

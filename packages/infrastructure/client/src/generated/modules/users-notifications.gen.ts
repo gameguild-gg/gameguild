@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from '../../runtime/client.js';
-import type { Result } from '../../runtime/result/types.js';
-import type { ApiError } from '../../runtime/errors/types.js';
-import * as Types from '../types.gen.js';
-import { safeParse } from '../../runtime/errors/validation.js';
+import type { ApiClient } from "../../runtime/client.js";
+import type { Result } from "../../runtime/result/types.js";
+import type { ApiError } from "../../runtime/errors/types.js";
+import * as Types from "../types.gen.js";
+import { safeParse } from "../../runtime/errors/validation.js";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -18,7 +18,7 @@ export class UsersNotificationsModule {
   /**
    * Get user notifications with pagination, search, and sorting
    */
-  async getUsersByUserIdNotifications(
+  async getUsersNotificationsForGetUsersByUserIdNotifications(
     userId: string,
     query?: {
       page?: number;
@@ -33,11 +33,13 @@ export class UsersNotificationsModule {
       fromDate?: string;
       toDate?: string;
     },
-  ): Promise<Result<Types.PagedResultOfGameGuildIdentityUsersUserNotificationDto, ApiError>> {
+  ): Promise<
+    Result<Types.PagedResultOfIdentityUsersUserNotification, ApiError>
+  > {
     const url = `/v1/users/${userId}/notifications`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
@@ -45,7 +47,11 @@ export class UsersNotificationsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.PagedResultOfGameGuildIdentityUsersUserNotificationDtoSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.PagedResultOfIdentityUsersUserNotificationSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -55,21 +61,25 @@ export class UsersNotificationsModule {
   /**
    * Get detailed notification by ID
    */
-  async getUsersByUserIdNotificationsByNotificationId(
+  async getUsersNotificationsForGetUsersByUserIdNotificationsByNotificationId(
     userId: string,
     notificationId: string,
   ): Promise<Result<Types.IdentityUsersUserNotificationDetail, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}`;
 
     const result = await this.client.request({
-      method: 'GET',
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(Types.IdentityUsersUserNotificationDetailSchema, result.data, 'response');
+      const validatedData = safeParse(
+        Types.IdentityUsersUserNotificationDetailSchema,
+        result.data,
+        "response",
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -79,11 +89,14 @@ export class UsersNotificationsModule {
   /**
    * Check if user notification exists
    */
-  async headUsersNotifications(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+  async headUsersNotifications(
+    userId: string,
+    notificationId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}`;
 
     const result = await this.client.request({
-      method: 'HEAD',
+      method: "HEAD",
       path: url,
       requiresAuth: true,
     });
@@ -94,11 +107,14 @@ export class UsersNotificationsModule {
   /**
    * Archive notification
    */
-  async postUsersByUserIdNotificationsByNotificationIdArchive(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+  async postUsersNotificationsArchiveForPostUsersByUserIdNotificationsByNotificationIdArchive(
+    userId: string,
+    notificationId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}:archive`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -109,11 +125,14 @@ export class UsersNotificationsModule {
   /**
    * Mark notification as read
    */
-  async postUsersByUserIdNotificationsByNotificationIdMarkAsRead(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+  async postUsersNotificationsMarkAsReadForPostUsersByUserIdNotificationsByNotificationIdMarkAsRead(
+    userId: string,
+    notificationId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}:mark-as-read`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -124,11 +143,14 @@ export class UsersNotificationsModule {
   /**
    * Mark notification as unread
    */
-  async postUsersByUserIdNotificationsByNotificationIdMarkAsUnread(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+  async postUsersNotificationsMarkAsUnreadForPostUsersByUserIdNotificationsByNotificationIdMarkAsUnread(
+    userId: string,
+    notificationId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}:mark-as-unread`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -139,11 +161,14 @@ export class UsersNotificationsModule {
   /**
    * Unarchive notification
    */
-  async postUsersByUserIdNotificationsByNotificationIdUnarchive(userId: string, notificationId: string): Promise<Result<void, ApiError>> {
+  async postUsersNotificationsUnarchiveForPostUsersByUserIdNotificationsByNotificationIdUnarchive(
+    userId: string,
+    notificationId: string,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications/${notificationId}:unarchive`;
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       requiresAuth: true,
     });
@@ -154,14 +179,21 @@ export class UsersNotificationsModule {
   /**
    * Archive multiple notifications for a user
    */
-  async postUsersByUserIdNotificationsArchive(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+  async postUsersNotificationsArchiveForPostUsersByUserIdNotificationsArchive(
+    userId: string,
+    body: Types.IdentityUsersBulkNotificationInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:archive`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkNotificationInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -173,14 +205,21 @@ export class UsersNotificationsModule {
   /**
    * Mark multiple notifications as read for a user
    */
-  async postUsersByUserIdNotificationsMarkAsRead(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+  async postUsersNotificationsMarkAsReadForPostUsersByUserIdNotificationsMarkAsRead(
+    userId: string,
+    body: Types.IdentityUsersBulkNotificationInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:mark-as-read`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkNotificationInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -192,14 +231,21 @@ export class UsersNotificationsModule {
   /**
    * Mark multiple notifications as unread for a user
    */
-  async postUsersByUserIdNotificationsMarkAsUnread(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+  async postUsersNotificationsMarkAsUnreadForPostUsersByUserIdNotificationsMarkAsUnread(
+    userId: string,
+    body: Types.IdentityUsersBulkNotificationInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:mark-as-unread`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkNotificationInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -211,14 +257,21 @@ export class UsersNotificationsModule {
   /**
    * Unarchive multiple notifications for a user
    */
-  async postUsersByUserIdNotificationsUnarchive(userId: string, body: Types.IdentityUsersBulkNotificationInput): Promise<Result<void, ApiError>> {
+  async postUsersNotificationsUnarchiveForPostUsersByUserIdNotificationsUnarchive(
+    userId: string,
+    body: Types.IdentityUsersBulkNotificationInput,
+  ): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/notifications:unarchive`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityUsersBulkNotificationInputSchema, body, 'request');
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkNotificationInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: 'POST',
+      method: "POST",
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -228,6 +281,8 @@ export class UsersNotificationsModule {
   }
 }
 
-export function createUsersNotificationsModule(client: ApiClient): UsersNotificationsModule {
+export function createUsersNotificationsModule(
+  client: ApiClient,
+): UsersNotificationsModule {
   return new UsersNotificationsModule(client);
 }

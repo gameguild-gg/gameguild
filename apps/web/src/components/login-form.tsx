@@ -35,7 +35,7 @@ export function SignInForm({ className, ...props }: React.ComponentProps<'div'>)
       await signIn('credentials', {
         email,
         password,
-        redirectTo: '/my',
+        redirectTo: '/',
       });
     } catch {
       // error state is set by useAuth
@@ -45,7 +45,7 @@ export function SignInForm({ className, ...props }: React.ComponentProps<'div'>)
   async function handleOAuthSignIn(provider: string) {
     clearError();
     try {
-      await signIn(provider, { redirectTo: '/my' });
+      await signIn(provider, { redirectTo: '/' });
     } catch {
       // error state is set by useAuth
     }
@@ -130,7 +130,7 @@ export function SignInForm({ className, ...props }: React.ComponentProps<'div'>)
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        By clicking continue, you agree to our <Link href="/terms">Terms of Service</Link> and <Link href="/privacy">Privacy Policy</Link>.
+        By clicking continue, you agree to our <Link href="/terms-of-service">Terms of Service</Link> and <Link href="/polices/privacy">Privacy Policy</Link>.
       </FieldDescription>
     </div>
   );

@@ -72,6 +72,54 @@ public class SessionManagementServiceTests
     }
 
     [Fact]
+    public async Task CreateSessionAsync_WithAuthenticationState_PreservesSessionAndRefreshTokenHash()
+    {
+        var sessionId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var expiresAt = SystemClock.UtcNow.AddDays(7);
+
+        _sessionRepositoryMock
+            .Setup(x => x.CreateAsync(It.IsAny<UserSession>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserSession session, CancellationToken _) => session);
+
+        var result = await _service.CreateSessionAsync(
+            sessionId,
+            userId,
+            "192.168.1.1",
+            "Mozilla/5.0",
+            "refresh-token-hash",
+            expiresAt,
+            "device-fingerprint");
+
+        result.Id.Should().Be(sessionId);
+        result.UserId.Should().Be(userId);
+        result.RefreshToken.Should().Be("refresh-token-hash");
+        result.ExpiresAt.Should().Be(expiresAt);
+        result.CreatedAt.Should().NotBe(default);
+    }
+
+    [Fact]
+    public async Task RefreshSessionAsync_WithAuthenticationState_RotatesRefreshTokenHash()
+    {
+        var sessionId = Guid.NewGuid();
+        var expiresAt = SystemClock.UtcNow.AddDays(7);
+        var session = new UserSession { Id = sessionId, IsActive = true, RefreshToken = "old-hash" };
+
+        _sessionRepositoryMock
+            .Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+        _sessionRepositoryMock
+            .Setup(x => x.UpdateAsync(session, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+
+        var result = await _service.RefreshSessionAsync(sessionId, "new-hash", expiresAt);
+
+        result.Should().BeTrue();
+        session.RefreshToken.Should().Be("new-hash");
+        session.ExpiresAt.Should().Be(expiresAt);
+    }
+
+    [Fact]
     public async Task GetSessionAsync_ShouldReturnSession()
     {
         // Arrange

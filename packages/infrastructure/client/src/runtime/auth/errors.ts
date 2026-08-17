@@ -16,10 +16,7 @@ export class AuthError extends Error {
   /** Original cause error */
   readonly cause?: Error;
 
-  constructor(
-    message: string,
-    options?: { type?: string; status?: number; cause?: Error }
-  ) {
+  constructor(message: string, options?: { type?: string; status?: number; cause?: Error }) {
     super(message);
     this.name = 'AuthError';
     this.type = options?.type ?? 'AuthError';
@@ -65,10 +62,7 @@ export class AccountLockedError extends AuthError {
  * Authentication backend is unavailable or unhealthy.
  */
 export class AuthServiceUnavailableError extends AuthError {
-  constructor(
-    message = 'Authentication is temporarily unavailable. Please try again after the API is healthy.',
-    cause?: Error
-  ) {
+  constructor(message = 'Authentication is temporarily unavailable. Please try again after the API is healthy.', cause?: Error) {
     super(message, { type: 'AuthServiceUnavailable', status: 503, cause });
     this.name = 'AuthServiceUnavailableError';
   }
@@ -83,10 +77,7 @@ export class MfaRequiredError extends AuthError {
   /** Available MFA methods */
   readonly availableMethods?: string[];
 
-  constructor(
-    message = 'Multi-factor authentication required',
-    options?: { mfaSessionId?: string; availableMethods?: string[] }
-  ) {
+  constructor(message = 'Multi-factor authentication required', options?: { mfaSessionId?: string; availableMethods?: string[] }) {
     super(message, { type: 'MfaRequired', status: 403 });
     this.name = 'MfaRequiredError';
     this.mfaSessionId = options?.mfaSessionId;
@@ -103,10 +94,7 @@ export class SignUpError extends AuthError {
   /** Validation errors by field */
   readonly fieldErrors?: Record<string, string[]>;
 
-  constructor(
-    message = 'Sign-up failed',
-    options?: { fieldErrors?: Record<string, string[]> }
-  ) {
+  constructor(message = 'Sign-up failed', options?: { fieldErrors?: Record<string, string[]> }) {
     super(message, { type: 'SignUpError', status: 400 });
     this.name = 'SignUpError';
     this.fieldErrors = options?.fieldErrors;
@@ -162,10 +150,7 @@ export class ConfigError extends AuthError {
  */
 export class MissingSecretError extends ConfigError {
   constructor() {
-    super(
-      'Missing AUTH_SECRET environment variable. ' +
-        'Set AUTH_SECRET or pass `secret` to GameGuildAuth().'
-    );
+    super('Missing AUTH_SECRET environment variable. ' + 'Set AUTH_SECRET or pass `secret` to GameGuildAuth().');
     this.name = 'MissingSecretError';
   }
 }
@@ -226,10 +211,7 @@ export class MfaVerificationError extends AuthError {
   /** Remaining verification attempts before lockout */
   readonly attemptsRemaining?: number;
 
-  constructor(
-    message = 'MFA verification failed',
-    options?: { attemptsRemaining?: number }
-  ) {
+  constructor(message = 'MFA verification failed', options?: { attemptsRemaining?: number }) {
     super(message, { type: 'MfaVerificationError', status: 401 });
     this.name = 'MfaVerificationError';
     this.attemptsRemaining = options?.attemptsRemaining;
@@ -272,19 +254,14 @@ export class SessionTerminationError extends AuthError {
  * Safely parse an error response body into a Record.
  * Shared by all auth operations that need to extract error details.
  */
-export async function parseErrorBody(
-  response: Response
-): Promise<Record<string, unknown>> {
+export async function parseErrorBody(response: Response): Promise<Record<string, unknown>> {
   return (await response.json().catch(() => ({}))) as Record<string, unknown>;
 }
 
 /**
  * Extract a human-readable message from a parsed error body.
  */
-export function extractErrorMessage(
-  body: Record<string, unknown>,
-  fallback: string
-): string {
+export function extractErrorMessage(body: Record<string, unknown>, fallback: string): string {
   return (body.message as string) || (body.detail as string) || fallback;
 }
 
@@ -302,18 +279,12 @@ export function isAuthError(error: unknown): error is AuthError {
  */
 export function isReauthRequired(error: unknown): boolean {
   if (!isAuthError(error)) return false;
-  return (
-    error instanceof SessionExpiredError ||
-    error instanceof InvalidSessionError ||
-    error instanceof TokenRefreshError
-  );
+  return error instanceof SessionExpiredError || error instanceof InvalidSessionError || error instanceof TokenRefreshError;
 }
 
 /**
  * Check if an error is a credentials error (wrong password, etc.)
  */
-export function isCredentialsError(
-  error: unknown
-): error is CredentialsSignInError {
+export function isCredentialsError(error: unknown): error is CredentialsSignInError {
   return error instanceof CredentialsSignInError;
 }

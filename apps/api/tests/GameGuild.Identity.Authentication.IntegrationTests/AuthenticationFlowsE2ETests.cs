@@ -21,7 +21,7 @@ namespace GameGuild.Tests.Authentication.Integration;
 /// - MFA enrollment and verification
 /// - Token refresh and revocation
 /// </summary>
-public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
+public class AuthenticationFlowsE2ETests : IClassFixture<AuthenticationApiFactory>, IDisposable
 {
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly HttpClient _client;
@@ -31,43 +31,9 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
     private readonly IMfaService _mfaService;
     private readonly IRefreshTokenHasher _refreshTokenHasher;
 
-    public AuthenticationFlowsE2ETests(WebApplicationFactory<GameGuild.API.Program> factory)
+    public AuthenticationFlowsE2ETests(AuthenticationApiFactory factory)
     {
-        // Set environment variables before factory initialization
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
-        Environment.SetEnvironmentVariable("Jwt__SecretKey", "ThisIsASecretKeyForIntegrationTestingThatIsLongEnoughToProhibitErrors");
-        Environment.SetEnvironmentVariable("Jwt__Issuer", "GameGuild");
-        Environment.SetEnvironmentVariable("Jwt__Audience", "GameGuild.Users");
-
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Testing");
-
-            builder.ConfigureTestServices(services =>
-            {
-                // Remove existing DbContext registrations
-                var descriptorsToRemove = services
-                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                                d.ServiceType == typeof(ApplicationDbContext) ||
-                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
-                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
-                    .ToList();
-
-                foreach (var descriptor in descriptorsToRemove)
-                {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database for testing
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase($"AuthFlowsTestDb_{Guid.NewGuid()}");
-                });
-
-                // Add HTTP logging services (required by the pipeline)
-                services.AddHttpLogging(o => { });
-            });
-        });
+        _factory = factory;
 
         _client = _factory.CreateClient();
         _scope = _factory.Services.CreateScope();

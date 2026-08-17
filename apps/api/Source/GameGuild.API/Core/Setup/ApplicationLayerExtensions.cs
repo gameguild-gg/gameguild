@@ -111,13 +111,10 @@ public static class ApplicationLayerExtensions
     {
         var stepStopwatch = Stopwatch.StartNew();
 
-        var allAssemblies = DependencyInjection.GetAssembliesByPattern(config.AssemblyPrefix)
-            .Where(a => !config.ExcludeTestAssemblies ||
-                        !ModuleConfiguration.IsTestAssembly(a.GetName().Name))
-            .ToArray();
-
+        var allAssemblies = ModuleAssemblyCatalog.Resolve(typeof(ApplicationLayerExtensions).Assembly, config);
         var moduleAssemblies = allAssemblies
             .Where(a => config.IsEnabledAssembly(a.GetName().Name))
+            .OrderBy(a => a.GetName().Name, StringComparer.Ordinal)
             .ToArray();
 
         logger.LogInformation(
@@ -137,7 +134,12 @@ public static class ApplicationLayerExtensions
     {
         var stepStopwatch = Stopwatch.StartNew();
 
-        services.AddCqrs(assemblies);
+        var cqrsAssemblies = assemblies
+            .Append(typeof(ApplicationLayerExtensions).Assembly)
+            .Distinct()
+            .ToArray();
+
+        services.AddCqrs(cqrsAssemblies);
 
         logger.LogInformation("CQRS registration completed in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
     }
@@ -173,7 +175,13 @@ public static class ApplicationLayerExtensions
     /// </summary>
     private static (int handlers, int validators) CountHandlersAndValidators(Assembly assembly)
     {
-        var types = assembly.GetTypes()
+        Type[] allTypes;
+        try { allTypes = assembly.GetTypes(); }
+        catch (ReflectionTypeLoadException ex)
+        {
+            allTypes = ex.Types.Where(t => t is not null).ToArray()!;
+        }
+        var types = allTypes
             .Where(t => t.IsClass && !t.IsAbstract)
             .ToList();
 

@@ -16,6 +16,7 @@ vi.mock("@/lib/courses/actions/enrollment.actions", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => '/workspace/learning',
   useRouter: () => ({
     push: mocks.push,
     refresh: mocks.refresh,

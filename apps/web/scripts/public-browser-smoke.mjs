@@ -26,7 +26,7 @@ const footerRoutes = [
   ['Roadmap', '/about/roadmap'],
   ['Contributors', '/about/contributors'],
   ['Contact', '/contact'],
-  ['Licenses', '/licenses'],
+  ['Licenses', '/legal/licenses'],
   ['Terms', '/terms-of-service'],
   ['Privacy', '/polices/privacy'],
   ['Cookies', '/polices/cookies'],
@@ -125,7 +125,11 @@ async function main() {
   });
   page.on('requestfailed', (request) => {
     const failure = request.failure()?.errorText ?? 'unknown request failure';
-    if (!/ERR_ABORTED/i.test(failure)) {
+    const isBlockedGoogleIdentityButton =
+      request.url().startsWith('https://accounts.google.com/gsi/button?') &&
+      /ERR_BLOCKED_BY_RESPONSE/i.test(failure);
+
+    if (!/ERR_ABORTED/i.test(failure) && !isBlockedGoogleIdentityButton) {
       requestErrors.push(`${request.method()} ${request.url()}: ${failure}`);
     }
   });
@@ -181,7 +185,16 @@ async function main() {
     }
 
     if (consoleErrors.length > 0) {
-      const relevantErrors = consoleErrors.filter((message) => !/favicon/i.test(message));
+      const ignoredGoogleIdentityErrors = [
+        "Provider's accounts list is empty.",
+        'Not signed in with the identity provider.',
+      ];
+      const relevantErrors = consoleErrors.filter(
+        (message) =>
+          !/favicon/i.test(message) &&
+          !ignoredGoogleIdentityErrors.includes(message) &&
+          !message.startsWith('[GSI_LOGGER]: FedCM get() rejects with NetworkError:'),
+      );
 
       if (relevantErrors.length > 0) {
         throw new Error(`Console/page errors detected:\n${relevantErrors.join('\n')}`);

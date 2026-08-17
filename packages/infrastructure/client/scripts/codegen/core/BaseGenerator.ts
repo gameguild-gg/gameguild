@@ -5,14 +5,13 @@
 import type { OpenApiSpec } from '../../fetch-spec.js';
 
 export abstract class BaseGenerator {
-  constructor(protected spec: OpenApiSpec) { }
+  constructor(protected spec: OpenApiSpec) {}
 
   /**
    * Template method defining the generation algorithm
    */
   generate(): string {
     const lines: string[] = [];
-
     lines.push(this.generateHeader());
     lines.push('');
     lines.push(this.generateImports());

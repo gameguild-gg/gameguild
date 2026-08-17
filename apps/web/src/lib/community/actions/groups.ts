@@ -6,7 +6,7 @@ import type { SocialGroupsSocialGroupMemberRole, SocialGroupsSocialGroupType, So
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-const DASHBOARD_GROUPS_PATH = '/dashboard/community/members/groups';
+const DASHBOARD_GROUPS_PATH = '/console/community/members/groups';
 const GROUP_TYPES = new Set<SocialGroupsSocialGroupType>(['StudyGroup', 'ProjectTeam', 'InterestCommunity', 'CourseCohort', 'Institution', 'GameJamTeam']);
 const GROUP_VISIBILITIES = new Set<SocialGroupsSocialGroupVisibility>(['Public', 'Private', 'InviteOnly']);
 const GROUP_ROLES = new Set<SocialGroupsSocialGroupMemberRole>(['Owner', 'Admin', 'Moderator', 'Member']);
@@ -69,7 +69,7 @@ export async function createCommunityGroup(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.postApiSocialGroups({
     ownerId,
     tenantId: session?.tenantId || undefined,
@@ -84,8 +84,8 @@ export async function createCommunityGroup(formData: FormData) {
     redirect(buildGroupsHref({ error: result.error.message }));
   }
 
-  revalidatePath('/dashboard/community');
-  revalidatePath('/dashboard/community/members');
+  revalidatePath('/console/community');
+  revalidatePath('/console/community/members');
   revalidatePath(DASHBOARD_GROUPS_PATH);
   redirect(buildGroupsHref({ message: `Created ${name}.` }));
 }
@@ -104,7 +104,7 @@ export async function updateCommunityGroup(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.putApiSocialGroups(groupId, {
     name,
     slug: slugify(name),
@@ -117,8 +117,8 @@ export async function updateCommunityGroup(formData: FormData) {
     redirect(buildGroupHref(groupId, { error: result.error.message }));
   }
 
-  revalidatePath('/dashboard/community');
-  revalidatePath('/dashboard/community/members');
+  revalidatePath('/console/community');
+  revalidatePath('/console/community/members');
   revalidatePath(DASHBOARD_GROUPS_PATH);
   revalidatePath(`${DASHBOARD_GROUPS_PATH}/${groupId}`);
   redirect(buildGroupHref(groupId, { message: `Updated ${name}.` }));
@@ -132,15 +132,15 @@ export async function archiveCommunityGroup(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.postApiSocialGroupsArchive(groupId);
 
   if (!result.ok) {
     redirect(buildGroupHref(groupId, { error: result.error.message }));
   }
 
-  revalidatePath('/dashboard/community');
-  revalidatePath('/dashboard/community/members');
+  revalidatePath('/console/community');
+  revalidatePath('/console/community/members');
   revalidatePath(DASHBOARD_GROUPS_PATH);
   revalidatePath(`${DASHBOARD_GROUPS_PATH}/${groupId}`);
   redirect(buildGroupsHref({ message: 'Archived group.' }));
@@ -157,7 +157,7 @@ export async function addCommunityGroupMember(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.postApiSocialGroupsMembers(groupId, {
     userId,
     requestedRole: role,
@@ -167,7 +167,7 @@ export async function addCommunityGroupMember(formData: FormData) {
     redirect(buildGroupHref(groupId, { error: result.error.message }));
   }
 
-  revalidatePath('/dashboard/community');
+  revalidatePath('/console/community');
   revalidatePath(DASHBOARD_GROUPS_PATH);
   revalidatePath(`${DASHBOARD_GROUPS_PATH}/${groupId}`);
   redirect(buildGroupHref(groupId, { message: 'Added member to group.' }));
@@ -183,7 +183,7 @@ export async function approveCommunityGroupMember(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.postApiSocialGroupsMembersApprove(groupId, userId, {
     approvedByUserId: approvedByUserId || undefined,
   });
@@ -206,7 +206,7 @@ export async function rejectCommunityGroupMember(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.postApiSocialGroupsMembersReject(groupId, userId);
 
   if (!result.ok) {
@@ -229,7 +229,7 @@ export async function changeCommunityGroupMemberRole(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.putApiSocialGroupsMembersRole(groupId, userId, { role });
 
   if (!result.ok) {
@@ -250,7 +250,7 @@ export async function removeCommunityGroupMember(formData: FormData) {
   }
 
   const client = createClient();
-  const socialGroups = new GeneratedApi.SocialGroupsSocialgroupsModule(client);
+  const socialGroups = new GeneratedApi.SocialGroupsSocialGroupsModule(client);
   const result = await socialGroups.deleteApiSocialGroupsMembers(groupId, userId);
 
   if (!result.ok) {

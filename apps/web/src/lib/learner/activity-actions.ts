@@ -187,7 +187,7 @@ export async function submitContentActivity(
     if (!authenticated)
       return { success: false, error: "Your session expired. Sign in again." };
     const interactions =
-      new GeneratedApi.LearningCoursesContentinteractionModule(
+      new GeneratedApi.LearningCoursesContentInteractionModule(
         authenticated.client,
       );
     let interaction = await interactions.getCourseInteractionsUserContent(

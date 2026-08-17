@@ -12,7 +12,8 @@ public class ExternalLoginsControllerTests
 {
     private static ExternalLoginsController CreateController(
         Mock<ISender> sender,
-        Guid? userId = null)
+        Guid? userId = null,
+        string claimType = ClaimTypes.NameIdentifier)
     {
         var controller = new ExternalLoginsController(sender.Object)
         {
@@ -22,7 +23,7 @@ public class ExternalLoginsControllerTests
                 {
                     User = userId.HasValue
                         ? new ClaimsPrincipal(new ClaimsIdentity(
-                            [new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString())],
+                            [new Claim(claimType, userId.Value.ToString())],
                             "Bearer"))
                         : new ClaimsPrincipal(new ClaimsIdentity())
                 }
@@ -31,17 +32,19 @@ public class ExternalLoginsControllerTests
         return controller;
     }
 
-    // ── GET list ────────────────────────────────────────────────────────
+    // ── HEAD list ───────────────────────────────────────────────────────
 
     [Fact]
-    public async Task GetExternalLogins_Returns200_WithProviderList()
+    public async Task GetExternalLogins_Returns200_WithProvidersInHeader()
     {
         var userId = Guid.NewGuid();
         var sender = new Mock<ISender>();
+        var discordLinkedAt = DateTime.UtcNow;
+        var googleLinkedAt = DateTime.UtcNow.AddHours(-2);
         var dtos = new List<ExternalLoginDto>
         {
-            new() { Provider = "discord", CreatedAt = DateTime.UtcNow },
-            new() { Provider = "google", CreatedAt = DateTime.UtcNow.AddHours(-2) }
+            new() { Provider = "discord", CreatedAt = discordLinkedAt },
+            new() { Provider = "google", CreatedAt = googleLinkedAt }
         };
         sender
             .Setup(s => s.Send(
@@ -49,10 +52,32 @@ public class ExternalLoginsControllerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(dtos);
 
-        var result = await CreateController(sender, userId).GetExternalLogins(CancellationToken.None);
+        var controller = CreateController(sender, userId);
+        var result = await controller.GetExternalLogins(CancellationToken.None);
 
-        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
-        ok.Value.Should().BeEquivalentTo(dtos);
+        result.Should().BeOfType<OkResult>();
+        var header = controller.Response.Headers["X-Linked-Providers"].ToString();
+        header.Should().Be(
+            $"discord={DateTime.SpecifyKind(discordLinkedAt, DateTimeKind.Utc):O}," +
+            $"google={DateTime.SpecifyKind(googleLinkedAt, DateTimeKind.Utc):O}");
+    }
+
+    [Fact]
+    public async Task GetExternalLogins_NoLinkedProviders_OmitsHeader()
+    {
+        var userId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(s => s.Send(
+                It.Is<GetExternalLoginsQuery>(q => q.UserId == userId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var controller = CreateController(sender, userId);
+        var result = await controller.GetExternalLogins(CancellationToken.None);
+
+        result.Should().BeOfType<OkResult>();
+        controller.Response.Headers.ContainsKey("X-Linked-Providers").Should().BeFalse();
     }
 
     [Fact]
@@ -66,6 +91,25 @@ public class ExternalLoginsControllerTests
         var problem = unauthorized.Value.Should().BeOfType<ProblemDetails>().Subject;
         problem.Status.Should().Be(401);
         sender.Verify(s => s.Send(It.IsAny<GetExternalLoginsQuery>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("sub")]
+    [InlineData("user_id")]
+    public async Task GetExternalLogins_AlternativeUserIdClaim_Returns200(string claimType)
+    {
+        var userId = Guid.NewGuid();
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(instance => instance.Send(
+                It.Is<GetExternalLoginsQuery>(query => query.UserId == userId),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        var result = await CreateController(sender, userId, claimType)
+            .GetExternalLogins(CancellationToken.None);
+
+        result.Should().BeOfType<OkResult>();
     }
 
     // ── POST google link ────────────────────────────────────────────────
@@ -121,6 +165,22 @@ public class ExternalLoginsControllerTests
         var problem = conflict.Value.Should().BeOfType<ProblemDetails>().Subject;
         problem.Status.Should().Be(409);
         problem.Detail.Should().Be("Social account already linked to another user");
+    }
+
+    [Fact]
+    public async Task LinkGoogle_UnexpectedFailure_RethrowsOriginalException()
+    {
+        var expected = new ApplicationException("Unexpected failure");
+        var sender = new Mock<ISender>();
+        sender
+            .Setup(instance => instance.Send(It.IsAny<LinkGoogleAccountCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(expected);
+
+        var action = () => CreateController(sender, Guid.NewGuid())
+            .LinkGoogle(new LinkGoogleAccountRequest { IdToken = "valid-id-token" }, CancellationToken.None);
+
+        var thrown = await action.Should().ThrowAsync<ApplicationException>();
+        thrown.Which.Should().BeSameAs(expected);
     }
 
     // ── POST discord link-authorize ─────────────────────────────────────

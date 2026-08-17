@@ -5,37 +5,42 @@ namespace GameGuild.API.UnitTests.Core;
 
 public class ModuleConfigurationTests
 {
-    [Fact]
-    public void DefaultEnabledModules_ShouldContainExpectedModules()
+    [Theory]
+    [InlineData("AI")]
+    [InlineData("Analytics")]
+    [InlineData("Assets")]
+    [InlineData("Commerce")]
+    [InlineData("Commerce.Billing")]
+    [InlineData("Commerce.Orders")]
+    [InlineData("Commerce.Payments")]
+    [InlineData("Commerce.Products")]
+    [InlineData("Commerce.Subscriptions")]
+    [InlineData("Compliance.Audit")]
+    [InlineData("Compliance.Consent")]
+    [InlineData("Compliance.KYC")]
+    [InlineData("Content.Pages")]
+    [InlineData("Features")]
+    [InlineData("Identity.Authentication")]
+    [InlineData("Identity.Authorization")]
+    [InlineData("Identity.Context")]
+    [InlineData("Identity.Tenants")]
+    [InlineData("Identity.Users")]
+    [InlineData("Localization")]
+    [InlineData("Monitoring.SLA")]
+    [InlineData("Notifications")]
+    [InlineData("Resources")]
+    [InlineData("Resources.Contents")]
+    [InlineData("SharedKernel")]
+    [InlineData("Tags")]
+    public void CommonEnabledModules_ShouldContainEveryCommonModule(string module)
     {
-        ModuleConfiguration.DefaultEnabledModules.Should().Contain("Authentication");
-        ModuleConfiguration.DefaultEnabledModules.Should().Contain("Authorization");
-        ModuleConfiguration.DefaultEnabledModules.Should().Contain("Users");
-        ModuleConfiguration.DefaultEnabledModules.Should().Contain("Tenants");
-        ModuleConfiguration.DefaultEnabledModules.Should().Contain("Payments");
-        ModuleConfiguration.DefaultEnabledModules.Should().Contain("Assets");
-        ModuleConfiguration.DefaultEnabledModules.Should().Contain("Projects");
-        ModuleConfiguration.DefaultEnabledModules.Should().Contain("TestingLab");
-        ModuleConfiguration.DefaultEnabledModules.Should().Contain("LaunchPad");
+        ModuleConfiguration.CommonEnabledModules.Should().Contain(module);
+        ModuleConfiguration.DefaultEnabledModules.Should().Contain(module);
     }
 
     [Fact]
-    public void DefaultEnabledModules_ShouldNotBeEmpty()
+    public void DefaultEnabledModules_ShouldNotOverlapDisabledModules()
     {
-        ModuleConfiguration.DefaultEnabledModules.Should().NotBeEmpty();
-        ModuleConfiguration.DefaultEnabledModules.Should().HaveCountGreaterThan(5);
-    }
-
-    [Fact]
-    public void FinancialCapabilityModules_ShouldBeKnownButDisabledByDefault()
-    {
-        ModuleConfiguration.DefaultDisabledModules.Should().BeEquivalentTo(
-            "Economy.AdRewards",
-            "Economy.Bounties",
-            "Economy.Marketplace",
-            "Economy.Treasury",
-            "Compliance.FinancialCrime",
-            "TrustSafety");
         ModuleConfiguration.DefaultEnabledModules.Should()
             .NotIntersectWith(ModuleConfiguration.DefaultDisabledModules);
     }
@@ -43,9 +48,10 @@ public class ModuleConfigurationTests
     [Fact]
     public void HandlerTypeNames_ShouldContainExpectedTypes()
     {
-        ModuleConfiguration.HandlerTypeNames.Should().Contain("ICommandHandler");
-        ModuleConfiguration.HandlerTypeNames.Should().Contain("IQueryHandler");
-        ModuleConfiguration.HandlerTypeNames.Should().Contain("IRequestHandler");
+        ModuleConfiguration.HandlerTypeNames.Should().BeEquivalentTo(
+            "ICommandHandler",
+            "IQueryHandler",
+            "IRequestHandler");
     }
 
     [Fact]
@@ -58,38 +64,10 @@ public class ModuleConfigurationTests
         config.ExcludeTestAssemblies.Should().BeTrue();
     }
 
-    [Fact]
-    public void EnabledModules_ShouldBeSettable()
-    {
-        var config = new ModuleConfiguration
-        {
-            EnabledModules = ["Authentication", "Users"]
-        };
-
-        config.EnabledModules.Should().HaveCount(2);
-    }
-
-    [Fact]
-    public void AssemblyPrefix_ShouldBeSettable()
-    {
-        var config = new ModuleConfiguration { AssemblyPrefix = "Custom." };
-
-        config.AssemblyPrefix.Should().Be("Custom.");
-    }
-
-    [Fact]
-    public void ExcludeTestAssemblies_ShouldBeSettable()
-    {
-        var config = new ModuleConfiguration { ExcludeTestAssemblies = false };
-
-        config.ExcludeTestAssemblies.Should().BeFalse();
-    }
-
     [Theory]
     [InlineData("GameGuild.Content.Pages", true)]
-    [InlineData("GameGuild.TestingLab", true)]
-    [InlineData("GameGuild.Learning.Experience.LearningPaths", true)]
-    [InlineData("GameGuild.Learning.TestingLab", true)]
+    [InlineData("GameGuild.Resources.Contents", true)]
+    [InlineData("GameGuild.ContentPages", true)]
     [InlineData("GameGuild.Unknown", false)]
     [InlineData(null, false)]
     public void IsEnabledAssembly_ShouldMatchDottedAndCompactModuleNames(string? assemblyName, bool expected)
@@ -100,13 +78,78 @@ public class ModuleConfigurationTests
     }
 
     [Theory]
-    [InlineData("GameGuild.TestingLab", false)]
-    [InlineData("GameGuild.TestingLab.UnitTests", true)]
-    [InlineData("GameGuild.API.Tests", true)]
     [InlineData("GameGuild.Contest", false)]
+    [InlineData("GameGuild.Tags", false)]
+    [InlineData("GameGuild.Tags.UnitTests", true)]
+    [InlineData("GameGuild.API.Tests", true)]
     [InlineData(null, false)]
     public void IsTestAssembly_ShouldOnlyMatchTestProjectNames(string? assemblyName, bool expected)
     {
         ModuleConfiguration.IsTestAssembly(assemblyName).Should().Be(expected);
+    }
+
+    [Fact]
+    public void ProductComposition_ShouldOwnProductModuleSelection()
+    {
+        var composition = ApiProductComposition.Instance;
+
+        composition.EnabledModules.Should().BeEquivalentTo(ModuleConfiguration.DefaultEnabledModules
+            .Except(ModuleConfiguration.CommonEnabledModules));
+        composition.DisabledModules.Should().BeEquivalentTo(ModuleConfiguration.DefaultDisabledModules);
+    }
+
+    [Fact]
+    public void ModuleAssemblyCatalog_ShouldLoadEnabledModulesOnceInDeterministicOrder()
+    {
+        var configuration = new ModuleConfiguration
+        {
+            EnabledModules = ["AI", "AI", "Tags.UnitTests"]
+        };
+
+        var assemblies = ModuleAssemblyCatalog.Resolve(typeof(Program).Assembly, configuration);
+        var names = assemblies.Select(assembly => assembly.GetName().Name!).ToArray();
+
+        names.Should().ContainInOrder("GameGuild.API", "GameGuild.AI");
+        names.Should().OnlyHaveUniqueItems();
+        names.Should().OnlyContain(name => !ModuleConfiguration.IsTestAssembly(name));
+    }
+
+    [Fact]
+    public void ModuleAssemblyCatalog_ShouldDescribeEveryRequiredAssemblyInDeterministicOrder()
+    {
+        var configuration = new ModuleConfiguration();
+        var expected = configuration.EnabledModules
+            .Select(module => $"GameGuild.{module}")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(name => name, StringComparer.Ordinal);
+
+        ModuleAssemblyCatalog.GetRequiredAssemblyNames(configuration).Should().Equal(expected);
+    }
+
+    [Fact]
+    public void ModuleAssemblyCatalog_WhenTestExclusionIsDisabled_ShouldKeepExplicitTestModules()
+    {
+        var configuration = new ModuleConfiguration
+        {
+            EnabledModules = ["AI.UnitTests"],
+            ExcludeTestAssemblies = false
+        };
+
+        ModuleAssemblyCatalog.GetRequiredAssemblyNames(configuration)
+            .Should().Equal("GameGuild.AI.UnitTests");
+    }
+
+    [Fact]
+    public void ModuleAssemblyCatalog_ShouldFailWhenAnEnabledModuleCannotBeLoaded()
+    {
+        var configuration = new ModuleConfiguration
+        {
+            EnabledModules = ["Missing.Required.Module"]
+        };
+
+        var action = () => ModuleAssemblyCatalog.Resolve(typeof(Program).Assembly, configuration);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*GameGuild.Missing.Required.Module*");
     }
 }

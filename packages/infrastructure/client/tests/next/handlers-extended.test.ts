@@ -4,11 +4,18 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createHandlers } from '../../src/integrations/next/handlers.js';
-import {
-  stateCookieName,
-  signStatePayload,
-} from '../../src/integrations/next/oauth-state.js';
+import { signStatePayload, stateCookieName } from '../../src/integrations/next/oauth-state.js';
 import type { ResolvedAuthConfig, ProviderResult } from '../../src/runtime/auth/types.js';
+
+async function createOAuthCallbackRequest(providerId: string, secret: string, code = 'abc123', state = 'xyz'): Promise<Request> {
+  const cookie = await signStatePayload(
+    { state, redirectTo: '/', flow: 'signin', exp: Date.now() + 600_000 },
+    secret,
+  );
+  return new Request(`http://localhost/api/auth/callback/${providerId}?code=${code}&state=${state}`, {
+    headers: { cookie: `${stateCookieName(providerId)}=${cookie}` },
+  });
+}
 
 vi.mock('../../src/runtime/auth/jwt.js', () => ({
   decodeJWT: vi.fn(async ({ token }: any) => {
@@ -90,7 +97,7 @@ function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig
       authorized: async ({ auth }) => !!auth,
     },
     secret: 'test-secret-min-32-chars-long-ok',
-    apiUrl: 'http://localhost:5000',
+    apiUrl: 'http://localhost:8080',
     pages: {},
     cookies: {
       name: '__gg',
@@ -110,10 +117,7 @@ function makeConfig(overrides?: Partial<ResolvedAuthConfig>): ResolvedAuthConfig
   };
 }
 
-function buildRequest(
-  path: string,
-  options: RequestInit & { cookies?: Record<string, string> } = {}
-): Request {
+function buildRequest(path: string, options: RequestInit & { cookies?: Record<string, string> } = {}): Request {
   const { cookies: cookiesObj, ...init } = options;
   const headers = new Headers(init.headers as HeadersInit | undefined);
   if (cookiesObj) {
@@ -326,11 +330,14 @@ describe('Handlers — signUp extended', () => {
 
   it('should sign up with full body and return session', async () => {
     fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({
-        accessToken: 'at',
-        refreshToken: 'rt',
-        userId: '1',
-      }), { status: 200 })
+      new Response(
+        JSON.stringify({
+          accessToken: 'at',
+          refreshToken: 'rt',
+          userId: '1',
+        }),
+        { status: 200 },
+      ),
     );
 
     const config = makeConfig();
@@ -376,9 +383,9 @@ describe('Handlers — signUp extended', () => {
   });
 
   it('should forward API errors from signup', async () => {
-    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response(JSON.stringify({ message: 'Email taken', errors: { email: ['Already in use'] } }), { status: 400 })
-    );
+    fetchSpy = vi
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({ message: 'Email taken', errors: { email: ['Already in use'] } }), { status: 400 }));
 
     const config = makeConfig();
     const { POST } = createHandlers(config);
@@ -487,17 +494,11 @@ describe('Handlers — OAuth callback extended', () => {
     });
     const { GET } = createHandlers(config);
 
-    const stateCookie = await signStatePayload(
-      { state: 'xyz', redirectTo: '/', flow: 'signin', exp: Date.now() + 600000 },
-      'test-secret-min-32-chars-long-ok',
-    );
-    const request = new Request('http://localhost/api/auth/callback/github?code=abc123&state=xyz', {
-      headers: { cookie: `${stateCookieName('github')}=${stateCookie}` },
-    });
+    const request = await createOAuthCallbackRequest('github', config.secret);
     const response = await GET(request);
     expect(response.status).toBe(302);
-    // Should redirect to newUser page or '/'
-    expect(response.headers.get('location')).toBeDefined();
+    expect(config.providers[0].handleCallback).toHaveBeenCalled();
+    expect(response.headers.get('location')).toBe('http://localhost/');
   });
 
   it('should redirect to error page when handleCallback returns null', async () => {
@@ -513,13 +514,7 @@ describe('Handlers — OAuth callback extended', () => {
     });
     const { GET } = createHandlers(config);
 
-    const stateCookie = await signStatePayload(
-      { state: 'xyz', redirectTo: '/', flow: 'signin', exp: Date.now() + 600000 },
-      'test-secret-min-32-chars-long-ok',
-    );
-    const request = new Request('http://localhost/api/auth/callback/github?code=abc123&state=xyz', {
-      headers: { cookie: `${stateCookieName('github')}=${stateCookie}` },
-    });
+    const request = await createOAuthCallbackRequest('github', config.secret);
     const response = await GET(request);
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toContain('callback_failed');
@@ -589,9 +584,7 @@ describe('Handlers — signOut with session token', () => {
   });
 
   it('should revoke token on signout when session exists', async () => {
-    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
-      new Response('{}', { status: 200 })
-    );
+    fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(new Response('{}', { status: 200 }));
 
     const config = makeConfig();
     const { POST } = createHandlers(config);

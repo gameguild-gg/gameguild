@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-    </ItemGroup>
+        </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="FluentValidation" />

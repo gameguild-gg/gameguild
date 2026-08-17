@@ -10,6 +10,7 @@ import {
   confirmPasswordReset,
   changePassword,
   sendVerificationEmail,
+  resendVerificationEmail,
   verifyEmail,
   listSessions,
   terminateSession,
@@ -65,7 +66,7 @@ describe('Extended Auth Operations', () => {
             code: '123456',
             method: 'totp',
           }),
-        })
+        }),
       );
       expect(result.tokens.accessToken).toBe('new-at');
       expect(result.user.id).toBe('u1');
@@ -77,16 +78,16 @@ describe('Extended Auth Operations', () => {
         json: async () => ({ message: 'Invalid code', attemptsRemaining: 2 }),
       });
 
-      await expect(
-        verifyMfa(API_URL, { mfaSessionId: 'mfa-1', code: '000000', method: 'totp' })
-      ).rejects.toThrow(MfaVerificationError);
+      await expect(verifyMfa(API_URL, { mfaSessionId: 'mfa-1', code: '000000', method: 'totp' })).rejects.toThrow(MfaVerificationError);
     });
 
     it('verifyMfa sends auth header when accessToken provided', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          accessToken: 'at', refreshToken: 'rt', userId: 'u1',
+          accessToken: 'at',
+          refreshToken: 'rt',
+          userId: 'u1',
         }),
       });
 
@@ -108,10 +109,7 @@ describe('Extended Auth Operations', () => {
 
       await confirmPasswordReset(API_URL, { token: 'reset-token', newPassword: 'newpass' });
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        `${API_URL}/v1/auth/password:reset`,
-        expect.objectContaining({ method: 'POST' })
-      );
+      expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/password:reset`, expect.objectContaining({ method: 'POST' }));
     });
 
     it('confirmPasswordReset throws PasswordResetError on failure', async () => {
@@ -120,9 +118,7 @@ describe('Extended Auth Operations', () => {
         json: async () => ({ message: 'Token expired' }),
       });
 
-      await expect(
-        confirmPasswordReset(API_URL, { token: 'bad', newPassword: 'x' })
-      ).rejects.toThrow(PasswordResetError);
+      await expect(confirmPasswordReset(API_URL, { token: 'bad', newPassword: 'x' })).rejects.toThrow(PasswordResetError);
     });
 
     it('changePassword sends auth header', async () => {
@@ -156,15 +152,26 @@ describe('Extended Auth Operations', () => {
       await expect(sendVerificationEmail(API_URL, TOKEN)).rejects.toThrow(EmailVerificationError);
     });
 
+    it('resendVerificationEmail calls anonymous endpoint with email body', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true });
+
+      await resendVerificationEmail(API_URL, { email: 'user@example.com' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        `${API_URL}/v1/auth/email:send-verification`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ email: 'user@example.com' }),
+        }),
+      );
+    });
+
     it('verifyEmail calls correct endpoint', async () => {
       mockFetch.mockResolvedValueOnce({ ok: true });
 
       await verifyEmail(API_URL, { token: 'verify-token' });
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        `${API_URL}/v1/auth/email:verify`,
-        expect.objectContaining({ method: 'POST' })
-      );
+      expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/email:verify`, expect.objectContaining({ method: 'POST' }));
     });
   });
 
@@ -203,9 +210,7 @@ describe('Extended Auth Operations', () => {
     it('terminateSession throws SessionTerminationError on failure', async () => {
       mockFetch.mockResolvedValueOnce({ ok: false });
 
-      await expect(
-        terminateSession(API_URL, 'session-bad', TOKEN)
-      ).rejects.toThrow(SessionTerminationError);
+      await expect(terminateSession(API_URL, 'session-bad', TOKEN)).rejects.toThrow(SessionTerminationError);
     });
 
     it('terminateOtherSessions calls correct endpoint', async () => {
@@ -213,10 +218,7 @@ describe('Extended Auth Operations', () => {
 
       await terminateOtherSessions(API_URL, TOKEN);
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        `${API_URL}/v1/auth/sessions:terminate-others`,
-        expect.objectContaining({ method: 'POST' })
-      );
+      expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/sessions:terminate-others`, expect.objectContaining({ method: 'POST' }));
     });
 
     it('terminateOtherSessions throws SessionTerminationError on failure', async () => {
@@ -225,9 +227,7 @@ describe('Extended Auth Operations', () => {
         json: async () => ({ message: 'Failed' }),
       });
 
-      await expect(
-        terminateOtherSessions(API_URL, TOKEN)
-      ).rejects.toThrow(SessionTerminationError);
+      await expect(terminateOtherSessions(API_URL, TOKEN)).rejects.toThrow(SessionTerminationError);
     });
 
     it('terminateAllSessions calls correct endpoint', async () => {
@@ -235,10 +235,7 @@ describe('Extended Auth Operations', () => {
 
       await terminateAllSessions(API_URL, TOKEN);
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        `${API_URL}/v1/auth/sessions:terminate-all`,
-        expect.objectContaining({ method: 'POST' })
-      );
+      expect(mockFetch).toHaveBeenCalledWith(`${API_URL}/v1/auth/sessions:terminate-all`, expect.objectContaining({ method: 'POST' }));
     });
 
     it('setupTotpMfa returns MfaSetupResult on success', async () => {
@@ -260,7 +257,7 @@ describe('Extended Auth Operations', () => {
           headers: expect.objectContaining({
             Authorization: `Bearer ${TOKEN}`,
           }),
-        })
+        }),
       );
       expect(result).toEqual({
         secret: 'JBSWY3DPEHPK3PXP',
@@ -290,7 +287,7 @@ describe('Extended Auth Operations', () => {
         `${API_URL}/v1/auth/mfa/methods`,
         expect.objectContaining({
           headers: { Authorization: `Bearer ${TOKEN}` },
-        })
+        }),
       );
       expect(result).toEqual(['totp', 'sms']);
     });

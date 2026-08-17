@@ -6,27 +6,27 @@ import { BarChart3, CalendarDays, FolderKanban, Settings, Users } from 'lucide-r
 
 const operations = [
   {
-    href: '/dashboard/testing-lab/events',
+    href: '/console/community/testing-lab/events',
     label: 'Events',
     Icon: CalendarDays,
   },
   {
-    href: '/dashboard/testing-lab/projects',
+    href: '/console/community/testing-lab/projects',
     label: 'Projects',
     Icon: FolderKanban,
   },
   {
-    href: '/dashboard/testing-lab/participants',
+    href: '/console/community/testing-lab/participants',
     label: 'Participants',
     Icon: Users,
   },
   {
-    href: '/dashboard/testing-lab/analytics',
+    href: '/console/community/testing-lab/analytics',
     label: 'Analytics',
     Icon: BarChart3,
   },
   {
-    href: '/dashboard/testing-lab/settings/general',
+    href: '/console/community/testing-lab/settings/general',
     label: 'Settings',
     Icon: Settings,
   },

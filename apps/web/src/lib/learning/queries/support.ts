@@ -6,7 +6,7 @@ import {
   type CommerceProductsSupportTicketMessage,
   type LearningExperienceSocialServicesCourseDiscussion,
   type LearningExperienceSocialServicesDiscussionReply,
-  type PagedResultOfGameGuildCommerceProductsSupportTicketDto,
+  type PagedResultOfCommerceProductsSupportTicket,
 } from '@game-guild/client';
 import { cache } from 'react';
 import { resolveCourseId } from './course';
@@ -142,7 +142,7 @@ function createSupportModules() {
   });
 
   return {
-    tickets: new GeneratedApi.LearningCoursesSupportticketsModule(client),
+    tickets: new GeneratedApi.LearningCoursesSupportTicketsModule(client),
     discussions: new GeneratedApi.LearningExperienceSocialDiscussionsModule(client),
     replies: new GeneratedApi.LearningExperienceSocialRepliesModule(client),
   };
@@ -201,11 +201,11 @@ function mapSupportTicket(dto: CommerceProductsSupportTicket): SupportTicket {
  */
 export const getCourseSupportTickets = cache(async (courseId: string): Promise<CourseSupportTickets> => {
   const resolvedCourseId = await resolveCourseId(courseId);
-  const result = await createSupportModules().tickets.getCoursesByCourseIdSupportTickets(resolvedCourseId, {
+  const result = await createSupportModules().tickets.getCoursesSupportTicketsForGetCoursesByCourseIdSupportTickets(resolvedCourseId, {
     skip: 0,
     take: 100,
   });
-  const response: PagedResultOfGameGuildCommerceProductsSupportTicketDto | undefined = result.ok
+  const response: PagedResultOfCommerceProductsSupportTicket | undefined = result.ok
     ? result.data
     : undefined;
   const tickets = (response?.items ?? []).map(mapSupportTicket);
@@ -225,7 +225,7 @@ export const getCourseSupportTickets = cache(async (courseId: string): Promise<C
  */
 export const getSupportTicket = cache(async (courseId: string, ticketId: string): Promise<SupportTicketDetail | null> => {
   const resolvedCourseId = await resolveCourseId(courseId);
-  const result = await createSupportModules().tickets.getCoursesByCourseIdSupportTicketsByTicketId(resolvedCourseId, ticketId);
+  const result = await createSupportModules().tickets.getCoursesSupportTicketsForGetCoursesByCourseIdSupportTicketsByTicketId(resolvedCourseId, ticketId);
   if (!result.ok) return null;
 
   const dto = result.data;

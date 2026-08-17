@@ -9,6 +9,7 @@ const mockReplace = vi.fn();
 const mockSearchParams = new URLSearchParams();
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   useSearchParams: () => mockSearchParams,
   useRouter: () => ({
     replace: mockReplace,
@@ -76,7 +77,7 @@ vi.mock('@game-guild/client/react', () => ({
 }));
 
 const { VerifyPageContent } = await import(
-  '@/app/[locale]/(auth)/verify/verify-page-content'
+  '@/components/auth/verify-page-content'
 );
 
 /* ------------------------------------------------------------------ */

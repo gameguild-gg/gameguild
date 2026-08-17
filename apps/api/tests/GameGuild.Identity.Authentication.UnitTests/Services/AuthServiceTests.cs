@@ -246,6 +246,23 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task DiscordSignInAsync_ShouldDelegateToOAuthAuthService()
+    {
+        var request = new DiscordSignInRequest { Code = "discord-code" };
+        var expectedResponse = new SignInResponse { Success = true, AccessToken = "discord-token" };
+        _oauthAuthServiceMock
+            .Setup(instance => instance.DiscordSignInAsync(request, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedResponse);
+
+        var result = await _authService.DiscordSignInAsync(request);
+
+        result.Should().BeSameAs(expectedResponse);
+        _oauthAuthServiceMock.Verify(
+            instance => instance.DiscordSignInAsync(request, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task GetGitHubAuthUrlAsync_ShouldDelegateToOAuthAuthService()
     {
         // Arrange

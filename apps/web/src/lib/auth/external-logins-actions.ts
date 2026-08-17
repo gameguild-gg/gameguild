@@ -13,7 +13,7 @@ import { revalidatePath } from 'next/cache';
  * link endpoints attach the external identity to the CURRENT user only.
  */
 
-const SETTINGS_ACCOUNT_PATH = '/my/settings/account';
+const SETTINGS_ACCOUNT_PATH = '/workspace/settings/account';
 
 export type ExternalLoginActionStatus =
   | 'success'

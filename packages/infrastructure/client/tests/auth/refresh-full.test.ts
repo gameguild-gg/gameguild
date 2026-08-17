@@ -18,37 +18,24 @@ afterEach(() => {
 
 describe('TokenRefreshManager — full branch coverage', () => {
   it('shouldRefresh returns false when no expiry set', () => {
-    const manager = new TokenRefreshManager(
-      { getAccessToken: async () => 'tok' },
-      'http://localhost',
-    );
+    const manager = new TokenRefreshManager({ getAccessToken: async () => 'tok' }, 'http://localhost');
     expect(manager.shouldRefresh()).toBe(false);
   });
 
   it('shouldRefresh returns false when token is not near expiry', () => {
-    const manager = new TokenRefreshManager(
-      { getAccessToken: async () => 'tok' },
-      'http://localhost',
-    );
+    const manager = new TokenRefreshManager({ getAccessToken: async () => 'tok' }, 'http://localhost');
     manager.setExpiry(3600); // 1 hour from now
     expect(manager.shouldRefresh()).toBe(false);
   });
 
   it('shouldRefresh returns true when token is near expiry', () => {
-    const manager = new TokenRefreshManager(
-      { getAccessToken: async () => 'tok' },
-      'http://localhost',
-      { refreshThreshold: 60_000 },
-    );
+    const manager = new TokenRefreshManager({ getAccessToken: async () => 'tok' }, 'http://localhost', { refreshThreshold: 60_000 });
     manager.setExpiry(30); // 30 seconds from now, threshold is 60s
     expect(manager.shouldRefresh()).toBe(true);
   });
 
   it('refreshIfNeeded returns null when no refresh needed', async () => {
-    const manager = new TokenRefreshManager(
-      { getAccessToken: async () => 'tok' },
-      'http://localhost',
-    );
+    const manager = new TokenRefreshManager({ getAccessToken: async () => 'tok' }, 'http://localhost');
     const result = await manager.refreshIfNeeded();
     expect(result).toBeNull();
   });
@@ -130,10 +117,7 @@ describe('TokenRefreshManager — full branch coverage', () => {
 
     expect(result).toBeNull();
     expect(onAuthRequired).toHaveBeenCalled();
-    expect(errorSpy).toHaveBeenCalledWith(
-      'Token refresh failed after', 2, 'attempts:',
-      expect.any(Error)
-    );
+    expect(errorSpy).toHaveBeenCalledWith('Token refresh failed after', 2, 'attempts:', expect.any(Error));
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 
@@ -157,10 +141,7 @@ describe('TokenRefreshManager — full branch coverage', () => {
     });
 
     // Start two concurrent refreshes
-    const [r1, r2] = await Promise.all([
-      manager.refresh(),
-      manager.refresh(),
-    ]);
+    const [r1, r2] = await Promise.all([manager.refresh(), manager.refresh()]);
 
     // Both should return same result; fetch called only once
     expect(mockFetch).toHaveBeenCalledTimes(1);

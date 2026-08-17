@@ -14,14 +14,15 @@ vi.mock("@game-guild/client", () => ({
   createServerClient: mocks.createServerClient,
   GeneratedApi: {
     LearningCoursesProgramModule: class {},
-    LearningCoursesProgramcontentModule: class {},
-    LearningWorkspacesLearnerworkspaceModule: class {
+    LearningCoursesProgramContentModule: class {},
+    LearningWorkspacesLearnerWorkspaceModule: class {
       getLearningMeDashboard = mocks.getLearningMeDashboard;
     },
   },
 }));
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => '/workspace/learning',
   unstable_rethrow: vi.fn(),
 }));
 
