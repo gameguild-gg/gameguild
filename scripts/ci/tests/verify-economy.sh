@@ -90,6 +90,59 @@ test_release_action_matches_changesets_cli_major() {
   ! grep -Fq 'uses: changesets/action@v2' "$workflow"
 }
 
+test_release_action_targets_the_upstream_branch() {
+  local workflow="$repository_root/.github/workflows/release.yml"
+
+  grep -Fq 'branch: ${{ needs.gate.outputs.branch }}' "$workflow"
+}
+
+test_changesets_config_matches_lockstep_workspace() {
+  local config="$repository_root/.changeset/config.json"
+  local workspace_packages="$fixture_root/workspace-packages.json"
+
+  (cd "$repository_root" && pnpm list -r --depth -1 --json) > "$workspace_packages" || return 1
+  "$PYTHON_BIN" - "$repository_root/package.json" "$config" "$workspace_packages" <<'PY' || return 1
+import collections
+import json
+import sys
+
+root_manifest_path, config_path, workspace_path = sys.argv[1:]
+with open(root_manifest_path, encoding="utf-8") as handle:
+    root_name = json.load(handle)["name"]
+with open(config_path, encoding="utf-8") as handle:
+    config = json.load(handle)
+with open(workspace_path, encoding="utf-8") as handle:
+    workspace = {
+        package["name"] for package in json.load(handle)
+        if package["name"] != root_name
+    }
+
+fixed = [package for group in config.get("fixed", []) for package in group]
+linked = [package for group in config.get("linked", []) for package in group]
+duplicates = sorted(
+    package for package, count in collections.Counter(fixed).items() if count > 1
+)
+missing = sorted(workspace - set(fixed))
+unknown = sorted(set(fixed) - workspace)
+
+errors = []
+if len(config.get("fixed", [])) != 1:
+    errors.append("the lockstep policy requires exactly one fixed group")
+if linked:
+    errors.append(f"linked packages conflict with the lockstep fixed policy: {sorted(linked)}")
+if duplicates:
+    errors.append(f"duplicate fixed packages: {duplicates}")
+if missing:
+    errors.append(f"workspace packages missing from the fixed group: {missing}")
+if unknown:
+    errors.append(f"unknown packages in the fixed group: {unknown}")
+if errors:
+    raise SystemExit("; ".join(errors))
+PY
+
+  (cd "$repository_root" && pnpm exec changeset status >/dev/null)
+}
+
 test_emception_emits_a_gate_result_for_every_main_push() {
   local workflow="$repository_root/.github/workflows/emception.yml"
   local trigger
@@ -376,6 +429,8 @@ run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
 run_test 'release gate uses resolvable workflow file IDs' test_release_gate_uses_resolvable_workflow_file_ids
 run_test 'release action matches the Changesets CLI major' test_release_action_matches_changesets_cli_major
+run_test 'release action targets the upstream branch' test_release_action_targets_the_upstream_branch
+run_test 'Changesets config matches the lockstep workspace policy' test_changesets_config_matches_lockstep_workspace
 run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
