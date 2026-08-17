@@ -1,6 +1,7 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import {
+  canManageCourse,
   getAssessment,
   getAssessmentRubric,
   getCourseAssessmentGroups,
@@ -19,13 +20,14 @@ export default async function AssessmentDetailPage({
 }: PageProps<"/[locale]/dashboard/learning/courses/[course]/assessments/[assessmentId]">): Promise<React.JSX.Element> {
   const { course: courseId, assessmentId } = await params;
 
-  const [assessment, assessmentGroups, courseContent, groupSets, rubric] =
+  const [assessment, assessmentGroups, courseContent, groupSets, rubric, canManage] =
     await Promise.all([
       getAssessment(assessmentId),
       getCourseAssessmentGroups(courseId),
       getCourseContent(courseId),
       getCourseGroupSets(courseId),
       getAssessmentRubric(assessmentId),
+      canManageCourse(courseId),
     ]);
 
   if (!assessment) {
@@ -41,6 +43,7 @@ export default async function AssessmentDetailPage({
       groupSets={groupSets.map((set) => ({ id: set.id, name: set.name }))}
       rubric={rubric.rubric}
       rubricLocked={rubric.locked}
+      canManage={canManage}
     />
   );
 }

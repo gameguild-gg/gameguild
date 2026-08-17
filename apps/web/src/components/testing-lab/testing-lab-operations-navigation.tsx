@@ -4,39 +4,45 @@ import { Link } from '@/i18n/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@game-guild/ui/components/tooltip';
 import { BarChart3, CalendarDays, FolderKanban, Settings, Users } from 'lucide-react';
 
-const operations = [
+const operations = (basePath: string) => [
   {
-    href: '/dashboard/testing-lab/events',
+    href: `${basePath}/events`,
     label: 'Events',
     Icon: CalendarDays,
   },
   {
-    href: '/dashboard/testing-lab/projects',
+    href: `${basePath}/projects`,
     label: 'Projects',
     Icon: FolderKanban,
   },
   {
-    href: '/dashboard/testing-lab/participants',
+    href: `${basePath}/participants`,
     label: 'Participants',
     Icon: Users,
   },
   {
-    href: '/dashboard/testing-lab/analytics',
+    href: `${basePath}/analytics`,
     label: 'Analytics',
     Icon: BarChart3,
   },
   {
-    href: '/dashboard/testing-lab/settings/general',
+    href: `${basePath}/settings/general`,
     label: 'Settings',
     Icon: Settings,
   },
 ] as const;
 
-export function TestingLabOperationsNavigation({ activeHref }: { activeHref?: string }) {
+export function TestingLabOperationsNavigation({
+  activeHref,
+  basePath = '/dashboard/testing-lab',
+}: {
+  activeHref?: string;
+  basePath?: string;
+}) {
   return (
     <TooltipProvider delayDuration={250}>
       <nav aria-label="Testing Lab operations" className="flex flex-wrap items-center gap-1">
-        {operations.map(({ href, label, Icon }) => {
+        {operations(basePath).map(({ href, label, Icon }) => {
           const active = activeHref === href;
           return (
             <Tooltip key={href}>

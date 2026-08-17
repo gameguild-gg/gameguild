@@ -466,7 +466,76 @@ describe('AssessmentsList weighted groups', () => {
     expect(await screen.findByText('Cannot delete a locked grade group.')).toBeInTheDocument();
   });
 
-  describe('Create Assessment dialog', () => {
+  describe('AssessmentsList instructor grade links', () => {
+  it('renders a grade link per assessment for instructors', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+        canManage
+      />,
+    );
+
+    const quizGradeLink = screen.getByTestId('grade-link-quiz-1');
+    expect(quizGradeLink).toHaveAttribute(
+      'href',
+      '/dashboard/learning/courses/course-1/assessments/quiz-1/submissions',
+    );
+    expect(screen.getByTestId('grade-link-project-1')).toHaveAttribute(
+      'href',
+      '/dashboard/learning/courses/course-1/assessments/project-1/submissions',
+    );
+    expect(quizGradeLink).toHaveTextContent(/grade/i);
+  });
+
+  it('renders an ungrouped grade link for instructors', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={[assignmentAssessment]}
+        total={1}
+        canManage
+      />,
+    );
+
+    expect(screen.getByTestId('grade-link-assignment-1')).toHaveAttribute(
+      'href',
+      '/dashboard/learning/courses/course-1/assessments/assignment-1/submissions',
+    );
+  });
+
+  it('hides grade links from non-instructors', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    expect(screen.queryByTestId('grade-link-quiz-1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('grade-link-project-1')).not.toBeInTheDocument();
+  });
+
+  it('hides grade links when canManage is explicitly false', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+        canManage={false}
+      />,
+    );
+
+    expect(screen.queryByTestId('grade-link-quiz-1')).not.toBeInTheDocument();
+  });
+});
+
+describe('Create Assessment dialog', () => {
     it('renders the Create Assessment button in the header', () => {
       render(
         <AssessmentsList

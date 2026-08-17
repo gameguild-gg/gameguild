@@ -21,6 +21,8 @@ const mocks = vi.hoisted(() => ({
   getCourseAssessmentGroups: vi.fn(),
   getCourseAssessmentAnalytics: vi.fn(),
   getCourseCertificates: vi.fn(),
+  getMyTasks: vi.fn(),
+  canManageCourse: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -74,6 +76,8 @@ vi.mock('@/lib/learning', () => ({
   getCourseAssessmentGroups: mocks.getCourseAssessmentGroups,
   getCourseAssessmentAnalytics: mocks.getCourseAssessmentAnalytics,
   getCourseCertificates: mocks.getCourseCertificates,
+  getMyTasks: mocks.getMyTasks,
+  canManageCourse: mocks.canManageCourse,
 }));
 
 vi.mock('@/lib/learning/queries/assessments', () => ({
@@ -295,6 +299,8 @@ describe('course-management dashboard route pages', () => {
       issuedCount: 3,
       templates: [{ id: 'template-1', name: 'Completion certificate', courseId: 'course-1' }],
     });
+    mocks.getMyTasks.mockResolvedValue({ ok: true, tasks: [] });
+    mocks.canManageCourse.mockResolvedValue(false);
   });
 
   it('wraps course subroutes in the course nav and preloads related dashboards', async () => {
@@ -326,6 +332,48 @@ describe('course-management dashboard route pages', () => {
     expect(screen.getByText('Course Readiness')).toBeInTheDocument();
     expect(screen.getByText('No launch blockers remain on the current dashboard contract.')).toBeInTheDocument();
     expect(screen.getByText('Open Listing Controls')).toBeInTheDocument();
+  });
+
+  it('renders the awaiting grading card with this course grade task count for managers', async () => {
+    mocks.canManageCourse.mockResolvedValueOnce(true);
+    mocks.getMyTasks.mockResolvedValueOnce({
+      ok: true,
+      tasks: [
+        { type: 'grade', courseId: 'course-1', assessmentId: 'assessment-1', countSubmitted: 2 },
+        { type: 'grade', courseId: 'other-course', assessmentId: 'assessment-2', countSubmitted: 5 },
+        { type: 'do', courseId: 'course-1', assessmentId: 'assessment-3' },
+      ],
+    });
+
+    render(await OverviewPage({ params: params() } as never));
+
+    const card = screen.getByTestId('awaiting-grading-card');
+    expect(card).toHaveAttribute('href', '/dashboard/learning/courses/advanced-game-ai-by-gameguild/assessments');
+    expect(card).toHaveTextContent('Awaiting grading');
+    expect(card).toHaveTextContent('1');
+  });
+
+  it('renders an em dash on the awaiting grading card when the tasks fetch fails', async () => {
+    mocks.canManageCourse.mockResolvedValueOnce(true);
+    mocks.getMyTasks.mockResolvedValueOnce({ ok: false, error: 'Failed to load tasks. Please try again.' });
+
+    render(await OverviewPage({ params: params() } as never));
+
+    expect(screen.getByTestId('awaiting-grading-card')).toHaveTextContent('—');
+  });
+
+  it('hides the awaiting grading card from non-managers', async () => {
+    mocks.canManageCourse.mockResolvedValueOnce(false);
+    mocks.getMyTasks.mockResolvedValueOnce({
+      ok: true,
+      tasks: [
+        { type: 'grade', courseId: 'course-1', assessmentId: 'assessment-1', countSubmitted: 2 },
+      ],
+    });
+
+    render(await OverviewPage({ params: params() } as never));
+
+    expect(screen.queryByTestId('awaiting-grading-card')).not.toBeInTheDocument();
   });
 
   it('renders content, assessment, class, student, certificate, and listing management pages', async () => {

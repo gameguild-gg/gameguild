@@ -20,9 +20,15 @@ const items = [
   { label: 'Learning', segment: 'learning', icon: BookOpenCheck },
 ] as const;
 
-export function TestingEventWorkspaceNav({ eventId }: { eventId: string }) {
+export function TestingEventWorkspaceNav({
+  eventId,
+  basePath = '/dashboard/testing-lab',
+}: {
+  eventId: string;
+  basePath?: string;
+}) {
   const pathname = usePathname() ?? '';
-  const base = `/dashboard/testing-lab/events/${eventId}`;
+  const base = `${basePath}/events/${eventId}`;
 
   return (
     <nav

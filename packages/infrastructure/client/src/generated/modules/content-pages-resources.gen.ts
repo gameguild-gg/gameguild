@@ -75,6 +75,32 @@ export class ContentPagesResourcesModule {
 
   /**
    */
+  async getContentResourcesBySlug(
+    slug: string,
+  ): Promise<Result<Types.ContentPagesContentResource, ApiError>> {
+    const url = `/v1/content-resources/by-slug/${slug}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ContentPagesContentResourceSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getContentResourcesForGetContentResourcesById(
     id: string,
   ): Promise<Result<Types.ContentPagesContentResource, ApiError>> {
@@ -146,32 +172,6 @@ export class ContentPagesResourcesModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getContentResourcesBySlug(
-    slug: string,
-  ): Promise<Result<Types.ContentPagesContentResource, ApiError>> {
-    const url = `/v1/content-resources/by-slug/${slug}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ContentPagesContentResourceSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
   }
 
   /**

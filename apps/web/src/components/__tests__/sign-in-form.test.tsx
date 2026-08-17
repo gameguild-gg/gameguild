@@ -72,8 +72,8 @@ describe('SignInForm', () => {
       'href',
       '/en-US/forgot-password'
     );
-    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/en-US/terms-of-service');
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/en-US/polices/privacy');
+    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/en-US/legal/terms-of-service');
+    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/en-US/legal/privacy');
   });
 
   /* ---------- Client-side validation ---------- */

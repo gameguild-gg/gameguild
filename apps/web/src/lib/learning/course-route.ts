@@ -53,11 +53,19 @@ export function getCourseLookupSlug(routeParam: string): string {
   return value.slice(0, separatorIndex);
 }
 
-export function buildDashboardCoursePath(course: CourseRouteSource | string, segment?: string): string {
+function buildCoursePath(basePath: string, course: CourseRouteSource | string, segment?: string): string {
   const routeParam = typeof course === 'string' ? course : getCourseRouteParam(course);
-  const basePath = `/dashboard/learning/courses/${encodeURIComponent(routeParam)}`;
+  const coursePath = `${basePath}/${encodeURIComponent(routeParam)}`;
 
-  if (!segment) return basePath;
+  if (!segment) return coursePath;
 
-  return `${basePath}/${segment.replace(/^\/+/, '')}`;
+  return `${coursePath}/${segment.replace(/^\/+/, '')}`;
+}
+
+export function buildDashboardCoursePath(course: CourseRouteSource | string, segment?: string): string {
+  return buildCoursePath('/dashboard/learning/courses', course, segment);
+}
+
+export function buildPlatformCoursePath(course: CourseRouteSource | string, segment?: string): string {
+  return buildCoursePath('/dashboard/platform/learning/courses', course, segment);
 }

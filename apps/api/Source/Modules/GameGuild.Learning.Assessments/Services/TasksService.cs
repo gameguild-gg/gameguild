@@ -137,16 +137,26 @@ public class TasksService(
     }
 
     /// <summary>
-    /// Distinct targets awaiting a grade: one per group-attempt, one per (user, attempt) for individual
-    /// submissions — the same collapse the grading queue applies. InProgress rows never count.
+    /// Distinct targets awaiting a grade under the one-grade-per-assignment model: a target
+    /// (user, or group collapsed to one) counts when its LATEST gradeable attempt has a
+    /// Submitted/Late row — the same semantics as the grading queue's NeedsGrading. InProgress
+    /// rows never count, and a stale ungraded attempt under a newer graded one does not either.
     /// Shared with the submit-notification hook (AssessmentService).
     /// </summary>
     internal static int CountPendingGradeTargets(IEnumerable<AssessmentSubmission> rows) =>
-        rows.Where(r => r.Status is SubmissionStatus.Submitted or SubmissionStatus.Late)
-            .GroupBy(r => r.CourseGroupId.HasValue
-                ? ("group", r.CourseGroupId.Value, r.AttemptNumber)
-                : ("user", r.UserId, r.AttemptNumber))
-            .Count();
+        rows.GroupBy(r => r.CourseGroupId.HasValue
+                ? ("group", r.CourseGroupId.Value)
+                : ("user", r.UserId))
+            .Count(targetRows =>
+            {
+                var gradeableAttempts = targetRows
+                    .GroupBy(r => r.AttemptNumber)
+                    .Where(g => g.Any(r => r.Status != SubmissionStatus.InProgress))
+                    .ToList();
+                return gradeableAttempts.Count > 0 &&
+                       gradeableAttempts.Single(g => g.Key == gradeableAttempts.Max(a => a.Key))
+                           .Any(r => r.Status is SubmissionStatus.Submitted or SubmissionStatus.Late);
+            });
 
     private async Task<Dictionary<Guid, string>> GetManagedCoursesAsync(Guid actorUserId, Guid? tenantId, bool isSystemAdmin)
     {

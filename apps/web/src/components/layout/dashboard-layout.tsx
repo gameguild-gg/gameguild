@@ -1,6 +1,6 @@
 'use client';
 
-import { DashboardShell } from './dashboard-shell';
+import { DashboardShell } from '@/components/console/console-shell';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
