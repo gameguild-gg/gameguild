@@ -20,11 +20,11 @@ const appRoot = __dirname;
 const footerRoutes = [
   { href: '/sign-up', page: '[locale]/(auth)/sign-up/page.tsx' },
   { href: '/community', page: '[locale]/(public)/community/page.tsx' },
-  { href: '/feed', page: '[locale]/(community)/(feed)/feed/page.tsx' },
+  { href: '/', page: '[locale]/(public)/page.tsx' },
   { href: '/jobs', page: '[locale]/(public)/jobs/page.tsx' },
-  { href: '/programs', page: '[locale]/(public)/programs/page.tsx' },
   { href: '/courses', page: '[locale]/(public)/courses/page.tsx' },
-  { href: '/projects', page: '[locale]/(contents)/(projects)/projects/page.tsx' },
+  { href: '/courses', page: '[locale]/(public)/courses/page.tsx' },
+  { href: '/projects', page: '[locale]/(public)/projects/page.tsx' },
   { href: '/testing-lab', page: '[locale]/(public)/testing-lab/page.tsx' },
   { href: '/launch-pad', page: '[locale]/(public)/launch-pad/page.tsx' },
   { href: '/about', page: '[locale]/(public)/about/page.tsx' },
@@ -32,8 +32,8 @@ const footerRoutes = [
   { href: '/about/contributors', page: '[locale]/(public)/about/(project)/contributors/page.tsx' },
   { href: '/contact', page: '[locale]/(public)/contact/page.tsx' },
   { href: '/legal/licenses', page: '[locale]/(legal)/legal/licenses/page.tsx' },
-  { href: '/legal/terms-of-service', page: '[locale]/(legal)/legal/terms-of-service/page.tsx' },
-  { href: '/legal/privacy', page: '[locale]/(legal)/legal/privacy/page.tsx' },
+  { href: '/terms-of-service', page: '[locale]/(legal)/terms-of-service/page.tsx' },
+  { href: '/polices/privacy', page: '[locale]/(legal)/polices/privacy/page.tsx' },
 ] as const;
 
 describe('PublicWebsiteFooter routes', () => {

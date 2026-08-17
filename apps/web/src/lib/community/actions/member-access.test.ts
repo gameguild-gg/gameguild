@@ -32,6 +32,7 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   redirect: mocks.redirect,
 }));
 
@@ -61,7 +62,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('role', 'SystemAdmin');
 
     await expect(updateMemberAccessRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/platform/roles?message=Updated+member+role+to+SystemAdmin.',
+      'redirect:/console/platform/roles?message=Updated+member+role+to+SystemAdmin.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
@@ -71,9 +72,9 @@ describe('updateMemberAccessRole', () => {
       requiresAuth: true,
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/users');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/roles');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/members/users');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/platform/roles');
   });
 
   it('redirects with an error when required fields are missing', async () => {
@@ -81,7 +82,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('userId', 'user-1');
 
     await expect(updateMemberAccessRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/platform/roles?error=User%2C+tenant%2C+and+role+are+required+to+update+access.',
+      'redirect:/console/platform/roles?error=User%2C+tenant%2C+and+role+are+required+to+update+access.',
     );
 
     expect(mocks.request).not.toHaveBeenCalled();
@@ -98,7 +99,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('role', ' SystemAdmin ');
 
     await expect(updateMemberAccessRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/platform/roles?error=Only+another+super+admin+can+grant+this+role.',
+      'redirect:/console/platform/roles?error=Only+another+super+admin+can+grant+this+role.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
@@ -121,7 +122,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('role', 'Member');
 
     await expect(updateMemberAccessRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/platform/roles?error=Cannot+demote+the+only+super+admin.',
+      'redirect:/console/platform/roles?error=Cannot+demote+the+only+super+admin.',
     );
 
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
@@ -136,7 +137,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('invitedByEmail', ' admin@game-guild.com ');
 
     await expect(invitePlatformUser(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?message=Invited+Learner+One+as+Moderator.',
+      'redirect:/console/community/members/users?message=Invited+Learner+One+as+Moderator.',
     );
 
     expect(mocks.usersPostUsers).toHaveBeenCalledWith({
@@ -157,8 +158,8 @@ describe('updateMemberAccessRole', () => {
         inviteeName: 'Learner One',
       },
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/users');
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/roles');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/members/users');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/platform/roles');
   });
 
   it('reuses an existing user when inviting an email already present in the directory', async () => {
@@ -171,7 +172,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('tenantId', 'tenant-1');
 
     await expect(invitePlatformUser(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?message=Invited+learner+as+Member.',
+      'redirect:/console/community/members/users?message=Invited+learner+as+Member.',
     );
 
     expect(mocks.usersPostUsers).not.toHaveBeenCalled();
@@ -185,7 +186,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('email', 'not-an-email');
 
     await expect(invitePlatformUser(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?error=A+valid+email+and+workspace+are+required+to+invite+a+user.',
+      'redirect:/console/community/members/users?error=A+valid+email+and+workspace+are+required+to+invite+a+user.',
     );
 
     expect(mocks.usersPostUsers).not.toHaveBeenCalled();
@@ -199,7 +200,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('tenantId', 'tenant-1');
 
     await expect(invitePlatformUser(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?error=Email+already+exists.',
+      'redirect:/console/community/members/users?error=Email+already+exists.',
     );
 
     expect(mocks.usersMembershipsPost).not.toHaveBeenCalled();
@@ -213,7 +214,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('tenantId', 'tenant-1');
 
     await expect(invitePlatformUser(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?error=Tenant+not+found.',
+      'redirect:/console/community/members/users?error=Tenant+not+found.',
     );
   });
 
@@ -223,7 +224,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('tenantId', 'tenant-1');
 
     await expect(resendPlatformInvite(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?message=Invite+resent.',
+      'redirect:/console/community/members/users?message=Invite+resent.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
@@ -232,7 +233,7 @@ describe('updateMemberAccessRole', () => {
       body: {},
       requiresAuth: true,
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/community/members/users');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/community/members/users');
   });
 
   it('cancels a pending platform invite through the membership invite endpoint', async () => {
@@ -241,7 +242,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('tenantId', 'tenant-1');
 
     await expect(cancelPlatformInvite(formData)).rejects.toThrow(
-      'redirect:/dashboard/community/members/users?message=Invite+cancelled.',
+      'redirect:/console/community/members/users?message=Invite+cancelled.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
@@ -258,7 +259,7 @@ describe('updateMemberAccessRole', () => {
     formData.set('tenantId', 'tenant-1');
 
     await expect(acceptCurrentUserInvite(formData)).rejects.toThrow(
-      'redirect:/my/invitations?message=Invitation+accepted.+Your+workspace+access+is+now+active.',
+      'redirect:/workspace/invitations?message=Invitation+accepted.+Your+workspace+access+is+now+active.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({

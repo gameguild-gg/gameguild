@@ -17,7 +17,8 @@ public sealed class TestingApplicationHandlers(
     IProjectLifecycleLock? capacityLock = null,
     ITestingLabPermissionService? testingLabPermissionService = null,
     GameGuild.Assets.IAssetScopedAccessService? assetScopedAccessService = null,
-    GameGuild.Assets.IAssetAccessService? assetAccessService = null) :
+    GameGuild.Assets.IAssetAccessService? assetAccessService = null,
+    GameGuild.CQRS.IMediator? mediator = null) :
     ICommandHandler<SubmitTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<UpdateTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
     ICommandHandler<WithdrawTestingProjectApplicationCommand, Result<TestingProjectApplicationProjection>>,
@@ -59,13 +60,16 @@ public sealed class TestingApplicationHandlers(
         if (!await projectAuthorizationService.HasPermissionAsync(request.ProjectId, PermissionType.Edit, cancellationToken).ConfigureAwait(false))
             return Result.Failure<TestingProjectApplicationProjection>(Error.NotFound("TestingLab.ProjectNotFound", "Project not found."));
 
-        var projectExists = await context.Set<Project>().AnyAsync(project =>
-            project.Id == request.ProjectId &&
+        var projectTitle = await context.Set<Project>()
+            .Where(project => project.Id == request.ProjectId &&
             project.TenantId == actor.TenantId &&
             project.DeletedAt == null &&
             project.Status != ContentStatus.Archived &&
-            project.Status != ContentStatus.Deleted,
-            cancellationToken).ConfigureAwait(false);
+            project.Status != ContentStatus.Deleted)
+            .Select(project => project.Title)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var projectExists = projectTitle != null;
         if (!projectExists)
             return Result.Failure<TestingProjectApplicationProjection>(Validation("The selected project is unavailable."));
         var versionExists = await context.Set<ProjectVersion>().AnyAsync(version =>
@@ -115,6 +119,21 @@ public sealed class TestingApplicationHandlers(
         context.Set<TestingProjectApplication>().Add(application);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Actor {ActorId} submitted project {ProjectId} to Testing Lab event {EventId}", actor.UserId, request.ProjectId, request.EventId);
+
+        if (mediator is not null)
+        {
+            await mediator.Send(new GameGuild.Announcements.Contracts.AnnouncePublicationCommand
+            {
+                Kind = GameGuild.Announcements.Contracts.PublicationKind.ProjectJoinedTestingEvent,
+                ActorId = actor.UserId,
+                Title = projectTitle!,
+                EntityId = testingEvent.Id,
+                SecondaryTitle = testingEvent.Name,
+                NotifyUserId = testingEvent.ManagerUserId,
+                TenantId = actor.TenantId,
+            }, cancellationToken).ConfigureAwait(false);
+        }
+
         return Result.Success(ToProjection(application));
     }
 

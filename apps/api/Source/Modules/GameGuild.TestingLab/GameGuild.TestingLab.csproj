@@ -16,6 +16,8 @@
         <ProjectReference Include="..\GameGuild.Projects\GameGuild.Projects.csproj"/>
         <ProjectReference Include="..\GameGuild.Teams\GameGuild.Teams.csproj"/>
         <ProjectReference Include="..\GameGuild.Assets\GameGuild.Assets.csproj"/>
+            <ProjectReference Include="..\GameGuild.Notifications\GameGuild.Notifications.csproj"/>
+        <ProjectReference Include="..\GameGuild.Announcements.Contracts\GameGuild.Announcements.Contracts.csproj"/>
     </ItemGroup>
 
 </Project>

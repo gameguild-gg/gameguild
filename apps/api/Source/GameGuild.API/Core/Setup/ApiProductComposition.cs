@@ -19,6 +19,7 @@ using GameGuild.Learning.Workspaces;
 using GameGuild.ProjectWork;
 using GameGuild.Projects;
 using GameGuild.Social.Blog;
+using GameGuild.Social.Follows;
 using GameGuild.Social.Feed;
 using GameGuild.Social.Groups;
 using GameGuild.Social.Profiles;
@@ -61,6 +62,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         "Learning.Workspaces",
         "Projects",
         "ProjectWork",
+        "Social.Announcements",
         "Social.Blog",
         "Social.Feed",
         "Social.Groups",
@@ -88,6 +90,8 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddEconomyCoreComposition(builder.Configuration);
         builder.Services.AddPayoutsComposition(builder.Configuration);
 
+        builder.Services.AddFollowsModule();
+        new GameGuild.Social.Announcements.AnnouncementsModule().ConfigureServices(builder.Services, builder.Configuration);
         builder.Services.AddCoursesModule();
         builder.Services.AddAssessmentsModule();
         builder.Services.AddLearningEnrollmentsModule();
@@ -111,7 +115,6 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddProjectWorkModule();
         builder.Services.AddTestingLabModule(builder.Configuration);
         builder.Services.AddLaunchPadModule();
-
         builder.Services.AddHealthChecks()
             .AddCheck<PaymentProviderReadinessHealthCheck>(
                 "payment-provider",

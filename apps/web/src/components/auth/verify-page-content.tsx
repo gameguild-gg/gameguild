@@ -19,7 +19,7 @@ export function VerifyPageContent() {
     if (!result.success) {
       throw new Error(result.error);
     }
-    router.push('/my');
+    router.push('/');
   }
 
   async function handleResend() {

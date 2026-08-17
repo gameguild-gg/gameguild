@@ -10,8 +10,9 @@ namespace GameGuild.TestingLab;
 public sealed class TestingEventHandlers(
     IApplicationDbContext context,
     IActorContextAccessor actorContextAccessor,
-    ITestingLabPermissionService? testingLabPermissionService = null) :
-    ICommandHandler<CreateTestingEventCommand, Result<TestingEventProjection>>,
+    ITestingLabPermissionService? testingLabPermissionService = null,
+    GameGuild.CQRS.IMediator? mediator = null)
+    : ICommandHandler<CreateTestingEventCommand, Result<TestingEventProjection>>,
     ICommandHandler<UpdateTestingEventCommand, Result<TestingEventProjection>>,
     ICommandHandler<DeleteTestingEventCommand, Result<bool>>,
     ICommandHandler<ArchiveTestingEventCommand, Result<bool>>,
@@ -78,6 +79,20 @@ public sealed class TestingEventHandlers(
             foreach (var testingEvent in testingEvents)
                 context.Set<TestingEvent>().Add(testingEvent);
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            if (mediator is not null)
+            {
+                await mediator.Send(new GameGuild.Announcements.Contracts.AnnouncePublicationCommand
+                {
+                    Kind = GameGuild.Announcements.Contracts.PublicationKind.TestingEventCreated,
+                    ActorId = actor.UserId,
+                    Title = testingEvents[0].Name,
+                    EntityId = testingEvents[0].Id,
+                    StartsAt = testingEvents[0].StartsAt,
+                    TenantId = actor.TenantId,
+                }, cancellationToken).ConfigureAwait(false);
+            }
+
             return Result.Success(ToProjection(testingEvents[0]));
         }
         catch (ArgumentException exception)

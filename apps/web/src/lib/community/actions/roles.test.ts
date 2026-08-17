@@ -23,6 +23,7 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   redirect: mocks.redirect,
 }));
 
@@ -45,7 +46,7 @@ describe('platform role actions', () => {
     formData.append('permissions', 'roles:read');
 
     await expect(createPlatformRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/platform/roles?message=Created+role+Course+Operator.',
+      'redirect:/console/platform/roles?message=Created+role+Course+Operator.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
@@ -59,7 +60,7 @@ describe('platform role actions', () => {
       },
       requiresAuth: true,
     });
-    expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard/platform/roles');
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/console/platform/roles');
   });
 
   it('updates a role permission matrix and active state', async () => {
@@ -71,7 +72,7 @@ describe('platform role actions', () => {
     formData.append('permissions', 'courses:read');
 
     await expect(updatePlatformRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/platform/roles?message=Updated+role+Course+Operator.',
+      'redirect:/console/platform/roles?message=Updated+role+Course+Operator.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
@@ -94,7 +95,7 @@ describe('platform role actions', () => {
     mocks.request.mockResolvedValue({ ok: true, data: undefined });
 
     await expect(deletePlatformRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/platform/roles?message=Deleted+role+Course+Operator.',
+      'redirect:/console/platform/roles?message=Deleted+role+Course+Operator.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
@@ -111,7 +112,7 @@ describe('platform role actions', () => {
     formData.set('roleName', 'Course Operator');
 
     await expect(assignPlatformRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/platform/roles?message=Assigned+Course+Operator.',
+      'redirect:/console/platform/roles?message=Assigned+Course+Operator.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({
@@ -133,7 +134,7 @@ describe('platform role actions', () => {
     formData.set('roleName', 'Course Operator');
 
     await expect(removePlatformRole(formData)).rejects.toThrow(
-      'redirect:/dashboard/platform/roles?message=Removed+Course+Operator.',
+      'redirect:/console/platform/roles?message=Removed+Course+Operator.',
     );
 
     expect(mocks.request).toHaveBeenCalledWith({

@@ -1,11 +1,19 @@
+import { auth } from '@/auth';
 import { publicWebsiteHighlights } from '@/components/app/app-shell';
+import { FeedShell } from '@/components/feed/feed-shell';
+import { isFeedTab } from '@/components/feed/feed-tabs';
 import { Link } from '@/i18n/navigation';
 import { publicActivities, publicMembers, publicPlaytests, publicProjects } from '@/lib/community/public-community';
 import { ArrowRight, CalendarDays, MessageSquare, Sparkles, Users } from 'lucide-react';
 import React from 'react';
 
-export default async function Page({ params }: PageProps<'/[locale]'>): Promise<React.JSX.Element> {
-  await params;
+/** `/` is contextual: the community feed when signed in, the marketing landing otherwise. */
+export default async function Page({ params, searchParams }: PageProps<'/[locale]'>): Promise<React.JSX.Element> {
+  const [, query, session] = await Promise.all([params, searchParams, auth()]);
+  if (session && typeof session !== 'function') {
+    const rawTab = typeof query?.tab === 'string' ? query.tab : undefined;
+    return <FeedShell tab={isFeedTab(rawTab) ? rawTab : 'foryou'} />;
+  }
 
   return (
     <main className="bg-slate-950 text-white">
@@ -32,7 +40,7 @@ export default async function Page({ params }: PageProps<'/[locale]'>): Promise<
                 <ArrowRight className="ml-2 size-4" aria-hidden="true" />
               </Link>
               <Link
-                href="/programs"
+                href="/courses"
                 className="inline-flex items-center justify-center rounded-full border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10"
               >
                 Explore Programs

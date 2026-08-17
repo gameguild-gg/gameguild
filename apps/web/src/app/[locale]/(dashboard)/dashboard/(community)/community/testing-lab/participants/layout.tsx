@@ -1,7 +1,0 @@
-import { requireDashboardCapability } from '@/lib/require-dashboard-capability';
-import type { ReactNode } from 'react';
-
-export default async function ParticipantsManagementLayout({ children }: { children: ReactNode }) {
-  await requireDashboardCapability('TestingLab.ManageParticipants');
-  return children;
-}
