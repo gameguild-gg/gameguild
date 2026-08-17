@@ -481,6 +481,7 @@ export async function updateTestingLabSettings(formData: FormData): Promise<Test
       allowPublicSignups: checked(formData, 'allowPublicSignups'),
       requireApproval: checked(formData, 'requireApproval'),
       enableNotifications: checked(formData, 'enableNotifications'),
+      reminderDaysBefore: optionalText(formData, 'reminderDaysBefore'),
     }),
     'Testing Lab settings updated.',
     `${DASHBOARD_PATH}/settings`,
