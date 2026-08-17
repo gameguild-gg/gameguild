@@ -100,7 +100,7 @@ public class MuteEntityConfiguration : IEntityTypeConfiguration<Mute>
 
         // Index for cleanup of expired mutes
         builder.HasIndex(m => m.ExpiresAt)
-            .HasFilter("[ExpiresAt] IS NOT NULL");
+            .HasFilter("\"ExpiresAt\" IS NOT NULL");
     }
 }
 

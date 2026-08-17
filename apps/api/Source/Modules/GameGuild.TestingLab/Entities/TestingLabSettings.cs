@@ -33,6 +33,10 @@ public class TestingLabSettings : EntityBase, ITenantable {
   /// <summary> Whether to enable email notifications for session updates </summary>
   public bool EnableNotifications { get; set; } = true;
 
+  /// <summary> Days before an event starts when reminders are sent (CSV, e.g. "4,2,1") </summary>
+  [MaxLength(64)]
+  public string ReminderDaysBefore { get; set; } = "4,2,1";
+
   /// <summary> Maximum number of simultaneous sessions allowed </summary>
   [Required]
   [Range(1, 100)]

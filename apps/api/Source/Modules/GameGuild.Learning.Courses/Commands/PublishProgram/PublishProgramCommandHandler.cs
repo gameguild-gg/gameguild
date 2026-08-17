@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Courses;
 /// <summary>
 /// Command handler for PublishProgramCommand
 /// </summary>
-public sealed class PublishProgramCommandHandler(IApplicationDbContext context, ILogger<PublishProgramCommandHandler> logger, Social.Posts.Services.IPublicationAnnouncer? publicationAnnouncer = null)
+public sealed class PublishProgramCommandHandler(IApplicationDbContext context, ILogger<PublishProgramCommandHandler> logger, IMediator? mediator = null)
     : ICommandHandler<PublishProgramCommand, Program>
 {
     public async Task<Program> Handle(PublishProgramCommand request, CancellationToken cancellationToken) {
@@ -26,9 +26,16 @@ public sealed class PublishProgramCommandHandler(IApplicationDbContext context, 
 
     logger.LogInformation("Published program: {ProgramId}", program.Id);
 
-    if (publicationAnnouncer is not null && program.CreatorId is { } creatorId)
+    if (mediator is not null && program.CreatorId is { } creatorId)
     {
-        await publicationAnnouncer.AnnounceCoursePublishedAsync(creatorId, program.Title, program.Id, program.TenantId, cancellationToken).ConfigureAwait(false);
+        await mediator.Send(new GameGuild.Announcements.Contracts.AnnouncePublicationCommand
+        {
+            Kind = GameGuild.Announcements.Contracts.PublicationKind.CoursePublished,
+            ActorId = creatorId,
+            Title = program.Title,
+            EntityId = program.Id,
+            TenantId = program.TenantId,
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     return program;
