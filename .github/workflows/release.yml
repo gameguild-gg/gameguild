@@ -11,9 +11,10 @@ name: Release
 #   3. The release job:
 #      - runs scripts/devops/auto-changeset.mjs to convert conventional
 #        commits since the last tag into a .changeset/auto-*.md file
-#      - runs changesets/action which either:
-#          * opens/updates a "Version Packages" PR (if changesets pending), or
-#          * publishes pending version bump to npm (if Version PR merged)
+#      - runs changesets/action which opens/updates a "Version Packages" PR
+#        that syncs main's package.json versions with what was published.
+#        npm publishing itself happens in emception.yml (publish-packages),
+#        which also pushes the release tag this workflow anchors on.
 #
 # `BREAKING CHANGE:` commit footer or `feat!:`/`fix!:` marker → major bump.
 # `feat:` → minor. `fix:`/`perf:`/`refactor:`/`revert:` → patch.
@@ -111,6 +112,7 @@ jobs:
           # The reusable caller grants the token write access for the verified
           # main commit and passes that exact SHA here.
           fetch-depth: 0
+          fetch-tags: true
           ref: ${{ inputs.sha }}
 
       - name: Set up pnpm
@@ -147,15 +149,13 @@ jobs:
             echo "No release-relevant commits since last tag — nothing to release."
           fi
 
-      - name: Create Release Pull Request or Publish
+      - name: Create Release Pull Request
         if: steps.has-changeset.outputs.proceed == 'true'
         uses: changesets/action@v1 # v1
         with:
           branch: ${{ inputs.branch }}
-          publish: pnpm run release
           version: pnpm run version
           title: 'chore(release): version packages'
           commit: 'chore(release): version packages'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

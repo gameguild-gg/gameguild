@@ -168,7 +168,10 @@ function main() {
     }
 
     const content = buildChangeset(bump, featured, tag);
-    const filename = `.changeset/auto-${Date.now()}.md`;
+    // Deterministic name per HEAD: re-runs for the same commit overwrite the
+    // same file instead of stacking duplicate changesets into the release PR.
+    const head = git('rev-parse --short HEAD');
+    const filename = `.changeset/auto-${head}.md`;
     const filepath = path.join(ROOT, filename);
 
     if (DRY_RUN) {
