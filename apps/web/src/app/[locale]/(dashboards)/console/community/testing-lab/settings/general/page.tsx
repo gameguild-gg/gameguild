@@ -139,6 +139,20 @@ export default async function TestingLabSettingsPage() {
                 defaultValue={settings?.maxSimultaneousSessions ?? 4}
               />
             </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="lab-reminders">Reminder days before event</Label>
+              <Input
+                id="lab-reminders"
+                name="reminderDaysBefore"
+                placeholder="4,2,1"
+                defaultValue={settings?.reminderDaysBefore ?? "4,2,1"}
+                aria-describedby="lab-reminders-help"
+              />
+              <p id="lab-reminders-help" className="text-xs text-muted-foreground">
+                Comma-separated day thresholds when reminders are sent to the event
+                manager and approved testers. Events can override this.
+              </p>
+            </div>
           </div>
         </section>
 
