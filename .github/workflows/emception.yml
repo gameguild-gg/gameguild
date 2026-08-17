@@ -287,7 +287,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - name: Check out repository
@@ -359,3 +359,16 @@ jobs:
           done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag release
+        shell: bash
+        run: |
+          VERSION="$(node -p "require('./tools/emception/packages/core/package.json').version")"
+          TAG="v${VERSION}"
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "${TAG} already exists; nothing to tag."
+            exit 0
+          fi
+          git tag "${TAG}"
+          git push origin "${TAG}"
+          echo "Tagged ${TAG} — future auto-changeset runs anchor here."
