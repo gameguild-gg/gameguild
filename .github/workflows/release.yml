@@ -188,6 +188,7 @@ jobs:
         if: steps.has-changeset.outputs.proceed == 'true'
         uses: changesets/action@v1 # v1
         with:
+          branch: ${{ needs.gate.outputs.branch }}
           publish: pnpm run release
           version: pnpm run version
           title: 'chore(release): version packages'
