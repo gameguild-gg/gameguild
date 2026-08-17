@@ -1,9 +1,5 @@
 export const CURRENT_GRADING_SCHEMA_VERSION = 1;
 
-// Result use answers "where should a trusted server result be applied?"
-// It is separate from runtime trust: grading-enabled work is always server-graded.
-export type GradingResultUse = 'feedback' | 'gradebook';
-
 export type FeedbackMode = 'immediate' | 'after-submit' | 'after-close' | 'manual';
 
 export type PresentationMode = 'continuous' | 'single-step';
@@ -15,24 +11,11 @@ export type GradingKind = 'deterministic' | 'manual' | 'external' | 'unsupported
 export interface ContentGradingDefinition {
   enabled: boolean;
   schemaVersion: number;
-  outcome: GradingOutcomePolicy;
   score: ScorePolicy;
   attempts: AttemptPolicy;
   feedback: FeedbackPolicy;
   presentation: PresentationPolicy;
   items: Record<string, GradedItemConfig>;
-}
-
-export interface GradingOutcomePolicy {
-  uses: GradingResultUse[];
-  gradebook?: GradebookPlacement | null;
-}
-
-export interface GradebookPlacement {
-  groupId?: string | null;
-  weight?: number;
-  required?: boolean;
-  includeInFinalGrade?: boolean;
 }
 
 export interface ScorePolicy {

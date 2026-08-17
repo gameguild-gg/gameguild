@@ -162,7 +162,7 @@ describe('quiz grading adapter', () => {
     }
   });
 
-  it('creates feedback-only quiz grading by default', () => {
+  it('creates quiz grading from authored items', () => {
     const definition = createQuizGradingDefinition([
       {
         id: '1',
@@ -172,14 +172,11 @@ describe('quiz grading adapter', () => {
     ]);
 
     expect(definition.enabled).toBe(true);
-    expect(definition.outcome).toEqual({
-      uses: ['feedback'],
-      gradebook: null,
-    });
+    expect(definition).not.toHaveProperty('outcome');
     expect(definition.score.maxScore).toBe(1);
   });
 
-  it('creates gradebook-bound quiz grading when requested', () => {
+  it('applies quiz scoring and presentation options', () => {
     const definition = createQuizGradingDefinition(
       [
         {
@@ -189,22 +186,16 @@ describe('quiz grading adapter', () => {
         },
       ],
       {
-        uses: ['feedback', 'gradebook'],
-        groupId: 'group-1',
-        weight: 30,
-        includeInFinalGrade: false,
+        maxScore: 10,
+        passingScore: 7,
+        feedbackMode: 'after-submit',
+        presentationMode: 'single-step',
       },
     );
 
-    expect(definition.outcome).toMatchObject({
-      uses: ['feedback', 'gradebook'],
-      gradebook: {
-        groupId: 'group-1',
-        weight: 30,
-        includeInFinalGrade: false,
-      },
-    });
-    expect(definition.score.maxScore).toBe(3);
+    expect(definition.score).toEqual({ maxScore: 10, passingScore: 7 });
+    expect(definition.feedback.mode).toBe('after-submit');
+    expect(definition.presentation.mode).toBe('single-step');
   });
 
   it('syncs items after quiz blocks change', () => {

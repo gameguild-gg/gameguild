@@ -106,7 +106,10 @@ public class AssessmentService : IAssessmentService
     {
         var assessments = await _context.Set<Assessment>()
             .Include(a => a.AssessmentGroup)
-            .Where(a => a.CourseId == courseId && a.DeletedAt == null)
+            .Where(a => a.CourseId == courseId &&
+                        a.DeletedAt == null &&
+                        a.AssessmentGroup != null &&
+                        a.AssessmentGroup.WeightPercent > 0)
             .ToListAsync().ConfigureAwait(false);
 
         var assessmentIds = assessments.Select(a => a.Id).ToArray();
