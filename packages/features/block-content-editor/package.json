@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/block-content-editor",
-  "version": "4.0.0",
+  "version": "6.0.0",
   "type": "module",
   "description": "Reusable block content editor components and helpers for GameGuild apps",
   "license": "UNLICENSED",

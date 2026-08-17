@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/grading",
-  "version": "4.0.0",
+  "version": "6.0.0",
   "type": "module",
   "description": "Framework-independent grading contracts and helpers for GameGuild learning content",
   "license": "UNLICENSED",

@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/community-members",
-  "version": "4.0.0",
+  "version": "6.0.0",
   "type": "module",
   "description": "UI-only components for the community members (profile) feature",
   "license": "UNLICENSED",

@@ -1,6 +1,6 @@
 {
   "name": "@gameguild/emception-demo-run-react",
-  "version": "4.0.0",
+  "version": "6.0.0",
   "private": true,
   "description": "Minimal Vite + React 19 demo for the <EmceptionRun /> declarative wrapper from @gameguild/emception-react.",
   "type": "module",

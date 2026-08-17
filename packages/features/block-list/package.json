@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/block-list",
-  "version": "4.0.0",
+  "version": "6.0.0",
   "type": "module",
   "description": "Framework-independent ordered block-list contracts and helpers",
   "license": "UNLICENSED",
