@@ -74,12 +74,13 @@ public class NotificationDeliveryServiceTests
     public async Task SendAsync_Should_Return_Failure_When_User_Preferences_Block_Delivery()
     {
         using var context = CreateContext();
-        var subject = CreateSubject(context, shouldSend: false);
+        var subject = CreateSubject(context, NotificationDeliveryDecision.Drop("muted"));
 
         var result = await subject.SendAsync(Guid.NewGuid(), NotificationType.System, "Title", "Message");
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Code.Should().Be("Notification.Skipped");
+        result.Error.Description.Should().Contain("muted");
         context.Notifications.Should().BeEmpty();
     }
 
@@ -108,6 +109,37 @@ public class NotificationDeliveryServiceTests
         result.IsSuccess.Should().BeTrue();
         result.Value.IsSent.Should().BeFalse();
         result.Value.SentAt.Should().BeNull();
+        result.Value.DeliveryStatus.Should().Be(NotificationDeliveryStatus.Pending);
+        result.Value.ScheduledAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task SendAsync_Should_Schedule_Email_Held_By_Quiet_Hours()
+    {
+        using var context = CreateContext();
+        var heldUntil = new DateTime(2026, 1, 2, 6, 0, 0, DateTimeKind.Utc);
+        var subject = CreateSubject(context, NotificationDeliveryDecision.HoldUntil(heldUntil));
+
+        var result = await subject.SendAsync(Guid.NewGuid(), NotificationType.System, "Title", "Message", NotificationChannel.Email);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.DeliveryStatus.Should().Be(NotificationDeliveryStatus.Pending);
+        result.Value.ScheduledAt.Should().Be(heldUntil);
+        result.Value.IsSent.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SendAsync_Should_Queue_Digest_Emails_As_HeldForDigest()
+    {
+        using var context = CreateContext();
+        var subject = CreateSubject(context, NotificationDeliveryDecision.Digest());
+
+        var result = await subject.SendAsync(Guid.NewGuid(), NotificationType.System, "Title", "Message", NotificationChannel.Email);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.DeliveryStatus.Should().Be(NotificationDeliveryStatus.HeldForDigest);
+        result.Value.ScheduledAt.Should().BeNull();
+        result.Value.IsSent.Should().BeFalse();
     }
 
     [Fact]
@@ -161,11 +193,11 @@ public class NotificationDeliveryServiceTests
         var blocked = Guid.NewGuid();
         var preferenceService = new Mock<INotificationPreferenceService>();
         preferenceService
-            .Setup(service => service.ShouldSendNotificationAsync(allowed, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .Setup(service => service.DecideDeliveryAsync(allowed, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NotificationDeliveryDecision.Send());
         preferenceService
-            .Setup(service => service.ShouldSendNotificationAsync(blocked, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+            .Setup(service => service.DecideDeliveryAsync(blocked, NotificationType.System, NotificationChannel.InApp, NotificationPriority.Normal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NotificationDeliveryDecision.Drop("muted"));
         var templateService = CreateTemplateServiceMock();
         var subject = new NotificationDeliveryService(
             new ApplicationDbContextAdapter(context),
@@ -177,6 +209,45 @@ public class NotificationDeliveryServiceTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().ContainSingle(notification => notification.RecipientId == allowed && notification.IsSent);
+    }
+
+    [Fact]
+    public async Task SendBulkAsync_Should_Map_Hold_And_Digest_Decisions_To_Row_State()
+    {
+        using var context = CreateContext();
+        var immediate = Guid.NewGuid();
+        var held = Guid.NewGuid();
+        var digested = Guid.NewGuid();
+        var dropped = Guid.NewGuid();
+        var heldUntil = new DateTime(2026, 1, 2, 6, 0, 0, DateTimeKind.Utc);
+        var preferenceService = new Mock<INotificationPreferenceService>();
+        preferenceService
+            .Setup(service => service.DecideDeliveryAsync(immediate, NotificationType.System, NotificationChannel.Email, NotificationPriority.Normal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NotificationDeliveryDecision.Send());
+        preferenceService
+            .Setup(service => service.DecideDeliveryAsync(held, NotificationType.System, NotificationChannel.Email, NotificationPriority.Normal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NotificationDeliveryDecision.HoldUntil(heldUntil));
+        preferenceService
+            .Setup(service => service.DecideDeliveryAsync(digested, NotificationType.System, NotificationChannel.Email, NotificationPriority.Normal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NotificationDeliveryDecision.Digest());
+        preferenceService
+            .Setup(service => service.DecideDeliveryAsync(dropped, NotificationType.System, NotificationChannel.Email, NotificationPriority.Normal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(NotificationDeliveryDecision.Drop("muted"));
+        var subject = new NotificationDeliveryService(
+            new ApplicationDbContextAdapter(context),
+            preferenceService.Object,
+            CreateTemplateServiceMock().Object,
+            NullLogger<NotificationDeliveryService>.Instance);
+
+        var result = await subject.SendBulkAsync([immediate, held, digested, dropped], NotificationType.System, "Bulk", "Message", NotificationChannel.Email);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(3);
+        result.Value.Single(n => n.RecipientId == immediate).DeliveryStatus.Should().Be(NotificationDeliveryStatus.Pending);
+        result.Value.Single(n => n.RecipientId == immediate).ScheduledAt.Should().BeNull();
+        result.Value.Single(n => n.RecipientId == held).ScheduledAt.Should().Be(heldUntil);
+        result.Value.Single(n => n.RecipientId == digested).DeliveryStatus.Should().Be(NotificationDeliveryStatus.HeldForDigest);
+        result.Value.Should().NotContain(n => n.RecipientId == dropped);
     }
 
     [Fact]
@@ -267,11 +338,14 @@ public class NotificationDeliveryServiceTests
     }
 
     private static NotificationDeliveryService CreateSubject(NotificationsTestDbContext context, bool shouldSend)
+        => CreateSubject(context, shouldSend ? NotificationDeliveryDecision.Send() : NotificationDeliveryDecision.Drop("muted"));
+
+    private static NotificationDeliveryService CreateSubject(NotificationsTestDbContext context, NotificationDeliveryDecision decision)
     {
         var preferenceService = new Mock<INotificationPreferenceService>();
         preferenceService
-            .Setup(service => service.ShouldSendNotificationAsync(It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<NotificationChannel>(), It.IsAny<NotificationPriority>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(shouldSend);
+            .Setup(service => service.DecideDeliveryAsync(It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<NotificationChannel>(), It.IsAny<NotificationPriority>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(decision);
 
         return new NotificationDeliveryService(
             new ApplicationDbContextAdapter(context),
