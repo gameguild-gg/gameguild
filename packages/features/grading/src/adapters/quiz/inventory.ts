@@ -88,7 +88,7 @@ export const QUIZ_ANSWER_KEY_INVENTORY: readonly QuizAnswerKeyInventoryItem[] = 
   },
   {
     type: 'HOTSPOT',
-    learnerSafeFields: ['type', 'stem', 'imageUrl', 'imageWidth', 'imageHeight', 'settings'],
+    learnerSafeFields: ['type', 'stem', 'imageAssetUri', 'imageWidth', 'imageHeight', 'settings'],
     answerKeyFields: ['type', 'imageWidth', 'imageHeight', 'hotspots'],
     structuredAnswerFields: ['textAnswers'],
     gradingSupport: 'deterministic',

@@ -3,12 +3,12 @@ import { createServerClient } from '@game-guild/client';
 import { Link } from '@/i18n/navigation';
 import { FlaskConical, Gamepad2, Github, GraduationCap, Heart, MessageCircle, Rocket, Twitter, Users, Youtube } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { PublicDesktopNav, PublicMobileNav, type PublicWebsiteUser } from '@/components/site/public-website-nav';
-import { PublicAccountMenu } from '@/components/site/public-account-menu';
+import { PublicDesktopNav, PublicMobileNav, type PublicWebsiteUser } from './public-website-nav';
+import { PublicAccountMenu } from './public-account-menu';
 
 const primaryNav = [
   { label: 'Courses', href: '/courses' },
-  { label: 'Programs', href: '/programs' },
+  { label: 'Programs', href: '/courses' },
   { label: 'Testing Lab', href: '/testing-lab' },
   { label: 'Launch Pad', href: '/launch-pad' },
   { label: 'Projects', href: '/projects' },
@@ -24,7 +24,7 @@ const footerSections = [
     hoverClass: 'hover:text-blue-300',
     links: [
       { label: 'Courses', href: '/courses' },
-      { label: 'Programs', href: '/programs' },
+      { label: 'Programs', href: '/courses' },
     ],
   },
   {
@@ -44,7 +44,7 @@ const footerSections = [
     links: [
       { label: 'Join community', href: '/sign-up' },
       { label: 'Community hub', href: '/community' },
-      { label: 'Feed', href: '/feed' },
+      { label: 'Feed', href: '/' },
       { label: 'Jobs', href: '/jobs' },
     ],
   },
@@ -237,10 +237,10 @@ export function PublicWebsiteFooter() {
               <Link href="/legal/licenses" className="transition-colors hover:text-blue-300">
                 Licenses
               </Link>
-              <Link href="/legal/terms-of-service" className="transition-colors hover:text-blue-300">
+              <Link href="/terms-of-service" className="transition-colors hover:text-blue-300">
                 Terms of Service
               </Link>
-              <Link href="/legal/privacy" className="transition-colors hover:text-blue-300">
+              <Link href="/polices/privacy" className="transition-colors hover:text-blue-300">
                 Privacy
               </Link>
             </nav>
@@ -252,7 +252,7 @@ export function PublicWebsiteFooter() {
   );
 }
 
-export async function PublicWebsiteShell({ children }: { readonly children: ReactNode }) {
+export async function AppShell({ children }: { readonly children: ReactNode }) {
   const header = await PublicWebsiteHeader();
 
   return (

@@ -127,4 +127,5 @@ describe('CoursesPage', () => {
     expect(screen.queryByText(/showing the imported GameGuild course snapshot/i)).not.toBeInTheDocument();
     expect(publicCourseCatalogMock).toHaveBeenCalledWith([]);
   });
+
 });

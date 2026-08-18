@@ -17,6 +17,7 @@ public class TestingLabModule : ModuleBase
     {
         // Register TestingLab repositories
         services.AddScoped<ITestingRequestRepository, TestingRequestRepository>();
+        services.AddHostedService<Services.TestingEventReminderService>();
         services.AddScoped<ITestingLocationRepository, TestingLocationRepository>();
 
         // Register TestingLab services (pre-existing focused services used by CQRS handlers)

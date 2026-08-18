@@ -3,11 +3,23 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  createEmptyQuizAnswer,
+  evaluateQuizAnswer,
+  toStructuredGradingAnswer,
+  type QuizAnswer,
+  type QuizLearnerEntry,
+  type QuizPracticeEntry,
+} from '@game-guild/quiz';
+import {
+  QuizPlayer,
+  QuizPracticePlayer,
+  type QuizSubmissionResult,
+} from '@game-guild/quiz-surface/player';
+import { readContentGradingDefinition } from '@game-guild/grading';
 import { submitActivity } from '@/lib/courses/server-actions';
 import { Clock, Code, FileText, MessageSquare, Play, Save, Send, Upload } from 'lucide-react';
 import { useState } from 'react';
@@ -32,13 +44,24 @@ interface ActivityComponentProps {
   onComplete: (score?: number) => void;
 }
 
-interface QuizQuestion {
+interface QuizActivityQuestion<Entry> {
   id: string;
-  question: string;
-  type: 'multiple-choice' | 'multiple-select' | 'true-false' | 'short-answer';
-  options?: string[];
-  correctAnswer?: string | string[];
-  points: number;
+  data: Entry;
+}
+
+type QuizActivityContent =
+  | {
+      questions: Array<QuizActivityQuestion<QuizLearnerEntry>>;
+      serverGraded: true;
+    }
+  | {
+      questions: Array<QuizActivityQuestion<QuizPracticeEntry>>;
+      serverGraded: false;
+    };
+
+interface QuizStorage {
+  order: unknown[];
+  blocks: Record<string, unknown>;
 }
 
 export function ActivityComponent({ item, courseId, onComplete }: ActivityComponentProps) {
@@ -46,6 +69,10 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submission, setSubmission] = useState<Record<string, unknown>>({});
   const [currentStep, setCurrentStep] = useState(0);
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, QuizAnswer>>({});
+  const [quizSubmissionResults, setQuizSubmissionResults] = useState<
+    Record<string, QuizSubmissionResult>
+  >({});
 
   const handleStart = () => {
     setHasStarted(true);
@@ -55,25 +82,36 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
     setIsSubmitting(true);
 
     try {
+      const quiz = item.type === 'quiz' ? getQuizContent() : null;
       const submissionData = {
         activityId: item.id,
         courseId,
         activityType: item.activityType || 'text',
-        content: submission,
-        isGraded: item.type === 'quiz' || item.type === 'assignment',
+        content: quiz
+          ? {
+              answers: Object.fromEntries(
+                quiz.questions.map((question) => {
+                  const answer =
+                    quizAnswers[question.id] ??
+                    createEmptyQuizAnswer(question.data.type);
+                  return [question.id, toStructuredGradingAnswer(answer)];
+                }),
+              ),
+            }
+          : submission,
+        isGraded:
+          item.type === 'quiz'
+            ? quiz?.serverGraded ?? false
+            : item.type === 'assignment',
         attempt: 1,
       };
 
       const result = await submitActivity(submissionData);
 
       if (result.success) {
-        // Calculate score for quiz
-        let score;
-        if (item.type === 'quiz') {
-          score = calculateQuizScore();
-        }
-
-        onComplete(score);
+        const localPracticeScore =
+          quiz && !quiz.serverGraded ? calculateQuizScore(quiz) : undefined;
+        onComplete(result.score ?? localPracticeScore);
       } else {
         console.error('Submission failed:', result.message);
       }
@@ -84,123 +122,65 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
     }
   };
 
-  const calculateQuizScore = (): number => {
-    const quiz = getQuizContent();
-    if (!quiz) return 0;
+  const calculateQuizScore = (
+    quiz: Extract<QuizActivityContent, { serverGraded: false }>,
+  ): number => {
+    const totals = quiz.questions.reduce(
+      (current, question) => {
+        const points = question.data.points ?? 1;
+        const answer =
+          quizAnswers[question.id] ??
+          createEmptyQuizAnswer(question.data.type);
+        const result = evaluateQuizAnswer(question.data, answer);
 
-    let totalPoints = 0;
-    let earnedPoints = 0;
+        return {
+          possible: current.possible + points,
+          earned: current.earned + (result.status === 'correct' ? points : 0),
+        };
+      },
+      { possible: 0, earned: 0 },
+    );
 
-    quiz.questions.forEach((question) => {
-      totalPoints += question.points;
-      const userAnswer = submission[question.id];
-
-      if (question.type === 'multiple-choice' || question.type === 'true-false') {
-        if (userAnswer === question.correctAnswer) {
-          earnedPoints += question.points;
-        }
-      } else if (question.type === 'multiple-select') {
-        const correct = question.correctAnswer as string[];
-        const user = userAnswer as string[];
-        if (user && correct && user.length === correct.length && user.every((answer) => correct.includes(answer))) {
-          earnedPoints += question.points;
-        }
-      }
-      // Short answer would need manual grading
-    });
-
-    return Math.round((earnedPoints / totalPoints) * 100);
+    return totals.possible > 0
+      ? Math.round((totals.earned / totals.possible) * 100)
+      : 0;
   };
 
-  const getQuizContent = (): { title: string; description: string; timeLimit: number; questions: QuizQuestion[] } => {
-    if (item.content && typeof item.content === 'object') {
-      const body = item.content as Record<string, unknown>;
-      if (Array.isArray(body.questions)) {
-        const questions = body.questions
-          .filter((question): question is Record<string, unknown> => typeof question === 'object' && question !== null)
-          .map((question, index) => ({
-            id: typeof question.id === 'string' ? question.id : `question-${index + 1}`,
-            question: typeof question.question === 'string' ? question.question : typeof question.prompt === 'string' ? question.prompt : `Question ${index + 1}`,
-            type:
-              question.type === 'multiple-choice' || question.type === 'multiple-select' || question.type === 'true-false' || question.type === 'short-answer'
-                ? question.type
-                : 'short-answer',
-            options: Array.isArray(question.options) ? question.options.filter((option): option is string => typeof option === 'string') : undefined,
-            correctAnswer:
-              typeof question.correctAnswer === 'string' || Array.isArray(question.correctAnswer)
-                ? (question.correctAnswer as string | string[])
-                : undefined,
-            points: typeof question.points === 'number' ? question.points : 10,
-          } satisfies QuizQuestion));
-
-        if (questions.length > 0) {
-          return {
-            title: typeof body.title === 'string' ? body.title : item.title,
-            description: typeof body.description === 'string' ? body.description : item.description || 'Answer the questions below.',
-            timeLimit: typeof body.timeLimit === 'number' ? body.timeLimit : item.duration || 15,
-            questions,
-          };
-        }
-      }
+  const getQuizContent = (): QuizActivityContent => {
+    const content = item.content;
+    if (!isBlockStorage(content)) {
+      return { questions: [], serverGraded: false };
     }
 
-    const quizzes: Record<string, { title: string; description: string; timeLimit: number; questions: QuizQuestion[] }> = {
-      'quiz-1': {
-        title: 'Programming Concepts Quiz',
-        description: 'Test your understanding of basic programming concepts',
-        timeLimit: 15,
-        questions: [
-          {
-            id: 'q1',
-            question: 'What is a game loop?',
-            type: 'multiple-choice',
-            options: ['A loop that only runs once', 'A continuous cycle that updates game state and renders graphics', 'A loop used for loading game assets', 'A debugging tool for games'],
-            correctAnswer: 'A continuous cycle that updates game state and renders graphics',
-            points: 10,
-          },
-          {
-            id: 'q2',
-            question: 'Which programming pattern is commonly used for game events?',
-            type: 'multiple-choice',
-            options: ['Singleton Pattern', 'Observer Pattern', 'Factory Pattern', 'Decorator Pattern'],
-            correctAnswer: 'Observer Pattern',
-            points: 10,
-          },
-          {
-            id: 'q3',
-            question: 'Select all that are components of a typical game loop:',
-            type: 'multiple-select',
-            options: ['Process Input', 'Update Game State', 'Render Graphics', 'Save Game Data', 'Load Assets'],
-            correctAnswer: ['Process Input', 'Update Game State', 'Render Graphics'],
-            points: 15,
-          },
-          {
-            id: 'q4',
-            question: 'Object pooling is used to optimize memory usage.',
-            type: 'true-false',
-            options: ['True', 'False'],
-            correctAnswer: 'True',
-            points: 5,
-          },
-        ],
-      },
-    };
-
-    return (
-      quizzes[item.id] ?? {
-        title: item.title,
-        description: item.description || 'Submit a short response to complete this quiz.',
-        timeLimit: item.duration || 15,
-        questions: [
-          {
-            id: 'response',
-            question: item.description || 'Summarize what you learned from this activity.',
-            type: 'short-answer',
-            points: 100,
-          },
-        ],
+    const grading = readContentGradingDefinition(content);
+    const rawQuestions = content.order.flatMap((entry) => {
+      if (
+        !Array.isArray(entry) ||
+        typeof entry[0] !== 'string' ||
+        entry[1] !== 'quiz'
+      ) {
+        return [];
       }
-    );
+
+      const data = content.blocks[entry[0]];
+      if (!data || typeof data !== 'object' || Array.isArray(data)) return [];
+
+      return [{ id: entry[0], data }];
+    });
+
+    return grading?.enabled
+      ? {
+          questions: rawQuestions as Array<
+            QuizActivityQuestion<QuizLearnerEntry>
+          >,
+          serverGraded: true,
+        }
+      : {
+          questions: rawQuestions as Array<
+            QuizActivityQuestion<QuizPracticeEntry>
+          >,
+          serverGraded: false,
+        };
   };
 
   const getActivityIcon = () => {
@@ -221,8 +201,29 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
   const renderQuizActivity = () => {
     const quiz = getQuizContent();
     const currentQuestion = quiz.questions[currentStep];
-    if (!currentQuestion) return <div>Question not found</div>;
+    if (!currentQuestion) {
+      return (
+        <div className="rounded-md border p-8 text-center text-sm text-muted-foreground">
+          This quiz has no published questions.
+        </div>
+      );
+    }
     const isLastQuestion = currentStep === quiz.questions.length - 1;
+    const answer =
+      quizAnswers[currentQuestion.id] ??
+      createEmptyQuizAnswer(currentQuestion.data.type);
+    const learnerEntry = quiz.serverGraded
+      ? quiz.questions[currentStep]?.data
+      : null;
+    const practiceEntry = !quiz.serverGraded
+      ? quiz.questions[currentStep]?.data
+      : null;
+    const setAnswer = (nextAnswer: QuizAnswer) => {
+      setQuizAnswers((current) => ({
+        ...current,
+        [currentQuestion.id]: nextAnswer,
+      }));
+    };
 
     return (
       <div className="space-y-6">
@@ -230,49 +231,35 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
           <h3 className="text-lg font-semibold">
             Question {currentStep + 1} of {quiz.questions.length}
           </h3>
-          <Badge variant="outline">{currentQuestion.points} points</Badge>
+          <Badge variant="outline">{currentQuestion.data.points ?? 1} points</Badge>
         </div>
 
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm border-slate-700/50 shadow-lg">
+        <Card>
           <CardContent className="p-6">
-            <h4 className="text-lg mb-4 text-white">{currentQuestion.question}</h4>
-
-            {currentQuestion.type === 'multiple-choice' || currentQuestion.type === 'true-false' ? (
-              <RadioGroup value={(submission[currentQuestion.id] as string) || ''} onValueChange={(value) => setSubmission((prev) => ({ ...prev, [currentQuestion.id]: value }))}>
-                {currentQuestion.options?.map((option, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option} id={`option-${index}`} />
-                    <Label htmlFor={`option-${index}`} className="text-slate-300">
-                      {option}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            ) : currentQuestion.type === 'multiple-select' ? (
-              <div className="space-y-2">
-                {currentQuestion.options?.map((option, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`option-${index}`}
-                      checked={((submission[currentQuestion.id] as string[]) || []).includes(option)}
-                      onCheckedChange={(checked) => {
-                        const current = (submission[currentQuestion.id] as string[]) || [];
-                        const updated = checked ? [...current, option] : current.filter((item) => item !== option);
-                        setSubmission((prev) => ({ ...prev, [currentQuestion.id]: updated }));
-                      }}
-                    />
-                    <Label htmlFor={`option-${index}`} className="text-gray-300">
-                      {option}
-                    </Label>
-                  </div>
-                ))}
-              </div>
+            {quiz.serverGraded ? (
+              <QuizPlayer
+                entry={learnerEntry!}
+                answer={answer}
+                onAnswerChange={setAnswer}
+                onSubmit={(nextAnswer) => {
+                  setAnswer(nextAnswer);
+                  setQuizSubmissionResults((current) => ({
+                    ...current,
+                    [currentQuestion.id]: {
+                      status: 'pending',
+                      feedback: 'Answer recorded. Submit the quiz to grade it.',
+                    },
+                  }));
+                }}
+                submissionResult={
+                  quizSubmissionResults[currentQuestion.id] ?? { status: 'idle' }
+                }
+              />
             ) : (
-              <Textarea
-                placeholder="Enter your answer..."
-                value={(submission[currentQuestion.id] as string) || ''}
-                onChange={(e) => setSubmission((prev) => ({ ...prev, [currentQuestion.id]: e.target.value }))}
-                className="bg-gray-800 border-gray-600 text-white"
+              <QuizPracticePlayer
+                entry={practiceEntry!}
+                answer={answer}
+                onAnswerChange={setAnswer}
               />
             )}
           </CardContent>
@@ -467,5 +454,17 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
         </div>
       )}
     </div>
+  );
+}
+
+function isBlockStorage(value: unknown): value is QuizStorage {
+  if (!value || typeof value !== 'object') return false;
+
+  const candidate = value as { order?: unknown; blocks?: unknown };
+  return (
+    Array.isArray(candidate.order) &&
+    Boolean(candidate.blocks) &&
+    typeof candidate.blocks === 'object' &&
+    !Array.isArray(candidate.blocks)
   );
 }

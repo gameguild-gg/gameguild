@@ -1,7 +1,6 @@
 import type {
   FeedbackMode,
   GradingKind,
-  GradingResultUse,
   PresentationMode,
   StructuredAnswer,
 } from '../../types';
@@ -43,13 +42,8 @@ export interface QuizQuestionLike {
 }
 
 export interface QuizGradingOptions {
-  uses?: readonly GradingResultUse[];
   maxScore?: number;
   passingScore?: number;
-  required?: boolean;
-  groupId?: string | null;
-  weight?: number;
-  includeInFinalGrade?: boolean;
   feedbackMode?: FeedbackMode;
   presentationMode?: PresentationMode;
 }

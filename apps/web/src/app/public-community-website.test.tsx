@@ -51,8 +51,8 @@ import { PublicWebsiteHeader } from '@/components/app/app-shell';
 import CommunityPage from './[locale]/(public)/community/page';
 import JobsPage from './[locale]/(public)/jobs/page';
 import LaunchPadPage from './[locale]/(public)/launch-pad/page';
-import ProjectsPage from './[locale]/(contents)/(projects)/projects/page';
-import ProjectDetailPage from './[locale]/(contents)/(projects)/projects/[project]/page';
+import ShowcasePage from './[locale]/(public)/projects/page';
+import ProjectDetailPage from './[locale]/(public)/projects/[slug]/page';
 import TestingLabPage from './[locale]/(public)/testing-lab/page';
 import HomePage from './[locale]/(public)/page';
 
@@ -128,6 +128,8 @@ describe('public community website UX', () => {
   });
 
   it('turns the home page into a community gateway', async () => {
+    authMock.mockResolvedValueOnce(null);
+
     render(await HomePage({ params: Promise.resolve({ locale: 'en-US' }) } as PageProps<'/[locale]'>));
 
     expect(screen.getByRole('heading', { name: /learn, build & connect/i })).toBeInTheDocument();
@@ -138,7 +140,7 @@ describe('public community website UX', () => {
   });
 
   it('renders a public project showcase and detail path', async () => {
-    render(await ProjectsPage());
+    render(await ShowcasePage());
 
     expect(screen.getByRole('heading', { name: /project showcase/i })).toBeInTheDocument();
     expect(screen.getByAltText(/real api project project preview/i)).toBeInTheDocument();
@@ -148,7 +150,7 @@ describe('public community website UX', () => {
   });
 
   it('renders project detail with creator, media, playtest status, and community CTAs', async () => {
-    render(await ProjectDetailPage({ params: Promise.resolve({ project: 'real-api-project' }) }));
+    render(await ProjectDetailPage({ params: Promise.resolve({ slug: 'real-api-project' }) }));
 
     expect(screen.getByRole('heading', { name: /real api project/i })).toBeInTheDocument();
     expect(screen.getByAltText(/real api project project preview/i)).toBeInTheDocument();

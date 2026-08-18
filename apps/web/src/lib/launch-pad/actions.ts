@@ -48,7 +48,7 @@ function value(formData: FormData, key: string) {
 }
 
 function revalidateLaunchPad(eventId?: string) {
-  revalidatePath('/dashboard/launch-pad');
+  revalidatePath('/console/community/launch-pad');
   revalidatePath('/launch-pad');
   revalidatePath('/launch-pad/events');
   revalidatePath('/launch-pad/participation');
@@ -210,7 +210,7 @@ export async function createLaunchPlan(formData: FormData): Promise<void> {
     }),
   });
 
-  if (result.success) revalidatePath('/dashboard/launch-pad');
+  if (result.success) revalidatePath('/console/community/launch-pad');
 }
 
 export async function completeLaunchChecklistItem(formData: FormData): Promise<void> {
@@ -223,7 +223,7 @@ export async function completeLaunchChecklistItem(formData: FormData): Promise<v
     body: JSON.stringify({}),
   });
 
-  if (result.success) revalidatePath('/dashboard/launch-pad');
+  if (result.success) revalidatePath('/console/community/launch-pad');
 }
 
 export async function publishLaunchPlan(formData: FormData): Promise<void> {
@@ -235,5 +235,5 @@ export async function publishLaunchPlan(formData: FormData): Promise<void> {
     body: JSON.stringify({}),
   });
 
-  if (result.success) revalidatePath('/dashboard/launch-pad');
+  if (result.success) revalidatePath('/console/community/launch-pad');
 }

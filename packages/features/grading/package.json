@@ -12,6 +12,9 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit --pretty false"
   },
+  "dependencies": {
+    "@game-guild/quiz": "workspace:^"
+  },
   "devDependencies": {
     "@game-guild/typescript-config": "workspace:*",
     "typescript": "^5.5.0",

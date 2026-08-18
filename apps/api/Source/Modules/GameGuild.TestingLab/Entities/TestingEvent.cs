@@ -54,6 +54,12 @@ public sealed class TestingEvent : EntityBase
 
     public Guid? LearningActivityId { get; private set; }
 
+    [MaxLength(64)]
+    public string? ReminderDaysBeforeOverride { get; private set; }
+
+    [MaxLength(128)]
+    public string SentReminderDays { get; private set; } = string.Empty;
+
     [MaxLength(1000)]
     public string? CancellationReason { get; private set; }
 
@@ -197,6 +203,33 @@ public sealed class TestingEvent : EntityBase
         CancelledAt = SystemClock.UtcNow;
         Touch();
     }
+
+    public void SetReminderOverride(int[]? daysBefore)
+    {
+        ReminderDaysBeforeOverride = daysBefore is { Length: > 0 }
+            ? string.Join(',', daysBefore.Where(day => day is > 0 and <= 30).Distinct().OrderBy(day => day))
+            : null;
+        Touch();
+    }
+
+    public void MarkReminderSent(int daysBefore)
+    {
+        var sent = SentReminderDaysCsv.ToList();
+        if (!sent.Contains(daysBefore))
+        {
+            sent.Add(daysBefore);
+            SentReminderDays = string.Join(',', sent.OrderBy(day => day));
+            Touch();
+        }
+    }
+
+    private List<int> SentReminderDaysCsv => SentReminderDays
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(part => int.TryParse(part, out var day) ? day : 0)
+        .Where(day => day > 0)
+        .ToList();
+
+    public bool HasReminderBeenSent(int daysBefore) => SentReminderDaysCsv.Contains(daysBefore);
 
     public void ConfigureLearning(
         Guid courseId,

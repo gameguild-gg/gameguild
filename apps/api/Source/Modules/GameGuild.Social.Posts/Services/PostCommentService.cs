@@ -27,7 +27,7 @@ public class PostCommentService : IPostCommentService
     public async Task<Result<PostComment>> AddCommentAsync(Guid postId, Guid authorId, string content, Guid? parentCommentId = null, CancellationToken cancellationToken = default)
     {
         var post = await _context.Set<Post>()
-            .FirstOrDefaultAsync(p => p.Id == postId && !p.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(p => p.Id == postId && p.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (post is null)
             return Result.Failure<PostComment>(PostErrors.NotFound);
@@ -56,7 +56,7 @@ public class PostCommentService : IPostCommentService
     public async Task<Result<PostComment>> UpdateCommentAsync(Guid commentId, string content, CancellationToken cancellationToken = default)
     {
         var comment = await _context.Set<PostComment>()
-            .FirstOrDefaultAsync(c => c.Id == commentId && !c.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (comment is null)
             return Result.Failure<PostComment>(PostErrors.CommentNotFound);
@@ -89,7 +89,7 @@ public class PostCommentService : IPostCommentService
     public async Task<Result<IEnumerable<PostComment>>> GetPostCommentsAsync(Guid postId, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
     {
         var comments = await _context.Set<PostComment>()
-            .Where(c => c.PostId == postId && !c.IsDeleted)
+            .Where(c => c.PostId == postId && c.DeletedAt == null)
             .OrderBy(c => c.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -101,7 +101,7 @@ public class PostCommentService : IPostCommentService
     public async Task<Result<PostComment>> GetCommentByIdAsync(Guid commentId, CancellationToken cancellationToken = default)
     {
         var comment = await _context.Set<PostComment>()
-            .FirstOrDefaultAsync(c => c.Id == commentId && !c.IsDeleted, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.DeletedAt == null, cancellationToken).ConfigureAwait(false);
 
         if (comment is null)
             return Result.Failure<PostComment>(PostErrors.CommentNotFound);

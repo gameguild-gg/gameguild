@@ -33,7 +33,8 @@ const result = GameGuildAuth({
       : []),
   ],
   pages: {
-    error: "/auth-error",
+    // Callback failures redirect here with ?error=; the page renders it inline.
+    error: "/sign-in",
   },
   apiUrl:
     process.env.API_URL ||
