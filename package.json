@@ -8,8 +8,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "dev:api": "dotenv -e .env -- dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:8080",
-    "dev:api:watch": "dotenv -e .env -- dotnet watch --project apps/api/Source/GameGuild.API/GameGuild.API.csproj run --urls http://localhost:8080",
+    "dev:api": "dotenv -e .env -v DOTNET_USE_POLLING_FILE_WATCHER=true -- dotnet watch --project apps/api/Source/GameGuild.API/GameGuild.API.csproj run --urls http://localhost:8080",
     "dev:compose": "docker compose -f compose.yaml --profile app up -d --build",
     "dev:compose:down": "docker compose -f compose.yaml down",
     "dev:compose:logs": "docker compose -f compose.yaml logs -f",
