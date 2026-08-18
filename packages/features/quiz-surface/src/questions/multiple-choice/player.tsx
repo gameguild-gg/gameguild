@@ -57,7 +57,7 @@ export function MultipleChoiceRenderer({
   return (
     <div className="space-y-3">
       {maxSelections > 1 && (
-        <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-gray-600 dark:border-blue-800 dark:bg-blue-950/30 dark:text-gray-300">
           <span className="font-medium">
             Select {maxSelections} answer{maxSelections > 1 ? "s" : ""} ({selectedIds.length}/{maxSelections} selected)
           </span>

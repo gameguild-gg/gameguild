@@ -42,6 +42,7 @@
     "@game-guild/content-rendering": "workspace:*",
     "@game-guild/lexical-surface": "workspace:*",
     "@game-guild/quiz": "workspace:*",
+    "@game-guild/quiz-content": "workspace:*",
     "@game-guild/quiz-surface": "workspace:*",
     "@game-guild/courses": "workspace:*",
     "@game-guild/dotnet-wasm": "workspace:^",

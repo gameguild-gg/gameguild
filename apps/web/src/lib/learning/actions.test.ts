@@ -802,7 +802,7 @@ describe("learning server actions", () => {
         parentId: "9ec3b854-89ca-4757-83fb-cfc823da1a5e",
         title: "Entry quiz",
         type: "Questionnaire",
-        jsonBody: { order: [], blocks: {} },
+        jsonBody: { schemaVersion: 1, order: [], blocks: {} },
       }),
     );
   });
@@ -1228,7 +1228,7 @@ describe("learning server actions", () => {
       "course-1",
       expect.objectContaining({
         type: "Questionnaire",
-        jsonBody: { order: [], blocks: {} },
+        jsonBody: { schemaVersion: 1, order: [], blocks: {} },
       }),
     );
     expect(mocks.postAssessments).not.toHaveBeenCalled();

@@ -4,7 +4,6 @@ export type {
   QuizEditorDialogProps,
   QuizEditorSurfaceProps,
   QuizCollectionEditorProps,
-  QuizCollectionItem,
 } from "./editor";
 export type {
   QuizPlayerProps,
@@ -12,3 +11,4 @@ export type {
   QuizSubmissionResult,
   QuizWrapperProps,
 } from "./player";
+export type { QuizSubmissionMode } from "./shared/submission-mode";
