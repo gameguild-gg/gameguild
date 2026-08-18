@@ -17,6 +17,13 @@
     </ItemGroup>
 
     <ItemGroup>
+        <!-- dotnet watch: editing a migration must NOT restart/hot-reload the API —
+             EF migrations run at startup, so only a full manual restart applies them.
+             (dotnet watch reads %(Compile.Watch) — <Watch Remove> would be a no-op.) -->
+        <Compile Update="Database\Migrations\**" Watch="false" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
         <PackageReference Include="Swashbuckle.AspNetCore" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" />

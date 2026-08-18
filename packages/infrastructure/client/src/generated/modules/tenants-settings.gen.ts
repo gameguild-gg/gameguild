@@ -141,63 +141,6 @@ export class TenantsSettingsModule {
   }
 
   /**
-   * Get tenant integration settings
-   *
-   * Retrieves third-party integration configurations for the tenant.
-   */
-  async getTenantsSettingsIntegrationSettings(
-    tenantId: string,
-  ): Promise<Result<Types.IdentityTenantsTenantIntegrationSettings, ApiError>> {
-    const url = `/v1/tenants/${tenantId}/settings/integration-settings`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsTenantIntegrationSettingsSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Update tenant integration settings
-   *
-   * Updates third-party integration configurations for the tenant.
-   */
-  async patchTenantsSettingsIntegrationSettings(
-    tenantId: string,
-    body: Types.IdentityTenantsUpdateTenantIntegrationSettingsInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/tenants/${tenantId}/settings/integration-settings`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityTenantsUpdateTenantIntegrationSettingsInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "PATCH",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Get tenant system limits
    *
    * Retrieves system limits and resource constraints configured for the tenant.
@@ -240,6 +183,63 @@ export class TenantsSettingsModule {
     // Validate request body
     const validatedBody = safeParse(
       Types.IdentityTenantsUpdateTenantSystemLimitsInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PATCH",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get tenant integration settings
+   *
+   * Retrieves third-party integration configurations for the tenant.
+   */
+  async getTenantsSettingsIntegrationSettings(
+    tenantId: string,
+  ): Promise<Result<Types.IdentityTenantsTenantIntegrationSettings, ApiError>> {
+    const url = `/v1/tenants/${tenantId}/settings/integration-settings`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityTenantsTenantIntegrationSettingsSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Update tenant integration settings
+   *
+   * Updates third-party integration configurations for the tenant.
+   */
+  async patchTenantsSettingsIntegrationSettings(
+    tenantId: string,
+    body: Types.IdentityTenantsUpdateTenantIntegrationSettingsInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/tenants/${tenantId}/settings/integration-settings`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityTenantsUpdateTenantIntegrationSettingsInputSchema,
       body,
       "request",
     );

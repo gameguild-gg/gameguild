@@ -16,97 +16,6 @@ export class TenantsResourcesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Check resource limits for a tenant
-   *
-   * Checks current resource usage against configured limits for a specific tenant.
-   */
-  async getTenantsResourcesLimits(
-    tenantId: string,
-    query?: { usageType?: Types.ResourcesResourceUsageType },
-  ): Promise<
-    Result<
-      {
-        AbacPolicies?: boolean;
-        AccessReviewCampaigns?: boolean;
-        AiRequests?: boolean;
-        AiTokens?: boolean;
-        ApiCalls?: boolean;
-        AssetDownloads?: boolean;
-        AssetStorage?: boolean;
-        AssetTransformations?: boolean;
-        Assets?: boolean;
-        AuditEntries?: boolean;
-        ConditionalPolicies?: boolean;
-        Courses?: boolean;
-        Disputes?: boolean;
-        FeatureFlags?: boolean;
-        Orders?: boolean;
-        Products?: boolean;
-        Programs?: boolean;
-        Projects?: boolean;
-        PromoCodes?: boolean;
-        Roles?: boolean;
-        SLOs?: boolean;
-        SoDRules?: boolean;
-        Storage?: boolean;
-        SubscriptionPlans?: boolean;
-        Subscriptions?: boolean;
-        Teams?: boolean;
-        Tenants?: boolean;
-        TestingSessions?: boolean;
-        Users?: boolean;
-        Wallets?: boolean;
-      },
-      ApiError
-    >
-  > {
-    const url = `/v1/tenants/${tenantId}/resources/limits`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      {
-        AbacPolicies?: boolean;
-        AccessReviewCampaigns?: boolean;
-        AiRequests?: boolean;
-        AiTokens?: boolean;
-        ApiCalls?: boolean;
-        AssetDownloads?: boolean;
-        AssetStorage?: boolean;
-        AssetTransformations?: boolean;
-        Assets?: boolean;
-        AuditEntries?: boolean;
-        ConditionalPolicies?: boolean;
-        Courses?: boolean;
-        Disputes?: boolean;
-        FeatureFlags?: boolean;
-        Orders?: boolean;
-        Products?: boolean;
-        Programs?: boolean;
-        Projects?: boolean;
-        PromoCodes?: boolean;
-        Roles?: boolean;
-        SLOs?: boolean;
-        SoDRules?: boolean;
-        Storage?: boolean;
-        SubscriptionPlans?: boolean;
-        Subscriptions?: boolean;
-        Teams?: boolean;
-        Tenants?: boolean;
-        TestingSessions?: boolean;
-        Users?: boolean;
-        Wallets?: boolean;
-      },
-      ApiError
-    >;
-  }
-
-  /**
    * Get usage records for a tenant
    *
    * Retrieves paginated resource usage records for a specific tenant with optional filtering by type and date range.
@@ -143,36 +52,36 @@ export class TenantsResourcesModule {
   ): Promise<
     Result<
       {
-        AbacPolicies?: number;
+        Users?: number;
+        Projects?: number;
+        Storage?: number;
+        ApiCalls?: number;
+        Programs?: number;
+        Courses?: number;
+        FeatureFlags?: number;
+        SubscriptionPlans?: number;
+        Products?: number;
+        TestingSessions?: number;
+        Roles?: number;
+        Tenants?: number;
+        Subscriptions?: number;
+        SLOs?: number;
         AccessReviewCampaigns?: number;
+        SoDRules?: number;
+        AbacPolicies?: number;
+        ConditionalPolicies?: number;
+        Wallets?: number;
+        Disputes?: number;
+        PromoCodes?: number;
+        Orders?: number;
+        AuditEntries?: number;
+        Assets?: number;
+        AssetStorage?: number;
+        AssetDownloads?: number;
+        AssetTransformations?: number;
         AiRequests?: number;
         AiTokens?: number;
-        ApiCalls?: number;
-        AssetDownloads?: number;
-        AssetStorage?: number;
-        AssetTransformations?: number;
-        Assets?: number;
-        AuditEntries?: number;
-        ConditionalPolicies?: number;
-        Courses?: number;
-        Disputes?: number;
-        FeatureFlags?: number;
-        Orders?: number;
-        Products?: number;
-        Programs?: number;
-        Projects?: number;
-        PromoCodes?: number;
-        Roles?: number;
-        SLOs?: number;
-        SoDRules?: number;
-        Storage?: number;
-        SubscriptionPlans?: number;
-        Subscriptions?: number;
         Teams?: number;
-        Tenants?: number;
-        TestingSessions?: number;
-        Users?: number;
-        Wallets?: number;
       },
       ApiError
     >
@@ -187,36 +96,127 @@ export class TenantsResourcesModule {
 
     return result as Result<
       {
-        AbacPolicies?: number;
+        Users?: number;
+        Projects?: number;
+        Storage?: number;
+        ApiCalls?: number;
+        Programs?: number;
+        Courses?: number;
+        FeatureFlags?: number;
+        SubscriptionPlans?: number;
+        Products?: number;
+        TestingSessions?: number;
+        Roles?: number;
+        Tenants?: number;
+        Subscriptions?: number;
+        SLOs?: number;
         AccessReviewCampaigns?: number;
+        SoDRules?: number;
+        AbacPolicies?: number;
+        ConditionalPolicies?: number;
+        Wallets?: number;
+        Disputes?: number;
+        PromoCodes?: number;
+        Orders?: number;
+        AuditEntries?: number;
+        Assets?: number;
+        AssetStorage?: number;
+        AssetDownloads?: number;
+        AssetTransformations?: number;
         AiRequests?: number;
         AiTokens?: number;
-        ApiCalls?: number;
-        AssetDownloads?: number;
-        AssetStorage?: number;
-        AssetTransformations?: number;
-        Assets?: number;
-        AuditEntries?: number;
-        ConditionalPolicies?: number;
-        Courses?: number;
-        Disputes?: number;
-        FeatureFlags?: number;
-        Orders?: number;
-        Products?: number;
-        Programs?: number;
-        Projects?: number;
-        PromoCodes?: number;
-        Roles?: number;
-        SLOs?: number;
-        SoDRules?: number;
-        Storage?: number;
-        SubscriptionPlans?: number;
-        Subscriptions?: number;
         Teams?: number;
-        Tenants?: number;
-        TestingSessions?: number;
-        Users?: number;
-        Wallets?: number;
+      },
+      ApiError
+    >;
+  }
+
+  /**
+   * Check resource limits for a tenant
+   *
+   * Checks current resource usage against configured limits for a specific tenant.
+   */
+  async getTenantsResourcesLimits(
+    tenantId: string,
+    query?: { usageType?: Types.ResourcesResourceUsageType },
+  ): Promise<
+    Result<
+      {
+        Users?: boolean;
+        Projects?: boolean;
+        Storage?: boolean;
+        ApiCalls?: boolean;
+        Programs?: boolean;
+        Courses?: boolean;
+        FeatureFlags?: boolean;
+        SubscriptionPlans?: boolean;
+        Products?: boolean;
+        TestingSessions?: boolean;
+        Roles?: boolean;
+        Tenants?: boolean;
+        Subscriptions?: boolean;
+        SLOs?: boolean;
+        AccessReviewCampaigns?: boolean;
+        SoDRules?: boolean;
+        AbacPolicies?: boolean;
+        ConditionalPolicies?: boolean;
+        Wallets?: boolean;
+        Disputes?: boolean;
+        PromoCodes?: boolean;
+        Orders?: boolean;
+        AuditEntries?: boolean;
+        Assets?: boolean;
+        AssetStorage?: boolean;
+        AssetDownloads?: boolean;
+        AssetTransformations?: boolean;
+        AiRequests?: boolean;
+        AiTokens?: boolean;
+        Teams?: boolean;
+      },
+      ApiError
+    >
+  > {
+    const url = `/v1/tenants/${tenantId}/resources/limits`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      {
+        Users?: boolean;
+        Projects?: boolean;
+        Storage?: boolean;
+        ApiCalls?: boolean;
+        Programs?: boolean;
+        Courses?: boolean;
+        FeatureFlags?: boolean;
+        SubscriptionPlans?: boolean;
+        Products?: boolean;
+        TestingSessions?: boolean;
+        Roles?: boolean;
+        Tenants?: boolean;
+        Subscriptions?: boolean;
+        SLOs?: boolean;
+        AccessReviewCampaigns?: boolean;
+        SoDRules?: boolean;
+        AbacPolicies?: boolean;
+        ConditionalPolicies?: boolean;
+        Wallets?: boolean;
+        Disputes?: boolean;
+        PromoCodes?: boolean;
+        Orders?: boolean;
+        AuditEntries?: boolean;
+        Assets?: boolean;
+        AssetStorage?: boolean;
+        AssetDownloads?: boolean;
+        AssetTransformations?: boolean;
+        AiRequests?: boolean;
+        AiTokens?: boolean;
+        Teams?: boolean;
       },
       ApiError
     >;

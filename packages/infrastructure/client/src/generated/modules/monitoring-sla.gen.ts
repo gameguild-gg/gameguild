@@ -17,30 +17,6 @@ export class MonitoringSlaModule {
 
   /**
    */
-  async postSlaSlis(
-    body: Types.MonitoringSLARecordSliMetricCommand,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/sla/slis";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.MonitoringSLARecordSliMetricCommandSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getSlaSlosForGetSlaSlos(query?: {
     tenantId?: string;
     serviceName?: string;
@@ -163,6 +139,30 @@ export class MonitoringSlaModule {
     const result = await this.client.request({
       method: "DELETE",
       path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postSlaSlis(
+    body: Types.MonitoringSLARecordSliMetricCommand,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/sla/slis";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.MonitoringSLARecordSliMetricCommandSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 

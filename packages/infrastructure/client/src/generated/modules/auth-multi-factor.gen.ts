@@ -45,6 +45,111 @@ export class AuthMultiFactorModule {
   }
 
   /**
+   * Initiate TOTP setup
+   *
+   * Initiates Time-based One-Time Password (TOTP) setup, returning a secret key and QR code URI for authenticator apps.
+   */
+  async postAuthMfaTotpSetup(): Promise<
+    Result<Types.IdentityAuthenticationMfaSetupOutput, ApiError>
+  > {
+    const url = "/v1/auth/mfa/totp:setup";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationMfaSetupOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Complete TOTP setup
+   *
+   * Completes TOTP setup by verifying a code from the user's authenticator app.
+   */
+  async postAuthMfaTotpComplete(
+    body: Types.IdentityAuthenticationCompleteMfaSetupInput,
+  ): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
+    const url = "/v1/auth/mfa/totp:complete";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationCompleteMfaSetupInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationMfaSuccessOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Verify MFA code
+   *
+   * Verifies an MFA code during the authentication flow. Used after initial sign-in when MFA is required.
+   */
+  async postAuthMfaVerify(
+    body: Types.IdentityAuthenticationVerifyMfaInput,
+  ): Promise<
+    Result<Types.IdentityAuthenticationMfaVerificationOutput, ApiError>
+  > {
+    const url = "/v1/auth/mfa/verify";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationVerifyMfaInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationMfaVerificationOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Get backup codes
    *
    * Retrieves the user's backup codes status. Codes are not returned for security; use regenerate to get new codes.
@@ -103,25 +208,33 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * List MFA methods
+   * Setup SMS MFA
    *
-   * Returns all available MFA methods and their configuration status for the current user.
+   * Initiates SMS-based MFA setup by sending a verification code to the provided phone number.
    */
-  async getAuthMfaMethods(): Promise<
-    Result<Types.IdentityAuthenticationMfaMethodsOutput, ApiError>
-  > {
-    const url = "/v1/auth/mfa/methods";
+  async postAuthMfaSmsSetup(
+    body: Types.IdentityAuthenticationSmsMfaSetupInput,
+  ): Promise<Result<Types.IdentityAuthenticationSmsMfaSetupOutput, ApiError>> {
+    const url = "/v1/auth/mfa/sms:setup";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationSmsMfaSetupInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: "GET",
+      method: "POST",
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.IdentityAuthenticationMfaMethodsOutputSchema,
+        Types.IdentityAuthenticationSmsMfaSetupOutputSchema,
         result.data,
         "response",
       );
@@ -169,91 +282,17 @@ export class AuthMultiFactorModule {
   }
 
   /**
-   * Setup SMS MFA
+   * List MFA methods
    *
-   * Initiates SMS-based MFA setup by sending a verification code to the provided phone number.
+   * Returns all available MFA methods and their configuration status for the current user.
    */
-  async postAuthMfaSmsSetup(
-    body: Types.IdentityAuthenticationSmsMfaSetupInput,
-  ): Promise<Result<Types.IdentityAuthenticationSmsMfaSetupOutput, ApiError>> {
-    const url = "/v1/auth/mfa/sms:setup";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationSmsMfaSetupInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSmsMfaSetupOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Complete TOTP setup
-   *
-   * Completes TOTP setup by verifying a code from the user's authenticator app.
-   */
-  async postAuthMfaTotpComplete(
-    body: Types.IdentityAuthenticationCompleteMfaSetupInput,
-  ): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
-    const url = "/v1/auth/mfa/totp:complete";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationCompleteMfaSetupInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationMfaSuccessOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Initiate TOTP setup
-   *
-   * Initiates Time-based One-Time Password (TOTP) setup, returning a secret key and QR code URI for authenticator apps.
-   */
-  async postAuthMfaTotpSetup(): Promise<
-    Result<Types.IdentityAuthenticationMfaSetupOutput, ApiError>
+  async getAuthMfaMethods(): Promise<
+    Result<Types.IdentityAuthenticationMfaMethodsOutput, ApiError>
   > {
-    const url = "/v1/auth/mfa/totp:setup";
+    const url = "/v1/auth/mfa/methods";
 
     const result = await this.client.request({
-      method: "POST",
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -261,46 +300,7 @@ export class AuthMultiFactorModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.IdentityAuthenticationMfaSetupOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Verify MFA code
-   *
-   * Verifies an MFA code during the authentication flow. Used after initial sign-in when MFA is required.
-   */
-  async postAuthMfaVerify(
-    body: Types.IdentityAuthenticationVerifyMfaInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationMfaVerificationOutput, ApiError>
-  > {
-    const url = "/v1/auth/mfa/verify";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationVerifyMfaInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationMfaVerificationOutputSchema,
+        Types.IdentityAuthenticationMfaMethodsOutputSchema,
         result.data,
         "response",
       );

@@ -38,6 +38,35 @@ export class AuthSessionsModule {
   }
 
   /**
+   * Analyze session security
+   *
+   * Analyzes the current session for security risks and provides recommendations.
+   */
+  async getAuthSessionsAnalyzeSecurity(): Promise<
+    Result<Types.IdentityAuthenticationSessionSecurityAnalysis, ApiError>
+  > {
+    const url = "/v1/auth/sessions:analyze-security";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationSessionSecurityAnalysisSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Terminate a session
    *
    * Terminates a specific session by its identifier. The session must belong to the current user.
@@ -69,43 +98,14 @@ export class AuthSessionsModule {
   }
 
   /**
-   * Analyze session security
+   * Terminate other sessions
    *
-   * Analyzes the current session for security risks and provides recommendations.
+   * Terminates all active sessions except the current one.
    */
-  async getAuthSessionsAnalyzeSecurity(): Promise<
-    Result<Types.IdentityAuthenticationSessionSecurityAnalysis, ApiError>
+  async postAuthSessionsTerminateOthers(): Promise<
+    Result<Types.IdentityAuthenticationSessionTerminationOutput, ApiError>
   > {
-    const url = "/v1/auth/sessions:analyze-security";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSessionSecurityAnalysisSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Refresh current session
-   *
-   * Extends the current session's expiration time.
-   */
-  async postAuthSessionsRefresh(): Promise<
-    Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>
-  > {
-    const url = "/v1/auth/sessions:refresh";
+    const url = "/v1/auth/sessions:terminate-others";
 
     const result = await this.client.request({
       method: "POST",
@@ -116,7 +116,7 @@ export class AuthSessionsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.IdentityAuthenticationSessionSuccessOutputSchema,
+        Types.IdentityAuthenticationSessionTerminationOutputSchema,
         result.data,
         "response",
       );
@@ -156,14 +156,14 @@ export class AuthSessionsModule {
   }
 
   /**
-   * Terminate other sessions
+   * Refresh current session
    *
-   * Terminates all active sessions except the current one.
+   * Extends the current session's expiration time.
    */
-  async postAuthSessionsTerminateOthers(): Promise<
-    Result<Types.IdentityAuthenticationSessionTerminationOutput, ApiError>
+  async postAuthSessionsRefresh(): Promise<
+    Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>
   > {
-    const url = "/v1/auth/sessions:terminate-others";
+    const url = "/v1/auth/sessions:refresh";
 
     const result = await this.client.request({
       method: "POST",
@@ -174,7 +174,7 @@ export class AuthSessionsModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.IdentityAuthenticationSessionTerminationOutputSchema,
+        Types.IdentityAuthenticationSessionSuccessOutputSchema,
         result.data,
         "response",
       );

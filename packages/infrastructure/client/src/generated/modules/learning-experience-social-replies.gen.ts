@@ -80,20 +80,6 @@ export class LearningExperienceSocialRepliesModule {
 
   /**
    */
-  async deleteApiSocialReplies(id: string): Promise<Result<void, ApiError>> {
-    const url = `/api/social/replies/${id}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postApiSocialRepliesAccept(
     id: string,
   ): Promise<
@@ -146,6 +132,20 @@ export class LearningExperienceSocialRepliesModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async deleteApiSocialReplies(id: string): Promise<Result<void, ApiError>> {
+    const url = `/api/social/replies/${id}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 }
 

@@ -1,13 +1,20 @@
 #!/usr/bin/env node
-// Sequential dev orchestrator — cross-platform (Windows/macOS/Linux).
+// Dev orchestrator — cross-platform (Windows/macOS/Linux).
 //
-// Replaces the shell one-liner that raced dev:web against a 40s API boot:
-//   1. docker compose up -d --wait
-//   2. dev:api in background
-//   3. poll the API health endpoint (fail fast if the API process dies)
-//   4. only then start dev:web
+//   1. docker compose up -d --wait   (postgres/redis/garage/mailhog)
+//   2. API via `dotnet watch`        (hot reload; Database/Migrations excluded
+//                                     in GameGuild.API.csproj — editing a
+//                                     migration never restarts the API, EF
+//                                     migrations only run on full restart)
+//   3. poll the API health endpoint  (fail fast if the API process dies)
+//   4. in parallel:
+//        - client generate:watch  (polls swagger.json, regenerates ONLY when
+//                                  the spec hash changes)
+//        - client build:watch     (tsup rebuilds dist so the running web picks
+//                                  up regenerated client code)
+//        - web dev                (Next.js watch mode)
 //
-// Ctrl+C tears down both children (taskkill /T on Windows, SIGTERM elsewhere).
+// Ctrl+C tears down all children (taskkill /T on Windows, SIGTERM elsewhere).
 import { spawn } from 'node:child_process';
 
 const API_HEALTH_URL = process.env.DEV_API_HEALTH_URL ?? 'http://localhost:8080/health';
@@ -51,8 +58,8 @@ const compose = run('docker', ['compose', '-f', 'compose.yaml', 'up', '-d', '--w
 const composeCode = await new Promise((resolve) => compose.on('exit', resolve));
 if (composeCode !== 0) process.exit(composeCode ?? 1);
 
-// ── 2. API in background ─────────────────────────────────────────────────────
-console.log('[dev] starting API...');
+// ── 2. API in background (dotnet watch) ──────────────────────────────────────
+console.log('[dev] starting API (dotnet watch)...');
 const api = run('pnpm', ['dev:api']);
 
 // ── 3. Wait for health ───────────────────────────────────────────────────────
@@ -65,20 +72,33 @@ try {
   process.exit(1);
 }
 
-// ── 4. Web in foreground ─────────────────────────────────────────────────────
-console.log('[dev] API up — starting web');
-const web = run('pnpm', ['dev:web']);
+// ── 4. Web + client regeneration in parallel ─────────────────────────────────
+console.log('[dev] API up — starting web, client generate:watch, client build:watch');
+const children = [
+  run('pnpm', ['--filter', '@game-guild/client', 'run', 'generate:watch']),
+  run('pnpm', ['--filter', '@game-guild/client', 'run', 'build:watch']),
+  run('pnpm', ['dev:web']),
+];
+const [clientGen, clientBuild, web] = children;
 
 const shutdown = () => {
-  killTree(api);
-  killTree(web);
+  for (const child of [api, ...children]) killTree(child);
   process.exit(0);
 };
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-// When web exits (Ctrl+C on its foreground output), tear the API down too.
+// Watcher processes failing must not take down dev — log and continue.
+for (const [name, child] of [
+  ['client generate:watch', clientGen],
+  ['client build:watch', clientBuild],
+]) {
+  child.on('exit', (code) => {
+    if (code !== 0 && code !== null) console.error(`[dev] ${name} exited (code ${code}) — continuing without it`);
+  });
+}
+
+// When web exits (Ctrl+C on its foreground output), tear everything down.
 web.on('exit', (code) => {
-  killTree(api);
-  process.exit(code ?? 0);
+  shutdown();
 });

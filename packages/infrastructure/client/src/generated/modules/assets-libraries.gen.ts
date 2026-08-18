@@ -17,6 +17,74 @@ export class AssetsLibrariesModule {
 
   /**
    */
+  async getAssetLibraries(
+    resourceType: string,
+    resourceId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/asset-libraries/${resourceType}/${resourceId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postAssetLibrariesFolders(
+    resourceType: string,
+    resourceId: string,
+    body: Types.AssetsControllersCreateAssetFolderInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/asset-libraries/${resourceType}/${resourceId}/folders`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AssetsControllersCreateAssetFolderInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async putAssetLibrariesFoldersRestriction(
+    folderId: string,
+    body: Types.AssetsControllersRestrictAssetFolderInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/asset-libraries/folders/${folderId}/restriction`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AssetsControllersRestrictAssetFolderInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async postAssetLibrariesAssetsCopy(
     referenceId: string,
     body: Types.AssetsControllersCopyAssetReferenceInput,
@@ -67,74 +135,6 @@ export class AssetsLibrariesModule {
     const result = await this.client.request({
       method: "POST",
       path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async putAssetLibrariesFoldersRestriction(
-    folderId: string,
-    body: Types.AssetsControllersRestrictAssetFolderInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/asset-libraries/folders/${folderId}/restriction`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersRestrictAssetFolderInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "PUT",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getAssetLibraries(
-    resourceType: string,
-    resourceId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/asset-libraries/${resourceType}/${resourceId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAssetLibrariesFolders(
-    resourceType: string,
-    resourceId: string,
-    body: Types.AssetsControllersCreateAssetFolderInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/asset-libraries/${resourceType}/${resourceId}/folders`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersCreateAssetFolderInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 

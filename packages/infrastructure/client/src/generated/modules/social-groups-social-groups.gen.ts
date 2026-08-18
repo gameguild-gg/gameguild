@@ -168,6 +168,22 @@ export class SocialGroupsSocialGroupsModule {
 
   /**
    */
+  async postApiSocialGroupsSuspend(
+    id: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/social/groups/${id}/suspend`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getApiSocialGroupsMembers(
     id: string,
     query?: {
@@ -224,23 +240,6 @@ export class SocialGroupsSocialGroupsModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async deleteApiSocialGroupsMembers(
-    id: string,
-    userId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/social/groups/${id}/members/${userId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 
   /**
@@ -314,13 +313,14 @@ export class SocialGroupsSocialGroupsModule {
 
   /**
    */
-  async postApiSocialGroupsSuspend(
+  async deleteApiSocialGroupsMembers(
     id: string,
+    userId: string,
   ): Promise<Result<void, ApiError>> {
-    const url = `/api/social/groups/${id}/suspend`;
+    const url = `/api/social/groups/${id}/members/${userId}`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: "DELETE",
       path: url,
       requiresAuth: true,
     });
