@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
-using GameGuild.Email;
 using Moq;
 using Xunit;
 
@@ -54,11 +53,10 @@ public class UpdateTenantMemberInviteCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenResendingPendingInviteWithInviteeEmail_Should_Send_Email()
+    public async Task Handle_WhenResendingPendingInviteWithInviteeEmail_Should_Queue_Resend_Notification()
     {
         var member = CreatePendingInvite();
-        var emailSender = new Mock<IEmailSender>();
-        EmailMessage? sentMessage = null;
+        TenantMember? updated = null;
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -67,28 +65,30 @@ public class UpdateTenantMemberInviteCommandHandlerTests
             .Build();
         var handler = new UpdateTenantMemberInviteCommandHandler(
             _memberRepositoryMock.Object,
-            emailSender.Object,
             configuration);
 
         _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(member.UserId, member.TenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(member);
         _memberRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
+            .Callback<TenantMember, CancellationToken>((entity, _) => updated = entity)
             .ReturnsAsync((TenantMember entity, CancellationToken _) => entity);
-        emailSender
-            .Setup(sender => sender.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
-            .Callback<EmailMessage, CancellationToken>((message, _) => sentMessage = message)
-            .Returns(Task.CompletedTask);
 
         var result = await handler.Handle(
             new UpdateTenantMemberInviteCommand(member.TenantId, member.UserId, TenantMemberInviteAction.Resend, "admin@game-guild.com"),
             CancellationToken.None);
 
         result.Success.Should().BeTrue();
-        sentMessage.Should().NotBeNull();
-        sentMessage!.ToEmail.Should().Be("learner@example.com");
-        sentMessage.ToName.Should().Be("Learner One");
-        sentMessage.Subject.Should().Contain("GameGuild Studio");
-        sentMessage.PlainTextContent.Should().Contain("callbackUrl=%2Faccount%2Finvitations");
+        var inviteEvent = member.DomainEvents
+            .Should().ContainSingle(e => e is TenantInviteRequestedNotification).Subject
+            as TenantInviteRequestedNotification;
+        inviteEvent!.Resend.Should().BeTrue();
+        inviteEvent.InviteeEmail.Should().Be("learner@example.com");
+        inviteEvent.InviteeName.Should().Be("Learner One");
+        inviteEvent.InvitedByEmail.Should().Be("admin@game-guild.com");
+        inviteEvent.TenantName.Should().Be("GameGuild Studio");
+        inviteEvent.ReviewUrl.Should().Contain("callbackUrl=%2Faccount%2Finvitations");
+        updated.Should().NotBeNull();
+        updated!.Metadata.Should().Contain("\"resendCount\":2");
     }
 
     [Fact]

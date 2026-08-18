@@ -58,7 +58,7 @@ public class NotificationDeliveryService(
     }
 
     public async Task<Result<Notification>> SendAsync(
-        Guid recipientId,
+        Guid? recipientId,
         NotificationType type,
         string title,
         string message,
@@ -69,13 +69,23 @@ public class NotificationDeliveryService(
         Guid? referenceEntityId = null,
         string? referenceEntityType = null,
         string? metadata = null,
+        string? recipientEmail = null,
         CancellationToken cancellationToken = default)
     {
-        var decision = await preferenceService.DecideDeliveryAsync(recipientId, type, channel, priority, cancellationToken).ConfigureAwait(false);
-        if (decision.Action == NotificationDeliveryAction.Drop)
+        NotificationDeliveryDecision decision;
+        if (recipientId is { } userId)
         {
-            logger.LogDebug("Notification dropped due to user preferences. UserId: {UserId}, Type: {Type}, Reason: {Reason}", recipientId, type, decision.Reason);
-            return Result.Failure<Notification>(Error.Failure("Notification.Skipped", $"Notification skipped due to user preferences ({decision.Reason})"));
+            decision = await preferenceService.DecideDeliveryAsync(userId, type, channel, priority, cancellationToken).ConfigureAwait(false);
+            if (decision.Action == NotificationDeliveryAction.Drop)
+            {
+                logger.LogDebug("Notification dropped due to user preferences. UserId: {UserId}, Type: {Type}, Reason: {Reason}", userId, type, decision.Reason);
+                return Result.Failure<Notification>(Error.Failure("Notification.Skipped", $"Notification skipped due to user preferences ({decision.Reason})"));
+            }
+        }
+        else
+        {
+            // Email-only recipient (no account/prefs): transactional types bypass prefs; always deliver.
+            decision = NotificationDeliveryDecision.Send();
         }
 
         var notification = Notification.Create(
@@ -91,7 +101,8 @@ public class NotificationDeliveryService(
             decision.Action == NotificationDeliveryAction.HoldUntil ? decision.HeldUntil : null,
             referenceEntityId,
             referenceEntityType,
-            metadata);
+            metadata,
+            recipientEmail: recipientEmail);
 
         if (decision.Action == NotificationDeliveryAction.Digest)
         {
@@ -147,6 +158,7 @@ public class NotificationDeliveryService(
             template.DefaultPriority,
             referenceEntityId,
             referenceEntityType,
+            null,
             null,
             cancellationToken);
     }
