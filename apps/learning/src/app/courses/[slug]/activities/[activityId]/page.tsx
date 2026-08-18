@@ -53,7 +53,7 @@ export default async function LearnerActivityPage({ params }: { params: Promise<
 
     if (!activity) notFound();
     const title = activity.kind === 'assessment' ? activity.assessment.title || 'Assessment' : activity.title;
-    const type = activity.kind === 'assessment' ? (activity.assessment.type === 'Exam' ? 'Quiz' : activity.assessment.type) : activity.contentType;
+    const type = activity.kind === 'assessment' ? activity.assessment.type : activity.contentType;
 
     return (
         <div className="mx-auto max-w-4xl space-y-6">

@@ -10,7 +10,7 @@ import {
     type LearningCohortsCohortCalendarEntry,
     type LearningExperienceSocialServicesCourseDiscussion,
     type LearningEnrollmentsEnrollment,
-    type ProjectsProject,
+    type ProjectsProjectApiOutput,
 } from '@game-guild/client';
 
 export interface LearnerCourseRecord {
@@ -103,7 +103,7 @@ export async function getMyCertificates(): Promise<LearningCertificatesCertifica
     const result = await new GeneratedApi.LearningCertificatesModule(client).getApiCertificatesMy();
     return result.ok ? result.data : [];
 }
-export async function getMyProjects(userId: string): Promise<ProjectsProject[]> {
+export async function getMyProjects(userId: string): Promise<ProjectsProjectApiOutput[]> {
     const client = await getClient();
     if (!client || !userId) return [];
     const result = await new GeneratedApi.ProjectsModule(client).getProjectsCreator(userId, { take: 100 });
