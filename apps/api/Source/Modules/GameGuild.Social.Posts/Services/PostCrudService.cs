@@ -61,6 +61,10 @@ public class PostCrudService : IPostCrudService
         CancellationToken cancellationToken = default)
     {
         var post = Post.Create(authorId, content, visibility, tenantId);
+        if (!string.IsNullOrWhiteSpace(mediaUrl))
+        {
+            post.AttachMedia(mediaUrl, mediaType);
+        }
 
         _context.Set<Post>().Add(post);
 
