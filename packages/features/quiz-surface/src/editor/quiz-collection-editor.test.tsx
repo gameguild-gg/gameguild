@@ -12,12 +12,10 @@ import {
   createTrueFalseEntry,
   type QuizEntry,
 } from "@game-guild/quiz";
-import {
-  QuizCollectionEditor,
-  type QuizCollectionItem,
-} from "./quiz-collection-editor";
+import type { QuizContentItem } from "@game-guild/quiz-content";
+import { QuizCollectionEditor } from "./quiz-collection-editor";
 
-function question(id: string, stem: string): QuizCollectionItem {
+function question(id: string, stem: string): QuizContentItem {
   return {
     id,
     entry: createTrueFalseEntry(stem) as QuizEntry,

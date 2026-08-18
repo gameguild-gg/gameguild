@@ -95,7 +95,7 @@ const item = {
   metadata: {},
   gradingConfig: null,
   content: null,
-  jsonBody: { order: [], blocks: {} },
+  jsonBody: { schemaVersion: 1, order: [], blocks: {} },
   settings: { isRequired: true },
   lessonFormat: null,
   createdAt: "2026-01-01T00:00:00.000Z",
@@ -106,6 +106,7 @@ const quizItemWithBlock = {
   ...item,
   id: "content-2",
   jsonBody: {
+    schemaVersion: 1,
     order: [["1", "quiz"]],
     blocks: {
       "1": {

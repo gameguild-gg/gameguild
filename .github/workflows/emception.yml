@@ -84,14 +84,14 @@ jobs:
 
       - name: Cache Emscripten SDK
         id: cache-emsdk
-        uses: actions/cache@v6 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: tools/emception/tools/emsdk
           key: emsdk-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/setup-emsdk.ts', 'tools/emception/scripts/lib/pinned-versions.ts') }}
 
       - name: Cache userland sources and builds
         id: cache-userland
-        uses: actions/cache@v6 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: tools/emception/userland
           key: userland-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/build-*.ts', 'tools/emception/scripts/lib/**', 'tools/emception/userland/**/BUILD.md', 'tools/emception/userland/**/patches/**', 'tools/emception/userland/**/*.c', 'tools/emception/userland/**/*.h') }}
@@ -109,7 +109,7 @@ jobs:
 
       - name: Cache sysroot and CDN bundles
         id: cache-cdn
-        uses: actions/cache@v6 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             tools/emception/sysroot
@@ -278,7 +278,7 @@ jobs:
 
       - name: Deploy GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5 # v4
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
 
   publish-packages:
     name: Publish Emception packages to npm

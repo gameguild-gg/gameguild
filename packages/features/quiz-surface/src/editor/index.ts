@@ -3,6 +3,5 @@ export { QuizEditorSurface, type QuizEditorSurfaceProps } from "./quiz-editor-su
 export {
   QuizCollectionEditor,
   type QuizCollectionEditorProps,
-  type QuizCollectionItem,
 } from "./quiz-collection-editor";
 export { QuizTypeSelector, QUIZ_TEMPLATES, type QuizTypeTemplate } from "./question-type-selector";

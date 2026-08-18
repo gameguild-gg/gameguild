@@ -13,10 +13,9 @@ import {
     type LearningCoursesProgressStatus,
 } from '@game-guild/client';
 import {
-    toQuizLearnerEntry,
-    type QuizEntry,
-} from '@game-guild/quiz';
-import { readContentGradingDefinition } from '@game-guild/grading';
+    parseQuizContentDocument,
+    prepareQuizContentForRuntime,
+} from '@game-guild/quiz-content';
 
 interface SubmitActivityData {
     activityId: string;
@@ -363,40 +362,12 @@ function prepareQuizContentForLearner(
 ): Record<string, unknown> | undefined {
     if (!contentBody) return undefined;
 
-    const grading = readContentGradingDefinition(contentBody);
-    if (!grading?.enabled) return contentBody;
-
-    const order = Array.isArray(contentBody.order) ? contentBody.order : [];
-    const sourceBlocks =
-        contentBody.blocks && typeof contentBody.blocks === 'object' && !Array.isArray(contentBody.blocks)
-            ? contentBody.blocks as Record<string, unknown>
-            : {};
-    const learnerOrder: unknown[] = [];
-    const learnerBlocks: Record<string, unknown> = {};
-
-    for (const entry of order) {
-        if (!Array.isArray(entry) || typeof entry[0] !== 'string' || entry[1] !== 'quiz') {
-            continue;
-        }
-
-        const question = sourceBlocks[entry[0]];
-        if (!question || typeof question !== 'object' || Array.isArray(question)) {
-            continue;
-        }
-
-        try {
-            learnerBlocks[entry[0]] = toQuizLearnerEntry(question as QuizEntry);
-            learnerOrder.push([entry[0], 'quiz']);
-        } catch {
-            // Invalid authored questions are omitted instead of exposing their answer key.
-        }
-    }
-
-    return {
-        ...contentBody,
-        order: learnerOrder,
-        blocks: learnerBlocks,
-    };
+    const { document } = parseQuizContentDocument(contentBody);
+    const runtime = prepareQuizContentForRuntime(
+        document,
+        document.grading?.enabled ? 'server-graded' : 'local-practice',
+    );
+    return { ...runtime.document };
 }
 
 export async function getCourseLearningData(courseSlug: string): Promise<CourseLearningData | null> {

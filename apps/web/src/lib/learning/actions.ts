@@ -25,6 +25,7 @@ import {
   type LearningCoursesUpdateProgramContent,
   type LearningCoursesProgramContentType,
 } from "@game-guild/client";
+import { createEmptyQuizContentDocument } from "@game-guild/quiz-content";
 import { revalidatePath } from "next/cache";
 
 type ActionResult<T> =
@@ -151,8 +152,10 @@ export async function addContent(
 
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const jsonBody =
-      type === 'Questionnaire' ? { order: [], blocks: {} } : undefined;
+    const jsonBody: Record<string, unknown> | undefined =
+      type === 'Questionnaire'
+        ? { ...createEmptyQuizContentDocument() }
+        : undefined;
     const contentBody: LearningCoursesCreateProgramContent = {
       programId: resolvedCourseId,
       title: title.trim(),

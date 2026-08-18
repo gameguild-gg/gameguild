@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   QuizEntryType,
   createEmptyQuizAnswer,
+  createMultipleChoiceEntry,
   createSingleChoiceEntry,
   createTrueFalseEntry,
   toQuizLearnerEntry,
@@ -62,6 +63,22 @@ describe("quiz players", () => {
 
     fireEvent.click(submitButton);
     expect(onSubmit).toHaveBeenCalledWith(answer);
+  });
+
+  it("renders the public multiple-choice selection limit", () => {
+    const authored = createMultipleChoiceEntry("Choose the prime numbers.");
+    const entry = toQuizLearnerEntry(authored);
+
+    render(
+      <QuizPlayer
+        entry={entry}
+        answer={createEmptyQuizAnswer(entry.type)}
+        onAnswerChange={() => undefined}
+        onSubmit={() => undefined}
+      />,
+    );
+
+    expect(screen.getByText("Select 3 answers (0/3 selected)")).toBeInTheDocument();
   });
 
   it("shows server grading submission as the blue status banner", () => {

@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "@game-guild/assets": "workspace:^",
-    "mathlive": "^0.110.0"
+    "mathlive": "^0.110.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@game-guild/typescript-config": "workspace:*",

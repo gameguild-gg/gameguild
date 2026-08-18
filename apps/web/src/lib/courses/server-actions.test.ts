@@ -24,7 +24,7 @@ vi.mock('@game-guild/client', () => ({
       getCoursesById = mocks.getCoursesById;
       getCoursesMeProgress = mocks.getCoursesMeProgress;
     },
-    LearningCoursesProgramcontentModule: class {
+    LearningCoursesProgramContentModule: class {
       getCoursesContent = mocks.getCoursesContent;
       postCoursesContentSubmit = mocks.postCoursesContentSubmit;
     },
@@ -33,9 +33,9 @@ vi.mock('@game-guild/client', () => ({
 
 import { createTrueFalseEntry } from '@game-guild/quiz';
 import {
-  createQuizGradingDefinition,
-  writeContentGradingDefinition,
-} from '@game-guild/grading';
+  enableQuizContentGrading,
+  quizContentItemsToDocument,
+} from '@game-guild/quiz-content';
 import { getCourseLearningData, submitActivity } from './server-actions';
 
 describe('course server actions', () => {
@@ -69,13 +69,10 @@ describe('course server actions', () => {
 
   it('redacts answer keys before returning a server-graded quiz to learners', async () => {
     const question = createTrueFalseEntry('Server-owned answer');
-    const blocks = [{ id: 'question-1', type: 'quiz' as const, data: question }];
-    const jsonBody = writeContentGradingDefinition(
-      {
-        order: [['question-1', 'quiz']],
-        blocks: { 'question-1': question },
-      },
-      createQuizGradingDefinition(blocks),
+    const jsonBody = enableQuizContentGrading(
+      quizContentItemsToDocument({
+        items: [{ id: 'question-1', entry: question }],
+      }),
     );
 
     mocks.getCoursesSlug.mockResolvedValue({
