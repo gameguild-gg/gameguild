@@ -8,7 +8,7 @@
 // process-group kill elsewhere). See spawnReaper for why a helper process
 // does the final sweep.
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import net from 'node:net';
 
 const API_PORT = 8080;
@@ -107,10 +107,18 @@ const api = spawn(
     },
   }
 );
+// Next.js needs the client's dist to exist before it starts. build:watch
+// produces it within seconds (the JS build is fast; slow DTS can lag) — much
+// faster than dev:web's serial full client build before `next dev`.
+async function waitForFile(file) {
+  while (!existsSync(file)) await new Promise((r) => setTimeout(r, 1000));
+}
+
+await waitForFile('packages/infrastructure/client/dist/index.js');
 const children = [
   run('pnpm', ['--filter', '@game-guild/client', 'run', 'generate:watch']),
   run('pnpm', ['--filter', '@game-guild/client', 'run', 'build:watch']),
-  run('pnpm', ['dev:web']),
+  run('pnpm', ['--filter', '@game-guild/web', 'run', 'dev']),
 ];
 const [clientGen, clientBuild, web] = children;
 
