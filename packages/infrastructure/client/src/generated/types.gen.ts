@@ -3829,7 +3829,7 @@ export interface IdentityAuthenticationOAuth2ErrorOutput {
 
 export interface IdentityAuthenticationPasswordChangeInput {
   confirmPassword: string;
-  currentPassword: string;
+  currentPassword?: string | null;
   newPassword: string;
   revokeOtherSessions?: boolean;
 }
@@ -17338,7 +17338,7 @@ IdentityAuthenticationOAuth2ErrorOutputSchema = z.object({
 /** Zod schema for IdentityAuthenticationPasswordChangeInput */
 IdentityAuthenticationPasswordChangeInputSchema = z.object({
   confirmPassword: z.string().min(1),
-  currentPassword: z.string().min(1),
+  currentPassword: z.string().nullable().optional(),
   newPassword: z.string().min(8),
   revokeOtherSessions: z.boolean().optional(),
 });
