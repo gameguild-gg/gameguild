@@ -4,7 +4,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <!-- Keep in lockstep with the monorepo release version; bumped by scripts/devops/auto-changeset.mjs --apply -->
+        <!-- Keep in lockstep with the monorepo release version; bumped by scripts/devops/auto-changeset.mjs (apply mode) -->
         <Version>4.1.0</Version>
     </PropertyGroup>
 
