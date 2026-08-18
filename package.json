@@ -53,10 +53,7 @@
     "ci:web:build": "pnpm --filter @game-guild/web build",
     "ci:playwright:smoke": "pnpm --filter @game-guild/web test:browser:public",
     "ci:playwright:learning-student": "pnpm --filter @game-guild/web test:browser:learning-student",
-    "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo pnpm-lock.yaml",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "turbo run build && changeset publish"
+    "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo pnpm-lock.yaml"
   },
   "packageManager": "pnpm@10.0.0",
   "engines": {
@@ -86,7 +83,6 @@
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.27.0",
     "@game-guild/eslint-config": "workspace:*",
     "@game-guild/prettier-config": "workspace:*",
     "@game-guild/typescript-config": "workspace:*",
