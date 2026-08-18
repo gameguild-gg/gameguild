@@ -4,6 +4,10 @@
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <!-- No wwwroot/static assets in this API. Disables static web assets manifests so
+             `dotnet watch` doesn't try to read obj/.../staticwebassets.development.json
+             (SDK 10.0.3xx watch resolves that path with Windows separators on macOS and errors). -->
+        <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
         <!-- Keep in lockstep with the monorepo release version; bumped by scripts/devops/auto-changeset.mjs (apply mode) -->
         <Version>4.1.0</Version>
     </PropertyGroup>
