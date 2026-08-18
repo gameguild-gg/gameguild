@@ -10,16 +10,16 @@ import {
   QuizPlayer,
   QuizPracticePlayer,
   QuizWrapper,
+  type QuizSubmissionMode,
   type QuizSubmissionResult,
 } from "@game-guild/quiz-surface/player"
-import type { SerializedQuizNode } from "../../nodes/quiz-node"
-import type { QuizSubmissionMode } from "../../lib/quiz-submission-mode"
+import type { QuizBlockView } from "@game-guild/quiz-content"
 
 export function PreviewQuiz({
   node,
   submissionMode,
 }: {
-  node: SerializedQuizNode
+  node: QuizBlockView
   submissionMode?: QuizSubmissionMode
 }) {
   const [answer, setAnswer] = useState<QuizAnswer>(() => createEmptyQuizAnswer(node.data.type))

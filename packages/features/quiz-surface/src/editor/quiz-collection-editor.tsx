@@ -9,6 +9,10 @@ import {
   type QuizEntry,
 } from "@game-guild/quiz";
 import {
+  nextQuizContentItemId,
+  type QuizContentItem,
+} from "@game-guild/quiz-content";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -30,6 +34,7 @@ import {
 import { QuizPlayer, type QuizSubmissionResult } from "../player/quiz-player";
 import { QuizPracticePlayer } from "../player/quiz-practice-player";
 import { QuizWrapper } from "../shared/quiz-wrapper";
+import type { QuizSubmissionMode } from "../shared/submission-mode";
 import { quizQuestionLabels } from "./editor-registry";
 import { QuizEditorDialog } from "./quiz-editor-dialog";
 import {
@@ -37,16 +42,11 @@ import {
   useQuizCollectionDragDrop,
 } from "./quiz-collection-drag-drop";
 
-export interface QuizCollectionItem {
-  id: string;
-  entry: QuizEntry;
-}
-
 export interface QuizCollectionEditorProps {
-  items: QuizCollectionItem[];
-  onChange: (items: QuizCollectionItem[]) => void;
-  createItemId: (items: QuizCollectionItem[]) => string;
-  submissionMode?: "local-practice" | "server-graded";
+  items: QuizContentItem[];
+  onChange: (items: QuizContentItem[]) => void;
+  createItemId?: (items: QuizContentItem[]) => string;
+  submissionMode?: QuizSubmissionMode;
   readOnly?: boolean;
   onDragStateChange?: (dragging: boolean) => void;
 }
@@ -60,7 +60,7 @@ interface EditingQuestion {
 export function QuizCollectionEditor({
   items,
   onChange,
-  createItemId,
+  createItemId = nextQuizContentItemId,
   submissionMode = "local-practice",
   readOnly = false,
   onDragStateChange,

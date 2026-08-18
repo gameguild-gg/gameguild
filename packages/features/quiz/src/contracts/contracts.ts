@@ -170,7 +170,7 @@ export function toQuizLearnerEntry(entry: QuizAuthoringEntry): QuizLearnerEntry 
         type: entry.type,
         options: cloneValue(entry.options),
       }, {
-        selectionLimit: cloneValue(entry.selectionLimit),
+        selectionLimit: cloneValue(entry.selectionLimit ?? entry.correctOptionIds.length),
       })
 
     case QuizEntryType.TrueFalse:

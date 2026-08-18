@@ -1,8 +1,8 @@
 {
-  "name": "@game-guild/quiz",
+  "name": "@game-guild/quiz-content",
   "version": "4.0.0",
   "type": "module",
-  "description": "Framework-independent quiz contracts and question semantics",
+  "description": "Framework-independent persisted quiz document contracts and helpers",
   "license": "UNLICENSED",
   "private": true,
   "exports": {
@@ -14,9 +14,9 @@
     "typecheck": "tsc --noEmit --pretty false"
   },
   "dependencies": {
-    "@game-guild/assets": "workspace:^",
-    "mathlive": "^0.110.0",
-    "zod": "^3.25.76"
+    "@game-guild/block-list": "workspace:^",
+    "@game-guild/grading": "workspace:^",
+    "@game-guild/quiz": "workspace:^"
   },
   "devDependencies": {
     "@game-guild/typescript-config": "workspace:*",
