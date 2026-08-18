@@ -9,10 +9,6 @@ import {
 const grading: ContentGradingDefinition = {
   enabled: true,
   schemaVersion: 1,
-  outcome: {
-    uses: ['feedback'],
-    gradebook: null,
-  },
   score: {
     maxScore: 1,
   },
@@ -46,10 +42,6 @@ describe('content storage grading metadata', () => {
 
     expect(body[CONTENT_GRADING_STORAGE_KEY]).toMatchObject({
       enabled: true,
-      outcome: {
-        uses: ['feedback'],
-        gradebook: null,
-      },
       score: { maxScore: 1 },
     });
     expect(body.order).toEqual([['1', 'quiz']]);

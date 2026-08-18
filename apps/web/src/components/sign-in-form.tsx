@@ -24,7 +24,7 @@ import { Input } from "@game-guild/ui/components/input"
 
 export function SignInForm({
   className,
-  redirectTo = "/my",
+  redirectTo = "/",
   providers,
   ...props
 }: React.ComponentProps<"div"> & {

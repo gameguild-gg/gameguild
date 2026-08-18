@@ -12,7 +12,7 @@ Part 2 successfully moved grading toward a content-owned, server-only, content-t
 - `Assessments` remains an operational projection over graded content.
 - All trusted correctness and score calculation happens on the server.
 - Quiz blocks with grading disabled may show local-practice correctness in the client.
-- `outcome.uses` remains the result-use policy, currently `feedback` and `gradebook`.
+- Assessment groups and their weights own gradebook placement outside this package.
 - Quiz is only the first adapter. The core grading package must stay content-type agnostic.
 - The frontend may collect answers, but it cannot produce trusted correctness, trusted score, or official gradebook updates.
 
@@ -227,9 +227,9 @@ Manual checks:
 - create a quiz content item;
 - add representative quiz question types;
 - confirm grading-disabled quiz submissions show local practice feedback only;
-- enable grading as feedback;
-- confirm feedback-only grading submits through the server path instead of local correctness;
-- switch result use to gradebook;
+- enable grading;
+- confirm grading submits through the server path instead of local correctness;
+- assign the resulting assessment to zero- and positive-weight groups;
 - save and reload;
 - confirm the stored authoring JSON still contains answer-key material only in authoring storage;
 - confirm learner-safe payload tests prove answer-key material is removed.
@@ -256,4 +256,4 @@ After Part 2.5, Part 3 should be able to implement backend grading by mirroring 
 - accept normalized structured answer payloads;
 - grade deterministic submissions server-side;
 - store trusted results in `AssessmentSubmission`;
-- propagate to gradebook only when `outcome.uses` includes `gradebook`.
+- propagate to gradebook only for assessments assigned to positive-weight groups.

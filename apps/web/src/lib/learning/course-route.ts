@@ -6,7 +6,6 @@ export interface CourseRouteSource {
   creatorName?: string | null;
   creatorEmail?: string | null;
 }
-
 const COURSE_AUTHOR_SEPARATOR = '-by-';
 
 export function slugifyRoutePart(value: string): string {
@@ -53,19 +52,15 @@ export function getCourseLookupSlug(routeParam: string): string {
   return value.slice(0, separatorIndex);
 }
 
-function buildCoursePath(basePath: string, course: CourseRouteSource | string, segment?: string): string {
+export function buildDashboardCoursePath(
+  course: CourseRouteSource | string,
+  segment?: string,
+  surface: 'workspace' | 'console' = 'workspace',
+): string {
   const routeParam = typeof course === 'string' ? course : getCourseRouteParam(course);
-  const coursePath = `${basePath}/${encodeURIComponent(routeParam)}`;
+  const coursePath = `/${surface}/learning/courses/${encodeURIComponent(routeParam)}`;
 
   if (!segment) return coursePath;
 
   return `${coursePath}/${segment.replace(/^\/+/, '')}`;
-}
-
-export function buildDashboardCoursePath(course: CourseRouteSource | string, segment?: string): string {
-  return buildCoursePath('/dashboard/learning/courses', course, segment);
-}
-
-export function buildPlatformCoursePath(course: CourseRouteSource | string, segment?: string): string {
-  return buildCoursePath('/dashboard/platform/learning/courses', course, segment);
 }

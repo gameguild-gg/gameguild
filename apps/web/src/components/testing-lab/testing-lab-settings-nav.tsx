@@ -4,29 +4,25 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@game-guild/ui/lib/utils";
 import { MapPin, Settings, ShieldCheck } from "lucide-react";
 
-const sections = (basePath: string) => [
+const sections = [
   {
     label: "General",
-    href: `${basePath}/settings/general`,
+    href: "/console/community/testing-lab/settings/general",
     icon: Settings,
   },
   {
     label: "Locations",
-    href: `${basePath}/settings/locations`,
+    href: "/console/community/testing-lab/settings/locations",
     icon: MapPin,
   },
   {
     label: "Access",
-    href: `${basePath}/settings/access`,
+    href: "/console/community/testing-lab/settings/access",
     icon: ShieldCheck,
   },
 ] as const;
 
-export function TestingLabSettingsNav({
-  basePath = "/dashboard/testing-lab",
-}: {
-  basePath?: string;
-}) {
+export function TestingLabSettingsNav() {
   const pathname = usePathname() ?? "";
 
   return (
@@ -34,7 +30,7 @@ export function TestingLabSettingsNav({
       aria-label="Testing Lab settings"
       className="grid grid-cols-3 gap-1 lg:sticky lg:top-20 lg:grid-cols-1"
     >
-      {sections(basePath).map((section) => {
+      {sections.map((section) => {
         const Icon = section.icon;
         const current =
           pathname === section.href || pathname.startsWith(section.href + "/");

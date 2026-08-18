@@ -591,9 +591,16 @@ public sealed class AssessmentServiceAnalyticsTests
         var courseId = Guid.NewGuid();
         var quizGroup = AssessmentGroup.Create(courseId, "Quizzes", 20, 1);
         var projectGroup = AssessmentGroup.Create(courseId, "Final Project", 30, 2);
+        var feedbackGroup = AssessmentGroup.Create(courseId, "Feedback", 0, 3);
         var quiz = Assessment.Create(courseId, "Intro quiz", AssessmentType.Quiz, 10, assessmentGroupId: quizGroup.Id);
         var project = Assessment.Create(courseId, "Final build", AssessmentType.Project, 100, assessmentGroupId: projectGroup.Id);
         var attendance = Assessment.Create(courseId, "Attendance", AssessmentType.Assignment, 10);
+        var feedbackOnly = Assessment.Create(
+            courseId,
+            "Practice quiz",
+            AssessmentType.Quiz,
+            10,
+            assessmentGroupId: feedbackGroup.Id);
         var ignoredOtherCourse = Assessment.Create(Guid.NewGuid(), "Other", AssessmentType.Quiz, 10);
 
         var quizSubmission = AssessmentSubmission.Start(quiz.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
@@ -606,8 +613,8 @@ public sealed class AssessmentServiceAnalyticsTests
         ignoredSubmission.Submit();
         ignoredSubmission.Grade(10, 6, ignoredOtherCourse.MaxScore);
 
-        db.Set<AssessmentGroup>().AddRange(quizGroup, projectGroup);
-        db.Set<Assessment>().AddRange(quiz, project, attendance, ignoredOtherCourse);
+        db.Set<AssessmentGroup>().AddRange(quizGroup, projectGroup, feedbackGroup);
+        db.Set<Assessment>().AddRange(quiz, project, attendance, feedbackOnly, ignoredOtherCourse);
         db.Set<AssessmentSubmission>().AddRange(quizSubmission, projectSubmission, ignoredSubmission);
         await db.SaveChangesAsync();
 
@@ -616,16 +623,17 @@ public sealed class AssessmentServiceAnalyticsTests
         var analytics = await service.GetCourseAssessmentAnalyticsAsync(courseId);
 
         analytics.CourseId.Should().Be(courseId);
-        analytics.AssessmentCount.Should().Be(3);
+        analytics.AssessmentCount.Should().Be(2);
         analytics.GradedCount.Should().Be(2);
-        analytics.UngradedCount.Should().Be(1);
+        analytics.UngradedCount.Should().Be(0);
         analytics.AveragePercent.Should().Be(65);
         analytics.PassRate.Should().Be(50);
         analytics.Distribution.Single(bucket => bucket.Label == "80-89").Count.Should().Be(1);
         analytics.Distribution.Single(bucket => bucket.Label == "0-59").Count.Should().Be(1);
         analytics.Groups.Single(group => group.GroupName == "Quizzes").AveragePercent.Should().Be(80);
         analytics.Groups.Single(group => group.GroupName == "Final Project").PassRate.Should().Be(0);
-        analytics.Groups.Single(group => group.GroupName == "Ungrouped").AssessmentCount.Should().Be(1);
+        analytics.Groups.Should().NotContain(group => group.GroupName == "Feedback");
+        analytics.Groups.Should().NotContain(group => group.GroupName == "Ungrouped");
     }
 
     private static TestAssessmentDbContext CreateContext()

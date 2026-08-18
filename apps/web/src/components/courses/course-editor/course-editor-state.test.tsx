@@ -18,8 +18,9 @@ vi.mock('../editor/actions', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   useParams: () => ({ course: 'course-123' }),
-  usePathname: () => '/dashboard/learning/courses/course-123',
+  usePathname: () => '/workspace/learning/courses/course-123',
 }));
 
 function ValidCourseState() {

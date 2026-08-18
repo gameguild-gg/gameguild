@@ -53,9 +53,11 @@ function revalidateCoursePath(
 ) {
   const suffix = segment ? `/${segment.replace(/^\/+/, "")}` : "";
 
-  revalidatePath(`/dashboard/learning/courses/${courseId}${suffix}`);
+  revalidatePath(`/workspace/learning/courses/${courseId}${suffix}`);
+  revalidatePath(`/console/learning/courses/${courseId}${suffix}`);
   if (resolvedCourseId !== courseId) {
-    revalidatePath(`/dashboard/learning/courses/${resolvedCourseId}${suffix}`);
+    revalidatePath(`/workspace/learning/courses/${resolvedCourseId}${suffix}`);
+  revalidatePath(`/console/learning/courses/${resolvedCourseId}${suffix}`);
   }
 }
 
@@ -124,7 +126,6 @@ function formatUnexpectedError(err: unknown): string {
 // SubmissionModality.Code is sent as the string "Code" — the wire format is comma-separated flag names, not a bitmask.
 const CONTENT_TO_ASSESSMENT_TYPE: Record<string, AssessmentType> = {
   Assignment: "Assignment",
-  Questionnaire: "Quiz",
   Project: "Project",
   Code: "Assignment",
 };
@@ -387,7 +388,8 @@ export async function createCourse(
       const id = result.data.id!;
       const createdSlug = result.data.slug?.trim() || slug.trim();
 
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return {
         success: true,
         data: {
@@ -455,8 +457,10 @@ export async function updateCourse(
     const result = await programs.putCourses(resolvedCourseId, updateFields);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}`);
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath(`/workspace/learning/courses/${courseId}`);
+  revalidatePath(`/console/learning/courses/${courseId}`);
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -505,7 +509,8 @@ export async function publishCourse(
     if (result.ok) {
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -529,7 +534,8 @@ export async function unpublishCourse(
     if (result.ok) {
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -553,7 +559,8 @@ export async function restoreCourse(
     if (result.ok) {
       revalidateCoursePath(courseId, resolvedCourseId);
       revalidateCoursePath(courseId, resolvedCourseId, "overview");
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -595,7 +602,8 @@ export async function transferCourseOwnership(
 
     revalidateCoursePath(courseId, resolvedCourseId);
     revalidateCoursePath(courseId, resolvedCourseId, "settings/danger");
-    revalidatePath("/dashboard/learning/courses");
+    revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
     return { success: true, data: null };
   } catch (e) {
     return {
@@ -615,7 +623,8 @@ export async function archiveCourse(
 
     if (result.ok) {
       revalidateCoursePath(courseId, resolvedCourseId);
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -637,7 +646,8 @@ export async function deleteCourse(
     const result = await programs.deleteCourses(resolvedCourseId);
 
     if (result.ok) {
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: null };
     }
 
@@ -1020,7 +1030,7 @@ export async function updateCourseReviewModeration(
   if (!result.ok) return { success: false, error: extractError(result.error) };
 
   revalidatePath(
-    `/dashboard/learning/courses/${courseId}/listing/testimonials`,
+    `/workspace/learning/courses/${courseId}/listing/testimonials`,
   );
   revalidatePath(`/courses/${courseId}`);
   return { success: true, data: null };
@@ -1122,9 +1132,9 @@ export async function updateCoursePricing(
 
       if (result.ok) {
         revalidatePath(
-          `/dashboard/learning/courses/${input.courseId}/listing/pricing`,
+          `/workspace/learning/courses/${input.courseId}/listing/pricing`,
         );
-        revalidatePath(`/dashboard/learning/courses/${input.courseId}/listing`);
+        revalidatePath(`/workspace/learning/courses/${input.courseId}/listing`);
         return { success: true, data: null };
       }
 
@@ -1146,9 +1156,9 @@ export async function updateCoursePricing(
 
     if (result.ok) {
       revalidatePath(
-        `/dashboard/learning/courses/${input.courseId}/listing/pricing`,
+        `/workspace/learning/courses/${input.courseId}/listing/pricing`,
       );
-      revalidatePath(`/dashboard/learning/courses/${input.courseId}/listing`);
+      revalidatePath(`/workspace/learning/courses/${input.courseId}/listing`);
       return { success: true, data: null };
     }
 
@@ -1172,7 +1182,8 @@ export async function cloneCourse(
     } satisfies LearningCoursesCloneProgram);
 
     if (result.ok) {
-      revalidatePath("/dashboard/learning/courses");
+      revalidatePath("/workspace/learning/courses");
+  revalidatePath("/console/learning/courses");
       return { success: true, data: { id: result.data.id! } };
     }
 
@@ -1195,8 +1206,8 @@ export interface CreateAssessmentInput {
   assessmentGroupId?: string | null;
   maxScore?: number;
   passingScore?: number;
-  timeLimitMinutes?: number;
-  maxAttempts?: number;
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number | null;
   isRequired?: boolean;
   availableFrom?: string;
   availableUntil?: string;
@@ -1320,8 +1331,8 @@ export async function createAssessmentGroup(
     if (!result.ok)
       return { success: false, error: extractError(result.error) };
 
-    revalidatePath(`/dashboard/learning/courses/${input.courseId}`);
-    revalidatePath(`/dashboard/learning/courses/${input.courseId}/assessments`);
+    revalidatePath(`/workspace/learning/courses/${input.courseId}`);
+    revalidatePath(`/workspace/learning/courses/${input.courseId}/assessments`);
     return { success: true, data: { id: result.data.id! } };
   } catch (e) {
     return {
@@ -1357,8 +1368,8 @@ export async function updateAssessmentGroup(
     if (!result.ok)
       return { success: false, error: extractError(result.error) };
 
-    revalidatePath(`/dashboard/learning/courses/${input.courseId}`);
-    revalidatePath(`/dashboard/learning/courses/${input.courseId}/assessments`);
+    revalidatePath(`/workspace/learning/courses/${input.courseId}`);
+    revalidatePath(`/workspace/learning/courses/${input.courseId}/assessments`);
     return { success: true, data: { id: result.data.id! } };
   } catch (e) {
     return {
@@ -1383,8 +1394,9 @@ export async function deleteAssessmentGroup(
     if (!result.ok)
       return { success: false, error: extractError(result.error) };
 
-    revalidatePath(`/dashboard/learning/courses/${courseId}`);
-    revalidatePath(`/dashboard/learning/courses/${courseId}/assessments`);
+    revalidatePath(`/workspace/learning/courses/${courseId}`);
+  revalidatePath(`/console/learning/courses/${courseId}`);
+    revalidatePath(`/workspace/learning/courses/${courseId}/assessments`);
     return { success: true, data: null };
   } catch (e) {
     return {
@@ -1838,7 +1850,7 @@ export async function createCertificateTemplate(
       return { success: false, error: extractError(result.error) };
 
     revalidatePath(
-      `/dashboard/learning/courses/${input.courseId}/certificates`,
+      `/workspace/learning/courses/${input.courseId}/certificates`,
     );
     return { success: true, data: { id: result.data.id! } };
   } catch (e) {
@@ -1898,10 +1910,10 @@ export async function updateCertificateTemplate(
       return { success: false, error: extractError(result.error) };
 
     revalidatePath(
-      `/dashboard/learning/courses/${input.courseId}/certificates`,
+      `/workspace/learning/courses/${input.courseId}/certificates`,
     );
     revalidatePath(
-      `/dashboard/learning/courses/${input.courseId}/certificates/${input.templateId}`,
+      `/workspace/learning/courses/${input.courseId}/certificates/${input.templateId}`,
     );
     return { success: true, data: null };
   } catch (e) {
@@ -1922,7 +1934,7 @@ export async function deleteCertificateTemplate(
       await certificates.deleteApiCertificatesTemplates(templateId);
 
     if (result.ok) {
-      revalidatePath(`/dashboard/learning/courses/${courseId}/certificates`);
+      revalidatePath(`/workspace/learning/courses/${courseId}/certificates`);
       return { success: true, data: null };
     }
 
@@ -1952,16 +1964,16 @@ export interface CreateDiscussionReplyInput {
 }
 
 function revalidateCourseSupport(courseId: string, discussionId?: string) {
-  revalidatePath(`/dashboard/learning/courses/${courseId}/support`);
-  revalidatePath(`/dashboard/learning/courses/${courseId}/support/tickets`);
-  revalidatePath(`/dashboard/learning/courses/${courseId}/support/discussions`);
+  revalidatePath(`/workspace/learning/courses/${courseId}/support`);
+  revalidatePath(`/workspace/learning/courses/${courseId}/support/tickets`);
+  revalidatePath(`/workspace/learning/courses/${courseId}/support/discussions`);
 
   if (discussionId) {
     revalidatePath(
-      `/dashboard/learning/courses/${courseId}/support/tickets/${discussionId}`,
+      `/workspace/learning/courses/${courseId}/support/tickets/${discussionId}`,
     );
     revalidatePath(
-      `/dashboard/learning/courses/${courseId}/support/discussions/${discussionId}`,
+      `/workspace/learning/courses/${courseId}/support/discussions/${discussionId}`,
     );
   }
 }

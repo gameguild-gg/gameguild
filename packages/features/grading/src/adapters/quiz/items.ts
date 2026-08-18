@@ -7,7 +7,6 @@ import type {
   ContentGradingDefinition,
   GradedItemConfig,
   GradingKind,
-  GradingResultUse,
 } from '../../types';
 import type { QuizBlockLike, QuizGradingOptions } from './types';
 import {
@@ -43,22 +42,10 @@ export function createQuizGradingDefinition(
   const items = buildQuizGradingItemsFromBlocks(blocks);
   const itemTotal = Object.values(items).reduce((sum, item) => sum + item.points, 0);
   const maxScore = options.maxScore ?? itemTotal;
-  const uses = normalizeQuizResultUses(options.uses);
 
   return validateGradingDefinition({
     enabled: true,
     schemaVersion: 1,
-    outcome: {
-      uses,
-      gradebook: uses.includes('gradebook')
-        ? {
-          groupId: options.groupId ?? null,
-          weight: options.weight,
-          required: options.required ?? true,
-          includeInFinalGrade: options.includeInFinalGrade ?? true,
-        }
-        : null,
-    },
     score: {
       maxScore: Math.max(1, maxScore),
       passingScore: options.passingScore,
@@ -143,14 +130,6 @@ export function getQuizQuestionGradingKind(value: unknown): GradingKind {
     default:
       return 'unsupported';
   }
-}
-
-function normalizeQuizResultUses(uses: readonly GradingResultUse[] | undefined): GradingResultUse[] {
-  const normalized: GradingResultUse[] = [];
-  for (const use of uses ?? ['feedback']) {
-    if ((use === 'feedback' || use === 'gradebook') && !normalized.includes(use)) normalized.push(use);
-  }
-  return normalized.length > 0 ? normalized : ['feedback'];
 }
 
 function hasSingleChoiceAnswerKey(question: unknown): boolean {

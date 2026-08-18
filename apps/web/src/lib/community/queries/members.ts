@@ -4,8 +4,6 @@
 
 import { auth, getToken } from '@/auth';
 import { createServerClient, GeneratedApi } from '@game-guild/client';
-import { getCourseShowcase } from '@/lib/courses/public-programs';
-import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import type {
   IdentityTenantsGetUserMembershipsOutput,
   IdentityTenantsUserMembership,
@@ -576,51 +574,6 @@ function mapLeadToSupportTicket(lead: GeneratedApi.ContentPagesMarketingLead): S
   };
 }
 
-function getCourseFeedReason(kind: CommunityFeedKind) {
-  switch (kind) {
-    case 'trending':
-      return 'Trending course';
-    case 'discover':
-      return 'Recommended course';
-    case 'following':
-    default:
-      return 'Course';
-  }
-}
-
-async function getCourseFeedItems(kind: CommunityFeedKind, take = 6): Promise<CommunityFeedItem[]> {
-  if (kind === 'following') {
-    return [];
-  }
-
-  const catalog = await getPublicCourseCatalog();
-  if (!catalog.success || catalog.data.length === 0) {
-    return [];
-  }
-
-  return catalog.data.slice(0, take).map((course, index) => {
-    const slug = String(course.slug ?? course.id ?? `course-${index + 1}`);
-    const showcase = getCourseShowcase(slug);
-    const thumbnail = typeof course.thumbnail === 'string' ? course.thumbnail : undefined;
-
-    return {
-      id: `course-${slug}`,
-      title: course.title ?? 'GameGuild course',
-      contentType: 'Course',
-      contentId: slug,
-      authorId: 'gameguild-learning',
-      reason: getCourseFeedReason(kind),
-      relevanceScore: Math.max(0, 10 - index),
-      isRead: false,
-      createdAt: '2026-01-01T00:00:00.000Z',
-      summary: showcase?.headline ?? course.description ?? 'Explore a GameGuild course landing page.',
-      href: `/courses/${slug}`,
-      imageUrl: thumbnail,
-      actionLabel: 'View course',
-    };
-  });
-}
-
 export async function getPublicMemberProfile(member: string): Promise<PublicMemberProfile | null> {
   try {
     const client = getApiClient();
@@ -655,15 +608,7 @@ export async function getMemberProject(
 export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take?: number; includeRead?: boolean }): Promise<CommunityFeedResult> {
   const session = await getSessionClaims();
   if (!session.userId) {
-    if (kind !== 'following') {
-      return {
-        kind,
-        requiresSignIn: false,
-        items: await getCourseFeedItems(kind, options?.take ?? 6),
-      };
-    }
-
-    return { kind, requiresSignIn: true, items: [] };
+    return { kind, requiresSignIn: kind === 'following', items: [] };
   }
 
   try {
@@ -676,26 +621,13 @@ export async function getCommunityFeed(kind: CommunityFeedKind, options?: { take
     });
 
     if (!result.ok) {
-      return {
-        kind,
-        requiresSignIn: false,
-        items: await getCourseFeedItems(kind, options?.take ?? 6),
-      };
+      return { kind, requiresSignIn: false, items: [] };
     }
 
     const items = (result.data ?? []).filter((item) => reasonMatches(kind, item.reason)).map(mapFeedItem);
-
-    return {
-      kind,
-      requiresSignIn: false,
-      items: items.length > 0 ? items : await getCourseFeedItems(kind, options?.take ?? 6),
-    };
+    return { kind, requiresSignIn: false, items };
   } catch {
-    return {
-      kind,
-      requiresSignIn: false,
-      items: await getCourseFeedItems(kind, options?.take ?? 6),
-    };
+    return { kind, requiresSignIn: false, items: [] };
   }
 }
 

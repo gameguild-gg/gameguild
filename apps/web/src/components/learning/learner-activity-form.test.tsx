@@ -7,6 +7,7 @@ vi.mock('@/lib/learner/activity-actions', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/workspace/learning',
   useRouter: () => ({ refresh: vi.fn() }),
 }));
 

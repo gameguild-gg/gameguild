@@ -66,9 +66,9 @@ describe('SignupForm', () => {
   it('renders navigation links', () => {
     renderWithUser(<SignupForm />);
 
-    expect(screen.getByText('Sign in')).toHaveAttribute('href', '/en-US/sign-in?redirectTo=%2Fmy');
-    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/en-US/legal/terms-of-service');
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/en-US/legal/privacy');
+    expect(screen.getByText('Sign in')).toHaveAttribute('href', '/en-US/sign-in?redirectTo=%2F');
+    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/en-US/terms-of-service');
+    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/en-US/polices/privacy');
   });
 
   /* ---------- Client-side validation ---------- */
@@ -204,7 +204,7 @@ describe('SignupForm', () => {
       password: '12345678',
       firstName: 'Jo',
       lastName: 'Do',
-      redirectTo: '/my',
+      redirectTo: '/',
     });
   }, 10000);
 

@@ -45,19 +45,19 @@ describe('coiHeadersForPath', () => {
 
   it('applies to the instructor coding-definition route (emception IDE needs SAB stdin)', () => {
     expect(
-      coiHeadersForPath('/dashboard/learning/courses/c1/assessments/a1/coding-definition'),
+      coiHeadersForPath('/workspace/learning/courses/c1/assessments/a1/coding-definition'),
     ).toEqual(COI_LEARN_HEADERS);
     expect(
-      coiHeadersForPath('/en/dashboard/learning/courses/c1/assessments/a1/coding-definition'),
+      coiHeadersForPath('/en/workspace/learning/courses/c1/assessments/a1/coding-definition'),
     ).toEqual(COI_LEARN_HEADERS);
   });
 
   it('does not apply to non-coding-definition assessment routes', () => {
     expect(
-      coiHeadersForPath('/dashboard/learning/courses/c1/assessments/a1'),
+      coiHeadersForPath('/workspace/learning/courses/c1/assessments/a1'),
     ).toBeUndefined();
     expect(
-      coiHeadersForPath('/en/dashboard/learning/courses/c1/assessments/a1/edit'),
+      coiHeadersForPath('/en/workspace/learning/courses/c1/assessments/a1/edit'),
     ).toBeUndefined();
   });
 });

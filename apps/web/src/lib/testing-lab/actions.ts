@@ -18,7 +18,7 @@ import {
 } from '@game-guild/client';
 import { revalidatePath } from 'next/cache';
 
-const DASHBOARD_PATH = '/dashboard/testing-lab';
+const DASHBOARD_PATH = '/console/community/testing-lab';
 
 type TestingLabActionData<T> = [T] extends [void] ? null : T | null;
 
@@ -481,6 +481,7 @@ export async function updateTestingLabSettings(formData: FormData): Promise<Test
       allowPublicSignups: checked(formData, 'allowPublicSignups'),
       requireApproval: checked(formData, 'requireApproval'),
       enableNotifications: checked(formData, 'enableNotifications'),
+      reminderDaysBefore: optionalText(formData, 'reminderDaysBefore'),
     }),
     'Testing Lab settings updated.',
     `${DASHBOARD_PATH}/settings`,

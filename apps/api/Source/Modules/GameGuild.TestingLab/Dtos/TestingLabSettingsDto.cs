@@ -30,6 +30,9 @@ public class CreateTestingLabSettingsDto {
   /// <summary> Whether to enable email notifications for session updates </summary>
   public bool EnableNotifications { get; set; } = true;
 
+  /// <summary> Days before an event starts when reminders are sent (CSV, e.g. "4,2,1") </summary>
+  public string ReminderDaysBefore { get; set; } = "4,2,1";
+
   /// <summary> Maximum number of simultaneous sessions allowed </summary>
   [Required]
   [Range(1, 100)]
@@ -63,6 +66,9 @@ public class UpdateTestingLabSettingsDto {
   /// <summary> Whether to enable email notifications for session updates </summary>
   public bool? EnableNotifications { get; set; }
 
+  /// <summary> Days before an event starts when reminders are sent (CSV, e.g. "4,2,1") </summary>
+  public string ReminderDaysBefore { get; set; } = "4,2,1";
+
   /// <summary> Maximum number of simultaneous sessions allowed </summary>
   [Range(1, 100)]
   public int? MaxSimultaneousSessions { get; set; }
@@ -93,6 +99,9 @@ public class TestingLabSettingsDto {
 
   /// <summary> Whether to enable email notifications for session updates </summary>
   public bool EnableNotifications { get; set; }
+
+  /// <summary> Days before an event starts when reminders are sent (CSV, e.g. "4,2,1") </summary>
+  public string ReminderDaysBefore { get; set; } = "4,2,1";
 
   /// <summary> Maximum number of simultaneous sessions allowed </summary>
   public int MaxSimultaneousSessions { get; set; }

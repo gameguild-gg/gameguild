@@ -271,10 +271,12 @@ export function BlockEditorModal({ open, onOpenChange, block, blockType, onSave 
   if (blockType === "quiz") {
     return (
       <QuizSettingsDialog
-        isOpen={open}
-        onClose={handleCancel}
-        entry={currentData}
-        onSave={handleSave}
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) handleCancel()
+        }}
+        value={currentData}
+        onCommit={handleSave}
       />
     )
   }
