@@ -33,7 +33,7 @@ public class NotificationDeliveryService(
         CancellationToken cancellationToken = default)
     {
         var query = context.Set<Notification>()
-            .Where(n => n.RecipientId == userId);
+            .Where(n => n.RecipientId == userId && n.Channel == NotificationChannel.InApp);
 
         if (isRead.HasValue)
         {
@@ -52,7 +52,7 @@ public class NotificationDeliveryService(
     public async Task<Result<int>> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var count = await context.Set<Notification>()
-            .CountAsync(n => n.RecipientId == userId && !n.IsRead, cancellationToken).ConfigureAwait(false);
+            .CountAsync(n => n.RecipientId == userId && !n.IsRead && n.Channel == NotificationChannel.InApp, cancellationToken).ConfigureAwait(false);
 
         return Result.Success(count);
     }

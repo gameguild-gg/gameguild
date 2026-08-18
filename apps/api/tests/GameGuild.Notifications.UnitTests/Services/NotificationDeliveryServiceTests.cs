@@ -328,6 +328,40 @@ public class NotificationDeliveryServiceTests
         context.Notifications.IgnoreQueryFilters().Count(notification => notification.DeletedAt != null).Should().Be(2);
     }
 
+    [Fact]
+    public async Task GetUserNotificationsAsync_Should_Exclude_Email_Channel_Rows()
+    {
+        using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        var inApp = Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "InApp", "Message");
+        var email = Notification.Create(userId, NotificationType.MonthlyStatement, NotificationChannel.Email, "Email", "Message");
+        context.Notifications.AddRange(inApp, email);
+        await context.SaveChangesAsync();
+        var subject = CreateSubject(context, shouldSend: true);
+
+        var result = await subject.GetUserNotificationsAsync(userId, 0, 20, null);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Select(n => n.Id).Should().Equal(inApp.Id);
+    }
+
+    [Fact]
+    public async Task GetUnreadCountAsync_Should_Exclude_Email_Channel_Rows()
+    {
+        using var context = CreateContext();
+        var userId = Guid.NewGuid();
+        context.Notifications.AddRange(
+            Notification.Create(userId, NotificationType.System, NotificationChannel.InApp, "InApp unread", "Message"),
+            Notification.Create(userId, NotificationType.MonthlyStatement, NotificationChannel.Email, "Email unread", "Message"));
+        await context.SaveChangesAsync();
+        var subject = CreateSubject(context, shouldSend: true);
+
+        var result = await subject.GetUnreadCountAsync(userId);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(1);
+    }
+
     private static NotificationsTestDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<NotificationsTestDbContext>()
