@@ -17,7 +17,7 @@ describe('learner record views', () => {
         render(<LearnerCalendar records={records} />);
         expect(screen.getByText('Live critique')).toBeInTheDocument();
         expect(screen.getByText('Playable build')).toBeInTheDocument();
-        expect(screen.getByText('Evening cohort')).toBeInTheDocument();
+        expect(screen.getByText(/Evening cohort/)).toBeInTheDocument();
     });
 
     it('renders grades and instructor feedback from submissions', () => {

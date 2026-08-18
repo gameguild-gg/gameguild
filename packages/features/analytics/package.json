@@ -11,6 +11,10 @@
   },
   "devDependencies": {
     "@game-guild/typescript-config": "workspace:*",
+    "@types/react": "^19",
     "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "react": "^19.2.8"
   }
 }

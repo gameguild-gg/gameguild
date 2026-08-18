@@ -6,7 +6,7 @@ import type {
   LearningAssessmentsAssessment,
   LearningAssessmentsLearnerAssessmentSubmission,
   LearningCoursesProgramContentType,
-  ProjectsProject,
+  ProjectsProjectApiOutput,
 } from '@game-guild/client';
 import { Alert, AlertDescription, AlertTitle } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -20,7 +20,7 @@ import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 
 export type LearnerActivityDescriptor =
-  | { kind: 'assessment'; assessment: LearningAssessmentsAssessment; submission?: LearningAssessmentsLearnerAssessmentSubmission; projects?: ProjectsProject[] }
+  | { kind: 'assessment'; assessment: LearningAssessmentsAssessment; submission?: LearningAssessmentsLearnerAssessmentSubmission; projects?: ProjectsProjectApiOutput[] }
   | {
       kind: 'content';
       contentId: string;

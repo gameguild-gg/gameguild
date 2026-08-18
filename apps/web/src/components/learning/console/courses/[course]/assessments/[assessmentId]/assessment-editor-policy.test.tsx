@@ -36,6 +36,7 @@ global.ResizeObserver = class ResizeObserver {
 
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMocks,
+  usePathname: () => "/workspace/learning/courses/course-1/assessments/assessment-1",
 }));
 
 vi.mock("@/i18n/navigation", () => ({
