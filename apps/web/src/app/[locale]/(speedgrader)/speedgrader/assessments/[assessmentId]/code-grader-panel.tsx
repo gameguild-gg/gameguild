@@ -94,6 +94,13 @@ export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifest
 
   const mergedFiles = useMemo(() => mergeWorkspaceWithSubmission(assignment, submittedFiles), [assignment, submittedFiles]);
 
+  // ponytail: empty submittedFiles means the student submitted no code (payload
+  // '{}' or null) OR the codePayload failed to parse (logged in submission-viewer).
+  // The merged workspace still seeds the IDE with the instructor template, so
+  // without this notice the instructor sees a generic/template IDE and can't
+  // tell "no student code" from a rendering bug.
+  const noStudentCode = submittedFiles.length === 0;
+
   // Seed the IDE with the merged workspace on mount.
   //
   // `Ide.setFiles` updates reactive state + the seed snapshot, and
@@ -170,6 +177,12 @@ export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifest
       {error && (
         <div role="alert" className="rounded border border-red-500 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
           {error}
+        </div>
+      )}
+
+      {noStudentCode && (
+        <div data-testid="no-student-code" className="rounded border border-amber-500 bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          This submission contains no student code. The IDE shows the assignment template only.
         </div>
       )}
 

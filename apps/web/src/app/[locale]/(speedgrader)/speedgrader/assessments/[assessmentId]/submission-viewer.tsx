@@ -123,7 +123,10 @@ export function SubmissionViewer({
 function safeParseCodeFiles(payload: string) {
   try {
     return codePayloadToFiles(payload);
-  } catch {
+  } catch (err) {
+    // ponytail: surface the parse failure so an empty IDE is diagnosable
+    // (payload shape drift / truncated JSON) instead of a silent empty array.
+    console.error('[speedgrader] Failed to parse codePayload:', err);
     return [];
   }
 }
