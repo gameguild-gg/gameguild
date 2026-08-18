@@ -4,7 +4,7 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
  * Generated from: GameGuild API
- * API Version: 4.1.0
+ * API Version: 4.2.0
  */
 import type * as Types from "./types.gen.js";
 
