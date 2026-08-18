@@ -89,6 +89,44 @@ public class NotificationPreferenceService(
         return Result.Success();
     }
 
+    public async Task<Result<NotificationPreference>> SetMutedTypesAsync(
+        Guid userId,
+        IEnumerable<string> typeNames,
+        CancellationToken cancellationToken = default)
+    {
+        var preferencesResult = await GetPreferencesAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (!preferencesResult.IsSuccess)
+        {
+            return preferencesResult;
+        }
+
+        var distinctNames = new HashSet<string>(typeNames, StringComparer.OrdinalIgnoreCase);
+        preferencesResult.Value.SetMutedTypes(
+            distinctNames.Count == 0 ? null : System.Text.Json.JsonSerializer.Serialize(distinctNames));
+
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return Result.Success(preferencesResult.Value);
+    }
+
+    public async Task<Result<NotificationPreference>> SetEmailDigestFrequencyAsync(
+        Guid userId,
+        DigestFrequency? frequency,
+        CancellationToken cancellationToken = default)
+    {
+        var preferencesResult = await GetPreferencesAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (!preferencesResult.IsSuccess)
+        {
+            return preferencesResult;
+        }
+
+        preferencesResult.Value.SetEmailDigestFrequency(frequency);
+
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return Result.Success(preferencesResult.Value);
+    }
+
     /// <summary>
     /// Notification types that are always delivered regardless of any preference (account-critical emails).
     /// </summary>

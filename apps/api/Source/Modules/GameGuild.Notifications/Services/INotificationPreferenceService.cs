@@ -36,6 +36,22 @@ public interface INotificationPreferenceService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Replaces the full set of muted notification type names (full-replace semantics; empty collection clears all mutes)
+    /// </summary>
+    Task<Result<NotificationPreference>> SetMutedTypesAsync(
+        Guid userId,
+        IEnumerable<string> typeNames,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sets the email digest frequency (null = immediate delivery)
+    /// </summary>
+    Task<Result<NotificationPreference>> SetEmailDigestFrequencyAsync(
+        Guid userId,
+        DigestFrequency? frequency,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Decides how a notification should be routed based on user preferences.
     /// Evaluation order: transactional bypass (EmailVerification/PasswordReset/MagicLink/TenantInvite or Urgent priority),
     /// digest routing, per-type mute, channel toggle, category toggle, quiet hours (hold for Email, drop for InApp).

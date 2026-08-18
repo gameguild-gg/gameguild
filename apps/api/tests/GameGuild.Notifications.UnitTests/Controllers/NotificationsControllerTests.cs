@@ -254,11 +254,14 @@ public class NotificationsControllerTests
         dto.EmailDigestFrequency.Should().BeNull();
     }
 
-    private static NotificationsController CreateController(Mock<INotificationService> service, Guid? userId)
+    private static NotificationsController CreateController(
+        Mock<INotificationService> service,
+        Guid? userId,
+        Mock<INotificationPreferenceService>? preferences = null)
     {
         var actorAccessor = new Mock<IActorContextAccessor>();
         actorAccessor.SetupGet(accessor => accessor.ActorContext).Returns(CreateActorContext(userId));
-        return new NotificationsController(service.Object, actorAccessor.Object);
+        return new NotificationsController(service.Object, (preferences ?? new Mock<INotificationPreferenceService>()).Object, actorAccessor.Object);
     }
 
     private static ActorContext CreateActorContext(Guid? userId)

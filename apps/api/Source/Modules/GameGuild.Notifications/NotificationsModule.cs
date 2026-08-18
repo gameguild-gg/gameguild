@@ -27,6 +27,9 @@ public static class NotificationsModule
         services.AddScoped<EmailDispatcherService>();
         services.AddHostedService<EmailDispatcherBackgroundService>();
 
+        // One-click unsubscribe tokens (IDataProtectionProvider is registered by the API host)
+        services.AddScoped<IUnsubscribeTokenService, UnsubscribeTokenService>();
+
         // Facade for backward compatibility
         services.AddScoped<INotificationService, NotificationService>();
 
