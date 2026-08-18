@@ -53,6 +53,22 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
+  async postAccessReviewsCampaignsProcessExpired(): Promise<
+    Result<number, ApiError>
+  > {
+    const url = "/v1/access-reviews/campaigns:process-expired";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<number, ApiError>;
+  }
+
+  /**
+   */
   async getAccessReviewsCampaigns(
     id: string,
   ): Promise<
@@ -81,32 +97,10 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async getAccessReviewsCampaignsActive(query?: {
-    tenantId?: string;
-  }): Promise<
-    Result<Array<Types.IdentityAuthorizationAccessReviewCampaign>, ApiError>
-  > {
-    const url = "/v1/access-reviews/campaigns/active";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.IdentityAuthorizationAccessReviewCampaign>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async postAccessReviewsCampaignsStart(
+  async postAccessReviewsCampaignsCancel(
     id: string,
   ): Promise<Result<void, ApiError>> {
-    const url = `/v1/access-reviews/campaigns/${id}:start`;
+    const url = `/v1/access-reviews/campaigns/${id}:cancel`;
 
     const result = await this.client.request({
       method: "POST",
@@ -144,22 +138,6 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async postAccessReviewsCampaignsCancel(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/access-reviews/campaigns/${id}:cancel`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postAccessReviewsCampaignsSendReminders(
     id: string,
   ): Promise<Result<number, ApiError>> {
@@ -176,13 +154,28 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async getAccessReviewsItemsPending(query?: {
-    reviewerId?: string;
+  async postAccessReviewsCampaignsStart(
+    id: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/access-reviews/campaigns/${id}:start`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getAccessReviewsCampaignsActive(query?: {
     tenantId?: string;
   }): Promise<
-    Result<Array<Types.IdentityAuthorizationAccessReviewItem>, ApiError>
+    Result<Array<Types.IdentityAuthorizationAccessReviewCampaign>, ApiError>
   > {
-    const url = "/v1/access-reviews/items/pending";
+    const url = "/v1/access-reviews/campaigns/active";
 
     const result = await this.client.request({
       method: "GET",
@@ -192,7 +185,7 @@ export class AccessControlAccessReviewsModule {
     });
 
     return result as Result<
-      Array<Types.IdentityAuthorizationAccessReviewItem>,
+      Array<Types.IdentityAuthorizationAccessReviewCampaign>,
       ApiError
     >;
   }
@@ -269,18 +262,25 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async postAccessReviewsCampaignsProcessExpired(): Promise<
-    Result<number, ApiError>
+  async getAccessReviewsItemsPending(query?: {
+    reviewerId?: string;
+    tenantId?: string;
+  }): Promise<
+    Result<Array<Types.IdentityAuthorizationAccessReviewItem>, ApiError>
   > {
-    const url = "/v1/access-reviews/campaigns:process-expired";
+    const url = "/v1/access-reviews/items/pending";
 
     const result = await this.client.request({
-      method: "POST",
+      method: "GET",
       path: url,
+      params: query,
       requiresAuth: true,
     });
 
-    return result as Result<number, ApiError>;
+    return result as Result<
+      Array<Types.IdentityAuthorizationAccessReviewItem>,
+      ApiError
+    >;
   }
 }
 

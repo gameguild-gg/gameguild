@@ -16,25 +16,6 @@ export class CommerceBillingWebhooksModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Handle Google Pay webhook events for transaction notifications
-   *
-   * Processes Google Pay webhook notifications for payment processing, subscription billing, and transaction status updates. Google Pay webhooks provide real-time notifications for payment completions, failures, refunds, and subscription lifecycle events.
-   */
-  async postBillingWebhooksGooglePay(): Promise<
-    Result<Record<string, unknown>, ApiError>
-  > {
-    const url = "/api/v1/billing/webhooks/google-pay";
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Record<string, unknown>, ApiError>;
-  }
-
-  /**
    * Handle Apple Pay webhook events for transaction notifications
    *
    * Processes Apple Pay webhook notifications for payment completions and transaction status updates.
@@ -54,14 +35,14 @@ export class CommerceBillingWebhooksModule {
   }
 
   /**
-   * Handle Stripe webhook events with signature verification
+   * Handle Google Pay webhook events for transaction notifications
    *
-   * Processes Stripe webhook notifications with enhanced security through signature verification. Handles subscription lifecycle events, payment confirmations, invoice updates, and customer changes. Stripe signatures are verified using the webhook signing secret to ensure event authenticity.
+   * Processes Google Pay webhook notifications for payment processing, subscription billing, and transaction status updates. Google Pay webhooks provide real-time notifications for payment completions, failures, refunds, and subscription lifecycle events.
    */
-  async postBillingWebhooksStripe(): Promise<
+  async postBillingWebhooksGooglePay(): Promise<
     Result<Record<string, unknown>, ApiError>
   > {
-    const url = "/api/v1/billing/webhooks/stripe";
+    const url = "/api/v1/billing/webhooks/google-pay";
 
     const result = await this.client.request({
       method: "POST",
@@ -81,6 +62,25 @@ export class CommerceBillingWebhooksModule {
     Result<Record<string, unknown>, ApiError>
   > {
     const url = "/api/v1/billing/webhooks/paypal";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Record<string, unknown>, ApiError>;
+  }
+
+  /**
+   * Handle Stripe webhook events with signature verification
+   *
+   * Processes Stripe webhook notifications with enhanced security through signature verification. Handles subscription lifecycle events, payment confirmations, invoice updates, and customer changes. Stripe signatures are verified using the webhook signing secret to ensure event authenticity.
+   */
+  async postBillingWebhooksStripe(): Promise<
+    Result<Record<string, unknown>, ApiError>
+  > {
+    const url = "/api/v1/billing/webhooks/stripe";
 
     const result = await this.client.request({
       method: "POST",

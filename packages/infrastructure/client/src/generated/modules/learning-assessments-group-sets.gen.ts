@@ -156,23 +156,6 @@ export class LearningAssessmentsGroupSetsModule {
 
   /**
    */
-  async deleteCoursesGroupSetsGroupsMembership(
-    courseId: string,
-    groupId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/membership`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postCoursesGroupSetsGroupsMembers(
     courseId: string,
     groupId: string,
@@ -207,6 +190,23 @@ export class LearningAssessmentsGroupSetsModule {
     userId: string,
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/members/${userId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async deleteCoursesGroupSetsGroupsMembership(
+    courseId: string,
+    groupId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/membership`;
 
     const result = await this.client.request({
       method: "DELETE",

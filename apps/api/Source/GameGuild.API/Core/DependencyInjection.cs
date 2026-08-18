@@ -44,7 +44,9 @@ public static class DependencyInjection
         }
 
         return AppDomain.CurrentDomain.GetAssemblies().Where(assembly =>
-            assembly.FullName?.StartsWith(pattern, StringComparison.OrdinalIgnoreCase) == true).ToArray();
+                assembly.FullName?.StartsWith(pattern, StringComparison.OrdinalIgnoreCase) == true)
+            .OrderBy(assembly => assembly.FullName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     /// <summary>

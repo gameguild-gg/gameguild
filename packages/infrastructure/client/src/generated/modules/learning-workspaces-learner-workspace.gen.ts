@@ -17,32 +17,6 @@ export class LearningWorkspacesLearnerWorkspaceModule {
 
   /**
    */
-  async getLearningMeDashboard(): Promise<
-    Result<Types.LearningWorkspacesLearnerDashboard, ApiError>
-  > {
-    const url = "/v1/learning/me/dashboard";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningWorkspacesLearnerDashboardSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async getLearningCoursesWorkspace(
     courseId: string,
   ): Promise<Result<Types.LearningWorkspacesLearnerCourseWorkspace, ApiError>> {
@@ -58,6 +32,32 @@ export class LearningWorkspacesLearnerWorkspaceModule {
     if (result.ok) {
       const validatedData = safeParse(
         Types.LearningWorkspacesLearnerCourseWorkspaceSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getLearningMeDashboard(): Promise<
+    Result<Types.LearningWorkspacesLearnerDashboard, ApiError>
+  > {
+    const url = "/v1/learning/me/dashboard";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningWorkspacesLearnerDashboardSchema,
         result.data,
         "response",
       );

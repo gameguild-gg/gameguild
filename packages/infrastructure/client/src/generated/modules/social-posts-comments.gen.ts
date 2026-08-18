@@ -103,6 +103,20 @@ export class SocialPostsCommentsModule {
 
   /**
    */
+  async getPostsTags(postId: string): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/posts/${postId}/tags`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getPostsTagsPopular(query?: {
     count?: number;
   }): Promise<Result<void, ApiError>> {
@@ -112,20 +126,6 @@ export class SocialPostsCommentsModule {
       method: "GET",
       path: url,
       params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getPostsTags(postId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/posts/${postId}/tags`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
       requiresAuth: true,
     });
 

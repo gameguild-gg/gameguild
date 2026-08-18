@@ -100,37 +100,55 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Update tenant membership role
-   *
-   * Updates the user's role in the specified tenant/workspace. Use this for console promotion/demotion flows.
+   * Get count of user's active tenant memberships
    */
-  async patchUsersMembershipsRole(
+  async getUsersMembershipsCount(
     userId: string,
-    tenantId: string,
-    body: Types.IdentityTenantsUpdateUserMembershipRoleInput,
-  ): Promise<
-    Result<Types.IdentityTenantsUpdateTenantMemberRoleOutput, ApiError>
-  > {
-    const url = `/v1/users/${userId}/memberships/${tenantId}/role`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityTenantsUpdateUserMembershipRoleInputSchema,
-      body,
-      "request",
-    );
+  ): Promise<Result<Types.IdentityTenantsMembershipCountOutput, ApiError>> {
+    const url = `/v1/users/${userId}/memberships:count`;
 
     const result = await this.client.request({
-      method: "PATCH",
+      method: "GET",
       path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.IdentityTenantsUpdateTenantMemberRoleOutputSchema,
+        Types.IdentityTenantsMembershipCountOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Activate a tenant membership
+   *
+   * Restores access to the specified tenant membership.
+   */
+  async postUsersMembershipsActivate(
+    userId: string,
+    tenantId: string,
+  ): Promise<
+    Result<Types.IdentityTenantsSetTenantMembershipStatusOutput, ApiError>
+  > {
+    const url = `/v1/users/${userId}/memberships/${tenantId}:activate`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityTenantsSetTenantMembershipStatusOutputSchema,
         result.data,
         "response",
       );
@@ -182,48 +200,16 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Activate a tenant membership
-   *
-   * Restores access to the specified tenant membership.
+   * Accept tenant membership invite
    */
-  async postUsersMembershipsActivate(
-    userId: string,
-    tenantId: string,
-  ): Promise<
-    Result<Types.IdentityTenantsSetTenantMembershipStatusOutput, ApiError>
-  > {
-    const url = `/v1/users/${userId}/memberships/${tenantId}:activate`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsSetTenantMembershipStatusOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Resend tenant membership invite
-   */
-  async postUsersMembershipsInviteResend(
+  async postUsersMembershipsInviteAccept(
     userId: string,
     tenantId: string,
     body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
   ): Promise<
     Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>
   > {
-    const url = `/v1/users/${userId}/memberships/${tenantId}/invite:resend`;
+    const url = `/v1/users/${userId}/memberships/${tenantId}/invite:accept`;
 
     // Validate request body
     const validatedBody = safeParse(
@@ -292,16 +278,16 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Accept tenant membership invite
+   * Resend tenant membership invite
    */
-  async postUsersMembershipsInviteAccept(
+  async postUsersMembershipsInviteResend(
     userId: string,
     tenantId: string,
     body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
   ): Promise<
     Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>
   > {
-    const url = `/v1/users/${userId}/memberships/${tenantId}/invite:accept`;
+    const url = `/v1/users/${userId}/memberships/${tenantId}/invite:resend`;
 
     // Validate request body
     const validatedBody = safeParse(
@@ -331,23 +317,37 @@ export class UsersMembershipsModule {
   }
 
   /**
-   * Get count of user's active tenant memberships
+   * Update tenant membership role
+   *
+   * Updates the user's role in the specified tenant/workspace. Use this for console promotion/demotion flows.
    */
-  async getUsersMembershipsCount(
+  async patchUsersMembershipsRole(
     userId: string,
-  ): Promise<Result<Types.IdentityTenantsMembershipCountOutput, ApiError>> {
-    const url = `/v1/users/${userId}/memberships:count`;
+    tenantId: string,
+    body: Types.IdentityTenantsUpdateUserMembershipRoleInput,
+  ): Promise<
+    Result<Types.IdentityTenantsUpdateTenantMemberRoleOutput, ApiError>
+  > {
+    const url = `/v1/users/${userId}/memberships/${tenantId}/role`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityTenantsUpdateUserMembershipRoleInputSchema,
+      body,
+      "request",
+    );
 
     const result = await this.client.request({
-      method: "GET",
+      method: "PATCH",
       path: url,
+      body: validatedBody,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.IdentityTenantsMembershipCountOutputSchema,
+        Types.IdentityTenantsUpdateTenantMemberRoleOutputSchema,
         result.data,
         "response",
       );

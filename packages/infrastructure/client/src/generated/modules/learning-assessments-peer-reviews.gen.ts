@@ -96,27 +96,6 @@ export class LearningAssessmentsPeerReviewsModule {
 
   /**
    */
-  async getAssessmentsSubmissionsReceivedPeerReviews(
-    submissionId: string,
-  ): Promise<
-    Result<Array<Types.LearningAssessmentsReceivedPeerReview>, ApiError>
-  > {
-    const url = `/v1/assessments/submissions/${submissionId}/received-peer-reviews`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningAssessmentsReceivedPeerReview>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async getAssessmentsSubmissionsPeerReviews(
     submissionId: string,
   ): Promise<
@@ -132,6 +111,27 @@ export class LearningAssessmentsPeerReviewsModule {
 
     return result as Result<
       Array<Types.LearningAssessmentsInstructorPeerReview>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getAssessmentsSubmissionsReceivedPeerReviews(
+    submissionId: string,
+  ): Promise<
+    Result<Array<Types.LearningAssessmentsReceivedPeerReview>, ApiError>
+  > {
+    const url = `/v1/assessments/submissions/${submissionId}/received-peer-reviews`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningAssessmentsReceivedPeerReview>,
       ApiError
     >;
   }

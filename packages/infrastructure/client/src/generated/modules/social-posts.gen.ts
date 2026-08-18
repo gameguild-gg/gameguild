@@ -114,47 +114,29 @@ export class SocialPostsModule {
 
   /**
    */
-  async getPostsFeed(query?: {
-    skip?: number;
-    take?: number;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/posts/feed";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getPostsTrending(query?: {
-    skip?: number;
-    take?: number;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/posts/trending";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getPostsAuthor(
     authorId: string,
     query?: { skip?: number; take?: number },
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/author/${authorId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getPostsFeed(query?: {
+    skip?: number;
+    take?: number;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/posts/feed";
 
     const result = await this.client.request({
       method: "GET",
@@ -192,6 +174,24 @@ export class SocialPostsModule {
     take?: number;
   }): Promise<Result<void, ApiError>> {
     const url = "/api/v1/posts/search";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getPostsTrending(query?: {
+    skip?: number;
+    take?: number;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/posts/trending";
 
     const result = await this.client.request({
       method: "GET",
