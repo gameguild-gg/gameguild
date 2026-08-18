@@ -58,8 +58,8 @@ const compose = run('docker', ['compose', '-f', 'compose.yaml', 'up', '-d', '--w
 const composeCode = await new Promise((resolve) => compose.on('exit', resolve));
 if (composeCode !== 0) process.exit(composeCode ?? 1);
 
-// ── 2. API in background (dotnet watch) ──────────────────────────────────────
-console.log('[dev] starting API (dotnet watch)...');
+// ── 2. API in background (dotnet run; watch crashes on macOS 26 — see dev:api:watch) ──
+console.log('[dev] starting API (dotnet run)...');
 const api = run('pnpm', ['dev:api']);
 
 // ── 3. Wait for health ───────────────────────────────────────────────────────
