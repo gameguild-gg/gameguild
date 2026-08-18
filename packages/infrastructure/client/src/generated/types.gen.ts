@@ -3704,11 +3704,6 @@ export interface IdentityAuthenticationEmailVerificationResult {
   verifiedAt?: string | null;
 }
 
-export interface IdentityAuthenticationExternalLogin {
-  createdAt: string;
-  provider: string | null;
-}
-
 export interface IdentityAuthenticationGitHubSignInOutput {
   authUrl: string | null;
 }
@@ -10274,8 +10269,8 @@ export interface TestingLabCreateTestingLabSettings {
   description?: string | null;
   enableNotifications?: boolean;
   labName: string;
-  reminderDaysBefore?: string | null;
   maxSimultaneousSessions: number;
+  reminderDaysBefore?: string | null;
   requireApproval?: boolean;
   timezone: string;
 }
@@ -10622,8 +10617,8 @@ export interface TestingLabTestingEvent {
   recurrenceOccurrence?: number | null;
   recurrenceOccurrenceCount?: number | null;
   recurrenceSeriesId?: string | null;
-  requiresFeedback?: boolean;
   reminderDaysBeforeOverride?: string | null;
+  requiresFeedback?: boolean;
   sentReminderDays?: string | null;
   slots?: Array<TestingLabTestingEventSlot> | null;
   startsAt?: string;
@@ -11033,8 +11028,8 @@ export interface TestingLabTestingLabSettings {
   description?: string | null;
   enableNotifications?: boolean;
   labName?: string | null;
-  reminderDaysBefore?: string | null;
   maxSimultaneousSessions?: number;
+  reminderDaysBefore?: string | null;
   requireApproval?: boolean;
   tenantId?: string | null;
   timezone?: string | null;
@@ -11354,8 +11349,8 @@ export interface TestingLabUpdateTestingLabSettings {
   description?: string | null;
   enableNotifications?: boolean | null;
   labName?: string | null;
-  reminderDaysBefore?: string | null;
   maxSimultaneousSessions?: number | null;
+  reminderDaysBefore?: string | null;
   requireApproval?: boolean | null;
   timezone?: string | null;
 }
@@ -11815,7 +11810,6 @@ export let IdentityAuthenticationDiscordLinkCallbackInputSchema: z.ZodType<Ident
 export let IdentityAuthenticationDiscordSignInOutputSchema: z.ZodType<IdentityAuthenticationDiscordSignInOutput>;
 export let IdentityAuthenticationEmailVerificationOutputSchema: z.ZodType<IdentityAuthenticationEmailVerificationOutput>;
 export let IdentityAuthenticationEmailVerificationResultSchema: z.ZodType<IdentityAuthenticationEmailVerificationResult>;
-export let IdentityAuthenticationExternalLoginSchema: z.ZodType<IdentityAuthenticationExternalLogin>;
 export let IdentityAuthenticationGitHubSignInOutputSchema: z.ZodType<IdentityAuthenticationGitHubSignInOutput>;
 export let IdentityAuthenticationGoogleIdTokenInputSchema: z.ZodType<IdentityAuthenticationGoogleIdTokenInput>;
 export let IdentityAuthenticationJwtKeyInfoSchema: z.ZodType<IdentityAuthenticationJwtKeyInfo>;
@@ -17191,12 +17185,6 @@ IdentityAuthenticationEmailVerificationResultSchema = z.object({
   success: z.boolean().optional(),
   userId: z.string().uuid().nullable().optional(),
   verifiedAt: z.string().datetime().nullable().optional(),
-});
-
-/** Zod schema for IdentityAuthenticationExternalLogin */
-IdentityAuthenticationExternalLoginSchema = z.object({
-  createdAt: z.string().datetime(),
-  provider: z.string().nullable(),
 });
 
 /** Zod schema for IdentityAuthenticationGitHubSignInOutput */
@@ -25666,8 +25654,8 @@ TestingLabCreateTestingLabSettingsSchema = z.object({
   description: z.string().max(1000).nullable().optional(),
   enableNotifications: z.boolean().optional(),
   labName: z.string().min(1).max(255),
-  reminderDaysBefore: z.string().nullable().optional(),
   maxSimultaneousSessions: z.number().int().min(1).max(100),
+  reminderDaysBefore: z.string().nullable().optional(),
   requireApproval: z.boolean().optional(),
   timezone: z.string().min(1).max(50),
 });
@@ -26120,8 +26108,8 @@ TestingLabTestingEventSchema = z.object({
   recurrenceOccurrence: z.number().int().nullable().optional(),
   recurrenceOccurrenceCount: z.number().int().nullable().optional(),
   recurrenceSeriesId: z.string().uuid().nullable().optional(),
-  requiresFeedback: z.boolean().optional(),
   reminderDaysBeforeOverride: z.string().max(64).nullable().optional(),
+  requiresFeedback: z.boolean().optional(),
   sentReminderDays: z.string().max(128).nullable().optional(),
   slots: z
     .array(z.lazy(() => TestingLabTestingEventSlotSchema))
@@ -26636,8 +26624,8 @@ TestingLabTestingLabSettingsSchema = z.object({
   description: z.string().nullable().optional(),
   enableNotifications: z.boolean().optional(),
   labName: z.string().nullable().optional(),
-  reminderDaysBefore: z.string().nullable().optional(),
   maxSimultaneousSessions: z.number().int().optional(),
+  reminderDaysBefore: z.string().nullable().optional(),
   requireApproval: z.boolean().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   timezone: z.string().nullable().optional(),
@@ -27031,7 +27019,6 @@ TestingLabUpdateTestingLabSettingsSchema = z.object({
   description: z.string().max(1000).nullable().optional(),
   enableNotifications: z.boolean().nullable().optional(),
   labName: z.string().max(255).nullable().optional(),
-  reminderDaysBefore: z.string().nullable().optional(),
   maxSimultaneousSessions: z
     .number()
     .int()
@@ -27039,6 +27026,7 @@ TestingLabUpdateTestingLabSettingsSchema = z.object({
     .max(100)
     .nullable()
     .optional(),
+  reminderDaysBefore: z.string().nullable().optional(),
   requireApproval: z.boolean().nullable().optional(),
   timezone: z.string().max(50).nullable().optional(),
 });
