@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Text;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using ApiVersioningOptions = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions;
@@ -25,7 +26,7 @@ public static class OpenApiExtensions
     // Reported as the OpenAPI document version instead of the URL api version, so
     // generated clients carry the release version.
     private static readonly string ReleaseVersion =
-        typeof(OpenApiExtensions).Assembly.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()
+        typeof(OpenApiExtensions).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion.Split('+')[0]
         ?? "1.0";
 

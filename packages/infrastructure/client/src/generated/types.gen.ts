@@ -4,7 +4,7 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
  * Generated from: GameGuild API
- * API Version: 1.0
+ * API Version: 4.1.0
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
