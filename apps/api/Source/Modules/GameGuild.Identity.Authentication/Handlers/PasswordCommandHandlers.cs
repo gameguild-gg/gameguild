@@ -152,7 +152,8 @@ public sealed class ResetPasswordCommandHandler(
 public sealed class ChangePasswordCommandHandler(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
-    ILogger<ChangePasswordCommandHandler> logger) : ICommandHandler<ChangePasswordCommand, PasswordChangeResult>
+    ILogger<ChangePasswordCommandHandler> logger,
+    IUserSessionRepository? userSessionRepository = null) : ICommandHandler<ChangePasswordCommand, PasswordChangeResult>
 {
     public async Task<PasswordChangeResult> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
     {
@@ -167,8 +168,16 @@ public sealed class ChangePasswordCommandHandler(
             return new PasswordChangeResult { Success = false, Message = "User not found" };
         }
 
-        if (string.IsNullOrEmpty(user.PasswordHash) ||
-            !passwordHasher.VerifyPassword(user.PasswordHash, request.CurrentPassword))
+        if (string.IsNullOrEmpty(user.PasswordHash))
+        {
+            // Set-initial mode (OAuth-only account): there is no current password to verify,
+            // but a supplied one can never match, so it is still rejected.
+            if (!string.IsNullOrEmpty(request.CurrentPassword))
+            {
+                return new PasswordChangeResult { Success = false, Message = "Current password is incorrect" };
+            }
+        }
+        else if (!passwordHasher.VerifyPassword(user.PasswordHash, request.CurrentPassword))
         {
             return new PasswordChangeResult { Success = false, Message = "Current password is incorrect" };
         }
@@ -186,7 +195,21 @@ public sealed class ChangePasswordCommandHandler(
         var passwordHash = passwordHasher.HashPassword(request.NewPassword);
         await userRepository.UpdatePasswordHashAsync(request.UserId, passwordHash, cancellationToken).ConfigureAwait(false);
 
-        var revokedSessions = request.RevokeOtherSessions ? 0 : 0;
+        var revokedSessions = 0;
+        if (request.RevokeOtherSessions)
+        {
+            if (request.CurrentSessionId is { } keepSessionId && userSessionRepository is not null)
+            {
+                var activeSessions = await userSessionRepository.GetActiveByUserIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
+                revokedSessions = activeSessions.Count(s => s.Id != keepSessionId);
+                await userSessionRepository.TerminateAllExceptAsync(request.UserId, keepSessionId, "password_changed", cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                logger.LogInformation("Skipping session revocation for user {UserId}: no session id in token", request.UserId);
+            }
+        }
+
         logger.LogInformation("Password changed for user {UserId}; revoked sessions: {RevokedSessions}", request.UserId, revokedSessions);
 
         return new PasswordChangeResult
