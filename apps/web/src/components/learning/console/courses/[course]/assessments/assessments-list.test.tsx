@@ -511,11 +511,11 @@ describe('AssessmentsList weighted groups', () => {
     const quizGradeLink = screen.getByTestId('grade-link-quiz-1');
     expect(quizGradeLink).toHaveAttribute(
       'href',
-      '/dashboard/learning/courses/course-1/assessments/quiz-1/submissions',
+      '/workspace/learning/courses/course-1/assessments/quiz-1/submissions',
     );
     expect(screen.getByTestId('grade-link-project-1')).toHaveAttribute(
       'href',
-      '/dashboard/learning/courses/course-1/assessments/project-1/submissions',
+      '/workspace/learning/courses/course-1/assessments/project-1/submissions',
     );
     expect(quizGradeLink).toHaveTextContent(/grade/i);
   });
@@ -532,7 +532,7 @@ describe('AssessmentsList weighted groups', () => {
 
     expect(screen.getByTestId('grade-link-assignment-1')).toHaveAttribute(
       'href',
-      '/dashboard/learning/courses/course-1/assessments/assignment-1/submissions',
+      '/workspace/learning/courses/course-1/assessments/assignment-1/submissions',
     );
   });
 
