@@ -113,6 +113,7 @@ public sealed class ResendSubscriptionNotificationCommandHandler(
                 source.ReferenceEntityId,
                 source.ReferenceEntityType,
                 source.Metadata,
+                null,
                 cancellationToken)
             .ConfigureAwait(false);
 

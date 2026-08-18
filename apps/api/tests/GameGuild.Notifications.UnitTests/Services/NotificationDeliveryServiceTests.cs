@@ -114,6 +114,28 @@ public class NotificationDeliveryServiceTests
     }
 
     [Fact]
+    public async Task SendAsync_With_Null_Recipient_And_RecipientEmail_Sets_Email_On_Row()
+    {
+        using var context = CreateContext();
+        var subject = CreateSubject(context, shouldSend: true);
+
+        var result = await subject.SendAsync(
+            null,
+            NotificationType.TenantInvite,
+            "Title",
+            "Message",
+            NotificationChannel.Email,
+            recipientEmail: "learner@example.com");
+
+        result.IsSuccess.Should().BeTrue();
+        var row = context.Notifications.Should().ContainSingle().Subject;
+        row.RecipientId.Should().BeNull();
+        row.RecipientEmail.Should().Be("learner@example.com");
+        row.Type.Should().Be(NotificationType.TenantInvite);
+        row.DeliveryStatus.Should().Be(NotificationDeliveryStatus.Pending);
+    }
+
+    [Fact]
     public async Task SendAsync_Should_Schedule_Email_Held_By_Quiet_Hours()
     {
         using var context = CreateContext();

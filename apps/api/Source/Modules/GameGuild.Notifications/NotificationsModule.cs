@@ -1,5 +1,6 @@
 using GameGuild.Notifications.Services;
 using GameGuild.Notifications.Services.Email;
+using GameGuild.Notifications.Services.Email.Renderers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Notifications;
@@ -26,6 +27,10 @@ public static class NotificationsModule
         services.AddScoped<IRecipientEmailResolver, RecipientEmailResolver>();
         services.AddScoped<EmailDispatcherService>();
         services.AddHostedService<EmailDispatcherBackgroundService>();
+
+        // Tenant invite renderer. Registered here (not in the producing Identity.Tenants module) because
+        // Identity.Tenants cannot reference GameGuild.Notifications (circular: Tenants -> Notifications -> Users -> Tenants).
+        services.AddScoped<IEmailRenderer, TenantInviteRenderer>();
 
         // One-click unsubscribe tokens (IDataProtectionProvider is registered by the API host)
         services.AddScoped<IUnsubscribeTokenService, UnsubscribeTokenService>();
