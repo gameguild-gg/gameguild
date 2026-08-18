@@ -166,6 +166,66 @@ export class AuthServiceAccountsModule {
 
   /**
    */
+  async postAuthServiceAccountsDeactivate(
+    serviceAccountId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:deactivate`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Lock service account
+   *
+   * Locks a service account to prevent it from authenticating.
+   */
+  async postAuthServiceAccountsLock(
+    serviceAccountId: string,
+    body: Types.IdentityAuthenticationLockServiceAccountInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:lock`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationLockServiceAccountInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postAuthServiceAccountsReactivate(
+    serviceAccountId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/service-accounts/${serviceAccountId}:reactivate`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async postAuthServiceAccountsRotateSecret(
     serviceAccountId: string,
   ): Promise<
@@ -209,34 +269,6 @@ export class AuthServiceAccountsModule {
   }
 
   /**
-   * Lock service account
-   *
-   * Locks a service account to prevent it from authenticating.
-   */
-  async postAuthServiceAccountsLock(
-    serviceAccountId: string,
-    body: Types.IdentityAuthenticationLockServiceAccountInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:lock`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationLockServiceAccountInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Get service account audit log
    *
    * Retrieves the audit log of actions performed on or by a service account.
@@ -267,38 +299,6 @@ export class AuthServiceAccountsModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async postAuthServiceAccountsDeactivate(
-    serviceAccountId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:deactivate`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAuthServiceAccountsReactivate(
-    serviceAccountId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/auth/service-accounts/${serviceAccountId}:reactivate`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 
   /**

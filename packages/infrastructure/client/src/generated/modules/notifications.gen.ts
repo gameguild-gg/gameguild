@@ -41,32 +41,6 @@ export class NotificationsModule {
 
   /**
    */
-  async getApiNotificationsUnreadCount(): Promise<
-    Result<Types.NotificationsControllersUnreadCountOutput, ApiError>
-  > {
-    const url = "/api/notifications/unread-count";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.NotificationsControllersUnreadCountOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async getApiNotificationsForGetApiNotificationsById(
     id: string,
   ): Promise<Result<Types.NotificationsControllersNotification, ApiError>> {
@@ -121,20 +95,6 @@ export class NotificationsModule {
 
   /**
    */
-  async postApiNotificationsReadAll(): Promise<Result<void, ApiError>> {
-    const url = "/api/notifications/read-all";
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postApiNotificationsUnread(
     id: string,
   ): Promise<Result<void, ApiError>> {
@@ -147,32 +107,6 @@ export class NotificationsModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async deleteApiNotificationsRead(): Promise<
-    Result<Types.NotificationsControllersDeletedCountOutput, ApiError>
-  > {
-    const url = "/api/notifications/read";
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.NotificationsControllersDeletedCountOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
   }
 
   /**
@@ -259,6 +193,72 @@ export class NotificationsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async deleteApiNotificationsRead(): Promise<
+    Result<Types.NotificationsControllersDeletedCountOutput, ApiError>
+  > {
+    const url = "/api/notifications/read";
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersDeletedCountOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postApiNotificationsReadAll(): Promise<Result<void, ApiError>> {
+    const url = "/api/notifications/read-all";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getApiNotificationsUnreadCount(): Promise<
+    Result<Types.NotificationsControllersUnreadCountOutput, ApiError>
+  > {
+    const url = "/api/notifications/unread-count";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersUnreadCountOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 }
 

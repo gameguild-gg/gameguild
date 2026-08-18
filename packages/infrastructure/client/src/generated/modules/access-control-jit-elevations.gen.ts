@@ -51,6 +51,46 @@ export class AccessControlJitElevationsModule {
 
   /**
    */
+  async postJitElevationsCleanup(): Promise<Result<number, ApiError>> {
+    const url = "/v1/jit-elevations/:cleanup";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<number, ApiError>;
+  }
+
+  /**
+   */
+  async getJitElevations(
+    id: string,
+  ): Promise<Result<Types.IdentityAuthorizationJitElevationInput, ApiError>> {
+    const url = `/v1/jit-elevations/${id}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthorizationJitElevationInputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postJitElevationsApprove(
     id: string,
     body: Types.IdentityAuthorizationControllersApproveElevationInput,
@@ -146,32 +186,6 @@ export class AccessControlJitElevationsModule {
 
   /**
    */
-  async getJitElevations(
-    id: string,
-  ): Promise<Result<Types.IdentityAuthorizationJitElevationInput, ApiError>> {
-    const url = `/v1/jit-elevations/${id}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationJitElevationInputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async getJitElevationsPending(query?: {
     tenantId?: string;
   }): Promise<
@@ -254,20 +268,6 @@ export class AccessControlJitElevationsModule {
     });
 
     return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
-  async postJitElevationsCleanup(): Promise<Result<number, ApiError>> {
-    const url = "/v1/jit-elevations/:cleanup";
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<number, ApiError>;
   }
 }
 

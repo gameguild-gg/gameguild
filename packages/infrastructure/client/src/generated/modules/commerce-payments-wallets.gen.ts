@@ -78,21 +78,6 @@ export class CommercePaymentsWalletsModule {
   }
 
   /**
-   * Get my wallet balance
-   */
-  async getWalletBalance(): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/wallet/balance";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Lock my wallet
    */
   async postWalletLock(
@@ -125,6 +110,21 @@ export class CommercePaymentsWalletsModule {
 
     const result = await this.client.request({
       method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get my wallet balance
+   */
+  async getWalletBalance(): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/wallet/balance";
+
+    const result = await this.client.request({
+      method: "GET",
       path: url,
       requiresAuth: true,
     });

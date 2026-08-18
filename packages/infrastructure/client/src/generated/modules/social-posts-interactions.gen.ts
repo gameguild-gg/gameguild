@@ -17,6 +17,59 @@ export class SocialPostsInteractionsModule {
 
   /**
    */
+  async getPostsFollow(postId: string): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/posts/${postId}/follow`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postPostsFollow(
+    postId: string,
+    body: Types.SocialPostsControllersFollowPostInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/posts/${postId}/follow`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.SocialPostsControllersFollowPostInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async deletePostsFollow(postId: string): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/posts/${postId}/follow`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async postPostsLike(
     postId: string,
     query?: { reactionType?: string },
@@ -63,20 +116,6 @@ export class SocialPostsInteractionsModule {
 
   /**
    */
-  async postPostsView(postId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/posts/${postId}/view`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getPostsStatistics(postId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/statistics`;
 
@@ -91,50 +130,11 @@ export class SocialPostsInteractionsModule {
 
   /**
    */
-  async getPostsFollow(postId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/posts/${postId}/follow`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postPostsFollow(
-    postId: string,
-    body: Types.SocialPostsControllersFollowPostInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/posts/${postId}/follow`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialPostsControllersFollowPostInputSchema,
-      body,
-      "request",
-    );
+  async postPostsView(postId: string): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/posts/${postId}/view`;
 
     const result = await this.client.request({
       method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async deletePostsFollow(postId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/posts/${postId}/follow`;
-
-    const result = await this.client.request({
-      method: "DELETE",
       path: url,
       requiresAuth: true,
     });

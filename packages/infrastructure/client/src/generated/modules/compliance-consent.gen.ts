@@ -17,162 +17,6 @@ export class ComplianceConsentModule {
 
   /**
    */
-  async getApiComplianceConsentPolicies(query?: {
-    tenantId?: string;
-  }): Promise<Result<Array<Types.ComplianceConsentConsentPolicy>, ApiError>> {
-    const url = "/api/compliance/consent/policies";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.ComplianceConsentConsentPolicy>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async postApiComplianceConsentPolicies(
-    body: Types.ComplianceConsentCreateConsentPolicyCommand,
-  ): Promise<Result<string, ApiError>> {
-    const url = "/api/compliance/consent/policies";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.ComplianceConsentCreateConsentPolicyCommandSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<string, ApiError>;
-  }
-
-  /**
-   */
-  async postApiComplianceConsentPoliciesVersions(
-    policyId: string,
-    body: Types.ComplianceConsentPublishVersionInput,
-  ): Promise<Result<Types.ComplianceConsentPolicyVersion, ApiError>> {
-    const url = `/api/compliance/consent/policies/${policyId}/versions`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.ComplianceConsentPublishVersionInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceConsentPolicyVersionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiComplianceConsentUsers(
-    userId: string,
-  ): Promise<Result<Array<Types.ComplianceConsentUserConsent>, ApiError>> {
-    const url = `/api/compliance/consent/users/${userId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.ComplianceConsentUserConsent>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async postApiComplianceConsentGrant(
-    body: Types.ComplianceConsentGrantConsentCommand,
-  ): Promise<Result<Types.ComplianceConsentUserConsent, ApiError>> {
-    const url = "/api/compliance/consent/grant";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.ComplianceConsentGrantConsentCommandSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceConsentUserConsentSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postApiComplianceConsentRevoke(
-    body: Types.ComplianceConsentRevokeConsentCommand,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/api/compliance/consent/revoke";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.ComplianceConsentRevokeConsentCommandSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async postApiComplianceConsentDataSubjectRequests(
     body: Types.ComplianceConsentSubmitDataSubjectRequestCommand,
   ): Promise<Result<Types.ComplianceConsentDataSubjectInput, ApiError>> {
@@ -255,6 +99,162 @@ export class ComplianceConsentModule {
 
     return result as Result<
       Array<Types.ComplianceConsentDataSubjectInput>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async postApiComplianceConsentGrant(
+    body: Types.ComplianceConsentGrantConsentCommand,
+  ): Promise<Result<Types.ComplianceConsentUserConsent, ApiError>> {
+    const url = "/api/compliance/consent/grant";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.ComplianceConsentGrantConsentCommandSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ComplianceConsentUserConsentSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getApiComplianceConsentPolicies(query?: {
+    tenantId?: string;
+  }): Promise<Result<Array<Types.ComplianceConsentConsentPolicy>, ApiError>> {
+    const url = "/api/compliance/consent/policies";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.ComplianceConsentConsentPolicy>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async postApiComplianceConsentPolicies(
+    body: Types.ComplianceConsentCreateConsentPolicyCommand,
+  ): Promise<Result<string, ApiError>> {
+    const url = "/api/compliance/consent/policies";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.ComplianceConsentCreateConsentPolicyCommandSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<string, ApiError>;
+  }
+
+  /**
+   */
+  async postApiComplianceConsentPoliciesVersions(
+    policyId: string,
+    body: Types.ComplianceConsentPublishVersionInput,
+  ): Promise<Result<Types.ComplianceConsentPolicyVersion, ApiError>> {
+    const url = `/api/compliance/consent/policies/${policyId}/versions`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.ComplianceConsentPublishVersionInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ComplianceConsentPolicyVersionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postApiComplianceConsentRevoke(
+    body: Types.ComplianceConsentRevokeConsentCommand,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/api/compliance/consent/revoke";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.ComplianceConsentRevokeConsentCommandSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getApiComplianceConsentUsers(
+    userId: string,
+  ): Promise<Result<Array<Types.ComplianceConsentUserConsent>, ApiError>> {
+    const url = `/api/compliance/consent/users/${userId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.ComplianceConsentUserConsent>,
       ApiError
     >;
   }
