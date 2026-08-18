@@ -176,7 +176,8 @@ async function generate(): Promise<void> {
     console.log('\n✅ Code generation complete!\n');
   } catch (error) {
     console.error('\n❌ Generation failed:', error instanceof Error ? error.message : error);
-    process.exit(1);
+    // Watch mode stays alive — the API may still be booting; the poll retries.
+    if (!CONFIG.watch) process.exit(1);
   }
 }
 
