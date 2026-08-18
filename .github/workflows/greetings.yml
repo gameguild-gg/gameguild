@@ -9,7 +9,7 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/first-interaction@v3 # v1
+      - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3.1.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           issue-message: "Thank you for reaching out and posting your first issue! We're thrilled to have you here and eager to assist you. Our team will look into your issue promptly and provide you with the best possible support. If you have any more questions or feedback, feel free to share. Happy gaming and coding!"
