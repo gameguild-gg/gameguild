@@ -25,7 +25,6 @@ describe("package architecture", () => {
       "features",
       "icons",
       "index.ts",
-      "integrations",
       "schema",
       "shared",
       "surface",

@@ -133,6 +133,7 @@ vi.mock('./listing/listing-launch-form', () => ({
 import CourseRouteLayout from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/layout';
 import CourseRouteRedirectPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/page';
 import OverviewPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/overview/page';
+import ConsoleOverviewPage from '@/app/[locale]/(dashboards)/console/learning/courses/[course]/overview/page';
 import ContentPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/page';
 import AssessmentsPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/assessments/page';
 import ClassesPage from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/classes/page';
@@ -346,10 +347,10 @@ describe('course-management dashboard route pages', () => {
       ],
     });
 
-    render(await OverviewPage({ params: params() } as never));
+    render(await ConsoleOverviewPage({ params: params() } as never));
 
     const card = screen.getByTestId('awaiting-grading-card');
-    expect(card).toHaveAttribute('href', '/dashboard/learning/courses/advanced-game-ai-by-gameguild/assessments');
+    expect(card).toHaveAttribute('href', '/workspace/learning/courses/advanced-game-ai-by-gameguild/assessments');
     expect(card).toHaveTextContent('Awaiting grading');
     expect(card).toHaveTextContent('1');
   });
@@ -358,7 +359,7 @@ describe('course-management dashboard route pages', () => {
     mocks.canManageCourse.mockResolvedValueOnce(true);
     mocks.getMyTasks.mockResolvedValueOnce({ ok: false, error: 'Failed to load tasks. Please try again.' });
 
-    render(await OverviewPage({ params: params() } as never));
+    render(await ConsoleOverviewPage({ params: params() } as never));
 
     expect(screen.getByTestId('awaiting-grading-card')).toHaveTextContent('—');
   });
@@ -372,7 +373,7 @@ describe('course-management dashboard route pages', () => {
       ],
     });
 
-    render(await OverviewPage({ params: params() } as never));
+    render(await ConsoleOverviewPage({ params: params() } as never));
 
     expect(screen.queryByTestId('awaiting-grading-card')).not.toBeInTheDocument();
   });

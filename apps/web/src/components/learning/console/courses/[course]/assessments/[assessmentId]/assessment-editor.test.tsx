@@ -396,7 +396,7 @@ describe("AssessmentEditor", () => {
     const gradeButton = screen.getByTestId("grade-submissions-button");
     expect(gradeButton).toHaveAttribute(
       "href",
-      "/dashboard/learning/courses/course-1/assessments/assessment-1/submissions",
+      "/workspace/learning/courses/course-1/assessments/assessment-1/submissions",
     );
     expect(gradeButton).toHaveTextContent(/grade submissions/i);
   });
