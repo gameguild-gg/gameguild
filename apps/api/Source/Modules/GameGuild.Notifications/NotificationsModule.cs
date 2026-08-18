@@ -30,6 +30,9 @@ public static class NotificationsModule
         // One-click unsubscribe tokens (IDataProtectionProvider is registered by the API host)
         services.AddScoped<IUnsubscribeTokenService, UnsubscribeTokenService>();
 
+        // Footer injection for suppressible emails (consumed by renderers via constructor injection)
+        services.AddScoped<IEmailFooterService, EmailFooterService>();
+
         // Facade for backward compatibility
         services.AddScoped<INotificationService, NotificationService>();
 
