@@ -157,6 +157,33 @@ describe("quiz contracts", () => {
     })
   })
 
+  it("preserves the multiple-choice selection count without exposing the answer key", () => {
+    const source: MultipleChoiceEntry = {
+      type: QuizEntryType.MultipleChoice,
+      stem: "Choose the prime numbers.",
+      options: [
+        { id: "two", text: "2" },
+        { id: "three", text: "3" },
+        { id: "four", text: "4" },
+        { id: "seven", text: "7" },
+      ],
+      correctOptionIds: ["two", "three", "seven"],
+      settings: {
+        allowRetry: false,
+        showFeedback: false,
+        showCorrectAnswer: false,
+      },
+    }
+
+    const learnerEntry = toQuizLearnerEntry(source)
+
+    expect(learnerEntry).toMatchObject({
+      type: QuizEntryType.MultipleChoice,
+      selectionLimit: 3,
+    })
+    expect("correctOptionIds" in learnerEntry).toBe(false)
+  })
+
   it("redacts formula answer material without inventing server-generated prompts", () => {
     const source: FormulaEntry = {
       type: QuizEntryType.Formula,
