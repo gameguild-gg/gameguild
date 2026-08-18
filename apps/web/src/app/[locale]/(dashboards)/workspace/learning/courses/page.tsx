@@ -1,29 +1,18 @@
-import { auth, getToken } from '@/auth';
 import { Link } from '@/i18n/navigation';
 import { getCourses } from '@/lib/learning';
-import { getAccessTokenRoles } from '@/lib/auth/roles';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
 import { AlertTriangle, ArrowLeft, BarChart3, BookOpen, Eye, Plus, RefreshCw } from 'lucide-react';
 import React from 'react';
 import { CourseList } from '@/components/learning/console/courses/course-list';
 
-// Mirrors the API's elevated course-management roles (ActorContext.IsTenantAdmin:
-// Owner || TenantAdmin || Admin || SystemAdmin). The API (GET /v1/courses) is the
-// authorization authority and already returns the full manageable catalog to
-// these roles, so the creator filter must not zero it out client-side.
-const ELEVATED_COURSE_ROLES = ['SystemAdmin', 'TenantAdmin', 'Admin', 'Owner'];
-
 export default async function Page({ params }: PageProps<'/[locale]/workspace/learning/courses'>): Promise<React.JSX.Element> {
   const { locale } = await params;
 
-  const [session, accessToken, result] = await Promise.all([auth(), getToken(), getCourses()]);
+  // GET /v1/courses is DAC-scoped by the API; this page renders what it returns.
+  const result = await getCourses();
   const { error } = result;
-  const roles = getAccessTokenRoles(accessToken);
-  const isElevated = roles.some((role) => ELEVATED_COURSE_ROLES.includes(role));
-  const courses = session?.user?.id && !isElevated
-    ? result.courses.filter((course) => course.creatorId === session.user.id)
-    : result.courses;
+  const courses = result.courses;
   const publishedCourses = courses.filter((course) => course.status === 'published').length;
   const publicCourses = courses.filter((course) => course.visibility === 'public').length;
   const totalEnrollments = courses.reduce((total, course) => total + course.enrolledCount, 0);

@@ -4,14 +4,7 @@ import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CoursesPage from './page';
 
-const authMock = vi.fn();
-const getTokenMock = vi.fn();
 const getCoursesMock = vi.fn();
-
-vi.mock('@/auth', () => ({
-  auth: () => authMock(),
-  getToken: () => getTokenMock(),
-}));
 
 vi.mock('@/lib/learning', () => ({
   getCourses: () => getCoursesMock(),
@@ -54,12 +47,22 @@ describe('dashboard learning courses page', () => {
     completionPercent: null,
     avgRating: null,
   };
+  const adminCourse = {
+    id: 'course-admin',
+    slug: 'admin-course',
+    creatorId: 'admin-user',
+    creatorHandle: 'admin-user',
+    routeParam: 'admin-course',
+    title: 'Admin Created Course',
+    thumbnail: null,
+    status: 'published' as const,
+    visibility: 'public' as const,
+    enrolledCount: 7,
+    completionPercent: null,
+    avgRating: null,
+  };
 
   beforeEach(() => {
-    authMock.mockReset();
-    authMock.mockResolvedValue(null);
-    getTokenMock.mockReset();
-    getTokenMock.mockResolvedValue(null);
     getCoursesMock.mockReset();
   });
 
@@ -92,30 +95,17 @@ describe('dashboard learning courses page', () => {
     expect(screen.queryByRole('heading', { name: /courses could not be loaded/i })).not.toBeInTheDocument();
   });
 
-  it('lists the full catalog for an elevated admin session instead of creator-only courses', async () => {
-    const roleClaim = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
-    const encode = (value: object) => Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
-    const accessToken = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: 'user-1', [roleClaim]: 'SystemAdmin' })}.${encode({ sig: 'x' })}`;
-    authMock.mockResolvedValue({ user: { id: 'user-1' } });
-    getTokenMock.mockResolvedValue(accessToken);
-    getCoursesMock.mockResolvedValue({ courses: [ownCourse, seededCourse], error: null });
+  it('renders exactly the courses the API returns, regardless of creator', async () => {
+    getCoursesMock.mockResolvedValue({
+      courses: [ownCourse, seededCourse, adminCourse],
+      error: null,
+    });
 
     render(await CoursesPage({ params: Promise.resolve({ locale: 'en-US' }) } as never));
 
     expect(screen.getByText('My Own Course')).toBeInTheDocument();
     expect(screen.getByText('Seeded Catalog Course')).toBeInTheDocument();
-  });
-
-  it('keeps creator-only filtering for a regular session', async () => {
-    const encode = (value: object) => Buffer.from(JSON.stringify(value), 'utf8').toString('base64url');
-    const accessToken = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ sub: 'user-1', role: 'Member' })}.${encode({ sig: 'x' })}`;
-    authMock.mockResolvedValue({ user: { id: 'user-1' } });
-    getTokenMock.mockResolvedValue(accessToken);
-    getCoursesMock.mockResolvedValue({ courses: [ownCourse, seededCourse], error: null });
-
-    render(await CoursesPage({ params: Promise.resolve({ locale: 'en-US' }) } as never));
-
-    expect(screen.getByText('My Own Course')).toBeInTheDocument();
-    expect(screen.queryByText('Seeded Catalog Course')).not.toBeInTheDocument();
+    expect(screen.getByText('Admin Created Course')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
   });
 });
