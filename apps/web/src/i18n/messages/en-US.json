@@ -50,5 +50,23 @@
         "generic": "We couldn't complete the request. Please try again."
       }
     }
+  },
+  "passwordChange": {
+    "title": "Password",
+    "description": "Change the password you use to sign in. You stay signed in on this device.",
+    "currentLabel": "Current password",
+    "currentHelp": "Leave blank if you never set a password.",
+    "newLabel": "New password",
+    "confirmLabel": "Confirm new password",
+    "revokeLabel": "Sign out other devices",
+    "hintLine": "At least 8 characters, with upper and lower case letters, a number, and a special character.",
+    "submit": "Change password",
+    "success": "Password updated.",
+    "errors": {
+      "mismatch": "Passwords do not match.",
+      "wrongCurrent": "Your current password is incorrect.",
+      "weakPassword": "The new password does not meet the requirements.",
+      "generic": "Could not change your password. Please try again."
+    }
   }
 }
