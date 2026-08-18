@@ -10,12 +10,12 @@ import {
 import {
   ASSIGNMENT_SAMPLES,
   type CodingLanguage,
-  type GradingCase,
   type GradingPlan,
   type IdeHandle,
   type TestReport,
   type WorkspaceConfig,
 } from '@game-guild/emception-ui';
+import { testing as emceptionTesting } from 'emception';
 import { Button } from '@game-guild/ui/components/button';
 import Script from 'next/script';
 import {
@@ -68,27 +68,22 @@ export interface CodingActivityClientProps {
 }
 
 /**
- * Map v1 Tests.Public (StandardTest | FunctionalTest) → emception GradingCase[].
- * FunctionalTest requires harness generation (Task 6/7) which is not yet wired
- * into the student runtime — skipped from the public-test banner for v1.
- * ponytail: include FunctionalTest in the banner once Task 7's buildTestPlan
- * is reachable from web (probably via Task 11 grader shared util).
+ * Map v1 Tests.Public → emception GradingPlan via the shared assignment-plan
+ * mapper (standard → stdio case; functional group → doctest case + generated
+ * harness the Ide's run-tests handler compiles against the student sources).
+ * Private tests never enter the plan (public-only mode) — the server also
+ * strips them from the student fetch, so the exclusion is enforced twice.
  */
+type WireAssignment = Parameters<typeof emceptionTesting.buildTestPlan>[0];
+
 function publicTestsToGradingPlan(assignment: CodingAssignmentContent): GradingPlan {
-  const cases: GradingCase[] = [];
-  for (const test of assignment.Tests.Public) {
-    if (test.kind !== 'standard') continue;
-    cases.push({
-      kind: 'stdio',
-      name: test.Name ?? undefined,
-      weight: test.Weight ?? 1,
-      stdin: test.Stdin ?? undefined,
-      expectedStdout: test.Stdout,
-      expectedStderr: test.Stderr ?? undefined,
-      expectedExit: test.ExitCode ?? undefined,
-    });
-  }
-  return { cases };
+  const { plan, generatedFiles } = emceptionTesting.buildTestPlan(
+    // Wire shapes identical; the web type declares readonly arrays the mapper
+    // does not — the mismatch is declarative only.
+    assignment as unknown as WireAssignment,
+    { mode: 'public-only' },
+  );
+  return { cases: plan.cases, generatedFiles };
 }
 
 export function CodingActivityClient({
