@@ -96,8 +96,7 @@ describe('OpenAPI Spec Normalizer', () => {
     const normalized = normalizeSpec(spec);
 
     expect(normalized.tags).toBeDefined();
-    expect(normalized.tags![0].name).toBe('UserManagement');
-    expect(normalized.tags![1].name).toBe('AuthService');
+    expect(normalized.tags!.map((tag) => tag.name)).toEqual(['AuthService', 'UserManagement']);
   });
 
   it('should normalize schema names to remove ASP.NET patterns', () => {
