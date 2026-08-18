@@ -103,24 +103,25 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // ponytail: COOP only — GIS popup sign-in breaks under COEP
+        // credentialless (opener postMessage severed, Google session
+        // stripped from the GIS iframe). COEP stays on emception/learn
+        // routes only, where SharedArrayBuffer actually needs it.
         source: "/sign-in",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
-          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
       {
         source: "/:locale/sign-in",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
-          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
       {
         source: "/api/auth/:path*",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
-          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
       {
