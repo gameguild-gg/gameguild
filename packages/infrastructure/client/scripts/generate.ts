@@ -43,7 +43,6 @@ interface GeneratorMetadata {
   hash: string;
   apiVersion: string | undefined;
   source: string;
-  generatedAt: string;
 }
 
 /**
@@ -73,11 +72,12 @@ function loadMetadata(): GeneratorMetadata | null {
  * Save generation metadata for incremental builds
  */
 function saveMetadata(hash: string, spec: OpenApiSpec): void {
+  // No wall-clock timestamp: CI diffs this file against regenerated output,
+  // and a changing timestamp makes the diff fail on every run.
   const metadata: GeneratorMetadata = {
     hash,
     apiVersion: spec.info?.version,
     source: CONFIG.generatedSourceLabel,
-    generatedAt: new Date().toISOString(),
   };
 
   if (!existsSync(dirname(CONFIG.metadataFile))) {
