@@ -21,6 +21,14 @@ public static class OpenApiExtensions
 {
     internal const string AllowAnonymousExtensionName = "x-gameguild-allow-anonymous";
 
+    // The release/monorepo version from the assembly (csproj <Version>), e.g. "4.1.0".
+    // Reported as the OpenAPI document version instead of the URL api version, so
+    // generated clients carry the release version.
+    private static readonly string ReleaseVersion =
+        typeof(OpenApiExtensions).Assembly.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion.Split('+')[0]
+        ?? "1.0";
+
     /// <summary>
     ///     Sets up OpenAPI/Swagger with configurable options.
     /// </summary>
@@ -61,7 +69,7 @@ public static class OpenApiExtensions
                             new OpenApiInfo
                             {
                                 Title = options.Title,
-                                Version = description.ApiVersion.ToString(),
+                                Version = ReleaseVersion,
                                 Description = options.Description,
                                 Contact = new OpenApiContact
                                 {
@@ -98,7 +106,7 @@ public static class OpenApiExtensions
                         new OpenApiInfo
                         {
                             Title = options.Title,
-                            Version = options.Version,
+                            Version = ReleaseVersion,
                             Description = options.Description,
                             Contact = new OpenApiContact
                             {

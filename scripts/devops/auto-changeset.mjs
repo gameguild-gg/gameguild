@@ -13,9 +13,10 @@
 //   anything else (chore, docs, style, test, ci, build)           → skipped
 //
 // `--apply` mode skips the .changeset machinery entirely and rewrites the
-// `version` field of every fixed-group package.json in lockstep. Used by
-// the Emception publish-packages CI job so it can ship a new version
-// without running `changeset version` (no @changesets/cli install needed).
+// `version` field of every fixed-group package.json (plus the repo root and
+// the API csproj <Version>) in lockstep. Used by the Emception
+// publish-packages CI job: it bumps, publishes to npm, tags vX.Y.Z, and
+// opens a release/X.Y.Z PR that syncs main's version fields.
 //
 // ponytail: fixed group in .changeset/config.json handles cross-package
 // propagation, so we only need to declare the bump for one canonical
@@ -52,6 +53,9 @@ const PKG_PATHS = {
     '@gameguild/emception-ide': 'tools/emception/packages/ide/package.json',
 };
 
+// Non-package.json artifact that also carries the release version.
+const CSPROJ = 'apps/api/Source/GameGuild.API/GameGuild.API.csproj';
+
 function bumpSemver(version, bump) {
     const [major, minor, patch] = version.split('.').map((n) => parseInt(n, 10));
     if (bump === 'major') return `${major + 1}.0.0`;
@@ -59,25 +63,48 @@ function bumpSemver(version, bump) {
     return `${major}.${minor}.${patch + 1}`;
 }
 
+// Every tracked package.json in the monorepo (fixed group is lockstep-wide,
+// so bump them all, root included).
+function allPackageJsonPaths() {
+    const out = git('ls-files "*.package.json" "**/package.json"').split('\n').map((l) => l.trim()).filter(Boolean);
+    if (!out.includes('package.json')) out.push('package.json');
+    return out;
+}
+
 function applyBump(bump) {
-    // Read canonical version from core, bump once, write to all packages.
+    // Read canonical version from core, bump once, write everywhere.
     const corePath = path.join(ROOT, PKG_PATHS['emception']);
     const corePkg = JSON.parse(readFileSync(corePath, 'utf8'));
     const current = corePkg.version;
     const next = bumpSemver(current, bump);
 
     let written = 0;
-    for (const [name, relPath] of Object.entries(PKG_PATHS)) {
+    for (const relPath of allPackageJsonPaths()) {
         const fullPath = path.join(ROOT, relPath);
-        const pkg = JSON.parse(readFileSync(fullPath, 'utf8'));
-        if (pkg.version !== next) {
-            pkg.version = next;
-            writeFileSync(fullPath, JSON.stringify(pkg, null, 2) + '\n');
-            written++;
-            console.log(`  ${name}: ${relPath}  ${current} → ${next}`);
+        let pkg;
+        try {
+            pkg = JSON.parse(readFileSync(fullPath, 'utf8'));
+        } catch {
+            continue;
         }
+        if (pkg.version === next) continue;
+        pkg.version = next;
+        writeFileSync(fullPath, JSON.stringify(pkg, null, 2) + '\n');
+        written++;
+        console.log(`  ${pkg.name || relPath}: ${relPath}  ${current} → ${next}`);
     }
+
+    const csprojPath = path.join(ROOT, CSPROJ);
+    const csproj = readFileSync(csprojPath, 'utf8');
+    const patched = csproj.replace(/<Version>[^<]*<\/Version>/, `<Version>${next}</Version>`);
+    if (patched !== csproj) {
+        writeFileSync(csprojPath, patched);
+        written++;
+        console.log(`  ${CSPROJ}  ${current} → ${next}`);
+    }
+
     console.log(`[auto-changeset] Applied ${bump} bump: ${current} → ${next} (${written} files updated).`);
+    console.log(`NEXT_VERSION=${next}`);
 }
 
 function git(args) {
