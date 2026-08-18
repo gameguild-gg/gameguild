@@ -144,41 +144,6 @@ export class AiPromptTemplatesModule {
 
   /**
    */
-  async postAiPromptTemplatesGenerate(
-    id: string,
-    body: Types.AIAiPromptTemplateGenerateInput,
-  ): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
-    const url = `/v1/ai/prompt-templates/${id}/generate`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AIAiPromptTemplateGenerateInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.AIAiCompletionOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async postAiPromptTemplatesRender(
     id: string,
     body: Types.AIAiPromptTemplateRenderInput,
@@ -203,6 +168,41 @@ export class AiPromptTemplatesModule {
     if (result.ok) {
       const validatedData = safeParse(
         Types.AIAiPromptTemplateRenderOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAiPromptTemplatesGenerate(
+    id: string,
+    body: Types.AIAiPromptTemplateGenerateInput,
+  ): Promise<Result<Types.AIAiCompletionOutput, ApiError>> {
+    const url = `/v1/ai/prompt-templates/${id}/generate`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AIAiPromptTemplateGenerateInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.AIAiCompletionOutputSchema,
         result.data,
         "response",
       );

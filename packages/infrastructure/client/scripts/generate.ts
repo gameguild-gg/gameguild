@@ -43,6 +43,7 @@ interface GeneratorMetadata {
   hash: string;
   apiVersion: string | undefined;
   source: string;
+  generatedAt: string;
 }
 
 /**
@@ -76,6 +77,7 @@ function saveMetadata(hash: string, spec: OpenApiSpec): void {
     hash,
     apiVersion: spec.info?.version,
     source: CONFIG.generatedSourceLabel,
+    generatedAt: new Date().toISOString(),
   };
 
   if (!existsSync(dirname(CONFIG.metadataFile))) {

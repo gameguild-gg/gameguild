@@ -17,32 +17,6 @@ export class LearningExperienceRecommendationsModule {
 
   /**
    */
-  async getRecommendationsCoursesSimilar(
-    courseId: string,
-    query?: { tenantId?: string; maxResults?: number },
-  ): Promise<
-    Result<
-      Array<Types.LearningExperienceRecommendationsSimilarCourse>,
-      ApiError
-    >
-  > {
-    const url = `/v1/recommendations/courses/${courseId}/similar`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceRecommendationsSimilarCourse>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async getRecommendationsMe(query?: {
     tenantId?: string;
     type?: Types.LearningExperienceRecommendationsRecommendationType;
@@ -94,6 +68,82 @@ export class LearningExperienceRecommendationsModule {
       Array<Types.LearningExperienceRecommendationsRecommendation>,
       ApiError
     >;
+  }
+
+  /**
+   */
+  async postRecommendationsViewed(id: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/recommendations/${id}/viewed`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postRecommendationsDismiss(
+    id: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/recommendations/${id}/dismiss`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postRecommendationsMeRefresh(query?: {
+    tenantId?: string;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/v1/recommendations/me/refresh";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getRecommendationsMeStatistics(): Promise<
+    Result<
+      Types.LearningExperienceRecommendationsRecommendationStatistics,
+      ApiError
+    >
+  > {
+    const url = "/v1/recommendations/me/statistics";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningExperienceRecommendationsRecommendationStatisticsSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
@@ -224,52 +274,6 @@ export class LearningExperienceRecommendationsModule {
 
   /**
    */
-  async postRecommendationsMeRefresh(query?: {
-    tenantId?: string;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/v1/recommendations/me/refresh";
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getRecommendationsMeStatistics(): Promise<
-    Result<
-      Types.LearningExperienceRecommendationsRecommendationStatistics,
-      ApiError
-    >
-  > {
-    const url = "/v1/recommendations/me/statistics";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceRecommendationsRecommendationStatisticsSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async getRecommendationsPopular(query?: {
     tenantId?: string;
     category?: string;
@@ -326,32 +330,28 @@ export class LearningExperienceRecommendationsModule {
 
   /**
    */
-  async postRecommendationsDismiss(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/recommendations/${id}/dismiss`;
+  async getRecommendationsCoursesSimilar(
+    courseId: string,
+    query?: { tenantId?: string; maxResults?: number },
+  ): Promise<
+    Result<
+      Array<Types.LearningExperienceRecommendationsSimilarCourse>,
+      ApiError
+    >
+  > {
+    const url = `/v1/recommendations/courses/${courseId}/similar`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: "GET",
       path: url,
+      params: query,
       requiresAuth: true,
     });
 
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postRecommendationsViewed(id: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/recommendations/${id}/viewed`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
+    return result as Result<
+      Array<Types.LearningExperienceRecommendationsSimilarCourse>,
+      ApiError
+    >;
   }
 }
 

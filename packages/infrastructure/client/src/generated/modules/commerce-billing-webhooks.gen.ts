@@ -16,25 +16,6 @@ export class CommerceBillingWebhooksModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Handle Apple Pay webhook events for transaction notifications
-   *
-   * Processes Apple Pay webhook notifications for payment completions and transaction status updates.
-   */
-  async postBillingWebhooksApplePay(): Promise<
-    Result<Record<string, unknown>, ApiError>
-  > {
-    const url = "/api/v1/billing/webhooks/apple-pay";
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Record<string, unknown>, ApiError>;
-  }
-
-  /**
    * Handle Google Pay webhook events for transaction notifications
    *
    * Processes Google Pay webhook notifications for payment processing, subscription billing, and transaction status updates. Google Pay webhooks provide real-time notifications for payment completions, failures, refunds, and subscription lifecycle events.
@@ -54,14 +35,14 @@ export class CommerceBillingWebhooksModule {
   }
 
   /**
-   * Handle PayPal IPN (Instant Payment Notification) webhook events
+   * Handle Apple Pay webhook events for transaction notifications
    *
-   * Processes PayPal Instant Payment Notification (IPN) webhook events for subscription billing, payment confirmations, and account updates. PayPal IPN provides real-time transaction status updates and subscription lifecycle management for PayPal-based billing integrations.
+   * Processes Apple Pay webhook notifications for payment completions and transaction status updates.
    */
-  async postBillingWebhooksPaypal(): Promise<
+  async postBillingWebhooksApplePay(): Promise<
     Result<Record<string, unknown>, ApiError>
   > {
-    const url = "/api/v1/billing/webhooks/paypal";
+    const url = "/api/v1/billing/webhooks/apple-pay";
 
     const result = await this.client.request({
       method: "POST",
@@ -81,6 +62,25 @@ export class CommerceBillingWebhooksModule {
     Result<Record<string, unknown>, ApiError>
   > {
     const url = "/api/v1/billing/webhooks/stripe";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Record<string, unknown>, ApiError>;
+  }
+
+  /**
+   * Handle PayPal IPN (Instant Payment Notification) webhook events
+   *
+   * Processes PayPal Instant Payment Notification (IPN) webhook events for subscription billing, payment confirmations, and account updates. PayPal IPN provides real-time transaction status updates and subscription lifecycle management for PayPal-based billing integrations.
+   */
+  async postBillingWebhooksPaypal(): Promise<
+    Result<Record<string, unknown>, ApiError>
+  > {
+    const url = "/api/v1/billing/webhooks/paypal";
 
     const result = await this.client.request({
       method: "POST",

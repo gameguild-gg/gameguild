@@ -17,282 +17,6 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async getDiscoveryCollectionsForGetDiscoveryCollections(query?: {
-    tenantId?: string;
-    type?: Types.LearningExperienceDiscoveryCollectionType;
-    skip?: number;
-    take?: number;
-  }): Promise<
-    Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>
-  > {
-    const url = "/v1/discovery/collections";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceDiscoveryCourseCollection>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async postDiscoveryCollections(
-    body: Types.LearningExperienceDiscoveryCreateCourseCollection,
-    query?: { curatorId?: string; tenantId?: string },
-  ): Promise<
-    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
-  > {
-    const url = "/v1/discovery/collections";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningExperienceDiscoveryCreateCourseCollectionSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      params: query,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceDiscoveryCourseCollectionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getDiscoveryCollectionsCurator(
-    curatorId: string,
-    query?: { includeUnpublished?: boolean; skip?: number; take?: number },
-  ): Promise<
-    Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>
-  > {
-    const url = `/v1/discovery/collections/curator/${curatorId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceDiscoveryCourseCollection>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getDiscoveryCollectionsFeatured(query?: {
-    tenantId?: string;
-    take?: number;
-  }): Promise<
-    Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>
-  > {
-    const url = "/v1/discovery/collections/featured";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceDiscoveryCourseCollection>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getDiscoveryCollectionsSlug(
-    slug: string,
-    query?: { tenantId?: string },
-  ): Promise<
-    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
-  > {
-    const url = `/v1/discovery/collections/slug/${slug}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceDiscoveryCourseCollectionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getDiscoveryCollectionsForGetDiscoveryCollectionsById(
-    id: string,
-  ): Promise<
-    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
-  > {
-    const url = `/v1/discovery/collections/${id}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceDiscoveryCourseCollectionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putDiscoveryCollections(
-    id: string,
-    body: Types.LearningExperienceDiscoveryUpdateCourseCollection,
-  ): Promise<
-    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
-  > {
-    const url = `/v1/discovery/collections/${id}`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningExperienceDiscoveryUpdateCourseCollectionSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "PUT",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceDiscoveryCourseCollectionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async deleteDiscoveryCollections(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/discovery/collections/${id}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postDiscoveryCollectionsPublish(
-    id: string,
-  ): Promise<
-    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
-  > {
-    const url = `/v1/discovery/collections/${id}/publish`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceDiscoveryCourseCollectionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postDiscoveryCollectionsUnpublish(
-    id: string,
-  ): Promise<
-    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
-  > {
-    const url = `/v1/discovery/collections/${id}/unpublish`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceDiscoveryCourseCollectionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async getDiscoveryFeaturedForGetDiscoveryFeatured(query?: {
     tenantId?: string;
     skip?: number;
@@ -487,13 +211,15 @@ export class LearningExperienceDiscoveryModule {
 
   /**
    */
-  async getDiscoverySearchHistory(
-    userId: string,
-    query?: { take?: number },
-  ): Promise<
-    Result<Array<Types.LearningExperienceDiscoverySearchHistory>, ApiError>
+  async getDiscoveryCollectionsForGetDiscoveryCollections(query?: {
+    tenantId?: string;
+    type?: Types.LearningExperienceDiscoveryCollectionType;
+    skip?: number;
+    take?: number;
+  }): Promise<
+    Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>
   > {
-    const url = `/v1/discovery/search/history/${userId}`;
+    const url = "/v1/discovery/collections";
 
     const result = await this.client.request({
       method: "GET",
@@ -503,23 +229,58 @@ export class LearningExperienceDiscoveryModule {
     });
 
     return result as Result<
-      Array<Types.LearningExperienceDiscoverySearchHistory>,
+      Array<Types.LearningExperienceDiscoveryCourseCollection>,
       ApiError
     >;
   }
 
   /**
    */
-  async getDiscoverySearchPopular(query?: {
-    daysBack?: number;
+  async postDiscoveryCollections(
+    body: Types.LearningExperienceDiscoveryCreateCourseCollection,
+    query?: { curatorId?: string; tenantId?: string },
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
+    const url = "/v1/discovery/collections";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.LearningExperienceDiscoveryCreateCourseCollectionSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      params: query,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getDiscoveryCollectionsFeatured(query?: {
+    tenantId?: string;
     take?: number;
   }): Promise<
-    Result<
-      Array<Types.LearningExperienceDiscoveryPopularSearchResult>,
-      ApiError
-    >
+    Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>
   > {
-    const url = "/v1/discovery/search/popular";
+    const url = "/v1/discovery/collections/featured";
 
     const result = await this.client.request({
       method: "GET",
@@ -529,9 +290,199 @@ export class LearningExperienceDiscoveryModule {
     });
 
     return result as Result<
-      Array<Types.LearningExperienceDiscoveryPopularSearchResult>,
+      Array<Types.LearningExperienceDiscoveryCourseCollection>,
       ApiError
     >;
+  }
+
+  /**
+   */
+  async getDiscoveryCollectionsSlug(
+    slug: string,
+    query?: { tenantId?: string },
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
+    const url = `/v1/discovery/collections/slug/${slug}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getDiscoveryCollectionsForGetDiscoveryCollectionsById(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
+    const url = `/v1/discovery/collections/${id}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putDiscoveryCollections(
+    id: string,
+    body: Types.LearningExperienceDiscoveryUpdateCourseCollection,
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
+    const url = `/v1/discovery/collections/${id}`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.LearningExperienceDiscoveryUpdateCourseCollectionSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteDiscoveryCollections(
+    id: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/discovery/collections/${id}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getDiscoveryCollectionsCurator(
+    curatorId: string,
+    query?: { includeUnpublished?: boolean; skip?: number; take?: number },
+  ): Promise<
+    Result<Array<Types.LearningExperienceDiscoveryCourseCollection>, ApiError>
+  > {
+    const url = `/v1/discovery/collections/curator/${curatorId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceDiscoveryCourseCollection>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async postDiscoveryCollectionsPublish(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
+    const url = `/v1/discovery/collections/${id}/publish`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postDiscoveryCollectionsUnpublish(
+    id: string,
+  ): Promise<
+    Result<Types.LearningExperienceDiscoveryCourseCollection, ApiError>
+  > {
+    const url = `/v1/discovery/collections/${id}/unpublish`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningExperienceDiscoveryCourseCollectionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
@@ -593,6 +544,55 @@ export class LearningExperienceDiscoveryModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getDiscoverySearchHistory(
+    userId: string,
+    query?: { take?: number },
+  ): Promise<
+    Result<Array<Types.LearningExperienceDiscoverySearchHistory>, ApiError>
+  > {
+    const url = `/v1/discovery/search/history/${userId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceDiscoverySearchHistory>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getDiscoverySearchPopular(query?: {
+    daysBack?: number;
+    take?: number;
+  }): Promise<
+    Result<
+      Array<Types.LearningExperienceDiscoveryPopularSearchResult>,
+      ApiError
+    >
+  > {
+    const url = "/v1/discovery/search/popular";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceDiscoveryPopularSearchResult>,
+      ApiError
+    >;
   }
 }
 

@@ -58,59 +58,6 @@ export class FeaturesModule {
 
   /**
    */
-  async postFeaturesDisable(id: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/features/${id}:disable`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postFeaturesEnable(id: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/features/${id}:enable`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postFeaturesToggle(
-    id: string,
-    body: Types.FeaturesToggleFeatureInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/features/${id}:toggle`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.FeaturesToggleFeatureInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getFeatureByKey(key: string): Promise<Result<void, ApiError>> {
     const url = `/v1/features/${key}`;
 
@@ -178,6 +125,59 @@ export class FeaturesModule {
     });
 
     return result as Result<boolean, ApiError>;
+  }
+
+  /**
+   */
+  async postFeaturesEnable(id: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/features/${id}:enable`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postFeaturesDisable(id: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/features/${id}:disable`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postFeaturesToggle(
+    id: string,
+    body: Types.FeaturesToggleFeatureInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/features/${id}:toggle`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.FeaturesToggleFeatureInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 }
 
