@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,11 +14,14 @@ namespace GameGuild.Learning.Courses;
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/courses")]
 [Authorize]
-public class ProgramCrudController(IProgramCrudService programService) : BaseApiController
+public class ProgramCrudController(
+    IProgramCrudService programService,
+    IActorContextAccessor actorContextAccessor,
+    IPermissionQueryService permissionQueryService) : BaseApiController
 {
   // ===== CONTENT-TYPE LEVEL OPERATIONS =====
 
-  /// <summary> Get all courses with optional filtering (content-type level read permission) </summary>
+  /// <summary> Get all courses with optional filtering (content-type level read permission). Non-manage actors are DAC-scoped to their own courses. </summary>
   [HttpGet]
   [RequireContentTypePermission<Program>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProgramDto>>> GetPrograms(
@@ -30,50 +34,77 @@ public class ProgramCrudController(IProgramCrudService programService) : BaseApi
       [FromQuery] int skip = 0,
       [FromQuery] int take = 50)
   {
+    var actor = actorContextAccessor.ActorContext;
+    var canManageCatalog = await CanManageCatalogAsync(actor).ConfigureAwait(false);
+    var selfId = actor.SubjectIdAsGuid;
+
+    if (!canManageCatalog && selfId.HasValue)
+    {
+      // Non-manage actors are scoped to their own courses in every filter branch. An explicit
+      // ?creatorId= pointing at someone else is ignored (conservative option: scoping to self
+      // never confirms whether the probed id exists, unlike a 403 would).
+      creatorId = selfId;
+    }
+
+    IEnumerable<Program> programs;
     if (!string.IsNullOrEmpty(q))
     {
-      var searchResults = await programService.SearchProgramsAsync(q, skip, take).ConfigureAwait(false);
-      return Ok(searchResults.ToDtos());
+      programs = await programService.SearchProgramsAsync(q, skip, take).ConfigureAwait(false);
     }
-
-    if (status == "published")
+    else if (status == "published")
     {
-      var publishedPrograms = await programService.GetPublishedProgramsAsync(skip, take).ConfigureAwait(false);
-      return Ok(publishedPrograms.ToDtos());
+      programs = await programService.GetPublishedProgramsAsync(skip, take).ConfigureAwait(false);
     }
-
-    if (category.HasValue)
+    else if (category.HasValue)
     {
-      var categoryPrograms = await programService.GetProgramsByCategoryAsync(category.Value, skip, take).ConfigureAwait(false);
-      return Ok(categoryPrograms.ToDtos());
+      programs = await programService.GetProgramsByCategoryAsync(category.Value, skip, take).ConfigureAwait(false);
     }
-
-    if (difficulty.HasValue)
+    else if (difficulty.HasValue)
     {
-      var difficultyPrograms = await programService.GetProgramsByDifficultyAsync(difficulty.Value, skip, take).ConfigureAwait(false);
-      return Ok(difficultyPrograms.ToDtos());
+      programs = await programService.GetProgramsByDifficultyAsync(difficulty.Value, skip, take).ConfigureAwait(false);
     }
-
-    if (creatorId.HasValue)
+    else if (creatorId.HasValue)
     {
-      var creatorPrograms = await programService.GetProgramsByCreatorAsync(creatorId.Value, skip, take).ConfigureAwait(false);
-      return Ok(creatorPrograms.ToDtos());
+      programs = await programService.GetProgramsByCreatorAsync(creatorId.Value, skip, take).ConfigureAwait(false);
     }
-
-    if (sort == "popular")
+    else if (sort == "popular")
     {
-      var popularPrograms = await programService.GetPopularProgramsAsync(take).ConfigureAwait(false);
-      return Ok(popularPrograms.ToDtos());
+      programs = await programService.GetPopularProgramsAsync(take).ConfigureAwait(false);
     }
-
-    if (sort == "recent")
+    else if (sort == "recent")
     {
-      var recentPrograms = await programService.GetRecentProgramsAsync(take).ConfigureAwait(false);
-      return Ok(recentPrograms.ToDtos());
+      programs = await programService.GetRecentProgramsAsync(take).ConfigureAwait(false);
+    }
+    else
+    {
+      programs = await programService.GetProgramsAsync(skip, take).ConfigureAwait(false);
     }
 
-    var programs = await programService.GetProgramsAsync(skip, take).ConfigureAwait(false);
+    // Belt-and-suspenders for branches the service cannot scope query-level (q/status/category/difficulty/sort).
+    if (!canManageCatalog)
+    {
+      programs = selfId.HasValue
+          ? programs.Where(p => p.CreatorId == selfId.Value)
+          : Enumerable.Empty<Program>();
+    }
+
     return Ok(programs.ToDtos());
+  }
+
+  /// <summary>
+  /// Catalog-wide manage capability: system admin, or a Program content-type Manage grant.
+  /// Same actors and permission-name scheme as <see cref="ResourcePermissionAuthorizationFilter"/>
+  /// content-type checks ("{ContentTypeName}.{PermissionType}") and AssessmentsController.CanManageCourseAsync.
+  /// </summary>
+  private async Task<bool> CanManageCatalogAsync(ActorContext actor)
+  {
+    if (actor.IsSystemAdmin) return true;
+    if (!actor.SubjectIdAsGuid.HasValue || !actor.TenantId.HasValue) return false;
+
+    return await permissionQueryService.HasTenantPermissionAsync(
+        actor.SubjectIdAsGuid.Value,
+        actor.TenantId,
+        $"{nameof(Program)}.{PermissionType.Manage}").ConfigureAwait(false);
   }
 
   /// <summary> Get published public courses for the public catalog. </summary>

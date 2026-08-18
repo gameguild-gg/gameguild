@@ -46,7 +46,16 @@ public sealed class ProgramCrudControllerLearnerTests
     var claims = userId.HasValue
       ? new[] { new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString()) }
       : Array.Empty<Claim>();
-    return new ProgramCrudController(service)
+    var actorAccessor = new Mock<GameGuild.Identity.Context.Actors.IActorContextAccessor>();
+    actorAccessor.Setup(a => a.ActorContext).Returns(new GameGuild.Identity.Context.Actors.ActorContext
+    {
+      ActorKind = GameGuild.Identity.Context.Actors.ActorKind.User,
+      IsAuthenticated = userId.HasValue,
+      SubjectId = userId?.ToString(),
+      Roles = new HashSet<string>(),
+      Permissions = new HashSet<string>()
+    });
+    return new ProgramCrudController(service, actorAccessor.Object, new Mock<GameGuild.Identity.Authorization.IPermissionQueryService>().Object)
     {
       ControllerContext = new ControllerContext
       {
