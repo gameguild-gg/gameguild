@@ -245,7 +245,7 @@ public sealed class BillingSubscriptionsAndNotificationsControllerTests
             referenceEntityType: "subscription",
             metadata: source.Metadata);
         notificationService.Setup(service => service.SendAsync(
-                source.RecipientId,
+                source.RecipientId!.Value,
                 NotificationType.Billing,
                 source.Title,
                 source.Message,

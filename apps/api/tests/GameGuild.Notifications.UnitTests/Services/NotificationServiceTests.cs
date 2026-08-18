@@ -5,7 +5,8 @@ public class NotificationServiceTests
     [Fact]
     public async Task Crud_Methods_Should_Delegate_To_Delivery_Service()
     {
-        var notification = Notification.Create(Guid.NewGuid(), NotificationType.System, NotificationChannel.InApp, "Title", "Message");
+        var recipientId = Guid.NewGuid();
+        var notification = Notification.Create(recipientId, NotificationType.System, NotificationChannel.InApp, "Title", "Message");
         var notifications = new[] { notification };
         var delivery = new Mock<INotificationDeliveryService>(MockBehavior.Strict);
         var preference = new Mock<INotificationPreferenceService>(MockBehavior.Strict);
@@ -13,20 +14,20 @@ public class NotificationServiceTests
         var subject = new NotificationService(delivery.Object, preference.Object, template.Object);
 
         delivery.Setup(x => x.GetByIdAsync(notification.Id, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(notification));
-        delivery.Setup(x => x.GetUserNotificationsAsync(notification.RecipientId, 2, 5, true, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success<IEnumerable<Notification>>(notifications));
-        delivery.Setup(x => x.GetUnreadCountAsync(notification.RecipientId, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(3));
-        delivery.Setup(x => x.SendAsync(notification.RecipientId, NotificationType.System, "Title", "Message", NotificationChannel.Email, null, "https://example.test", NotificationPriority.High, null, null, null, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(notification));
-        delivery.Setup(x => x.SendFromTemplateAsync(notification.RecipientId, "welcome", It.IsAny<Dictionary<string, string>>(), null, null, null, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(notification));
+        delivery.Setup(x => x.GetUserNotificationsAsync(recipientId, 2, 5, true, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success<IEnumerable<Notification>>(notifications));
+        delivery.Setup(x => x.GetUnreadCountAsync(recipientId, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(3));
+        delivery.Setup(x => x.SendAsync(recipientId, NotificationType.System, "Title", "Message", NotificationChannel.Email, null, "https://example.test", NotificationPriority.High, null, null, null, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(notification));
+        delivery.Setup(x => x.SendFromTemplateAsync(recipientId, "welcome", It.IsAny<Dictionary<string, string>>(), null, null, null, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(notification));
         delivery.Setup(x => x.SendBulkAsync(It.IsAny<IEnumerable<Guid>>(), NotificationType.System, "Bulk", "Message", NotificationChannel.InApp, null, null, NotificationPriority.Normal, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success<IEnumerable<Notification>>(notifications));
-        delivery.Setup(x => x.ScheduleAsync(notification.RecipientId, NotificationType.System, "Later", "Message", It.IsAny<DateTime>(), NotificationChannel.InApp, null, null, NotificationPriority.Normal, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(notification));
+        delivery.Setup(x => x.ScheduleAsync(recipientId, NotificationType.System, "Later", "Message", It.IsAny<DateTime>(), NotificationChannel.InApp, null, null, NotificationPriority.Normal, It.IsAny<CancellationToken>())).ReturnsAsync(Result.Success(notification));
 
         (await subject.GetByIdAsync(notification.Id)).Value.Should().BeSameAs(notification);
-        (await subject.GetUserNotificationsAsync(notification.RecipientId, 2, 5, true)).Value.Should().BeEquivalentTo(notifications);
-        (await subject.GetUnreadCountAsync(notification.RecipientId)).Value.Should().Be(3);
-        (await subject.SendAsync(notification.RecipientId, NotificationType.System, "Title", "Message", NotificationChannel.Email, actionUrl: "https://example.test", priority: NotificationPriority.High)).Value.Should().BeSameAs(notification);
-        (await subject.SendFromTemplateAsync(notification.RecipientId, "welcome", new Dictionary<string, string> { ["name"] = "Ada" })).Value.Should().BeSameAs(notification);
-        (await subject.SendBulkAsync([notification.RecipientId], NotificationType.System, "Bulk", "Message")).Value.Should().BeEquivalentTo(notifications);
-        (await subject.ScheduleAsync(notification.RecipientId, NotificationType.System, "Later", "Message", SystemClock.UtcNow.AddMinutes(5))).Value.Should().BeSameAs(notification);
+        (await subject.GetUserNotificationsAsync(recipientId, 2, 5, true)).Value.Should().BeEquivalentTo(notifications);
+        (await subject.GetUnreadCountAsync(recipientId)).Value.Should().Be(3);
+        (await subject.SendAsync(recipientId, NotificationType.System, "Title", "Message", NotificationChannel.Email, actionUrl: "https://example.test", priority: NotificationPriority.High)).Value.Should().BeSameAs(notification);
+        (await subject.SendFromTemplateAsync(recipientId, "welcome", new Dictionary<string, string> { ["name"] = "Ada" })).Value.Should().BeSameAs(notification);
+        (await subject.SendBulkAsync([recipientId], NotificationType.System, "Bulk", "Message")).Value.Should().BeEquivalentTo(notifications);
+        (await subject.ScheduleAsync(recipientId, NotificationType.System, "Later", "Message", SystemClock.UtcNow.AddMinutes(5))).Value.Should().BeSameAs(notification);
 
         delivery.VerifyAll();
     }

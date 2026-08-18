@@ -102,7 +102,7 @@ public sealed class ResendSubscriptionNotificationCommandHandler(
         }
 
         var result = await notificationService.SendAsync(
-                source.RecipientId,
+                source.RecipientId!.Value,
                 NotificationType.Billing,
                 source.Title,
                 source.Message,
@@ -135,7 +135,7 @@ file static class SubscriptionNotificationMapper
     public static SubscriptionNotificationDto ToDto(Notification notification)
         => new(
             notification.Id,
-            notification.RecipientId,
+            notification.RecipientId!.Value,
             notification.TenantId,
             notification.ReferenceEntityId,
             notification.Channel.ToString(),
