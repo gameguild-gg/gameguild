@@ -1,5 +1,5 @@
 import { ungzip } from 'pako'
-import { Tarball } from '@obsidize/tar-browserify'
+import { Archive } from '@obsidize/tar-browserify'
 import type { BinaryWASIFS } from '@runno/wasi'
 
 const wasmCache: Map<string, WebAssembly.Module> = new Map()
@@ -502,7 +502,8 @@ export async function loadTarGz(path: string): Promise<BinaryWASIFS> {
     }
 
     // Extrair tar
-    const entries = Tarball.extract(inflatedBinary)
+    const archive = await Archive.extract(inflatedBinary)
+    const entries = archive.entries
 
     const fs: BinaryWASIFS = {}
     for (const entry of entries) {
