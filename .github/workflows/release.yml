@@ -149,7 +149,7 @@ jobs:
 
       - name: Create Release Pull Request or Publish
         if: steps.has-changeset.outputs.proceed == 'true'
-        uses: changesets/action@v1 # v1
+        uses: changesets/action@v2 # v1
         with:
           branch: ${{ inputs.branch }}
           publish: pnpm run release
