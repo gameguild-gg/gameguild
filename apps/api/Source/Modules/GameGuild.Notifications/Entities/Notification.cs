@@ -282,6 +282,16 @@ public class Notification : EntityBase
     }
 
     /// <summary>
+    /// Quarantines the notification for a future digest email
+    /// </summary>
+    public void MarkHeldForDigest()
+    {
+        DeliveryStatus = NotificationDeliveryStatus.HeldForDigest;
+        NextAttemptAt = null;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
     /// Soft deletes the notification
     /// </summary>
     public void Delete() => SoftDelete();

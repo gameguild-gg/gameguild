@@ -36,8 +36,21 @@ public interface INotificationPreferenceService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Determines whether a notification should be sent based on user preferences
+    /// Decides how a notification should be routed based on user preferences.
+    /// Evaluation order: transactional bypass (EmailVerification/PasswordReset/MagicLink/TenantInvite or Urgent priority),
+    /// digest routing, per-type mute, channel toggle, category toggle, quiet hours (hold for Email, drop for InApp).
     /// </summary>
+    Task<NotificationDeliveryDecision> DecideDeliveryAsync(
+        Guid userId,
+        NotificationType type,
+        NotificationChannel channel,
+        NotificationPriority priority,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Legacy boolean gate — true only when the decision is Send. Kept temporarily for the email dispatcher lane; removed with the dispatcher rework.
+    /// </summary>
+    [Obsolete("Use DecideDeliveryAsync instead. Returns true only for the Send decision.")]
     Task<bool> ShouldSendNotificationAsync(
         Guid userId,
         NotificationType type,
