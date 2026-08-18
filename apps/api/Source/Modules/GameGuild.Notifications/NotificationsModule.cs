@@ -1,4 +1,5 @@
 using GameGuild.Notifications.Services;
+using GameGuild.Notifications.Services.Email;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Notifications;
@@ -17,6 +18,14 @@ public static class NotificationsModule
         services.AddScoped<INotificationPreferenceService, NotificationPreferenceService>();
         services.AddScoped<INotificationTemplateService, NotificationTemplateService>();
         services.AddScoped<INotificationDeliveryService, NotificationDeliveryService>();
+
+        // Email dispatch pipeline
+        services.AddOptions<EmailDispatcherOptions>()
+            .BindConfiguration("Notifications:EmailDispatcher");
+        services.AddScoped<IEmailRendererRegistry, EmailRendererRegistry>();
+        services.AddScoped<IRecipientEmailResolver, RecipientEmailResolver>();
+        services.AddScoped<EmailDispatcherService>();
+        services.AddHostedService<EmailDispatcherBackgroundService>();
 
         // Facade for backward compatibility
         services.AddScoped<INotificationService, NotificationService>();
