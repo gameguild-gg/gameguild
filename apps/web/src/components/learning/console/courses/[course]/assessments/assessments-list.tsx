@@ -594,6 +594,7 @@ export function AssessmentsList({
                   <Badge variant="outline" className="shrink-0 rounded-full bg-background">
                     {formatWeight(group.weightPercent)}
                   </Badge>
+                  <Badge variant="outline">{formatAssessmentRole(group.weightPercent)}</Badge>
                   {group.id !== UNGROUPED_ID && (
                     <>
                       <Button
@@ -654,6 +655,17 @@ export function AssessmentsList({
                             {assessment.isAvailable ? 'available' : 'scheduled'}
                           </Badge>
                         </Link>
+                        {canManage && (
+                          <Button asChild variant="outline" size="sm" className="mr-4 shrink-0">
+                            <Link
+                              href={`${pathname}/${assessment.id}/submissions`}
+                              data-testid={`grade-link-${assessment.id}`}
+                            >
+                              <ClipboardCheck className="mr-2 h-4 w-4" />
+                              Grade
+                            </Link>
+                          </Button>
+                        )}
                       </DraggableAssessmentRow>
                     ))}
                   </div>
