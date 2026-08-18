@@ -57,7 +57,7 @@ describe('Zod Schema Validation', () => {
       const result = TaxJurisdictionDtoSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.errors[0].path).toEqual(['id']);
+        expect(result.error.issues[0].path).toEqual(['id']);
       }
     });
 
