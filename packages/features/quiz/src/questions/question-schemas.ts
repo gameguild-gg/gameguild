@@ -124,7 +124,7 @@ const shortAnswerEntrySchema = z.object({
   caseSensitive: z.boolean().optional(),
 }).strict();
 
-const serializedRichTextPayloadSchema = z.record(z.unknown()).nullable();
+const serializedRichTextPayloadSchema = z.record(z.string(), z.unknown()).nullable();
 
 const essayEntrySchema = z.object({
   ...entryBaseShape,
@@ -285,7 +285,9 @@ void _parsedQuizEntryTypeCheck;
 
 export const quizEntrySchema: z.ZodType<QuizEntry> = rawQuizEntrySchema;
 
-export type QuizEntryParseResult = z.SafeParseReturnType<unknown, QuizEntry>;
+export type QuizEntryParseResult =
+  | { success: true; data: QuizEntry }
+  | { success: false; error: z.ZodError };
 
 export function safeParseQuizEntry(value: unknown): QuizEntryParseResult {
   return quizEntrySchema.safeParse(value) as QuizEntryParseResult;

@@ -318,8 +318,8 @@ describe('validation.ts — remaining branch gaps', () => {
   it('invalid_string with url validation', async () => {
     const error = new ZodError([
       {
-        code: 'invalid_string',
-        validation: 'url',
+        code: 'invalid_format',
+        format: 'url',
         path: ['website'],
         message: 'Invalid url',
       } as any,
@@ -333,8 +333,8 @@ describe('validation.ts — remaining branch gaps', () => {
   it('invalid_string with uuid validation', async () => {
     const error = new ZodError([
       {
-        code: 'invalid_string',
-        validation: 'uuid',
+        code: 'invalid_format',
+        format: 'uuid',
         path: ['id'],
         message: 'Invalid uuid',
       } as any,
@@ -348,8 +348,8 @@ describe('validation.ts — remaining branch gaps', () => {
   it('invalid_string with datetime validation', async () => {
     const error = new ZodError([
       {
-        code: 'invalid_string',
-        validation: 'datetime',
+        code: 'invalid_format',
+        format: 'datetime',
         path: ['createdAt'],
         message: 'Invalid datetime',
       } as any,
@@ -364,7 +364,7 @@ describe('validation.ts — remaining branch gaps', () => {
     const error = new ZodError([
       {
         code: 'too_small',
-        type: 'array',
+        origin: 'array',
         minimum: 1,
         inclusive: true,
         path: ['items'],
@@ -381,7 +381,7 @@ describe('validation.ts — remaining branch gaps', () => {
     const error = new ZodError([
       {
         code: 'too_big',
-        type: 'array',
+        origin: 'array',
         maximum: 10,
         inclusive: true,
         path: ['tags'],
