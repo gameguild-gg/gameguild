@@ -254,8 +254,8 @@ export interface NativePreset {
     readonly env?: Record<string, string>;
     readonly compileTool: string;
     readonly linkTool: string;
-    compileArgv(paths: CompilePaths): string[];
-    linkArgv(paths: CompilePaths): string[];
+    compileArgv(paths: Pick<CompilePaths, 'sourcePath' | 'objectPath'>): string[];
+    linkArgv(paths: Pick<CompilePaths, 'objectPath' | 'wasmPath'>): string[];
 }
 
 /** Full preset for a Python script target (no compile/link step). */
