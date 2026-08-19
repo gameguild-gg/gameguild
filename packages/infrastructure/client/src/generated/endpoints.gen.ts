@@ -3678,6 +3678,19 @@ export const deleteEmailDeliverySuppressionsEndpoint = {
 } as const;
 
 /**
+ * SES email delivery events webhook (public, SNS signature-verified)
+ */
+export type PostNotificationsEmailEventsInput = void;
+export type PostNotificationsEmailEventsOutput = void;
+export const postNotificationsEmailEventsEndpoint = {
+  operationId: "postNotificationsEmailEvents" as const,
+  method: "POST" as const,
+  path: "/api/v1/notifications/email-events" as const,
+  tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * List subscription billing notifications
  *
  * Lists local billing notification records tied to subscriptions.
@@ -19774,6 +19787,7 @@ export const endpoints = {
     getEmailDeliveryNotificationsTimelineEndpoint,
   getEmailDeliverySuppressions: getEmailDeliverySuppressionsEndpoint,
   deleteEmailDeliverySuppressions: deleteEmailDeliverySuppressionsEndpoint,
+  postNotificationsEmailEvents: postNotificationsEmailEventsEndpoint,
   getNotificationsSubscriptions: getNotificationsSubscriptionsEndpoint,
   postNotificationsSubscriptionsResend:
     postNotificationsSubscriptionsResendEndpoint,

@@ -829,21 +829,22 @@ async function clickBottomTab(page, name) {
 }
 
 async function studentRunTestsAndWait(page) {
-  // Status-transition wait: capture the status text BEFORE the click, then
-  // wait until it CHANGES and matches the terminal pattern. Without this,
-  // run #2 resolves immediately on run #1's stale 'Tests complete' text.
+  // Two-stage wait: (1) the synchronous 'Running tests...' status flip
+  // proves the click landed — guards against resolving on stale text when
+  // a later run produces the SAME final text as the previous one; then
+  // (2) the terminal pattern.
   const statusSel = '[data-testid="status"]';
-  const before = ((await page.locator(statusSel).first().textContent()) ?? "").trim();
   const runBtn = page.getByTestId("run-tests-button").first();
   await runBtn.waitFor({ state: "visible", timeout: 15_000 });
   await runBtn.click();
-  // Student IDE auto-switches to Test Results + status 'Tests complete'.
   await page.waitForFunction(
-    ({ sel, before }) => {
-      const t = (document.querySelector(sel)?.textContent ?? "").trim();
-      return t !== before && /Tests complete|Test error/.test(t);
-    },
-    { sel: statusSel, before },
+    (sel) => /Running tests/.test((document.querySelector(sel)?.textContent ?? "")),
+    statusSel,
+    { timeout: 15_000 },
+  );
+  await page.waitForFunction(
+    (sel) => /Tests complete|Test error/.test((document.querySelector(sel)?.textContent ?? "").trim()),
+    statusSel,
     { timeout: RUN_TESTS_TIMEOUT_MS },
   );
 }
