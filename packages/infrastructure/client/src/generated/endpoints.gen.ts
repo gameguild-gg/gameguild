@@ -3584,6 +3584,99 @@ export const getEconomyWalletTransactionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetEmailDeliveryDeadlettersInput {
+  query?: {
+    skip?: number;
+    take?: number;
+    type?: string;
+    email?: string;
+  };
+}
+export type GetEmailDeliveryDeadlettersOutput =
+  Types.PagedResultOfNotificationsControllersDeadLetter;
+export const getEmailDeliveryDeadlettersEndpoint = {
+  operationId: "getEmailDeliveryDeadletters" as const,
+  method: "GET" as const,
+  path: "/api/v1/email-delivery/deadletters" as const,
+  tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetEmailDeliveryEmailEventsInput {
+  query?: {
+    skip?: number;
+    take?: number;
+    eventType?: string;
+    email?: string;
+    providerMessageId?: string;
+  };
+}
+export type GetEmailDeliveryEmailEventsOutput =
+  Types.PagedResultOfNotificationsControllersEmailDeliveryEvent;
+export const getEmailDeliveryEmailEventsEndpoint = {
+  operationId: "getEmailDeliveryEmailEvents" as const,
+  method: "GET" as const,
+  path: "/api/v1/email-delivery/email-events" as const,
+  tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostEmailDeliveryNotificationsRequeueInput {
+  id: string;
+}
+export type PostEmailDeliveryNotificationsRequeueOutput =
+  Types.NotificationsControllersRequeueOutput;
+export const postEmailDeliveryNotificationsRequeueEndpoint = {
+  operationId: "postEmailDeliveryNotificationsRequeue" as const,
+  method: "POST" as const,
+  path: "/api/v1/email-delivery/notifications/{id}:requeue" as const,
+  tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetEmailDeliveryNotificationsTimelineInput {
+  id: string;
+}
+export type GetEmailDeliveryNotificationsTimelineOutput =
+  Types.NotificationsControllersNotificationTimeline;
+export const getEmailDeliveryNotificationsTimelineEndpoint = {
+  operationId: "getEmailDeliveryNotificationsTimeline" as const,
+  method: "GET" as const,
+  path: "/api/v1/email-delivery/notifications/{id}/timeline" as const,
+  tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetEmailDeliverySuppressionsInput {
+  query?: {
+    skip?: number;
+    take?: number;
+    includeReleased?: boolean;
+  };
+}
+export type GetEmailDeliverySuppressionsOutput =
+  Types.PagedResultOfNotificationsControllersEmailSuppression;
+export const getEmailDeliverySuppressionsEndpoint = {
+  operationId: "getEmailDeliverySuppressions" as const,
+  method: "GET" as const,
+  path: "/api/v1/email-delivery/suppressions" as const,
+  tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteEmailDeliverySuppressionsInput {
+  email: string;
+}
+export type DeleteEmailDeliverySuppressionsOutput =
+  Types.NotificationsControllersUnsuppressOutput;
+export const deleteEmailDeliverySuppressionsEndpoint = {
+  operationId: "deleteEmailDeliverySuppressions" as const,
+  method: "DELETE" as const,
+  path: "/api/v1/email-delivery/suppressions/{email}" as const,
+  tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * List subscription billing notifications
  *
@@ -19673,6 +19766,14 @@ export const endpoints = {
     getEconomyPayoutsForGetEconomyPayoutsByOperationIdEndpoint,
   getEconomyWallet: getEconomyWalletEndpoint,
   getEconomyWalletTransactions: getEconomyWalletTransactionsEndpoint,
+  getEmailDeliveryDeadletters: getEmailDeliveryDeadlettersEndpoint,
+  getEmailDeliveryEmailEvents: getEmailDeliveryEmailEventsEndpoint,
+  postEmailDeliveryNotificationsRequeue:
+    postEmailDeliveryNotificationsRequeueEndpoint,
+  getEmailDeliveryNotificationsTimeline:
+    getEmailDeliveryNotificationsTimelineEndpoint,
+  getEmailDeliverySuppressions: getEmailDeliverySuppressionsEndpoint,
+  deleteEmailDeliverySuppressions: deleteEmailDeliverySuppressionsEndpoint,
   getNotificationsSubscriptions: getNotificationsSubscriptionsEndpoint,
   postNotificationsSubscriptionsResend:
     postNotificationsSubscriptionsResendEndpoint,
