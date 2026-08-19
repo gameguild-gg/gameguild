@@ -8439,6 +8439,14 @@ export interface NotificationsControllersDeletedCountOutput {
   deletedCount?: number;
 }
 
+export interface NotificationsControllersDigestFrequencyOutput {
+  emailDigestFrequency?: string | null;
+}
+
+export interface NotificationsControllersMutedTypesOutput {
+  mutedTypes?: Array<string> | null;
+}
+
 export interface NotificationsControllersNotification {
   id?: string;
   actionUrl?: string | null;
@@ -8462,12 +8470,20 @@ export interface NotificationsControllersNotificationPreference {
   inAppEnabled?: boolean;
   learningEnabled?: boolean;
   marketingEnabled?: boolean;
+  mutedTypes?: Array<string> | null;
   pushEnabled?: boolean;
   quietHoursEnd?: string | null;
   quietHoursStart?: string | null;
   smsEnabled?: boolean;
   socialEnabled?: boolean;
   timezone?: string | null;
+}
+
+export interface NotificationsControllersNotificationTypeCatalogEntry {
+  category?: string | null;
+  displayName?: string | null;
+  suppressible?: boolean;
+  type?: string | null;
 }
 
 export interface NotificationsControllersSetQuietHoursInput {
@@ -8478,6 +8494,21 @@ export interface NotificationsControllersSetQuietHoursInput {
 
 export interface NotificationsControllersUnreadCountOutput {
   count?: number;
+}
+
+export interface NotificationsControllersUnsubscribeOutput {
+  manageUrl?: string | null;
+  scope?: string | null;
+  status?: string | null;
+  value?: string | null;
+}
+
+export interface NotificationsControllersUpdateDigestFrequencyInput {
+  frequency?: string | null;
+}
+
+export interface NotificationsControllersUpdateMutedTypesInput {
+  types?: Array<string> | null;
 }
 
 export interface NotificationsControllersUpdatePreferencesInput {
@@ -12327,10 +12358,16 @@ export let MonitoringSLAUpdateSloCommandSchema: z.ZodType<MonitoringSLAUpdateSlo
 export let MonitoringSLAViolationSeveritySchema: z.ZodType<MonitoringSLAViolationSeverity>;
 export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
 export let NotificationsControllersDeletedCountOutputSchema: z.ZodType<NotificationsControllersDeletedCountOutput>;
+export let NotificationsControllersDigestFrequencyOutputSchema: z.ZodType<NotificationsControllersDigestFrequencyOutput>;
+export let NotificationsControllersMutedTypesOutputSchema: z.ZodType<NotificationsControllersMutedTypesOutput>;
 export let NotificationsControllersNotificationSchema: z.ZodType<NotificationsControllersNotification>;
 export let NotificationsControllersNotificationPreferenceSchema: z.ZodType<NotificationsControllersNotificationPreference>;
+export let NotificationsControllersNotificationTypeCatalogEntrySchema: z.ZodType<NotificationsControllersNotificationTypeCatalogEntry>;
 export let NotificationsControllersSetQuietHoursInputSchema: z.ZodType<NotificationsControllersSetQuietHoursInput>;
 export let NotificationsControllersUnreadCountOutputSchema: z.ZodType<NotificationsControllersUnreadCountOutput>;
+export let NotificationsControllersUnsubscribeOutputSchema: z.ZodType<NotificationsControllersUnsubscribeOutput>;
+export let NotificationsControllersUpdateDigestFrequencyInputSchema: z.ZodType<NotificationsControllersUpdateDigestFrequencyInput>;
+export let NotificationsControllersUpdateMutedTypesInputSchema: z.ZodType<NotificationsControllersUpdateMutedTypesInput>;
 export let NotificationsControllersUpdatePreferencesInputSchema: z.ZodType<NotificationsControllersUpdatePreferencesInput>;
 export let NotificationsNotificationChannelSchema: z.ZodType<NotificationsNotificationChannel>;
 export let ObjectsAttestationConveyancePreferenceSchema: z.ZodType<ObjectsAttestationConveyancePreference>;
@@ -23294,6 +23331,16 @@ NotificationsControllersDeletedCountOutputSchema = z.object({
   deletedCount: z.number().int().optional(),
 });
 
+/** Zod schema for NotificationsControllersDigestFrequencyOutput */
+NotificationsControllersDigestFrequencyOutputSchema = z.object({
+  emailDigestFrequency: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersMutedTypesOutput */
+NotificationsControllersMutedTypesOutputSchema = z.object({
+  mutedTypes: z.array(z.string()).nullable().optional(),
+});
+
 /** Zod schema for NotificationsControllersNotification */
 NotificationsControllersNotificationSchema = z.object({
   id: z.string().uuid().optional(),
@@ -23319,12 +23366,21 @@ NotificationsControllersNotificationPreferenceSchema = z.object({
   inAppEnabled: z.boolean().optional(),
   learningEnabled: z.boolean().optional(),
   marketingEnabled: z.boolean().optional(),
+  mutedTypes: z.array(z.string()).nullable().optional(),
   pushEnabled: z.boolean().optional(),
   quietHoursEnd: z.string().nullable().optional(),
   quietHoursStart: z.string().nullable().optional(),
   smsEnabled: z.boolean().optional(),
   socialEnabled: z.boolean().optional(),
   timezone: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersNotificationTypeCatalogEntry */
+NotificationsControllersNotificationTypeCatalogEntrySchema = z.object({
+  category: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  suppressible: z.boolean().optional(),
+  type: z.string().nullable().optional(),
 });
 
 /** Zod schema for NotificationsControllersSetQuietHoursInput */
@@ -23337,6 +23393,24 @@ NotificationsControllersSetQuietHoursInputSchema = z.object({
 /** Zod schema for NotificationsControllersUnreadCountOutput */
 NotificationsControllersUnreadCountOutputSchema = z.object({
   count: z.number().int().optional(),
+});
+
+/** Zod schema for NotificationsControllersUnsubscribeOutput */
+NotificationsControllersUnsubscribeOutputSchema = z.object({
+  manageUrl: z.string().nullable().optional(),
+  scope: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersUpdateDigestFrequencyInput */
+NotificationsControllersUpdateDigestFrequencyInputSchema = z.object({
+  frequency: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersUpdateMutedTypesInput */
+NotificationsControllersUpdateMutedTypesInputSchema = z.object({
+  types: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for NotificationsControllersUpdatePreferencesInput */

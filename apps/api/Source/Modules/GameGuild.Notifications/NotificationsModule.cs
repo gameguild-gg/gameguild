@@ -1,4 +1,6 @@
 using GameGuild.Notifications.Services;
+using GameGuild.Notifications.Services.Email;
+using GameGuild.Notifications.Services.Email.Renderers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Notifications;
@@ -17,6 +19,31 @@ public static class NotificationsModule
         services.AddScoped<INotificationPreferenceService, NotificationPreferenceService>();
         services.AddScoped<INotificationTemplateService, NotificationTemplateService>();
         services.AddScoped<INotificationDeliveryService, NotificationDeliveryService>();
+
+        // Email dispatch pipeline
+        services.AddOptions<EmailDispatcherOptions>()
+            .BindConfiguration("Notifications:EmailDispatcher");
+        services.AddScoped<IEmailRendererRegistry, EmailRendererRegistry>();
+        services.AddScoped<IRecipientEmailResolver, RecipientEmailResolver>();
+        services.AddScoped<EmailDispatcherService>();
+        services.AddHostedService<EmailDispatcherBackgroundService>();
+
+        // Email digest engine (daily/weekly/biweekly bundled delivery)
+        services.AddOptions<DigestDispatcherOptions>()
+            .BindConfiguration("Notifications:DigestDispatcher");
+        services.AddScoped<DigestRenderer>();
+        services.AddScoped<DigestDispatcherService>();
+        services.AddHostedService<DigestDispatcherBackgroundService>();
+
+        // Tenant invite renderer. Registered here (not in the producing Identity.Tenants module) because
+        // Identity.Tenants cannot reference GameGuild.Notifications (circular: Tenants -> Notifications -> Users -> Tenants).
+        services.AddScoped<IEmailRenderer, TenantInviteRenderer>();
+
+        // One-click unsubscribe tokens (IDataProtectionProvider is registered by the API host)
+        services.AddScoped<IUnsubscribeTokenService, UnsubscribeTokenService>();
+
+        // Footer injection for suppressible emails (consumed by renderers via constructor injection)
+        services.AddScoped<IEmailFooterService, EmailFooterService>();
 
         // Facade for backward compatibility
         services.AddScoped<INotificationService, NotificationService>();

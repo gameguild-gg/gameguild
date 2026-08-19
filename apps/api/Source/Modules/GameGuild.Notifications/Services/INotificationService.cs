@@ -32,7 +32,7 @@ public interface INotificationService
     /// Creates and sends a notification
     /// </summary>
     Task<Result<Notification>> SendAsync(
-        Guid recipientId,
+        Guid? recipientId,
         NotificationType type,
         string title,
         string message,
@@ -43,6 +43,7 @@ public interface INotificationService
         Guid? referenceEntityId = null,
         string? referenceEntityType = null,
         string? metadata = null,
+        string? recipientEmail = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

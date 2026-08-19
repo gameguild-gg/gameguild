@@ -13,7 +13,9 @@
   },
   "settings": {
     "accountTitle": "Configurações da conta",
-    "accountDescription": "Gerencie as formas de entrar no GameGuild."
+    "accountDescription": "Gerencie as formas de entrar no GameGuild.",
+    "notificationsTitle": "Configurações de notificações",
+    "notificationsDescription": "Escolha como você recebe notificações e e-mails."
   },
   "connectedAccounts": {
     "title": "Contas conectadas",
@@ -67,6 +69,64 @@
       "wrongCurrent": "Sua senha atual está incorreta.",
       "weakPassword": "A nova senha não atende aos requisitos.",
       "generic": "Não foi possível alterar sua senha. Tente novamente."
+    }
+  },
+  "notificationPrefs": {
+    "loadError": {
+      "title": "Notificações indisponíveis",
+      "description": "Não conseguimos carregar suas configurações de notificações. Tente novamente mais tarde."
+    },
+    "channels": {
+      "title": "Canais de entrega",
+      "description": "Ative ou desative canais inteiros.",
+      "email": "E-mail",
+      "inApp": "No aplicativo",
+      "push": "Push",
+      "sms": "SMS"
+    },
+    "categories": {
+      "title": "Categorias",
+      "description": "Controle grandes categorias de notificações.",
+      "marketing": "Marketing",
+      "social": "Social",
+      "learning": "Aprendizado",
+      "achievements": "Conquistas"
+    },
+    "types": {
+      "title": "Tipos de e-mail",
+      "description": "Silencie tipos individuais de e-mail. Mensagens transacionais são sempre enviadas.",
+      "alwaysSent": "Sempre enviada",
+      "groups": {
+        "Marketing": "Marketing",
+        "Social": "Social",
+        "Learning": "Aprendizado",
+        "Achievements": "Conquistas",
+        "Billing": "Cobrança",
+        "Transactional": "Transacional",
+        "System": "Sistema"
+      }
+    },
+    "digest": {
+      "title": "Resumo de e-mails",
+      "description": "Agrupe notificações em um único e-mail de resumo em vez de mensagens individuais.",
+      "off": "Desativado",
+      "Daily": "Diário",
+      "Weekly": "Semanal",
+      "BiWeekly": "A cada duas semanas"
+    },
+    "quietHours": {
+      "title": "Horário de silêncio",
+      "description": "Segura notificações durante uma janela diária. E-mails chegam quando a janela termina.",
+      "start": "Início",
+      "end": "Fim",
+      "timezone": "Fuso horário",
+      "timezonePlaceholder": "UTC",
+      "save": "Salvar horário de silêncio"
+    },
+    "toast": {
+      "saved": "Preferências salvas.",
+      "error": "Não foi possível salvar sua preferência. Tente novamente.",
+      "unauthorized": "Sua sessão expirou. Entre novamente."
     }
   }
 }

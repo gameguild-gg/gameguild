@@ -44,6 +44,19 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .HasConversion<string>()
             .HasMaxLength(20);
 
+        builder.Property(n => n.DeliveryStatus)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        builder.Property(n => n.LastError)
+            .HasMaxLength(1000);
+
+        builder.Property(n => n.RecipientEmail)
+            .HasMaxLength(320);
+
+        // Covers the dispatcher sweep: Channel == Email && DeliveryStatus == Pending && NextAttemptAt <= now
+        builder.HasIndex(n => new { n.Channel, n.DeliveryStatus, n.NextAttemptAt });
+
         // Configure the relationship with NotificationTemplate
         builder.HasOne(n => n.Template)
             .WithMany()

@@ -33,7 +33,7 @@ public class NotificationDeliveryService(
         CancellationToken cancellationToken = default)
     {
         var query = context.Set<Notification>()
-            .Where(n => n.RecipientId == userId);
+            .Where(n => n.RecipientId == userId && n.Channel == NotificationChannel.InApp);
 
         if (isRead.HasValue)
         {
@@ -52,13 +52,13 @@ public class NotificationDeliveryService(
     public async Task<Result<int>> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var count = await context.Set<Notification>()
-            .CountAsync(n => n.RecipientId == userId && !n.IsRead, cancellationToken).ConfigureAwait(false);
+            .CountAsync(n => n.RecipientId == userId && !n.IsRead && n.Channel == NotificationChannel.InApp, cancellationToken).ConfigureAwait(false);
 
         return Result.Success(count);
     }
 
     public async Task<Result<Notification>> SendAsync(
-        Guid recipientId,
+        Guid? recipientId,
         NotificationType type,
         string title,
         string message,
@@ -69,13 +69,23 @@ public class NotificationDeliveryService(
         Guid? referenceEntityId = null,
         string? referenceEntityType = null,
         string? metadata = null,
+        string? recipientEmail = null,
         CancellationToken cancellationToken = default)
     {
-        var shouldSend = await preferenceService.ShouldSendNotificationAsync(recipientId, type, channel, priority, cancellationToken).ConfigureAwait(false);
-        if (!shouldSend)
+        NotificationDeliveryDecision decision;
+        if (recipientId is { } userId)
         {
-            logger.LogDebug("Notification skipped due to user preferences. UserId: {UserId}, Type: {Type}", recipientId, type);
-            return Result.Failure<Notification>(Error.Failure("Notification.Skipped", "Notification skipped due to user preferences"));
+            decision = await preferenceService.DecideDeliveryAsync(userId, type, channel, priority, cancellationToken).ConfigureAwait(false);
+            if (decision.Action == NotificationDeliveryAction.Drop)
+            {
+                logger.LogDebug("Notification dropped due to user preferences. UserId: {UserId}, Type: {Type}, Reason: {Reason}", userId, type, decision.Reason);
+                return Result.Failure<Notification>(Error.Failure("Notification.Skipped", $"Notification skipped due to user preferences ({decision.Reason})"));
+            }
+        }
+        else
+        {
+            // Email-only recipient (no account/prefs): transactional types bypass prefs; always deliver.
+            decision = NotificationDeliveryDecision.Send();
         }
 
         var notification = Notification.Create(
@@ -88,10 +98,16 @@ public class NotificationDeliveryService(
             actionUrl,
             null,
             priority,
-            null,
+            decision.Action == NotificationDeliveryAction.HoldUntil ? decision.HeldUntil : null,
             referenceEntityId,
             referenceEntityType,
-            metadata);
+            metadata,
+            recipientEmail: recipientEmail);
+
+        if (decision.Action == NotificationDeliveryAction.Digest)
+        {
+            notification.MarkHeldForDigest();
+        }
 
         context.Set<Notification>().Add(notification);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -143,6 +159,7 @@ public class NotificationDeliveryService(
             referenceEntityId,
             referenceEntityType,
             null,
+            null,
             cancellationToken);
     }
 
@@ -161,8 +178,11 @@ public class NotificationDeliveryService(
 
         foreach (var recipientId in recipientIds)
         {
-            var shouldSend = await preferenceService.ShouldSendNotificationAsync(recipientId, type, channel, priority, cancellationToken).ConfigureAwait(false);
-            if (!shouldSend) continue;
+            var decision = await preferenceService.DecideDeliveryAsync(recipientId, type, channel, priority, cancellationToken).ConfigureAwait(false);
+            if (decision.Action == NotificationDeliveryAction.Drop)
+            {
+                continue;
+            }
 
             var notification = Notification.Create(
                 recipientId,
@@ -173,7 +193,13 @@ public class NotificationDeliveryService(
                 tenantId,
                 actionUrl,
                 null,
-                priority);
+                priority,
+                decision.Action == NotificationDeliveryAction.HoldUntil ? decision.HeldUntil : null);
+
+            if (decision.Action == NotificationDeliveryAction.Digest)
+            {
+                notification.MarkHeldForDigest();
+            }
 
             notifications.Add(notification);
         }

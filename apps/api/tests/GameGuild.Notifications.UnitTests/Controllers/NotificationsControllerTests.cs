@@ -254,11 +254,33 @@ public class NotificationsControllerTests
         dto.EmailDigestFrequency.Should().BeNull();
     }
 
-    private static NotificationsController CreateController(Mock<INotificationService> service, Guid? userId)
+    [Fact]
+    public async Task GetPreferences_Should_Map_MutedTypes()
+    {
+        var userId = Guid.NewGuid();
+        var preference = NotificationPreference.CreateDefault(userId);
+        preference.MuteType(nameof(NotificationType.MonthlyStatement));
+        preference.MuteType(nameof(NotificationType.FeatureAnnouncement));
+        var service = new Mock<INotificationService>();
+        service.Setup(x => x.GetPreferencesAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(preference));
+        var controller = CreateController(service, userId);
+
+        var actionResult = await controller.GetPreferences();
+
+        var dto = actionResult.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeOfType<NotificationPreferenceDto>().Subject;
+        dto.MutedTypes.Should().BeEquivalentTo(["MonthlyStatement", "FeatureAnnouncement"]);
+    }
+
+    private static NotificationsController CreateController(
+        Mock<INotificationService> service,
+        Guid? userId,
+        Mock<INotificationPreferenceService>? preferences = null)
     {
         var actorAccessor = new Mock<IActorContextAccessor>();
         actorAccessor.SetupGet(accessor => accessor.ActorContext).Returns(CreateActorContext(userId));
-        return new NotificationsController(service.Object, actorAccessor.Object);
+        return new NotificationsController(service.Object, (preferences ?? new Mock<INotificationPreferenceService>()).Object, actorAccessor.Object);
     }
 
     private static ActorContext CreateActorContext(Guid? userId)

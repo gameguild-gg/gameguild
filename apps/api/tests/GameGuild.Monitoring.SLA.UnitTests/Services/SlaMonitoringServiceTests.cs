@@ -423,6 +423,7 @@ public class AlertManagerTests
                 It.IsAny<Guid?>(),
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(Notification.Create(Guid.Empty, NotificationType.System, NotificationChannel.InApp, "Test", "Test")));
     }

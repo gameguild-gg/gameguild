@@ -60,7 +60,7 @@ public class UserRole : EntityBase<Guid>
     ///     Check if this role assignment has expired
     /// </summary>
     /// <returns>True if the role assignment has expired</returns>
-    public bool IsExpired() => ExpiresAt.HasValue && ExpiresAt.Value < SystemClock.UtcNow;
+    public bool IsExpired() => ExpiresAt.HasValue && ExpiresAt.Value <= SystemClock.UtcNow;
 
     /// <summary>
     ///     Check if this is a permanent role assignment
