@@ -13,7 +13,9 @@
   },
   "settings": {
     "accountTitle": "Account settings",
-    "accountDescription": "Manage how you sign in to GameGuild."
+    "accountDescription": "Manage how you sign in to GameGuild.",
+    "notificationsTitle": "Notification settings",
+    "notificationsDescription": "Choose how you receive notifications and emails."
   },
   "connectedAccounts": {
     "title": "Connected Accounts",
@@ -49,6 +51,64 @@
         "stateMismatch": "The linking request expired or was tampered with. Please try again.",
         "generic": "We couldn't complete the request. Please try again."
       }
+    }
+  },
+  "notificationPrefs": {
+    "loadError": {
+      "title": "Notifications unavailable",
+      "description": "We couldn't load your notification settings. Please try again later."
+    },
+    "channels": {
+      "title": "Delivery channels",
+      "description": "Turn entire channels on or off.",
+      "email": "Email",
+      "inApp": "In-app",
+      "push": "Push",
+      "sms": "SMS"
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "Control broad notification categories.",
+      "marketing": "Marketing",
+      "social": "Social",
+      "learning": "Learning",
+      "achievements": "Achievements"
+    },
+    "types": {
+      "title": "Email types",
+      "description": "Mute individual kinds of emails. Transactional messages are always sent.",
+      "alwaysSent": "Always sent",
+      "groups": {
+        "Marketing": "Marketing",
+        "Social": "Social",
+        "Learning": "Learning",
+        "Achievements": "Achievements",
+        "Billing": "Billing",
+        "Transactional": "Transactional",
+        "System": "System"
+      }
+    },
+    "digest": {
+      "title": "Email digest",
+      "description": "Bundle notifications into a single summary email instead of individual messages.",
+      "off": "Off",
+      "Daily": "Daily",
+      "Weekly": "Weekly",
+      "BiWeekly": "Every two weeks"
+    },
+    "quietHours": {
+      "title": "Quiet hours",
+      "description": "Hold notifications during a daily window. Emails arrive when the window ends.",
+      "start": "Start",
+      "end": "End",
+      "timezone": "Timezone",
+      "timezonePlaceholder": "UTC",
+      "save": "Save quiet hours"
+    },
+    "toast": {
+      "saved": "Preferences saved.",
+      "error": "Couldn't save your preference. Please try again.",
+      "unauthorized": "Your session expired. Please sign in again."
     }
   }
 }
