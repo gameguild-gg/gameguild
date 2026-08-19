@@ -290,7 +290,7 @@ describe("AssessmentEditor", () => {
     expect(routerMocks.refresh).toHaveBeenCalled();
   });
 
-  it("unlinks content when None is selected (clearContentId: true)", async () => {
+  it("cannot unlink content once linked — None option absent, clearContentId never sent", async () => {
     const user = userEvent.setup();
     const linked = { ...assessment, contentId: "content-assignment-1" };
     render(
@@ -303,18 +303,39 @@ describe("AssessmentEditor", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: /linked content/i }));
-    await user.click(
-      screen.getByRole("option", { name: /none \(standalone assessment\)/i }),
-    );
+    expect(
+      screen.queryByRole("option", { name: /none \(standalone assessment\)/i }),
+    ).not.toBeInTheDocument();
 
+    await user.click(screen.getByRole("option", { name: "Intro Lesson" }));
     await waitFor(() => {
       expect(updateAssessment).toHaveBeenCalledWith({
         courseId: "course-1",
         assessmentId: "assessment-1",
-        contentId: null,
-        clearContentId: true,
+        contentId: "content-lesson-1",
+        clearContentId: false,
       });
     });
+    expect(updateAssessment).not.toHaveBeenCalledWith(
+      expect.objectContaining({ clearContentId: true }),
+    );
+  });
+
+  it("offers the None option when the assessment has no linked content", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
+    expect(
+      screen.getByRole("option", { name: /none \(standalone assessment\)/i }),
+    ).toBeInTheDocument();
   });
 
   it("toggles grading methods and writes the comma-separated string", async () => {
@@ -401,6 +422,25 @@ describe("AssessmentEditor", () => {
     expect(gradeButton).toHaveTextContent(/grade submissions/i);
   });
 
+  it("renders the SpeedGrader link in the header for instructors", () => {
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+        canManage
+      />,
+    );
+
+    const speedgraderButton = screen.getByTestId("start-speedgrader-button");
+    expect(speedgraderButton).toHaveAttribute(
+      "href",
+      "/speedgrader/assessments/assessment-1?course=course-1",
+    );
+    expect(speedgraderButton).toHaveTextContent(/speedgrader/i);
+  });
+
   it("hides the grade submissions link from non-instructors", () => {
     render(
       <AssessmentEditor
@@ -413,6 +453,9 @@ describe("AssessmentEditor", () => {
 
     expect(
       screen.queryByTestId("grade-submissions-button"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("start-speedgrader-button"),
     ).not.toBeInTheDocument();
   });
 });

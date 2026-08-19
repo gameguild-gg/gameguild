@@ -23,7 +23,7 @@ import {
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
 import { Separator } from "@game-guild/ui/components/separator";
-import { ArrowLeft, ClipboardCheck, Clock, Code, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, Clock, Code, Gauge, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import type {
   Assessment,
   AssessmentGroup,
@@ -230,6 +230,13 @@ export function AssessmentEditor({
   function handleLinkedContentChange(value: string) {
     const previous = linkedContentId;
     const next = value === LINKED_CONTENT_NONE ? LINKED_CONTENT_NONE : value;
+    // Linked content cannot be unlinked — only switched to another item.
+    // The None option is not rendered while linked; this guard covers
+    // programmatic/desynced values.
+    if (next === LINKED_CONTENT_NONE && assessment.contentId != null) {
+      setLinkedContentId(previous);
+      return;
+    }
     setLinkedContentId(next);
     setError(null);
 
@@ -499,6 +506,17 @@ export function AssessmentEditor({
           <p className="text-muted-foreground text-sm">Assessment Editor</p>
           <h1 className="text-2xl font-bold">{assessment.title}</h1>
         </div>
+        {canManage && (
+          <Button variant="outline" size="sm" asChild>
+            <Link
+              href={`/speedgrader/assessments/${assessment.id}?course=${encodeURIComponent(courseId)}`}
+              data-testid="start-speedgrader-button"
+            >
+              <Gauge className="mr-2 h-4 w-4" />
+              SpeedGrader
+            </Link>
+          </Button>
+        )}
         {canManage && (
           <Button variant="outline" size="sm" asChild>
             <Link
@@ -847,9 +865,11 @@ export function AssessmentEditor({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={LINKED_CONTENT_NONE}>
-                      None (standalone assessment)
-                    </SelectItem>
+                    {assessment.contentId == null && (
+                      <SelectItem value={LINKED_CONTENT_NONE}>
+                        None (standalone assessment)
+                      </SelectItem>
+                    )}
                     {courseContent.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.title}
@@ -858,8 +878,9 @@ export function AssessmentEditor({
                   </SelectContent>
                 </Select>
                 <p className="text-muted-foreground text-xs">
-                  Link this assessment to a content item, or leave it
-                  standalone.
+                  {assessment.contentId == null
+                    ? "Link this assessment to a content item, or leave it standalone."
+                    : "Content cannot be unlinked once set — select a different item to change it."}
                 </p>
               </div>
 
