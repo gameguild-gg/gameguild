@@ -8,21 +8,21 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     Handles password reset email delivery by recording a notification row.
+///     Handles magic sign-in link delivery by recording a notification row.
 /// </summary>
-public sealed class SendPasswordResetRequestedHandler(
-    ILogger<SendPasswordResetRequestedHandler> logger,
+public sealed class SendMagicLinkRequestedHandler(
+    ILogger<SendMagicLinkRequestedHandler> logger,
     INotificationService notificationService,
-    IUserRepository userRepository) : INotificationHandler<PasswordResetRequestedNotification>
+    IUserRepository userRepository) : INotificationHandler<MagicLinkRequestedNotification>
 {
-    public async Task Handle(PasswordResetRequestedNotification notification, CancellationToken cancellationToken)
+    public async Task Handle(MagicLinkRequestedNotification notification, CancellationToken cancellationToken)
     {
         try
         {
             var user = await userRepository.GetByEmailAsync(notification.Email, cancellationToken).ConfigureAwait(false);
             if (user is null)
             {
-                logger.LogWarning("Password reset email requested for unknown email {Email}", notification.Email);
+                logger.LogWarning("Magic-link email requested for unknown email {Email}", notification.Email);
                 return;
             }
 
@@ -35,18 +35,19 @@ public sealed class SendPasswordResetRequestedHandler(
 
             await notificationService.SendAsync(
                 user.Id,
-                NotificationType.PasswordReset,
-                "Reset your GameGuild password",
-                "Reset your password.",
+                NotificationType.MagicLink,
+                "Your GameGuild sign-in link",
+                "Sign in with this magic link.",
                 NotificationChannel.Email,
+                notification.TenantId,
                 metadata: metadata,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
-            logger.LogInformation("Password reset email queued for {Email}", notification.Email);
+            logger.LogInformation("Magic-link email queued for {Email}", notification.Email);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error queueing password reset email to {Email}", notification.Email);
+            logger.LogError(ex, "Error queueing magic-link email to {Email}", notification.Email);
         }
     }
 }

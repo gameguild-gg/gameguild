@@ -1,9 +1,12 @@
 using FluentAssertions;
-using GameGuild.Email;
+using GameGuild.Identity.Users;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
+using NotificationPriority = GameGuild.Notifications.NotificationPriority;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Handlers;
 
@@ -88,79 +91,84 @@ public class UserSignedInEventHandlerTests
 
 public class SendEmailVerificationRequestedHandlerTests
 {
+    private static readonly Guid UserId = Guid.NewGuid();
+
+    private static (SendEmailVerificationRequestedHandler Handler, Mock<INotificationService> Service) CreateSubject(
+        TestLogger<SendEmailVerificationRequestedHandler> logger,
+        User? user = null)
+    {
+        var service = new Mock<INotificationService>();
+        var userRepo = new Mock<IUserRepository>();
+        userRepo
+            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        var handler = new SendEmailVerificationRequestedHandler(logger, service.Object, userRepo.Object);
+        return (handler, service);
+    }
+
     [Fact]
-    public async Task Handle_ShouldLogVerificationLink_WhenEmailSenderIsMissing()
+    public async Task Handle_ShouldCreateNotificationRow_WithVerificationMetadata()
     {
         var logger = new TestLogger<SendEmailVerificationRequestedHandler>();
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["App:BaseUrl"] = "https://portal.modu.test/"
-            })
-            .Build();
-        var handler = new SendEmailVerificationRequestedHandler(logger, null, configuration);
+        var (handler, service) = CreateSubject(logger, new User { Id = UserId, Email = "user@example.com" });
         var notification = new EmailVerificationRequestedNotification
         {
             Email = "user@example.com",
-            Token = "token-123",
+            Token = "token-abc",
+            UserName = "Alice"
+        };
+
+        await handler.Handle(notification, CancellationToken.None);
+
+        service.Verify(s => s.SendAsync(
+            UserId,
+            NotificationType.EmailVerification,
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            NotificationChannel.Email,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(),
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.Is<string>(m => m!.Contains("token-abc") && m.Contains("user@example.com") && m.Contains("Alice")),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        logger.Entries.Should().ContainSingle(entry =>
+            entry.Level == LogLevel.Information &&
+            entry.Message.Contains("Verification email queued for user@example.com"));
+    }
+
+    [Fact]
+    public async Task Handle_ShouldLogWarning_WhenUserNotFound()
+    {
+        var logger = new TestLogger<SendEmailVerificationRequestedHandler>();
+        var (handler, _) = CreateSubject(logger, user: null);
+        var notification = new EmailVerificationRequestedNotification
+        {
+            Email = "unknown@example.com",
+            Token = "token-abc",
             UserName = null
         };
 
         await handler.Handle(notification, CancellationToken.None);
 
-        logger.Entries.Should().ContainSingle();
-        logger.Entries[0].Level.Should().Be(LogLevel.Information);
-        logger.Entries[0].Message.Should().Contain("Unknown");
-        logger.Entries[0].Message.Should().Contain("https://portal.modu.test/verify-email?token=token-123");
-    }
-
-    [Fact]
-    public async Task Handle_ShouldSendVerificationEmail_UsingEmailAsFallbackRecipientName()
-    {
-        var logger = new TestLogger<SendEmailVerificationRequestedHandler>();
-        var emailSender = new Mock<IEmailSender>();
-        EmailMessage? capturedMessage = null;
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["App:BaseUrl"] = "https://app.modu.test/"
-            })
-            .Build();
-        var notification = new EmailVerificationRequestedNotification
-        {
-            Email = "user@example.com",
-            Token = "token-abc",
-            UserName = "  "
-        };
-
-        emailSender
-            .Setup(sender => sender.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
-            .Callback<EmailMessage, CancellationToken>((message, _) => capturedMessage = message)
-            .Returns(Task.CompletedTask);
-
-        var handler = new SendEmailVerificationRequestedHandler(logger, emailSender.Object, configuration);
-
-        await handler.Handle(notification, CancellationToken.None);
-
-        capturedMessage.Should().NotBeNull();
-        capturedMessage!.ToEmail.Should().Be(notification.Email);
-        capturedMessage.ToName.Should().Be(notification.Email);
-        capturedMessage.Subject.Should().Be("Verify your GameGuild email address");
-        capturedMessage.PlainTextContent.Should().Contain("https://app.modu.test/verify-email?token=token-abc");
-        capturedMessage.HtmlContent.Should().Contain("Verify your email address");
-
         logger.Entries.Should().ContainSingle(entry =>
-            entry.Level == LogLevel.Information &&
-            entry.Message.Contains("Verification email delivered to user@example.com"));
+            entry.Level == LogLevel.Warning &&
+            entry.Message.Contains("unknown@example.com"));
     }
 
     [Fact]
-    public async Task Handle_ShouldLogErrorAndRethrow_WhenEmailDeliveryFails()
+    public async Task Handle_ShouldNotThrow_WhenNotificationServiceFails()
     {
         var logger = new TestLogger<SendEmailVerificationRequestedHandler>();
-        var emailSender = new Mock<IEmailSender>();
-        var expectedException = new InvalidOperationException("smtp offline");
-        var handler = new SendEmailVerificationRequestedHandler(logger, emailSender.Object, null);
+        var (handler, service) = CreateSubject(logger, new User { Id = UserId, Email = "user@example.com" });
+        service
+            .Setup(s => s.SendAsync(It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("notifications offline"));
         var notification = new EmailVerificationRequestedNotification
         {
             Email = "user@example.com",
@@ -168,21 +176,231 @@ public class SendEmailVerificationRequestedHandlerTests
             UserName = "User"
         };
 
-        emailSender
-            .Setup(sender => sender.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(expectedException);
-
         var act = () => handler.Handle(notification, CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("smtp offline");
+        await act.Should().NotThrowAsync();
         logger.Entries.Should().ContainSingle(entry =>
             entry.Level == LogLevel.Error &&
-            entry.Exception == expectedException &&
-            entry.Message.Contains(notification.Email));
+            entry.Message.Contains("user@example.com"));
     }
 }
 
-file sealed class TestLogger<T> : ILogger<T>
+public class SendWelcomeEmailHandlerTests
+{
+    private static readonly Guid UserId = Guid.NewGuid();
+
+    [Fact]
+    public async Task Handle_ShouldCreateOnboardingRow_WithDisplayNameMetadata()
+    {
+        var logger = new TestLogger<SendWelcomeEmailHandler>();
+        var service = new Mock<INotificationService>();
+        var handler = new SendWelcomeEmailHandler(logger, service.Object);
+        var notification = new UserSignedUpNotification
+        {
+            UserId = UserId,
+            Email = "user@example.com",
+            Username = "alice"
+        };
+
+        await handler.Handle(notification, CancellationToken.None);
+
+        service.Verify(s => s.SendAsync(
+            UserId,
+            NotificationType.Onboarding,
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            NotificationChannel.Email,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(),
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.Is<string>(m => m!.Contains("alice") && m.Contains("user@example.com")),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        logger.Entries.Should().ContainSingle(entry =>
+            entry.Level == LogLevel.Information &&
+            entry.Message.Contains("Welcome email queued for user@example.com"));
+    }
+
+    [Fact]
+    public async Task Handle_ShouldNotThrow_WhenNotificationServiceFails()
+    {
+        var logger = new TestLogger<SendWelcomeEmailHandler>();
+        var service = new Mock<INotificationService>();
+        service
+            .Setup(s => s.SendAsync(It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("notifications offline"));
+        var handler = new SendWelcomeEmailHandler(logger, service.Object);
+        var notification = new UserSignedUpNotification
+        {
+            UserId = UserId,
+            Email = "user@example.com",
+            Username = "alice"
+        };
+
+        var act = () => handler.Handle(notification, CancellationToken.None);
+
+        await act.Should().NotThrowAsync();
+        logger.Entries.Should().ContainSingle(entry =>
+            entry.Level == LogLevel.Warning &&
+            entry.Message.Contains("user@example.com"));
+    }
+}
+
+public class SendPasswordResetRequestedHandlerTests
+{
+    private static readonly Guid UserId = Guid.NewGuid();
+
+    [Fact]
+    public async Task Handle_ShouldCreatePasswordResetRow_WithTokenMetadata()
+    {
+        var logger = new TestLogger<SendPasswordResetRequestedHandler>();
+        var service = new Mock<INotificationService>();
+        var userRepo = new Mock<IUserRepository>();
+        userRepo
+            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = UserId, Email = "user@example.com" });
+        var handler = new SendPasswordResetRequestedHandler(logger, service.Object, userRepo.Object);
+        var notification = new PasswordResetRequestedNotification
+        {
+            Email = "user@example.com",
+            Token = "reset-token",
+            UserName = "Alice"
+        };
+
+        await handler.Handle(notification, CancellationToken.None);
+
+        service.Verify(s => s.SendAsync(
+            UserId,
+            NotificationType.PasswordReset,
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            NotificationChannel.Email,
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(),
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.Is<string>(m => m!.Contains("reset-token") && m.Contains("user@example.com")),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        logger.Entries.Should().ContainSingle(entry =>
+            entry.Level == LogLevel.Information &&
+            entry.Message.Contains("Password reset email queued for user@example.com"));
+    }
+
+    [Fact]
+    public async Task Handle_ShouldNotThrow_WhenNotificationServiceFails()
+    {
+        var logger = new TestLogger<SendPasswordResetRequestedHandler>();
+        var service = new Mock<INotificationService>();
+        var userRepo = new Mock<IUserRepository>();
+        userRepo
+            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = UserId, Email = "user@example.com" });
+        service
+            .Setup(s => s.SendAsync(It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("notifications offline"));
+        var handler = new SendPasswordResetRequestedHandler(logger, service.Object, userRepo.Object);
+        var notification = new PasswordResetRequestedNotification
+        {
+            Email = "user@example.com",
+            Token = "reset-token",
+            UserName = "Alice"
+        };
+
+        var act = () => handler.Handle(notification, CancellationToken.None);
+
+        await act.Should().NotThrowAsync();
+        logger.Entries.Should().ContainSingle(entry =>
+            entry.Level == LogLevel.Error &&
+            entry.Message.Contains("user@example.com"));
+    }
+}
+
+public class SendMagicLinkRequestedHandlerTests
+{
+    private static readonly Guid UserId = Guid.NewGuid();
+
+    [Fact]
+    public async Task Handle_ShouldCreateMagicLinkRow_WithTokenMetadata()
+    {
+        var logger = new TestLogger<SendMagicLinkRequestedHandler>();
+        var service = new Mock<INotificationService>();
+        var userRepo = new Mock<IUserRepository>();
+        userRepo
+            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = UserId, Email = "user@example.com" });
+        var handler = new SendMagicLinkRequestedHandler(logger, service.Object, userRepo.Object);
+        var notification = new MagicLinkRequestedNotification
+        {
+            Email = "user@example.com",
+            Token = "magic-token",
+            UserName = "Alice",
+            TenantId = Guid.NewGuid()
+        };
+
+        await handler.Handle(notification, CancellationToken.None);
+
+        service.Verify(s => s.SendAsync(
+            UserId,
+            NotificationType.MagicLink,
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            NotificationChannel.Email,
+            notification.TenantId,
+            It.IsAny<string?>(),
+            It.IsAny<NotificationPriority>(),
+            It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
+            It.Is<string>(m => m!.Contains("magic-token") && m.Contains("user@example.com")),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        logger.Entries.Should().ContainSingle(entry =>
+            entry.Level == LogLevel.Information &&
+            entry.Message.Contains("Magic-link email queued for user@example.com"));
+    }
+
+    [Fact]
+    public async Task Handle_ShouldNotThrow_WhenNotificationServiceFails()
+    {
+        var logger = new TestLogger<SendMagicLinkRequestedHandler>();
+        var service = new Mock<INotificationService>();
+        var userRepo = new Mock<IUserRepository>();
+        userRepo
+            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = UserId, Email = "user@example.com" });
+        service
+            .Setup(s => s.SendAsync(It.IsAny<Guid>(), It.IsAny<NotificationType>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<NotificationChannel>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<NotificationPriority>(),
+                It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("notifications offline"));
+        var handler = new SendMagicLinkRequestedHandler(logger, service.Object, userRepo.Object);
+        var notification = new MagicLinkRequestedNotification
+        {
+            Email = "user@example.com",
+            Token = "magic-token",
+            UserName = "Alice"
+        };
+
+        var act = () => handler.Handle(notification, CancellationToken.None);
+
+        await act.Should().NotThrowAsync();
+        logger.Entries.Should().ContainSingle(entry =>
+            entry.Level == LogLevel.Error &&
+            entry.Message.Contains("user@example.com"));
+    }
+}
+
+sealed class TestLogger<T> : ILogger<T>
 {
     public List<LogEntry> Entries { get; } = new();
 
