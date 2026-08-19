@@ -53,7 +53,9 @@ export function createVFSManager(overlay: OverlayFS, lazyFs: LazyFS): VFSManager
         overlay,
         lazyFs,
         async fetchFile(path: string): Promise<Uint8Array | null> {
-            return overlay.readFile(path);
+            const overlayData = overlay.readFile(path);
+            if (overlayData) return overlayData;
+            return lazyFs.readFile(path);
         },
         getUrl(path: string): string {
             return lazyFs.getUrl(path);

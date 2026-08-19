@@ -383,6 +383,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     const { client, tty } = orch;
     setTestRunning(true);
     setLastReport(null);
+    setStatus('Running tests...');
     const totalStart = performance.now();
 
     let report: import('./TestResultsPanel').TestReport;
@@ -400,69 +401,30 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         throw new Error('No C/C++ source file found in workspace');
       }
 
+      // ── Resolve toolchain preset for the current environment ──
+      const isC = resolvedConfig.id === 'c' || resolvedConfig.id.endsWith('-c');
+      const nativePreset = (
+        TOOLCHAIN_PRESETS[resolvedConfig.id as keyof typeof TOOLCHAIN_PRESETS] ??
+        (isC ? TOOLCHAIN_PRESETS.c : TOOLCHAIN_PRESETS.cpp)
+      ) as NativePreset;
+
       // ── Filter cases per testMode (before building — a doctest-only plan
       //    must not pay for, or fail on, the stdio binary build) ──
       const cases = testMode === 'public' ? testPlan.cases.filter((c) => !c.hidden) : testPlan.cases;
       const wasmPath = '/home/user/main.wasm';
 
-      // ── stdio binary (clang -cc1 + wasm-ld) — same args as the working
-      //    handleCompile direct path. Only built when stdio cases exist: a
-      //    doctest-only workspace has no main() and --entry=main fails. ──
+      // ── stdio binary (clang -cc1 + wasm-ld via preset) ──
       if (cases.some((c) => c.kind === 'stdio')) {
         const mainSrc = studentSources[0];
         const sourceFsPath = toWorkspaceFsPath(mainSrc.path, propsRef.current.assignmentToken);
         const objPath = '/tmp/emception-test-main.o';
 
-        // ── Compile (clang -cc1) — same args as the working handleCompile direct path ──
         tty.writeLine('\x1b[36m[tests] Compiling...\x1b[0m');
         const clangResult = await client.run(
-          'clang',
-          [
-            'clang',
-            '-cc1',
-            '-triple',
-            'wasm32-unknown-emscripten',
-            '-emit-obj',
-            '-O1',
-            '-disable-free',
-            '-clear-ast-before-backend',
-            '-disable-llvm-verifier',
-            '-discard-value-names',
-            '-main-file-name',
-            'main.cpp',
-            '-mrelocation-model',
-            'static',
-            '-mframe-pointer=none',
-            '-ffp-contract=on',
-            '-fno-rounding-math',
-            '-mconstructor-aliases',
-            '-target-cpu',
-            'generic',
-            '-fvisibility=hidden',
-            '-internal-isystem',
-            '/usr/include/c++/v1',
-            '-internal-isystem',
-            '/usr/include/compat',
-            '-internal-isystem',
-            '/usr/lib/clang/23/include',
-            '-resource-dir',
-            '/usr/lib/clang/23',
-            '-internal-isystem',
-            '/usr/include',
-            '-fdeprecated-macro',
-            '-ferror-limit',
-            '19',
-            '-fgnuc-version=4.2.1',
-            '-fcxx-exceptions',
-            '-fexceptions',
-            '-o',
-            objPath,
-            '-x',
-            'c++',
-            sourceFsPath,
-          ],
+          nativePreset.compileTool,
+          nativePreset.compileArgv({ sourcePath: sourceFsPath, objectPath: objPath }),
           {
-            cwd: '/home/user',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => console.log(t),
             onStderr: (t: string) => {
               console.error(t);
@@ -474,31 +436,13 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
           throw new Error(`Compilation failed (exit ${clangResult.exitCode})`);
         }
 
-        // ── Link (wasm-ld) ──
+        // ── Link (wasm-ld via preset) ──
         tty.writeLine('\x1b[36m[tests] Linking...\x1b[0m');
         const lldResult = await client.run(
-          'wasm-ld',
-          [
-            'wasm-ld',
-            objPath,
-            '-o',
-            wasmPath,
-            '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
-            '--entry=main',
-            '--import-undefined',
-            '--allow-undefined',
-            '--export-table',
-            '--table-base=1',
-            '--export=__wasm_call_ctors',
-            '-lc',
-            '-ldlmalloc',
-            '-lcompiler_rt',
-            '-lc++-noexcept',
-            '-lc++abi-noexcept',
-            '-lsockets',
-          ],
+          nativePreset.linkTool,
+          nativePreset.linkArgv({ objectPath: objPath, wasmPath }),
           {
-            cwd: '/home/user',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => console.log(t),
             onStderr: (t: string) => {
               console.error(t);
@@ -553,59 +497,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
               '#define main gg_student_main_disabled',
               ...studentSources.map((f) => f.content),
               '#undef main',
-              harness.content.replace(/^extern "C" .*;\s*$/m, ''),
-            ].join('\n');
+              harness.content.replace(/extern\s+"C"\s+[\s\S]*?;/g, ''),
+            ].join('\n\n');
             await client.writeFile(combinedPath, enc.encode(combined));
 
             tty.writeLine(`\x1b[36m[tests] Compiling doctest ${name}...\x1b[0m`);
             const dClangResult = await client.run(
-              'clang',
-              [
-                'clang',
-                '-cc1',
-                '-triple',
-                'wasm32-unknown-emscripten',
-                '-emit-obj',
-                '-O1',
-                '-disable-free',
-                '-clear-ast-before-backend',
-                '-disable-llvm-verifier',
-                '-discard-value-names',
-                '-main-file-name',
-                combinedName,
-                '-mrelocation-model',
-                'static',
-                '-mframe-pointer=none',
-                '-ffp-contract=on',
-                '-fno-rounding-math',
-                '-mconstructor-aliases',
-                '-target-cpu',
-                'generic',
-                '-fvisibility=hidden',
-                '-internal-isystem',
-                '/usr/include/c++/v1',
-                '-internal-isystem',
-                '/usr/include/compat',
-                '-internal-isystem',
-                '/usr/lib/clang/23/include',
-                '-resource-dir',
-                '/usr/lib/clang/23',
-                '-internal-isystem',
-                '/usr/include',
-                '-fdeprecated-macro',
-                '-ferror-limit',
-                '19',
-                '-fgnuc-version=4.2.1',
-                '-fcxx-exceptions',
-                '-fexceptions',
-                '-o',
-                doctestObjPath,
-                '-x',
-                'c++',
-                combinedPath,
-              ],
+              nativePreset.compileTool,
+              nativePreset.compileArgv({ sourcePath: combinedPath, objectPath: doctestObjPath }),
               {
-                cwd: '/home/user',
+                cwd: resolvedConfig.compile.cwd ?? '/home/user',
                 onStdout: (t: string) => console.log(t),
                 onStderr: (t: string) => {
                   console.error(t);
@@ -619,28 +520,10 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
             tty.writeLine(`\x1b[36m[tests] Linking doctest ${name}...\x1b[0m`);
             const dLldResult = await client.run(
-              'wasm-ld',
-              [
-                'wasm-ld',
-                doctestObjPath,
-                '-o',
-                doctestWasmPath,
-                '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
-                '--entry=main',
-                '--import-undefined',
-                '--allow-undefined',
-                '--export-table',
-                '--table-base=1',
-                '--export=__wasm_call_ctors',
-                '-lc',
-                '-ldlmalloc',
-                '-lcompiler_rt',
-                '-lc++-noexcept',
-                '-lc++abi-noexcept',
-                '-lsockets',
-              ],
+              nativePreset.linkTool,
+              nativePreset.linkArgv({ objectPath: doctestObjPath, wasmPath: doctestWasmPath }),
               {
-                cwd: '/home/user',
+                cwd: resolvedConfig.compile.cwd ?? '/home/user',
                 onStdout: (t: string) => console.log(t),
                 onStderr: (t: string) => {
                   console.error(t);
@@ -2290,11 +2173,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             '--export-table',
             '--table-base=1',
             '--export=__wasm_call_ctors',
+            '-lc++-noexcept',
+            '-lc++abi-noexcept',
             '-lc',
             '-ldlmalloc',
             '-lcompiler_rt',
-            '-lc++-noexcept',
-            '-lc++abi-noexcept',
             '-lsockets',
           ],
           {

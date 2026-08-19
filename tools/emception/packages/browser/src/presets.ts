@@ -102,14 +102,18 @@ const WASM_LD_BASE: readonly string[] = [
     '--export-table',
     '--table-base=1',
     '--export=__wasm_call_ctors',
+];
+
+const WASM_LD_CPP_LIBS: readonly string[] = [
+    '-lc++-noexcept',
+    '-lc++abi-noexcept',
     '-lc',
     '-ldlmalloc',
     '-lcompiler_rt',
+    '-lsockets',
 ];
 
-const WASM_LD_CPP_LIBS: readonly string[] = ['-lc++-noexcept', '-lc++abi-noexcept', '-lsockets'];
-
-const WASM_LD_C_LIBS: readonly string[] = ['-lsockets'];
+const WASM_LD_C_LIBS: readonly string[] = ['-lc', '-ldlmalloc', '-lcompiler_rt', '-lsockets'];
 
 /**
  * Shared wasm-ld base flags for all canvas presets (SDL3, raylib, Allegro).
