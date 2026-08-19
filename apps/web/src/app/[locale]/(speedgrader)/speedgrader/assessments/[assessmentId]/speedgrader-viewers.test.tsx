@@ -35,10 +35,17 @@ vi.mock('@game-guild/emception-ui', () => {
     }));
     return React.createElement('div', { 'data-testid': 'mock-ide', 'data-manifest-url': props.manifestUrl });
   });
-  Ide.displayName = 'Ide';
   const TestResultsPanel = ({ report, maxScore }: { report: { cases: { name: string; passed: boolean }[] }; maxScore?: number }) =>
     React.createElement('div', { 'data-testid': 'mock-results' }, `cases=${report.cases.length} max=${maxScore ?? '?'}`);
-  return { Ide, TestResultsPanel };
+  const ASSIGNMENT_SAMPLES = {
+    cpp: {
+      workspaceConfig: {
+        id: 'cpp',
+        layout: { activeFile: '/user/main.cpp', openTabs: [{ path: '/user/main.cpp', group: 'main' }] },
+      },
+    },
+  };
+  return { Ide, TestResultsPanel, ASSIGNMENT_SAMPLES };
 });
 
 // --- Fixtures ---------------------------------------------------------------

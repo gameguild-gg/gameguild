@@ -126,62 +126,77 @@ export function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
 }
 
-function isFunctionParameterType(v: unknown): v is FunctionParameterType {
-  return typeof v === 'string' && (PARAM_TYPES as readonly string[]).includes(v);
+export function isFunctionParameterType(v: unknown): v is FunctionParameterType {
+  return (
+    typeof v === 'string' &&
+    (PARAM_TYPES as readonly string[]).includes(v.toLowerCase())
+  );
 }
 
-function isFunctionParameterValue(v: unknown): v is FunctionParameterValue {
+export function isFunctionParameterValue(v: unknown): v is FunctionParameterValue {
   const t = typeof v;
   return t === 'string' || t === 'number' || t === 'boolean';
 }
 
 export function isFunctionParameter(v: unknown): v is FunctionParameter {
   if (!isRecord(v)) return false;
-  return isFunctionParameterType(v.Type) && isFunctionParameterValue(v.Content);
+  const rawType = v.Type ?? v.type;
+  const content = v.Content ?? v.content;
+  return isFunctionParameterType(rawType) && isFunctionParameterValue(content);
 }
 
 export function isFunctionParameterWithName(
   v: unknown,
 ): v is FunctionParameterWithName {
   if (!isRecord(v)) return false;
-  return (
-    isFunctionParameterType(v.Type) &&
-    typeof (v as unknown as Record<string, unknown>).Name === 'string'
-  );
+  const rawType = v.Type ?? v.type;
+  const name = v.Name ?? v.name;
+  return isFunctionParameterType(rawType) && typeof name === 'string';
 }
 
 export function isTestFunctionData(v: unknown): v is TestFunctionData {
   if (!isRecord(v)) return false;
+  const fnName = v.FunctionName ?? v.functionName;
+  const params = v.Parameters ?? v.parameters;
+  const ret = v.ReturnType ?? v.returnType;
+  const retType = isRecord(ret) ? (ret.Type ?? ret.type) : undefined;
   return (
-    typeof v.FunctionName === 'string' &&
-    Array.isArray(v.Parameters) &&
-    v.Parameters.every(isFunctionParameterWithName) &&
-    isRecord(v.ReturnType) &&
-    isFunctionParameterType(v.ReturnType.Type)
+    typeof fnName === 'string' &&
+    Array.isArray(params) &&
+    params.every(isFunctionParameterWithName) &&
+    isRecord(ret) &&
+    isFunctionParameterType(retType)
   );
 }
 
 export function isFunctionalTestCase(v: unknown): v is FunctionalTestCase {
   if (!isRecord(v)) return false;
+  const inputs = v.Inputs ?? v.inputs;
+  const expected = v.Expected ?? v.expected;
   return (
-    Array.isArray(v.Inputs) &&
-    v.Inputs.every(isFunctionParameter) &&
-    isFunctionParameter(v.Expected)
+    Array.isArray(inputs) &&
+    inputs.every(isFunctionParameter) &&
+    isFunctionParameter(expected)
   );
 }
 
 export function isStandardTest(v: unknown): v is StandardTest {
   if (!isRecord(v)) return false;
-  return v.kind === TEST_KIND.Standard && typeof v.Stdout === 'string';
+  const kind = v.kind ?? v.Kind;
+  const stdout = v.Stdout ?? v.stdout;
+  return kind === TEST_KIND.Standard && typeof stdout === 'string';
 }
 
 export function isFunctionalTestGroup(v: unknown): v is FunctionalTestGroup {
   if (!isRecord(v)) return false;
+  const kind = v.kind ?? v.Kind;
+  const fn = v.Function ?? v.function;
+  const cases = v.Cases ?? v.cases;
   return (
-    v.kind === TEST_KIND.Functional &&
-    isTestFunctionData(v.Function) &&
-    Array.isArray(v.Cases) &&
-    v.Cases.every(isFunctionalTestCase)
+    kind === TEST_KIND.Functional &&
+    isTestFunctionData(fn) &&
+    Array.isArray(cases) &&
+    cases.every(isFunctionalTestCase)
   );
 }
 
@@ -189,19 +204,137 @@ export function isTest(v: unknown): v is Test {
   return isStandardTest(v) || isFunctionalTestGroup(v);
 }
 
-function narrowTest(v: unknown): Test | null {
-  if (isStandardTest(v)) return v;
-  if (isFunctionalTestGroup(v)) return v;
+export function normalizeFunctionParameter(v: unknown): FunctionParameter | null {
+  if (!isRecord(v)) return null;
+  const rawType = v.Type ?? v.type;
+  if (!isFunctionParameterType(rawType)) return null;
+  const content = v.Content ?? v.content;
+  if (!isFunctionParameterValue(content)) return null;
+  return {
+    Type: String(rawType).toLowerCase() as FunctionParameterType,
+    Content: content,
+  };
+}
+
+export function normalizeFunctionParameterWithName(
+  v: unknown,
+): FunctionParameterWithName | null {
+  if (!isRecord(v)) return null;
+  const rawType = v.Type ?? v.type;
+  if (!isFunctionParameterType(rawType)) return null;
+  const name = v.Name ?? v.name;
+  if (typeof name !== 'string') return null;
+  return {
+    Type: String(rawType).toLowerCase() as FunctionParameterType,
+    Name: name,
+  };
+}
+
+export function normalizeTestFunctionData(v: unknown): TestFunctionData | null {
+  if (!isRecord(v)) return null;
+  const functionName = v.FunctionName ?? v.functionName;
+  if (typeof functionName !== 'string') return null;
+  const params = v.Parameters ?? v.parameters;
+  if (!Array.isArray(params)) return null;
+  const normalizedParams: FunctionParameterWithName[] = [];
+  for (const p of params) {
+    const norm = normalizeFunctionParameterWithName(p);
+    if (!norm) return null;
+    normalizedParams.push(norm);
+  }
+  const ret = v.ReturnType ?? v.returnType;
+  if (!isRecord(ret)) return null;
+  const retType = ret.Type ?? ret.type;
+  if (!isFunctionParameterType(retType)) return null;
+  return {
+    FunctionName: functionName,
+    Parameters: normalizedParams,
+    ReturnType: { Type: String(retType).toLowerCase() as FunctionParameterType },
+  };
+}
+
+export function normalizeFunctionalTestCase(v: unknown): FunctionalTestCase | null {
+  if (!isRecord(v)) return null;
+  const inputs = v.Inputs ?? v.inputs;
+  if (!Array.isArray(inputs)) return null;
+  const normalizedInputs: FunctionParameter[] = [];
+  for (const input of inputs) {
+    const norm = normalizeFunctionParameter(input);
+    if (!norm) return null;
+    normalizedInputs.push(norm);
+  }
+  const expected = normalizeFunctionParameter(v.Expected ?? v.expected);
+  if (!expected) return null;
+  return {
+    Inputs: normalizedInputs,
+    Expected: expected,
+  };
+}
+
+export function narrowFunctionalTestGroup(v: unknown): FunctionalTestGroup | null {
+  if (!isRecord(v)) return null;
+  const kind = v.kind ?? v.Kind;
+  if (kind !== TEST_KIND.Functional) return null;
+  const fn = normalizeTestFunctionData(v.Function ?? v.function);
+  if (!fn) return null;
+  const rawCases = v.Cases ?? v.cases;
+  if (!Array.isArray(rawCases)) return null;
+  const cases: FunctionalTestCase[] = [];
+  for (const c of rawCases) {
+    const norm = normalizeFunctionalTestCase(c);
+    if (!norm) return null;
+    cases.push(norm);
+  }
+  const weight = typeof (v.Weight ?? v.weight) === 'number' ? (v.Weight ?? v.weight) : undefined;
+  const name = typeof (v.Name ?? v.name) === 'string' ? (v.Name ?? v.name) : undefined;
+  return {
+    kind: TEST_KIND.Functional,
+    Function: fn,
+    Cases: cases,
+    ...(weight !== undefined ? { Weight: weight } : {}),
+    ...(name !== undefined ? { Name: name } : {}),
+  };
+}
+
+export function narrowStandardTest(v: unknown): StandardTest | null {
+  if (!isRecord(v)) return null;
+  const kind = v.kind ?? v.Kind;
+  if (kind !== TEST_KIND.Standard) return null;
+  const stdout = v.Stdout ?? v.stdout;
+  if (typeof stdout !== 'string') return null;
+  const stdin = v.Stdin ?? v.stdin;
+  const stderr = v.Stderr ?? v.stderr;
+  const exitCode = v.ExitCode ?? v.exitCode;
+  const weight = v.Weight ?? v.weight;
+  const name = v.Name ?? v.name;
+  return {
+    kind: TEST_KIND.Standard,
+    Stdout: stdout,
+    ...(typeof stdin === 'string' || stdin === null ? { Stdin: stdin } : {}),
+    ...(typeof stderr === 'string' || stderr === null ? { Stderr: stderr } : {}),
+    ...(typeof exitCode === 'number' || exitCode === null ? { ExitCode: exitCode } : {}),
+    ...(typeof weight === 'number' ? { Weight: weight } : {}),
+    ...(typeof name === 'string' || name === null ? { Name: name } : {}),
+  };
+}
+
+export function narrowTest(v: unknown): Test | null {
+  const std = narrowStandardTest(v);
+  if (std) return std;
+  const fn = narrowFunctionalTestGroup(v);
+  if (fn) return fn;
   return null;
 }
 
-function narrowSuite(raw: unknown): TestSuite | null {
+export function narrowSuite(raw: unknown): TestSuite | null {
   if (!isRecord(raw)) return null;
-  const pub = Array.isArray(raw.Public)
-    ? raw.Public.map(narrowTest).filter((t): t is Test => t !== null)
+  const rawPublic = raw.Public ?? raw.public;
+  const rawPrivate = raw.Private ?? raw.private;
+  const pub = Array.isArray(rawPublic)
+    ? rawPublic.map(narrowTest).filter((t): t is Test => t !== null)
     : [];
-  const priv = Array.isArray(raw.Private)
-    ? raw.Private.map(narrowTest).filter((t): t is Test => t !== null)
+  const priv = Array.isArray(rawPrivate)
+    ? rawPrivate.map(narrowTest).filter((t): t is Test => t !== null)
     : [];
   return { Public: pub, Private: priv };
 }
@@ -232,17 +365,14 @@ const WIRE_KEY_MAP: Record<string, string> = {
 
 /**
  * Deep-walk renaming camelCase wire keys to PascalCase. Rules:
- * - Object already carrying `Type` → assumed PascalCase, returned as-is
- *   (fast path; also makes the walk idempotent on PascalCase subtrees).
  * - Own keys renamed via {@link WIRE_KEY_MAP}; unknown keys pass through.
  * - The value of `Files`/`files` is a map keyed by file paths — its keys are
  *   never renamed; only the per-file metadata values are walked.
  * - Arrays and all other object values recurse normally.
  */
-function normalizeWireCasing(node: unknown): unknown {
+export function normalizeWireCasing(node: unknown): unknown {
   if (Array.isArray(node)) return node.map(normalizeWireCasing);
   if (!isRecord(node)) return node;
-  if ('Type' in node) return node;
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(node)) {
     const renamed = WIRE_KEY_MAP[key] ?? key;
@@ -271,9 +401,11 @@ export function narrowCodingAssignmentContent(
 ): CodingAssignmentContent | null {
   if (!isRecord(raw)) return null;
   const source = normalizeWireCasing(raw) as Record<string, unknown>;
-  if (source.Type !== 'coding-assignment') return null;
-  if (source.Version !== 1) return null;
-  const tests = narrowSuite(source.Tests);
+  const type = source.Type ?? source.type;
+  if (type !== 'coding-assignment') return null;
+  const version = source.Version ?? source.version;
+  if (version !== 1) return null;
+  const tests = narrowSuite(source.Tests ?? source.tests);
   if (!tests) return null;
   // Environment / Data / Grading are not polymorphic — trust the wire shape,
   // the server validates via FluentValidation.

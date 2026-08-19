@@ -2022,9 +2022,13 @@ sys.excepthook = _hook
       // Only load graphics bundles the caller explicitly requested.
       const bundlesNeeded = options.hints?.bundlesNeeded ?? [];
       const graphicsBundles = (['sdl3', 'raylib', 'allegro'] as const).filter((b) => bundlesNeeded.includes(b));
+      const coreLibBundles = ['cache-core', 'cache-crt', 'cache-libc-variants', 'cache-libcxx-variants'];
       try {
-        await Promise.all([this.vfs.preloadBundle('cache-core'), ...graphicsBundles.map((b) => this.vfs.preloadBundle(b))]);
-        const bundleList = ['cache-core', ...graphicsBundles].join(' + ');
+        await Promise.all([
+          ...coreLibBundles.map((b) => this.vfs.preloadBundle(b)),
+          ...graphicsBundles.map((b) => this.vfs.preloadBundle(b)),
+        ]);
+        const bundleList = [...coreLibBundles, ...graphicsBundles].join(' + ');
         console.log(`${LOG_PREFIX}   Preloaded ${bundleList} bundles for lld in ${elapsed(tPreload)}`);
       } catch (e) {
         console.warn(`${LOG_PREFIX}   ⚠️ Failed to preload lld bundles:`, e);
@@ -2033,7 +2037,7 @@ sys.excepthook = _hook
       // Pre-warm library files into lld's Emscripten FS
       const tWarm = performance.now();
       const libPaths: string[] = [];
-      for (const bundleName of ['cache-core', ...graphicsBundles]) {
+      for (const bundleName of [...coreLibBundles, ...graphicsBundles]) {
         for (const fp of this.vfs.getBundleFilePaths(bundleName)) {
           libPaths.push(fp);
         }
@@ -2050,7 +2054,7 @@ sys.excepthook = _hook
           }
         }
       }
-      const warmBundles = ['cache-core', ...graphicsBundles].join('+');
+      const warmBundles = [...coreLibBundles, ...graphicsBundles].join('+');
       console.log(`${LOG_PREFIX}   Pre-warmed ${warmed}/${libPaths.length} library files (${warmBundles}) for lld in ${elapsed(tWarm)}`);
 
       // Pre-warm manifest-symlink .a paths referenced in the link argv but not
@@ -2985,10 +2989,45 @@ sys.excepthook = _hook
     let memory: WebAssembly.Memory = undefined as unknown as WebAssembly.Memory;
 
     try {
-      console.log(`${LOG_PREFIX}   Compiling WASM module...`);
+      // Cleanly trim any trailing non-WASM padding/garbage bytes beyond the last valid section
+      let validEnd = wasmBytes.byteLength;
+      if (
+        wasmBytes.byteLength >= 8 &&
+        wasmBytes[0] === 0x00 &&
+        wasmBytes[1] === 0x61 &&
+        wasmBytes[2] === 0x73 &&
+        wasmBytes[3] === 0x6d
+      ) {
+        let offset = 8;
+        let lastSectionEnd = 8;
+        while (offset < wasmBytes.byteLength) {
+          const secId = wasmBytes[offset];
+          if (secId > 13) break; // Valid WASM section IDs are 0..13
+          let shift = 0, size = 0, bytesRead = 0;
+          while (offset + 1 + bytesRead < wasmBytes.byteLength) {
+            const b = wasmBytes[offset + 1 + bytesRead];
+            bytesRead++;
+            size |= (b & 0x7f) << shift;
+            if ((b & 0x80) === 0) break;
+            shift += 7;
+          }
+          const contentStart = offset + 1 + bytesRead;
+          if (contentStart + size > wasmBytes.byteLength) break;
+          offset = contentStart + size;
+          lastSectionEnd = offset;
+        }
+        if (lastSectionEnd < wasmBytes.byteLength) {
+          console.warn(
+            `${LOG_PREFIX}   Trimming ${wasmBytes.byteLength - lastSectionEnd} trailing bytes after WASM offset ${lastSectionEnd}`,
+          );
+          validEnd = lastSectionEnd;
+        }
+      }
+
+      console.log(`${LOG_PREFIX}   Compiling WASM module (total size: ${validEnd}B)...`);
       const tCompile = performance.now();
-      const wasmBuffer = new ArrayBuffer(wasmBytes.byteLength);
-      new Uint8Array(wasmBuffer).set(wasmBytes);
+      const wasmBuffer = new ArrayBuffer(validEnd);
+      new Uint8Array(wasmBuffer).set(wasmBytes.subarray(0, validEnd));
       const wasmModule = await WebAssembly.compile(wasmBuffer);
 
       console.log(`${LOG_PREFIX}   WASM compiled in ${elapsed(tCompile)}`);

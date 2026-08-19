@@ -8,6 +8,13 @@ const configuredDevOrigins = process.env.NEXT_ALLOWED_DEV_ORIGINS?.split(",")
   .filter(Boolean);
 
 const nextConfig: NextConfig = {
+  // ponytail: isolated E2E boots a second `next dev` on a dedicated port
+  // alongside the user's running dev server; without a separate distDir the
+  // two fight over the .next/ dev-server lock. Gated by env so production
+  // builds are unaffected.
+  ...(process.env.CODING_CYCLE_E2E === "1"
+    ? { distDir: ".next-e2e-coding-cycle" }
+    : {}),
   allowedDevOrigins: configuredDevOrigins ?? [
     "gameguild.localhost",
     "learning.gameguild.localhost",
