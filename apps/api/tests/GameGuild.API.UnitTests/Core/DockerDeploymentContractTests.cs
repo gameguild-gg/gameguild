@@ -18,7 +18,7 @@ public sealed class DockerDeploymentContractTests
         dockerfile.Should().Contain("USER appuser");
         dockerfile.Should().Contain("EXPOSE 8080");
         dockerfile.Should().Contain("ASPNETCORE_HTTP_PORTS=8080");
-        dockerfile.Should().Contain("DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys");
+        dockerfile.Should().NotContain("DATAPROTECTION_KEYS_PATH");
         dockerfile.Should().Contain("http://127.0.0.1:8080/live");
         dockerfile.Should().NotContain("EXPOSE 3000");
     }
