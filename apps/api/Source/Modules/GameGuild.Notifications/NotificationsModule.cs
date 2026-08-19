@@ -28,6 +28,13 @@ public static class NotificationsModule
         services.AddScoped<EmailDispatcherService>();
         services.AddHostedService<EmailDispatcherBackgroundService>();
 
+        // Email digest engine (daily/weekly/biweekly bundled delivery)
+        services.AddOptions<DigestDispatcherOptions>()
+            .BindConfiguration("Notifications:DigestDispatcher");
+        services.AddScoped<DigestRenderer>();
+        services.AddScoped<DigestDispatcherService>();
+        services.AddHostedService<DigestDispatcherBackgroundService>();
+
         // Tenant invite renderer. Registered here (not in the producing Identity.Tenants module) because
         // Identity.Tenants cannot reference GameGuild.Notifications (circular: Tenants -> Notifications -> Users -> Tenants).
         services.AddScoped<IEmailRenderer, TenantInviteRenderer>();
