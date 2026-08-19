@@ -52,29 +52,13 @@ public static class OperationalStartupConfiguration
     private static void ValidateEmail(IConfiguration configuration, ICollection<string> failures)
     {
         if (configuration.GetValue<bool?>("EmailDelivery:Enabled") != true)
+        {
             failures.Add("Email delivery must be enabled.");
+            return;
+        }
 
         Require(configuration, failures, "EmailDelivery:FromEmail", "An email delivery sender address is required.");
-
-        var provider = configuration["EmailDelivery:Provider"];
-        if (string.Equals(provider, "Smtp", StringComparison.OrdinalIgnoreCase))
-        {
-            Require(configuration, failures, "EmailDelivery:SmtpHost", "An SMTP host is required.");
-            if (configuration.GetValue<int?>("EmailDelivery:SmtpPort") is not > 0)
-                failures.Add("A positive SMTP port is required.");
-        }
-        else if (string.Equals(provider, "SendGrid", StringComparison.OrdinalIgnoreCase))
-        {
-            Require(configuration, failures, "EmailDelivery:SendGridApiKey", "A SendGrid API key is required.");
-        }
-        else if (string.IsNullOrWhiteSpace(provider))
-        {
-            failures.Add("An email delivery provider is required.");
-        }
-        else
-        {
-            failures.Add("EmailDelivery:Provider must use a supported provider: Smtp or SendGrid.");
-        }
+        Require(configuration, failures, "EmailDelivery:Ses:Region", "An AWS region for SES email delivery is required.");
     }
 
     private static void ValidateStorage(IConfiguration configuration, ICollection<string> failures)
