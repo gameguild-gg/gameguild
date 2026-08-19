@@ -300,6 +300,17 @@ public class CodingAssignmentContentTests
         errors.Should().Contain(e => e.ErrorCode == "invalid_language");
     }
 
+    [Fact]
+    public void Validator_Accepts_AllegroCppLanguage()
+    {
+        var content = CreateMinimalValid() with
+        {
+            Environment = new CodingEnvironment { Language = "allegro-cpp", Tools = "clang", LibBundle = "allegro" }
+        };
+        var errors = Validate(content);
+        errors.Should().NotContain(e => e.ErrorCode == "invalid_language");
+    }
+
     // ── total assignment size: sum of file Content lengths ≤ 10MB ─────────────────────────────────────
 
     [Fact]

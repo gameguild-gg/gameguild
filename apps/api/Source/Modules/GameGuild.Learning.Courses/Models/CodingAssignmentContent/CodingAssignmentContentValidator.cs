@@ -10,7 +10,7 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
 {
     private static readonly HashSet<string> s_validLanguages = new(StringComparer.OrdinalIgnoreCase)
     {
-        "cpp", "c", "sdl-cpp", "raylib-cpp"
+        "cpp", "c", "sdl-cpp", "raylib-cpp", "allegro-cpp"
     };
 
     private static readonly HashSet<string> s_validVisibilities = new(StringComparer.Ordinal)
@@ -39,7 +39,7 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
 
         RuleFor(x => x.Environment.Language)
             .Must(lang => s_validLanguages.Contains(lang ?? string.Empty))
-            .WithMessage("Language must be one of: cpp, c, sdl-cpp, raylib-cpp")
+            .WithMessage("Language must be one of: cpp, c, sdl-cpp, raylib-cpp, allegro-cpp")
             .WithErrorCode("invalid_language")
             .When(x => x.Environment != null);
 

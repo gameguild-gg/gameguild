@@ -1548,18 +1548,25 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         const sourceFsPath = toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken);
 
         // Detection mirrors the tools IDE's toolchain-prefix check: the preset
-        // id ('sdl-cpp' | 'raylib-cpp', or a '-c' variant) selects the preset,
-        // runtime mjs, and CDN bundle. Legacy/unknown canvas ids (e.g.
-        // 'cpp-sdl3') default to the SDL3 preset.
+        // id ('sdl-cpp' | 'raylib-cpp' | 'allegro-cpp', or a '-c' variant)
+        // selects the preset, runtime mjs, and CDN bundle. Legacy/unknown
+        // canvas ids (e.g. 'cpp-sdl3') default to the SDL3 preset.
         const isRaylib = resolvedConfig.id.startsWith('raylib');
-        const canvasLabel = isRaylib ? 'raylib' : 'SDL3';
+        const isAllegro = resolvedConfig.id.startsWith('allegro');
+        const canvasLabel = isRaylib ? 'raylib' : isAllegro ? 'allegro' : 'SDL3';
         const canvasPresetKey = (
-          isRaylib ? (resolvedConfig.id.endsWith('-c') ? 'raylib-c' : 'raylib-cpp') : (resolvedConfig.id === 'sdl-c' ? 'sdl-c' : 'sdl-cpp')
+          isRaylib
+            ? resolvedConfig.id.endsWith('-c') ? 'raylib-c' : 'raylib-cpp'
+            : isAllegro
+              ? resolvedConfig.id.endsWith('-c') ? 'allegro-c' : 'allegro-cpp'
+              : resolvedConfig.id === 'sdl-c' ? 'sdl-c' : 'sdl-cpp'
         ) as keyof typeof TOOLCHAIN_PRESETS;
         const canvasPreset = TOOLCHAIN_PRESETS[canvasPresetKey] as NativePreset;
-        const runtimePath = isRaylib
-          ? '/usr/lib/emscripten/raylib-runtime.mjs'
-          : '/usr/lib/emscripten/sdl3-runtime.mjs';
+        const runtimePath = isAllegro
+          ? '/usr/lib/emscripten/allegro-runtime.mjs'
+          : isRaylib
+            ? '/usr/lib/emscripten/raylib-runtime.mjs'
+            : '/usr/lib/emscripten/sdl3-runtime.mjs';
         tty.writeLine(`\x1b[36m${canvasLabel} detected \u2014 compiling object...\x1b[0m`);
 
         const sdlObjPath = '/tmp/emception-canvas-main.o';
@@ -1567,9 +1574,10 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
         const sdlPaths = { sourcePath: sourceFsPath, objectPath: sdlObjPath, wasmPath };
         // The hint is LOAD-BEARING: without bundlesNeeded the worker's LazyFS
-        // never materializes the sdl3/raylib bundle (headers + lib*.a) from
-        // the CDN manifest, so clang can't find SDL3/SDL.h or raylib.h.
-        const canvasBundleName = isRaylib ? 'raylib' : 'sdl3';
+        // never materializes the sdl3/raylib/allegro bundle (headers + lib*.a)
+        // from the CDN manifest, so clang can't find SDL3/SDL.h, raylib.h,
+        // or allegro5/allegro.h.
+        const canvasBundleName = isRaylib ? 'raylib' : isAllegro ? 'allegro' : 'sdl3';
         const canvasRunHints = { bundlesNeeded: [canvasBundleName] };
         const sdlCompile = await client.run(canvasPreset.compileTool, canvasPreset.compileArgv(sdlPaths), {
           cwd: resolvedConfig.compile.cwd ?? '/home/user',
@@ -1792,13 +1800,14 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             keyboardListeningElement: canvas,
             wasmBinary: wasmBytes,
             locateFile: (filename: string) => filename,
-            // raylib: prevent the runtime from calling main() internally (via
-            // its own run() → callMain() path). Without this, main() fires
-            // twice — once from the runtime and once from our explicit entry
-            // invocation below — causing InitWindow + emscripten_set_main_loop
-            // to execute twice, registering duplicate RAF loops → crash.
-            // SDL3 is unaffected because its _main is a noop proxy.
-            noInitialRun: isRaylib,
+            // raylib + allegro: prevent the runtime from calling main()
+            // internally (via its own run() → callMain() path). Without this,
+            // main() fires twice — once from the runtime and once from our
+            // explicit entry invocation below — causing InitWindow +
+            // emscripten_set_main_loop to execute twice, registering duplicate
+            // RAF loops → crash. SDL3 is unaffected because its _main is a
+            // noop proxy.
+            noInitialRun: isRaylib || isAllegro,
             // Both SDL3 and raylib route through the env-preserving
             // instantiateWasm override: it starts from the runtime's own
             // info.env glue and only fills missing imports. Raylib cannot use

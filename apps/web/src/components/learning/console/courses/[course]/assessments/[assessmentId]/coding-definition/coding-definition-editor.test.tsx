@@ -46,13 +46,30 @@ const assignmentSamplesMock = vi.hoisted(() => ({
       build: { sources: ["/user/main.cpp"] },
     },
   },
+  "allegro-cpp": {
+    workspaceConfig: {
+      id: "allegro-cpp",
+      label: "Allegro 5 C++ Assignment",
+      version: 1,
+      files: {
+        "/user/allegro-main.cpp": {
+          encoding: "text",
+          content: "// Allegro 5 assignment starter",
+        },
+      },
+    },
+    plan: {
+      cases: [{ kind: "custom", name: "renders without crashing", weight: 1, hidden: false }],
+      build: { sources: ["/user/allegro-main.cpp"] },
+    },
+  },
 }));
 
 // ponytail: capture the latest props handed to the IDE mock so tests can assert
 // on workspaceConfig / tests without a rendered JSON preview card (removed in
 // the editor refinements plan).
 let lastIdeProps: {
-  workspaceConfig?: { files?: Record<string, unknown> };
+  workspaceConfig?: { id?: string; files?: Record<string, unknown> };
   tests?: { Public?: unknown[]; Private?: unknown[] };
   allowCreateFiles?: boolean;
   onAllowCreateFilesChange?: (v: boolean) => void;
@@ -84,15 +101,21 @@ vi.mock("@game-guild/emception-ui", async () => {
   // as children, and echoes `props.tests` back via getAuthoredState — mirroring the
   // real IDE's contract (T6/T7) where authored.tests === what the page passed in.
   // useImperativeHandle has no deps array → handle recreated every render →
-  // closure always captures the latest props.tests.
+  // closure always captures the latest props. getAuthoredState also echoes the
+  // active workspace (files + presetId = workspaceConfig.id), matching the real
+  // Ide's authored-state contract; the preset picker mirrors the Ide header
+  // workspace <select> (rendered when presetOptions is supplied).
   const Ide = React.forwardRef<IdeHandle, Record<string, unknown>>((props, ref) => {
     React.useImperativeHandle(ref, () => ({
       getFiles: ideMock.getFiles,
       getAuthoredState: async () => ({
-        files: [{ path: "/user/main.cpp", content: "// edited starter" }],
+        files: Object.entries(
+          (props.workspaceConfig as { files?: Record<string, { content: string }> } | undefined)
+            ?.files ?? {},
+        ).map(([path, bundle]) => ({ path, content: bundle.content })),
         fileMeta: {},
         tests: props.tests,
-        presetId: "cpp",
+        presetId: (props.workspaceConfig as { id?: string } | undefined)?.id ?? "cpp",
       }),
       runTests: vi.fn(),
       compileAndRun: vi.fn(),
@@ -119,9 +142,24 @@ vi.mock("@game-guild/emception-ui", async () => {
           props.allowCreateFiles ? "🔓" : "🔒",
         )
       : null;
+    const presetPicker = Array.isArray(props.presetOptions)
+      ? React.createElement(
+          "select",
+          {
+            "data-testid": "preset-picker",
+            value: (props.workspaceConfig as { id?: string } | undefined)?.id ?? "",
+            onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
+              (props.onPresetChange as ((v: string) => void) | undefined)?.(e.target.value),
+          },
+          ...(props.presetOptions as Array<{ value: string; label: string }>).map((o) =>
+            React.createElement("option", { key: o.value, value: o.value }, o.label),
+          ),
+        )
+      : null;
     return React.createElement(
       "div",
       { "data-testid": "mock-ide" },
+      presetPicker,
       createToggle,
       (props.testsPanelSlot as React.ReactNode) ?? null,
     );
@@ -227,6 +265,34 @@ describe("CodingDefinitionEditor", () => {
     // Tests bucket split by Visibility: Public has 1, Private has 1.
     expect(payloadText).toMatch(/"Public":[\s\S]*"kind": "standard"/);
     expect(payloadText).toMatch(/"Private":[\s\S]*"kind": "standard"/);
+  });
+
+  it("offers C++ + Allegro 5 and saves Language=allegro-cpp, Tools=clang, LibBundle=allegro", async () => {
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} />);
+
+    const picker = await screen.findByTestId("preset-picker");
+    expect(
+      screen.getByRole("option", { name: "C++ + Allegro 5 (clang + wasm-ld)" }),
+    ).toBeInTheDocument();
+
+    // Switch to Allegro — seeds the allegro starter into the workspace.
+    await user.selectOptions(picker, "allegro-cpp");
+    expect(lastIdeProps.workspaceConfig?.id).toBe("allegro-cpp");
+    expect(
+      Object.keys(lastIdeProps.workspaceConfig?.files ?? {}),
+    ).toContain("/user/allegro-main.cpp");
+
+    await user.click(screen.getByTestId("save-button"));
+
+    await waitFor(() => {
+      expect(putCodingAssignmentAction).toHaveBeenCalledTimes(1);
+    });
+    const payloadArg = putCodingAssignmentAction.mock.calls[0][2] as CodingAssignmentContent;
+    expect(payloadArg.Environment.Language).toBe("allegro-cpp");
+    expect(payloadArg.Environment.Tools).toBe("clang");
+    expect(payloadArg.Environment.LibBundle).toBe("allegro");
+    expect(Object.keys(payloadArg.Data.Files)).toContain("/user/allegro-main.cpp");
   });
 
   it("rejects negative weight client-side — Save disabled + error shown", async () => {
