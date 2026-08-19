@@ -25,7 +25,7 @@ public class NotificationService(
         => deliveryService.GetUnreadCountAsync(userId, cancellationToken);
 
     public Task<Result<Notification>> SendAsync(
-        Guid recipientId,
+        Guid? recipientId,
         NotificationType type,
         string title,
         string message,
@@ -36,8 +36,9 @@ public class NotificationService(
         Guid? referenceEntityId = null,
         string? referenceEntityType = null,
         string? metadata = null,
+        string? recipientEmail = null,
         CancellationToken cancellationToken = default)
-        => deliveryService.SendAsync(recipientId, type, title, message, channel, tenantId, actionUrl, priority, referenceEntityId, referenceEntityType, metadata, cancellationToken);
+        => deliveryService.SendAsync(recipientId, type, title, message, channel, tenantId, actionUrl, priority, referenceEntityId, referenceEntityType, metadata, recipientEmail, cancellationToken);
 
     public Task<Result<Notification>> SendFromTemplateAsync(
         Guid recipientId,

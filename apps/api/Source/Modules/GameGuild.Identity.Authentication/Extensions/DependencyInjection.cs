@@ -1,4 +1,6 @@
 using GameGuild.CQRS;
+using GameGuild.Notifications.Services.Email;
+using GameGuild.Notifications.Services.Email.Renderers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Identity.Authentication;
@@ -33,6 +35,12 @@ public static class DependencyInjection
         services.AddScoped<FluentValidation.IValidator<LocalSignInCommand>, LocalSignInCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<RefreshTokenCommand>, RefreshTokenCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<GoogleIdTokenSignInCommand>, GoogleIdTokenSignInCommandValidator>();
+
+        // Email renderers for identity notifications (consumed by the Notifications email dispatcher registry).
+        services.AddScoped<IEmailRenderer, WelcomeEmailRenderer>();
+        services.AddScoped<IEmailRenderer, EmailVerificationRenderer>();
+        services.AddScoped<IEmailRenderer, PasswordResetRenderer>();
+        services.AddScoped<IEmailRenderer, MagicLinkRenderer>();
 
         return services;
     }

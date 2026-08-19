@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
-using GameGuild.Email;
 using Moq;
 using Xunit;
 
@@ -318,13 +317,11 @@ public class AddTenantMemberCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenRequiresAcceptanceAndInviteeEmail_Should_Send_Invite_Email()
+    public async Task Handle_WhenRequiresAcceptanceAndInviteeEmail_Should_Queue_Invite_Notification()
     {
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var tenant = new Tenant { Id = tenantId, Name = "GameGuild Studio", Slug = "gameguild-studio" };
-        var emailSender = new Mock<IEmailSender>();
-        EmailMessage? sentMessage = null;
         TenantMember? capturedMember = null;
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -335,7 +332,6 @@ public class AddTenantMemberCommandHandlerTests
         var handler = new AddTenantMemberCommandHandler(
             _tenantRepositoryMock.Object,
             _memberRepositoryMock.Object,
-            emailSender.Object,
             configuration);
 
         _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
@@ -345,10 +341,6 @@ public class AddTenantMemberCommandHandlerTests
         _memberRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
             .Callback<TenantMember, CancellationToken>((member, _) => capturedMember = member)
             .ReturnsAsync((TenantMember m, CancellationToken _) => m);
-        emailSender
-            .Setup(sender => sender.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
-            .Callback<EmailMessage, CancellationToken>((message, _) => sentMessage = message)
-            .Returns(Task.CompletedTask);
 
         var result = await handler.Handle(
             new TestAddTenantMemberCommand(
@@ -362,12 +354,16 @@ public class AddTenantMemberCommandHandlerTests
             CancellationToken.None);
 
         result.Success.Should().BeTrue();
-        sentMessage.Should().NotBeNull();
-        sentMessage!.ToEmail.Should().Be("learner@example.com");
-        sentMessage.ToName.Should().Be("Learner One");
-        sentMessage.Subject.Should().Contain("GameGuild Studio");
-        sentMessage.PlainTextContent.Should().Contain("Moderator");
-        sentMessage.PlainTextContent.Should().Contain("callbackUrl=%2Faccount%2Finvitations");
+        var inviteEvent = tenant.DomainEvents
+            .Should().ContainSingle(e => e is TenantInviteRequestedNotification).Subject
+            as TenantInviteRequestedNotification;
+        inviteEvent!.InviteeEmail.Should().Be("learner@example.com");
+        inviteEvent.InviteeName.Should().Be("Learner One");
+        inviteEvent.InvitedByEmail.Should().Be("admin@game-guild.com");
+        inviteEvent.TenantName.Should().Be("GameGuild Studio");
+        inviteEvent.Role.Should().Be("Moderator");
+        inviteEvent.Resend.Should().BeFalse();
+        inviteEvent.ReviewUrl.Should().Contain("callbackUrl=%2Faccount%2Finvitations");
         capturedMember!.Metadata.Should().Contain("\"inviteeEmail\":\"learner@example.com\"");
         capturedMember.Metadata.Should().Contain("\"inviteeName\":\"Learner One\"");
     }

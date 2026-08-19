@@ -12,6 +12,7 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Users;
+using GameGuild.Notifications.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +37,7 @@ public class SendWelcomeEmailHandlerCovTests
     public async Task Handle_LogsAndCompletes()
     {
         var logger = new Mock<ILogger<SendWelcomeEmailHandler>>();
-        var handler = new SendWelcomeEmailHandler(logger.Object);
+        var handler = new SendWelcomeEmailHandler(logger.Object, Mock.Of<INotificationService>());
 
         var notification = new UserSignedUpNotification
         {
@@ -53,7 +54,7 @@ public class SendWelcomeEmailHandlerCovTests
     [Fact]
     public async Task Handle_WithTenantId_Completes()
     {
-        var handler = new SendWelcomeEmailHandler(NullLogger<SendWelcomeEmailHandler>.Instance);
+        var handler = new SendWelcomeEmailHandler(NullLogger<SendWelcomeEmailHandler>.Instance, Mock.Of<INotificationService>());
 
         var notification = new UserSignedUpNotification
         {

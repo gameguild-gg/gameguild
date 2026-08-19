@@ -36,7 +36,6 @@ builder.Services.Configure<EmailDeliveryOptions>(builder.Configuration.GetSectio
 builder.Services.Configure<SubscriptionNotificationLinkOptions>(
     builder.Configuration.GetSection("SubscriptionNotifications"));
 builder.Services.AddScoped<IEmailSender, EmailSender>();
-builder.Services.AddScoped<IMonthlyStatementMailSender, MonthlyStatementMailSenderAdapter>();
 builder.Services.AddScoped<IMonthlyStatementDataProvider, MonthlyStatementDataProvider>();
 builder.Services.AddScoped<IMonthlyStatementAttachmentBuilder, MonthlyStatementAttachmentBuilder>();
 builder.Services.AddSingleton<IMonthlyStatementLinkBuilder, MonthlyStatementLinkBuilder>();
