@@ -1,8 +1,10 @@
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using FluentAssertions;
 using GameGuild.API.Setup;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -11,64 +13,75 @@ namespace GameGuild.API.UnitTests.Core;
 public sealed class ApiHostLifecycleTests
 {
     [Fact]
-    public void ResolveKeysPath_ShouldPreferConfigurationThenEnvironmentThenDefault()
+    public void ConfigureServices_ShouldRegisterDataProtectionProvider()
     {
-        var configured = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            ["DataProtection:KeysPath"] = "configured-path"
-        }).Build();
-        var empty = new ConfigurationBuilder().Build();
-
-        DataProtectionStartupConfiguration.ResolveKeysPath(configured, "default-path", _ => "environment-path")
-            .Should().Be("configured-path");
-        DataProtectionStartupConfiguration.ResolveKeysPath(empty, "default-path", _ => "environment-path")
-            .Should().Be("environment-path");
-        DataProtectionStartupConfiguration.ResolveKeysPath(empty, "default-path", _ => null)
-            .Should().Be("default-path");
-    }
-
-    [Fact]
-    public void ConfigureServices_ShouldPersistKeysWhenDirectoryIsWritable()
-    {
-        var path = Path.Combine(Path.GetTempPath(), $"keys-{Guid.NewGuid():N}");
         var services = new ServiceCollection();
         var errors = new List<string>();
 
-        try
-        {
-            DataProtectionStartupConfiguration.ConfigureServices(services, path, "TestProduct", errors.Add);
-            using var provider = services.BuildServiceProvider();
+        DataProtectionStartupConfiguration.ConfigureServices(services, "TestProduct", errors.Add);
+        using var provider = services.BuildServiceProvider();
 
-            Directory.Exists(path).Should().BeTrue();
-            provider.GetRequiredService<IDataProtectionProvider>().Should().NotBeNull();
-            errors.Should().BeEmpty();
-        }
-        finally
-        {
-            if (Directory.Exists(path))
-                Directory.Delete(path, recursive: true);
-        }
+        provider.GetRequiredService<IDataProtectionProvider>().Should().NotBeNull();
+        // No cert env vars in the test environment → a plaintext-fallback warning is expected.
+        errors.Should().ContainSingle().Which.Should().Contain("unencrypted");
     }
 
     [Fact]
-    public void ConfigureServices_WhenDirectoryCannotBeCreated_ShouldUseFallbackProvider()
+    public void LoadCertificate_ShouldReturnNullWhenEnvironmentVariablesAreAbsent()
     {
-        var path = Path.GetTempFileName();
-        var services = new ServiceCollection();
         var errors = new List<string>();
 
-        try
-        {
-            DataProtectionStartupConfiguration.ConfigureServices(services, path, "TestProduct", errors.Add);
-            using var provider = services.BuildServiceProvider();
+        var certificate = DataProtectionStartupConfiguration.LoadCertificate(_ => null, errors.Add);
 
-            provider.GetRequiredService<IDataProtectionProvider>().Should().NotBeNull();
-            errors.Should().ContainSingle().Which.Should().Contain("Falling back to defaults");
-        }
-        finally
-        {
-            File.Delete(path);
-        }
+        certificate.Should().BeNull();
+        errors.Should().ContainSingle().Which.Should().Contain("unencrypted");
+    }
+
+    [Fact]
+    public void LoadCertificate_ShouldReturnNullWhenOnlyOneVariableIsSet()
+    {
+        var errors = new List<string>();
+
+        var certificate = DataProtectionStartupConfiguration.LoadCertificate(
+            name => name == "DATAPROTECTION_CERTIFICATE_BASE64" ? "Y2VydA==" : null,
+            errors.Add);
+
+        certificate.Should().BeNull();
+    }
+
+    [Fact]
+    public void LoadCertificate_ShouldReturnCertificateForValidBase64Pem()
+    {
+        using var rsa = RSA.Create(2048);
+        var request = new CertificateRequest(
+            "CN=dataprotection-test",
+            rsa,
+            HashAlgorithmName.SHA256,
+            RSASignaturePadding.Pkcs1);
+        using var selfSigned = request.CreateSelfSigned(
+            DateTimeOffset.UtcNow.AddDays(-1),
+            DateTimeOffset.UtcNow.AddDays(1));
+
+        var certificateBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(selfSigned.ExportCertificatePem()));
+        var keyBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(rsa.ExportPkcs8PrivateKeyPem()));
+
+        var certificate = DataProtectionStartupConfiguration.LoadCertificate(
+            name => name == "DATAPROTECTION_CERTIFICATE_BASE64" ? certificateBase64 : keyBase64,
+            _ => { });
+
+        certificate.Should().NotBeNull();
+        certificate!.HasPrivateKey.Should().BeTrue();
+    }
+
+    [Fact]
+    public void LoadCertificate_ShouldReturnNullOnMalformedBase64()
+    {
+        var errors = new List<string>();
+
+        var certificate = DataProtectionStartupConfiguration.LoadCertificate(_ => "!!!not-base64!!!", errors.Add);
+
+        certificate.Should().BeNull();
+        errors.Should().ContainSingle().Which.Should().Contain("Failed to load");
     }
 
     [Theory]
@@ -110,8 +123,6 @@ public sealed class ApiHostLifecycleTests
         public IReadOnlyList<string> Arguments { get; private set; } = [];
 
         public string ApplicationName => "TestProduct";
-
-        public string DefaultDataProtectionKeysPath => "test-keys";
 
         public IReadOnlyList<string> EnabledModules => [];
 
