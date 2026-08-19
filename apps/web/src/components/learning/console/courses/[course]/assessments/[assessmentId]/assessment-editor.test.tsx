@@ -249,49 +249,7 @@ describe("AssessmentEditor", () => {
     expect(routerMocks.back).not.toHaveBeenCalled();
   });
 
-  it("renders linked content items from courseContent", async () => {
-    const user = userEvent.setup();
-    render(
-      <AssessmentEditor
-        courseId="course-1"
-        assessment={assessment}
-        assessmentGroups={groups}
-        courseContent={courseContent}
-      />,
-    );
-
-    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
-    expect(await screen.findByText("Module 1 Homework")).toBeInTheDocument();
-    expect(screen.getByText("Intro Lesson")).toBeInTheDocument();
-  });
-
-  it("calls updateAssessment with contentId when an item is selected", async () => {
-    const user = userEvent.setup();
-    render(
-      <AssessmentEditor
-        courseId="course-1"
-        assessment={assessment}
-        assessmentGroups={groups}
-        courseContent={courseContent}
-      />,
-    );
-
-    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
-    await user.click(screen.getByRole("option", { name: "Module 1 Homework" }));
-
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        contentId: "content-assignment-1",
-        clearContentId: false,
-      });
-    });
-    expect(routerMocks.refresh).toHaveBeenCalled();
-  });
-
-  it("cannot unlink content once linked — None option absent, clearContentId never sent", async () => {
-    const user = userEvent.setup();
+  it("shows a permanent link to the parent content when linked (no dropdown)", async () => {
     const linked = { ...assessment, contentId: "content-assignment-1" };
     render(
       <AssessmentEditor
@@ -302,27 +260,22 @@ describe("AssessmentEditor", () => {
       />,
     );
 
-    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
     expect(
-      screen.queryByRole("option", { name: /none \(standalone assessment\)/i }),
+      screen.queryByRole("combobox", { name: /linked content/i }),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("option", { name: "Intro Lesson" }));
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        contentId: "content-lesson-1",
-        clearContentId: false,
-      });
-    });
-    expect(updateAssessment).not.toHaveBeenCalledWith(
-      expect.objectContaining({ clearContentId: true }),
+    const contentLink = screen.getByTestId("linked-content-link");
+    expect(contentLink).toHaveAttribute(
+      "href",
+      "/workspace/learning/courses/course-1/content/content-assignment-1",
     );
+    expect(contentLink).toHaveTextContent("Module 1 Homework");
+    expect(
+      screen.getByText(/cannot\s+be\s+unlinked/i),
+    ).toBeInTheDocument();
   });
 
-  it("offers the None option when the assessment has no linked content", async () => {
-    const user = userEvent.setup();
+  it("shows standalone text when no content is linked", async () => {
     render(
       <AssessmentEditor
         courseId="course-1"
@@ -332,10 +285,10 @@ describe("AssessmentEditor", () => {
       />,
     );
 
-    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
     expect(
-      screen.getByRole("option", { name: /none \(standalone assessment\)/i }),
-    ).toBeInTheDocument();
+      screen.queryByRole("combobox", { name: /linked content/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("linked-content-none")).toBeInTheDocument();
   });
 
   it("toggles grading methods and writes the comma-separated string", async () => {
