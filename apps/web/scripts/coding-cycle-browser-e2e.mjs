@@ -1103,11 +1103,13 @@ async function instructorJourney(fixture, browser) {
     const studentCodeVisible = /e2e-student-fix/.test(editorText) || /return a \+ b/.test(editorText);
     record("grader IDE shows student typed code", studentCodeVisible, editorText.slice(0, 200));
     const noStudentCodeNotice = await graderPanel.getByTestId("no-student-code").count();
-    record("'no-student-code' notice state (observation)", true, `count=${noStudentCodeNotice} (0 expected now the payload bug is fixed)`, "observed");
+    record("'no-student-code' notice absent (student code present)", noStudentCodeNotice === 0, `count=${noStudentCodeNotice}`);
 
     // Run Tests — full plan (public + private).
     await graderRunTestsAndWait(graderPanel);
-    const graderResults = graderPanel.getByTestId("test-results-panel");
+    // Two results panels exist in grader mode now (the panel's own + the
+    // IDE's internal one) — scope to the IDE's slot for a unique match.
+    const graderResults = graderPanel.getByTestId("test-results-slot").getByTestId("test-results-panel");
     await graderResults.waitFor({ state: "visible", timeout: 30_000 });
     const graderRowTexts = await graderResults.evaluate((el) => {
       return Array.from(el.querySelectorAll('[data-testid^="test-case-"]')).filter((n) =>
@@ -1118,10 +1120,12 @@ async function instructorJourney(fixture, browser) {
     record("full plan produces 3 result rows", rowCount === 3, `rows=${rowCount}; ${graderRowTexts.join(" | ")}`);
     const privateVisible = graderRowTexts.some((t) => /secret-exit/.test(t));
     record("private test 'secret-exit' visible to instructor", privateVisible, graderRowTexts.join(" | "));
-    // Per-row pass/fail are OBSERVATIONS — they depend on the known payload
-    // bug (starter template runs, not the student's fixed code).
+    // Per-row pass/fail: the grader shares the student pipeline — the
+    // student's fixed code must PASS every case in the full plan.
     for (const rowText of graderRowTexts) {
-      record("grader per-row outcome (observation)", true, rowText.replace(/\s+/g, " ").slice(0, 140), "observed");
+      const name = (rowText.match(/(prints-sum|add-fn|secret-exit)/) ?? ["?"])[0];
+      const passed = /^\s*✓/.test(rowText);
+      record(`grader row '${name}' passes`, passed, rowText.replace(/\s+/g, " ").slice(0, 140));
     }
     await screenshot(page, "instructor-run-tests");
 
