@@ -114,6 +114,19 @@ public class Notification : EntityBase
     public string? RecipientEmail { get; private set; }
 
     /// <summary>
+    /// Message id assigned by the email provider (SES) for the last send attempt;
+    /// null when the provider returned none (disabled/skip) or for digest bundles.
+    /// Joins EmailDeliveryEvent.ProviderMessageId for the delivery timeline.
+    /// </summary>
+    [MaxLength(100)]
+    public string? ProviderMessageId { get; private set; }
+
+    /// <summary>
+    /// Number of times this notification was requeued from the dead-letter state by an admin
+    /// </summary>
+    public int RequeueCount { get; private set; }
+
+    /// <summary>
     /// Optional scheduled delivery time (for delayed notifications)
     /// </summary>
     public DateTime? ScheduledAt { get; private set; }
@@ -267,6 +280,22 @@ public class Notification : EntityBase
         DeliveryStatus = NotificationDeliveryStatus.DeadLettered;
         LastError = reason;
         NextAttemptAt = null;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    /// Requeues a dead-lettered notification for another delivery attempt (admin action).
+    /// <see cref="LastError"/> and <see cref="AttemptCount"/> are deliberately KEPT as the
+    /// audit trail of the failure that dead-lettered the row; subsequent delivery attempts
+    /// overwrite them as usual.
+    /// </summary>
+    public void MarkRequeued()
+    {
+        if (DeliveryStatus != NotificationDeliveryStatus.DeadLettered) return;
+
+        DeliveryStatus = NotificationDeliveryStatus.Pending;
+        NextAttemptAt = null;
+        RequeueCount++;
         UpdatedAt = SystemClock.UtcNow;
     }
 
