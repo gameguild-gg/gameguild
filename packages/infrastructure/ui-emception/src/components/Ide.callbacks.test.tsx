@@ -81,17 +81,9 @@ jest.mock('./TerminalPanel', () => {
 import Ide from './Ide';
 import type { IdeHandle } from './Ide';
 
-// ── Sample TestReport for assertions ───────────────────────────────────────
-const SAMPLE_REPORT = {
-  passed: 2,
-  failed: 1,
-  totalDurationMs: 150,
-  cases: [
-    { name: 'test_add', passed: true, durationMs: 50 },
-    { name: 'test_sub', passed: true, durationMs: 40 },
-    { name: 'test_div', passed: false, durationMs: 60, diagnostic: 'expected 5 got 0' },
-  ],
-};
+// runTests({cases: []}) runs the shared IDE pipeline, which short-circuits
+// to an empty report (no api.runTests delegation anymore).
+const EMPTY_REPORT = { passed: 0, failed: 0, totalDurationMs: 0, cases: [] };
 
 // ── Tests ──────────────────────────────────────────────────────────────────
 
@@ -104,23 +96,18 @@ describe('Ide callback props', () => {
       render(<Ide ref={ref} onTestReport={onTestReport} />);
     });
 
-    // Wire mock to return our sample report
-    const { wrapWorkerClient } = require('@gameguild/emception-browser');
-    const mockApi = wrapWorkerClient();
-    mockApi.runTests.mockResolvedValue(SAMPLE_REPORT);
-
     await act(async () => {
       const report = await ref.current!.runTests({ cases: [] });
-      expect(report).toEqual(SAMPLE_REPORT);
+      expect(report).toEqual(EMPTY_REPORT);
     });
 
     // onTestReport must have been called ONCE with the exact report
     expect(onTestReport).toHaveBeenCalledTimes(1);
-    expect(onTestReport).toHaveBeenCalledWith(SAMPLE_REPORT);
+    expect(onTestReport).toHaveBeenCalledWith(EMPTY_REPORT);
     // Payload correctness: not just "called" but called with the right data
-    expect(onTestReport.mock.calls[0][0].passed).toBe(2);
-    expect(onTestReport.mock.calls[0][0].failed).toBe(1);
-    expect(onTestReport.mock.calls[0][0].cases).toHaveLength(3);
+    expect(onTestReport.mock.calls[0][0].passed).toBe(0);
+    expect(onTestReport.mock.calls[0][0].failed).toBe(0);
+    expect(onTestReport.mock.calls[0][0].cases).toHaveLength(0);
   });
 
   it('onTestReport is NOT called when callbacks are omitted', async () => {
@@ -129,10 +116,6 @@ describe('Ide callback props', () => {
     await act(async () => {
       render(<Ide ref={ref} />);
     });
-
-    const { wrapWorkerClient } = require('@gameguild/emception-browser');
-    const mockApi = wrapWorkerClient();
-    mockApi.runTests.mockResolvedValue(SAMPLE_REPORT);
 
     // Should not throw — just no callback invocation
     await act(async () => {
@@ -150,14 +133,10 @@ describe('Ide callback props', () => {
       render(<Ide ref={ref} onTestReport={onTestReport} />);
     });
 
-    const { wrapWorkerClient } = require('@gameguild/emception-browser');
-    const mockApi = wrapWorkerClient();
-    mockApi.runTests.mockResolvedValue(SAMPLE_REPORT);
-
     // Should NOT throw — the callback error is swallowed
     await act(async () => {
       const report = await ref.current!.runTests({ cases: [] });
-      expect(report).toEqual(SAMPLE_REPORT);
+      expect(report).toEqual(EMPTY_REPORT);
     });
 
     expect(onTestReport).toHaveBeenCalledTimes(1);

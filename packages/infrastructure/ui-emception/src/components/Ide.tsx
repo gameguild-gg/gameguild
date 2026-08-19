@@ -376,10 +376,21 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     console.log(`${P} VFS sync complete (${textFiles.length} files)`);
   }, []);
 
-      // ── Run Tests button handler ───────────────────────────────────
-      const handleRunTests = useCallback(async () => {
+      // ── Run Tests pipeline — shared by the toolbar button AND the
+      // imperative handle (grader panel). One path, one contract. ────
+      const runTestPlanFor = useCallback(async (
+        plan: GradingPlan,
+        mode: 'public' | 'full',
+      ): Promise<import('./TestResultsPanel').TestReport> => {
     const orch = orchestratorRef.current;
-    if (!orch || !testPlan || testPlan.cases.length === 0) return;
+    if (!orch) throw new Error('Worker not booted yet');
+    if (!plan || plan.cases.length === 0) {
+      // ponytail: empty plan → empty report; still fire the callback so
+      // hosts observe completion (legacy handle contract).
+      const empty: import('./TestResultsPanel').TestReport = { passed: 0, failed: 0, totalDurationMs: 0, cases: [] };
+      try { onTestReportRef.current?.(empty); } catch { /* swallow */ }
+      return empty;
+    }
     const { client, tty } = orch;
     setTestRunning(true);
     setLastReport(null);
@@ -392,10 +403,17 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       // reads the latest editor content.
       await syncFilesToVfs(filesRef.current);
 
+      // Generated doctest harnesses may live in the workspace (the grader
+      // seeds them via setFiles) — exclude them so the combined TU never
+      // compiles a harness twice.
+      const harnessPaths = new Set(
+        plan.cases.flatMap((c) => (c.kind === 'doctest' ? (c.sourceFiles ?? []) : [])),
+      );
+
       // All text C/C++ sources — the stdio path compiles the first; the
       // doctest path concatenates all of them into one combined TU.
       const studentSources = Object.values(filesRef.current).filter(
-        (f) => f.type === 'text' && isSourceFile(f.path),
+        (f) => f.type === 'text' && isSourceFile(f.path) && !harnessPaths.has(f.path),
       );
       if (studentSources.length === 0) {
         throw new Error('No C/C++ source file found in workspace');
@@ -408,9 +426,9 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         (isC ? TOOLCHAIN_PRESETS.c : TOOLCHAIN_PRESETS.cpp)
       ) as NativePreset;
 
-      // ── Filter cases per testMode (before building — a doctest-only plan
+      // ── Filter cases per mode (before building — a doctest-only plan
       //    must not pay for, or fail on, the stdio binary build) ──
-      const cases = testMode === 'public' ? testPlan.cases.filter((c) => !c.hidden) : testPlan.cases;
+      const cases = mode === 'public' ? plan.cases.filter((c) => !c.hidden) : plan.cases;
       const wasmPath = '/home/user/main.wasm';
 
       // ── stdio binary (clang -cc1 + wasm-ld via preset) ──
@@ -467,10 +485,15 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         if (test.kind === 'doctest') {
           try {
             const harnessPath = test.sourceFiles?.[0];
-            const harness = harnessPath
-              ? testPlan.generatedFiles?.find((g) => g.path === harnessPath)
+            // Harness content: generated files on the plan, else workspace
+            // files seeded by the host before runTests (grader panel path).
+            const harnessFromPlan = harnessPath
+              ? plan.generatedFiles?.find((g) => g.path === harnessPath)
               : undefined;
-            if (!harness) {
+            const harnessContent =
+              harnessFromPlan?.content ??
+              (harnessPath ? filesRef.current[harnessPath]?.content : undefined);
+            if (harnessContent === undefined) {
               reportCases.push({
                 name,
                 passed: false,
@@ -497,7 +520,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
               '#define main gg_student_main_disabled',
               ...studentSources.map((f) => f.content),
               '#undef main',
-              harness.content.replace(/extern\s+"C"\s+[\s\S]*?;/g, ''),
+              harnessContent.replace(/extern\s+"C"\s+[\s\S]*?;/g, ''),
             ].join('\n\n');
             await client.writeFile(combinedPath, enc.encode(combined));
 
@@ -659,7 +682,17 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     } finally {
       setTestRunning(false);
     }
-    }, [testPlan, testMode, syncFilesToVfs, testsPanelSlot]);
+    return report;
+    }, [syncFilesToVfs, resolvedConfig]);
+
+      const handleRunTests = useCallback(async () => {
+    if (!orchestratorRef.current || !testPlan || testPlan.cases.length === 0) return;
+    await runTestPlanFor(testPlan, testMode);
+      }, [testPlan, testMode, runTestPlanFor]);
+
+  // Latest-pipeline ref for the imperative handle (mirrors propsRef).
+  const runPlanRef = useRef(runTestPlanFor);
+  runPlanRef.current = runTestPlanFor;
 
   // ── Apply a workspace config to reactive state + Worker VFS ─────
   const applyWorkspace = useCallback(
@@ -879,11 +912,13 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     };
     return {
     runTests: async (plan) => {
-      const api = apiRef.current;
-      if (!api) throw new Error('Worker not booted yet');
-      const report = await api.runTests(plan);
-      try { onTestReportRef.current?.(report); } catch { /* swallow */ }
-      return report;
+      if (!orchestratorRef.current) throw new Error('Worker not booted yet');
+      // Shared pipeline with the Run Tests button. The core-engine
+      // api.runTests path is broken for assignment plans: the browser
+      // facade only reads opts.sources (never opts.build.sources), compiles
+      // an empty default source, and clobbers the seeded workspace.
+      // onTestReport fires inside runTestPlanFor — do not double-fire here.
+      return runPlanRef.current(plan as unknown as GradingPlan, 'full');
     },
     compileAndRun: async (sourceOrFiles?, opts?) => {
       const api = apiRef.current;
