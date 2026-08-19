@@ -82,8 +82,56 @@ public sealed class EmailDispatcherServiceTests : IDisposable
         notification.DeliveryStatus.Should().Be(NotificationDeliveryStatus.Sent);
         notification.IsSent.Should().BeTrue();
         notification.SentAt.Should().NotBeNull();
+        notification.ProviderMessageId.Should().Be("test-message-id");
         (await context.Notifications.SingleAsync(n => n.Id == notification.Id))
             .DeliveryStatus.Should().Be(NotificationDeliveryStatus.Sent);
+        (await context.Notifications.SingleAsync(n => n.Id == notification.Id))
+            .ProviderMessageId.Should().Be("test-message-id");
+    }
+
+    [Fact]
+    public async Task Sweep_Deadletters_Suppressed_Recipient_Without_Sending_Or_Attempt_Burn()
+    {
+        // Mixed-case seed proves both sides normalize: Create() normalizes the stored value,
+        // the dispatcher normalizes the resolved recipient before comparing.
+        var (subject, context, sender, _) = CreateSubject(renderers: [new StubRenderer(NotificationType.System)]);
+        context.EmailSuppressions.Add(EmailSuppression.Create(
+            "  Member@Example.COM ", EmailSuppressionReason.HardBounce, bounceType: "Permanent"));
+        var notification = Notification.Create(
+            null, NotificationType.System, NotificationChannel.Email, "Title", "Body",
+            recipientEmail: "member@example.com");
+        context.Notifications.Add(notification);
+        await context.SaveChangesAsync();
+
+        var processed = await subject.SweepOnceAsync();
+
+        processed.Should().Be(1);
+        sender.Sent.Should().BeEmpty();
+        notification.DeliveryStatus.Should().Be(NotificationDeliveryStatus.DeadLettered);
+        notification.LastError.Should().Be("suppressed: HardBounce");
+        notification.AttemptCount.Should().Be(0);
+        notification.NextAttemptAt.Should().BeNull();
+        notification.ProviderMessageId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Sweep_Sends_To_Released_Suppression()
+    {
+        var (subject, context, sender, _) = CreateSubject(renderers: [new StubRenderer(NotificationType.System)]);
+        var suppression = EmailSuppression.Create("member@example.com", EmailSuppressionReason.Complaint);
+        suppression.Release();
+        context.EmailSuppressions.Add(suppression);
+        var notification = Notification.Create(
+            null, NotificationType.System, NotificationChannel.Email, "Title", "Body",
+            recipientEmail: "member@example.com");
+        context.Notifications.Add(notification);
+        await context.SaveChangesAsync();
+
+        await subject.SweepOnceAsync();
+
+        sender.Sent.Should().ContainSingle();
+        notification.DeliveryStatus.Should().Be(NotificationDeliveryStatus.Sent);
+        notification.ProviderMessageId.Should().Be("test-message-id");
     }
 
     [Fact]
@@ -285,6 +333,7 @@ public sealed class EmailDispatcherServiceTests : IDisposable
         processed.Should().Be(1);
         sender.Sent.Should().BeEmpty();
         notification.DeliveryStatus.Should().Be(NotificationDeliveryStatus.Sent);
+        notification.ProviderMessageId.Should().BeNull();
     }
 
     [Fact]

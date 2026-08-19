@@ -148,6 +148,21 @@ public sealed class EmailDispatcherService(
             return;
         }
 
+        // 5b. Suppression: actively suppressed address (hard bounce / complaint) — deadletter without
+        // sending and without consuming a retry attempt. Rows are already claimed (Sending) here;
+        // MarkDeadLettered is an unguarded state write, so Sending → DeadLettered is legal.
+        // ponytail: per-row indexed lookup is fine at the 50-row/30s sweep; batch-prefetch the
+        // suppression set per sweep if profiling ever shows the roundtrips matter.
+        var activeSuppression = await FindActiveSuppressionAsync(context, toEmail, cancellationToken).ConfigureAwait(false);
+        if (activeSuppression is not null)
+        {
+            notification.MarkDeadLettered($"suppressed: {activeSuppression.Reason}");
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            logger.LogWarning("Deadlettered notification to suppressed address. NotificationId: {NotificationId}, Recipient: {RecipientEmail}, Reason: {Reason}",
+                notification.Id, toEmail, activeSuppression.Reason);
+            return;
+        }
+
         // 6. Render: null means "nothing to send" — treat as delivered.
         var message = await renderer.RenderAsync(notification, cancellationToken).ConfigureAwait(false);
         if (message is null)
@@ -159,12 +174,25 @@ public sealed class EmailDispatcherService(
             return;
         }
 
-        // 7. Send (a disabled sender logs and returns — treated as success) and finalize.
-        await emailSender.SendAsync(message with { ToEmail = toEmail }, cancellationToken).ConfigureAwait(false);
-        notification.MarkDeliverySent();
+        // 7. Send (a disabled sender logs and returns null — treated as success) and finalize.
+        var providerMessageId = await emailSender.SendAsync(message with { ToEmail = toEmail }, cancellationToken).ConfigureAwait(false);
+        notification.MarkDeliverySent(providerMessageId);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         logger.LogInformation("Email delivered. NotificationId: {NotificationId}, Type: {Type}, Recipient: {RecipientEmail}",
             notification.Id, notification.Type, toEmail);
+    }
+
+    /// <summary>
+    /// Active suppression (ReleasedAt null) for the given recipient, matched on the canonical
+    /// normalized form via <see cref="EmailAddressNormalizer"/>; null when the address is clear.
+    /// </summary>
+    internal static async Task<EmailSuppression?> FindActiveSuppressionAsync(
+        IApplicationDbContext context, string toEmail, CancellationToken cancellationToken)
+    {
+        var normalized = EmailAddressNormalizer.Normalize(toEmail);
+        return await context.Set<EmailSuppression>()
+            .FirstOrDefaultAsync(s => s.EmailAddress == normalized && s.ReleasedAt == null, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private void HandleFailure(Notification notification, Exception ex, EmailDispatcherOptions opts)
