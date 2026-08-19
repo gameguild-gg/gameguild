@@ -441,7 +441,7 @@ public sealed class JwtTokenServiceCatchTests
             Issuer = "test", Audience = "test",
             ValidateIssuer = true, ValidateAudience = true,
             ValidateLifetime = true, ValidateIssuerSigningKey = true,
-            ClockSkewSeconds = 0, AccessTokenExpirationMinutes = 0,
+            ClockSkewSeconds = 0, AccessTokenExpirationMinutes = 1,
             RefreshTokenExpirationDays = 7
         };
 
@@ -455,15 +455,27 @@ public sealed class JwtTokenServiceCatchTests
             httpAccessor.Object,
             Options.Create(options));
 
-        // Generate token that expires immediately (0 minutes expiration)
-        var token = await sut.GenerateAccessTokenAsync(
-            Guid.NewGuid(), "test@test.com", new[] { "User" }, null);
-
-        // Wait briefly to ensure expiration
-        await Task.Delay(100);
+        // Generate the token against a clock in the past so its lifetime is already over;
+        // the 0-minute trick throws IDX12401 whenever both SystemClock reads land on the same tick.
+        SystemClock.SetProvider(new FixedPastTimeProvider(DateTimeOffset.UtcNow.AddMinutes(-5)));
+        string token;
+        try
+        {
+            token = await sut.GenerateAccessTokenAsync(
+                Guid.NewGuid(), "test@test.com", new[] { "User" }, null);
+        }
+        finally
+        {
+            SystemClock.Reset();
+        }
 
         var result = await sut.ValidateTokenAsync(token);
         result.Should().BeFalse();
+    }
+
+    private sealed class FixedPastTimeProvider(DateTimeOffset utcNowValue) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNowValue;
     }
 
     [Fact]
