@@ -277,14 +277,40 @@ public class AssessmentEntityTests
     }
 
     [Fact]
-    public void Update_WithClearContentId_ShouldClearContentId()
+    public void Update_WithClearContentId_ThrowsWhenContentAlreadyLinked()
     {
         var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100);
         assessment.Update(null, null, null, null, null, null, null, null, Guid.NewGuid());
 
-        assessment.Update(null, null, null, null, null, null, null, null, null, clearContentId: true);
+        var act = () => assessment.Update(null, null, null, null, null, null, null, null, null, clearContentId: true);
 
-        assessment.ContentId.Should().BeNull();
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*cannot be unlinked*");
+        assessment.ContentId.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Update_WithDifferentContentId_ThrowsWhenContentAlreadyLinked()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100);
+        assessment.Update(null, null, null, null, null, null, null, null, Guid.NewGuid());
+
+        var act = () => assessment.Update(null, null, null, null, null, null, null, null, Guid.NewGuid());
+
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*cannot be unlinked*");
+    }
+
+    [Fact]
+    public void Update_WithSameContentId_IsAllowedNoOp()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100);
+        var contentId = Guid.NewGuid();
+        assessment.Update(null, null, null, null, null, null, null, null, contentId);
+
+        assessment.Update(null, null, null, null, null, null, null, null, contentId);
+
+        assessment.ContentId.Should().Be(contentId);
     }
 }
 
