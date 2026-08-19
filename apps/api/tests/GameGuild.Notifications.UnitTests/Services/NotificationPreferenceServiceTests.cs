@@ -337,6 +337,57 @@ public class NotificationPreferenceServiceTests
     }
 
     [Fact]
+    public async Task DecideDeliveryAsync_Should_Drop_Digestible_Email_When_Channel_Disabled()
+    {
+        using var context = CreateContext();
+        var preference = NotificationPreference.CreateDefault(Guid.NewGuid());
+        preference.SetEmailDigestFrequency(DigestFrequency.Daily);
+        preference.UpdateChannelPreferences(false, true, true, true);
+        context.NotificationPreferences.Add(preference);
+        await context.SaveChangesAsync();
+        var subject = new NotificationPreferenceService(new ApplicationDbContextAdapter(context));
+
+        var result = await subject.DecideDeliveryAsync(preference.UserId, NotificationType.MonthlyStatement, NotificationChannel.Email, NotificationPriority.Normal);
+
+        result.Action.Should().Be(NotificationDeliveryAction.Drop);
+        result.Reason.Should().Be("channel-disabled");
+    }
+
+    [Fact]
+    public async Task DecideDeliveryAsync_Should_Drop_Muted_Type_Even_With_Digest_Frequency_Set()
+    {
+        using var context = CreateContext();
+        var preference = NotificationPreference.CreateDefault(Guid.NewGuid());
+        preference.SetEmailDigestFrequency(DigestFrequency.Daily);
+        preference.MuteType(nameof(NotificationType.MonthlyStatement));
+        context.NotificationPreferences.Add(preference);
+        await context.SaveChangesAsync();
+        var subject = new NotificationPreferenceService(new ApplicationDbContextAdapter(context));
+
+        var result = await subject.DecideDeliveryAsync(preference.UserId, NotificationType.MonthlyStatement, NotificationChannel.Email, NotificationPriority.Normal);
+
+        result.Action.Should().Be(NotificationDeliveryAction.Drop);
+        result.Reason.Should().Be("muted");
+    }
+
+    [Fact]
+    public async Task DecideDeliveryAsync_Should_Drop_Category_Disabled_Type_Even_With_Digest_Frequency_Set()
+    {
+        using var context = CreateContext();
+        var preference = NotificationPreference.CreateDefault(Guid.NewGuid());
+        preference.SetEmailDigestFrequency(DigestFrequency.Daily);
+        preference.UpdateCategoryPreferences(marketingEnabled: false, socialEnabled: true, learningEnabled: true, achievementsEnabled: true);
+        context.NotificationPreferences.Add(preference);
+        await context.SaveChangesAsync();
+        var subject = new NotificationPreferenceService(new ApplicationDbContextAdapter(context));
+
+        var result = await subject.DecideDeliveryAsync(preference.UserId, NotificationType.Marketing, NotificationChannel.Email, NotificationPriority.Normal);
+
+        result.Action.Should().Be(NotificationDeliveryAction.Drop);
+        result.Reason.Should().Be("category-disabled");
+    }
+
+    [Fact]
     public async Task DecideDeliveryAsync_Should_Drop_Muted_Type_Case_Insensitively()
     {
         using var context = CreateContext();

@@ -386,13 +386,14 @@ public class TasksAggregationTests
         public bool ThrowOnSend { get; set; }
 
         public Task<Result<Notification>> SendAsync(
-            Guid recipientId, NotificationType type, string title, string message,
+            Guid? recipientId, NotificationType type, string title, string message,
             NotificationChannel channel = NotificationChannel.InApp, Guid? tenantId = null, string? actionUrl = null,
             NotificationPriority priority = NotificationPriority.Normal, Guid? referenceEntityId = null,
-            string? referenceEntityType = null, string? metadata = null, CancellationToken cancellationToken = default)
+            string? referenceEntityType = null, string? metadata = null, string? recipientEmail = null,
+            CancellationToken cancellationToken = default)
         {
             if (ThrowOnSend) throw new InvalidOperationException("notification sink down");
-            Sent.Add((recipientId, type, title, message));
+            Sent.Add((recipientId!.Value, type, title, message));
             return Task.FromResult(Result.Success<Notification>(null!));
         }
 
