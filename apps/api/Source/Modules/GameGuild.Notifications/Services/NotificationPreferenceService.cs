@@ -153,28 +153,20 @@ public class NotificationPreferenceService(
             return NotificationDeliveryDecision.Send();
         }
 
-        // Evaluation order (fixed):
+        // Evaluation order (fixed): gate-then-route.
         // 1. Transactional bypass: account-critical types and Urgent priority are never gated.
         if (TransactionalTypes.Contains(type) || priority == NotificationPriority.Urgent)
         {
             return NotificationDeliveryDecision.Send();
         }
 
-        // 2. Digest routing: digestible email never lands in quiet hours, it lands in the digest.
-        if (channel == NotificationChannel.Email
-            && preferences.EmailDigestFrequency.HasValue
-            && priority < preferences.QuietHoursBypassPriority)
-        {
-            return NotificationDeliveryDecision.Digest();
-        }
-
-        // 3. Per-type mute (JSON array of type names, case-insensitive, malformed JSON treated as empty).
+        // 2. Per-type mute (JSON array of type names, case-insensitive, malformed JSON treated as empty).
         if (preferences.GetMutedTypeNames().Contains(type.ToString()))
         {
             return NotificationDeliveryDecision.Drop("muted");
         }
 
-        // 4. Channel toggle.
+        // 3. Channel toggle.
         var channelEnabled = channel switch
         {
             NotificationChannel.Email => preferences.EmailEnabled,
@@ -189,7 +181,7 @@ public class NotificationPreferenceService(
             return NotificationDeliveryDecision.Drop("channel-disabled");
         }
 
-        // 5. Category toggle.
+        // 4. Category toggle.
         var categoryEnabled = type switch
         {
             NotificationType.Marketing => preferences.MarketingEnabled,
@@ -202,6 +194,16 @@ public class NotificationPreferenceService(
         if (!categoryEnabled)
         {
             return NotificationDeliveryDecision.Drop("category-disabled");
+        }
+
+        // 5. Digest routing: every "do not send" gate has already run, so unsubscribed/muted/
+        //    category-disabled types never enter the digest. Digestible email never lands in
+        //    quiet hours, it lands in the digest.
+        if (channel == NotificationChannel.Email
+            && preferences.EmailDigestFrequency.HasValue
+            && priority < preferences.QuietHoursBypassPriority)
+        {
+            return NotificationDeliveryDecision.Digest();
         }
 
         // 6. Quiet hours: InApp drops (existing behavior), Email holds until the quiet window ends, other channels send.
