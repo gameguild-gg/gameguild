@@ -1371,6 +1371,32 @@ export const putApiNotificationsPreferencesEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PutApiNotificationsPreferencesDigestFrequencyInput {
+  body?: Types.NotificationsControllersUpdateDigestFrequencyInput;
+}
+export type PutApiNotificationsPreferencesDigestFrequencyOutput =
+  Types.NotificationsControllersDigestFrequencyOutput;
+export const putApiNotificationsPreferencesDigestFrequencyEndpoint = {
+  operationId: "putApiNotificationsPreferencesDigestFrequency" as const,
+  method: "PUT" as const,
+  path: "/api/notifications/preferences/digest-frequency" as const,
+  tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutApiNotificationsPreferencesMutedTypesInput {
+  body?: Types.NotificationsControllersUpdateMutedTypesInput;
+}
+export type PutApiNotificationsPreferencesMutedTypesOutput =
+  Types.NotificationsControllersMutedTypesOutput;
+export const putApiNotificationsPreferencesMutedTypesEndpoint = {
+  operationId: "putApiNotificationsPreferencesMutedTypes" as const,
+  method: "PUT" as const,
+  path: "/api/notifications/preferences/muted-types" as const,
+  tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PutApiNotificationsPreferencesQuietHoursInput {
   body?: Types.NotificationsControllersSetQuietHoursInput;
 }
@@ -1400,6 +1426,17 @@ export const postApiNotificationsReadAllEndpoint = {
   operationId: "postApiNotificationsReadAll" as const,
   method: "POST" as const,
   path: "/api/notifications/read-all" as const,
+  tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetApiNotificationsTypesCatalogInput = void;
+export type GetApiNotificationsTypesCatalogOutput =
+  Array<Types.NotificationsControllersNotificationTypeCatalogEntry>;
+export const getApiNotificationsTypesCatalogEndpoint = {
+  operationId: "getApiNotificationsTypesCatalog" as const,
+  method: "GET" as const,
+  path: "/api/notifications/types-catalog" as const,
   tags: ["Notifications"] as const,
   requiresAuth: true,
 } as const;
@@ -3588,6 +3625,24 @@ export const postNotificationsSubscriptionsResendEndpoint = {
   method: "POST" as const,
   path: "/api/v1/notifications/subscriptions/{notificationId}:resend" as const,
   tags: ["NotificationsSubscriptions"] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * One-click unsubscribe (public, signed token)
+ */
+export interface GetNotificationsUnsubscribeInput {
+  query?: {
+    token?: string;
+  };
+}
+export type GetNotificationsUnsubscribeOutput =
+  Types.NotificationsControllersUnsubscribeOutput;
+export const getNotificationsUnsubscribeEndpoint = {
+  operationId: "getNotificationsUnsubscribe" as const,
+  method: "GET" as const,
+  path: "/api/v1/notifications/unsubscribe" as const,
+  tags: ["Notifications"] as const,
   requiresAuth: true,
 } as const;
 
@@ -19424,10 +19479,15 @@ export const endpoints = {
   postApiNotificationsUnread: postApiNotificationsUnreadEndpoint,
   getApiNotificationsPreferences: getApiNotificationsPreferencesEndpoint,
   putApiNotificationsPreferences: putApiNotificationsPreferencesEndpoint,
+  putApiNotificationsPreferencesDigestFrequency:
+    putApiNotificationsPreferencesDigestFrequencyEndpoint,
+  putApiNotificationsPreferencesMutedTypes:
+    putApiNotificationsPreferencesMutedTypesEndpoint,
   putApiNotificationsPreferencesQuietHours:
     putApiNotificationsPreferencesQuietHoursEndpoint,
   deleteApiNotificationsRead: deleteApiNotificationsReadEndpoint,
   postApiNotificationsReadAll: postApiNotificationsReadAllEndpoint,
+  getApiNotificationsTypesCatalog: getApiNotificationsTypesCatalogEndpoint,
   getApiNotificationsUnreadCount: getApiNotificationsUnreadCountEndpoint,
   postApiPrerequisites: postApiPrerequisitesEndpoint,
   getApiPrerequisites: getApiPrerequisitesEndpoint,
@@ -19616,6 +19676,7 @@ export const endpoints = {
   getNotificationsSubscriptions: getNotificationsSubscriptionsEndpoint,
   postNotificationsSubscriptionsResend:
     postNotificationsSubscriptionsResendEndpoint,
+  getNotificationsUnsubscribe: getNotificationsUnsubscribeEndpoint,
   getPayments: getPaymentsEndpoint,
   postPayments: postPaymentsEndpoint,
   getPaymentById: getPaymentByIdEndpoint,

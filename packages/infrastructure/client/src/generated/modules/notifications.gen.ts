@@ -173,6 +173,76 @@ export class NotificationsModule {
 
   /**
    */
+  async putApiNotificationsPreferencesDigestFrequency(
+    body: Types.NotificationsControllersUpdateDigestFrequencyInput,
+  ): Promise<
+    Result<Types.NotificationsControllersDigestFrequencyOutput, ApiError>
+  > {
+    const url = "/api/notifications/preferences/digest-frequency";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.NotificationsControllersUpdateDigestFrequencyInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersDigestFrequencyOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putApiNotificationsPreferencesMutedTypes(
+    body: Types.NotificationsControllersUpdateMutedTypesInput,
+  ): Promise<Result<Types.NotificationsControllersMutedTypesOutput, ApiError>> {
+    const url = "/api/notifications/preferences/muted-types";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.NotificationsControllersUpdateMutedTypesInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersMutedTypesOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async putApiNotificationsPreferencesQuietHours(
     body: Types.NotificationsControllersSetQuietHoursInput,
   ): Promise<Result<void, ApiError>> {
@@ -237,6 +307,28 @@ export class NotificationsModule {
 
   /**
    */
+  async getApiNotificationsTypesCatalog(): Promise<
+    Result<
+      Array<Types.NotificationsControllersNotificationTypeCatalogEntry>,
+      ApiError
+    >
+  > {
+    const url = "/api/notifications/types-catalog";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.NotificationsControllersNotificationTypeCatalogEntry>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
   async getApiNotificationsUnreadCount(): Promise<
     Result<Types.NotificationsControllersUnreadCountOutput, ApiError>
   > {
@@ -252,6 +344,36 @@ export class NotificationsModule {
     if (result.ok) {
       const validatedData = safeParse(
         Types.NotificationsControllersUnreadCountOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * One-click unsubscribe (public, signed token)
+   */
+  async getNotificationsUnsubscribe(query?: {
+    token?: string;
+  }): Promise<
+    Result<Types.NotificationsControllersUnsubscribeOutput, ApiError>
+  > {
+    const url = "/api/v1/notifications/unsubscribe";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersUnsubscribeOutputSchema,
         result.data,
         "response",
       );
