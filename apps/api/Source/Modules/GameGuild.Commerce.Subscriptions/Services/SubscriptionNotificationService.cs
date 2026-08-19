@@ -8,7 +8,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     
 ///     Integration Points:
 ///     - When GameGuild.Notifications module is implemented, replace this with a real implementation
-///     - Can integrate with email services (SendGrid, AWS SES, etc.)
+///     - Can integrate with email services (AWS SES, etc.)
 ///     - Can integrate with push notification services (Firebase, OneSignal, etc.)
 ///     - Can integrate with in-app notification systems
 /// </summary>

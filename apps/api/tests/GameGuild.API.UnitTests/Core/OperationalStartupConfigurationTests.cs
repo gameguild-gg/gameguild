@@ -40,24 +40,18 @@ public sealed class OperationalStartupConfigurationTests
     }
 
     [Fact]
-    public void Validate_RequiresProviderSpecificEmailConfiguration()
+    public void Validate_RequiresSesRegionWhenEmailDeliveryIsEnabled()
     {
-        var smtp = CompleteValues();
-        smtp.Remove("EmailDelivery:SmtpHost");
+        var missingRegion = CompleteValues();
+        missingRegion.Remove("EmailDelivery:Ses:Region");
 
-        var sendGrid = CompleteValues();
-        sendGrid["EmailDelivery:Provider"] = "SendGrid";
-        sendGrid.Remove("EmailDelivery:SendGridApiKey");
+        var missingFromEmail = CompleteValues();
+        missingFromEmail.Remove("EmailDelivery:FromEmail");
 
-        var unsupported = CompleteValues();
-        unsupported["EmailDelivery:Provider"] = "Unknown";
-
-        OperationalStartupConfiguration.Validate(CreateConfiguration(smtp), Environments.Production)
-            .Should().ContainSingle(message => message.Contains("SMTP host", StringComparison.Ordinal));
-        OperationalStartupConfiguration.Validate(CreateConfiguration(sendGrid), Environments.Production)
-            .Should().ContainSingle(message => message.Contains("SendGrid API key", StringComparison.Ordinal));
-        OperationalStartupConfiguration.Validate(CreateConfiguration(unsupported), Environments.Production)
-            .Should().ContainSingle(message => message.Contains("supported", StringComparison.OrdinalIgnoreCase));
+        OperationalStartupConfiguration.Validate(CreateConfiguration(missingRegion), Environments.Production)
+            .Should().ContainSingle(message => message.Contains("AWS region", StringComparison.Ordinal));
+        OperationalStartupConfiguration.Validate(CreateConfiguration(missingFromEmail), Environments.Production)
+            .Should().ContainSingle(message => message.Contains("sender address", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -71,16 +65,6 @@ public sealed class OperationalStartupConfigurationTests
 
         failures.Should().Contain(message => message.Contains("Redis must be enabled", StringComparison.Ordinal));
         failures.Should().Contain(message => message.Contains("Email delivery must be enabled", StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public void Validate_RejectsNonPositiveSmtpPort()
-    {
-        var values = CompleteValues();
-        values["EmailDelivery:SmtpPort"] = "0";
-
-        OperationalStartupConfiguration.Validate(CreateConfiguration(values), Environments.Production)
-            .Should().ContainSingle(message => message.Contains("positive SMTP port", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -136,11 +120,8 @@ public sealed class OperationalStartupConfigurationTests
         ["Redis:Enabled"] = "true",
         ["Redis:ConnectionString"] = "redis:6379",
         ["EmailDelivery:Enabled"] = "true",
-        ["EmailDelivery:Provider"] = "Smtp",
         ["EmailDelivery:FromEmail"] = "no-reply@example.com",
-        ["EmailDelivery:SmtpHost"] = "mailhog",
-        ["EmailDelivery:SmtpPort"] = "1025",
-        ["EmailDelivery:SendGridApiKey"] = "sendgrid-key",
+        ["EmailDelivery:Ses:Region"] = "us-east-1",
         ["Assets:Storage:ServiceUrl"] = "http://garage:3900",
         ["Assets:Storage:AccessKey"] = "access-key",
         ["Assets:Storage:SecretKey"] = "secret-key",

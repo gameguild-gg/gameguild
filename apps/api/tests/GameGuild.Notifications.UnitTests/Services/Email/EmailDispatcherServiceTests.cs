@@ -35,7 +35,7 @@ public sealed class EmailDispatcherServiceTests : IDisposable
 
         public bool ThrowOnSend { get; set; }
 
-        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
+        public Task<string?> SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
         {
             if (ThrowOnSend)
             {
@@ -43,7 +43,7 @@ public sealed class EmailDispatcherServiceTests : IDisposable
             }
 
             Sent.Add(message);
-            return Task.CompletedTask;
+            return Task.FromResult<string?>("test-message-id");
         }
     }
 
@@ -345,6 +345,6 @@ public sealed class EmailDispatcherServiceTests : IDisposable
     private sealed class AlwaysResolvesResolver : IRecipientEmailResolver
     {
         public Task<string?> ResolveAsync(Notification notification, CancellationToken cancellationToken = default)
-            => Task.FromResult(notification.RecipientEmail ?? "resolved@example.com");
+            => Task.FromResult<string?>(notification.RecipientEmail ?? "resolved@example.com");
     }
 }
