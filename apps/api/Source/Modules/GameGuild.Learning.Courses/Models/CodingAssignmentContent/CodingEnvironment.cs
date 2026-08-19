@@ -5,7 +5,7 @@ namespace GameGuild.Learning.Courses;
 /// </summary>
 public sealed record CodingEnvironment
 {
-    /// <summary>One of: cpp, c, sdl-cpp, raylib-cpp (validator-enforced).</summary>
+    /// <summary>One of: cpp, c, sdl-cpp, raylib-cpp, allegro-cpp (validator-enforced).</summary>
     public required string Language { get; init; }
 
     /// <summary>Toolset id (e.g. "clang").</summary>

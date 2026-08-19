@@ -56,6 +56,7 @@ const LANGUAGE_OPTIONS: { value: CodingLanguage; label: string }[] = [
   { value: "c", label: "C (clang + WASI)" },
   { value: "sdl-cpp", label: "C++ + SDL3 (emcc)" },
   { value: "raylib-cpp", label: "C++ + raylib (emcc)" },
+  { value: "allegro-cpp", label: "C++ + Allegro 5 (clang + wasm-ld)" },
 ];
 
 const DEFAULT_TOOLS: Record<CodingLanguage, string> = {
@@ -63,6 +64,7 @@ const DEFAULT_TOOLS: Record<CodingLanguage, string> = {
   c: "clang",
   "sdl-cpp": "emcc",
   "raylib-cpp": "emcc",
+  "allegro-cpp": "clang",
 };
 
 const FUNCTION_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -703,7 +705,7 @@ function buildContent(args: BuildArgs): CodingAssignmentContent {
   const environment: CodingEnvironment = {
     Language: args.language,
     Tools: DEFAULT_TOOLS[args.language],
-    LibBundle: null,
+    LibBundle: args.language === "allegro-cpp" ? "allegro" : null,
     AllowStudentCreateFiles: args.allowStudentCreateFiles,
   };
 
