@@ -354,6 +354,188 @@ export class NotificationsModule {
   }
 
   /**
+   */
+  async getEmailDeliveryDeadletters(query?: {
+    skip?: number;
+    take?: number;
+    type?: string;
+    email?: string;
+  }): Promise<
+    Result<Types.PagedResultOfNotificationsControllersDeadLetter, ApiError>
+  > {
+    const url = "/api/v1/email-delivery/deadletters";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.PagedResultOfNotificationsControllersDeadLetterSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getEmailDeliveryEmailEvents(query?: {
+    skip?: number;
+    take?: number;
+    eventType?: string;
+    email?: string;
+    providerMessageId?: string;
+  }): Promise<
+    Result<
+      Types.PagedResultOfNotificationsControllersEmailDeliveryEvent,
+      ApiError
+    >
+  > {
+    const url = "/api/v1/email-delivery/email-events";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.PagedResultOfNotificationsControllersEmailDeliveryEventSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postEmailDeliveryNotificationsRequeue(
+    id: string,
+  ): Promise<Result<Types.NotificationsControllersRequeueOutput, ApiError>> {
+    const url = `/api/v1/email-delivery/notifications/${id}:requeue`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersRequeueOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getEmailDeliveryNotificationsTimeline(
+    id: string,
+  ): Promise<
+    Result<Types.NotificationsControllersNotificationTimeline, ApiError>
+  > {
+    const url = `/api/v1/email-delivery/notifications/${id}/timeline`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersNotificationTimelineSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getEmailDeliverySuppressions(query?: {
+    skip?: number;
+    take?: number;
+    includeReleased?: boolean;
+  }): Promise<
+    Result<
+      Types.PagedResultOfNotificationsControllersEmailSuppression,
+      ApiError
+    >
+  > {
+    const url = "/api/v1/email-delivery/suppressions";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.PagedResultOfNotificationsControllersEmailSuppressionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteEmailDeliverySuppressions(
+    email: string,
+  ): Promise<Result<Types.NotificationsControllersUnsuppressOutput, ApiError>> {
+    const url = `/api/v1/email-delivery/suppressions/${email}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.NotificationsControllersUnsuppressOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * One-click unsubscribe (public, signed token)
    */
   async getNotificationsUnsubscribe(query?: {

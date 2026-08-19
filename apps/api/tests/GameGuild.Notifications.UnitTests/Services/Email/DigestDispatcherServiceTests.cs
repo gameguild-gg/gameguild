@@ -35,7 +35,7 @@ public sealed class DigestDispatcherServiceTests : IDisposable
 
         public bool ThrowOnSend { get; set; }
 
-        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
+        public Task<string?> SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
         {
             if (ThrowOnSend)
             {
@@ -43,7 +43,7 @@ public sealed class DigestDispatcherServiceTests : IDisposable
             }
 
             Sent.Add(message);
-            return Task.CompletedTask;
+            return Task.FromResult<string?>("test-message-id");
         }
     }
 
@@ -141,6 +141,8 @@ public sealed class DigestDispatcherServiceTests : IDisposable
             row.DeliveryStatus.Should().Be(NotificationDeliveryStatus.Sent);
             row.IsSent.Should().BeTrue();
             row.SentAt.Should().NotBeNull();
+            // Digest bundles have no single provider message id — the returned id is discarded by design.
+            row.ProviderMessageId.Should().BeNull();
         }
 
         // Claim exclusivity / no re-digest: a second sequential sweep finds nothing left to claim.
@@ -190,6 +192,35 @@ public sealed class DigestDispatcherServiceTests : IDisposable
         sender.ThrowOnSend = false;
         (await subject.SweepOnceAsync()).Should().Be(1);
         row.DeliveryStatus.Should().Be(NotificationDeliveryStatus.Sent);
+    }
+
+    [Fact]
+    public async Task Sweep_Deadletters_Claimed_Rows_For_Suppressed_User_Without_Sending()
+    {
+        var (subject, context, sender, _) = CreateSubject();
+        var userId = Guid.NewGuid();
+        SeedDigestPreferences(context, userId, DigestFrequency.Daily);
+        var row1 = SeedHeldRow(context, userId, NotificationType.System, "One");
+        var row2 = SeedHeldRow(context, userId, NotificationType.System, "Two");
+        // Resolver returns "digest-user@example.com"; mixed-case seed proves both sides normalize.
+        context.EmailSuppressions.Add(EmailSuppression.Create(
+            "Digest-User@Example.com", EmailSuppressionReason.Complaint));
+        await context.SaveChangesAsync();
+
+        (await subject.SweepOnceAsync()).Should().Be(0);
+
+        sender.Sent.Should().BeEmpty();
+        foreach (var row in new[] { row1, row2 })
+        {
+            row.DeliveryStatus.Should().Be(NotificationDeliveryStatus.DeadLettered);
+            row.LastError.Should().Be("suppressed");
+            row.AttemptCount.Should().Be(0);
+            row.IsSent.Should().BeFalse();
+        }
+
+        // Suppression is permanent for the digest: a later sweep finds no HeldForDigest rows to claim.
+        (await subject.SweepOnceAsync()).Should().Be(0);
+        sender.Sent.Should().BeEmpty();
     }
 
     [Fact]
@@ -321,6 +352,6 @@ public sealed class DigestDispatcherServiceTests : IDisposable
     private sealed class AlwaysResolvesResolver : IRecipientEmailResolver
     {
         public Task<string?> ResolveAsync(Notification notification, CancellationToken cancellationToken = default)
-            => Task.FromResult(notification.RecipientEmail ?? "digest-user@example.com");
+            => Task.FromResult<string?>(notification.RecipientEmail ?? "digest-user@example.com");
     }
 }

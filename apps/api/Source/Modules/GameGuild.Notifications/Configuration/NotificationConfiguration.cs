@@ -54,6 +54,12 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.RecipientEmail)
             .HasMaxLength(320);
 
+        builder.Property(n => n.ProviderMessageId)
+            .HasMaxLength(100);
+
+        // Timeline join: EmailDeliveryEvent.ProviderMessageId -> Notifications.ProviderMessageId
+        builder.HasIndex(n => n.ProviderMessageId);
+
         // Covers the dispatcher sweep: Channel == Email && DeliveryStatus == Pending && NextAttemptAt <= now
         builder.HasIndex(n => new { n.Channel, n.DeliveryStatus, n.NextAttemptAt });
 

@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="AWSSDK.SimpleNotificationService"/>
         <PackageReference Include="FluentValidation"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational"/>

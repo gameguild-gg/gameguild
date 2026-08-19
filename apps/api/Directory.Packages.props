@@ -79,7 +79,6 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="Slugify.Core" Version="5.1.1" />
-    <PackageVersion Include="SendGrid" Version="9.29.3" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.13.0" />
     <PackageVersion Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
     <PackageVersion Include="Twilio" Version="7.6.0" />
@@ -89,6 +88,10 @@
     <PackageVersion Include="Stripe.net" Version="46.0.0" />
     <!-- AWS SDK -->
     <PackageVersion Include="AWSSDK.S3" Version="3.7.300" />
+    <!-- SES email delivery + SNS event webhook. Floor 3.7.3.96: older 3.7.x only
+         validates SigV1 SNS messages (no SHA256), which would 401 every prod event. -->
+    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="3.7.509.10" />
+    <PackageVersion Include="AWSSDK.SimpleNotificationService" Version="3.7.502.61" />
     <!-- Image Processing -->
     <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.11" />
     <!-- Testing packages -->
