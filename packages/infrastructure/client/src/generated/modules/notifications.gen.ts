@@ -536,6 +536,21 @@ export class NotificationsModule {
   }
 
   /**
+   * SES email delivery events webhook (public, SNS signature-verified)
+   */
+  async postNotificationsEmailEvents(): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/notifications/email-events";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * One-click unsubscribe (public, signed token)
    */
   async getNotificationsUnsubscribe(query?: {
