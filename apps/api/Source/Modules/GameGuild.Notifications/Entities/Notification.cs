@@ -247,13 +247,24 @@ public class Notification : EntityBase
     }
 
     /// <summary>
-    /// Marks the delivery pipeline state as Sent (idempotent; also sets IsSent/SentAt)
+    /// Marks the delivery pipeline state as Sent (idempotent; also sets IsSent/SentAt).
+    /// Provider message id stays null — used by digest bundles, which have no single provider id.
     /// </summary>
     public void MarkDeliverySent()
+    {
+        MarkDeliverySent(null);
+    }
+
+    /// <summary>
+    /// Marks the delivery pipeline state as Sent and records the provider-assigned message id
+    /// (SES) for the delivery timeline join. Null when the provider returned none (disabled/skip).
+    /// </summary>
+    public void MarkDeliverySent(string? providerMessageId)
     {
         MarkAsSent();
         if (DeliveryStatus == NotificationDeliveryStatus.Sent) return;
 
+        ProviderMessageId = providerMessageId;
         DeliveryStatus = NotificationDeliveryStatus.Sent;
         NextAttemptAt = null;
         LastError = null;
