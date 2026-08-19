@@ -254,6 +254,25 @@ public class NotificationsControllerTests
         dto.EmailDigestFrequency.Should().BeNull();
     }
 
+    [Fact]
+    public async Task GetPreferences_Should_Map_MutedTypes()
+    {
+        var userId = Guid.NewGuid();
+        var preference = NotificationPreference.CreateDefault(userId);
+        preference.MuteType(nameof(NotificationType.MonthlyStatement));
+        preference.MuteType(nameof(NotificationType.FeatureAnnouncement));
+        var service = new Mock<INotificationService>();
+        service.Setup(x => x.GetPreferencesAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(preference));
+        var controller = CreateController(service, userId);
+
+        var actionResult = await controller.GetPreferences();
+
+        var dto = actionResult.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeOfType<NotificationPreferenceDto>().Subject;
+        dto.MutedTypes.Should().BeEquivalentTo(["MonthlyStatement", "FeatureAnnouncement"]);
+    }
+
     private static NotificationsController CreateController(
         Mock<INotificationService> service,
         Guid? userId,

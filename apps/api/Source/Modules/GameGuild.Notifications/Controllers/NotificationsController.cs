@@ -426,7 +426,8 @@ public class NotificationsController : BaseApiController
             preference.QuietHoursStart,
             preference.QuietHoursEnd,
             preference.Timezone,
-            preference.EmailDigestFrequency?.ToString());
+            preference.EmailDigestFrequency?.ToString(),
+            [.. preference.GetMutedTypeNames()]);
     }
 
     #endregion
@@ -461,7 +462,8 @@ public sealed record NotificationPreferenceDto(
     TimeOnly? QuietHoursStart,
     TimeOnly? QuietHoursEnd,
     string? Timezone,
-    string? EmailDigestFrequency);
+    string? EmailDigestFrequency,
+    IReadOnlyList<string>? MutedTypes = null);
 
 public sealed record UnreadCountResponse(int Count);
 
