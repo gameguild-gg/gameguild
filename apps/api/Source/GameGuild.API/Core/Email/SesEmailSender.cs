@@ -57,6 +57,7 @@ public sealed class SesEmailSender : IEmailSender
         cancellationToken.ThrowIfCancellationRequested();
 
         var client = sesClientFactory(region);
+        var configurationSetName = currentOptions.Ses.ConfigurationSetName?.Trim();
         var request = new SendEmailRequest
         {
             FromEmailAddress = FormatAddress(currentOptions.FromEmail, currentOptions.FromName),
@@ -66,7 +67,8 @@ public sealed class SesEmailSender : IEmailSender
             },
             Content = message.Attachments is { Count: > 0 }
                 ? BuildRawContent(message, currentOptions)
-                : BuildSimpleContent(message)
+                : BuildSimpleContent(message),
+            ConfigurationSetName = string.IsNullOrWhiteSpace(configurationSetName) ? null : configurationSetName
         };
 
         SendEmailResponse response;

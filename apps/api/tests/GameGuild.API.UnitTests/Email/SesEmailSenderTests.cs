@@ -113,6 +113,24 @@ public sealed class SesEmailSenderTests
     }
 
     [Fact]
+    public async Task SendAsync_WhenConfigurationSetNameIsSet_AttachesItToRequest()
+    {
+        SendEmailRequest? capturedRequest = null;
+        var client = new Mock<IAmazonSimpleEmailServiceV2>(MockBehavior.Strict);
+        client.Setup(value => value.SendEmailAsync(It.IsAny<SendEmailRequest>(), It.IsAny<CancellationToken>()))
+            .Callback<SendEmailRequest, CancellationToken>((request, _) => capturedRequest = request)
+            .ReturnsAsync(new SendEmailResponse { MessageId = "ses-message-123" });
+        var options = CreateEnabledOptions();
+        options.Ses.ConfigurationSetName = "gameguild-events";
+        var sender = CreateSender(options, new RecordingClientFactory(client.Object));
+
+        await sender.SendAsync(CreateMessage());
+
+        capturedRequest!.ConfigurationSetName.Should().Be("gameguild-events");
+        client.VerifyAll();
+    }
+
+    [Fact]
     public async Task SendAsync_WhenMessageHasAttachments_SendsRawMimeWithBase64Attachment()
     {
         SendEmailRequest? capturedRequest = null;

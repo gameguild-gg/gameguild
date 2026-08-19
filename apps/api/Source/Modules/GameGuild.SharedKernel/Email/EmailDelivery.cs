@@ -15,6 +15,8 @@ public sealed class EmailDeliveryOptions
     public sealed class SesOptions
     {
         public string? Region { get; set; }
+
+        public string? ConfigurationSetName { get; set; }
     }
 
     public sealed class EventsOptions
