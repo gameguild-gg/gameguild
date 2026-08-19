@@ -103,6 +103,24 @@ public sealed class DigestDispatcherService(
             return false;
         }
 
+        // Suppression: actively suppressed address (hard bounce / complaint) — deadletter the whole
+        // claimed bundle without sending (rows are claimed/Sending here; MarkDeadLettered is an
+        // unguarded state write). Same policy as the email dispatcher's pre-send check.
+        // ponytail: per-user indexed lookup; batch-prefetch if digest scale ever demands it.
+        var activeSuppression = await EmailDispatcherService.FindActiveSuppressionAsync(context, toEmail, cancellationToken)
+            .ConfigureAwait(false);
+        if (activeSuppression is not null)
+        {
+            foreach (var row in claimed)
+            {
+                row.MarkDeadLettered("suppressed");
+            }
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            logger.LogWarning("Deadlettered {Count} digest row(s) to suppressed address. UserId: {UserId}, Recipient: {RecipientEmail}, Reason: {Reason}",
+                claimed.Count, userId, toEmail, activeSuppression.Reason);
+            return false;
+        }
+
         try
         {
             await emailSender.SendAsync(renderer.Render(toEmail, claimed), cancellationToken).ConfigureAwait(false);

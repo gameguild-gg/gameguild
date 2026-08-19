@@ -285,8 +285,10 @@ export function narrowFunctionalTestGroup(v: unknown): FunctionalTestGroup | nul
     if (!norm) return null;
     cases.push(norm);
   }
-  const weight = typeof (v.Weight ?? v.weight) === 'number' ? (v.Weight ?? v.weight) : undefined;
-  const name = typeof (v.Name ?? v.name) === 'string' ? (v.Name ?? v.name) : undefined;
+  const rawWeight = v.Weight ?? v.weight;
+  const weight = typeof rawWeight === 'number' ? rawWeight : undefined;
+  const rawName = v.Name ?? v.name;
+  const name = typeof rawName === 'string' ? rawName : undefined;
   return {
     kind: TEST_KIND.Functional,
     Function: fn,

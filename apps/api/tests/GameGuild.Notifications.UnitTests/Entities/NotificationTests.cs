@@ -202,6 +202,44 @@ public class NotificationTests
     }
 
     [Fact]
+    public void MarkRequeued_Should_Return_DeadLettered_To_Pending_Keeping_Audit_And_Counting()
+    {
+        var notification = Notification.Create(
+            Guid.NewGuid(),
+            NotificationType.PasswordReset,
+            NotificationChannel.Email,
+            "Reset",
+            "Reset your password");
+        notification.MarkDeliveryAttemptFailed("boom", SystemClock.UtcNow.AddHours(8));
+        notification.MarkDeliveryAttemptFailed("boom again", SystemClock.UtcNow.AddHours(16));
+        notification.MarkDeadLettered("max attempts exceeded");
+
+        notification.MarkRequeued();
+
+        notification.DeliveryStatus.Should().Be(NotificationDeliveryStatus.Pending);
+        notification.NextAttemptAt.Should().BeNull();
+        notification.RequeueCount.Should().Be(1);
+        notification.AttemptCount.Should().Be(2); // audit preserved
+        notification.LastError.Should().Be("max attempts exceeded"); // audit preserved
+    }
+
+    [Fact]
+    public void MarkRequeued_Should_Be_NoOp_For_Non_DeadLettered_Rows()
+    {
+        var notification = Notification.Create(
+            Guid.NewGuid(),
+            NotificationType.System,
+            NotificationChannel.InApp,
+            "Welcome",
+            "Hello");
+
+        notification.MarkRequeued();
+
+        notification.DeliveryStatus.Should().Be(NotificationDeliveryStatus.Pending);
+        notification.RequeueCount.Should().Be(0);
+    }
+
+    [Fact]
     public void ClaimForSending_Should_Transition_Pending_To_Sending_Only()
     {
         var notification = Notification.Create(

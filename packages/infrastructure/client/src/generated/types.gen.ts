@@ -8435,12 +8435,47 @@ export interface MvcProblemDetails {
   [key: string]: any;
 }
 
+export interface NotificationsControllersDeadLetter {
+  id?: string;
+  attemptCount?: number;
+  channel?: string | null;
+  createdAt?: string;
+  lastError?: string | null;
+  recipientEmail?: string | null;
+  recipientId?: string | null;
+  requeueCount?: number;
+  title?: string | null;
+  type?: string | null;
+}
+
 export interface NotificationsControllersDeletedCountOutput {
   deletedCount?: number;
 }
 
 export interface NotificationsControllersDigestFrequencyOutput {
   emailDigestFrequency?: string | null;
+}
+
+export interface NotificationsControllersEmailDeliveryEvent {
+  id?: string;
+  bounceType?: string | null;
+  diagnosticCode?: string | null;
+  eventType?: string | null;
+  occurredAt?: string;
+  payloadPreview?: string | null;
+  providerMessageId?: string | null;
+  recipientEmail?: string | null;
+}
+
+export interface NotificationsControllersEmailSuppression {
+  id?: string;
+  bounceType?: string | null;
+  emailAddress?: string | null;
+  isActive?: boolean;
+  reason?: string | null;
+  releasedAt?: string | null;
+  sourceEventId?: string | null;
+  suppressedAt?: string;
 }
 
 export interface NotificationsControllersMutedTypesOutput {
@@ -8479,11 +8514,23 @@ export interface NotificationsControllersNotificationPreference {
   timezone?: string | null;
 }
 
+export interface NotificationsControllersNotificationTimeline {
+  events?: Array<NotificationsControllersEmailDeliveryEvent> | null;
+  notificationId?: string;
+  providerMessageId?: string | null;
+}
+
 export interface NotificationsControllersNotificationTypeCatalogEntry {
   category?: string | null;
   displayName?: string | null;
   suppressible?: boolean;
   type?: string | null;
+}
+
+export interface NotificationsControllersRequeueOutput {
+  id?: string;
+  deliveryStatus?: string | null;
+  requeueCount?: number;
 }
 
 export interface NotificationsControllersSetQuietHoursInput {
@@ -8501,6 +8548,11 @@ export interface NotificationsControllersUnsubscribeOutput {
   scope?: string | null;
   status?: string | null;
   value?: string | null;
+}
+
+export interface NotificationsControllersUnsuppressOutput {
+  emailAddress?: string | null;
+  wasActive?: boolean;
 }
 
 export interface NotificationsControllersUpdateDigestFrequencyInput {
@@ -8719,6 +8771,42 @@ export interface PagedResultOfIdentityUsersUserProfile {
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
   items?: Array<IdentityUsersUserProfileDto> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
+}
+
+export interface PagedResultOfNotificationsControllersDeadLetter {
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  items?: Array<NotificationsControllersDeadLetter> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
+}
+
+export interface PagedResultOfNotificationsControllersEmailDeliveryEvent {
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  items?: Array<NotificationsControllersEmailDeliveryEvent> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
+}
+
+export interface PagedResultOfNotificationsControllersEmailSuppression {
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  items?: Array<NotificationsControllersEmailSuppression> | null;
   pageNumber?: number;
   pageSize?: number;
   skip?: number;
@@ -12357,15 +12445,21 @@ export let MonitoringSLASloViolationSchema: z.ZodType<MonitoringSLASloViolation>
 export let MonitoringSLAUpdateSloCommandSchema: z.ZodType<MonitoringSLAUpdateSloCommand>;
 export let MonitoringSLAViolationSeveritySchema: z.ZodType<MonitoringSLAViolationSeverity>;
 export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
+export let NotificationsControllersDeadLetterSchema: z.ZodType<NotificationsControllersDeadLetter>;
 export let NotificationsControllersDeletedCountOutputSchema: z.ZodType<NotificationsControllersDeletedCountOutput>;
 export let NotificationsControllersDigestFrequencyOutputSchema: z.ZodType<NotificationsControllersDigestFrequencyOutput>;
+export let NotificationsControllersEmailDeliveryEventSchema: z.ZodType<NotificationsControllersEmailDeliveryEvent>;
+export let NotificationsControllersEmailSuppressionSchema: z.ZodType<NotificationsControllersEmailSuppression>;
 export let NotificationsControllersMutedTypesOutputSchema: z.ZodType<NotificationsControllersMutedTypesOutput>;
 export let NotificationsControllersNotificationSchema: z.ZodType<NotificationsControllersNotification>;
 export let NotificationsControllersNotificationPreferenceSchema: z.ZodType<NotificationsControllersNotificationPreference>;
+export let NotificationsControllersNotificationTimelineSchema: z.ZodType<NotificationsControllersNotificationTimeline>;
 export let NotificationsControllersNotificationTypeCatalogEntrySchema: z.ZodType<NotificationsControllersNotificationTypeCatalogEntry>;
+export let NotificationsControllersRequeueOutputSchema: z.ZodType<NotificationsControllersRequeueOutput>;
 export let NotificationsControllersSetQuietHoursInputSchema: z.ZodType<NotificationsControllersSetQuietHoursInput>;
 export let NotificationsControllersUnreadCountOutputSchema: z.ZodType<NotificationsControllersUnreadCountOutput>;
 export let NotificationsControllersUnsubscribeOutputSchema: z.ZodType<NotificationsControllersUnsubscribeOutput>;
+export let NotificationsControllersUnsuppressOutputSchema: z.ZodType<NotificationsControllersUnsuppressOutput>;
 export let NotificationsControllersUpdateDigestFrequencyInputSchema: z.ZodType<NotificationsControllersUpdateDigestFrequencyInput>;
 export let NotificationsControllersUpdateMutedTypesInputSchema: z.ZodType<NotificationsControllersUpdateMutedTypesInput>;
 export let NotificationsControllersUpdatePreferencesInputSchema: z.ZodType<NotificationsControllersUpdatePreferencesInput>;
@@ -12396,6 +12490,9 @@ export let PagedResultOfIdentityTenantsTenantAuditLogEntrySchema: z.ZodType<Page
 export let PagedResultOfIdentityUsersUserSchema: z.ZodType<PagedResultOfIdentityUsersUser>;
 export let PagedResultOfIdentityUsersUserNotificationSchema: z.ZodType<PagedResultOfIdentityUsersUserNotification>;
 export let PagedResultOfIdentityUsersUserProfileSchema: z.ZodType<PagedResultOfIdentityUsersUserProfile>;
+export let PagedResultOfNotificationsControllersDeadLetterSchema: z.ZodType<PagedResultOfNotificationsControllersDeadLetter>;
+export let PagedResultOfNotificationsControllersEmailDeliveryEventSchema: z.ZodType<PagedResultOfNotificationsControllersEmailDeliveryEvent>;
+export let PagedResultOfNotificationsControllersEmailSuppressionSchema: z.ZodType<PagedResultOfNotificationsControllersEmailSuppression>;
 export let ProgramCategorySchema: z.ZodType<ProgramCategory>;
 export let ProjectsAddCollaboratorInputSchema: z.ZodType<ProjectsAddCollaboratorInput>;
 export let ProjectsAddProjectCollaboratorInputSchema: z.ZodType<ProjectsAddProjectCollaboratorInput>;
@@ -23326,6 +23423,20 @@ MvcProblemDetailsSchema = z
   })
   .catchall(z.record(z.string(), z.unknown()));
 
+/** Zod schema for NotificationsControllersDeadLetter */
+NotificationsControllersDeadLetterSchema = z.object({
+  id: z.string().uuid().optional(),
+  attemptCount: z.number().int().optional(),
+  channel: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  lastError: z.string().nullable().optional(),
+  recipientEmail: z.string().nullable().optional(),
+  recipientId: z.string().uuid().nullable().optional(),
+  requeueCount: z.number().int().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+});
+
 /** Zod schema for NotificationsControllersDeletedCountOutput */
 NotificationsControllersDeletedCountOutputSchema = z.object({
   deletedCount: z.number().int().optional(),
@@ -23334,6 +23445,30 @@ NotificationsControllersDeletedCountOutputSchema = z.object({
 /** Zod schema for NotificationsControllersDigestFrequencyOutput */
 NotificationsControllersDigestFrequencyOutputSchema = z.object({
   emailDigestFrequency: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersEmailDeliveryEvent */
+NotificationsControllersEmailDeliveryEventSchema = z.object({
+  id: z.string().uuid().optional(),
+  bounceType: z.string().nullable().optional(),
+  diagnosticCode: z.string().nullable().optional(),
+  eventType: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  payloadPreview: z.string().nullable().optional(),
+  providerMessageId: z.string().nullable().optional(),
+  recipientEmail: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersEmailSuppression */
+NotificationsControllersEmailSuppressionSchema = z.object({
+  id: z.string().uuid().optional(),
+  bounceType: z.string().nullable().optional(),
+  emailAddress: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().nullable().optional(),
+  releasedAt: z.string().datetime().nullable().optional(),
+  sourceEventId: z.string().uuid().nullable().optional(),
+  suppressedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for NotificationsControllersMutedTypesOutput */
@@ -23375,12 +23510,29 @@ NotificationsControllersNotificationPreferenceSchema = z.object({
   timezone: z.string().nullable().optional(),
 });
 
+/** Zod schema for NotificationsControllersNotificationTimeline */
+NotificationsControllersNotificationTimelineSchema = z.object({
+  events: z
+    .array(z.lazy(() => NotificationsControllersEmailDeliveryEventSchema))
+    .nullable()
+    .optional(),
+  notificationId: z.string().uuid().optional(),
+  providerMessageId: z.string().nullable().optional(),
+});
+
 /** Zod schema for NotificationsControllersNotificationTypeCatalogEntry */
 NotificationsControllersNotificationTypeCatalogEntrySchema = z.object({
   category: z.string().nullable().optional(),
   displayName: z.string().nullable().optional(),
   suppressible: z.boolean().optional(),
   type: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersRequeueOutput */
+NotificationsControllersRequeueOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  deliveryStatus: z.string().nullable().optional(),
+  requeueCount: z.number().int().optional(),
 });
 
 /** Zod schema for NotificationsControllersSetQuietHoursInput */
@@ -23401,6 +23553,12 @@ NotificationsControllersUnsubscribeOutputSchema = z.object({
   scope: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
   value: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersUnsuppressOutput */
+NotificationsControllersUnsuppressOutputSchema = z.object({
+  emailAddress: z.string().nullable().optional(),
+  wasActive: z.boolean().optional(),
 });
 
 /** Zod schema for NotificationsControllersUpdateDigestFrequencyInput */
@@ -23715,6 +23873,54 @@ PagedResultOfIdentityUsersUserProfileSchema = z.object({
   hasPreviousPage: z.boolean().optional(),
   items: z
     .array(z.lazy(() => IdentityUsersUserProfileDtoSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultOfNotificationsControllersDeadLetter */
+PagedResultOfNotificationsControllersDeadLetterSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => NotificationsControllersDeadLetterSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultOfNotificationsControllersEmailDeliveryEvent */
+PagedResultOfNotificationsControllersEmailDeliveryEventSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => NotificationsControllersEmailDeliveryEventSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultOfNotificationsControllersEmailSuppression */
+PagedResultOfNotificationsControllersEmailSuppressionSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => NotificationsControllersEmailSuppressionSchema))
     .nullable()
     .optional(),
   pageNumber: z.number().int().optional(),
