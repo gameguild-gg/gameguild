@@ -22,13 +22,13 @@ RUN dotnet publish "Source/GameGuild.API/GameGuild.API.csproj" -m:1 -o /app/publ
 # Stage 2: Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 
+WORKDIR /app
+
 # Install health-check, PostgreSQL authentication, and localization dependencies.
 RUN apk add --no-cache curl krb5-libs icu-libs icu-data-full openssl3 libssl3 \
     && addgroup -g 1001 -S appuser \
     && adduser -S appuser -G appuser -u 1001 \
     && chown -R appuser:appuser /app
-
-WORKDIR /app
 
 # Copy published application with correct ownership
 COPY --from=build --chown=appuser:appuser /app/publish .
