@@ -48,6 +48,13 @@ public static class NotificationsModule
         // Platform-level deliverability administration (event feed, suppressions, requeue, timeline)
         services.AddScoped<IEmailDeliveryAdminService, EmailDeliveryAdminService>();
 
+        // SES/SNS email-events webhook: signature verification + inline suppression processing
+        // (the webhook controller owns the single transactional SaveChanges for both)
+        services.AddScoped<ISnsMessageVerifier, SnsMessageVerifier>();
+        services.AddScoped<IEmailEventProcessor, EmailEventProcessor>();
+        services.AddHttpClient(Controllers.EmailEventsController.SubscriptionConfirmationClientName, client =>
+            client.Timeout = TimeSpan.FromSeconds(15));
+
         // Facade for backward compatibility
         services.AddScoped<INotificationService, NotificationService>();
 
