@@ -45,6 +45,9 @@ public static class NotificationsModule
         // Footer injection for suppressible emails (consumed by renderers via constructor injection)
         services.AddScoped<IEmailFooterService, EmailFooterService>();
 
+        // Platform-level deliverability administration (event feed, suppressions, requeue, timeline)
+        services.AddScoped<IEmailDeliveryAdminService, EmailDeliveryAdminService>();
+
         // Facade for backward compatibility
         services.AddScoped<INotificationService, NotificationService>();
 
