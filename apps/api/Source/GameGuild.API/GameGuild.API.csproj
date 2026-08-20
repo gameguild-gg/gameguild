@@ -9,7 +9,7 @@
              (SDK 10.0.3xx watch resolves that path with Windows separators on macOS and errors). -->
         <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
         <!-- Keep in lockstep with the monorepo release version; bumped by scripts/devops/auto-changeset.mjs (apply mode) -->
-        <Version>4.2.0</Version>
+        <Version>4.3.0</Version>
     </PropertyGroup>
 
     <ItemGroup>
