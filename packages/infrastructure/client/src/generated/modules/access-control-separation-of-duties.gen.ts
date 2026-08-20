@@ -147,66 +147,19 @@ export class AccessControlSeparationOfDutiesModule {
 
   /**
    */
-  async getSodViolationsActive(query?: {
+  async postSodViolationsScan(query?: {
     tenantId?: string;
-  }): Promise<
-    Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>
-  > {
-    const url = "/v1/sod/violations/active";
+  }): Promise<Result<number, ApiError>> {
+    const url = "/v1/sod/violations:scan";
 
     const result = await this.client.request({
-      method: "GET",
+      method: "POST",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.IdentityAuthorizationSoDViolation>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getSodViolationsDetect(
-    userId: string,
-    query?: { tenantId?: string },
-  ): Promise<Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>> {
-    const url = `/v1/sod/violations/detect/${userId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.IdentityAuthorizationSoDViolation>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getSodViolationsUser(
-    userId: string,
-    query?: { tenantId?: string },
-  ): Promise<Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>> {
-    const url = `/v1/sod/violations/user/${userId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.IdentityAuthorizationSoDViolation>,
-      ApiError
-    >;
+    return result as Result<number, ApiError>;
   }
 
   /**
@@ -281,19 +234,66 @@ export class AccessControlSeparationOfDutiesModule {
 
   /**
    */
-  async postSodViolationsScan(query?: {
+  async getSodViolationsActive(query?: {
     tenantId?: string;
-  }): Promise<Result<number, ApiError>> {
-    const url = "/v1/sod/violations:scan";
+  }): Promise<
+    Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>
+  > {
+    const url = "/v1/sod/violations/active";
 
     const result = await this.client.request({
-      method: "POST",
+      method: "GET",
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<number, ApiError>;
+    return result as Result<
+      Array<Types.IdentityAuthorizationSoDViolation>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getSodViolationsDetect(
+    userId: string,
+    query?: { tenantId?: string },
+  ): Promise<Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>> {
+    const url = `/v1/sod/violations/detect/${userId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.IdentityAuthorizationSoDViolation>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getSodViolationsUser(
+    userId: string,
+    query?: { tenantId?: string },
+  ): Promise<Result<Array<Types.IdentityAuthorizationSoDViolation>, ApiError>> {
+    const url = `/v1/sod/violations/user/${userId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.IdentityAuthorizationSoDViolation>,
+      ApiError
+    >;
   }
 }
 

@@ -73,6 +73,62 @@ export class LearningAssessmentsGroupSetsModule {
 
   /**
    */
+  async getCoursesGroupSetsGroups(
+    courseId: string,
+    setId: string,
+  ): Promise<Result<Array<Types.LearningAssessmentsGroupDetail>, ApiError>> {
+    const url = `/v1/courses/${courseId}/group-sets/${setId}/groups`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningAssessmentsGroupDetail>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async postCoursesGroupSetsGroups(
+    courseId: string,
+    setId: string,
+    body: Types.LearningAssessmentsCreateGroupInput,
+  ): Promise<Result<Types.LearningAssessmentsGroup, ApiError>> {
+    const url = `/v1/courses/${courseId}/group-sets/${setId}/groups`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.LearningAssessmentsCreateGroupInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningAssessmentsGroupSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postCoursesGroupSetsGroupsJoin(
     courseId: string,
     groupId: string,
@@ -159,62 +215,6 @@ export class LearningAssessmentsGroupSetsModule {
     });
 
     return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getCoursesGroupSetsGroups(
-    courseId: string,
-    setId: string,
-  ): Promise<Result<Array<Types.LearningAssessmentsGroupDetail>, ApiError>> {
-    const url = `/v1/courses/${courseId}/group-sets/${setId}/groups`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningAssessmentsGroupDetail>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async postCoursesGroupSetsGroups(
-    courseId: string,
-    setId: string,
-    body: Types.LearningAssessmentsCreateGroupInput,
-  ): Promise<Result<Types.LearningAssessmentsGroup, ApiError>> {
-    const url = `/v1/courses/${courseId}/group-sets/${setId}/groups`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningAssessmentsCreateGroupInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsGroupSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
   }
 }
 

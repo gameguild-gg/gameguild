@@ -436,14 +436,20 @@ function createVFSFS(
                 const nodePath = getNodePath(node);
                 const existing = fileData.get(nodePath);
                 if (existing) {
+                    let updated: Uint8Array;
                     if (size === 0) {
-                        fileData.set(nodePath, new Uint8Array(0));
+                        updated = new Uint8Array(0);
                     } else if (size < existing.length) {
-                        fileData.set(nodePath, existing.slice(0, size));
+                        updated = existing.slice(0, size);
                     } else if (size > existing.length) {
-                        const newData = new Uint8Array(size);
-                        newData.set(existing);
-                        fileData.set(nodePath, newData);
+                        updated = new Uint8Array(size);
+                        updated.set(existing);
+                    } else {
+                        updated = existing;
+                    }
+                    fileData.set(nodePath, updated);
+                    if (!isMemfsPath(nodePath)) {
+                        try { vfs.writeFileSync(nodePath, updated); } catch { /* non-fatal */ }
                     }
                 }
                 node.usedBytes = size;

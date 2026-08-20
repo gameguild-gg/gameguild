@@ -1,4 +1,3 @@
-import { auth } from '@/auth';
 import { Link } from '@/i18n/navigation';
 import { getCourses } from '@/lib/learning';
 import { Button } from '@game-guild/ui/components/button';
@@ -10,11 +9,10 @@ import { CourseList } from '@/components/learning/console/courses/course-list';
 export default async function Page({ params }: PageProps<'/[locale]/workspace/learning/courses'>): Promise<React.JSX.Element> {
   const { locale } = await params;
 
-  const [session, result] = await Promise.all([auth(), getCourses()]);
+  // GET /v1/courses is DAC-scoped by the API; this page renders what it returns.
+  const result = await getCourses();
   const { error } = result;
-  const courses = session?.user?.id
-    ? result.courses.filter((course) => course.creatorId === session.user.id)
-    : result.courses;
+  const courses = result.courses;
   const publishedCourses = courses.filter((course) => course.status === 'published').length;
   const publicCourses = courses.filter((course) => course.visibility === 'public').length;
   const totalEnrollments = courses.reduce((total, course) => total + course.enrolledCount, 0);

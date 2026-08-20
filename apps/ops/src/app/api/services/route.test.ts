@@ -13,12 +13,13 @@ describe("services/route GET", () => {
     vi.restoreAllMocks();
   });
 
-  it("returns pass for all 6 services when each predicate matches", async () => {
+  it("returns pass for all 7 services when each predicate matches", async () => {
     globalThis.fetch = vi.fn(async (input: URL | RequestInfo, _init?: RequestInit) => {
       const u = String(input);
       if (u.includes("/api/healthz")) return jsonRes({ status: "pass" });
       if (u.includes("devtron-service")) return jsonRes({ result: "OK" });
       if (u.includes("grafana")) return jsonRes({ database: "ok" });
+      if (u.includes("metrics")) return new Response("# HELP redis_up\nredis_up 1\n", { status: 200 });
       if (u.endsWith("/v2/")) return new Response("auth required", { status: 401 });
       return new Response("", { status: 200 });
     }) as unknown as typeof fetch;
@@ -26,7 +27,7 @@ describe("services/route GET", () => {
     const res = await GET();
     expect(res.status).toBe(200);
     const body = (await res.json()) as Array<{ name: string; status: string; httpStatus: number }>;
-    expect(body).toHaveLength(6);
+    expect(body).toHaveLength(7);
     for (const r of body) {
       expect(r.status).toBe("pass");
     }
@@ -38,6 +39,7 @@ describe("services/route GET", () => {
       if (u.includes("/api/healthz")) return jsonRes({ status: "fail" });
       if (u.includes("devtron-service")) return jsonRes({ result: "OK" });
       if (u.includes("grafana")) return jsonRes({ database: "ok" });
+      if (u.includes("metrics")) return new Response("# HELP redis_up\nredis_up 1\n", { status: 200 });
       if (u.endsWith("/v2/")) return new Response("", { status: 401 });
       return new Response("", { status: 200 });
     }) as unknown as typeof fetch;
@@ -47,10 +49,23 @@ describe("services/route GET", () => {
     expect(byName.Forgejo).toBe("fail");
     expect(byName.Devtron).toBe("pass");
     expect(byName.Grafana).toBe("pass");
+    expect(byName.Redis).toBe("pass");
     expect(byName.API).toBe("pass");
     expect(byName.Web).toBe("pass");
     expect(byName.Registry).toBe("pass");
-    expect(body).toHaveLength(6);
+    expect(body).toHaveLength(7);
+  });
+
+  it("returns fail for Redis when the exporter reports redis_up 0", async () => {
+    globalThis.fetch = vi.fn(async (input: URL | RequestInfo) => {
+      const u = String(input);
+      if (u.includes("metrics")) return new Response("# HELP redis_up\nredis_up 0\n", { status: 200 });
+      return jsonRes({});
+    }) as unknown as typeof fetch;
+
+    const body = (await (await GET()).json()) as Array<{ name: string; status: string }>;
+    const redis = body.find((r) => r.name === "Redis");
+    expect(redis?.status).toBe("fail");
   });
 
   it("returns fail for Registry when registry returns 200 instead of 401", async () => {
@@ -64,7 +79,7 @@ describe("services/route GET", () => {
   it("returns fail with httpStatus=0 for every service when fetch rejects", async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error("ECONNREFUSED")) as unknown as typeof fetch;
     const body = (await (await GET()).json()) as Array<{ status: string; httpStatus: number }>;
-    expect(body).toHaveLength(6);
+    expect(body).toHaveLength(7);
     expect(body.every((r) => r.status === "fail")).toBe(true);
     expect(body.every((r) => r.httpStatus === 0)).toBe(true);
   });

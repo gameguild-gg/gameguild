@@ -23,7 +23,7 @@ import {
 } from "@game-guild/ui/components/select";
 import { Switch } from "@game-guild/ui/components/switch";
 import { Separator } from "@game-guild/ui/components/separator";
-import { ArrowLeft, ClipboardCheck, Clock, Code, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, Clock, Code, Gauge, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import type {
   Assessment,
   AssessmentGroup,
@@ -53,8 +53,6 @@ const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: "PeerReview", label: "Peer Review" },
   { value: "SelfAssessment", label: "Self Assessment" },
 ];
-
-const LINKED_CONTENT_NONE = "none";
 
 const GROUP_SET_NONE = "none";
 
@@ -106,7 +104,6 @@ export function AssessmentEditor({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isDeleting, startDeleteTransition] = useTransition();
-  const [isLinkPending, startLinkTransition] = useTransition();
   const [isGradingPending, startGradingTransition] = useTransition();
   const [isPolicyPending, startPolicyTransition] = useTransition();
   const [isRubricPending, startRubricTransition] = useTransition();
@@ -137,9 +134,6 @@ export function AssessmentEditor({
   );
   const [availableUntil, setAvailableUntil] = useState(
     assessment.availableUntil ? assessment.availableUntil.slice(0, 16) : "",
-  );
-  const [linkedContentId, setLinkedContentId] = useState(
-    assessment.contentId ?? LINKED_CONTENT_NONE,
   );
   const [gradingMethods, setGradingMethods] = useState<Set<AssessmentGradingMethodFlag>>(
     () => parseGradingMethods(assessment.gradingMethods),
@@ -225,30 +219,6 @@ export function AssessmentEditor({
     router.push(
       `${learningBase}/courses/${encodeURIComponent(courseId)}/assessments`,
     );
-  }
-
-  function handleLinkedContentChange(value: string) {
-    const previous = linkedContentId;
-    const next = value === LINKED_CONTENT_NONE ? LINKED_CONTENT_NONE : value;
-    setLinkedContentId(next);
-    setError(null);
-
-    startLinkTransition(async () => {
-      const result = await updateAssessment({
-        courseId,
-        assessmentId: assessment.id,
-        contentId: next === LINKED_CONTENT_NONE ? null : next,
-        clearContentId: next === LINKED_CONTENT_NONE,
-      });
-
-      if (!result.success) {
-        setLinkedContentId(previous);
-        setError(result.error);
-        return;
-      }
-
-      router.refresh();
-    });
   }
 
   function handleGradingMethodToggle(
@@ -499,6 +469,17 @@ export function AssessmentEditor({
           <p className="text-muted-foreground text-sm">Assessment Editor</p>
           <h1 className="text-2xl font-bold">{assessment.title}</h1>
         </div>
+        {canManage && (
+          <Button variant="outline" size="sm" asChild>
+            <Link
+              href={`/speedgrader/assessments/${assessment.id}?course=${encodeURIComponent(courseId)}`}
+              data-testid="start-speedgrader-button"
+            >
+              <Gauge className="mr-2 h-4 w-4" />
+              SpeedGrader
+            </Link>
+          </Button>
+        )}
         {canManage && (
           <Button variant="outline" size="sm" asChild>
             <Link
@@ -837,30 +818,31 @@ export function AssessmentEditor({
               <Separator />
 
               <div className="space-y-2">
-                <Label htmlFor="linked-content">Linked content</Label>
-                <Select
-                  value={linkedContentId}
-                  onValueChange={handleLinkedContentChange}
-                  disabled={isLinkPending}
-                >
-                  <SelectTrigger id="linked-content">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={LINKED_CONTENT_NONE}>
-                      None (standalone assessment)
-                    </SelectItem>
-                    {courseContent.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-muted-foreground text-xs">
-                  Link this assessment to a content item, or leave it
-                  standalone.
-                </p>
+                <Label>Linked content</Label>
+                {(() => {
+                  const item = courseContent.find(
+                    (c) => c.id === assessment.contentId,
+                  );
+                  return assessment.contentId != null ? (
+                    <div className="space-y-1">
+                      <Link
+                        href={`${learningBase}/courses/${encodeURIComponent(courseId)}/content/${assessment.contentId}`}
+                        className="text-sm text-primary underline-offset-4 hover:underline"
+                        data-testid="linked-content-link"
+                      >
+                        {item?.title ?? assessment.contentId}
+                      </Link>
+                      <p className="text-muted-foreground text-xs">
+                        This assessment was created by its content and cannot
+                        be unlinked.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm" data-testid="linked-content-none">
+                      Not linked (standalone assessment).
+                    </p>
+                  );
+                })()}
               </div>
 
               <Separator />

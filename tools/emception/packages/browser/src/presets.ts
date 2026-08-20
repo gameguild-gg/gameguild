@@ -102,14 +102,18 @@ const WASM_LD_BASE: readonly string[] = [
     '--export-table',
     '--table-base=1',
     '--export=__wasm_call_ctors',
+];
+
+const WASM_LD_CPP_LIBS: readonly string[] = [
+    '-lc++-noexcept',
+    '-lc++abi-noexcept',
     '-lc',
     '-ldlmalloc',
     '-lcompiler_rt',
+    '-lsockets',
 ];
 
-const WASM_LD_CPP_LIBS: readonly string[] = ['-lc++-noexcept', '-lc++abi-noexcept', '-lsockets'];
-
-const WASM_LD_C_LIBS: readonly string[] = ['-lsockets'];
+const WASM_LD_C_LIBS: readonly string[] = ['-lc', '-ldlmalloc', '-lcompiler_rt', '-lsockets'];
 
 /**
  * Shared wasm-ld base flags for all canvas presets (SDL3, raylib, Allegro).
@@ -250,8 +254,8 @@ export interface NativePreset {
     readonly env?: Record<string, string>;
     readonly compileTool: string;
     readonly linkTool: string;
-    compileArgv(paths: CompilePaths): string[];
-    linkArgv(paths: CompilePaths): string[];
+    compileArgv(paths: Pick<CompilePaths, 'sourcePath' | 'objectPath'>): string[];
+    linkArgv(paths: Pick<CompilePaths, 'objectPath' | 'wasmPath'>): string[];
 }
 
 /** Full preset for a Python script target (no compile/link step). */

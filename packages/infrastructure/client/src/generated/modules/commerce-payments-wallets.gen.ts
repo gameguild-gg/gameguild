@@ -78,21 +78,6 @@ export class CommercePaymentsWalletsModule {
   }
 
   /**
-   * Get my wallet balance
-   */
-  async getWalletBalance(): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/wallet/balance";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Lock my wallet
    */
   async postWalletLock(
@@ -125,6 +110,21 @@ export class CommercePaymentsWalletsModule {
 
     const result = await this.client.request({
       method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get my wallet balance
+   */
+  async getWalletBalance(): Promise<Result<void, ApiError>> {
+    const url = "/api/v1/wallet/balance";
+
+    const result = await this.client.request({
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
@@ -227,25 +227,6 @@ export class CommercePaymentsWalletsModule {
   }
 
   /**
-   * Get wallet audit log
-   */
-  async getWalletsAuditLog(
-    walletId: string,
-    query?: { page?: number; pageSize?: number },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/wallets/${walletId}/audit-log`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Freeze wallet
    */
   async postWalletsFreeze(
@@ -280,6 +261,25 @@ export class CommercePaymentsWalletsModule {
     const result = await this.client.request({
       method: "POST",
       path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Get wallet audit log
+   */
+  async getWalletsAuditLog(
+    walletId: string,
+    query?: { page?: number; pageSize?: number },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/wallets/${walletId}/audit-log`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
       requiresAuth: true,
     });
 

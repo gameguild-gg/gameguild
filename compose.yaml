@@ -148,25 +148,6 @@ services:
       retries: ${HEALTHCHECK_RETRIES:-5}
     restart: unless-stopped
 
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
-    container_name: game-guild-mailhog
-    ports:
-      - "${MAILHOG_UI_HOST_PORT:-8025}:8025"
-    networks:
-      internal:
-        aliases:
-          - mailhog
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    labels:
-      - "com.game-guild.app=mailhog"
-      - "com.game-guild.tier=infrastructure"
-
   api:
     # pnpm dev runs the API locally (hot reload) — containerized api only
     # starts with `docker compose --profile app up` (dev:compose / production).
@@ -202,16 +183,11 @@ services:
       - Redis__ConnectionString=${REDIS_CONNECTION_STRING:-redis:6379}
       - Redis__InstanceName=${REDIS_INSTANCE_NAME:-game-guild:}
       - StatementEmails__ConsoleBaseUrl=${STATEMENTEMAILS__CONSOLEBASEURL:-http://localhost:3000}
-      - EmailDelivery__Enabled=${EMAILDELIVERY__ENABLED:-true}
-      - EmailDelivery__Provider=${EMAILDELIVERY__PROVIDER:-Smtp}
+      - EmailDelivery__Enabled=${EMAILDELIVERY__ENABLED:-false}
       - EmailDelivery__FromEmail=${EMAILDELIVERY__FROMEMAIL:-no-reply@example.com}
       - EmailDelivery__FromName=${EMAILDELIVERY__FROMNAME:-GameGuild}
-      - EmailDelivery__SendGridApiKey=${EMAILDELIVERY__SENDGRIDAPIKEY:-}
-      - EmailDelivery__SmtpHost=${EMAILDELIVERY__SMTPHOST:-mailhog}
-      - EmailDelivery__SmtpPort=${EMAILDELIVERY__SMTPPORT:-1025}
-      - EmailDelivery__SmtpUsername=${EMAILDELIVERY__SMTPUSERNAME:-}
-      - EmailDelivery__SmtpPassword=${EMAILDELIVERY__SMTPPASSWORD:-}
-      - EmailDelivery__SmtpUseSsl=${EMAILDELIVERY__SMTPUSESSL:-false}
+      - EmailDelivery__Ses__Region=${EMAILDELIVERY__SES__REGION:-}
+      - EmailDelivery__Events__TopicArn=${EMAILDELIVERY__EVENTS__TOPICARN:-}
       - Assets__Storage__BucketName=${S3_BUCKET:-gameguild-assets}
       - Assets__Storage__TransformedBucketName=${S3_BUCKET_TRANSFORMED:-}
       - Assets__Storage__QuarantineBucketName=${S3_BUCKET_QUARANTINE:-}

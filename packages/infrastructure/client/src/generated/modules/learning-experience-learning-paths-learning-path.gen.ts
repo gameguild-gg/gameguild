@@ -80,188 +80,6 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
-  async getLearningPathsCreator(
-    creatorId: string,
-    query?: { includeUnpublished?: boolean; skip?: number; take?: number },
-  ): Promise<
-    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
-  > {
-    const url = `/v1/learning-paths/creator/${creatorId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPath>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getLearningPathsFeatured(query?: {
-    tenantId?: string;
-    take?: number;
-  }): Promise<
-    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
-  > {
-    const url = "/v1/learning-paths/featured";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPath>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getLearningPathsPopular(query?: {
-    tenantId?: string;
-    daysBack?: number;
-    take?: number;
-  }): Promise<
-    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
-  > {
-    const url = "/v1/learning-paths/popular";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPath>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getLearningPathsSearch(query?: {
-    q?: string;
-    tenantId?: string;
-    difficulty?: Types.LearningExperienceLearningPathsLearningPathDifficulty;
-    skip?: number;
-    take?: number;
-  }): Promise<
-    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
-  > {
-    const url = "/v1/learning-paths/search";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPath>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getLearningPathsSlug(
-    slug: string,
-    query?: { tenantId?: string },
-  ): Promise<
-    Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>
-  > {
-    const url = `/v1/learning-paths/slug/${slug}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathDetailSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getLearningPathsUserCompleted(
-    userId: string,
-    query?: { skip?: number; take?: number },
-  ): Promise<
-    Result<
-      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
-      ApiError
-    >
-  > {
-    const url = `/v1/learning-paths/user/${userId}/completed`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getLearningPathsUserEnrollments(
-    userId: string,
-    query?: {
-      status?: Types.LearningExperienceLearningPathsLearningPathEnrollmentStatus;
-      skip?: number;
-      take?: number;
-    },
-  ): Promise<
-    Result<
-      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
-      ApiError
-    >
-  > {
-    const url = `/v1/learning-paths/user/${userId}/enrollments`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async getLearningPathsForGetLearningPathsById(
     id: string,
   ): Promise<
@@ -429,6 +247,23 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
+  async deleteLearningPathsCourses(
+    id: string,
+    courseId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/learning-paths/${id}/courses/${courseId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async putLearningPathsCoursesOrder(
     id: string,
     body: Types.LearningExperienceLearningPathsReorderCourses,
@@ -462,23 +297,6 @@ export class LearningExperienceLearningPathsLearningPathModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async deleteLearningPathsCourses(
-    id: string,
-    courseId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/learning-paths/${id}/courses/${courseId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 
   /**
@@ -738,6 +556,188 @@ export class LearningExperienceLearningPathsLearningPathModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getLearningPathsCreator(
+    creatorId: string,
+    query?: { includeUnpublished?: boolean; skip?: number; take?: number },
+  ): Promise<
+    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
+  > {
+    const url = `/v1/learning-paths/creator/${creatorId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceLearningPathsLearningPath>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getLearningPathsFeatured(query?: {
+    tenantId?: string;
+    take?: number;
+  }): Promise<
+    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
+  > {
+    const url = "/v1/learning-paths/featured";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceLearningPathsLearningPath>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getLearningPathsPopular(query?: {
+    tenantId?: string;
+    daysBack?: number;
+    take?: number;
+  }): Promise<
+    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
+  > {
+    const url = "/v1/learning-paths/popular";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceLearningPathsLearningPath>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getLearningPathsSearch(query?: {
+    q?: string;
+    tenantId?: string;
+    difficulty?: Types.LearningExperienceLearningPathsLearningPathDifficulty;
+    skip?: number;
+    take?: number;
+  }): Promise<
+    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
+  > {
+    const url = "/v1/learning-paths/search";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceLearningPathsLearningPath>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getLearningPathsSlug(
+    slug: string,
+    query?: { tenantId?: string },
+  ): Promise<
+    Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>
+  > {
+    const url = `/v1/learning-paths/slug/${slug}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningExperienceLearningPathsLearningPathDetailSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getLearningPathsUserCompleted(
+    userId: string,
+    query?: { skip?: number; take?: number },
+  ): Promise<
+    Result<
+      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
+      ApiError
+    >
+  > {
+    const url = `/v1/learning-paths/user/${userId}/completed`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getLearningPathsUserEnrollments(
+    userId: string,
+    query?: {
+      status?: Types.LearningExperienceLearningPathsLearningPathEnrollmentStatus;
+      skip?: number;
+      take?: number;
+    },
+  ): Promise<
+    Result<
+      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
+      ApiError
+    >
+  > {
+    const url = `/v1/learning-paths/user/${userId}/enrollments`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
+      ApiError
+    >;
   }
 }
 

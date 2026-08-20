@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Text;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using ApiVersioningOptions = GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions;
@@ -20,6 +21,14 @@ namespace GameGuild.API;
 public static class OpenApiExtensions
 {
     internal const string AllowAnonymousExtensionName = "x-gameguild-allow-anonymous";
+
+    // The release/monorepo version from the assembly (csproj <Version>), e.g. "4.1.0".
+    // Reported as the OpenAPI document version instead of the URL api version, so
+    // generated clients carry the release version.
+    private static readonly string ReleaseVersion =
+        typeof(OpenApiExtensions).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion.Split('+')[0]
+        ?? "1.0";
 
     /// <summary>
     ///     Sets up OpenAPI/Swagger with configurable options.
@@ -61,7 +70,7 @@ public static class OpenApiExtensions
                             new OpenApiInfo
                             {
                                 Title = options.Title,
-                                Version = description.ApiVersion.ToString(),
+                                Version = ReleaseVersion,
                                 Description = options.Description,
                                 Contact = new OpenApiContact
                                 {
@@ -98,7 +107,7 @@ public static class OpenApiExtensions
                         new OpenApiInfo
                         {
                             Title = options.Title,
-                            Version = options.Version,
+                            Version = ReleaseVersion,
                             Description = options.Description,
                             Contact = new OpenApiContact
                             {
@@ -172,6 +181,7 @@ public static class OpenApiExtensions
                 c.OperationFilter<ModuleControllerTagOperationFilter>();
                 c.OperationFilter<AllowAnonymousOperationFilter>();
                 c.SchemaFilter<FlagsEnumSchemaFilter>();
+                c.DocumentFilter<DeterministicOpenApiDocumentFilter>();
                 ApiProductComposition.Instance.ConfigureOpenApi(c);
 
                 // Add security definition for JWT Bearer token
@@ -277,6 +287,66 @@ internal sealed class FlagsEnumSchemaFilter : ISchemaFilter
         schema.Format = null;
         schema.Enum?.Clear();
         schema.Description = "A comma-separated combination of the declared flag names.";
+    }
+}
+
+internal sealed class DeterministicOpenApiDocumentFilter : IDocumentFilter
+{
+    public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
+    {
+        var sortedPaths = swaggerDoc.Paths.OrderBy(pair => pair.Key, StringComparer.Ordinal).ToList();
+        swaggerDoc.Paths.Clear();
+        foreach (var (path, item) in sortedPaths)
+        {
+            swaggerDoc.Paths.Add(path, item);
+        }
+
+        if (swaggerDoc.Components?.Schemas is not null)
+        {
+            var sortedSchemas = swaggerDoc.Components.Schemas
+                .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                .ToList();
+            swaggerDoc.Components.Schemas.Clear();
+            foreach (var (name, schema) in sortedSchemas)
+            {
+                swaggerDoc.Components.Schemas.Add(name, schema);
+                SortSchema(schema);
+            }
+        }
+    }
+
+    private static void SortSchema(OpenApiSchema? schema)
+    {
+        if (schema is null) return;
+
+        if (schema.Properties is { Count: > 1 })
+        {
+            var sortedProperties = schema.Properties
+                .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                .ToList();
+            schema.Properties.Clear();
+            foreach (var (name, property) in sortedProperties)
+            {
+                schema.Properties.Add(name, property);
+            }
+        }
+
+        if (schema.Required is { Count: > 1 })
+        {
+            var sortedRequired = schema.Required.OrderBy(name => name, StringComparer.Ordinal).ToList();
+            schema.Required.Clear();
+            foreach (var name in sortedRequired)
+            {
+                schema.Required.Add(name);
+            }
+        }
+
+        foreach (var property in schema.Properties.Values) SortSchema(property);
+        foreach (var subSchema in schema.AllOf) SortSchema(subSchema);
+        foreach (var subSchema in schema.OneOf) SortSchema(subSchema);
+        foreach (var subSchema in schema.AnyOf) SortSchema(subSchema);
+        SortSchema(schema.Items);
+        SortSchema(schema.AdditionalProperties);
     }
 }
 

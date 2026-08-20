@@ -73,49 +73,6 @@ export class ContentPagesModule {
 
   /**
    */
-  async getPagesBySlug(
-    slug: string,
-  ): Promise<Result<Types.ContentPagesPage, ApiError>> {
-    const url = `/v1/pages/by-slug/${slug}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ContentPagesPageSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getPagesSitemap(query?: {
-    locale?: string;
-  }): Promise<Result<Array<Types.ContentPagesSitemapEntry>, ApiError>> {
-    const url = "/v1/pages/sitemap";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.ContentPagesSitemapEntry>, ApiError>;
-  }
-
-  /**
-   */
   async getPagesForGetPagesById(
     id: string,
   ): Promise<Result<Types.ContentPagesPage, ApiError>> {
@@ -294,24 +251,6 @@ export class ContentPagesModule {
 
   /**
    */
-  async postPagesSectionsReorder(
-    pageId: string,
-    body: Array<string>,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/pages/${pageId}/sections/reorder`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: body,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getPagesSectionsForGetPagesByPageIdSectionsBySectionId(
     pageId: string,
     sectionId: string,
@@ -388,6 +327,67 @@ export class ContentPagesModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postPagesSectionsReorder(
+    pageId: string,
+    body: Array<string>,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/pages/${pageId}/sections/reorder`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: body,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getPagesBySlug(
+    slug: string,
+  ): Promise<Result<Types.ContentPagesPage, ApiError>> {
+    const url = `/v1/pages/by-slug/${slug}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ContentPagesPageSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getPagesSitemap(query?: {
+    locale?: string;
+  }): Promise<Result<Array<Types.ContentPagesSitemapEntry>, ApiError>> {
+    const url = "/v1/pages/sitemap";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.ContentPagesSitemapEntry>, ApiError>;
   }
 }
 

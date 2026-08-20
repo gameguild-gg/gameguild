@@ -28,7 +28,63 @@ export function normalizeSpec(spec: OpenApiSpec): OpenApiSpec {
   // Clean up Microsoft/ASP.NET specific patterns
   cleanAspNetPatterns(normalized);
 
+  // Canonical ordering — makes output and hash deterministic regardless of
+  // which machine/boot/artifact the spec came from.
+  canonicalizeOrder(normalized);
+
   return normalized;
+}
+
+/**
+ * ponytail: exact key "id" leads; userId/tenantId etc. sort alphabetically
+ * like everything else. Add more lead keys if review diffs want them.
+ */
+const LEADING_PROPERTY_KEYS = ['id'];
+
+function comparePropertyKeys(left: string, right: string): number {
+  const leftRank = LEADING_PROPERTY_KEYS.indexOf(left);
+  const rightRank = LEADING_PROPERTY_KEYS.indexOf(right);
+  if (leftRank !== rightRank) return leftRank === -1 ? 1 : rightRank === -1 ? -1 : leftRank - rightRank;
+  return left.localeCompare(right);
+}
+
+function sortRecordKeys<T>(record: Record<string, T>, compare: (left: string, right: string) => number): void {
+  const sorted = Object.entries(record).sort(([left], [right]) => compare(left, right));
+  for (const key of Object.keys(record)) delete record[key];
+  for (const [key, value] of sorted) record[key] = value;
+}
+
+function canonicalizeOrder(spec: OpenApiSpec): void {
+  if (spec.paths) sortRecordKeys(spec.paths as Record<string, unknown>, (l, r) => l.localeCompare(r));
+
+  spec.tags?.sort((left, right) => left.name.localeCompare(right.name));
+
+  canonicalizeSchemaOrder(spec as unknown as Record<string, unknown>);
+}
+
+function canonicalizeSchemaOrder(node: unknown): void {
+  if (!node || typeof node !== 'object') return;
+
+  if (Array.isArray(node)) {
+    for (const item of node) canonicalizeSchemaOrder(item);
+    return;
+  }
+
+  const record = node as Record<string, unknown>;
+
+  if (record.properties && typeof record.properties === 'object') {
+    sortRecordKeys(record.properties as Record<string, unknown>, comparePropertyKeys);
+  }
+
+  if (Array.isArray(record.required)) {
+    record.required.sort((left: unknown, right: unknown) => String(left).localeCompare(String(right)));
+  }
+
+  if (Array.isArray(record.tags)) {
+    record.tags.sort((left: unknown, right: unknown) => String(left).localeCompare(String(right)));
+  }
+
+  for (const value of Object.values(record)) canonicalizeSchemaOrder(value);
 }
 
 /**

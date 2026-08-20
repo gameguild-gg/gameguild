@@ -244,27 +244,6 @@ export class CommerceProductsModule {
 
   /**
    */
-  async getProductsPricing(
-    productId: string,
-    query?: { includeUnpublished?: boolean },
-  ): Promise<Result<Array<Types.CommerceProductsProductPricing>, ApiError>> {
-    const url = `/v1/products/${productId}/pricing`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.CommerceProductsProductPricing>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async postProductsActivate(
     productId: string,
   ): Promise<Result<Types.CommerceProductsProduct, ApiError>> {
@@ -339,6 +318,27 @@ export class CommerceProductsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getProductsPricing(
+    productId: string,
+    query?: { includeUnpublished?: boolean },
+  ): Promise<Result<Array<Types.CommerceProductsProductPricing>, ApiError>> {
+    const url = `/v1/products/${productId}/pricing`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.CommerceProductsProductPricing>,
+      ApiError
+    >;
   }
 }
 

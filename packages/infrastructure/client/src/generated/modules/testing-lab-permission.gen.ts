@@ -70,22 +70,6 @@ export class TestingLabPermissionModule {
 
   /**
    */
-  async deleteApiTestingLabPermissionsRoleTemplatesByName(
-    name: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/testing-lab/permissions/role-templates/by-name/${name}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async putApiTestingLabPermissionsRoleTemplates(
     idOrName: string,
     body: Types.TestingLabUpdateTestingLabRoleInput,
@@ -125,6 +109,22 @@ export class TestingLabPermissionModule {
     idOrName: string,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/testing-lab/permissions/role-templates/${idOrName}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async deleteApiTestingLabPermissionsRoleTemplatesByName(
+    name: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/testing-lab/permissions/role-templates/by-name/${name}`;
 
     const result = await this.client.request({
       method: "DELETE",

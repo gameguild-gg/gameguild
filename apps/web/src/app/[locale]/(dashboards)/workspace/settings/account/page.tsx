@@ -4,6 +4,7 @@ import {
   type LinkedAccount,
   type SettingsBanner,
 } from '@/components/connected-accounts-card';
+import { PasswordCard } from '@/components/password-card';
 import { redirect } from '@/i18n/navigation';
 import { createServerClient } from '@game-guild/client';
 import { getTranslations } from 'next-intl/server';
@@ -86,6 +87,7 @@ export default async function AccountSettingsPage({
         <p className="text-muted-foreground">{t('accountDescription')}</p>
       </header>
       <ConnectedAccountsCard linkedAccounts={linkedAccounts} banner={banner} />
+      <PasswordCard />
     </div>
   );
 }

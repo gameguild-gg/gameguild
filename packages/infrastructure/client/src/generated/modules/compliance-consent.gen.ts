@@ -51,25 +51,6 @@ export class ComplianceConsentModule {
 
   /**
    */
-  async getApiComplianceConsentDataSubjectRequestsPending(): Promise<
-    Result<Array<Types.ComplianceConsentDataSubjectInput>, ApiError>
-  > {
-    const url = "/api/compliance/consent/data-subject-requests/pending";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.ComplianceConsentDataSubjectInput>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async postApiComplianceConsentDataSubjectRequestsProcess(
     requestId: string,
     body: Types.ComplianceConsentProcessRequestBody,
@@ -101,6 +82,25 @@ export class ComplianceConsentModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiComplianceConsentDataSubjectRequestsPending(): Promise<
+    Result<Array<Types.ComplianceConsentDataSubjectInput>, ApiError>
+  > {
+    const url = "/api/compliance/consent/data-subject-requests/pending";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.ComplianceConsentDataSubjectInput>,
+      ApiError
+    >;
   }
 
   /**

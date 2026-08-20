@@ -525,10 +525,11 @@ public sealed class AuthController(ISender sender) : BaseApiController
         var command = new ChangePasswordCommand
         {
             UserId = userId,
-            CurrentPassword = body.CurrentPassword,
+            CurrentPassword = body.CurrentPassword ?? string.Empty,
             NewPassword = body.NewPassword,
             ConfirmPassword = body.ConfirmPassword,
-            RevokeOtherSessions = body.RevokeOtherSessions
+            RevokeOtherSessions = body.RevokeOtherSessions,
+            CurrentSessionId = Guid.TryParse(User.FindFirst("session_id")?.Value, out var sessionId) ? sessionId : null
         };
 
         var result = await sender.Send(command, ct).ConfigureAwait(false);

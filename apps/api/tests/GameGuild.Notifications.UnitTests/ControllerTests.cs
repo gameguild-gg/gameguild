@@ -26,7 +26,7 @@ public class ControllerTests
             Roles = new HashSet<string>(),
             Permissions = new HashSet<string>()
         });
-        return new NotificationsController(_svc.Object, _actor.Object);
+        return new NotificationsController(_svc.Object, new Mock<INotificationPreferenceService>().Object, _actor.Object);
     }
 
     [Fact] public void Ctor_Creates() => CreateController().Should().NotBeNull();

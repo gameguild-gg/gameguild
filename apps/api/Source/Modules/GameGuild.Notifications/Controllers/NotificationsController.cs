@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Notifications.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -14,14 +15,19 @@ namespace GameGuild.Notifications.Controllers;
 [Authorize]
 public class NotificationsController : BaseApiController
 {
+    private static readonly Regex CamelCaseBoundary = new("(?<=[a-z])(?=[A-Z])", RegexOptions.Compiled);
+
     private readonly INotificationService _notificationService;
+    private readonly INotificationPreferenceService _preferenceService;
     private readonly IActorContextAccessor _actorContextAccessor;
 
     public NotificationsController(
         INotificationService notificationService,
+        INotificationPreferenceService preferenceService,
         IActorContextAccessor actorContextAccessor)
     {
         _notificationService = notificationService;
+        _preferenceService = preferenceService;
         _actorContextAccessor = actorContextAccessor;
     }
 
@@ -300,6 +306,92 @@ public class NotificationsController : BaseApiController
         return NoContent();
     }
 
+    /// <summary>
+    /// Replaces the current user's muted notification types (full replace; empty list clears all mutes)
+    /// </summary>
+    [HttpPut("preferences/muted-types")]
+    [ProducesResponseType(typeof(MutedTypesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SetMutedTypes(
+        [FromBody] UpdateMutedTypesRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.Types is null)
+        {
+            return BadRequest(Error.Validation("Notifications.MutedTypes.Invalid", "Request body must contain a list of notification type names."));
+        }
+
+        var canonicalNames = new List<string>(request.Types.Count);
+        foreach (var name in request.Types)
+        {
+            if (!Enum.TryParse<NotificationType>(name, ignoreCase: true, out var parsed))
+            {
+                return BadRequest(Error.Validation("Notifications.MutedTypes.UnknownType", $"Unknown notification type name '{name}'."));
+            }
+
+            canonicalNames.Add(parsed.ToString());
+        }
+
+        var userId = GetRequiredUserId();
+        var result = await _preferenceService.SetMutedTypesAsync(userId, canonicalNames, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Error);
+        }
+
+        return Ok(new MutedTypesResponse([.. result.Value.GetMutedTypeNames()]));
+    }
+
+    /// <summary>
+    /// Sets the current user's email digest frequency (null, Daily, Weekly or BiWeekly)
+    /// </summary>
+    [HttpPut("preferences/digest-frequency")]
+    [ProducesResponseType(typeof(DigestFrequencyResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SetDigestFrequency(
+        [FromBody] UpdateDigestFrequencyRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        DigestFrequency? frequency = null;
+        if (!string.IsNullOrEmpty(request.Frequency))
+        {
+            if (!Enum.TryParse<DigestFrequency>(request.Frequency, ignoreCase: true, out var parsed))
+            {
+                return BadRequest(Error.Validation("Notifications.DigestFrequency.Invalid", "Frequency must be null, Daily, Weekly or BiWeekly."));
+            }
+
+            frequency = parsed;
+        }
+
+        var userId = GetRequiredUserId();
+        var result = await _preferenceService.SetEmailDigestFrequencyAsync(userId, frequency, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Error);
+        }
+
+        return Ok(new DigestFrequencyResponse(result.Value.EmailDigestFrequency?.ToString()));
+    }
+
+    /// <summary>
+    /// Gets the catalog of notification types with category and suppressibility classification (drives the preferences UI)
+    /// </summary>
+    [HttpGet("types-catalog")]
+    [ProducesResponseType(typeof(IEnumerable<NotificationTypeCatalogEntry>), StatusCodes.Status200OK)]
+    public IActionResult GetTypesCatalog()
+    {
+        // Custom is excluded: catch-all bucket with no stable display semantics.
+        return Ok(Enum.GetValues<NotificationType>()
+            .Where(t => t != NotificationType.Custom)
+            .Select(t => new NotificationTypeCatalogEntry(
+                t.ToString(),
+                CamelCaseBoundary.Replace(t.ToString(), " "),
+                NotificationCategories.GetCategory(t),
+                !NotificationCategories.Transactional.Contains(t))));
+    }
+
     #region Private Helpers
 
     private static NotificationDto MapToDto(Notification notification)
@@ -334,7 +426,8 @@ public class NotificationsController : BaseApiController
             preference.QuietHoursStart,
             preference.QuietHoursEnd,
             preference.Timezone,
-            preference.EmailDigestFrequency?.ToString());
+            preference.EmailDigestFrequency?.ToString(),
+            [.. preference.GetMutedTypeNames()]);
     }
 
     #endregion
@@ -369,7 +462,8 @@ public sealed record NotificationPreferenceDto(
     TimeOnly? QuietHoursStart,
     TimeOnly? QuietHoursEnd,
     string? Timezone,
-    string? EmailDigestFrequency);
+    string? EmailDigestFrequency,
+    IReadOnlyList<string>? MutedTypes = null);
 
 public sealed record UnreadCountResponse(int Count);
 
@@ -389,5 +483,23 @@ public sealed record SetQuietHoursRequest(
     TimeOnly? Start,
     TimeOnly? End,
     string? Timezone);
+
+public sealed record UpdateMutedTypesRequest(
+    IReadOnlyList<string> Types);
+
+public sealed record MutedTypesResponse(
+    IReadOnlyList<string> MutedTypes);
+
+public sealed record UpdateDigestFrequencyRequest(
+    string? Frequency);
+
+public sealed record DigestFrequencyResponse(
+    string? EmailDigestFrequency);
+
+public sealed record NotificationTypeCatalogEntry(
+    string Type,
+    string DisplayName,
+    string Category,
+    bool Suppressible);
 
 #endregion

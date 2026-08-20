@@ -73,33 +73,26 @@ test_contributors_visualization_uses_native_xvfb() {
   ! grep -Fq 'coactions/setup-xvfb' "$workflow"
 }
 
-test_main_calls_release_from_the_verified_main_context() {
+test_release_flow_opens_version_pr_to_main() {
+  local emception_workflow="$repository_root/.github/workflows/emception.yml"
   local main_workflow="$repository_root/.github/workflows/main.yml"
-  local release_workflow="$repository_root/.github/workflows/release.yml"
 
-  grep -Fq 'needs: [economy-gate, contributors]' "$main_workflow" || return 1
-  grep -Fq 'uses: ./.github/workflows/release.yml' "$main_workflow" || return 1
-  grep -Fq 'sha: ${{ github.sha }}' "$main_workflow" || return 1
-  grep -Fq 'branch: ${{ github.ref_name }}' "$main_workflow" || return 1
-  grep -Fq 'secrets: inherit' "$main_workflow" || return 1
-  grep -Fq 'workflow_call:' "$release_workflow" || return 1
-  ! grep -Fq 'workflow_run:' "$release_workflow" || return 1
-  grep -Fq 'ref: ${{ inputs.sha }}' "$release_workflow" || return 1
-  grep -Fq "workflow_id: 'emception.yml'" "$release_workflow"
+  [[ ! -e "$repository_root/.github/workflows/release.yml" ]] || return 1
+  ! grep -Fq 'release.yml' "$main_workflow" || return 1
+  grep -Fq 'node scripts/devops/auto-changeset.mjs --apply' "$emception_workflow" || return 1
+  grep -Fq 'BRANCH="release/${VERSION}"' "$emception_workflow" || return 1
+  grep -Fq 'git push origin "${BRANCH}"' "$emception_workflow" || return 1
+  grep -Fq -- '--base main' "$emception_workflow" || return 1
+  grep -Fq 'git push origin "${TAG}"' "$emception_workflow"
 }
 
-test_release_action_matches_changesets_cli_major() {
-  local workflow="$repository_root/.github/workflows/release.yml"
+test_auto_changeset_bumps_entire_lockstep_workspace() {
+  local script="$repository_root/scripts/devops/auto-changeset.mjs"
 
-  grep -Eq '"@changesets/cli": "[~^]?2\.' "$repository_root/package.json" || return 1
-  grep -Fq 'uses: changesets/action@v1' "$workflow" || return 1
-  ! grep -Fq 'uses: changesets/action@v2' "$workflow"
-}
-
-test_release_action_targets_the_upstream_branch() {
-  local workflow="$repository_root/.github/workflows/release.yml"
-
-  grep -Fq 'branch: ${{ inputs.branch }}' "$workflow"
+  grep -Fq 'GameGuild.API.csproj' "$script" || return 1
+  grep -Fq 'function allPackageJsonPaths' "$script" || return 1
+  grep -Fq 'NEXT_VERSION=' "$script" || return 1
+  ! grep -Eq '"@changesets/cli"' "$repository_root/package.json"
 }
 
 test_changesets_config_matches_lockstep_workspace() {
@@ -433,9 +426,8 @@ test_canonical_json_preserves_arrays() {
 
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
-run_test 'Main calls Release from its verified main context' test_main_calls_release_from_the_verified_main_context
-run_test 'release action matches the Changesets CLI major' test_release_action_matches_changesets_cli_major
-run_test 'release action targets the upstream branch' test_release_action_targets_the_upstream_branch
+run_test 'Emception publish opens a release PR to main' test_release_flow_opens_version_pr_to_main
+run_test 'auto-changeset apply bumps the entire lockstep workspace' test_auto_changeset_bumps_entire_lockstep_workspace
 run_test 'Changesets config matches the lockstep workspace policy' test_changesets_config_matches_lockstep_workspace
 run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence

@@ -544,6 +544,7 @@ public class AlertManagerCoverageGapTests
             It.IsAny<Guid?>(),
             It.IsAny<string?>(),
             It.IsAny<string?>(),
+            It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -575,6 +576,7 @@ public class AlertManagerCoverageGapTests
             It.IsAny<string?>(),
             It.IsAny<NotificationPriority>(),
             It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
             It.IsAny<string?>(),
             It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -612,6 +614,7 @@ public class AlertManagerCoverageGapTests
             It.IsAny<string?>(),
             It.IsAny<NotificationPriority>(),
             It.IsAny<Guid?>(),
+            It.IsAny<string?>(),
             It.IsAny<string?>(),
             It.IsAny<string?>(),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -1053,6 +1056,7 @@ internal static class SlaCoverageGapTestData
                 It.IsAny<string?>(),
                 It.IsAny<NotificationPriority>(),
                 It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))

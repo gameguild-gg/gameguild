@@ -35,10 +35,17 @@ vi.mock('@game-guild/emception-ui', () => {
     }));
     return React.createElement('div', { 'data-testid': 'mock-ide', 'data-manifest-url': props.manifestUrl });
   });
-  Ide.displayName = 'Ide';
   const TestResultsPanel = ({ report, maxScore }: { report: { cases: { name: string; passed: boolean }[] }; maxScore?: number }) =>
     React.createElement('div', { 'data-testid': 'mock-results' }, `cases=${report.cases.length} max=${maxScore ?? '?'}`);
-  return { Ide, TestResultsPanel };
+  const ASSIGNMENT_SAMPLES = {
+    cpp: {
+      workspaceConfig: {
+        id: 'cpp',
+        layout: { activeFile: '/user/main.cpp', openTabs: [{ path: '/user/main.cpp', group: 'main' }] },
+      },
+    },
+  };
+  return { Ide, TestResultsPanel, ASSIGNMENT_SAMPLES };
 });
 
 // --- Fixtures ---------------------------------------------------------------
@@ -189,6 +196,22 @@ describe('SubmissionViewer — modality switch', () => {
     render(<SubmissionViewer submissionId="sub-1" />);
 
     expect(await screen.findByTestId('viewer-error')).toHaveTextContent('boom');
+  });
+
+  // Bug #1 diagnosability: a malformed codePayload must not vanish silently —
+  // the parse error is logged so an empty IDE is traceable to payload drift.
+  it('logs a console.error when codePayload fails to parse', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    resolveSubmission({
+      submittedModalities: 'Code',
+      codePayload: 'not-valid-json{',
+    });
+
+    render(<SubmissionViewer submissionId="sub-1" codingAssignment={sampleAssignment} />);
+
+    await waitFor(() => expect(screen.getByTestId('code-grader-panel')).toBeInTheDocument());
+    expect(errSpy).toHaveBeenCalled();
+    errSpy.mockRestore();
   });
 });
 
@@ -465,5 +488,79 @@ describe('CodeGraderPanel', () => {
     fireEvent.click(screen.getByTestId('run-tests-button'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('boot failed');
+  });
+
+  // Regression guard (Metis #33 / original design): instructor run-tests must
+  // build the FULL plan — Public + Private cases — not the student-visible
+  // public-only plan. A flip back to 'public-only' would silently drop Private
+  // cases from the instructor grade.
+  it('run tests builds the test plan with mode "full" (Public + Private)', async () => {
+    ideMock.runTests.mockResolvedValue(sampleReport);
+
+    render(
+      <CodeGraderPanel
+        assignment={sampleAssignment}
+        submittedFiles={[{ path: '/home/user/main.cpp', content: '// student main' }]}
+        maxScore={100}
+        manifestUrl="/emception/manifest.json"
+      />,
+    );
+    await waitFor(() => expect(ideMock.setFiles).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByTestId('run-tests-button'));
+
+    await waitFor(() => expect(buildTestPlanSpy).toHaveBeenCalled());
+    expect(buildTestPlanSpy.mock.calls[0]![1]).toEqual({ mode: 'full' });
+  });
+
+  // End-to-end plan shape (no buildTestPlan mock): the real mapper must emit
+  // one case per Public AND per Private test for the instructor 'full' plan.
+  it('real buildTestPlan(full) includes BOTH Public and Private test cases', () => {
+    buildTestPlanSpy.mockRestore();
+    const { plan } = emceptionTesting.buildTestPlan(
+      sampleAssignment as unknown as Parameters<typeof emceptionTesting.buildTestPlan>[0],
+      { mode: 'full' },
+    );
+    const names = plan.cases.map((c) => (c as { name?: string }).name).sort();
+    expect(names).toEqual(['case1', 'case2', 'case3']); // 2 Public + 1 Private
+  });
+
+  it('real buildTestPlan(public-only) excludes Private cases (contrast for the guard above)', () => {
+    buildTestPlanSpy.mockRestore();
+    const { plan } = emceptionTesting.buildTestPlan(
+      sampleAssignment as unknown as Parameters<typeof emceptionTesting.buildTestPlan>[0],
+      { mode: 'public-only' },
+    );
+    const names = plan.cases.map((c) => (c as { name?: string }).name).sort();
+    expect(names).toEqual(['case1', 'case2']); // Public only
+  });
+
+  // Bug #1 robustness: when the student submitted no code (payload '{}' or null
+  // → parsed to []), the panel must tell the instructor so the template-only
+  // IDE is not mistaken for a rendering bug.
+  it('shows a "no student code" notice when submittedFiles is empty', async () => {
+    render(
+      <CodeGraderPanel
+        assignment={sampleAssignment}
+        submittedFiles={[]}
+        maxScore={100}
+        manifestUrl="/emception/manifest.json"
+      />,
+    );
+    await waitFor(() => expect(ideMock.setFiles).toHaveBeenCalled());
+    expect(screen.getByTestId('no-student-code')).toBeInTheDocument();
+  });
+
+  it('does NOT show the "no student code" notice when submittedFiles are present', async () => {
+    render(
+      <CodeGraderPanel
+        assignment={sampleAssignment}
+        submittedFiles={[{ path: '/home/user/main.cpp', content: '// student main' }]}
+        maxScore={100}
+        manifestUrl="/emception/manifest.json"
+      />,
+    );
+    await waitFor(() => expect(ideMock.setFiles).toHaveBeenCalled());
+    expect(screen.queryByTestId('no-student-code')).not.toBeInTheDocument();
   });
 });

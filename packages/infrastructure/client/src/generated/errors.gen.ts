@@ -4,7 +4,7 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
  * Generated from: GameGuild API
- * API Version: 1.0
+ * API Version: 4.2.0
  */
 /**
  * These types extend the base error types from the runtime.

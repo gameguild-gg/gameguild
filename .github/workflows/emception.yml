@@ -287,7 +287,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - name: Check out repository
@@ -359,3 +359,35 @@ jobs:
           done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag release and open version PR
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="$(node -p "require('./tools/emception/packages/core/package.json').version")"
+          TAG="v${VERSION}"
+          BRANCH="release/${VERSION}"
+
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "${TAG} already exists; nothing to release."
+            exit 0
+          fi
+
+          git config user.name "gameguild-release-bot"
+          git config user.email "noreply@gameguild.gg"
+
+          git tag "${TAG}"
+          git push origin "${TAG}"
+
+          git checkout -b "${BRANCH}"
+          git add '**/package.json' 'package.json' 'apps/api/Source/GameGuild.API/GameGuild.API.csproj'
+          git commit -m "chore(release): version packages ${VERSION}"
+          git push origin "${BRANCH}"
+
+          gh pr create \
+            --base main \
+            --head "${BRANCH}" \
+            --title "chore(release): version packages ${VERSION}" \
+            --body "Bumps all monorepo package versions (and the API csproj) to ${VERSION}, released to npm as ${TAG}." \
+            || echo "PR for ${BRANCH} already open."

@@ -17,236 +17,6 @@ export class ResourcesContentsVersioningModule {
 
   /**
    */
-  async getApiContentsVersioningCompare(query?: {
-    versionId1?: string;
-    versionId2?: string;
-  }): Promise<Result<Types.ResourcesContentsContentVersionDiff, ApiError>> {
-    const url = "/api/contents/versioning/compare";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ResourcesContentsContentVersionDiffSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postApiContentsVersioningDrafts(
-    body: Types.ResourcesContentsCreateDraftInput,
-  ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
-    const url = "/api/contents/versioning/drafts";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.ResourcesContentsCreateDraftInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ResourcesContentsContentVersionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async putApiContentsVersioningDrafts(
-    versionId: string,
-    body: Types.ResourcesContentsUpdateDraftInput,
-  ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
-    const url = `/api/contents/versioning/drafts/${versionId}`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.ResourcesContentsUpdateDraftInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "PUT",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ResourcesContentsContentVersionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiContentsVersioningEntityCurrent(
-    entityType: string,
-    entityId: string,
-  ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
-    const url = `/api/contents/versioning/entity/${entityType}/${entityId}/current`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ResourcesContentsContentVersionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiContentsVersioningEntityHistory(
-    entityType: string,
-    entityId: string,
-  ): Promise<Result<Array<Types.ResourcesContentsContentVersion>, ApiError>> {
-    const url = `/api/contents/versioning/entity/${entityType}/${entityId}/history`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.ResourcesContentsContentVersion>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async postApiContentsVersioningEntityRollback(
-    entityType: string,
-    entityId: string,
-    body: Types.ResourcesContentsRollbackInput,
-  ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
-    const url = `/api/contents/versioning/entity/${entityType}/${entityId}/rollback`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.ResourcesContentsRollbackInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ResourcesContentsContentVersionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiContentsVersioningEntityVersion(
-    entityType: string,
-    entityId: string,
-    versionNumber: number,
-  ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
-    const url = `/api/contents/versioning/entity/${entityType}/${entityId}/version/${versionNumber}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ResourcesContentsContentVersionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getApiContentsVersioningPendingReview(query?: {
-    entityType?: string;
-    skip?: number;
-    take?: number;
-  }): Promise<Result<Array<Types.ResourcesContentsContentVersion>, ApiError>> {
-    const url = "/api/contents/versioning/pending-review";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.ResourcesContentsContentVersion>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async getApiContentsVersioning(
     versionId: string,
   ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
@@ -487,6 +257,236 @@ export class ResourcesContentsVersioningModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiContentsVersioningCompare(query?: {
+    versionId1?: string;
+    versionId2?: string;
+  }): Promise<Result<Types.ResourcesContentsContentVersionDiff, ApiError>> {
+    const url = "/api/contents/versioning/compare";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ResourcesContentsContentVersionDiffSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postApiContentsVersioningDrafts(
+    body: Types.ResourcesContentsCreateDraftInput,
+  ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
+    const url = "/api/contents/versioning/drafts";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.ResourcesContentsCreateDraftInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ResourcesContentsContentVersionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async putApiContentsVersioningDrafts(
+    versionId: string,
+    body: Types.ResourcesContentsUpdateDraftInput,
+  ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
+    const url = `/api/contents/versioning/drafts/${versionId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.ResourcesContentsUpdateDraftInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ResourcesContentsContentVersionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getApiContentsVersioningEntityCurrent(
+    entityType: string,
+    entityId: string,
+  ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
+    const url = `/api/contents/versioning/entity/${entityType}/${entityId}/current`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ResourcesContentsContentVersionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getApiContentsVersioningEntityHistory(
+    entityType: string,
+    entityId: string,
+  ): Promise<Result<Array<Types.ResourcesContentsContentVersion>, ApiError>> {
+    const url = `/api/contents/versioning/entity/${entityType}/${entityId}/history`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.ResourcesContentsContentVersion>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async postApiContentsVersioningEntityRollback(
+    entityType: string,
+    entityId: string,
+    body: Types.ResourcesContentsRollbackInput,
+  ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
+    const url = `/api/contents/versioning/entity/${entityType}/${entityId}/rollback`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.ResourcesContentsRollbackInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ResourcesContentsContentVersionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getApiContentsVersioningEntityVersion(
+    entityType: string,
+    entityId: string,
+    versionNumber: number,
+  ): Promise<Result<Types.ResourcesContentsContentVersion, ApiError>> {
+    const url = `/api/contents/versioning/entity/${entityType}/${entityId}/version/${versionNumber}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ResourcesContentsContentVersionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getApiContentsVersioningPendingReview(query?: {
+    entityType?: string;
+    skip?: number;
+    take?: number;
+  }): Promise<Result<Array<Types.ResourcesContentsContentVersion>, ApiError>> {
+    const url = "/api/contents/versioning/pending-review";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.ResourcesContentsContentVersion>,
+      ApiError
+    >;
   }
 }
 

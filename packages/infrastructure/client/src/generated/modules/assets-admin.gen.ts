@@ -54,6 +54,127 @@ export class AssetsAdminModule {
 
   /**
    */
+  async postAdminAssetsMarkUndeletable(
+    contentId: string,
+    body: Types.AssetsControllersMarkNonDeletableInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/admin/assets/${contentId}:mark-undeletable`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AssetsControllersMarkNonDeletableInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postAdminAssetsReviewModeration(
+    contentId: string,
+    body: Types.AssetsControllersContentModerationInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/admin/assets/${contentId}:review-moderation`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AssetsControllersContentModerationInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postAdminAssetsRunVirusScan(
+    contentId: string,
+    body: Types.AssetsControllersUpdateVirusScanInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/admin/assets/${contentId}:run-virus-scan`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AssetsControllersUpdateVirusScanInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postAdminAssetsUnmarkUndeletable(
+    contentId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/admin/assets/${contentId}:unmark-undeletable`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postAdminAssetsForceDelete(
+    id: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/admin/assets/${id}:force-delete`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getAdminAssetsReports(id: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/admin/assets/${id}/reports`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getAdminAssetsGcCandidates(query?: {
     gracePeriodHours?: number;
     limit?: number;
@@ -200,127 +321,6 @@ export class AssetsAdminModule {
     });
 
     return result as Result<Blob, ApiError>;
-  }
-
-  /**
-   */
-  async postAdminAssetsMarkUndeletable(
-    contentId: string,
-    body: Types.AssetsControllersMarkNonDeletableInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/admin/assets/${contentId}:mark-undeletable`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersMarkNonDeletableInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAdminAssetsReviewModeration(
-    contentId: string,
-    body: Types.AssetsControllersContentModerationInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/admin/assets/${contentId}:review-moderation`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersContentModerationInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAdminAssetsRunVirusScan(
-    contentId: string,
-    body: Types.AssetsControllersUpdateVirusScanInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/admin/assets/${contentId}:run-virus-scan`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersUpdateVirusScanInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAdminAssetsUnmarkUndeletable(
-    contentId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/admin/assets/${contentId}:unmark-undeletable`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getAdminAssetsReports(id: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/admin/assets/${id}/reports`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAdminAssetsForceDelete(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/admin/assets/${id}:force-delete`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 }
 

@@ -305,18 +305,20 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
     wsFiles[path] = { path, type, content };
   }
 
-  const openTabs: OpenTab[] = config.layout.openTabs.map((t) => {
-    const file = wsFiles[t.path];
+  const openTabs: OpenTab[] = (config.layout?.openTabs ?? []).map((t: any) => {
+    const tabPath = typeof t === 'string' ? t : (t?.path ?? '');
+    const tabGroup = typeof t === 'object' && t?.group ? t.group : 'main';
+    const file = wsFiles[tabPath];
     return {
-      id: `tab:${t.path}`,
-      path: t.path,
-      type: file?.type ?? inferTabType(t.path),
-      group: t.group,
+      id: `tab:${tabPath}`,
+      path: tabPath,
+      type: file?.type ?? inferTabType(tabPath),
+      group: tabGroup,
     };
   });
 
-  const activeTabId = `tab:${config.layout.activeFile}`;
-  const expandedDirs = new Set(config.layout.expandedDirs ?? ['/user']);
+  const activeTabId = `tab:${config.layout?.activeFile ?? ''}`;
+  const expandedDirs = new Set(config.layout?.expandedDirs ?? ['/user']);
 
   return { files: wsFiles, openTabs, activeTabId, expandedDirs };
 }

@@ -65,92 +65,6 @@ export class AccessControlJitElevationsModule {
 
   /**
    */
-  async getJitElevationsPending(query?: {
-    tenantId?: string;
-  }): Promise<
-    Result<Array<Types.IdentityAuthorizationJitElevationInput>, ApiError>
-  > {
-    const url = "/v1/jit-elevations/pending";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.IdentityAuthorizationJitElevationInput>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getJitElevationsUser(
-    userId: string,
-    query?: { tenantId?: string },
-  ): Promise<
-    Result<Array<Types.IdentityAuthorizationJitElevationInput>, ApiError>
-  > {
-    const url = `/v1/jit-elevations/user/${userId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.IdentityAuthorizationJitElevationInput>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getJitElevationsUserActive(
-    userId: string,
-    query?: { tenantId?: string },
-  ): Promise<
-    Result<Array<Types.IdentityAuthorizationJitElevationInput>, ApiError>
-  > {
-    const url = `/v1/jit-elevations/user/${userId}/active`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.IdentityAuthorizationJitElevationInput>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getJitElevationsUserCheck(
-    userId: string,
-    query?: { permission?: string; tenantId?: string; resourceId?: string },
-  ): Promise<Result<boolean, ApiError>> {
-    const url = `/v1/jit-elevations/user/${userId}/check`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
   async getJitElevations(
     id: string,
   ): Promise<Result<Types.IdentityAuthorizationJitElevationInput, ApiError>> {
@@ -268,6 +182,92 @@ export class AccessControlJitElevationsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getJitElevationsPending(query?: {
+    tenantId?: string;
+  }): Promise<
+    Result<Array<Types.IdentityAuthorizationJitElevationInput>, ApiError>
+  > {
+    const url = "/v1/jit-elevations/pending";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.IdentityAuthorizationJitElevationInput>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getJitElevationsUser(
+    userId: string,
+    query?: { tenantId?: string },
+  ): Promise<
+    Result<Array<Types.IdentityAuthorizationJitElevationInput>, ApiError>
+  > {
+    const url = `/v1/jit-elevations/user/${userId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.IdentityAuthorizationJitElevationInput>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getJitElevationsUserActive(
+    userId: string,
+    query?: { tenantId?: string },
+  ): Promise<
+    Result<Array<Types.IdentityAuthorizationJitElevationInput>, ApiError>
+  > {
+    const url = `/v1/jit-elevations/user/${userId}/active`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.IdentityAuthorizationJitElevationInput>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getJitElevationsUserCheck(
+    userId: string,
+    query?: { permission?: string; tenantId?: string; resourceId?: string },
+  ): Promise<Result<boolean, ApiError>> {
+    const url = `/v1/jit-elevations/user/${userId}/check`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<boolean, ApiError>;
   }
 }
 

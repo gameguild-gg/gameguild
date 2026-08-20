@@ -107,24 +107,6 @@ export class AuthRolesModule {
 
   /**
    */
-  async getRolesUser(
-    userId: string,
-    query?: { includeExpired?: boolean },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/roles/user/${userId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
   async getRolesForGetRolesByRoleId(
     roleId: string,
   ): Promise<Result<void, ApiError>> {
@@ -172,6 +154,24 @@ export class AuthRolesModule {
     const result = await this.client.request({
       method: "DELETE",
       path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getRolesUser(
+    userId: string,
+    query?: { includeExpired?: boolean },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/roles/user/${userId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
       requiresAuth: true,
     });
 

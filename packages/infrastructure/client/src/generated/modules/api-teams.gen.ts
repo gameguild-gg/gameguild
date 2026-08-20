@@ -73,102 +73,6 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeamsInvitationsAcceptForPostTeamsInvitationsAccept(
-    body: Types.APITeamsAcceptTeamInvitationInput,
-  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
-    const url = "/v1/teams/invitations/accept";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.APITeamsAcceptTeamInvitationInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postTeamsInvitationsAcceptForPostTeamsInvitationsByInvitationIdAccept(
-    invitationId: string,
-  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
-    const url = `/v1/teams/invitations/${invitationId}:accept`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getTeamsMine(query?: {
-    includeArchived?: boolean;
-    search?: string;
-    skip?: number;
-    take?: number;
-  }): Promise<Result<Array<Types.APITeamsTeam>, ApiError>> {
-    const url = "/v1/teams/mine";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.APITeamsTeam>, ApiError>;
-  }
-
-  /**
-   */
-  async getTeamsMyInvitations(): Promise<
-    Result<Array<Types.APITeamsMyTeamInvitation>, ApiError>
-  > {
-    const url = "/v1/teams/my-invitations";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.APITeamsMyTeamInvitation>, ApiError>;
-  }
-
-  /**
-   */
   async getTeamsForGetTeamsByTeamId(
     teamId: string,
   ): Promise<Result<Types.APITeamsTeam, ApiError>> {
@@ -240,6 +144,32 @@ export class ApiTeamsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postTeamsRestore(
+    teamId: string,
+  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
+    const url = `/v1/teams/${teamId}:restore`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APITeamsTeamSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
@@ -400,10 +330,10 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeamsRestore(
-    teamId: string,
+  async postTeamsInvitationsAcceptForPostTeamsInvitationsByInvitationIdAccept(
+    invitationId: string,
   ): Promise<Result<Types.APITeamsTeam, ApiError>> {
-    const url = `/v1/teams/${teamId}:restore`;
+    const url = `/v1/teams/invitations/${invitationId}:accept`;
 
     const result = await this.client.request({
       method: "POST",
@@ -422,6 +352,76 @@ export class ApiTeamsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async postTeamsInvitationsAcceptForPostTeamsInvitationsAccept(
+    body: Types.APITeamsAcceptTeamInvitationInput,
+  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
+    const url = "/v1/teams/invitations/accept";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.APITeamsAcceptTeamInvitationInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APITeamsTeamSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getTeamsMine(query?: {
+    includeArchived?: boolean;
+    search?: string;
+    skip?: number;
+    take?: number;
+  }): Promise<Result<Array<Types.APITeamsTeam>, ApiError>> {
+    const url = "/v1/teams/mine";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.APITeamsTeam>, ApiError>;
+  }
+
+  /**
+   */
+  async getTeamsMyInvitations(): Promise<
+    Result<Array<Types.APITeamsMyTeamInvitation>, ApiError>
+  > {
+    const url = "/v1/teams/my-invitations";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.APITeamsMyTeamInvitation>, ApiError>;
   }
 }
 

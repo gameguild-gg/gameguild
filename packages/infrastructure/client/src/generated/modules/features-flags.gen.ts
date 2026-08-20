@@ -65,12 +65,16 @@ export class FeaturesFlagsModule {
 
   /**
    */
-  async getFeaturesEnabled(query?: {
-    userId?: string;
-    tenantId?: string;
-    environment?: string;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/v1/features/enabled";
+  async getFeaturesValue(
+    key: string,
+    query?: {
+      defaultValue?: boolean;
+      userId?: string;
+      tenantId?: string;
+      environment?: string;
+    },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/features/${key}/value`;
 
     const result = await this.client.request({
       method: "GET",
@@ -84,16 +88,12 @@ export class FeaturesFlagsModule {
 
   /**
    */
-  async getFeaturesValue(
-    key: string,
-    query?: {
-      defaultValue?: boolean;
-      userId?: string;
-      tenantId?: string;
-      environment?: string;
-    },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/features/${key}/value`;
+  async getFeaturesEnabled(query?: {
+    userId?: string;
+    tenantId?: string;
+    environment?: string;
+  }): Promise<Result<void, ApiError>> {
+    const url = "/v1/features/enabled";
 
     const result = await this.client.request({
       method: "GET",

@@ -1,7 +1,12 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "dom", "dom.iterable", "esnext"],
+    "lib": [
+      "ES2022",
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,11 +24,21 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@game-guild/dotnet-wasm": ["../../packages/infrastructure/wasm/dotnet/src/index.ts"],
-      "@game-guild/ui/*": ["../../packages/infrastructure/ui/src/*"],
-      "next": ["./node_modules/next"],
-      "next/*": ["./node_modules/next/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@game-guild/dotnet-wasm": [
+        "../../packages/infrastructure/wasm/dotnet/src/index.ts"
+      ],
+      "@game-guild/ui/*": [
+        "../../packages/infrastructure/ui/src/*"
+      ],
+      "next": [
+        "./node_modules/next"
+      ],
+      "next/*": [
+        "./node_modules/next/*"
+      ]
     }
   },
   "include": [
@@ -32,7 +47,18 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    ".next-e2e-coding-cycle/types/**/*.ts",
+    ".next-e2e-coding-cycle/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "vitest.config.ts", "src/test", "src/**/__tests__", "src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.spec.ts", "src/**/*.spec.tsx"]
+  "exclude": [
+    "node_modules",
+    "vitest.config.ts",
+    "src/test",
+    "src/**/__tests__",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx"
+  ]
 }
