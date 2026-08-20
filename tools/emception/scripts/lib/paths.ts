@@ -27,6 +27,10 @@ export interface EmceptionPaths {
     readonly build: string;
     /** Final CDN payload that gets shipped to consumers: `<root>/build/cdn`. */
     readonly buildCdn: string;
+    /** Immutable input snapshot for release assembly: `<root>/build/stage/sysroot`. */
+    readonly stagedSysroot: string;
+    /** Receipt describing the staged sysroot snapshot. */
+    readonly sysrootReceipt: string;
     /** Cross-compile sysroot consumed by clang/lld: `<root>/sysroot`. */
     readonly sysroot: string;
     /** `<sysroot>/usr/lib` — emscripten libraries land here. */
@@ -52,6 +56,8 @@ export function paths(root: string = process.cwd()): EmceptionPaths {
         userland,
         build,
         buildCdn: path.join(build, 'cdn'),
+        stagedSysroot: path.join(build, 'stage', 'sysroot'),
+        sysrootReceipt: path.join(build, 'stage', 'sysroot-receipt.json'),
         sysroot,
         sysrootLib: path.join(sysroot, 'usr', 'lib'),
         sysrootInclude: path.join(sysroot, 'usr', 'include'),
