@@ -53,7 +53,7 @@
     "build": "tsc -p tsconfig.json",
     "prepack": "npm run build && node ../../scripts/stage-core-cdn.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test 'tests/*.test.mjs'",
+    "test": "npm run build && node ../../scripts/run-node-tests.mjs tests",
     "test:types": "npm run build && tsd",
     "clean": "rm -rf dist cdn"
   },
