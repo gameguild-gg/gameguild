@@ -32,7 +32,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "test": "node --test 'tests/*.test.mjs'",
+    "test": "npm run build && node ../../scripts/run-node-tests.mjs tests",
     "clean": "rm -rf dist"
   },
   "dependencies": {
