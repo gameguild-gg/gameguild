@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/learning",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3002",
