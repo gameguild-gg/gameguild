@@ -51,6 +51,46 @@ export class AccessControlDelegatedAdminModule {
 
   /**
    */
+  async getDelegatedAdmin(
+    id: string,
+  ): Promise<Result<Types.IdentityAuthorizationDelegatedAdminScope, ApiError>> {
+    const url = `/v1/delegated-admin/${id}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthorizationDelegatedAdminScopeSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteDelegatedAdmin(id: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/delegated-admin/${id}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getDelegatedAdminUserCanManageResource(
     adminUserId: string,
     query?: { resourceType?: string; tenantId?: string },
@@ -143,46 +183,6 @@ export class AccessControlDelegatedAdminModule {
       Array<Types.IdentityAuthorizationDelegatedAdminScope>,
       ApiError
     >;
-  }
-
-  /**
-   */
-  async getDelegatedAdmin(
-    id: string,
-  ): Promise<Result<Types.IdentityAuthorizationDelegatedAdminScope, ApiError>> {
-    const url = `/v1/delegated-admin/${id}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationDelegatedAdminScopeSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async deleteDelegatedAdmin(id: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/delegated-admin/${id}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 }
 

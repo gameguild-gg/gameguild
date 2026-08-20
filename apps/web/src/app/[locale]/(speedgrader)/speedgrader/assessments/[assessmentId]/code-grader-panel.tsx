@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Ide, TestResultsPanel, type IdeHandle, type TestReport } from '@game-guild/emception-ui';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ASSIGNMENT_SAMPLES, Ide, TestResultsPanel, type CodingLanguage, type IdeHandle, type TestReport, type WorkspaceConfig } from '@game-guild/emception-ui';
 import { buildTestPlan } from 'emception/testing';
 // Cast bridge: the web `CodingAssignmentContent` (lib/coding-assignment/types)
 // uses `readonly` arrays; the emception mapper input uses mutable arrays. The
@@ -86,7 +86,12 @@ export function mergeWorkspaceWithSubmission(assignment: CodingAssignmentContent
  * `grade-client.tsx`; the score/feedback/submit UX lives in the grading panel.
  */
 export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifestUrl, submissionId, onComputedScore }: CodeGraderPanelProps): React.JSX.Element {
-  const ideRef = useRef<IdeHandle>(null);
+  const ideRef = useRef<IdeHandle | null>(null);
+  const [ideMounted, setIdeMounted] = useState(false);
+  const setIdeRef = useCallback((handle: IdeHandle | null) => {
+    ideRef.current = handle;
+    setIdeMounted(Boolean(handle));
+  }, []);
   const [gradeState, setGradeState] = useState<GradeState>('idle');
   const [report, setReport] = useState<TestReport | null>(null);
   const [computed, setComputed] = useState<ComputedScore | null>(null);
@@ -94,19 +99,49 @@ export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifest
 
   const mergedFiles = useMemo(() => mergeWorkspaceWithSubmission(assignment, submittedFiles), [assignment, submittedFiles]);
 
-  // Seed the IDE with the merged workspace on mount.
-  //
-  // `Ide.setFiles` updates reactive state + the seed snapshot, and
-  // `syncFilesToVfs` no-ops until `orchestratorRef.current` is set; once
-  // boot completes the boot effect re-syncs from `filesRef.current`, so the
-  // merged workspace is in the worker VFS before any compile runs.
+  const fullPlan = useMemo(() => {
+    try {
+      return buildTestPlan(assignment as unknown as EmceptionAssignmentContent, { mode: 'full' });
+    } catch {
+      return null;
+    }
+  }, [assignment]);
+
+  const language = (assignment.Environment.Language as CodingLanguage | undefined) ?? 'cpp';
+  const sample = ASSIGNMENT_SAMPLES[language] ?? ASSIGNMENT_SAMPLES.cpp;
+
+  const workspaceConfig = useMemo<WorkspaceConfig>(() => {
+    const files: WorkspaceConfig['files'] = {};
+    for (const file of mergedFiles) {
+      files[file.path] = { encoding: 'text', content: file.content };
+    }
+    const firstPath = mergedFiles[0]?.path ?? sample.workspaceConfig.layout.activeFile;
+    return {
+      ...sample.workspaceConfig,
+      id: submissionId ?? sample.workspaceConfig.id,
+      layout: {
+        ...sample.workspaceConfig.layout,
+        activeFile: firstPath,
+        openTabs: [{ path: firstPath, group: 'main' as const }],
+      },
+      files,
+    };
+  }, [sample, mergedFiles, submissionId]);
+
+  // ponytail: empty submittedFiles means the student submitted no code (payload
+  // '{}' or null) OR the codePayload failed to parse (logged in submission-viewer).
+  // The merged workspace still seeds the IDE with the instructor template, so
+  // without this notice the instructor sees a generic/template IDE and can't
+  // tell "no student code" from a rendering bug.
+  const noStudentCode = submittedFiles.length === 0;
+
+  // Seed the IDE with the merged workspace once mounted.
   useEffect(() => {
-    if (mergedFiles.length === 0) return;
+    if (!ideMounted || mergedFiles.length === 0) return;
     ideRef.current?.setFiles(mergedFiles).catch((err) => {
       console.error('Failed to seed IDE with merged workspace:', err);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [ideMounted, mergedFiles]);
 
   async function handleRunTests() {
     setGradeState('grading');
@@ -173,10 +208,24 @@ export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifest
         </div>
       )}
 
+      {noStudentCode && (
+        <div data-testid="no-student-code" className="rounded border border-amber-500 bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          This submission contains no student code. The IDE shows the assignment template only.
+        </div>
+      )}
+
       {report && <TestResultsPanel report={report} maxScore={maxScore} />}
 
       <div className="min-h-[400px] flex-1 border">
-        <Ide ref={ideRef} manifestUrl={manifestUrl} maxScore={maxScore} assignmentToken={submissionId} />
+        <Ide
+          ref={setIdeRef}
+          manifestUrl={manifestUrl}
+          maxScore={maxScore}
+          assignmentToken={submissionId}
+          workspaceConfig={workspaceConfig}
+          testPlan={fullPlan?.plan as any}
+          testMode="full"
+        />
       </div>
     </div>
   );

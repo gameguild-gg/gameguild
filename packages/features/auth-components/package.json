@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/auth-components",
-  "version": "4.0.0",
+  "version": "4.2.0",
   "type": "module",
   "description": "Reusable auth form components for GameGuild apps",
   "license": "UNLICENSED",

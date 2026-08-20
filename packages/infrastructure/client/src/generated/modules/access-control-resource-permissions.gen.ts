@@ -17,24 +17,90 @@ export class AccessControlResourcePermissionsModule {
 
   /**
    */
-  async getAuthorizationResourcesInvitationsPending(): Promise<
-    Result<
-      Types.IdentityAuthorizationGetPendingResourceInvitationsOutput,
-      ApiError
-    >
-  > {
-    const url = "/api/v1/authorization/resources/invitations/pending";
+  async getAuthorizationResourcesHasPermission(
+    resourceType: string,
+    resourceId: string,
+    query?: { tenantId?: string; permission?: string; userId?: string },
+  ): Promise<Result<Types.IdentityAuthorizationHasPermissionOutput, ApiError>> {
+    const url = `/api/v1/authorization/resources/${resourceType}/${resourceId}/has-permission`;
 
     const result = await this.client.request({
       method: "GET",
       path: url,
+      params: query,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.IdentityAuthorizationGetPendingResourceInvitationsOutputSchema,
+        Types.IdentityAuthorizationHasPermissionOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAuthorizationResourcesPermissions(
+    resourceType: string,
+    resourceId: string,
+    query?: { tenantId?: string; userId?: string },
+  ): Promise<
+    Result<Types.IdentityAuthorizationEffectivePermissionsOutput, ApiError>
+  > {
+    const url = `/api/v1/authorization/resources/${resourceType}/${resourceId}/permissions`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthorizationEffectivePermissionsOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAuthorizationResourcesUsers(
+    resourceType: string,
+    resourceId: string,
+    query?: {
+      tenantId?: string;
+      includeInherited?: boolean;
+      includeExpired?: boolean;
+    },
+  ): Promise<
+    Result<Types.IdentityAuthorizationGetResourceUsersOutput, ApiError>
+  > {
+    const url = `/api/v1/authorization/resources/${resourceType}/${resourceId}/users`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthorizationGetResourceUsersOutputSchema,
         result.data,
         "response",
       );
@@ -167,6 +233,35 @@ export class AccessControlResourcePermissionsModule {
 
   /**
    */
+  async getAuthorizationResourcesInvitationsPending(): Promise<
+    Result<
+      Types.IdentityAuthorizationGetPendingResourceInvitationsOutput,
+      ApiError
+    >
+  > {
+    const url = "/api/v1/authorization/resources/invitations/pending";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthorizationGetPendingResourceInvitationsOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAuthorizationResourcesShare(
     body: Types.IdentityAuthorizationShareResourceCommand,
   ): Promise<Result<Types.IdentityAuthorizationShareResult, ApiError>> {
@@ -262,101 +357,6 @@ export class AccessControlResourcePermissionsModule {
     if (result.ok) {
       const validatedData = safeParse(
         Types.IdentityAuthorizationPermissionUpdateResultSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getAuthorizationResourcesHasPermission(
-    resourceType: string,
-    resourceId: string,
-    query?: { tenantId?: string; permission?: string; userId?: string },
-  ): Promise<Result<Types.IdentityAuthorizationHasPermissionOutput, ApiError>> {
-    const url = `/api/v1/authorization/resources/${resourceType}/${resourceId}/has-permission`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationHasPermissionOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getAuthorizationResourcesPermissions(
-    resourceType: string,
-    resourceId: string,
-    query?: { tenantId?: string; userId?: string },
-  ): Promise<
-    Result<Types.IdentityAuthorizationEffectivePermissionsOutput, ApiError>
-  > {
-    const url = `/api/v1/authorization/resources/${resourceType}/${resourceId}/permissions`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationEffectivePermissionsOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getAuthorizationResourcesUsers(
-    resourceType: string,
-    resourceId: string,
-    query?: {
-      tenantId?: string;
-      includeInherited?: boolean;
-      includeExpired?: boolean;
-    },
-  ): Promise<
-    Result<Types.IdentityAuthorizationGetResourceUsersOutput, ApiError>
-  > {
-    const url = `/api/v1/authorization/resources/${resourceType}/${resourceId}/users`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationGetResourceUsersOutputSchema,
         result.data,
         "response",
       );

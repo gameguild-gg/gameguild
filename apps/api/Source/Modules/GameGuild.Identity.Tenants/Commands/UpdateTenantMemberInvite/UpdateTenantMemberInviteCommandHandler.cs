@@ -1,13 +1,10 @@
-using System.Net;
 using GameGuild.CQRS;
-using GameGuild.Email;
 using Microsoft.Extensions.Configuration;
 
 namespace GameGuild.Identity.Tenants;
 
 public sealed class UpdateTenantMemberInviteCommandHandler(
     ITenantMemberRepository memberRepository,
-    IEmailSender? emailSender = null,
     IConfiguration? configuration = null)
     : ICommandHandler<UpdateTenantMemberInviteCommand, UpdateTenantMemberInviteResponse>
 {
@@ -62,7 +59,7 @@ public sealed class UpdateTenantMemberInviteCommandHandler(
 
         if (request.Action == TenantMemberInviteAction.Resend)
         {
-            await SendInviteEmailAsync(member, metadata, request.ActorEmail, cancellationToken).ConfigureAwait(false);
+            QueueInviteEmail(member, metadata, request.ActorEmail);
         }
 
         return new UpdateTenantMemberInviteResponse
@@ -98,37 +95,23 @@ public sealed class UpdateTenantMemberInviteCommandHandler(
         return metadata.MarkAccepted(now);
     }
 
-    private async Task SendInviteEmailAsync(
-        TenantMember member,
-        TenantMemberInviteMetadata metadata,
-        string? actorEmail,
-        CancellationToken cancellationToken)
+    private void QueueInviteEmail(TenantMember member, TenantMemberInviteMetadata metadata, string? actorEmail)
     {
-        if (emailSender == null || string.IsNullOrWhiteSpace(metadata.InviteeEmail))
+        if (string.IsNullOrWhiteSpace(metadata.InviteeEmail))
         {
             return;
         }
 
-        var tenantName = string.IsNullOrWhiteSpace(member.Tenant?.Name) ? "GameGuild" : member.Tenant!.Name;
-        var recipientName = string.IsNullOrWhiteSpace(metadata.InviteeName) ? metadata.InviteeEmail.Trim() : metadata.InviteeName.Trim();
-        var inviter = string.IsNullOrWhiteSpace(actorEmail)
-            ? metadata.InvitedByEmail ?? "A GameGuild administrator"
-            : actorEmail.Trim();
-        var reviewUrl = BuildReviewUrl();
-        var activationUrl = BuildActivationUrl(metadata.InviteeEmail);
-        var plainTextContent =
-            $"Hi {recipientName},\n\n{inviter} resent your invitation to join {tenantName} on GameGuild as {member.Role}.\n\nReview and accept your access:\n{reviewUrl}\n\nIf this is your first GameGuild invitation, set your password first:\n{activationUrl}\n\nIf you were not expecting this invite, you can ignore this email.";
-        var htmlContent =
-            $"<p>Hi {WebUtility.HtmlEncode(recipientName)},</p><p>{WebUtility.HtmlEncode(inviter)} resent your invitation to join <strong>{WebUtility.HtmlEncode(tenantName)}</strong> on GameGuild as <strong>{WebUtility.HtmlEncode(member.Role)}</strong>.</p><p><a href=\"{WebUtility.HtmlEncode(reviewUrl)}\">Review and accept your access</a></p><p>First time on GameGuild? <a href=\"{WebUtility.HtmlEncode(activationUrl)}\">Set your password</a>, then return to your invitations.</p><p>If you were not expecting this invite, you can ignore this email.</p>";
-
-        await emailSender.SendAsync(
-            new EmailMessage(
-                metadata.InviteeEmail.Trim(),
-                $"Reminder: you were invited to {tenantName} on GameGuild",
-                plainTextContent,
-                htmlContent,
-                recipientName),
-            cancellationToken).ConfigureAwait(false);
+        member.AddDomainEvent(new TenantInviteRequestedNotification(
+            member.TenantId,
+            metadata.InviteeEmail.Trim(),
+            metadata.InviteeName,
+            string.IsNullOrWhiteSpace(actorEmail) ? metadata.InvitedByEmail : actorEmail.Trim(),
+            member.Tenant?.Name ?? "GameGuild",
+            member.Role,
+            BuildReviewUrl(),
+            BuildActivationUrl(metadata.InviteeEmail),
+            resend: true));
     }
 
     private string BuildReviewUrl()

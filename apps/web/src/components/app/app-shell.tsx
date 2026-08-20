@@ -9,7 +9,7 @@ import { PublicAccountMenu } from './public-account-menu';
 
 const primaryNav = [
   { label: 'Courses', href: '/courses' },
-  { label: 'Programs', href: '/courses' },
+  { label: 'Programs', href: '/programs' },
   { label: 'Testing Lab', href: '/testing-lab' },
   { label: 'Launch Pad', href: '/launch-pad' },
   { label: 'Projects', href: '/projects' },
@@ -25,7 +25,7 @@ const footerSections = [
     hoverClass: 'hover:text-blue-300',
     links: [
       { label: 'Courses', href: '/courses' },
-      { label: 'Programs', href: '/courses' },
+      { label: 'Programs', href: '/programs' },
     ],
   },
   {

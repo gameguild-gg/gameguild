@@ -120,6 +120,12 @@ public class ChangePasswordCommand : ICommand<PasswordChangeResult>
     ///     Whether to revoke all other sessions after password change
     /// </summary>
     public bool RevokeOtherSessions { get; init; } = true;
+
+    /// <summary>
+    ///     Session ID of the current access token (extracted from the session_id claim by the controller).
+    ///     When set with RevokeOtherSessions, all other sessions are terminated and this one is kept.
+    /// </summary>
+    public Guid? CurrentSessionId { get; init; }
 }
 
 /// <summary>

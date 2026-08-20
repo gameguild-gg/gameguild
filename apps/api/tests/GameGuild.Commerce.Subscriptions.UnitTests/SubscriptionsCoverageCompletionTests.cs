@@ -10,8 +10,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using GameGuild.Commerce.Payments;
+using GameGuild.Commerce.Subscriptions.Services.Email.Renderers;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Notifications.Services.Email;
 using MockQueryable.Moq;
 using Moq;
 using Xunit;
@@ -264,18 +266,18 @@ public sealed class SubscriptionsCoverageCompletionTests
         _ = typeof(MonthlyStatementDispatchBackgroundService).GetField("PollInterval", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
         _ = typeof(MonthlyStatementDispatchBackgroundService).GetField("ProbeTimeout", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
 
-        InvokePrivateInstance<string>(CreateDispatchService(new Dictionary<string, string?> { ["StatementEmails:ConsoleBaseUrl"] = " https://console.test/base/ " }), "ResolveConsoleBaseUrl")
+        InvokePrivateInstance<string>(CreateStatementRenderer(new Dictionary<string, string?> { ["StatementEmails:ConsoleBaseUrl"] = " https://console.test/base/ " }), "ResolveConsoleBaseUrl")
             .Should().Be("https://console.test/base");
-        InvokePrivateInstance<string>(CreateDispatchService(new Dictionary<string, string?> { ["NEXTAUTH_URL"] = "https://nextauth.test/" }), "ResolveConsoleBaseUrl")
+        InvokePrivateInstance<string>(CreateStatementRenderer(new Dictionary<string, string?> { ["NEXTAUTH_URL"] = "https://nextauth.test/" }), "ResolveConsoleBaseUrl")
             .Should().Be("https://nextauth.test");
-        InvokePrivateInstance<string>(CreateDispatchService(new Dictionary<string, string?> { ["NEXT_PUBLIC_URL"] = "https://public.test/" }), "ResolveConsoleBaseUrl")
+        InvokePrivateInstance<string>(CreateStatementRenderer(new Dictionary<string, string?> { ["NEXT_PUBLIC_URL"] = "https://public.test/" }), "ResolveConsoleBaseUrl")
             .Should().Be("https://public.test");
-        InvokePrivateInstance<string>(CreateDispatchService(new Dictionary<string, string?>()), "ResolveConsoleBaseUrl")
+        InvokePrivateInstance<string>(CreateStatementRenderer(new Dictionary<string, string?>()), "ResolveConsoleBaseUrl")
             .Should().Be("http://localhost:3000");
 
-        InvokePrivateStatic<string>(typeof(MonthlyStatementDispatchBackgroundService), "BuildAbsoluteUrl", "https://console.test", "/statements")
+        InvokePrivateStatic<string>(typeof(MonthlyStatementRenderer), "BuildAbsoluteUrl", "https://console.test", "/statements")
             .Should().Be("https://console.test/statements");
-        InvokePrivateStatic<string>(typeof(MonthlyStatementDispatchBackgroundService), "BuildAbsoluteUrl", "https://console.test/", "statements")
+        InvokePrivateStatic<string>(typeof(MonthlyStatementRenderer), "BuildAbsoluteUrl", "https://console.test/", "statements")
             .Should().Be("https://console.test/statements");
 
         var controller = CreateSubscriptionsController(CreateActor(Guid.NewGuid()));
@@ -510,12 +512,12 @@ public sealed class SubscriptionsCoverageCompletionTests
     private static Subscription CreateSubscription(Guid planId)
         => new(Guid.NewGuid(), planId, Guid.NewGuid(), BillingCycle.Monthly, new Money(100m, "USD"), DateTime.UtcNow.AddDays(-5));
 
-    private static MonthlyStatementDispatchBackgroundService CreateDispatchService(Dictionary<string, string?> values)
+    private static MonthlyStatementRenderer CreateStatementRenderer(Dictionary<string, string?> values)
         => new(
-            new ServiceCollection().BuildServiceProvider(),
-            new ConfigurationBuilder().AddInMemoryCollection(values).Build(),
+            Mock.Of<IMonthlyStatementAttachmentBuilder>(),
             Mock.Of<IMonthlyStatementLinkBuilder>(),
-            Mock.Of<ILogger<MonthlyStatementDispatchBackgroundService>>());
+            new ConfigurationBuilder().AddInMemoryCollection(values).Build(),
+            Mock.Of<IEmailFooterService>());
 
     private static SubscriptionsController CreateSubscriptionsController(ActorContext actorContext)
     {

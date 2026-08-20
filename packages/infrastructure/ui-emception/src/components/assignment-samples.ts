@@ -69,7 +69,36 @@ int main(void) {
 }
 `;
 
-export type CodingLanguage = 'cpp' | 'c' | 'sdl-cpp' | 'raylib-cpp';
+// ── Allegro 5 graphics starter ────────────────────────────────────
+// ponytail: minimal Allegro 5 loop — compiled via the clang + wasm-ld
+// two-step against precompiled liballegro*.a (CDN 'allegro' bundle).
+// Mirrors the e2e-verified demo shape: emscripten_set_main_loop drives
+// the frame callback (blocking while-loops would freeze the main thread).
+
+const STARTER_ALLEGRO = `// Allegro 5 graphics starter
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
+#include <emscripten/emscripten.h>
+
+static ALLEGRO_DISPLAY* display = NULL;
+
+static void draw_frame(void) {
+  al_clear_to_color(al_map_rgb(30, 30, 45));
+  al_draw_filled_circle(320, 240, 48, al_map_rgb(137, 180, 250));
+  al_flip_display();
+}
+
+int main(void) {
+  if (!al_init()) return 1;
+  al_init_primitives_addon();
+  display = al_create_display(640, 480);
+  if (!display) return 1;
+  emscripten_set_main_loop(draw_frame, 0, 1);
+  return 0;
+}
+`;
+
+export type CodingLanguage = 'cpp' | 'c' | 'sdl-cpp' | 'raylib-cpp' | 'allegro-cpp';
 
 export interface AssignmentSample {
   workspaceConfig: WorkspaceConfig;
@@ -295,6 +324,47 @@ int main(void) {
     plan: {
       cases: [GRAPHICS_BUILD_CASE],
       build: { sources: ['/user/raylib-main.cpp'] },
+    },
+  },
+
+  'allegro-cpp': {
+    workspaceConfig: {
+      id: 'allegro-cpp',
+      label: 'Allegro 5 C++ Assignment',
+      description: 'Allegro 5 graphics starter — clang + wasm-ld',
+      version: 1,
+      compile: {
+        // Canvas path compiles via TOOLCHAIN_PRESETS['allegro-cpp'] argv
+        // builders — args stay empty like the core cpp-allegro preset.
+        tool: 'clang',
+        args: [],
+        cwd: '/home/user',
+        output: '/home/user/main.wasm',
+        sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/allegro-main.cpp' },
+      },
+      run: {
+        type: 'sdl3-canvas',
+      },
+      features: {
+        canvas: true,
+        terminalInput: false,
+        showTestButton: false,
+      },
+      layout: {
+        activeFile: '/user/allegro-main.cpp',
+        openTabs: [
+          { path: '/user/allegro-main.cpp', group: 'main' },
+          { path: '/user/sdl-canvas', group: 'right' },
+        ],
+        expandedDirs: ['/user'],
+      },
+      files: {
+        '/user/allegro-main.cpp': { encoding: 'text', content: STARTER_ALLEGRO },
+      },
+    },
+    plan: {
+      cases: [GRAPHICS_BUILD_CASE],
+      build: { sources: ['/user/allegro-main.cpp'] },
     },
   },
 };

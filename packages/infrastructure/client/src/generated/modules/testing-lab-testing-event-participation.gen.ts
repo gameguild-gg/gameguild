@@ -17,22 +17,24 @@ export class TestingLabTestingEventParticipationModule {
 
   /**
    */
-  async getTestingEventsFeedbackObligationsMe(query?: {
-    eventId?: string;
-  }): Promise<
-    Result<Array<Types.TestingLabTestingFeedbackObligationProjection>, ApiError>
+  async getTestingEventsFeedback(
+    eventId: string,
+  ): Promise<
+    Result<
+      Array<Types.TestingLabTestingEventFeedbackReviewProjection>,
+      ApiError
+    >
   > {
-    const url = "/v1/testing/events/feedback-obligations/me";
+    const url = `/v1/testing/events/${eventId}/feedback`;
 
     const result = await this.client.request({
       method: "GET",
       path: url,
-      params: query,
       requiresAuth: true,
     });
 
     return result as Result<
-      Array<Types.TestingLabTestingFeedbackObligationProjection>,
+      Array<Types.TestingLabTestingEventFeedbackReviewProjection>,
       ApiError
     >;
   }
@@ -74,6 +76,28 @@ export class TestingLabTestingEventParticipationModule {
 
   /**
    */
+  async getTestingEventsFeedbackObligationsMe(query?: {
+    eventId?: string;
+  }): Promise<
+    Result<Array<Types.TestingLabTestingFeedbackObligationProjection>, ApiError>
+  > {
+    const url = "/v1/testing/events/feedback-obligations/me";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.TestingLabTestingFeedbackObligationProjection>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
   async getTestingEventsParticipants(query?: {
     search?: string;
     status?: Types.TestingLabTestingSlotRegistrationStatus;
@@ -106,28 +130,6 @@ export class TestingLabTestingEventParticipationModule {
 
   /**
    */
-  async getTestingEventsRegistrationsMe(query?: {
-    eventId?: string;
-  }): Promise<
-    Result<Array<Types.TestingLabTestingSlotRegistrationProjection>, ApiError>
-  > {
-    const url = "/v1/testing/events/registrations/me";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.TestingLabTestingSlotRegistrationProjection>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async deleteTestingEventsRegistrations(
     registrationId: string,
   ): Promise<
@@ -145,43 +147,6 @@ export class TestingLabTestingEventParticipationModule {
     if (result.ok) {
       const validatedData = safeParse(
         Types.TestingLabTestingSlotRegistrationProjectionSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postTestingEventsRegistrationsTestedProjects(
-    registrationId: string,
-    body: Types.TestingLabAssignTestingProjectToTesterInput,
-  ): Promise<
-    Result<Types.TestingLabTestingFeedbackObligationProjection, ApiError>
-  > {
-    const url = `/v1/testing/events/registrations/${registrationId}/tested-projects`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabAssignTestingProjectToTesterInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingFeedbackObligationProjectionSchema,
         result.data,
         "response",
       );
@@ -305,6 +270,65 @@ export class TestingLabTestingEventParticipationModule {
 
   /**
    */
+  async postTestingEventsRegistrationsTestedProjects(
+    registrationId: string,
+    body: Types.TestingLabAssignTestingProjectToTesterInput,
+  ): Promise<
+    Result<Types.TestingLabTestingFeedbackObligationProjection, ApiError>
+  > {
+    const url = `/v1/testing/events/registrations/${registrationId}/tested-projects`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.TestingLabAssignTestingProjectToTesterInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.TestingLabTestingFeedbackObligationProjectionSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getTestingEventsRegistrationsMe(query?: {
+    eventId?: string;
+  }): Promise<
+    Result<Array<Types.TestingLabTestingSlotRegistrationProjection>, ApiError>
+  > {
+    const url = "/v1/testing/events/registrations/me";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.TestingLabTestingSlotRegistrationProjection>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
   async getTestingEventsSlotsRegistrations(
     slotId: string,
     query?: { status?: Types.TestingLabTestingSlotRegistrationStatus },
@@ -361,30 +385,6 @@ export class TestingLabTestingEventParticipationModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async getTestingEventsFeedback(
-    eventId: string,
-  ): Promise<
-    Result<
-      Array<Types.TestingLabTestingEventFeedbackReviewProjection>,
-      ApiError
-    >
-  > {
-    const url = `/v1/testing/events/${eventId}/feedback`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.TestingLabTestingEventFeedbackReviewProjection>,
-      ApiError
-    >;
   }
 }
 

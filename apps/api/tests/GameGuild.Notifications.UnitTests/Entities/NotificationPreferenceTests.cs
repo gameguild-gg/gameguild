@@ -61,4 +61,37 @@ public class NotificationPreferenceTests
         preference.QuietHoursStart.Should().BeNull();
         preference.QuietHoursEnd.Should().BeNull();
     }
+
+    [Fact]
+    public void MuteTypeHelpers_Should_Roundtrip_Case_Insensitively()
+    {
+        var preference = NotificationPreference.CreateDefault(Guid.NewGuid());
+
+        preference.MuteType("MonthlyStatement");
+        preference.MuteType("marketing");
+
+        preference.GetMutedTypeNames().Should().Contain("MonthlyStatement").And.Contain("Marketing");
+        preference.GetMutedTypeNames().Contains("monthlystatement").Should().BeTrue();
+
+        preference.UnmuteType("MONTHLYSTATEMENT");
+
+        preference.GetMutedTypeNames().Should().NotContain("MonthlyStatement").And.Contain("Marketing");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("not json at all")]
+    [InlineData("[1,2]")]
+    [InlineData("{\"a\":\"b\"}")]
+    [InlineData("null")]
+    public void GetMutedTypeNames_Should_Be_Parse_Safe_For_Malformed_Input(string? mutedTypes)
+    {
+        var preference = NotificationPreference.CreateDefault(Guid.NewGuid());
+
+        preference.SetMutedTypes(mutedTypes);
+
+        preference.GetMutedTypeNames().Should().BeEmpty();
+    }
 }

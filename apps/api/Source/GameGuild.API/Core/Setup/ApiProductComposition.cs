@@ -40,8 +40,6 @@ internal sealed class ApiProductComposition : IApiProductComposition
 
     public string ApplicationName => "GameGuild";
 
-    public string DefaultDataProtectionKeysPath => "/app/.aspnet/DataProtection-Keys";
-
     public IReadOnlyList<string> EnabledModules { get; } =
     [
         "Compliance.FERPA",

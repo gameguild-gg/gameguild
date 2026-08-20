@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using GameGuild.API.Setup;
 using GameGuild.CQRS;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 
 namespace GameGuild.API.Database;
 
@@ -12,8 +13,10 @@ namespace GameGuild.API.Database;
 ///     to <see cref="IModelConfiguration"/> implementations discovered via assembly scanning.
 /// </summary>
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IPublisher? publisher = null)
-    : DbContext(options), IApplicationDbContext
+    : DbContext(options), IApplicationDbContext, IDataProtectionKeyContext
 {
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
+
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var domainEventEntities = ChangeTracker.Entries()

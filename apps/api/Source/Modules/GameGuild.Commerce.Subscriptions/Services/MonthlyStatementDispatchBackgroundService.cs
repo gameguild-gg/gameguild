@@ -1,7 +1,11 @@
 using System.Globalization;
 using System.Net.Sockets;
+using System.Text.Json;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
+using GameGuild.Notifications;
+using GameGuild.Notifications.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,7 +22,6 @@ public sealed class MonthlyStatementDispatchBackgroundService(
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromHours(1);
     private static readonly TimeSpan ProbeTimeout = TimeSpan.FromSeconds(1);
-    private DateOnly _lastProcessedPeriod = DateOnly.MinValue;
     private bool _databaseUnavailableLogged;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -44,11 +47,7 @@ public sealed class MonthlyStatementDispatchBackgroundService(
                     if (nowUtc.Day == 1)
                     {
                         var period = new DateOnly(nowUtc.Year, nowUtc.Month, 1);
-                        if (period != _lastProcessedPeriod)
-                        {
-                            await SendStatementsForPeriodAsync(period, stoppingToken).ConfigureAwait(false);
-                            _lastProcessedPeriod = period;
-                        }
+                        await SendStatementsForPeriodAsync(period, stoppingToken).ConfigureAwait(false);
                     }
                 }
             }
@@ -72,7 +71,7 @@ public sealed class MonthlyStatementDispatchBackgroundService(
         }
     }
 
-    private async Task SendStatementsForPeriodAsync(DateOnly period, CancellationToken ct)
+    internal async Task SendStatementsForPeriodAsync(DateOnly period, CancellationToken ct)
     {
         var statementMonth = period.AddMonths(-1);
         var monthLabel = statementMonth.ToString("MMMM yyyy", CultureInfo.InvariantCulture);
@@ -81,28 +80,44 @@ public sealed class MonthlyStatementDispatchBackgroundService(
             statementMonth.Year,
             statementMonth.Month,
             DateTime.DaysInMonth(statementMonth.Year, statementMonth.Month));
-        var links = statementLinkBuilder.Build(fromDate, toDate);
-        var statementPagePath = links.StatementPagePath;
-        var statementPdfPath = links.StatementPdfPath;
-        var statementCsvPath = links.StatementCsvPath;
-        var consoleBaseUrl = ResolveConsoleBaseUrl();
-        var statementPageAbsoluteUrl = BuildAbsoluteUrl(consoleBaseUrl, statementPagePath);
-        var statementPdfAbsoluteUrl = BuildAbsoluteUrl(consoleBaseUrl, statementPdfPath);
-        var statementCsvAbsoluteUrl = BuildAbsoluteUrl(consoleBaseUrl, statementCsvPath);
 
         using var scope = serviceProvider.CreateScope();
         var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
+        var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
         var subscriptionRepository = scope.ServiceProvider.GetRequiredService<ISubscriptionRepository>();
         var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-        var attachmentBuilder = scope.ServiceProvider.GetRequiredService<IMonthlyStatementAttachmentBuilder>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+
+        // Idempotency: a restart on the 1st must never re-publish a full period. The period is identified by
+        // its fromDate, which every MonthlyStatement row for the period carries in its metadata JSON. If any
+        // such row already exists, the period was already queued — skip it entirely. (ponytail: per-period
+        // guard; a crash mid-run that leaves some subscriptions unqueued is accepted over re-publishing the
+        // whole period to everyone. Per-subscription tracking would need a metadata parse per row.)
+        var periodAlreadyQueued = await dbContext.Set<Notification>()
+            .AnyAsync(
+                n => n.Type == NotificationType.MonthlyStatement
+                    && n.Metadata != null
+                    && n.Metadata.Contains($"\"fromDate\":\"{fromDate:yyyy-MM-dd}\""),
+                ct)
+            .ConfigureAwait(false);
+
+        if (periodAlreadyQueued)
+        {
+            logger.LogInformation(
+                "Monthly statement period {MonthLabel} already queued; skipping to avoid duplicates.",
+                monthLabel);
+            return;
+        }
 
         var activeSubscriptions = await subscriptionRepository
             .GetByStatusAsync(SubscriptionStatus.Active, ct)
             .ConfigureAwait(false);
 
+        var workspaceLabel = statementLinkBuilder.Build(fromDate, toDate).WorkspaceLabel;
+
         var queued = 0;
+        var skipped = 0;
         var failed = 0;
-        var cachedArtifactsByTenant = new Dictionary<Guid, MonthlyStatementArtifacts>();
 
         foreach (var subscription in activeSubscriptions)
         {
@@ -133,14 +148,20 @@ public sealed class MonthlyStatementDispatchBackgroundService(
                     continue;
                 }
 
-                if (!cachedArtifactsByTenant.TryGetValue(tenantId, out var artifacts))
+                var metadata = JsonSerializer.Serialize(new
                 {
-                    artifacts = await attachmentBuilder
-                        .BuildAsync(tenantId, fromDate, toDate, ct)
-                        .ConfigureAwait(false);
-                    cachedArtifactsByTenant[tenantId] = artifacts;
-                }
+                    tenantId,
+                    subscriptionId = subscription.Id,
+                    userId = recipient.Id,
+                    fromDate = $"{fromDate:yyyy-MM-dd}",
+                    toDate = $"{toDate:yyyy-MM-dd}",
+                    workspaceLabel,
+                    monthLabel,
+                    recipientEmail = recipient.Email,
+                    recipientName = recipient.Name,
+                });
 
+                // Keep the publish+handler as the InApp row-creation step (existing dashboard behavior).
                 await publisher.Publish(
                     new MonthlyStatementPreparedNotification
                     {
@@ -149,21 +170,41 @@ public sealed class MonthlyStatementDispatchBackgroundService(
                         RecipientId = recipient.Id,
                         RecipientEmail = recipient.Email,
                         RecipientName = recipient.Name,
-                        WorkspaceLabel = links.WorkspaceLabel,
+                        WorkspaceLabel = workspaceLabel,
                         MonthLabel = monthLabel,
                         FromDate = fromDate,
                         ToDate = toDate,
-                        StatementPagePath = statementPagePath,
-                        StatementPdfPath = statementPdfPath,
-                        StatementCsvPath = statementCsvPath,
-                        StatementPageAbsoluteUrl = statementPageAbsoluteUrl,
-                        StatementPdfAbsoluteUrl = statementPdfAbsoluteUrl,
-                        StatementCsvAbsoluteUrl = statementCsvAbsoluteUrl,
-                        Artifacts = artifacts,
                     },
                     ct).ConfigureAwait(false);
 
-                queued++;
+                var result = await notificationService.SendAsync(
+                    recipientId: recipient.Id,
+                    type: NotificationType.MonthlyStatement,
+                    title: $"Your statement for {monthLabel} is ready",
+                    message:
+                        $"Your monthly statement for {monthLabel} is now available. " +
+                        $"The PDF and CSV copies are attached to this email, and the {workspaceLabel} has the same statement available online.",
+                    channel: NotificationChannel.Email,
+                    tenantId: tenantId,
+                    priority: GameGuild.Notifications.NotificationPriority.Normal,
+                    referenceEntityId: subscription.Id,
+                    referenceEntityType: nameof(Subscription),
+                    metadata: metadata,
+                    cancellationToken: ct).ConfigureAwait(false);
+
+                if (result.IsSuccess)
+                {
+                    queued++;
+                }
+                else
+                {
+                    // Preference enforcement (mute/digest/quiet-hours) intentionally produced no row.
+                    skipped++;
+                    logger.LogInformation(
+                        "Monthly statement for subscription {SubscriptionId} not queued: {Reason}",
+                        subscription.Id,
+                        result.Error?.Description ?? "preference decision");
+                }
             }
             catch (Exception ex)
             {
@@ -176,24 +217,12 @@ public sealed class MonthlyStatementDispatchBackgroundService(
         }
 
         logger.LogInformation(
-            "Monthly statement run for {Period}: {Queued} queued, {Failed} failed",
+            "Monthly statement run for {Period}: {Queued} queued, {Skipped} skipped, {Failed} failed",
             monthLabel,
             queued,
+            skipped,
             failed);
     }
-
-    private string ResolveConsoleBaseUrl()
-    {
-        var configured = configuration["StatementEmails:ConsoleBaseUrl"]
-            ?? configuration["NEXTAUTH_URL"]
-            ?? configuration["NEXT_PUBLIC_URL"]
-            ?? "http://localhost:3000";
-
-        return configured.Trim().TrimEnd('/');
-    }
-
-    private static string BuildAbsoluteUrl(string baseUrl, string relativePath)
-        => new Uri(new Uri(baseUrl.EndsWith('/') ? baseUrl : $"{baseUrl}/", UriKind.Absolute), relativePath.TrimStart('/')).ToString();
 
     private async Task<bool> IsDatabaseReachableAsync(CancellationToken cancellationToken)
     {

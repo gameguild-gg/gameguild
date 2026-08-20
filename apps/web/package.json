@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/web",
-  "version": "4.0.0",
+  "version": "4.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -22,6 +22,7 @@
     "test:browser:community-admin": "node scripts/community-admin-browser-e2e.mjs",
     "test:browser:testing-lab": "bash scripts/testing-lab-browser-e2e.sh",
     "test:browser:testing-lab:existing": "node scripts/testing-lab-browser-e2e.mjs",
+    "test:browser:coding-cycle": "node scripts/coding-cycle-browser-e2e.mjs",
     "test:watch": "vitest",
     "test:e2e": "vitest run -c vitest.e2e.config.mts",
     "test:browser:learning": "pnpm run test:browser:learning-support && pnpm run test:browser:learning-checkout && pnpm run test:browser:learning-student && pnpm run test:browser:learning-professor"

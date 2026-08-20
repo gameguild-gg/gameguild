@@ -4,7 +4,7 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
  * Generated from: GameGuild API
- * API Version: 1.0
+ * API Version: 4.2.0
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from "zod";
@@ -32,8 +32,8 @@ export interface AIAiCompletionOutput {
 }
 
 export interface AIAiConversationHistoryEntry {
-  finishReason?: string | null;
   id?: string;
+  finishReason?: string | null;
   model?: string | null;
   occurredAt?: string;
   outcome?: string | null;
@@ -82,11 +82,11 @@ export interface AIAiGenerateInput {
 }
 
 export interface AIAiPromptTemplate {
+  id?: string;
   category?: string | null;
   createdAt?: string;
   createdByUserId?: string | null;
   description?: string | null;
-  id?: string;
   isActive?: boolean;
   isSystemTemplate?: boolean;
   key?: string | null;
@@ -178,11 +178,11 @@ export interface AIUpdateAiPromptTemplateInput {
 }
 
 export interface AnalyticsAnalyticsWarehouseFact {
+  id?: string;
   amountUsd?: number | null;
   count?: number | null;
   dimensions?: Record<string, string | null> | null;
   factName?: string | null;
-  id?: string;
   metric?: string | null;
   runId?: string | null;
   tenantId?: string | null;
@@ -221,9 +221,9 @@ export interface AnalyticsCreateDashboardInput {
 }
 
 export interface AnalyticsDashboard {
+  id?: string;
   createdAt?: string;
   description?: string | null;
-  id?: string;
   isDefault?: boolean;
   slug?: string | null;
   tenantId?: string | null;
@@ -233,8 +233,8 @@ export interface AnalyticsDashboard {
 }
 
 export interface AnalyticsDashboardWidget {
-  configuration?: string | null;
   id?: string;
+  configuration?: string | null;
   sortOrder?: number;
   title?: string | null;
   type?: AnalyticsWidgetType;
@@ -457,10 +457,10 @@ export interface APIProjectsCreateProjectTeamAgreementInput {
 }
 
 export interface APIProjectsProjectAllocation {
+  id?: string;
   capacityPercentage?: number;
   endsAt?: string | null;
   function?: string | null;
-  id?: string;
   isActive?: boolean;
   projectTeamId?: string;
   startsAt?: string;
@@ -475,10 +475,10 @@ export interface APIProjectsProjectOwnership {
 }
 
 export interface APIProjectsProjectTeamAgreement {
+  id?: string;
   acceptedByUserId?: string | null;
   deliverables?: string | null;
   endsAt?: string;
-  id?: string;
   proposedByUserId?: string;
   proposingTeamId?: string;
   receivingTeamId?: string;
@@ -489,9 +489,9 @@ export interface APIProjectsProjectTeamAgreement {
 }
 
 export interface APIProjectsProjectTeamOwnership {
+  id?: string;
   assignedAt?: string;
   endedAt?: string | null;
-  id?: string;
   isActive?: boolean;
   participationMode?: ProjectsProjectTeamParticipationMode;
   permissions?: Array<string> | null;
@@ -567,8 +567,8 @@ export interface APIProjectWorkMoveProjectWorkTaskInput {
 }
 
 export interface APIProjectWorkProjectBoard {
-  columns?: Array<APIProjectWorkProjectWorkColumn> | null;
   id?: string;
+  columns?: Array<APIProjectWorkProjectWorkColumn> | null;
   name?: string | null;
   projectId?: string;
 }
@@ -581,29 +581,29 @@ export interface APIProjectWorkProjectChecklistItem {
 }
 
 export interface APIProjectWorkProjectMilestone {
+  id?: string;
   completedAt?: string | null;
   description?: string | null;
   dueAt?: string | null;
-  id?: string;
   name?: string | null;
 }
 
 export interface APIProjectWorkProjectTaskComment {
+  id?: string;
   authorUserId?: string;
   body?: string | null;
   createdAt?: string;
   editedAt?: string | null;
-  id?: string;
 }
 
 export interface APIProjectWorkProjectTaskDependency {
-  dependsOnTaskId?: string;
   id?: string;
+  dependsOnTaskId?: string;
 }
 
 export interface APIProjectWorkProjectTaskLabel {
-  color?: string | null;
   id?: string;
+  color?: string | null;
   name?: string | null;
 }
 
@@ -617,21 +617,21 @@ export interface APIProjectWorkProjectWorkColumn {
 }
 
 export interface APIProjectWorkProjectWorkHistory {
+  id?: string;
   action?: string | null;
   actorUserId?: string;
   changesJson?: string | null;
   createdAt?: string;
-  id?: string;
   taskId?: string | null;
 }
 
 export interface APIProjectWorkProjectWorkTask {
+  id?: string;
   assigneeUserId?: string | null;
   columnId?: string;
   completedAt?: string | null;
   description?: string | null;
   dueAt?: string | null;
-  id?: string;
   milestoneId?: string | null;
   position?: number;
   priority?: ProjectWorkProjectWorkTaskPriority;
@@ -705,17 +705,17 @@ export interface APITeamsCreateTeamInvitationInput {
 }
 
 export interface APITeamsMyTeamInvitation {
+  id?: string;
   authority?: TeamsTeamMemberAuthority;
   expiresAt?: string;
-  id?: string;
   teamId?: string;
   teamName?: string | null;
   teamSlug?: string | null;
 }
 
 export interface APITeamsTeam {
-  description?: string | null;
   id?: string;
+  description?: string | null;
   isPersonal?: boolean;
   members?: Array<APITeamsTeamMember> | null;
   name?: string | null;
@@ -726,9 +726,9 @@ export interface APITeamsTeam {
 }
 
 export interface APITeamsTeamInvitation {
+  id?: string;
   authority?: TeamsTeamMemberAuthority;
   expiresAt?: string;
-  id?: string;
   invitedByUserId?: string;
   invitedEmail?: string | null;
   invitedUserId?: string | null;
@@ -737,8 +737,8 @@ export interface APITeamsTeamInvitation {
 }
 
 export interface APITeamsTeamInvitationCreated {
-  expiresAt?: string;
   id?: string;
+  expiresAt?: string;
   token?: string | null;
 }
 
@@ -806,8 +806,8 @@ export interface AssetsChunkedUploadSession {
   objectKey?: string | null;
   totalChunks?: number;
   totalSize?: number;
-  uploadId?: string | null;
   uploadedChunks?: number;
+  uploadId?: string | null;
   userId?: string;
 }
 
@@ -1055,8 +1055,8 @@ export interface BulkOperationOutput {
   errors?: Array<BulkOperationError> | null;
   failedOperations?: number;
   isComplete?: boolean;
-  successRate?: number;
   successfulOperations?: number;
+  successRate?: number;
   totalRequested?: number;
 }
 
@@ -1103,18 +1103,18 @@ export interface CommerceOrdersCreateOrderInput {
 }
 
 export interface CommerceOrdersOrder {
+  id?: string;
   createdAt?: string;
   currency?: string | null;
   discountTotal?: number;
-  id?: string;
   idempotencyKey?: string | null;
   lineItems?: Array<CommerceOrdersOrderLineItem> | null;
   paidAt?: string | null;
   paymentMethod?: string | null;
   paymentProviderReference?: string | null;
   refundAmount?: number | null;
-  refundReason?: string | null;
   refundedAt?: string | null;
+  refundReason?: string | null;
   status?: CommerceOrdersOrderStatus;
   subtotal?: number;
   taxAmount?: number;
@@ -1124,11 +1124,11 @@ export interface CommerceOrdersOrder {
 }
 
 export interface CommerceOrdersOrderCapture {
+  id?: string;
   clientActionToken?: string | null;
   createdAt?: string;
   currency?: string | null;
   discountTotal?: number;
-  id?: string;
   idempotencyKey?: string | null;
   lineItems?: Array<CommerceOrdersOrderLineItem> | null;
   paidAt?: string | null;
@@ -1138,8 +1138,8 @@ export interface CommerceOrdersOrderCapture {
   paymentProviderReference?: string | null;
   paymentState?: CommerceOrderChargeState;
   refundAmount?: number | null;
-  refundReason?: string | null;
   refundedAt?: string | null;
+  refundReason?: string | null;
   status?: CommerceOrdersOrderStatus;
   subtotal?: number;
   taxAmount?: number;
@@ -1149,10 +1149,10 @@ export interface CommerceOrdersOrderCapture {
 }
 
 export interface CommerceOrdersOrderLineItem {
+  id?: string;
   basePrice?: number;
   currency?: string | null;
   discountAmount?: number;
-  id?: string;
   isSubscription?: boolean;
   lineTotal?: number;
   priceVersion?: number;
@@ -1354,8 +1354,8 @@ export interface CommercePaymentsProcessRefundResult {
   processingFee?: number;
   reason: string | null;
   referenceNumber?: string | null;
-  refundId: string;
   refundedAmount: number;
+  refundId: string;
   status: CommercePaymentsTransactionStatus;
 }
 
@@ -1363,9 +1363,9 @@ export interface CommercePaymentsTaxBreakdown {
   description?: string | null;
   jurisdictionCode?: string | null;
   rate?: number;
+  taxableAmount?: number;
   taxAmount?: number;
   taxType?: CommercePaymentsTaxType;
-  taxableAmount?: number;
 }
 
 export interface CommercePaymentsTaxCalculationResult {
@@ -1387,19 +1387,19 @@ export interface CommercePaymentsTaxExemptionValidationResult {
   exemptionRate?: number;
   exemptionType?: string | null;
   isValid?: boolean;
+  validationMessage?: string | null;
   validFrom?: string | null;
   validTo?: string | null;
-  validationMessage?: string | null;
   warnings?: Array<string> | null;
 }
 
 export interface CommercePaymentsTaxJurisdiction {
+  id?: string;
   childJurisdictions?: Array<CommercePaymentsTaxJurisdiction> | null;
   code: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -1417,10 +1417,10 @@ export interface CommercePaymentsTaxJurisdiction {
 }
 
 export interface CommercePaymentsTaxJurisdictionDto {
+  id?: string;
   code?: string | null;
   country?: string | null;
   defaultRate?: number;
-  id?: string;
   isActive?: boolean;
   name?: string | null;
   state?: string | null;
@@ -1431,13 +1431,13 @@ export type CommercePaymentsTaxJurisdictionType =
   "Country" | "State" | "Province" | "Region" | "City" | "County" | "District";
 
 export interface CommercePaymentsTaxRate {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   effectiveFrom?: string;
   effectiveTo?: string | null;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -1455,6 +1455,7 @@ export interface CommercePaymentsTaxRate {
 }
 
 export interface CommercePaymentsTaxRule {
+  id?: string;
   createdAt: string;
   customerTypeFilter?: CommercePaymentsCustomerType;
   defaultTaxRate?: CommercePaymentsTaxRate;
@@ -1465,7 +1466,6 @@ export interface CommercePaymentsTaxRule {
   effectiveFrom?: string | null;
   effectiveTo?: string | null;
   exemptionConditions?: string | null;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -1486,11 +1486,11 @@ export interface CommercePaymentsTaxRule {
 }
 
 export interface CommercePaymentsTaxRuleDto {
+  id?: string;
   customerType?: string | null;
   description?: string | null;
   effectiveFrom?: string;
   effectiveTo?: string | null;
-  id?: string;
   isActive?: boolean;
   jurisdictionCode?: string | null;
   productCategory?: string | null;
@@ -1521,13 +1521,13 @@ export type CommercePaymentsTransactionStatus =
   "Pending" | "Processing" | "Completed" | "Failed" | "Cancelled" | "Reversed";
 
 export interface CommercePaymentsUserWallet {
+  id?: string;
   balance?: number;
   createdAt: string;
   currency: string;
   dailyLimit?: number | null;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -1553,13 +1553,13 @@ export interface CommercePaymentsValidateTaxExemptionInput {
 }
 
 export interface CommercePaymentsWalletTransaction {
+  id?: string;
   amount?: number;
   balanceAfter?: number;
   createdAt: string;
   deletedAt?: string | null;
   description: string;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -1761,12 +1761,12 @@ export interface CommerceProductsPatchPromoCodeInput {
 }
 
 export interface CommerceProductsProduct {
+  id?: string;
   affiliateCommissionPercentage?: number;
   bundleItems?: Array<string> | null;
   createdAt?: string;
   creatorId?: string | null;
   description?: string | null;
-  id?: string;
   imageUrl?: string | null;
   isBundle?: boolean;
   isPublished?: boolean;
@@ -1791,10 +1791,10 @@ export type CommerceProductsProductAcquisitionType =
   | "Gift";
 
 export interface CommerceProductsProductPricing {
+  id?: string;
   basePrice?: number;
   currency?: string | null;
   currentPrice?: number;
-  id?: string;
   isDefault?: boolean;
   isSaleActive?: boolean;
   name?: string | null;
@@ -1821,13 +1821,13 @@ export type CommerceProductsProductType =
   | "Other";
 
 export interface CommerceProductsPromoCode {
+  id?: string;
   code?: string | null;
   createdAt?: string;
   currency?: string | null;
   description?: string | null;
   discountAmount?: number | null;
   discountPercentage?: number | null;
-  id?: string;
   isActive?: boolean;
   isExclusive?: boolean;
   maxUses?: number | null;
@@ -1898,6 +1898,7 @@ export interface CommerceProductsRevokeEntitlementInput {
 }
 
 export interface CommerceProductsSupportTicket {
+  id?: string;
   assignedToName?: string | null;
   assignedToUserId?: string | null;
   category?: string | null;
@@ -1905,7 +1906,6 @@ export interface CommerceProductsSupportTicket {
   customerId?: string;
   customerName?: string | null;
   firstResponseAt?: string | null;
-  id?: string;
   lastMessageAt?: string | null;
   lastMessagePreview?: string | null;
   messageCount?: number;
@@ -1924,13 +1924,13 @@ export interface CommerceProductsSupportTicket {
 }
 
 export interface CommerceProductsSupportTicketMessage {
+  id?: string;
   authorEmail?: string | null;
   authorName?: string | null;
   authorType?: CommerceProductsSupportTicketMessageAuthorType;
   authorUserId?: string;
   body?: string | null;
   createdAt?: string;
-  id?: string;
   isInternal?: boolean;
   ticketId?: string;
 }
@@ -1983,13 +1983,13 @@ export interface CommerceProductsValidatePromoCodeInput {
 }
 
 export interface CommerceSubscriptionsBillingHistory {
+  id?: string;
   amount?: number;
   billingDate?: string;
   createdAt?: string;
   currency?: string | null;
   description?: string | null;
   externalPaymentId?: string | null;
-  id?: string;
   status?: string | null;
   subscriptionId?: string;
 }
@@ -2038,6 +2038,7 @@ export interface CommerceSubscriptionsCreateClientInput {
 }
 
 export interface CommerceSubscriptionsSubscription {
+  id?: string;
   amount?: Money;
   autoRenew?: boolean;
   billingCycle?: BillingCycle;
@@ -2055,7 +2056,6 @@ export interface CommerceSubscriptionsSubscription {
   externalCustomerId?: string | null;
   externalId?: string | null;
   fulfilledOrderId?: string | null;
-  id?: string;
   isActive?: boolean;
   isCancelled?: boolean;
   isDeleted?: boolean;
@@ -2146,9 +2146,9 @@ export interface CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInpu
 }
 
 export interface CommerceSubscriptionsSubscriptionNotification {
+  id?: string;
   channel?: string | null;
   createdAt?: string;
-  id?: string;
   isSent?: boolean;
   message?: string | null;
   recipientId?: string;
@@ -2163,6 +2163,7 @@ export interface CommerceSubscriptionsSubscriptionNotificationsControllerResendS
 }
 
 export interface CommerceSubscriptionsSubscriptionPlan {
+  id?: string;
   annualPriceInCents?: number | null;
   createdAt: string;
   currency: string;
@@ -2174,7 +2175,6 @@ export interface CommerceSubscriptionsSubscriptionPlan {
   hasAdvancedAnalytics?: boolean;
   hasCustomBranding?: boolean;
   hasPrioritySupport?: boolean;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isFeatured?: boolean;
@@ -2353,13 +2353,13 @@ export interface ComplianceAuditAuditExportInput {
 }
 
 export interface ComplianceAuditAuditLog {
+  id?: string;
   actionType?: string | null;
   category?: ComplianceAuditAuditCategory;
   correlationId?: string | null;
   createdAt?: string;
   description?: string | null;
   errorMessage?: string | null;
-  id?: string;
   ipAddress?: string | null;
   resourceId?: string | null;
   resourceType?: string | null;
@@ -2393,11 +2393,11 @@ export interface ComplianceAuditAuditStatisticsOutput {
 }
 
 export interface ComplianceAuditAuthenticationAuditEntry {
+  id?: string;
   attemptedAt?: string;
   email?: string | null;
   failureReason?: string | null;
   geoLocation?: string | null;
-  id?: string;
   ipAddress?: string | null;
   isSuccessful?: boolean;
   isSuspicious?: boolean;
@@ -2430,8 +2430,8 @@ export interface ComplianceAuditFailureReasonCount {
 }
 
 export interface ComplianceAuditPermissionAuditEntry {
-  errorMessage?: string | null;
   id?: string;
+  errorMessage?: string | null;
   ipAddress?: string | null;
   newValue?: string | null;
   oldValue?: string | null;
@@ -2498,10 +2498,10 @@ export interface ComplianceAuditTopUserActivity {
 }
 
 export interface ComplianceAuditUnifiedSecurityAuditEntry {
+  id?: string;
   actionType?: string | null;
   description?: string | null;
   errorMessage?: string | null;
-  id?: string;
   ipAddress?: string | null;
   metadata?: string | null;
   resourceId?: string | null;
@@ -2548,8 +2548,8 @@ export interface ComplianceAuditUnifiedSecurityAuditOutput {
 }
 
 export interface ComplianceConsentConsentPolicy {
-  currentVersion?: string | null;
   id?: string;
+  currentVersion?: string | null;
   isActive?: boolean;
   isMandatory?: boolean;
   name?: string | null;
@@ -2567,8 +2567,8 @@ export interface ComplianceConsentCreateConsentPolicyCommand {
 }
 
 export interface ComplianceConsentDataSubjectInput {
-  deadline?: string;
   id?: string;
+  deadline?: string;
   processedAt?: string | null;
   processingNotes?: string | null;
   requestType?: ComplianceConsentDataSubjectRequestType;
@@ -2605,9 +2605,9 @@ export type ComplianceConsentPolicyType =
   | "Custom";
 
 export interface ComplianceConsentPolicyVersion {
+  id?: string;
   contentType?: ComplianceConsentContentType;
   effectiveFrom?: string;
-  id?: string;
   isCurrent?: boolean;
   policyId?: string;
   versionNumber?: string | null;
@@ -2636,10 +2636,10 @@ export interface ComplianceConsentSubmitDataSubjectRequestCommand {
 }
 
 export interface ComplianceConsentUserConsent {
+  id?: string;
   consentGivenAt?: string;
   consentMethod?: string | null;
   consentRevokedAt?: string | null;
-  id?: string;
   isGranted?: boolean;
   policyVersionId?: string;
   userId?: string;
@@ -2662,9 +2662,9 @@ export type ComplianceFERPAEducationRecordKind =
   | "Custom";
 
 export interface ComplianceFERPAFerpaDirectoryInformationPolicy {
+  id?: string;
   allowedFieldsJson?: string | null;
   annualNoticeSentAt?: string | null;
-  id?: string;
   noticeUrl?: string | null;
   optOutEnabled?: boolean;
   tenantId?: string | null;
@@ -2682,10 +2682,10 @@ export type ComplianceFERPAFerpaDisclosureBasis =
   | "Other";
 
 export interface ComplianceFERPAFerpaDisclosureConsent {
+  id?: string;
   effectiveFrom?: string;
   expiresAt?: string | null;
   guardianUserId?: string | null;
-  id?: string;
   isActive?: boolean;
   purpose?: string | null;
   recipient?: string | null;
@@ -2695,10 +2695,10 @@ export interface ComplianceFERPAFerpaDisclosureConsent {
 }
 
 export interface ComplianceFERPAFerpaDisclosureLog {
+  id?: string;
   basis?: ComplianceFERPAFerpaDisclosureBasis;
   disclosedAt?: string;
   disclosedByUserId?: string;
-  id?: string;
   purpose?: string | null;
   recipient?: string | null;
   recordIdsJson?: string | null;
@@ -2706,9 +2706,9 @@ export interface ComplianceFERPAFerpaDisclosureLog {
 }
 
 export interface ComplianceFERPAFerpaEducationRecord {
+  id?: string;
   createdAt?: string;
   externalRecordId?: string | null;
-  id?: string;
   isDirectoryInformation?: boolean;
   metadataJson?: string | null;
   protectionLevel?: ComplianceFERPAFerpaRecordProtectionLevel;
@@ -2719,8 +2719,8 @@ export interface ComplianceFERPAFerpaEducationRecord {
 }
 
 export interface ComplianceFERPAFerpaInspectionInput {
-  deadline?: string;
   id?: string;
+  deadline?: string;
   processedAt?: string | null;
   processedByUserId?: string | null;
   processingNotes?: string | null;
@@ -2787,6 +2787,7 @@ export interface ComplianceFERPAUpsertDirectoryInformationPolicyCommand {
 }
 
 export interface ContentPagesContentResource {
+  id?: string;
   authorId?: string | null;
   authorName?: string | null;
   body?: string | null;
@@ -2796,7 +2797,6 @@ export interface ContentPagesContentResource {
   customData?: string | null;
   downloadUrl?: string | null;
   externalUrl?: string | null;
-  id?: string;
   isFeatured?: boolean;
   linkedEntityId?: string | null;
   linkedEntityType?: string | null;
@@ -2907,10 +2907,10 @@ export interface ContentPagesCreatePageSection {
 }
 
 export interface ContentPagesMarketingLead {
+  id?: string;
   company?: string | null;
   createdAt?: string;
   email?: string | null;
-  id?: string;
   locale?: string | null;
   message?: string | null;
   name?: string | null;
@@ -2940,12 +2940,12 @@ export interface ContentPagesOpenGraphMetadata {
 }
 
 export interface ContentPagesPage {
+  id?: string;
   body?: string | null;
   canonicalUrl?: string | null;
   createdAt?: string;
   customData?: string | null;
   description?: string | null;
-  id?: string;
   locale?: string | null;
   metaDescription?: string | null;
   metaKeywords?: string | null;
@@ -2971,11 +2971,11 @@ export interface ContentPagesPage {
 }
 
 export interface ContentPagesPageSection {
+  id?: string;
   createdAt?: string;
   cssClasses?: string | null;
   data?: string | null;
   heading?: string | null;
-  id?: string;
   isVisible?: boolean;
   pageId?: string;
   sectionType?: string | null;
@@ -3200,17 +3200,17 @@ export type EconomyPayoutsPayoutRequestState =
   "Submitted" | "Cancelled" | "Approved" | "Rejected";
 
 export interface EconomyPayoutsQueriesEconomyPayoutInput {
+  id?: string;
   createdAt?: string;
   hardCoinUnits?: number;
-  id?: string;
   state?: EconomyPayoutsPayoutRequestState;
   updatedAt?: string;
 }
 
 export interface EconomyPayoutsQueriesEconomyPayoutOperation {
+  id?: string;
   createdAt?: string;
   hardCoinUnits?: number;
-  id?: string;
   state?: EconomyPayoutsPayoutOperationState;
   updatedAt?: string;
 }
@@ -3249,12 +3249,12 @@ export interface FeaturesBulkEvaluationInput {
 }
 
 export interface FeaturesCapabilityAuditLog {
+  id?: string;
   capabilityKey?: string | null;
-  changeReason?: string | null;
-  changeType?: string | null;
   changedAt?: string;
   changedByUserId?: string | null;
-  id?: string;
+  changeReason?: string | null;
+  changeType?: string | null;
   newSource?: string | null;
   newValue?: boolean;
   oldSource?: string | null;
@@ -3295,12 +3295,12 @@ export interface FeaturesFeatureEvaluationInput {
 }
 
 export interface FeaturesFeatureFlag {
+  id: string;
   createdAt: string;
   defaultValue?: Record<string, unknown> | null;
   deletedAt?: string | null;
   description?: string | null;
   environment?: string | null;
-  id: string;
   isEnabled: boolean;
   key: string | null;
   name: string | null;
@@ -3311,11 +3311,11 @@ export interface FeaturesFeatureFlag {
 }
 
 export interface FeaturesFeatureFlagTarget {
+  id: string;
   createdAt: string;
   customValue?: string | null;
   deletedAt?: string | null;
   featureFlagId: string;
-  id: string;
   isEnabled: boolean;
   metadata?: string | null;
   priority?: number;
@@ -3385,8 +3385,8 @@ export interface Fido2NetLibCredentialCreateOptions {
 }
 
 export interface Fido2NetLibFido2User {
-  displayName?: string | null;
   id?: string | null;
+  displayName?: string | null;
   name?: string | null;
 }
 
@@ -3396,8 +3396,8 @@ export interface Fido2NetLibPubKeyCredParam {
 }
 
 export interface Fido2NetLibPublicKeyCredentialRpEntity {
-  icon?: string | null;
   id?: string | null;
+  icon?: string | null;
   name?: string | null;
 }
 
@@ -3423,13 +3423,13 @@ export interface GameJamsCreateJamInput {
 }
 
 export interface GameJamsJam {
+  id?: string;
   createdAt: string;
   createdBy: string;
   deletedAt?: string | null;
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endDate: string;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -3449,8 +3449,8 @@ export interface GameJamsJam {
 }
 
 export interface GameJamsJamCriteria {
-  description?: string | null;
   id?: string;
+  description?: string | null;
   jamId?: string;
   maxScore?: number;
   name?: string | null;
@@ -3458,10 +3458,10 @@ export interface GameJamsJamCriteria {
 }
 
 export interface GameJamsJamDto {
+  id?: string;
   createdBy?: string;
   description?: string | null;
   endDate?: string;
-  id?: string;
   maxParticipants?: number | null;
   name?: string | null;
   participantCount?: number;
@@ -3473,12 +3473,12 @@ export interface GameJamsJamDto {
 }
 
 export interface GameJamsJamScore {
+  id?: string;
   createdAt: string;
   criteriaId: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   feedback?: string | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -3491,9 +3491,9 @@ export interface GameJamsJamScore {
 }
 
 export interface GameJamsJamScoreDto {
+  id?: string;
   criteriaId?: string;
   feedback?: string | null;
-  id?: string;
   judgeUserId?: string;
   score?: number;
   submissionId?: string;
@@ -3524,9 +3524,9 @@ export interface GameJamsSubmitJamEntryInput {
 }
 
 export interface IdentityAuthenticationApiKey {
+  id?: string;
   createdAt?: string;
   expiresAt?: string | null;
-  id?: string;
   isActive?: boolean;
   keyPrefix?: string | null;
   lastUsedAt?: string | null;
@@ -3614,10 +3614,10 @@ export interface IdentityAuthenticationCreateApiKeyCommand {
 }
 
 export interface IdentityAuthenticationCreateApiKeyOutput {
+  id?: string;
   apiKey?: string | null;
   createdAt?: string;
   expiresAt?: string | null;
-  id?: string;
   keyPrefix?: string | null;
   name?: string | null;
   scopes?: Array<string> | null;
@@ -3704,11 +3704,6 @@ export interface IdentityAuthenticationEmailVerificationResult {
   verifiedAt?: string | null;
 }
 
-export interface IdentityAuthenticationExternalLogin {
-  createdAt: string;
-  provider: string | null;
-}
-
 export interface IdentityAuthenticationGitHubSignInOutput {
   authUrl: string | null;
 }
@@ -3759,8 +3754,8 @@ export interface IdentityAuthenticationLocationInfo {
   displayLocation?: string | null;
   ipAddress?: string | null;
   isHosting?: boolean | null;
-  isProxy?: boolean | null;
   isp?: string | null;
+  isProxy?: boolean | null;
   latitude?: number | null;
   longitude?: number | null;
   organization?: string | null;
@@ -3834,7 +3829,7 @@ export interface IdentityAuthenticationOAuth2ErrorOutput {
 
 export interface IdentityAuthenticationPasswordChangeInput {
   confirmPassword: string;
-  currentPassword: string;
+  currentPassword?: string | null;
   newPassword: string;
   revokeOtherSessions?: boolean;
 }
@@ -3912,9 +3907,9 @@ export interface IdentityAuthenticationSendEmailVerificationInput {
 }
 
 export interface IdentityAuthenticationServiceAccountAuditEntry {
+  id?: string;
   action?: string | null;
   details?: string | null;
-  id?: string;
   ipAddress?: string | null;
   performedBy?: string | null;
   timestamp?: string;
@@ -3929,12 +3924,12 @@ export interface IdentityAuthenticationServiceAccountAuditLogOutput {
 }
 
 export interface IdentityAuthenticationServiceAccountCreatedOutput {
+  id?: string;
   clientId?: string | null;
   clientSecret?: string | null;
   createdAt?: string;
   description?: string | null;
   expiresAt?: string | null;
-  id?: string;
   name?: string | null;
   scopes?: string | null;
   tenantId?: string | null;
@@ -3942,13 +3937,13 @@ export interface IdentityAuthenticationServiceAccountCreatedOutput {
 }
 
 export interface IdentityAuthenticationServiceAccountOutput {
+  id?: string;
   authenticationCount?: number;
   clientId?: string | null;
   createdAt?: string;
   createdBy?: string | null;
   description?: string | null;
   expiresAt?: string | null;
-  id?: string;
   isActive?: boolean;
   isLocked?: boolean;
   lastAuthenticatedAt?: string | null;
@@ -3959,10 +3954,10 @@ export interface IdentityAuthenticationServiceAccountOutput {
 }
 
 export interface IdentityAuthenticationSessionOutput {
+  id?: string;
   createdAt?: string;
   deviceInfo?: IdentityAuthenticationDeviceInfo;
   expiresAt?: string;
-  id?: string;
   ipAddress?: string | null;
   isCurrent?: boolean;
   isTrustedDevice?: boolean;
@@ -4036,10 +4031,10 @@ export interface IdentityAuthenticationTrustDeviceInput {
 }
 
 export interface IdentityAuthenticationTrustedDeviceOutput {
+  id?: string;
   deviceInfo?: IdentityAuthenticationDeviceInfo;
   deviceName?: string | null;
   expiresAt?: string | null;
-  id?: string;
   lastUsedAt?: string;
   trustedAt?: string;
 }
@@ -4060,11 +4055,11 @@ export interface IdentityAuthenticationUpdateScopesInput {
 }
 
 export interface IdentityAuthenticationUser {
+  id?: string;
   createdAt?: string;
   email?: string | null;
   emailVerified?: boolean;
   firstName?: string | null;
-  id?: string;
   lastLoginAt?: string | null;
   lastName?: string | null;
   phoneNumber?: string | null;
@@ -4129,11 +4124,11 @@ export type IdentityAuthenticationWebAuthnAuthenticatorType =
   "Platform" | "CrossPlatform";
 
 export interface IdentityAuthenticationWebAuthnCredentialInfo {
+  id?: string;
   authenticatorType?: IdentityAuthenticationWebAuthnAuthenticatorType;
   backedUp?: boolean;
   createdAt?: string;
   friendlyName?: string | null;
-  id?: string;
   isDefault?: boolean;
   isPasswordless?: boolean;
   lastUsedAt?: string | null;
@@ -4173,6 +4168,7 @@ export interface IdentityAuthenticationWebAuthnStatusOutput {
 }
 
 export interface IdentityAuthorizationAccessReviewCampaign {
+  id?: string;
   approvedItems?: number;
   autoRevokeOnNoResponse?: boolean;
   completedAt?: string | null;
@@ -4181,13 +4177,12 @@ export interface IdentityAuthorizationAccessReviewCampaign {
   createdBy?: string;
   description?: string | null;
   endDate?: string;
-  id?: string;
   items?: Array<IdentityAuthorizationAccessReviewItem> | null;
   name?: string | null;
   notificationTemplate?: string | null;
   reminderFrequencyDays?: number;
-  reviewType?: IdentityAuthorizationAccessReviewType;
   reviewedItems?: number;
+  reviewType?: IdentityAuthorizationAccessReviewType;
   revokedItems?: number;
   scope?: IdentityAuthorizationAccessReviewScope;
   scopeFilter?: string | null;
@@ -4202,12 +4197,12 @@ export type IdentityAuthorizationAccessReviewDecision =
   "None" | "Approve" | "Revoke" | "ModifyAndApprove";
 
 export interface IdentityAuthorizationAccessReviewItem {
+  id?: string;
   campaign?: IdentityAuthorizationAccessReviewCampaign;
   campaignId?: string;
   createdAt?: string;
   decision?: IdentityAuthorizationAccessReviewDecision;
   decisionReason?: string | null;
-  id?: string;
   lastReminderSent?: string | null;
   permissionDetails?: string | null;
   reminderCount?: number;
@@ -4352,6 +4347,7 @@ export interface IdentityAuthorizationDeclineInvitationInput {
 }
 
 export interface IdentityAuthorizationDelegatedAdminScope {
+  id?: string;
   adminUserId?: string;
   allowedDepartments?: string | null;
   allowedResourceIds?: string | null;
@@ -4369,7 +4365,6 @@ export interface IdentityAuthorizationDelegatedAdminScope {
   description?: string | null;
   expiresAt?: string | null;
   grantablePermissions?: string | null;
-  id?: string;
   isActive?: boolean;
   name?: string | null;
   scopeType?: IdentityAuthorizationDelegatedAdminScopeType;
@@ -4465,11 +4460,11 @@ export interface IdentityAuthorizationInvitationActionResult {
 }
 
 export interface IdentityAuthorizationJitElevationInput {
+  id?: string;
   activatedAt?: string | null;
   createdAt?: string;
   durationMinutes?: number;
   expiresAt?: string;
-  id?: string;
   justification?: string | null;
   permission?: string | null;
   requesterId?: string;
@@ -4508,14 +4503,14 @@ export interface IdentityAuthorizationPermissionAnomaly {
 }
 
 export interface IdentityAuthorizationPermissionDelegation {
+  id?: string;
   canSubDelegate?: boolean;
   conditions?: string | null;
   createdAt?: string;
-  delegateUserId?: string;
   delegatedPermissions?: Array<string> | null;
+  delegateUserId?: string;
   delegatorUserId?: string;
   expiresAt?: string | null;
-  id?: string;
   isActive?: boolean;
   reason?: string | null;
   resourceId?: string | null;
@@ -4754,6 +4749,7 @@ export type IdentityAuthorizationSoDResolutionAction =
   | "NoAction";
 
 export interface IdentityAuthorizationSoDRule {
+  id?: string;
   allowedExceptions?: string | null;
   approverRoles?: string | null;
   conflictingPermissions?: string | null;
@@ -4762,7 +4758,6 @@ export interface IdentityAuthorizationSoDRule {
   createdAt?: string;
   createdBy?: string;
   description?: string | null;
-  id?: string;
   isEnabled?: boolean;
   lastViolationDetected?: string | null;
   mitigationStrategy?: string | null;
@@ -4788,6 +4783,7 @@ export type IdentityAuthorizationSoDSeverity =
   "None" | "Low" | "Medium" | "High" | "Critical";
 
 export interface IdentityAuthorizationSoDViolation {
+  id?: string;
   approvedAt?: string | null;
   approvedBy?: string | null;
   conflictingItems?: string | null;
@@ -4795,7 +4791,6 @@ export interface IdentityAuthorizationSoDViolation {
   detectedAt?: string;
   detectedBy?: string | null;
   exceptionJustification?: string | null;
-  id?: string;
   isException?: boolean;
   resolutionAction?: IdentityAuthorizationSoDResolutionAction;
   resolutionNotes?: string | null;
@@ -4959,6 +4954,7 @@ export interface IdentityTenantsSlugValidation {
 }
 
 export interface IdentityTenantsTenant {
+  id?: string;
   activeMemberCount?: number;
   adminEmail?: string | null;
   archivedAt?: string | null;
@@ -4968,7 +4964,6 @@ export interface IdentityTenantsTenant {
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   hasActiveMembers?: boolean;
-  id?: string;
   isActive?: boolean;
   isArchived?: boolean;
   isDefault?: boolean;
@@ -4996,6 +4991,7 @@ export interface IdentityTenantsTenantAddress {
 }
 
 export interface IdentityTenantsTenantAuditLogEntry {
+  id?: string;
   action?: string | null;
   actorEmail?: string | null;
   actorId?: string | null;
@@ -5003,7 +4999,6 @@ export interface IdentityTenantsTenantAuditLogEntry {
   afterValues?: Record<string, Record<string, unknown> | null> | null;
   beforeValues?: Record<string, Record<string, unknown> | null> | null;
   correlationId?: string | null;
-  id?: string;
   ipAddress?: string | null;
   metadata?: Record<string, string> | null;
   tenantId?: string;
@@ -5050,11 +5045,11 @@ export interface IdentityTenantsTenantCurrencySettings {
 }
 
 export interface IdentityTenantsTenantDomain {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   fullDomain?: string | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isMainDomain?: boolean;
@@ -5077,11 +5072,11 @@ export interface IdentityTenantsTenantIntegrationSettings {
 }
 
 export interface IdentityTenantsTenantMember {
+  id?: string;
   childMembers?: Array<IdentityTenantsTenantMember> | null;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -5101,13 +5096,13 @@ export interface IdentityTenantsTenantMember {
 }
 
 export interface IdentityTenantsTenantMetadata {
+  id?: string;
   adminNotes?: string | null;
   businessInfo?: IdentityTenantsTenantBusinessInfo;
   contactInfo?: IdentityTenantsTenantContactInfo;
   createdAt?: string;
   customFields?: Record<string, Record<string, unknown> | null> | null;
   externalReferences?: Record<string, string> | null;
-  id?: string;
   tags?: Array<string> | null;
   updatedAt?: string;
 }
@@ -5121,6 +5116,7 @@ export interface IdentityTenantsTenantSecuritySettings {
 }
 
 export interface IdentityTenantsTenantSettings {
+  id?: string;
   allowUserRegistration?: boolean;
   brandingSettings?: string | null;
   createdAt: string;
@@ -5131,7 +5127,6 @@ export interface IdentityTenantsTenantSettings {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   enableApiAccess?: boolean;
   enableAuditLogging?: boolean;
-  id?: string;
   integrationSettingsJson?: string | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -5149,10 +5144,10 @@ export interface IdentityTenantsTenantSettings {
 }
 
 export interface IdentityTenantsTenantSettingsDto {
+  id?: string;
   businessRules?: IdentityTenantsTenantBusinessRules;
   createdAt?: string;
   featureFlags?: Record<string, boolean> | null;
-  id?: string;
   integrationSettings?: IdentityTenantsTenantIntegrationSettings;
   securitySettings?: IdentityTenantsTenantSecuritySettings;
   systemConfiguration?: IdentityTenantsTenantSystemConfiguration;
@@ -5162,13 +5157,13 @@ export interface IdentityTenantsTenantSettingsDto {
 }
 
 export interface IdentityTenantsTenantStatistics {
+  id?: string;
   activeMembers?: number;
   apiCalls?: number;
   createdAt: string;
   customMetrics?: string | null;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   inactiveMembers?: number;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -5371,12 +5366,12 @@ export interface IdentityTenantsUpdateUserMembershipRoleInput {
 }
 
 export interface IdentityTenantsUsageTracking {
+  id?: string;
   cost?: number;
   createdAt: string;
   date?: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -5393,12 +5388,12 @@ export interface IdentityTenantsUsageTracking {
 export interface IdentityTenantsUserMembership {
   acceptedAt?: string | null;
   cancelledAt?: string | null;
-  inviteResendCount?: number;
-  inviteStatus?: string | null;
   invitedAt?: string | null;
   invitedByEmail?: string | null;
   inviteeEmail?: string | null;
   inviteeName?: string | null;
+  inviteResendCount?: number;
+  inviteStatus?: string | null;
   isActive?: boolean;
   joinedAt?: string;
   lastInviteSentAt?: string | null;
@@ -5630,6 +5625,7 @@ export interface IdentityUsersUpdateUserRequestItem {
 }
 
 export interface IdentityUsersUser {
+  id?: string;
   canPerformActions?: boolean;
   canSignIn?: boolean;
   createdAt: string;
@@ -5637,7 +5633,6 @@ export interface IdentityUsersUser {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   email: string;
   hasPassword?: boolean;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isEmailVerified?: boolean;
@@ -5673,9 +5668,9 @@ export interface IdentityUsersUserAccessibilityPreferences {
 }
 
 export interface IdentityUsersUserDto {
+  id?: string;
   createdAt?: string;
   email?: string | null;
-  id?: string;
   isActive?: boolean;
   lastSeenAt?: string | null;
   name?: string | null;
@@ -5694,12 +5689,12 @@ export interface IdentityUsersUserLocalizationPreferences {
 }
 
 export interface IdentityUsersUserMetadata {
+  id?: string;
   createdAt: string;
   customFields?: string | null;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   externalReferences?: string | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -5713,10 +5708,10 @@ export interface IdentityUsersUserMetadata {
 }
 
 export interface IdentityUsersUserMetadataDto {
+  id?: string;
   createdAt?: string;
   customFields?: Record<string, Record<string, unknown>> | null;
   externalReferences?: Record<string, string> | null;
-  id?: string;
   tags?: Array<string> | null;
   updatedAt?: string | null;
   userId?: string;
@@ -5724,13 +5719,13 @@ export interface IdentityUsersUserMetadataDto {
 }
 
 export interface IdentityUsersUserNotification {
+  id?: string;
   actionUrl?: string | null;
   archivedAt?: string | null;
   content: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isArchived?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -5759,13 +5754,13 @@ export interface IdentityUsersUserNotificationDetail {
 }
 
 export interface IdentityUsersUserNotificationDto {
+  id?: string;
   actionText?: string | null;
   actionUrl?: string | null;
   archivedAt?: string | null;
   category?: string | null;
   createdAt?: string;
   expiresAt?: string | null;
-  id?: string;
   imageUrl?: string | null;
   isArchived?: boolean;
   isRead?: boolean;
@@ -5791,12 +5786,12 @@ export interface IdentityUsersUserNotificationPreferences {
 }
 
 export interface IdentityUsersUserPreferences {
+  id?: string;
   accessibilityPreferences?: string | null;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   generalPreferences?: string | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -5811,10 +5806,10 @@ export interface IdentityUsersUserPreferences {
 }
 
 export interface IdentityUsersUserPreferencesDto {
+  id?: string;
   accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
   createdAt?: string;
   generalPreferences?: Record<string, Record<string, unknown>> | null;
-  id?: string;
   localizationPreferences?: Record<string, Record<string, unknown>> | null;
   notificationPreferences?: Record<string, Record<string, unknown>> | null;
   privacyPreferences?: Record<string, Record<string, unknown>> | null;
@@ -5835,6 +5830,7 @@ export interface IdentityUsersUserPrivacyPreferences {
 }
 
 export interface IdentityUsersUserProfile {
+  id?: string;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
   bio?: string | null;
@@ -5845,7 +5841,6 @@ export interface IdentityUsersUserProfile {
   displayName?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   gender?: string | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -5862,13 +5857,13 @@ export interface IdentityUsersUserProfile {
 }
 
 export interface IdentityUsersUserProfileDto {
+  id?: string;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
   bio?: string | null;
   company?: string | null;
   createdAt?: string;
   displayName?: string | null;
-  id?: string;
   jobTitle?: string | null;
   language?: string | null;
   location?: string | null;
@@ -5919,12 +5914,12 @@ export interface LaunchPadCreateLaunchPlanInput {
 }
 
 export interface LaunchPadLaunchChecklistItem {
+  id?: string;
   category: string;
   completedAt?: string | null;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isComplete?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -5955,10 +5950,10 @@ export interface LaunchPadLaunchPadAnalyticsProjection {
 }
 
 export interface LaunchPadLaunchPadApplication {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -5983,8 +5978,8 @@ export interface LaunchPadLaunchPadApplication {
 }
 
 export interface LaunchPadLaunchPadApplicationProjection {
-  eventId?: string;
   id?: string;
+  eventId?: string;
   pitch?: string | null;
   projectId?: string;
   projectVersionId?: string;
@@ -6004,6 +5999,7 @@ export type LaunchPadLaunchPadApplicationStatus =
   | "Withdrawn";
 
 export interface LaunchPadLaunchPadEvent {
+  id?: string;
   applications?: Array<LaunchPadLaunchPadApplication> | null;
   applicationsCloseAt?: string | null;
   applicationsOpenAt?: string | null;
@@ -6012,7 +6008,6 @@ export interface LaunchPadLaunchPadEvent {
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -6031,11 +6026,11 @@ export interface LaunchPadLaunchPadEventDetailProjection {
 }
 
 export interface LaunchPadLaunchPadEventProjection {
+  id?: string;
   applicationsCloseAt?: string | null;
   applicationsOpenAt?: string | null;
   description?: string | null;
   endsAt?: string;
-  id?: string;
   name?: string | null;
   startsAt?: string;
   status?: LaunchPadLaunchPadEventStatus;
@@ -6052,12 +6047,12 @@ export type LaunchPadLaunchPadEventStatus =
   | "Archived";
 
 export interface LaunchPadLaunchPadParticipantRegistration {
+  id?: string;
   checkedInAt?: string | null;
   completedAt?: string | null;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -6076,13 +6071,13 @@ export type LaunchPadLaunchPadParticipantRole =
   "Participant" | "Mentor" | "Audience" | "Presenter";
 
 export interface LaunchPadLaunchPadParticipantSlot {
+  id?: string;
   capacity?: number;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
   hasCapacity?: boolean;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -6108,9 +6103,9 @@ export type LaunchPadLaunchPadParticipantStatus =
   | "NoShow";
 
 export interface LaunchPadLaunchPadRegistrationProjection {
+  id?: string;
   checkedInAt?: string | null;
   completedAt?: string | null;
-  id?: string;
   registeredAt?: string;
   slotId?: string;
   status?: LaunchPadLaunchPadParticipantStatus;
@@ -6118,10 +6113,10 @@ export interface LaunchPadLaunchPadRegistrationProjection {
 }
 
 export interface LaunchPadLaunchPadSlotProjection {
+  id?: string;
   capacity?: number;
   endsAt?: string;
   eventId?: string;
-  id?: string;
   name?: string | null;
   reservedCount?: number;
   role?: LaunchPadLaunchPadParticipantRole;
@@ -6129,20 +6124,20 @@ export interface LaunchPadLaunchPadSlotProjection {
 }
 
 export interface LaunchPadLaunchPlan {
+  id?: string;
   channels?: Array<string> | null;
   checklistItems?: Array<LaunchPadLaunchChecklistItem> | null;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
+  launchedAt?: string | null;
   launchPadApplication?: LaunchPadLaunchPadApplication;
   launchPadApplicationId?: string | null;
   launchPadEvent?: LaunchPadLaunchPadEvent;
   launchPadEventId?: string | null;
-  launchedAt?: string | null;
   name: string;
   positioning?: string | null;
   project?: ProjectsProject;
@@ -6223,6 +6218,7 @@ export interface LearningAssessmentsAnonymousReviewSubmission {
 }
 
 export interface LearningAssessmentsAssessment {
+  id?: string;
   allowLateSubmissions?: boolean;
   assessmentGroupId?: string | null;
   assessmentGroupName?: string | null;
@@ -6236,7 +6232,6 @@ export interface LearningAssessmentsAssessment {
   dueAt?: string | null;
   gradingMethods?: LearningAssessmentsAssessmentGradingMethod;
   groupSetId?: string | null;
-  id?: string;
   isAvailable?: boolean;
   isRequired?: boolean;
   lateSubmissionDeadline?: string | null;
@@ -6261,9 +6256,9 @@ export interface LearningAssessmentsAssessmentDefinition {
 export type LearningAssessmentsAssessmentGradingMethod = string;
 
 export interface LearningAssessmentsAssessmentGroup {
+  id?: string;
   courseId?: string;
   description?: string | null;
-  id?: string;
   name?: string | null;
   order?: number;
   weightPercent?: number;
@@ -6292,6 +6287,7 @@ export interface LearningAssessmentsAssessmentScoreBucket {
 }
 
 export interface LearningAssessmentsAssessmentSubmission {
+  id?: string;
   assessmentId?: string;
   attemptNumber?: number;
   codePayload?: string | null;
@@ -6300,7 +6296,6 @@ export interface LearningAssessmentsAssessmentSubmission {
   filePayload?: string | null;
   gradedAt?: string | null;
   gradedBy?: string | null;
-  id?: string;
   isLate?: boolean;
   mediaPayload?: string | null;
   passed?: boolean | null;
@@ -6394,10 +6389,10 @@ export interface LearningAssessmentsGradingQueue {
 }
 
 export interface LearningAssessmentsGradingQueueAssessment {
+  id?: string;
   gradingMethods?: string | null;
   groupSetId?: string | null;
   hasRubric?: boolean;
-  id?: string;
   maxScore?: number;
   peerReviewsRequiredCount?: number;
   rubric?: LearningAssessmentsRubric;
@@ -6424,15 +6419,15 @@ export interface LearningAssessmentsGradingQueueItem {
 }
 
 export interface LearningAssessmentsGroup {
+  id?: string;
   capacity?: number;
   groupSetId?: string;
-  id?: string;
   name?: string | null;
 }
 
 export interface LearningAssessmentsGroupDetail {
-  capacity?: number;
   id?: string;
+  capacity?: number;
   memberCount?: number;
   members?: Array<LearningAssessmentsGroupMember> | null;
   name?: string | null;
@@ -6444,47 +6439,47 @@ export interface LearningAssessmentsGroupMember {
 }
 
 export interface LearningAssessmentsGroupMembership {
-  groupId?: string;
   id?: string;
+  groupId?: string;
   joinedAt?: string;
   userId?: string;
 }
 
 export interface LearningAssessmentsGroupSet {
-  courseId?: string;
   id?: string;
+  courseId?: string;
   name?: string | null;
 }
 
 export interface LearningAssessmentsGroupSetSummary {
-  groups?: Array<LearningAssessmentsGroupSummary> | null;
   id?: string;
+  groups?: Array<LearningAssessmentsGroupSummary> | null;
   name?: string | null;
 }
 
 export interface LearningAssessmentsGroupSummary {
-  capacity?: number;
   id?: string;
+  capacity?: number;
   memberCount?: number;
   name?: string | null;
 }
 
 export interface LearningAssessmentsInstructorPeerReview {
   feedback?: string | null;
-  reviewId?: string;
   reviewerName?: string | null;
   reviewerUserId?: string;
+  reviewId?: string;
   rubricScoresPayload?: string | null;
   score?: number | null;
   submittedAt?: string | null;
 }
 
 export interface LearningAssessmentsInteractiveVideoAssessmentCue {
+  id?: string;
   assessmentId?: string;
   contentId?: string;
   cueId?: string | null;
   cuePositionSeconds?: number | null;
-  id?: string;
 }
 
 export interface LearningAssessmentsLearnerAssessmentAttempt {
@@ -6492,6 +6487,7 @@ export interface LearningAssessmentsLearnerAssessmentAttempt {
 }
 
 export interface LearningAssessmentsLearnerAssessmentSubmission {
+  id?: string;
   assessmentId?: string;
   attemptNumber?: number;
   codePayload?: string | null;
@@ -6499,7 +6495,6 @@ export interface LearningAssessmentsLearnerAssessmentSubmission {
   feedback?: string | null;
   filePayload?: string | null;
   gradedAt?: string | null;
-  id?: string;
   isLate?: boolean;
   mediaPayload?: string | null;
   passed?: boolean | null;
@@ -6547,14 +6542,14 @@ export interface LearningAssessmentsReceivedPeerReview {
 }
 
 export interface LearningAssessmentsRubric {
-  criteria?: Array<LearningAssessmentsRubricCriterion> | null;
   id?: string;
+  criteria?: Array<LearningAssessmentsRubricCriterion> | null;
   title?: string | null;
 }
 
 export interface LearningAssessmentsRubricCriterion {
-  description?: string | null;
   id?: string;
+  description?: string | null;
   order?: number;
   points?: number;
 }
@@ -6640,12 +6635,12 @@ export interface LearningAssessmentsUpdateAssessmentInput {
 }
 
 export interface LearningCertificatesCertificate {
+  id?: string;
   certificateNumber?: string | null;
   courseId?: string;
   courseName?: string | null;
   enrollmentId?: string;
   expiresAt?: string | null;
-  id?: string;
   issuedAt?: string;
   recipientName?: string | null;
   status?: LearningCertificatesCertificateStatus;
@@ -6657,10 +6652,10 @@ export type LearningCertificatesCertificateStatus =
   "Active" | "Expired" | "Revoked";
 
 export interface LearningCertificatesCertificateTemplate {
+  id?: string;
   courseId?: string;
   createdAt?: string;
   description?: string | null;
-  id?: string;
   isActive?: boolean;
   isDefault?: boolean;
   name?: string | null;
@@ -6669,10 +6664,10 @@ export interface LearningCertificatesCertificateTemplate {
 }
 
 export interface LearningCertificatesCertificateTemplateDetail {
+  id?: string;
   courseId?: string;
   createdAt?: string;
   description?: string | null;
-  id?: string;
   isActive?: boolean;
   isDefault?: boolean;
   name?: string | null;
@@ -6686,8 +6681,8 @@ export interface LearningCertificatesCertificateVerificationResult {
   certificateNumber?: string | null;
   courseName?: string | null;
   expiresAt?: string | null;
-  isValid?: boolean;
   issuedAt?: string;
+  isValid?: boolean;
   message?: string | null;
   recipientName?: string | null;
   status?: LearningCertificatesCertificateStatus;
@@ -6740,6 +6735,7 @@ export interface LearningCohortsAvailableCohortContent {
 }
 
 export interface LearningCohortsCohort {
+  id?: string;
   availableSpots?: number;
   canEnroll?: boolean;
   conflictCount?: number;
@@ -6748,7 +6744,6 @@ export interface LearningCohortsCohort {
   currentEnrollmentCount?: number;
   description?: string | null;
   endDate?: string;
-  id?: string;
   instructorId?: string | null;
   isOpen?: boolean;
   maxCapacity?: number;
@@ -6781,8 +6776,8 @@ export type LearningCohortsCohortReleasePolicy =
   "Weekly" | "BeforeMeeting" | "Manual" | "Immediately";
 
 export interface LearningCohortsCohortSchedule {
-  cohortId?: string;
   id?: string;
+  cohortId?: string;
   items?: Array<LearningCohortsCohortScheduleItem> | null;
   meetingDays?: Array<SystemDayOfWeek> | null;
   meetingDurationMinutes?: number;
@@ -6804,12 +6799,12 @@ export interface LearningCohortsCohortScheduleConflict {
 }
 
 export interface LearningCohortsCohortScheduleItem {
+  id?: string;
   assessmentId?: string | null;
   availableFrom?: string | null;
   availableUntil?: string | null;
   dueAt?: string | null;
   endsAt?: string | null;
-  id?: string;
   instructionalWeek?: number;
   location?: string | null;
   meetingUrl?: string | null;
@@ -6935,19 +6930,19 @@ export interface LearningCohortsUpdateCohortScheduleItemInput {
 }
 
 export interface LearningCoursesActivityGrade {
+  id?: string;
   contentInteraction?: LearningCoursesContentInteractionSummary;
   contentInteractionId?: string;
   createdAt?: string;
   feedback?: string | null;
   grade?: number;
-  gradePercentage?: string | null;
   gradedAt?: string;
+  gradePercentage?: string | null;
   grader?: LearningCoursesGraderSummary;
   graderProgramUserId?: string | null;
   gradingDetails?: string | null;
   hasFeedback?: boolean;
   hasGradingDetails?: boolean;
-  id?: string;
   isPassingGrade?: boolean;
   updatedAt?: string;
 }
@@ -7024,6 +7019,7 @@ export interface LearningCoursesCompletionTrend {
 }
 
 export interface LearningCoursesContentInteraction {
+  id?: string;
   canModify?: boolean;
   completedAt?: string | null;
   completionPercentage?: number;
@@ -7033,7 +7029,6 @@ export interface LearningCoursesContentInteraction {
   durationInMinutes?: number;
   durationInSeconds?: number;
   firstAccessedAt?: string | null;
-  id?: string;
   isCompleted?: boolean;
   isSubmitted?: boolean;
   lastAccessedAt?: string | null;
@@ -7048,8 +7043,8 @@ export interface LearningCoursesContentInteraction {
 }
 
 export interface LearningCoursesContentInteractionEvent {
-  durationSeconds?: number | null;
   id?: string;
+  durationSeconds?: number | null;
   idempotencyKey?: string | null;
   interactionId?: string;
   occurredAt?: string;
@@ -7071,9 +7066,9 @@ export type LearningCoursesContentInteractionEventType =
   | "QuizAnswered";
 
 export interface LearningCoursesContentInteractionSummary {
+  id?: string;
   content?: LearningCoursesContentSummary;
   contentId?: string;
-  id?: string;
   programUserId?: string;
   status?: string | null;
   student?: LearningCoursesStudentSummary;
@@ -7119,9 +7114,9 @@ export interface LearningCoursesContentStats {
 }
 
 export interface LearningCoursesContentSummary {
+  id?: string;
   contentType?: string | null;
   estimatedMinutes?: number | null;
-  id?: string;
   title?: string | null;
 }
 
@@ -7241,11 +7236,11 @@ export interface LearningCoursesMoveContent {
 }
 
 export interface LearningCoursesPrerequisite {
+  id?: string;
   courseId?: string;
   createdAt?: string;
   description?: string | null;
   displayOrder?: number;
-  id?: string;
   minimumGrade?: number | null;
   prerequisiteCourseId?: string;
   prerequisiteCourseName?: string | null;
@@ -7282,6 +7277,7 @@ export interface LearningCoursesPricing {
 }
 
 export interface LearningCoursesProgram {
+  id?: string;
   averageRating?: number;
   category?: ProgramCategory;
   createdAt?: string;
@@ -7292,7 +7288,6 @@ export interface LearningCoursesProgram {
   enrollmentDeadline?: string | null;
   enrollmentStatus?: LearningCoursesEnrollmentStatus;
   estimatedHours?: number | null;
-  id?: string;
   isEnrollmentOpen?: boolean;
   maxEnrollments?: number | null;
   metadata?: string | null;
@@ -7323,6 +7318,7 @@ export interface LearningCoursesProgramAnalytics {
 }
 
 export interface LearningCoursesProgramContent {
+  id?: string;
   activitySettings?: LearningCoursesActivitySettings;
   body?: string | null;
   children?: Array<LearningCoursesProgramContent> | null;
@@ -7330,7 +7326,6 @@ export interface LearningCoursesProgramContent {
   createdAt?: string;
   description?: string | null;
   estimatedMinutes?: number | null;
-  id?: string;
   isRequired?: boolean;
   jsonBody?: Record<string, unknown> | null;
   lessonFormat?: LearningCoursesLessonContentFormat;
@@ -7524,11 +7519,11 @@ export interface LearningCoursesUpdateProgram {
 }
 
 export interface LearningCoursesUpdateProgramContent {
+  id: string;
   activitySettings?: LearningCoursesActivitySettings;
   body?: string | null;
   description?: string | null;
   estimatedMinutes?: number | null;
-  id: string;
   isRequired?: boolean | null;
   jsonBody?: Record<string, unknown> | null;
   lessonFormat?: LearningCoursesLessonContentFormat;
@@ -7575,12 +7570,12 @@ export interface LearningCoursesWorkspaceData {
 }
 
 export interface LearningEnrollmentsEnrollment {
+  id?: string;
   cohortId?: string | null;
   completedAt?: string | null;
   courseId?: string;
   droppedAt?: string | null;
   enrolledAt?: string;
-  id?: string;
   lastActivityAt?: string | null;
   progress?: number;
   status?: LearningEnrollmentsEnrollmentStatus;
@@ -7604,11 +7599,11 @@ export type LearningExperienceDiscoveryCollectionType =
   "Curated" | "Category" | "Skill" | "Career" | "Trending" | "NewReleases";
 
 export interface LearningExperienceDiscoveryCourseCollection {
+  id?: string;
   courseCount?: number;
   createdAt?: string;
   curatorId?: string;
   description?: string | null;
-  id?: string;
   imageUrl?: string | null;
   isFeatured?: boolean;
   isPublished?: boolean;
@@ -7641,11 +7636,11 @@ export interface LearningExperienceDiscoveryCreateFeaturedContent {
 }
 
 export interface LearningExperienceDiscoveryFeaturedContent {
+  id?: string;
   courseId?: string | null;
   createdAt?: string;
   displayOrder?: number;
   endsAt?: string | null;
-  id?: string;
   imageUrl?: string | null;
   isActive?: boolean;
   learningPathId?: string | null;
@@ -7687,10 +7682,10 @@ export interface LearningExperienceDiscoveryRecordSearchClick {
 }
 
 export interface LearningExperienceDiscoverySearchHistory {
+  id?: string;
   clickedCourseId?: string | null;
   createdAt?: string;
   filters?: string | null;
-  id?: string;
   query?: string | null;
   resultCount?: number;
   userId?: string | null;
@@ -7735,6 +7730,7 @@ export interface LearningExperienceLearningPathsCreateLearningPath {
 }
 
 export interface LearningExperienceLearningPathsLearningPath {
+  id?: string;
   completionCount?: number;
   courseCount?: number;
   createdAt?: string;
@@ -7743,7 +7739,6 @@ export interface LearningExperienceLearningPathsLearningPath {
   difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
   enrollmentCount?: number;
   estimatedHours?: number;
-  id?: string;
   imageUrl?: string | null;
   isFeatured?: boolean;
   isPublished?: boolean;
@@ -7760,6 +7755,7 @@ export interface LearningExperienceLearningPathsLearningPathCourse {
 }
 
 export interface LearningExperienceLearningPathsLearningPathDetail {
+  id?: string;
   completionCount?: number;
   courses?: Array<LearningExperienceLearningPathsLearningPathCourse> | null;
   createdAt?: string;
@@ -7768,7 +7764,6 @@ export interface LearningExperienceLearningPathsLearningPathDetail {
   difficulty?: LearningExperienceLearningPathsLearningPathDifficulty;
   enrollmentCount?: number;
   estimatedHours?: number;
-  id?: string;
   imageUrl?: string | null;
   isFeatured?: boolean;
   isPublished?: boolean;
@@ -7782,11 +7777,11 @@ export type LearningExperienceLearningPathsLearningPathDifficulty =
   "Beginner" | "Intermediate" | "Advanced" | "Expert";
 
 export interface LearningExperienceLearningPathsLearningPathEnrollment {
+  id?: string;
   completedAt?: string | null;
   coursesCompleted?: number;
   createdAt?: string;
   enrolledAt?: string;
-  id?: string;
   learningPathId?: string;
   progress?: number;
   status?: LearningExperienceLearningPathsLearningPathEnrollmentStatus;
@@ -7849,10 +7844,10 @@ export interface LearningExperienceRecommendationsPopularCourse {
 }
 
 export interface LearningExperienceRecommendationsRecommendation {
+  id?: string;
   courseId?: string;
   createdAt?: string;
   expiresAt?: string;
-  id?: string;
   isDismissed?: boolean;
   isViewed?: boolean;
   reason?: string | null;
@@ -7909,8 +7904,8 @@ export interface LearningExperienceRecommendationsTrendingCourse {
 }
 
 export interface LearningExperienceRecommendationsUserLearningProfile {
-  createdAt?: string;
   id?: string;
+  createdAt?: string;
   lastActivityAt?: string | null;
   learningGoals?: Array<string> | null;
   preferredCategories?: Array<string> | null;
@@ -7941,12 +7936,12 @@ export type LearningExperienceSocialFeedItemType =
   | "SkillMilestone";
 
 export interface LearningExperienceSocialServicesCourseDiscussion {
+  id?: string;
   authorId?: string;
   content?: string | null;
   contentId?: string | null;
   courseId?: string;
   createdAt?: string;
-  id?: string;
   isPinned?: boolean;
   isResolved?: boolean;
   lastActivityAt?: string | null;
@@ -7956,9 +7951,9 @@ export interface LearningExperienceSocialServicesCourseDiscussion {
 }
 
 export interface LearningExperienceSocialServicesCourseLike {
+  id?: string;
   courseId?: string;
   createdAt?: string;
-  id?: string;
   userId?: string;
 }
 
@@ -7975,11 +7970,11 @@ export interface LearningExperienceSocialServicesCourseRatingStats {
 }
 
 export interface LearningExperienceSocialServicesCourseReview {
+  id?: string;
   content?: string | null;
   courseId?: string;
   createdAt?: string;
   helpfulCount?: number;
-  id?: string;
   isApproved?: boolean;
   isFeatured?: boolean;
   isVerifiedPurchase?: boolean;
@@ -7989,9 +7984,9 @@ export interface LearningExperienceSocialServicesCourseReview {
 }
 
 export interface LearningExperienceSocialServicesCourseWishlist {
+  id?: string;
   courseId?: string;
   createdAt?: string;
-  id?: string;
   notifyOnSale?: boolean;
   notifyOnUpdate?: boolean;
   userId?: string;
@@ -8019,22 +8014,22 @@ export interface LearningExperienceSocialServicesCreateReviewInput {
 }
 
 export interface LearningExperienceSocialServicesDiscussionReply {
+  id?: string;
   authorId?: string;
   content?: string | null;
   createdAt?: string;
   discussionId?: string;
-  id?: string;
   isAcceptedAnswer?: boolean;
   parentReplyId?: string | null;
   upvoteCount?: number;
 }
 
 export interface LearningExperienceSocialServicesPersonalizedFeedItem {
+  id?: string;
   courseId?: string | null;
   createdAt?: string;
   discussionId?: string | null;
   expiresAt?: string;
-  id?: string;
   isViewed?: boolean;
   itemType?: LearningExperienceSocialFeedItemType;
   learningPathId?: string | null;
@@ -8285,10 +8280,10 @@ export interface LearningWorkspacesLearnerScheduleEntry {
 }
 
 export interface LearningWorkspacesLearnerSearchResult {
+  id?: string;
   courseId?: string;
   courseSlug?: string | null;
   description?: string | null;
-  id?: string;
   kind?: string | null;
   route?: string | null;
   title?: string | null;
@@ -8348,12 +8343,12 @@ export interface MonitoringSLAResolveSloViolationCommand {
 }
 
 export interface MonitoringSLASlo {
+  id?: string;
   alertThresholdPercentage?: number;
   createdAt?: string;
   currentActualPercentage?: number | null;
   description?: string | null;
   errorBudgetPercentage?: number;
-  id?: string;
   isEnabled?: boolean;
   lastEvaluatedAt?: string | null;
   name?: string | null;
@@ -8395,6 +8390,7 @@ export type MonitoringSLASloStatus =
   | "Inactive";
 
 export interface MonitoringSLASloViolation {
+  id?: string;
   acknowledgedAt?: string | null;
   acknowledgedByUserId?: string | null;
   actualValue?: number;
@@ -8403,7 +8399,6 @@ export interface MonitoringSLASloViolation {
   description?: string | null;
   durationMinutes?: number;
   endedAt?: string | null;
-  id?: string;
   isAcknowledged?: boolean;
   isOngoing?: boolean;
   notes?: string | null;
@@ -8416,10 +8411,10 @@ export interface MonitoringSLASloViolation {
 }
 
 export interface MonitoringSLAUpdateSloCommand {
+  id?: string;
   alertThresholdPercentage?: number;
   description?: string | null;
   errorBudgetPercentage?: number;
-  id?: string;
   isEnabled?: boolean;
   name?: string | null;
   serviceName?: string | null;
@@ -8440,16 +8435,59 @@ export interface MvcProblemDetails {
   [key: string]: any;
 }
 
+export interface NotificationsControllersDeadLetter {
+  id?: string;
+  attemptCount?: number;
+  channel?: string | null;
+  createdAt?: string;
+  lastError?: string | null;
+  recipientEmail?: string | null;
+  recipientId?: string | null;
+  requeueCount?: number;
+  title?: string | null;
+  type?: string | null;
+}
+
 export interface NotificationsControllersDeletedCountOutput {
   deletedCount?: number;
 }
 
+export interface NotificationsControllersDigestFrequencyOutput {
+  emailDigestFrequency?: string | null;
+}
+
+export interface NotificationsControllersEmailDeliveryEvent {
+  id?: string;
+  bounceType?: string | null;
+  diagnosticCode?: string | null;
+  eventType?: string | null;
+  occurredAt?: string;
+  payloadPreview?: string | null;
+  providerMessageId?: string | null;
+  recipientEmail?: string | null;
+}
+
+export interface NotificationsControllersEmailSuppression {
+  id?: string;
+  bounceType?: string | null;
+  emailAddress?: string | null;
+  isActive?: boolean;
+  reason?: string | null;
+  releasedAt?: string | null;
+  sourceEventId?: string | null;
+  suppressedAt?: string;
+}
+
+export interface NotificationsControllersMutedTypesOutput {
+  mutedTypes?: Array<string> | null;
+}
+
 export interface NotificationsControllersNotification {
+  id?: string;
   actionUrl?: string | null;
   channel?: string | null;
   createdAt?: string;
   iconUrl?: string | null;
-  id?: string;
   isRead?: boolean;
   message?: string | null;
   priority?: string | null;
@@ -8467,12 +8505,32 @@ export interface NotificationsControllersNotificationPreference {
   inAppEnabled?: boolean;
   learningEnabled?: boolean;
   marketingEnabled?: boolean;
+  mutedTypes?: Array<string> | null;
   pushEnabled?: boolean;
   quietHoursEnd?: string | null;
   quietHoursStart?: string | null;
   smsEnabled?: boolean;
   socialEnabled?: boolean;
   timezone?: string | null;
+}
+
+export interface NotificationsControllersNotificationTimeline {
+  events?: Array<NotificationsControllersEmailDeliveryEvent> | null;
+  notificationId?: string;
+  providerMessageId?: string | null;
+}
+
+export interface NotificationsControllersNotificationTypeCatalogEntry {
+  category?: string | null;
+  displayName?: string | null;
+  suppressible?: boolean;
+  type?: string | null;
+}
+
+export interface NotificationsControllersRequeueOutput {
+  id?: string;
+  deliveryStatus?: string | null;
+  requeueCount?: number;
 }
 
 export interface NotificationsControllersSetQuietHoursInput {
@@ -8483,6 +8541,26 @@ export interface NotificationsControllersSetQuietHoursInput {
 
 export interface NotificationsControllersUnreadCountOutput {
   count?: number;
+}
+
+export interface NotificationsControllersUnsubscribeOutput {
+  manageUrl?: string | null;
+  scope?: string | null;
+  status?: string | null;
+  value?: string | null;
+}
+
+export interface NotificationsControllersUnsuppressOutput {
+  emailAddress?: string | null;
+  wasActive?: boolean;
+}
+
+export interface NotificationsControllersUpdateDigestFrequencyInput {
+  frequency?: string | null;
+}
+
+export interface NotificationsControllersUpdateMutedTypesInput {
+  types?: Array<string> | null;
 }
 
 export interface NotificationsControllersUpdatePreferencesInput {
@@ -8512,8 +8590,8 @@ export type ObjectsAttestationStatementFormatIdentifier =
   | "None";
 
 export interface ObjectsAuthenticationExtensionsClientInputs {
-  credProps?: boolean | null;
   credentialProtectionPolicy?: ObjectsCredentialProtectionPolicy;
+  credProps?: boolean | null;
   enforceCredentialProtectionPolicy?: boolean | null;
   "example.extension.bool"?: boolean | null;
   exts?: boolean | null;
@@ -8701,6 +8779,42 @@ export interface PagedResultOfIdentityUsersUserProfile {
   totalPages?: number;
 }
 
+export interface PagedResultOfNotificationsControllersDeadLetter {
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  items?: Array<NotificationsControllersDeadLetter> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
+}
+
+export interface PagedResultOfNotificationsControllersEmailDeliveryEvent {
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  items?: Array<NotificationsControllersEmailDeliveryEvent> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
+}
+
+export interface PagedResultOfNotificationsControllersEmailSuppression {
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  items?: Array<NotificationsControllersEmailSuppression> | null;
+  pageNumber?: number;
+  pageSize?: number;
+  skip?: number;
+  take?: number;
+  totalCount?: number;
+  totalPages?: number;
+}
+
 export type ProgramCategory =
   | "General"
   | "Programming"
@@ -8811,6 +8925,7 @@ export interface ProjectsPermissionUpdateResult {
 }
 
 export interface ProjectsProject {
+  id?: string;
   allocations?: Array<ProjectsProjectMemberAllocation> | null;
   averageRating?: number | null;
   category?: ProjectsProjectCategory;
@@ -8829,7 +8944,6 @@ export interface ProjectsProject {
   feedbacks?: Array<ProjectsProjectFeedback> | null;
   followerCount?: number;
   followers?: Array<ProjectsProjectFollower> | null;
-  id?: string;
   imageUrl?: string | null;
   isActive?: boolean;
   isDeleted?: boolean;
@@ -8862,6 +8976,7 @@ export interface ProjectsProject {
 }
 
 export interface ProjectsProjectApiOutput {
+  id?: string;
   averageRating?: number | null;
   category?: ProjectsProjectCategoryApiOutput;
   categoryId?: string | null;
@@ -8876,7 +8991,6 @@ export interface ProjectsProjectApiOutput {
   featuredImageUrl?: string | null;
   feedbackCount?: number;
   followerCount?: number;
-  id?: string;
   imageUrl?: string | null;
   isInJam?: boolean;
   latestVersion?: ProjectsProjectVersionApiOutput;
@@ -8902,10 +9016,10 @@ export interface ProjectsProjectApiOutput {
 }
 
 export interface ProjectsProjectCategory {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -8922,10 +9036,10 @@ export interface ProjectsProjectCategoryApiOutput {
 }
 
 export interface ProjectsProjectCollaborator {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -8967,13 +9081,13 @@ export interface ProjectsProjectCollaboratorDto {
 }
 
 export interface ProjectsProjectFeedback {
+  id?: string;
   categories?: string | null;
   content?: string | null;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   helpfulVotes?: number;
-  id?: string;
   isDeleted?: boolean;
   isFeatured?: boolean;
   isGlobal?: boolean;
@@ -8994,12 +9108,12 @@ export interface ProjectsProjectFeedback {
 }
 
 export interface ProjectsProjectFollower {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   emailNotifications?: boolean;
   followedAt?: string;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -9014,8 +9128,8 @@ export interface ProjectsProjectFollower {
 }
 
 export interface ProjectsProjectInvitation {
-  expiresAt?: string | null;
   id?: string;
+  expiresAt?: string | null;
   invitedAt?: string;
   invitedByUserId?: string;
   invitedEmail?: string | null;
@@ -9033,13 +9147,13 @@ export type ProjectsProjectInvitationStatus =
   "Pending" | "Accepted" | "Declined" | "Revoked" | "Expired";
 
 export interface ProjectsProjectJamSubmission {
+  id?: string;
   awardDetails?: string | null;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   finalScore?: number | null;
   hasAward?: boolean;
-  id?: string;
   isDeleted?: boolean;
   isEligible?: boolean;
   isGlobal?: boolean;
@@ -9058,13 +9172,13 @@ export interface ProjectsProjectJamSubmission {
 }
 
 export interface ProjectsProjectMemberAllocation {
+  id?: string;
   capacityPercentage?: number;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string | null;
   function: string;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -9079,12 +9193,12 @@ export interface ProjectsProjectMemberAllocation {
 }
 
 export interface ProjectsProjectMetadata {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   downloadCount?: number;
   followerCount?: number;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -9096,13 +9210,14 @@ export interface ProjectsProjectMetadata {
 }
 
 export interface ProjectsProjectMetadataApiOutput {
+  id?: string;
   downloadCount?: number;
   followerCount?: number;
-  id?: string;
   viewCount?: number;
 }
 
 export interface ProjectsProjectRelease {
+  id?: string;
   buildNumber?: string | null;
   checksum?: string | null;
   createdAt: string;
@@ -9112,18 +9227,17 @@ export interface ProjectsProjectRelease {
   downloadCount?: number;
   downloadUrl?: string | null;
   fileSize?: number | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isLatest?: boolean;
   isNew?: boolean;
   isPrerelease?: boolean;
   projectId?: string;
+  releasedAt?: string;
   releaseMetadata?: string | null;
   releaseNotes?: string | null;
   releaseType?: string | null;
   releaseVersion: string;
-  releasedAt?: string;
   status?: ContentStatus;
   supportedPlatforms?: string | null;
   systemRequirements?: string | null;
@@ -9134,20 +9248,20 @@ export interface ProjectsProjectRelease {
 }
 
 export interface ProjectsProjectReleaseApiOutput {
+  id?: string;
   buildNumber?: string | null;
   checksum?: string | null;
   description?: string | null;
   downloadCount?: number;
   downloadUrl?: string | null;
   fileSize?: number | null;
-  id?: string;
   isLatest?: boolean;
   isPrerelease?: boolean;
+  releasedAt?: string;
   releaseMetadata?: string | null;
   releaseNotes?: string | null;
   releaseType?: string | null;
   releaseVersion?: string | null;
-  releasedAt?: string;
   status?: ContentStatus;
   supportedPlatforms?: string | null;
   systemRequirements?: string | null;
@@ -9186,6 +9300,7 @@ export interface ProjectsProjectStoreProductProjection {
 }
 
 export interface ProjectsProjectTeam {
+  id?: string;
   allocations?: Array<ProjectsProjectMemberAllocation> | null;
   assignedAt?: string;
   contributionPercentage?: number;
@@ -9193,7 +9308,6 @@ export interface ProjectsProjectTeam {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endedAt?: string | null;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -9211,6 +9325,7 @@ export interface ProjectsProjectTeam {
 }
 
 export interface ProjectsProjectTeamAgreement {
+  id?: string;
   acceptedAt?: string | null;
   acceptedByUserId?: string | null;
   cancelledAt?: string | null;
@@ -9220,7 +9335,6 @@ export interface ProjectsProjectTeamAgreement {
   deliverables: string;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -9241,10 +9355,10 @@ export type ProjectsProjectTeamAgreementStatus =
   "Proposed" | "CounterProposed" | "Accepted" | "Cancelled" | "Completed";
 
 export interface ProjectsProjectTeamApiOutput {
+  id?: string;
   assignedAt?: string;
   contributionPercentage?: number;
   endedAt?: string | null;
-  id?: string;
   isActive?: boolean;
   name?: string | null;
   notes?: string | null;
@@ -9279,12 +9393,12 @@ export interface ProjectsProjectUserApiOutput {
 }
 
 export interface ProjectsProjectVersion {
+  id?: string;
   createdAt: string;
   createdById?: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   downloadCount?: number;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -9298,10 +9412,10 @@ export interface ProjectsProjectVersion {
 }
 
 export interface ProjectsProjectVersionApiOutput {
+  id?: string;
   createdAt?: string;
   createdById?: string;
   downloadCount?: number;
-  id?: string;
   projectId?: string;
   releaseNotes?: string | null;
   status?: string | null;
@@ -9418,20 +9532,20 @@ export type ResourcesContentsContentReviewDecision =
   "Pending" | "Approve" | "RequestChanges" | "Reject";
 
 export interface ResourcesContentsContentVersion {
+  id?: string;
   body?: string | null;
   changeNotes?: string | null;
   createdAt?: string;
   createdBy?: string;
   entityId?: string;
   entityType?: string | null;
-  id?: string;
   isCurrentVersion?: boolean;
   metadata?: string | null;
   publishedAt?: string | null;
   publishedBy?: string | null;
-  reviewNotes?: string | null;
   reviewedAt?: string | null;
   reviewedBy?: string | null;
+  reviewNotes?: string | null;
   scheduledPublishAt?: string | null;
   status?: ResourcesContentsContentVersionStatus;
   submittedForReviewAt?: string | null;
@@ -9455,11 +9569,11 @@ export interface ResourcesContentsContentVersionDiff {
 }
 
 export interface ResourcesContentsContentVersionReview {
+  id?: string;
   contentVersionId?: string;
   createdAt?: string;
   decision?: ResourcesContentsContentReviewDecision;
   feedback?: string | null;
-  id?: string;
   reviewerId?: string;
   suggestions?: string | null;
 }
@@ -9554,6 +9668,7 @@ export interface ResourcesRecordUserResourceUsageInput {
 }
 
 export interface ResourcesResourceMetadata {
+  id?: string;
   category?: string | null;
   createdAt: string;
   dataType?: string | null;
@@ -9561,7 +9676,6 @@ export interface ResourcesResourceMetadata {
   description?: string | null;
   displayOrder?: number;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -9593,10 +9707,10 @@ export interface ResourcesResourceQuotaEnforcementResult {
 }
 
 export interface ResourcesResourceQuotaOutput {
+  id?: string;
   currentUsage?: number;
   description?: string | null;
   hardLimit?: number | null;
-  id?: string;
   isActive?: boolean;
   isHardLimitExceeded?: boolean;
   isSoftLimitExceeded?: boolean;
@@ -9617,6 +9731,7 @@ export type ResourcesResourceQuotaPeriod =
   "Daily" | "Weekly" | "Monthly" | "Quarterly" | "Yearly" | "Unlimited";
 
 export interface ResourcesResourceSettings {
+  id?: string;
   allowUserOverride?: boolean;
   category?: string | null;
   createdAt: string;
@@ -9626,7 +9741,6 @@ export interface ResourcesResourceSettings {
   description?: string | null;
   displayOrder?: number;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -9712,12 +9826,12 @@ export interface ResourcesToggleResourceQuotaInput {
 export type ResourcesTrendGranularity = "Daily" | "Weekly" | "Monthly";
 
 export interface ResourcesUsageRecord {
+  id?: string;
   averagePerDay?: number | null;
   count?: number;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -9752,6 +9866,7 @@ export interface ResourcesUsageTrendsResult {
 }
 
 export interface SocialBlogBlogPost {
+  id?: string;
   allowComments?: boolean;
   authorId?: string;
   commentsCount?: number;
@@ -9759,7 +9874,6 @@ export interface SocialBlogBlogPost {
   coverImageUrl?: string | null;
   createdAt?: string;
   excerpt?: string | null;
-  id?: string;
   isFeatured?: boolean;
   likesCount?: number;
   publishedAt?: string | null;
@@ -9801,12 +9915,12 @@ export type SocialFeedFeedContentType =
   | "CourseCompletion";
 
 export interface SocialFeedFeedItem {
+  id?: string;
   authorId?: string;
   contentCreatedAt?: string;
   contentId?: string;
   contentType?: SocialFeedFeedContentType;
   createdAt?: string;
-  id?: string;
   isHidden?: boolean;
   isRead?: boolean;
   reason?: SocialFeedFeedItemReason;
@@ -9847,9 +9961,9 @@ export interface SocialGroupsJoinSocialGroupInput {
 }
 
 export interface SocialGroupsSocialGroup {
+  id?: string;
   createdAt?: string;
   description?: string | null;
-  id?: string;
   memberCount?: number;
   name?: string | null;
   ownerId?: string;
@@ -9863,9 +9977,9 @@ export interface SocialGroupsSocialGroup {
 }
 
 export interface SocialGroupsSocialGroupMember {
+  id?: string;
   approvedByUserId?: string | null;
   groupId?: string;
-  id?: string;
   joinedAt?: string | null;
   removedAt?: string | null;
   requestedAt?: string;
@@ -9955,9 +10069,9 @@ export type SocialProfilesProfileAvailabilityStatus =
   "NotSet" | "OpenToWork" | "OpenToCollaborate" | "Busy" | "Hidden";
 
 export interface SocialProfilesProfilePortfolioItem {
+  id?: string;
   description?: string | null;
   displayOrder?: number;
-  id?: string;
   imageUrl?: string | null;
   isPinned?: boolean;
   profileId?: string;
@@ -9967,8 +10081,8 @@ export interface SocialProfilesProfilePortfolioItem {
 }
 
 export interface SocialProfilesProfileSkill {
-  displayOrder?: number;
   id?: string;
+  displayOrder?: number;
   name?: string | null;
   proficiency?: SocialProfilesProfileSkillProficiency;
   profileId?: string;
@@ -9981,6 +10095,7 @@ export type SocialProfilesProfileVisibility =
   "Private" | "Connections" | "Public";
 
 export interface SocialProfilesSocialProfile {
+  id?: string;
   availabilityStatus?: SocialProfilesProfileAvailabilityStatus;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
@@ -9991,7 +10106,6 @@ export interface SocialProfilesSocialProfile {
   followingCount?: number;
   handle?: string | null;
   headline?: string | null;
-  id?: string;
   location?: string | null;
   portfolioItems?: Array<SocialProfilesProfilePortfolioItem> | null;
   postCount?: number;
@@ -10046,8 +10160,8 @@ export interface SocialProfilesUpdateSocialProfileBody {
 }
 
 export interface SocialReactionsReaction {
-  createdAt?: string;
   id?: string;
+  createdAt?: string;
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
   type?: SocialReactionsReactionType;
@@ -10098,11 +10212,11 @@ export type SystemDayOfWeek =
   | "Saturday";
 
 export interface TeamsTeam {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   invitations?: Array<TeamsTeamInvitation> | null;
   isActive?: boolean;
   isDeleted?: boolean;
@@ -10120,13 +10234,13 @@ export interface TeamsTeam {
 }
 
 export interface TeamsTeamInvitation {
+  id?: string;
   acceptedByUserId?: string | null;
   authority?: TeamsTeamMemberAuthority;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   expiresAt?: string;
-  id?: string;
   invitedByUserId?: string;
   invitedEmail?: string | null;
   invitedUserId?: string | null;
@@ -10144,11 +10258,11 @@ export interface TeamsTeamInvitation {
 }
 
 export interface TeamsTeamMember {
+  id?: string;
   authority?: TeamsTeamMemberAuthority;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -10274,8 +10388,8 @@ export interface TestingLabCreateTestingLabSettings {
   description?: string | null;
   enableNotifications?: boolean;
   labName: string;
-  reminderDaysBefore?: string | null;
   maxSimultaneousSessions: number;
+  reminderDaysBefore?: string | null;
   requireApproval?: boolean;
   timezone: string;
 }
@@ -10330,12 +10444,12 @@ export interface TestingLabFeedbackInput {
 export type TestingLabFeedbackQuality = "Low" | "Medium" | "High";
 
 export interface TestingLabFeedbackQualityRating {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   feedback?: TestingLabTestingFeedback;
   feedbackId: string;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNegative?: boolean;
@@ -10370,13 +10484,13 @@ export type TestingLabParticipationStatus =
   "Registered" | "Active" | "Completed" | "Withdrawn" | "Suspended";
 
 export interface TestingLabPublicTestingEventProjection {
+  id?: string;
   applicationCount?: number;
   applicationsCloseAt?: string;
   applicationsOpenAt?: string;
   approvalMode?: TestingLabTestingEventApprovalMode;
   description?: string | null;
   endsAt?: string;
-  id?: string;
   mode?: TestingLabTestingEventMode;
   name?: string | null;
   requiresFeedback?: boolean;
@@ -10386,13 +10500,13 @@ export interface TestingLabPublicTestingEventProjection {
 }
 
 export interface TestingLabPublicTestingEventSlotProjection {
+  id?: string;
   approvedProjectCount?: number;
   availableProjectCount?: number | null;
   availableTesterCount?: number | null;
   campusName?: string | null;
   endsAt?: string;
   eventId?: string;
-  id?: string;
   maxProjects?: number | null;
   maxTesters?: number | null;
   mode?: TestingLabTestingEventMode;
@@ -10427,6 +10541,7 @@ export interface TestingLabSessionProjectProjection {
 }
 
 export interface TestingLabSessionRegistration {
+  id?: string;
   attendanceDuration?: string | null;
   attendanceStatus?: TestingLabAttendanceStatus;
   attendedAt?: string | null;
@@ -10436,7 +10551,6 @@ export interface TestingLabSessionRegistration {
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isCheckedIn?: boolean;
   isCheckedOut?: boolean;
   isConfirmed?: boolean;
@@ -10466,10 +10580,10 @@ export type TestingLabSessionStatus =
   "Scheduled" | "Active" | "Completed" | "Cancelled";
 
 export interface TestingLabSessionWaitlist {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -10540,6 +10654,7 @@ export interface TestingLabTestingApplicationTesterEligibilityProjection {
 }
 
 export interface TestingLabTestingApplicationVote {
+  id?: string;
   application?: TestingLabTestingProjectApplication;
   applicationId?: string;
   comments?: string | null;
@@ -10547,7 +10662,6 @@ export interface TestingLabTestingApplicationVote {
   decision?: TestingLabTestingApplicationVoteDecision;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -10562,20 +10676,20 @@ export type TestingLabTestingApplicationVoteDecision =
   "Approve" | "Reject" | "Abstain";
 
 export interface TestingLabTestingApplicationVoteProjection {
+  id?: string;
   comments?: string | null;
   createdAt?: string;
   decision?: TestingLabTestingApplicationVoteDecision;
-  id?: string;
   reviewerId?: string;
 }
 
 export interface TestingLabTestingCommitteeMember {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   event?: TestingLabTestingEvent;
   eventId?: string;
-  id?: string;
   isActive?: boolean;
   isChair?: boolean;
   isDeleted?: boolean;
@@ -10591,6 +10705,7 @@ export interface TestingLabTestingCommitteeMember {
 export type TestingLabTestingContext = "Online" | "InPerson";
 
 export interface TestingLabTestingEvent {
+  id?: string;
   applications?: Array<TestingLabTestingProjectApplication> | null;
   applicationsCloseAt?: string;
   applicationsOpenAt?: string;
@@ -10605,7 +10720,6 @@ export interface TestingLabTestingEvent {
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -10622,8 +10736,8 @@ export interface TestingLabTestingEvent {
   recurrenceOccurrence?: number | null;
   recurrenceOccurrenceCount?: number | null;
   recurrenceSeriesId?: string | null;
-  requiresFeedback?: boolean;
   reminderDaysBeforeOverride?: string | null;
+  requiresFeedback?: boolean;
   sentReminderDays?: string | null;
   slots?: Array<TestingLabTestingEventSlot> | null;
   startsAt?: string;
@@ -10636,8 +10750,8 @@ export interface TestingLabTestingEvent {
 export type TestingLabTestingEventApprovalMode = "ManagerOnly" | "Committee";
 
 export interface TestingLabTestingEventCommitteeMemberProjection {
-  eventId?: string;
   id?: string;
+  eventId?: string;
   isActive?: boolean;
   isChair?: boolean;
   userEmail?: string | null;
@@ -10646,11 +10760,11 @@ export interface TestingLabTestingEventCommitteeMemberProjection {
 }
 
 export interface TestingLabTestingEventFeedbackProjection {
+  id?: string;
   additionalNotes?: string | null;
   applicationId?: string;
   eventId?: string;
   feedbackData?: string | null;
-  id?: string;
   overallRating?: number | null;
   submittedAt?: string;
   testerUserId?: string;
@@ -10671,6 +10785,7 @@ export interface TestingLabTestingEventFeedbackReviewProjection {
 export type TestingLabTestingEventMode = "Online" | "InPerson" | "Hybrid";
 
 export interface TestingLabTestingEventProjection {
+  id?: string;
   applicationCount?: number;
   applicationsCloseAt?: string;
   applicationsOpenAt?: string;
@@ -10679,7 +10794,6 @@ export interface TestingLabTestingEventProjection {
   courseId?: string | null;
   description?: string | null;
   endsAt?: string;
-  id?: string;
   learningActivityId?: string | null;
   learningCompletionRequirement?: TestingLabTestingLearningCompletionRequirement;
   managerUserId?: string;
@@ -10711,6 +10825,7 @@ export interface TestingLabTestingEventRecurrenceInput {
 }
 
 export interface TestingLabTestingEventSlot {
+  id?: string;
   campusName?: string | null;
   createdAt: string;
   deletedAt?: string | null;
@@ -10718,7 +10833,6 @@ export interface TestingLabTestingEventSlot {
   endsAt?: string;
   event?: TestingLabTestingEvent;
   eventId?: string;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -10738,11 +10852,11 @@ export interface TestingLabTestingEventSlot {
 }
 
 export interface TestingLabTestingEventSlotProjection {
+  id?: string;
   approvedProjectCount?: number;
   campusName?: string | null;
   endsAt?: string;
   eventId?: string;
-  id?: string;
   locationId?: string | null;
   maxProjects?: number | null;
   maxTesters?: number | null;
@@ -10763,6 +10877,7 @@ export type TestingLabTestingEventStatus =
   | "Cancelled";
 
 export interface TestingLabTestingFeedback {
+  id?: string;
   additionalNotes?: string | null;
   application?: TestingLabTestingProjectApplication;
   applicationId?: string | null;
@@ -10775,7 +10890,6 @@ export interface TestingLabTestingFeedback {
   feedbackData: string;
   feedbackForm?: TestingLabTestingFeedbackForm;
   feedbackFormId?: string | null;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNegative?: boolean;
@@ -10785,11 +10899,11 @@ export interface TestingLabTestingFeedback {
   overallRating?: number | null;
   qualityRating?: TestingLabFeedbackQuality;
   qualityRatings?: Array<TestingLabFeedbackQualityRating> | null;
-  reportReason?: string | null;
   reportedAt?: string | null;
   reportedBy?: IdentityUsersUser;
   reportedById?: string | null;
   reportedByUserId?: string | null;
+  reportReason?: string | null;
   session?: TestingLabTestingSession;
   sessionId?: string | null;
   tenantId?: string | null;
@@ -10804,13 +10918,13 @@ export interface TestingLabTestingFeedback {
 }
 
 export interface TestingLabTestingFeedbackDirectoryItem {
+  id?: string;
   additionalNotes?: string | null;
   applicationId?: string | null;
   createdAt?: string;
   eventId?: string | null;
   eventName?: string | null;
   feedbackData?: string | null;
-  id?: string;
   isReported?: boolean;
   overallRating?: number | null;
   projectId?: string | null;
@@ -10818,9 +10932,9 @@ export interface TestingLabTestingFeedbackDirectoryItem {
   projectVersion?: string | null;
   projectVersionId?: string | null;
   qualityRating?: TestingLabFeedbackQuality;
-  reportReason?: string | null;
   reportedAt?: string | null;
   reportedByUserId?: string | null;
+  reportReason?: string | null;
   requestTitle?: string | null;
   source?: TestingLabTestingFeedbackSource;
   testingContext?: TestingLabTestingContext;
@@ -10840,6 +10954,7 @@ export interface TestingLabTestingFeedbackDirectoryPage {
 }
 
 export interface TestingLabTestingFeedbackForm {
+  id?: string;
   createdAt: string;
   deletedAt?: string | null;
   description?: string | null;
@@ -10849,7 +10964,6 @@ export interface TestingLabTestingFeedbackForm {
   formSchema?: string | null;
   formType?: TestingLabFeedbackFormType;
   formVersion?: number;
-  id?: string;
   isActive?: boolean;
   isDeleted?: boolean;
   isForOnline?: boolean;
@@ -10867,11 +10981,11 @@ export interface TestingLabTestingFeedbackForm {
 }
 
 export interface TestingLabTestingFeedbackObligationProjection {
+  id?: string;
   applicationId?: string;
   eventId?: string;
   feedbackId?: string | null;
   fulfilledAt?: string | null;
-  id?: string;
   slotId?: string;
   status?: TestingLabTestingFeedbackObligationStatus;
   testerUserId?: string;
@@ -10883,6 +10997,7 @@ export type TestingLabTestingFeedbackObligationStatus =
 export type TestingLabTestingFeedbackSource = "Request" | "Event";
 
 export interface TestingLabTestingInput {
+  id?: string;
   acceptsNewTesters?: boolean;
   availableSpots?: number | null;
   createdAt: string;
@@ -10900,7 +11015,6 @@ export interface TestingLabTestingInput {
   feedback?: Array<TestingLabTestingFeedback> | null;
   feedbackFormContent?: string | null;
   feedbackForms?: Array<TestingLabTestingFeedbackForm> | null;
-  id?: string;
   instructionsContent?: string | null;
   instructionsFileId?: string | null;
   instructionsType: TestingLabInstructionType;
@@ -11018,23 +11132,23 @@ export interface TestingLabTestingLabResourcePermission {
 }
 
 export interface TestingLabTestingLabRoleTemplate {
-  description?: string | null;
   id?: string;
+  description?: string | null;
   isSystemRole?: boolean;
   name?: string | null;
   permissions?: TestingLabTestingLabPermissions;
 }
 
 export interface TestingLabTestingLabSettings {
+  id?: string;
   allowPublicSignups?: boolean;
   createdAt?: string;
   defaultSessionDuration?: number;
   description?: string | null;
   enableNotifications?: boolean;
-  id?: string;
   labName?: string | null;
-  reminderDaysBefore?: string | null;
   maxSimultaneousSessions?: number;
+  reminderDaysBefore?: string | null;
   requireApproval?: boolean;
   tenantId?: string | null;
   timezone?: string | null;
@@ -11045,6 +11159,7 @@ export interface TestingLabTestingLabSettings {
 export type TestingLabTestingLearningCompletionRequirement = string;
 
 export interface TestingLabTestingLocation {
+  id?: string;
   activeSessionCount?: number;
   address?: string | null;
   capacity?: number | null;
@@ -11059,7 +11174,6 @@ export interface TestingLabTestingLocation {
   equipment?: string | null;
   equipmentAvailable?: string | null;
   fullAddress?: string | null;
-  id?: string;
   isAvailable?: boolean;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -11081,6 +11195,7 @@ export interface TestingLabTestingLocation {
 export type TestingLabTestingMode = "Online" | "InPerson" | "Hybrid";
 
 export interface TestingLabTestingParticipant {
+  id?: string;
   canProvideFeedback?: boolean;
   completedAt?: string | null;
   createdAt: string;
@@ -11088,7 +11203,6 @@ export interface TestingLabTestingParticipant {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   feedback?: Array<TestingLabTestingFeedback> | null;
   feedbackCount?: number;
-  id?: string;
   instructionsAcknowledged: boolean;
   instructionsAcknowledgedAt?: string | null;
   isActive?: boolean;
@@ -11156,6 +11270,7 @@ export interface TestingLabTestingParticipantMutationProjection {
 export type TestingLabTestingPriority = "Low" | "Medium" | "High" | "Critical";
 
 export interface TestingLabTestingProjectApplication {
+  id?: string;
   assignedSlot?: TestingLabTestingEventSlot;
   assignedSlotId?: string | null;
   createdAt: string;
@@ -11167,7 +11282,6 @@ export interface TestingLabTestingProjectApplication {
   domainEvents?: Array<CQRSIDomainEvent> | null;
   event?: TestingLabTestingEvent;
   eventId?: string;
-  id?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -11188,12 +11302,12 @@ export interface TestingLabTestingProjectApplication {
 }
 
 export interface TestingLabTestingProjectApplicationProjection {
+  id?: string;
   assignedSlotId?: string | null;
   decidedAt?: string | null;
   decidedByUserId?: string | null;
   decisionRationale?: string | null;
   eventId?: string;
-  id?: string;
   preferredAvailability?: string | null;
   projectId?: string;
   projectVersionId?: string | null;
@@ -11204,12 +11318,12 @@ export interface TestingLabTestingProjectApplicationProjection {
 }
 
 export interface TestingLabTestingRequestDetailProjection {
+  id?: string;
   currentTesterCount?: number;
   description?: string | null;
   downloadUrl?: string | null;
   endDate?: string;
   feedbackFormContent?: string | null;
-  id?: string;
   instructionsContent?: string | null;
   isDeleted?: boolean;
   maxTesters?: number | null;
@@ -11244,6 +11358,7 @@ export type TestingLabTestingRequestStatus =
   | "Cancelled";
 
 export interface TestingLabTestingSession {
+  id?: string;
   allowsRegistration?: boolean;
   availableSpots?: number;
   createdAt: string;
@@ -11256,7 +11371,6 @@ export interface TestingLabTestingSession {
   eventSlot?: TestingLabTestingEventSlot;
   eventSlotId?: string | null;
   feedback?: Array<TestingLabTestingFeedback> | null;
-  id?: string;
   isActive?: boolean;
   isCompleted?: boolean;
   isDeleted?: boolean;
@@ -11285,11 +11399,11 @@ export interface TestingLabTestingSession {
 }
 
 export interface TestingLabTestingSlotRegistrationProjection {
+  id?: string;
   checkedInAt?: string | null;
   checkedOutAt?: string | null;
   completedAt?: string | null;
   eventId?: string;
-  id?: string;
   notes?: string | null;
   pendingFeedbackCount?: number;
   promotedAt?: string | null;
@@ -11354,8 +11468,8 @@ export interface TestingLabUpdateTestingLabSettings {
   description?: string | null;
   enableNotifications?: boolean | null;
   labName?: string | null;
-  reminderDaysBefore?: string | null;
   maxSimultaneousSessions?: number | null;
+  reminderDaysBefore?: string | null;
   requireApproval?: boolean | null;
   timezone?: string | null;
 }
@@ -11815,7 +11929,6 @@ export let IdentityAuthenticationDiscordLinkCallbackInputSchema: z.ZodType<Ident
 export let IdentityAuthenticationDiscordSignInOutputSchema: z.ZodType<IdentityAuthenticationDiscordSignInOutput>;
 export let IdentityAuthenticationEmailVerificationOutputSchema: z.ZodType<IdentityAuthenticationEmailVerificationOutput>;
 export let IdentityAuthenticationEmailVerificationResultSchema: z.ZodType<IdentityAuthenticationEmailVerificationResult>;
-export let IdentityAuthenticationExternalLoginSchema: z.ZodType<IdentityAuthenticationExternalLogin>;
 export let IdentityAuthenticationGitHubSignInOutputSchema: z.ZodType<IdentityAuthenticationGitHubSignInOutput>;
 export let IdentityAuthenticationGoogleIdTokenInputSchema: z.ZodType<IdentityAuthenticationGoogleIdTokenInput>;
 export let IdentityAuthenticationJwtKeyInfoSchema: z.ZodType<IdentityAuthenticationJwtKeyInfo>;
@@ -12332,11 +12445,23 @@ export let MonitoringSLASloViolationSchema: z.ZodType<MonitoringSLASloViolation>
 export let MonitoringSLAUpdateSloCommandSchema: z.ZodType<MonitoringSLAUpdateSloCommand>;
 export let MonitoringSLAViolationSeveritySchema: z.ZodType<MonitoringSLAViolationSeverity>;
 export let MvcProblemDetailsSchema: z.ZodType<MvcProblemDetails>;
+export let NotificationsControllersDeadLetterSchema: z.ZodType<NotificationsControllersDeadLetter>;
 export let NotificationsControllersDeletedCountOutputSchema: z.ZodType<NotificationsControllersDeletedCountOutput>;
+export let NotificationsControllersDigestFrequencyOutputSchema: z.ZodType<NotificationsControllersDigestFrequencyOutput>;
+export let NotificationsControllersEmailDeliveryEventSchema: z.ZodType<NotificationsControllersEmailDeliveryEvent>;
+export let NotificationsControllersEmailSuppressionSchema: z.ZodType<NotificationsControllersEmailSuppression>;
+export let NotificationsControllersMutedTypesOutputSchema: z.ZodType<NotificationsControllersMutedTypesOutput>;
 export let NotificationsControllersNotificationSchema: z.ZodType<NotificationsControllersNotification>;
 export let NotificationsControllersNotificationPreferenceSchema: z.ZodType<NotificationsControllersNotificationPreference>;
+export let NotificationsControllersNotificationTimelineSchema: z.ZodType<NotificationsControllersNotificationTimeline>;
+export let NotificationsControllersNotificationTypeCatalogEntrySchema: z.ZodType<NotificationsControllersNotificationTypeCatalogEntry>;
+export let NotificationsControllersRequeueOutputSchema: z.ZodType<NotificationsControllersRequeueOutput>;
 export let NotificationsControllersSetQuietHoursInputSchema: z.ZodType<NotificationsControllersSetQuietHoursInput>;
 export let NotificationsControllersUnreadCountOutputSchema: z.ZodType<NotificationsControllersUnreadCountOutput>;
+export let NotificationsControllersUnsubscribeOutputSchema: z.ZodType<NotificationsControllersUnsubscribeOutput>;
+export let NotificationsControllersUnsuppressOutputSchema: z.ZodType<NotificationsControllersUnsuppressOutput>;
+export let NotificationsControllersUpdateDigestFrequencyInputSchema: z.ZodType<NotificationsControllersUpdateDigestFrequencyInput>;
+export let NotificationsControllersUpdateMutedTypesInputSchema: z.ZodType<NotificationsControllersUpdateMutedTypesInput>;
 export let NotificationsControllersUpdatePreferencesInputSchema: z.ZodType<NotificationsControllersUpdatePreferencesInput>;
 export let NotificationsNotificationChannelSchema: z.ZodType<NotificationsNotificationChannel>;
 export let ObjectsAttestationConveyancePreferenceSchema: z.ZodType<ObjectsAttestationConveyancePreference>;
@@ -12365,6 +12490,9 @@ export let PagedResultOfIdentityTenantsTenantAuditLogEntrySchema: z.ZodType<Page
 export let PagedResultOfIdentityUsersUserSchema: z.ZodType<PagedResultOfIdentityUsersUser>;
 export let PagedResultOfIdentityUsersUserNotificationSchema: z.ZodType<PagedResultOfIdentityUsersUserNotification>;
 export let PagedResultOfIdentityUsersUserProfileSchema: z.ZodType<PagedResultOfIdentityUsersUserProfile>;
+export let PagedResultOfNotificationsControllersDeadLetterSchema: z.ZodType<PagedResultOfNotificationsControllersDeadLetter>;
+export let PagedResultOfNotificationsControllersEmailDeliveryEventSchema: z.ZodType<PagedResultOfNotificationsControllersEmailDeliveryEvent>;
+export let PagedResultOfNotificationsControllersEmailSuppressionSchema: z.ZodType<PagedResultOfNotificationsControllersEmailSuppression>;
 export let ProgramCategorySchema: z.ZodType<ProgramCategory>;
 export let ProjectsAddCollaboratorInputSchema: z.ZodType<ProjectsAddCollaboratorInput>;
 export let ProjectsAddProjectCollaboratorInputSchema: z.ZodType<ProjectsAddProjectCollaboratorInput>;
@@ -12642,8 +12770,8 @@ AIAiCompletionOutputSchema = z.object({
 
 /** Zod schema for AIAiConversationHistoryEntry */
 AIAiConversationHistoryEntrySchema = z.object({
-  finishReason: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  finishReason: z.string().nullable().optional(),
   model: z.string().nullable().optional(),
   occurredAt: z.string().datetime().optional(),
   outcome: z.string().nullable().optional(),
@@ -12700,11 +12828,11 @@ AIAiGenerateInputSchema = z.object({
 
 /** Zod schema for AIAiPromptTemplate */
 AIAiPromptTemplateSchema = z.object({
+  id: z.string().uuid().optional(),
   category: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   createdByUserId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isSystemTemplate: z.boolean().optional(),
   key: z.string().nullable().optional(),
@@ -12813,11 +12941,11 @@ AIUpdateAiPromptTemplateInputSchema = z.object({
 
 /** Zod schema for AnalyticsAnalyticsWarehouseFact */
 AnalyticsAnalyticsWarehouseFactSchema = z.object({
+  id: z.string().uuid().optional(),
   amountUsd: z.number().nullable().optional(),
   count: z.number().int().nullable().optional(),
   dimensions: z.record(z.string(), z.string().nullable()).nullable().optional(),
   factName: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   metric: z.string().nullable().optional(),
   runId: z.string().uuid().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -12864,9 +12992,9 @@ AnalyticsCreateDashboardInputSchema = z.object({
 
 /** Zod schema for AnalyticsDashboard */
 AnalyticsDashboardSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isDefault: z.boolean().optional(),
   slug: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -12880,8 +13008,8 @@ AnalyticsDashboardSchema = z.object({
 
 /** Zod schema for AnalyticsDashboardWidget */
 AnalyticsDashboardWidgetSchema = z.object({
-  configuration: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  configuration: z.string().nullable().optional(),
   sortOrder: z.number().int().optional(),
   title: z.string().nullable().optional(),
   type: z.lazy(() => AnalyticsWidgetTypeSchema).optional(),
@@ -13171,10 +13299,10 @@ APIProjectsCreateProjectTeamAgreementInputSchema = z.object({
 
 /** Zod schema for APIProjectsProjectAllocation */
 APIProjectsProjectAllocationSchema = z.object({
+  id: z.string().uuid().optional(),
   capacityPercentage: z.number().optional(),
   endsAt: z.string().datetime().nullable().optional(),
   function: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   projectTeamId: z.string().uuid().optional(),
   startsAt: z.string().datetime().optional(),
@@ -13200,10 +13328,10 @@ APIProjectsProjectOwnershipSchema = z.object({
 
 /** Zod schema for APIProjectsProjectTeamAgreement */
 APIProjectsProjectTeamAgreementSchema = z.object({
+  id: z.string().uuid().optional(),
   acceptedByUserId: z.string().uuid().nullable().optional(),
   deliverables: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   proposedByUserId: z.string().uuid().optional(),
   proposingTeamId: z.string().uuid().optional(),
   receivingTeamId: z.string().uuid().optional(),
@@ -13215,9 +13343,9 @@ APIProjectsProjectTeamAgreementSchema = z.object({
 
 /** Zod schema for APIProjectsProjectTeamOwnership */
 APIProjectsProjectTeamOwnershipSchema = z.object({
+  id: z.string().uuid().optional(),
   assignedAt: z.string().datetime().optional(),
   endedAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   participationMode: z
     .lazy(() => ProjectsProjectTeamParticipationModeSchema)
@@ -13312,11 +13440,11 @@ APIProjectWorkMoveProjectWorkTaskInputSchema = z.object({
 
 /** Zod schema for APIProjectWorkProjectBoard */
 APIProjectWorkProjectBoardSchema = z.object({
+  id: z.string().uuid().optional(),
   columns: z
     .array(z.lazy(() => APIProjectWorkProjectWorkColumnSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
 });
@@ -13331,32 +13459,32 @@ APIProjectWorkProjectChecklistItemSchema = z.object({
 
 /** Zod schema for APIProjectWorkProjectMilestone */
 APIProjectWorkProjectMilestoneSchema = z.object({
+  id: z.string().uuid().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   description: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIProjectWorkProjectTaskComment */
 APIProjectWorkProjectTaskCommentSchema = z.object({
+  id: z.string().uuid().optional(),
   authorUserId: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   editedAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
 });
 
 /** Zod schema for APIProjectWorkProjectTaskDependency */
 APIProjectWorkProjectTaskDependencySchema = z.object({
-  dependsOnTaskId: z.string().uuid().optional(),
   id: z.string().uuid().optional(),
+  dependsOnTaskId: z.string().uuid().optional(),
 });
 
 /** Zod schema for APIProjectWorkProjectTaskLabel */
 APIProjectWorkProjectTaskLabelSchema = z.object({
-  color: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  color: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
@@ -13375,22 +13503,22 @@ APIProjectWorkProjectWorkColumnSchema = z.object({
 
 /** Zod schema for APIProjectWorkProjectWorkHistory */
 APIProjectWorkProjectWorkHistorySchema = z.object({
+  id: z.string().uuid().optional(),
   action: z.string().nullable().optional(),
   actorUserId: z.string().uuid().optional(),
   changesJson: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   taskId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for APIProjectWorkProjectWorkTask */
 APIProjectWorkProjectWorkTaskSchema = z.object({
+  id: z.string().uuid().optional(),
   assigneeUserId: z.string().uuid().nullable().optional(),
   columnId: z.string().uuid().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   description: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   milestoneId: z.string().uuid().nullable().optional(),
   position: z.number().int().optional(),
   priority: z.lazy(() => ProjectWorkProjectWorkTaskPrioritySchema).optional(),
@@ -13492,9 +13620,9 @@ APITeamsCreateTeamInvitationInputSchema = z.object({
 
 /** Zod schema for APITeamsMyTeamInvitation */
 APITeamsMyTeamInvitationSchema = z.object({
+  id: z.string().uuid().optional(),
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   expiresAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   teamId: z.string().uuid().optional(),
   teamName: z.string().nullable().optional(),
   teamSlug: z.string().nullable().optional(),
@@ -13502,8 +13630,8 @@ APITeamsMyTeamInvitationSchema = z.object({
 
 /** Zod schema for APITeamsTeam */
 APITeamsTeamSchema = z.object({
-  description: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   isPersonal: z.boolean().optional(),
   members: z
     .array(z.lazy(() => APITeamsTeamMemberSchema))
@@ -13518,9 +13646,9 @@ APITeamsTeamSchema = z.object({
 
 /** Zod schema for APITeamsTeamInvitation */
 APITeamsTeamInvitationSchema = z.object({
+  id: z.string().uuid().optional(),
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   expiresAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   invitedByUserId: z.string().uuid().optional(),
   invitedEmail: z.string().nullable().optional(),
   invitedUserId: z.string().uuid().nullable().optional(),
@@ -13530,8 +13658,8 @@ APITeamsTeamInvitationSchema = z.object({
 
 /** Zod schema for APITeamsTeamInvitationCreated */
 APITeamsTeamInvitationCreatedSchema = z.object({
-  expiresAt: z.string().datetime().optional(),
   id: z.string().uuid().optional(),
+  expiresAt: z.string().datetime().optional(),
   token: z.string().nullable().optional(),
 });
 
@@ -13621,8 +13749,8 @@ AssetsChunkedUploadSessionSchema = z.object({
   objectKey: z.string().nullable().optional(),
   totalChunks: z.number().int().optional(),
   totalSize: z.number().int().optional(),
-  uploadId: z.string().nullable().optional(),
   uploadedChunks: z.number().int().optional(),
+  uploadId: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
 });
 
@@ -13942,8 +14070,8 @@ BulkOperationOutputSchema = z.object({
     .optional(),
   failedOperations: z.number().int().optional(),
   isComplete: z.boolean().optional(),
-  successRate: z.number().optional(),
   successfulOperations: z.number().int().optional(),
+  successRate: z.number().optional(),
   totalRequested: z.number().int().optional(),
 });
 
@@ -14005,10 +14133,10 @@ CommerceOrdersCreateOrderInputSchema = z.object({
 
 /** Zod schema for CommerceOrdersOrder */
 CommerceOrdersOrderSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   currency: z.string().nullable().optional(),
   discountTotal: z.number().optional(),
-  id: z.string().uuid().optional(),
   idempotencyKey: z.string().nullable().optional(),
   lineItems: z
     .array(z.lazy(() => CommerceOrdersOrderLineItemSchema))
@@ -14018,8 +14146,8 @@ CommerceOrdersOrderSchema = z.object({
   paymentMethod: z.string().nullable().optional(),
   paymentProviderReference: z.string().nullable().optional(),
   refundAmount: z.number().nullable().optional(),
-  refundReason: z.string().nullable().optional(),
   refundedAt: z.string().datetime().nullable().optional(),
+  refundReason: z.string().nullable().optional(),
   status: z.lazy(() => CommerceOrdersOrderStatusSchema).optional(),
   subtotal: z.number().optional(),
   taxAmount: z.number().optional(),
@@ -14030,11 +14158,11 @@ CommerceOrdersOrderSchema = z.object({
 
 /** Zod schema for CommerceOrdersOrderCapture */
 CommerceOrdersOrderCaptureSchema = z.object({
+  id: z.string().uuid().optional(),
   clientActionToken: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   currency: z.string().nullable().optional(),
   discountTotal: z.number().optional(),
-  id: z.string().uuid().optional(),
   idempotencyKey: z.string().nullable().optional(),
   lineItems: z
     .array(z.lazy(() => CommerceOrdersOrderLineItemSchema))
@@ -14047,8 +14175,8 @@ CommerceOrdersOrderCaptureSchema = z.object({
   paymentProviderReference: z.string().nullable().optional(),
   paymentState: z.lazy(() => CommerceOrderChargeStateSchema).optional(),
   refundAmount: z.number().nullable().optional(),
-  refundReason: z.string().nullable().optional(),
   refundedAt: z.string().datetime().nullable().optional(),
+  refundReason: z.string().nullable().optional(),
   status: z.lazy(() => CommerceOrdersOrderStatusSchema).optional(),
   subtotal: z.number().optional(),
   taxAmount: z.number().optional(),
@@ -14059,10 +14187,10 @@ CommerceOrdersOrderCaptureSchema = z.object({
 
 /** Zod schema for CommerceOrdersOrderLineItem */
 CommerceOrdersOrderLineItemSchema = z.object({
+  id: z.string().uuid().optional(),
   basePrice: z.number().optional(),
   currency: z.string().nullable().optional(),
   discountAmount: z.number().optional(),
-  id: z.string().uuid().optional(),
   isSubscription: z.boolean().optional(),
   lineTotal: z.number().optional(),
   priceVersion: z.number().int().optional(),
@@ -14295,8 +14423,8 @@ CommercePaymentsProcessRefundResultSchema = z.object({
   processingFee: z.number().optional(),
   reason: z.string().nullable(),
   referenceNumber: z.string().nullable().optional(),
-  refundId: z.string().uuid(),
   refundedAmount: z.number(),
+  refundId: z.string().uuid(),
   status: z.lazy(() => CommercePaymentsTransactionStatusSchema),
 });
 
@@ -14305,9 +14433,9 @@ CommercePaymentsTaxBreakdownSchema = z.object({
   description: z.string().nullable().optional(),
   jurisdictionCode: z.string().nullable().optional(),
   rate: z.number().optional(),
+  taxableAmount: z.number().optional(),
   taxAmount: z.number().optional(),
   taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
-  taxableAmount: z.number().optional(),
 });
 
 /** Zod schema for CommercePaymentsTaxCalculationResult */
@@ -14334,14 +14462,15 @@ CommercePaymentsTaxExemptionValidationResultSchema = z.object({
   exemptionRate: z.number().optional(),
   exemptionType: z.string().nullable().optional(),
   isValid: z.boolean().optional(),
+  validationMessage: z.string().nullable().optional(),
   validFrom: z.string().datetime().nullable().optional(),
   validTo: z.string().datetime().nullable().optional(),
-  validationMessage: z.string().nullable().optional(),
   warnings: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for CommercePaymentsTaxJurisdiction */
 CommercePaymentsTaxJurisdictionSchema = z.object({
+  id: z.string().uuid().optional(),
   childJurisdictions: z
     .array(z.lazy(() => CommercePaymentsTaxJurisdictionSchema))
     .nullable()
@@ -14353,7 +14482,6 @@ CommercePaymentsTaxJurisdictionSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -14377,10 +14505,10 @@ CommercePaymentsTaxJurisdictionSchema = z.object({
 
 /** Zod schema for CommercePaymentsTaxJurisdictionDto */
 CommercePaymentsTaxJurisdictionDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   code: z.string().nullable().optional(),
   country: z.string().nullable().optional(),
   defaultRate: z.number().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   name: z.string().nullable().optional(),
   state: z.string().nullable().optional(),
@@ -14400,6 +14528,7 @@ CommercePaymentsTaxJurisdictionTypeSchema = z.enum([
 
 /** Zod schema for CommercePaymentsTaxRate */
 CommercePaymentsTaxRateSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   description: z.string().max(500).nullable().optional(),
@@ -14409,7 +14538,6 @@ CommercePaymentsTaxRateSchema = z.object({
     .optional(),
   effectiveFrom: z.string().datetime().optional(),
   effectiveTo: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -14430,6 +14558,7 @@ CommercePaymentsTaxRateSchema = z.object({
 
 /** Zod schema for CommercePaymentsTaxRule */
 CommercePaymentsTaxRuleSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   customerTypeFilter: z
     .lazy(() => CommercePaymentsCustomerTypeSchema)
@@ -14445,7 +14574,6 @@ CommercePaymentsTaxRuleSchema = z.object({
   effectiveFrom: z.string().datetime().nullable().optional(),
   effectiveTo: z.string().datetime().nullable().optional(),
   exemptionConditions: z.string().max(2000).nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -14469,11 +14597,11 @@ CommercePaymentsTaxRuleSchema = z.object({
 
 /** Zod schema for CommercePaymentsTaxRuleDto */
 CommercePaymentsTaxRuleDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   customerType: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   effectiveFrom: z.string().datetime().optional(),
   effectiveTo: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   jurisdictionCode: z.string().nullable().optional(),
   productCategory: z.string().nullable().optional(),
@@ -14516,6 +14644,7 @@ CommercePaymentsTransactionStatusSchema = z.enum([
 
 /** Zod schema for CommercePaymentsUserWallet */
 CommercePaymentsUserWalletSchema = z.object({
+  id: z.string().uuid().optional(),
   balance: z.number().optional(),
   createdAt: z.string().datetime(),
   currency: z.string().min(1).max(3),
@@ -14525,7 +14654,6 @@ CommercePaymentsUserWalletSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -14556,6 +14684,7 @@ CommercePaymentsValidateTaxExemptionInputSchema = z.object({
 
 /** Zod schema for CommercePaymentsWalletTransaction */
 CommercePaymentsWalletTransactionSchema = z.object({
+  id: z.string().uuid().optional(),
   amount: z.number().optional(),
   balanceAfter: z.number().optional(),
   createdAt: z.string().datetime(),
@@ -14565,7 +14694,6 @@ CommercePaymentsWalletTransactionSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -14799,12 +14927,12 @@ CommerceProductsPatchPromoCodeInputSchema = z.object({
 
 /** Zod schema for CommerceProductsProduct */
 CommerceProductsProductSchema = z.object({
+  id: z.string().uuid().optional(),
   affiliateCommissionPercentage: z.number().optional(),
   bundleItems: z.array(z.string().uuid()).nullable().optional(),
   createdAt: z.string().datetime().optional(),
   creatorId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   imageUrl: z.string().nullable().optional(),
   isBundle: z.boolean().optional(),
   isPublished: z.boolean().optional(),
@@ -14835,10 +14963,10 @@ CommerceProductsProductAcquisitionTypeSchema = z.enum([
 
 /** Zod schema for CommerceProductsProductPricing */
 CommerceProductsProductPricingSchema = z.object({
+  id: z.string().uuid().optional(),
   basePrice: z.number().optional(),
   currency: z.string().nullable().optional(),
   currentPrice: z.number().optional(),
-  id: z.string().uuid().optional(),
   isDefault: z.boolean().optional(),
   isSaleActive: z.boolean().optional(),
   name: z.string().nullable().optional(),
@@ -14868,13 +14996,13 @@ CommerceProductsProductTypeSchema = z.enum([
 
 /** Zod schema for CommerceProductsPromoCode */
 CommerceProductsPromoCodeSchema = z.object({
+  id: z.string().uuid().optional(),
   code: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   currency: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   discountAmount: z.number().nullable().optional(),
   discountPercentage: z.number().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isExclusive: z.boolean().optional(),
   maxUses: z.number().int().nullable().optional(),
@@ -14960,6 +15088,7 @@ CommerceProductsRevokeEntitlementInputSchema = z.object({
 
 /** Zod schema for CommerceProductsSupportTicket */
 CommerceProductsSupportTicketSchema = z.object({
+  id: z.string().uuid().optional(),
   assignedToName: z.string().nullable().optional(),
   assignedToUserId: z.string().uuid().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -14967,7 +15096,6 @@ CommerceProductsSupportTicketSchema = z.object({
   customerId: z.string().uuid().optional(),
   customerName: z.string().nullable().optional(),
   firstResponseAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   lastMessageAt: z.string().datetime().nullable().optional(),
   lastMessagePreview: z.string().nullable().optional(),
   messageCount: z.number().int().optional(),
@@ -14992,6 +15120,7 @@ CommerceProductsSupportTicketSchema = z.object({
 
 /** Zod schema for CommerceProductsSupportTicketMessage */
 CommerceProductsSupportTicketMessageSchema = z.object({
+  id: z.string().uuid().optional(),
   authorEmail: z.string().nullable().optional(),
   authorName: z.string().nullable().optional(),
   authorType: z
@@ -15000,7 +15129,6 @@ CommerceProductsSupportTicketMessageSchema = z.object({
   authorUserId: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isInternal: z.boolean().optional(),
   ticketId: z.string().uuid().optional(),
 });
@@ -15072,13 +15200,13 @@ CommerceProductsValidatePromoCodeInputSchema = z.object({
 
 /** Zod schema for CommerceSubscriptionsBillingHistory */
 CommerceSubscriptionsBillingHistorySchema = z.object({
+  id: z.string().uuid().optional(),
   amount: z.number().optional(),
   billingDate: z.string().datetime().optional(),
   createdAt: z.string().datetime().optional(),
   currency: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   externalPaymentId: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   status: z.string().nullable().optional(),
   subscriptionId: z.string().uuid().optional(),
 });
@@ -15143,6 +15271,7 @@ CommerceSubscriptionsCreateClientInputSchema = z.object({
 
 /** Zod schema for CommerceSubscriptionsSubscription */
 CommerceSubscriptionsSubscriptionSchema = z.object({
+  id: z.string().uuid().optional(),
   amount: z.lazy(() => MoneySchema).optional(),
   autoRenew: z.boolean().optional(),
   billingCycle: z.lazy(() => BillingCycleSchema).optional(),
@@ -15165,7 +15294,6 @@ CommerceSubscriptionsSubscriptionSchema = z.object({
   externalCustomerId: z.string().max(100).nullable().optional(),
   externalId: z.string().max(100).nullable().optional(),
   fulfilledOrderId: z.string().uuid().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isCancelled: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
@@ -15281,9 +15409,9 @@ CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema =
 
 /** Zod schema for CommerceSubscriptionsSubscriptionNotification */
 CommerceSubscriptionsSubscriptionNotificationSchema = z.object({
+  id: z.string().uuid().optional(),
   channel: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isSent: z.boolean().optional(),
   message: z.string().nullable().optional(),
   recipientId: z.string().uuid().optional(),
@@ -15301,6 +15429,7 @@ CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotifi
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlan */
 CommerceSubscriptionsSubscriptionPlanSchema = z.object({
+  id: z.string().uuid().optional(),
   annualPriceInCents: z.number().int().nullable().optional(),
   createdAt: z.string().datetime(),
   currency: z.string().min(1).max(3),
@@ -15315,7 +15444,6 @@ CommerceSubscriptionsSubscriptionPlanSchema = z.object({
   hasAdvancedAnalytics: z.boolean().optional(),
   hasCustomBranding: z.boolean().optional(),
   hasPrioritySupport: z.boolean().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
@@ -15535,13 +15663,13 @@ ComplianceAuditAuditExportInputSchema = z.object({
 
 /** Zod schema for ComplianceAuditAuditLog */
 ComplianceAuditAuditLogSchema = z.object({
+  id: z.string().uuid().optional(),
   actionType: z.string().nullable().optional(),
   category: z.lazy(() => ComplianceAuditAuditCategorySchema).optional(),
   correlationId: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
   errorMessage: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   ipAddress: z.string().nullable().optional(),
   resourceId: z.string().nullable().optional(),
   resourceType: z.string().nullable().optional(),
@@ -15586,11 +15714,11 @@ ComplianceAuditAuditStatisticsOutputSchema = z.object({
 
 /** Zod schema for ComplianceAuditAuthenticationAuditEntry */
 ComplianceAuditAuthenticationAuditEntrySchema = z.object({
+  id: z.string().uuid().optional(),
   attemptedAt: z.string().datetime().optional(),
   email: z.string().nullable().optional(),
   failureReason: z.string().nullable().optional(),
   geoLocation: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   ipAddress: z.string().nullable().optional(),
   isSuccessful: z.boolean().optional(),
   isSuspicious: z.boolean().optional(),
@@ -15630,8 +15758,8 @@ ComplianceAuditFailureReasonCountSchema = z.object({
 
 /** Zod schema for ComplianceAuditPermissionAuditEntry */
 ComplianceAuditPermissionAuditEntrySchema = z.object({
-  errorMessage: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  errorMessage: z.string().nullable().optional(),
   ipAddress: z.string().nullable().optional(),
   newValue: z.string().nullable().optional(),
   oldValue: z.string().nullable().optional(),
@@ -15723,10 +15851,10 @@ ComplianceAuditTopUserActivitySchema = z.object({
 
 /** Zod schema for ComplianceAuditUnifiedSecurityAuditEntry */
 ComplianceAuditUnifiedSecurityAuditEntrySchema = z.object({
+  id: z.string().uuid().optional(),
   actionType: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   errorMessage: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   ipAddress: z.string().nullable().optional(),
   metadata: z.string().nullable().optional(),
   resourceId: z.string().nullable().optional(),
@@ -15786,8 +15914,8 @@ ComplianceAuditUnifiedSecurityAuditOutputSchema = z.object({
 
 /** Zod schema for ComplianceConsentConsentPolicy */
 ComplianceConsentConsentPolicySchema = z.object({
-  currentVersion: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  currentVersion: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   isMandatory: z.boolean().optional(),
   name: z.string().nullable().optional(),
@@ -15812,8 +15940,8 @@ ComplianceConsentCreateConsentPolicyCommandSchema = z.object({
 
 /** Zod schema for ComplianceConsentDataSubjectInput */
 ComplianceConsentDataSubjectInputSchema = z.object({
-  deadline: z.string().datetime().optional(),
   id: z.string().uuid().optional(),
+  deadline: z.string().datetime().optional(),
   processedAt: z.string().datetime().nullable().optional(),
   processingNotes: z.string().nullable().optional(),
   requestType: z
@@ -15866,9 +15994,9 @@ ComplianceConsentPolicyTypeSchema = z.enum([
 
 /** Zod schema for ComplianceConsentPolicyVersion */
 ComplianceConsentPolicyVersionSchema = z.object({
+  id: z.string().uuid().optional(),
   contentType: z.lazy(() => ComplianceConsentContentTypeSchema).optional(),
   effectiveFrom: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isCurrent: z.boolean().optional(),
   policyId: z.string().uuid().optional(),
   versionNumber: z.string().nullable().optional(),
@@ -15904,10 +16032,10 @@ ComplianceConsentSubmitDataSubjectRequestCommandSchema = z.object({
 
 /** Zod schema for ComplianceConsentUserConsent */
 ComplianceConsentUserConsentSchema = z.object({
+  id: z.string().uuid().optional(),
   consentGivenAt: z.string().datetime().optional(),
   consentMethod: z.string().nullable().optional(),
   consentRevokedAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isGranted: z.boolean().optional(),
   policyVersionId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
@@ -15934,9 +16062,9 @@ ComplianceFERPAEducationRecordKindSchema = z.enum([
 
 /** Zod schema for ComplianceFERPAFerpaDirectoryInformationPolicy */
 ComplianceFERPAFerpaDirectoryInformationPolicySchema = z.object({
+  id: z.string().uuid().optional(),
   allowedFieldsJson: z.string().nullable().optional(),
   annualNoticeSentAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   noticeUrl: z.string().nullable().optional(),
   optOutEnabled: z.boolean().optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -15957,10 +16085,10 @@ ComplianceFERPAFerpaDisclosureBasisSchema = z.enum([
 
 /** Zod schema for ComplianceFERPAFerpaDisclosureConsent */
 ComplianceFERPAFerpaDisclosureConsentSchema = z.object({
+  id: z.string().uuid().optional(),
   effectiveFrom: z.string().datetime().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
   guardianUserId: z.string().uuid().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   purpose: z.string().nullable().optional(),
   recipient: z.string().nullable().optional(),
@@ -15971,10 +16099,10 @@ ComplianceFERPAFerpaDisclosureConsentSchema = z.object({
 
 /** Zod schema for ComplianceFERPAFerpaDisclosureLog */
 ComplianceFERPAFerpaDisclosureLogSchema = z.object({
+  id: z.string().uuid().optional(),
   basis: z.lazy(() => ComplianceFERPAFerpaDisclosureBasisSchema).optional(),
   disclosedAt: z.string().datetime().optional(),
   disclosedByUserId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   purpose: z.string().nullable().optional(),
   recipient: z.string().nullable().optional(),
   recordIdsJson: z.string().nullable().optional(),
@@ -15983,9 +16111,9 @@ ComplianceFERPAFerpaDisclosureLogSchema = z.object({
 
 /** Zod schema for ComplianceFERPAFerpaEducationRecord */
 ComplianceFERPAFerpaEducationRecordSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   externalRecordId: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isDirectoryInformation: z.boolean().optional(),
   metadataJson: z.string().nullable().optional(),
   protectionLevel: z
@@ -15999,8 +16127,8 @@ ComplianceFERPAFerpaEducationRecordSchema = z.object({
 
 /** Zod schema for ComplianceFERPAFerpaInspectionInput */
 ComplianceFERPAFerpaInspectionInputSchema = z.object({
-  deadline: z.string().datetime().optional(),
   id: z.string().uuid().optional(),
+  deadline: z.string().datetime().optional(),
   processedAt: z.string().datetime().nullable().optional(),
   processedByUserId: z.string().uuid().nullable().optional(),
   processingNotes: z.string().nullable().optional(),
@@ -16083,6 +16211,7 @@ ComplianceFERPAUpsertDirectoryInformationPolicyCommandSchema = z.object({
 
 /** Zod schema for ContentPagesContentResource */
 ContentPagesContentResourceSchema = z.object({
+  id: z.string().uuid().optional(),
   authorId: z.string().uuid().nullable().optional(),
   authorName: z.string().nullable().optional(),
   body: z.string().nullable().optional(),
@@ -16092,7 +16221,6 @@ ContentPagesContentResourceSchema = z.object({
   customData: z.string().nullable().optional(),
   downloadUrl: z.string().nullable().optional(),
   externalUrl: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isFeatured: z.boolean().optional(),
   linkedEntityId: z.string().uuid().nullable().optional(),
   linkedEntityType: z.string().nullable().optional(),
@@ -16215,10 +16343,10 @@ ContentPagesCreatePageSectionSchema = z.object({
 
 /** Zod schema for ContentPagesMarketingLead */
 ContentPagesMarketingLeadSchema = z.object({
+  id: z.string().uuid().optional(),
   company: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   email: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   locale: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -16250,12 +16378,12 @@ ContentPagesOpenGraphMetadataSchema = z.object({
 
 /** Zod schema for ContentPagesPage */
 ContentPagesPageSchema = z.object({
+  id: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
   canonicalUrl: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   customData: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   locale: z.string().nullable().optional(),
   metaDescription: z.string().nullable().optional(),
   metaKeywords: z.string().nullable().optional(),
@@ -16285,11 +16413,11 @@ ContentPagesPageSchema = z.object({
 
 /** Zod schema for ContentPagesPageSection */
 ContentPagesPageSectionSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   cssClasses: z.string().nullable().optional(),
   data: z.string().nullable().optional(),
   heading: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isVisible: z.boolean().optional(),
   pageId: z.string().uuid().optional(),
   sectionType: z.string().nullable().optional(),
@@ -16571,18 +16699,18 @@ EconomyPayoutsPayoutRequestStateSchema = z.enum([
 
 /** Zod schema for EconomyPayoutsQueriesEconomyPayoutInput */
 EconomyPayoutsQueriesEconomyPayoutInputSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   hardCoinUnits: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   state: z.lazy(() => EconomyPayoutsPayoutRequestStateSchema).optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for EconomyPayoutsQueriesEconomyPayoutOperation */
 EconomyPayoutsQueriesEconomyPayoutOperationSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   hardCoinUnits: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   state: z.lazy(() => EconomyPayoutsPayoutOperationStateSchema).optional(),
   updatedAt: z.string().datetime().optional(),
 });
@@ -16628,12 +16756,12 @@ FeaturesBulkEvaluationInputSchema = z.object({
 
 /** Zod schema for FeaturesCapabilityAuditLog */
 FeaturesCapabilityAuditLogSchema = z.object({
+  id: z.string().uuid().optional(),
   capabilityKey: z.string().nullable().optional(),
-  changeReason: z.string().nullable().optional(),
-  changeType: z.string().nullable().optional(),
   changedAt: z.string().datetime().optional(),
   changedByUserId: z.string().uuid().nullable().optional(),
-  id: z.string().uuid().optional(),
+  changeReason: z.string().nullable().optional(),
+  changeType: z.string().nullable().optional(),
   newSource: z.string().nullable().optional(),
   newValue: z.boolean().optional(),
   oldSource: z.string().nullable().optional(),
@@ -16682,12 +16810,12 @@ FeaturesFeatureEvaluationInputSchema = z.object({
 
 /** Zod schema for FeaturesFeatureFlag */
 FeaturesFeatureFlagSchema = z.object({
+  id: z.string().uuid(),
   createdAt: z.string().datetime(),
   defaultValue: z.record(z.string(), z.unknown()).nullable().optional(),
   deletedAt: z.string().datetime().nullable().optional(),
   description: z.string().nullable().optional(),
   environment: z.string().nullable().optional(),
-  id: z.string().uuid(),
   isEnabled: z.boolean(),
   key: z.string().nullable(),
   name: z.string().nullable(),
@@ -16702,11 +16830,11 @@ FeaturesFeatureFlagSchema = z.object({
 
 /** Zod schema for FeaturesFeatureFlagTarget */
 FeaturesFeatureFlagTargetSchema = z.object({
+  id: z.string().uuid(),
   createdAt: z.string().datetime(),
   customValue: z.string().nullable().optional(),
   deletedAt: z.string().datetime().nullable().optional(),
   featureFlagId: z.string().uuid(),
-  id: z.string().uuid(),
   isEnabled: z.boolean(),
   metadata: z.string().nullable().optional(),
   priority: z.number().int().optional(),
@@ -16820,8 +16948,8 @@ Fido2NetLibCredentialCreateOptionsSchema = z.object({
 
 /** Zod schema for Fido2NetLibFido2User */
 Fido2NetLibFido2UserSchema = z.object({
-  displayName: z.string().nullable().optional(),
   id: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
@@ -16833,8 +16961,8 @@ Fido2NetLibPubKeyCredParamSchema = z.object({
 
 /** Zod schema for Fido2NetLibPublicKeyCredentialRpEntity */
 Fido2NetLibPublicKeyCredentialRpEntitySchema = z.object({
-  icon: z.string().nullable().optional(),
   id: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
 });
 
@@ -16863,6 +16991,7 @@ GameJamsCreateJamInputSchema = z.object({
 
 /** Zod schema for GameJamsJam */
 GameJamsJamSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   createdBy: z.string().uuid(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -16872,7 +17001,6 @@ GameJamsJamSchema = z.object({
     .nullable()
     .optional(),
   endDate: z.string().datetime(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -16893,8 +17021,8 @@ GameJamsJamSchema = z.object({
 
 /** Zod schema for GameJamsJamCriteria */
 GameJamsJamCriteriaSchema = z.object({
-  description: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   jamId: z.string().uuid().optional(),
   maxScore: z.number().int().optional(),
   name: z.string().nullable().optional(),
@@ -16903,10 +17031,10 @@ GameJamsJamCriteriaSchema = z.object({
 
 /** Zod schema for GameJamsJamDto */
 GameJamsJamDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   createdBy: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
   endDate: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   maxParticipants: z.number().int().nullable().optional(),
   name: z.string().nullable().optional(),
   participantCount: z.number().int().optional(),
@@ -16919,6 +17047,7 @@ GameJamsJamDtoSchema = z.object({
 
 /** Zod schema for GameJamsJamScore */
 GameJamsJamScoreSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   criteriaId: z.string().uuid(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -16927,7 +17056,6 @@ GameJamsJamScoreSchema = z.object({
     .nullable()
     .optional(),
   feedback: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -16941,9 +17069,9 @@ GameJamsJamScoreSchema = z.object({
 
 /** Zod schema for GameJamsJamScoreDto */
 GameJamsJamScoreDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   criteriaId: z.string().uuid().optional(),
   feedback: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   judgeUserId: z.string().uuid().optional(),
   score: z.number().int().optional(),
   submissionId: z.string().uuid().optional(),
@@ -16984,9 +17112,9 @@ GameJamsSubmitJamEntryInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationApiKey */
 IdentityAuthenticationApiKeySchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   keyPrefix: z.string().nullable().optional(),
   lastUsedAt: z.string().datetime().nullable().optional(),
@@ -17091,10 +17219,10 @@ IdentityAuthenticationCreateApiKeyCommandSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationCreateApiKeyOutput */
 IdentityAuthenticationCreateApiKeyOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   apiKey: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   keyPrefix: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   scopes: z.array(z.string()).nullable().optional(),
@@ -17193,12 +17321,6 @@ IdentityAuthenticationEmailVerificationResultSchema = z.object({
   verifiedAt: z.string().datetime().nullable().optional(),
 });
 
-/** Zod schema for IdentityAuthenticationExternalLogin */
-IdentityAuthenticationExternalLoginSchema = z.object({
-  createdAt: z.string().datetime(),
-  provider: z.string().nullable(),
-});
-
 /** Zod schema for IdentityAuthenticationGitHubSignInOutput */
 IdentityAuthenticationGitHubSignInOutputSchema = z.object({
   authUrl: z.string().nullable(),
@@ -17256,8 +17378,8 @@ IdentityAuthenticationLocationInfoSchema = z.object({
   displayLocation: z.string().nullable().optional(),
   ipAddress: z.string().nullable().optional(),
   isHosting: z.boolean().nullable().optional(),
-  isProxy: z.boolean().nullable().optional(),
   isp: z.string().nullable().optional(),
+  isProxy: z.boolean().nullable().optional(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
   organization: z.string().nullable().optional(),
@@ -17350,7 +17472,7 @@ IdentityAuthenticationOAuth2ErrorOutputSchema = z.object({
 /** Zod schema for IdentityAuthenticationPasswordChangeInput */
 IdentityAuthenticationPasswordChangeInputSchema = z.object({
   confirmPassword: z.string().min(1),
-  currentPassword: z.string().min(1),
+  currentPassword: z.string().nullable().optional(),
   newPassword: z.string().min(8),
   revokeOtherSessions: z.boolean().optional(),
 });
@@ -17447,9 +17569,9 @@ IdentityAuthenticationSendEmailVerificationInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationServiceAccountAuditEntry */
 IdentityAuthenticationServiceAccountAuditEntrySchema = z.object({
+  id: z.string().uuid().optional(),
   action: z.string().nullable().optional(),
   details: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   ipAddress: z.string().nullable().optional(),
   performedBy: z.string().nullable().optional(),
   timestamp: z.string().datetime().optional(),
@@ -17469,12 +17591,12 @@ IdentityAuthenticationServiceAccountAuditLogOutputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationServiceAccountCreatedOutput */
 IdentityAuthenticationServiceAccountCreatedOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   clientId: z.string().nullable().optional(),
   clientSecret: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
   scopes: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -17483,13 +17605,13 @@ IdentityAuthenticationServiceAccountCreatedOutputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationServiceAccountOutput */
 IdentityAuthenticationServiceAccountOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   authenticationCount: z.number().int().optional(),
   clientId: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   createdBy: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isLocked: z.boolean().optional(),
   lastAuthenticatedAt: z.string().datetime().nullable().optional(),
@@ -17501,10 +17623,10 @@ IdentityAuthenticationServiceAccountOutputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationSessionOutput */
 IdentityAuthenticationSessionOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   deviceInfo: z.lazy(() => IdentityAuthenticationDeviceInfoSchema).optional(),
   expiresAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   ipAddress: z.string().nullable().optional(),
   isCurrent: z.boolean().optional(),
   isTrustedDevice: z.boolean().optional(),
@@ -17589,10 +17711,10 @@ IdentityAuthenticationTrustDeviceInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationTrustedDeviceOutput */
 IdentityAuthenticationTrustedDeviceOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   deviceInfo: z.lazy(() => IdentityAuthenticationDeviceInfoSchema).optional(),
   deviceName: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   lastUsedAt: z.string().datetime().optional(),
   trustedAt: z.string().datetime().optional(),
 });
@@ -17617,11 +17739,11 @@ IdentityAuthenticationUpdateScopesInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationUser */
 IdentityAuthenticationUserSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   email: z.string().nullable().optional(),
   emailVerified: z.boolean().optional(),
   firstName: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   lastLoginAt: z.string().datetime().nullable().optional(),
   lastName: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
@@ -17697,13 +17819,13 @@ IdentityAuthenticationWebAuthnAuthenticatorTypeSchema = z.enum([
 
 /** Zod schema for IdentityAuthenticationWebAuthnCredentialInfo */
 IdentityAuthenticationWebAuthnCredentialInfoSchema = z.object({
+  id: z.string().uuid().optional(),
   authenticatorType: z
     .lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema)
     .optional(),
   backedUp: z.boolean().optional(),
   createdAt: z.string().datetime().optional(),
   friendlyName: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isDefault: z.boolean().optional(),
   isPasswordless: z.boolean().optional(),
   lastUsedAt: z.string().datetime().nullable().optional(),
@@ -17748,6 +17870,7 @@ IdentityAuthenticationWebAuthnStatusOutputSchema = z.object({
 
 /** Zod schema for IdentityAuthorizationAccessReviewCampaign */
 IdentityAuthorizationAccessReviewCampaignSchema = z.object({
+  id: z.string().uuid().optional(),
   approvedItems: z.number().int().optional(),
   autoRevokeOnNoResponse: z.boolean().optional(),
   completedAt: z.string().datetime().nullable().optional(),
@@ -17756,7 +17879,6 @@ IdentityAuthorizationAccessReviewCampaignSchema = z.object({
   createdBy: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
   endDate: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   items: z
     .array(z.lazy(() => IdentityAuthorizationAccessReviewItemSchema))
     .nullable()
@@ -17764,10 +17886,10 @@ IdentityAuthorizationAccessReviewCampaignSchema = z.object({
   name: z.string().nullable().optional(),
   notificationTemplate: z.string().nullable().optional(),
   reminderFrequencyDays: z.number().int().optional(),
+  reviewedItems: z.number().int().optional(),
   reviewType: z
     .lazy(() => IdentityAuthorizationAccessReviewTypeSchema)
     .optional(),
-  reviewedItems: z.number().int().optional(),
   revokedItems: z.number().int().optional(),
   scope: z.lazy(() => IdentityAuthorizationAccessReviewScopeSchema).optional(),
   scopeFilter: z.string().nullable().optional(),
@@ -17790,6 +17912,7 @@ IdentityAuthorizationAccessReviewDecisionSchema = z.enum([
 
 /** Zod schema for IdentityAuthorizationAccessReviewItem */
 IdentityAuthorizationAccessReviewItemSchema = z.object({
+  id: z.string().uuid().optional(),
   campaign: z
     .lazy(() => IdentityAuthorizationAccessReviewCampaignSchema)
     .optional(),
@@ -17799,7 +17922,6 @@ IdentityAuthorizationAccessReviewItemSchema = z.object({
     .lazy(() => IdentityAuthorizationAccessReviewDecisionSchema)
     .optional(),
   decisionReason: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   lastReminderSent: z.string().datetime().nullable().optional(),
   permissionDetails: z.string().nullable().optional(),
   reminderCount: z.number().int().optional(),
@@ -17986,6 +18108,7 @@ IdentityAuthorizationDeclineInvitationInputSchema = z.object({
 
 /** Zod schema for IdentityAuthorizationDelegatedAdminScope */
 IdentityAuthorizationDelegatedAdminScopeSchema = z.object({
+  id: z.string().uuid().optional(),
   adminUserId: z.string().uuid().optional(),
   allowedDepartments: z.string().nullable().optional(),
   allowedResourceIds: z.string().nullable().optional(),
@@ -18003,7 +18126,6 @@ IdentityAuthorizationDelegatedAdminScopeSchema = z.object({
   description: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
   grantablePermissions: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   name: z.string().nullable().optional(),
   scopeType: z
@@ -18138,11 +18260,11 @@ IdentityAuthorizationInvitationActionResultSchema = z.object({
 
 /** Zod schema for IdentityAuthorizationJitElevationInput */
 IdentityAuthorizationJitElevationInputSchema = z.object({
+  id: z.string().uuid().optional(),
   activatedAt: z.string().datetime().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   durationMinutes: z.number().int().optional(),
   expiresAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   justification: z.string().nullable().optional(),
   permission: z.string().nullable().optional(),
   requesterId: z.string().uuid().optional(),
@@ -18195,14 +18317,14 @@ IdentityAuthorizationPermissionAnomalySchema = z.object({
 
 /** Zod schema for IdentityAuthorizationPermissionDelegation */
 IdentityAuthorizationPermissionDelegationSchema = z.object({
+  id: z.string().uuid().optional(),
   canSubDelegate: z.boolean().optional(),
   conditions: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
-  delegateUserId: z.string().uuid().optional(),
   delegatedPermissions: z.array(z.string()).nullable().optional(),
+  delegateUserId: z.string().uuid().optional(),
   delegatorUserId: z.string().uuid().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   reason: z.string().nullable().optional(),
   resourceId: z.string().uuid().nullable().optional(),
@@ -18459,6 +18581,7 @@ IdentityAuthorizationSoDResolutionActionSchema = z.enum([
 
 /** Zod schema for IdentityAuthorizationSoDRule */
 IdentityAuthorizationSoDRuleSchema = z.object({
+  id: z.string().uuid().optional(),
   allowedExceptions: z.string().nullable().optional(),
   approverRoles: z.string().nullable().optional(),
   conflictingPermissions: z.string().nullable().optional(),
@@ -18467,7 +18590,6 @@ IdentityAuthorizationSoDRuleSchema = z.object({
   createdAt: z.string().datetime().optional(),
   createdBy: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isEnabled: z.boolean().optional(),
   lastViolationDetected: z.string().datetime().nullable().optional(),
   mitigationStrategy: z.string().nullable().optional(),
@@ -18505,6 +18627,7 @@ IdentityAuthorizationSoDSeveritySchema = z.enum([
 
 /** Zod schema for IdentityAuthorizationSoDViolation */
 IdentityAuthorizationSoDViolationSchema = z.object({
+  id: z.string().uuid().optional(),
   approvedAt: z.string().datetime().nullable().optional(),
   approvedBy: z.string().uuid().nullable().optional(),
   conflictingItems: z.string().nullable().optional(),
@@ -18512,7 +18635,6 @@ IdentityAuthorizationSoDViolationSchema = z.object({
   detectedAt: z.string().datetime().optional(),
   detectedBy: z.string().uuid().nullable().optional(),
   exceptionJustification: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isException: z.boolean().optional(),
   resolutionAction: z
     .lazy(() => IdentityAuthorizationSoDResolutionActionSchema)
@@ -18735,6 +18857,7 @@ IdentityTenantsSlugValidationSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenant */
 IdentityTenantsTenantSchema = z.object({
+  id: z.string().uuid().optional(),
   activeMemberCount: z.number().int().optional(),
   adminEmail: z.string().max(255).nullable().optional(),
   archivedAt: z.string().datetime().nullable().optional(),
@@ -18747,7 +18870,6 @@ IdentityTenantsTenantSchema = z.object({
     .nullable()
     .optional(),
   hasActiveMembers: z.boolean().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isArchived: z.boolean().optional(),
   isDefault: z.boolean().optional(),
@@ -18788,6 +18910,7 @@ IdentityTenantsTenantAddressSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenantAuditLogEntry */
 IdentityTenantsTenantAuditLogEntrySchema = z.object({
+  id: z.string().uuid().optional(),
   action: z.string().nullable().optional(),
   actorEmail: z.string().nullable().optional(),
   actorId: z.string().uuid().nullable().optional(),
@@ -18801,7 +18924,6 @@ IdentityTenantsTenantAuditLogEntrySchema = z.object({
     .nullable()
     .optional(),
   correlationId: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   ipAddress: z.string().nullable().optional(),
   metadata: z.record(z.string(), z.string()).nullable().optional(),
   tenantId: z.string().uuid().optional(),
@@ -18866,6 +18988,7 @@ IdentityTenantsTenantCurrencySettingsSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenantDomain */
 IdentityTenantsTenantDomainSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
@@ -18873,7 +18996,6 @@ IdentityTenantsTenantDomainSchema = z.object({
     .nullable()
     .optional(),
   fullDomain: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isMainDomain: z.boolean().optional(),
@@ -18907,6 +19029,7 @@ IdentityTenantsTenantIntegrationSettingsSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenantMember */
 IdentityTenantsTenantMemberSchema = z.object({
+  id: z.string().uuid().optional(),
   childMembers: z
     .array(z.lazy(() => IdentityTenantsTenantMemberSchema))
     .nullable()
@@ -18917,7 +19040,6 @@ IdentityTenantsTenantMemberSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -18938,6 +19060,7 @@ IdentityTenantsTenantMemberSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenantMetadata */
 IdentityTenantsTenantMetadataSchema = z.object({
+  id: z.string().uuid().optional(),
   adminNotes: z.string().nullable().optional(),
   businessInfo: z
     .lazy(() => IdentityTenantsTenantBusinessInfoSchema)
@@ -18949,7 +19072,6 @@ IdentityTenantsTenantMetadataSchema = z.object({
     .nullable()
     .optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
-  id: z.string().uuid().optional(),
   tags: z.array(z.string()).nullable().optional(),
   updatedAt: z.string().datetime().optional(),
 });
@@ -18968,6 +19090,7 @@ IdentityTenantsTenantSecuritySettingsSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenantSettings */
 IdentityTenantsTenantSettingsSchema = z.object({
+  id: z.string().uuid().optional(),
   allowUserRegistration: z.boolean().optional(),
   brandingSettings: z.string().max(5000).nullable().optional(),
   createdAt: z.string().datetime(),
@@ -18981,7 +19104,6 @@ IdentityTenantsTenantSettingsSchema = z.object({
     .optional(),
   enableApiAccess: z.boolean().optional(),
   enableAuditLogging: z.boolean().optional(),
-  id: z.string().uuid().optional(),
   integrationSettingsJson: z.string().nullable().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -19000,12 +19122,12 @@ IdentityTenantsTenantSettingsSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenantSettingsDto */
 IdentityTenantsTenantSettingsDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   businessRules: z
     .lazy(() => IdentityTenantsTenantBusinessRulesSchema)
     .optional(),
   createdAt: z.string().datetime().optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
-  id: z.string().uuid().optional(),
   integrationSettings: z
     .lazy(() => IdentityTenantsTenantIntegrationSettingsSchema)
     .optional(),
@@ -19026,6 +19148,7 @@ IdentityTenantsTenantSettingsDtoSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenantStatistics */
 IdentityTenantsTenantStatisticsSchema = z.object({
+  id: z.string().uuid().optional(),
   activeMembers: z.number().int().optional(),
   apiCalls: z.number().int().optional(),
   createdAt: z.string().datetime(),
@@ -19035,7 +19158,6 @@ IdentityTenantsTenantStatisticsSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   inactiveMembers: z.number().int().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -19340,6 +19462,7 @@ IdentityTenantsUpdateUserMembershipRoleInputSchema = z.object({
 
 /** Zod schema for IdentityTenantsUsageTracking */
 IdentityTenantsUsageTrackingSchema = z.object({
+  id: z.string().uuid().optional(),
   cost: z.number().optional(),
   createdAt: z.string().datetime(),
   date: z.string().datetime().optional(),
@@ -19348,7 +19471,6 @@ IdentityTenantsUsageTrackingSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -19366,12 +19488,12 @@ IdentityTenantsUsageTrackingSchema = z.object({
 IdentityTenantsUserMembershipSchema = z.object({
   acceptedAt: z.string().datetime().nullable().optional(),
   cancelledAt: z.string().datetime().nullable().optional(),
-  inviteResendCount: z.number().int().optional(),
-  inviteStatus: z.string().nullable().optional(),
   invitedAt: z.string().datetime().nullable().optional(),
   invitedByEmail: z.string().nullable().optional(),
   inviteeEmail: z.string().nullable().optional(),
   inviteeName: z.string().nullable().optional(),
+  inviteResendCount: z.number().int().optional(),
+  inviteStatus: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   joinedAt: z.string().datetime().optional(),
   lastInviteSentAt: z.string().datetime().nullable().optional(),
@@ -19732,6 +19854,7 @@ IdentityUsersUpdateUserRequestItemSchema = z.object({
 
 /** Zod schema for IdentityUsersUser */
 IdentityUsersUserSchema = z.object({
+  id: z.string().uuid().optional(),
   canPerformActions: z.boolean().optional(),
   canSignIn: z.boolean().optional(),
   createdAt: z.string().datetime(),
@@ -19742,7 +19865,6 @@ IdentityUsersUserSchema = z.object({
     .optional(),
   email: z.string().email().min(1).max(255),
   hasPassword: z.boolean().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isEmailVerified: z.boolean().optional(),
@@ -19789,9 +19911,9 @@ IdentityUsersUserAccessibilityPreferencesSchema = z.object({
 
 /** Zod schema for IdentityUsersUserDto */
 IdentityUsersUserDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   email: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   lastSeenAt: z.string().datetime().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -19818,6 +19940,7 @@ IdentityUsersUserLocalizationPreferencesSchema = z.object({
 
 /** Zod schema for IdentityUsersUserMetadata */
 IdentityUsersUserMetadataSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   customFields: z.string().max(50000).nullable().optional(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -19826,7 +19949,6 @@ IdentityUsersUserMetadataSchema = z.object({
     .nullable()
     .optional(),
   externalReferences: z.string().max(25000).nullable().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -19841,13 +19963,13 @@ IdentityUsersUserMetadataSchema = z.object({
 
 /** Zod schema for IdentityUsersUserMetadataDto */
 IdentityUsersUserMetadataDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   customFields: z
     .record(z.string(), z.record(z.string(), z.unknown()))
     .nullable()
     .optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
-  id: z.string().uuid().optional(),
   tags: z.array(z.string()).nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
   userId: z.string().uuid().optional(),
@@ -19856,6 +19978,7 @@ IdentityUsersUserMetadataDtoSchema = z.object({
 
 /** Zod schema for IdentityUsersUserNotification */
 IdentityUsersUserNotificationSchema = z.object({
+  id: z.string().uuid().optional(),
   actionUrl: z.string().max(500).nullable().optional(),
   archivedAt: z.string().datetime().nullable().optional(),
   content: z.string().min(1).max(2000),
@@ -19865,7 +19988,6 @@ IdentityUsersUserNotificationSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isArchived: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -19902,13 +20024,13 @@ IdentityUsersUserNotificationDetailSchema = z.object({
 
 /** Zod schema for IdentityUsersUserNotificationDto */
 IdentityUsersUserNotificationDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   actionText: z.string().nullable().optional(),
   actionUrl: z.string().nullable().optional(),
   archivedAt: z.string().datetime().nullable().optional(),
   category: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   imageUrl: z.string().nullable().optional(),
   isArchived: z.boolean().optional(),
   isRead: z.boolean().optional(),
@@ -19945,6 +20067,7 @@ IdentityUsersUserNotificationPreferencesSchema = z.object({
 
 /** Zod schema for IdentityUsersUserPreferences */
 IdentityUsersUserPreferencesSchema = z.object({
+  id: z.string().uuid().optional(),
   accessibilityPreferences: z.string().max(10000).nullable().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -19953,7 +20076,6 @@ IdentityUsersUserPreferencesSchema = z.object({
     .nullable()
     .optional(),
   generalPreferences: z.string().max(10000).nullable().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -19969,6 +20091,7 @@ IdentityUsersUserPreferencesSchema = z.object({
 
 /** Zod schema for IdentityUsersUserPreferencesDto */
 IdentityUsersUserPreferencesDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   accessibilityPreferences: z
     .record(z.string(), z.record(z.string(), z.unknown()))
     .nullable()
@@ -19978,7 +20101,6 @@ IdentityUsersUserPreferencesDtoSchema = z.object({
     .record(z.string(), z.record(z.string(), z.unknown()))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   localizationPreferences: z
     .record(z.string(), z.record(z.string(), z.unknown()))
     .nullable()
@@ -20019,6 +20141,7 @@ IdentityUsersUserPrivacyPreferencesSchema = z.object({
 
 /** Zod schema for IdentityUsersUserProfile */
 IdentityUsersUserProfileSchema = z.object({
+  id: z.string().uuid().optional(),
   avatarUrl: z.string().max(500).nullable().optional(),
   bannerUrl: z.string().max(500).nullable().optional(),
   bio: z.string().max(1000).nullable().optional(),
@@ -20032,7 +20155,6 @@ IdentityUsersUserProfileSchema = z.object({
     .nullable()
     .optional(),
   gender: z.string().max(20).nullable().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -20050,13 +20172,13 @@ IdentityUsersUserProfileSchema = z.object({
 
 /** Zod schema for IdentityUsersUserProfileDto */
 IdentityUsersUserProfileDtoSchema = z.object({
+  id: z.string().uuid().optional(),
   avatarUrl: z.string().nullable().optional(),
   bannerUrl: z.string().nullable().optional(),
   bio: z.string().nullable().optional(),
   company: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   displayName: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   jobTitle: z.string().nullable().optional(),
   language: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
@@ -20118,6 +20240,7 @@ LaunchPadCreateLaunchPlanInputSchema = z.object({
 
 /** Zod schema for LaunchPadLaunchChecklistItem */
 LaunchPadLaunchChecklistItemSchema = z.object({
+  id: z.string().uuid().optional(),
   category: z.string().min(1).max(100),
   completedAt: z.string().datetime().nullable().optional(),
   createdAt: z.string().datetime(),
@@ -20126,7 +20249,6 @@ LaunchPadLaunchChecklistItemSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isComplete: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -20160,13 +20282,13 @@ LaunchPadLaunchPadAnalyticsProjectionSchema = z.object({
 
 /** Zod schema for LaunchPadLaunchPadApplication */
 LaunchPadLaunchPadApplicationSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -20192,8 +20314,8 @@ LaunchPadLaunchPadApplicationSchema = z.object({
 
 /** Zod schema for LaunchPadLaunchPadApplicationProjection */
 LaunchPadLaunchPadApplicationProjectionSchema = z.object({
-  eventId: z.string().uuid().optional(),
   id: z.string().uuid().optional(),
+  eventId: z.string().uuid().optional(),
   pitch: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().optional(),
@@ -20216,6 +20338,7 @@ LaunchPadLaunchPadApplicationStatusSchema = z.enum([
 
 /** Zod schema for LaunchPadLaunchPadEvent */
 LaunchPadLaunchPadEventSchema = z.object({
+  id: z.string().uuid().optional(),
   applications: z
     .array(z.lazy(() => LaunchPadLaunchPadApplicationSchema))
     .nullable()
@@ -20230,7 +20353,6 @@ LaunchPadLaunchPadEventSchema = z.object({
     .nullable()
     .optional(),
   endsAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -20257,11 +20379,11 @@ LaunchPadLaunchPadEventDetailProjectionSchema = z.object({
 
 /** Zod schema for LaunchPadLaunchPadEventProjection */
 LaunchPadLaunchPadEventProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   applicationsCloseAt: z.string().datetime().nullable().optional(),
   applicationsOpenAt: z.string().datetime().nullable().optional(),
   description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
   startsAt: z.string().datetime().optional(),
   status: z.lazy(() => LaunchPadLaunchPadEventStatusSchema).optional(),
@@ -20281,6 +20403,7 @@ LaunchPadLaunchPadEventStatusSchema = z.enum([
 
 /** Zod schema for LaunchPadLaunchPadParticipantRegistration */
 LaunchPadLaunchPadParticipantRegistrationSchema = z.object({
+  id: z.string().uuid().optional(),
   checkedInAt: z.string().datetime().nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   createdAt: z.string().datetime(),
@@ -20289,7 +20412,6 @@ LaunchPadLaunchPadParticipantRegistrationSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -20316,6 +20438,7 @@ LaunchPadLaunchPadParticipantRoleSchema = z.enum([
 
 /** Zod schema for LaunchPadLaunchPadParticipantSlot */
 LaunchPadLaunchPadParticipantSlotSchema = z.object({
+  id: z.string().uuid().optional(),
   capacity: z.number().int().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -20325,7 +20448,6 @@ LaunchPadLaunchPadParticipantSlotSchema = z.object({
     .optional(),
   endsAt: z.string().datetime().optional(),
   hasCapacity: z.boolean().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -20357,9 +20479,9 @@ LaunchPadLaunchPadParticipantStatusSchema = z.enum([
 
 /** Zod schema for LaunchPadLaunchPadRegistrationProjection */
 LaunchPadLaunchPadRegistrationProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   checkedInAt: z.string().datetime().nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   registeredAt: z.string().datetime().optional(),
   slotId: z.string().uuid().optional(),
   status: z.lazy(() => LaunchPadLaunchPadParticipantStatusSchema).optional(),
@@ -20368,10 +20490,10 @@ LaunchPadLaunchPadRegistrationProjectionSchema = z.object({
 
 /** Zod schema for LaunchPadLaunchPadSlotProjection */
 LaunchPadLaunchPadSlotProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   capacity: z.number().int().optional(),
   endsAt: z.string().datetime().optional(),
   eventId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
   reservedCount: z.number().int().optional(),
   role: z.lazy(() => LaunchPadLaunchPadParticipantRoleSchema).optional(),
@@ -20380,6 +20502,7 @@ LaunchPadLaunchPadSlotProjectionSchema = z.object({
 
 /** Zod schema for LaunchPadLaunchPlan */
 LaunchPadLaunchPlanSchema = z.object({
+  id: z.string().uuid().optional(),
   channels: z.array(z.string()).nullable().optional(),
   checklistItems: z
     .array(z.lazy(() => LaunchPadLaunchChecklistItemSchema))
@@ -20391,17 +20514,16 @@ LaunchPadLaunchPlanSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
+  launchedAt: z.string().datetime().nullable().optional(),
   launchPadApplication: z
     .lazy(() => LaunchPadLaunchPadApplicationSchema)
     .optional(),
   launchPadApplicationId: z.string().uuid().nullable().optional(),
   launchPadEvent: z.lazy(() => LaunchPadLaunchPadEventSchema).optional(),
   launchPadEventId: z.string().uuid().nullable().optional(),
-  launchedAt: z.string().datetime().nullable().optional(),
   name: z.string().min(1).max(200),
   positioning: z.string().max(1000).nullable().optional(),
   project: z.lazy(() => ProjectsProjectSchema).optional(),
@@ -20507,6 +20629,7 @@ LearningAssessmentsAnonymousReviewSubmissionSchema = z.object({
 
 /** Zod schema for LearningAssessmentsAssessment */
 LearningAssessmentsAssessmentSchema = z.object({
+  id: z.string().uuid().optional(),
   allowLateSubmissions: z.boolean().optional(),
   assessmentGroupId: z.string().uuid().nullable().optional(),
   assessmentGroupName: z.string().nullable().optional(),
@@ -20522,7 +20645,6 @@ LearningAssessmentsAssessmentSchema = z.object({
     .lazy(() => LearningAssessmentsAssessmentGradingMethodSchema)
     .optional(),
   groupSetId: z.string().uuid().nullable().optional(),
-  id: z.string().uuid().optional(),
   isAvailable: z.boolean().optional(),
   isRequired: z.boolean().optional(),
   lateSubmissionDeadline: z.string().datetime().nullable().optional(),
@@ -20553,9 +20675,9 @@ LearningAssessmentsAssessmentGradingMethodSchema = z.string();
 
 /** Zod schema for LearningAssessmentsAssessmentGroup */
 LearningAssessmentsAssessmentGroupSchema = z.object({
+  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
   order: z.number().int().optional(),
   weightPercent: z.number().optional(),
@@ -20593,6 +20715,7 @@ LearningAssessmentsAssessmentScoreBucketSchema = z.object({
 
 /** Zod schema for LearningAssessmentsAssessmentSubmission */
 LearningAssessmentsAssessmentSubmissionSchema = z.object({
+  id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
   attemptNumber: z.number().int().optional(),
   codePayload: z.string().nullable().optional(),
@@ -20601,7 +20724,6 @@ LearningAssessmentsAssessmentSubmissionSchema = z.object({
   filePayload: z.string().nullable().optional(),
   gradedAt: z.string().datetime().nullable().optional(),
   gradedBy: z.string().uuid().nullable().optional(),
-  id: z.string().uuid().optional(),
   isLate: z.boolean().optional(),
   mediaPayload: z.string().nullable().optional(),
   passed: z.boolean().nullable().optional(),
@@ -20729,10 +20851,10 @@ LearningAssessmentsGradingQueueSchema = z.object({
 
 /** Zod schema for LearningAssessmentsGradingQueueAssessment */
 LearningAssessmentsGradingQueueAssessmentSchema = z.object({
+  id: z.string().uuid().optional(),
   gradingMethods: z.string().nullable().optional(),
   groupSetId: z.string().uuid().nullable().optional(),
   hasRubric: z.boolean().optional(),
-  id: z.string().uuid().optional(),
   maxScore: z.number().int().optional(),
   peerReviewsRequiredCount: z.number().int().optional(),
   rubric: z.lazy(() => LearningAssessmentsRubricSchema).optional(),
@@ -20761,16 +20883,16 @@ LearningAssessmentsGradingQueueItemSchema = z.object({
 
 /** Zod schema for LearningAssessmentsGroup */
 LearningAssessmentsGroupSchema = z.object({
+  id: z.string().uuid().optional(),
   capacity: z.number().int().optional(),
   groupSetId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsGroupDetail */
 LearningAssessmentsGroupDetailSchema = z.object({
-  capacity: z.number().int().optional(),
   id: z.string().uuid().optional(),
+  capacity: z.number().int().optional(),
   memberCount: z.number().int().optional(),
   members: z
     .array(z.lazy(() => LearningAssessmentsGroupMemberSchema))
@@ -20787,33 +20909,33 @@ LearningAssessmentsGroupMemberSchema = z.object({
 
 /** Zod schema for LearningAssessmentsGroupMembership */
 LearningAssessmentsGroupMembershipSchema = z.object({
-  groupId: z.string().uuid().optional(),
   id: z.string().uuid().optional(),
+  groupId: z.string().uuid().optional(),
   joinedAt: z.string().datetime().optional(),
   userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningAssessmentsGroupSet */
 LearningAssessmentsGroupSetSchema = z.object({
-  courseId: z.string().uuid().optional(),
   id: z.string().uuid().optional(),
+  courseId: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsGroupSetSummary */
 LearningAssessmentsGroupSetSummarySchema = z.object({
+  id: z.string().uuid().optional(),
   groups: z
     .array(z.lazy(() => LearningAssessmentsGroupSummarySchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   name: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsGroupSummary */
 LearningAssessmentsGroupSummarySchema = z.object({
-  capacity: z.number().int().optional(),
   id: z.string().uuid().optional(),
+  capacity: z.number().int().optional(),
   memberCount: z.number().int().optional(),
   name: z.string().nullable().optional(),
 });
@@ -20821,9 +20943,9 @@ LearningAssessmentsGroupSummarySchema = z.object({
 /** Zod schema for LearningAssessmentsInstructorPeerReview */
 LearningAssessmentsInstructorPeerReviewSchema = z.object({
   feedback: z.string().nullable().optional(),
-  reviewId: z.string().uuid().optional(),
   reviewerName: z.string().nullable().optional(),
   reviewerUserId: z.string().uuid().optional(),
+  reviewId: z.string().uuid().optional(),
   rubricScoresPayload: z.string().nullable().optional(),
   score: z.number().int().nullable().optional(),
   submittedAt: z.string().datetime().nullable().optional(),
@@ -20831,11 +20953,11 @@ LearningAssessmentsInstructorPeerReviewSchema = z.object({
 
 /** Zod schema for LearningAssessmentsInteractiveVideoAssessmentCue */
 LearningAssessmentsInteractiveVideoAssessmentCueSchema = z.object({
+  id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
   contentId: z.string().uuid().optional(),
   cueId: z.string().nullable().optional(),
   cuePositionSeconds: z.number().nullable().optional(),
-  id: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningAssessmentsLearnerAssessmentAttempt */
@@ -20847,6 +20969,7 @@ LearningAssessmentsLearnerAssessmentAttemptSchema = z.object({
 
 /** Zod schema for LearningAssessmentsLearnerAssessmentSubmission */
 LearningAssessmentsLearnerAssessmentSubmissionSchema = z.object({
+  id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().optional(),
   attemptNumber: z.number().int().optional(),
   codePayload: z.string().nullable().optional(),
@@ -20854,7 +20977,6 @@ LearningAssessmentsLearnerAssessmentSubmissionSchema = z.object({
   feedback: z.string().nullable().optional(),
   filePayload: z.string().nullable().optional(),
   gradedAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isLate: z.boolean().optional(),
   mediaPayload: z.string().nullable().optional(),
   passed: z.boolean().nullable().optional(),
@@ -20911,18 +21033,18 @@ LearningAssessmentsReceivedPeerReviewSchema = z.object({
 
 /** Zod schema for LearningAssessmentsRubric */
 LearningAssessmentsRubricSchema = z.object({
+  id: z.string().uuid().optional(),
   criteria: z
     .array(z.lazy(() => LearningAssessmentsRubricCriterionSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   title: z.string().nullable().optional(),
 });
 
 /** Zod schema for LearningAssessmentsRubricCriterion */
 LearningAssessmentsRubricCriterionSchema = z.object({
-  description: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   order: z.number().int().optional(),
   points: z.number().int().optional(),
 });
@@ -21035,12 +21157,12 @@ LearningAssessmentsUpdateAssessmentInputSchema = z.object({
 
 /** Zod schema for LearningCertificatesCertificate */
 LearningCertificatesCertificateSchema = z.object({
+  id: z.string().uuid().optional(),
   certificateNumber: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
   courseName: z.string().nullable().optional(),
   enrollmentId: z.string().uuid().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   issuedAt: z.string().datetime().optional(),
   recipientName: z.string().nullable().optional(),
   status: z.lazy(() => LearningCertificatesCertificateStatusSchema).optional(),
@@ -21057,10 +21179,10 @@ LearningCertificatesCertificateStatusSchema = z.enum([
 
 /** Zod schema for LearningCertificatesCertificateTemplate */
 LearningCertificatesCertificateTemplateSchema = z.object({
+  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDefault: z.boolean().optional(),
   name: z.string().nullable().optional(),
@@ -21070,10 +21192,10 @@ LearningCertificatesCertificateTemplateSchema = z.object({
 
 /** Zod schema for LearningCertificatesCertificateTemplateDetail */
 LearningCertificatesCertificateTemplateDetailSchema = z.object({
+  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDefault: z.boolean().optional(),
   name: z.string().nullable().optional(),
@@ -21088,8 +21210,8 @@ LearningCertificatesCertificateVerificationResultSchema = z.object({
   certificateNumber: z.string().nullable().optional(),
   courseName: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
-  isValid: z.boolean().optional(),
   issuedAt: z.string().datetime().optional(),
+  isValid: z.boolean().optional(),
   message: z.string().nullable().optional(),
   recipientName: z.string().nullable().optional(),
   status: z.lazy(() => LearningCertificatesCertificateStatusSchema).optional(),
@@ -21151,6 +21273,7 @@ LearningCohortsAvailableCohortContentSchema = z.object({
 
 /** Zod schema for LearningCohortsCohort */
 LearningCohortsCohortSchema = z.object({
+  id: z.string().uuid().optional(),
   availableSpots: z.number().int().optional(),
   canEnroll: z.boolean().optional(),
   conflictCount: z.number().int().optional(),
@@ -21159,7 +21282,6 @@ LearningCohortsCohortSchema = z.object({
   currentEnrollmentCount: z.number().int().optional(),
   description: z.string().nullable().optional(),
   endDate: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   instructorId: z.string().uuid().nullable().optional(),
   isOpen: z.boolean().optional(),
   maxCapacity: z.number().int().optional(),
@@ -21206,8 +21328,8 @@ LearningCohortsCohortReleasePolicySchema = z.enum([
 
 /** Zod schema for LearningCohortsCohortSchedule */
 LearningCohortsCohortScheduleSchema = z.object({
-  cohortId: z.string().uuid().optional(),
   id: z.string().uuid().optional(),
+  cohortId: z.string().uuid().optional(),
   items: z
     .array(z.lazy(() => LearningCohortsCohortScheduleItemSchema))
     .nullable()
@@ -21241,12 +21363,12 @@ LearningCohortsCohortScheduleConflictSchema = z.object({
 
 /** Zod schema for LearningCohortsCohortScheduleItem */
 LearningCohortsCohortScheduleItemSchema = z.object({
+  id: z.string().uuid().optional(),
   assessmentId: z.string().uuid().nullable().optional(),
   availableFrom: z.string().datetime().nullable().optional(),
   availableUntil: z.string().datetime().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
   endsAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   instructionalWeek: z.number().int().optional(),
   location: z.string().nullable().optional(),
   meetingUrl: z.string().nullable().optional(),
@@ -21437,6 +21559,7 @@ LearningCohortsUpdateCohortScheduleItemInputSchema = z.object({
 
 /** Zod schema for LearningCoursesActivityGrade */
 LearningCoursesActivityGradeSchema = z.object({
+  id: z.string().uuid().optional(),
   contentInteraction: z
     .lazy(() => LearningCoursesContentInteractionSummarySchema)
     .optional(),
@@ -21444,14 +21567,13 @@ LearningCoursesActivityGradeSchema = z.object({
   createdAt: z.string().datetime().optional(),
   feedback: z.string().nullable().optional(),
   grade: z.number().optional(),
-  gradePercentage: z.string().nullable().optional(),
   gradedAt: z.string().datetime().optional(),
+  gradePercentage: z.string().nullable().optional(),
   grader: z.lazy(() => LearningCoursesGraderSummarySchema).optional(),
   graderProgramUserId: z.string().uuid().nullable().optional(),
   gradingDetails: z.string().nullable().optional(),
   hasFeedback: z.boolean().optional(),
   hasGradingDetails: z.boolean().optional(),
-  id: z.string().uuid().optional(),
   isPassingGrade: z.boolean().optional(),
   updatedAt: z.string().datetime().optional(),
 });
@@ -21546,6 +21668,7 @@ LearningCoursesCompletionTrendSchema = z.object({
 
 /** Zod schema for LearningCoursesContentInteraction */
 LearningCoursesContentInteractionSchema = z.object({
+  id: z.string().uuid().optional(),
   canModify: z.boolean().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   completionPercentage: z.number().optional(),
@@ -21555,7 +21678,6 @@ LearningCoursesContentInteractionSchema = z.object({
   durationInMinutes: z.number().int().optional(),
   durationInSeconds: z.number().int().optional(),
   firstAccessedAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isCompleted: z.boolean().optional(),
   isSubmitted: z.boolean().optional(),
   lastAccessedAt: z.string().datetime().nullable().optional(),
@@ -21571,8 +21693,8 @@ LearningCoursesContentInteractionSchema = z.object({
 
 /** Zod schema for LearningCoursesContentInteractionEvent */
 LearningCoursesContentInteractionEventSchema = z.object({
-  durationSeconds: z.number().int().nullable().optional(),
   id: z.string().uuid().optional(),
+  durationSeconds: z.number().int().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
   interactionId: z.string().uuid().optional(),
   occurredAt: z.string().datetime().optional(),
@@ -21599,9 +21721,9 @@ LearningCoursesContentInteractionEventTypeSchema = z.enum([
 
 /** Zod schema for LearningCoursesContentInteractionSummary */
 LearningCoursesContentInteractionSummarySchema = z.object({
+  id: z.string().uuid().optional(),
   content: z.lazy(() => LearningCoursesContentSummarySchema).optional(),
   contentId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   programUserId: z.string().uuid().optional(),
   status: z.string().nullable().optional(),
   student: z.lazy(() => LearningCoursesStudentSummarySchema).optional(),
@@ -21656,9 +21778,9 @@ LearningCoursesContentStatsSchema = z.object({
 
 /** Zod schema for LearningCoursesContentSummary */
 LearningCoursesContentSummarySchema = z.object({
+  id: z.string().uuid().optional(),
   contentType: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
-  id: z.string().uuid().optional(),
   title: z.string().nullable().optional(),
 });
 
@@ -21807,11 +21929,11 @@ LearningCoursesMoveContentSchema = z.object({
 
 /** Zod schema for LearningCoursesPrerequisite */
 LearningCoursesPrerequisiteSchema = z.object({
+  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
   displayOrder: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   minimumGrade: z.number().int().nullable().optional(),
   prerequisiteCourseId: z.string().uuid().optional(),
   prerequisiteCourseName: z.string().nullable().optional(),
@@ -21859,6 +21981,7 @@ LearningCoursesPricingSchema = z.object({
 
 /** Zod schema for LearningCoursesProgram */
 LearningCoursesProgramSchema = z.object({
+  id: z.string().uuid().optional(),
   averageRating: z.number().optional(),
   category: z.lazy(() => ProgramCategorySchema).optional(),
   createdAt: z.string().datetime().optional(),
@@ -21871,7 +21994,6 @@ LearningCoursesProgramSchema = z.object({
     .lazy(() => LearningCoursesEnrollmentStatusSchema)
     .optional(),
   estimatedHours: z.number().int().nullable().optional(),
-  id: z.string().uuid().optional(),
   isEnrollmentOpen: z.boolean().optional(),
   maxEnrollments: z.number().int().nullable().optional(),
   metadata: z.string().nullable().optional(),
@@ -21907,6 +22029,7 @@ LearningCoursesProgramAnalyticsSchema = z.object({
 
 /** Zod schema for LearningCoursesProgramContent */
 LearningCoursesProgramContentSchema = z.object({
+  id: z.string().uuid().optional(),
   activitySettings: z
     .lazy(() => LearningCoursesActivitySettingsSchema)
     .optional(),
@@ -21919,7 +22042,6 @@ LearningCoursesProgramContentSchema = z.object({
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
-  id: z.string().uuid().optional(),
   isRequired: z.boolean().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z
@@ -22167,13 +22289,13 @@ LearningCoursesUpdateProgramSchema = z.object({
 
 /** Zod schema for LearningCoursesUpdateProgramContent */
 LearningCoursesUpdateProgramContentSchema = z.object({
+  id: z.string().uuid(),
   activitySettings: z
     .lazy(() => LearningCoursesActivitySettingsSchema)
     .optional(),
   body: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
-  id: z.string().uuid(),
   isRequired: z.boolean().nullable().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z
@@ -22245,12 +22367,12 @@ LearningCoursesWorkspaceDataSchema = z.object({
 
 /** Zod schema for LearningEnrollmentsEnrollment */
 LearningEnrollmentsEnrollmentSchema = z.object({
+  id: z.string().uuid().optional(),
   cohortId: z.string().uuid().nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   courseId: z.string().uuid().optional(),
   droppedAt: z.string().datetime().nullable().optional(),
   enrolledAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   lastActivityAt: z.string().datetime().nullable().optional(),
   progress: z.number().int().optional(),
   status: z.lazy(() => LearningEnrollmentsEnrollmentStatusSchema).optional(),
@@ -22290,11 +22412,11 @@ LearningExperienceDiscoveryCollectionTypeSchema = z.enum([
 
 /** Zod schema for LearningExperienceDiscoveryCourseCollection */
 LearningExperienceDiscoveryCourseCollectionSchema = z.object({
+  id: z.string().uuid().optional(),
   courseCount: z.number().int().optional(),
   createdAt: z.string().datetime().optional(),
   curatorId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   imageUrl: z.string().nullable().optional(),
   isFeatured: z.boolean().optional(),
   isPublished: z.boolean().optional(),
@@ -22336,11 +22458,11 @@ LearningExperienceDiscoveryCreateFeaturedContentSchema = z.object({
 
 /** Zod schema for LearningExperienceDiscoveryFeaturedContent */
 LearningExperienceDiscoveryFeaturedContentSchema = z.object({
+  id: z.string().uuid().optional(),
   courseId: z.string().uuid().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   displayOrder: z.number().int().optional(),
   endsAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   imageUrl: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   learningPathId: z.string().uuid().nullable().optional(),
@@ -22390,10 +22512,10 @@ LearningExperienceDiscoveryRecordSearchClickSchema = z.object({
 
 /** Zod schema for LearningExperienceDiscoverySearchHistory */
 LearningExperienceDiscoverySearchHistorySchema = z.object({
+  id: z.string().uuid().optional(),
   clickedCourseId: z.string().uuid().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   filters: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   query: z.string().nullable().optional(),
   resultCount: z.number().int().optional(),
   userId: z.string().uuid().nullable().optional(),
@@ -22446,6 +22568,7 @@ LearningExperienceLearningPathsCreateLearningPathSchema = z.object({
 
 /** Zod schema for LearningExperienceLearningPathsLearningPath */
 LearningExperienceLearningPathsLearningPathSchema = z.object({
+  id: z.string().uuid().optional(),
   completionCount: z.number().int().optional(),
   courseCount: z.number().int().optional(),
   createdAt: z.string().datetime().optional(),
@@ -22456,7 +22579,6 @@ LearningExperienceLearningPathsLearningPathSchema = z.object({
     .optional(),
   enrollmentCount: z.number().int().optional(),
   estimatedHours: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   imageUrl: z.string().nullable().optional(),
   isFeatured: z.boolean().optional(),
   isPublished: z.boolean().optional(),
@@ -22475,6 +22597,7 @@ LearningExperienceLearningPathsLearningPathCourseSchema = z.object({
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathDetail */
 LearningExperienceLearningPathsLearningPathDetailSchema = z.object({
+  id: z.string().uuid().optional(),
   completionCount: z.number().int().optional(),
   courses: z
     .array(
@@ -22490,7 +22613,6 @@ LearningExperienceLearningPathsLearningPathDetailSchema = z.object({
     .optional(),
   enrollmentCount: z.number().int().optional(),
   estimatedHours: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   imageUrl: z.string().nullable().optional(),
   isFeatured: z.boolean().optional(),
   isPublished: z.boolean().optional(),
@@ -22510,11 +22632,11 @@ LearningExperienceLearningPathsLearningPathDifficultySchema = z.enum([
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathEnrollment */
 LearningExperienceLearningPathsLearningPathEnrollmentSchema = z.object({
+  id: z.string().uuid().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   coursesCompleted: z.number().int().optional(),
   createdAt: z.string().datetime().optional(),
   enrolledAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   learningPathId: z.string().uuid().optional(),
   progress: z.number().int().optional(),
   status: z
@@ -22600,10 +22722,10 @@ LearningExperienceRecommendationsPopularCourseSchema = z.object({
 
 /** Zod schema for LearningExperienceRecommendationsRecommendation */
 LearningExperienceRecommendationsRecommendationSchema = z.object({
+  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isDismissed: z.boolean().optional(),
   isViewed: z.boolean().optional(),
   reason: z.string().nullable().optional(),
@@ -22671,8 +22793,8 @@ LearningExperienceRecommendationsTrendingCourseSchema = z.object({
 
 /** Zod schema for LearningExperienceRecommendationsUserLearningProfile */
 LearningExperienceRecommendationsUserLearningProfileSchema = z.object({
-  createdAt: z.string().datetime().optional(),
   id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
   lastActivityAt: z.string().datetime().nullable().optional(),
   learningGoals: z.array(z.string()).nullable().optional(),
   preferredCategories: z.array(z.string()).nullable().optional(),
@@ -22709,12 +22831,12 @@ LearningExperienceSocialFeedItemTypeSchema = z.enum([
 
 /** Zod schema for LearningExperienceSocialServicesCourseDiscussion */
 LearningExperienceSocialServicesCourseDiscussionSchema = z.object({
+  id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
   contentId: z.string().uuid().nullable().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isPinned: z.boolean().optional(),
   isResolved: z.boolean().optional(),
   lastActivityAt: z.string().datetime().nullable().optional(),
@@ -22725,9 +22847,9 @@ LearningExperienceSocialServicesCourseDiscussionSchema = z.object({
 
 /** Zod schema for LearningExperienceSocialServicesCourseLike */
 LearningExperienceSocialServicesCourseLikeSchema = z.object({
+  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
 });
 
@@ -22746,11 +22868,11 @@ LearningExperienceSocialServicesCourseRatingStatsSchema = z.object({
 
 /** Zod schema for LearningExperienceSocialServicesCourseReview */
 LearningExperienceSocialServicesCourseReviewSchema = z.object({
+  id: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   helpfulCount: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   isApproved: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   isVerifiedPurchase: z.boolean().optional(),
@@ -22761,9 +22883,9 @@ LearningExperienceSocialServicesCourseReviewSchema = z.object({
 
 /** Zod schema for LearningExperienceSocialServicesCourseWishlist */
 LearningExperienceSocialServicesCourseWishlistSchema = z.object({
+  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   notifyOnSale: z.boolean().optional(),
   notifyOnUpdate: z.boolean().optional(),
   userId: z.string().uuid().optional(),
@@ -22795,11 +22917,11 @@ LearningExperienceSocialServicesCreateReviewInputSchema = z.object({
 
 /** Zod schema for LearningExperienceSocialServicesDiscussionReply */
 LearningExperienceSocialServicesDiscussionReplySchema = z.object({
+  id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
   content: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   discussionId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   isAcceptedAnswer: z.boolean().optional(),
   parentReplyId: z.string().uuid().nullable().optional(),
   upvoteCount: z.number().int().optional(),
@@ -22807,11 +22929,11 @@ LearningExperienceSocialServicesDiscussionReplySchema = z.object({
 
 /** Zod schema for LearningExperienceSocialServicesPersonalizedFeedItem */
 LearningExperienceSocialServicesPersonalizedFeedItemSchema = z.object({
+  id: z.string().uuid().optional(),
   courseId: z.string().uuid().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   discussionId: z.string().uuid().nullable().optional(),
   expiresAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isViewed: z.boolean().optional(),
   itemType: z.lazy(() => LearningExperienceSocialFeedItemTypeSchema).optional(),
   learningPathId: z.string().uuid().nullable().optional(),
@@ -23128,10 +23250,10 @@ LearningWorkspacesLearnerScheduleEntrySchema = z.object({
 
 /** Zod schema for LearningWorkspacesLearnerSearchResult */
 LearningWorkspacesLearnerSearchResultSchema = z.object({
+  id: z.string().uuid().optional(),
   courseId: z.string().uuid().optional(),
   courseSlug: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   kind: z.string().nullable().optional(),
   route: z.string().nullable().optional(),
   title: z.string().nullable().optional(),
@@ -23197,12 +23319,12 @@ MonitoringSLAResolveSloViolationCommandSchema = z.object({
 
 /** Zod schema for MonitoringSLASlo */
 MonitoringSLASloSchema = z.object({
+  id: z.string().uuid().optional(),
   alertThresholdPercentage: z.number().optional(),
   createdAt: z.string().datetime().optional(),
   currentActualPercentage: z.number().nullable().optional(),
   description: z.string().nullable().optional(),
   errorBudgetPercentage: z.number().optional(),
-  id: z.string().uuid().optional(),
   isEnabled: z.boolean().optional(),
   lastEvaluatedAt: z.string().datetime().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -23248,6 +23370,7 @@ MonitoringSLASloStatusSchema = z.enum([
 
 /** Zod schema for MonitoringSLASloViolation */
 MonitoringSLASloViolationSchema = z.object({
+  id: z.string().uuid().optional(),
   acknowledgedAt: z.string().datetime().nullable().optional(),
   acknowledgedByUserId: z.string().uuid().nullable().optional(),
   actualValue: z.number().optional(),
@@ -23256,7 +23379,6 @@ MonitoringSLASloViolationSchema = z.object({
   description: z.string().nullable().optional(),
   durationMinutes: z.number().optional(),
   endedAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isAcknowledged: z.boolean().optional(),
   isOngoing: z.boolean().optional(),
   notes: z.string().nullable().optional(),
@@ -23270,10 +23392,10 @@ MonitoringSLASloViolationSchema = z.object({
 
 /** Zod schema for MonitoringSLAUpdateSloCommand */
 MonitoringSLAUpdateSloCommandSchema = z.object({
+  id: z.string().uuid().optional(),
   alertThresholdPercentage: z.number().optional(),
   description: z.string().nullable().optional(),
   errorBudgetPercentage: z.number().optional(),
-  id: z.string().uuid().optional(),
   isEnabled: z.boolean().optional(),
   name: z.string().nullable().optional(),
   serviceName: z.string().nullable().optional(),
@@ -23301,18 +23423,66 @@ MvcProblemDetailsSchema = z
   })
   .catchall(z.record(z.string(), z.unknown()));
 
+/** Zod schema for NotificationsControllersDeadLetter */
+NotificationsControllersDeadLetterSchema = z.object({
+  id: z.string().uuid().optional(),
+  attemptCount: z.number().int().optional(),
+  channel: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  lastError: z.string().nullable().optional(),
+  recipientEmail: z.string().nullable().optional(),
+  recipientId: z.string().uuid().nullable().optional(),
+  requeueCount: z.number().int().optional(),
+  title: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+});
+
 /** Zod schema for NotificationsControllersDeletedCountOutput */
 NotificationsControllersDeletedCountOutputSchema = z.object({
   deletedCount: z.number().int().optional(),
 });
 
+/** Zod schema for NotificationsControllersDigestFrequencyOutput */
+NotificationsControllersDigestFrequencyOutputSchema = z.object({
+  emailDigestFrequency: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersEmailDeliveryEvent */
+NotificationsControllersEmailDeliveryEventSchema = z.object({
+  id: z.string().uuid().optional(),
+  bounceType: z.string().nullable().optional(),
+  diagnosticCode: z.string().nullable().optional(),
+  eventType: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  payloadPreview: z.string().nullable().optional(),
+  providerMessageId: z.string().nullable().optional(),
+  recipientEmail: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersEmailSuppression */
+NotificationsControllersEmailSuppressionSchema = z.object({
+  id: z.string().uuid().optional(),
+  bounceType: z.string().nullable().optional(),
+  emailAddress: z.string().nullable().optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().nullable().optional(),
+  releasedAt: z.string().datetime().nullable().optional(),
+  sourceEventId: z.string().uuid().nullable().optional(),
+  suppressedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for NotificationsControllersMutedTypesOutput */
+NotificationsControllersMutedTypesOutputSchema = z.object({
+  mutedTypes: z.array(z.string()).nullable().optional(),
+});
+
 /** Zod schema for NotificationsControllersNotification */
 NotificationsControllersNotificationSchema = z.object({
+  id: z.string().uuid().optional(),
   actionUrl: z.string().nullable().optional(),
   channel: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   iconUrl: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isRead: z.boolean().optional(),
   message: z.string().nullable().optional(),
   priority: z.string().nullable().optional(),
@@ -23331,12 +23501,38 @@ NotificationsControllersNotificationPreferenceSchema = z.object({
   inAppEnabled: z.boolean().optional(),
   learningEnabled: z.boolean().optional(),
   marketingEnabled: z.boolean().optional(),
+  mutedTypes: z.array(z.string()).nullable().optional(),
   pushEnabled: z.boolean().optional(),
   quietHoursEnd: z.string().nullable().optional(),
   quietHoursStart: z.string().nullable().optional(),
   smsEnabled: z.boolean().optional(),
   socialEnabled: z.boolean().optional(),
   timezone: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersNotificationTimeline */
+NotificationsControllersNotificationTimelineSchema = z.object({
+  events: z
+    .array(z.lazy(() => NotificationsControllersEmailDeliveryEventSchema))
+    .nullable()
+    .optional(),
+  notificationId: z.string().uuid().optional(),
+  providerMessageId: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersNotificationTypeCatalogEntry */
+NotificationsControllersNotificationTypeCatalogEntrySchema = z.object({
+  category: z.string().nullable().optional(),
+  displayName: z.string().nullable().optional(),
+  suppressible: z.boolean().optional(),
+  type: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersRequeueOutput */
+NotificationsControllersRequeueOutputSchema = z.object({
+  id: z.string().uuid().optional(),
+  deliveryStatus: z.string().nullable().optional(),
+  requeueCount: z.number().int().optional(),
 });
 
 /** Zod schema for NotificationsControllersSetQuietHoursInput */
@@ -23349,6 +23545,30 @@ NotificationsControllersSetQuietHoursInputSchema = z.object({
 /** Zod schema for NotificationsControllersUnreadCountOutput */
 NotificationsControllersUnreadCountOutputSchema = z.object({
   count: z.number().int().optional(),
+});
+
+/** Zod schema for NotificationsControllersUnsubscribeOutput */
+NotificationsControllersUnsubscribeOutputSchema = z.object({
+  manageUrl: z.string().nullable().optional(),
+  scope: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersUnsuppressOutput */
+NotificationsControllersUnsuppressOutputSchema = z.object({
+  emailAddress: z.string().nullable().optional(),
+  wasActive: z.boolean().optional(),
+});
+
+/** Zod schema for NotificationsControllersUpdateDigestFrequencyInput */
+NotificationsControllersUpdateDigestFrequencyInputSchema = z.object({
+  frequency: z.string().nullable().optional(),
+});
+
+/** Zod schema for NotificationsControllersUpdateMutedTypesInput */
+NotificationsControllersUpdateMutedTypesInputSchema = z.object({
+  types: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for NotificationsControllersUpdatePreferencesInput */
@@ -23395,10 +23615,10 @@ ObjectsAttestationStatementFormatIdentifierSchema = z.enum([
 
 /** Zod schema for ObjectsAuthenticationExtensionsClientInputs */
 ObjectsAuthenticationExtensionsClientInputsSchema = z.object({
-  credProps: z.boolean().nullable().optional(),
   credentialProtectionPolicy: z
     .lazy(() => ObjectsCredentialProtectionPolicySchema)
     .optional(),
+  credProps: z.boolean().nullable().optional(),
   enforceCredentialProtectionPolicy: z.boolean().nullable().optional(),
   "example.extension.bool": z.boolean().nullable().optional(),
   exts: z.boolean().nullable().optional(),
@@ -23663,6 +23883,54 @@ PagedResultOfIdentityUsersUserProfileSchema = z.object({
   totalPages: z.number().int().optional(),
 });
 
+/** Zod schema for PagedResultOfNotificationsControllersDeadLetter */
+PagedResultOfNotificationsControllersDeadLetterSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => NotificationsControllersDeadLetterSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultOfNotificationsControllersEmailDeliveryEvent */
+PagedResultOfNotificationsControllersEmailDeliveryEventSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => NotificationsControllersEmailDeliveryEventSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
+/** Zod schema for PagedResultOfNotificationsControllersEmailSuppression */
+PagedResultOfNotificationsControllersEmailSuppressionSchema = z.object({
+  hasNextPage: z.boolean().optional(),
+  hasPreviousPage: z.boolean().optional(),
+  items: z
+    .array(z.lazy(() => NotificationsControllersEmailSuppressionSchema))
+    .nullable()
+    .optional(),
+  pageNumber: z.number().int().optional(),
+  pageSize: z.number().int().optional(),
+  skip: z.number().int().optional(),
+  take: z.number().int().optional(),
+  totalCount: z.number().int().optional(),
+  totalPages: z.number().int().optional(),
+});
+
 /** Zod schema for ProgramCategory */
 ProgramCategorySchema = z.enum([
   "General",
@@ -23794,6 +24062,7 @@ ProjectsPermissionUpdateResultSchema = z.object({
 
 /** Zod schema for ProjectsProject */
 ProjectsProjectSchema = z.object({
+  id: z.string().uuid().optional(),
   allocations: z
     .array(z.lazy(() => ProjectsProjectMemberAllocationSchema))
     .nullable()
@@ -23827,7 +24096,6 @@ ProjectsProjectSchema = z.object({
     .array(z.lazy(() => ProjectsProjectFollowerSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   imageUrl: z.string().max(500).nullable().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
@@ -23876,6 +24144,7 @@ ProjectsProjectSchema = z.object({
 
 /** Zod schema for ProjectsProjectApiOutput */
 ProjectsProjectApiOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   averageRating: z.number().nullable().optional(),
   category: z.lazy(() => ProjectsProjectCategoryApiOutputSchema).optional(),
   categoryId: z.string().uuid().nullable().optional(),
@@ -23893,7 +24162,6 @@ ProjectsProjectApiOutputSchema = z.object({
   featuredImageUrl: z.string().nullable().optional(),
   feedbackCount: z.number().int().optional(),
   followerCount: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   imageUrl: z.string().nullable().optional(),
   isInJam: z.boolean().optional(),
   latestVersion: z.lazy(() => ProjectsProjectVersionApiOutputSchema).optional(),
@@ -23929,13 +24197,13 @@ ProjectsProjectApiOutputSchema = z.object({
 
 /** Zod schema for ProjectsProjectCategory */
 ProjectsProjectCategorySchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -23957,13 +24225,13 @@ ProjectsProjectCategoryApiOutputSchema = z.object({
 
 /** Zod schema for ProjectsProjectCollaborator */
 ProjectsProjectCollaboratorSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -24011,6 +24279,7 @@ ProjectsProjectCollaboratorDtoSchema = z.object({
 
 /** Zod schema for ProjectsProjectFeedback */
 ProjectsProjectFeedbackSchema = z.object({
+  id: z.string().uuid().optional(),
   categories: z.string().max(500).nullable().optional(),
   content: z.string().max(2000).nullable().optional(),
   createdAt: z.string().datetime(),
@@ -24020,7 +24289,6 @@ ProjectsProjectFeedbackSchema = z.object({
     .nullable()
     .optional(),
   helpfulVotes: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -24042,6 +24310,7 @@ ProjectsProjectFeedbackSchema = z.object({
 
 /** Zod schema for ProjectsProjectFollower */
 ProjectsProjectFollowerSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
@@ -24050,7 +24319,6 @@ ProjectsProjectFollowerSchema = z.object({
     .optional(),
   emailNotifications: z.boolean().optional(),
   followedAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -24066,8 +24334,8 @@ ProjectsProjectFollowerSchema = z.object({
 
 /** Zod schema for ProjectsProjectInvitation */
 ProjectsProjectInvitationSchema = z.object({
-  expiresAt: z.string().datetime().nullable().optional(),
   id: z.string().uuid().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
   invitedAt: z.string().datetime().optional(),
   invitedByUserId: z.string().uuid().optional(),
   invitedEmail: z.string().nullable().optional(),
@@ -24092,6 +24360,7 @@ ProjectsProjectInvitationStatusSchema = z.enum([
 
 /** Zod schema for ProjectsProjectJamSubmission */
 ProjectsProjectJamSubmissionSchema = z.object({
+  id: z.string().uuid().optional(),
   awardDetails: z.string().max(1000).nullable().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -24101,7 +24370,6 @@ ProjectsProjectJamSubmissionSchema = z.object({
     .optional(),
   finalScore: z.number().nullable().optional(),
   hasAward: z.boolean().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isEligible: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -24124,6 +24392,7 @@ ProjectsProjectJamSubmissionSchema = z.object({
 
 /** Zod schema for ProjectsProjectMemberAllocation */
 ProjectsProjectMemberAllocationSchema = z.object({
+  id: z.string().uuid().optional(),
   capacityPercentage: z.number().min(1).max(100).optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -24133,7 +24402,6 @@ ProjectsProjectMemberAllocationSchema = z.object({
     .optional(),
   endsAt: z.string().datetime().nullable().optional(),
   function: z.string().min(1).max(100),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -24149,6 +24417,7 @@ ProjectsProjectMemberAllocationSchema = z.object({
 
 /** Zod schema for ProjectsProjectMetadata */
 ProjectsProjectMetadataSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
@@ -24157,7 +24426,6 @@ ProjectsProjectMetadataSchema = z.object({
     .optional(),
   downloadCount: z.number().int().optional(),
   followerCount: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -24170,14 +24438,15 @@ ProjectsProjectMetadataSchema = z.object({
 
 /** Zod schema for ProjectsProjectMetadataApiOutput */
 ProjectsProjectMetadataApiOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   downloadCount: z.number().int().optional(),
   followerCount: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   viewCount: z.number().int().optional(),
 });
 
 /** Zod schema for ProjectsProjectRelease */
 ProjectsProjectReleaseSchema = z.object({
+  id: z.string().uuid().optional(),
   buildNumber: z.string().max(100).nullable().optional(),
   checksum: z.string().max(128).nullable().optional(),
   createdAt: z.string().datetime(),
@@ -24190,18 +24459,17 @@ ProjectsProjectReleaseSchema = z.object({
   downloadCount: z.number().int().optional(),
   downloadUrl: z.string().max(500).nullable().optional(),
   fileSize: z.number().int().nullable().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isLatest: z.boolean().optional(),
   isNew: z.boolean().optional(),
   isPrerelease: z.boolean().optional(),
   projectId: z.string().uuid().optional(),
+  releasedAt: z.string().datetime().optional(),
   releaseMetadata: z.string().max(2000).nullable().optional(),
   releaseNotes: z.string().nullable().optional(),
   releaseType: z.string().max(50).nullable().optional(),
   releaseVersion: z.string().min(1).max(50),
-  releasedAt: z.string().datetime().optional(),
   status: z.lazy(() => ContentStatusSchema).optional(),
   supportedPlatforms: z.string().max(500).nullable().optional(),
   systemRequirements: z.string().max(1000).nullable().optional(),
@@ -24213,20 +24481,20 @@ ProjectsProjectReleaseSchema = z.object({
 
 /** Zod schema for ProjectsProjectReleaseApiOutput */
 ProjectsProjectReleaseApiOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   buildNumber: z.string().nullable().optional(),
   checksum: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   downloadCount: z.number().int().optional(),
   downloadUrl: z.string().nullable().optional(),
   fileSize: z.number().int().nullable().optional(),
-  id: z.string().uuid().optional(),
   isLatest: z.boolean().optional(),
   isPrerelease: z.boolean().optional(),
+  releasedAt: z.string().datetime().optional(),
   releaseMetadata: z.string().nullable().optional(),
   releaseNotes: z.string().nullable().optional(),
   releaseType: z.string().nullable().optional(),
   releaseVersion: z.string().nullable().optional(),
-  releasedAt: z.string().datetime().optional(),
   status: z.lazy(() => ContentStatusSchema).optional(),
   supportedPlatforms: z.string().nullable().optional(),
   systemRequirements: z.string().nullable().optional(),
@@ -24272,6 +24540,7 @@ ProjectsProjectStoreProductProjectionSchema = z.object({
 
 /** Zod schema for ProjectsProjectTeam */
 ProjectsProjectTeamSchema = z.object({
+  id: z.string().uuid().optional(),
   allocations: z
     .array(z.lazy(() => ProjectsProjectMemberAllocationSchema))
     .nullable()
@@ -24285,7 +24554,6 @@ ProjectsProjectTeamSchema = z.object({
     .nullable()
     .optional(),
   endedAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -24306,6 +24574,7 @@ ProjectsProjectTeamSchema = z.object({
 
 /** Zod schema for ProjectsProjectTeamAgreement */
 ProjectsProjectTeamAgreementSchema = z.object({
+  id: z.string().uuid().optional(),
   acceptedAt: z.string().datetime().nullable().optional(),
   acceptedByUserId: z.string().uuid().nullable().optional(),
   cancelledAt: z.string().datetime().nullable().optional(),
@@ -24318,7 +24587,6 @@ ProjectsProjectTeamAgreementSchema = z.object({
     .nullable()
     .optional(),
   endsAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -24346,10 +24614,10 @@ ProjectsProjectTeamAgreementStatusSchema = z.enum([
 
 /** Zod schema for ProjectsProjectTeamApiOutput */
 ProjectsProjectTeamApiOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   assignedAt: z.string().datetime().optional(),
   contributionPercentage: z.number().optional(),
   endedAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   name: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
@@ -24398,6 +24666,7 @@ ProjectsProjectUserApiOutputSchema = z.object({
 
 /** Zod schema for ProjectsProjectVersion */
 ProjectsProjectVersionSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   createdById: z.string().uuid().optional(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -24406,7 +24675,6 @@ ProjectsProjectVersionSchema = z.object({
     .nullable()
     .optional(),
   downloadCount: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -24421,10 +24689,10 @@ ProjectsProjectVersionSchema = z.object({
 
 /** Zod schema for ProjectsProjectVersionApiOutput */
 ProjectsProjectVersionApiOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   createdById: z.string().uuid().optional(),
   downloadCount: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   projectId: z.string().uuid().optional(),
   releaseNotes: z.string().nullable().optional(),
   status: z.string().nullable().optional(),
@@ -24596,20 +24864,20 @@ ResourcesContentsContentReviewDecisionSchema = z.enum([
 
 /** Zod schema for ResourcesContentsContentVersion */
 ResourcesContentsContentVersionSchema = z.object({
+  id: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
   changeNotes: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   createdBy: z.string().uuid().optional(),
   entityId: z.string().uuid().optional(),
   entityType: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isCurrentVersion: z.boolean().optional(),
   metadata: z.string().nullable().optional(),
   publishedAt: z.string().datetime().nullable().optional(),
   publishedBy: z.string().uuid().nullable().optional(),
-  reviewNotes: z.string().nullable().optional(),
   reviewedAt: z.string().datetime().nullable().optional(),
   reviewedBy: z.string().uuid().nullable().optional(),
+  reviewNotes: z.string().nullable().optional(),
   scheduledPublishAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => ResourcesContentsContentVersionStatusSchema).optional(),
   submittedForReviewAt: z.string().datetime().nullable().optional(),
@@ -24635,13 +24903,13 @@ ResourcesContentsContentVersionDiffSchema = z.object({
 
 /** Zod schema for ResourcesContentsContentVersionReview */
 ResourcesContentsContentVersionReviewSchema = z.object({
+  id: z.string().uuid().optional(),
   contentVersionId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   decision: z
     .lazy(() => ResourcesContentsContentReviewDecisionSchema)
     .optional(),
   feedback: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   reviewerId: z.string().uuid().optional(),
   suggestions: z.string().nullable().optional(),
 });
@@ -24749,6 +25017,7 @@ ResourcesRecordUserResourceUsageInputSchema = z.object({
 
 /** Zod schema for ResourcesResourceMetadata */
 ResourcesResourceMetadataSchema = z.object({
+  id: z.string().uuid().optional(),
   category: z.string().max(100).nullable().optional(),
   createdAt: z.string().datetime(),
   dataType: z.string().max(50).nullable().optional(),
@@ -24759,7 +25028,6 @@ ResourcesResourceMetadataSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -24793,10 +25061,10 @@ ResourcesResourceQuotaEnforcementResultSchema = z.object({
 
 /** Zod schema for ResourcesResourceQuotaOutput */
 ResourcesResourceQuotaOutputSchema = z.object({
+  id: z.string().uuid().optional(),
   currentUsage: z.number().int().optional(),
   description: z.string().nullable().optional(),
   hardLimit: z.number().int().nullable().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isHardLimitExceeded: z.boolean().optional(),
   isSoftLimitExceeded: z.boolean().optional(),
@@ -24825,6 +25093,7 @@ ResourcesResourceQuotaPeriodSchema = z.enum([
 
 /** Zod schema for ResourcesResourceSettings */
 ResourcesResourceSettingsSchema = z.object({
+  id: z.string().uuid().optional(),
   allowUserOverride: z.boolean().optional(),
   category: z.string().max(100).nullable().optional(),
   createdAt: z.string().datetime(),
@@ -24837,7 +25106,6 @@ ResourcesResourceSettingsSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -24932,6 +25200,7 @@ ResourcesTrendGranularitySchema = z.enum(["Daily", "Weekly", "Monthly"]);
 
 /** Zod schema for ResourcesUsageRecord */
 ResourcesUsageRecordSchema = z.object({
+  id: z.string().uuid().optional(),
   averagePerDay: z.number().nullable().optional(),
   count: z.number().int().optional(),
   createdAt: z.string().datetime(),
@@ -24940,7 +25209,6 @@ ResourcesUsageRecordSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -24981,6 +25249,7 @@ ResourcesUsageTrendsResultSchema = z.object({
 
 /** Zod schema for SocialBlogBlogPost */
 SocialBlogBlogPostSchema = z.object({
+  id: z.string().uuid().optional(),
   allowComments: z.boolean().optional(),
   authorId: z.string().uuid().optional(),
   commentsCount: z.number().int().optional(),
@@ -24988,7 +25257,6 @@ SocialBlogBlogPostSchema = z.object({
   coverImageUrl: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   excerpt: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isFeatured: z.boolean().optional(),
   likesCount: z.number().int().optional(),
   publishedAt: z.string().datetime().nullable().optional(),
@@ -25036,12 +25304,12 @@ SocialFeedFeedContentTypeSchema = z.enum([
 
 /** Zod schema for SocialFeedFeedItem */
 SocialFeedFeedItemSchema = z.object({
+  id: z.string().uuid().optional(),
   authorId: z.string().uuid().optional(),
   contentCreatedAt: z.string().datetime().optional(),
   contentId: z.string().uuid().optional(),
   contentType: z.lazy(() => SocialFeedFeedContentTypeSchema).optional(),
   createdAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isHidden: z.boolean().optional(),
   isRead: z.boolean().optional(),
   reason: z.lazy(() => SocialFeedFeedItemReasonSchema).optional(),
@@ -25091,9 +25359,9 @@ SocialGroupsJoinSocialGroupInputSchema = z.object({
 
 /** Zod schema for SocialGroupsSocialGroup */
 SocialGroupsSocialGroupSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   memberCount: z.number().int().optional(),
   name: z.string().nullable().optional(),
   ownerId: z.string().uuid().optional(),
@@ -25108,9 +25376,9 @@ SocialGroupsSocialGroupSchema = z.object({
 
 /** Zod schema for SocialGroupsSocialGroupMember */
 SocialGroupsSocialGroupMemberSchema = z.object({
+  id: z.string().uuid().optional(),
   approvedByUserId: z.string().uuid().nullable().optional(),
   groupId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   joinedAt: z.string().datetime().nullable().optional(),
   removedAt: z.string().datetime().nullable().optional(),
   requestedAt: z.string().datetime().optional(),
@@ -25246,9 +25514,9 @@ SocialProfilesProfileAvailabilityStatusSchema = z.enum([
 
 /** Zod schema for SocialProfilesProfilePortfolioItem */
 SocialProfilesProfilePortfolioItemSchema = z.object({
+  id: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
   displayOrder: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   imageUrl: z.string().nullable().optional(),
   isPinned: z.boolean().optional(),
   profileId: z.string().uuid().optional(),
@@ -25259,8 +25527,8 @@ SocialProfilesProfilePortfolioItemSchema = z.object({
 
 /** Zod schema for SocialProfilesProfileSkill */
 SocialProfilesProfileSkillSchema = z.object({
-  displayOrder: z.number().int().optional(),
   id: z.string().uuid().optional(),
+  displayOrder: z.number().int().optional(),
   name: z.string().nullable().optional(),
   proficiency: z
     .lazy(() => SocialProfilesProfileSkillProficiencySchema)
@@ -25285,6 +25553,7 @@ SocialProfilesProfileVisibilitySchema = z.enum([
 
 /** Zod schema for SocialProfilesSocialProfile */
 SocialProfilesSocialProfileSchema = z.object({
+  id: z.string().uuid().optional(),
   availabilityStatus: z
     .lazy(() => SocialProfilesProfileAvailabilityStatusSchema)
     .optional(),
@@ -25297,7 +25566,6 @@ SocialProfilesSocialProfileSchema = z.object({
   followingCount: z.number().int().optional(),
   handle: z.string().nullable().optional(),
   headline: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   location: z.string().nullable().optional(),
   portfolioItems: z
     .array(z.lazy(() => SocialProfilesProfilePortfolioItemSchema))
@@ -25365,8 +25633,8 @@ SocialProfilesUpdateSocialProfileBodySchema = z.object({
 
 /** Zod schema for SocialReactionsReaction */
 SocialReactionsReactionSchema = z.object({
-  createdAt: z.string().datetime().optional(),
   id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
   targetId: z.string().uuid().optional(),
   targetType: z.lazy(() => SocialReactionsReactionTargetTypeSchema).optional(),
   type: z.lazy(() => SocialReactionsReactionTypeSchema).optional(),
@@ -25440,6 +25708,7 @@ SystemDayOfWeekSchema = z.enum([
 
 /** Zod schema for TeamsTeam */
 TeamsTeamSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   description: z.string().max(2000).nullable().optional(),
@@ -25447,7 +25716,6 @@ TeamsTeamSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   invitations: z
     .array(z.lazy(() => TeamsTeamInvitationSchema))
     .nullable()
@@ -25472,6 +25740,7 @@ TeamsTeamSchema = z.object({
 
 /** Zod schema for TeamsTeamInvitation */
 TeamsTeamInvitationSchema = z.object({
+  id: z.string().uuid().optional(),
   acceptedByUserId: z.string().uuid().nullable().optional(),
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   createdAt: z.string().datetime(),
@@ -25481,7 +25750,6 @@ TeamsTeamInvitationSchema = z.object({
     .nullable()
     .optional(),
   expiresAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   invitedByUserId: z.string().uuid().optional(),
   invitedEmail: z.string().max(255).nullable().optional(),
   invitedUserId: z.string().uuid().nullable().optional(),
@@ -25500,6 +25768,7 @@ TeamsTeamInvitationSchema = z.object({
 
 /** Zod schema for TeamsTeamMember */
 TeamsTeamMemberSchema = z.object({
+  id: z.string().uuid().optional(),
   authority: z.lazy(() => TeamsTeamMemberAuthoritySchema).optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -25507,7 +25776,6 @@ TeamsTeamMemberSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -25666,8 +25934,8 @@ TestingLabCreateTestingLabSettingsSchema = z.object({
   description: z.string().max(1000).nullable().optional(),
   enableNotifications: z.boolean().optional(),
   labName: z.string().min(1).max(255),
-  reminderDaysBefore: z.string().nullable().optional(),
   maxSimultaneousSessions: z.number().int().min(1).max(100),
+  reminderDaysBefore: z.string().nullable().optional(),
   requireApproval: z.boolean().optional(),
   timezone: z.string().min(1).max(50),
 });
@@ -25734,6 +26002,7 @@ TestingLabFeedbackQualitySchema = z.enum(["Low", "Medium", "High"]);
 
 /** Zod schema for TestingLabFeedbackQualityRating */
 TestingLabFeedbackQualityRatingSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
@@ -25742,7 +26011,6 @@ TestingLabFeedbackQualityRatingSchema = z.object({
     .optional(),
   feedback: z.lazy(() => TestingLabTestingFeedbackSchema).optional(),
   feedbackId: z.string().uuid(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNegative: z.boolean().optional(),
@@ -25788,6 +26056,7 @@ TestingLabParticipationStatusSchema = z.enum([
 
 /** Zod schema for TestingLabPublicTestingEventProjection */
 TestingLabPublicTestingEventProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   applicationCount: z.number().int().optional(),
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
@@ -25796,7 +26065,6 @@ TestingLabPublicTestingEventProjectionSchema = z.object({
     .optional(),
   description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
   name: z.string().nullable().optional(),
   requiresFeedback: z.boolean().optional(),
@@ -25810,13 +26078,13 @@ TestingLabPublicTestingEventProjectionSchema = z.object({
 
 /** Zod schema for TestingLabPublicTestingEventSlotProjection */
 TestingLabPublicTestingEventSlotProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   approvedProjectCount: z.number().int().optional(),
   availableProjectCount: z.number().int().nullable().optional(),
   availableTesterCount: z.number().int().nullable().optional(),
   campusName: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
   eventId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   maxProjects: z.number().int().nullable().optional(),
   maxTesters: z.number().int().nullable().optional(),
   mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
@@ -25863,6 +26131,7 @@ TestingLabSessionProjectProjectionSchema = z.object({
 
 /** Zod schema for TestingLabSessionRegistration */
 TestingLabSessionRegistrationSchema = z.object({
+  id: z.string().uuid().optional(),
   attendanceDuration: z.string().nullable().optional(),
   attendanceStatus: z.lazy(() => TestingLabAttendanceStatusSchema).optional(),
   attendedAt: z.string().datetime().nullable().optional(),
@@ -25875,7 +26144,6 @@ TestingLabSessionRegistrationSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isCheckedIn: z.boolean().optional(),
   isCheckedOut: z.boolean().optional(),
   isConfirmed: z.boolean().optional(),
@@ -25912,13 +26180,13 @@ TestingLabSessionStatusSchema = z.enum([
 
 /** Zod schema for TestingLabSessionWaitlist */
 TestingLabSessionWaitlistSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -26003,6 +26271,7 @@ TestingLabTestingApplicationTesterEligibilityProjectionSchema = z.object({
 
 /** Zod schema for TestingLabTestingApplicationVote */
 TestingLabTestingApplicationVoteSchema = z.object({
+  id: z.string().uuid().optional(),
   application: z
     .lazy(() => TestingLabTestingProjectApplicationSchema)
     .optional(),
@@ -26017,7 +26286,6 @@ TestingLabTestingApplicationVoteSchema = z.object({
     .array(z.lazy(() => CQRSIDomainEventSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -26037,17 +26305,18 @@ TestingLabTestingApplicationVoteDecisionSchema = z.enum([
 
 /** Zod schema for TestingLabTestingApplicationVoteProjection */
 TestingLabTestingApplicationVoteProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   comments: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   decision: z
     .lazy(() => TestingLabTestingApplicationVoteDecisionSchema)
     .optional(),
-  id: z.string().uuid().optional(),
   reviewerId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabTestingCommitteeMember */
 TestingLabTestingCommitteeMemberSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
@@ -26056,7 +26325,6 @@ TestingLabTestingCommitteeMemberSchema = z.object({
     .optional(),
   event: z.lazy(() => TestingLabTestingEventSchema).optional(),
   eventId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isChair: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
@@ -26074,6 +26342,7 @@ TestingLabTestingContextSchema = z.enum(["Online", "InPerson"]);
 
 /** Zod schema for TestingLabTestingEvent */
 TestingLabTestingEventSchema = z.object({
+  id: z.string().uuid().optional(),
   applications: z
     .array(z.lazy(() => TestingLabTestingProjectApplicationSchema))
     .nullable()
@@ -26099,7 +26368,6 @@ TestingLabTestingEventSchema = z.object({
     .nullable()
     .optional(),
   endsAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -26120,8 +26388,8 @@ TestingLabTestingEventSchema = z.object({
   recurrenceOccurrence: z.number().int().nullable().optional(),
   recurrenceOccurrenceCount: z.number().int().nullable().optional(),
   recurrenceSeriesId: z.string().uuid().nullable().optional(),
-  requiresFeedback: z.boolean().optional(),
   reminderDaysBeforeOverride: z.string().max(64).nullable().optional(),
+  requiresFeedback: z.boolean().optional(),
   sentReminderDays: z.string().max(128).nullable().optional(),
   slots: z
     .array(z.lazy(() => TestingLabTestingEventSlotSchema))
@@ -26139,8 +26407,8 @@ TestingLabTestingEventApprovalModeSchema = z.enum(["ManagerOnly", "Committee"]);
 
 /** Zod schema for TestingLabTestingEventCommitteeMemberProjection */
 TestingLabTestingEventCommitteeMemberProjectionSchema = z.object({
-  eventId: z.string().uuid().optional(),
   id: z.string().uuid().optional(),
+  eventId: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isChair: z.boolean().optional(),
   userEmail: z.string().nullable().optional(),
@@ -26150,11 +26418,11 @@ TestingLabTestingEventCommitteeMemberProjectionSchema = z.object({
 
 /** Zod schema for TestingLabTestingEventFeedbackProjection */
 TestingLabTestingEventFeedbackProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   additionalNotes: z.string().nullable().optional(),
   applicationId: z.string().uuid().optional(),
   eventId: z.string().uuid().optional(),
   feedbackData: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   overallRating: z.number().int().nullable().optional(),
   submittedAt: z.string().datetime().optional(),
   testerUserId: z.string().uuid().optional(),
@@ -26182,6 +26450,7 @@ TestingLabTestingEventModeSchema = z.enum(["Online", "InPerson", "Hybrid"]);
 
 /** Zod schema for TestingLabTestingEventProjection */
 TestingLabTestingEventProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   applicationCount: z.number().int().optional(),
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
@@ -26192,7 +26461,6 @@ TestingLabTestingEventProjectionSchema = z.object({
   courseId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
-  id: z.string().uuid().optional(),
   learningActivityId: z.string().uuid().nullable().optional(),
   learningCompletionRequirement: z
     .lazy(() => TestingLabTestingLearningCompletionRequirementSchema)
@@ -26242,6 +26510,7 @@ TestingLabTestingEventRecurrenceInputSchema = z.object({
 
 /** Zod schema for TestingLabTestingEventSlot */
 TestingLabTestingEventSlotSchema = z.object({
+  id: z.string().uuid().optional(),
   campusName: z.string().max(200).nullable().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -26252,7 +26521,6 @@ TestingLabTestingEventSlotSchema = z.object({
   endsAt: z.string().datetime().optional(),
   event: z.lazy(() => TestingLabTestingEventSchema).optional(),
   eventId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -26273,11 +26541,11 @@ TestingLabTestingEventSlotSchema = z.object({
 
 /** Zod schema for TestingLabTestingEventSlotProjection */
 TestingLabTestingEventSlotProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   approvedProjectCount: z.number().int().optional(),
   campusName: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
   eventId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   locationId: z.string().uuid().nullable().optional(),
   maxProjects: z.number().int().nullable().optional(),
   maxTesters: z.number().int().nullable().optional(),
@@ -26301,6 +26569,7 @@ TestingLabTestingEventStatusSchema = z.enum([
 
 /** Zod schema for TestingLabTestingFeedback */
 TestingLabTestingFeedbackSchema = z.object({
+  id: z.string().uuid().optional(),
   additionalNotes: z.string().nullable().optional(),
   application: z
     .lazy(() => TestingLabTestingProjectApplicationSchema)
@@ -26318,7 +26587,6 @@ TestingLabTestingFeedbackSchema = z.object({
   feedbackData: z.string().min(1),
   feedbackForm: z.lazy(() => TestingLabTestingFeedbackFormSchema).optional(),
   feedbackFormId: z.string().uuid().nullable().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNegative: z.boolean().optional(),
@@ -26331,11 +26599,11 @@ TestingLabTestingFeedbackSchema = z.object({
     .array(z.lazy(() => TestingLabFeedbackQualityRatingSchema))
     .nullable()
     .optional(),
-  reportReason: z.string().max(500).nullable().optional(),
   reportedAt: z.string().datetime().nullable().optional(),
   reportedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
   reportedById: z.string().uuid().nullable().optional(),
   reportedByUserId: z.string().uuid().nullable().optional(),
+  reportReason: z.string().max(500).nullable().optional(),
   session: z.lazy(() => TestingLabTestingSessionSchema).optional(),
   sessionId: z.string().uuid().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -26351,13 +26619,13 @@ TestingLabTestingFeedbackSchema = z.object({
 
 /** Zod schema for TestingLabTestingFeedbackDirectoryItem */
 TestingLabTestingFeedbackDirectoryItemSchema = z.object({
+  id: z.string().uuid().optional(),
   additionalNotes: z.string().nullable().optional(),
   applicationId: z.string().uuid().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   eventId: z.string().uuid().nullable().optional(),
   eventName: z.string().nullable().optional(),
   feedbackData: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isReported: z.boolean().optional(),
   overallRating: z.number().int().nullable().optional(),
   projectId: z.string().uuid().nullable().optional(),
@@ -26365,9 +26633,9 @@ TestingLabTestingFeedbackDirectoryItemSchema = z.object({
   projectVersion: z.string().nullable().optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
   qualityRating: z.lazy(() => TestingLabFeedbackQualitySchema).optional(),
-  reportReason: z.string().nullable().optional(),
   reportedAt: z.string().datetime().nullable().optional(),
   reportedByUserId: z.string().uuid().nullable().optional(),
+  reportReason: z.string().nullable().optional(),
   requestTitle: z.string().nullable().optional(),
   source: z.lazy(() => TestingLabTestingFeedbackSourceSchema).optional(),
   testingContext: z.lazy(() => TestingLabTestingContextSchema).optional(),
@@ -26392,6 +26660,7 @@ TestingLabTestingFeedbackDirectoryPageSchema = z.object({
 
 /** Zod schema for TestingLabTestingFeedbackForm */
 TestingLabTestingFeedbackFormSchema = z.object({
+  id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
   description: z.string().nullable().optional(),
@@ -26407,7 +26676,6 @@ TestingLabTestingFeedbackFormSchema = z.object({
   formSchema: z.string().nullable().optional(),
   formType: z.lazy(() => TestingLabFeedbackFormTypeSchema).optional(),
   formVersion: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isForOnline: z.boolean().optional(),
@@ -26426,11 +26694,11 @@ TestingLabTestingFeedbackFormSchema = z.object({
 
 /** Zod schema for TestingLabTestingFeedbackObligationProjection */
 TestingLabTestingFeedbackObligationProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   applicationId: z.string().uuid().optional(),
   eventId: z.string().uuid().optional(),
   feedbackId: z.string().uuid().nullable().optional(),
   fulfilledAt: z.string().datetime().nullable().optional(),
-  id: z.string().uuid().optional(),
   slotId: z.string().uuid().optional(),
   status: z
     .lazy(() => TestingLabTestingFeedbackObligationStatusSchema)
@@ -26450,6 +26718,7 @@ TestingLabTestingFeedbackSourceSchema = z.enum(["Request", "Event"]);
 
 /** Zod schema for TestingLabTestingInput */
 TestingLabTestingInputSchema = z.object({
+  id: z.string().uuid().optional(),
   acceptsNewTesters: z.boolean().optional(),
   availableSpots: z.number().int().nullable().optional(),
   createdAt: z.string().datetime(),
@@ -26476,7 +26745,6 @@ TestingLabTestingInputSchema = z.object({
     .array(z.lazy(() => TestingLabTestingFeedbackFormSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   instructionsContent: z.string().nullable().optional(),
   instructionsFileId: z.string().uuid().nullable().optional(),
   instructionsType: z.lazy(() => TestingLabInstructionTypeSchema),
@@ -26620,8 +26888,8 @@ TestingLabTestingLabResourcePermissionSchema = z.object({
 
 /** Zod schema for TestingLabTestingLabRoleTemplate */
 TestingLabTestingLabRoleTemplateSchema = z.object({
-  description: z.string().nullable().optional(),
   id: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
   isSystemRole: z.boolean().optional(),
   name: z.string().nullable().optional(),
   permissions: z.lazy(() => TestingLabTestingLabPermissionsSchema).optional(),
@@ -26629,15 +26897,15 @@ TestingLabTestingLabRoleTemplateSchema = z.object({
 
 /** Zod schema for TestingLabTestingLabSettings */
 TestingLabTestingLabSettingsSchema = z.object({
+  id: z.string().uuid().optional(),
   allowPublicSignups: z.boolean().optional(),
   createdAt: z.string().datetime().optional(),
   defaultSessionDuration: z.number().int().optional(),
   description: z.string().nullable().optional(),
   enableNotifications: z.boolean().optional(),
-  id: z.string().uuid().optional(),
   labName: z.string().nullable().optional(),
-  reminderDaysBefore: z.string().nullable().optional(),
   maxSimultaneousSessions: z.number().int().optional(),
+  reminderDaysBefore: z.string().nullable().optional(),
   requireApproval: z.boolean().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   timezone: z.string().nullable().optional(),
@@ -26649,6 +26917,7 @@ TestingLabTestingLearningCompletionRequirementSchema = z.string();
 
 /** Zod schema for TestingLabTestingLocation */
 TestingLabTestingLocationSchema = z.object({
+  id: z.string().uuid().optional(),
   activeSessionCount: z.number().int().optional(),
   address: z.string().max(500).nullable().optional(),
   capacity: z.number().int().nullable().optional(),
@@ -26666,7 +26935,6 @@ TestingLabTestingLocationSchema = z.object({
   equipment: z.string().nullable().optional(),
   equipmentAvailable: z.string().nullable().optional(),
   fullAddress: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   isAvailable: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -26693,6 +26961,7 @@ TestingLabTestingModeSchema = z.enum(["Online", "InPerson", "Hybrid"]);
 
 /** Zod schema for TestingLabTestingParticipant */
 TestingLabTestingParticipantSchema = z.object({
+  id: z.string().uuid().optional(),
   canProvideFeedback: z.boolean().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   createdAt: z.string().datetime(),
@@ -26706,7 +26975,6 @@ TestingLabTestingParticipantSchema = z.object({
     .nullable()
     .optional(),
   feedbackCount: z.number().int().optional(),
-  id: z.string().uuid().optional(),
   instructionsAcknowledged: z.boolean(),
   instructionsAcknowledgedAt: z.string().datetime().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -26786,6 +27054,7 @@ TestingLabTestingPrioritySchema = z.enum(["Low", "Medium", "High", "Critical"]);
 
 /** Zod schema for TestingLabTestingProjectApplication */
 TestingLabTestingProjectApplicationSchema = z.object({
+  id: z.string().uuid().optional(),
   assignedSlot: z.lazy(() => TestingLabTestingEventSlotSchema).optional(),
   assignedSlotId: z.string().uuid().nullable().optional(),
   createdAt: z.string().datetime(),
@@ -26800,7 +27069,6 @@ TestingLabTestingProjectApplicationSchema = z.object({
     .optional(),
   event: z.lazy(() => TestingLabTestingEventSchema).optional(),
   eventId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
@@ -26825,12 +27093,12 @@ TestingLabTestingProjectApplicationSchema = z.object({
 
 /** Zod schema for TestingLabTestingProjectApplicationProjection */
 TestingLabTestingProjectApplicationProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   assignedSlotId: z.string().uuid().nullable().optional(),
   decidedAt: z.string().datetime().nullable().optional(),
   decidedByUserId: z.string().uuid().nullable().optional(),
   decisionRationale: z.string().nullable().optional(),
   eventId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   preferredAvailability: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
@@ -26845,12 +27113,12 @@ TestingLabTestingProjectApplicationProjectionSchema = z.object({
 
 /** Zod schema for TestingLabTestingRequestDetailProjection */
 TestingLabTestingRequestDetailProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   currentTesterCount: z.number().int().optional(),
   description: z.string().nullable().optional(),
   downloadUrl: z.string().nullable().optional(),
   endDate: z.string().datetime().optional(),
   feedbackFormContent: z.string().nullable().optional(),
-  id: z.string().uuid().optional(),
   instructionsContent: z.string().nullable().optional(),
   isDeleted: z.boolean().optional(),
   maxTesters: z.number().int().nullable().optional(),
@@ -26894,6 +27162,7 @@ TestingLabTestingRequestStatusSchema = z.enum([
 
 /** Zod schema for TestingLabTestingSession */
 TestingLabTestingSessionSchema = z.object({
+  id: z.string().uuid().optional(),
   allowsRegistration: z.boolean().optional(),
   availableSpots: z.number().int().optional(),
   createdAt: z.string().datetime(),
@@ -26912,7 +27181,6 @@ TestingLabTestingSessionSchema = z.object({
     .array(z.lazy(() => TestingLabTestingFeedbackSchema))
     .nullable()
     .optional(),
-  id: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
   isCompleted: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
@@ -26945,11 +27213,11 @@ TestingLabTestingSessionSchema = z.object({
 
 /** Zod schema for TestingLabTestingSlotRegistrationProjection */
 TestingLabTestingSlotRegistrationProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
   checkedInAt: z.string().datetime().nullable().optional(),
   checkedOutAt: z.string().datetime().nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
   eventId: z.string().uuid().optional(),
-  id: z.string().uuid().optional(),
   notes: z.string().nullable().optional(),
   pendingFeedbackCount: z.number().int().optional(),
   promotedAt: z.string().datetime().nullable().optional(),
@@ -27031,7 +27299,6 @@ TestingLabUpdateTestingLabSettingsSchema = z.object({
   description: z.string().max(1000).nullable().optional(),
   enableNotifications: z.boolean().nullable().optional(),
   labName: z.string().max(255).nullable().optional(),
-  reminderDaysBefore: z.string().nullable().optional(),
   maxSimultaneousSessions: z
     .number()
     .int()
@@ -27039,6 +27306,7 @@ TestingLabUpdateTestingLabSettingsSchema = z.object({
     .max(100)
     .nullable()
     .optional(),
+  reminderDaysBefore: z.string().nullable().optional(),
   requireApproval: z.boolean().nullable().optional(),
   timezone: z.string().max(50).nullable().optional(),
 });

@@ -17,6 +17,54 @@ export class AccessControlTenantPermissionsModule {
 
   /**
    */
+  async getAuthorizationTenantsHasPermission(
+    tenantId: string,
+    query?: { permission?: string; userId?: string },
+  ): Promise<Result<boolean, ApiError>> {
+    const url = `/api/v1/authorization/tenants/${tenantId}/has-permission`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<boolean, ApiError>;
+  }
+
+  /**
+   */
+  async getAuthorizationTenantsPermissions(
+    tenantId: string,
+    query?: { userId?: string; includeEffective?: boolean },
+  ): Promise<
+    Result<Types.IdentityAuthorizationGetTenantPermissionsOutput, ApiError>
+  > {
+    const url = `/api/v1/authorization/tenants/${tenantId}/permissions`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthorizationGetTenantPermissionsOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAuthorizationTenantsDefaults(
     body: Types.IdentityAuthorizationSetTenantDefaultPermissionsCommand,
   ): Promise<Result<boolean, ApiError>> {
@@ -157,54 +205,6 @@ export class AccessControlTenantPermissionsModule {
     });
 
     return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
-  async getAuthorizationTenantsHasPermission(
-    tenantId: string,
-    query?: { permission?: string; userId?: string },
-  ): Promise<Result<boolean, ApiError>> {
-    const url = `/api/v1/authorization/tenants/${tenantId}/has-permission`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
-  async getAuthorizationTenantsPermissions(
-    tenantId: string,
-    query?: { userId?: string; includeEffective?: boolean },
-  ): Promise<
-    Result<Types.IdentityAuthorizationGetTenantPermissionsOutput, ApiError>
-  > {
-    const url = `/api/v1/authorization/tenants/${tenantId}/permissions`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationGetTenantPermissionsOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
   }
 }
 

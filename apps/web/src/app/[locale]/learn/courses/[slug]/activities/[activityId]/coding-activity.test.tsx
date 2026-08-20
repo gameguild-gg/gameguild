@@ -485,6 +485,94 @@ describe('coding activity page routing', () => {
     expect(screen.queryByTestId('public-test-estimate-unavailable')).toBeNull();
   });
 
+  it('maps functional public tests into the student plan (doctest case + generated harness)', async () => {
+    // Real-world shape (ai-for-games assessment-85333849): Public tests are
+    // FunctionalTestGroups, not StandardTests. The plan must still carry a
+    // runnable case + its generated doctest harness, or the IDE hides the
+    // Test Cases tab and Run Tests button (testPlan gated on cases.length).
+    mocks.getCodingAssignmentPublic.mockResolvedValue(
+      makeAssignment({
+        Tests: {
+          Public: [
+            {
+              kind: 'functional',
+              Name: 'sum',
+              Weight: 2,
+              Function: {
+                FunctionName: 'test',
+                Parameters: [
+                  { Type: 'integer', Name: 'a' },
+                  { Type: 'integer', Name: 'b' },
+                ],
+                ReturnType: { Type: 'integer' },
+              },
+              Cases: [
+                {
+                  Inputs: [
+                    { Type: 'integer', Content: 1 },
+                    { Type: 'integer', Content: 2 },
+                  ],
+                  Expected: { Type: 'integer', Content: 3 },
+                },
+              ],
+            },
+          ],
+          Private: [],
+        },
+      }),
+    );
+
+    render(await LearnerActivityPage(pageParams()));
+
+    const ide = await screen.findByTestId('mock-ide');
+    const passedProps = JSON.parse(ide.dataset.props ?? '{}');
+    expect(passedProps.testPlan).toBeDefined();
+    expect(passedProps.testPlan.cases).toHaveLength(1);
+    expect(passedProps.testPlan.cases[0].kind).toBe('doctest');
+    expect(passedProps.testPlan.cases[0].name).toBe('sum');
+    expect(passedProps.testPlan.cases[0].weight).toBe(2);
+    expect(passedProps.testPlan.generatedFiles).toHaveLength(1);
+    expect(passedProps.testPlan.generatedFiles[0].path).toMatch(/\.cpp$/);
+    expect(passedProps.testPlan.generatedFiles[0].content).toContain('TEST_CASE');
+  });
+
+  it('excludes private tests from the student plan even when the server fails to strip them', async () => {
+    mocks.getCodingAssignmentPublic.mockResolvedValue(
+      makeAssignment({
+        Tests: {
+          Public: [{ kind: 'standard', Name: 'pub-1', Stdout: 'x' }],
+          Private: [
+            { kind: 'standard', Name: 'priv-1', Stdout: 'secret' },
+            {
+              kind: 'functional',
+              Name: 'priv-fn',
+              Function: {
+                FunctionName: 'hidden',
+                Parameters: [],
+                ReturnType: { Type: 'integer' },
+              },
+              Cases: [
+                {
+                  Inputs: [],
+                  Expected: { Type: 'integer', Content: 42 },
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+
+    render(await LearnerActivityPage(pageParams()));
+
+    const ide = await screen.findByTestId('mock-ide');
+    const passedProps = JSON.parse(ide.dataset.props ?? '{}');
+    expect(passedProps.testPlan.cases).toHaveLength(1);
+    expect(passedProps.testPlan.cases.map((c: { name?: string }) => c.name)).toEqual(['pub-1']);
+    expect(JSON.stringify(passedProps.testPlan)).not.toContain('priv-');
+    expect(JSON.stringify(passedProps.testPlan)).not.toContain('secret');
+  });
+
   it('renders "Estimate unavailable" without crashing when computeScore throws', async () => {
     mocks.computeScore.mockImplementation(() => {
       throw new Error('NaN weight');

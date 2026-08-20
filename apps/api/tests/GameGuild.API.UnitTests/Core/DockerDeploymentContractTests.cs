@@ -18,7 +18,7 @@ public sealed class DockerDeploymentContractTests
         dockerfile.Should().Contain("USER appuser");
         dockerfile.Should().Contain("EXPOSE 8080");
         dockerfile.Should().Contain("ASPNETCORE_HTTP_PORTS=8080");
-        dockerfile.Should().Contain("DATAPROTECTION_KEYS_PATH=/app/.aspnet/DataProtection-Keys");
+        dockerfile.Should().NotContain("DATAPROTECTION_KEYS_PATH");
         dockerfile.Should().Contain("http://127.0.0.1:8080/live");
         dockerfile.Should().NotContain("EXPOSE 3000");
     }
@@ -36,7 +36,7 @@ public sealed class DockerDeploymentContractTests
         compose.Should().Contain("  redis:\n");
         compose.Should().Contain("  garage:\n");
         compose.Should().Contain("  garage-init:\n");
-        compose.Should().Contain("  mailhog:\n");
+        compose.Should().NotContain("mailhog");
         apiSection.Should().Contain("context: .");
         apiSection.Should().Contain("dockerfile: apps/api/Dockerfile");
         apiSection.Should().Contain("depends_on:");
@@ -46,7 +46,7 @@ public sealed class DockerDeploymentContractTests
         apiSection.Should().Contain("Database__FailStartupOnSeedFailure");
         apiSection.Should().Contain("Database__FailStartupOnGrantFailure");
         apiSection.Should().Contain("Redis__ConnectionString");
-        apiSection.Should().Contain("EmailDelivery__Provider");
+        apiSection.Should().Contain("EmailDelivery__Ses__Region");
         apiSection.Should().Contain("Assets__Storage__ServiceUrl");
         apiSection.Should().Contain(":/app/.aspnet/DataProtection-Keys");
         apiSection.Should().Contain("no-new-privileges:true");
@@ -68,6 +68,7 @@ public sealed class DockerDeploymentContractTests
         apiSection.Should().Contain("Database__FailStartupOnGrantFailure=true");
         apiSection.Should().Contain("REDIS_CONNECTION_STRING:?set REDIS_CONNECTION_STRING");
         apiSection.Should().Contain("EMAILDELIVERY__FROMEMAIL:?set EMAILDELIVERY__FROMEMAIL");
+        apiSection.Should().Contain("EMAILDELIVERY__SES__REGION:?set EMAILDELIVERY__SES__REGION");
         apiSection.Should().Contain("S3_SERVICE_URL:?set S3_SERVICE_URL");
         apiSection.Should().Contain(":/app/.aspnet/DataProtection-Keys");
         apiSection.Should().Contain("http://127.0.0.1:8080/live");

@@ -16,7 +16,7 @@ type ServiceProbe = {
   pass: (body: unknown, status: number) => boolean;
 };
 
-// ponytail: 6 services hardcoded. They change ~once a year; no service-registry
+// ponytail: 7 services hardcoded. They change ~once a year; no service-registry
 // abstraction is worth the indirection. Add when count > 12 or probes fan out.
 const SERVICES: readonly ServiceProbe[] = [
   {
@@ -33,6 +33,11 @@ const SERVICES: readonly ServiceProbe[] = [
     name: "Grafana",
     url: "http://kube-prometheus-stack-grafana.monitoring:80/api/health",
     pass: (b, s) => s === 200 && (b as { database?: string } | null)?.database === "ok",
+  },
+  {
+    name: "Redis",
+    url: "http://redis-metrics.redis:9121/metrics",
+    pass: (b, s) => s === 200 && String(b).includes("redis_up 1"),
   },
   {
     name: "API",
@@ -60,12 +65,16 @@ async function probe(service: ServiceProbe): Promise<ServiceResult> {
     });
     const responseTimeMs = Date.now() - start;
     const httpStatus = res.status;
-    let body: unknown = undefined;
-    try {
-      body = await res.json();
-    } catch {
-      // ponytail: some endpoints return text/plain; body stays undefined and
-      // pass() predicates that don't inspect body still run.
+    // Read the stream once (json() would consume it), then parse; non-JSON
+    // bodies (prometheus text exposition) reach predicates as raw text.
+    const raw = await res.text().catch(() => undefined);
+    let body: unknown = raw;
+    if (typeof raw === "string" && raw.length > 0) {
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        // text body, keep raw
+      }
     }
     return {
       name: service.name,

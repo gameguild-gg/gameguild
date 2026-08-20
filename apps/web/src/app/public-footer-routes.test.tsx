@@ -23,7 +23,7 @@ const footerRoutes = [
   { href: '/', page: '[locale]/(public)/page.tsx' },
   { href: '/jobs', page: '[locale]/(public)/jobs/page.tsx' },
   { href: '/courses', page: '[locale]/(public)/courses/page.tsx' },
-  { href: '/courses', page: '[locale]/(public)/courses/page.tsx' },
+  { href: '/programs', page: '[locale]/(public)/programs/page.tsx' },
   { href: '/projects', page: '[locale]/(public)/projects/page.tsx' },
   { href: '/testing-lab', page: '[locale]/(public)/testing-lab/page.tsx' },
   { href: '/launch-pad', page: '[locale]/(public)/launch-pad/page.tsx' },

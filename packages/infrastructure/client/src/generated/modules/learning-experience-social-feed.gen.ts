@@ -17,47 +17,6 @@ export class LearningExperienceSocialFeedModule {
 
   /**
    */
-  async getApiSocialFeedMe(query?: {
-    skip?: number;
-    take?: number;
-    filterByType?: Types.LearningExperienceSocialFeedItemType;
-  }): Promise<
-    Result<
-      Array<Types.LearningExperienceSocialServicesPersonalizedFeedItem>,
-      ApiError
-    >
-  > {
-    const url = "/api/social/feed/me";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceSocialServicesPersonalizedFeedItem>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async postApiSocialFeedMeGenerate(): Promise<Result<number, ApiError>> {
-    const url = "/api/social/feed/me/generate";
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<number, ApiError>;
-  }
-
-  /**
-   */
   async postApiSocialFeedDismiss(
     id: string,
   ): Promise<
@@ -110,6 +69,47 @@ export class LearningExperienceSocialFeedModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiSocialFeedMe(query?: {
+    skip?: number;
+    take?: number;
+    filterByType?: Types.LearningExperienceSocialFeedItemType;
+  }): Promise<
+    Result<
+      Array<Types.LearningExperienceSocialServicesPersonalizedFeedItem>,
+      ApiError
+    >
+  > {
+    const url = "/api/social/feed/me";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceSocialServicesPersonalizedFeedItem>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async postApiSocialFeedMeGenerate(): Promise<Result<number, ApiError>> {
+    const url = "/api/social/feed/me/generate";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<number, ApiError>;
   }
 }
 

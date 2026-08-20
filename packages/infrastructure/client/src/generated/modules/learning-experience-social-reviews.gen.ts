@@ -104,29 +104,6 @@ export class LearningExperienceSocialReviewsModule {
 
   /**
    */
-  async getApiSocialReviewsMe(query?: {
-    skip?: number;
-    take?: number;
-  }): Promise<
-    Result<Array<Types.LearningExperienceSocialServicesCourseReview>, ApiError>
-  > {
-    const url = "/api/social/reviews/me";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningExperienceSocialServicesCourseReview>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async getApiSocialReviews(
     id: string,
   ): Promise<
@@ -286,6 +263,29 @@ export class LearningExperienceSocialReviewsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiSocialReviewsMe(query?: {
+    skip?: number;
+    take?: number;
+  }): Promise<
+    Result<Array<Types.LearningExperienceSocialServicesCourseReview>, ApiError>
+  > {
+    const url = "/api/social/reviews/me";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningExperienceSocialServicesCourseReview>,
+      ApiError
+    >;
   }
 }
 

@@ -76,22 +76,6 @@ export class TestingLabTestingFeedbackModule {
 
   /**
    */
-  async getTestingFeedbackByUser(
-    userId: string,
-  ): Promise<Result<Array<Types.TestingLabTestingFeedback>, ApiError>> {
-    const url = `/v1/testing/feedback/by-user/${userId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.TestingLabTestingFeedback>, ApiError>;
-  }
-
-  /**
-   */
   async postTestingFeedbackQuality(
     feedbackId: string,
     body: Types.TestingLabRateFeedbackQuality,
@@ -138,6 +122,22 @@ export class TestingLabTestingFeedbackModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getTestingFeedbackByUser(
+    userId: string,
+  ): Promise<Result<Array<Types.TestingLabTestingFeedback>, ApiError>> {
+    const url = `/v1/testing/feedback/by-user/${userId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.TestingLabTestingFeedback>, ApiError>;
   }
 
   /**

@@ -59,6 +59,61 @@ export class SocialPostsModule {
 
   /**
    */
+  async getPostsForGetPostsByPostId(
+    postId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/posts/${postId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async putPosts(
+    postId: string,
+    body: Types.SocialPostsControllersUpdatePostInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/posts/${postId}`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.SocialPostsControllersUpdatePostInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PUT",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async deletePosts(postId: string): Promise<Result<void, ApiError>> {
+    const url = `/api/v1/posts/${postId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async getPostsAuthor(
     authorId: string,
     query?: { skip?: number; take?: number },
@@ -142,61 +197,6 @@ export class SocialPostsModule {
       method: "GET",
       path: url,
       params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getPostsForGetPostsByPostId(
-    postId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/posts/${postId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async putPosts(
-    postId: string,
-    body: Types.SocialPostsControllersUpdatePostInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/posts/${postId}`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialPostsControllersUpdatePostInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "PUT",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async deletePosts(postId: string): Promise<Result<void, ApiError>> {
-    const url = `/api/v1/posts/${postId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
       requiresAuth: true,
     });
 

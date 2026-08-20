@@ -17,6 +17,32 @@ export class LearningAssessmentsPeerReviewsModule {
 
   /**
    */
+  async postAssessmentsPeerReviewsClaim(
+    assessmentId: string,
+  ): Promise<Result<Types.LearningAssessmentsPeerReviewClaim, ApiError>> {
+    const url = `/v1/assessments/${assessmentId}/peer-reviews/claim`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.LearningAssessmentsPeerReviewClaimSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getAssessmentsPeerReviews(
     reviewId: string,
   ): Promise<
@@ -108,32 +134,6 @@ export class LearningAssessmentsPeerReviewsModule {
       Array<Types.LearningAssessmentsReceivedPeerReview>,
       ApiError
     >;
-  }
-
-  /**
-   */
-  async postAssessmentsPeerReviewsClaim(
-    assessmentId: string,
-  ): Promise<Result<Types.LearningAssessmentsPeerReviewClaim, ApiError>> {
-    const url = `/v1/assessments/${assessmentId}/peer-reviews/claim`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsPeerReviewClaimSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
   }
 }
 

@@ -8,6 +8,13 @@ const configuredDevOrigins = process.env.NEXT_ALLOWED_DEV_ORIGINS?.split(",")
   .filter(Boolean);
 
 const nextConfig: NextConfig = {
+  // ponytail: isolated E2E boots a second `next dev` on a dedicated port
+  // alongside the user's running dev server; without a separate distDir the
+  // two fight over the .next/ dev-server lock. Gated by env so production
+  // builds are unaffected.
+  ...(process.env.CODING_CYCLE_E2E === "1"
+    ? { distDir: ".next-e2e-coding-cycle" }
+    : {}),
   allowedDevOrigins: configuredDevOrigins ?? [
     "gameguild.localhost",
     "learning.gameguild.localhost",
@@ -103,24 +110,25 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // ponytail: COOP only — GIS popup sign-in breaks under COEP
+        // credentialless (opener postMessage severed, Google session
+        // stripped from the GIS iframe). COEP stays on emception/learn
+        // routes only, where SharedArrayBuffer actually needs it.
         source: "/sign-in",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
-          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
       {
         source: "/:locale/sign-in",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
-          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
       {
         source: "/api/auth/:path*",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
-          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
       {

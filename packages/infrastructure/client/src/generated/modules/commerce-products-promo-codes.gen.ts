@@ -156,32 +156,6 @@ export class CommerceProductsPromoCodesModule {
 
   /**
    */
-  async getPromoCodesByCode(
-    code: string,
-  ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
-    const url = `/v1/promo-codes/by-code/${code}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommerceProductsPromoCodeSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async getPromoCodesForGetPromoCodesByPromoCodeId(
     promoCodeId: string,
   ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
@@ -306,32 +280,6 @@ export class CommerceProductsPromoCodesModule {
 
   /**
    */
-  async getPromoCodesUsage(
-    promoCodeId: string,
-  ): Promise<Result<Types.CommerceProductsPromoCodeUsage, ApiError>> {
-    const url = `/v1/promo-codes/${promoCodeId}/usage`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommerceProductsPromoCodeUsageSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
   async postPromoCodesActivate(
     promoCodeId: string,
   ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
@@ -365,6 +313,58 @@ export class CommerceProductsPromoCodesModule {
 
     const result = await this.client.request({
       method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getPromoCodesUsage(
+    promoCodeId: string,
+  ): Promise<Result<Types.CommerceProductsPromoCodeUsage, ApiError>> {
+    const url = `/v1/promo-codes/${promoCodeId}/usage`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.CommerceProductsPromoCodeUsageSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getPromoCodesByCode(
+    code: string,
+  ): Promise<Result<Types.CommerceProductsPromoCode, ApiError>> {
+    const url = `/v1/promo-codes/by-code/${code}`;
+
+    const result = await this.client.request({
+      method: "GET",
       path: url,
       requiresAuth: true,
     });

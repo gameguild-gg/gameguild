@@ -260,6 +260,14 @@ public class Assessment : EntityBase
             nextDueAt,
             allowLateSubmissions ?? AllowLateSubmissions,
             nextLateSubmissionDeadline);
+        // The content link is immutable once set: content-created assessments
+        // can never be unlinked or re-pointed at different content.
+        if (ContentId.HasValue &&
+            (clearContentId || (contentId.HasValue && contentId.Value != ContentId.Value)))
+        {
+            throw new ArgumentException(
+                "Assessment cannot be unlinked from its content. Content link is permanent once set.");
+        }
         if (clearContentId) ContentId = null;
         else if (contentId.HasValue) ContentId = contentId.Value;
         if (clearAssessmentGroupId) AssessmentGroupId = null;

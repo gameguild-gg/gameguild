@@ -376,13 +376,25 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     console.log(`${P} VFS sync complete (${textFiles.length} files)`);
   }, []);
 
-      // ── Run Tests button handler ───────────────────────────────────
-      const handleRunTests = useCallback(async () => {
+      // ── Run Tests pipeline — shared by the toolbar button AND the
+      // imperative handle (grader panel). One path, one contract. ────
+      const runTestPlanFor = useCallback(async (
+        plan: GradingPlan,
+        mode: 'public' | 'full',
+      ): Promise<import('./TestResultsPanel').TestReport> => {
     const orch = orchestratorRef.current;
-    if (!orch || !testPlan || testPlan.cases.length === 0) return;
+    if (!orch) throw new Error('Worker not booted yet');
+    if (!plan || plan.cases.length === 0) {
+      // ponytail: empty plan → empty report; still fire the callback so
+      // hosts observe completion (legacy handle contract).
+      const empty: import('./TestResultsPanel').TestReport = { passed: 0, failed: 0, totalDurationMs: 0, cases: [] };
+      try { onTestReportRef.current?.(empty); } catch { /* swallow */ }
+      return empty;
+    }
     const { client, tty } = orch;
     setTestRunning(true);
     setLastReport(null);
+    setStatus('Running tests...');
     const totalStart = performance.now();
 
     let report: import('./TestResultsPanel').TestReport;
@@ -391,78 +403,46 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
       // reads the latest editor content.
       await syncFilesToVfs(filesRef.current);
 
+      // Generated doctest harnesses may live in the workspace (the grader
+      // seeds them via setFiles) — exclude them so the combined TU never
+      // compiles a harness twice.
+      const harnessPaths = new Set(
+        plan.cases.flatMap((c) => (c.kind === 'doctest' ? (c.sourceFiles ?? []) : [])),
+      );
+
       // All text C/C++ sources — the stdio path compiles the first; the
       // doctest path concatenates all of them into one combined TU.
       const studentSources = Object.values(filesRef.current).filter(
-        (f) => f.type === 'text' && isSourceFile(f.path),
+        (f) => f.type === 'text' && isSourceFile(f.path) && !harnessPaths.has(f.path),
       );
       if (studentSources.length === 0) {
         throw new Error('No C/C++ source file found in workspace');
       }
 
-      // ── Filter cases per testMode (before building — a doctest-only plan
+      // ── Resolve toolchain preset for the current environment ──
+      const isC = resolvedConfig.id === 'c' || resolvedConfig.id.endsWith('-c');
+      const nativePreset = (
+        TOOLCHAIN_PRESETS[resolvedConfig.id as keyof typeof TOOLCHAIN_PRESETS] ??
+        (isC ? TOOLCHAIN_PRESETS.c : TOOLCHAIN_PRESETS.cpp)
+      ) as NativePreset;
+
+      // ── Filter cases per mode (before building — a doctest-only plan
       //    must not pay for, or fail on, the stdio binary build) ──
-      const cases = testMode === 'public' ? testPlan.cases.filter((c) => !c.hidden) : testPlan.cases;
+      const cases = mode === 'public' ? plan.cases.filter((c) => !c.hidden) : plan.cases;
       const wasmPath = '/home/user/main.wasm';
 
-      // ── stdio binary (clang -cc1 + wasm-ld) — same args as the working
-      //    handleCompile direct path. Only built when stdio cases exist: a
-      //    doctest-only workspace has no main() and --entry=main fails. ──
+      // ── stdio binary (clang -cc1 + wasm-ld via preset) ──
       if (cases.some((c) => c.kind === 'stdio')) {
         const mainSrc = studentSources[0];
         const sourceFsPath = toWorkspaceFsPath(mainSrc.path, propsRef.current.assignmentToken);
         const objPath = '/tmp/emception-test-main.o';
 
-        // ── Compile (clang -cc1) — same args as the working handleCompile direct path ──
         tty.writeLine('\x1b[36m[tests] Compiling...\x1b[0m');
         const clangResult = await client.run(
-          'clang',
-          [
-            'clang',
-            '-cc1',
-            '-triple',
-            'wasm32-unknown-emscripten',
-            '-emit-obj',
-            '-O1',
-            '-disable-free',
-            '-clear-ast-before-backend',
-            '-disable-llvm-verifier',
-            '-discard-value-names',
-            '-main-file-name',
-            'main.cpp',
-            '-mrelocation-model',
-            'static',
-            '-mframe-pointer=none',
-            '-ffp-contract=on',
-            '-fno-rounding-math',
-            '-mconstructor-aliases',
-            '-target-cpu',
-            'generic',
-            '-fvisibility=hidden',
-            '-internal-isystem',
-            '/usr/include/c++/v1',
-            '-internal-isystem',
-            '/usr/include/compat',
-            '-internal-isystem',
-            '/usr/lib/clang/23/include',
-            '-resource-dir',
-            '/usr/lib/clang/23',
-            '-internal-isystem',
-            '/usr/include',
-            '-fdeprecated-macro',
-            '-ferror-limit',
-            '19',
-            '-fgnuc-version=4.2.1',
-            '-fcxx-exceptions',
-            '-fexceptions',
-            '-o',
-            objPath,
-            '-x',
-            'c++',
-            sourceFsPath,
-          ],
+          nativePreset.compileTool,
+          nativePreset.compileArgv({ sourcePath: sourceFsPath, objectPath: objPath }),
           {
-            cwd: '/home/user',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => console.log(t),
             onStderr: (t: string) => {
               console.error(t);
@@ -474,31 +454,13 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
           throw new Error(`Compilation failed (exit ${clangResult.exitCode})`);
         }
 
-        // ── Link (wasm-ld) ──
+        // ── Link (wasm-ld via preset) ──
         tty.writeLine('\x1b[36m[tests] Linking...\x1b[0m');
         const lldResult = await client.run(
-          'wasm-ld',
-          [
-            'wasm-ld',
-            objPath,
-            '-o',
-            wasmPath,
-            '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
-            '--entry=main',
-            '--import-undefined',
-            '--allow-undefined',
-            '--export-table',
-            '--table-base=1',
-            '--export=__wasm_call_ctors',
-            '-lc',
-            '-ldlmalloc',
-            '-lcompiler_rt',
-            '-lc++-noexcept',
-            '-lc++abi-noexcept',
-            '-lsockets',
-          ],
+          nativePreset.linkTool,
+          nativePreset.linkArgv({ objectPath: objPath, wasmPath }),
           {
-            cwd: '/home/user',
+            cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => console.log(t),
             onStderr: (t: string) => {
               console.error(t);
@@ -523,10 +485,15 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         if (test.kind === 'doctest') {
           try {
             const harnessPath = test.sourceFiles?.[0];
-            const harness = harnessPath
-              ? testPlan.generatedFiles?.find((g) => g.path === harnessPath)
+            // Harness content: generated files on the plan, else workspace
+            // files seeded by the host before runTests (grader panel path).
+            const harnessFromPlan = harnessPath
+              ? plan.generatedFiles?.find((g) => g.path === harnessPath)
               : undefined;
-            if (!harness) {
+            const harnessContent =
+              harnessFromPlan?.content ??
+              (harnessPath ? filesRef.current[harnessPath]?.content : undefined);
+            if (harnessContent === undefined) {
               reportCases.push({
                 name,
                 passed: false,
@@ -553,59 +520,16 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
               '#define main gg_student_main_disabled',
               ...studentSources.map((f) => f.content),
               '#undef main',
-              harness.content.replace(/^extern "C" .*;\s*$/m, ''),
-            ].join('\n');
+              harnessContent.replace(/extern\s+"C"\s+[\s\S]*?;/g, ''),
+            ].join('\n\n');
             await client.writeFile(combinedPath, enc.encode(combined));
 
             tty.writeLine(`\x1b[36m[tests] Compiling doctest ${name}...\x1b[0m`);
             const dClangResult = await client.run(
-              'clang',
-              [
-                'clang',
-                '-cc1',
-                '-triple',
-                'wasm32-unknown-emscripten',
-                '-emit-obj',
-                '-O1',
-                '-disable-free',
-                '-clear-ast-before-backend',
-                '-disable-llvm-verifier',
-                '-discard-value-names',
-                '-main-file-name',
-                combinedName,
-                '-mrelocation-model',
-                'static',
-                '-mframe-pointer=none',
-                '-ffp-contract=on',
-                '-fno-rounding-math',
-                '-mconstructor-aliases',
-                '-target-cpu',
-                'generic',
-                '-fvisibility=hidden',
-                '-internal-isystem',
-                '/usr/include/c++/v1',
-                '-internal-isystem',
-                '/usr/include/compat',
-                '-internal-isystem',
-                '/usr/lib/clang/23/include',
-                '-resource-dir',
-                '/usr/lib/clang/23',
-                '-internal-isystem',
-                '/usr/include',
-                '-fdeprecated-macro',
-                '-ferror-limit',
-                '19',
-                '-fgnuc-version=4.2.1',
-                '-fcxx-exceptions',
-                '-fexceptions',
-                '-o',
-                doctestObjPath,
-                '-x',
-                'c++',
-                combinedPath,
-              ],
+              nativePreset.compileTool,
+              nativePreset.compileArgv({ sourcePath: combinedPath, objectPath: doctestObjPath }),
               {
-                cwd: '/home/user',
+                cwd: resolvedConfig.compile.cwd ?? '/home/user',
                 onStdout: (t: string) => console.log(t),
                 onStderr: (t: string) => {
                   console.error(t);
@@ -619,28 +543,10 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
             tty.writeLine(`\x1b[36m[tests] Linking doctest ${name}...\x1b[0m`);
             const dLldResult = await client.run(
-              'wasm-ld',
-              [
-                'wasm-ld',
-                doctestObjPath,
-                '-o',
-                doctestWasmPath,
-                '-L/usr/lib/emscripten/cache-lib/wasm32-emscripten',
-                '--entry=main',
-                '--import-undefined',
-                '--allow-undefined',
-                '--export-table',
-                '--table-base=1',
-                '--export=__wasm_call_ctors',
-                '-lc',
-                '-ldlmalloc',
-                '-lcompiler_rt',
-                '-lc++-noexcept',
-                '-lc++abi-noexcept',
-                '-lsockets',
-              ],
+              nativePreset.linkTool,
+              nativePreset.linkArgv({ objectPath: doctestObjPath, wasmPath: doctestWasmPath }),
               {
-                cwd: '/home/user',
+                cwd: resolvedConfig.compile.cwd ?? '/home/user',
                 onStdout: (t: string) => console.log(t),
                 onStderr: (t: string) => {
                   console.error(t);
@@ -776,7 +682,17 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     } finally {
       setTestRunning(false);
     }
-    }, [testPlan, testMode, syncFilesToVfs, testsPanelSlot]);
+    return report;
+    }, [syncFilesToVfs, resolvedConfig]);
+
+      const handleRunTests = useCallback(async () => {
+    if (!orchestratorRef.current || !testPlan || testPlan.cases.length === 0) return;
+    await runTestPlanFor(testPlan, testMode);
+      }, [testPlan, testMode, runTestPlanFor]);
+
+  // Latest-pipeline ref for the imperative handle (mirrors propsRef).
+  const runPlanRef = useRef(runTestPlanFor);
+  runPlanRef.current = runTestPlanFor;
 
   // ── Apply a workspace config to reactive state + Worker VFS ─────
   const applyWorkspace = useCallback(
@@ -996,11 +912,13 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
     };
     return {
     runTests: async (plan) => {
-      const api = apiRef.current;
-      if (!api) throw new Error('Worker not booted yet');
-      const report = await api.runTests(plan);
-      try { onTestReportRef.current?.(report); } catch { /* swallow */ }
-      return report;
+      if (!orchestratorRef.current) throw new Error('Worker not booted yet');
+      // Shared pipeline with the Run Tests button. The core-engine
+      // api.runTests path is broken for assignment plans: the browser
+      // facade only reads opts.sources (never opts.build.sources), compiles
+      // an empty default source, and clobbers the seeded workspace.
+      // onTestReport fires inside runTestPlanFor — do not double-fire here.
+      return runPlanRef.current(plan as unknown as GradingPlan, 'full');
     },
     compileAndRun: async (sourceOrFiles?, opts?) => {
       const api = apiRef.current;
@@ -1665,18 +1583,25 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         const sourceFsPath = toWorkspaceFsPath(compileTarget, propsRef.current.assignmentToken);
 
         // Detection mirrors the tools IDE's toolchain-prefix check: the preset
-        // id ('sdl-cpp' | 'raylib-cpp', or a '-c' variant) selects the preset,
-        // runtime mjs, and CDN bundle. Legacy/unknown canvas ids (e.g.
-        // 'cpp-sdl3') default to the SDL3 preset.
+        // id ('sdl-cpp' | 'raylib-cpp' | 'allegro-cpp', or a '-c' variant)
+        // selects the preset, runtime mjs, and CDN bundle. Legacy/unknown
+        // canvas ids (e.g. 'cpp-sdl3') default to the SDL3 preset.
         const isRaylib = resolvedConfig.id.startsWith('raylib');
-        const canvasLabel = isRaylib ? 'raylib' : 'SDL3';
+        const isAllegro = resolvedConfig.id.startsWith('allegro');
+        const canvasLabel = isRaylib ? 'raylib' : isAllegro ? 'allegro' : 'SDL3';
         const canvasPresetKey = (
-          isRaylib ? (resolvedConfig.id.endsWith('-c') ? 'raylib-c' : 'raylib-cpp') : (resolvedConfig.id === 'sdl-c' ? 'sdl-c' : 'sdl-cpp')
+          isRaylib
+            ? resolvedConfig.id.endsWith('-c') ? 'raylib-c' : 'raylib-cpp'
+            : isAllegro
+              ? resolvedConfig.id.endsWith('-c') ? 'allegro-c' : 'allegro-cpp'
+              : resolvedConfig.id === 'sdl-c' ? 'sdl-c' : 'sdl-cpp'
         ) as keyof typeof TOOLCHAIN_PRESETS;
         const canvasPreset = TOOLCHAIN_PRESETS[canvasPresetKey] as NativePreset;
-        const runtimePath = isRaylib
-          ? '/usr/lib/emscripten/raylib-runtime.mjs'
-          : '/usr/lib/emscripten/sdl3-runtime.mjs';
+        const runtimePath = isAllegro
+          ? '/usr/lib/emscripten/allegro-runtime.mjs'
+          : isRaylib
+            ? '/usr/lib/emscripten/raylib-runtime.mjs'
+            : '/usr/lib/emscripten/sdl3-runtime.mjs';
         tty.writeLine(`\x1b[36m${canvasLabel} detected \u2014 compiling object...\x1b[0m`);
 
         const sdlObjPath = '/tmp/emception-canvas-main.o';
@@ -1684,9 +1609,10 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
 
         const sdlPaths = { sourcePath: sourceFsPath, objectPath: sdlObjPath, wasmPath };
         // The hint is LOAD-BEARING: without bundlesNeeded the worker's LazyFS
-        // never materializes the sdl3/raylib bundle (headers + lib*.a) from
-        // the CDN manifest, so clang can't find SDL3/SDL.h or raylib.h.
-        const canvasBundleName = isRaylib ? 'raylib' : 'sdl3';
+        // never materializes the sdl3/raylib/allegro bundle (headers + lib*.a)
+        // from the CDN manifest, so clang can't find SDL3/SDL.h, raylib.h,
+        // or allegro5/allegro.h.
+        const canvasBundleName = isRaylib ? 'raylib' : isAllegro ? 'allegro' : 'sdl3';
         const canvasRunHints = { bundlesNeeded: [canvasBundleName] };
         const sdlCompile = await client.run(canvasPreset.compileTool, canvasPreset.compileArgv(sdlPaths), {
           cwd: resolvedConfig.compile.cwd ?? '/home/user',
@@ -1909,13 +1835,14 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             keyboardListeningElement: canvas,
             wasmBinary: wasmBytes,
             locateFile: (filename: string) => filename,
-            // raylib: prevent the runtime from calling main() internally (via
-            // its own run() → callMain() path). Without this, main() fires
-            // twice — once from the runtime and once from our explicit entry
-            // invocation below — causing InitWindow + emscripten_set_main_loop
-            // to execute twice, registering duplicate RAF loops → crash.
-            // SDL3 is unaffected because its _main is a noop proxy.
-            noInitialRun: isRaylib,
+            // raylib + allegro: prevent the runtime from calling main()
+            // internally (via its own run() → callMain() path). Without this,
+            // main() fires twice — once from the runtime and once from our
+            // explicit entry invocation below — causing InitWindow +
+            // emscripten_set_main_loop to execute twice, registering duplicate
+            // RAF loops → crash. SDL3 is unaffected because its _main is a
+            // noop proxy.
+            noInitialRun: isRaylib || isAllegro,
             // Both SDL3 and raylib route through the env-preserving
             // instantiateWasm override: it starts from the runtime's own
             // info.env glue and only fills missing imports. Raylib cannot use
@@ -2290,11 +2217,11 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             '--export-table',
             '--table-base=1',
             '--export=__wasm_call_ctors',
+            '-lc++-noexcept',
+            '-lc++abi-noexcept',
             '-lc',
             '-ldlmalloc',
             '-lcompiler_rt',
-            '-lc++-noexcept',
-            '-lc++abi-noexcept',
             '-lsockets',
           ],
           {

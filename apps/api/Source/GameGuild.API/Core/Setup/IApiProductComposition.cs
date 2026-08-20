@@ -6,8 +6,6 @@ internal interface IApiProductComposition
 {
     string ApplicationName { get; }
 
-    string DefaultDataProtectionKeysPath { get; }
-
     IReadOnlyList<string> EnabledModules { get; }
 
     IReadOnlyList<string> DisabledModules { get; }
