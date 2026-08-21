@@ -196,7 +196,7 @@ console.log(`Deployed libSDL3.a → ${path.relative(ROOT, CACHE_LIB_DIR)}/`);
 
 // Copy SDL3 headers
 if (fs.existsSync(cacheIncSDL3)) {
-    shell.cp('-rf', path.join(cacheIncSDL3, '*.h'), path.join(SYSROOT_INC, 'SDL3', '/'));
+    fs.cpSync(cacheIncSDL3, path.join(SYSROOT_INC, 'SDL3'), { recursive: true });
     console.log(`Deployed SDL3 headers → sysroot/usr/include/SDL3/`);
 } else {
     console.warn(`Warning: SDL3 headers not found in emsdk cache at ${cacheIncSDL3}`);
