@@ -37,6 +37,7 @@ export {
     type CanvasAPI,
     type CanvasArtifact,
     type CanvasBuildOptions,
+    type CanvasBuildFailure,
     type CanvasBuildResult,
     type CanvasCompileFailure,
     type CanvasLinkFailure,
