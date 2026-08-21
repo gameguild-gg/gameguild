@@ -1,0 +1,20 @@
+From: Emception maintainers
+Subject: [PATCH] sysconfig: honor cross project base on Windows
+
+The Emscripten cross-build sets _PYTHON_PROJECT_BASE to the target build
+directory. A Windows host otherwise looks for pyconfig.h beside the native
+bootstrap interpreter, which makes generate-posix-vars fail before the target
+build starts.
+
+Keep CPython's native Windows behavior unless the cross-build explicitly
+provides _PYTHON_PROJECT_BASE.
+---
+ Lib/sysconfig/__init__.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Lib/sysconfig/__init__.py b/Lib/sysconfig/__init__.py
+--- a/Lib/sysconfig/__init__.py
++++ b/Lib/sysconfig/__init__.py
+@@ -429 +429 @@
+-        if os.name == "nt":
++        if os.name == "nt" and "_PYTHON_PROJECT_BASE" not in os.environ:
