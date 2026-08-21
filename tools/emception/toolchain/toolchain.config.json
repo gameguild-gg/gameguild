@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "runtimeAbi": "emception-browser-v1",
+  "constraints": {
+    "cmake": "<4"
+  },
+  "emsdkGroup": [
+    "llvm",
+    "binaryen",
+    "python",
+    "sdl3"
+  ],
+  "channels": {
+    "emsdk": "release",
+    "cmake": "latest-3.x",
+    "llvm": "emsdk-compatible"
+  },
+  "overlays": {
+    "cpython": "toolchain/overlays/cpython",
+    "brotli": "toolchain/overlays/brotli",
+    "curlLite": "toolchain/overlays/libcurl-lite",
+    "busybox": "toolchain/overlays/busybox"
+  }
+}
