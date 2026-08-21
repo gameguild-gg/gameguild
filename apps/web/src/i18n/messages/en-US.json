@@ -13,7 +13,119 @@
   },
   "settings": {
     "accountTitle": "Account settings",
-    "accountDescription": "Manage how you sign in to GameGuild."
+    "accountDescription": "Manage how you sign in to GameGuild.",
+    "hubTitle": "Settings",
+    "navLabel": "Settings sections",
+    "nav": {
+      "profile": "Profile",
+      "account": "Account",
+      "appearance": "Appearance",
+      "localization": "Language & region",
+      "privacy": "Privacy",
+      "accessibility": "Accessibility"
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Update the personal details shown on your GameGuild account.",
+      "fallbackName": "GameGuild user",
+      "fallbackEmail": "No email available",
+      "accountLabel": "Signed-in account",
+      "accountDescription": "Your account identity is managed by your sign-in provider.",
+      "displayName": "Display name",
+      "bio": "Bio",
+      "optional": "Optional",
+      "location": "Location",
+      "website": "Website",
+      "jobTitle": "Job title",
+      "company": "Company",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "saved": "Profile saved.",
+      "saveFailed": "We could not save your profile.",
+      "errors": {
+        "tooLong": "Use at most {limit} characters."
+      }
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Choose how GameGuild looks on this and your other devices.",
+      "saveFailed": "We could not save your appearance preference.",
+      "theme": {
+        "label": "Theme",
+        "light": "Light",
+        "lightDescription": "Use the light color scheme.",
+        "dark": "Dark",
+        "darkDescription": "Use the dark color scheme.",
+        "system": "System",
+        "systemDescription": "Match your device setting."
+      }
+    },
+    "localization": {
+      "title": "Language & region",
+      "description": "Set the language, timezone, and formats used by GameGuild.",
+      "language": "Language",
+      "timezone": "Timezone",
+      "dateFormat": "Date format",
+      "timeFormat": "Time format",
+      "currency": "Currency",
+      "currencyDescription": "Used as your preferred currency in supported views.",
+      "save": "Save preferences",
+      "saving": "Saving...",
+      "saved": "Language and region preferences saved.",
+      "saveFailed": "We could not save your language and region preferences."
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Control the privacy preferences stored for your GameGuild account.",
+      "saveFailed": "We could not save your privacy preferences.",
+      "profileVisibility": {
+        "label": "Profile visibility"
+      },
+      "visibility": {
+        "public": "Public",
+        "members": "Members",
+        "private": "Private"
+      },
+      "sharingLabel": "Data preferences",
+      "activityTracking": {
+        "label": "Activity tracking",
+        "description": "Allow GameGuild to remember activity that improves your experience."
+      },
+      "marketingEmails": {
+        "label": "Marketing emails",
+        "description": "Receive optional product and community updates by email."
+      },
+      "analyticsCookies": {
+        "label": "Analytics cookies",
+        "description": "Allow anonymous usage analytics in supported web experiences."
+      },
+      "personalizedContent": {
+        "label": "Personalized content",
+        "description": "Allow content recommendations to use your preferences."
+      }
+    },
+    "accessibility": {
+      "title": "Accessibility",
+      "description": "Adjust the interface for more comfortable reading and motion.",
+      "saveFailed": "We could not save your accessibility preferences.",
+      "displayLabel": "Display",
+      "highContrast": {
+        "label": "High contrast",
+        "description": "Increase visual contrast across the interface."
+      },
+      "largeText": {
+        "label": "Larger text",
+        "description": "Increase the base text size throughout GameGuild."
+      },
+      "reducedMotion": {
+        "label": "Reduce motion",
+        "description": "Minimize non-essential animations and transitions."
+      },
+      "fontSize": {
+        "label": "Base text size",
+        "description": "Choose a size between {min}px and {max}px."
+      }
+    }
   },
   "connectedAccounts": {
     "title": "Connected Accounts",

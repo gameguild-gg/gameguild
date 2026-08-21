@@ -19,6 +19,7 @@ import {
   SidebarRail,
 } from '@game-guild/ui/components/sidebar';
 import {
+  Accessibility,
   BarChart3,
   BookOpen,
   ChevronRight,
@@ -30,13 +31,16 @@ import {
   LayoutDashboard,
   MapPin,
   FolderKanban,
+  Globe2,
   MailCheck,
   Plus,
+  Palette,
   MessageSquareText,
   Rocket,
   Settings,
   ShieldCheck,
   UserCog,
+  User,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -123,7 +127,12 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
         title: 'Settings',
         icon: Settings,
         subGroups: [
+          { title: 'Profile', url: '/workspace/settings/profile', icon: User, items: [] },
           { title: 'Account', url: '/workspace/settings/account', icon: UserCog, items: [] },
+          { title: 'Appearance', url: '/workspace/settings/appearance', icon: Palette, items: [] },
+          { title: 'Localization', url: '/workspace/settings/localization', icon: Globe2, items: [] },
+          { title: 'Privacy', url: '/workspace/settings/privacy', icon: ShieldCheck, items: [] },
+          { title: 'Accessibility', url: '/workspace/settings/accessibility', icon: Accessibility, items: [] },
         ],
       },
     ],
