@@ -9,6 +9,7 @@ build/
 .next/
 out/
 packages/core/cdn/
+packages/toolchain/cdn/
 
 # IDE/Next.js output
 out/
