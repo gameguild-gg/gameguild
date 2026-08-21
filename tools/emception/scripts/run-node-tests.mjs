@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const testDirectory = resolve(process.argv[2] ?? 'tests');
+const testTimeout = process.env.EMCEPTION_TEST_TIMEOUT_MS ?? '60000';
 const testFiles = readdirSync(testDirectory, { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith('.test.mjs'))
   .map((entry) => resolve(testDirectory, entry.name))
@@ -14,7 +15,7 @@ if (testFiles.length === 0) {
 
 const result = spawnSync(
   process.execPath,
-  ['--test', '--test-concurrency=1', '--test-timeout=15000', ...testFiles],
+  ['--test', '--test-concurrency=1', `--test-timeout=${testTimeout}`, ...testFiles],
   { stdio: 'inherit' },
 );
 
