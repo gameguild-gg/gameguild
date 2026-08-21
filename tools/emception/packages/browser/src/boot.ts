@@ -220,7 +220,13 @@ export async function bootInWorker(
 
 export { LineBuffer } from 'emception';
 export type { IOProvider } from 'emception';
-export { createEmception, type BrowserEmceptionAPI, type CreateEmceptionOptions } from './createEmception.js';
+export {
+  createEmception,
+  type BrowserEmceptionAPI,
+  type BrowserRunOptions,
+  type BrowserStdin,
+  type CreateEmceptionOptions,
+} from './createEmception.js';
 export type { BrowserEmceptionAPI as EmceptionAPI } from './createEmception.js';
 export { createBrowserBridge, SUBPROCESS_SHIM, type BrowserBridge } from './emscripten/index.js';
 export { decompressBrotli, isBrotliSupported } from './loader/brotli.js';

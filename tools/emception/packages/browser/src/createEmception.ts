@@ -41,7 +41,7 @@ import type {
 import { DEFAULT_MANIFEST_URL } from './manifest.js';
 import { createCanvasAPI } from './canvas.js';
 import type { CanvasAPI } from './canvas.js';
-import type { RunOptions as BrowserRunOptions } from './tool-runner.js';
+import type { RunOptions as WorkerRunOptions } from './tool-runner.js';
 import { WorkerClient } from './worker-client.js';
 
 /**
@@ -89,7 +89,15 @@ export interface CreateEmceptionOptions {
     manifestUrl?: string;
 }
 
-export interface BrowserEmceptionAPI extends EmceptionAPI {
+export type BrowserStdin = RunOptions['stdin'] | (() => number | null | Promise<number>);
+
+export type BrowserRunOptions = Omit<RunOptions, 'stdin'> & {
+    /** Browser byte reader used by interactive terminal programs. */
+    stdin?: BrowserStdin;
+};
+
+export interface BrowserEmceptionAPI extends Omit<EmceptionAPI, 'run'> {
+    run(cmd: string, argv?: string[], opts?: BrowserRunOptions): Promise<ToolResult>;
     /** Browser-owned canvas build/runtime boundary. */
     readonly canvas: CanvasAPI;
 }
@@ -150,8 +158,8 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
     const mountPath = () => `/home/user/${currentWorkspaceName}`;
 
     /** Translate a core RunOptions into the browser WorkerClient RunOptions. */
-    function toBrowserOpts(opts: RunOptions): BrowserRunOptions {
-        const browser: BrowserRunOptions = {
+    function toBrowserOpts(opts: BrowserRunOptions): WorkerRunOptions {
+        const browser: WorkerRunOptions = {
             cwd: opts.cwd ?? mountPath(),
             env: { ...currentBuild.env, ...opts.env },
             hints: opts.preloadBundles ? { bundlesNeeded: [...opts.preloadBundles] } : undefined,
@@ -178,7 +186,7 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
         return browser;
     }
 
-    async function run(cmd: string, argv?: string[], opts?: RunOptions): Promise<ToolResult> {
+    async function run(cmd: string, argv?: string[], opts?: BrowserRunOptions): Promise<ToolResult> {
         const start = Date.now();
         const result = await client.run(cmd, [...(argv ?? [])], toBrowserOpts(opts ?? {}));
         const toolResult: ToolResult = { ...result, durationMs: Date.now() - start, timedOut: false };
