@@ -47,11 +47,12 @@ export interface CanvasArtifact extends CanvasBuildBase {
 }
 
 export type CanvasBuildResult = CanvasCompileFailure | CanvasLinkFailure | CanvasArtifact;
+export type CanvasBuildFailure = CanvasCompileFailure | CanvasLinkFailure;
 
 export interface CanvasAPI {
     build(options: CanvasBuildOptions): Promise<CanvasBuildResult>;
     start(artifact: CanvasArtifact, options: CanvasStartOptions): Promise<CanvasSession>;
-    buildAndStart(build: CanvasBuildOptions, start: CanvasStartOptions): Promise<CanvasBuildResult | CanvasSession>;
+    buildAndStart(build: CanvasBuildOptions, start: CanvasStartOptions): Promise<CanvasBuildFailure | CanvasSession>;
     stop(): void;
 }
 
