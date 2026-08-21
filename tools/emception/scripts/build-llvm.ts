@@ -57,7 +57,41 @@ const LLVM_SRC_DIR = LLVM_USE_GIT ? 'llvm-project-git' : `llvm-project-${LLVM_VE
 const LLVM_TARBALL = `llvm-project-${LLVM_VERSION}.src.tar.xz`;
 const LLVM_URL = `https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${LLVM_TARBALL}`;
 const LLVM_GIT_URL = 'https://github.com/llvm/llvm-project.git';
-const CONCURRENCY = os.cpus().length;
+const CONCURRENCY = Number(process.env.EMCEPTION_BUILD_CONCURRENCY || os.cpus().length);
+
+function ensureCMakeBuildDirectory(buildDir: string): void {
+    const relative = path.relative(LLVM_DIR, buildDir);
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
+        throw new Error(`Refusing to manage LLVM build directory outside ${LLVM_DIR}: ${buildDir}`);
+    }
+
+    const cachePath = path.join(buildDir, 'CMakeCache.txt');
+    if (fs.existsSync(cachePath)) {
+        const hasBuildSystem = fs.existsSync(path.join(buildDir, 'build.ninja'))
+            || fs.existsSync(path.join(buildDir, 'Makefile'))
+            || fs.readdirSync(buildDir).some(entry => entry.endsWith('.sln'));
+        if (!hasBuildSystem) {
+            console.log(`Resetting ${relative}: cached CMake configuration is incomplete.`);
+            fs.rmSync(buildDir, { recursive: true, force: true });
+        }
+    }
+    fs.mkdirSync(buildDir, { recursive: true });
+}
+
+function nativeToolPath(buildDir: string, name: string): string {
+    const suffix = process.platform === 'win32' ? '.exe' : '';
+    const executable = `${name}${suffix}`;
+    const candidates = [
+        path.join(buildDir, 'bin', executable),
+        path.join(buildDir, 'Release', 'bin', executable),
+        path.join(buildDir, 'bin', 'Release', executable),
+    ];
+    const resolved = candidates.find(candidate => fs.existsSync(candidate));
+    if (!resolved) {
+        throw new Error(`Native LLVM tool was not produced: ${name} (${candidates.join(', ')})`);
+    }
+    return resolved;
+}
 
 /** Common Emscripten flags for standalone tool modules */
 const STANDALONE_FLAGS = [
@@ -156,21 +190,25 @@ function setupSource() {
 function buildNativeTableGen() {
     console.log('>>> Building native llvm-tblgen and clang-tblgen...');
     const nativeBuildDir = path.join(LLVM_DIR, 'build-native');
-    shell.mkdir('-p', nativeBuildDir);
-    shell.cd(nativeBuildDir);
+    ensureCMakeBuildDirectory(nativeBuildDir);
 
-    if (!fs.existsSync(path.join(nativeBuildDir, 'Makefile'))) {
-        const cmd = `cmake "../${LLVM_SRC_DIR}/llvm" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DLLVM_TARGETS_TO_BUILD="WebAssembly" \
-            -DLLVM_ENABLE_PROJECTS="clang;lld" \
-            -DLLVM_INCLUDE_TESTS=OFF \
-            -DLLVM_INCLUDE_BENCHMARKS=OFF \
-            -DLLVM_INCLUDE_EXAMPLES=OFF`;
+    if (!fs.existsSync(path.join(nativeBuildDir, 'CMakeCache.txt'))) {
+        const sourceDir = path.join(LLVM_DIR, LLVM_SRC_DIR, 'llvm');
+        const cmd = [
+            'cmake',
+            `-S "${sourceDir}"`,
+            `-B "${nativeBuildDir}"`,
+            '-DCMAKE_BUILD_TYPE=Release',
+            '-DLLVM_TARGETS_TO_BUILD="WebAssembly"',
+            '-DLLVM_ENABLE_PROJECTS="clang;lld"',
+            '-DLLVM_INCLUDE_TESTS=OFF',
+            '-DLLVM_INCLUDE_BENCHMARKS=OFF',
+            '-DLLVM_INCLUDE_EXAMPLES=OFF',
+        ].join(' ');
         shell.exec(cmd);
     }
 
-    shell.exec(`make -j${CONCURRENCY} llvm-tblgen clang-tblgen`);
+    shell.exec(`cmake --build "${nativeBuildDir}" --config Release --parallel ${CONCURRENCY} --target llvm-tblgen clang-tblgen`);
     shell.cd(LLVM_DIR);
 }
 
@@ -179,8 +217,8 @@ function buildStaticLLVM() {
     const wasmBuildDir = path.join(LLVM_DIR, 'build-wasm');
     const nativeBuildDir = path.join(LLVM_DIR, 'build-native');
 
-    const llvmTblGen = path.join(nativeBuildDir, 'bin/llvm-tblgen');
-    const clangTblGen = path.join(nativeBuildDir, 'bin/clang-tblgen');
+    const llvmTblGen = nativeToolPath(nativeBuildDir, 'llvm-tblgen');
+    const clangTblGen = nativeToolPath(nativeBuildDir, 'clang-tblgen');
 
     if (!fs.existsSync(wasmBuildDir)) {
         shell.mkdir('-p', wasmBuildDir);
