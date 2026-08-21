@@ -14,14 +14,16 @@
  *   - sysroot/usr/include/raylib/{raylib,raymath,rlgl,raygui,physac,rlights}.h
  *   - sysroot/usr/lib/emscripten/raylib-runtime.mjs  (MODULARIZE=1 JS factory)
  *
- * Versions: latest GitHub release tags (override via *_VERSION env vars).
+ * Versions: pinned defaults (override via *_VERSION env vars).
  */
 
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
+import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
+import { ensureGitHubSource } from './lib/github-source.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { PINNED } from './lib/pinned-versions.ts';
 
@@ -48,105 +50,14 @@ shell.mkdir('-p', BUILD_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 shell.mkdir('-p', RAYLIB_INC);
 
-// ─────────────── version detection ───────────────
-
-function curlJson(url: string): any {
-    const exec = (extra = '') =>
-        shell.exec(`curl -fsSL ${extra} "${url}"`, { silent: true, fatal: false });
-    let res = process.env.GITHUB_TOKEN
-        ? exec(`-H "Authorization: Bearer ${process.env.GITHUB_TOKEN}"`)
-        : exec();
-    if (res.code !== 0 && process.env.GITHUB_TOKEN) {
-        console.warn(`  Authenticated GitHub call failed for ${url}, retrying without token...`);
-        res = exec();
-    }
-    if (res.code !== 0) throw new Error(`Failed to GET ${url}`);
-    return JSON.parse(res.stdout);
-}
-
-function detectLatestTag(repo: string, envVar: string, fallback: string): string {
-    const env = process.env[envVar];
-    if (env) return env;
-    console.log(`Detecting latest release for ${repo}...`);
-    let tag: string | undefined;
-    try {
-        tag = curlJson(`https://api.github.com/repos/${repo}/releases/latest`).tag_name;
-    } catch {
-        // GitHub API unavailable
-    }
-    if (tag) {
-        console.log(`  ${repo} latest: ${tag}`);
-        return tag;
-    }
-    console.warn(`  GitHub API unavailable for ${repo}, using pinned ${fallback}`);
-    return fallback;
-}
-
-function detectLatestDefaultBranchSha(repo: string, envVar: string, fallback: string): string {
-    // Fallback for repos without releases (raygui/physac/rlights publish via tags or only default branch).
-    const env = process.env[envVar];
-    if (env) return env;
-    console.log(`Detecting latest tag/branch for ${repo}...`);
-    // Try latest release first
-    const releasesRes = shell.exec(
-        `curl -fsSL "https://api.github.com/repos/${repo}/releases/latest"`,
-        { silent: true, fatal: false },
-    );
-    if (releasesRes.code === 0) {
-        try {
-            const tag = JSON.parse(releasesRes.stdout).tag_name;
-            if (tag) {
-                console.log(`  ${repo} latest release: ${tag}`);
-                return tag;
-            }
-        } catch {
-            // fall through
-        }
-    }
-    // GitHub API unavailable — use pinned fallback
-    console.warn(`  GitHub API unavailable for ${repo}, using pinned ${fallback}`);
-    return fallback;
-}
-
-// ─────────────── source download ───────────────
-
-function downloadTarball(repo: string, tag: string, destName: string, keyFile = 'CMakeLists.txt'): string {
-    const destDir = path.join(USERLAND_DIR, destName);
-    const isSourceValid = fs.existsSync(path.join(destDir, keyFile));
-    if (isSourceValid) {
-        console.log(`Using existing source: ${destName}`);
-        return destDir;
-    }
-    if (fs.existsSync(destDir)) {
-        console.log(`Removing incomplete source dir: ${destName}`);
-        shell.rm('-rf', destDir);
-    }
-    shell.mkdir('-p', destDir);
-    const tarball = path.join(USERLAND_DIR, `${destName}.tar.gz`);
-    console.log(`Downloading ${repo} @ ${tag}...`);
-    // Try refs/tags first, then refs/heads (for branch fallback).
-    const tryUrls = [
-        `https://github.com/${repo}/archive/refs/tags/${tag}.tar.gz`,
-        `https://github.com/${repo}/archive/refs/heads/${tag}.tar.gz`,
-    ];
-    let ok = false;
-    for (const url of tryUrls) {
-        const res = shell.exec(`curl -fSL -o "${tarball}" "${url}"`, { silent: true, fatal: false });
-        if (res.code === 0) {
-            ok = true;
-            break;
-        }
-    }
-    if (!ok) throw new Error(`Failed to download ${repo} @ ${tag}`);
-    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${destDir}"`);
-    shell.rm('-f', tarball);
-    return destDir;
-}
-
 // ─────────────── 1. raylib via CMake ───────────────
 
-const RAYLIB_TAG = detectLatestTag('raysan5/raylib', 'RAYLIB_VERSION', PINNED.RAYLIB_VERSION);
-const RAYLIB_SRC = downloadTarball('raysan5/raylib', RAYLIB_TAG, `raylib-${RAYLIB_TAG}`);
+const RAYLIB_TAG = process.env.RAYLIB_VERSION ?? PINNED.RAYLIB_VERSION;
+const RAYLIB_SRC = ensureGitHubSource({
+    repository: 'raysan5/raylib',
+    version: RAYLIB_TAG,
+    destination: path.join(USERLAND_DIR, `raylib-${RAYLIB_TAG}`),
+});
 
 const RAYLIB_BUILD = path.join(BUILD_DIR, 'raylib-build');
 if (fs.existsSync(RAYLIB_BUILD)) shell.rm('-rf', RAYLIB_BUILD);
@@ -204,9 +115,6 @@ const EMSCRIPTEN_DIR = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten');
 shell.mkdir('-p', EMSCRIPTEN_DIR);
 
 const RAYLIB_STUB_C = path.join(os.tmpdir(), 'raylib_runtime_stub.c');
-const TMP_RAYLIB_JS = path.join(os.tmpdir(), 'raylib-runtime.js');
-const TMP_RAYLIB_WASM = path.join(os.tmpdir(), 'raylib-runtime.wasm');
-
 fs.writeFileSync(
     RAYLIB_STUB_C,
     `#include <raylib.h>
@@ -230,12 +138,12 @@ int main(void) {
 );
 
 console.log('Generating raylib-runtime.mjs (MODULARIZE JS factory)...');
-const runtimeResult = shell.exec(
-    [
-        `"${EMCC}"`,
-        `"${RAYLIB_STUB_C}"`,
-        `"${path.join(SYSROOT_LIB, 'libraylib.a')}"`,
-        `-I"${RAYLIB_INC}"`,
+const runtimePair = buildCanvasRuntimePair({
+    compiler: EMCC,
+    sourcePath: RAYLIB_STUB_C,
+    libraryPaths: [path.join(SYSROOT_LIB, 'libraylib.a')],
+    includeDirectories: [RAYLIB_INC],
+    flags: [
         '-sENVIRONMENT=web',
         '-sALLOW_MEMORY_GROWTH=1',
         '-sUSE_GLFW=3',
@@ -248,40 +156,30 @@ const runtimeResult = shell.exec(
         '-sEXPORTED_FUNCTIONS=_main,_malloc,_free',
         '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue,UTF8ToString,stringToUTF8,lengthBytesUTF8',
         '-O2',
-        `-o "${TMP_RAYLIB_JS}"`,
-    ].join(' '),
-    { silent: false },
-);
-
-if (runtimeResult.code !== 0) {
-    console.error('emcc raylib-runtime.mjs generation failed');
-    process.exit(1);
-}
-
-const OUTPUT_MJS = path.join(EMSCRIPTEN_DIR, 'raylib-runtime.mjs');
-const OUTPUT_WASM = path.join(EMSCRIPTEN_DIR, 'raylib-runtime.wasm');
-fs.copyFileSync(TMP_RAYLIB_JS, OUTPUT_MJS);
-fs.copyFileSync(TMP_RAYLIB_WASM, OUTPUT_WASM);
-const mjsSize = (fs.statSync(OUTPUT_MJS).size / 1024).toFixed(1);
+    ],
+    outputDirectory: EMSCRIPTEN_DIR,
+    runtimeName: 'raylib-runtime',
+});
+const mjsSize = (fs.statSync(runtimePair.gluePath).size / 1024).toFixed(1);
 console.log(`Saved raylib runtime pair (${mjsSize} KB glue) → ${path.relative(ROOT, EMSCRIPTEN_DIR)}`);
 
 // ─────────────── 2. companion libs ───────────────
 
-interface HeaderOnlyLib {
-    libName: string;        // libNAME.a
-    headerName: string;     // raygui.h
-    implMacro: string;      // RAYGUI_IMPLEMENTATION
-    prelude?: string;       // extra source emitted before #include of the header
-    extraHeaders?: string[];
+type HeaderOnlyLib = {
+    readonly libName: string;        // libNAME.a
+    readonly headerName: string;     // raygui.h
+    readonly implMacro: string;      // RAYGUI_IMPLEMENTATION
+    readonly prelude?: string;       // extra source emitted before #include of the header
+    readonly extraHeaders?: readonly string[];
     // Source = remote tarball OR local path inside an existing source tree.
-    repo?: string;
-    envVar?: string;
-    fallback?: string;      // pinned version used when GitHub API is unavailable
-    headerSubpath?: string;
-    localHeader?: string;   // absolute path to header on disk (skips download)
-}
+    readonly repo?: string;
+    readonly envVar?: string;
+    readonly fallback?: string;
+    readonly headerSubpath?: string;
+    readonly localHeader?: string;   // absolute path to header on disk (skips download)
+};
 
-const COMPANIONS: HeaderOnlyLib[] = [
+const COMPANIONS: readonly HeaderOnlyLib[] = [
     {
         repo: 'raysan5/raygui',
         envVar: 'RAYGUI_VERSION',
@@ -334,13 +232,19 @@ for (const lib of COMPANIONS) {
             console.warn(`  ${lib.libName}: missing repo/envVar, skipping`);
             continue;
         }
-        const tag = detectLatestDefaultBranchSha(lib.repo, lib.envVar, lib.fallback ?? 'master');
+        const tag = process.env[lib.envVar] ?? lib.fallback ?? 'master';
         const keyFile = lib.headerSubpath || lib.headerName;
         let srcDir: string;
         try {
-            srcDir = downloadTarball(lib.repo, tag, `${lib.libName}-${tag}`, keyFile);
-        } catch (e) {
-            console.warn(`  ${lib.repo}: download failed, skipping (${(e as Error).message})`);
+            srcDir = ensureGitHubSource({
+                repository: lib.repo,
+                version: tag,
+                destination: path.join(USERLAND_DIR, `${lib.libName}-${tag}`),
+                keyFile,
+            });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.warn(`  ${lib.repo}: download failed, skipping (${message})`);
             continue;
         }
         headerPath = lib.headerSubpath
