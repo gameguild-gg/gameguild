@@ -73,7 +73,6 @@ const ALLEGRO_SRC = ensureGitHubSource({
 });
 
 const ALLEGRO_BUILD = path.join(BUILD_DIR, 'allegro-build');
-if (fs.existsSync(ALLEGRO_BUILD)) shell.rm('-rf', ALLEGRO_BUILD);
 shell.mkdir('-p', ALLEGRO_BUILD);
 
 console.log('Configuring Allegro 5 (PLATFORM=Emscripten, ALLEGRO_SDL=on)...');

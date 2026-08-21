@@ -60,7 +60,6 @@ const RAYLIB_SRC = ensureGitHubSource({
 });
 
 const RAYLIB_BUILD = path.join(BUILD_DIR, 'raylib-build');
-if (fs.existsSync(RAYLIB_BUILD)) shell.rm('-rf', RAYLIB_BUILD);
 shell.mkdir('-p', RAYLIB_BUILD);
 
 console.log('Configuring raylib (PLATFORM=Web)...');
