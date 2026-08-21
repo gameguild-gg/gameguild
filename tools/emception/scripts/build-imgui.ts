@@ -1,7 +1,7 @@
 /**
  * Build Dear ImGui as a static library for Emscripten.
  *
- * Detects the latest release from GitHub (or uses IMGUI_VERSION env var),
+ * Uses the pinned release (or IMGUI_VERSION env var),
  * downloads the source, compiles core + SDL3 backend with emcc, and deploys:
  *   - sysroot/usr/lib/libimgui.a
  *   - sysroot/usr/include/imgui/*.h
@@ -38,33 +38,8 @@ shell.mkdir('-p', path.join(SYSROOT_INC, 'imgui'));
 // --------------- version detection ---------------
 
 function detectVersion(): string {
-    const envVer = process.env.IMGUI_VERSION;
-    if (envVer) return envVer;
-
-    console.log('Detecting latest ImGui release...');
-    const url = 'https://api.github.com/repos/ocornut/imgui/releases/latest';
-
-    const execCurl = (extraArgs = '') =>
-        shell.exec(`curl -fsSL ${extraArgs} ${url}`, {
-            silent: true,
-            fatal: false,
-        });
-
-    let result = process.env.GITHUB_TOKEN
-        ? execCurl(`-H "Authorization: Bearer ${process.env.GITHUB_TOKEN}"`)
-        : execCurl();
-
-    if (result.code !== 0 && process.env.GITHUB_TOKEN) {
-        console.warn('  Authenticated GitHub API call failed; retrying without token...');
-        result = execCurl();
-    }
-
-    if (result.code !== 0) {
-        console.warn(`  GitHub API unavailable (exit ${result.code}), using pinned ${PINNED.IMGUI_VERSION}`);
-        return PINNED.IMGUI_VERSION;
-    }
-    const tag: string = JSON.parse(result.stdout).tag_name;
-    console.log(`  Latest ImGui release: ${tag}`);
+    const tag = process.env.IMGUI_VERSION ?? PINNED.IMGUI_VERSION;
+    console.log(`Using ImGui release: ${tag}`);
     return tag;
 }
 
