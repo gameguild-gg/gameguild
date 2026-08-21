@@ -28,6 +28,7 @@ function priorityFor(relativePath) {
 }
 
 function profileKind(name) {
+  if (name.endsWith('-runtime')) return 'canvas-runtime';
   if (name === 'python') return 'interpreter';
   if (name === 'clang') return 'compiler';
   if (name === 'lld') return 'linker';
@@ -54,10 +55,10 @@ async function collectFiles(root) {
 
 async function createProfiles(sysroot, files) {
   const profiles = {};
-  const wasmPaths = Object.keys(files).filter((filePath) => /^\/usr\/lib\/[^/]+\.wasm$/.test(filePath));
+  const wasmPaths = Object.keys(files).filter((filePath) => /^\/usr\/lib\/(?:emscripten\/)?[^/]+\.wasm$/.test(filePath));
   for (const wasmPath of wasmPaths.sort()) {
     const name = path.posix.basename(wasmPath, '.wasm');
-    const glue = `/usr/lib/${name}.mjs`;
+    const glue = wasmPath.replace(/\.wasm$/, '.mjs');
     if (!files[glue]) continue;
     const wasmBytes = await readFile(path.join(sysroot, ...wasmPath.slice(1).split('/')));
     const module = await WebAssembly.compile(wasmBytes);

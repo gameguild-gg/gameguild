@@ -197,11 +197,8 @@ console.log('Deployed raylib headers to sysroot/usr/include/raylib/');
 // Because libraylib.a references _emscripten_gl*, malloc/free, and
 // emscripten_set_main_loop, emcc emits a full MODULARIZE JS factory that
 // includes all GL infrastructure (GL.createContext, GL.makeContextCurrent,
-// GLctx, RAF MainLoop) that the IDE needs to run user WASM at runtime.
-//
-// The stub itself does nothing at runtime — the IDE patches it in-browser:
-//   - GLFW stubs → real GL.createContext / GL.makeContextCurrent calls
-//   - wasmImports extended with emscripten_webgl_* entries
+// GLctx, RAF MainLoop) used by the browser canvas API. The generated WASM is
+// retained as the glue's ABI anchor and recorded in the release manifest.
 
 const EMSCRIPTEN_DIR = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten');
 shell.mkdir('-p', EMSCRIPTEN_DIR);
@@ -262,11 +259,11 @@ if (runtimeResult.code !== 0) {
 }
 
 const OUTPUT_MJS = path.join(EMSCRIPTEN_DIR, 'raylib-runtime.mjs');
+const OUTPUT_WASM = path.join(EMSCRIPTEN_DIR, 'raylib-runtime.wasm');
 fs.copyFileSync(TMP_RAYLIB_JS, OUTPUT_MJS);
+fs.copyFileSync(TMP_RAYLIB_WASM, OUTPUT_WASM);
 const mjsSize = (fs.statSync(OUTPUT_MJS).size / 1024).toFixed(1);
-console.log(`Saved raylib-runtime.mjs (${mjsSize} KB) → ${path.relative(ROOT, OUTPUT_MJS)}`);
-
-if (fs.existsSync(TMP_RAYLIB_WASM)) fs.rmSync(TMP_RAYLIB_WASM);
+console.log(`Saved raylib runtime pair (${mjsSize} KB glue) → ${path.relative(ROOT, EMSCRIPTEN_DIR)}`);
 
 // ─────────────── 2. companion libs ───────────────
 

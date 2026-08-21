@@ -325,8 +325,8 @@ console.log('Deployed libSDL2.a to sysroot/usr/lib/');
 // Same rationale as raylib-runtime.mjs: compile a minimal stub linked against
 // the Allegro static libs so emcc emits a full MODULARIZE ES6 factory with
 // GL infrastructure (createContext, makeContextCurrent, GLctx, RAF MainLoop)
-// + emscripten_set_main_loop glue. The IDE patches this in-browser to bind
-// to the actual user WASM + canvas.
+// + emscripten_set_main_loop glue. The generated WASM is retained as the
+// glue's ABI anchor and recorded in the release manifest.
 
 const EMSCRIPTEN_DIR = path.join(SYSROOT_LIB, 'emscripten');
 shell.mkdir('-p', EMSCRIPTEN_DIR);
@@ -412,10 +412,10 @@ if (runtimeResult.code !== 0) {
 }
 
 const OUTPUT_MJS = path.join(EMSCRIPTEN_DIR, 'allegro-runtime.mjs');
+const OUTPUT_WASM = path.join(EMSCRIPTEN_DIR, 'allegro-runtime.wasm');
 fs.copyFileSync(TMP_ALLEGRO_JS, OUTPUT_MJS);
+fs.copyFileSync(TMP_ALLEGRO_WASM, OUTPUT_WASM);
 const mjsSize = (fs.statSync(OUTPUT_MJS).size / 1024).toFixed(1);
-console.log(`Saved allegro-runtime.mjs (${mjsSize} KB) → ${path.relative(ROOT, OUTPUT_MJS)}`);
-
-if (fs.existsSync(TMP_ALLEGRO_WASM)) fs.rmSync(TMP_ALLEGRO_WASM);
+console.log(`Saved allegro runtime pair (${mjsSize} KB glue) → ${path.relative(ROOT, EMSCRIPTEN_DIR)}`);
 
 console.log('>>> Allegro 5 build complete.');

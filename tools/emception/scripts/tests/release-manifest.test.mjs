@@ -15,8 +15,11 @@ async function fixture() {
   const outputDir = path.join(root, 'build', 'cdn');
   const manifestFile = path.join(outputDir, 'manifest.json');
   await mkdir(path.join(sysroot, 'usr', 'lib', 'python3.13', 'test'), { recursive: true });
+  await mkdir(path.join(sysroot, 'usr', 'lib', 'emscripten'), { recursive: true });
   await writeFile(path.join(sysroot, 'usr', 'lib', 'clang.mjs'), 'export default {};');
   await writeFile(path.join(sysroot, 'usr', 'lib', 'clang.wasm'), EMPTY_WASM_MODULE);
+  await writeFile(path.join(sysroot, 'usr', 'lib', 'emscripten', 'sdl3-runtime.mjs'), 'export default {};');
+  await writeFile(path.join(sysroot, 'usr', 'lib', 'emscripten', 'sdl3-runtime.wasm'), EMPTY_WASM_MODULE);
   await writeFile(path.join(sysroot, 'usr', 'lib', 'python3.13', 'os.py'), 'name = "posix"');
   await writeFile(path.join(sysroot, 'usr', 'lib', 'python3.13', 'test', 'ignored.py'), 'ignored');
   return { root, sysroot, outputDir, manifestFile };
@@ -47,6 +50,9 @@ test('generateReleaseManifest creates a clean schema-v2 release with wasm profil
   assert.deepEqual(manifest.profiles.clang.imports, []);
   assert.deepEqual(manifest.profiles.clang.exports, []);
   assert.equal(manifest.profiles.clang.glue, '/usr/lib/clang.mjs');
+  assert.equal(manifest.profiles['sdl3-runtime'].kind, 'canvas-runtime');
+  assert.equal(manifest.profiles['sdl3-runtime'].glue, '/usr/lib/emscripten/sdl3-runtime.mjs');
+  assert.equal(manifest.profiles['sdl3-runtime'].wasm, '/usr/lib/emscripten/sdl3-runtime.wasm');
   assert.equal(written.buildFingerprint, manifest.buildFingerprint);
   await assert.rejects(readFile(path.join(paths.outputDir, 'stale.txt')));
   await assert.rejects(readFile(path.join(paths.outputDir, 'usr', 'lib', 'python3.13', 'test', 'ignored.py')));

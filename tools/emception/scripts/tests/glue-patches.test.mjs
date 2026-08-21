@@ -111,6 +111,9 @@ test('patch-glue CLI patches only the frozen staged sysroot', async (context) =>
   await writeFile(path.join(stagedRuntimes, 'sdl3-runtime.mjs'), SDL_RUNTIME);
   await writeFile(path.join(stagedRuntimes, 'raylib-runtime.mjs'), CANVAS_COMMON);
   await writeFile(path.join(stagedRuntimes, 'allegro-runtime.mjs'), CANVAS_COMMON);
+  await writeFile(path.join(stagedRuntimes, 'sdl3-runtime.wasm'), new Uint8Array([0, 97, 115, 109]));
+  await writeFile(path.join(stagedRuntimes, 'raylib-runtime.wasm'), new Uint8Array([0, 97, 115, 109]));
+  await writeFile(path.join(stagedRuntimes, 'allegro-runtime.wasm'), new Uint8Array([0, 97, 115, 109]));
   await writeFile(
     path.join(stagedTools, 'colored_logger.py'),
     'import ctypes\nimport logging\n  kernel32 = ctypes.windll.kernel32\n',
