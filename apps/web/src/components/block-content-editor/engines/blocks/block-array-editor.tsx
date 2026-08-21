@@ -35,7 +35,7 @@ import { BlockContentRenderer } from "./block-array-viewer"
 import { InlineRichTextEditor } from "../../extras/rich-text/inline-rich-text-editor"
 import type { RichTextData } from "../../nodes/rich-text-node"
 import { DragPreview, useBlockDragDrop } from "./block-drag-drop"
-import type { QuizSubmissionMode } from "../../extras/quiz/hooks/use-quiz-answers"
+import type { QuizSubmissionMode } from "@game-guild/quiz-surface/player"
 
 // ============================================================================
 // Insert Line — the "seam" between blocks where new blocks can be added

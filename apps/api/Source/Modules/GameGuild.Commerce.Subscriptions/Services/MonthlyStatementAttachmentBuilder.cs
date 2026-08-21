@@ -1,5 +1,7 @@
 namespace GameGuild.Commerce.Subscriptions;
 
+public sealed record MonthlyStatementEmailAttachment(string FileName, string ContentType, byte[] Content);
+
 public interface IMonthlyStatementAttachmentBuilder
 {
     Task<MonthlyStatementArtifacts> BuildAsync(

@@ -457,15 +457,10 @@ public class CacheEmailAndBuilderCoverageTests
         var options = new EmailDeliveryOptions
         {
             Enabled = true,
-            Provider = "SendGrid",
-            SendGridApiKey = "api-key",
             FromEmail = "from@example.com",
             FromName = "GameGuild",
-            SmtpHost = "smtp.example.com",
-            SmtpPort = 2525,
-            SmtpUsername = "user",
-            SmtpPassword = "secret",
-            SmtpUseSsl = true
+            Ses = { Region = "us-east-1" },
+            Events = { TopicArn = "arn:aws:sns:us-east-1:000000000000:email-events" }
         };
         var attachment = new EmailAttachment("statement.pdf", "application/pdf", [1, 2, 3]);
         var message = new EmailMessage(
@@ -477,15 +472,10 @@ public class CacheEmailAndBuilderCoverageTests
             [attachment]);
 
         options.Enabled.Should().BeTrue();
-        options.Provider.Should().Be("SendGrid");
-        options.SendGridApiKey.Should().Be("api-key");
         options.FromEmail.Should().Be("from@example.com");
         options.FromName.Should().Be("GameGuild");
-        options.SmtpHost.Should().Be("smtp.example.com");
-        options.SmtpPort.Should().Be(2525);
-        options.SmtpUsername.Should().Be("user");
-        options.SmtpPassword.Should().Be("secret");
-        options.SmtpUseSsl.Should().BeTrue();
+        options.Ses.Region.Should().Be("us-east-1");
+        options.Events.TopicArn.Should().Be("arn:aws:sns:us-east-1:000000000000:email-events");
         message.ToEmail.Should().Be("to@example.com");
         message.Subject.Should().Be("Subject");
         message.PlainTextContent.Should().Be("plain");

@@ -11,6 +11,8 @@ public class Assessment : EntityBase
     public Guid CourseId { get; private set; }
     public Guid? ContentId { get; private set; } // Optional: linked to specific content
     public Guid? AssessmentGroupId { get; private set; }
+    public Guid? GroupSetId { get; private set; }
+    public Guid? RubricId { get; private set; }
     public AssessmentGroup? AssessmentGroup { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string? Description { get; private set; }
@@ -29,6 +31,7 @@ public class Assessment : EntityBase
     public SubmissionModality SubmissionModalities { get; private set; } = SubmissionModality.Text;
     public AssessmentPresentationMode PresentationMode { get; private set; } = AssessmentPresentationMode.SingleStep;
     public AssessmentGradingMethod GradingMethods { get; private set; } = AssessmentGradingMethod.InstructorGraded;
+    public int PeerReviewsRequiredCount { get; private set; }
     public string? DefinitionPayload { get; private set; }
     public int DefinitionSchemaVersion { get; private set; } = 1;
     public ICollection<InteractiveVideoAssessmentCue> InteractiveVideoCues { get; private set; } = new List<InteractiveVideoAssessmentCue>();
@@ -187,6 +190,33 @@ public class Assessment : EntityBase
         UpdatedAt = SystemClock.UtcNow;
     }
 
+    public void AssignToGroupSet(Guid? groupSetId)
+    {
+        GroupSetId = groupSetId;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public void AssignRubric(Guid? rubricId)
+    {
+        RubricId = rubricId;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    /// Sets how many peer reviews each student must complete. The on/off switch is the
+    /// <see cref="AssessmentGradingMethod.PeerReview"/> flag on <see cref="GradingMethods"/>.
+    /// </summary>
+    public void SetPeerReviewPolicy(int requiredCount)
+    {
+        if (requiredCount < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(requiredCount), "Peer review required count must be at least one.");
+        }
+
+        PeerReviewsRequiredCount = requiredCount;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
     public void Update(
         string? title,
         string? description,
@@ -207,7 +237,10 @@ public class Assessment : EntityBase
         bool? allowLateSubmissions = null,
         DateTime? lateSubmissionDeadline = null,
         bool clearLateSubmissionDeadline = false,
-        AssessmentGradingMethod? gradingMethods = null)
+        AssessmentGradingMethod? gradingMethods = null,
+        Guid? groupSetId = null,
+        bool clearGroupSetId = false,
+        int? peerReviewsRequiredCount = null)
     {
         if (title != null) Title = title;
         Description = description;
@@ -227,6 +260,14 @@ public class Assessment : EntityBase
             nextDueAt,
             allowLateSubmissions ?? AllowLateSubmissions,
             nextLateSubmissionDeadline);
+        // The content link is immutable once set: content-created assessments
+        // can never be unlinked or re-pointed at different content.
+        if (ContentId.HasValue &&
+            (clearContentId || (contentId.HasValue && contentId.Value != ContentId.Value)))
+        {
+            throw new ArgumentException(
+                "Assessment cannot be unlinked from its content. Content link is permanent once set.");
+        }
         if (clearContentId) ContentId = null;
         else if (contentId.HasValue) ContentId = contentId.Value;
         if (clearAssessmentGroupId) AssessmentGroupId = null;
@@ -240,6 +281,12 @@ public class Assessment : EntityBase
         if (gradingMethods.HasValue)
         {
             GradingMethods = gradingMethods.Value;
+        }
+        if (clearGroupSetId) GroupSetId = null;
+        else if (groupSetId.HasValue) GroupSetId = groupSetId.Value;
+        if (peerReviewsRequiredCount.HasValue)
+        {
+            SetPeerReviewPolicy(peerReviewsRequiredCount.Value);
         }
 
         UpdatedAt = SystemClock.UtcNow;
@@ -409,6 +456,7 @@ public class AssessmentSubmission : EntityBase
     public Guid AssessmentId { get; private set; }
     public Guid EnrollmentId { get; private set; }
     public Guid UserId { get; private set; }
+    public Guid? CourseGroupId { get; private set; }
     public int AttemptNumber { get; private set; }
     public int? Score { get; private set; }
     public bool? Passed { get; private set; }
@@ -427,6 +475,7 @@ public class AssessmentSubmission : EntityBase
     public string? MediaPayload { get; private set; }
     public string? ProjectPayload { get; private set; }
     public string? StructuredAnswerPayload { get; private set; }
+    public string? RubricScoresPayload { get; private set; }
 
     private AssessmentSubmission() { } // EF Core
 
@@ -499,6 +548,12 @@ public class AssessmentSubmission : EntityBase
         UpdatedAt = submittedAt;
     }
 
+    internal void StampCourseGroup(Guid courseGroupId)
+    {
+        CourseGroupId = courseGroupId;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
     public void Grade(int score, int passingScore, int maxScore, Guid? gradedBy = null, string? feedback = null)
     {
         if (maxScore <= 0 || passingScore < 0 || passingScore > maxScore)
@@ -512,6 +567,13 @@ public class AssessmentSubmission : EntityBase
         }
 
         GradeCore(score, passingScore, gradedBy, feedback);
+    }
+
+    public void Grade(int score, int passingScore, int maxScore, Guid? gradedBy, string? feedback, string? rubricScores)
+    {
+        Grade(score, passingScore, maxScore, gradedBy, feedback);
+        RubricScoresPayload = rubricScores;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     private void GradeCore(int score, int passingScore, Guid? gradedBy, string? feedback)

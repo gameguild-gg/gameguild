@@ -80,7 +80,7 @@ uint8_t* brotli_decompress_buffer(const uint8_t* input, size_t input_len, size_t
   }
 
   BrotliDecoderDestroyInstance(st);
-  if (out_len) *out_len = total_out;
+  if (out_len) *out_len = (size_t)(next_out - out);
   return out;
 }
 

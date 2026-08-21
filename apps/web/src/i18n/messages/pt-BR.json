@@ -125,7 +125,9 @@
         "label": "Tamanho-base do texto",
         "description": "Escolha um tamanho entre {min}px e {max}px."
       }
-    }
+    },
+    "notificationsTitle": "Configurações de notificações",
+    "notificationsDescription": "Escolha como você recebe notificações e e-mails."
   },
   "connectedAccounts": {
     "title": "Contas conectadas",
@@ -161,6 +163,158 @@
         "stateMismatch": "A solicitação de vínculo expirou ou foi adulterada. Tente novamente.",
         "generic": "Não conseguimos concluir a solicitação. Tente novamente."
       }
+    }
+  },
+  "passwordChange": {
+    "title": "Senha",
+    "description": "Altere a senha que você usa para entrar. Você permanece conectado neste dispositivo.",
+    "currentLabel": "Senha atual",
+    "currentHelp": "Deixe em branco se você nunca definiu uma senha.",
+    "newLabel": "Nova senha",
+    "confirmLabel": "Confirmar nova senha",
+    "revokeLabel": "Sair de outros dispositivos",
+    "hintLine": "Pelo menos 8 caracteres, com letras maiúsculas e minúsculas, um número e um caractere especial.",
+    "submit": "Alterar senha",
+    "success": "Senha atualizada.",
+    "errors": {
+      "mismatch": "As senhas não coincidem.",
+      "wrongCurrent": "Sua senha atual está incorreta.",
+      "weakPassword": "A nova senha não atende aos requisitos.",
+      "generic": "Não foi possível alterar sua senha. Tente novamente."
+    }
+  },
+  "notificationPrefs": {
+    "loadError": {
+      "title": "Notificações indisponíveis",
+      "description": "Não conseguimos carregar suas configurações de notificações. Tente novamente mais tarde."
+    },
+    "channels": {
+      "title": "Canais de entrega",
+      "description": "Ative ou desative canais inteiros.",
+      "email": "E-mail",
+      "inApp": "No aplicativo",
+      "push": "Push",
+      "sms": "SMS"
+    },
+    "categories": {
+      "title": "Categorias",
+      "description": "Controle grandes categorias de notificações.",
+      "marketing": "Marketing",
+      "social": "Social",
+      "learning": "Aprendizado",
+      "achievements": "Conquistas"
+    },
+    "types": {
+      "title": "Tipos de e-mail",
+      "description": "Silencie tipos individuais de e-mail. Mensagens transacionais são sempre enviadas.",
+      "alwaysSent": "Sempre enviada",
+      "groups": {
+        "Marketing": "Marketing",
+        "Social": "Social",
+        "Learning": "Aprendizado",
+        "Achievements": "Conquistas",
+        "Billing": "Cobrança",
+        "Transactional": "Transacional",
+        "System": "Sistema"
+      }
+    },
+    "digest": {
+      "title": "Resumo de e-mails",
+      "description": "Agrupe notificações em um único e-mail de resumo em vez de mensagens individuais.",
+      "off": "Desativado",
+      "Daily": "Diário",
+      "Weekly": "Semanal",
+      "BiWeekly": "A cada duas semanas"
+    },
+    "quietHours": {
+      "title": "Horário de silêncio",
+      "description": "Segura notificações durante uma janela diária. E-mails chegam quando a janela termina.",
+      "start": "Início",
+      "end": "Fim",
+      "timezone": "Fuso horário",
+      "timezonePlaceholder": "UTC",
+      "save": "Salvar horário de silêncio"
+    },
+    "toast": {
+      "saved": "Preferências salvas.",
+      "error": "Não foi possível salvar sua preferência. Tente novamente.",
+      "unauthorized": "Sua sessão expirou. Entre novamente."
+    }
+  },
+  "emailDeliverability": {
+    "title": "Entregabilidade de e-mail",
+    "description": "Eventos de entrega de e-mail da plataforma, endereços suprimidos e mensagens mortas.",
+    "loadError": {
+      "title": "Entregabilidade indisponível",
+      "description": "Não conseguimos carregar os dados de entregabilidade de e-mail. Tente novamente mais tarde."
+    },
+    "tabs": {
+      "events": "Eventos",
+      "suppressions": "Supressões",
+      "deadLetters": "Mensagens mortas"
+    },
+    "events": {
+      "description": "Eventos de entrega do provedor (SES via SNS), mais recentes primeiro.",
+      "time": "Horário",
+      "type": "Tipo",
+      "recipient": "Destinatário",
+      "diagnostic": "Falha / diagnóstico",
+      "providerMessageId": "Mensagem do provedor",
+      "viewDeadLetters": "Ver mensagens mortas",
+      "empty": "Nenhum evento de entrega registrado ainda.",
+      "types": {
+        "Send": "Envio",
+        "Delivery": "Entrega",
+        "Bounce": "Retorno",
+        "Complaint": "Reclamação",
+        "Open": "Abertura"
+      }
+    },
+    "suppressions": {
+      "description": "Endereços bloqueados de receber e-mail após retorno permanente ou reclamação.",
+      "email": "E-mail",
+      "reason": "Motivo",
+      "bounceType": "Tipo de retorno",
+      "suppressedAt": "Suprimido em",
+      "releasedAt": "Liberado em",
+      "unsuppress": "Remover supressão",
+      "confirmTitle": "Remover supressão?",
+      "confirmDescription": "E-mails para {email} serão permitidos novamente na próxima tentativa de entrega.",
+      "confirmAction": "Liberar",
+      "cancel": "Cancelar",
+      "empty": "Nenhum endereço suprimido.",
+      "reasons": {
+        "HardBounce": "Retorno permanente",
+        "Complaint": "Reclamação"
+      }
+    },
+    "deadLetters": {
+      "description": "Notificações que pararam de ser entregues. Reenfileirar repete a entrega de uma notificação morta.",
+      "title": "Título",
+      "type": "Tipo",
+      "recipient": "Destinatário",
+      "error": "Último erro",
+      "attempts": "Tentativas",
+      "requeues": "Reenfileiramentos",
+      "requeue": "Reenfileirar",
+      "suppressedTooltip": "Remova a supressão ativa deste destinatário antes de reenfileirar.",
+      "empty": "Nenhuma notificação morta.",
+      "viewTimeline": "Ver linha do tempo",
+      "clearFilter": "Mostrar todas"
+    },
+    "timeline": {
+      "title": "Linha do tempo de entrega",
+      "description": "Eventos do provedor para esta notificação, do mais antigo ao mais recente.",
+      "noCorrelation": "Esta notificação não tem id de correlação com o provedor (ex.: resumos agrupados), portanto não há eventos do provedor.",
+      "empty": "Nenhum evento do provedor registrado para esta notificação.",
+      "payload": "Conteúdo do provedor",
+      "close": "Fechar"
+    },
+    "toast": {
+      "unsuppressed": "Supressão removida.",
+      "requeued": "Notificação reenfileirada.",
+      "error": "A ação falhou. Tente novamente.",
+      "unauthorized": "Sua sessão expirou. Entre novamente."
     }
   }
 }

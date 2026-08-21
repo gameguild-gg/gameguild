@@ -59,6 +59,30 @@ export class ComplianceAuditSecurityModule {
 
   /**
    */
+  async postAdminSecurityAuditExport(
+    body: Types.ComplianceAuditUnifiedSecurityAuditInput,
+  ): Promise<Result<Blob, ApiError>> {
+    const url = "/v1/admin/security-audit/:export";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.ComplianceAuditUnifiedSecurityAuditInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<Blob, ApiError>;
+  }
+
+  /**
+   */
   async getAdminSecurityAuditAuthentication(query?: {
     UserId?: string;
     Email?: string;
@@ -85,6 +109,35 @@ export class ComplianceAuditSecurityModule {
     if (result.ok) {
       const validatedData = safeParse(
         Types.ComplianceAuditAuthenticationAuditOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminSecurityAuditDashboard(query?: {
+    startDate?: string;
+    endDate?: string;
+    tenantId?: string;
+  }): Promise<Result<Types.ComplianceAuditSecurityAuditDashboard, ApiError>> {
+    const url = "/v1/admin/security-audit/dashboard";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.ComplianceAuditSecurityAuditDashboardSchema,
         result.data,
         "response",
       );
@@ -128,59 +181,6 @@ export class ComplianceAuditSecurityModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async getAdminSecurityAuditDashboard(query?: {
-    startDate?: string;
-    endDate?: string;
-    tenantId?: string;
-  }): Promise<Result<Types.ComplianceAuditSecurityAuditDashboard, ApiError>> {
-    const url = "/v1/admin/security-audit/dashboard";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceAuditSecurityAuditDashboardSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postAdminSecurityAuditExport(
-    body: Types.ComplianceAuditUnifiedSecurityAuditInput,
-  ): Promise<Result<Blob, ApiError>> {
-    const url = "/v1/admin/security-audit/:export";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.ComplianceAuditUnifiedSecurityAuditInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<Blob, ApiError>;
   }
 }
 

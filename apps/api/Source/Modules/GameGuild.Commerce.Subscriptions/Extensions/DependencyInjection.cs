@@ -1,5 +1,7 @@
 using GameGuild.Commerce.Payments;
+using GameGuild.Commerce.Subscriptions.Services.Email.Renderers;
 using GameGuild.CQRS;
+using GameGuild.Notifications.Services.Email;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Commerce.Subscriptions;
@@ -144,6 +146,9 @@ public static class DependencyInjection
         services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
 
         services.AddHostedService<MonthlyStatementDispatchBackgroundService>();
+
+        // Monthly statement email renderer: regenerates PDF/CSV artifacts at send time (REGEN-IS-CANONICAL).
+        services.AddScoped<IEmailRenderer, MonthlyStatementRenderer>();
 
         return services;
     }

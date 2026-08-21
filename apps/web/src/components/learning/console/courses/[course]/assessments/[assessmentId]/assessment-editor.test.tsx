@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AssessmentEditor } from "./assessment-editor";
 import { deleteAssessment, updateAssessment } from "@/lib/learning/actions";
@@ -34,6 +35,21 @@ vi.mock("next/navigation", () => ({
   useRouter: () => routerMocks,
 }));
 
+vi.mock("@/i18n/navigation", () => ({
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 vi.mock("@/lib/learning/actions", () => ({
   updateAssessment: vi.fn(),
   deleteAssessment: vi.fn(),
@@ -64,6 +80,8 @@ const assessment = {
   lateSubmissionDeadline: null,
   isAvailable: true,
   gradingMethods: "InstructorGraded",
+  groupSetId: null,
+  peerReviewsRequiredCount: 0,
 } satisfies Assessment;
 
 const groups = [
@@ -231,49 +249,7 @@ describe("AssessmentEditor", () => {
     expect(routerMocks.back).not.toHaveBeenCalled();
   });
 
-  it("renders linked content items from courseContent", async () => {
-    const user = userEvent.setup();
-    render(
-      <AssessmentEditor
-        courseId="course-1"
-        assessment={assessment}
-        assessmentGroups={groups}
-        courseContent={courseContent}
-      />,
-    );
-
-    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
-    expect(await screen.findByText("Module 1 Homework")).toBeInTheDocument();
-    expect(screen.getByText("Intro Lesson")).toBeInTheDocument();
-  });
-
-  it("calls updateAssessment with contentId when an item is selected", async () => {
-    const user = userEvent.setup();
-    render(
-      <AssessmentEditor
-        courseId="course-1"
-        assessment={assessment}
-        assessmentGroups={groups}
-        courseContent={courseContent}
-      />,
-    );
-
-    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
-    await user.click(screen.getByRole("option", { name: "Module 1 Homework" }));
-
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        contentId: "content-assignment-1",
-        clearContentId: false,
-      });
-    });
-    expect(routerMocks.refresh).toHaveBeenCalled();
-  });
-
-  it("unlinks content when None is selected (clearContentId: true)", async () => {
-    const user = userEvent.setup();
+  it("shows a permanent link to the parent content when linked (no dropdown)", async () => {
     const linked = { ...assessment, contentId: "content-assignment-1" };
     render(
       <AssessmentEditor
@@ -284,19 +260,35 @@ describe("AssessmentEditor", () => {
       />,
     );
 
-    await user.click(screen.getByRole("combobox", { name: /linked content/i }));
-    await user.click(
-      screen.getByRole("option", { name: /none \(standalone assessment\)/i }),
+    expect(
+      screen.queryByRole("combobox", { name: /linked content/i }),
+    ).not.toBeInTheDocument();
+
+    const contentLink = screen.getByTestId("linked-content-link");
+    expect(contentLink).toHaveAttribute(
+      "href",
+      "/workspace/learning/courses/course-1/content/content-assignment-1",
+    );
+    expect(contentLink).toHaveTextContent("Module 1 Homework");
+    expect(
+      screen.getByText(/cannot\s+be\s+unlinked/i),
+    ).toBeInTheDocument();
+  });
+
+  it("shows standalone text when no content is linked", async () => {
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+      />,
     );
 
-    await waitFor(() => {
-      expect(updateAssessment).toHaveBeenCalledWith({
-        courseId: "course-1",
-        assessmentId: "assessment-1",
-        contentId: null,
-        clearContentId: true,
-      });
-    });
+    expect(
+      screen.queryByRole("combobox", { name: /linked content/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("linked-content-none")).toBeInTheDocument();
   });
 
   it("toggles grading methods and writes the comma-separated string", async () => {
@@ -362,5 +354,61 @@ describe("AssessmentEditor", () => {
       .closest("div")
       ?.querySelector('[role="combobox"]');
     expect(typeTrigger).toBeDisabled();
+  });
+
+  it("renders the grade submissions link in the header for instructors", () => {
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+        canManage
+      />,
+    );
+
+    const gradeButton = screen.getByTestId("grade-submissions-button");
+    expect(gradeButton).toHaveAttribute(
+      "href",
+      "/workspace/learning/courses/course-1/assessments/assessment-1/submissions",
+    );
+    expect(gradeButton).toHaveTextContent(/grade submissions/i);
+  });
+
+  it("renders the SpeedGrader link in the header for instructors", () => {
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+        canManage
+      />,
+    );
+
+    const speedgraderButton = screen.getByTestId("start-speedgrader-button");
+    expect(speedgraderButton).toHaveAttribute(
+      "href",
+      "/speedgrader/assessments/assessment-1?course=course-1",
+    );
+    expect(speedgraderButton).toHaveTextContent(/speedgrader/i);
+  });
+
+  it("hides the grade submissions link from non-instructors", () => {
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+        courseContent={courseContent}
+      />,
+    );
+
+    expect(
+      screen.queryByTestId("grade-submissions-button"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("start-speedgrader-button"),
+    ).not.toBeInTheDocument();
   });
 });

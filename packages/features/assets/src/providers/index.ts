@@ -8,6 +8,5 @@ export type {
 export { RemoteAssetProviderRegistry } from "./remote-provider-registry";
 export {
   ComposedAssetRepository,
-  type AssetUploadMapping,
   type ComposedAssetRepositoryOptions,
 } from "../repository/composed-asset-repository";

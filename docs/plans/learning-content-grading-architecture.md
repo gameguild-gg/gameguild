@@ -16,9 +16,8 @@ All official evaluation for grading-enabled content is server-side. The client c
 - **Gradable content**: a content item with grading enabled.
 - **Ungraded practice**: a content item with grading disabled. It may use client-side correctness for pedagogy, but it does not create trusted submissions, gradebook entries, or official analytics.
 - **Assessment view**: dashboard surface that lists, groups, routes, and analyzes gradable content.
-- **Grading definition**: versioned contract that describes score policy, attempt policy, feedback policy, graded items, answer-key references, and result usage.
+- **Grading definition**: versioned contract that describes score policy, attempt policy, feedback policy, graded items, and answer-key references.
 - **Grading adapter**: content-type-specific implementation that knows how to extract graded items, answer keys, redacted learner payloads, and structured answer payloads for a content type.
-- **Result use**: the configured purpose for a server-produced grading result: learner feedback only, or a gradebook entry.
 - **Trusted grading result**: a score, correctness result, pass/fail result, or feedback result produced by the server for grading-enabled content.
 - **Authoring payload**: full instructor-owned content data, including correct answers when the content type needs them.
 - **Learner payload**: redacted content data safe to send to students.
@@ -41,40 +40,19 @@ Rules:
 
 Grading-enabled instructor preview can display correctness only when the value comes from a server dry-run response. Ungraded practice preview may display local correctness, but that result is pedagogical only and must not be stored or submitted as grading evidence.
 
-## Result Use
+## Assessment Placement
 
-A grading result is always server-validated, and a separate policy decides where that result is used.
+The grading package does not decide whether a trusted result contributes to the
+course grade. It only defines how content is evaluated.
 
-Target type direction:
+Assessment groups own placement:
 
-```ts
-export type GradingResultUse =
-  | 'feedback'
-  | 'gradebook';
+- no group means the assessment is not configured yet;
+- a zero-weight group has the `Practice` role;
+- a positive-weight group contributes to gradebook analytics and final-grade flows.
 
-export interface GradingOutcomePolicy {
-  uses: GradingResultUse[];
-  gradebook?: GradebookPlacement | null;
-}
-
-export interface GradebookPlacement {
-  groupId?: string | null;
-  weight?: number;
-  required?: boolean;
-  includeInFinalGrade?: boolean;
-}
-```
-
-Examples:
-
-- exercise with evaluation but no global grade: `uses: ['feedback']`;
-- quiz that contributes to the course grade: `uses: ['feedback', 'gradebook']`.
-
-`gradebook` details are only meaningful when `uses` includes `gradebook`.
-
-`uses: ['feedback']` still means grading is enabled and server-side. It is not the same as grading disabled. Grading disabled content may show local practice feedback, but it does not create a trusted grading result.
-
-Future workflows such as completion, certificate eligibility, placement, or analytics should consume the server-produced result from their own feature context. They should not become first-class `GradingResultUse` values until the platform has a concrete rule that belongs inside the grading package itself.
+This keeps scoring policy independent from course-grade organization and avoids
+duplicating group and weight state inside content grading metadata.
 
 ## Target Ownership
 
@@ -171,7 +149,7 @@ It should:
 
 - list content items where `grading.enabled === true`;
 - group graded content by gradebook group/category when configured;
-- show max score, weight, result use, attempts, availability, and grading status;
+- show max score, assessment group weight, attempts, availability, and grading status;
 - route edits back to the owning content item;
 - display analytics from submissions/gradebook;
 - never become the source of truth for quiz or assignment body data.
@@ -276,8 +254,8 @@ When a learner submits:
 2. Ignore client-provided score, correctness, answer key, and `isCorrect`.
 3. Store answers as structured submission data.
 4. Grade on the server using server-owned answer keys and the relevant adapter.
-5. Publish the result according to `outcome.uses`.
-6. Store feedback-only results for learner feedback and operational review without writing gradebook or final-grade aggregates.
+5. Store the trusted result in assessment/submission infrastructure.
+6. Let the assessment group's weight determine whether gradebook and final-grade aggregates consume it.
 
 Content with grading disabled does not create an official grading submission. Any local correctness shown by the client is transient practice feedback.
 
@@ -289,8 +267,7 @@ The content editor should let the instructor:
 
 - edit the content body;
 - enable or disable grading for that content item;
-- configure result use;
-- configure max score, passing score, weights, attempts, time limits, feedback, and presentation;
+- configure max score, passing score, attempts, time limits, feedback, and presentation;
 - assign points to individual blocks/questions;
 - save everything through the content-owned path.
 
@@ -302,7 +279,7 @@ The assessments page should:
 
 - query graded content items;
 - show them as assessment activities;
-- offer filters/grouping by content type, result use, grade group, status, and required/optional;
+- offer filters/grouping by content type, grade group, group weight, status, and required/optional;
 - link to the same content editor;
 - optionally open a focused grading settings panel for the content item.
 
@@ -316,7 +293,6 @@ The grading package should expose framework-independent APIs similar to:
 validateGradingDefinition(config: unknown): ContentGradingDefinition;
 normalizeGradingDefinition(config: Partial<ContentGradingDefinition>): ContentGradingDefinition;
 sumGradedItemPoints(config: ContentGradingDefinition): number;
-getResultUses(config: ContentGradingDefinition): readonly GradingResultUse[];
 registerGradingAdapter(adapter: GradingAdapter): void;
 getGradingAdapter(contentType: string): GradingAdapter | null;
 ```
@@ -364,7 +340,7 @@ Part 2 cleans up the package and frontend contract before backend integration.
 
 Main work:
 
-- add `GradingResultUse` and `GradingOutcomePolicy`;
+- keep gradebook placement outside `ContentGradingDefinition`;
 - keep `ContentGradingDefinition` as the content-owned grading contract;
 - move quiz-specific logic behind a quiz adapter;
 - keep core grading APIs content-type agnostic;
@@ -411,12 +387,11 @@ Target direction:
 - `Assessment` remains projection/submission infrastructure, not authored content source.
 - Every content item with `grading.enabled === true` gets a server-side submission/result path.
 - Content with grading disabled does not create an `Assessment` projection or `AssessmentSubmission` path.
-- The first backend implementation should prefer one active `Assessment` projection per gradable content item so feedback-only and gradebook-bound content can both reuse `AssessmentSubmission`.
+- The first backend implementation should prefer one active `Assessment` projection per gradable content item so all graded content can reuse `AssessmentSubmission`.
 - `AssessmentSubmission.StructuredAnswerPayload` stores learner answers for server-side grading.
-- `AssessmentSubmission.Score`, `Passed`, `GradedAt`, and `Feedback` store trusted grading results for feedback-only and gradebook-bound content.
-- `outcome.uses` controls whether those trusted results propagate into gradebook/final-grade flows.
-- `outcome.uses: ['feedback']` is still grading enabled and server-side; it only skips gradebook/final-grade propagation.
-- `AssessmentGroup` remains the gradebook grouping surface when `outcome.uses` includes `gradebook`.
+- `AssessmentSubmission.Score`, `Passed`, `GradedAt`, and `Feedback` store trusted grading results.
+- `AssessmentGroup.WeightPercent` controls whether results propagate into gradebook/final-grade flows.
+- zero-weight groups remain available for practice assessments without affecting global grades.
 - Existing learner dashboard/workspace score queries should continue consuming the trusted backend result path.
 
 ### Part 4: Authoring Preview and Grading Dry Run

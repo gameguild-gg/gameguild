@@ -162,7 +162,7 @@ describe('quiz grading adapter', () => {
     }
   });
 
-  it('creates feedback-only quiz grading by default', () => {
+  it('creates quiz grading from authored items', () => {
     const definition = createQuizGradingDefinition([
       {
         id: '1',
@@ -172,14 +172,11 @@ describe('quiz grading adapter', () => {
     ]);
 
     expect(definition.enabled).toBe(true);
-    expect(definition.outcome).toEqual({
-      uses: ['feedback'],
-      gradebook: null,
-    });
+    expect(definition).not.toHaveProperty('outcome');
     expect(definition.score.maxScore).toBe(1);
   });
 
-  it('creates gradebook-bound quiz grading when requested', () => {
+  it('applies quiz scoring and presentation options', () => {
     const definition = createQuizGradingDefinition(
       [
         {
@@ -189,22 +186,16 @@ describe('quiz grading adapter', () => {
         },
       ],
       {
-        uses: ['feedback', 'gradebook'],
-        groupId: 'group-1',
-        weight: 30,
-        includeInFinalGrade: false,
+        maxScore: 10,
+        passingScore: 7,
+        feedbackMode: 'after-submit',
+        presentationMode: 'single-step',
       },
     );
 
-    expect(definition.outcome).toMatchObject({
-      uses: ['feedback', 'gradebook'],
-      gradebook: {
-        groupId: 'group-1',
-        weight: 30,
-        includeInFinalGrade: false,
-      },
-    });
-    expect(definition.score.maxScore).toBe(3);
+    expect(definition.score).toEqual({ maxScore: 10, passingScore: 7 });
+    expect(definition.feedback.mode).toBe('after-submit');
+    expect(definition.presentation.mode).toBe('single-step');
   });
 
   it('syncs items after quiz blocks change', () => {
@@ -415,7 +406,7 @@ describe('quiz grading adapter', () => {
           data: {
             type: 'HOTSPOT',
             stem: 'Click',
-            imageUrl: '/img.png',
+            imageAssetUri: 'asset://7776453f-1123-4f56-8abc-1234567890ab',
             imageWidth: 100,
             imageHeight: 100,
             hotspots: [{ id: 'h1', x: 50, y: 50, zones: [{ radius: 10, label: 'Hit' }] }],
@@ -468,7 +459,7 @@ describe('quiz grading adapter', () => {
     expect(redacted.find((block) => block.id === 'hotspot')?.data).toEqual({
       type: 'HOTSPOT',
       stem: 'Click',
-      imageUrl: '/img.png',
+      imageAssetUri: 'asset://7776453f-1123-4f56-8abc-1234567890ab',
       imageWidth: 100,
       imageHeight: 100,
     });
@@ -529,7 +520,7 @@ describe('quiz grading adapter', () => {
     });
     expect(answerKey.items.fill).toEqual({
       type: 'FILL_IN_THE_BLANK',
-      blanks: [{ id: 'b1', input: { type: 'DROPDOWN', correctValue: 'Paris' } }],
+      blanks: [{ id: 'b1', input: { type: 'DROPDOWN', options: ['Paris'] } }],
     });
     expect(JSON.stringify(answerKey.items.matching)).not.toContain('France');
     expect(JSON.stringify(answerKey.items.single)).not.toContain('options');

@@ -80,7 +80,7 @@ Part 2 continues from this baseline:
 
 Part 2 owns the contract tightening:
 
-- add `GradingResultUse` and `GradingOutcomePolicy`;
+- keep gradebook placement outside the grading package and content metadata;
 - use `ContentGradingDefinition` as the content-owned grading contract;
 - move quiz-specific extraction/redaction/payload logic behind a quiz adapter;
 - remove learner-facing client correctness as a grading path;
@@ -93,7 +93,7 @@ Part 2 should prove that:
 - existing content without grading still saves and loads unchanged;
 - quiz content can keep its authored body data through `ProgramContent`;
 - quiz grading metadata saves and reloads through the current grading definition;
-- result use controls save expected metadata;
+- grading controls save scoring and attempt metadata without gradebook placement;
 - direct assessment body editing remains absent;
 - assessment rows, if shown, link back to the owning content item;
 - no `quiz-assessment-editor` returns;

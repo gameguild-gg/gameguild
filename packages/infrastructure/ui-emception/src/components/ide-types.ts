@@ -44,6 +44,17 @@ export function workspaceStorageKey(assignmentToken?: string, workspaceId?: stri
     : WORKSPACE_STORAGE_KEY;
 }
 
+/**
+ * Token shape before userId-namespacing: the raw suffix after the LAST ':'.
+ * `userId:assessmentId` → `assessmentId`; a bare token maps to itself, so the
+ * legacy read is a no-op for consumers that never namespaced (instructor editor).
+ */
+export function legacyAssignmentToken(assignmentToken?: string): string | undefined {
+  if (!assignmentToken) return undefined;
+  const idx = assignmentToken.lastIndexOf(':');
+  return idx === -1 ? assignmentToken : assignmentToken.slice(idx + 1);
+}
+
 export interface WorkspaceFile {
   path: string;
   type: TabType;
@@ -266,7 +277,7 @@ function inferTabType(path: string): TabType {
   return 'text';
 }
 
-const IMAGE_MIME_BY_EXT: Record<string, string> = {
+export const IMAGE_MIME_BY_EXT: Record<string, string> = {
   png: 'image/png',
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
@@ -294,18 +305,20 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
     wsFiles[path] = { path, type, content };
   }
 
-  const openTabs: OpenTab[] = config.layout.openTabs.map((t) => {
-    const file = wsFiles[t.path];
+  const openTabs: OpenTab[] = (config.layout?.openTabs ?? []).map((t: any) => {
+    const tabPath = typeof t === 'string' ? t : (t?.path ?? '');
+    const tabGroup = typeof t === 'object' && t?.group ? t.group : 'main';
+    const file = wsFiles[tabPath];
     return {
-      id: `tab:${t.path}`,
-      path: t.path,
-      type: file?.type ?? inferTabType(t.path),
-      group: t.group,
+      id: `tab:${tabPath}`,
+      path: tabPath,
+      type: file?.type ?? inferTabType(tabPath),
+      group: tabGroup,
     };
   });
 
-  const activeTabId = `tab:${config.layout.activeFile}`;
-  const expandedDirs = new Set(config.layout.expandedDirs ?? ['/user']);
+  const activeTabId = `tab:${config.layout?.activeFile ?? ''}`;
+  const expandedDirs = new Set(config.layout?.expandedDirs ?? ['/user']);
 
   return { files: wsFiles, openTabs, activeTabId, expandedDirs };
 }

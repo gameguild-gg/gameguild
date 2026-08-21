@@ -16,38 +16,6 @@ export class UsersProfilesModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Find all user profiles with pagination, search, and sorting
-   */
-  async getUsersProfiles(query?: {
-    page?: number;
-    pageSize?: number;
-    search?: string;
-    sortBy?: string;
-    sortDirection?: string;
-  }): Promise<Result<Types.PagedResultOfIdentityUsersUserProfile, ApiError>> {
-    const url = "/v1/users/profiles";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.PagedResultOfIdentityUsersUserProfileSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Get user profile by user ID
    */
   async getUsersProfile(
@@ -137,6 +105,38 @@ export class UsersProfilesModule {
     if (result.ok) {
       const validatedData = safeParse(
         Types.IdentityUsersUserProfileDtoSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Find all user profiles with pagination, search, and sorting
+   */
+  async getUsersProfiles(query?: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    sortBy?: string;
+    sortDirection?: string;
+  }): Promise<Result<Types.PagedResultOfIdentityUsersUserProfile, ApiError>> {
+    const url = "/v1/users/profiles";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.PagedResultOfIdentityUsersUserProfileSchema,
         result.data,
         "response",
       );

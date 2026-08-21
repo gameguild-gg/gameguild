@@ -116,7 +116,7 @@ function extractFillBlankAnswerKey(value: unknown): unknown {
         ...base,
         input: {
           type,
-          correctValue: asStringArray(safeInput.options)[0] ?? '',
+          options: [asStringArray(safeInput.options)[0] ?? ''],
         },
       };
 
@@ -125,7 +125,7 @@ function extractFillBlankAnswerKey(value: unknown): unknown {
         ...base,
         input: {
           type,
-          correctValue: asStringArray(safeInput.words)[0] ?? '',
+          words: [asStringArray(safeInput.words)[0] ?? ''],
         },
       };
 

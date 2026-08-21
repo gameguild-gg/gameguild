@@ -1,10 +1,10 @@
 export type {
   AssetAvailability,
-  AssetCachePolicy,
-  AssetCacheResult,
   AssetImportBlobOptions,
+  AssetImportExternalOptions,
   AssetImportOptions,
   AssetKind,
+  AssetLocation,
   AssetPage,
   AssetPersistenceResult,
   AssetPortabilityReport,
@@ -23,8 +23,8 @@ export type {
 } from "./core/asset-contracts";
 export { AssetError, toAssetError, type AssetErrorCode } from "./core/asset-errors";
 export {
-  createLocalAssetUri,
-  createRemoteAssetUri,
+  createAssetUri,
+  isAssetId,
   isAssetUri,
   parseAssetUri,
   toAssetUri,
@@ -33,6 +33,7 @@ export {
 } from "./core/asset-uri";
 export { classifyAssetKind, inferMimeType } from "./core/mime";
 export { findAssetUris } from "./core/find-asset-uris";
+export { hashBlob as computeAssetContentHash } from "./browser/content-hashing";
 export {
   validateAssetFile,
   type AssetAcceptanceRules,

@@ -12,6 +12,10 @@ import {
     type LearningCoursesProgramContent,
     type LearningCoursesProgressStatus,
 } from '@game-guild/client';
+import {
+    parseQuizContentDocument,
+    prepareQuizContentForRuntime,
+} from '@game-guild/quiz-content';
 
 interface SubmitActivityData {
     activityId: string;
@@ -353,6 +357,19 @@ function mapLearningStatus(
     return unlocked ? 'available' : 'locked';
 }
 
+function prepareQuizContentForLearner(
+    contentBody: Record<string, unknown> | null | undefined,
+): Record<string, unknown> | undefined {
+    if (!contentBody) return undefined;
+
+    const { document } = parseQuizContentDocument(contentBody);
+    const runtime = prepareQuizContentForRuntime(
+        document,
+        document.grading?.enabled ? 'server-graded' : 'local-practice',
+    );
+    return { ...runtime.document };
+}
+
 export async function getCourseLearningData(courseSlug: string): Promise<CourseLearningData | null> {
     try {
         const { programs, content } = createCourseModules();
@@ -421,7 +438,9 @@ export async function getCourseLearningData(courseSlug: string): Promise<CourseL
                     order: item.sortOrder ?? 0,
                     isRequired: item.isRequired ?? false,
                     activityType: mapLearningActivityType(item.type),
-                    content: item.body ?? undefined,
+                    content: item.type === 'Questionnaire'
+                        ? prepareQuizContentForLearner(item.jsonBody)
+                        : item.body ?? undefined,
                     progress: itemProgress?.status === 'completed' || itemProgress?.status === 'graded' ? 100 : itemProgress?.status === 'in-progress' ? 50 : 0,
                 } satisfies CourseLearningItem;
             });

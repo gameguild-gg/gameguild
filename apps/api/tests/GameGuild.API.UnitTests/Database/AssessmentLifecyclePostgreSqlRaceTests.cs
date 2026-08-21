@@ -59,7 +59,7 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
             Result result;
             await using (var context = new ApplicationDbContext(options))
             {
-                var service = new AssessmentService(context, Mock.Of<IProgramContentService>(), logger);
+                var service = new AssessmentService(context, Mock.Of<IProgramContentService>(), new RubricService(context, NullLogger<RubricService>.Instance), logger);
                 (await service.GetAssessmentByIdAsync(assessmentId)).Should().NotBeNull();
                 result = await service.DeleteAssessmentAsync(assessmentId);
             }
@@ -138,7 +138,7 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
     private static async Task<Result> DeleteAsync(DbContextOptions<ApplicationDbContext> options, Guid assessmentId)
     {
         await using var context = new ApplicationDbContext(options);
-        return await new AssessmentService(context, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance)
+        return await new AssessmentService(context, Mock.Of<IProgramContentService>(), new RubricService(context, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance)
             .DeleteAssessmentAsync(assessmentId);
     }
 
@@ -159,7 +159,7 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
         };
         var contents = new Mock<IProgramContentService>();
         contents.Setup(service => service.GetContentByIdAsync(contentId)).ReturnsAsync(content);
-        return await new AssessmentService(context, contents.Object, NullLogger<AssessmentService>.Instance)
+        return await new AssessmentService(context, contents.Object, new RubricService(context, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance)
             .LinkInteractiveVideoCueAsync(assessmentId, new LinkInteractiveVideoCueRequest(contentId, "race"));
     }
 

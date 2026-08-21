@@ -114,15 +114,15 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async postSupportTicketsMessages(
+  async postSupportTicketsAssign(
     ticketId: string,
-    body: Types.CommerceProductsAddSupportTicketMessageInput,
+    body: Types.CommerceProductsAssignSupportTicketInput,
   ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/support/tickets/${ticketId}/messages`;
+    const url = `/v1/support/tickets/${ticketId}:assign`;
 
     // Validate request body
     const validatedBody = safeParse(
-      Types.CommerceProductsAddSupportTicketMessageInputSchema,
+      Types.CommerceProductsAssignSupportTicketInputSchema,
       body,
       "request",
     );
@@ -149,15 +149,15 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async postSupportTicketsAssign(
+  async postSupportTicketsClose(
     ticketId: string,
-    body: Types.CommerceProductsAssignSupportTicketInput,
+    body: Types.CommerceProductsCloseSupportTicketInput,
   ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/support/tickets/${ticketId}:assign`;
+    const url = `/v1/support/tickets/${ticketId}:close`;
 
     // Validate request body
     const validatedBody = safeParse(
-      Types.CommerceProductsAssignSupportTicketInputSchema,
+      Types.CommerceProductsCloseSupportTicketInputSchema,
       body,
       "request",
     );
@@ -219,15 +219,15 @@ export class CommerceProductsSupportTicketsModule {
 
   /**
    */
-  async postSupportTicketsClose(
+  async postSupportTicketsMessages(
     ticketId: string,
-    body: Types.CommerceProductsCloseSupportTicketInput,
+    body: Types.CommerceProductsAddSupportTicketMessageInput,
   ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = `/v1/support/tickets/${ticketId}:close`;
+    const url = `/v1/support/tickets/${ticketId}/messages`;
 
     // Validate request body
     const validatedBody = safeParse(
-      Types.CommerceProductsCloseSupportTicketInputSchema,
+      Types.CommerceProductsAddSupportTicketMessageInputSchema,
       body,
       "request",
     );

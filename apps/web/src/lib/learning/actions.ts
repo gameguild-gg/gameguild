@@ -25,6 +25,7 @@ import {
   type LearningCoursesUpdateProgramContent,
   type LearningCoursesProgramContentType,
 } from "@game-guild/client";
+import { createEmptyQuizContentDocument } from "@game-guild/quiz-content";
 import { revalidatePath } from "next/cache";
 
 type ActionResult<T> =
@@ -126,7 +127,6 @@ function formatUnexpectedError(err: unknown): string {
 // SubmissionModality.Code is sent as the string "Code" — the wire format is comma-separated flag names, not a bitmask.
 const CONTENT_TO_ASSESSMENT_TYPE: Record<string, AssessmentType> = {
   Assignment: "Assignment",
-  Questionnaire: "Quiz",
   Project: "Project",
   Code: "Assignment",
 };
@@ -152,8 +152,10 @@ export async function addContent(
 
   try {
     const resolvedCourseId = await resolveCourseMutationId(courseId);
-    const jsonBody =
-      type === 'Questionnaire' ? { order: [], blocks: {} } : undefined;
+    const jsonBody: Record<string, unknown> | undefined =
+      type === 'Questionnaire'
+        ? { ...createEmptyQuizContentDocument() }
+        : undefined;
     const contentBody: LearningCoursesCreateProgramContent = {
       programId: resolvedCourseId,
       title: title.trim(),
@@ -1207,8 +1209,8 @@ export interface CreateAssessmentInput {
   assessmentGroupId?: string | null;
   maxScore?: number;
   passingScore?: number;
-  timeLimitMinutes?: number;
-  maxAttempts?: number;
+  timeLimitMinutes?: number | null;
+  maxAttempts?: number | null;
   isRequired?: boolean;
   availableFrom?: string;
   availableUntil?: string;
@@ -1425,6 +1427,9 @@ export interface UpdateAssessmentInput {
   clearAssessmentGroupId?: boolean;
   presentationMode?: AssessmentPresentationMode;
   gradingMethods?: string;
+  groupSetId?: string | null;
+  clearGroupSetId?: boolean;
+  peerReviewsRequiredCount?: number;
 }
 
 export async function updateAssessment(
@@ -1454,6 +1459,9 @@ export async function updateAssessment(
       clearAssessmentGroupId: fields.clearAssessmentGroupId ?? false,
       presentationMode: fields.presentationMode,
       gradingMethods: fields.gradingMethods ?? undefined,
+      groupSetId: fields.groupSetId ?? null,
+      clearGroupSetId: fields.clearGroupSetId ?? false,
+      peerReviewsRequiredCount: fields.peerReviewsRequiredCount ?? null,
     };
 
     const { assessments } = createCourseModules();
@@ -1515,6 +1523,276 @@ export async function restoreAssessment(
     }
 
     return { success: false, error: extractError(result.error) };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+// ── Course group set actions (todo 4 endpoints) ──
+
+export async function createGroupSet(
+  courseId: string,
+  name: string,
+): Promise<ActionResult<null>> {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return { success: false, error: "Group set name is required." };
+  }
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.postCoursesGroupSets(resolvedCourseId, {
+      name: trimmed,
+    });
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export interface CreateCourseGroupInput {
+  courseId: string;
+  setId: string;
+  name: string;
+  capacity: number;
+}
+
+export async function createCourseGroup(
+  input: CreateCourseGroupInput,
+): Promise<ActionResult<null>> {
+  const name = input.name.trim();
+  if (!name) {
+    return { success: false, error: "Group name is required." };
+  }
+  if (!Number.isInteger(input.capacity) || input.capacity < 2) {
+    return { success: false, error: "Capacity must be at least 2." };
+  }
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.postCoursesGroupSetsGroups(
+      resolvedCourseId,
+      input.setId,
+      { name, capacity: input.capacity },
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(input.courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export interface GroupMemberInput {
+  courseId: string;
+  groupId: string;
+  userReference: string;
+}
+
+export async function addGroupMember(
+  input: GroupMemberInput,
+): Promise<ActionResult<null>> {
+  const reference = input.userReference.trim();
+  if (!reference) {
+    return { success: false, error: "User email or ID is required." };
+  }
+
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+    const resolvedUser = await resolveEnrollmentUserId(reference);
+    if (!resolvedUser.success) {
+      return resolvedUser;
+    }
+
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.postCoursesGroupSetsGroupsMembers(
+      resolvedCourseId,
+      input.groupId,
+      resolvedUser.data.userId,
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(input.courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export interface RemoveGroupMemberInput {
+  courseId: string;
+  groupId: string;
+  userId: string;
+}
+
+export async function removeGroupMember(
+  input: RemoveGroupMemberInput,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(input.courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.deleteCoursesGroupSetsGroupsMembers(
+      resolvedCourseId,
+      input.groupId,
+      input.userId,
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(input.courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+// ── Student group self-signup actions (todo 4 endpoints) ──
+
+export async function joinGroup(
+  courseId: string,
+  groupId: string,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.postCoursesGroupSetsGroupsJoin(
+      resolvedCourseId,
+      groupId,
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export async function leaveGroup(
+  courseId: string,
+  groupId: string,
+): Promise<ActionResult<null>> {
+  try {
+    const resolvedCourseId = await resolveCourseMutationId(courseId);
+    const groupSets = new GeneratedApi.LearningAssessmentsGroupSetsModule(
+      getApiClient(),
+    );
+    const result = await groupSets.deleteCoursesGroupSetsGroupsMembership(
+      resolvedCourseId,
+      groupId,
+    );
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    revalidateCoursePath(courseId, resolvedCourseId, "groups");
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+// ── Assessment rubric actions (todo 6 endpoints) ──
+
+export interface SaveRubricCriterionInput {
+  description: string;
+  points: number;
+  order: number;
+}
+
+export interface SaveRubricInputAction {
+  assessmentId: string;
+  title: string;
+  criteria: SaveRubricCriterionInput[];
+}
+
+export async function saveRubric(
+  input: SaveRubricInputAction,
+): Promise<ActionResult<null>> {
+  try {
+    const rubrics = new GeneratedApi.LearningAssessmentsRubricsModule(
+      getApiClient(),
+    );
+    const result = await rubrics.putAssessmentsRubric(input.assessmentId, {
+      title: input.title,
+      criteria: input.criteria.map((criterion) => ({
+        description: criterion.description,
+        points: criterion.points,
+        order: criterion.order,
+      })),
+    });
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    return { success: true, data: null };
+  } catch (e) {
+    return {
+      success: false,
+      error: `Unexpected error: ${e instanceof Error ? e.message : String(e)}`,
+    };
+  }
+}
+
+export async function deleteRubric(
+  assessmentId: string,
+): Promise<ActionResult<null>> {
+  try {
+    const rubrics = new GeneratedApi.LearningAssessmentsRubricsModule(
+      getApiClient(),
+    );
+    const result = await rubrics.deleteAssessmentsRubric(assessmentId);
+
+    if (!result.ok)
+      return { success: false, error: extractError(result.error) };
+
+    return { success: true, data: null };
   } catch (e) {
     return {
       success: false,

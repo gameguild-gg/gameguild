@@ -59,6 +59,277 @@ export class AssetsModule {
 
   /**
    */
+  async getAssetsForGetAssetsById(
+    id: string,
+    query?: { includeContent?: boolean },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/assets/${id}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async deleteAssets(id: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/assets/${id}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async patchAssets(
+    id: string,
+    body: Types.AssetsControllersUpdateAssetInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/assets/${id}`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AssetsControllersUpdateAssetInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "PATCH",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getSignedAssetExtractedText(
+    id: string,
+    query?: { token?: string },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/assets/${id}:extracted-text`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postAssetsGenerateAccessUrl(
+    id: string,
+    query?: {
+      width?: number;
+      height?: number;
+      fit?: Types.AssetsImageFit;
+      format?: Types.AssetsImageFormat;
+      quality?: number;
+      direct?: boolean;
+    },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/assets/${id}:generate-access-url`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async postAssetsReport(
+    id: string,
+    body: Types.AssetsControllersReportAssetInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/assets/${id}:report`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AssetsControllersReportAssetInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getAssetsContent(
+    id: string,
+    query?: { token?: string; transform?: string },
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/assets/${id}/content`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getAssetExtractedText(
+    id: string,
+  ): Promise<
+    Result<Types.AssetsControllersAssetExtractedTextOutput, ApiError>
+  > {
+    const url = `/v1/assets/${id}/extracted-text`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.AssetsControllersAssetExtractedTextOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAssetsPreview(
+    id: string,
+    query?: {
+      includeExtractedText?: boolean;
+      thumbnailWidth?: number;
+      thumbnailHeight?: number;
+    },
+  ): Promise<Result<Types.AssetsQueriesAssetPreviewOutput, ApiError>> {
+    const url = `/v1/assets/${id}/preview`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.AssetsQueriesAssetPreviewOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssetsBulkDelete(
+    body: Types.AssetsControllersBulkDeleteAssetsInput,
+  ): Promise<Result<Types.AssetsCommandsBulkDeleteAssetsOutput, ApiError>> {
+    const url = "/v1/assets/bulk-delete";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AssetsControllersBulkDeleteAssetsInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.AssetsCommandsBulkDeleteAssetsOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAssetsBulkDownload(
+    body: Types.AssetsControllersBulkAssetAccessUrlInput,
+  ): Promise<Result<Types.AssetsQueriesBulkAssetAccessUrlsOutput, ApiError>> {
+    const url = "/v1/assets/bulk-download";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.AssetsControllersBulkAssetAccessUrlInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.AssetsQueriesBulkAssetAccessUrlsOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAssetsBulkUpload(query?: {
     accessPolicy?: Types.AssetsAssetAccessPolicy;
     parentResourceType?: string;
@@ -118,16 +389,14 @@ export class AssetsModule {
 
   /**
    */
-  async postAssetsChunkedUploadsParts(
+  async deleteAssetsChunkedUploads(
     uploadId: string,
-    query?: { chunkIndex?: number },
   ): Promise<Result<void, ApiError>> {
-    const url = `/v1/assets/chunked-uploads/${uploadId}/parts`;
+    const url = `/v1/assets/chunked-uploads/${uploadId}`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: "DELETE",
       path: url,
-      params: query,
       requiresAuth: true,
     });
 
@@ -170,285 +439,16 @@ export class AssetsModule {
 
   /**
    */
-  async deleteAssetsChunkedUploads(
+  async postAssetsChunkedUploadsParts(
     uploadId: string,
+    query?: { chunkIndex?: number },
   ): Promise<Result<void, ApiError>> {
-    const url = `/v1/assets/chunked-uploads/${uploadId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getAssetsForGetAssetsById(
-    id: string,
-    query?: { includeContent?: boolean },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/assets/${id}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async deleteAssets(id: string): Promise<Result<void, ApiError>> {
-    const url = `/v1/assets/${id}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async patchAssets(
-    id: string,
-    body: Types.AssetsControllersUpdateAssetInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/assets/${id}`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersUpdateAssetInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "PATCH",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getAssetsPreview(
-    id: string,
-    query?: {
-      includeExtractedText?: boolean;
-      thumbnailWidth?: number;
-      thumbnailHeight?: number;
-    },
-  ): Promise<Result<Types.AssetsQueriesAssetPreviewOutput, ApiError>> {
-    const url = `/v1/assets/${id}/preview`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsQueriesAssetPreviewOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getAssetExtractedText(
-    id: string,
-  ): Promise<
-    Result<Types.AssetsControllersAssetExtractedTextOutput, ApiError>
-  > {
-    const url = `/v1/assets/${id}/extracted-text`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsControllersAssetExtractedTextOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postAssetsGenerateAccessUrl(
-    id: string,
-    query?: {
-      width?: number;
-      height?: number;
-      fit?: Types.AssetsImageFit;
-      format?: Types.AssetsImageFormat;
-      quality?: number;
-      direct?: boolean;
-    },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/assets/${id}:generate-access-url`;
+    const url = `/v1/assets/chunked-uploads/${uploadId}/parts`;
 
     const result = await this.client.request({
       method: "POST",
       path: url,
       params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAssetsBulkDownload(
-    body: Types.AssetsControllersBulkAssetAccessUrlInput,
-  ): Promise<Result<Types.AssetsQueriesBulkAssetAccessUrlsOutput, ApiError>> {
-    const url = "/v1/assets/bulk-download";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersBulkAssetAccessUrlInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsQueriesBulkAssetAccessUrlsOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async getAssetsContent(
-    id: string,
-    query?: { token?: string; transform?: string },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/assets/${id}/content`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getSignedAssetExtractedText(
-    id: string,
-    query?: { token?: string },
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/assets/${id}:extracted-text`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async postAssetsBulkDelete(
-    body: Types.AssetsControllersBulkDeleteAssetsInput,
-  ): Promise<Result<Types.AssetsCommandsBulkDeleteAssetsOutput, ApiError>> {
-    const url = "/v1/assets/bulk-delete";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersBulkDeleteAssetsInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsCommandsBulkDeleteAssetsOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   */
-  async postAssetsReport(
-    id: string,
-    body: Types.AssetsControllersReportAssetInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/assets/${id}:report`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersReportAssetInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 

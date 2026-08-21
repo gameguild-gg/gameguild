@@ -98,6 +98,8 @@ export function LearningShell({
   webOrigin = "https://gameguild.gg",
 }: LearningShellProps) {
   const pathname = normalizeLearnerPathname(usePathname());
+  // Regex tests the locale-stripped pathname; coding assessments go edge-to-edge.
+  const wide = /^\/learn\/courses\/[^/]+\/activities\/assessment-/.test(pathname);
   const router = useRouter();
   const { isLoading, signOut } = useAuth();
   const [ready, setReady] = useState(false);
@@ -328,7 +330,13 @@ export function LearningShell({
         </div>
       </header>
 
-      <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r bg-background p-4 lg:flex">
+      <aside
+        className={
+          wide
+            ? "hidden"
+            : "fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r bg-background p-4 lg:flex"
+        }
+      >
         <div className="mb-8 flex h-10 items-center gap-2">
           <Link
             href="/"
@@ -427,9 +435,17 @@ export function LearningShell({
       <main
         id="learning-content"
         tabIndex={-1}
-        className="min-w-0 overflow-x-clip lg:pl-64"
+        className={
+          wide ? "min-w-0 overflow-x-clip" : "min-w-0 overflow-x-clip lg:pl-64"
+        }
       >
-        <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
+        <div
+          className={
+            wide
+              ? "w-full px-4 pt-4 pb-6"
+              : "mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8"
+          }
+        >
           {children}
         </div>
       </main>

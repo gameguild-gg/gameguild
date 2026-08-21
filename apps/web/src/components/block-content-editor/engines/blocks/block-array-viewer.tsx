@@ -19,7 +19,7 @@ import type { Block, BlockArray } from "@/components/block-content-editor/lib/st
 
 // Import all preview components
 import { PreviewQuiz } from "@/components/block-content-editor/plugins/preview-components/preview-quiz"
-import type { QuizSubmissionMode } from "@/components/block-content-editor/extras/quiz/hooks/use-quiz-answers"
+import type { QuizSubmissionMode } from "@game-guild/quiz-surface/player"
 import { PreviewImage } from "@/components/block-content-editor/plugins/preview-components/preview-image"
 import { PreviewGallery } from "@/components/block-content-editor/plugins/preview-components/preview-gallery"
 import { PreviewMarkdown } from "@/components/block-content-editor/plugins/preview-components/preview-markdown"

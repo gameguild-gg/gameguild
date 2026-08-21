@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/cookies",
-  "version": "4.0.0",
+  "version": "4.2.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -11,6 +11,11 @@
   },
   "devDependencies": {
     "@game-guild/typescript-config": "workspace:*",
+    "@types/react": "^19",
     "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "@game-guild/ui": "workspace:^",
+    "react": "^19.2.8"
   }
 }

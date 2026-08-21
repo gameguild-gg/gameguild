@@ -245,7 +245,7 @@ public sealed class BillingSubscriptionsAndNotificationsControllerTests
             referenceEntityType: "subscription",
             metadata: source.Metadata);
         notificationService.Setup(service => service.SendAsync(
-                source.RecipientId,
+                source.RecipientId!.Value,
                 NotificationType.Billing,
                 source.Title,
                 source.Message,
@@ -256,6 +256,7 @@ public sealed class BillingSubscriptionsAndNotificationsControllerTests
                 subscriptionId,
                 "subscription",
                 source.Metadata,
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success(resent));
 
@@ -302,6 +303,7 @@ public sealed class BillingSubscriptionsAndNotificationsControllerTests
                 It.IsAny<string?>(),
                 It.IsAny<NotificationPriority>(),
                 It.IsAny<Guid?>(),
+                It.IsAny<string?>(),
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))

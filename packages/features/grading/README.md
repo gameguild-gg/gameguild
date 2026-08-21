@@ -2,8 +2,8 @@
 
 `@game-guild/grading` is the framework-independent grading contract package for
 GameGuild learning content. It defines how content-owned activities describe
-scores, attempts, feedback, gradebook use, answer keys, learner-safe payloads,
-structured answers, and deterministic grading results.
+scores, attempts, feedback, answer keys, learner-safe payloads, structured
+answers, and deterministic grading results.
 
 This package does not own React UI, database persistence, HTTP routes, or
 course navigation. It provides contracts and pure helpers that the web app and
@@ -26,8 +26,7 @@ There are two runtime paths:
   content type supports local pedagogy. Any client-side correctness is transient
   practice feedback and is not a trusted score.
 - Grading enabled: the learner receives a learner-safe payload, submits answers,
-  and the server produces trusted correctness, score, feedback, pass/fail, and
-  gradebook effects.
+  and the server produces trusted correctness, score, feedback, and pass/fail.
 
 Client-provided `score`, `grade`, `correctness`, `isCorrect`, answer-key fields,
 or feedback are never trusted as grading evidence.
@@ -40,7 +39,6 @@ The top-level contract is `ContentGradingDefinition`:
 interface ContentGradingDefinition {
   enabled: boolean;
   schemaVersion: number;
-  outcome: GradingOutcomePolicy;
   score: ScorePolicy;
   attempts: AttemptPolicy;
   feedback: FeedbackPolicy;
@@ -49,15 +47,9 @@ interface ContentGradingDefinition {
 }
 ```
 
-`outcome.uses` controls how a trusted server result is used:
-
-- `feedback`: server-validated feedback/result exists, but it does not affect
-  the global grade.
-- `gradebook`: the result can contribute to gradebook/final-grade flows through
-  the configured `gradebook` placement.
-
-`uses: ['feedback']` still means grading is enabled and server-side. It is not
-the same as disabling grading.
+The grading contract deliberately does not decide whether a result contributes
+to a course grade. Assessment groups and their weights own that decision. This
+package only defines how content is scored and how its result is presented.
 
 ## Adapter Contract
 
@@ -136,8 +128,8 @@ backend stores the full content-owned grading definition directly.
 - Keep content-type behavior behind adapters.
 - Keep official grading server-side for grading-enabled content.
 - Keep client-side correctness limited to grading-disabled practice flows.
-- Keep `feedback` and `gradebook` as result-use semantics, not runtime trust
-  modes.
+- Keep assessment groups, weights, and course-grade placement outside this
+  package.
 - Add test vectors when adapter behavior is meant to be mirrored by the backend.
 
 ## Validation

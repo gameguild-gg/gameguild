@@ -1,6 +1,4 @@
-using System.Net;
 using GameGuild.CQRS;
-using GameGuild.Email;
 using Microsoft.Extensions.Configuration;
 
 namespace GameGuild.Identity.Tenants;
@@ -11,7 +9,6 @@ namespace GameGuild.Identity.Tenants;
 public sealed class AddTenantMemberCommandHandler(
     ITenantRepository tenantRepository,
     ITenantMemberRepository memberRepository,
-    IEmailSender? emailSender = null,
     IConfiguration? configuration = null) : ICommandHandler<AddTenantMemberCommand, AddTenantMemberResponse>
 {
     public async Task<AddTenantMemberResponse> Handle(AddTenantMemberCommand request, CancellationToken cancellationToken)
@@ -78,7 +75,7 @@ public sealed class AddTenantMemberCommandHandler(
 
             if (request.RequiresAcceptance)
             {
-                await SendInviteEmailAsync(tenant, request, cancellationToken).ConfigureAwait(false);
+                QueueInviteEmail(tenant, request);
             }
 
             tenant.AddDomainEvent(new TenantMemberAddedEvent(request.TenantId, request.UserId, request.InvitedByEmail ?? "unknown@email.com", request.Role));
@@ -110,7 +107,7 @@ public sealed class AddTenantMemberCommandHandler(
 
         if (request.RequiresAcceptance)
         {
-            await SendInviteEmailAsync(tenant, request, cancellationToken).ConfigureAwait(false);
+            QueueInviteEmail(tenant, request);
         }
 
         tenant.AddDomainEvent(new TenantMemberAddedEvent(request.TenantId, request.UserId, request.InvitedByEmail ?? "unknown@email.com", request.Role));
@@ -118,32 +115,23 @@ public sealed class AddTenantMemberCommandHandler(
         return new AddTenantMemberResponse { Success = true, Message = "Member added successfully", MemberId = createdMember.Id };
     }
 
-    private async Task SendInviteEmailAsync(Tenant tenant, AddTenantMemberCommand request, CancellationToken cancellationToken)
+    private void QueueInviteEmail(Tenant tenant, AddTenantMemberCommand request)
     {
-        if (emailSender == null || string.IsNullOrWhiteSpace(request.InviteeEmail))
+        if (string.IsNullOrWhiteSpace(request.InviteeEmail))
         {
             return;
         }
 
-        var recipientName = string.IsNullOrWhiteSpace(request.InviteeName)
-            ? request.InviteeEmail.Trim()
-            : request.InviteeName.Trim();
-        var reviewUrl = BuildReviewUrl();
-        var activationUrl = BuildActivationUrl(request.InviteeEmail);
-        var inviter = string.IsNullOrWhiteSpace(request.InvitedByEmail) ? "A GameGuild administrator" : request.InvitedByEmail.Trim();
-        var plainTextContent =
-            $"Hi {recipientName},\n\n{inviter} invited you to join {tenant.Name} on GameGuild as {request.Role}.\n\nReview and accept your access:\n{reviewUrl}\n\nIf this is your first GameGuild invitation, set your password first:\n{activationUrl}\n\nIf you were not expecting this invite, you can ignore this email.";
-        var htmlContent =
-            $"<p>Hi {WebUtility.HtmlEncode(recipientName)},</p><p>{WebUtility.HtmlEncode(inviter)} invited you to join <strong>{WebUtility.HtmlEncode(tenant.Name)}</strong> on GameGuild as <strong>{WebUtility.HtmlEncode(request.Role)}</strong>.</p><p><a href=\"{WebUtility.HtmlEncode(reviewUrl)}\">Review and accept your access</a></p><p>First time on GameGuild? <a href=\"{WebUtility.HtmlEncode(activationUrl)}\">Set your password</a>, then return to your invitations.</p><p>If you were not expecting this invite, you can ignore this email.</p>";
-
-        await emailSender.SendAsync(
-            new EmailMessage(
-                request.InviteeEmail.Trim(),
-                $"You were invited to {tenant.Name} on GameGuild",
-                plainTextContent,
-                htmlContent,
-                recipientName),
-            cancellationToken).ConfigureAwait(false);
+        tenant.AddDomainEvent(new TenantInviteRequestedNotification(
+            request.TenantId,
+            request.InviteeEmail.Trim(),
+            request.InviteeName,
+            request.InvitedByEmail,
+            tenant.Name,
+            request.Role,
+            BuildReviewUrl(),
+            BuildActivationUrl(request.InviteeEmail),
+            resend: false));
     }
 
     private string BuildReviewUrl()

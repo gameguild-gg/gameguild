@@ -1,12 +1,14 @@
 import { Link } from '@/i18n/navigation';
 import { buildDashboardCoursePath, getCourseRouteParam } from '@/lib/learning/course-route';
 import {
+  canManageCourse,
   getCourse,
   getCourseAnalytics,
   getCourseCompletionAnalytics,
   getCourseContent,
   getCourseEngagementAnalytics,
   getCourseRevenueAnalytics,
+  getMyTasks,
 } from '@/lib/learning';
 import {
   deriveCourseLaunchSummary,
@@ -24,6 +26,7 @@ import {
   Activity,
   BookOpen,
   CheckCircle2,
+  ClipboardCheck,
   ClipboardList,
   Clock,
   Edit,
@@ -123,13 +126,19 @@ export default async function Page({ params }: PageProps<'/[locale]/console/lear
 
   const courseId = course.id;
   const courseRouteParam = getCourseRouteParam(course);
-  const [analytics, content, completionAnalytics, engagementAnalytics, revenueAnalytics] = await Promise.all([
+  const [analytics, content, completionAnalytics, engagementAnalytics, revenueAnalytics, canManage, tasksResult] = await Promise.all([
     getCourseAnalytics(courseId),
     getCourseContent(courseId),
     getCourseCompletionAnalytics(courseId),
     getCourseEngagementAnalytics(courseId),
     course.features.hasPricing ? getCourseRevenueAnalytics(courseId) : Promise.resolve(null),
+    canManageCourse(courseId),
+    getMyTasks(),
   ]);
+
+  const awaitingGradingCount = tasksResult.ok
+    ? tasksResult.tasks.filter((task) => task.type === 'grade' && task.courseId === courseId).length
+    : null;
 
   const totalEnrollments = analytics.totalUsers || course.currentEnrollments;
   const completedCount = analytics.completedUsers;
@@ -211,6 +220,26 @@ export default async function Page({ params }: PageProps<'/[locale]/console/lear
             </div>
           </CardContent>
         </Card>
+        {canManage && (
+          <Link
+            href={buildDashboardCoursePath(courseRouteParam, 'assessments')}
+            locale={locale}
+            prefetch={false}
+            data-testid="awaiting-grading-card"
+          >
+            <Card className="h-full transition-colors hover:bg-muted/50">
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-900">
+                  <ClipboardCheck className="size-5 text-teal-600 dark:text-teal-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{awaitingGradingCount ?? '—'}</p>
+                  <p className="text-sm text-muted-foreground">Awaiting grading</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
       </div>
 
       {/* Main Content */}

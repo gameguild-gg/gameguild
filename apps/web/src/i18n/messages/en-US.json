@@ -125,7 +125,9 @@
         "label": "Base text size",
         "description": "Choose a size between {min}px and {max}px."
       }
-    }
+    },
+    "notificationsTitle": "Notification settings",
+    "notificationsDescription": "Choose how you receive notifications and emails."
   },
   "connectedAccounts": {
     "title": "Connected Accounts",
@@ -161,6 +163,158 @@
         "stateMismatch": "The linking request expired or was tampered with. Please try again.",
         "generic": "We couldn't complete the request. Please try again."
       }
+    }
+  },
+  "passwordChange": {
+    "title": "Password",
+    "description": "Change the password you use to sign in. You stay signed in on this device.",
+    "currentLabel": "Current password",
+    "currentHelp": "Leave blank if you never set a password.",
+    "newLabel": "New password",
+    "confirmLabel": "Confirm new password",
+    "revokeLabel": "Sign out other devices",
+    "hintLine": "At least 8 characters, with upper and lower case letters, a number, and a special character.",
+    "submit": "Change password",
+    "success": "Password updated.",
+    "errors": {
+      "mismatch": "Passwords do not match.",
+      "wrongCurrent": "Your current password is incorrect.",
+      "weakPassword": "The new password does not meet the requirements.",
+      "generic": "Could not change your password. Please try again."
+    }
+  },
+  "notificationPrefs": {
+    "loadError": {
+      "title": "Notifications unavailable",
+      "description": "We couldn't load your notification settings. Please try again later."
+    },
+    "channels": {
+      "title": "Delivery channels",
+      "description": "Turn entire channels on or off.",
+      "email": "Email",
+      "inApp": "In-app",
+      "push": "Push",
+      "sms": "SMS"
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "Control broad notification categories.",
+      "marketing": "Marketing",
+      "social": "Social",
+      "learning": "Learning",
+      "achievements": "Achievements"
+    },
+    "types": {
+      "title": "Email types",
+      "description": "Mute individual kinds of emails. Transactional messages are always sent.",
+      "alwaysSent": "Always sent",
+      "groups": {
+        "Marketing": "Marketing",
+        "Social": "Social",
+        "Learning": "Learning",
+        "Achievements": "Achievements",
+        "Billing": "Billing",
+        "Transactional": "Transactional",
+        "System": "System"
+      }
+    },
+    "digest": {
+      "title": "Email digest",
+      "description": "Bundle notifications into a single summary email instead of individual messages.",
+      "off": "Off",
+      "Daily": "Daily",
+      "Weekly": "Weekly",
+      "BiWeekly": "Every two weeks"
+    },
+    "quietHours": {
+      "title": "Quiet hours",
+      "description": "Hold notifications during a daily window. Emails arrive when the window ends.",
+      "start": "Start",
+      "end": "End",
+      "timezone": "Timezone",
+      "timezonePlaceholder": "UTC",
+      "save": "Save quiet hours"
+    },
+    "toast": {
+      "saved": "Preferences saved.",
+      "error": "Couldn't save your preference. Please try again.",
+      "unauthorized": "Your session expired. Please sign in again."
+    }
+  },
+  "emailDeliverability": {
+    "title": "Email deliverability",
+    "description": "Platform email delivery events, address suppressions, and dead letters.",
+    "loadError": {
+      "title": "Email deliverability unavailable",
+      "description": "We couldn't load email deliverability data. Please try again later."
+    },
+    "tabs": {
+      "events": "Events",
+      "suppressions": "Suppressions",
+      "deadLetters": "Dead letters"
+    },
+    "events": {
+      "description": "Provider delivery events (SES via SNS), newest first.",
+      "time": "Time",
+      "type": "Type",
+      "recipient": "Recipient",
+      "diagnostic": "Bounce / diagnostic",
+      "providerMessageId": "Provider message",
+      "viewDeadLetters": "View dead letters",
+      "empty": "No delivery events recorded yet.",
+      "types": {
+        "Send": "Send",
+        "Delivery": "Delivery",
+        "Bounce": "Bounce",
+        "Complaint": "Complaint",
+        "Open": "Open"
+      }
+    },
+    "suppressions": {
+      "description": "Addresses blocked from receiving email after a hard bounce or complaint.",
+      "email": "Email",
+      "reason": "Reason",
+      "bounceType": "Bounce type",
+      "suppressedAt": "Suppressed",
+      "releasedAt": "Released",
+      "unsuppress": "Unsuppress",
+      "confirmTitle": "Release suppression?",
+      "confirmDescription": "Emails to {email} will be allowed again on the next delivery attempt.",
+      "confirmAction": "Release",
+      "cancel": "Cancel",
+      "empty": "No suppressed addresses.",
+      "reasons": {
+        "HardBounce": "Hard bounce",
+        "Complaint": "Complaint"
+      }
+    },
+    "deadLetters": {
+      "description": "Notifications that stopped delivering. Requeue retries a dead-lettered notification.",
+      "title": "Title",
+      "type": "Type",
+      "recipient": "Recipient",
+      "error": "Last error",
+      "attempts": "Attempts",
+      "requeues": "Requeues",
+      "requeue": "Requeue",
+      "suppressedTooltip": "Release the active suppression for this recipient before requeueing.",
+      "empty": "No dead-lettered notifications.",
+      "viewTimeline": "View timeline",
+      "clearFilter": "Show all"
+    },
+    "timeline": {
+      "title": "Delivery timeline",
+      "description": "Provider events for this notification, oldest first.",
+      "noCorrelation": "This notification has no provider correlation id (e.g. digest bundles), so there are no provider events.",
+      "empty": "No provider events recorded for this notification.",
+      "payload": "Provider payload",
+      "close": "Close"
+    },
+    "toast": {
+      "unsuppressed": "Suppression released.",
+      "requeued": "Notification requeued.",
+      "error": "Action failed. Please try again.",
+      "unauthorized": "Your session expired. Please sign in again."
     }
   }
 }

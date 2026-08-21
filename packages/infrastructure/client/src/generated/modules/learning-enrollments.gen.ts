@@ -17,62 +17,6 @@ export class LearningEnrollmentsModule {
 
   /**
    */
-  async getApiLearningEnrollments(id: string): Promise<Result<void, ApiError>> {
-    const url = `/api/learning/enrollments/${id}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   */
-  async getApiLearningEnrollmentsUsers(
-    userId: string,
-    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
-  ): Promise<Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>> {
-    const url = `/api/learning/enrollments/users/${userId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningEnrollmentsEnrollment>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getApiLearningEnrollmentsCourses(
-    courseId: string,
-    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
-  ): Promise<Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>> {
-    const url = `/api/learning/enrollments/courses/${courseId}`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.LearningEnrollmentsEnrollment>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
   async postApiLearningEnrollments(
     body: Types.LearningEnrollmentsEnrollUserInput,
   ): Promise<Result<Types.LearningEnrollmentsEnrollment, ApiError>> {
@@ -103,6 +47,20 @@ export class LearningEnrollmentsModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getApiLearningEnrollments(id: string): Promise<Result<void, ApiError>> {
+    const url = `/api/learning/enrollments/${id}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 
   /**
@@ -145,6 +103,48 @@ export class LearningEnrollmentsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getApiLearningEnrollmentsCourses(
+    courseId: string,
+    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
+  ): Promise<Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>> {
+    const url = `/api/learning/enrollments/courses/${courseId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningEnrollmentsEnrollment>,
+      ApiError
+    >;
+  }
+
+  /**
+   */
+  async getApiLearningEnrollmentsUsers(
+    userId: string,
+    query?: { status?: Types.LearningEnrollmentsEnrollmentStatus },
+  ): Promise<Result<Array<Types.LearningEnrollmentsEnrollment>, ApiError>> {
+    const url = `/api/learning/enrollments/users/${userId}`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.LearningEnrollmentsEnrollment>,
+      ApiError
+    >;
   }
 }
 

@@ -91,13 +91,11 @@ export class AccessControlDelegatedAdminModule {
 
   /**
    */
-  async getDelegatedAdminUserScopes(
+  async getDelegatedAdminUserCanManageResource(
     adminUserId: string,
-    query?: { tenantId?: string },
-  ): Promise<
-    Result<Array<Types.IdentityAuthorizationDelegatedAdminScope>, ApiError>
-  > {
-    const url = `/v1/delegated-admin/user/${adminUserId}/scopes`;
+    query?: { resourceType?: string; tenantId?: string },
+  ): Promise<Result<boolean, ApiError>> {
+    const url = `/v1/delegated-admin/user/${adminUserId}/can-manage-resource`;
 
     const result = await this.client.request({
       method: "GET",
@@ -106,46 +104,7 @@ export class AccessControlDelegatedAdminModule {
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.IdentityAuthorizationDelegatedAdminScope>,
-      ApiError
-    >;
-  }
-
-  /**
-   */
-  async getDelegatedAdminUserManagedUsers(
-    adminUserId: string,
-    query?: { tenantId?: string },
-  ): Promise<Result<Array<string>, ApiError>> {
-    const url = `/v1/delegated-admin/user/${adminUserId}/managed-users`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<string>, ApiError>;
-  }
-
-  /**
-   */
-  async getDelegatedAdminUserManagedResources(
-    adminUserId: string,
-    query?: { tenantId?: string },
-  ): Promise<Result<Array<string>, ApiError>> {
-    const url = `/v1/delegated-admin/user/${adminUserId}/managed-resources`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<string>, ApiError>;
+    return result as Result<boolean, ApiError>;
   }
 
   /**
@@ -169,11 +128,11 @@ export class AccessControlDelegatedAdminModule {
 
   /**
    */
-  async getDelegatedAdminUserCanManageResource(
+  async getDelegatedAdminUserManagedResources(
     adminUserId: string,
-    query?: { resourceType?: string; tenantId?: string },
-  ): Promise<Result<boolean, ApiError>> {
-    const url = `/v1/delegated-admin/user/${adminUserId}/can-manage-resource`;
+    query?: { tenantId?: string },
+  ): Promise<Result<Array<string>, ApiError>> {
+    const url = `/v1/delegated-admin/user/${adminUserId}/managed-resources`;
 
     const result = await this.client.request({
       method: "GET",
@@ -182,7 +141,48 @@ export class AccessControlDelegatedAdminModule {
       requiresAuth: true,
     });
 
-    return result as Result<boolean, ApiError>;
+    return result as Result<Array<string>, ApiError>;
+  }
+
+  /**
+   */
+  async getDelegatedAdminUserManagedUsers(
+    adminUserId: string,
+    query?: { tenantId?: string },
+  ): Promise<Result<Array<string>, ApiError>> {
+    const url = `/v1/delegated-admin/user/${adminUserId}/managed-users`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<string>, ApiError>;
+  }
+
+  /**
+   */
+  async getDelegatedAdminUserScopes(
+    adminUserId: string,
+    query?: { tenantId?: string },
+  ): Promise<
+    Result<Array<Types.IdentityAuthorizationDelegatedAdminScope>, ApiError>
+  > {
+    const url = `/v1/delegated-admin/user/${adminUserId}/scopes`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.IdentityAuthorizationDelegatedAdminScope>,
+      ApiError
+    >;
   }
 }
 

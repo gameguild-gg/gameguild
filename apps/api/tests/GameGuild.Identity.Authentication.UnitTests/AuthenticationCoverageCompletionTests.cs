@@ -20,6 +20,7 @@ using Microsoft.Extensions.Options;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
+using GameGuild.Notifications.Services;
 using Moq;
 using Xunit;
 
@@ -816,7 +817,9 @@ public sealed class AuthenticationCoverageCompletionTests
             dbContext,
             NullLogger<GetPermissionTemplatesQueryHandler>.Instance).Should().NotBeNull();
         new SendPasswordResetRequestedHandler(
-            NullLogger<SendPasswordResetRequestedHandler>.Instance).Should().NotBeNull();
+            NullLogger<SendPasswordResetRequestedHandler>.Instance,
+            Mock.Of<INotificationService>(),
+            Mock.Of<IUserRepository>()).Should().NotBeNull();
 
         new RevokeContentTypePermissionByIdHandler(dbContext).Should().NotBeNull();
         new RevokeResourcePermissionByIdHandler(dbContext).Should().NotBeNull();

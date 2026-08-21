@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Notifications;
@@ -189,6 +190,51 @@ public class NotificationPreference : EntityBase
     {
         MutedTypes = mutedTypesJson;
         UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    /// Parses <see cref="MutedTypes"/> (JSON array of notification type names, case-insensitive).
+    /// Malformed or missing JSON yields an empty set.
+    /// </summary>
+    public IReadOnlySet<string> GetMutedTypeNames()
+    {
+        if (string.IsNullOrWhiteSpace(MutedTypes))
+        {
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        try
+        {
+            var names = JsonSerializer.Deserialize<string[]>(MutedTypes);
+            return names == null
+                ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                : new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
+        }
+        catch (JsonException)
+        {
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+    }
+
+    /// <summary>
+    /// Adds a notification type name to the mute list
+    /// </summary>
+    public void MuteType(string typeName)
+    {
+        var names = new HashSet<string>(GetMutedTypeNames(), StringComparer.OrdinalIgnoreCase) { typeName };
+        SetMutedTypes(JsonSerializer.Serialize(names));
+    }
+
+    /// <summary>
+    /// Removes a notification type name from the mute list
+    /// </summary>
+    public void UnmuteType(string typeName)
+    {
+        var names = new HashSet<string>(GetMutedTypeNames(), StringComparer.OrdinalIgnoreCase);
+        if (names.Remove(typeName))
+        {
+            SetMutedTypes(JsonSerializer.Serialize(names));
+        }
     }
 }
 

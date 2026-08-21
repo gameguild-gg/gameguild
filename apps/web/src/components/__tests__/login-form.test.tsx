@@ -62,8 +62,8 @@ describe('SignInForm', () => {
 
     expect(screen.getByText('Sign up')).toHaveAttribute('href', '/sign-up?redirectTo=%2F');
     expect(screen.getByText('Forgot your password?')).toHaveAttribute('href', '/forgot-password');
-    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/terms-of-service');
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/polices/privacy');
+    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/legal/terms-of-service');
+    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/legal/privacy');
   });
 
   /* ---------- Client-side validation ---------- */

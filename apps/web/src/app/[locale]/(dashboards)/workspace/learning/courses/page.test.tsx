@@ -19,6 +19,49 @@ vi.mock('@/i18n/navigation', () => ({
 }));
 
 describe('dashboard learning courses page', () => {
+  const ownCourse = {
+    id: 'course-own',
+    slug: 'own-course',
+    creatorId: 'user-1',
+    creatorHandle: 'user-1',
+    routeParam: 'own-course',
+    title: 'My Own Course',
+    thumbnail: null,
+    status: 'published' as const,
+    visibility: 'public' as const,
+    enrolledCount: 3,
+    completionPercent: null,
+    avgRating: null,
+  };
+  const seededCourse = {
+    id: 'course-seeded',
+    slug: 'seeded-course',
+    creatorId: 'seeder-user',
+    creatorHandle: 'seeder-user',
+    routeParam: 'seeded-course',
+    title: 'Seeded Catalog Course',
+    thumbnail: null,
+    status: 'draft' as const,
+    visibility: 'private' as const,
+    enrolledCount: 0,
+    completionPercent: null,
+    avgRating: null,
+  };
+  const adminCourse = {
+    id: 'course-admin',
+    slug: 'admin-course',
+    creatorId: 'admin-user',
+    creatorHandle: 'admin-user',
+    routeParam: 'admin-course',
+    title: 'Admin Created Course',
+    thumbnail: null,
+    status: 'published' as const,
+    visibility: 'public' as const,
+    enrolledCount: 7,
+    completionPercent: null,
+    avgRating: null,
+  };
+
   beforeEach(() => {
     getCoursesMock.mockReset();
   });
@@ -50,5 +93,19 @@ describe('dashboard learning courses page', () => {
     expect(screen.getByText(/the public storefront reads from the same course source/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /open storefront/i })).toHaveAttribute('href', '/courses');
     expect(screen.queryByRole('heading', { name: /courses could not be loaded/i })).not.toBeInTheDocument();
+  });
+
+  it('renders exactly the courses the API returns, regardless of creator', async () => {
+    getCoursesMock.mockResolvedValue({
+      courses: [ownCourse, seededCourse, adminCourse],
+      error: null,
+    });
+
+    render(await CoursesPage({ params: Promise.resolve({ locale: 'en-US' }) } as never));
+
+    expect(screen.getByText('My Own Course')).toBeInTheDocument();
+    expect(screen.getByText('Seeded Catalog Course')).toBeInTheDocument();
+    expect(screen.getByText('Admin Created Course')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
   });
 });
