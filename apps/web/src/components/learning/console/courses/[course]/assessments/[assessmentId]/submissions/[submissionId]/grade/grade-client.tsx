@@ -72,7 +72,6 @@ export function mergeWorkspaceWithSubmission(
   assignment: CodingAssignmentContent,
   submittedFiles: CodeFile[],
 ): CodeFile[] {
-  const learningBase = useLearningBase();
   const privatePaths = buildPrivatePaths(assignment);
   const merged = new Map<string, string>();
   for (const [path, meta] of Object.entries(assignment.Data.Files)) {

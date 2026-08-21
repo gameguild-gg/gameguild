@@ -1,14 +1,15 @@
 import { auth, getToken } from '@/auth';
 import { createServerClient } from '@game-guild/client';
 import { Link } from '@/i18n/navigation';
-import { FlaskConical, Gamepad2, Github, GraduationCap, Heart, MessageCircle, Rocket, Twitter, Users, Youtube } from 'lucide-react';
+import { FlaskConical, Gamepad2, GraduationCap, Heart, MessageCircle, Rocket, Users } from 'lucide-react';
+import { Github, Twitter, Youtube } from '@/components/ui/brand-icons';
 import type { ReactNode } from 'react';
 import { PublicDesktopNav, PublicMobileNav, type PublicWebsiteUser } from './public-website-nav';
 import { PublicAccountMenu } from './public-account-menu';
 
 const primaryNav = [
   { label: 'Courses', href: '/courses' },
-  { label: 'Programs', href: '/courses' },
+  { label: 'Programs', href: '/programs' },
   { label: 'Testing Lab', href: '/testing-lab' },
   { label: 'Launch Pad', href: '/launch-pad' },
   { label: 'Projects', href: '/projects' },
@@ -24,7 +25,7 @@ const footerSections = [
     hoverClass: 'hover:text-blue-300',
     links: [
       { label: 'Courses', href: '/courses' },
-      { label: 'Programs', href: '/courses' },
+      { label: 'Programs', href: '/programs' },
     ],
   },
   {

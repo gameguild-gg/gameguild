@@ -76,7 +76,7 @@ describe('GoogleSignInButton', () => {
     const [config] = initializeMock.mock.calls[0];
     expect(config).toMatchObject({
       client_id: 'test-google-client-id',
-      auto_select: true,
+      auto_select: false,
       cancel_on_tap_outside: false,
     });
     expect(typeof config.callback).toBe('function');

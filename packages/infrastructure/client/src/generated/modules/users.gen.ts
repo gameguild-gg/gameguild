@@ -16,500 +16,6 @@ export class UsersModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Bulk create users
-   *
-   * Creates multiple user accounts at once.
-   */
-  async postUsersCreate(
-    body: Types.IdentityUsersBulkCreateUsersInput,
-  ): Promise<Result<Types.IdentityUsersBulkCreateUsersOutput, ApiError>> {
-    const url = "/v1/users:create";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkCreateUsersInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkCreateUsersOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk partial update users
-   *
-   * Updates multiple users with partial data.
-   */
-  async postUsersUpdate(
-    body: Types.IdentityUsersBulkUpdateUsersInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/users:update";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkUpdateUsersInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Bulk full update users
-   *
-   * Updates multiple users with complete data.
-   */
-  async postUsersReplace(
-    body: Types.IdentityUsersBulkUpdateUsersInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/users:replace";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkUpdateUsersInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Bulk soft delete users
-   *
-   * Soft deletes multiple users at once.
-   */
-  async postUsersDelete(
-    body: Types.IdentityUsersBulkDeleteUsersInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/users:delete";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkDeleteUsersInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Bulk activate user accounts
-   *
-   * Activates multiple user accounts at once.
-   */
-  async postUsersActivateForPostUsersActivate(
-    body: Types.IdentityUsersBulkActivateUsersInput,
-  ): Promise<Result<Types.IdentityUsersBulkActivateUsersOutput, ApiError>> {
-    const url = "/v1/users:activate";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkActivateUsersInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkActivateUsersOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk deactivate user accounts
-   *
-   * Deactivates multiple user accounts at once.
-   */
-  async postUsersDeactivateForPostUsersDeactivate(
-    body: Types.IdentityUsersBulkDeactivateUsersInput,
-  ): Promise<Result<Types.IdentityUsersBulkDeactivateUsersOutput, ApiError>> {
-    const url = "/v1/users:deactivate";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkDeactivateUsersInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkDeactivateUsersOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk suspend user accounts
-   *
-   * Suspends multiple user accounts at once.
-   */
-  async postUsersSuspendForPostUsersSuspend(
-    body: Types.IdentityUsersBulkSuspendUsersInput,
-  ): Promise<Result<Types.IdentityUsersBulkSuspendUsersOutput, ApiError>> {
-    const url = "/v1/users:suspend";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkSuspendUsersInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkSuspendUsersOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk unsuspend user accounts
-   *
-   * Unsuspends multiple user accounts at once.
-   */
-  async postUsersUnsuspendForPostUsersUnsuspend(
-    body: Types.IdentityUsersBulkUnsuspendUsersInput,
-  ): Promise<Result<Types.IdentityUsersBulkUnsuspendUsersOutput, ApiError>> {
-    const url = "/v1/users:unsuspend";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkUnsuspendUsersInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkUnsuspendUsersOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk undelete soft-deleted users
-   *
-   * Restores multiple soft-deleted users at once.
-   */
-  async postUsersUndeleteForPostUsersUndelete(
-    body: Types.IdentityUsersBulkRestoreUsersInput,
-  ): Promise<Result<Types.IdentityUsersBulkRestoreUsersOutput, ApiError>> {
-    const url = "/v1/users:undelete";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkRestoreUsersInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkRestoreUsersOutputSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Bulk hard delete users (irreversible purge)
-   *
-   * Permanently deletes multiple users. Admin operation requiring proper authorization.
-   */
-  async postUsersPurgeForPostUsersPurge(
-    body: Types.IdentityUsersBulkPurgeUsersInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/users:purge";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkPurgeUsersInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
-   * Activate user account
-   *
-   * Activates a user account by ID.
-   */
-  async postUsersActivateForPostUsersByUserIdActivate(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
-    const url = `/v1/users/${userId}:activate`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Deactivate user account
-   *
-   * Deactivates a user account by ID.
-   */
-  async postUsersDeactivateForPostUsersByUserIdDeactivate(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
-    const url = `/v1/users/${userId}:deactivate`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Suspend user account
-   *
-   * Suspends a user account by ID.
-   */
-  async postUsersSuspendForPostUsersByUserIdSuspend(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
-    const url = `/v1/users/${userId}:suspend`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Unsuspend user account
-   *
-   * Unsuspends a user account by ID.
-   */
-  async postUsersUnsuspendForPostUsersByUserIdUnsuspend(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
-    const url = `/v1/users/${userId}:unsuspend`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Undelete soft-deleted user by ID
-   *
-   * Restores a soft-deleted user by ID.
-   */
-  async postUsersUndeleteForPostUsersByUserIdUndelete(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
-    const url = `/v1/users/${userId}:undelete`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * Hard delete user by ID (irreversible purge)
-   *
-   * Permanently deletes a user by ID (irreversible).
-   */
-  async postUsersPurgeForPostUsersByUserIdPurge(
-    userId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/users/${userId}:purge`;
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
-  }
-
-  /**
    * Get users with pagination, search, and sorting
    *
    * Retrieves a paginated list of users with optional filtering by email, status, and text search.
@@ -580,6 +86,336 @@ export class UsersModule {
     }
 
     return result;
+  }
+
+  /**
+   * Bulk activate user accounts
+   *
+   * Activates multiple user accounts at once.
+   */
+  async postUsersActivateForPostUsersActivate(
+    body: Types.IdentityUsersBulkActivateUsersInput,
+  ): Promise<Result<Types.IdentityUsersBulkActivateUsersOutput, ApiError>> {
+    const url = "/v1/users:activate";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkActivateUsersInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersBulkActivateUsersOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk create users
+   *
+   * Creates multiple user accounts at once.
+   */
+  async postUsersCreate(
+    body: Types.IdentityUsersBulkCreateUsersInput,
+  ): Promise<Result<Types.IdentityUsersBulkCreateUsersOutput, ApiError>> {
+    const url = "/v1/users:create";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkCreateUsersInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersBulkCreateUsersOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk deactivate user accounts
+   *
+   * Deactivates multiple user accounts at once.
+   */
+  async postUsersDeactivateForPostUsersDeactivate(
+    body: Types.IdentityUsersBulkDeactivateUsersInput,
+  ): Promise<Result<Types.IdentityUsersBulkDeactivateUsersOutput, ApiError>> {
+    const url = "/v1/users:deactivate";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkDeactivateUsersInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersBulkDeactivateUsersOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk soft delete users
+   *
+   * Soft deletes multiple users at once.
+   */
+  async postUsersDelete(
+    body: Types.IdentityUsersBulkDeleteUsersInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/v1/users:delete";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkDeleteUsersInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Bulk hard delete users (irreversible purge)
+   *
+   * Permanently deletes multiple users. Admin operation requiring proper authorization.
+   */
+  async postUsersPurgeForPostUsersPurge(
+    body: Types.IdentityUsersBulkPurgeUsersInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/v1/users:purge";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkPurgeUsersInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Bulk full update users
+   *
+   * Updates multiple users with complete data.
+   */
+  async postUsersReplace(
+    body: Types.IdentityUsersBulkUpdateUsersInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/v1/users:replace";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkUpdateUsersInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Bulk suspend user accounts
+   *
+   * Suspends multiple user accounts at once.
+   */
+  async postUsersSuspendForPostUsersSuspend(
+    body: Types.IdentityUsersBulkSuspendUsersInput,
+  ): Promise<Result<Types.IdentityUsersBulkSuspendUsersOutput, ApiError>> {
+    const url = "/v1/users:suspend";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkSuspendUsersInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersBulkSuspendUsersOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk undelete soft-deleted users
+   *
+   * Restores multiple soft-deleted users at once.
+   */
+  async postUsersUndeleteForPostUsersUndelete(
+    body: Types.IdentityUsersBulkRestoreUsersInput,
+  ): Promise<Result<Types.IdentityUsersBulkRestoreUsersOutput, ApiError>> {
+    const url = "/v1/users:undelete";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkRestoreUsersInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersBulkRestoreUsersOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk unsuspend user accounts
+   *
+   * Unsuspends multiple user accounts at once.
+   */
+  async postUsersUnsuspendForPostUsersUnsuspend(
+    body: Types.IdentityUsersBulkUnsuspendUsersInput,
+  ): Promise<Result<Types.IdentityUsersBulkUnsuspendUsersOutput, ApiError>> {
+    const url = "/v1/users:unsuspend";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkUnsuspendUsersInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersBulkUnsuspendUsersOutputSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Bulk partial update users
+   *
+   * Updates multiple users with partial data.
+   */
+  async postUsersUpdate(
+    body: Types.IdentityUsersBulkUpdateUsersInput,
+  ): Promise<Result<void, ApiError>> {
+    const url = "/v1/users:update";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityUsersBulkUpdateUsersInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
   }
 
   /**
@@ -719,6 +555,170 @@ export class UsersModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Activate user account
+   *
+   * Activates a user account by ID.
+   */
+  async postUsersActivateForPostUsersByUserIdActivate(
+    userId: string,
+  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+    const url = `/v1/users/${userId}:activate`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersUserDtoSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Deactivate user account
+   *
+   * Deactivates a user account by ID.
+   */
+  async postUsersDeactivateForPostUsersByUserIdDeactivate(
+    userId: string,
+  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+    const url = `/v1/users/${userId}:deactivate`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersUserDtoSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Hard delete user by ID (irreversible purge)
+   *
+   * Permanently deletes a user by ID (irreversible).
+   */
+  async postUsersPurgeForPostUsersByUserIdPurge(
+    userId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/users/${userId}:purge`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   * Suspend user account
+   *
+   * Suspends a user account by ID.
+   */
+  async postUsersSuspendForPostUsersByUserIdSuspend(
+    userId: string,
+  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+    const url = `/v1/users/${userId}:suspend`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersUserDtoSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Undelete soft-deleted user by ID
+   *
+   * Restores a soft-deleted user by ID.
+   */
+  async postUsersUndeleteForPostUsersByUserIdUndelete(
+    userId: string,
+  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+    const url = `/v1/users/${userId}:undelete`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersUserDtoSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Unsuspend user account
+   *
+   * Unsuspends a user account by ID.
+   */
+  async postUsersUnsuspendForPostUsersByUserIdUnsuspend(
+    userId: string,
+  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+    const url = `/v1/users/${userId}:unsuspend`;
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityUsersUserDtoSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 }
 

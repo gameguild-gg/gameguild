@@ -73,26 +73,6 @@ export class ApiTeamsModule {
 
   /**
    */
-  async getTeamsMine(query?: {
-    includeArchived?: boolean;
-    search?: string;
-    skip?: number;
-    take?: number;
-  }): Promise<Result<Array<Types.APITeamsTeam>, ApiError>> {
-    const url = "/v1/teams/mine";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.APITeamsTeam>, ApiError>;
-  }
-
-  /**
-   */
   async getTeamsForGetTeamsByTeamId(
     teamId: string,
   ): Promise<Result<Types.APITeamsTeam, ApiError>> {
@@ -194,6 +174,74 @@ export class ApiTeamsModule {
 
   /**
    */
+  async getTeamsInvitations(
+    teamId: string,
+  ): Promise<Result<Array<Types.APITeamsTeamInvitation>, ApiError>> {
+    const url = `/v1/teams/${teamId}/invitations`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.APITeamsTeamInvitation>, ApiError>;
+  }
+
+  /**
+   */
+  async postTeamsInvitations(
+    teamId: string,
+    body: Types.APITeamsCreateTeamInvitationInput,
+  ): Promise<Result<Types.APITeamsTeamInvitationCreated, ApiError>> {
+    const url = `/v1/teams/${teamId}/invitations`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.APITeamsCreateTeamInvitationInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.APITeamsTeamInvitationCreatedSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async deleteTeamsInvitations(
+    teamId: string,
+    invitationId: string,
+  ): Promise<Result<void, ApiError>> {
+    const url = `/v1/teams/${teamId}/invitations/${invitationId}`;
+
+    const result = await this.client.request({
+      method: "DELETE",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
   async postTeamsMembers(
     teamId: string,
     body: Types.APITeamsAddTeamMemberInput,
@@ -282,46 +330,21 @@ export class ApiTeamsModule {
 
   /**
    */
-  async getTeamsInvitations(
-    teamId: string,
-  ): Promise<Result<Array<Types.APITeamsTeamInvitation>, ApiError>> {
-    const url = `/v1/teams/${teamId}/invitations`;
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.APITeamsTeamInvitation>, ApiError>;
-  }
-
-  /**
-   */
-  async postTeamsInvitations(
-    teamId: string,
-    body: Types.APITeamsCreateTeamInvitationInput,
-  ): Promise<Result<Types.APITeamsTeamInvitationCreated, ApiError>> {
-    const url = `/v1/teams/${teamId}/invitations`;
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.APITeamsCreateTeamInvitationInputSchema,
-      body,
-      "request",
-    );
+  async postTeamsInvitationsAcceptForPostTeamsInvitationsByInvitationIdAccept(
+    invitationId: string,
+  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
+    const url = `/v1/teams/invitations/${invitationId}:accept`;
 
     const result = await this.client.request({
       method: "POST",
       path: url,
-      body: validatedBody,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(
-        Types.APITeamsTeamInvitationCreatedSchema,
+        Types.APITeamsTeamSchema,
         result.data,
         "response",
       );
@@ -329,39 +352,6 @@ export class ApiTeamsModule {
     }
 
     return result;
-  }
-
-  /**
-   */
-  async getTeamsMyInvitations(): Promise<
-    Result<Array<Types.APITeamsMyTeamInvitation>, ApiError>
-  > {
-    const url = "/v1/teams/my-invitations";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<Array<Types.APITeamsMyTeamInvitation>, ApiError>;
-  }
-
-  /**
-   */
-  async deleteTeamsInvitations(
-    teamId: string,
-    invitationId: string,
-  ): Promise<Result<void, ApiError>> {
-    const url = `/v1/teams/${teamId}/invitations/${invitationId}`;
-
-    const result = await this.client.request({
-      method: "DELETE",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<void, ApiError>;
   }
 
   /**
@@ -400,28 +390,38 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeamsInvitationsAcceptForPostTeamsInvitationsByInvitationIdAccept(
-    invitationId: string,
-  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
-    const url = `/v1/teams/invitations/${invitationId}:accept`;
+  async getTeamsMine(query?: {
+    includeArchived?: boolean;
+    search?: string;
+    skip?: number;
+    take?: number;
+  }): Promise<Result<Array<Types.APITeamsTeam>, ApiError>> {
+    const url = "/v1/teams/mine";
 
     const result = await this.client.request({
-      method: "POST",
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.APITeamsTeam>, ApiError>;
+  }
+
+  /**
+   */
+  async getTeamsMyInvitations(): Promise<
+    Result<Array<Types.APITeamsMyTeamInvitation>, ApiError>
+  > {
+    const url = "/v1/teams/my-invitations";
+
+    const result = await this.client.request({
+      method: "GET",
       path: url,
       requiresAuth: true,
     });
 
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
+    return result as Result<Array<Types.APITeamsMyTeamInvitation>, ApiError>;
   }
 }
 

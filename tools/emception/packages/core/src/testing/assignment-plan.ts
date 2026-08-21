@@ -137,7 +137,7 @@ const WORKSPACE_MOUNT = '/home/user';
  * `FunctionParameterType` union. Single-purpose: do not generalize.
  */
 function capitalize(s: string): string {
-    return s.charAt(0).toUpperCase() + s.slice(1);
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
 /** Map a wire FunctionParameter → harness descriptor FunctionParameter. */

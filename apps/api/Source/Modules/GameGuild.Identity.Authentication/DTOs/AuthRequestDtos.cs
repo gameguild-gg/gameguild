@@ -114,10 +114,11 @@ public sealed record CompletePasswordResetRequest
 public sealed record PasswordChangeRequest
 {
     /// <summary>
-    ///     Current password for verification
+    ///     Current password for verification. Optional: omit or send empty when the account
+    ///     has no password yet (OAuth-only) to set an initial password; any non-empty value
+    ///     is always verified against the existing password hash.
     /// </summary>
-    [Required]
-    public required string CurrentPassword { get; init; }
+    public string? CurrentPassword { get; init; }
 
     /// <summary>
     ///     New password

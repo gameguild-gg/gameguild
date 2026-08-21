@@ -73,6 +73,87 @@ test_contributors_visualization_uses_native_xvfb() {
   ! grep -Fq 'coactions/setup-xvfb' "$workflow"
 }
 
+test_release_flow_opens_version_pr_to_main() {
+  local emception_workflow="$repository_root/.github/workflows/emception.yml"
+  local main_workflow="$repository_root/.github/workflows/main.yml"
+
+  [[ ! -e "$repository_root/.github/workflows/release.yml" ]] || return 1
+  ! grep -Fq 'release.yml' "$main_workflow" || return 1
+  grep -Fq 'node scripts/devops/auto-changeset.mjs --apply' "$emception_workflow" || return 1
+  grep -Fq 'BRANCH="release/${VERSION}"' "$emception_workflow" || return 1
+  grep -Fq 'git push origin "${BRANCH}"' "$emception_workflow" || return 1
+  grep -Fq -- '--base main' "$emception_workflow" || return 1
+  grep -Fq 'git push origin "${TAG}"' "$emception_workflow"
+}
+
+test_auto_changeset_bumps_entire_lockstep_workspace() {
+  local script="$repository_root/scripts/devops/auto-changeset.mjs"
+
+  grep -Fq 'GameGuild.API.csproj' "$script" || return 1
+  grep -Fq 'function allPackageJsonPaths' "$script" || return 1
+  grep -Fq 'NEXT_VERSION=' "$script" || return 1
+  ! grep -Eq '"@changesets/cli"' "$repository_root/package.json"
+}
+
+test_changesets_config_matches_lockstep_workspace() {
+  local config="$repository_root/.changeset/config.json"
+  local workspace_packages="$fixture_root/workspace-packages.json"
+
+  (cd "$repository_root" && pnpm list -r --depth -1 --json) > "$workspace_packages" || return 1
+  "$PYTHON_BIN" - "$repository_root/package.json" "$config" "$workspace_packages" <<'PY' || return 1
+import collections
+import json
+import sys
+
+root_manifest_path, config_path, workspace_path = sys.argv[1:]
+with open(root_manifest_path, encoding="utf-8") as handle:
+    root_name = json.load(handle)["name"]
+with open(config_path, encoding="utf-8") as handle:
+    config = json.load(handle)
+with open(workspace_path, encoding="utf-8") as handle:
+    workspace = {
+        package["name"] for package in json.load(handle)
+        if package["name"] != root_name
+    }
+
+fixed = [package for group in config.get("fixed", []) for package in group]
+linked = [package for group in config.get("linked", []) for package in group]
+duplicates = sorted(
+    package for package, count in collections.Counter(fixed).items() if count > 1
+)
+missing = sorted(workspace - set(fixed))
+unknown = sorted(set(fixed) - workspace)
+
+errors = []
+if len(config.get("fixed", [])) != 1:
+    errors.append("the lockstep policy requires exactly one fixed group")
+if linked:
+    errors.append(f"linked packages conflict with the lockstep fixed policy: {sorted(linked)}")
+if duplicates:
+    errors.append(f"duplicate fixed packages: {duplicates}")
+if missing:
+    errors.append(f"workspace packages missing from the fixed group: {missing}")
+if unknown:
+    errors.append(f"unknown packages in the fixed group: {unknown}")
+if errors:
+    raise SystemExit("; ".join(errors))
+PY
+
+  (cd "$repository_root" && pnpm exec changeset status >/dev/null)
+}
+
+test_emception_emits_a_gate_result_for_every_main_push() {
+  local workflow="$repository_root/.github/workflows/emception.yml"
+  local trigger
+  trigger="$(sed -n '/^on:/,/^permissions:/p' "$workflow")"
+
+  ! grep -Fq 'paths:' <<< "$trigger" || return 1
+  grep -Fq 'detect-emception-changes:' "$workflow" || return 1
+  grep -Fq 'required: ${{ steps.changes.outputs.required }}' "$workflow" || return 1
+  grep -Fq 'needs: detect-emception-changes' "$workflow" || return 1
+  grep -Fq "if: needs.detect-emception-changes.outputs.required == 'true'" "$workflow"
+}
+
 test_web_vitest_uses_direct_exec_for_json_evidence() {
   grep -q 'pnpm --filter @game-guild/web exec vitest run --reporter=json' "$ci_dir/verify-economy.sh" || return 1
   ! grep -q 'pnpm --filter @game-guild/web run test --' "$ci_dir/verify-economy.sh"
@@ -345,6 +426,10 @@ test_canonical_json_preserves_arrays() {
 
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
+run_test 'Emception publish opens a release PR to main' test_release_flow_opens_version_pr_to_main
+run_test 'auto-changeset apply bumps the entire lockstep workspace' test_auto_changeset_bumps_entire_lockstep_workspace
+run_test 'Changesets config matches the lockstep workspace policy' test_changesets_config_matches_lockstep_workspace
+run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
 run_test 'standalone web server uses an origin-safe bind address' test_standalone_web_server_uses_origin_safe_bind_address

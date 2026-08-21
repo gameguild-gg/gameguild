@@ -81,10 +81,7 @@ public sealed class AssessmentSubmissionPostgreSqlConcurrencyTests
         Guid enrollmentId)
     {
         await using var context = new ApplicationDbContext(options);
-        var service = new AssessmentService(
-            context,
-            Mock.Of<IProgramContentService>(),
-            NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(context, Mock.Of<IProgramContentService>(), new RubricService(context, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
         return await service.StartSubmissionAsync(assessmentId, enrollmentId, Guid.NewGuid());
     }
 

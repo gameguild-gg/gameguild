@@ -29,7 +29,7 @@ import {
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@game-guild/ui/components/select';
-import { AlertTriangle, BarChart3, ChevronDown, ClipboardList, GripVertical, Loader2, Pencil, Plus, Target, Trash2, Trophy, Wand2 } from 'lucide-react';
+import { AlertTriangle, BarChart3, ChevronDown, ClipboardCheck, ClipboardList, GripVertical, Loader2, Pencil, Plus, Target, Trash2, Trophy, Wand2 } from 'lucide-react';
 import React, { useState, useTransition } from 'react';
 
 function typeIcon(type: AssessmentType) {
@@ -63,7 +63,7 @@ const GRADING_METHOD_FLAGS: AssessmentGradingMethodFlag[] = [
 const NO_GROUP_VALUE = '__none__';
 const UNGROUPED_ID = 'ungrouped';
 const UNGROUPED_NAME = 'Unassigned';
-const UNGROUPED_DESCRIPTION = 'Activities that do not yet count toward a weighted grade group.';
+const UNGROUPED_DESCRIPTION = 'Activities that still need a grading group.';
 const ASSESSMENT_DRAG_PREFIX = 'assessment-';
 const GROUP_DROP_PREFIX = 'group-drop-';
 
@@ -73,6 +73,7 @@ interface AssessmentsListProps {
   total: number;
   assessmentGroups?: AssessmentGroup[];
   analytics?: CourseAssessmentAnalytics | null;
+  canManage?: boolean;
 }
 
 interface AssessmentGroupView {
@@ -85,8 +86,13 @@ interface AssessmentGroupView {
 }
 
 function formatWeight(weightPercent: number | null) {
-  if (weightPercent == null) return 'Ungraded';
+  if (weightPercent == null) return 'Unconfigured';
   return `${formatPercent(weightPercent)} of Total`;
+}
+
+function formatAssessmentRole(weightPercent: number | null) {
+  if (weightPercent == null) return 'Unconfigured';
+  return weightPercent === 0 ? 'Practice' : 'Gradebook';
 }
 
 function formatPercent(value: number) {
@@ -225,7 +231,7 @@ function AssessmentAnalyticsPanel({ analytics }: { analytics: CourseAssessmentAn
                     {group.gradedCount} graded · {group.ungradedCount} ungraded
                   </p>
                 </div>
-                <Badge variant="outline">{group.weightPercent == null ? 'Ungraded' : formatPercent(group.weightPercent)}</Badge>
+                <Badge variant="outline">{group.weightPercent == null ? 'Unconfigured' : formatPercent(group.weightPercent)}</Badge>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                 <div>
@@ -251,6 +257,7 @@ export function AssessmentsList({
   total,
   assessmentGroups = [],
   analytics = null,
+  canManage = false,
 }: AssessmentsListProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -587,6 +594,7 @@ export function AssessmentsList({
                   <Badge variant="outline" className="shrink-0 rounded-full bg-background">
                     {formatWeight(group.weightPercent)}
                   </Badge>
+                  <Badge variant="outline">{formatAssessmentRole(group.weightPercent)}</Badge>
                   {group.id !== UNGROUPED_ID && (
                     <>
                       <Button
@@ -629,10 +637,15 @@ export function AssessmentsList({
                             <span className="block truncate text-sm font-semibold underline-offset-2 group-hover:underline">
                               {assessment.title}
                             </span>
-                            <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                              {assessment.timeLimitMinutes && <span>{assessment.timeLimitMinutes}m</span>}
-                              {assessment.maxAttempts && <span>{assessment.maxAttempts} attempts</span>}
-                              <span>{assessment.maxScore} pts</span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-semibold underline-offset-2 group-hover:underline">
+                                {assessment.title}
+                              </span>
+                              <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                                {assessment.timeLimitMinutes && <span>{assessment.timeLimitMinutes}m</span>}
+                                {assessment.maxAttempts && <span>{assessment.maxAttempts} attempts</span>}
+                                <span>{assessment.maxScore} pts</span>
+                              </span>
                             </span>
                           </span>
                           <Badge variant={typeBadgeVariant(assessment.type)} className="hidden shrink-0 sm:inline-flex">
@@ -642,6 +655,17 @@ export function AssessmentsList({
                             {assessment.isAvailable ? 'available' : 'scheduled'}
                           </Badge>
                         </Link>
+                        {canManage && (
+                          <Button asChild variant="outline" size="sm" className="mr-4 shrink-0">
+                            <Link
+                              href={`${pathname}/${assessment.id}/submissions`}
+                              data-testid={`grade-link-${assessment.id}`}
+                            >
+                              <ClipboardCheck className="mr-2 h-4 w-4" />
+                              Grade
+                            </Link>
+                          </Button>
+                        )}
                       </DraggableAssessmentRow>
                     ))}
                   </div>

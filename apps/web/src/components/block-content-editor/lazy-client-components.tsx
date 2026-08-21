@@ -8,7 +8,7 @@ import { ClientOnlyLazy } from "@/components/block-content-editor/lib/client-onl
 import type { ModeSelectionDialog as ModeSelectionDialogComponent } from "@/components/block-content-editor/extras/code-studio/mode-selection-dialog"
 import type { HTMLEditor as HTMLEditorComponent } from "@/components/block-content-editor/extras/html/html-editor"
 import type { MarkdownEditor as MarkdownEditorComponent } from "@/components/block-content-editor/extras/markdown/markdown-editor"
-import type { QuizSettingsDialog as QuizSettingsDialogComponent } from "@/components/block-content-editor/extras/quiz/quiz-settings-dialog"
+import type { QuizEditorDialog as QuizSettingsDialogComponent } from "@game-guild/quiz-surface/editor"
 import type { RichTextEditor as RichTextEditorComponent } from "@/components/block-content-editor/extras/rich-text/rich-text-editor"
 
 // Browser-only editor surfaces used by nodes and engine modals.
@@ -120,7 +120,7 @@ const LazyCodeStudioPreview = lazy(async () => ({
 }))
 
 const LazyQuizSettingsDialog = lazy(async () => ({
-  default: (await import("@/components/block-content-editor/extras/quiz/quiz-settings-dialog")).QuizSettingsDialog,
+  default: (await import("@game-guild/quiz-surface/editor")).QuizEditorDialog,
 }))
 
 const LazyModeSelectionDialog = lazy(async () => ({

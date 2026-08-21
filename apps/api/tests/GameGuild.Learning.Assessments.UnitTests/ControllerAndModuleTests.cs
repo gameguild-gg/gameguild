@@ -22,6 +22,7 @@ public class ControllerAndModuleTests
     private readonly Mock<IProgramCrudService> _programs = new();
     private readonly Mock<IEnrollmentService> _enrollments = new();
     private readonly Mock<IPermissionQueryService> _permissions = new();
+    private readonly Mock<IGradingQueueService> _gradingQueue = new();
     private readonly Mock<ILogger<AssessmentsController>> _log = new();
 
     private AssessmentsController CreateController(Guid? userId = null, bool isSystemAdmin = false, Guid? tenantId = null)
@@ -42,6 +43,7 @@ public class ControllerAndModuleTests
             _programs.Object,
             _enrollments.Object,
             _permissions.Object,
+            _gradingQueue.Object,
             _log.Object);
     }
 
@@ -260,7 +262,7 @@ public class ControllerAndModuleTests
     [InlineData(PermissionType.Create)]
     [InlineData(PermissionType.Edit)]
     [InlineData(PermissionType.Delete)]
-    public async Task GetSubmission_WithManagementPermissionOnly_ReturnsForbidden(PermissionType permission)
+    public async Task GetSubmission_WithManagementPermission_ReturnsManagerPayload(PermissionType permission)
     {
         var actorId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
@@ -278,11 +280,12 @@ public class ControllerAndModuleTests
 
         var result = await CreateController(actorId).GetSubmission(submission.Id);
 
-        result.Result.Should().BeOfType<ForbidResult>();
+        result.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeOfType<AssessmentSubmissionDto>();
     }
 
     [Fact]
-    public async Task GetSubmission_WhenActorIsProgramCreatorWithoutReview_ReturnsForbidden()
+    public async Task GetSubmission_WhenActorIsProgramCreatorWithoutReview_ReturnsManagerPayload()
     {
         var actorId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
@@ -295,7 +298,8 @@ public class ControllerAndModuleTests
 
         var result = await CreateController(actorId).GetSubmission(submission.Id);
 
-        result.Result.Should().BeOfType<ForbidResult>();
+        result.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeOfType<AssessmentSubmissionDto>();
     }
 
     [Fact]
@@ -334,7 +338,7 @@ public class ControllerAndModuleTests
     [InlineData(PermissionType.Create)]
     [InlineData(PermissionType.Edit)]
     [InlineData(PermissionType.Delete)]
-    public async Task GetAssessmentSubmissions_WithManagementPermissionOnly_ReturnsForbidden(PermissionType permission)
+    public async Task GetAssessmentSubmissions_WithManagementPermission_ReturnsOk(PermissionType permission)
     {
         var actorId = Guid.NewGuid();
         var assessmentId = Guid.NewGuid();
@@ -352,12 +356,12 @@ public class ControllerAndModuleTests
 
         var result = await CreateController(actorId).GetAssessmentSubmissions(assessmentId);
 
-        result.Result.Should().BeOfType<ForbidResult>();
-        _svc.Verify(service => service.GetAssessmentSubmissionsAsync(It.IsAny<Guid>()), Times.Never);
+        result.Result.Should().BeOfType<OkObjectResult>();
+        _svc.Verify(service => service.GetAssessmentSubmissionsAsync(assessmentId), Times.Once);
     }
 
     [Fact]
-    public async Task GetAssessmentSubmissions_WhenActorIsProgramCreatorWithoutReview_ReturnsForbidden()
+    public async Task GetAssessmentSubmissions_WhenActorIsProgramCreatorWithoutReview_ReturnsOk()
     {
         var actorId = Guid.NewGuid();
         var assessmentId = Guid.NewGuid();
@@ -369,8 +373,8 @@ public class ControllerAndModuleTests
 
         var result = await CreateController(actorId).GetAssessmentSubmissions(assessmentId);
 
-        result.Result.Should().BeOfType<ForbidResult>();
-        _svc.Verify(service => service.GetAssessmentSubmissionsAsync(It.IsAny<Guid>()), Times.Never);
+        result.Result.Should().BeOfType<OkObjectResult>();
+        _svc.Verify(service => service.GetAssessmentSubmissionsAsync(assessmentId), Times.Once);
     }
 
     [Fact]
@@ -477,7 +481,7 @@ public class ControllerAndModuleTests
     [InlineData(PermissionType.Create)]
     [InlineData(PermissionType.Edit)]
     [InlineData(PermissionType.Delete)]
-    public async Task GradeSubmission_WithManagementPermissionOnly_ReturnsForbidden(PermissionType permission)
+    public async Task GradeSubmission_WithManagementPermission_GradesSubmission(PermissionType permission)
     {
         var actorId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
@@ -500,12 +504,13 @@ public class ControllerAndModuleTests
         var result = await CreateController(actorId, tenantId: tenantId)
             .GradeSubmission(submissionId, new GradeSubmissionRequest(80));
 
-        result.Result.Should().BeOfType<ForbidResult>();
-        _svc.Verify(service => service.GradeSubmissionAsync(It.IsAny<Guid>(), It.IsAny<GradeSubmissionRequest>()), Times.Never);
+        result.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeOfType<AssessmentSubmissionDto>();
+        _svc.Verify(service => service.GradeSubmissionAsync(submissionId, It.Is<GradeSubmissionRequest>(r => r.GradedBy == actorId)), Times.Once);
     }
 
     [Fact]
-    public async Task GradeSubmission_WhenActorIsProgramCreatorWithoutReview_ReturnsForbidden()
+    public async Task GradeSubmission_WhenActorIsProgramCreatorWithoutReview_GradesSubmission()
     {
         var actorId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
@@ -523,8 +528,9 @@ public class ControllerAndModuleTests
         var result = await CreateController(actorId, tenantId: tenantId)
             .GradeSubmission(submissionId, new GradeSubmissionRequest(80));
 
-        result.Result.Should().BeOfType<ForbidResult>();
-        _svc.Verify(service => service.GradeSubmissionAsync(It.IsAny<Guid>(), It.IsAny<GradeSubmissionRequest>()), Times.Never);
+        result.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeOfType<AssessmentSubmissionDto>();
+        _svc.Verify(service => service.GradeSubmissionAsync(submissionId, It.Is<GradeSubmissionRequest>(r => r.GradedBy == actorId)), Times.Once);
     }
 
     [Fact]

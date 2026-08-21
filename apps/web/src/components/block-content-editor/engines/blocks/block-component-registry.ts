@@ -24,7 +24,7 @@ import {
   FolderOpen,
 } from "lucide-react"
 import type { Block, BlockCellType } from "@/components/block-content-editor/lib/storage/editor/block-structure"
-import { QuizEntryType, createDefaultSettings } from "@/components/block-content-editor/extras/quiz"
+import { QuizEntryType, createDefaultSettings, createQuizEntityId } from "@game-guild/quiz"
 import { createDefaultHTMLData } from "@/components/block-content-editor/extras/html/html-utils"
 
 // Re-export for consumers that import from here
@@ -56,11 +56,20 @@ export const BLOCK_REGISTRY: Record<BlockCellType, BlockTypeConfig> = {
     icon: HelpCircle,
     label: "Quiz",
     description: "Interactive quiz question",
-    createEmpty: (id) => ({
-      id,
-      type: "quiz",
-      data: { type: QuizEntryType.SingleChoice, stem: "", options: [{ id: "o1", text: "" }], correctOptionId: "o1", settings: createDefaultSettings() },
-    }),
+    createEmpty: (id) => {
+      const optionId = createQuizEntityId()
+      return {
+        id,
+        type: "quiz",
+        data: {
+          type: QuizEntryType.SingleChoice,
+          stem: "",
+          options: [{ id: optionId, text: "" }],
+          correctOptionId: optionId,
+          settings: createDefaultSettings(),
+        },
+      }
+    },
   },
   "code-studio": {
     icon: Code,

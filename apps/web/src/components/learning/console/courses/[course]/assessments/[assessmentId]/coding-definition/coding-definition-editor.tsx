@@ -25,8 +25,6 @@ import {
 } from "@game-guild/ui/components/card";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
-import { Label } from "@game-guild/ui/components/label";
-import { Switch } from "@game-guild/ui/components/switch";
 import {
   putCodingAssignmentAction,
   type CodingAssignmentContent,
@@ -38,7 +36,7 @@ import {
   type Test,
 } from "@/lib/coding-assignment/actions";
 import type { FileEncoding } from "@/lib/coding-assignment/types";
-// ponytail: same import path + cast bridge as grade-client.tsx. The web
+// ponytail: same import path + cast bridge as the speedgrader code-grader-panel. The web
 // CodingAssignmentContent uses readonly arrays; the emception mapper input
 // uses mutable arrays. Wire shape is identical at runtime.
 import { buildTestPlan } from "emception/testing";
@@ -49,7 +47,7 @@ import { StandardTestEditor } from "./standard-test-editor";
 import { FunctionalTestEditor } from "./functional-test-editor";
 import { useLearningBase } from '@/lib/learning/use-learning-base';
 
-// ponytail: direct import (matches grade-client pattern). The IDE manages
+// ponytail: direct import (matches code-grader-panel pattern). The IDE manages
 // its own worker boot client-side; Next's transpilePackages list already
 // includes @game-guild/emception-ui so this resolves at build time.
 
@@ -58,6 +56,7 @@ const LANGUAGE_OPTIONS: { value: CodingLanguage; label: string }[] = [
   { value: "c", label: "C (clang + WASI)" },
   { value: "sdl-cpp", label: "C++ + SDL3 (emcc)" },
   { value: "raylib-cpp", label: "C++ + raylib (emcc)" },
+  { value: "allegro-cpp", label: "C++ + Allegro 5 (clang + wasm-ld)" },
 ];
 
 const DEFAULT_TOOLS: Record<CodingLanguage, string> = {
@@ -65,6 +64,7 @@ const DEFAULT_TOOLS: Record<CodingLanguage, string> = {
   c: "clang",
   "sdl-cpp": "emcc",
   "raylib-cpp": "emcc",
+  "allegro-cpp": "clang",
 };
 
 const FUNCTION_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -504,6 +504,8 @@ export function CodingDefinitionEditor({
                 onPresetChange={(v) => handleLanguageChange(v as CodingLanguage)}
                 fileMeta={fileMeta}
                 onFileMetaChange={handleFileMetaChange}
+                allowCreateFiles={allowStudentCreateFiles}
+                onAllowCreateFilesChange={setAllowStudentCreateFiles}
                 tests={testSuite}
                 onTestsChange={handleTestsChange}
                 testPlan={authoredTestPlan}
@@ -569,17 +571,6 @@ export function CodingDefinitionEditor({
                   </div>
                 }
               />
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                id="allow-student-create"
-                checked={allowStudentCreateFiles}
-                onCheckedChange={setAllowStudentCreateFiles}
-                data-testid="allow-student-create"
-              />
-              <Label htmlFor="allow-student-create" className="text-sm">
-                Allow students to create new files
-              </Label>
             </div>
           </CardContent>
         </Card>
@@ -714,7 +705,7 @@ function buildContent(args: BuildArgs): CodingAssignmentContent {
   const environment: CodingEnvironment = {
     Language: args.language,
     Tools: DEFAULT_TOOLS[args.language],
-    LibBundle: null,
+    LibBundle: args.language === "allegro-cpp" ? "allegro" : null,
     AllowStudentCreateFiles: args.allowStudentCreateFiles,
   };
 

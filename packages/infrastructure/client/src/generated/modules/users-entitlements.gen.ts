@@ -17,10 +17,10 @@ export class UsersEntitlementsModule {
 
   /**
    */
-  async getUsersMeEntitlements(): Promise<
-    Result<Array<Types.CommerceProductsEntitlementInfo>, ApiError>
-  > {
-    const url = "/v1/users/me/entitlements";
+  async getUsersEntitlements(
+    userId: string,
+  ): Promise<Result<Array<Types.CommerceProductsEntitlementInfo>, ApiError>> {
+    const url = `/v1/users/${userId}/entitlements`;
 
     const result = await this.client.request({
       method: "GET",
@@ -36,10 +36,10 @@ export class UsersEntitlementsModule {
 
   /**
    */
-  async getUsersEntitlements(
-    userId: string,
-  ): Promise<Result<Array<Types.CommerceProductsEntitlementInfo>, ApiError>> {
-    const url = `/v1/users/${userId}/entitlements`;
+  async getUsersMeEntitlements(): Promise<
+    Result<Array<Types.CommerceProductsEntitlementInfo>, ApiError>
+  > {
+    const url = "/v1/users/me/entitlements";
 
     const result = await this.client.request({
       method: "GET",

@@ -277,14 +277,40 @@ public class AssessmentEntityTests
     }
 
     [Fact]
-    public void Update_WithClearContentId_ShouldClearContentId()
+    public void Update_WithClearContentId_ThrowsWhenContentAlreadyLinked()
     {
         var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100);
         assessment.Update(null, null, null, null, null, null, null, null, Guid.NewGuid());
 
-        assessment.Update(null, null, null, null, null, null, null, null, null, clearContentId: true);
+        var act = () => assessment.Update(null, null, null, null, null, null, null, null, null, clearContentId: true);
 
-        assessment.ContentId.Should().BeNull();
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*cannot be unlinked*");
+        assessment.ContentId.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Update_WithDifferentContentId_ThrowsWhenContentAlreadyLinked()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100);
+        assessment.Update(null, null, null, null, null, null, null, null, Guid.NewGuid());
+
+        var act = () => assessment.Update(null, null, null, null, null, null, null, null, Guid.NewGuid());
+
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*cannot be unlinked*");
+    }
+
+    [Fact]
+    public void Update_WithSameContentId_IsAllowedNoOp()
+    {
+        var assessment = Assessment.Create(Guid.NewGuid(), "Title", AssessmentType.Quiz, 100);
+        var contentId = Guid.NewGuid();
+        assessment.Update(null, null, null, null, null, null, null, null, contentId);
+
+        assessment.Update(null, null, null, null, null, null, null, null, contentId);
+
+        assessment.ContentId.Should().Be(contentId);
     }
 }
 
@@ -303,7 +329,7 @@ public class AssessmentServiceRestoreTests
         assessment.SoftDelete();
         db.Set<Assessment>().Add(assessment);
         await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var before = await service.GetAssessmentByIdAsync(assessment.Id);
         before.Should().BeNull();
@@ -321,7 +347,7 @@ public class AssessmentServiceRestoreTests
     public async Task RestoreAssessmentAsync_OnUnknownId_ReturnsNotFound()
     {
         await using var db = CreateContext();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.RestoreAssessmentAsync(Guid.NewGuid());
 
@@ -336,7 +362,7 @@ public class AssessmentServiceRestoreTests
         var assessment = Assessment.Create(Guid.NewGuid(), "Quiz", AssessmentType.Quiz, 100);
         db.Set<Assessment>().Add(assessment);
         await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.RestoreAssessmentAsync(assessment.Id);
 
@@ -377,14 +403,14 @@ public class AssessmentSubmissionEntityTests
     [Fact]
     public void Grade_RequiresAssessmentMaximumScore()
     {
-        var gradeMethods = typeof(AssessmentSubmission)
+        var gradeMethodSignatures = typeof(AssessmentSubmission)
             .GetMethods()
             .Where(method => method.Name == nameof(AssessmentSubmission.Grade))
-            .ToArray();
+            .Select(method => string.Join(",", method.GetParameters().Select(parameter => parameter.ParameterType.Name)))
+            .ToList();
 
-        gradeMethods.Should().ContainSingle()
-            .Which.GetParameters().Select(parameter => parameter.ParameterType)
-            .Should().Equal(typeof(int), typeof(int), typeof(int), typeof(Guid?), typeof(string));
+        gradeMethodSignatures.Should().Contain("Int32,Int32,Int32,Nullable`1,String");
+        gradeMethodSignatures.Should().Contain("Int32,Int32,Int32,Nullable`1,String,String");
     }
 
     [Fact]
@@ -483,7 +509,7 @@ public class AssessmentSubmissionEntityTests
         historicalSubmission.SoftDelete();
         db.AddRange(assessment, historicalSubmission);
         await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.StartSubmissionAsync(assessment.Id, enrollmentId, Guid.NewGuid());
 
@@ -591,9 +617,16 @@ public sealed class AssessmentServiceAnalyticsTests
         var courseId = Guid.NewGuid();
         var quizGroup = AssessmentGroup.Create(courseId, "Quizzes", 20, 1);
         var projectGroup = AssessmentGroup.Create(courseId, "Final Project", 30, 2);
+        var feedbackGroup = AssessmentGroup.Create(courseId, "Feedback", 0, 3);
         var quiz = Assessment.Create(courseId, "Intro quiz", AssessmentType.Quiz, 10, assessmentGroupId: quizGroup.Id);
         var project = Assessment.Create(courseId, "Final build", AssessmentType.Project, 100, assessmentGroupId: projectGroup.Id);
         var attendance = Assessment.Create(courseId, "Attendance", AssessmentType.Assignment, 10);
+        var feedbackOnly = Assessment.Create(
+            courseId,
+            "Practice quiz",
+            AssessmentType.Quiz,
+            10,
+            assessmentGroupId: feedbackGroup.Id);
         var ignoredOtherCourse = Assessment.Create(Guid.NewGuid(), "Other", AssessmentType.Quiz, 10);
 
         var quizSubmission = AssessmentSubmission.Start(quiz.Id, Guid.NewGuid(), Guid.NewGuid(), 1);
@@ -606,26 +639,27 @@ public sealed class AssessmentServiceAnalyticsTests
         ignoredSubmission.Submit();
         ignoredSubmission.Grade(10, 6, ignoredOtherCourse.MaxScore);
 
-        db.Set<AssessmentGroup>().AddRange(quizGroup, projectGroup);
-        db.Set<Assessment>().AddRange(quiz, project, attendance, ignoredOtherCourse);
+        db.Set<AssessmentGroup>().AddRange(quizGroup, projectGroup, feedbackGroup);
+        db.Set<Assessment>().AddRange(quiz, project, attendance, feedbackOnly, ignoredOtherCourse);
         db.Set<AssessmentSubmission>().AddRange(quizSubmission, projectSubmission, ignoredSubmission);
         await db.SaveChangesAsync();
 
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var analytics = await service.GetCourseAssessmentAnalyticsAsync(courseId);
 
         analytics.CourseId.Should().Be(courseId);
-        analytics.AssessmentCount.Should().Be(3);
+        analytics.AssessmentCount.Should().Be(2);
         analytics.GradedCount.Should().Be(2);
-        analytics.UngradedCount.Should().Be(1);
+        analytics.UngradedCount.Should().Be(0);
         analytics.AveragePercent.Should().Be(65);
         analytics.PassRate.Should().Be(50);
         analytics.Distribution.Single(bucket => bucket.Label == "80-89").Count.Should().Be(1);
         analytics.Distribution.Single(bucket => bucket.Label == "0-59").Count.Should().Be(1);
         analytics.Groups.Single(group => group.GroupName == "Quizzes").AveragePercent.Should().Be(80);
         analytics.Groups.Single(group => group.GroupName == "Final Project").PassRate.Should().Be(0);
-        analytics.Groups.Single(group => group.GroupName == "Ungrouped").AssessmentCount.Should().Be(1);
+        analytics.Groups.Should().NotContain(group => group.GroupName == "Feedback");
+        analytics.Groups.Should().NotContain(group => group.GroupName == "Ungrouped");
     }
 
     private static TestAssessmentDbContext CreateContext()

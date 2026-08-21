@@ -17,10 +17,10 @@ namespace GameGuild.Notifications;
 public class Notification : EntityBase
 {
     /// <summary>
-    /// ID of the user who will receive this notification
+    /// ID of the user who will receive this notification.
+    /// Null for email-only recipients (e.g., tenant invites to unregistered addresses).
     /// </summary>
-    [Required]
-    public Guid RecipientId { get; private set; }
+    public Guid? RecipientId { get; private set; }
 
     /// <summary>
     /// Tenant context for this notification
@@ -87,6 +87,46 @@ public class Notification : EntityBase
     public DateTime? SentAt { get; private set; }
 
     /// <summary>
+    /// Delivery pipeline state for out-of-band channels (email dispatcher, digest engine)
+    /// </summary>
+    public NotificationDeliveryStatus DeliveryStatus { get; private set; } = NotificationDeliveryStatus.Pending;
+
+    /// <summary>
+    /// Number of delivery attempts made for this notification
+    /// </summary>
+    public int AttemptCount { get; private set; }
+
+    /// <summary>
+    /// Last delivery error, if any
+    /// </summary>
+    [MaxLength(1000)]
+    public string? LastError { get; private set; }
+
+    /// <summary>
+    /// When the next delivery attempt should be made (retry backoff / quiet-hours hold)
+    /// </summary>
+    public DateTime? NextAttemptAt { get; private set; }
+
+    /// <summary>
+    /// Email address for email-channel notifications when no user account exists
+    /// </summary>
+    [MaxLength(320)]
+    public string? RecipientEmail { get; private set; }
+
+    /// <summary>
+    /// Message id assigned by the email provider (SES) for the last send attempt;
+    /// null when the provider returned none (disabled/skip) or for digest bundles.
+    /// Joins EmailDeliveryEvent.ProviderMessageId for the delivery timeline.
+    /// </summary>
+    [MaxLength(100)]
+    public string? ProviderMessageId { get; private set; }
+
+    /// <summary>
+    /// Number of times this notification was requeued from the dead-letter state by an admin
+    /// </summary>
+    public int RequeueCount { get; private set; }
+
+    /// <summary>
     /// Optional scheduled delivery time (for delayed notifications)
     /// </summary>
     public DateTime? ScheduledAt { get; private set; }
@@ -133,7 +173,7 @@ public class Notification : EntityBase
     /// Creates a new notification
     /// </summary>
     public static Notification Create(
-        Guid recipientId,
+        Guid? recipientId,
         NotificationType type,
         NotificationChannel channel,
         string title,
@@ -146,12 +186,14 @@ public class Notification : EntityBase
         Guid? referenceEntityId = null,
         string? referenceEntityType = null,
         string? metadata = null,
-        Guid? templateId = null)
+        Guid? templateId = null,
+        string? recipientEmail = null)
     {
         return new Notification
         {
             Id = Guid.NewGuid(),
             RecipientId = recipientId,
+            RecipientEmail = recipientEmail,
             TenantId = tenantId,
             Type = type,
             Channel = channel,
@@ -201,6 +243,91 @@ public class Notification : EntityBase
         
         IsSent = true;
         SentAt = SystemClock.UtcNow;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    /// Marks the delivery pipeline state as Sent (idempotent; also sets IsSent/SentAt).
+    /// Provider message id stays null — used by digest bundles, which have no single provider id.
+    /// </summary>
+    public void MarkDeliverySent()
+    {
+        MarkDeliverySent(null);
+    }
+
+    /// <summary>
+    /// Marks the delivery pipeline state as Sent and records the provider-assigned message id
+    /// (SES) for the delivery timeline join. Null when the provider returned none (disabled/skip).
+    /// </summary>
+    public void MarkDeliverySent(string? providerMessageId)
+    {
+        MarkAsSent();
+        if (DeliveryStatus == NotificationDeliveryStatus.Sent) return;
+
+        ProviderMessageId = providerMessageId;
+        DeliveryStatus = NotificationDeliveryStatus.Sent;
+        NextAttemptAt = null;
+        LastError = null;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    /// Records a failed delivery attempt and schedules the next retry (status returns to Pending)
+    /// </summary>
+    public void MarkDeliveryAttemptFailed(string error, DateTime nextAttemptAt)
+    {
+        AttemptCount++;
+        LastError = error;
+        NextAttemptAt = nextAttemptAt;
+        DeliveryStatus = NotificationDeliveryStatus.Pending;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    /// Gives up on delivery after exhausting retries or exceeding the staleness TTL
+    /// </summary>
+    public void MarkDeadLettered(string reason)
+    {
+        DeliveryStatus = NotificationDeliveryStatus.DeadLettered;
+        LastError = reason;
+        NextAttemptAt = null;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    /// Requeues a dead-lettered notification for another delivery attempt (admin action).
+    /// <see cref="LastError"/> and <see cref="AttemptCount"/> are deliberately KEPT as the
+    /// audit trail of the failure that dead-lettered the row; subsequent delivery attempts
+    /// overwrite them as usual.
+    /// </summary>
+    public void MarkRequeued()
+    {
+        if (DeliveryStatus != NotificationDeliveryStatus.DeadLettered) return;
+
+        DeliveryStatus = NotificationDeliveryStatus.Pending;
+        NextAttemptAt = null;
+        RequeueCount++;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    /// Atomically claims a Pending notification for the sender (no-op unless Pending)
+    /// </summary>
+    public void ClaimForSending()
+    {
+        if (DeliveryStatus != NotificationDeliveryStatus.Pending) return;
+
+        DeliveryStatus = NotificationDeliveryStatus.Sending;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    /// <summary>
+    /// Quarantines the notification for a future digest email
+    /// </summary>
+    public void MarkHeldForDigest()
+    {
+        DeliveryStatus = NotificationDeliveryStatus.HeldForDigest;
+        NextAttemptAt = null;
         UpdatedAt = SystemClock.UtcNow;
     }
 
@@ -272,8 +399,47 @@ public enum NotificationType
     /// <summary>Inactivity reminder</summary>
     InactivityReminder = 18,
 
+    /// <summary>Email address verification</summary>
+    EmailVerification = 19,
+
+    /// <summary>Password reset request</summary>
+    PasswordReset = 20,
+
+    /// <summary>Sign-in magic link</summary>
+    MagicLink = 21,
+
+    /// <summary>Tenant membership invitation</summary>
+    TenantInvite = 22,
+
+    /// <summary>Monthly billing statement</summary>
+    MonthlyStatement = 23,
+
     /// <summary>Custom/other notification type</summary>
     Custom = 99
+}
+
+/// <summary>
+/// Delivery pipeline state for out-of-band channels
+/// </summary>
+public enum NotificationDeliveryStatus
+{
+    /// <summary>Waiting to be picked up by the dispatcher</summary>
+    Pending = 0,
+
+    /// <summary>Claimed by a sender; delivery in progress</summary>
+    Sending = 1,
+
+    /// <summary>Delivered successfully</summary>
+    Sent = 2,
+
+    /// <summary>Delivery failed; will be retried</summary>
+    Failed = 3,
+
+    /// <summary>Permanently failed after exhausting retries or exceeding TTL</summary>
+    DeadLettered = 4,
+
+    /// <summary>Quarantined for a future digest email</summary>
+    HeldForDigest = 5
 }
 
 /// <summary>

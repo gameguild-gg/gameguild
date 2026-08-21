@@ -38,40 +38,23 @@ Part 3 connects that cleaned contract to the Learning backend. The backend will 
 ## Part 2 Contract Target
 
 ```ts
-export type GradingResultUse =
-  | 'feedback'
-  | 'gradebook';
-
 export interface ContentGradingDefinition {
   enabled: boolean;
   schemaVersion: number;
-  outcome: GradingOutcomePolicy;
   score: ScorePolicy;
   attempts: AttemptPolicy;
   feedback: FeedbackPolicy;
   presentation: PresentationPolicy;
   items: Record<string, GradedItemConfig>;
 }
-
-export interface GradingOutcomePolicy {
-  uses: GradingResultUse[];
-  gradebook?: GradebookPlacement | null;
-}
-
-export interface GradebookPlacement {
-  groupId?: string | null;
-  weight?: number;
-  required?: boolean;
-  includeInFinalGrade?: boolean;
-}
 ```
 
 Rules:
 
-- `uses: ['feedback']` means evaluated but not global-grade affecting.
-- `uses` including `gradebook` means the result can contribute to gradebook/final grade according to `gradebook`.
-- `uses: ['feedback']` is still grading enabled and server-side; it is not the same as disabling grading.
-- Other product concerns such as completion, certificate eligibility, placement, or analytics should consume the server-produced result from their own context instead of expanding this type before the platform has a concrete grading-package rule for them.
+- grading metadata defines evaluation, not course-grade placement;
+- `AssessmentGroup.WeightPercent == 0` assigns the `Practice` role;
+- a positive-weight assessment group contributes to gradebook/final-grade flows;
+- an assessment without a group remains unconfigured.
 
 ## Part 2 Package Refactor
 
@@ -124,7 +107,7 @@ Learner/runtime:
 Assessments page:
 
 - Continue listing content-owned graded activities.
-- Show result use instead of validation mode.
+- Show placement derived from assessment-group weight.
 - Link edits back to content.
 - Do not restore assessment-owned quiz editing.
 
@@ -133,9 +116,7 @@ Assessments page:
 Package tests:
 
 - normalized definitions use the current `ContentGradingDefinition` shape.
-- feedback-only definitions are valid without gradebook placement.
-- gradebook-targeting definitions validate gradebook placement.
-- invalid result uses are rejected.
+- definitions contain no gradebook placement metadata.
 - quiz adapter extracts items from quiz blocks.
 - quiz adapter redacts answer keys.
 - quiz adapter creates structured answer payloads.
@@ -143,8 +124,8 @@ Package tests:
 Frontend tests:
 
 - quiz grading metadata saves/reloads through the current grading definition.
-- result-use controls save expected metadata.
-- assessments projection shows result use.
+- assessment groups control whether results contribute to gradebook flows.
+- assessments projection derives placement from group weight.
 - grading-enabled learner-facing quiz path does not compute trusted correctness in the client.
 - grading-disabled quiz path can show local practice correctness without creating a trusted result.
 
@@ -172,7 +153,7 @@ Regression:
 Use the existing Learning modules this way:
 
 - `GameGuild.Learning.Courses`: owns `ProgramContent`, body data, content tree, progress, and content-level authoring.
-- `GameGuild.Learning.Assessments`: provides `AssessmentGroup`, `AssessmentSubmission`, attempts, `StructuredAnswerPayload`, score, pass/fail, and result storage that can feed gradebook when `outcome.uses` includes `gradebook`.
+- `GameGuild.Learning.Assessments`: provides `AssessmentGroup`, `AssessmentSubmission`, attempts, `StructuredAnswerPayload`, score, pass/fail, and group-weight-driven gradebook placement.
 - `GameGuild.Learning`: remains shared contracts/events/interfaces, not the concrete persistence owner.
 
 Recommended Part 3 direction:
@@ -181,7 +162,7 @@ Recommended Part 3 direction:
 - A server-owned answer-key store links to content grading definition versions.
 - Every content item with `grading.enabled === true` gets a server-side submission/result path.
 - Content with grading disabled keeps normal content delivery and may use local-practice feedback without `AssessmentSubmission`.
-- The first implementation should prefer one active `Assessment` projection per gradable content item, linked by `Assessment.ContentId`, so feedback-only and gradebook-bound content can both reuse `AssessmentSubmission`.
+- The first implementation should prefer one active `Assessment` projection per gradable content item, linked by `Assessment.ContentId`, so all graded content can reuse `AssessmentSubmission`.
 - The `Assessment.ContentId` link must be validated against `ProgramContent.ProgramId == Assessment.CourseId`.
 - Add an index or uniqueness rule for active `Assessment.ContentId` projections if the backend keeps one active projection per gradable content item.
 - `AssessmentSubmission.StructuredAnswerPayload` stores submitted answers.
@@ -227,9 +208,9 @@ Recommended Part 3 direction:
 
 ### Phase 3.5: Result Propagation
 
-- Apply `outcome.uses`.
-- Feedback-only results are stored for learner feedback and operational review, but stay out of gradebook/final grade.
-- Gradebook results update assessment/submission analytics.
+- Use assessment-group weight as the placement rule.
+- Results in zero-weight `Practice` groups remain available for operational review, but stay out of gradebook/final grade.
+- Results in positive-weight groups update assessment/submission analytics.
 - Final grade propagation waits for a canonical aggregation owner decision if the current backend still has multiple grade-bearing models.
 
 ## Part 3 Security Tests

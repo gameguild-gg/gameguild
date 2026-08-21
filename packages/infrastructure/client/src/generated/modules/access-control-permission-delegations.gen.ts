@@ -53,6 +53,20 @@ export class AccessControlPermissionDelegationsModule {
 
   /**
    */
+  async postPermissionDelegationsCleanup(): Promise<Result<number, ApiError>> {
+    const url = "/v1/permission-delegations/:cleanup";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<number, ApiError>;
+  }
+
+  /**
+   */
   async getPermissionDelegations(
     id: string,
   ): Promise<
@@ -93,6 +107,26 @@ export class AccessControlPermissionDelegationsModule {
     });
 
     return result as Result<void, ApiError>;
+  }
+
+  /**
+   */
+  async getPermissionDelegationsCheck(query?: {
+    delegateUserId?: string;
+    permission?: string;
+    tenantId?: string;
+    resourceId?: string;
+  }): Promise<Result<boolean, ApiError>> {
+    const url = "/v1/permission-delegations/check";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<boolean, ApiError>;
   }
 
   /**
@@ -139,40 +173,6 @@ export class AccessControlPermissionDelegationsModule {
       Array<Types.IdentityAuthorizationPermissionDelegation>,
       ApiError
     >;
-  }
-
-  /**
-   */
-  async getPermissionDelegationsCheck(query?: {
-    delegateUserId?: string;
-    permission?: string;
-    tenantId?: string;
-    resourceId?: string;
-  }): Promise<Result<boolean, ApiError>> {
-    const url = "/v1/permission-delegations/check";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<boolean, ApiError>;
-  }
-
-  /**
-   */
-  async postPermissionDelegationsCleanup(): Promise<Result<number, ApiError>> {
-    const url = "/v1/permission-delegations/:cleanup";
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<number, ApiError>;
   }
 }
 

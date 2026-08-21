@@ -81,6 +81,7 @@ global.ResizeObserver = class ResizeObserver {
 const assessmentGroups = [
   { id: 'group-a', courseId: 'course-1', name: 'Group A', description: null, weightPercent: 50, order: 1 },
   { id: 'group-b', courseId: 'course-1', name: 'Group B', description: null, weightPercent: 50, order: 2 },
+  { id: 'group-feedback', courseId: 'course-1', name: 'Feedback', description: null, weightPercent: 0, order: 3 },
 ];
 
 const unassignedAssessment = {
@@ -125,7 +126,17 @@ const groupBAssessment = {
   assessmentGroupOrder: 2,
 } as unknown as Assessment;
 
-const assessments = [unassignedAssessment, groupAAssessment, groupBAssessment];
+const feedbackAssessment = {
+  ...unassignedAssessment,
+  id: 'assessment-feedback',
+  title: 'Practice quiz',
+  assessmentGroupId: 'group-feedback',
+  assessmentGroupName: 'Feedback',
+  assessmentGroupWeightPercent: 0,
+  assessmentGroupOrder: 3,
+} as unknown as Assessment;
+
+const assessments = [unassignedAssessment, groupAAssessment, groupBAssessment, feedbackAssessment];
 
 function renderList() {
   dndHarness.handlers.length = 0;
@@ -177,6 +188,23 @@ describe('AssessmentsList DnD between grade groups', () => {
         courseId: 'course-1',
         assessmentId: 'assessment-groupA',
         assessmentGroupId: 'group-b',
+      });
+    });
+  });
+
+  it('moves a feedback assessment into a weighted gradebook group', async () => {
+    renderList();
+    const dragEnd = dndHarness.handlers[0]!;
+
+    await act(async () => {
+      dragEnd({ active: { id: 'assessment-assessment-feedback' }, over: { id: 'group-drop-group-a' } });
+    });
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith({
+        courseId: 'course-1',
+        assessmentId: 'assessment-feedback',
+        assessmentGroupId: 'group-a',
       });
     });
   });

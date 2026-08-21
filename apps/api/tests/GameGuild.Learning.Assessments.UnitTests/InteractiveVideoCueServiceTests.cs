@@ -30,7 +30,7 @@ public sealed class InteractiveVideoCueServiceTests
             db.AddRange(assessment, submission);
             await db.SaveChangesAsync();
             SystemClock.SetProvider(new SequenceTimeProvider(dueAt, dueAt.AddTicks(1)));
-            var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+            var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
             var result = await service.SubmitAsync(submission.Id);
 
@@ -55,10 +55,7 @@ public sealed class InteractiveVideoCueServiceTests
             AssessmentSubmission.Start(Guid.NewGuid(), enrollmentId, Guid.NewGuid(), 1),
             AssessmentSubmission.Start(Guid.NewGuid(), Guid.NewGuid(), actorUserId, 1));
         await db.SaveChangesAsync();
-        var service = new AssessmentService(
-            db,
-            Mock.Of<IProgramContentService>(),
-            NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var submissions = await service.GetUserSubmissionsAsync(enrollmentId, actorUserId);
 
@@ -75,7 +72,7 @@ public sealed class InteractiveVideoCueServiceTests
         await db.SaveChangesAsync();
         var contents = new Mock<IProgramContentService>();
         contents.Setup(service => service.GetContentByIdAsync(It.IsAny<Guid>())).ReturnsAsync((ProgramContent?)null);
-        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, contents.Object, new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.LinkInteractiveVideoCueAsync(
             assessment.Id,
@@ -94,7 +91,7 @@ public sealed class InteractiveVideoCueServiceTests
         await db.SaveChangesAsync();
         var contents = new Mock<IProgramContentService>();
         contents.Setup(service => service.GetContentByIdAsync(It.IsAny<Guid>())).ReturnsAsync((ProgramContent?)null);
-        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, contents.Object, new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.LinkInteractiveVideoCueAsync(
             assessment.Id,
@@ -114,7 +111,7 @@ public sealed class InteractiveVideoCueServiceTests
         var content = CreateVideoLesson(Guid.NewGuid());
         var contents = new Mock<IProgramContentService>();
         contents.Setup(service => service.GetContentByIdAsync(content.Id)).ReturnsAsync(content);
-        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, contents.Object, new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.LinkInteractiveVideoCueAsync(
             assessment.Id,
@@ -136,7 +133,7 @@ public sealed class InteractiveVideoCueServiceTests
         content.LessonFormat = LessonContentFormat.Markdown;
         var contents = new Mock<IProgramContentService>();
         contents.Setup(service => service.GetContentByIdAsync(content.Id)).ReturnsAsync(content);
-        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, contents.Object, new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.LinkInteractiveVideoCueAsync(
             assessment.Id,
@@ -157,7 +154,7 @@ public sealed class InteractiveVideoCueServiceTests
         var content = CreateVideoLesson(courseId);
         var contents = new Mock<IProgramContentService>();
         contents.Setup(service => service.GetContentByIdAsync(content.Id)).ReturnsAsync(content);
-        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, contents.Object, new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.LinkInteractiveVideoCueAsync(
             assessment.Id,
@@ -178,7 +175,7 @@ public sealed class InteractiveVideoCueServiceTests
         await db.SaveChangesAsync();
         var contents = new Mock<IProgramContentService>();
         contents.Setup(service => service.GetContentByIdAsync(cue.ContentId)).ReturnsAsync((ProgramContent?)null);
-        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, contents.Object, new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var cues = await service.GetInteractiveVideoCuesAsync(assessment.Id);
 
@@ -196,7 +193,7 @@ public sealed class InteractiveVideoCueServiceTests
         var content = CreateVideoLesson(courseId);
         var contents = new Mock<IProgramContentService>();
         contents.Setup(service => service.GetContentByIdAsync(content.Id)).ReturnsAsync(content);
-        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, contents.Object, new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var linked = await service.LinkInteractiveVideoCueAsync(
             assessment.Id,
@@ -227,7 +224,7 @@ public sealed class InteractiveVideoCueServiceTests
         content.Id = cue.ContentId;
         var contents = new Mock<IProgramContentService>();
         contents.Setup(service => service.GetContentByIdAsync(content.Id)).ReturnsAsync(content);
-        var service = new AssessmentService(db, contents.Object, NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, contents.Object, new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var deleted = await service.DeleteAssessmentAsync(assessment.Id);
         var loaded = await service.GetAssessmentByIdAsync(assessment.Id);
@@ -250,7 +247,7 @@ public sealed class InteractiveVideoCueServiceTests
         var program = new Program { Id = courseId, PassingScore = 60m };
         db.AddRange(program, assessment, submission);
         await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.GradeSubmissionAsync(submission.Id, new GradeSubmissionRequest(101));
 
@@ -271,7 +268,7 @@ public sealed class InteractiveVideoCueServiceTests
         failing.Submit();
         db.AddRange(program, assessment, passing, failing);
         await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var passResult = await service.GradeSubmissionAsync(passing.Id, new GradeSubmissionRequest(70));
         var failResult = await service.GradeSubmissionAsync(failing.Id, new GradeSubmissionRequest(50));
@@ -294,7 +291,7 @@ public sealed class InteractiveVideoCueServiceTests
         submission.Grade(80, 60, assessment.MaxScore);
         db.AddRange(assessment, submission);
         await db.SaveChangesAsync();
-        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), NullLogger<AssessmentService>.Instance);
+        var service = new AssessmentService(db, Mock.Of<IProgramContentService>(), new RubricService(db, NullLogger<RubricService>.Instance), NullLogger<AssessmentService>.Instance);
 
         var result = await service.UpdateAssessmentAsync(
             assessment.Id,

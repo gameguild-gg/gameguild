@@ -1,5 +1,11 @@
 import "@testing-library/jest-dom/vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ContentItemEditor } from "./content-item-editor";
@@ -7,6 +13,7 @@ import {
   createAssessment,
   deleteAssessment,
   restoreAssessment,
+  updateAssessment,
   updateContent,
 } from "@/lib/learning/actions";
 import type { ContentItemDetail } from "@/lib/learning/types";
@@ -40,6 +47,7 @@ vi.mock("@/lib/learning/actions", () => ({
   createAssessment: vi.fn(),
   deleteAssessment: vi.fn(),
   restoreAssessment: vi.fn(),
+  updateAssessment: vi.fn(),
 }));
 
 const putCodingDefinitionMock = vi.hoisted(() => ({
@@ -75,15 +83,6 @@ vi.mock("./lesson-code-editor", () => ({
   ),
 }));
 
-vi.mock(
-  "@/components/block-content-editor/engines/blocks/block-array-editor",
-  () => ({
-    BlockArrayEditor: ({ blocks }: { blocks: unknown[] }) => (
-      <div data-testid="block-array-editor">Blocks: {blocks.length}</div>
-    ),
-  }),
-);
-
 const item = {
   id: "content-1",
   parentId: "module-1",
@@ -96,7 +95,7 @@ const item = {
   metadata: {},
   gradingConfig: null,
   content: null,
-  jsonBody: { order: [], blocks: {} },
+  jsonBody: { schemaVersion: 1, order: [], blocks: {} },
   settings: { isRequired: true },
   lessonFormat: null,
   createdAt: "2026-01-01T00:00:00.000Z",
@@ -107,12 +106,18 @@ const quizItemWithBlock = {
   ...item,
   id: "content-2",
   jsonBody: {
+    schemaVersion: 1,
     order: [["1", "quiz"]],
     blocks: {
       "1": {
         type: "TRUE_FALSE",
-        question: "Stored question",
+        stem: "Stored question",
         correctAnswer: true,
+        settings: {
+          allowRetry: true,
+          showFeedback: true,
+          showCorrectAnswer: true,
+        },
       },
     },
   },
@@ -215,8 +220,18 @@ describe("ContentItemEditor", () => {
       success: true,
       data: { id: "new-asmnt" },
     });
-    vi.mocked(deleteAssessment).mockResolvedValue({ success: true, data: null });
-    vi.mocked(restoreAssessment).mockResolvedValue({ success: true, data: null });
+    vi.mocked(deleteAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
+    vi.mocked(restoreAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
+    vi.mocked(updateAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
   });
 
   it("renders quiz-publication copy and normalizes questionnaire to quiz", () => {
@@ -251,7 +266,8 @@ describe("ContentItemEditor", () => {
       />,
     );
 
-    expect(await screen.findByText("Blocks: 1")).toBeInTheDocument();
+    expect(await screen.findByText("Stored question")).toBeInTheDocument();
+    expect(screen.getByText("True / false")).toBeInTheDocument();
   });
 
   it("validates title before updating lesson content", async () => {
@@ -335,21 +351,91 @@ describe("ContentItemEditor", () => {
     const jsonBody = vi.mocked(updateContent).mock.calls[0]![0].jsonBody as {
       grading?: {
         enabled?: boolean;
-        outcome?: { uses?: string[]; gradebook?: unknown };
         score?: { maxScore?: number };
       };
     };
     expect(vi.mocked(updateContent).mock.calls[0]![0].body).toBeUndefined();
     expect(jsonBody.grading).toMatchObject({
       enabled: true,
-      outcome: {
-        uses: ["feedback"],
-        gradebook: null,
-      },
       score: {
         maxScore: 1,
       },
     });
+    expect(createAssessment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        courseId: "course-1",
+        contentId: "content-1",
+        type: "Quiz",
+        submissionModalities: "StructuredAnswer",
+        gradingMethods: "AutoGraded,InstructorGraded",
+      }),
+    );
+  });
+
+  it("keeps one linked assessment while grading is enabled and removes it only when grading is disabled", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+        linkedAssessmentId="asmnt-quiz"
+      />,
+    );
+
+    await user.click(screen.getByRole("switch", { name: /grading/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          courseId: "course-1",
+          assessmentId: "asmnt-quiz",
+          contentId: "content-1",
+          gradingMethods: "AutoGraded,InstructorGraded",
+        }),
+      );
+    });
+    expect(deleteAssessment).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("switch", { name: /grading/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(deleteAssessment).toHaveBeenCalledWith("course-1", "asmnt-quiz");
+    });
+  });
+
+  it("leaves result placement to assessment groups", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("switch", { name: /grading/i }));
+    expect(
+      screen.queryByRole("combobox", { name: /result destination/i }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => expect(createAssessment).toHaveBeenCalledOnce());
+    expect(createAssessment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        courseId: "course-1",
+        contentId: "content-1",
+        type: "Quiz",
+      }),
+    );
+    expect(deleteAssessment).not.toHaveBeenCalled();
+
+    const jsonBody = vi.mocked(updateContent).mock.calls[0]![0].jsonBody as {
+      grading?: Record<string, unknown>;
+    };
+    expect(jsonBody.grading).not.toHaveProperty("outcome");
   });
 
   it("shows update errors and routes cancel back to the course content deterministically", async () => {
@@ -621,8 +707,14 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
       success: true,
       data: { id: "new-asmnt" },
     });
-    vi.mocked(deleteAssessment).mockResolvedValue({ success: true, data: null });
-    vi.mocked(restoreAssessment).mockResolvedValue({ success: true, data: null });
+    vi.mocked(deleteAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
+    vi.mocked(restoreAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
   });
 
   it("renders the Graded toggle for Code content; coding-tests panel only appears when an AutoGraded assessment is linked", () => {
@@ -679,7 +771,7 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
     expect(screen.queryByTestId("graded-section")).not.toBeInTheDocument();
   });
 
-  it("renders the Graded toggle for Assignment, Questionnaire, and Project", () => {
+  it("keeps the generic Graded toggle outside quizzes", () => {
     const { rerender } = render(
       <ContentItemEditor
         courseId="course-1"
@@ -699,7 +791,10 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
       />,
     );
     expect(
-      screen.getByRole("switch", { name: /^graded$/i }),
+      screen.queryByRole("switch", { name: /^graded$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("switch", { name: /^grading$/i }),
     ).toBeInTheDocument();
 
     rerender(
@@ -759,7 +854,10 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
     );
 
     await waitFor(() => {
-      expect(deleteAssessment).toHaveBeenCalledWith("course-1", "asmnt-existing");
+      expect(deleteAssessment).toHaveBeenCalledWith(
+        "course-1",
+        "asmnt-existing",
+      );
     });
 
     const gradedSwitch = screen.getByRole("switch", { name: /^graded$/i });
@@ -772,7 +870,10 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
     await user.click(gradedSwitch);
 
     await waitFor(() => {
-      expect(restoreAssessment).toHaveBeenCalledWith("course-1", "asmnt-existing");
+      expect(restoreAssessment).toHaveBeenCalledWith(
+        "course-1",
+        "asmnt-existing",
+      );
     });
     expect(createAssessment).not.toHaveBeenCalled();
   });
@@ -819,8 +920,6 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
     expect(restoreAssessment).not.toHaveBeenCalled();
     expect(createAssessment).not.toHaveBeenCalled();
     // Switch state unchanged — still ON because no mutation ran.
-    expect(
-      screen.getByRole("switch", { name: /^graded$/i }),
-    ).toBeChecked();
+    expect(screen.getByRole("switch", { name: /^graded$/i })).toBeChecked();
   });
 });

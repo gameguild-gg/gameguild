@@ -5,7 +5,7 @@ import type { AnchorHTMLAttributes, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentsList } from './assessments-list';
 import { createAssessment, createAssessmentGroup, deleteAssessmentGroup, updateAssessmentGroup } from '@/lib/learning/actions';
-import type { Assessment, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
+import type { Assessment, AssessmentGroup, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
 
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
@@ -268,7 +268,7 @@ describe('AssessmentsList weighted groups', () => {
     expect(screen.getByText('No graded scores yet')).toBeInTheDocument();
     expect(screen.getByText(/score distribution appears after submissions are graded/i)).toBeInTheDocument();
     expect(screen.getByText('Ungrouped activities')).toBeInTheDocument();
-    expect(screen.getAllByText('Ungraded').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Unconfigured').length).toBeGreaterThan(0);
   });
 
   it('renders ungrouped assignments with schedule and attempt metadata', () => {
@@ -281,11 +281,41 @@ describe('AssessmentsList weighted groups', () => {
     );
 
     const ungrouped = screen.getByTestId('assessment-group-ungrouped');
-    expect(within(ungrouped).getByText('Activities that do not yet count toward a weighted grade group.')).toBeInTheDocument();
+    expect(within(ungrouped).getByText('Activities that still need a grading group.')).toBeInTheDocument();
     expect(within(ungrouped).getByText('45m')).toBeInTheDocument();
     expect(within(ungrouped).getByText('2 attempts')).toBeInTheDocument();
     expect(within(ungrouped).getByText('scheduled')).toBeInTheDocument();
     expect(within(ungrouped).getByText('Assignment')).toBeInTheDocument();
+  });
+
+  it('keeps practice assessments visible and identifies their role', () => {
+    const practiceGroup = {
+      id: 'group-practice',
+      courseId: 'course-1',
+      name: 'Exercises',
+      description: null,
+      weightPercent: 0,
+      order: 1,
+    } satisfies AssessmentGroup;
+
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={[{
+          ...assignmentAssessment,
+          assessmentGroupId: practiceGroup.id,
+          assessmentGroupName: practiceGroup.name,
+          assessmentGroupWeightPercent: 0,
+          assessmentGroupOrder: practiceGroup.order,
+        }]}
+        total={1}
+        assessmentGroups={[practiceGroup]}
+      />,
+    );
+
+    const practice = screen.getByTestId('assessment-group-group-practice');
+    expect(within(practice).getByRole('link', { name: /environment setup/i })).toBeInTheDocument();
+    expect(within(practice).getByText('Practice')).toBeInTheDocument();
   });
 
   it('renders the empty state without offering direct assessment creation', () => {
@@ -466,7 +496,76 @@ describe('AssessmentsList weighted groups', () => {
     expect(await screen.findByText('Cannot delete a locked grade group.')).toBeInTheDocument();
   });
 
-  describe('Create Assessment dialog', () => {
+  describe('AssessmentsList instructor grade links', () => {
+  it('renders a grade link per assessment for instructors', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+        canManage
+      />,
+    );
+
+    const quizGradeLink = screen.getByTestId('grade-link-quiz-1');
+    expect(quizGradeLink).toHaveAttribute(
+      'href',
+      '/workspace/learning/courses/course-1/assessments/quiz-1/submissions',
+    );
+    expect(screen.getByTestId('grade-link-project-1')).toHaveAttribute(
+      'href',
+      '/workspace/learning/courses/course-1/assessments/project-1/submissions',
+    );
+    expect(quizGradeLink).toHaveTextContent(/grade/i);
+  });
+
+  it('renders an ungrouped grade link for instructors', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={[assignmentAssessment]}
+        total={1}
+        canManage
+      />,
+    );
+
+    expect(screen.getByTestId('grade-link-assignment-1')).toHaveAttribute(
+      'href',
+      '/workspace/learning/courses/course-1/assessments/assignment-1/submissions',
+    );
+  });
+
+  it('hides grade links from non-instructors', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+      />,
+    );
+
+    expect(screen.queryByTestId('grade-link-quiz-1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('grade-link-project-1')).not.toBeInTheDocument();
+  });
+
+  it('hides grade links when canManage is explicitly false', () => {
+    render(
+      <AssessmentsList
+        courseId="course-1"
+        assessments={groupedAssessments}
+        total={groupedAssessments.length}
+        assessmentGroups={assessmentGroups}
+        canManage={false}
+      />,
+    );
+
+    expect(screen.queryByTestId('grade-link-quiz-1')).not.toBeInTheDocument();
+  });
+});
+
+describe('Create Assessment dialog', () => {
     it('renders the Create Assessment button in the header', () => {
       render(
         <AssessmentsList

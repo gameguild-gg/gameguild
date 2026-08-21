@@ -1,0 +1,27 @@
+{
+  "name": "@game-guild/quiz",
+  "version": "4.2.0",
+  "type": "module",
+  "description": "Framework-independent quiz contracts and question semantics",
+  "license": "UNLICENSED",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@game-guild/assets": "workspace:^",
+    "mathlive": "^0.110.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@game-guild/typescript-config": "workspace:*",
+    "@types/node": "^20",
+    "typescript": "^5.5.0",
+    "vitest": "^4.1.10"
+  }
+}

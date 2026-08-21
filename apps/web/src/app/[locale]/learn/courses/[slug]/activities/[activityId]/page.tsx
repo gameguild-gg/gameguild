@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+import { auth, getToken } from '@/auth';
 import { Link } from '@/i18n/navigation';
 import { CourseAccessGate } from '@/components/learning/course-access-gate';
 import {
@@ -6,9 +6,11 @@ import {
   type LearnerActivityDescriptor,
 } from '@/components/learning/learner-activity-form';
 import { getCodingAssignmentPublic } from '@/lib/coding-assignment/client';
+import { codePayloadToFiles } from '@/lib/coding-assignment/code-payload';
 import type { CodingAssignmentContent } from '@/lib/coding-assignment/types';
 import { getCourseAccessData } from '@/lib/learner/courses';
 import { getCourseLearnerContext, getMyProjects } from '@/lib/learner/records';
+import { createServerClient, GeneratedApi } from '@game-guild/client';
 import { MarkdownRenderer } from '@game-guild/content-rendering';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
@@ -16,6 +18,58 @@ import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/compone
 import { ArrowLeft, CalendarClock, ClipboardCheck } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { CodingActivityClient } from '@/components/learning/coding-activity-client';
+
+interface SubmissionFile {
+  path: string;
+  content: string;
+  encoding: 'text';
+  modifiable: boolean;
+}
+
+/**
+ * Best-effort restore of the learner's latest code submission for an
+ * assessment: list my submissions, keep matching ones with a code payload,
+ * take the highest attemptNumber, parse the payload. Any failure returns
+ * null so the page still renders with starter files.
+ */
+async function loadLastSubmissionFiles(
+  assessmentId: string,
+  enrollmentId: string,
+): Promise<SubmissionFile[] | null> {
+  try {
+    const apiUrl =
+      process.env.API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://localhost:8080';
+    const client = createServerClient({
+      baseUrl: apiUrl,
+      auth: { getAccessToken: () => getToken() },
+    });
+    const assessments = new GeneratedApi.LearningAssessmentsModule(client);
+    const result = await assessments.getAssessmentsMySubmissions(enrollmentId);
+    if (!result.ok) return null;
+    const matching = result.data.filter(
+      (entry) =>
+        entry.assessmentId === assessmentId && entry.codePayload != null,
+    );
+    const latest = matching.reduce<(typeof matching)[number] | null>(
+      (max, entry) =>
+        !max || (entry.attemptNumber ?? 0) > (max.attemptNumber ?? 0)
+          ? entry
+          : max,
+      null,
+    );
+    if (!latest?.codePayload) return null;
+    return codePayloadToFiles(latest.codePayload).map((file) => ({
+      ...file,
+      encoding: 'text' as const,
+      modifiable: true,
+    }));
+  } catch (err) {
+    console.error('loadLastSubmissionFiles: unexpected error', err);
+    return null;
+  }
+}
 
 function promptBody(value: unknown): string {
   if (typeof value === 'string') return value;
@@ -48,6 +102,8 @@ export default async function LearnerActivityPage({
   let codingAssignment: CodingAssignmentContent | null = null;
   let useCodingExperience = false;
   let codingUnpublished = false;
+  let submissionFiles: SubmissionFile[] | null = null;
+  let userId: string | null = null;
   let description = '';
   let dueAt: string | null | undefined;
   let points: number | undefined;
@@ -59,8 +115,11 @@ export default async function LearnerActivityPage({
     const submission = context.submissions.find(
       (candidate) => candidate.assessmentId === assessmentId,
     );
-    const session = assessment.type === 'Project' ? await auth() : null;
-    const projects = session?.user?.id ? await getMyProjects(session.user.id) : [];
+    // Unconditional: the coding experience needs a user id for its
+    // user-scoped draft token, not just Project-type project listings.
+    const session = await auth();
+    userId = session?.user?.id ?? null;
+    const projects = userId ? await getMyProjects(userId) : [];
     activity = { kind: 'assessment', assessment, submission, projects };
     description = assessment.description || '';
     dueAt = assessment.dueAt;
@@ -80,6 +139,10 @@ export default async function LearnerActivityPage({
       if (candidate && candidate.Type === 'coding-assignment') {
         codingAssignment = candidate;
         useCodingExperience = true;
+        submissionFiles = await loadLastSubmissionFiles(
+          assessment.id,
+          access.course.enrollmentId,
+        );
       }
     }
     codingUnpublished = codingEligible && !codingAssignment;
@@ -107,9 +170,28 @@ export default async function LearnerActivityPage({
   const type = activity.kind === 'assessment'
     ? activity.assessment.type
     : activity.contentType;
+  // learn/layout.tsx already redirects signed-out visitors; the userId
+  // guard keeps the client's user-scoped token well-formed even if that
+  // invariant ever breaks.
+  const codingProps =
+    activity.kind === 'assessment' &&
+    useCodingExperience &&
+    codingAssignment &&
+    activity.assessment.id &&
+    userId
+      ? {
+          assessmentId: activity.assessment.id,
+          assignment: codingAssignment,
+          userId,
+        }
+      : null;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div
+      className={
+        codingProps ? 'w-full space-y-6' : 'mx-auto max-w-4xl space-y-6'
+      }
+    >
       <Button asChild variant="ghost" className="-ml-3">
         <Link href={`/learn/courses/${slug}/activities`}>
           <ArrowLeft className="size-4" />
@@ -162,33 +244,34 @@ export default async function LearnerActivityPage({
           </CardContent>
         </Card>
       ) : null}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Your response</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {activity.kind === 'assessment' &&
-          useCodingExperience &&
-          codingAssignment &&
-          activity.assessment.id ? (
-            <CodingActivityClient
-              assessmentId={activity.assessment.id}
-              enrollmentId={access.course.enrollmentId}
-              courseId={access.course.id}
-              slug={slug}
-              assignment={codingAssignment}
-              manifestUrl={process.env.NEXT_PUBLIC_EMCEPTION_MANIFEST_URL}
-            />
-          ) : (
+      {codingProps ? (
+        <div data-testid="ide-fullwidth-mount">
+          <CodingActivityClient
+            assessmentId={codingProps.assessmentId}
+            enrollmentId={access.course.enrollmentId}
+            courseId={access.course.id}
+            slug={slug}
+            assignment={codingProps.assignment}
+            manifestUrl={process.env.NEXT_PUBLIC_EMCEPTION_MANIFEST_URL}
+            userId={codingProps.userId}
+            submissionFiles={submissionFiles}
+          />
+        </div>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Your response</CardTitle>
+          </CardHeader>
+          <CardContent>
             <LearnerActivityForm
               courseId={access.course.id}
               courseSlug={slug}
               enrollmentId={access.course.enrollmentId}
               activity={activity}
             />
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

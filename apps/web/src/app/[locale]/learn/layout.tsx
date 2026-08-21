@@ -3,6 +3,7 @@ import { LearningAuthRedirect } from "@/components/learning/learning-auth-redire
 import { LearningShell } from "@/components/learning/learning-shell";
 import { getDashboardNotificationSummary } from "@/lib/dashboard-notifications";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
@@ -23,10 +24,13 @@ export default async function LearningLayout({
     return <LearningAuthRedirect />;
   }
 
+  const headerList = await headers();
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+  const proto = headerList.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
   const webOrigin =
     process.env.WEB_PUBLIC_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    "https://gameguild.gg";
+    (host ? `${proto}://${host}` : "https://gameguild.gg");
   const name =
     session.user.name?.trim() ||
     session.user.email?.split("@")[0] ||

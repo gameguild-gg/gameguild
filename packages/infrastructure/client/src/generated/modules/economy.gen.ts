@@ -16,51 +16,21 @@ export class EconomyModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
-   * Get my Economy wallet
+   * Get my Economy capability readiness
    */
-  async getEconomyWallet(): Promise<
-    Result<Types.EconomyContractsEconomyWalletSummary, ApiError>
+  async getEconomyCapabilities(): Promise<
+    Result<Array<Types.APIControllersEconomySelfServiceCapability>, ApiError>
   > {
-    const url = "/api/v1/economy/wallet";
+    const url = "/api/v1/economy/capabilities";
 
     const result = await this.client.request({
       method: "GET",
       path: url,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyContractsEconomyWalletSummarySchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
-   * List my Economy wallet transactions
-   */
-  async getEconomyWalletTransactions(query?: {
-    take?: number;
-  }): Promise<
-    Result<Array<Types.EconomyContractsEconomyWalletTransaction>, ApiError>
-  > {
-    const url = "/api/v1/economy/wallet/transactions";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
       requiresAuth: true,
     });
 
     return result as Result<
-      Array<Types.EconomyContractsEconomyWalletTransaction>,
+      Array<Types.APIControllersEconomySelfServiceCapability>,
       ApiError
     >;
   }
@@ -100,49 +70,6 @@ export class EconomyModule {
     }
 
     return result;
-  }
-
-  /**
-   * Get my Economy capability readiness
-   */
-  async getEconomyCapabilities(): Promise<
-    Result<Array<Types.APIControllersEconomySelfServiceCapability>, ApiError>
-  > {
-    const url = "/api/v1/economy/capabilities";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.APIControllersEconomySelfServiceCapability>,
-      ApiError
-    >;
-  }
-
-  /**
-   * List my payout operations
-   */
-  async getEconomyPayoutsForGetEconomyPayouts(query?: {
-    take?: number;
-  }): Promise<
-    Result<Array<Types.EconomyPayoutsQueriesEconomyPayoutOperation>, ApiError>
-  > {
-    const url = "/api/v1/economy/payouts";
-
-    const result = await this.client.request({
-      method: "GET",
-      path: url,
-      params: query,
-      requiresAuth: true,
-    });
-
-    return result as Result<
-      Array<Types.EconomyPayoutsQueriesEconomyPayoutOperation>,
-      ApiError
-    >;
   }
 
   /**
@@ -233,6 +160,29 @@ export class EconomyModule {
   }
 
   /**
+   * List my payout operations
+   */
+  async getEconomyPayoutsForGetEconomyPayouts(query?: {
+    take?: number;
+  }): Promise<
+    Result<Array<Types.EconomyPayoutsQueriesEconomyPayoutOperation>, ApiError>
+  > {
+    const url = "/api/v1/economy/payouts";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.EconomyPayoutsQueriesEconomyPayoutOperation>,
+      ApiError
+    >;
+  }
+
+  /**
    * Get my payout operation
    */
   async getEconomyPayoutsForGetEconomyPayoutsByOperationId(
@@ -259,6 +209,56 @@ export class EconomyModule {
     }
 
     return result;
+  }
+
+  /**
+   * Get my Economy wallet
+   */
+  async getEconomyWallet(): Promise<
+    Result<Types.EconomyContractsEconomyWalletSummary, ApiError>
+  > {
+    const url = "/api/v1/economy/wallet";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyContractsEconomyWalletSummarySchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * List my Economy wallet transactions
+   */
+  async getEconomyWalletTransactions(query?: {
+    take?: number;
+  }): Promise<
+    Result<Array<Types.EconomyContractsEconomyWalletTransaction>, ApiError>
+  > {
+    const url = "/api/v1/economy/wallet/transactions";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.EconomyContractsEconomyWalletTransaction>,
+      ApiError
+    >;
   }
 }
 

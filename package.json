@@ -1,6 +1,6 @@
 {
   "name": "game-guild",
-  "version": "0.1.0",
+  "version": "4.2.0",
   "description": "GameGuild Platform Monorepo",
   "author": "Matheus Martins <contact@matheusmartins.com>",
   "homepage": "https://gameguild.gg",
@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "dev:api": "dotenv -e .env -- dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj --urls http://localhost:8080",
+    "dev:api": "dotenv -e .env -v DOTNET_USE_POLLING_FILE_WATCHER=true -- dotnet watch --project apps/api/Source/GameGuild.API/GameGuild.API.csproj run --urls http://localhost:8080",
     "dev:compose": "docker compose -f compose.yaml --profile app up -d --build",
     "dev:compose:down": "docker compose -f compose.yaml down",
     "dev:compose:logs": "docker compose -f compose.yaml logs -f",
@@ -33,6 +33,9 @@
     "test:emception:types": "pnpm --dir tools/emception run test:types:packages",
     "test:coverage": "turbo run test:coverage",
     "test:e2e": "turbo run test:e2e",
+    "e2e": "playwright test",
+    "e2e:record": "node scripts/e2e-record.mjs",
+    "e2e:record:continue": "node scripts/e2e-record-continue.mjs",
     "typecheck": "turbo run typecheck",
     "typecheck:emception": "pnpm --dir tools/emception run typecheck:packages",
     "lint": "turbo run lint",
@@ -53,10 +56,7 @@
     "ci:web:build": "pnpm --filter @game-guild/web build",
     "ci:playwright:smoke": "pnpm --filter @game-guild/web test:browser:public",
     "ci:playwright:learning-student": "pnpm --filter @game-guild/web test:browser:learning-student",
-    "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo pnpm-lock.yaml",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "turbo run build && changeset publish"
+    "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo pnpm-lock.yaml"
   },
   "packageManager": "pnpm@10.0.0",
   "engines": {
@@ -86,12 +86,13 @@
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.27.0",
+    "@changesets/cli": "^3.0.0",
     "@game-guild/eslint-config": "workspace:*",
     "@game-guild/prettier-config": "workspace:*",
     "@game-guild/typescript-config": "workspace:*",
     "dotenv-cli": "^11.0.0",
     "eslint": "^10.8.1",
+    "playwright": "1.62.1",
     "npm-run-all": "4.1.5",
     "prettier": "^3.5.0",
     "rimraf": "^6.0.0",

@@ -372,6 +372,67 @@ describe('narrowCodingAssignmentContent wire-casing normalization', () => {
     expect(result?.Data.Files['/user/main.cpp']?.Modifiable).toBe(true);
     expect(result?.Data.Files['/user/main.cpp']?.Visibility).toBe('Public');
   });
+
+  it('normalizes PascalCase parameter types (e.g. Type: "Integer") in functional tests', () => {
+    const payloadWithPascalEnums = {
+      type: 'coding-assignment',
+      version: 1,
+      environment: {
+        language: 'cpp',
+        tools: 'clang',
+        allowStudentCreateFiles: false,
+      },
+      data: {
+        files: {
+          '/user/main.cpp': {
+            content: 'int add(int a, int b) { return a + b; }',
+            encoding: 'text',
+            visibility: 'Public',
+            modifiable: true,
+          },
+        },
+      },
+      tests: {
+        public: [
+          {
+            kind: 'functional',
+            name: 'add-fn',
+            weight: 1,
+            function: {
+              functionName: 'add',
+              parameters: [
+                { name: 'a', type: 'Integer' },
+                { name: 'b', type: 'Integer' },
+              ],
+              returnType: { type: 'Integer' },
+            },
+            cases: [
+              {
+                inputs: [
+                  { type: 'Integer', content: 2 },
+                  { type: 'Integer', content: 3 },
+                ],
+                expected: { type: 'Integer', content: 5 },
+              },
+            ],
+          },
+        ],
+        private: [],
+      },
+      grading: { maxScore: 100 },
+    };
+
+    const result = narrowCodingAssignmentContent(payloadWithPascalEnums);
+    expect(result).not.toBeNull();
+    const [fnTest] = result?.Tests.Public ?? [];
+    expect(fnTest?.kind).toBe('functional');
+    if (fnTest?.kind === 'functional') {
+      expect(fnTest.Function.Parameters[0]?.Type).toBe('integer');
+      expect(fnTest.Function.ReturnType.Type).toBe('integer');
+      expect(fnTest.Cases[0]?.Inputs[0]?.Type).toBe('integer');
+      expect(fnTest.Cases[0]?.Expected.Type).toBe('integer');
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

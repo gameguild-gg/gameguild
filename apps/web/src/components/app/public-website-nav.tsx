@@ -12,7 +12,8 @@ import {
   SheetTrigger,
 } from '@game-guild/ui/components/sheet';
 import { cn } from '@game-guild/ui/lib/utils';
-import { Github, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
+import { Github } from '@/components/ui/brand-icons';
 
 export type PublicNavItem = {
   readonly label: string;

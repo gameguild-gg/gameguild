@@ -4,19 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - '.github/workflows/emception.yml'
-      - 'apps/web/src/types/global.d.ts'
-      - 'demos/emception-*/**'
-      - 'docs/frontend/emception-workspace-config.md'
-      - 'package.json'
-      - 'packages/infrastructure/ui-emception/**'
-      - 'pnpm-workspace.yaml'
-      - 'scripts/emception/**'
-      - 'scripts/sync-emception-cdn.mjs'
-      - 'tools/emception/**'
-      - 'tsconfig.json'
-      - 'turbo.json'
   workflow_dispatch:
     inputs:
       publish_packages:
@@ -37,9 +24,37 @@ env:
   PNPM_VERSION: '10.0.0'
 
 jobs:
+  detect-emception-changes:
+    name: Detect Emception changes
+    runs-on: ubuntu-latest
+    outputs:
+      required: ${{ steps.changes.outputs.required }}
+    steps:
+      - uses: actions/checkout@v7 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine whether Emception validation is required
+        id: changes
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          required=false
+          if [[ "$EVENT_NAME" == "workflow_dispatch" || -z "$BEFORE_SHA" || "$BEFORE_SHA" =~ ^0+$ ]]; then
+            required=true
+          elif git diff --name-only "$BEFORE_SHA" "$HEAD_SHA" | grep -Eq '^(\.github/workflows/emception\.yml|apps/web/src/types/global\.d\.ts|demos/emception-[^/]+/|docs/frontend/emception-workspace-config\.md|package\.json|packages/infrastructure/ui-emception/|pnpm-workspace\.yaml|scripts/emception/|scripts/sync-emception-cdn\.mjs|tools/emception/|tsconfig\.json|turbo\.json)'; then
+            required=true
+          fi
+          echo "required=$required" >> "$GITHUB_OUTPUT"
+
   build-test-package:
     name: Build, test, and package Emception
     runs-on: ubuntu-latest
+    needs: detect-emception-changes
+    if: needs.detect-emception-changes.outputs.required == 'true'
     timeout-minutes: 360
     env:
       CI: 'true'
@@ -50,8 +65,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7 # v4
         with:
-          fetch-depth: 0
-          fetch-tags: true
+          fetch-depth: 1
           lfs: false
 
       - name: Set up pnpm
@@ -70,14 +84,14 @@ jobs:
 
       - name: Cache Emscripten SDK
         id: cache-emsdk
-        uses: actions/cache@v6 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: tools/emception/tools/emsdk
           key: emsdk-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/setup-emsdk.ts', 'tools/emception/scripts/lib/pinned-versions.ts') }}
 
       - name: Cache userland sources and builds
         id: cache-userland
-        uses: actions/cache@v6 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: tools/emception/userland
           key: userland-${{ runner.os }}-${{ hashFiles('tools/emception/scripts/build-*.ts', 'tools/emception/scripts/lib/**', 'tools/emception/userland/**/BUILD.md', 'tools/emception/userland/**/patches/**', 'tools/emception/userland/**/*.c', 'tools/emception/userland/**/*.h') }}
@@ -95,7 +109,7 @@ jobs:
 
       - name: Cache sysroot and CDN bundles
         id: cache-cdn
-        uses: actions/cache@v6 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             tools/emception/sysroot
@@ -149,15 +163,15 @@ jobs:
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: pnpm --dir tools/emception exec playwright install --with-deps chromium
 
-      - name: Run browser C++ compilation smoke test
-        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
-        run: pnpm run test:emception:e2e
-
       - name: Stage CDN into packages and demo applications
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
         run: |
           node scripts/sync-emception-cdn.mjs demos/emception-ide-react
           pnpm --dir tools/emception run stage:core:cdn
+
+      - name: Run browser C++ compilation smoke test
+        if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
+        run: pnpm run test:emception:e2e
 
       - name: Build Emception web consumers
         if: steps.cache-cdn.outputs.cache-hit == 'true' || steps.build-wasm.outcome == 'success'
@@ -218,7 +232,7 @@ jobs:
 
   deploy-pages:
     name: Deploy Emception IDE and CDN
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build-test-package.outputs.wasm-available == 'true'
+    if: needs.build-test-package.outputs.wasm-available == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch')
     needs: build-test-package
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -264,16 +278,16 @@ jobs:
 
       - name: Deploy GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5 # v4
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
 
   publish-packages:
     name: Publish Emception packages to npm
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_packages && needs.build-test-package.outputs.wasm-available == 'true'
+    if: needs.build-test-package.outputs.wasm-available == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.publish_packages))
     needs: build-test-package
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - name: Check out repository
@@ -345,3 +359,35 @@ jobs:
           done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag release and open version PR
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="$(node -p "require('./tools/emception/packages/core/package.json').version")"
+          TAG="v${VERSION}"
+          BRANCH="release/${VERSION}"
+
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "${TAG} already exists; nothing to release."
+            exit 0
+          fi
+
+          git config user.name "gameguild-release-bot"
+          git config user.email "noreply@gameguild.gg"
+
+          git tag "${TAG}"
+          git push origin "${TAG}"
+
+          git checkout -b "${BRANCH}"
+          git add '**/package.json' 'package.json' 'apps/api/Source/GameGuild.API/GameGuild.API.csproj'
+          git commit -m "chore(release): version packages ${VERSION}"
+          git push origin "${BRANCH}"
+
+          gh pr create \
+            --base main \
+            --head "${BRANCH}" \
+            --title "chore(release): version packages ${VERSION}" \
+            --body "Bumps all monorepo package versions (and the API csproj) to ${VERSION}, released to npm as ${TAG}." \
+            || echo "PR for ${BRANCH} already open."

@@ -31,7 +31,7 @@ import type { RichTextData } from "../../../nodes/rich-text-node";
 import type { SourceData } from "../../../nodes/source-node";
 import type { VideoData } from "../../../nodes/video-node";
 import type { CodeStudioData } from "../../../extras/code-studio/types";
-import type { QuizEntry } from "../../../extras/quiz";
+import type { QuizBlockDataMap } from "@game-guild/quiz-content";
 
 // ============================================================================
 // Block types — the 21 decorator kinds supported by the engine
@@ -62,7 +62,7 @@ export type BlockCellType = (typeof BLOCK_CELL_TYPES)[number];
 // ============================================================================
 
 export interface BlockDataMap {
-  quiz: QuizEntry;
+  quiz: QuizBlockDataMap["quiz"];
   "code-studio": CodeStudioData;
   image: ImageData;
   video: VideoData;

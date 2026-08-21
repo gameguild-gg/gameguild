@@ -32,6 +32,9 @@ const mocks = vi.hoisted(() => ({
   getCourseAssessmentGroups: vi.fn(),
   getCourseCertificates: vi.fn(),
   getCertificateTemplate: vi.fn(),
+  getCourseGroupSets: vi.fn(),
+  getAssessmentRubric: vi.fn(),
+  canManageCourse: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -83,6 +86,9 @@ vi.mock("@/lib/learning", () => ({
   getCourseAssessmentGroups: mocks.getCourseAssessmentGroups,
   getCourseCertificates: mocks.getCourseCertificates,
   getCertificateTemplate: mocks.getCertificateTemplate,
+  getCourseGroupSets: mocks.getCourseGroupSets,
+  getAssessmentRubric: mocks.getAssessmentRubric,
+  canManageCourse: mocks.canManageCourse,
 }));
 
 vi.mock("./content/[contentId]/content-item-editor", () => ({
@@ -412,6 +418,12 @@ describe("course-management secondary route pages", () => {
       templates: [{ id: "template-1", name: "Completion certificate" }],
       total: 1,
     });
+    mocks.getCourseGroupSets.mockResolvedValue([]);
+    mocks.getAssessmentRubric.mockResolvedValue({
+      rubric: null,
+      locked: false,
+    });
+    mocks.canManageCourse.mockResolvedValue(false);
     mocks.getCertificateTemplate.mockResolvedValue({
       id: "template-1",
       courseId: "course-1",

@@ -39,43 +39,6 @@ export class AuthSigningKeysModule {
   }
 
   /**
-   * Rotate signing key
-   *
-   * Manually rotates to a new signing key. Previous keys remain valid for token validation during grace period.
-   */
-  async postAuthSigningKeysRotate(
-    body: Types.IdentityAuthenticationRotateKeyInput,
-  ): Promise<Result<Types.IdentityAuthenticationJwtKeyInfo, ApiError>> {
-    const url = "/v1/auth/signing-keys:rotate";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationRotateKeyInputSchema,
-      body,
-      "request",
-    );
-
-    const result = await this.client.request({
-      method: "POST",
-      path: url,
-      body: validatedBody,
-      requiresAuth: true,
-    });
-
-    // Validate response
-    if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationJwtKeyInfoSchema,
-        result.data,
-        "response",
-      );
-      return { ok: true, data: validatedData };
-    }
-
-    return result;
-  }
-
-  /**
    * Cleanup expired keys
    *
    * Removes signing keys that have been expired beyond the retention period.
@@ -103,6 +66,43 @@ export class AuthSigningKeysModule {
     if (result.ok) {
       const validatedData = safeParse(
         Types.IdentityAuthenticationCleanupResultSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Rotate signing key
+   *
+   * Manually rotates to a new signing key. Previous keys remain valid for token validation during grace period.
+   */
+  async postAuthSigningKeysRotate(
+    body: Types.IdentityAuthenticationRotateKeyInput,
+  ): Promise<Result<Types.IdentityAuthenticationJwtKeyInfo, ApiError>> {
+    const url = "/v1/auth/signing-keys:rotate";
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.IdentityAuthenticationRotateKeyInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.IdentityAuthenticationJwtKeyInfoSchema,
         result.data,
         "response",
       );

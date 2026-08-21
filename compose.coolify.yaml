@@ -38,8 +38,8 @@
 services:
   backend:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
     image: game-guild-api
     ports:
       - '8080'
@@ -83,15 +83,10 @@ services:
       - Assets__Storage__PresignedUrlExpiryMinutes=${S3_PRESIGNED_EXPIRY:-60}
       - StatementEmails__ConsoleBaseUrl=${STATEMENTEMAILS__CONSOLEBASEURL:-}
       - EmailDelivery__Enabled=${EMAILDELIVERY__ENABLED:-true}
-      - EmailDelivery__Provider=${EMAILDELIVERY__PROVIDER:-Smtp}
       - EmailDelivery__FromEmail=${EMAILDELIVERY__FROMEMAIL:?set EMAILDELIVERY__FROMEMAIL}
       - EmailDelivery__FromName=${EMAILDELIVERY__FROMNAME:-GameGuild}
-      - EmailDelivery__SendGridApiKey=${EMAILDELIVERY__SENDGRIDAPIKEY:-}
-      - EmailDelivery__SmtpHost=${EMAILDELIVERY__SMTPHOST:-mailhog}
-      - EmailDelivery__SmtpPort=${EMAILDELIVERY__SMTPPORT:-1025}
-      - EmailDelivery__SmtpUsername=${EMAILDELIVERY__SMTPUSERNAME:-}
-      - EmailDelivery__SmtpPassword=${EMAILDELIVERY__SMTPPASSWORD:-}
-      - EmailDelivery__SmtpUseSsl=${EMAILDELIVERY__SMTPUSESSL:-false}
+      - EmailDelivery__Ses__Region=${EMAILDELIVERY__SES__REGION:?set EMAILDELIVERY__SES__REGION}
+      - EmailDelivery__Events__TopicArn=${EMAILDELIVERY__EVENTS__TOPICARN:-}
       # Canonical Stripe sections consumed by Payments and Billing.
       - PaymentGateways__Stripe__IsEnabled=true
       - PaymentGateways__Stripe__UseSimulation=false

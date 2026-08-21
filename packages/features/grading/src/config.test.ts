@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   GradingConfigValidationError,
   createDisabledGradingDefinition,
-  isGradebookBound,
   normalizeGradingDefinition,
   sumGradedItemPoints,
   validateGradingDefinition,
@@ -13,10 +12,6 @@ describe('grading definition contracts', () => {
     expect(createDisabledGradingDefinition()).toEqual({
       enabled: false,
       schemaVersion: 1,
-      outcome: {
-        uses: ['feedback'],
-        gradebook: null,
-      },
       score: {
         maxScore: 0,
       },
@@ -27,16 +22,9 @@ describe('grading definition contracts', () => {
     });
   });
 
-  it('keeps feedback-only grading out of the gradebook', () => {
+  it('normalizes enabled grading without placement concerns', () => {
     const definition = normalizeGradingDefinition({
       enabled: true,
-      outcome: {
-        uses: ['feedback'],
-        gradebook: {
-          groupId: 'ignored',
-          includeInFinalGrade: true,
-        },
-      },
       score: {
         maxScore: 10,
       },
@@ -49,24 +37,15 @@ describe('grading definition contracts', () => {
       },
     });
 
-    expect(definition.outcome.uses).toEqual(['feedback']);
-    expect(definition.outcome.gradebook).toBeNull();
-    expect(isGradebookBound(definition)).toBe(false);
+    expect(definition.score.maxScore).toBe(10);
+    expect(definition.items.q1?.gradingKind).toBe('deterministic');
+    expect(definition).not.toHaveProperty('outcome');
   });
 
-  it('normalizes gradebook placement when the result should count there', () => {
+  it('normalizes scoring, feedback and presentation policies', () => {
     const definition = validateGradingDefinition({
       enabled: true,
       schemaVersion: 1,
-      outcome: {
-        uses: ['feedback', 'gradebook', 'gradebook'],
-        gradebook: {
-          groupId: 'group-1',
-          weight: 20,
-          required: false,
-          includeInFinalGrade: true,
-        },
-      },
       score: {
         maxScore: 10,
         passingScore: 7,
@@ -92,39 +71,15 @@ describe('grading definition contracts', () => {
       },
     });
 
-    expect(definition.outcome.uses).toEqual(['feedback', 'gradebook']);
-    expect(definition.outcome.gradebook).toEqual({
-      groupId: 'group-1',
-      weight: 20,
-      required: false,
-      includeInFinalGrade: true,
-    });
-    expect(isGradebookBound(definition)).toBe(true);
+    expect(definition.feedback.mode).toBe('after-submit');
+    expect(definition.presentation.mode).toBe('single-step');
     expect(sumGradedItemPoints(definition)).toBe(10);
-  });
-
-  it('rejects unsupported result uses', () => {
-    expect(() =>
-      validateGradingDefinition({
-        enabled: true,
-        outcome: {
-          uses: ['analytics'],
-        },
-        score: {
-          maxScore: 1,
-        },
-        items: {},
-      }),
-    ).toThrow(GradingConfigValidationError);
   });
 
   it('rejects enabled grading without a positive max score', () => {
     expect(() =>
       validateGradingDefinition({
         enabled: true,
-        outcome: {
-          uses: ['feedback'],
-        },
         score: {
           maxScore: 0,
         },

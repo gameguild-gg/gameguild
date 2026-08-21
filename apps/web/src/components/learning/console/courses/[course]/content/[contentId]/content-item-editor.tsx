@@ -42,12 +42,17 @@ import { buttonVariants } from "@game-guild/ui/components/button";
 import { ArrowLeft, Clock, Eye, Loader2, Pencil, Save } from "lucide-react";
 import type { SerializedEditorState } from "lexical";
 import type { LearningCoursesLessonContentFormat } from "@game-guild/client";
+import {
+  readContentGradingDefinition,
+  type ContentGradingDefinition,
+} from "@game-guild/grading";
 import type { ContentItemDetail } from "@/lib/learning/types";
 import type { CodingDefinition } from "@/lib/learning/queries/assessments";
 import {
   createAssessment,
   deleteAssessment,
   restoreAssessment,
+  updateAssessment,
   updateContent,
 } from "@/lib/learning/actions";
 import { CONTENT_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
@@ -110,8 +115,10 @@ export function ContentItemEditor({
   // recentlyDeletedAssessmentId remembers what the OFF transition just soft-deleted so
   // a re-toggle ON restores instead of creating a duplicate — the GET assessments
   // endpoint filters deleted rows server-side, so this is the only client-side signal.
-  const [gradedChecked, setGradedChecked] = useState<boolean>(!!linkedAssessmentId);
-  const [recentlyDeletedAssessmentId, setRecentlyDeletedAssessmentId] = useState<string | null>(null);
+  const [gradedChecked, setGradedChecked] =
+    useState<boolean>(!!linkedAssessmentId);
+  const [recentlyDeletedAssessmentId, setRecentlyDeletedAssessmentId] =
+    useState<string | null>(null);
   const [showGradedOffConfirm, setShowGradedOffConfirm] = useState(false);
   const [gradedError, setGradedError] = useState<string | null>(null);
   const [isGradedPending, startGradedTransition] = useTransition();
@@ -120,13 +127,14 @@ export function ContentItemEditor({
   const isQuiz = item.type === "Questionnaire";
   const isCode = item.type === "Code";
   // ponytail: substring check is enough — full parseGradingMethods is overkill for one flag.
-  const isAutoGraded = (linkedAssessmentGradingMethods ?? "").includes("AutoGraded");
+  const isAutoGraded = (linkedAssessmentGradingMethods ?? "").includes(
+    "AutoGraded",
+  );
   // ponytail: isGradedType drives the Graded toggle (wider set); the Coding Assignment card
   // below gates on `isCode && gradedChecked && isAutoGraded` per Task 11 — only Code content
   // with AutoGraded-flagged linked assessment exposes the coding-tests bridge.
   const GRADED_CONTENT_TYPES: ReadonlySet<string> = new Set([
     "Assignment",
-    "Questionnaire",
     "Project",
     "Code",
   ]);
@@ -152,6 +160,7 @@ export function ContentItemEditor({
   const quizContentRef = useRef<Record<string, unknown> | undefined>(
     initialQuizContent,
   );
+  const quizAssessmentIdRef = useRef<string | undefined>(linkedAssessmentId);
 
   // ── Selected lesson format ──
   const initialSelectedFormat = useMemo(() => {
@@ -205,6 +214,9 @@ export function ContentItemEditor({
     } else if (isQuiz) {
       jsonBodyToSave = quizContentRef.current;
     }
+    const quizGrading = isQuiz
+      ? readContentGradingDefinition(jsonBodyToSave)
+      : null;
 
     startTransition(async () => {
       const result = await updateContent({
@@ -224,13 +236,76 @@ export function ContentItemEditor({
           : undefined,
       });
 
-      if (result.success) {
-        setSaved(true);
-        router.refresh();
-      } else {
+      if (!result.success) {
         setError(result.error);
+        return;
       }
+
+      if (isQuiz) {
+        const assessmentResult = await reconcileQuizAssessment(quizGrading);
+        if (!assessmentResult.success) {
+          setError(
+            `Quiz content was saved, but its assessment could not be synchronized: ${assessmentResult.error}`,
+          );
+          return;
+        }
+      }
+
+      setSaved(true);
+      router.refresh();
     });
+  }
+
+  async function reconcileQuizAssessment(
+    grading: ContentGradingDefinition | null,
+  ): Promise<{ success: true } | { success: false; error: string }> {
+    const assessmentId = quizAssessmentIdRef.current;
+
+    if (!grading?.enabled) {
+      if (!assessmentId) return { success: true };
+
+      const result = await deleteAssessment(courseId, assessmentId);
+      if (!result.success) return result;
+
+      quizAssessmentIdRef.current = undefined;
+      return { success: true };
+    }
+
+    const assessmentFields = {
+      title: title.trim(),
+      description: description.trim() || undefined,
+      maxScore: Math.max(1, Math.round(grading.score.maxScore)),
+      timeLimitMinutes: grading.attempts.timeLimitMinutes ?? null,
+      maxAttempts: grading.attempts.maxAttempts ?? null,
+      isRequired,
+      presentationMode:
+        grading.presentation.mode === "single-step"
+          ? ("SingleStep" as const)
+          : ("Continuous" as const),
+      gradingMethods: "AutoGraded,InstructorGraded",
+    };
+
+    if (assessmentId) {
+      const result = await updateAssessment({
+        courseId,
+        assessmentId,
+        contentId: item.id,
+        ...assessmentFields,
+      });
+      return result.success ? { success: true } : result;
+    }
+
+    const result = await createAssessment({
+      courseId,
+      type: "Quiz",
+      contentId: item.id,
+      submissionModalities: "StructuredAnswer",
+      ...assessmentFields,
+    });
+    if (!result.success) return result;
+
+    quizAssessmentIdRef.current = result.data.id;
+    return { success: true };
   }
 
   function handleBack() {
@@ -267,9 +342,11 @@ export function ContentItemEditor({
   // rather than imported because the action's map keys LearningCoursesProgramContentType and
   // we only need the four graded branches — re-using the action's const would pull server-only
   // code into the client bundle.
-  const CONTENT_TO_ASSESSMENT_TYPE: Record<string, "Assignment" | "Quiz" | "Project"> = {
+  const CONTENT_TO_ASSESSMENT_TYPE: Record<
+    string,
+    "Assignment" | "Quiz" | "Project"
+  > = {
     Assignment: "Assignment",
-    Questionnaire: "Quiz",
     Project: "Project",
     Code: "Assignment",
   };
@@ -295,7 +372,8 @@ export function ContentItemEditor({
         router.refresh();
         return;
       }
-      const assessmentType = CONTENT_TO_ASSESSMENT_TYPE[item.type] ?? "Assignment";
+      const assessmentType =
+        CONTENT_TO_ASSESSMENT_TYPE[item.type] ?? "Assignment";
       const result = await createAssessment({
         courseId,
         title: item.title,
@@ -338,10 +416,10 @@ export function ContentItemEditor({
   // ponytail: narrow cast on the testPlan shape; the public endpoint strips hidden cases
   // server-side so cases[].length is the public count and the hidden count is unknown here.
   const codingCases =
-    (initialCodingDefinition?.testPlan as
-      | { cases?: Array<{ kind?: string }> }
-      | null
-      | undefined)?.cases ?? [];
+    (
+      initialCodingDefinition?.testPlan as
+        { cases?: Array<{ kind?: string }> } | null | undefined
+    )?.cases ?? [];
   const stdioCaseCount = codingCases.filter(
     (c) => c.kind === "stdio" || c.kind === "stdio-file",
   ).length;
@@ -568,6 +646,7 @@ export function ContentItemEditor({
                   key={item.id}
                   initialContent={initialQuizContent}
                   onChange={handleQuizContentChange}
+                  mode={previewMode ? "preview" : "edit"}
                 />
               )}
 
@@ -613,9 +692,7 @@ export function ContentItemEditor({
                   {initialCodingDefinition ? (
                     <div className="text-muted-foreground space-y-1 text-sm">
                       <p>Language: {initialCodingDefinition.language}</p>
-                      <p>
-                        Test cases: {codingCases.length} (public)
-                      </p>
+                      <p>Test cases: {codingCases.length} (public)</p>
                       <p>
                         Types: {stdioCaseCount} stdin/stdout ·{" "}
                         {functionalCaseCount} functional
