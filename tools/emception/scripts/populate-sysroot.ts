@@ -5,7 +5,7 @@ import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 
 enableBuildKeepalive('populate-sysroot');
 
@@ -16,7 +16,7 @@ const ROOT = path.resolve(__dirname, '..');
 const P = toolchainPaths(ROOT);
 const EMSDK_DIR = getEmsdkDir();
 const SYSROOT = P.sysroot;
-const EMSDK_VERSION = process.argv[2] || process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const EMSDK_VERSION = lockedVersion(loadToolchainStateSync(ROOT).lock, 'emsdk');
 const VIRTUAL_LINKS_FILE = path.join(SYSROOT, '.emception-symlinks.json');
 const virtualLinks: Record<string, string> = {};
 

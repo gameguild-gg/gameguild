@@ -28,7 +28,7 @@
 import shell from 'shelljs';
 import { setupEmsdk } from './emsdk.ts';
 import { enableBuildKeepalive } from './keepalive.ts';
-import { PINNED } from './pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from '../toolchain/config.ts';
 
 export interface BuildScriptContext {
     /** Repository-root-relative working directory (= `process.cwd()` at script start). */
@@ -78,7 +78,7 @@ export function defineBuildScript(options: BuildScriptOptions): Promise<void> {
 
     const root = process.cwd();
     const emsdkVersion = requireEmsdk
-        ? (process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION)
+        ? lockedVersion(loadToolchainStateSync(root).lock, 'emsdk')
         : null;
     if (requireEmsdk && emsdkVersion) {
         setupEmsdk(emsdkVersion);

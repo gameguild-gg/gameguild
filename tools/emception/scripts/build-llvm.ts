@@ -12,10 +12,9 @@ import path from 'path';
 import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
-import { detectLLVMGitCommit, detectLLVMVersion, resolveAvailableLLVMRelease } from './lib/detect-versions.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedTool, lockedVersion } from './toolchain/config.ts';
 
 enableBuildKeepalive('build-llvm');
 
@@ -31,35 +30,20 @@ const LLVM_BUILD_ROOT = path.join(P.builds, 'llvm');
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 
-// Setup EMSDK first so we can detect the bundled LLVM version
+// Setup the exact EMSDK recorded by the lock.
 setupEmsdk(EMSDK_VERSION);
 
-// Detect LLVM version from emsdk. If the exact version (or same-major
-// release) has a published tarball we use that; otherwise we clone from
-// the llvm-project git repo at the exact commit the emsdk was built with.
-const DETECTED_LLVM = process.env.LLVM_VERSION || detectLLVMVersion();
-const LLVM_GIT_COMMIT = detectLLVMGitCommit();
-let LLVM_VERSION: string;
-let LLVM_USE_GIT = false;
-try {
-    LLVM_VERSION = process.env.LLVM_VERSION || resolveAvailableLLVMRelease(PINNED.LLVM_VERSION);
-} catch {
-    // No released tarball available — fall back to git clone
-    LLVM_VERSION = DETECTED_LLVM;
-    LLVM_USE_GIT = true;
+const LLVM_TOOL = lockedTool(lock, 'llvm');
+if (LLVM_TOOL.source.kind !== 'git-archive') {
+    throw new Error('llvm must use an immutable git-archive source');
 }
-// If the resolved version's major doesn't match the detected major, use git
-if (parseInt(LLVM_VERSION) !== parseInt(DETECTED_LLVM)) {
-    console.log(`    Resolved LLVM ${LLVM_VERSION} does not match detected major ${DETECTED_LLVM.split('.')[0]}; using git clone instead.`);
-    LLVM_VERSION = DETECTED_LLVM;
-    LLVM_USE_GIT = true;
-}
-const LLVM_SRC_DIR = LLVM_USE_GIT ? 'llvm-project-git' : `llvm-project-${LLVM_VERSION}.src`;
-const LLVM_TARBALL = `llvm-project-${LLVM_VERSION}.src.tar.xz`;
-const LLVM_URL = `https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${LLVM_TARBALL}`;
-const LLVM_GIT_URL = 'https://github.com/llvm/llvm-project.git';
+const LLVM_VERSION = LLVM_TOOL.version;
+const LLVM_SRC_DIR = `llvm-project-${LLVM_TOOL.source.commit}`;
+const LLVM_TARBALL = `llvm-project-${LLVM_TOOL.source.commit}.tar.gz`;
+const LLVM_URL = LLVM_TOOL.source.url;
 const CONCURRENCY = Number(process.env.EMCEPTION_BUILD_CONCURRENCY || os.cpus().length);
 
 function ensureCMakeBuildDirectory(buildDir: string): void {
@@ -180,29 +164,12 @@ function setupSource() {
     shell.mkdir('-p', LLVM_SOURCE_ROOT);
     shell.cd(LLVM_SOURCE_ROOT);
     if (!fs.existsSync(LLVM_SRC_DIR)) {
-        if (LLVM_USE_GIT) {
-            const commit = LLVM_GIT_COMMIT;
-            if (!commit) {
-                throw new Error(
-                    'Cannot determine LLVM git commit from emsdk clang. ' +
-                    'Set LLVM_VERSION env var to a specific released version.',
-                );
-            }
-            console.log(`Cloning LLVM from git at commit ${commit}...`);
-            // Shallow clone to save time/space, then checkout the exact commit
-            shell.exec(`git clone --depth 1 "${LLVM_GIT_URL}" "${LLVM_SRC_DIR}"`);
-            shell.cd(LLVM_SRC_DIR);
-            shell.exec(`git fetch --depth 1 origin ${commit}`);
-            shell.exec(`git checkout ${commit}`);
-            shell.cd(LLVM_SOURCE_ROOT);
-        } else {
-            if (!fs.existsSync(LLVM_TARBALL)) {
-                console.log(`Downloading LLVM source from ${LLVM_URL}...`);
-                shell.exec(`curl -fSL -o "${LLVM_TARBALL}" "${LLVM_URL}"`);
-            }
-            console.log('Extracting LLVM source...');
-            shell.exec(`tar -xf "${LLVM_TARBALL}"`);
+        if (!fs.existsSync(LLVM_TARBALL)) {
+            console.log(`Downloading locked LLVM source from ${LLVM_URL}...`);
+            shell.exec(`curl -fSL -o "${LLVM_TARBALL}" "${LLVM_URL}"`);
         }
+        console.log('Extracting LLVM source...');
+        shell.exec(`tar -xf "${LLVM_TARBALL}"`);
     } else {
         console.log('LLVM source already present.');
     }

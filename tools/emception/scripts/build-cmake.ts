@@ -13,7 +13,7 @@ import shell from 'shelljs';
 import { standaloneFlags } from './lib/emcc-flags.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 
 enableBuildKeepalive('build-cmake');
 
@@ -21,7 +21,8 @@ const ROOT = process.cwd();
 const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 setupEmsdk(EMSDK_VERSION);
 
 const CONCURRENCY = os.cpus().length;
@@ -39,46 +40,9 @@ shell.mkdir('-p', SOURCE_ROOT);
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
-// Detect latest CMake release
 const GITHUB_AUTH = process.env.GITHUB_TOKEN
     ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
     : '';
-
-function detectCMakeVersion(): string {
-    const envVer = process.env.CMAKE_VERSION;
-    if (envVer) return envVer;
-
-    // CMake 4.x changed CMakeBuildUtilities.cmake: when CMAKE_USE_SYSTEM_CURL=ON it
-    // forces CMAKE_USE_SYSTEM_ZLIB=ON via a regular set() that overrides our -D flag,
-    // and Emscripten's cross-compile sysroot has no system zlib. Cap at 3.x.
-    const FALLBACK_CMAKE_VERSION = PINNED.CMAKE_VERSION;
-    console.log('Detecting latest CMake 3.x release...');
-    const prevFatal = shell.config.fatal;
-    shell.config.fatal = false;
-    const result = shell.exec(
-        `curl -fsSL ${GITHUB_AUTH} "https://api.github.com/repos/Kitware/CMake/releases?per_page=100"`,
-        { silent: true },
-    );
-    shell.config.fatal = prevFatal;
-    if (result.code !== 0) {
-        console.warn(`  GitHub API unavailable (exit ${result.code}), using fallback ${FALLBACK_CMAKE_VERSION}`);
-        return FALLBACK_CMAKE_VERSION;
-    }
-    const releases = JSON.parse(result.stdout) as Array<{
-        tag_name: string;
-        prerelease: boolean;
-        draft: boolean;
-    }>;
-    for (const rel of releases) {
-        if (rel.prerelease || rel.draft) continue;
-        const m = rel.tag_name.match(/^v(3\.\d+\.\d+)$/);
-        if (m) {
-            console.log(`  Latest CMake 3.x release: ${m[1]}`);
-            return m[1];
-        }
-    }
-    throw new Error('No CMake 3.x release found in recent 100 releases');
-}
 
 function escapeRegex(input: string): string {
     return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -149,7 +113,7 @@ function ensureCMakeSource(version: string): string {
     return normalizedSourceDir;
 }
 
-const CMAKE_VERSION = detectCMakeVersion();
+const CMAKE_VERSION = lockedVersion(lock, 'cmake');
 const SOURCE_DIR = ensureCMakeSource(CMAKE_VERSION);
 const BUILD_WASM_DIR = path.join(P.builds, 'cmake', 'wasm');
 

@@ -14,7 +14,7 @@ import { fileURLToPath } from 'url';
 import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 
 enableBuildKeepalive('build-binaryen');
 
@@ -26,12 +26,13 @@ const P = toolchainPaths(ROOT);
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 
 // Setup EMSDK first
 setupEmsdk(EMSDK_VERSION);
 
-const BINARYEN_VERSION = process.env.BINARYEN_VERSION || PINNED.BINARYEN_VERSION;
+const BINARYEN_VERSION = lockedVersion(lock, 'binaryen');
 
 const SOURCE_ROOT = path.join(P.sources, 'binaryen');
 const SOURCE_DIR = path.join(SOURCE_ROOT, `binaryen-version_${BINARYEN_VERSION}`);

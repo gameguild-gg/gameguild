@@ -4,8 +4,7 @@
  * Produces python.wasm — a self-contained module that statically links
  * libpython.a. No SIDE_MODULE, no shared libraries, no libc_stubs.
  *
- * The Python version is detected from emsdk's bundled Python unless
- * overridden via the PYTHON_VERSION environment variable.
+ * The Python and helper-tool versions come only from toolchain.lock.json.
  */
 
 import fs from 'fs';
@@ -16,10 +15,9 @@ import path from 'path';
 import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
-import { pythonMajorMinor } from './lib/detect-versions.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedTool, lockedVersion, pythonMajorMinor } from './toolchain/config.ts';
 
 enableBuildKeepalive('build-cpython');
 
@@ -31,12 +29,13 @@ const P = toolchainPaths(ROOT);
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 
 // Setup EMSDK first
 setupEmsdk(EMSDK_VERSION);
 
-const PYTHON_VERSION = process.env.PYTHON_VERSION || PINNED.PYTHON_VERSION;
+const PYTHON_VERSION = lockedVersion(lock, 'python');
 const PYTHON_MM = pythonMajorMinor(PYTHON_VERSION);   // e.g. "3.13"
 const CONCURRENCY = Number(process.env.EMCEPTION_BUILD_CONCURRENCY || os.cpus().length);
 
@@ -70,29 +69,37 @@ function resolveGitBash(): string {
     return gitBash;
 }
 
+function lockedArchive(name: 'zstdWindows' | 'msys2Make') {
+    const tool = lockedTool(lock, name);
+    if (tool.source.kind !== 'archive') throw new Error(`${name} must use an archive source`);
+    return { version: tool.version, ...tool.source };
+}
+
 function ensureWindowsMake(): string {
-    const cacheDir = path.join(ROOT, 'tools', 'msys2-make');
+    const cacheDir = path.join(P.downloads, 'windows-build-tools');
     const packageDir = path.join(cacheDir, 'package');
     const makeExecutable = path.join(packageDir, 'mingw64', 'bin', 'mingw32-make.exe');
     if (fs.existsSync(makeExecutable)) return makeExecutable;
 
     fs.mkdirSync(packageDir, { recursive: true });
-    const zstdVersion = PINNED.ZSTD_WINDOWS_VERSION;
+    const zstd = lockedArchive('zstdWindows');
+    const zstdVersion = zstd.version;
     const zstdArchive = path.join(cacheDir, `zstd-v${zstdVersion}-win64.zip`);
     downloadPinned(
-        `https://github.com/facebook/zstd/releases/download/v${zstdVersion}/zstd-v${zstdVersion}-win64.zip`,
+        zstd.url,
         zstdArchive,
-        PINNED.ZSTD_WINDOWS_SHA256,
+        zstd.sha256,
     );
     execFileSync('C:\\Windows\\System32\\tar.exe', ['-xf', zstdArchive, '-C', cacheDir]);
     const zstdExecutable = path.join(cacheDir, `zstd-v${zstdVersion}-win64`, 'zstd.exe');
 
-    const makeVersion = PINNED.MSYS2_MAKE_VERSION;
+    const make = lockedArchive('msys2Make');
+    const makeVersion = make.version;
     const makeArchive = path.join(cacheDir, `mingw-w64-x86_64-make-${makeVersion}-any.pkg.tar.zst`);
     downloadPinned(
-        `https://mirror.msys2.org/mingw/mingw64/mingw-w64-x86_64-make-${makeVersion}-any.pkg.tar.zst`,
+        make.url,
         makeArchive,
-        PINNED.MSYS2_MAKE_SHA256,
+        make.sha256,
     );
     const makeTar = path.join(cacheDir, 'make.pkg.tar');
     execFileSync(zstdExecutable, ['-d', '-f', makeArchive, '-o', makeTar], { stdio: 'inherit' });

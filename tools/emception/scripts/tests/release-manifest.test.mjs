@@ -86,6 +86,14 @@ test('generate-manifest CLI assembles the canonical build paths', async (context
   const paths = await fixture();
   context.after(() => rm(paths.root, { recursive: true, force: true }));
   await writeFile(path.join(paths.root, 'package.json'), '{"version":"9.8.7"}');
+  const workspaceRoot = path.resolve(import.meta.dirname, '..', '..');
+  await mkdir(path.join(paths.root, 'toolchain'), { recursive: true });
+  for (const filename of ['toolchain.config.json', 'toolchain.lock.json']) {
+    await writeFile(
+      path.join(paths.root, 'toolchain', filename),
+      await readFile(path.join(workspaceRoot, 'toolchain', filename)),
+    );
+  }
 
   const tsxCli = path.resolve(import.meta.dirname, '../../node_modules/tsx/dist/cli.mjs');
   const manifestScript = path.resolve(import.meta.dirname, '../generate-manifest.ts');

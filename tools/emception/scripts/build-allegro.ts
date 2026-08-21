@@ -27,7 +27,7 @@
  *   - sysroot/usr/include/allegro5/**\/*.h
  *   - sysroot/usr/lib/emscripten/allegro-runtime.mjs  (MODULARIZE=1 JS factory)
  *
- * Version: pinned default (override via ALLEGRO_VERSION env var).
+ * Version: exact entry from toolchain.lock.json.
  */
 
 import fs from 'fs';
@@ -39,7 +39,7 @@ import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { ensureGitHubSource } from './lib/github-source.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 
 enableBuildKeepalive('build-allegro');
 
@@ -47,7 +47,8 @@ const ROOT = process.cwd();
 const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 setupEmsdk(EMSDK_VERSION);
 
 const EMSDK_DIR = getEmsdkDir();
@@ -67,7 +68,7 @@ shell.mkdir('-p', ALLEGRO_INC);
 
 // ─────────────── 1. Allegro 5 via CMake ───────────────
 
-const ALLEGRO_TAG = process.env.ALLEGRO_VERSION ?? PINNED.ALLEGRO_VERSION;
+const ALLEGRO_TAG = lockedVersion(lock, 'allegro');
 const ALLEGRO_SRC = ensureGitHubSource({
     repository: 'liballeg/allegro5',
     version: ALLEGRO_TAG,

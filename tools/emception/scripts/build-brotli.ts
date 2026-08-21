@@ -1,7 +1,7 @@
 /**
  * Build Brotli for both Node.js CLI and WebAssembly browser decompression.
  *
- * Downloads the latest Brotli release, compiles the CLI natively (using gcc),
+ * Downloads the locked Brotli release, compiles the CLI natively (using gcc),
  * and generates the WASM module for browser use via Emscripten.
  */
 
@@ -13,7 +13,7 @@ import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 
 enableBuildKeepalive('build-brotli');
 
@@ -25,10 +25,11 @@ const P = toolchainPaths(ROOT);
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 
 // Brotli version to use
-const BROTLI_VERSION = process.env.BROTLI_VERSION || PINNED.BROTLI_VERSION;
+const BROTLI_VERSION = lockedVersion(lock, 'brotli');
 
 // Directories
 const SOURCE_ROOT = path.join(P.sources, 'brotli');
