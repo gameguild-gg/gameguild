@@ -9,7 +9,7 @@ const emceptionRoot = path.resolve(__dirname, '..');
 
 const sourceBuildDir = path.join(emceptionRoot, 'build');
 const sourceBuildCdnDir = path.join(sourceBuildDir, 'cdn');
-const sourceBuildManifestFile = path.join(sourceBuildDir, 'manifest.json');
+const sourceBuildManifestFile = path.join(sourceBuildCdnDir, 'manifest.json');
 const sourcePublicCdnDir = path.join(emceptionRoot, 'public', 'cdn');
 const sourcePublicManifestFile = path.join(sourcePublicCdnDir, 'manifest.json');
 const targetCdnDir = path.join(emceptionRoot, 'packages', 'core', 'cdn');
