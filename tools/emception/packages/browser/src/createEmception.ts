@@ -39,6 +39,8 @@ import type {
     WorkspaceAPI,
 } from 'emception';
 import { DEFAULT_MANIFEST_URL } from './manifest.js';
+import { createCanvasAPI } from './canvas.js';
+import type { CanvasAPI } from './canvas.js';
 import type { RunOptions as BrowserRunOptions } from './tool-runner.js';
 import { WorkerClient } from './worker-client.js';
 
@@ -87,7 +89,12 @@ export interface CreateEmceptionOptions {
     manifestUrl?: string;
 }
 
-export async function createEmception(opts: CreateEmceptionOptions = {}): Promise<EmceptionAPI> {
+export interface BrowserEmceptionAPI extends EmceptionAPI {
+    /** Browser-owned canvas build/runtime boundary. */
+    readonly canvas: CanvasAPI;
+}
+
+export async function createEmception(opts: CreateEmceptionOptions = {}): Promise<BrowserEmceptionAPI> {
     const manifestUrl = opts.manifestUrl ?? DEFAULT_MANIFEST_URL;
     const tty = opts.tty ?? (opts.container ? 'xterm' : 'none');
 
@@ -120,7 +127,7 @@ export async function createEmception(opts: CreateEmceptionOptions = {}): Promis
     return wrap(client);
 }
 
-function wrap(client: WorkerClient): EmceptionAPI {
+function wrap(client: WorkerClient): BrowserEmceptionAPI {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     const toBytes = (data: Uint8Array | string): Uint8Array =>
@@ -144,7 +151,11 @@ function wrap(client: WorkerClient): EmceptionAPI {
 
     /** Translate a core RunOptions into the browser WorkerClient RunOptions. */
     function toBrowserOpts(opts: RunOptions): BrowserRunOptions {
-        const browser: BrowserRunOptions = { cwd: opts.cwd ?? mountPath(), env: { ...currentBuild.env, ...opts.env } };
+        const browser: BrowserRunOptions = {
+            cwd: opts.cwd ?? mountPath(),
+            env: { ...currentBuild.env, ...opts.env },
+            hints: opts.preloadBundles ? { bundlesNeeded: [...opts.preloadBundles] } : undefined,
+        };
         if (typeof opts.stdout === 'function') {
             const fn = opts.stdout;
             browser.onStdout = (text: string) => { (fn as (c: Uint8Array) => void)(encoder.encode(text)); };
@@ -264,7 +275,7 @@ function wrap(client: WorkerClient): EmceptionAPI {
             client.terminate();
         },
     };
-    return api;
+    return { ...api, canvas: createCanvasAPI(api) };
 }
 
 /**
@@ -273,7 +284,7 @@ function wrap(client: WorkerClient): EmceptionAPI {
  * the worker themselves via {@link bootInWorker} and need the same
  * high-level surface that {@link createEmception} returns.
  */
-export function wrapWorkerClient(client: WorkerClient): EmceptionAPI {
+export function wrapWorkerClient(client: WorkerClient): BrowserEmceptionAPI {
     return wrap(client);
 }
 

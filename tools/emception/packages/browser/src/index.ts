@@ -20,6 +20,7 @@ export {
     TTYBridge,
     type BootResult,
     type BrowserBridge,
+    type BrowserEmceptionAPI,
     type CreateEmceptionOptions,
     type EmceptionAPI,
     type IOProvider,
@@ -28,6 +29,17 @@ export {
     type VFSManager,
     type WorkerBootResult
 } from './boot.js';
+
+export {
+    createCanvasAPI,
+    type CanvasAPI,
+    type CanvasArtifact,
+    type CanvasBuildOptions,
+    type CanvasBuildResult,
+    type CanvasCompileFailure,
+    type CanvasLinkFailure,
+    type CanvasToolchain,
+} from './canvas.js';
 
 // Lower-level VFS surface (LazyFS, IDBFS, mountVFSFS) for advanced consumers
 // that want to compose their own VFSManager.
