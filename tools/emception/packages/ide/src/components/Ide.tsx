@@ -1,5 +1,5 @@
-import type { NativePreset } from '@gameguild/emception-browser';
-import { TOOLCHAIN_PRESETS as EMCEPTION_PRESETS, bootInWorker } from '@gameguild/emception-browser';
+import type { BrowserEmceptionAPI, BrowserStdin, NativePreset } from '@gameguild/emception-browser';
+import { TOOLCHAIN_PRESETS as EMCEPTION_PRESETS, createEmception } from '@gameguild/emception-browser';
 import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -12,6 +12,61 @@ import { DEFAULT_IMAGE, deriveStorageKey, parseWorkspaceBundle, resolveArgs, wor
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, resolveWsPath } from './ide-utils.js';
 import TerminalPanel from './TerminalPanel.js';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets.js';
+
+interface IdeTerminal {
+  clear(): void;
+  dispose(): void;
+  readByteExclusive(): number | Promise<number>;
+  write(text: string): void;
+  writeError(text: string): void;
+  writeLine(text: string): void;
+}
+
+interface IdeRunOptions {
+  cwd?: string;
+  env?: Record<string, string>;
+  hints?: { bundlesNeeded?: string[] };
+  stdin?: BrowserStdin;
+  onStdout?: (text: string) => void;
+  onStderr?: (text: string) => void;
+}
+
+function createIdeTerminal(terminal: Terminal, onClear: () => void): IdeTerminal {
+  const bytes: number[] = [];
+  const waiters: Array<(byte: number) => void> = [];
+  const subscription = terminal.onData((data) => {
+    for (let index = 0; index < data.length; index += 1) {
+      const byte = data.charCodeAt(index);
+      const waiter = waiters.shift();
+      if (waiter) waiter(byte);
+      else bytes.push(byte);
+    }
+  });
+  return {
+    clear: () => {
+      terminal.clear();
+      onClear();
+    },
+    dispose: () => subscription.dispose(),
+    readByteExclusive: () => bytes.shift() ?? new Promise<number>((resolve) => waiters.push(resolve)),
+    write: (text) => terminal.write(text),
+    writeError: (text) => terminal.writeln(`\x1b[31m${text}\x1b[0m`),
+    writeLine: (text) => terminal.writeln(text),
+  };
+}
+
+async function runTool(api: BrowserEmceptionAPI, tool: string, argv: string[], options: IdeRunOptions = {}) {
+  const stdoutDecoder = new TextDecoder();
+  const stderrDecoder = new TextDecoder();
+  return api.run(tool, argv, {
+    cwd: options.cwd,
+    env: options.env,
+    stdin: options.stdin,
+    preloadBundles: options.hints?.bundlesNeeded,
+    stdout: options.onStdout ? (chunk) => options.onStdout?.(stdoutDecoder.decode(chunk, { stream: true })) : 'capture',
+    stderr: options.onStderr ? (chunk) => options.onStderr?.(stderrDecoder.decode(chunk, { stream: true })) : 'capture',
+  });
+}
 
 /** Creates a line-buffered stdin reader from the tty. Shared by WASI, CMake, and Python paths. */
 function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<number> | null }): () => Promise<number> {
@@ -62,11 +117,11 @@ function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<
 }
 
 export type { IdeProps };
-type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
 
 export default function Ide({
   title = 'Emception',
   manifestUrl = '/cdn/manifest.json',
+  api: injectedApi,
   workspaceConfig,
   workspaceUrl,
   workspaceName,
@@ -94,7 +149,9 @@ export default function Ide({
   const canvasHolderRef = useRef<HTMLDivElement | null>(null);
   /** The div inside whichever DockGroupPanel currently shows the canvas tab */
   const canvasHostElRef = useRef<HTMLDivElement | null>(null);
-  const orchestratorRef = useRef<WorkerBoot | null>(null);
+  const apiRef = useRef<BrowserEmceptionAPI | null>(null);
+  const ownsApiRef = useRef(false);
+  const terminalIORef = useRef<IdeTerminal | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const terminalLogRef = useRef<HTMLPreElement | null>(null);
   /** Tracks blob URLs created for SDL output so they can be revoked on reset/unmount */
@@ -223,14 +280,13 @@ export default function Ide({
 
   // ── Sync workspace files into the Worker VFS (/home/user) ─────
   const syncFilesToVfs = useCallback(async (filesToSync: Record<string, WorkspaceFile>) => {
-    const orch = orchestratorRef.current;
-    if (!orch) return;
+    const api = apiRef.current;
+    if (!api) return;
     const P = '[Emception:IDE]';
-    const { client } = orch;
     const enc = new TextEncoder();
     const textFiles = Object.values(filesToSync).filter((f) => f.type === 'text' && isTextFile(f.path));
     for (const file of textFiles) {
-      await client.writeFile(file.path, enc.encode(file.content));
+      await api.workspace.writeFile(file.path, enc.encode(file.content));
       console.log(`${P} VFS sync: ${file.path}`);
     }
     console.log(`${P} VFS sync complete (${textFiles.length} files)`);
@@ -269,13 +325,13 @@ export default function Ide({
       stoppedRef.current = true;
 
       // Reset VFS in the Worker to clear stale build artifacts from the previous workspace
-      if (orchestratorRef.current) {
-        const { client, tty } = orchestratorRef.current;
-        tty.clear();
-        tty.writeLine(`\x1b[33mSwitching workspace...\x1b[0m`);
+      if (apiRef.current) {
+        const tty = terminalIORef.current;
+        tty?.clear();
+        tty?.writeLine(`\x1b[33mSwitching workspace...\x1b[0m`);
         try {
           console.log(`${P} Resetting Worker VFS (clearing /tmp and /home/user)...`);
-          await client.resetVfs();
+          await apiRef.current.workspace.reset();
           console.log(`${P} Worker VFS reset complete`);
         } catch (err) {
           console.warn(`${P} VFS reset failed, continuing:`, err);
@@ -308,8 +364,8 @@ export default function Ide({
         });
       }
 
-      if (orchestratorRef.current) {
-        orchestratorRef.current.tty.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
+      if (apiRef.current) {
+        terminalIORef.current?.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
         // Sync new workspace files into VFS so /home/user is populated immediately
         await syncFilesToVfs(state.files);
       }
@@ -320,6 +376,10 @@ export default function Ide({
 
   const handleBootTerminalReady = useCallback((term: Terminal) => {
     xtermRef.current = term;
+    terminalIORef.current?.dispose();
+    terminalIORef.current = createIdeTerminal(term, () => {
+      if (terminalLogRef.current) terminalLogRef.current.textContent = '';
+    });
     (window as Window & { __xterm__?: Terminal }).__xterm__ = term;
     term.writeln('\x1b[32mWelcome to the Browser C/C++ Toolchain!\x1b[0m');
     term.writeln('Booting system...');
@@ -334,7 +394,7 @@ export default function Ide({
       setStatus('Booting toolchain...');
       try {
         // Mirror ALL xterm output to a hidden DOM element for Playwright E2E tests.
-        // Must be patched BEFORE bootInWorker so the MiniShell banner (sent by the
+        // Must be patched BEFORE createEmception so the MiniShell banner (sent by the
         // Worker before the 'booted' reply) is also captured in the log.
         // eslint-disable-next-line no-control-regex
         const stripAnsi = (s: string) => s.replace(/\u001b\[[\d;]*m/g, '');
@@ -355,21 +415,15 @@ export default function Ide({
           xtermAny.__emceptionLogPatched = true;
         }
 
-        const result = await bootInWorker(manifestUrl, xterm);
+        const result = injectedApi ?? await createEmception({ manifestUrl, container: xterm, tty: 'xterm' });
+        const ownsApi = !injectedApi;
         if (!isMounted()) {
-          result.client.terminate();
+          if (ownsApi) result.dispose();
           return;
         }
-        // Patch tty.clear to also clear the mirror log so each compile run starts fresh.
-        const origClear = result.tty.clear.bind(result.tty);
-        result.tty.clear = () => {
-          origClear();
-          if (log.current) log.current.textContent = '';
-        };
-        orchestratorRef.current = result;
-        // Expose worker client on window for E2E / debug access
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).__emception_client__ = result.client;
+        apiRef.current = result;
+        ownsApiRef.current = ownsApi;
+        (window as unknown as Record<string, unknown>).__emception_api__ = result;
         // Sync current workspace files into VFS so /home/user is populated on boot
         await syncFilesToVfs(filesRef.current);
         setStatus('Ready');
@@ -382,7 +436,7 @@ export default function Ide({
         xterm.writeln(`\x1b[31mBoot failed: ${err}\x1b[0m`);
       }
     },
-    [manifestUrl, syncFilesToVfs],
+    [injectedApi, manifestUrl, syncFilesToVfs],
   );
 
   useEffect(() => {
@@ -391,8 +445,9 @@ export default function Ide({
     doBootstrap(() => mounted);
     return () => {
       mounted = false;
-      orchestratorRef.current?.client.terminate();
-      orchestratorRef.current = null;
+      if (ownsApiRef.current) apiRef.current?.dispose();
+      apiRef.current = null;
+      ownsApiRef.current = false;
     };
   }, [terminalReady, manifestUrl, doBootstrap]);
 
@@ -584,10 +639,10 @@ export default function Ide({
     stoppedRef.current = true;
 
     // Reset VFS in the Worker to clear stale build artifacts
-    if (orchestratorRef.current) {
+    if (apiRef.current) {
       try {
         console.log(`${P} Resetting Worker VFS...`);
-        await orchestratorRef.current.client.resetVfs();
+        await apiRef.current.workspace.reset();
         console.log(`${P} Worker VFS reset complete`);
       } catch (err) {
         console.warn(`${P} VFS reset failed, continuing:`, err);
@@ -603,9 +658,9 @@ export default function Ide({
     setActiveTabId(state.activeTabId);
     setTerminalTabs([{ id: 'terminal-1', title: 'bash' }]);
     setActiveTerminalId('terminal-1');
-    if (orchestratorRef.current) {
-      orchestratorRef.current.tty.clear();
-      orchestratorRef.current.tty.writeLine('\x1b[32mWorkspace reset.\x1b[0m');
+    if (apiRef.current) {
+      terminalIORef.current?.clear();
+      terminalIORef.current?.writeLine('\x1b[32mWorkspace reset.\x1b[0m');
     } else {
       xtermRef.current?.clear();
       xtermRef.current?.writeln('\x1b[32mWorkspace reset.\x1b[0m');
@@ -732,7 +787,9 @@ export default function Ide({
   }, []);
 
   const handleCompile = async () => {
-    if (!orchestratorRef.current || !activeFile || activeFile.type !== 'text') return;
+    const api = apiRef.current;
+    const tty = terminalIORef.current;
+    if (!api || !tty || !activeFile || activeFile.type !== 'text') return;
     stoppedRef.current = false;
     setExecutionPhase('compiling');
     setActiveTerminalId('terminal-1');
@@ -743,7 +800,6 @@ export default function Ide({
       editorRef.current?.focus();
     };
     const tTotal = performance.now();
-    const { client, tty } = orchestratorRef.current;
     // Read from filesRef.current (updated immediately by handleEditorChange)
     // instead of the render-time `files` closure, so e2e __setFileContent
     // updates are always picked up even before React re-renders.
@@ -771,7 +827,7 @@ export default function Ide({
       console.log(`${P} COMPILE & RUN START`);
       const enc = new TextEncoder();
       for (const file of textFiles) {
-        await client.writeFile(file.path, enc.encode(file.content));
+        await api.workspace.writeFile(file.path, enc.encode(file.content));
         console.log(`${P} Synced ${file.path}`);
       }
 
@@ -786,7 +842,7 @@ export default function Ide({
         tty.writeLine(`\x1b[36mRunning ${pyFile}...\x1b[0m`);
         setExecutionPhase('running');
         const lineBufferedStdin = makeLineBufferedStdin(tty);
-        await client.run(args[0], args, {
+        await runTool(api, args[0], args, {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
@@ -812,7 +868,7 @@ export default function Ide({
         setStatus('CMake configure...');
         tty.writeLine('\x1b[36mCMake configure...\x1b[0m');
         const configArgs = resolvedConfig.compile.args;
-        const configResult = await client.run(configArgs[0], configArgs, {
+        const configResult = await runTool(api, configArgs[0], configArgs, {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.writeLine(t);
@@ -830,7 +886,7 @@ export default function Ide({
         setStatus('Ninja build...');
         tty.writeLine('\x1b[36mNinja build...\x1b[0m');
         const buildDir = configArgs.includes('-B') ? configArgs[configArgs.indexOf('-B') + 1] : '/home/user/build';
-        const ninjaResult = await client.run('ninja', ['ninja', '-C', buildDir], {
+        const ninjaResult = await runTool(api, 'ninja', ['ninja', '-C', buildDir], {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.writeLine(t);
@@ -851,7 +907,7 @@ export default function Ide({
         const runArgs = resolvedConfig.run.args ?? ['wasi-run', resolvedConfig.compile.output];
         setExecutionPhase('running');
         const lineBufferedStdin = makeLineBufferedStdin(tty);
-        await client.run(runArgs[0], runArgs, {
+        await runTool(api, runArgs[0], runArgs, {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
@@ -888,7 +944,7 @@ export default function Ide({
           // ── Generic emcc single-step path (raylib, etc.) ────────
           tty.writeLine('\x1b[36mCanvas compile...\x1b[0m');
           const compileArgv = resolveArgs(resolvedConfig.compile.args, sourceFsPath);
-          const canvasCompile = await client.run(compileArgv[0], compileArgv, {
+          const canvasCompile = await runTool(api, compileArgv[0], compileArgv, {
             cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
             onStdout: (t: string) => {
               tty.writeLine(t);
@@ -907,7 +963,7 @@ export default function Ide({
           tty.writeLine(`\x1b[32mCompiled in ${canvasDuration}s \u2014 loading...\x1b[0m`);
 
           const jsOutPath = resolveWsPath(cwd, resolvedConfig.compile.output || 'main.js');
-          const jsBytes = await client.getFile(jsOutPath);
+          const jsBytes = await api.workspace.readFile(jsOutPath);
           if (!jsBytes) {
             setExecutionPhase('idle');
             tty.writeError(`${jsOutPath} not found \u2014 emcc may have failed to produce output`);
@@ -979,7 +1035,7 @@ export default function Ide({
         // Map canvas preset name to the CDN bundle name used by the hints system.
         const canvasBundleName = isSDL3 ? 'sdl3' : isAllegro ? 'allegro' : 'raylib';
         const canvasRunHints = { bundlesNeeded: [canvasBundleName] };
-        const sdlCompile = await client.run(canvasPreset.compileTool, canvasPreset.compileArgv(sdlPaths), {
+        const sdlCompile = await runTool(api, canvasPreset.compileTool, canvasPreset.compileArgv(sdlPaths), {
           cwd: compileCwd,
           onStdout: (t: string) => {
             console.log(t);
@@ -1002,7 +1058,7 @@ export default function Ide({
 
         tty.writeLine(`\x1b[36m${canvasLabel} linking (wasm-ld)...\x1b[0m`);
 
-        const sdlLink = await client.run(canvasPreset.linkTool, canvasPreset.linkArgv(sdlPaths), {
+        const sdlLink = await runTool(api, canvasPreset.linkTool, canvasPreset.linkArgv(sdlPaths), {
           cwd: compileCwd,
           onStdout: (t: string) => {
             console.log(t);
@@ -1025,7 +1081,7 @@ export default function Ide({
         tty.writeLine(`\x1b[32m${canvasLabel} compiled in ${sdlDuration}s \u2014 loading...\x1b[0m`);
 
         // Read the compiled WASM binary from the VFS.
-        const wasmBytes = await client.getFile(wasmPath);
+        const wasmBytes = await api.workspace.readFile(wasmPath);
         if (!wasmBytes) {
           setExecutionPhase('idle');
           tty.writeError('main.wasm not found — emcc may have failed to produce it alongside main.js');
@@ -1034,7 +1090,7 @@ export default function Ide({
 
         // Read the pre-built SDL3 JS runtime shell from the VFS
         // (used for both SDL3 and raylib - provides emscripten_set_main_loop & WebGL)
-        const runtimeBytes = await client.getFile(runtimePath);
+        const runtimeBytes = await api.workspace.readFile(runtimePath);
         if (!runtimeBytes) {
           setExecutionPhase('idle');
           tty.writeError(`${runtimePath} not found in VFS — rebuild the CDN bundle`);
@@ -1506,7 +1562,7 @@ export default function Ide({
         const isC = compileTarget.endsWith('.c');
         const directPreset = isC ? (EMCEPTION_PRESETS.c as NativePreset) : (EMCEPTION_PRESETS.cpp as NativePreset);
         const presetPaths = { sourcePath: sourceFsPath, objectPath: objPath, wasmPath };
-        const clangResult = await client.run(directPreset.compileTool, directPreset.compileArgv(presetPaths), {
+        const clangResult = await runTool(api, directPreset.compileTool, directPreset.compileArgv(presetPaths), {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             console.log(t);
@@ -1527,7 +1583,7 @@ export default function Ide({
         }
 
         tty.writeLine('\x1b[36mLinking (wasm-ld)...\x1b[0m');
-        const lldResult = await client.run(directPreset.linkTool, directPreset.linkArgv(presetPaths), {
+        const lldResult = await runTool(api, directPreset.linkTool, directPreset.linkArgv(presetPaths), {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             console.log(t);
@@ -1552,7 +1608,7 @@ export default function Ide({
         tty.writeLine(`\x1b[32mCompilation successful in ${dur}s\x1b[0m`);
 
         // Log output size for test verification
-        const wasmFile = await client.getFile(wasmPath);
+        const wasmFile = await api.workspace.readFile(wasmPath);
         const wasmSize = wasmFile ? wasmFile.length : 0;
         console.log(`${P} Compilation output: main.wasm=${wasmSize}B`);
 
@@ -1561,7 +1617,7 @@ export default function Ide({
         const lineBufferedStdin = makeLineBufferedStdin(tty);
         const runArgs = resolvedConfig.run.args ?? ['wasi-run', wasmPath];
         setExecutionPhase('running');
-        await client.run(runArgs[0], runArgs, {
+        await runTool(api, runArgs[0], runArgs, {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
@@ -1581,7 +1637,7 @@ export default function Ide({
         resolvedConfig.compile.args.length > 0
           ? resolveArgs(resolvedConfig.compile.args, compileTarget)
           : ['emcc', compileTarget, '-o', resolveWsPath(cwd, resolvedConfig.compile.output || 'main.wasm'), '-O2'];
-      const result = await client.run(compileArgs[0], compileArgs, {
+      const result = await runTool(api, compileArgs[0], compileArgs, {
         cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
         onStdout: (t: string) => {
           console.log(t);
@@ -1602,7 +1658,7 @@ export default function Ide({
       setStatus('Compilation successful');
       tty.writeLine(`\x1b[32mCompilation successful in ${duration}s\x1b[0m`);
       const wasmPath = resolveWsPath(cwd, resolvedConfig.compile.output || 'main.wasm');
-      let wasmBytes = await client.getFile(wasmPath);
+      let wasmBytes = await api.workspace.readFile(wasmPath);
 
       // emcc may return before all subprocess-linked outputs are flushed to VFS.
       // Give the canonical artifact a short grace window before triggering fallback.
@@ -1610,7 +1666,7 @@ export default function Ide({
         const waitUntil = performance.now() + 12_000;
         while ((!wasmBytes || wasmBytes.length === 0) && performance.now() < waitUntil) {
           await new Promise<void>((resolve) => setTimeout(resolve, 120));
-          wasmBytes = await client.getFile(wasmPath);
+          wasmBytes = await api.workspace.readFile(wasmPath);
         }
       }
 
@@ -1619,7 +1675,7 @@ export default function Ide({
         const fallbackObj = '/tmp/emception-fallback-main.o';
         const sourceFsPath = compileTarget;
 
-        const clangFallback = await client.run(
+        const clangFallback = await runTool(api,
           'clang',
           [
             'clang',
@@ -1644,7 +1700,7 @@ export default function Ide({
 
         if (clangFallback.exitCode === 0) {
           const crtPath = '/usr/lib/emscripten/cache-lib/wasm32-emscripten/crt1.o';
-          const crtBytes = await client.getFile(crtPath);
+          const crtBytes = await api.workspace.readFile(crtPath);
           const magic = crtBytes
             ? Array.from((crtBytes as Uint8Array).slice(0, 8))
               .map((b: number) => b.toString(16).padStart(2, '0'))
@@ -1652,7 +1708,7 @@ export default function Ide({
             : 'none';
           tty.writeLine(`crt1.o probe: bytes=${crtBytes?.length ?? 0}, head=${magic}`);
 
-          const lldFallback = await client.run(
+          const lldFallback = await runTool(api,
             'wasm-ld',
             [
               'wasm-ld',
@@ -1695,14 +1751,14 @@ export default function Ide({
           tty.writeLine('\x1b[31mFallback compile step failed.\x1b[0m');
         }
 
-        wasmBytes = await client.getFile(wasmPath);
+        wasmBytes = await api.workspace.readFile(wasmPath);
       }
       console.log(`${P} Compilation output: main.wasm=${wasmBytes?.length ?? 0}`);
       tty.writeLine('Running...');
       const lineBufferedStdin = makeLineBufferedStdin(tty);
       const runArgs = resolvedConfig.run.args ?? ['wasi-run', resolvedConfig.compile.output || '/home/user/main.wasm'];
       setExecutionPhase('running');
-      await client.run(runArgs[0], runArgs, {
+      await runTool(api, runArgs[0], runArgs, {
         cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
         onStdout: (t: string) => {
           tty.write(t.replace(/\n/g, '\r\n'));
@@ -1729,14 +1785,15 @@ export default function Ide({
 
   const handleTest = async () => {
     const testConfig = resolvedConfig.test;
-    if (!orchestratorRef.current || !testConfig) return;
+    const api = apiRef.current;
+    const tty = terminalIORef.current;
+    if (!api || !tty || !testConfig) return;
     stoppedRef.current = false;
     setExecutionPhase('compiling');
     setActiveTerminalId('terminal-1');
     const restoreEditorFocus = () => {
       editorRef.current?.focus();
     };
-    const { client, tty } = orchestratorRef.current;
     const tTotal = performance.now();
     try {
       tty.clear();
@@ -1746,13 +1803,13 @@ export default function Ide({
       const textFiles = Object.values(files).filter((f) => f.type === 'text' && isTextFile(f.path));
       const enc = new TextEncoder();
       for (const file of textFiles) {
-        await client.writeFile(file.path, enc.encode(file.content));
+        await api.workspace.writeFile(file.path, enc.encode(file.content));
       }
 
       // Compile test if needed
       if (testConfig.compileArgs && testConfig.compileArgs.length > 0) {
         setStatus('Compiling tests...');
-        const compileResult = await client.run(testConfig.tool, testConfig.compileArgs, {
+        const compileResult = await runTool(api, testConfig.tool, testConfig.compileArgs, {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.writeLine(t);
@@ -1773,7 +1830,7 @@ export default function Ide({
       setStatus('Running tests...');
       setExecutionPhase('running');
       const lineBufferedStdin = makeLineBufferedStdin(tty);
-      const runResult = await client.run(testConfig.runArgs[0], testConfig.runArgs, {
+      const runResult = await runTool(api, testConfig.runArgs[0], testConfig.runArgs, {
         cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
         onStdout: (t: string) => {
           tty.write(t.replace(/\n/g, '\r\n'));
@@ -1818,11 +1875,12 @@ export default function Ide({
     }
 
     // WASI path: the worker is actively running wasi-run — terminate and reboot.
-    if (!orchestratorRef.current) return;
+    const api = apiRef.current;
+    if (!api || !ownsApiRef.current) return;
     stoppedRef.current = true;
-    const { client } = orchestratorRef.current;
-    client.terminate();
-    orchestratorRef.current = null;
+    api.dispose();
+    apiRef.current = null;
+    ownsApiRef.current = false;
     setExecutionPhase('idle');
     setIsReady(false);
     setStatus('Stopped — rebooting...');
