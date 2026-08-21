@@ -1,7 +1,7 @@
 import { access, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-export const PATCH_SET_VERSION = 'emception-glue-v1';
+export const PATCH_SET_VERSION = 'emception-glue-v2';
 
 const ENV_NEEDLE = 'var ENV={};';
 const ENV_MARKER = 'moduleArg["ENV"]';
@@ -10,6 +10,68 @@ const SYSTEM_ASYNC_ONLY = 'if(!command)return 0;if(Module["systemCallback"]){ret
 const SYSTEM_BARE = 'if(!command)return 0;if(Module["systemCallback"]){return Module["systemCallback"](UTF8ToString(command))}return-52';
 const SYSTEM_REPLACEMENT = 'if(!command)return 0;if(Module["systemCallbackSync"]){var sr=Module["systemCallbackSync"](UTF8ToString(command));if(sr!==undefined)return sr}if(Module["systemCallback"]){return Asyncify.handleAsync(function(){return Module["systemCallback"](UTF8ToString(command))})}return-52';
 const OPENAT_NEEDLE = 'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);var mode=varargs?syscallGetVarargI():0;';
+const CANVAS_RUNTIME_NAMES = ['sdl3', 'raylib', 'allegro'];
+
+const CANVAS_COMMON_PATCHES = [
+  {
+    label: 'wasmBinary',
+    needle: 'var wasmBinary;var ABORT=false',
+    replacement: 'var wasmBinary=Module["wasmBinary"];var ABORT=false',
+    marker: 'wasmBinary=Module["wasmBinary"]',
+  },
+  {
+    label: 'instantiateAsync',
+    needle: 'instantiateAsync(binary,binaryFile,imports){if(!binary){try{var response=fetch(',
+    replacement: 'instantiateAsync(binary,binaryFile,imports){if(binary){return WebAssembly.instantiate(binary,imports)}if(!binary){try{var response=fetch(',
+    marker: 'instantiateAsync(binary,binaryFile,imports){if(binary){return WebAssembly.instantiate',
+  },
+  {
+    label: 'callUserCallback',
+    needle: 'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){handleException(e)}finally{maybeExit()}}',
+    replacement: 'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return;}handleException(e)}finally{maybeExit()}}',
+    marker: 'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.()',
+  },
+  {
+    label: 'handleException',
+    needle: 'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}quit_(1,e)}',
+    replacement: 'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return EXITSTATUS}quit_(1,e)}',
+    marker: 'return EXITSTATUS}if(e instanceof WebAssembly.RuntimeError)',
+  },
+];
+
+function replaceRequired(content, patch, filename, applied) {
+  if (content.includes(patch.marker)) return content;
+  if (!content.includes(patch.needle)) {
+    throw new Error(`unsupported ${filename} generated shape: missing ${patch.label}`);
+  }
+  applied.push(patch.label);
+  return content.replace(patch.needle, patch.replacement);
+}
+
+export function applyCanvasRuntimePatches(source, filename) {
+  const applied = [];
+  let content = source;
+  for (const patch of CANVAS_COMMON_PATCHES) {
+    content = replaceRequired(content, patch, filename, applied);
+  }
+  if (filename !== 'sdl3-runtime.mjs') return { content, applied };
+
+  const emAsmFallback = (name) =>
+    `if(!ASM_CONSTS[${name}]){var _s=UTF8ToString(${name});ASM_CONSTS[${name}]=eval("(function($0,$1,$2,$3,$4,$5,$6,$7,$8,$9){"+_s+"})");}`;
+  const sdlPatches = [
+    { label: 'free declaration', needle: 'var _main,_SDL_free,', replacement: 'var _free,_main,_SDL_free,', marker: 'var _free,_main,_SDL_free,' },
+    { label: 'malloc fallback', needle: '_malloc=wasmExports["malloc"]', replacement: '_malloc=wasmExports["malloc"]||wasmExports["SDL_malloc"]', marker: '_malloc=wasmExports["malloc"]||' },
+    { label: 'free fallback', needle: '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"]', replacement: '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"];_free=wasmExports["free"]||_SDL_free', marker: '_free=wasmExports["free"]||_SDL_free' },
+    { label: 'string allocation', needle: 'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var ret=_malloc(size)', replacement: 'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var allocFn=_malloc||_SDL_malloc;var ret=allocFn(size)', marker: 'var allocFn=_malloc||_SDL_malloc' },
+    { label: 'EM_ASM', needle: 'var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[code](...args)}', replacement: `var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('code')}return ASM_CONSTS[code](...args)}`, marker: 'ASM_CONSTS[code]=eval' },
+    { label: 'main-thread EM_ASM', needle: 'var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[emAsmAddr](...args)}', replacement: `var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('emAsmAddr')}return ASM_CONSTS[emAsmAddr](...args)}`, marker: 'ASM_CONSTS[emAsmAddr]=eval' },
+    { label: 'canvas keyboard scope', needle: 'var keyEventHandlerFunc=e=>{var keyEventData=JSEvents.keyEvent', replacement: 'var keyEventHandlerFunc=e=>{if(Module["canvas"]&&e.target!==Module["canvas"])return;var keyEventData=JSEvents.keyEvent', marker: 'e.target!==Module["canvas"]' },
+  ];
+  for (const patch of sdlPatches) {
+    content = replaceRequired(content, patch, filename, applied);
+  }
+  return { content, applied };
+}
 
 function patchEnv(content, applied) {
   if (content.includes(ENV_MARKER) || !content.includes(ENV_NEEDLE)) return content;
@@ -123,4 +185,22 @@ export async function patchGlueDirectory({ libDirectory, tools }) {
   }
   if (foundFiles === 0) throw new Error(`no generated tool glue found in ${libDirectory}`);
   return { foundFiles, changedFiles, patchCount };
+}
+
+export async function patchCanvasRuntimeDirectory({ runtimeDirectory, runtimes = CANVAS_RUNTIME_NAMES }) {
+  let changedFiles = 0;
+  let patchCount = 0;
+  for (const runtime of runtimes) {
+    const filename = `${runtime}-runtime.mjs`;
+    const runtimePath = path.join(runtimeDirectory, filename);
+    if (!(await exists(runtimePath))) throw new Error(`required canvas runtime is missing: ${runtimePath}`);
+    const source = await readFile(runtimePath, 'utf8');
+    const result = applyCanvasRuntimePatches(source, filename);
+    patchCount += result.applied.length;
+    if (result.content !== source) {
+      await writeFile(runtimePath, result.content);
+      changedFiles += 1;
+    }
+  }
+  return { foundFiles: runtimes.length, changedFiles, patchCount };
 }
