@@ -38,20 +38,20 @@ import type {
     WorkspaceBuildConfig,
     WorkspaceAPI,
 } from 'emception';
+import { DEFAULT_MANIFEST_URL } from './manifest.js';
 import type { RunOptions as BrowserRunOptions } from './tool-runner.js';
 import { WorkerClient } from './worker-client.js';
 
 /**
  * Default manifest URL used when `manifestUrl` is omitted. Points at the
- * latest published `emception` package CDN payload on jsDelivr so a host can
+ * matching `@gameguild/emception-toolchain` package on jsDelivr so a host can
  * boot emception with zero configuration:
  *
  *     await createEmception({ container: el }); // uses DEFAULT_MANIFEST_URL
  *
- * Pin to a specific version in production by passing `manifestUrl`
- * explicitly, e.g. `https://cdn.jsdelivr.net/npm/emception@1.2.3/cdn/manifest.json`.
+ * Override `manifestUrl` only when self-hosting the same versioned artifacts.
  */
-export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/emception/cdn/manifest.json';
+export { DEFAULT_MANIFEST_URL } from './manifest.js';
 
 export interface CreateEmceptionOptions {
     /**

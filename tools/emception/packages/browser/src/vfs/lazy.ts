@@ -293,7 +293,7 @@ export class LazyFS implements IFileSystem {
       if (typeFlag === 48 || typeFlag === 0) {
         const fileData = new Uint8Array(content);
         const entry = this.manifest.files[name];
-        if (entry) {
+        if (entry?.hash) {
           idbEntries.push({ path: name, data: fileData, hash: entry.hash });
         }
         // Create blob URLs for module files (.wasm, .mjs, .js) so that
