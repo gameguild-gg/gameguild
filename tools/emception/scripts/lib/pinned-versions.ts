@@ -16,6 +16,10 @@ export const PINNED = {
     BINARYEN_VERSION: '129',
     BROTLI_VERSION: '1.2.0',
     PYTHON_VERSION: '3.13.3',
+    ZSTD_WINDOWS_VERSION: '1.5.6',
+    ZSTD_WINDOWS_SHA256: '7b4eff6719990e38aca93a4844c2e86a1935090625c4611f7e89675e999c56cc',
+    MSYS2_MAKE_VERSION: '4.4.1-5',
+    MSYS2_MAKE_SHA256: 'c19e7caf09bbc89b2730556b2da73004118d4e1f967a685cc48524c7ff80d864',
     IMGUI_VERSION: 'v1.92.7',
     /** resolveAvailableLLVMRelease() is called with this value; if 23.0.0 tarball
      *  is not yet published it walks to the closest available 23.x release. */

@@ -9,6 +9,8 @@
  */
 
 import fs from 'fs';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
@@ -34,7 +36,98 @@ setupEmsdk(EMSDK_VERSION);
 
 const PYTHON_VERSION = process.env.PYTHON_VERSION || PINNED.PYTHON_VERSION;
 const PYTHON_MM = pythonMajorMinor(PYTHON_VERSION);   // e.g. "3.13"
-const CONCURRENCY = os.cpus().length;
+const CONCURRENCY = Number(process.env.EMCEPTION_BUILD_CONCURRENCY || os.cpus().length);
+
+function quotePosix(value: string): string {
+    return `'${value.replaceAll('\\', '/').replaceAll("'", `'\\''`)}'`;
+}
+
+function sha256(filePath: string): string {
+    return createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
+
+function downloadPinned(url: string, destination: string, expectedHash: string): void {
+    if (!fs.existsSync(destination)) {
+        shell.exec(`curl -fSL -o "${destination}" "${url}"`);
+    }
+    const actualHash = sha256(destination);
+    if (actualHash !== expectedHash) {
+        throw new Error(`Checksum mismatch for ${destination}: expected ${expectedHash}, got ${actualHash}`);
+    }
+}
+
+function resolveGitBash(): string {
+    const candidates = [
+        process.env.GIT_BASH_PATH,
+        process.env.OMO_CODEX_GIT_BASH_PATH,
+        process.env.ProgramFiles && path.join(process.env.ProgramFiles, 'Git', 'bin', 'bash.exe'),
+        process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'Programs', 'Git', 'bin', 'bash.exe'),
+    ].filter((candidate): candidate is string => Boolean(candidate));
+    const gitBash = candidates.find(candidate => fs.existsSync(candidate));
+    if (!gitBash) throw new Error('Git Bash is required to build CPython on Windows; set GIT_BASH_PATH');
+    return gitBash;
+}
+
+function ensureWindowsMake(): string {
+    const cacheDir = path.join(ROOT, 'tools', 'msys2-make');
+    const packageDir = path.join(cacheDir, 'package');
+    const makeExecutable = path.join(packageDir, 'mingw64', 'bin', 'mingw32-make.exe');
+    if (fs.existsSync(makeExecutable)) return makeExecutable;
+
+    fs.mkdirSync(packageDir, { recursive: true });
+    const zstdVersion = PINNED.ZSTD_WINDOWS_VERSION;
+    const zstdArchive = path.join(cacheDir, `zstd-v${zstdVersion}-win64.zip`);
+    downloadPinned(
+        `https://github.com/facebook/zstd/releases/download/v${zstdVersion}/zstd-v${zstdVersion}-win64.zip`,
+        zstdArchive,
+        PINNED.ZSTD_WINDOWS_SHA256,
+    );
+    execFileSync('C:\\Windows\\System32\\tar.exe', ['-xf', zstdArchive, '-C', cacheDir]);
+    const zstdExecutable = path.join(cacheDir, `zstd-v${zstdVersion}-win64`, 'zstd.exe');
+
+    const makeVersion = PINNED.MSYS2_MAKE_VERSION;
+    const makeArchive = path.join(cacheDir, `mingw-w64-x86_64-make-${makeVersion}-any.pkg.tar.zst`);
+    downloadPinned(
+        `https://mirror.msys2.org/mingw/mingw64/mingw-w64-x86_64-make-${makeVersion}-any.pkg.tar.zst`,
+        makeArchive,
+        PINNED.MSYS2_MAKE_SHA256,
+    );
+    const makeTar = path.join(cacheDir, 'make.pkg.tar');
+    execFileSync(zstdExecutable, ['-d', '-f', makeArchive, '-o', makeTar], { stdio: 'inherit' });
+    execFileSync('C:\\Windows\\System32\\tar.exe', ['-xf', makeTar, '-C', packageDir]);
+    if (!fs.existsSync(makeExecutable)) throw new Error(`GNU Make was not extracted to ${makeExecutable}`);
+    return makeExecutable;
+}
+
+function runPosix(command: string, cwd: string, fatal = true): { stdout: string; status: number } {
+    const bash = resolveGitBash();
+    const result = spawnSync(bash, ['-lc', command], {
+        cwd,
+        env: { ...process.env, SHELL: bash, MSYS2_ARG_CONV_EXCL: '*' },
+        encoding: 'utf8',
+        stdio: ['inherit', 'pipe', 'pipe'],
+    });
+    if (result.stdout) process.stdout.write(result.stdout);
+    if (result.stderr) process.stderr.write(result.stderr);
+    if (fatal && result.status !== 0) {
+        throw new Error(`POSIX command failed with exit ${result.status}: ${command}`);
+    }
+    return { stdout: result.stdout.trim(), status: result.status ?? 1 };
+}
+
+function windowsMakeOverrides(): string {
+    const emscriptenDir = path.join(process.env.EMSDK ?? '', 'upstream', 'emscripten');
+    const emcc = path.join(emscriptenDir, 'emcc.bat').replaceAll('\\', '/');
+    const emxx = path.join(emscriptenDir, 'em++.bat').replaceAll('\\', '/');
+    const emar = path.join(emscriptenDir, 'emar.bat').replaceAll('\\', '/');
+    return [
+        `CC=${emcc}`,
+        `CXX=${emxx}`,
+        `AR=${emar}`,
+        `LDSHARED=${emcc} $(PY_LDFLAGS)`,
+        `BLDSHARED=${emcc} $(PY_CORE_LDFLAGS)`,
+    ].map(quotePosix).join(' ');
+}
 
 /** Common Emscripten flags for standalone tool modules */
 const STANDALONE_FLAGS = [
@@ -105,7 +198,27 @@ if (fs.existsSync(PATCHES_DIR)) {
     if (patches.length > 0) {
         for (const patch of patches) {
             console.log(`Applying patch: ${patch}`);
-            shell.exec(`patch -p1 -N < "${patch}" || true`);
+            const runPatch = (args: string): number => {
+                const command = `patch ${args} -p1 < ${quotePosix(patch)}`;
+                if (process.platform === 'win32') {
+                    return runPosix(command, SOURCE_DIR, false).status;
+                }
+                const fatal = shell.config.fatal;
+                shell.config.fatal = false;
+                const status = shell.exec(command).code;
+                shell.config.fatal = fatal;
+                return status;
+            };
+
+            if (runPatch('--dry-run --batch --forward') === 0) {
+                if (runPatch('--batch --forward') !== 0) {
+                    throw new Error(`Failed to apply CPython patch: ${patch}`);
+                }
+            } else if (runPatch('--dry-run --batch --reverse') === 0) {
+                console.log(`Patch already applied: ${path.basename(patch)}`);
+            } else {
+                throw new Error(`CPython patch does not match ${PYTHON_VERSION}: ${patch}`);
+            }
         }
     } else {
         console.log('No patches found.');
@@ -113,15 +226,29 @@ if (fs.existsSync(PATCHES_DIR)) {
 }
 
 // 3. Build native Python (needed for cross-compilation bootstrapping)
-console.log('Building native Python...');
-shell.mkdir('-p', BUILD_NATIVE_DIR);
-shell.cd(BUILD_NATIVE_DIR);
-
-if (!fs.existsSync(path.join(BUILD_NATIVE_DIR, 'Makefile'))) {
-    shell.exec(`../configure --prefix="${path.join(BUILD_NATIVE_DIR, 'install')}"`);
+let buildPython = path.join(BUILD_NATIVE_DIR, 'install', 'bin', 'python3');
+const windowsMake = process.platform === 'win32' ? ensureWindowsMake() : null;
+if (process.platform === 'win32') {
+    const emsdkPython = process.env.EMSDK_PYTHON;
+    if (!emsdkPython || !fs.existsSync(emsdkPython)) {
+        throw new Error('EMSDK_PYTHON is required to bootstrap CPython on Windows');
+    }
+    const version = execFileSync(emsdkPython, ['--version'], { encoding: 'utf8' }).trim();
+    if (!version.startsWith(`Python ${PYTHON_MM}.`)) {
+        throw new Error(`CPython ${PYTHON_VERSION} requires a Python ${PYTHON_MM} host, got ${version}`);
+    }
+    buildPython = emsdkPython;
+    console.log(`Using EMSDK host ${version}: ${buildPython}`);
+} else {
+    console.log('Building native Python...');
+    shell.mkdir('-p', BUILD_NATIVE_DIR);
+    shell.cd(BUILD_NATIVE_DIR);
+    if (!fs.existsSync(path.join(BUILD_NATIVE_DIR, 'Makefile'))) {
+        shell.exec(`../configure --prefix="${path.join(BUILD_NATIVE_DIR, 'install')}"`);
+    }
+    shell.exec(`make -j${CONCURRENCY}`);
+    shell.exec('make install');
 }
-shell.exec(`make -j${CONCURRENCY}`);
-shell.exec('make install');
 
 // 4. Cross-compile to WASM (standard build, no SIDE_MODULE flags)
 console.log('Cross-compiling CPython to WASM...');
@@ -145,33 +272,54 @@ if (!fs.existsSync(path.join(BUILD_WASM_DIR, 'Makefile'))) {
     process.env.ac_cv_file__dev_ptc = 'no';
     process.env.ac_cv_func_memfd_create = 'no';
 
-    const configureCmd = `emconfigure ../configure \
-    --host=wasm32-unknown-emscripten \
-    --build=${shell.exec('../config.guess', { silent: true }).stdout.trim()} \
-    --with-emscripten-target=browser \
-    --with-build-python="${path.join(BUILD_NATIVE_DIR, 'install', 'bin', 'python3')}" \
-    --prefix=/usr \
-    --disable-ipv6 \
-    --disable-test-modules`;
+    const buildTriple = process.platform === 'win32'
+        ? runPosix('./config.guess', SOURCE_DIR).stdout
+        : shell.exec('../config.guess', { silent: true }).stdout.trim();
+    const configureArgs = [
+        '../configure',
+        '--host=wasm32-unknown-emscripten',
+        `--build=${buildTriple}`,
+        '--with-emscripten-target=browser',
+        quotePosix(`--with-build-python=${buildPython}`),
+        '--prefix=/usr',
+        '--disable-ipv6',
+        '--disable-test-modules',
+    ].join(' ');
+    const configureCmd = process.platform === 'win32'
+        ? [
+            quotePosix(process.env.EMSDK_PYTHON ?? ''),
+            quotePosix(path.join(process.env.EMSDK ?? '', 'upstream', 'emscripten', 'emconfigure.py')),
+            quotePosix(resolveGitBash()),
+            configureArgs,
+        ].join(' ')
+        : `emconfigure ${configureArgs}`;
 
     console.log(configureCmd);
-    shell.exec(configureCmd);
+    if (process.platform === 'win32') runPosix(configureCmd, BUILD_WASM_DIR);
+    else shell.exec(configureCmd);
 }
 
 // Build WASM
-shell.exec(`emmake make -j${CONCURRENCY}`);
+if (process.platform === 'win32') {
+    const emmake = path.join(process.env.EMSDK ?? '', 'upstream', 'emscripten', 'emmake.py');
+    runPosix(
+        `${quotePosix(process.env.EMSDK_PYTHON ?? '')} ${quotePosix(emmake)} ${quotePosix(windowsMake ?? '')} -j${CONCURRENCY} ${windowsMakeOverrides()}`,
+        BUILD_WASM_DIR,
+    );
+} else {
+    shell.exec(`emmake make -j${CONCURRENCY}`);
+}
 
 // 5. Install to sysroot staging area
 console.log('Installing to sysroot-staging...');
 shell.mkdir('-p', SYSROOT_STAGING);
 
-shell.config.fatal = false;
-const installCmd = `emmake make install DESTDIR="${SYSROOT_STAGING}" V=1`;
+const installCmd = process.platform === 'win32'
+    ? `${quotePosix(process.env.EMSDK_PYTHON ?? '')} ${quotePosix(path.join(process.env.EMSDK ?? '', 'upstream', 'emscripten', 'emmake.py'))} ${quotePosix(windowsMake ?? '')} install ${quotePosix(`DESTDIR=${SYSROOT_STAGING}`)} V=1 ${windowsMakeOverrides()}`
+    : `emmake make install DESTDIR="${SYSROOT_STAGING}" V=1`;
 console.log(installCmd);
-if (shell.exec(installCmd).code !== 0) {
-    console.warn('make install failed, checking if critical files exist...');
-}
-shell.config.fatal = true;
+if (process.platform === 'win32') runPosix(installCmd, BUILD_WASM_DIR);
+else shell.exec(installCmd);
 
 // 6. Deploy sysroot-staging to sysroot
 // The Python stdlib files in sysroot/usr/lib/pythonX.Y/ are served via
@@ -205,7 +353,12 @@ if (fs.existsSync(stagingUsr)) {
         }
     }
     shell.mkdir('-p', SYSROOT_USR);
-    shell.cp('-r', path.join(stagingUsr, '*'), SYSROOT_USR);
+    for (const entry of fs.readdirSync(stagingUsr)) {
+        fs.cpSync(path.join(stagingUsr, entry), path.join(SYSROOT_USR, entry), {
+            recursive: true,
+            force: true,
+        });
+    }
 }
 
 // 8. Build python.wasm — standalone module that statically links libpython
@@ -271,7 +424,7 @@ const cmdParts = [
     `-O2`,
     `-o "${pythonMjs}"`,
 ];
-const cmd = cmdParts.join(' \\\n    ');
+const cmd = cmdParts.join(' ');
 
 console.log(cmd);
 shell.exec(cmd);
