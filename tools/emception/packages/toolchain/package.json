@@ -1,0 +1,29 @@
+{
+  "name": "@gameguild/emception-toolchain",
+  "version": "4.2.0",
+  "description": "Versioned Emception browser toolchain artifacts, manifest, ABI profiles, and compressed sysroot bundles.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "cdn",
+    "README.md"
+  ],
+  "exports": {
+    "./manifest.json": "./cdn/manifest.json",
+    "./cdn/*": "./cdn/*",
+    "./package.json": "./package.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gameguild-gg/gameguild.git",
+    "directory": "tools/emception/packages/toolchain"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "prepack": "node ../../scripts/stage-toolchain-cdn.mjs",
+    "clean": "node -e \"require('fs').rmSync('cdn',{recursive:true,force:true})\""
+  }
+}
