@@ -39,7 +39,7 @@ export interface EmceptionPaths {
     readonly sysrootInclude: string;
     /** Public Next.js mount point: `<root>/public/cdn`. */
     readonly publicCdn: string;
-    /** Generated manifest file: `<root>/build/manifest.json`. */
+    /** Generated manifest file inside the canonical release: `<root>/build/cdn/manifest.json`. */
     readonly manifestFile: string;
     /** libcurl-lite include directory used by ninja/cmake. */
     readonly libcurlInclude: string;
@@ -62,7 +62,7 @@ export function paths(root: string = process.cwd()): EmceptionPaths {
         sysrootLib: path.join(sysroot, 'usr', 'lib'),
         sysrootInclude: path.join(sysroot, 'usr', 'include'),
         publicCdn: path.join(root, 'public', 'cdn'),
-        manifestFile: path.join(build, 'manifest.json'),
+        manifestFile: path.join(build, 'cdn', 'manifest.json'),
         libcurlInclude: path.join(userland, 'libcurl-lite', 'include'),
         libcurlArchive: path.join(build, 'libcurl.a'),
     });

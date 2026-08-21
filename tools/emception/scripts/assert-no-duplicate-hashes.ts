@@ -20,7 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = process.cwd();
 
 // Accept --manifest <path> override
-let manifestPath = process.env.MANIFEST_FILE || path.join(ROOT, 'build', 'manifest.json');
+let manifestPath = process.env.MANIFEST_FILE || path.join(ROOT, 'build', 'cdn', 'manifest.json');
 const manifestFlagIdx = process.argv.indexOf('--manifest');
 if (manifestFlagIdx !== -1 && process.argv[manifestFlagIdx + 1]) {
     manifestPath = process.argv[manifestFlagIdx + 1];

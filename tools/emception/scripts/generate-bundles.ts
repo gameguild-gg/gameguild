@@ -1,7 +1,7 @@
 /**
  * Generate .tar.br bundle archives from the CDN file tree.
  *
- * Reads build/manifest.json (produced by generate-manifest.ts), groups files
+ * Reads build/cdn/manifest.json (produced by generate-manifest.ts), groups files
  * into bundles, creates tar archives, compresses them with brotli, writes the
  * bundles into build/cdn/, and rewrites manifest.json with bundle metadata.
  *
@@ -44,7 +44,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = process.cwd();
 const OUTPUT_DIR = process.env.OUTPUT_DIR || path.join(ROOT, 'build', 'cdn');
-const MANIFEST_FILE = process.env.MANIFEST_FILE || path.join(ROOT, 'build', 'manifest.json');
+const MANIFEST_FILE = process.env.MANIFEST_FILE || path.join(ROOT, 'build', 'cdn', 'manifest.json');
 
 enableBuildKeepalive('generate-bundles');
 
