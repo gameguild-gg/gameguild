@@ -106,3 +106,114 @@ test('checked-in toolchain policy and lock agree without dynamic timestamps', as
   assert.equal(state.lock.tools.cmake.version, '3.31.12');
   assert.equal(source.includes('generatedAt'), false);
 });
+
+test('updating EMSDK replaces the complete derived component group without mutating the input lock', async () => {
+  const { planToolchainUpdate } = await import('../toolchain/sources.ts');
+  const config = {
+    schemaVersion: 1,
+    runtimeAbi: 'emception-browser-v1',
+    constraints: { cmake: '<4' },
+    emsdkGroup: ['llvm', 'binaryen', 'python', 'sdl3'],
+  };
+  const source = (name, version, derivedFrom) => ({
+    version,
+    ...(derivedFrom ? { derivedFrom } : {}),
+    source: {
+      kind: 'emsdk-component',
+      emsdkVersion: version,
+      revision: `${name}-${version}`,
+      contentHash: name[0].repeat(64),
+    },
+  });
+  const original = {
+    schemaVersion: 1,
+    configHash: 'c'.repeat(64),
+    tools: {
+      emsdk: source('emsdk', '5.0.7'),
+      llvm: source('llvm', '23.1.0', 'emsdk'),
+      binaryen: source('binaryen', '129', 'emsdk'),
+      python: source('python', '3.13.3', 'emsdk'),
+      sdl3: source('sdl3', 'emsdk-5.0.7', 'emsdk'),
+      cmake: {
+        version: '3.31.12',
+        source: { kind: 'archive', url: 'https://example.invalid/cmake', sha256: 'd'.repeat(64) },
+      },
+    },
+  };
+  const before = JSON.stringify(original);
+  const provider = {
+    async resolve(name, requested) {
+      assert.equal(name, 'emsdk');
+      assert.equal(requested, 'latest');
+      return source('emsdk', '6.0.5');
+    },
+    async inspectEmsdk() {
+      return {
+        llvm: source('llvm', '24.0.0', 'emsdk'),
+        binaryen: source('binaryen', '130', 'emsdk'),
+        python: source('python', '3.14.0', 'emsdk'),
+        sdl3: source('sdl3', 'emsdk-6.0.5', 'emsdk'),
+      };
+    },
+    async latestVersion() {
+      return '6.0.5';
+    },
+  };
+
+  const updated = await planToolchainUpdate(config, original, 'emsdk', 'latest', provider);
+
+  assert.equal(JSON.stringify(original), before);
+  assert.equal(updated.tools.emsdk.version, '6.0.5');
+  assert.equal(updated.tools.llvm.version, '24.0.0');
+  assert.equal(updated.tools.binaryen.version, '130');
+  assert.equal(updated.tools.python.version, '3.14.0');
+  assert.equal(updated.tools.sdl3.version, 'emsdk-6.0.5');
+  assert.equal(updated.tools.cmake.version, '3.31.12');
+});
+
+test('outdated is read-only and derived tools must be updated through EMSDK', async () => {
+  const { findOutdatedTools, planToolchainUpdate } = await import('../toolchain/sources.ts');
+  const config = {
+    schemaVersion: 1,
+    runtimeAbi: 'emception-browser-v1',
+    constraints: { cmake: '<4' },
+    emsdkGroup: ['llvm'],
+  };
+  const lock = {
+    schemaVersion: 1,
+    configHash: 'e'.repeat(64),
+    tools: {
+      emsdk: {
+        version: '5.0.7',
+        source: { kind: 'archive', url: 'https://example.invalid/emsdk', sha256: 'a'.repeat(64) },
+      },
+      llvm: {
+        version: '23.1.0',
+        derivedFrom: 'emsdk',
+        source: { kind: 'archive', url: 'https://example.invalid/llvm', sha256: 'b'.repeat(64) },
+      },
+      cmake: {
+        version: '3.31.12',
+        source: { kind: 'archive', url: 'https://example.invalid/cmake', sha256: 'c'.repeat(64) },
+      },
+    },
+  };
+  const before = JSON.stringify(lock);
+  const provider = {
+    async latestVersion(name) {
+      return name === 'cmake' ? '3.31.13' : '5.0.7';
+    },
+    async resolve() {
+      throw new Error('not used');
+    },
+    async inspectEmsdk() {
+      throw new Error('not used');
+    },
+  };
+
+  assert.deepEqual(await findOutdatedTools(config, lock, provider), [
+    { name: 'cmake', current: '3.31.12', latest: '3.31.13' },
+  ]);
+  assert.equal(JSON.stringify(lock), before);
+  await assert.rejects(planToolchainUpdate(config, lock, 'llvm', '24.0.0', provider), /controlled by emsdk/);
+});
