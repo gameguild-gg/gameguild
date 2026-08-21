@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { loadToolchainStateSync, lockedTool, lockedVersion } from './toolchain/config.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-llvm');
 
@@ -42,8 +43,6 @@ if (LLVM_TOOL.source.kind !== 'git-archive') {
 }
 const LLVM_VERSION = LLVM_TOOL.version;
 const LLVM_SRC_DIR = `llvm-project-${LLVM_TOOL.source.commit}`;
-const LLVM_TARBALL = `llvm-project-${LLVM_TOOL.source.commit}.tar.gz`;
-const LLVM_URL = LLVM_TOOL.source.url;
 const CONCURRENCY = Number(process.env.EMCEPTION_BUILD_CONCURRENCY || os.cpus().length);
 
 function ensureCMakeBuildDirectory(buildDir: string): void {
@@ -161,18 +160,13 @@ async function main() {
 }
 
 function setupSource() {
-    shell.mkdir('-p', LLVM_SOURCE_ROOT);
-    shell.cd(LLVM_SOURCE_ROOT);
-    if (!fs.existsSync(LLVM_SRC_DIR)) {
-        if (!fs.existsSync(LLVM_TARBALL)) {
-            console.log(`Downloading locked LLVM source from ${LLVM_URL}...`);
-            shell.exec(`curl -fSL -o "${LLVM_TARBALL}" "${LLVM_URL}"`);
-        }
-        console.log('Extracting LLVM source...');
-        shell.exec(`tar -xf "${LLVM_TARBALL}"`);
-    } else {
-        console.log('LLVM source already present.');
-    }
+    ensureLockedSource(
+        ROOT,
+        lock,
+        'llvm',
+        path.join(LLVM_SOURCE_ROOT, LLVM_SRC_DIR),
+        'llvm/CMakeLists.txt',
+    );
 }
 
 function buildNativeTableGen() {

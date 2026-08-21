@@ -24,10 +24,10 @@ import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
-import { ensureGitHubSource } from './lib/github-source.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 import type { ToolName } from './toolchain/lock.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-raylib');
 
@@ -57,11 +57,13 @@ shell.mkdir('-p', RAYLIB_INC);
 // ─────────────── 1. raylib via CMake ───────────────
 
 const RAYLIB_TAG = lockedVersion(lock, 'raylib');
-const RAYLIB_SRC = ensureGitHubSource({
-    repository: 'raysan5/raylib',
-    version: RAYLIB_TAG,
-    destination: path.join(SOURCE_ROOT, `raylib-${RAYLIB_TAG}`),
-});
+const RAYLIB_SRC = ensureLockedSource(
+    ROOT,
+    lock,
+    'raylib',
+    path.join(SOURCE_ROOT, `raylib-${RAYLIB_TAG}`),
+    'CMakeLists.txt',
+);
 
 const RAYLIB_BUILD = path.join(BUILD_DIR, 'raylib-build');
 shell.mkdir('-p', RAYLIB_BUILD);
@@ -175,7 +177,6 @@ type HeaderOnlyLib = {
     readonly prelude?: string;       // extra source emitted before #include of the header
     readonly extraHeaders?: readonly string[];
     // Source = remote tarball OR local path inside an existing source tree.
-    readonly repo?: string;
     readonly tool?: ToolName;
     readonly headerSubpath?: string;
     readonly localHeader?: string;   // absolute path to header on disk (skips download)
@@ -183,7 +184,6 @@ type HeaderOnlyLib = {
 
 const COMPANIONS: readonly HeaderOnlyLib[] = [
     {
-        repo: 'raysan5/raygui',
         tool: 'raygui',
         libName: 'raygui',
         headerName: 'raygui.h',
@@ -191,7 +191,6 @@ const COMPANIONS: readonly HeaderOnlyLib[] = [
         headerSubpath: 'src/raygui.h',
     },
     {
-        repo: 'victorfisac/Physac',
         tool: 'physac',
         libName: 'physac',
         headerName: 'physac.h',
@@ -228,30 +227,24 @@ for (const lib of COMPANIONS) {
         }
         headerPath = lib.localHeader;
     } else {
-        if (!lib.repo || !lib.tool) {
-            console.warn(`  ${lib.libName}: missing repo/tool, skipping`);
+        if (!lib.tool) {
+            console.warn(`  ${lib.libName}: missing tool identity, skipping`);
             continue;
         }
         const tag = lockedVersion(lock, lib.tool);
         const keyFile = lib.headerSubpath || lib.headerName;
-        let srcDir: string;
-        try {
-            srcDir = ensureGitHubSource({
-                repository: lib.repo,
-                version: tag,
-                destination: path.join(SOURCE_ROOT, `${lib.libName}-${tag}`),
-                keyFile,
-            });
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            console.warn(`  ${lib.repo}: download failed, skipping (${message})`);
-            continue;
-        }
+        const srcDir = ensureLockedSource(
+            ROOT,
+            lock,
+            lib.tool,
+            path.join(SOURCE_ROOT, `${lib.libName}-${tag}`),
+            keyFile,
+        );
         headerPath = lib.headerSubpath
             ? path.join(srcDir, lib.headerSubpath)
             : path.join(srcDir, lib.headerName);
         if (!fs.existsSync(headerPath)) {
-            console.warn(`  ${lib.repo}: header ${headerPath} not found, skipping`);
+            console.warn(`  ${lib.tool}: header ${headerPath} not found, skipping`);
             continue;
         }
     }

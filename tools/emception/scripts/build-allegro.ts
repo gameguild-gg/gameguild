@@ -37,9 +37,9 @@ import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
-import { ensureGitHubSource } from './lib/github-source.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-allegro');
 
@@ -69,11 +69,13 @@ shell.mkdir('-p', ALLEGRO_INC);
 // ─────────────── 1. Allegro 5 via CMake ───────────────
 
 const ALLEGRO_TAG = lockedVersion(lock, 'allegro');
-const ALLEGRO_SRC = ensureGitHubSource({
-    repository: 'liballeg/allegro5',
-    version: ALLEGRO_TAG,
-    destination: path.join(SOURCE_ROOT, `allegro-${ALLEGRO_TAG}`),
-});
+const ALLEGRO_SRC = ensureLockedSource(
+    ROOT,
+    lock,
+    'allegro',
+    path.join(SOURCE_ROOT, `allegro-${ALLEGRO_TAG}`),
+    'CMakeLists.txt',
+);
 
 const ALLEGRO_BUILD = path.join(BUILD_DIR, 'allegro-build');
 shell.mkdir('-p', ALLEGRO_BUILD);
