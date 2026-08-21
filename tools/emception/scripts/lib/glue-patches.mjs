@@ -89,7 +89,8 @@ function patchEnv(content, applied) {
 }
 
 function patchSystem(content, filename, applied) {
-  if (!content.includes('__emscripten_system') || content.includes('Module["systemCallbackSync"]')) return content;
+  const hasSystemImplementation = /(?:function\s+__emscripten_system\b|(?:var|let|const)\s+__emscripten_system\b|__emscripten_system\s*=)/.test(content);
+  if (!hasSystemImplementation || content.includes('Module["systemCallbackSync"]')) return content;
   const supportedNeedle = [SYSTEM_ASYNC_ONLY, SYSTEM_BARE, SYSTEM_NEEDLE].find((needle) => content.includes(needle));
   if (!supportedNeedle) {
     throw new Error(`${filename}: unsupported __emscripten_system shape`);
