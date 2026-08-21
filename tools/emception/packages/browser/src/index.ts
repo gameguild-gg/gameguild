@@ -40,6 +40,12 @@ export {
     type CanvasLinkFailure,
     type CanvasToolchain,
 } from './canvas.js';
+export {
+    startCanvasArtifact,
+    type CanvasRuntimeDependencies,
+    type CanvasSession,
+    type CanvasStartOptions,
+} from './canvas-runtime.js';
 
 // Lower-level VFS surface (LazyFS, IDBFS, mountVFSFS) for advanced consumers
 // that want to compose their own VFSManager.
