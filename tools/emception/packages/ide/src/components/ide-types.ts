@@ -8,7 +8,8 @@
 export { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, parseWorkspaceBundle, resolveArgs, SDL_DEMO_CODE } from 'emception';
 export type { BundleFile, CompileConfig, EmceptionAPI, RunConfig, RunType, TestConfig, WorkspaceConfig, WorkspaceFeatures } from 'emception';
 
-import type { EmceptionAPI, WorkspaceConfig } from 'emception';
+import type { BrowserEmceptionAPI } from '@gameguild/emception-browser';
+import type { WorkspaceConfig } from 'emception';
 
 // ── IDE-only layout types (not in @emception/core) ──────────────────
 
@@ -101,7 +102,7 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
  * The API surface accepted by the Ide component for an injected emception
  * instance. Compatible with `createEmception()` from `@gameguild/emception-browser`.
  */
-export type InjectedEmceptionAPI = EmceptionAPI;
+export type InjectedEmceptionAPI = BrowserEmceptionAPI;
 
 /**
  * Full reactive props for `<Ide>`.
