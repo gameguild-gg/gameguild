@@ -56,7 +56,15 @@ export {
 } from './ui/adapters.js';
 export { diffViewConfigs, normalizeViewConfig, toAttributes, type NormalizedViewConfig, type ViewConfigInput } from './ui/config.js';
 export type { FSStats, IFileSystem } from './vfs/interface.js';
-export type { FSManifest, ManifestBundle, ManifestEntry } from './vfs/manifest.js';
+export type {
+  FSManifest,
+  LegacyFSManifest,
+  ManifestBundle,
+  ManifestEntry,
+  ManifestToolVersions,
+  ReleaseFSManifest,
+  WasmArtifactProfile,
+} from './vfs/manifest.js';
 export { OverlayFS } from './vfs/overlay.js';
 export type { MainToWorkerMessage, WorkerToMainMessage } from './worker-protocol.js';
 export { resolveBuild, type ResolveBuildInput, type ResolvedBuild } from './workspace/build-resolver.js';
