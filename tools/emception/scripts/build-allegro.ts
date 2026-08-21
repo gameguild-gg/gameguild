@@ -4,8 +4,8 @@
  * Strategy: download the liballeg/allegro5 tarball, configure with
  * `emcmake cmake -DPLATFORM=Emscripten -DSHARED=off -DALLEGRO_SDL=on`,
  * build core + addons, deploy archives + headers, then emit a MODULARIZE
- * runtime mjs (mirrors build-raylib.ts) so the IDE can drive it as a canvas
- * runtime.
+ * runtime mjs (mirrors build-raylib.ts) so the browser API can drive it as a
+ * canvas runtime.
  *
  * Backend: Allegro 5 upstream removed the native HTML5 backend; current
  * releases require `-DALLEGRO_SDL=on` for Emscripten. SDL2 is provided by
@@ -25,17 +25,18 @@
  *   - sysroot/usr/lib/liballegro_main.a
  *   - sysroot/usr/lib/libSDL2.a                       (copied from emsdk cache)
  *   - sysroot/usr/include/allegro5/**\/*.h
- *   - sysroot/usr/include/SDL2/*.h                    (SDL2 headers, optional)
  *   - sysroot/usr/lib/emscripten/allegro-runtime.mjs  (MODULARIZE=1 JS factory)
  *
- * Version: latest GitHub release tag (override via ALLEGRO_VERSION env var).
+ * Version: pinned default (override via ALLEGRO_VERSION env var).
  */
 
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import shell from 'shelljs';
+import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
+import { ensureGitHubSource } from './lib/github-source.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { PINNED } from './lib/pinned-versions.ts';
 
@@ -49,9 +50,6 @@ setupEmsdk(EMSDK_VERSION);
 
 const EMSDK_DIR = getEmsdkDir();
 const EMCC = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'emcc');
-const GITHUB_AUTH = process.env.GITHUB_TOKEN
-    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
-    : '';
 
 const USERLAND_DIR = path.join(ROOT, 'userland', 'allegro');
 const BUILD_DIR = path.join(ROOT, 'build', 'allegro');
@@ -65,83 +63,14 @@ shell.mkdir('-p', BUILD_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 shell.mkdir('-p', ALLEGRO_INC);
 
-// ─────────────── version detection ───────────────
-
-function curlJson(url: string): any {
-    const exec = (extra = '') =>
-        shell.exec(`curl -fsSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${extra} "${url}"`, { silent: true, fatal: false });
-    let res = process.env.GITHUB_TOKEN
-        ? exec(GITHUB_AUTH)
-        : exec();
-    if (res.code !== 0 && process.env.GITHUB_TOKEN) {
-        console.warn(`  Authenticated GitHub call failed for ${url}, retrying without token...`);
-        res = exec();
-    }
-    if (res.code !== 0) throw new Error(`Failed to GET ${url}`);
-    return JSON.parse(res.stdout);
-}
-
-function detectLatestTag(repo: string, envVar: string, fallback: string): string {
-    const env = process.env[envVar];
-    if (env) return env;
-    console.log(`Detecting latest release for ${repo}...`);
-    let tag: string | undefined;
-    try {
-        tag = curlJson(`https://api.github.com/repos/${repo}/releases/latest`).tag_name;
-    } catch {
-        // GitHub API unavailable
-    }
-    if (tag) {
-        console.log(`  ${repo} latest: ${tag}`);
-        return tag;
-    }
-    console.warn(`  GitHub API unavailable for ${repo}, using pinned ${fallback}`);
-    return fallback;
-}
-
-// ─────────────── source download ───────────────
-
-function downloadTarball(repo: string, tag: string, destName: string, keyFile = 'CMakeLists.txt'): string {
-    const destDir = path.join(USERLAND_DIR, destName);
-    const isSourceValid = fs.existsSync(path.join(destDir, keyFile));
-    if (isSourceValid) {
-        console.log(`Using existing source: ${destName}`);
-        return destDir;
-    }
-    if (fs.existsSync(destDir)) {
-        console.log(`Removing incomplete source dir: ${destName}`);
-        shell.rm('-rf', destDir);
-    }
-    shell.mkdir('-p', destDir);
-    const tarball = path.join(USERLAND_DIR, `${destName}.tar.gz`);
-    console.log(`Downloading ${repo} @ ${tag}...`);
-    const tryUrls = [
-        `https://github.com/${repo}/archive/refs/tags/${tag}.tar.gz`,
-        `https://codeload.github.com/${repo}/tar.gz/refs/tags/${tag}`,
-        `https://github.com/${repo}/archive/refs/heads/${tag}.tar.gz`,
-        `https://codeload.github.com/${repo}/tar.gz/refs/heads/${tag}`,
-    ];
-    let ok = false;
-    for (const url of tryUrls) {
-        const res = shell.exec(
-            `curl -fSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${GITHUB_AUTH} -o "${tarball}" "${url}"`,
-            { silent: true, fatal: false },
-        );
-        if (res.code === 0) {
-            ok = true;
-            break;
-        }
-    }
-    if (!ok) throw new Error(`Failed to download ${repo} @ ${tag}`);
-    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${destDir}"`);
-    shell.rm('-f', tarball);
-    return destDir;
-}
-
 // ─────────────── 1. Allegro 5 via CMake ───────────────
 
-const ALLEGRO_TAG = detectLatestTag('liballeg/allegro5', 'ALLEGRO_VERSION', PINNED.ALLEGRO_VERSION);
-const ALLEGRO_SRC = downloadTarball('liballeg/allegro5', ALLEGRO_TAG, `allegro-${ALLEGRO_TAG}`);
+const ALLEGRO_TAG = process.env.ALLEGRO_VERSION ?? PINNED.ALLEGRO_VERSION;
+const ALLEGRO_SRC = ensureGitHubSource({
+    repository: 'liballeg/allegro5',
+    version: ALLEGRO_TAG,
+    destination: path.join(USERLAND_DIR, `allegro-${ALLEGRO_TAG}`),
+});
 
 const ALLEGRO_BUILD = path.join(BUILD_DIR, 'allegro-build');
 if (fs.existsSync(ALLEGRO_BUILD)) shell.rm('-rf', ALLEGRO_BUILD);
@@ -153,26 +82,27 @@ console.log('Configuring Allegro 5 (PLATFORM=Emscripten, ALLEGRO_SDL=on)...');
 // headers + flags during configure-time checks and the build itself.
 // Allegro's CMake uses find_package(SDL2) which doesn't know about emsdk's
 // port system, so we point SDL2_INCLUDE_DIR / SDL2_LIBRARY at the cache.
-const SDL_FLAG = '-sUSE_SDL=2';
 const SDL2_INC = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'cache', 'sysroot', 'include', 'SDL2');
 const SDL2_LIB = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'cache', 'sysroot', 'lib', 'wasm32-emscripten', 'libSDL2.a');
 // CMAKE_*_FLAGS gets `-I${SDL2_INC}` explicitly: emcc's `-sUSE_SDL=2` is a
 // link-time port directive and does not always inject the include path at
 // compile time, so Allegro core's `#include <SDL.h>` fails without it.
-const COMPILER_FLAGS = `${SDL_FLAG} -I${SDL2_INC}`;
+const COMPILER_FLAGS = `-sUSE_SDL=2 -I${SDL2_INC}`;
 const allegroCmakeCmd = [
     'emcmake cmake',
     `-S "${ALLEGRO_SRC}"`,
     `-B "${ALLEGRO_BUILD}"`,
     '-DCMAKE_BUILD_TYPE=Release',
+    '-DCMAKE_POLICY_VERSION_MINIMUM=3.5',
     '-DSHARED=off',
     '-DWANT_DEMO=off',
     '-DWANT_EXAMPLES=off',
     '-DWANT_TESTS=off',
     '-DWANT_DOCS=off',
     '-DALLEGRO_SDL=on',
-    `'-DCMAKE_C_FLAGS=${COMPILER_FLAGS}'`,
-    `'-DCMAKE_CXX_FLAGS=${COMPILER_FLAGS}'`,
+    '-DWANT_ALLOW_SSE=off',
+    `"-DCMAKE_C_FLAGS=${COMPILER_FLAGS}"`,
+    `"-DCMAKE_CXX_FLAGS=${COMPILER_FLAGS}"`,
     `-DSDL2_INCLUDE_DIR="${SDL2_INC}"`,
     `-DSDL2_LIBRARY="${SDL2_LIB}"`,
     // Enabled addons (build/v1 scope; native_dialog/video/physfs intentionally
@@ -189,21 +119,20 @@ const allegroCmakeCmd = [
     '-DWANT_VIDEO=off',
     '-DWANT_PHYSFS=off',
 ].join(' ');
-console.log(allegroCmakeCmd);
 shell.exec(allegroCmakeCmd);
 
 console.log('Building Allegro 5...');
-shell.exec(`emmake make -C "${ALLEGRO_BUILD}" -j${CONCURRENCY}`);
+shell.exec(`cmake --build "${ALLEGRO_BUILD}" --parallel ${CONCURRENCY}`);
 
 // Allegro's CMake puts static archives in build/lib/ with `_static` suffix.
 // Map { sysrootName: candidate basenames } and pick the first that exists.
-interface ArchiveSpec {
-    sysrootName: string;
-    candidates: string[];
-    required: boolean;
-}
+type ArchiveSpec = {
+    readonly sysrootName: string;
+    readonly candidates: readonly string[];
+    readonly required: boolean;
+};
 
-const archives: ArchiveSpec[] = [
+const archives: readonly ArchiveSpec[] = [
     { sysrootName: 'liballegro.a', candidates: ['liballegro-static.a', 'liballegro_static.a', 'liballegro.a'], required: true },
     { sysrootName: 'liballegro_main.a', candidates: ['liballegro_main-static.a', 'liballegro_main_static.a', 'liballegro_main.a'], required: true },
     { sysrootName: 'liballegro_image.a', candidates: ['liballegro_image-static.a', 'liballegro_image_static.a', 'liballegro_image.a'], required: true },
@@ -222,19 +151,16 @@ const searchRoots = [
     ALLEGRO_BUILD,
 ];
 
-function locateArchive(candidates: string[]): string | undefined {
+function locateArchive(candidates: readonly string[]): string | undefined {
     for (const root of searchRoots) {
         for (const c of candidates) {
             const p = path.join(root, c);
             if (fs.existsSync(p)) return p;
         }
     }
-    // Fallback: recursive search inside the build dir.
-    for (const c of candidates) {
-        const found = shell.exec(`find "${ALLEGRO_BUILD}" -name "${c}" -type f`, { silent: true, fatal: false }).stdout.trim().split('\n').filter(Boolean);
-        if (found.length > 0) return found[0];
-    }
-    return undefined;
+    const recursiveEntries = fs.readdirSync(ALLEGRO_BUILD, { recursive: true });
+    const match = recursiveEntries.find((entry) => candidates.includes(path.basename(entry)));
+    return match ? path.join(ALLEGRO_BUILD, match) : undefined;
 }
 
 for (const a of archives) {
@@ -253,9 +179,7 @@ for (const a of archives) {
 // ── Deploy headers ────────────────────────────────────────────────
 // Allegro splits headers between include/ (core) and addons/<name>/.
 
-shell.mkdir('-p', ALLEGRO_INC);
-
-function copyHeaderTree(srcDir: string) {
+function copyHeaderTree(srcDir: string): void {
     if (!fs.existsSync(srcDir)) return;
     // shelljs `cp -R src/. dst/` does not always behave like POSIX cp; iterate
     // the top-level entries and recurse explicitly.
@@ -274,7 +198,7 @@ if (fs.existsSync(ADDONS_DIR)) {
     for (const addon of fs.readdirSync(ADDONS_DIR)) {
         const addonHeaderDir = path.join(ADDONS_DIR, addon, 'allegro5');
         if (fs.existsSync(addonHeaderDir)) {
-            for (const f of fs.readdirSync(addonHeaderDir, { recursive: true }) as string[]) {
+            for (const f of fs.readdirSync(addonHeaderDir, { recursive: true })) {
                 const src = path.join(addonHeaderDir, f);
                 if (fs.statSync(src).isDirectory()) continue;
                 const rel = path.relative(addonHeaderDir, src);
@@ -329,11 +253,8 @@ console.log('Deployed libSDL2.a to sysroot/usr/lib/');
 // glue's ABI anchor and recorded in the release manifest.
 
 const EMSCRIPTEN_DIR = path.join(SYSROOT_LIB, 'emscripten');
-shell.mkdir('-p', EMSCRIPTEN_DIR);
 
 const ALLEGRO_STUB_C = path.join(os.tmpdir(), 'allegro_runtime_stub.c');
-const TMP_ALLEGRO_JS = path.join(os.tmpdir(), 'allegro-runtime.js');
-const TMP_ALLEGRO_WASM = path.join(os.tmpdir(), 'allegro-runtime.wasm');
 
 fs.writeFileSync(
     ALLEGRO_STUB_C,
@@ -363,7 +284,7 @@ int main(void) {
 );
 
 console.log('Generating allegro-runtime.mjs (MODULARIZE JS factory)...');
-const runtimeLinkLibs = [
+const runtimeLibraryPaths = [
     'liballegro_main.a',
     'liballegro_image.a',
     'liballegro_primitives.a',
@@ -373,14 +294,14 @@ const runtimeLinkLibs = [
     'liballegro_color.a',
     'liballegro.a',
 ].filter((l) => fs.existsSync(path.join(SYSROOT_LIB, l)))
-    .map((l) => `"${path.join(SYSROOT_LIB, l)}"`).join(' ');
+    .map((library) => path.join(SYSROOT_LIB, library));
 
-const runtimeResult = shell.exec(
-    [
-        `"${EMCC}"`,
-        `"${ALLEGRO_STUB_C}"`,
-        runtimeLinkLibs,
-        `-I"${SYSROOT_INC}"`,
+const runtimePair = buildCanvasRuntimePair({
+    compiler: EMCC,
+    sourcePath: ALLEGRO_STUB_C,
+    libraryPaths: runtimeLibraryPaths,
+    includeDirectories: [SYSROOT_INC],
+    flags: [
         '-sENVIRONMENT=web',
         '-sALLOW_MEMORY_GROWTH=1',
         // Allegro 5 SDL backend on Emscripten — must use the same SDL2 port
@@ -401,21 +322,11 @@ const runtimeResult = shell.exec(
         '-sEXPORTED_FUNCTIONS=_main,_malloc,_free',
         '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue,UTF8ToString,stringToUTF8,lengthBytesUTF8',
         '-O2',
-        `-o "${TMP_ALLEGRO_JS}"`,
-    ].join(' '),
-    { silent: false },
-);
-
-if (runtimeResult.code !== 0) {
-    console.error('emcc allegro-runtime.mjs generation failed');
-    process.exit(1);
-}
-
-const OUTPUT_MJS = path.join(EMSCRIPTEN_DIR, 'allegro-runtime.mjs');
-const OUTPUT_WASM = path.join(EMSCRIPTEN_DIR, 'allegro-runtime.wasm');
-fs.copyFileSync(TMP_ALLEGRO_JS, OUTPUT_MJS);
-fs.copyFileSync(TMP_ALLEGRO_WASM, OUTPUT_WASM);
-const mjsSize = (fs.statSync(OUTPUT_MJS).size / 1024).toFixed(1);
+    ],
+    outputDirectory: EMSCRIPTEN_DIR,
+    runtimeName: 'allegro-runtime',
+});
+const mjsSize = (fs.statSync(runtimePair.gluePath).size / 1024).toFixed(1);
 console.log(`Saved allegro runtime pair (${mjsSize} KB glue) → ${path.relative(ROOT, EMSCRIPTEN_DIR)}`);
 
 console.log('>>> Allegro 5 build complete.');

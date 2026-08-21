@@ -35,10 +35,16 @@ export function ensureGitHubSource(source: GitHubSource): string {
     const tarball = `${source.destination}.tar.gz`;
     const urls = [
         `https://github.com/${source.repository}/archive/refs/tags/${source.version}.tar.gz`,
+        `https://codeload.github.com/${source.repository}/tar.gz/refs/tags/${source.version}`,
         `https://github.com/${source.repository}/archive/refs/heads/${source.version}.tar.gz`,
+        `https://codeload.github.com/${source.repository}/tar.gz/refs/heads/${source.version}`,
     ] as const;
     const downloaded = urls.some((url) =>
-        spawnSync('curl', ['-fSL', '-o', tarball, url], { stdio: 'ignore' }).status === 0,
+        spawnSync(
+            'curl',
+            ['-fSL', '--http1.1', '--retry', '8', '--retry-all-errors', '--retry-delay', '2', '-o', tarball, url],
+            { stdio: 'ignore' },
+        ).status === 0,
     );
 
     if (!downloaded) {
