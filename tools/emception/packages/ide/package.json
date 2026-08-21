@@ -43,7 +43,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "test": "node -e \"console.log('ide: no tests yet')\"",
+    "test": "npm run build && node ../../scripts/run-node-tests.mjs tests",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -72,7 +72,6 @@
   },
   "devDependencies": {
     "@monaco-editor/react": "^4.7.0",
-    "@types/jest": "^30.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@xterm/addon-fit": "^0.11.0",
