@@ -1,67 +1,80 @@
 # @gameguild/emception-browser
 
-Browser runtime adapter for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception). Spawns Web Workers, persists workspaces in IndexedDB, ships OffscreenCanvas + SDL/ImGui helpers, and bundles the cross-origin-isolation preflight.
-
-This is the package most browser apps want. The bare-metal `npm i emception` meta-package forwards to it.
-
-## Live Demo
-
-Try it at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
+Browser runtime adapter for Emception. It owns Web Worker boot, manifest/ABI
+validation, workspace persistence, terminal stream adaptation, and canvas
+artifact execution.
 
 ## Install
 
 ```bash
 npm install @gameguild/emception-browser
-# Optional, for terminal:
-npm install @gameguild/emception-xterm @xterm/xterm
 ```
 
-The CDN payload is bundled inside the `emception` package under `emception/cdn/*`. By default, `createEmception()` points at the latest published `emception/cdn/manifest.json` on jsDelivr. For self-hosting, copy `emception/cdn/*` into your app's public `/cdn/` directory and pass `manifestUrl: '/cdn/manifest.json'`.
+Install `@gameguild/emception-xterm` and `@xterm/xterm` only when mounting an
+interactive terminal.
 
-## Quick start
+## Headless usage
 
 ```ts
 import { createEmception } from '@gameguild/emception-browser';
 
-const em = await createEmception({
-  manifestUrl: 'https://cdn.jsdelivr.net/npm/emception/cdn/manifest.json',
+const emception = await createEmception({
   tty: 'none',
+  onStdout: (text) => console.log(text),
 });
 
-const result = await em.compileAndRun('int main(){ printf("hi\\n"); return 0; }');
-console.log(result.stdout); // 'hi\n'
+const result = await emception.compileAndRun(
+  '#include <stdio.h>\nint main(){puts("hello");}',
+);
+emception.dispose();
 ```
 
-With xterm:
+When `manifestUrl` is omitted, the Browser loads the matching version of
+`@gameguild/emception-toolchain` from its pinned jsDelivr URL. To self-host,
+copy that package's `cdn/` directory and pass the resulting manifest URL.
+
+## Canvas API
+
+The public `canvas` surface keeps generated glue and raw WebAssembly concerns
+out of UI packages:
 
 ```ts
-import { Terminal } from '@xterm/xterm';
-import { fromXterm, toXterm } from '@gameguild/emception-xterm';
+import { ToolchainPreset } from 'emception';
 
-const xterm = new Terminal();
-xterm.open(document.getElementById('term')!);
-
-const em = await createEmception({
-  manifestUrl: '/cdn/manifest.json',
-  stdin: fromXterm(xterm),
-  stdout: toXterm(xterm),
-  stderr: toXterm(xterm),
+const session = await emception.canvas.buildAndStart({
+  toolchain: ToolchainPreset.SDL_CPP,
+  sourcePath: '/home/user/main.cpp',
+  wasmPath: '/home/user/main.wasm',
+}, {
+  canvas: document.querySelector('canvas')!,
 });
+
+if ('phase' in session) {
+  const failure = session.phase === 'compile' ? session.compile : session.link;
+  console.error(failure.stderr);
+} else {
+  session.stop();
+}
 ```
+
+`build`, `start`, `buildAndStart`, and `stop` select a manifest profile, load
+its matched runtime factory, construct browser imports, and manage lifecycle.
 
 ## Cross-origin isolation
 
-The toolchain Workers need `SharedArrayBuffer`, which requires `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`. Self-host a root-level `/coi-serviceworker.js` (for example by copying `node_modules/@gameguild/emception-browser/dist/coi-serviceworker.js` into your app's public root), or import the preflight helper:
+Toolchain Workers require `SharedArrayBuffer`. Serve
+`Cross-Origin-Opener-Policy: same-origin` and
+`Cross-Origin-Embedder-Policy: require-corp`, or use the supplied preflight and
+service worker:
 
 ```ts
 import { ensureCrossOriginIsolated } from '@gameguild/emception-browser';
+
 await ensureCrossOriginIsolated();
 ```
 
-Throws `CrossOriginIsolationError` if SAB isn't available.
+## Stable surface
 
-## Surface
-
-Top-level exports include `boot`, `bootInWorker`, `createEmception`, `ToolRunner`, `MiniShell`, `LineBuffer`, `TTYBridge`, `createBrowserBridge`, `createVFSManager`, `decompressBrotli`, `isBrotliSupported`, `detectAsyncStrategy`, plus `IDBFS` / `LazyFS` / `mountVFSFS` for advanced consumers composing their own `VFSManager`.
-
-Types: `BootResult`, `CreateEmceptionOptions`, `EmceptionAPI`, `RunOptions`, `ToolResult`, `IOProvider`, `VFSManager`, `FileEntry`, `FSManifest`, `IDBFSOptions`, `MountVFSFSOptions`.
+Use `createEmception()` and the returned `BrowserEmceptionAPI` for application
+code. Low-level Worker/VFS exports remain available for advanced runtime
+adapters, but presentation packages should not wrap them.

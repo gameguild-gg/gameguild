@@ -2,10 +2,6 @@
 
 React 19 components for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception).
 
-## Live Demo
-
-Try it at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
-
 ## Install
 
 ```bash
