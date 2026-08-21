@@ -33,6 +33,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
@@ -43,6 +44,7 @@ import { PINNED } from './lib/pinned-versions.ts';
 enableBuildKeepalive('build-allegro');
 
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
 const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
@@ -51,14 +53,14 @@ setupEmsdk(EMSDK_VERSION);
 const EMSDK_DIR = getEmsdkDir();
 const EMCC = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'emcc');
 
-const USERLAND_DIR = path.join(ROOT, 'userland', 'allegro');
-const BUILD_DIR = path.join(ROOT, 'build', 'allegro');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
-const SYSROOT_INC = path.join(ROOT, 'sysroot', 'usr', 'include');
+const SOURCE_ROOT = path.join(P.sources, 'allegro');
+const BUILD_DIR = path.join(P.builds, 'allegro');
+const SYSROOT_LIB = path.join(P.sysroot, 'usr', 'lib');
+const SYSROOT_INC = path.join(P.sysroot, 'usr', 'include');
 const ALLEGRO_INC = path.join(SYSROOT_INC, 'allegro5');
 const CONCURRENCY = os.cpus().length;
 
-shell.mkdir('-p', USERLAND_DIR);
+shell.mkdir('-p', SOURCE_ROOT);
 shell.mkdir('-p', BUILD_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 shell.mkdir('-p', ALLEGRO_INC);
@@ -69,7 +71,7 @@ const ALLEGRO_TAG = process.env.ALLEGRO_VERSION ?? PINNED.ALLEGRO_VERSION;
 const ALLEGRO_SRC = ensureGitHubSource({
     repository: 'liballeg/allegro5',
     version: ALLEGRO_TAG,
-    destination: path.join(USERLAND_DIR, `allegro-${ALLEGRO_TAG}`),
+    destination: path.join(SOURCE_ROOT, `allegro-${ALLEGRO_TAG}`),
 });
 
 const ALLEGRO_BUILD = path.join(BUILD_DIR, 'allegro-build');
@@ -157,7 +159,7 @@ function locateArchive(candidates: readonly string[]): string | undefined {
             if (fs.existsSync(p)) return p;
         }
     }
-    const recursiveEntries = fs.readdirSync(ALLEGRO_BUILD, { recursive: true });
+    const recursiveEntries = fs.readdirSync(ALLEGRO_BUILD, { recursive: true, encoding: 'utf8' });
     const match = recursiveEntries.find((entry) => candidates.includes(path.basename(entry)));
     return match ? path.join(ALLEGRO_BUILD, match) : undefined;
 }
@@ -197,7 +199,7 @@ if (fs.existsSync(ADDONS_DIR)) {
     for (const addon of fs.readdirSync(ADDONS_DIR)) {
         const addonHeaderDir = path.join(ADDONS_DIR, addon, 'allegro5');
         if (fs.existsSync(addonHeaderDir)) {
-            for (const f of fs.readdirSync(addonHeaderDir, { recursive: true })) {
+            for (const f of fs.readdirSync(addonHeaderDir, { recursive: true, encoding: 'utf8' })) {
                 const src = path.join(addonHeaderDir, f);
                 if (fs.statSync(src).isDirectory()) continue;
                 const rel = path.relative(addonHeaderDir, src);

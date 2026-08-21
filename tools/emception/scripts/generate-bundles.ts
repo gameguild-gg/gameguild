@@ -1,9 +1,11 @@
 /**
  * Generate .tar.br bundle archives from the CDN file tree.
  *
- * Reads build/cdn/manifest.json (produced by generate-manifest.ts), groups files
+ * Reads artifacts/toolchain/release/cdn/manifest.json (produced by
+ * generate-manifest.ts), groups files
  * into bundles, creates tar archives, compresses them with brotli, writes the
- * bundles into build/cdn/, and rewrites manifest.json with bundle metadata.
+ * bundles into artifacts/toolchain/release/cdn/, and rewrites manifest.json
+ * with bundle metadata.
  *
  * EVERY file must belong to a bundle -- no unbundled individual downloads.
  *
@@ -36,6 +38,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import { fileURLToPath } from 'url';
 import * as zlib from 'zlib';
 import { createDeterministicTar } from './lib/deterministic-tar.ts';
@@ -44,8 +47,9 @@ import { enableBuildKeepalive } from './lib/keepalive.ts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = process.cwd();
-const OUTPUT_DIR = process.env.OUTPUT_DIR || path.join(ROOT, 'build', 'cdn');
-const MANIFEST_FILE = process.env.MANIFEST_FILE || path.join(ROOT, 'build', 'cdn', 'manifest.json');
+const P = toolchainPaths(ROOT);
+const OUTPUT_DIR = process.env.OUTPUT_DIR || P.releaseCdn;
+const MANIFEST_FILE = process.env.MANIFEST_FILE || P.manifestFile;
 
 enableBuildKeepalive('generate-bundles');
 

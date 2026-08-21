@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
@@ -12,8 +13,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const ROOT = path.resolve(__dirname, '..');
+const P = toolchainPaths(ROOT);
 const EMSDK_DIR = getEmsdkDir();
-const SYSROOT = path.join(ROOT, 'sysroot');
+const SYSROOT = P.sysroot;
 const EMSDK_VERSION = process.argv[2] || process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 const VIRTUAL_LINKS_FILE = path.join(SYSROOT, '.emception-symlinks.json');
 const virtualLinks: Record<string, string> = {};

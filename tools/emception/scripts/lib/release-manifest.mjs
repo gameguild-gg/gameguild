@@ -109,7 +109,7 @@ async function createProfiles(sysroot, files) {
 }
 
 export async function generateReleaseManifest(options) {
-  const stagedSuffix = path.join('build', 'stage', 'sysroot');
+  const stagedSuffix = path.join('artifacts', 'toolchain', 'stage', 'sysroot');
   if (!path.resolve(options.sysroot).endsWith(stagedSuffix)) {
     throw new Error(`release input must be a staged sysroot: ${options.sysroot}`);
   }

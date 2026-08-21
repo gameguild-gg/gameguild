@@ -8,6 +8,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { setupEmsdk } from './lib/emsdk.ts';
@@ -19,6 +20,7 @@ enableBuildKeepalive('build-brotli');
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 
 // Ensure shell commands fail on error
 shell.config.fatal = true;
@@ -29,10 +31,12 @@ const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 const BROTLI_VERSION = process.env.BROTLI_VERSION || PINNED.BROTLI_VERSION;
 
 // Directories
-const USERLAND_DIR = path.join(ROOT, 'userland', 'brotli');
-const SOURCE_DIR = path.join(USERLAND_DIR, `brotli-v${BROTLI_VERSION}`);
-const BUILD_DIR = path.join(ROOT, 'build');
-const CDN_DIR = path.join(BUILD_DIR, 'cdn');
+const SOURCE_ROOT = path.join(P.sources, 'brotli');
+const SOURCE_DIR = path.join(SOURCE_ROOT, `brotli-v${BROTLI_VERSION}`);
+const CLI_BUILD_DIR = path.join(P.builds, 'brotli', 'native');
+const WASM_BUILD_DIR = path.join(P.builds, 'brotli', 'wasm');
+const BUILD_DIR = P.tools;
+const CDN_DIR = P.releaseCdn;
 
 // Setup EMSDK first
 setupEmsdk(EMSDK_VERSION);
@@ -40,8 +44,8 @@ setupEmsdk(EMSDK_VERSION);
 // 1. Download Brotli source if not already present
 if (!fs.existsSync(SOURCE_DIR)) {
   console.log(`Downloading Brotli v${BROTLI_VERSION}...`);
-  shell.mkdir('-p', USERLAND_DIR);
-  shell.cd(USERLAND_DIR);
+  shell.mkdir('-p', SOURCE_ROOT);
+  shell.cd(SOURCE_ROOT);
   const tarball = `v${BROTLI_VERSION}.tar.gz`;
   shell.exec(`curl -fSL -o "${tarball}" "https://github.com/google/brotli/archive/refs/tags/v${BROTLI_VERSION}.tar.gz"`);
   shell.exec(`tar xzf "${tarball}"`);
@@ -49,7 +53,7 @@ if (!fs.existsSync(SOURCE_DIR)) {
 }
 
 // Rename the extracted directory (brotli-<version> -> brotli-v<version>)
-const extractedDir = path.join(USERLAND_DIR, `brotli-${BROTLI_VERSION}`);
+const extractedDir = path.join(SOURCE_ROOT, `brotli-${BROTLI_VERSION}`);
 if (fs.existsSync(extractedDir) && !fs.existsSync(SOURCE_DIR)) {
   shell.mv(extractedDir, SOURCE_DIR);
 }
@@ -57,14 +61,12 @@ if (fs.existsSync(extractedDir) && !fs.existsSync(SOURCE_DIR)) {
 shell.cd(SOURCE_DIR);
 
 // 2. Create build directories
-shell.mkdir('-p', path.join(SOURCE_DIR, 'build-cli'));
 shell.mkdir('-p', BUILD_DIR);
 shell.mkdir('-p', CDN_DIR);
 
 // 3. Build Brotli CLI for Node.js (native compilation with gcc)
 console.log('Building Brotli CLI (native, for Node.js)...');
 
-const CLI_BUILD_DIR = path.join(SOURCE_DIR, 'build-cli');
 shell.mkdir('-p', CLI_BUILD_DIR);
 shell.cd(SOURCE_DIR);
 
@@ -102,7 +104,6 @@ if (cliOutput) {
 // 4. Build Brotli WASM for browser decompression
 console.log('Building Brotli WASM (browser)...');
 
-const WASM_BUILD_DIR = path.join(SOURCE_DIR, 'build-wasm');
 shell.mkdir('-p', WASM_BUILD_DIR);
 shell.cd(SOURCE_DIR);
 
@@ -138,7 +139,7 @@ if (!fs.existsSync(libDec) || !fs.existsSync(libCommon)) {
 //    Output: brotli_wasm.mjs + brotli_wasm.wasm (renamed to .js after link).
 console.log('Linking brotli wrapper into MODULARIZE-d ES module...');
 
-const wrapperSrc = path.join(USERLAND_DIR, 'brotli-wrapper.c');
+const wrapperSrc = path.join(P.overlays, 'brotli', 'brotli-wrapper.c');
 if (!fs.existsSync(wrapperSrc)) {
   console.error(`ERROR: missing brotli wrapper source: ${wrapperSrc}`);
   process.exit(1);

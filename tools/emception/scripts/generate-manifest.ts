@@ -2,6 +2,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import { pythonMajorMinor, pythonMajorMinorCompact } from './lib/detect-versions.ts';
 import { PATCH_SET_VERSION } from './lib/glue-patches.mjs';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
@@ -11,6 +12,7 @@ import { generateReleaseManifest } from './lib/release-manifest.mjs';
 enableBuildKeepalive('generate-manifest');
 
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 const packageJson: unknown = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 if (!packageJson || typeof packageJson !== 'object' || !('version' in packageJson) || typeof packageJson.version !== 'string') {
   throw new Error('package.json must contain a string version');
@@ -34,9 +36,9 @@ const toolVersions = {
 };
 
 generateReleaseManifest({
-  sysroot: process.env.STAGED_SYSPATH ?? path.join(ROOT, 'build', 'stage', 'sysroot'),
-  outputDir: process.env.OUTPUT_DIR ?? path.join(ROOT, 'build', 'cdn'),
-  manifestFile: process.env.MANIFEST_FILE ?? path.join(ROOT, 'build', 'cdn', 'manifest.json'),
+  sysroot: process.env.STAGED_SYSPATH ?? P.stagedSysroot,
+  outputDir: process.env.OUTPUT_DIR ?? P.releaseCdn,
+  manifestFile: process.env.MANIFEST_FILE ?? P.manifestFile,
   baseUrl: process.env.CDN_BASE_URL ?? '/cdn',
   artifactVersion: process.env.ARTIFACT_VERSION ?? packageJson.version,
   runtimeAbi: process.env.RUNTIME_ABI ?? 'emception-browser-v1',

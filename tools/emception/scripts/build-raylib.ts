@@ -20,6 +20,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
@@ -30,6 +31,7 @@ import { PINNED } from './lib/pinned-versions.ts';
 enableBuildKeepalive('build-raylib');
 
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
 const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
@@ -38,14 +40,14 @@ setupEmsdk(EMSDK_VERSION);
 const EMSDK_DIR = getEmsdkDir();
 const EMCC = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'emcc');
 
-const USERLAND_DIR = path.join(ROOT, 'userland', 'raylib');
-const BUILD_DIR = path.join(ROOT, 'build', 'raylib');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
-const SYSROOT_INC = path.join(ROOT, 'sysroot', 'usr', 'include');
+const SOURCE_ROOT = path.join(P.sources, 'raylib');
+const BUILD_DIR = path.join(P.builds, 'raylib');
+const SYSROOT_LIB = path.join(P.sysroot, 'usr', 'lib');
+const SYSROOT_INC = path.join(P.sysroot, 'usr', 'include');
 const RAYLIB_INC = path.join(SYSROOT_INC, 'raylib');
 const CONCURRENCY = os.cpus().length;
 
-shell.mkdir('-p', USERLAND_DIR);
+shell.mkdir('-p', SOURCE_ROOT);
 shell.mkdir('-p', BUILD_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 shell.mkdir('-p', RAYLIB_INC);
@@ -56,7 +58,7 @@ const RAYLIB_TAG = process.env.RAYLIB_VERSION ?? PINNED.RAYLIB_VERSION;
 const RAYLIB_SRC = ensureGitHubSource({
     repository: 'raysan5/raylib',
     version: RAYLIB_TAG,
-    destination: path.join(USERLAND_DIR, `raylib-${RAYLIB_TAG}`),
+    destination: path.join(SOURCE_ROOT, `raylib-${RAYLIB_TAG}`),
 });
 
 const RAYLIB_BUILD = path.join(BUILD_DIR, 'raylib-build');
@@ -110,7 +112,7 @@ console.log('Deployed raylib headers to sysroot/usr/include/raylib/');
 // GLctx, RAF MainLoop) used by the browser canvas API. The generated WASM is
 // retained as the glue's ABI anchor and recorded in the release manifest.
 
-const EMSCRIPTEN_DIR = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten');
+const EMSCRIPTEN_DIR = path.join(P.sysroot, 'usr', 'lib', 'emscripten');
 shell.mkdir('-p', EMSCRIPTEN_DIR);
 
 const RAYLIB_STUB_C = path.join(os.tmpdir(), 'raylib_runtime_stub.c');
@@ -238,7 +240,7 @@ for (const lib of COMPANIONS) {
             srcDir = ensureGitHubSource({
                 repository: lib.repo,
                 version: tag,
-                destination: path.join(USERLAND_DIR, `${lib.libName}-${tag}`),
+                destination: path.join(SOURCE_ROOT, `${lib.libName}-${tag}`),
                 keyFile,
             });
         } catch (error) {

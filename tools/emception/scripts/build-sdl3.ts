@@ -24,6 +24,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
@@ -32,6 +33,7 @@ import { PINNED } from './lib/pinned-versions.ts';
 enableBuildKeepalive('build-sdl3');
 
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
 const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
@@ -40,7 +42,7 @@ setupEmsdk(EMSDK_VERSION);
 const EMSDK_DIR = getEmsdkDir();
 const EMCC = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'emcc');
 
-const SYSROOT = path.join(ROOT, 'sysroot');
+const SYSROOT = P.sysroot;
 const SYSROOT_LIB = path.join(SYSROOT, 'usr', 'lib');
 const SYSROOT_INC = path.join(SYSROOT, 'usr', 'include');
 const EMSCRIPTEN_DIR = path.join(SYSROOT_LIB, 'emscripten');

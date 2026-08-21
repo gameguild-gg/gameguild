@@ -8,9 +8,9 @@ import { stageSysroot } from '../stage-sysroot.mjs';
 
 async function fixture() {
   const root = await mkdtemp(path.join(tmpdir(), 'emception-stage-'));
-  const source = path.join(root, 'sysroot');
-  const target = path.join(root, 'build', 'stage', 'sysroot');
-  const receipt = path.join(root, 'build', 'stage', 'sysroot-receipt.json');
+  const source = path.join(root, 'artifacts', 'toolchain', 'sysroot');
+  const target = path.join(root, 'artifacts', 'toolchain', 'stage', 'sysroot');
+  const receipt = path.join(root, 'artifacts', 'toolchain', 'receipts', 'sysroot.json');
 
   await mkdir(path.join(source, 'usr', 'lib'), { recursive: true });
   await writeFile(path.join(source, 'usr', 'lib', 'clang.mjs'), 'export default 1;');

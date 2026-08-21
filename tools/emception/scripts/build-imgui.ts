@@ -12,6 +12,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
@@ -20,17 +21,18 @@ import { PINNED } from './lib/pinned-versions.ts';
 enableBuildKeepalive('build-imgui');
 
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
 const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 setupEmsdk(EMSDK_VERSION);
 
-const USERLAND_DIR = path.join(ROOT, 'userland', 'imgui');
-const BUILD_DIR = path.join(ROOT, 'build', 'imgui');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
-const SYSROOT_INC = path.join(ROOT, 'sysroot', 'usr', 'include');
+const SOURCE_ROOT = path.join(P.sources, 'imgui');
+const BUILD_DIR = path.join(P.builds, 'imgui');
+const SYSROOT_LIB = path.join(P.sysroot, 'usr', 'lib');
+const SYSROOT_INC = path.join(P.sysroot, 'usr', 'include');
 
-shell.mkdir('-p', USERLAND_DIR);
+shell.mkdir('-p', SOURCE_ROOT);
 shell.mkdir('-p', BUILD_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 shell.mkdir('-p', path.join(SYSROOT_INC, 'imgui'));
@@ -46,7 +48,7 @@ function detectVersion(): string {
 // --------------- source management ---------------
 
 function ensureSource(tag: string): string {
-    const destDir = path.join(USERLAND_DIR, `imgui-${tag}`);
+    const destDir = path.join(SOURCE_ROOT, `imgui-${tag}`);
     if (fs.existsSync(path.join(destDir, 'imgui.h'))) {
         console.log(`Using existing ImGui source: ${path.basename(destDir)}`);
         return destDir;
@@ -54,7 +56,7 @@ function ensureSource(tag: string): string {
 
     const tarball = `${tag}.tar.gz`;
     console.log(`Downloading ImGui ${tag}...`);
-    shell.cd(USERLAND_DIR);
+    shell.cd(SOURCE_ROOT);
     shell.exec(`curl -fSL -o "${tarball}" "https://github.com/ocornut/imgui/archive/refs/tags/${tarball}"`);
 
     shell.rm('-rf', destDir);

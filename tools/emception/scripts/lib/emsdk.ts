@@ -2,11 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
+import { toolchainPaths } from '../toolchain/paths.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = process.cwd(); // Assume run from project root
-const EMSDK_DIR = path.join(ROOT, 'tools', 'emsdk');
+const EMSDK_DIR = toolchainPaths(ROOT).emsdk;
 
 const EMSDK_ARCHITECTURES: Partial<Record<NodeJS.Architecture, string>> = {
   arm: 'arm',
