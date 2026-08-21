@@ -22,6 +22,17 @@ export function ensureEmsdkArchitecture(environment: NodeJS.ProcessEnv = process
   environment.EMSDK_ARCH = emsdkArchitecture;
 }
 
+export function ensureWindowsEmsdkShell(environment: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): void {
+  if (platform !== 'win32') return;
+  delete environment.EMSDK_BASH;
+  delete environment.EMSDK_CSH;
+  delete environment.EMSDK_FISH;
+  delete environment.EMSDK_POWERSHELL;
+  delete environment.MSYSTEM;
+  delete environment.SHELL;
+  environment.EMSDK_CMD = '1';
+}
+
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
@@ -53,6 +64,7 @@ function acquireEmsdkLock(timeoutMs = 120_000): () => void {
 export function setupEmsdk(version: string = 'latest'): NodeJS.ProcessEnv {
   console.log(`>>> Setting up Emscripten SDK (${version})...`);
   ensureEmsdkArchitecture();
+  ensureWindowsEmsdkShell();
 
   if (!fs.existsSync(path.join(EMSDK_DIR, 'emsdk'))) {
     console.log(`    Cloning EMSDK to ${EMSDK_DIR}...`);
