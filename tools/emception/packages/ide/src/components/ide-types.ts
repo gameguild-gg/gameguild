@@ -113,7 +113,7 @@ export interface IdeProps {
   // ── Boot ──────────────────────────────────────────────────────────────────
   /** Title shown in the header bar. */
   title?: string;
-  /** URL of the sysroot manifest. Defaults to `/cdn/manifest.json`. */
+  /** URL of a self-hosted manifest. Omit to use the Browser package's versioned default. */
   manifestUrl?: string;
   /**
    * Pre-built emception instance.

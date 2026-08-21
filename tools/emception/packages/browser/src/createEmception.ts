@@ -79,12 +79,10 @@ export interface CreateEmceptionOptions {
     /** Headless stderr sink. Only used when `tty: 'none'`. */
     onStderr?: (text: string) => void;
     /**
-     * URL of the manifest produced by `npm run build:manifest`.
+     * URL of a self-hosted manifest produced by `npm run build:manifest`.
      *
-    * If omitted, falls back to {@link DEFAULT_MANIFEST_URL} (the latest
-    * published `emception` CDN payload on jsDelivr). For production deploys
-     * pin a specific version or self-host the manifest under your own
-     * origin to avoid CDN drift.
+     * If omitted, falls back to {@link DEFAULT_MANIFEST_URL}, which pins the
+     * matching `@gameguild/emception-toolchain` version on jsDelivr.
      */
     manifestUrl?: string;
 }

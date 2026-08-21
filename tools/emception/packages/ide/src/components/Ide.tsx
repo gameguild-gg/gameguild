@@ -135,7 +135,7 @@ export type { IdeProps };
 
 export default function Ide({
   title = 'Emception',
-  manifestUrl = '/cdn/manifest.json',
+  manifestUrl,
   api: injectedApi,
   workspaceConfig,
   workspaceUrl,
