@@ -209,7 +209,7 @@ if (fs.existsSync(cacheIncSDL3)) {
 // a file-system lock (which is forbidden in the browser sandbox).
 // tool-runner.ts aliases /home/user/.emscripten_cache/ports
 //                      → /usr/lib/emscripten_ports
-const sdl3PortPy = path.join(SYSROOT, 'usr', 'lib', 'emscripten', 'tools', 'ports', 'sdl3.py');
+const sdl3PortPy = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'tools', 'ports', 'sdl3.py');
 if (fs.existsSync(sdl3PortPy)) {
     const src = fs.readFileSync(sdl3PortPy, 'utf-8');
     const m = src.match(/^VERSION\s*=\s*['"]([^'"]+)['"]/m);
