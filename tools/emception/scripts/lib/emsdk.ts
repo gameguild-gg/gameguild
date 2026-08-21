@@ -33,6 +33,24 @@ export function ensureWindowsEmsdkShell(environment: NodeJS.ProcessEnv = process
   environment.EMSDK_CMD = '1';
 }
 
+function activatedEmsdkPath(config: string, variable: string): string {
+  const expression = new RegExp(`^${variable}\\s*=\\s*emsdk_path\\s*\\+\\s*['\"]([^'\"]+)['\"]`, 'm');
+  const match = expression.exec(config);
+  if (!match) throw new Error(`Activated emsdk config is missing ${variable}`);
+  return path.normalize(path.join(EMSDK_DIR, match[1]));
+}
+
+export function captureWindowsEmsdkEnvironment(environment: NodeJS.ProcessEnv = process.env): Record<string, string> {
+  const config = fs.readFileSync(path.join(EMSDK_DIR, '.emscripten'), 'utf8');
+  const emscriptenRoot = activatedEmsdkPath(config, 'EMSCRIPTEN_ROOT');
+  return {
+    EMSDK: EMSDK_DIR,
+    EMSDK_NODE: activatedEmsdkPath(config, 'NODE_JS'),
+    EMSDK_PYTHON: activatedEmsdkPath(config, 'PYTHON'),
+    PATH: [EMSDK_DIR, emscriptenRoot, environment.PATH ?? ''].filter(Boolean).join(path.delimiter),
+  };
+}
+
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
@@ -117,21 +135,7 @@ export function setupEmsdk(version: string = 'latest'): NodeJS.ProcessEnv {
   const envVars: Record<string, string> = {};
 
   if (process.platform === 'win32') {
-    // On Windows, run emsdk_env.bat and capture output of set
-    // We use a temporary file to avoid parsing issues with pipe
-    const tempFile = path.join(EMSDK_DIR, 'env.txt');
-    shell.exec(`call emsdk_env.bat > NUL && set > "${tempFile}"`, { shell: 'cmd.exe' });
-    const output = fs.readFileSync(tempFile, 'utf8');
-    fs.unlinkSync(tempFile);
-
-    output.split('\r\n').forEach(line => {
-      const idx = line.indexOf('=');
-      if (idx > 0) {
-        const key = line.substring(0, idx);
-        const val = line.substring(idx + 1);
-        envVars[key] = val;
-      }
-    });
+    Object.assign(envVars, captureWindowsEmsdkEnvironment());
   } else {
     // On Unix, source emsdk_env.sh and print env
     const output = shell.exec(`source ./emsdk_env.sh > /dev/null && env`, { shell: '/bin/bash', silent: true }).stdout;
