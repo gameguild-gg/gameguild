@@ -93,6 +93,24 @@ function nativeToolPath(buildDir: string, name: string): string {
     return resolved;
 }
 
+function writeResponseFile(responseFile: string, argumentsList: string[]): boolean {
+    const content = argumentsList.map(argument => JSON.stringify(argument)).join('\n');
+    const previous = fs.existsSync(responseFile) ? fs.readFileSync(responseFile, 'utf8') : undefined;
+    if (previous === content) {
+        return false;
+    }
+    fs.writeFileSync(responseFile, content);
+    return true;
+}
+
+function linkArtifactsAreCurrent(outputs: string[], inputs: string[], responseChanged: boolean): boolean {
+    if (responseChanged || outputs.some(output => !fs.existsSync(output) || fs.statSync(output).size === 0)) {
+        return false;
+    }
+    const oldestOutput = Math.min(...outputs.map(output => fs.statSync(output).mtimeMs));
+    return inputs.every(input => fs.existsSync(input) && fs.statSync(input).mtimeMs <= oldestOutput);
+}
+
 /** Common Emscripten flags for standalone tool modules */
 const STANDALONE_FLAGS = [
     '-sALLOW_MEMORY_GROWTH=1',
@@ -357,8 +375,12 @@ function buildClang() {
         clangMjs,
     ];
     const responseFile = path.join(BUILD_DIR, 'clang-link.rsp');
-    fs.writeFileSync(responseFile, linkArguments.map(argument => JSON.stringify(argument)).join('\n'));
+    const responseChanged = writeResponseFile(responseFile, linkArguments);
 
+    if (linkArtifactsAreCurrent([clangMjs, clangWasm], [...allDriverObjects, ...clangLibs, ...llvmLibs, responseFile], responseChanged)) {
+        console.log('Clang link artifacts are current.');
+        return;
+    }
     shell.exec(`em++ @"${responseFile}"`);
     console.log(`Created ${clangWasm} + ${clangMjs}`);
 }
