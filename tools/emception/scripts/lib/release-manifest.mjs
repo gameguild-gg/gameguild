@@ -4,6 +4,7 @@ import path from 'node:path';
 
 const PYTHON_ROOT = /^\/usr\/lib\/python\d+\.\d+/;
 const ENCODING_ALLOWLIST = new Set(['__init__', 'aliases', 'ascii', 'latin_1', 'mbcs', 'idna', 'unicode_escape']);
+const VIRTUAL_LINKS_FILENAME = '.emception-symlinks.json';
 
 function shouldExclude(relativePath) {
   if (PYTHON_ROOT.test(relativePath)) {
@@ -53,6 +54,31 @@ async function collectFiles(root) {
   return entries;
 }
 
+async function readVirtualLinks(sysroot) {
+  const filename = path.join(sysroot, VIRTUAL_LINKS_FILENAME);
+  let parsed;
+  try {
+    parsed = JSON.parse(await readFile(filename, 'utf8'));
+  } catch (error) {
+    if (error && typeof error === 'object' && error.code === 'ENOENT') return {};
+    throw error;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error(`${VIRTUAL_LINKS_FILENAME} must contain an object`);
+  }
+  const links = {};
+  for (const [link, target] of Object.entries(parsed)) {
+    if (path.posix.normalize(link) !== link || !link.startsWith('/')) {
+      throw new Error(`invalid virtual link path: ${link}`);
+    }
+    if (typeof target !== 'string' || path.posix.normalize(target) !== target || !target.startsWith('/')) {
+      throw new Error(`invalid virtual link target for ${link}`);
+    }
+    links[link] = target;
+  }
+  return links;
+}
+
 async function createProfiles(sysroot, files) {
   const profiles = {};
   const wasmPaths = Object.keys(files).filter((filePath) => /^\/usr\/lib\/(?:emscripten\/)?[^/]+\.wasm$/.test(filePath));
@@ -90,6 +116,7 @@ export async function generateReleaseManifest(options) {
 
   const sourceFiles = await collectFiles(options.sysroot);
   if (sourceFiles.length === 0) throw new Error(`staged sysroot is empty: ${options.sysroot}`);
+  const virtualLinks = await readVirtualLinks(options.sysroot);
   await rm(options.outputDir, { recursive: true, force: true });
   await mkdir(options.outputDir, { recursive: true });
 
@@ -97,6 +124,7 @@ export async function generateReleaseManifest(options) {
   for (const absolutePath of sourceFiles) {
     const stats = await lstat(absolutePath);
     const relativePath = `/${path.relative(options.sysroot, absolutePath).replaceAll('\\', '/')}`;
+    if (relativePath === `/${VIRTUAL_LINKS_FILENAME}`) continue;
     if (shouldExclude(relativePath)) continue;
     if (stats.isSymbolicLink()) {
       files[relativePath] = { symlink: await readlink(absolutePath) };
@@ -113,6 +141,9 @@ export async function generateReleaseManifest(options) {
       executable: (stats.mode & 0o111) !== 0 || relativePath.endsWith('.wasm'),
       priority: priorityFor(relativePath),
     };
+  }
+  for (const [link, target] of Object.entries(virtualLinks).sort(([left], [right]) => left.localeCompare(right))) {
+    files[link] = { symlink: target };
   }
 
   const profiles = await createProfiles(options.sysroot, files);

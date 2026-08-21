@@ -22,6 +22,10 @@ async function fixture() {
   await writeFile(path.join(sysroot, 'usr', 'lib', 'emscripten', 'sdl3-runtime.wasm'), EMPTY_WASM_MODULE);
   await writeFile(path.join(sysroot, 'usr', 'lib', 'python3.13', 'os.py'), 'name = "posix"');
   await writeFile(path.join(sysroot, 'usr', 'lib', 'python3.13', 'test', 'ignored.py'), 'ignored');
+  await writeFile(
+    path.join(sysroot, '.emception-symlinks.json'),
+    JSON.stringify({ '/usr/bin/clang': '/usr/lib/clang.wasm' }),
+  );
   return { root, sysroot, outputDir, manifestFile };
 }
 
@@ -53,7 +57,9 @@ test('generateReleaseManifest creates a clean schema-v2 release with wasm profil
   assert.equal(manifest.profiles['sdl3-runtime'].kind, 'canvas-runtime');
   assert.equal(manifest.profiles['sdl3-runtime'].glue, '/usr/lib/emscripten/sdl3-runtime.mjs');
   assert.equal(manifest.profiles['sdl3-runtime'].wasm, '/usr/lib/emscripten/sdl3-runtime.wasm');
+  assert.deepEqual(manifest.files['/usr/bin/clang'], { symlink: '/usr/lib/clang.wasm' });
   assert.equal(written.buildFingerprint, manifest.buildFingerprint);
+  assert.equal(manifest.files['/.emception-symlinks.json'], undefined);
   await assert.rejects(readFile(path.join(paths.outputDir, 'stale.txt')));
   await assert.rejects(readFile(path.join(paths.outputDir, 'usr', 'lib', 'python3.13', 'test', 'ignored.py')));
 });
