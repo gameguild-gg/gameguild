@@ -56,7 +56,7 @@ before release processing.
 Generated glue patches live in `scripts/lib/glue-patches.mjs`. They are:
 
 - applied only to the staged snapshot;
-- versioned as part of the runtime ABI (`emception-glue-v2`);
+- versioned as part of the runtime ABI (`emception-glue-v3`);
 - idempotent for a recognized generated shape;
 - fail-fast when Emscripten emits an unknown shape;
 - tested independently by the script suite.

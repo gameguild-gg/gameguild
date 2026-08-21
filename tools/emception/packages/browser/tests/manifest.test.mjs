@@ -9,7 +9,7 @@ function releaseManifest(overrides = {}) {
     version: 2,
     artifactVersion: '4.2.0',
     runtimeAbi: RUNTIME_ABI,
-    patchSetVersion: 'emception-glue-v2',
+    patchSetVersion: 'emception-glue-v3',
     buildFingerprint: 'a'.repeat(64),
     generated: '2026-08-20T00:00:00Z',
     baseUrl: '/cdn',
