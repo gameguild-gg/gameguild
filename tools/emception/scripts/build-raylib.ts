@@ -169,7 +169,7 @@ console.log(raylibCmakeCmd);
 shell.exec(raylibCmakeCmd);
 
 console.log('Building raylib...');
-shell.exec(`emmake make -C "${RAYLIB_BUILD}" -j${CONCURRENCY} raylib`);
+shell.exec(`cmake --build "${RAYLIB_BUILD}" --parallel ${CONCURRENCY} --target raylib`);
 
 // raylib's CMake puts libraylib.a under raylib/ subdir
 const candidates = [
