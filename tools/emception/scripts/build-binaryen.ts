@@ -88,27 +88,21 @@ if (fs.existsSync(PATCHES_DIR)) {
 // 3. Build binaryen as a static library (no SIDE_MODULE)
 console.log('Cross-compiling libbinaryen.a (static library)...');
 
-if (fs.existsSync(BUILD_WASM_DIR)) {
-    console.log('Cleaning build-wasm directory...');
-    shell.rm('-rf', BUILD_WASM_DIR);
-}
 shell.mkdir('-p', BUILD_WASM_DIR);
 
 // Configure CMake — static build, no SIDE_MODULE
-if (!fs.existsSync(path.join(BUILD_WASM_DIR, 'Makefile'))) {
-    const cmakeCmd = `emcmake cmake -S . -B "${BUILD_WASM_DIR}" \
+const cmakeCmd = `emcmake cmake -S . -B "${BUILD_WASM_DIR}" \
     -DCMAKE_BUILD_TYPE=MinSizeRel \
     -DBUILD_TESTS=OFF \
     -DBYN_ENABLE_LTO=OFF \
     -DBUILD_SHARED_LIBS=OFF \
     -DEMSCRIPTEN_ENABLE_WASM_EH=OFF`;
 
-    console.log(cmakeCmd);
-    shell.exec(cmakeCmd);
-}
+console.log(cmakeCmd);
+shell.exec(cmakeCmd);
 
 // Build static library
-shell.exec(`emmake make -C "${BUILD_WASM_DIR}" -j${CONCURRENCY} binaryen`);
+shell.exec(`cmake --build "${BUILD_WASM_DIR}" --parallel ${CONCURRENCY} --target binaryen`);
 
 // 4. Find the static library
 const staticLib = path.join(BUILD_WASM_DIR, 'lib', 'libbinaryen.a');
@@ -160,7 +154,7 @@ for (const tool of TOOLS) {
         '-Os',
         `-o "${toolMjs}"`,
     ];
-    const cmd = cmdParts.join(' \\\n    ');
+    const cmd = cmdParts.join(' ');
 
     console.log(cmd);
     shell.exec(cmd);
