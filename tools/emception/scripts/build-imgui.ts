@@ -84,7 +84,7 @@ function ensureSource(tag: string): string {
 
     shell.rm('-rf', destDir);
     shell.mkdir('-p', destDir);
-    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${destDir}"`);
+    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${path.basename(destDir)}"`);
     shell.rm('-f', tarball);
 
     if (!fs.existsSync(path.join(destDir, 'imgui.h'))) {
