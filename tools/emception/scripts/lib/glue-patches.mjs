@@ -193,7 +193,11 @@ export async function patchCanvasRuntimeDirectory({ runtimeDirectory, runtimes =
   for (const runtime of runtimes) {
     const filename = `${runtime}-runtime.mjs`;
     const runtimePath = path.join(runtimeDirectory, filename);
-    if (!(await exists(runtimePath))) throw new Error(`required canvas runtime is missing: ${runtimePath}`);
+    const wasmPath = path.join(runtimeDirectory, `${runtime}-runtime.wasm`);
+    const [hasGlue, hasWasm] = await Promise.all([exists(runtimePath), exists(wasmPath)]);
+    if (!hasGlue || !hasWasm) {
+      throw new Error(`required canvas runtime pair is incomplete: ${runtimePath} + ${wasmPath}`);
+    }
     const source = await readFile(runtimePath, 'utf8');
     const result = applyCanvasRuntimePatches(source, filename);
     patchCount += result.applied.length;

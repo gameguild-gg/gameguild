@@ -146,12 +146,11 @@ if (result.code !== 0) {
 
 // ── Step 2: save sdl3-runtime.mjs ─────────────────────────────────────────
 const OUTPUT_MJS = path.join(EMSCRIPTEN_DIR, 'sdl3-runtime.mjs');
+const OUTPUT_WASM = path.join(EMSCRIPTEN_DIR, 'sdl3-runtime.wasm');
 fs.copyFileSync(TMP_JS, OUTPUT_MJS);
+fs.copyFileSync(TMP_WASM, OUTPUT_WASM);
 const mjsSize = (fs.statSync(OUTPUT_MJS).size / 1024).toFixed(1);
-console.log(`Saved sdl3-runtime.mjs (${mjsSize} KB) → ${path.relative(ROOT, OUTPUT_MJS)}`);
-
-// Clean up the stub WASM — users supply their own WASM at runtime.
-if (fs.existsSync(TMP_WASM)) fs.rmSync(TMP_WASM);
+console.log(`Saved canvas runtime pair (${mjsSize} KB glue) → ${path.relative(ROOT, EMSCRIPTEN_DIR)}`);
 
 // ── Step 3: copy libSDL3.a + headers from the emsdk cache ─────────────────
 //
