@@ -69,7 +69,7 @@ function ensureCMakeBuildDirectory(buildDir: string): void {
     if (fs.existsSync(cachePath)) {
         const hasBuildSystem = fs.existsSync(path.join(buildDir, 'build.ninja'))
             || fs.existsSync(path.join(buildDir, 'Makefile'))
-            || fs.readdirSync(buildDir).some(entry => entry.endsWith('.sln'));
+            || fs.readdirSync(buildDir).some(entry => entry.endsWith('.sln') || entry.endsWith('.slnx'));
         if (!hasBuildSystem) {
             console.log(`Resetting ${relative}: cached CMake configuration is incomplete.`);
             fs.rmSync(buildDir, { recursive: true, force: true });
@@ -220,38 +220,42 @@ function buildStaticLLVM() {
     const llvmTblGen = nativeToolPath(nativeBuildDir, 'llvm-tblgen');
     const clangTblGen = nativeToolPath(nativeBuildDir, 'clang-tblgen');
 
-    if (!fs.existsSync(wasmBuildDir)) {
-        shell.mkdir('-p', wasmBuildDir);
-    }
+    ensureCMakeBuildDirectory(wasmBuildDir);
 
     // Configure — static build only, no SIDE_MODULE, no shared libs
-    if (!fs.existsSync(path.join(wasmBuildDir, 'Makefile'))) {
+    if (!fs.existsSync(path.join(wasmBuildDir, 'CMakeCache.txt'))) {
         console.log('Configuring LLVM for WebAssembly (static)...');
-        const cmd = `emcmake cmake -S "${LLVM_SRC_DIR}/llvm" -B "${wasmBuildDir}" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_FLAGS="" \
-            -DCMAKE_C_FLAGS="" \
-            -DLLVM_TARGETS_TO_BUILD="WebAssembly" \
-            -DLLVM_ENABLE_PROJECTS="clang;lld" \
-            -DLLVM_TABLEGEN="${llvmTblGen}" \
-            -DCLANG_TABLEGEN="${clangTblGen}" \
-            -DCMAKE_CROSSCOMPILING=ON \
-            -DLLVM_DEFAULT_TARGET_TRIPLE="wasm32-unknown-emscripten" \
-            -DLLVM_ENABLE_THREADS=OFF \
-            -DLLVM_ENABLE_PIC=OFF \
-            -DLLVM_INCLUDE_TESTS=OFF \
-            -DLLVM_INCLUDE_BENCHMARKS=OFF \
-            -DLLVM_INCLUDE_EXAMPLES=OFF \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DLLVM_BUILD_LLVM_DYLIB=OFF \
-            -DLLVM_LINK_LLVM_DYLIB=OFF \
-            -DUNIX=1`;
+        const sourceDir = path.join(LLVM_DIR, LLVM_SRC_DIR, 'llvm');
+        const cmd = [
+            'emcmake cmake',
+            `-S "${sourceDir}"`,
+            `-B "${wasmBuildDir}"`,
+            '-DCMAKE_BUILD_TYPE=Release',
+            '-DCMAKE_CXX_FLAGS=""',
+            '-DCMAKE_C_FLAGS=""',
+            '-DLLVM_TARGETS_TO_BUILD="WebAssembly"',
+            '-DLLVM_ENABLE_PROJECTS="clang;lld"',
+            `-DLLVM_TABLEGEN="${llvmTblGen}"`,
+            `-DCLANG_TABLEGEN="${clangTblGen}"`,
+            '-DCMAKE_CROSSCOMPILING=ON',
+            '-DLLVM_HOST_TRIPLE="wasm32-unknown-emscripten"',
+            '-DLLVM_DEFAULT_TARGET_TRIPLE="wasm32-unknown-emscripten"',
+            '-DLLVM_ENABLE_THREADS=OFF',
+            '-DLLVM_ENABLE_PIC=OFF',
+            '-DLLVM_INCLUDE_TESTS=OFF',
+            '-DLLVM_INCLUDE_BENCHMARKS=OFF',
+            '-DLLVM_INCLUDE_EXAMPLES=OFF',
+            '-DBUILD_SHARED_LIBS=OFF',
+            '-DLLVM_BUILD_LLVM_DYLIB=OFF',
+            '-DLLVM_LINK_LLVM_DYLIB=OFF',
+            '-DUNIX=1',
+        ].join(' ');
 
         shell.exec(cmd);
     }
 
     console.log('Building LLVM static libraries...');
-    shell.exec(`emmake make -C "${wasmBuildDir}" -j${CONCURRENCY} llvm-libraries`);
+    shell.exec(`cmake --build "${wasmBuildDir}" --parallel ${CONCURRENCY} --target llvm-libraries`);
 }
 
 function buildClang() {
