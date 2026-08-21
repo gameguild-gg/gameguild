@@ -64,6 +64,22 @@ describe("dashboard management navigation", () => {
     ]);
   });
 
+  it("links the workspace settings group to every hub section", () => {
+    const workspace = dashboardNavigationData.find(
+      (group) => group.label === "My Workspace",
+    );
+    const settings = workspace?.items.find((item) => item.title === "Settings");
+
+    expect(settings?.subGroups?.map(({ title, url }) => ({ title, url }))).toEqual([
+      { title: "Profile", url: "/workspace/settings/profile" },
+      { title: "Account", url: "/workspace/settings/account" },
+      { title: "Appearance", url: "/workspace/settings/appearance" },
+      { title: "Localization", url: "/workspace/settings/localization" },
+      { title: "Privacy", url: "/workspace/settings/privacy" },
+      { title: "Accessibility", url: "/workspace/settings/accessibility" },
+    ]);
+  });
+
   it("shows only the administrative module granted to the actor", () => {
     const navigation = filterDashboardNavigation(dashboardNavigationData, [
       "TestingLab.ManageEvents",

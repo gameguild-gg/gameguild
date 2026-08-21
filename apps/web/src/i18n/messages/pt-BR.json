@@ -13,7 +13,119 @@
   },
   "settings": {
     "accountTitle": "Configurações da conta",
-    "accountDescription": "Gerencie as formas de entrar no GameGuild."
+    "accountDescription": "Gerencie as formas de entrar no GameGuild.",
+    "hubTitle": "Configurações",
+    "navLabel": "Seções de configurações",
+    "nav": {
+      "profile": "Perfil",
+      "account": "Conta",
+      "appearance": "Aparência",
+      "localization": "Idioma e região",
+      "privacy": "Privacidade",
+      "accessibility": "Acessibilidade"
+    },
+    "profile": {
+      "title": "Perfil",
+      "description": "Atualize os dados pessoais exibidos na sua conta do GameGuild.",
+      "fallbackName": "Usuário do GameGuild",
+      "fallbackEmail": "E-mail indisponível",
+      "accountLabel": "Conta conectada",
+      "accountDescription": "A identidade da sua conta é gerenciada pelo provedor de login.",
+      "displayName": "Nome de exibição",
+      "bio": "Bio",
+      "optional": "Opcional",
+      "location": "Localização",
+      "website": "Site",
+      "jobTitle": "Cargo",
+      "company": "Empresa",
+      "save": "Salvar alterações",
+      "saving": "Salvando...",
+      "saved": "Perfil salvo.",
+      "saveFailed": "Não foi possível salvar seu perfil.",
+      "errors": {
+        "tooLong": "Use no máximo {limit} caracteres."
+      }
+    },
+    "appearance": {
+      "title": "Aparência",
+      "description": "Escolha como o GameGuild aparece neste e em seus outros dispositivos.",
+      "saveFailed": "Não foi possível salvar sua preferência de aparência.",
+      "theme": {
+        "label": "Tema",
+        "light": "Claro",
+        "lightDescription": "Usar o esquema de cores claro.",
+        "dark": "Escuro",
+        "darkDescription": "Usar o esquema de cores escuro.",
+        "system": "Sistema",
+        "systemDescription": "Usar a preferência do seu dispositivo."
+      }
+    },
+    "localization": {
+      "title": "Idioma e região",
+      "description": "Defina o idioma, fuso horário e formatos usados pelo GameGuild.",
+      "language": "Idioma",
+      "timezone": "Fuso horário",
+      "dateFormat": "Formato de data",
+      "timeFormat": "Formato de hora",
+      "currency": "Moeda",
+      "currencyDescription": "Usada como sua moeda preferida nas visualizações compatíveis.",
+      "save": "Salvar preferências",
+      "saving": "Salvando...",
+      "saved": "Preferências de idioma e região salvas.",
+      "saveFailed": "Não foi possível salvar suas preferências de idioma e região."
+    },
+    "privacy": {
+      "title": "Privacidade",
+      "description": "Controle as preferências de privacidade armazenadas na sua conta do GameGuild.",
+      "saveFailed": "Não foi possível salvar suas preferências de privacidade.",
+      "profileVisibility": {
+        "label": "Visibilidade do perfil"
+      },
+      "visibility": {
+        "public": "Público",
+        "members": "Membros",
+        "private": "Privado"
+      },
+      "sharingLabel": "Preferências de dados",
+      "activityTracking": {
+        "label": "Rastreamento de atividade",
+        "description": "Permita que o GameGuild lembre atividades que melhoram sua experiência."
+      },
+      "marketingEmails": {
+        "label": "E-mails de marketing",
+        "description": "Receba atualizações opcionais de produto e comunidade por e-mail."
+      },
+      "analyticsCookies": {
+        "label": "Cookies analíticos",
+        "description": "Permita análises anônimas de uso em experiências web compatíveis."
+      },
+      "personalizedContent": {
+        "label": "Conteúdo personalizado",
+        "description": "Permita que recomendações de conteúdo usem suas preferências."
+      }
+    },
+    "accessibility": {
+      "title": "Acessibilidade",
+      "description": "Ajuste a interface para leitura e movimento mais confortáveis.",
+      "saveFailed": "Não foi possível salvar suas preferências de acessibilidade.",
+      "displayLabel": "Exibição",
+      "highContrast": {
+        "label": "Alto contraste",
+        "description": "Aumente o contraste visual em toda a interface."
+      },
+      "largeText": {
+        "label": "Texto maior",
+        "description": "Aumente o tamanho-base dos textos em todo o GameGuild."
+      },
+      "reducedMotion": {
+        "label": "Reduzir movimento",
+        "description": "Minimize animações e transições não essenciais."
+      },
+      "fontSize": {
+        "label": "Tamanho-base do texto",
+        "description": "Escolha um tamanho entre {min}px e {max}px."
+      }
+    }
   },
   "connectedAccounts": {
     "title": "Contas conectadas",
