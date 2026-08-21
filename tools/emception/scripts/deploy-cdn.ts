@@ -5,7 +5,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import shell from 'shelljs';
 import { defineBuildScript } from './lib/build-script.ts';
 import { paths } from './lib/paths.ts';
 
@@ -55,14 +54,16 @@ defineBuildScript({
             : P.publicCdn;
 
         await step(`copy build/cdn → ${dest}`, () => {
-            shell.rm('-rf', dest);
-            shell.mkdir('-p', dest);
-            shell.cp('-r', path.join(P.buildCdn, '*'), dest);
+            if (!fs.existsSync(P.buildCdn)) {
+                throw new Error(`CDN build directory not found: ${P.buildCdn}`);
+            }
+            fs.rmSync(dest, { recursive: true, force: true });
+            fs.cpSync(P.buildCdn, dest, { recursive: true, force: true });
         });
 
         await step('copy manifest.json', () => {
             if (fs.existsSync(P.manifestFile)) {
-                shell.cp(P.manifestFile, dest);
+                fs.copyFileSync(P.manifestFile, path.join(dest, 'manifest.json'));
             } else {
                 log(`WARN: manifest.json not found at ${P.manifestFile}`);
             }
@@ -82,7 +83,7 @@ defineBuildScript({
             // Remove the legacy filename if a previous build left it behind.
             const legacy = path.join(dest, 'brotli_wasm_bg.wasm');
             if (fs.existsSync(legacy)) {
-                shell.rm('-f', legacy);
+                fs.rmSync(legacy, { force: true });
             }
             const deployed = path.join(dest, 'brotli_wasm.wasm');
             if (!fs.existsSync(deployed)) {
