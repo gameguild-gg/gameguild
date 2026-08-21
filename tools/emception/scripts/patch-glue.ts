@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PATCH_SET_VERSION, patchGlueDirectory } from './lib/glue-patches.mjs';
+import { PATCH_SET_VERSION, patchCanvasRuntimeDirectory, patchGlueDirectory } from './lib/glue-patches.mjs';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 
 enableBuildKeepalive('patch-glue');
@@ -47,11 +47,13 @@ function patchColoredLogger(filePath: string): boolean {
 async function main(): Promise<void> {
   console.log(`Applying ${PATCH_SET_VERSION} to ${STAGED_SYSROOT}`);
   const glue = await patchGlueDirectory({ libDirectory: STAGED_LIB, tools: ALL_TOOLS });
+  const canvas = await patchCanvasRuntimeDirectory({ runtimeDirectory: path.join(STAGED_LIB, 'emscripten') });
   const coloredLoggerChanged = patchColoredLogger(path.join(EMSCRIPTEN_TOOLS, 'colored_logger.py'));
 
   console.log(
-    `Patch set verified: ${glue.foundFiles} glue pairs, ${glue.patchCount} patches, ` +
-      `${glue.changedFiles + Number(coloredLoggerChanged)} changed files.`,
+    `Patch set verified: ${glue.foundFiles} glue pairs + ${canvas.foundFiles} canvas runtimes, ` +
+      `${glue.patchCount + canvas.patchCount} patches, ` +
+      `${glue.changedFiles + canvas.changedFiles + Number(coloredLoggerChanged)} changed files.`,
   );
 }
 

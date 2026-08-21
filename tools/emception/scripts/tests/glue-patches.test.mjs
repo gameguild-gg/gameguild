@@ -5,10 +5,51 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 
-import { applyGluePatches, patchGlueDirectory } from '../lib/glue-patches.mjs';
+import {
+  applyCanvasRuntimePatches,
+  applyGluePatches,
+  patchGlueDirectory,
+} from '../lib/glue-patches.mjs';
 
 const SYSTEM_FALLBACK = 'function __emscripten_system(command){if(!command)return 0;return-52}';
 const OPENAT = 'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);var mode=varargs?syscallGetVarargI():0;';
+const CANVAS_COMMON = [
+  'var wasmBinary;var ABORT=false',
+  'instantiateAsync(binary,binaryFile,imports){if(!binary){try{var response=fetch(',
+  'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){handleException(e)}finally{maybeExit()}}',
+  'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}quit_(1,e)}',
+].join(';');
+const SDL_RUNTIME = [
+  CANVAS_COMMON,
+  'var _main,_SDL_free,',
+  '_malloc=wasmExports["malloc"]',
+  '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"]',
+  'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var ret=_malloc(size)',
+  'var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[code](...args)}',
+  'var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[emAsmAddr](...args)}',
+  'var keyEventHandlerFunc=e=>{var keyEventData=JSEvents.keyEvent',
+].join(';');
+
+test('applyCanvasRuntimePatches freezes runtime-only fixes into release glue', () => {
+  const first = applyCanvasRuntimePatches(SDL_RUNTIME, 'sdl3-runtime.mjs');
+  const second = applyCanvasRuntimePatches(first.content, 'sdl3-runtime.mjs');
+
+  assert.match(first.content, /wasmBinary=Module\["wasmBinary"\]/);
+  assert.match(first.content, /if\(binary\)\{return WebAssembly\.instantiate/);
+  assert.match(first.content, /e\.target!==Module\["canvas"\]/);
+  assert.match(first.content, /ASM_CONSTS\[code\]=eval/);
+  assert.match(first.content, /e instanceof WebAssembly\.RuntimeError/);
+  assert.ok(first.applied.length >= 8);
+  assert.equal(second.content, first.content);
+  assert.deepEqual(second.applied, []);
+});
+
+test('applyCanvasRuntimePatches rejects an unknown generated runtime shape', () => {
+  assert.throws(
+    () => applyCanvasRuntimePatches('export default function runtime() {}', 'raylib-runtime.mjs'),
+    /unsupported raylib-runtime\.mjs generated shape/,
+  );
+});
 
 test('applyGluePatches applies required hooks once and is idempotent', () => {
   const source = `var ENV={};${SYSTEM_FALLBACK}${OPENAT}`;
@@ -58,6 +99,7 @@ test('patch-glue CLI patches only the frozen staged sysroot', async (context) =>
   const workingLib = path.join(root, 'sysroot', 'usr', 'lib');
   const stagedRoot = path.join(root, 'build', 'stage', 'sysroot');
   const stagedLib = path.join(stagedRoot, 'usr', 'lib');
+  const stagedRuntimes = path.join(stagedLib, 'emscripten');
   const stagedTools = path.join(stagedLib, 'emscripten', 'tools');
   context.after(() => rm(root, { recursive: true, force: true }));
 
@@ -66,6 +108,9 @@ test('patch-glue CLI patches only the frozen staged sysroot', async (context) =>
   await writeFile(path.join(workingLib, 'clang.mjs'), 'var ENV={};');
   await writeFile(path.join(stagedLib, 'clang.mjs'), 'var ENV={};');
   await writeFile(path.join(stagedLib, 'clang.wasm'), new Uint8Array([0, 97, 115, 109]));
+  await writeFile(path.join(stagedRuntimes, 'sdl3-runtime.mjs'), SDL_RUNTIME);
+  await writeFile(path.join(stagedRuntimes, 'raylib-runtime.mjs'), CANVAS_COMMON);
+  await writeFile(path.join(stagedRuntimes, 'allegro-runtime.mjs'), CANVAS_COMMON);
   await writeFile(
     path.join(stagedTools, 'colored_logger.py'),
     'import ctypes\nimport logging\n  kernel32 = ctypes.windll.kernel32\n',
@@ -82,5 +127,6 @@ test('patch-glue CLI patches only the frozen staged sysroot', async (context) =>
   assert.equal(result.status, 0, result.stderr);
   assert.equal(await readFile(path.join(workingLib, 'clang.mjs'), 'utf8'), 'var ENV={};');
   assert.match(await readFile(path.join(stagedLib, 'clang.mjs'), 'utf8'), /moduleArg\["ENV"\]/);
+  assert.match(await readFile(path.join(stagedRuntimes, 'sdl3-runtime.mjs'), 'utf8'), /e\.target!==Module\["canvas"\]/);
   assert.match(await readFile(path.join(stagedTools, 'colored_logger.py'), 'utf8'), /except ImportError/);
 });
