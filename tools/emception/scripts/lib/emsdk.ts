@@ -2,7 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
+import { loadToolchainStateSync, lockedVersion } from '../toolchain/config.ts';
 import { toolchainPaths } from '../toolchain/paths.ts';
+import { ensureLockedSource } from '../toolchain/sources.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,15 +82,19 @@ function acquireEmsdkLock(timeoutMs = 120_000): () => void {
  * Downloads, installs, activates EMSDK, and sets environment variables.
  * Returns the environment variables map.
  */
-export function setupEmsdk(version: string = 'latest'): NodeJS.ProcessEnv {
+export function setupEmsdk(version: string): NodeJS.ProcessEnv {
   console.log(`>>> Setting up Emscripten SDK (${version})...`);
   ensureEmsdkArchitecture();
   ensureWindowsEmsdkShell();
 
-  if (!fs.existsSync(path.join(EMSDK_DIR, 'emsdk'))) {
-    console.log(`    Cloning EMSDK to ${EMSDK_DIR}...`);
-    shell.mkdir('-p', path.dirname(EMSDK_DIR));
-    shell.exec(`git clone --depth 1 https://github.com/emscripten-core/emsdk.git "${EMSDK_DIR}"`);
+  const { lock } = loadToolchainStateSync(ROOT);
+  const expectedVersion = lockedVersion(lock, 'emsdk');
+  if (version !== expectedVersion) {
+    throw new Error(`EMSDK ${version} does not match locked version ${expectedVersion}`);
+  }
+  const hadSource = fs.existsSync(path.join(EMSDK_DIR, 'emsdk.py'));
+  ensureLockedSource(ROOT, lock, 'emsdk', EMSDK_DIR, 'emsdk.py');
+  if (!hadSource) {
     // After a fresh clone there's no bundled Python yet — unset stale env vars
     // so the emsdk script falls back to system python3 and system certs.
     delete process.env.EMSDK_PYTHON;

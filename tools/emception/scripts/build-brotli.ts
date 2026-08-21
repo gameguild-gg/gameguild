@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-brotli');
 
@@ -42,22 +43,7 @@ const CDN_DIR = P.releaseCdn;
 // Setup EMSDK first
 setupEmsdk(EMSDK_VERSION);
 
-// 1. Download Brotli source if not already present
-if (!fs.existsSync(SOURCE_DIR)) {
-  console.log(`Downloading Brotli v${BROTLI_VERSION}...`);
-  shell.mkdir('-p', SOURCE_ROOT);
-  shell.cd(SOURCE_ROOT);
-  const tarball = `v${BROTLI_VERSION}.tar.gz`;
-  shell.exec(`curl -fSL -o "${tarball}" "https://github.com/google/brotli/archive/refs/tags/v${BROTLI_VERSION}.tar.gz"`);
-  shell.exec(`tar xzf "${tarball}"`);
-  shell.rm(tarball);
-}
-
-// Rename the extracted directory (brotli-<version> -> brotli-v<version>)
-const extractedDir = path.join(SOURCE_ROOT, `brotli-${BROTLI_VERSION}`);
-if (fs.existsSync(extractedDir) && !fs.existsSync(SOURCE_DIR)) {
-  shell.mv(extractedDir, SOURCE_DIR);
-}
+ensureLockedSource(ROOT, lock, 'brotli', SOURCE_DIR, 'CMakeLists.txt');
 
 shell.cd(SOURCE_DIR);
 

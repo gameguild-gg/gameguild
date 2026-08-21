@@ -18,6 +18,7 @@ import { fileURLToPath } from 'url';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { loadToolchainStateSync, lockedTool, lockedVersion, pythonMajorMinor } from './toolchain/config.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-cpython');
 
@@ -173,27 +174,7 @@ const BUILD_NATIVE_DIR = path.join(P.builds, 'cpython', 'native');
 const BUILD_WASM_DIR = path.join(P.builds, 'cpython', 'wasm');
 const SYSROOT_STAGING = path.join(P.builds, 'cpython', 'sysroot-staging');
 
-shell.mkdir('-p', SOURCE_ROOT);
-
-const GITHUB_AUTH = process.env.GITHUB_TOKEN
-    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
-    : '';
-
-// 1. Download CPython source
-// Validate by checking configure script — absence means incomplete cache entry.
-const isCPythonSourceValid = fs.existsSync(path.join(SOURCE_DIR, 'configure'));
-if (!isCPythonSourceValid) {
-    if (fs.existsSync(SOURCE_DIR)) {
-        console.log(`Removing incomplete CPython source dir: ${path.basename(SOURCE_DIR)}`);
-        shell.rm('-rf', SOURCE_DIR);
-    }
-    console.log(`Downloading CPython ${PYTHON_VERSION}...`);
-    shell.cd(SOURCE_ROOT);
-    const tarball = `v${PYTHON_VERSION}.tar.gz`;
-    shell.exec(`curl -fSL ${GITHUB_AUTH} -o "${tarball}" "https://github.com/python/cpython/archive/refs/tags/${tarball}"`);
-    shell.exec(`tar xzf "${tarball}"`);
-    shell.rm(tarball);
-}
+ensureLockedSource(ROOT, lock, 'python', SOURCE_DIR, 'configure');
 
 shell.cd(SOURCE_DIR);
 

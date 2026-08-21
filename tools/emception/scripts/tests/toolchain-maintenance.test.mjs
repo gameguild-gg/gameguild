@@ -97,6 +97,7 @@ test('toolchain lock serialization is stable and validates the CMake major polic
 
 test('checked-in toolchain policy and lock agree without dynamic timestamps', async () => {
   const { loadToolchainState } = await import('../toolchain/lock.ts');
+  const { hashDirectory } = await import('../toolchain/sources.ts');
   const root = path.resolve(import.meta.dirname, '..', '..');
   const state = await loadToolchainState(root);
   const source = await readFile(path.join(root, 'toolchain', 'toolchain.lock.json'), 'utf8');
@@ -105,6 +106,10 @@ test('checked-in toolchain policy and lock agree without dynamic timestamps', as
   assert.equal(state.lock.tools.emsdk.version, '5.0.7');
   assert.equal(state.lock.tools.cmake.version, '3.31.12');
   assert.equal(source.includes('generatedAt'), false);
+  assert.equal(
+    hashDirectory(path.join(root, state.lock.tools.curlLite.source.path)),
+    state.lock.tools.curlLite.source.contentHash,
+  );
 });
 
 test('updating EMSDK replaces the complete derived component group without mutating the input lock', async () => {
@@ -262,5 +267,44 @@ test('build scripts select versions only from the toolchain lock', async () => {
     assert.doesNotMatch(source, /pinned-versions/, `${path.basename(filename)} still imports pinned versions`);
     assert.doesNotMatch(source, toolVersionOverride, `${path.basename(filename)} accepts a version override`);
     assert.doesNotMatch(source, /api\.github\.com\/.*releases|Detect(?:ing)? latest/i, `${path.basename(filename)} resolves latest during a build`);
+    assert.doesNotMatch(source, /git clone|refs\/(?:tags|heads)|curl[^\n]*https?:\/\//, `${path.basename(filename)} bypasses the locked source manager`);
   }
+});
+
+test('locked source checksum is verified before extraction and workspace hashes are deterministic', async (context) => {
+  const { createHash } = await import('node:crypto');
+  const { ensureLockedSource, hashDirectory } = await import('../toolchain/sources.ts');
+  const root = await temporaryRoot(context);
+  const overlay = path.join(root, 'toolchain', 'overlays', 'local');
+  await mkdir(path.join(overlay, 'nested'), { recursive: true });
+  await writeFile(path.join(overlay, 'nested', 'b.txt'), 'second');
+  await writeFile(path.join(overlay, 'a.txt'), 'first');
+  const firstHash = hashDirectory(overlay);
+  const secondHash = hashDirectory(overlay);
+  assert.equal(firstHash, secondHash);
+  assert.match(firstHash, /^[a-f0-9]{64}$/);
+
+  const poisoned = Buffer.from('not the locked archive');
+  const expectedHash = createHash('sha256').update('expected archive').digest('hex');
+  const download = path.join(root, '.cache', 'toolchain', 'downloads', `cmake-${expectedHash}.archive`);
+  await mkdir(path.dirname(download), { recursive: true });
+  await writeFile(download, poisoned);
+  const lock = {
+    schemaVersion: 1,
+    configHash: 'a'.repeat(64),
+    tools: {
+      cmake: {
+        version: '3.31.12',
+        source: { kind: 'archive', url: 'https://example.invalid/cmake.tar.gz', sha256: expectedHash },
+      },
+    },
+  };
+  const destination = path.join(root, '.cache', 'toolchain', 'sources', 'cmake');
+
+  assert.throws(
+    () => ensureLockedSource(root, lock, 'cmake', destination, 'CMakeLists.txt'),
+    /Checksum mismatch/,
+  );
+  assert.equal(await readFile(download, 'utf8'), poisoned.toString());
+  await assert.rejects(readFile(path.join(destination, 'CMakeLists.txt')));
 });

@@ -14,6 +14,7 @@ import { standaloneFlags } from './lib/emcc-flags.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-cmake');
 
@@ -40,81 +41,20 @@ shell.mkdir('-p', SOURCE_ROOT);
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
-const GITHUB_AUTH = process.env.GITHUB_TOKEN
-    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
-    : '';
-
-function escapeRegex(input: string): string {
-    return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function isCMakeSourceDir(dirPath: string): boolean {
-    if (!fs.existsSync(path.join(dirPath, 'CMakeLists.txt'))) return false;
-    // bundled libarchive version file must exist for cross-compilation configure
-    if (!fs.existsSync(path.join(dirPath, 'Utilities', 'cmlibarchive', 'build', 'version'))) return false;
-    return true;
-}
-
 function findFilesByExtension(rootDir: string, extension: string): string[] {
     return fs.readdirSync(rootDir, { recursive: true, encoding: 'utf8' })
         .filter(relativePath => relativePath.endsWith(extension))
         .map(relativePath => path.join(rootDir, relativePath));
 }
 
-function findExistingSourceDir(version: string): string | null {
-    const candidates = new Set<string>([
-        path.join(SOURCE_ROOT, `cmake-${version}`),
-        path.join(SOURCE_ROOT, `CMake-${version}`),
-    ]);
-
-    const versionPattern = new RegExp(`^cmake[-_]?${escapeRegex(version)}$`, 'i');
-    for (const entry of fs.readdirSync(SOURCE_ROOT, { withFileTypes: true })) {
-        if (!entry.isDirectory()) continue;
-        if (versionPattern.test(entry.name)) {
-            candidates.add(path.join(SOURCE_ROOT, entry.name));
-        }
-    }
-
-    for (const candidate of candidates) {
-        if (isCMakeSourceDir(candidate)) return candidate;
-    }
-    return null;
-}
-
-function ensureCMakeSource(version: string): string {
-    const existing = findExistingSourceDir(version);
-    if (existing) {
-        console.log(`Using existing CMake source dir: ${path.basename(existing)}`);
-        return existing;
-    }
-
-    const normalizedSourceDir = path.join(SOURCE_ROOT, `cmake-${version}`);
-    // Remove any incomplete source directory (e.g. gitignore stripped build/ subdirs)
-    if (fs.existsSync(normalizedSourceDir)) {
-        console.log(`Removing incomplete cmake source dir: ${path.basename(normalizedSourceDir)}`);
-        shell.rm('-rf', normalizedSourceDir);
-    }
-    const tarball = `v${version}.tar.gz`;
-
-    console.log(`Downloading CMake ${version}...`);
-    shell.cd(SOURCE_ROOT);
-    shell.exec(`curl -fSL ${GITHUB_AUTH} -o "${tarball}" "https://github.com/Kitware/CMake/archive/refs/tags/${tarball}"`);
-
-    shell.rm('-rf', normalizedSourceDir);
-    shell.mkdir('-p', normalizedSourceDir);
-    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${path.basename(normalizedSourceDir)}"`);
-    shell.rm('-f', tarball);
-
-    if (!isCMakeSourceDir(normalizedSourceDir)) {
-        throw new Error(`Extracted CMake source is invalid: ${normalizedSourceDir}`);
-    }
-
-    console.log(`Extracted CMake source to: ${path.basename(normalizedSourceDir)}`);
-    return normalizedSourceDir;
-}
-
 const CMAKE_VERSION = lockedVersion(lock, 'cmake');
-const SOURCE_DIR = ensureCMakeSource(CMAKE_VERSION);
+const SOURCE_DIR = ensureLockedSource(
+    ROOT,
+    lock,
+    'cmake',
+    path.join(SOURCE_ROOT, `cmake-${CMAKE_VERSION}`),
+    'Utilities/cmlibarchive/build/version',
+);
 const BUILD_WASM_DIR = path.join(P.builds, 'cmake', 'wasm');
 
 shell.cd(SOURCE_DIR);

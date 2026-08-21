@@ -17,6 +17,7 @@ import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-imgui');
 
@@ -50,26 +51,7 @@ function detectVersion(): string {
 
 function ensureSource(tag: string): string {
     const destDir = path.join(SOURCE_ROOT, `imgui-${tag}`);
-    if (fs.existsSync(path.join(destDir, 'imgui.h'))) {
-        console.log(`Using existing ImGui source: ${path.basename(destDir)}`);
-        return destDir;
-    }
-
-    const tarball = `${tag}.tar.gz`;
-    console.log(`Downloading ImGui ${tag}...`);
-    shell.cd(SOURCE_ROOT);
-    shell.exec(`curl -fSL -o "${tarball}" "https://github.com/ocornut/imgui/archive/refs/tags/${tarball}"`);
-
-    shell.rm('-rf', destDir);
-    shell.mkdir('-p', destDir);
-    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${path.basename(destDir)}"`);
-    shell.rm('-f', tarball);
-
-    if (!fs.existsSync(path.join(destDir, 'imgui.h'))) {
-        throw new Error(`Extracted ImGui source is invalid: ${destDir}`);
-    }
-    console.log(`Extracted ImGui source to: ${path.basename(destDir)}`);
-    return destDir;
+    return ensureLockedSource(ROOT, lock, 'imgui', destDir, 'imgui.h');
 }
 
 // --------------- build ---------------

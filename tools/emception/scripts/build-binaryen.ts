@@ -15,6 +15,7 @@ import { standaloneFlags } from './lib/emcc-flags.ts';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-binaryen');
 
@@ -35,7 +36,7 @@ setupEmsdk(EMSDK_VERSION);
 const BINARYEN_VERSION = lockedVersion(lock, 'binaryen');
 
 const SOURCE_ROOT = path.join(P.sources, 'binaryen');
-const SOURCE_DIR = path.join(SOURCE_ROOT, `binaryen-version_${BINARYEN_VERSION}`);
+const SOURCE_DIR = path.join(SOURCE_ROOT, `binaryen-${BINARYEN_VERSION}`);
 const PATCHES_DIR = path.join(P.overlays, 'binaryen', 'patches');
 const BUILD_WASM_DIR = path.join(P.builds, 'binaryen', 'wasm');
 const OUTPUT_DIR = P.tools;
@@ -69,29 +70,7 @@ shell.mkdir('-p', BUILD_WASM_DIR);
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
-const GITHUB_AUTH = process.env.GITHUB_TOKEN
-    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
-    : '';
-
-// 1. Download Binaryen source
-// Validate the source dir by checking for CMakeLists.txt — a missing file
-// indicates an incomplete or corrupt cache entry that must be re-downloaded.
-const isBinaryenSourceValid = fs.existsSync(path.join(SOURCE_DIR, 'CMakeLists.txt'));
-if (!isBinaryenSourceValid) {
-    if (fs.existsSync(SOURCE_DIR)) {
-        console.log(`Removing incomplete Binaryen source dir: ${path.basename(SOURCE_DIR)}`);
-        shell.rm('-rf', SOURCE_DIR);
-    }
-    console.log(`Downloading Binaryen ${BINARYEN_VERSION}...`);
-    shell.cd(SOURCE_ROOT);
-    const tarball = `version_${BINARYEN_VERSION}.tar.gz`;
-    shell.exec(
-        `curl -fSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${GITHUB_AUTH} -o "${tarball}" "https://github.com/WebAssembly/binaryen/archive/refs/tags/${tarball}" || ` +
-        `curl -fSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${GITHUB_AUTH} -o "${tarball}" "https://codeload.github.com/WebAssembly/binaryen/tar.gz/refs/tags/version_${BINARYEN_VERSION}"`
-    );
-    shell.exec(`tar xzf "${tarball}"`);
-    shell.rm(tarball);
-}
+ensureLockedSource(ROOT, lock, 'binaryen', SOURCE_DIR, 'CMakeLists.txt');
 
 shell.cd(SOURCE_DIR);
 
