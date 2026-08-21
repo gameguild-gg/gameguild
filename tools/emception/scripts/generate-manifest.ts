@@ -3,10 +3,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { toolchainPaths } from './toolchain/paths.ts';
-import { pythonMajorMinor, pythonMajorMinorCompact } from './lib/detect-versions.ts';
 import { PATCH_SET_VERSION } from './lib/glue-patches.mjs';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion, pythonMajorMinor, pythonMajorMinorCompact } from './toolchain/config.ts';
 import { generateReleaseManifest } from './lib/release-manifest.mjs';
 
 enableBuildKeepalive('generate-manifest');
@@ -17,22 +16,23 @@ const packageJson: unknown = JSON.parse(fs.readFileSync(path.join(ROOT, 'package
 if (!packageJson || typeof packageJson !== 'object' || !('version' in packageJson) || typeof packageJson.version !== 'string') {
   throw new Error('package.json must contain a string version');
 }
-const python = process.env.PYTHON_VERSION ?? PINNED.PYTHON_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const python = lockedVersion(lock, 'python');
 const toolVersions = {
-  emsdk: process.env.EMSDK_VERSION ?? PINNED.EMSDK_VERSION,
-  llvm: process.env.LLVM_VERSION ?? PINNED.LLVM_VERSION,
-  binaryen: process.env.BINARYEN_VERSION ?? PINNED.BINARYEN_VERSION,
+  emsdk: lockedVersion(lock, 'emsdk'),
+  llvm: lockedVersion(lock, 'llvm'),
+  binaryen: lockedVersion(lock, 'binaryen'),
   python,
   pythonMajorMinor: pythonMajorMinor(python),
   pythonMajorMinorCompact: pythonMajorMinorCompact(python),
-  cmake: process.env.CMAKE_VERSION ?? PINNED.CMAKE_VERSION,
-  brotli: process.env.BROTLI_VERSION ?? PINNED.BROTLI_VERSION,
-  imgui: process.env.IMGUI_VERSION ?? PINNED.IMGUI_VERSION,
-  raylib: process.env.RAYLIB_VERSION ?? PINNED.RAYLIB_VERSION,
-  raygui: process.env.RAYGUI_VERSION ?? PINNED.RAYGUI_VERSION,
-  physac: process.env.PHYSAC_VERSION ?? PINNED.PHYSAC_VERSION,
-  allegro: process.env.ALLEGRO_VERSION ?? PINNED.ALLEGRO_VERSION,
-  curlLite: process.env.CURL_LITE_VERSION ?? PINNED.CURL_LITE_VERSION,
+  cmake: lockedVersion(lock, 'cmake'),
+  brotli: lockedVersion(lock, 'brotli'),
+  imgui: lockedVersion(lock, 'imgui'),
+  raylib: lockedVersion(lock, 'raylib'),
+  raygui: lockedVersion(lock, 'raygui'),
+  physac: lockedVersion(lock, 'physac'),
+  allegro: lockedVersion(lock, 'allegro'),
+  curlLite: lockedVersion(lock, 'curlLite'),
 };
 
 generateReleaseManifest({

@@ -6,15 +6,15 @@ import fs from 'fs';
 import path from 'path';
 import shell from 'shelljs';
 import { defineBuildScript } from './lib/build-script.ts';
-import { detectPythonVersion } from './lib/detect-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 import { toolchainPaths } from './toolchain/paths.ts';
 
 defineBuildScript({
     label: 'deploy-cpython',
-    requireEmsdk: true, // setupEmsdk needed so detectPythonVersion can read the bundled config
+    requireEmsdk: true,
     run: async ({ step, log }) => {
         const P = toolchainPaths();
-        const pythonVersion = process.env.PYTHON_VERSION || detectPythonVersion();
+        const pythonVersion = lockedVersion(loadToolchainStateSync().lock, 'python');
         const buildWasmDir = path.join(P.builds, 'cpython', 'wasm');
 
         await step(`deploy cpython.wasm (python ${pythonVersion})`, () => {

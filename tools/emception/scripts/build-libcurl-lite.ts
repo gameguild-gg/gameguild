@@ -15,7 +15,7 @@ import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 
 enableBuildKeepalive('build-libcurl-lite');
 
@@ -24,8 +24,9 @@ const P = toolchainPaths(ROOT);
 
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
-const CURL_LITE_VERSION = process.env.CURL_LITE_VERSION || PINNED.CURL_LITE_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
+const CURL_LITE_VERSION = lockedVersion(lock, 'curlLite');
 setupEmsdk(EMSDK_VERSION);
 
 const LIBCURL_DIR = path.join(P.overlays, 'libcurl-lite');

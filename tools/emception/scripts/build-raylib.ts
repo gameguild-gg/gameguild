@@ -14,7 +14,7 @@
  *   - sysroot/usr/include/raylib/{raylib,raymath,rlgl,raygui,physac,rlights}.h
  *   - sysroot/usr/lib/emscripten/raylib-runtime.mjs  (MODULARIZE=1 JS factory)
  *
- * Versions: pinned defaults (override via *_VERSION env vars).
+ * Versions: exact entries from toolchain.lock.json.
  */
 
 import fs from 'fs';
@@ -26,7 +26,8 @@ import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { ensureGitHubSource } from './lib/github-source.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import type { ToolName } from './toolchain/lock.ts';
 
 enableBuildKeepalive('build-raylib');
 
@@ -34,7 +35,8 @@ const ROOT = process.cwd();
 const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 setupEmsdk(EMSDK_VERSION);
 
 const EMSDK_DIR = getEmsdkDir();
@@ -54,7 +56,7 @@ shell.mkdir('-p', RAYLIB_INC);
 
 // ─────────────── 1. raylib via CMake ───────────────
 
-const RAYLIB_TAG = process.env.RAYLIB_VERSION ?? PINNED.RAYLIB_VERSION;
+const RAYLIB_TAG = lockedVersion(lock, 'raylib');
 const RAYLIB_SRC = ensureGitHubSource({
     repository: 'raysan5/raylib',
     version: RAYLIB_TAG,
@@ -174,8 +176,7 @@ type HeaderOnlyLib = {
     readonly extraHeaders?: readonly string[];
     // Source = remote tarball OR local path inside an existing source tree.
     readonly repo?: string;
-    readonly envVar?: string;
-    readonly fallback?: string;
+    readonly tool?: ToolName;
     readonly headerSubpath?: string;
     readonly localHeader?: string;   // absolute path to header on disk (skips download)
 };
@@ -183,8 +184,7 @@ type HeaderOnlyLib = {
 const COMPANIONS: readonly HeaderOnlyLib[] = [
     {
         repo: 'raysan5/raygui',
-        envVar: 'RAYGUI_VERSION',
-        fallback: PINNED.RAYGUI_VERSION,
+        tool: 'raygui',
         libName: 'raygui',
         headerName: 'raygui.h',
         implMacro: 'RAYGUI_IMPLEMENTATION',
@@ -192,8 +192,7 @@ const COMPANIONS: readonly HeaderOnlyLib[] = [
     },
     {
         repo: 'victorfisac/Physac',
-        envVar: 'PHYSAC_VERSION',
-        fallback: PINNED.PHYSAC_VERSION,
+        tool: 'physac',
         libName: 'physac',
         headerName: 'physac.h',
         implMacro: 'PHYSAC_IMPLEMENTATION',
@@ -229,11 +228,11 @@ for (const lib of COMPANIONS) {
         }
         headerPath = lib.localHeader;
     } else {
-        if (!lib.repo || !lib.envVar) {
-            console.warn(`  ${lib.libName}: missing repo/envVar, skipping`);
+        if (!lib.repo || !lib.tool) {
+            console.warn(`  ${lib.libName}: missing repo/tool, skipping`);
             continue;
         }
-        const tag = process.env[lib.envVar] ?? lib.fallback ?? 'master';
+        const tag = lockedVersion(lock, lib.tool);
         const keyFile = lib.headerSubpath || lib.headerName;
         let srcDir: string;
         try {

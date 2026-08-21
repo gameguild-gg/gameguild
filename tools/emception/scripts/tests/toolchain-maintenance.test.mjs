@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -247,4 +247,20 @@ test('clean scopes remove only generated toolchain state', async (context) => {
   assert.equal(await exists(artifactMarker), false);
   assert.equal(await exists(dependencyMarker), true);
   assert.equal(await exists(overlayMarker), true);
+});
+
+test('build scripts select versions only from the toolchain lock', async () => {
+  const scriptsRoot = path.resolve(import.meta.dirname, '..');
+  const entries = await readdir(scriptsRoot, { withFileTypes: true });
+  const buildScripts = entries
+    .filter((entry) => entry.isFile() && /^(build-|deploy-cpython|populate-sysroot|setup-emsdk|generate-manifest).*\.(?:ts|mjs)$/.test(entry.name))
+    .map((entry) => path.join(scriptsRoot, entry.name));
+  const toolVersionOverride = /process\.env\.(?:EMSDK|LLVM|BINARYEN|PYTHON|CMAKE|BROTLI|IMGUI|RAYLIB|RAYGUI|PHYSAC|ALLEGRO|CURL_LITE)_VERSION/;
+
+  for (const filename of buildScripts) {
+    const source = await readFile(filename, 'utf8');
+    assert.doesNotMatch(source, /pinned-versions/, `${path.basename(filename)} still imports pinned versions`);
+    assert.doesNotMatch(source, toolVersionOverride, `${path.basename(filename)} accepts a version override`);
+    assert.doesNotMatch(source, /api\.github\.com\/.*releases|Detect(?:ing)? latest/i, `${path.basename(filename)} resolves latest during a build`);
+  }
 });

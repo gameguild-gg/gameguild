@@ -1,7 +1,7 @@
 /**
  * Build Dear ImGui as a static library for Emscripten.
  *
- * Uses the pinned release (or IMGUI_VERSION env var),
+ * Uses the exact release in toolchain.lock.json,
  * downloads the source, compiles core + SDL3 backend with emcc, and deploys:
  *   - sysroot/usr/lib/libimgui.a
  *   - sysroot/usr/include/imgui/*.h
@@ -16,7 +16,7 @@ import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 
 enableBuildKeepalive('build-imgui');
 
@@ -24,7 +24,8 @@ const ROOT = process.cwd();
 const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 setupEmsdk(EMSDK_VERSION);
 
 const SOURCE_ROOT = path.join(P.sources, 'imgui');
@@ -40,7 +41,7 @@ shell.mkdir('-p', path.join(SYSROOT_INC, 'imgui'));
 // --------------- version detection ---------------
 
 function detectVersion(): string {
-    const tag = process.env.IMGUI_VERSION ?? PINNED.IMGUI_VERSION;
+    const tag = lockedVersion(lock, 'imgui');
     console.log(`Using ImGui release: ${tag}`);
     return tag;
 }
