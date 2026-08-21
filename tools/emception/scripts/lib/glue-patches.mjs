@@ -1,7 +1,7 @@
 import { access, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-export const PATCH_SET_VERSION = 'emception-glue-v2';
+export const PATCH_SET_VERSION = 'emception-glue-v3';
 
 const ENV_NEEDLE = 'var ENV={};';
 const ENV_MARKER = 'moduleArg["ENV"]';
@@ -10,6 +10,12 @@ const SYSTEM_ASYNC_ONLY = 'if(!command)return 0;if(Module["systemCallback"]){ret
 const SYSTEM_BARE = 'if(!command)return 0;if(Module["systemCallback"]){return Module["systemCallback"](UTF8ToString(command))}return-52';
 const SYSTEM_REPLACEMENT = 'if(!command)return 0;if(Module["systemCallbackSync"]){var sr=Module["systemCallbackSync"](UTF8ToString(command));if(sr!==undefined)return sr}if(Module["systemCallback"]){return Asyncify.handleAsync(function(){return Module["systemCallback"](UTF8ToString(command))})}return-52';
 const OPENAT_NEEDLE = 'path=SYSCALLS.getStr(path);path=SYSCALLS.calculateAt(dirfd,path);var mode=varargs?syscallGetVarargI():0;';
+const CMAKE_PIPE_POLL_LEGACY = 'poll(stream,timeout,notifyCallback){var pipe=stream.node.pipe;if((stream.flags&2097155)===1){return 256|4}for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1}}return 0}';
+const CMAKE_PIPE_POLL_PATCHED = 'poll(stream,timeout,notifyCallback){var pipe=stream.node.pipe;if((stream.flags&2097155)===1){if(pipe.refcnt<=1)return 4|8;return 256|4}if(pipe.refcnt<=1){for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1|16}}return 16}for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1}}return 0}';
+const CMAKE_SYSCALL_POLL_LEGACY = 'if(stream.stream_ops.poll){flags=stream.stream_ops.poll(stream,-1)}else{flags=5}';
+const CMAKE_SYSCALL_POLL_PATCHED = 'if(stream.stream_ops.poll){flags=stream.stream_ops.poll(stream,-1);if(flags===0&&timeout<0&&stream.node&&stream.node.pipe){flags=(stream.flags&2097155)===1?12:16}}else{flags=5}';
+const CMAKE_PIPE_POLL_ASYNC = 'if(notifyCallback)pipe.registerReadableHandler(notifyCallback);return 0';
+const CMAKE_SYSCALL_POLL_ASYNC = 'if(isAsyncContext&&timeout){flags=stream.stream_ops.poll(stream,timeout,makeNotifyCallback(stream,pollfd))}else flags=stream.stream_ops.poll(stream,-1)';
 const CANVAS_RUNTIME_NAMES = ['sdl3', 'raylib', 'allegro'];
 
 const CANVAS_COMMON_PATCHES = [
@@ -142,12 +148,27 @@ function patchOpenat(content, applied) {
   return content.replace(OPENAT_NEEDLE, OPENAT_NEEDLE + subprocess + vfs);
 }
 
+function patchCmakePoll(content, filename, applied) {
+  if (filename !== 'cmake.mjs') return content;
+  const hasAsyncPoll = content.includes(CMAKE_PIPE_POLL_ASYNC) && content.includes(CMAKE_SYSCALL_POLL_ASYNC);
+  const hasLegacyPatch = content.includes(CMAKE_PIPE_POLL_PATCHED) && content.includes(CMAKE_SYSCALL_POLL_PATCHED);
+  if (hasAsyncPoll || hasLegacyPatch) return content;
+  if (!content.includes(CMAKE_PIPE_POLL_LEGACY) || !content.includes(CMAKE_SYSCALL_POLL_LEGACY)) {
+    throw new Error(`${filename}: unsupported pipe poll shape`);
+  }
+  applied.push('pipefs-pollhup', 'syscall-poll-pipe-hup');
+  return content
+    .replace(CMAKE_PIPE_POLL_LEGACY, CMAKE_PIPE_POLL_PATCHED)
+    .replace(CMAKE_SYSCALL_POLL_LEGACY, CMAKE_SYSCALL_POLL_PATCHED);
+}
+
 export function applyGluePatches(source, filename) {
   const applied = [];
   let content = patchEnv(source, applied);
   content = patchCallMain(content, applied);
   content = patchSystem(content, filename, applied);
   content = patchOpenat(content, applied);
+  content = patchCmakePoll(content, filename, applied);
   return { content, applied };
 }
 

@@ -36,7 +36,7 @@ test('generateReleaseManifest creates a clean schema-v2 release with wasm profil
     baseUrl: '/cdn',
     artifactVersion: '4.2.0',
     runtimeAbi: 'emception-browser-v1',
-    patchSetVersion: 'emception-glue-v2',
+    patchSetVersion: 'emception-glue-v3',
     toolVersions: { python: '3.13.3', pythonMajorMinor: '3.13', pythonMajorMinorCompact: '313' },
   });
   const written = JSON.parse(await readFile(paths.manifestFile, 'utf8'));
@@ -45,7 +45,7 @@ test('generateReleaseManifest creates a clean schema-v2 release with wasm profil
   assert.equal(manifest.version, 2);
   assert.equal(manifest.artifactVersion, '4.2.0');
   assert.equal(manifest.runtimeAbi, 'emception-browser-v1');
-  assert.equal(manifest.patchSetVersion, 'emception-glue-v2');
+  assert.equal(manifest.patchSetVersion, 'emception-glue-v3');
   assert.match(manifest.buildFingerprint, /^[a-f0-9]{64}$/);
   assert.deepEqual(manifest.profiles.clang.imports, []);
   assert.deepEqual(manifest.profiles.clang.exports, []);

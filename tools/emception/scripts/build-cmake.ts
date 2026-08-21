@@ -418,45 +418,6 @@ if (!fs.existsSync(toolWasm)) {
 }
 console.log(`Created ${toolWasm} + ${toolMjs}`);
 
-// 4b. Patch Emscripten glue: fix PIPEFS.poll to return POLLHUP on closed pipe ends
-// Without this, kwsys ProcessUNIX.c's poll() loop spins forever because
-// Emscripten's PIPEFS.poll returns 0 (no events) instead of POLLHUP when the
-// other end of a pipe is closed, and Emscripten's ___syscall_poll ignores the
-// timeout parameter.
-{
-    const mjsContent = fs.readFileSync(toolMjs, 'utf8');
-    const pipefsNeedle = 'poll(stream,timeout,notifyCallback){var pipe=stream.node.pipe;if((stream.flags&2097155)===1){return 256|4}for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1}}return 0}';
-    const pipefsReplacement = 'poll(stream,timeout,notifyCallback){var pipe=stream.node.pipe;if((stream.flags&2097155)===1){if(pipe.refcnt<=1)return 4|8;return 256|4}if(pipe.refcnt<=1){for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1|16}}return 16}for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1}}return 0}';
-    if (mjsContent.includes(pipefsReplacement)) {
-        console.log('  [pipefs-pollhup] already applied — skipping');
-    } else if (!mjsContent.includes(pipefsNeedle)) {
-        console.warn('  [pipefs-pollhup] needle not found in cmake.mjs — upstream Emscripten may have changed');
-    } else {
-        fs.writeFileSync(toolMjs, mjsContent.replace(pipefsNeedle, pipefsReplacement));
-        console.log('  [pipefs-pollhup] applied');
-    }
-}
-
-// 4c. Patch ___syscall_poll: return POLLHUP on pipe fds with infinite timeout
-// Emscripten's ___syscall_poll ignores the timeout parameter — it returns 0
-// immediately even when timeout=-1.  Since Emscripten can never spawn child
-// processes (no fork/clone), an infinite-timeout poll on a pipe will never
-// succeed.  Inject POLLHUP (read-end) / POLLERR (write-end) so callers like
-// kwsys ProcessUNIX.c break out of their retry loops.
-{
-    const mjsContent = fs.readFileSync(toolMjs, 'utf8');
-    const pollNeedle = 'if(stream.stream_ops.poll){flags=stream.stream_ops.poll(stream,-1)}else{flags=5}';
-    const pollReplacement = 'if(stream.stream_ops.poll){flags=stream.stream_ops.poll(stream,-1);if(flags===0&&timeout<0&&stream.node&&stream.node.pipe){flags=(stream.flags&2097155)===1?12:16}}else{flags=5}';
-    if (mjsContent.includes(pollReplacement)) {
-        console.log('  [syscall-poll-pipe-hup] already applied — skipping');
-    } else if (!mjsContent.includes(pollNeedle)) {
-        console.warn('  [syscall-poll-pipe-hup] needle not found in cmake.mjs — upstream Emscripten may have changed');
-    } else {
-        fs.writeFileSync(toolMjs, mjsContent.replace(pollNeedle, pollReplacement));
-        console.log('  [syscall-poll-pipe-hup] applied');
-    }
-}
-
 // 5. Deploy to sysroot
 console.log('Deploying to sysroot...');
 for (const ext of ['.wasm', '.mjs']) {
