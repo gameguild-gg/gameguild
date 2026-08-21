@@ -76,6 +76,14 @@ test('applyGluePatches fails when a known system import has an unknown generated
   );
 });
 
+test('applyGluePatches ignores an Asyncify system allowlist without a system import', () => {
+  const source = 'var importPattern=/^(__syscall_openat|__emscripten_system|invoke_.*)$/;';
+  const result = applyGluePatches(source, 'clang.mjs');
+
+  assert.equal(result.content, source);
+  assert.deepEqual(result.applied, []);
+});
+
 test('applyGluePatches accepts the current async CMake pipe poll ABI', () => {
   const source = `${CMAKE_PIPE_POLL_ASYNC}${CMAKE_SYSCALL_POLL_ASYNC}`;
   const result = applyGluePatches(source, 'cmake.mjs');
