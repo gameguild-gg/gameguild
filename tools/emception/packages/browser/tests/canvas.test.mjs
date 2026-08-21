@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import { ToolchainPreset } from 'emception';
 import { createCanvasAPI } from '../dist/canvas.js';
+import { startCanvasArtifact } from '../dist/canvas-runtime.js';
 
 test('canvas.build owns the preset, runtime glue, and wasm artifact paths', async () => {
   const calls = [];
@@ -55,4 +56,38 @@ test('canvas.build stops before linking after a compiler failure', async () => {
   assert.equal(calls, 1);
   assert.equal(result.phase, 'compile');
   assert.equal(result.compile.exitCode, 2);
+});
+
+test('canvas runtime starts and disposes through the generated module factory', async () => {
+  let callMainCount = 0;
+  let pauseCount = 0;
+  const artifact = {
+    phase: 'ready',
+    compile: { exitCode: 0, stdout: '', stderr: '', durationMs: 1, timedOut: false },
+    link: { exitCode: 0, stdout: '', stderr: '', durationMs: 1, timedOut: false },
+    runtimeProfile: 'raylib-runtime',
+    runtimePath: '/usr/lib/emscripten/raylib-runtime.mjs',
+    wasmPath: '/workspace/main.wasm',
+    runtimeGlue: new Uint8Array(),
+    wasm: new Uint8Array(),
+  };
+  const session = await startCanvasArtifact(
+    artifact,
+    { canvas: { width: 800, height: 600 } },
+    {
+      importModule: async () => ({
+        default: async () => ({
+          callMain: () => { callMainCount += 1; },
+          pauseMainLoop: () => { pauseCount += 1; },
+        }),
+      }),
+      createModuleUrl: () => 'memory:runtime',
+      revokeModuleUrl: () => {},
+    },
+  );
+
+  assert.equal(callMainCount, 1);
+  session.stop();
+  session.stop();
+  assert.equal(pauseCount, 1);
 });

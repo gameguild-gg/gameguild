@@ -2,6 +2,8 @@ import { ToolchainPreset } from 'emception';
 import type { EmceptionAPI, ToolResult } from 'emception';
 import { TOOLCHAIN_PRESETS } from './presets.js';
 import type { NativePreset } from './presets.js';
+import { startCanvasArtifact } from './canvas-runtime.js';
+import type { CanvasSession, CanvasStartOptions } from './canvas-runtime.js';
 
 export type CanvasToolchain =
     | ToolchainPreset.SDL_CPP
@@ -48,6 +50,9 @@ export type CanvasBuildResult = CanvasCompileFailure | CanvasLinkFailure | Canva
 
 export interface CanvasAPI {
     build(options: CanvasBuildOptions): Promise<CanvasBuildResult>;
+    start(artifact: CanvasArtifact, options: CanvasStartOptions): Promise<CanvasSession>;
+    buildAndStart(build: CanvasBuildOptions, start: CanvasStartOptions): Promise<CanvasBuildResult | CanvasSession>;
+    stop(): void;
 }
 
 type CanvasHostAPI = Pick<EmceptionAPI, 'run' | 'workspace'>;
@@ -79,6 +84,7 @@ function outputSink(callback: ((text: string) => void) | undefined): ((chunk: Ui
 }
 
 export function createCanvasAPI(api: CanvasHostAPI): CanvasAPI {
+    let activeSession: CanvasSession | null = null;
     return {
         async build(options) {
             const preset = nativePreset(options.toolchain);
@@ -117,6 +123,19 @@ export function createCanvasAPI(api: CanvasHostAPI): CanvasAPI {
                 runtimeGlue,
                 wasm,
             };
+        },
+        async start(artifact, options) {
+            activeSession?.stop();
+            activeSession = await startCanvasArtifact(artifact, options);
+            return activeSession;
+        },
+        async buildAndStart(build, start) {
+            const result = await this.build(build);
+            return result.phase === 'ready' ? this.start(result, start) : result;
+        },
+        stop() {
+            activeSession?.stop();
+            activeSession = null;
         },
     };
 }
