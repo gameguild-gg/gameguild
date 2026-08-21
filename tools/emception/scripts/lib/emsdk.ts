@@ -8,6 +8,20 @@ const __dirname = path.dirname(__filename);
 const ROOT = process.cwd(); // Assume run from project root
 const EMSDK_DIR = path.join(ROOT, 'tools', 'emsdk');
 
+const EMSDK_ARCHITECTURES: Partial<Record<NodeJS.Architecture, string>> = {
+  arm: 'arm',
+  arm64: 'arm64',
+  ia32: 'x86',
+  x64: 'x86_64',
+};
+
+export function ensureEmsdkArchitecture(environment: NodeJS.ProcessEnv = process.env, architecture: NodeJS.Architecture = process.arch): void {
+  if (environment.EMSDK_ARCH) return;
+  const emsdkArchitecture = EMSDK_ARCHITECTURES[architecture];
+  if (!emsdkArchitecture) throw new Error(`Unsupported Node architecture for emsdk: ${architecture}`);
+  environment.EMSDK_ARCH = emsdkArchitecture;
+}
+
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
@@ -38,6 +52,7 @@ function acquireEmsdkLock(timeoutMs = 120_000): () => void {
  */
 export function setupEmsdk(version: string = 'latest'): NodeJS.ProcessEnv {
   console.log(`>>> Setting up Emscripten SDK (${version})...`);
+  ensureEmsdkArchitecture();
 
   if (!fs.existsSync(path.join(EMSDK_DIR, 'emsdk'))) {
     console.log(`    Cloning EMSDK to ${EMSDK_DIR}...`);
