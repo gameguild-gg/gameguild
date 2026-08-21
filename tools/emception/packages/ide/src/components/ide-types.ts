@@ -20,9 +20,8 @@ export type DockGroup = 'main' | 'right' | 'bottom';
 
 export type TabType = 'text' | 'image' | 'canvas';
 
-/** @deprecated — use {@link deriveStorageKey} instead. Kept for legacy apps that have
- *  data under this key and haven't migrated to a named workspace. */
-export const WORKSPACE_STORAGE_KEY = 'gameguild.emception.workspace.v1';
+/** Default localStorage key used when no named workspace is configured. */
+export const WORKSPACE_STORAGE_KEY = 'emception.workspace.v1';
 
 export interface WorkspaceFile {
   path: string;
@@ -44,8 +43,7 @@ export interface TreeNode {
   children: TreeNode[];
 }
 
-/** Derive the localStorage key from a workspace name.
- *  Falls back to the legacy key so existing stored data is not lost. */
+/** Derive the localStorage key from a workspace name. */
 export function deriveStorageKey(workspaceName?: string): string {
   return workspaceName ? `emception:ws:${workspaceName}` : WORKSPACE_STORAGE_KEY;
 }
@@ -131,8 +129,7 @@ export interface IdeProps {
   workspaceUrl?: string;
   /**
    * Logical workspace name — used to derive the IDB/localStorage key as
-   * `emception:ws:<name>`. Omit to keep the legacy key so
-   * previously saved state is not lost.
+   * `emception:ws:<name>`. Omit to use the package's neutral default key.
    */
   workspaceName?: string;
 
