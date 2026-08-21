@@ -36,11 +36,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@gameguild/emception-browser": "*",
-    "emception": "*"
+    "@gameguild/emception-browser": "4.2.0",
+    "emception": "4.2.0"
   },
   "peerDependencies": {
-    "@gameguild/emception-xterm": "*"
+    "@gameguild/emception-xterm": "^4.2.0"
   },
   "peerDependenciesMeta": {
     "@gameguild/emception-xterm": {

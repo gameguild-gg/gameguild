@@ -43,8 +43,8 @@
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
   },
   "dependencies": {
-    "emception": "*",
-    "@gameguild/emception-xterm": "*"
+    "emception": "4.2.0",
+    "@gameguild/emception-xterm": "4.2.0"
   },
   "devDependencies": {
     "typescript": "^5.3.0"

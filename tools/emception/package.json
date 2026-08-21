@@ -1,6 +1,7 @@
 {
   "version": "4.2.0",
   "name": "emception-workspace",
+  "private": true,
   "description": "Emscripten C/C++ toolchain running in the browser via WebAssembly",
   "license": "MIT",
   "type": "module",
@@ -102,8 +103,8 @@
     "e2e:react": "npx playwright test --config=playwright.config.react.ts"
   },
   "dependencies": {
-    "@gameguild/emception-browser": "*",
-    "@gameguild/emception-xterm": "*"
+    "@gameguild/emception-browser": "4.2.0",
+    "@gameguild/emception-xterm": "4.2.0"
   },
   "peerDependencies": {
     "@xterm/xterm": "^6.0.0"
