@@ -135,7 +135,7 @@ test('patchGlueDirectory requires matched wasm and glue files', async (context) 
 test('patch-glue CLI patches only the frozen staged sysroot', async (context) => {
   const root = await mkdtemp(path.join(tmpdir(), 'emception-patch-cli-'));
   const workingLib = path.join(root, 'sysroot', 'usr', 'lib');
-  const stagedRoot = path.join(root, 'build', 'stage', 'sysroot');
+  const stagedRoot = path.join(root, 'artifacts', 'toolchain', 'stage', 'sysroot');
   const stagedLib = path.join(stagedRoot, 'usr', 'lib');
   const stagedRuntimes = path.join(stagedLib, 'emscripten');
   const stagedTools = path.join(stagedLib, 'emscripten', 'tools');

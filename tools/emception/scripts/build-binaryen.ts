@@ -8,6 +8,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { standaloneFlags } from './lib/emcc-flags.ts';
@@ -20,6 +21,7 @@ enableBuildKeepalive('build-binaryen');
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 
 // Ensure shell commands fail on error
 shell.config.fatal = true;
@@ -31,12 +33,12 @@ setupEmsdk(EMSDK_VERSION);
 
 const BINARYEN_VERSION = process.env.BINARYEN_VERSION || PINNED.BINARYEN_VERSION;
 
-const USERLAND_DIR = path.join(ROOT, 'userland', 'binaryen');
-const SOURCE_DIR = path.join(USERLAND_DIR, `binaryen-version_${BINARYEN_VERSION}`);
-const PATCHES_DIR = path.join(USERLAND_DIR, 'patches');
-const BUILD_WASM_DIR = path.join(SOURCE_DIR, 'build-wasm');
-const OUTPUT_DIR = path.join(ROOT, 'build');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
+const SOURCE_ROOT = path.join(P.sources, 'binaryen');
+const SOURCE_DIR = path.join(SOURCE_ROOT, `binaryen-version_${BINARYEN_VERSION}`);
+const PATCHES_DIR = path.join(P.overlays, 'binaryen', 'patches');
+const BUILD_WASM_DIR = path.join(P.builds, 'binaryen', 'wasm');
+const OUTPUT_DIR = P.tools;
+const SYSROOT_LIB = path.join(P.sysroot, 'usr', 'lib');
 const CONCURRENCY = os.cpus().length;
 
 // 4 MB stack — binaryen tools do deep recursion on ASTs.
@@ -61,7 +63,8 @@ function linkArtifactsAreCurrent(
     return inputs.every(input => fs.existsSync(input) && fs.statSync(input).mtimeMs <= oldestOutput);
 }
 
-shell.mkdir('-p', USERLAND_DIR);
+shell.mkdir('-p', SOURCE_ROOT);
+shell.mkdir('-p', BUILD_WASM_DIR);
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
@@ -79,7 +82,7 @@ if (!isBinaryenSourceValid) {
         shell.rm('-rf', SOURCE_DIR);
     }
     console.log(`Downloading Binaryen ${BINARYEN_VERSION}...`);
-    shell.cd(USERLAND_DIR);
+    shell.cd(SOURCE_ROOT);
     const tarball = `version_${BINARYEN_VERSION}.tar.gz`;
     shell.exec(
         `curl -fSL --http1.1 --retry 8 --retry-all-errors --retry-delay 2 ${GITHUB_AUTH} -o "${tarball}" "https://github.com/WebAssembly/binaryen/archive/refs/tags/${tarball}" || ` +

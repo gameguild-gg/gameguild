@@ -5,7 +5,7 @@ import { stageCdnPackage } from './lib/stage-cdn-package.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 stageCdnPackage({
-  sourceCdn: path.join(root, 'build', 'cdn'),
+  sourceCdn: path.join(root, 'artifacts', 'toolchain', 'release', 'cdn'),
   targetCdn: path.join(root, 'packages', 'toolchain', 'cdn'),
 }).then((result) => {
   console.log(`[stage-toolchain-cdn] ${result.bundleCount} bundles, ${result.totalBytes} bytes`);

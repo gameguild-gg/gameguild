@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { cp, lstat, mkdir, readFile, readdir, readlink, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { toolchainPaths } from './toolchain/paths.ts';
 
 async function collectSnapshot(root) {
   const entries = [];
@@ -75,10 +76,11 @@ export async function stageSysroot({ source, target, receipt }) {
 
 async function main() {
   const root = process.cwd();
+  const canonical = toolchainPaths(root);
   const result = await stageSysroot({
-    source: process.env.SYSPATH ?? path.join(root, 'sysroot'),
-    target: process.env.STAGED_SYSPATH ?? path.join(root, 'build', 'stage', 'sysroot'),
-    receipt: process.env.SYSROOT_RECEIPT ?? path.join(root, 'build', 'stage', 'sysroot-receipt.json'),
+    source: process.env.SYSPATH ?? canonical.sysroot,
+    target: process.env.STAGED_SYSPATH ?? canonical.stagedSysroot,
+    receipt: process.env.SYSROOT_RECEIPT ?? path.join(canonical.receipts, 'sysroot.json'),
   });
   console.log(`[stage-sysroot] ${result.fileCount} files, fingerprint ${result.fingerprint}`);
 }

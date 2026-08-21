@@ -4,8 +4,9 @@ dist/
 *.tsbuildinfo
 package-lock.json
 
-# Generated build artifacts
-build/
+# Generated toolchain artifacts
+.cache/toolchain/
+artifacts/toolchain/
 .next/
 out/
 packages/core/cdn/
@@ -19,36 +20,8 @@ tsc.log
 tsconfig.tsbuildinfo
 next-env.d.ts
 
-# CMake, sysroot, and extracted toolchains
+# Generated CDN contents
 public/cdn/usr/
-
-# Local toolchains and extracted upstream sources
-tools/
-userland/**/build/
-userland/**/build-*/
-userland/**/cpython-*/
-userland/**/llvm-project-*/
-userland/**/binaryen-version_*/
-userland/**/CMake-*/
-userland/**/ninja-*/
-userland/**/SDL-*/
-userland/**/SDL_image-*/
-userland/**/SDL_ttf-*/
-userland/**/SDL_mixer-*/
-userland/**/imgui-*/
-userland/**/raylib-*/
-userland/**/raygui-*/
-userland/**/physac-*/
-userland/**/allegro-*/
-userland/**/*.tar.gz
-userland/**/*.tar.xz
-userland/**/version_*.tar.gz
-# Ignore only the extracted upstream brotli source, not our hand-written wrapper.
-userland/brotli/brotli-*/
-
-# Sysroot staging
-sysroot/
-sysroot-staging/
 
 # Generated runtime loader assets
 src/loader/cdn/

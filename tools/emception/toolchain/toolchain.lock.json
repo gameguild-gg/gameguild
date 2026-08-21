@@ -130,7 +130,7 @@
       "source": {
         "kind": "workspace",
         "path": "toolchain/overlays/libcurl-lite",
-        "contentHash": "3c681cd62c06cb4e16e35056cfa03514f843a6d1e6c9d9876d5d6f79978a20b9"
+        "contentHash": "c3d8dee44dd6d8e0b637f6aed1f2e9948e82e9aaec02a42e4f1e373745cc532c"
       }
     },
     "zstdWindows": {

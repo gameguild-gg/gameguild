@@ -11,8 +11,8 @@ const EMPTY_WASM_MODULE = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);
 
 async function fixture() {
   const root = await mkdtemp(path.join(tmpdir(), 'emception-manifest-'));
-  const sysroot = path.join(root, 'build', 'stage', 'sysroot');
-  const outputDir = path.join(root, 'build', 'cdn');
+  const sysroot = path.join(root, 'artifacts', 'toolchain', 'stage', 'sysroot');
+  const outputDir = path.join(root, 'artifacts', 'toolchain', 'release', 'cdn');
   const manifestFile = path.join(outputDir, 'manifest.json');
   await mkdir(path.join(sysroot, 'usr', 'lib', 'python3.13', 'test'), { recursive: true });
   await mkdir(path.join(sysroot, 'usr', 'lib', 'emscripten'), { recursive: true });

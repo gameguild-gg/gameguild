@@ -2,6 +2,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import { fileURLToPath } from 'node:url';
 import { PATCH_SET_VERSION, patchCanvasRuntimeDirectory, patchGlueDirectory } from './lib/glue-patches.mjs';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
@@ -9,7 +10,8 @@ import { enableBuildKeepalive } from './lib/keepalive.ts';
 enableBuildKeepalive('patch-glue');
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const STAGED_SYSROOT = process.env.STAGED_SYSPATH ?? path.join(ROOT, 'build', 'stage', 'sysroot');
+const P = toolchainPaths(ROOT);
+const STAGED_SYSROOT = process.env.STAGED_SYSPATH ?? P.stagedSysroot;
 const STAGED_LIB = path.join(STAGED_SYSROOT, 'usr', 'lib');
 const EMSCRIPTEN_TOOLS = path.join(STAGED_LIB, 'emscripten', 'tools');
 

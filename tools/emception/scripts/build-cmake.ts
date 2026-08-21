@@ -8,15 +8,17 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { standaloneFlags } from './lib/emcc-flags.ts';
-import { setupEmsdk } from './lib/emsdk.ts';
+import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { PINNED } from './lib/pinned-versions.ts';
 
 enableBuildKeepalive('build-cmake');
 
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
 const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
@@ -24,16 +26,16 @@ setupEmsdk(EMSDK_VERSION);
 
 const CONCURRENCY = os.cpus().length;
 
-const USERLAND_DIR = path.join(ROOT, 'userland', 'cmake');
-const OUTPUT_DIR = path.join(ROOT, 'build');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
-const LIBCURL_INC = path.join(ROOT, 'userland', 'libcurl-lite', 'include');
+const SOURCE_ROOT = path.join(P.sources, 'cmake');
+const OUTPUT_DIR = P.tools;
+const SYSROOT_LIB = path.join(P.sysroot, 'usr', 'lib');
+const LIBCURL_INC = path.join(P.overlays, 'libcurl-lite', 'include');
 const LIBCURL_A = path.join(OUTPUT_DIR, 'libcurl.a');
 
 // 4 MB stack — CMake can do deep recursion.
 const STANDALONE_FLAGS = standaloneFlags({ stackSize: 4 * 1024 * 1024, asyncifyStackSize: 65536 });
 
-shell.mkdir('-p', USERLAND_DIR);
+shell.mkdir('-p', SOURCE_ROOT);
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
@@ -90,22 +92,22 @@ function isCMakeSourceDir(dirPath: string): boolean {
 }
 
 function findFilesByExtension(rootDir: string, extension: string): string[] {
-    return fs.readdirSync(rootDir, { recursive: true })
+    return fs.readdirSync(rootDir, { recursive: true, encoding: 'utf8' })
         .filter(relativePath => relativePath.endsWith(extension))
         .map(relativePath => path.join(rootDir, relativePath));
 }
 
 function findExistingSourceDir(version: string): string | null {
     const candidates = new Set<string>([
-        path.join(USERLAND_DIR, `cmake-${version}`),
-        path.join(USERLAND_DIR, `CMake-${version}`),
+        path.join(SOURCE_ROOT, `cmake-${version}`),
+        path.join(SOURCE_ROOT, `CMake-${version}`),
     ]);
 
     const versionPattern = new RegExp(`^cmake[-_]?${escapeRegex(version)}$`, 'i');
-    for (const entry of fs.readdirSync(USERLAND_DIR, { withFileTypes: true })) {
+    for (const entry of fs.readdirSync(SOURCE_ROOT, { withFileTypes: true })) {
         if (!entry.isDirectory()) continue;
         if (versionPattern.test(entry.name)) {
-            candidates.add(path.join(USERLAND_DIR, entry.name));
+            candidates.add(path.join(SOURCE_ROOT, entry.name));
         }
     }
 
@@ -122,7 +124,7 @@ function ensureCMakeSource(version: string): string {
         return existing;
     }
 
-    const normalizedSourceDir = path.join(USERLAND_DIR, `cmake-${version}`);
+    const normalizedSourceDir = path.join(SOURCE_ROOT, `cmake-${version}`);
     // Remove any incomplete source directory (e.g. gitignore stripped build/ subdirs)
     if (fs.existsSync(normalizedSourceDir)) {
         console.log(`Removing incomplete cmake source dir: ${path.basename(normalizedSourceDir)}`);
@@ -131,7 +133,7 @@ function ensureCMakeSource(version: string): string {
     const tarball = `v${version}.tar.gz`;
 
     console.log(`Downloading CMake ${version}...`);
-    shell.cd(USERLAND_DIR);
+    shell.cd(SOURCE_ROOT);
     shell.exec(`curl -fSL ${GITHUB_AUTH} -o "${tarball}" "https://github.com/Kitware/CMake/archive/refs/tags/${tarball}"`);
 
     shell.rm('-rf', normalizedSourceDir);
@@ -149,7 +151,7 @@ function ensureCMakeSource(version: string): string {
 
 const CMAKE_VERSION = detectCMakeVersion();
 const SOURCE_DIR = ensureCMakeSource(CMAKE_VERSION);
-const BUILD_WASM_DIR = path.join(SOURCE_DIR, 'build-wasm');
+const BUILD_WASM_DIR = path.join(P.builds, 'cmake', 'wasm');
 
 shell.cd(SOURCE_DIR);
 
@@ -390,7 +392,7 @@ const cmakeMainObjs = findFilesByExtension(
 
 // Emscripten's sysroot zlib — CMake uses it instead of bundled cmzlib
 const EMSDK_ZLIB = path.join(
-    ROOT, 'tools', 'emsdk', 'upstream', 'emscripten', 'cache', 'sysroot',
+    getEmsdkDir(), 'upstream', 'emscripten', 'cache', 'sysroot',
     'lib', 'wasm32-emscripten', 'libz.a',
 );
 
@@ -428,7 +430,7 @@ for (const ext of ['.wasm', '.mjs']) {
 // 6. Copy CMake data files (Modules/, Templates/) to sysroot.
 // Without these, cmake fails at runtime with "Could not find CMAKE_ROOT".
 const CMAKE_MAJOR_MINOR = CMAKE_VERSION.split('.').slice(0, 2).join('.');
-const SYSROOT_CMAKE_DATA = path.join(ROOT, 'sysroot', 'usr', 'share', `cmake-${CMAKE_MAJOR_MINOR}`);
+const SYSROOT_CMAKE_DATA = path.join(P.sysroot, 'usr', 'share', `cmake-${CMAKE_MAJOR_MINOR}`);
 shell.mkdir('-p', SYSROOT_CMAKE_DATA);
 
 const modulesDir = path.join(SOURCE_DIR, 'Modules');
@@ -448,7 +450,7 @@ if (fs.existsSync(templatesDir)) {
 }
 
 // Deploy Emception runtime toolchain file for cmake compiler detection
-const toolchainSrc = path.join(ROOT, 'sysroot', 'usr', 'share', `cmake-${CMAKE_MAJOR_MINOR}`, 'toolchain-emception.cmake');
+const toolchainSrc = path.join(P.sysroot, 'usr', 'share', `cmake-${CMAKE_MAJOR_MINOR}`, 'toolchain-emception.cmake');
 if (!fs.existsSync(toolchainSrc)) {
     console.warn('WARNING: toolchain-emception.cmake not found — cmake compiler detection may fail');
 }

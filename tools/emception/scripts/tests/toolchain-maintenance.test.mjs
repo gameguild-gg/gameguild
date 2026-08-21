@@ -217,3 +217,34 @@ test('outdated is read-only and derived tools must be updated through EMSDK', as
   assert.equal(JSON.stringify(lock), before);
   await assert.rejects(planToolchainUpdate(config, lock, 'llvm', '24.0.0', provider), /controlled by emsdk/);
 });
+
+test('clean scopes remove only generated toolchain state', async (context) => {
+  const { cleanToolchain } = await import('../toolchain/clean.ts');
+  const root = await temporaryRoot(context);
+  const cacheMarker = path.join(root, '.cache', 'toolchain', 'sources', 'source.txt');
+  const artifactMarker = path.join(root, 'artifacts', 'toolchain', 'tools', 'clang.wasm');
+  const dependencyMarker = path.join(root, 'node_modules', 'keep.txt');
+  const overlayMarker = path.join(root, 'toolchain', 'overlays', 'cpython', 'patches', 'keep.patch');
+  for (const marker of [cacheMarker, artifactMarker, dependencyMarker, overlayMarker]) {
+    await mkdir(path.dirname(marker), { recursive: true });
+    await writeFile(marker, 'keep');
+  }
+  const exists = async (filename) => readFile(filename, 'utf8').then(() => true, () => false);
+
+  await cleanToolchain(root, 'artifacts');
+  assert.equal(await exists(artifactMarker), false);
+  assert.equal(await exists(cacheMarker), true);
+  assert.equal(await exists(dependencyMarker), true);
+  assert.equal(await exists(overlayMarker), true);
+
+  await mkdir(path.dirname(artifactMarker), { recursive: true });
+  await writeFile(artifactMarker, 'again');
+  await cleanToolchain(root, 'cache');
+  assert.equal(await exists(cacheMarker), false);
+  assert.equal(await exists(artifactMarker), true);
+
+  await cleanToolchain(root, 'all');
+  assert.equal(await exists(artifactMarker), false);
+  assert.equal(await exists(dependencyMarker), true);
+  assert.equal(await exists(overlayMarker), true);
+});

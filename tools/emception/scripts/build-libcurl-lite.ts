@@ -11,6 +11,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
@@ -19,6 +20,7 @@ import { PINNED } from './lib/pinned-versions.ts';
 enableBuildKeepalive('build-libcurl-lite');
 
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 
 shell.config.fatal = true;
 
@@ -26,12 +28,12 @@ const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 const CURL_LITE_VERSION = process.env.CURL_LITE_VERSION || PINNED.CURL_LITE_VERSION;
 setupEmsdk(EMSDK_VERSION);
 
-const LIBCURL_DIR = path.join(ROOT, 'userland', 'libcurl-lite');
+const LIBCURL_DIR = path.join(P.overlays, 'libcurl-lite');
 const SRC_FILE = path.join(LIBCURL_DIR, 'src', 'curl_lite.c');
 const HEADER_FILE = path.join(LIBCURL_DIR, 'include', 'curl', 'curl.h');
-const OUTPUT_DIR = path.join(ROOT, 'build');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
-const SYSROOT_INC = path.join(ROOT, 'sysroot', 'usr', 'include');
+const OUTPUT_DIR = P.tools;
+const SYSROOT_LIB = path.join(P.sysroot, 'usr', 'lib');
+const SYSROOT_INC = path.join(P.sysroot, 'usr', 'include');
 
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);

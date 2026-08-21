@@ -8,7 +8,7 @@ import { stageCdnPackage } from '../lib/stage-cdn-package.mjs';
 
 test('stageCdnPackage copies only publishable release artifacts', async (context) => {
   const root = await mkdtemp(path.join(tmpdir(), 'emception-package-cdn-'));
-  const sourceCdn = path.join(root, 'build', 'cdn');
+  const sourceCdn = path.join(root, 'artifacts', 'toolchain', 'release', 'cdn');
   const targetCdn = path.join(root, 'packages', 'toolchain', 'cdn');
   context.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(path.join(sourceCdn, 'usr', 'lib'), { recursive: true });
@@ -30,7 +30,7 @@ test('stageCdnPackage copies only publishable release artifacts', async (context
 
 test('stageCdnPackage refuses a source without the complete release metadata', async (context) => {
   const root = await mkdtemp(path.join(tmpdir(), 'emception-package-cdn-'));
-  const sourceCdn = path.join(root, 'build', 'cdn');
+  const sourceCdn = path.join(root, 'artifacts', 'toolchain', 'release', 'cdn');
   const targetCdn = path.join(root, 'target');
   context.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(sourceCdn, { recursive: true });

@@ -9,6 +9,7 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { detectLLVMGitCommit, detectLLVMVersion, resolveAvailableLLVMRelease } from './lib/detect-versions.ts';
@@ -21,9 +22,11 @@ enableBuildKeepalive('build-llvm');
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '..');
-const BUILD_DIR = path.join(ROOT, 'build');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot/usr/lib');
-const LLVM_DIR = path.join(ROOT, 'userland/llvm');
+const P = toolchainPaths(ROOT);
+const BUILD_DIR = P.tools;
+const SYSROOT_LIB = path.join(P.sysroot, 'usr', 'lib');
+const LLVM_SOURCE_ROOT = path.join(P.sources, 'llvm');
+const LLVM_BUILD_ROOT = path.join(P.builds, 'llvm');
 
 // Ensure shell commands fail on error
 shell.config.fatal = true;
@@ -60,9 +63,9 @@ const LLVM_GIT_URL = 'https://github.com/llvm/llvm-project.git';
 const CONCURRENCY = Number(process.env.EMCEPTION_BUILD_CONCURRENCY || os.cpus().length);
 
 function ensureCMakeBuildDirectory(buildDir: string): void {
-    const relative = path.relative(LLVM_DIR, buildDir);
+    const relative = path.relative(LLVM_BUILD_ROOT, buildDir);
     if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
-        throw new Error(`Refusing to manage LLVM build directory outside ${LLVM_DIR}: ${buildDir}`);
+        throw new Error(`Refusing to manage LLVM build directory outside ${LLVM_BUILD_ROOT}: ${buildDir}`);
     }
 
     const cachePath = path.join(buildDir, 'CMakeCache.txt');
@@ -174,8 +177,8 @@ async function main() {
 }
 
 function setupSource() {
-    shell.mkdir('-p', LLVM_DIR);
-    shell.cd(LLVM_DIR);
+    shell.mkdir('-p', LLVM_SOURCE_ROOT);
+    shell.cd(LLVM_SOURCE_ROOT);
     if (!fs.existsSync(LLVM_SRC_DIR)) {
         if (LLVM_USE_GIT) {
             const commit = LLVM_GIT_COMMIT;
@@ -191,7 +194,7 @@ function setupSource() {
             shell.cd(LLVM_SRC_DIR);
             shell.exec(`git fetch --depth 1 origin ${commit}`);
             shell.exec(`git checkout ${commit}`);
-            shell.cd(LLVM_DIR);
+            shell.cd(LLVM_SOURCE_ROOT);
         } else {
             if (!fs.existsSync(LLVM_TARBALL)) {
                 console.log(`Downloading LLVM source from ${LLVM_URL}...`);
@@ -207,11 +210,11 @@ function setupSource() {
 
 function buildNativeTableGen() {
     console.log('>>> Building native llvm-tblgen and clang-tblgen...');
-    const nativeBuildDir = path.join(LLVM_DIR, 'build-native');
+    const nativeBuildDir = path.join(LLVM_BUILD_ROOT, 'native');
     ensureCMakeBuildDirectory(nativeBuildDir);
 
     if (!fs.existsSync(path.join(nativeBuildDir, 'CMakeCache.txt'))) {
-        const sourceDir = path.join(LLVM_DIR, LLVM_SRC_DIR, 'llvm');
+        const sourceDir = path.join(LLVM_SOURCE_ROOT, LLVM_SRC_DIR, 'llvm');
         const cmd = [
             'cmake',
             `-S "${sourceDir}"`,
@@ -227,13 +230,13 @@ function buildNativeTableGen() {
     }
 
     shell.exec(`cmake --build "${nativeBuildDir}" --config Release --parallel ${CONCURRENCY} --target llvm-tblgen clang-tblgen`);
-    shell.cd(LLVM_DIR);
+    shell.cd(LLVM_SOURCE_ROOT);
 }
 
 function buildStaticLLVM() {
     console.log('>>> Building static LLVM libraries...');
-    const wasmBuildDir = path.join(LLVM_DIR, 'build-wasm');
-    const nativeBuildDir = path.join(LLVM_DIR, 'build-native');
+    const wasmBuildDir = path.join(LLVM_BUILD_ROOT, 'wasm');
+    const nativeBuildDir = path.join(LLVM_BUILD_ROOT, 'native');
 
     const llvmTblGen = nativeToolPath(nativeBuildDir, 'llvm-tblgen');
     const clangTblGen = nativeToolPath(nativeBuildDir, 'clang-tblgen');
@@ -243,7 +246,7 @@ function buildStaticLLVM() {
     // Configure — static build only, no SIDE_MODULE, no shared libs
     if (!fs.existsSync(path.join(wasmBuildDir, 'CMakeCache.txt'))) {
         console.log('Configuring LLVM for WebAssembly (static)...');
-        const sourceDir = path.join(LLVM_DIR, LLVM_SRC_DIR, 'llvm');
+        const sourceDir = path.join(LLVM_SOURCE_ROOT, LLVM_SRC_DIR, 'llvm');
         const cmd = [
             'emcmake cmake',
             `-S "${sourceDir}"`,
@@ -278,7 +281,7 @@ function buildStaticLLVM() {
 
 function buildClang() {
     console.log('>>> Building clang.wasm (standalone)...');
-    const wasmBuildDir = path.join(LLVM_DIR, 'build-wasm');
+    const wasmBuildDir = path.join(LLVM_BUILD_ROOT, 'wasm');
 
     // Build clang tablegen targets and static libraries
     console.log('Building clang tablegen targets...');
@@ -387,7 +390,7 @@ function buildClang() {
 
 function buildLLD() {
     console.log('>>> Building lld.wasm (standalone)...');
-    const wasmBuildDir = path.join(LLVM_DIR, 'build-wasm');
+    const wasmBuildDir = path.join(LLVM_BUILD_ROOT, 'wasm');
 
     if (!fs.existsSync(path.join(wasmBuildDir, 'CMakeCache.txt'))) {
         console.warn('LLD step detected missing build-wasm directory; reconfiguring LLVM wasm build...');
