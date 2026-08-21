@@ -16,6 +16,16 @@ const EMSDK_DIR = getEmsdkDir();
 const SYSROOT = path.join(ROOT, 'sysroot');
 const EMSDK_VERSION = process.argv[2] || process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
 
+function copyDirectoryContents(source: string, destination: string): void {
+    fs.mkdirSync(destination, { recursive: true });
+    for (const entry of fs.readdirSync(source)) {
+        fs.cpSync(path.join(source, entry), path.join(destination, entry), {
+            recursive: true,
+            force: true,
+        });
+    }
+}
+
 // Ensure we fail on error
 shell.config.fatal = true;
 
@@ -113,7 +123,7 @@ if (fs.existsSync(buildingPath)) {
 // ensure_sysroot / install_system_headers expects them under EMSCRIPTEN_ROOT).
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'system/include'))) {
     console.log('>> Copying system headers...');
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'system/include/*'), path.join(SYSROOT, 'usr/include/'));
+    copyDirectoryContents(path.join(EMSCRIPTEN_ROOT, 'system/include'), path.join(SYSROOT, 'usr/include'));
     // Emscripten also looks for system/include under EMSCRIPTEN_ROOT
     shell.mkdir('-p', path.join(SYSROOT, 'usr/lib/emscripten/system'));
     shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'system/include'), path.join(SYSROOT, 'usr/lib/emscripten/system/'));
@@ -143,18 +153,20 @@ const CACHE_DIR = path.join(EMSCRIPTEN_ROOT, 'cache');
 if (fs.existsSync(path.join(CACHE_DIR, 'sysroot'))) {
     console.log('>> Copying cached sysroot libraries...');
     if (fs.existsSync(path.join(CACHE_DIR, 'sysroot/lib'))) {
-        shell.mkdir('-p', path.join(SYSROOT, 'usr/lib/emscripten/cache-lib'));
-        shell.cp('-r', path.join(CACHE_DIR, 'sysroot/lib/*'), path.join(SYSROOT, 'usr/lib/emscripten/cache-lib/'));
+        copyDirectoryContents(
+            path.join(CACHE_DIR, 'sysroot/lib'),
+            path.join(SYSROOT, 'usr/lib/emscripten/cache-lib'),
+        );
     }
     if (fs.existsSync(path.join(CACHE_DIR, 'sysroot/include'))) {
-        shell.cp('-r', path.join(CACHE_DIR, 'sysroot/include/*'), path.join(SYSROOT, 'usr/include/'));
+        copyDirectoryContents(path.join(CACHE_DIR, 'sysroot/include'), path.join(SYSROOT, 'usr/include'));
     }
 }
 
 // 5. Copy Binaryen tools info
 if (fs.existsSync(path.join(BINARYEN_DIR, 'lib/binaryen'))) {
     console.log('>> Copying Binaryen support files...');
-    shell.cp('-r', path.join(BINARYEN_DIR, 'lib/binaryen/*'), path.join(SYSROOT, 'usr/lib/binaryen/'));
+    copyDirectoryContents(path.join(BINARYEN_DIR, 'lib/binaryen'), path.join(SYSROOT, 'usr/lib/binaryen'));
 }
 
 // 5b. Copy clang resource-dir (builtin headers like stddef.h, stdarg.h, *intrin.h).
@@ -170,8 +182,7 @@ if (fs.existsSync(CLANG_RESOURCE_ROOT)) {
         if (!fs.existsSync(srcInclude)) continue;
         const destDir = path.join(SYSROOT, 'usr/lib/clang', ver, 'include');
         console.log(`>> Copying clang ${ver} resource-dir headers to ${destDir}...`);
-        shell.mkdir('-p', destDir);
-        shell.cp('-r', path.join(srcInclude, '*'), destDir);
+        copyDirectoryContents(srcInclude, destDir);
     }
 } else {
     console.warn(`>> WARN: clang resource-dir not found at ${CLANG_RESOURCE_ROOT}`);
