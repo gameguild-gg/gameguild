@@ -42,6 +42,25 @@ const CONCURRENCY = os.cpus().length;
 // 4 MB stack — binaryen tools do deep recursion on ASTs.
 const STANDALONE_FLAGS = standaloneFlags({ stackSize: 4 * 1024 * 1024, asyncifyStackSize: 65536 });
 
+function linkArtifactsAreCurrent(
+    outputs: readonly string[],
+    inputs: readonly string[],
+    signatureFile: string,
+    signature: string,
+): boolean {
+    const previousSignature = fs.existsSync(signatureFile)
+        ? fs.readFileSync(signatureFile, 'utf8')
+        : undefined;
+    if (previousSignature !== undefined && previousSignature !== signature) {
+        return false;
+    }
+    if (outputs.some(output => !fs.existsSync(output) || fs.statSync(output).size === 0)) {
+        return false;
+    }
+    const oldestOutput = Math.min(...outputs.map(output => fs.statSync(output).mtimeMs));
+    return inputs.every(input => fs.existsSync(input) && fs.statSync(input).mtimeMs <= oldestOutput);
+}
+
 shell.mkdir('-p', USERLAND_DIR);
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
@@ -114,16 +133,16 @@ console.log(`Static library: ${staticLib}`);
 
 // 5. Build each tool as a standalone Emscripten module
 console.log('Building Binaryen tools as standalone WASM modules...');
-const TOOLS = ['wasm-opt', 'wasm-as', 'wasm-ctor-eval', 'wasm-emscripten-finalize', 'wasm-metadce'];
+const TOOLS: readonly string[] = ['wasm-opt', 'wasm-as', 'wasm-ctor-eval', 'wasm-emscripten-finalize', 'wasm-metadce'];
 
 // wasm-opt needs the fuzzing sources (TranslateToFuzzReader etc.)
 const FUZZING_DIR = path.join(SOURCE_DIR, 'src', 'tools', 'fuzzing');
 const FUZZING_SOURCES = fs.existsSync(FUZZING_DIR)
-    ? fs.readdirSync(FUZZING_DIR).filter(f => f.endsWith('.cpp')).map(f => `"${path.join(FUZZING_DIR, f)}"`)
+    ? fs.readdirSync(FUZZING_DIR).filter(f => f.endsWith('.cpp')).map(f => path.join(FUZZING_DIR, f))
     : [];
 
 // Map tool -> extra source files required
-const TOOL_EXTRA_SOURCES: Record<string, string[]> = {
+const TOOL_EXTRA_SOURCES: Readonly<Record<string, readonly string[]>> = {
     'wasm-opt': FUZZING_SOURCES,
 };
 
@@ -136,14 +155,33 @@ for (const tool of TOOLS) {
 
     const toolWasm = path.join(OUTPUT_DIR, `${tool}.wasm`);
     const toolMjs = path.join(OUTPUT_DIR, `${tool}.mjs`);
-    console.log(`Building ${tool} (standalone)...`);
-
     const extraSources = TOOL_EXTRA_SOURCES[tool] || [];
     const extraIncludes = extraSources.length > 0 ? [`-I "${FUZZING_DIR}"`] : [];
+    const inputs = [toolSrc, ...extraSources, staticLib];
+    const signatureFile = path.join(OUTPUT_DIR, `${tool}-link.signature`);
+    const signature = JSON.stringify({
+        schemaVersion: 1,
+        tool,
+        binaryenVersion: BINARYEN_VERSION,
+        emsdkVersion: EMSDK_VERSION,
+        standaloneFlags: STANDALONE_FLAGS,
+        languageStandard: 'c++20',
+        optimization: 'Os',
+        extraIncludes,
+        extraSources,
+    });
+
+    if (linkArtifactsAreCurrent([toolMjs, toolWasm], inputs, signatureFile, signature)) {
+        fs.writeFileSync(signatureFile, signature);
+        console.log(`${tool} link artifacts are current.`);
+        continue;
+    }
+
+    console.log(`Building ${tool} (standalone)...`);
 
     const cmdParts = [
         `em++ "${toolSrc}"`,
-        ...extraSources,
+        ...extraSources.map(source => `"${source}"`),
         `"${staticLib}"`,
         `-I "${path.join(SOURCE_DIR, 'src')}"`,
         `-I "${path.join(BUILD_WASM_DIR, 'src')}"`,
@@ -163,6 +201,7 @@ for (const tool of TOOLS) {
         console.error(`ERROR: ${toolWasm} not generated`);
         process.exit(1);
     }
+    fs.writeFileSync(signatureFile, signature);
     console.log(`Created ${toolWasm} + ${toolMjs}`);
 }
 
