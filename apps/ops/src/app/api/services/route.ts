@@ -16,7 +16,7 @@ type ServiceProbe = {
   pass: (body: unknown, status: number) => boolean;
 };
 
-// ponytail: 7 services hardcoded. They change ~once a year; no service-registry
+// ponytail: 8 services hardcoded. They change ~once a year; no service-registry
 // abstraction is worth the indirection. Add when count > 12 or probes fan out.
 const SERVICES: readonly ServiceProbe[] = [
   {
@@ -53,6 +53,11 @@ const SERVICES: readonly ServiceProbe[] = [
     name: "Registry",
     url: "http://forgejo-gitea-http.forgejo:3000/v2/",
     pass: (_b, s) => s === 401,
+  },
+  {
+    name: "AFFiNE",
+    url: "http://affine.affine.svc.cluster.local:3010/info",
+    pass: (_b, s) => s === 200,
   },
 ];
 
