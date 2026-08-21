@@ -89,6 +89,12 @@ function isCMakeSourceDir(dirPath: string): boolean {
     return true;
 }
 
+function findFilesByExtension(rootDir: string, extension: string): string[] {
+    return fs.readdirSync(rootDir, { recursive: true })
+        .filter(relativePath => relativePath.endsWith(extension))
+        .map(relativePath => path.join(rootDir, relativePath));
+}
+
 function findExistingSourceDir(version: string): string | null {
     const candidates = new Set<string>([
         path.join(USERLAND_DIR, `cmake-${version}`),
@@ -130,7 +136,7 @@ function ensureCMakeSource(version: string): string {
 
     shell.rm('-rf', normalizedSourceDir);
     shell.mkdir('-p', normalizedSourceDir);
-    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${normalizedSourceDir}"`);
+    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${path.basename(normalizedSourceDir)}"`);
     shell.rm('-f', tarball);
 
     if (!isCMakeSourceDir(normalizedSourceDir)) {
@@ -338,7 +344,6 @@ patchSource(
 
 // 3. Build with emcmake
 console.log('Cross-compiling CMake for WASM...');
-if (fs.existsSync(BUILD_WASM_DIR)) shell.rm('-rf', BUILD_WASM_DIR);
 shell.mkdir('-p', BUILD_WASM_DIR);
 
 // CMake needs to find our libcurl-lite
@@ -365,7 +370,7 @@ console.log(cmakeCmd);
 shell.exec(cmakeCmd);
 
 // Build only the cmake executable (not ctest, cpack, etc.)
-shell.exec(`emmake make -C "${BUILD_WASM_DIR}" -j${CONCURRENCY} cmake`);
+shell.exec(`cmake --build "${BUILD_WASM_DIR}" --parallel ${CONCURRENCY} --target cmake`);
 
 // 4. Re-link as standalone module
 console.log('Linking CMake as standalone WASM module...');
@@ -374,12 +379,14 @@ const toolWasm = path.join(OUTPUT_DIR, 'cmake.wasm');
 const toolMjs = path.join(OUTPUT_DIR, 'cmake.mjs');
 
 // Find the CMake libraries produced by the build.
-const cmakeLibs = shell.find(BUILD_WASM_DIR)
-    .filter(f => f.endsWith('.a') && !f.includes('CMakeTmp'));
+const cmakeLibs = findFilesByExtension(BUILD_WASM_DIR, '.a')
+    .filter(f => !f.includes('CMakeTmp'));
 
 // Find the main object files — these contain main() and are NOT in any .a
-const cmakeMainObjs = shell.find(path.join(BUILD_WASM_DIR, 'Source', 'CMakeFiles', 'cmake.dir'))
-    .filter(f => f.endsWith('.o'));
+const cmakeMainObjs = findFilesByExtension(
+    path.join(BUILD_WASM_DIR, 'Source', 'CMakeFiles', 'cmake.dir'),
+    '.o',
+);
 
 // Emscripten's sysroot zlib — CMake uses it instead of bundled cmzlib
 const EMSDK_ZLIB = path.join(
@@ -400,7 +407,7 @@ const linkCmd = [
     STANDALONE_FLAGS,
     '-Os',
     `-o "${toolMjs}"`,
-].filter(Boolean).join(' \\\n    ');
+].filter(Boolean).join(' ');
 
 console.log(linkCmd);
 shell.exec(linkCmd);
@@ -485,15 +492,5 @@ if (!fs.existsSync(toolchainSrc)) {
     console.warn('WARNING: toolchain-emception.cmake not found — cmake compiler detection may fail');
 }
 console.log(`Toolchain file: ${toolchainSrc}`);
-
-// 7. Apply glue patches (systemCallback, Asyncify hooks, ENV merge) to the freshly
-// deployed cmake.mjs in both build/ and sysroot/. Without these patches,
-// std::system() returns -52 (ENOSYS) and callMain() cannot suspend for async I/O.
-console.log('Applying glue patches to cmake.mjs...');
-shell.cd(ROOT);
-const patchGlueResult = shell.exec('npx tsx scripts/patch-glue.ts', { silent: false });
-if (patchGlueResult.code !== 0) {
-    console.error('WARNING: patch:glue failed — cmake.mjs may be missing systemCallback patches');
-}
 
 console.log('>>> CMake build complete.');
