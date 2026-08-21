@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "configHash": "7e090175bd1e195f56392c80e37ba90daf6d1a258b46a08fd108a49f2ef0b7c7",
+  "tools": {
+    "emsdk": {
+      "version": "5.0.7",
+      "source": {
+        "kind": "git-archive",
+        "repository": "emscripten-core/emsdk",
+        "commit": "41190c21c662e9cc1962aea94e71cbae9fd2fc87",
+        "url": "https://codeload.github.com/emscripten-core/emsdk/tar.gz/41190c21c662e9cc1962aea94e71cbae9fd2fc87",
+        "sha256": "1bdc20256510df3c0db566094c5948e58938738a9a48535b06e6742a6ec9adf9"
+      }
+    },
+    "llvm": {
+      "version": "23.1.0-rc3",
+      "derivedFrom": "emsdk",
+      "source": {
+        "kind": "git-archive",
+        "repository": "llvm/llvm-project",
+        "commit": "7196f931f212fc7c406066b2628a0ff4ea0ee344",
+        "url": "https://codeload.github.com/llvm/llvm-project/tar.gz/7196f931f212fc7c406066b2628a0ff4ea0ee344",
+        "sha256": "df469d7c5e874c42bcf4d9c5f3aaf24b83827c0bb622b9e572f8f7cce0546a4b"
+      }
+    },
+    "binaryen": {
+      "version": "129",
+      "derivedFrom": "emsdk",
+      "source": {
+        "kind": "git-archive",
+        "repository": "WebAssembly/binaryen",
+        "commit": "d0e2be9edd0052e487dde1d8d85d10f1338af584",
+        "url": "https://codeload.github.com/WebAssembly/binaryen/tar.gz/d0e2be9edd0052e487dde1d8d85d10f1338af584",
+        "sha256": "df3e7915a40a01bdaeecc0fdb88605c63e1c46ccd46e8ed8f3c5fa44081353de"
+      }
+    },
+    "python": {
+      "version": "3.13.3",
+      "derivedFrom": "emsdk",
+      "source": {
+        "kind": "git-archive",
+        "repository": "python/cpython",
+        "commit": "6280bb547840b609feedb78887c6491af75548e8",
+        "url": "https://codeload.github.com/python/cpython/tar.gz/6280bb547840b609feedb78887c6491af75548e8",
+        "sha256": "1b56531e0130bda333df966144f0e765274852cd6802ee36fd4fe9116d7c73b7"
+      }
+    },
+    "sdl3": {
+      "version": "emsdk-5.0.7",
+      "derivedFrom": "emsdk",
+      "source": {
+        "kind": "emsdk-component",
+        "emsdkVersion": "5.0.7",
+        "revision": "41190c21c662e9cc1962aea94e71cbae9fd2fc87",
+        "contentHash": "1bdc20256510df3c0db566094c5948e58938738a9a48535b06e6742a6ec9adf9"
+      }
+    },
+    "cmake": {
+      "version": "3.31.12",
+      "source": {
+        "kind": "git-archive",
+        "repository": "Kitware/CMake",
+        "commit": "6acf7153156bb45038be62e79a32ed5a6ea2d00e",
+        "url": "https://codeload.github.com/Kitware/CMake/tar.gz/6acf7153156bb45038be62e79a32ed5a6ea2d00e",
+        "sha256": "41c4cb83560190a60acd8a1c177d6f19f8193d43983878f1e79e540bcfc4840f"
+      }
+    },
+    "brotli": {
+      "version": "1.2.0",
+      "source": {
+        "kind": "git-archive",
+        "repository": "google/brotli",
+        "commit": "028fb5a23661f123017c060daa546b55cf4bde29",
+        "url": "https://codeload.github.com/google/brotli/tar.gz/028fb5a23661f123017c060daa546b55cf4bde29",
+        "sha256": "0afe09a53c8bad9861c8dd1fc1284308d54f19d2979ba3541cfdcc9b05fe360f"
+      }
+    },
+    "imgui": {
+      "version": "v1.92.7",
+      "source": {
+        "kind": "git-archive",
+        "repository": "ocornut/imgui",
+        "commit": "dac07199cfd761113d966eb8ad739254e10df2fe",
+        "url": "https://codeload.github.com/ocornut/imgui/tar.gz/dac07199cfd761113d966eb8ad739254e10df2fe",
+        "sha256": "d95368fadc5a1665fc1b3f198d4c9ff026e8bd8edcc7bad5d82fa12cf379c5f3"
+      }
+    },
+    "raylib": {
+      "version": "6.0",
+      "source": {
+        "kind": "git-archive",
+        "repository": "raysan5/raylib",
+        "commit": "dbc56a87da87d973a9c5baa4e7438a9d20121d28",
+        "url": "https://codeload.github.com/raysan5/raylib/tar.gz/dbc56a87da87d973a9c5baa4e7438a9d20121d28",
+        "sha256": "81b06ce7c19cf3b634b0271c23c361ba6ad8bf45fb8b036abbfeb4260ec1e126"
+      }
+    },
+    "raygui": {
+      "version": "4.0",
+      "source": {
+        "kind": "git-archive",
+        "repository": "raysan5/raygui",
+        "commit": "25c8c65a6e5f0f4d4b564a0343861898c6f2778b",
+        "url": "https://codeload.github.com/raysan5/raygui/tar.gz/25c8c65a6e5f0f4d4b564a0343861898c6f2778b",
+        "sha256": "86881d5aa498f4e78c6758efa12bc43bd19ff649904c3c9e8fc6b1f3edbbd55a"
+      }
+    },
+    "physac": {
+      "version": "1.1",
+      "source": {
+        "kind": "git-archive",
+        "repository": "victorfisac/Physac",
+        "commit": "2fd40de9356085f8676dcfca3b897ac342dfc125",
+        "url": "https://codeload.github.com/victorfisac/Physac/tar.gz/2fd40de9356085f8676dcfca3b897ac342dfc125",
+        "sha256": "27625b0130fca19ba825fc24124f93e6837b8a6c742fcdf37eeb091b0febee7b"
+      }
+    },
+    "allegro": {
+      "version": "5.2.10.1",
+      "source": {
+        "kind": "git-archive",
+        "repository": "liballeg/allegro5",
+        "commit": "9000e8dab60c9d583d68e20a0f39a3f33092cbe9",
+        "url": "https://codeload.github.com/liballeg/allegro5/tar.gz/9000e8dab60c9d583d68e20a0f39a3f33092cbe9",
+        "sha256": "f3be6d59804e8c8bb4ce5b4f57699179239e065a41d5933e28bca244a37b5784"
+      }
+    },
+    "curlLite": {
+      "version": "8.20.0",
+      "source": {
+        "kind": "workspace",
+        "path": "toolchain/overlays/libcurl-lite",
+        "contentHash": "3c681cd62c06cb4e16e35056cfa03514f843a6d1e6c9d9876d5d6f79978a20b9"
+      }
+    },
+    "zstdWindows": {
+      "version": "1.5.6",
+      "source": {
+        "kind": "archive",
+        "url": "https://github.com/facebook/zstd/releases/download/v1.5.6/zstd-v1.5.6-win64.zip",
+        "sha256": "7b4eff6719990e38aca93a4844c2e86a1935090625c4611f7e89675e999c56cc"
+      }
+    },
+    "msys2Make": {
+      "version": "4.4.1-5",
+      "source": {
+        "kind": "archive",
+        "url": "https://mirror.msys2.org/mingw/mingw64/mingw-w64-x86_64-make-4.4.1-5-any.pkg.tar.zst",
+        "sha256": "c19e7caf09bbc89b2730556b2da73004118d4e1f967a685cc48524c7ff80d864"
+      }
+    }
+  }
+}
