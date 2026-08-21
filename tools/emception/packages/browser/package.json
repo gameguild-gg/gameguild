@@ -36,11 +36,11 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node -e \"const fs=require('fs');fs.copyFileSync('src/emscripten/subprocess_shim.py','dist/emscripten/subprocess_shim.py');fs.copyFileSync('../../public/coi-serviceworker.js','dist/coi-serviceworker.js')\"",
+    "build": "npm run clean && tsc -p tsconfig.json && node -e \"const fs=require('fs');fs.copyFileSync('src/emscripten/subprocess_shim.py','dist/emscripten/subprocess_shim.py');fs.copyFileSync('../../public/coi-serviceworker.js','dist/coi-serviceworker.js')\"",
     "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node ../../scripts/run-node-tests.mjs tests",
-    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+    "clean": "node -e \"const fs=require('fs');for(const path of ['dist','tsconfig.tsbuildinfo'])fs.rmSync(path,{recursive:true,force:true})\""
   },
   "dependencies": {
     "emception": "4.2.0",
