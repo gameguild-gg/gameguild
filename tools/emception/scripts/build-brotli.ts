@@ -65,7 +65,6 @@ shell.mkdir('-p', CDN_DIR);
 console.log('Building Brotli CLI (native, for Node.js)...');
 
 const CLI_BUILD_DIR = path.join(SOURCE_DIR, 'build-cli');
-shell.rm('-rf', CLI_BUILD_DIR);
 shell.mkdir('-p', CLI_BUILD_DIR);
 shell.cd(SOURCE_DIR);
 
@@ -81,16 +80,22 @@ shell.exec(cmakeCmd);
 shell.cd(CLI_BUILD_DIR);
 
 // Build the CLI
-shell.exec(`make -C "${CLI_BUILD_DIR}" -j${os.cpus().length}`);
+shell.exec(`cmake --build "${CLI_BUILD_DIR}" --config MinSizeRel --parallel ${os.cpus().length} --target brotli`);
 
 // Copy the CLI to build/brotli
-const cliOutput = path.join(CLI_BUILD_DIR, 'brotli');
-if (fs.existsSync(cliOutput)) {
-  shell.cp('-f', cliOutput, path.join(BUILD_DIR, 'brotli'));
-  shell.exec(`chmod +x "${path.join(BUILD_DIR, 'brotli')}"`);
-  console.log(`Copied Brotli CLI to ${BUILD_DIR}/brotli`);
+const cliCandidates = [
+  path.join(CLI_BUILD_DIR, 'brotli'),
+  path.join(CLI_BUILD_DIR, 'brotli.exe'),
+  path.join(CLI_BUILD_DIR, 'MinSizeRel', 'brotli.exe'),
+];
+const cliOutput = cliCandidates.find(candidate => fs.existsSync(candidate));
+const cliDestination = path.join(BUILD_DIR, process.platform === 'win32' ? 'brotli.exe' : 'brotli');
+if (cliOutput) {
+  fs.copyFileSync(cliOutput, cliDestination);
+  if (process.platform !== 'win32') fs.chmodSync(cliDestination, 0o755);
+  console.log(`Copied Brotli CLI to ${cliDestination}`);
 } else {
-  console.error('ERROR: Brotli CLI not found in build directory');
+  console.error(`ERROR: Brotli CLI not found: ${cliCandidates.join(', ')}`);
   process.exit(1);
 }
 
@@ -98,8 +103,6 @@ if (fs.existsSync(cliOutput)) {
 console.log('Building Brotli WASM (browser)...');
 
 const WASM_BUILD_DIR = path.join(SOURCE_DIR, 'build-wasm');
-// shelljs.rm -rf chokes on some emcc-produced files; use the real /bin/rm.
-shell.exec(`rm -rf "${WASM_BUILD_DIR}"`);
 shell.mkdir('-p', WASM_BUILD_DIR);
 shell.cd(SOURCE_DIR);
 
@@ -119,7 +122,9 @@ shell.cd(WASM_BUILD_DIR);
 // Brotli's CMakeLists with BROTLI_BUILD_CLI=OFF + BROTLI_BUILD_BROTLI_CMD=OFF
 // does NOT produce a working browser-loadable .js/.wasm pair (no MODULARIZE,
 // no exported wrappers), so we link our own wrapper manually below.
-shell.exec(`emmake make -C "${WASM_BUILD_DIR}" -j${os.cpus().length} brotlidec brotlicommon`);
+shell.exec(
+  `cmake --build "${WASM_BUILD_DIR}" --config MinSizeRel --parallel ${os.cpus().length} --target brotlidec brotlicommon`,
+);
 
 const libDec = path.join(WASM_BUILD_DIR, 'libbrotlidec.a');
 const libCommon = path.join(WASM_BUILD_DIR, 'libbrotlicommon.a');
@@ -179,6 +184,6 @@ shell.mv(wasmMjs, wasmJs);
 
 // Verify output
 console.log('\nBuild complete!');
-console.log(`  CLI: ${path.join(BUILD_DIR, 'brotli')}`);
+console.log(`  CLI: ${cliDestination}`);
 console.log(`  CDN WASM JS: ${wasmJs}`);
 console.log(`  CDN WASM: ${wasmWasm}`);
