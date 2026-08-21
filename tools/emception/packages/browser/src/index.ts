@@ -21,6 +21,8 @@ export {
     type BootResult,
     type BrowserBridge,
     type BrowserEmceptionAPI,
+    type BrowserRunOptions,
+    type BrowserStdin,
     type CreateEmceptionOptions,
     type EmceptionAPI,
     type IOProvider,
