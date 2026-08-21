@@ -15,6 +15,8 @@ const ROOT = path.resolve(__dirname, '..');
 const EMSDK_DIR = getEmsdkDir();
 const SYSROOT = path.join(ROOT, 'sysroot');
 const EMSDK_VERSION = process.argv[2] || process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const VIRTUAL_LINKS_FILE = path.join(SYSROOT, '.emception-symlinks.json');
+const virtualLinks: Record<string, string> = {};
 
 function copyDirectoryContents(source: string, destination: string): void {
     fs.mkdirSync(destination, { recursive: true });
@@ -24,6 +26,11 @@ function copyDirectoryContents(source: string, destination: string): void {
             force: true,
         });
     }
+}
+
+function declareToolLink(command: string, moduleName: string): void {
+    fs.rmSync(path.join(SYSROOT, 'usr/bin', command), { force: true });
+    virtualLinks[`/usr/bin/${command}`] = `/usr/lib/${moduleName}.wasm`;
 }
 
 // Ensure we fail on error
@@ -208,55 +215,32 @@ createWrapper('em++', 'emcc');
 createWrapper('emar', 'emar');
 createWrapper('emranlib', 'emranlib');
 
-// Symlinks for LLVM tools
+// Virtual links for LLVM tools. They are materialized by the release manifest,
+// so building the sysroot never depends on host symlink privileges.
 // In the micro-kernel architecture, tools are standalone .wasm modules.
 // clang++ and wasm-ld are aliases handled by the TypeScript tool runner,
 // so they don't need separate symlinks on disk.
 const llvmTools = ['clang', 'lld', 'llvm-ar', 'llvm-nm', 'llvm-objcopy', 'llc'];
-llvmTools.forEach(tool => {
-    const dest = path.join(SYSROOT, 'usr/bin', tool);
-    try {
-        if (fs.existsSync(dest) || fs.lstatSync(dest).isSymbolicLink()) fs.unlinkSync(dest);
-    } catch (e) { }
-    fs.symlinkSync(`/usr/lib/${tool}.wasm`, dest);
-});
+llvmTools.forEach(tool => declareToolLink(tool, tool));
 // clang++ -> clang, wasm-ld -> lld (aliases)
-for (const [alias, target] of [['clang++', 'clang'], ['wasm-ld', 'lld']] as const) {
-    const dest = path.join(SYSROOT, 'usr/bin', alias);
-    try {
-        if (fs.existsSync(dest) || fs.lstatSync(dest).isSymbolicLink()) fs.unlinkSync(dest);
-    } catch (e) { }
-    fs.symlinkSync(`/usr/lib/${target}.wasm`, dest);
+const llvmAliases: ReadonlyArray<readonly [string, string]> = [['clang++', 'clang'], ['wasm-ld', 'lld']];
+for (const [alias, target] of llvmAliases) {
+    declareToolLink(alias, target);
 }
 
 const binaryenTools = ['wasm-opt', 'wasm-as', 'wasm-emscripten-finalize', 'wasm-metadce', 'wasm-ctor-eval'];
-binaryenTools.forEach(tool => {
-    const dest = path.join(SYSROOT, 'usr/bin', tool);
-    try {
-        if (fs.existsSync(dest) || fs.lstatSync(dest).isSymbolicLink()) fs.unlinkSync(dest);
-    } catch (e) { }
-    fs.symlinkSync(`/usr/lib/${tool}.wasm`, dest);
-});
+binaryenTools.forEach(tool => declareToolLink(tool, tool));
+declareToolLink('python3', 'python');
 
-const pythonDest = path.join(SYSROOT, 'usr/bin/python3');
-try {
-    if (fs.existsSync(pythonDest) || fs.lstatSync(pythonDest).isSymbolicLink()) fs.unlinkSync(pythonDest);
-} catch (e) { }
-fs.symlinkSync('/usr/lib/python.wasm', pythonDest);
-
-  // 6b. Symlinks for build tools (cmake, curl)
-  const buildTools = ['cmake', 'curl'];
+// 6b. Virtual links for build tools (cmake, curl)
+const buildTools = ['cmake', 'curl'];
 buildTools.forEach(tool => {
-    const dest = path.join(SYSROOT, 'usr/bin', tool);
-    try {
-        if (fs.existsSync(dest) || fs.lstatSync(dest).isSymbolicLink()) fs.unlinkSync(dest);
-    } catch (e) { }
-    // Only create symlink if the .wasm exists in sysroot
     const wasmPath = path.join(SYSROOT, 'usr/lib', `${tool}.wasm`);
     if (fs.existsSync(wasmPath)) {
-        fs.symlinkSync(`/usr/lib/${tool}.wasm`, dest);
+        declareToolLink(tool, tool);
     }
 });
+fs.writeFileSync(VIRTUAL_LINKS_FILE, `${JSON.stringify(virtualLinks, null, 2)}\n`);
 
 // 7. Write emscripten.config
 const configContent = `import os
