@@ -147,18 +147,29 @@ export async function generateReleaseManifest(options) {
   }
 
   const profiles = await createProfiles(options.sysroot, files);
+  for (const field of ['toolchainLockHash', 'buildReceiptHash']) {
+    if (!/^[a-f0-9]{64}$/.test(options[field] ?? '')) {
+      throw new Error(`${field} must be a SHA-256 hex string`);
+    }
+  }
+  if (!options.sourceProvenance || typeof options.sourceProvenance !== 'object') {
+    throw new Error('sourceProvenance is required for a new release manifest');
+  }
   const fingerprintInput = {
     artifactVersion: options.artifactVersion,
     runtimeAbi: options.runtimeAbi,
     patchSetVersion: options.patchSetVersion,
     toolVersions: options.toolVersions,
+    toolchainLockHash: options.toolchainLockHash,
+    buildReceiptHash: options.buildReceiptHash,
+    sourceProvenance: options.sourceProvenance,
     profiles,
     files,
   };
   const buildFingerprint = createHash('sha256')
     .update(JSON.stringify(fingerprintInput))
     .digest('hex');
-  const generated = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+  const generated = new Date((options.sourceDateEpoch ?? 0) * 1000).toISOString().replace(/\.\d+Z$/, 'Z');
   const manifest = {
     schemaVersion: 2,
     version: 2,
@@ -169,6 +180,9 @@ export async function generateReleaseManifest(options) {
     generated,
     baseUrl: options.baseUrl,
     toolVersions: options.toolVersions,
+    toolchainLockHash: options.toolchainLockHash,
+    buildReceiptHash: options.buildReceiptHash,
+    sourceProvenance: options.sourceProvenance,
     profiles,
     files,
     bundles: {},

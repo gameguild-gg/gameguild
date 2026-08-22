@@ -27,6 +27,20 @@ test('parseManifest accepts a schema-v2 manifest with the supported runtime ABI'
   assert.equal(parsed.runtimeAbi, RUNTIME_ABI);
 });
 
+test('parseManifest preserves optional toolchain provenance and still accepts older v2 manifests', () => {
+  const legacyV2 = parseManifest(releaseManifest());
+  assert.equal(legacyV2.toolchainLockHash, undefined);
+  const parsed = parseManifest(releaseManifest({
+    toolchainLockHash: 'b'.repeat(64),
+    buildReceiptHash: 'c'.repeat(64),
+    sourceProvenance: {
+      llvm: { version: '23.0.0git', revision: 'd'.repeat(40), sha256: 'e'.repeat(64) },
+    },
+  }));
+  assert.equal(parsed.toolchainLockHash, 'b'.repeat(64));
+  assert.equal(parsed.sourceProvenance.llvm.version, '23.0.0git');
+});
+
 test('default manifest URL is versioned and owned by the toolchain package', () => {
   assert.equal(
     DEFAULT_MANIFEST_URL,

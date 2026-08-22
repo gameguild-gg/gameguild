@@ -31,6 +31,12 @@ export interface WasmArtifactProfile {
   readonly exports: readonly string[];
 }
 
+export interface ToolchainSourceProvenance {
+  readonly version: string;
+  readonly revision?: string;
+  readonly sha256: string;
+}
+
 interface ManifestBase {
   version: 1 | 2;
   generated: string;
@@ -54,6 +60,9 @@ export interface ReleaseFSManifest extends ManifestBase {
   buildFingerprint: string;
   toolVersions: ManifestToolVersions;
   profiles: Record<string, WasmArtifactProfile>;
+  toolchainLockHash?: string;
+  buildReceiptHash?: string;
+  sourceProvenance?: Record<string, ToolchainSourceProvenance>;
 }
 
 export type FSManifest = LegacyFSManifest | ReleaseFSManifest;

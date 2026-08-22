@@ -7,6 +7,7 @@ export type {
   ManifestBundle,
   ManifestEntry,
   ManifestToolVersions,
+  ToolchainSourceProvenance,
   ReleaseFSManifest,
   WasmArtifactProfile,
 } from './manifest.js';
