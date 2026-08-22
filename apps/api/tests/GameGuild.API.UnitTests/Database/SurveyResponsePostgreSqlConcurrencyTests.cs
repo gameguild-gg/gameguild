@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data.Common;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -14,18 +13,11 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
     [PostgreSqlFact]
     public async Task DirectSubmissions_RespectSingleAndMultipleSurveyResponsePoliciesUnderConcurrency()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("survey_response_policy")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("survey_response_policy");
         try
         {
             var options = new DbContextOptionsBuilder<SurveyPolicyDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options;
             await using (var setup = new SurveyPolicyDbContext(options))
             {
@@ -70,18 +62,11 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
     [PostgreSqlFact]
     public async Task InteractionSubmission_UsesFreshPolicyAndSerializesWithDirectSubmission()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("survey_interaction_policy")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("survey_interaction_policy");
         try
         {
             var options = new DbContextOptionsBuilder<SurveyPolicyDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options;
             await using (var setup = new SurveyPolicyDbContext(options))
             {
@@ -145,11 +130,10 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
     [PostgreSqlFact]
     public async Task NonSurveyInteractionPaths_DoNotAcquireSurveyAdvisoryLocks()
     {
-        var container = CreateContainer("non_survey_transaction_policy");
-        await container.StartAsync();
+        var container = await CreateContainer("non_survey_transaction_policy");
         try
         {
-            var setupOptions = CreateOptions(container.GetConnectionString());
+            var setupOptions = CreateOptions(container.ConnectionString);
             await using (var setup = new SurveyPolicyDbContext(setupOptions))
             {
                 await setup.Database.EnsureCreatedAsync();
@@ -157,7 +141,7 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
 
             var fixture = await SeedLessonAsync(setupOptions);
             var probe = new AdvisoryLockProbe();
-            var options = CreateOptions(container.GetConnectionString(), probe);
+            var options = CreateOptions(container.ConnectionString, probe);
 
             await using (var startContext = new SurveyPolicyDbContext(options))
             {
@@ -186,11 +170,10 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
     [PostgreSqlFact]
     public async Task LifecycleLock_WhenCallerOwnsTransaction_ShouldNotCommitOrDisposeIt()
     {
-        var container = CreateContainer("lifecycle_existing_transaction");
-        await container.StartAsync();
+        var container = await CreateContainer("lifecycle_existing_transaction");
         try
         {
-            var options = CreateOptions(container.GetConnectionString());
+            var options = CreateOptions(container.ConnectionString);
             await using var context = new SurveyPolicyDbContext(options);
             await using var outerTransaction = await context.Database.BeginTransactionAsync();
 
@@ -241,13 +224,8 @@ public sealed class SurveyResponsePostgreSqlConcurrencyTests
         return (programId, userId, enrollment.Id, startContent.Id, interaction.Id, directContent.Id);
     }
 
-    private static PostgreSqlContainer CreateContainer(string database) => new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
-        .WithDatabase(database)
-        .WithUsername("test")
-        .WithPassword("test")
-        .WithCleanUp(true)
-        .Build();
+    private static Task<EconomyPostgreSqlTestDatabase> CreateContainer(string database) =>
+        EconomyPostgreSqlTestDatabase.CreateAsync(database);
 
     private static DbContextOptions<SurveyPolicyDbContext> CreateOptions(string connectionString, params IInterceptor[] interceptors)
     {

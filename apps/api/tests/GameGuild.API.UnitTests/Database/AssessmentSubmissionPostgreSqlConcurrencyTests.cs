@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -16,18 +15,11 @@ public sealed class AssessmentSubmissionPostgreSqlConcurrencyTests
     [Fact]
     public async Task ConcurrentStarts_RespectMaxAttemptsAndAssignOneFirstAttempt()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("assessment_attempt_concurrency")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("assessment_attempt_concurrency");
         try
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options;
             var enrollmentId = Guid.NewGuid();
             Guid assessmentId;
@@ -41,7 +33,7 @@ public sealed class AssessmentSubmissionPostgreSqlConcurrencyTests
                 await setup.SaveChangesAsync();
             }
 
-            await using var connection = new NpgsqlConnection(container.GetConnectionString());
+            await using var connection = new NpgsqlConnection(container.ConnectionString);
             await connection.OpenAsync();
             await ExecuteAsync(connection, """
                 CREATE OR REPLACE FUNCTION pause_assessment_submission_insert() RETURNS trigger LANGUAGE plpgsql AS $$

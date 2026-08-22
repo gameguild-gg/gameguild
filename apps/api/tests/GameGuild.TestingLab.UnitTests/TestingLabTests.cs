@@ -946,6 +946,13 @@ public class TestingRequestOperationsServiceTests
         var deleted = CreateProject("Legacy team", tenantId, userId);
         deleted.DeletedAt = SystemClock.UtcNow;
         context.Set<Project>().AddRange(foreign, deleted, expected);
+        context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = expected.Id,
+            UserId = userId,
+            Role = ProjectRoles.Owner,
+            IsActive = true
+        });
         await context.SaveChangesAsync();
         var (_, service) = CreateRequestService(context, userId, tenantId);
 
@@ -1080,6 +1087,13 @@ public class TestingRequestOperationsServiceTests
             Status = "testing"
         };
         context.Set<Project>().Add(project);
+        context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
+        {
+            ProjectId = project.Id,
+            UserId = userId,
+            Role = ProjectRoles.Owner,
+            IsActive = true
+        });
         context.Set<ProjectVersion>().Add(staleVersion);
         await context.SaveChangesAsync();
 

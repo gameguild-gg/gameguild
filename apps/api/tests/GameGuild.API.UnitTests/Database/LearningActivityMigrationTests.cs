@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -49,17 +48,10 @@ public sealed class LearningActivityMigrationTests
     [Fact]
     public async Task Up_PreservesHistoricalSurveyGradesWhileRepairingLegacySurveyGrading()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("learning_activity_contracts")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("learning_activity_contracts");
         try
         {
-            await using var connection = new NpgsqlConnection(container.GetConnectionString());
+            await using var connection = new NpgsqlConnection(container.ConnectionString);
             await connection.OpenAsync();
             var surveyId = Guid.NewGuid();
             var interactionId = Guid.NewGuid();

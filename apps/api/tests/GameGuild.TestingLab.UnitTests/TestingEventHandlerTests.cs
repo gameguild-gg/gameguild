@@ -730,6 +730,13 @@ public sealed class TestingEventHandlerTests : IDisposable
             CreatedById = ownerId
         };
         _context.Add(project);
+        _context.Add(new ProjectCollaborator
+        {
+            Project = project,
+            UserId = ownerId,
+            Role = ProjectRoles.Owner,
+            IsActive = true
+        });
         return project;
     }
 

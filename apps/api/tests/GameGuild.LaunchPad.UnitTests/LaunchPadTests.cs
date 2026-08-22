@@ -351,7 +351,7 @@ public sealed class LaunchPadTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task LaunchPlan_Reads_Should_Allow_Creator_And_Read_Collaborator(bool isCreator)
+    public async Task LaunchPlan_Reads_Should_Allow_Owner_And_Read_Collaborator(bool isCreator)
     {
         await using var context = CreateContext();
         var actorId = Guid.NewGuid();
@@ -361,7 +361,10 @@ public sealed class LaunchPadTests
             tenantId,
             isCreator ? "Creator read" : "Collaborator read",
             createdById: isCreator ? actorId : Guid.NewGuid());
-        if (!isCreator) AddCollaborator(context, project.Id, actorId, ProjectRoles.Viewer, "Read");
+        if (isCreator)
+            AddCollaborator(context, project.Id, actorId, ProjectRoles.Owner, string.Empty);
+        else
+            AddCollaborator(context, project.Id, actorId, ProjectRoles.Viewer, "Read");
         AddIdentity(context, actorId, tenantId);
         await context.SaveChangesAsync();
         var handler = CreateHandler(context, ActorAccessor(actorId, tenantId));

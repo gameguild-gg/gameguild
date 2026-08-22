@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Npgsql;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace GameGuild.API.UnitTests.Database;
@@ -18,18 +17,11 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
     [Fact]
     public async Task DeleteAssessment_WithGradeGroup_SoftDeletesOnlyAssessment()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("assessment_group_delete")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("assessment_group_delete");
         try
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString(), npgsql => npgsql.EnableRetryOnFailure())
+                .UseNpgsql(container.ConnectionString, npgsql => npgsql.EnableRetryOnFailure())
                 .Options;
             Guid assessmentId;
             Guid groupId;
@@ -81,18 +73,11 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
     [Fact]
     public async Task ConcurrentDeleteAndCueLink_CannotLeaveAnActiveCueOnDeletedAssessment()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("assessment_lifecycle_race")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("assessment_lifecycle_race");
         try
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options;
             var courseId = Guid.NewGuid();
             var contentId = Guid.NewGuid();
@@ -109,7 +94,7 @@ public sealed class AssessmentLifecyclePostgreSqlRaceTests
             await using var gateContext = new ApplicationDbContext(options);
             await using var contentGate = await ProgramContentLifecycleDatabaseLock.AcquireAsync(gateContext, [contentId]);
             contentGate.Should().NotBeNull();
-            await using var observer = new NpgsqlConnection(container.GetConnectionString());
+            await using var observer = new NpgsqlConnection(container.ConnectionString);
             await observer.OpenAsync();
 
             var linkTask = LinkAsync(options, courseId, assessmentId, contentId);
