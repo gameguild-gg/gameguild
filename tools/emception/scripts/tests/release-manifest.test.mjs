@@ -8,6 +8,13 @@ import { test } from 'node:test';
 import { generateReleaseManifest } from '../lib/release-manifest.mjs';
 
 const EMPTY_WASM_MODULE = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);
+const PROVENANCE = {
+  toolchainLockHash: 'c'.repeat(64),
+  buildReceiptHash: 'd'.repeat(64),
+  sourceProvenance: {
+    llvm: { version: '23.0.0git', revision: 'e'.repeat(40), sha256: 'f'.repeat(64) },
+  },
+};
 
 async function fixture() {
   const root = await mkdtemp(path.join(tmpdir(), 'emception-manifest-'));
@@ -35,21 +42,28 @@ test('generateReleaseManifest creates a clean schema-v2 release with wasm profil
   await mkdir(paths.outputDir, { recursive: true });
   await writeFile(path.join(paths.outputDir, 'stale.txt'), 'stale');
 
-  const manifest = await generateReleaseManifest({
+  const manifestOptions = {
     ...paths,
     baseUrl: '/cdn',
     artifactVersion: '4.2.0',
     runtimeAbi: 'emception-browser-v1',
     patchSetVersion: 'emception-glue-v3',
     toolVersions: { python: '3.13.3', pythonMajorMinor: '3.13', pythonMajorMinorCompact: '313' },
-  });
-  const written = JSON.parse(await readFile(paths.manifestFile, 'utf8'));
+    ...PROVENANCE,
+  };
+  const manifest = await generateReleaseManifest(manifestOptions);
+  const firstManifestSource = await readFile(paths.manifestFile, 'utf8');
+  const written = JSON.parse(firstManifestSource);
 
   assert.equal(manifest.schemaVersion, 2);
   assert.equal(manifest.version, 2);
   assert.equal(manifest.artifactVersion, '4.2.0');
   assert.equal(manifest.runtimeAbi, 'emception-browser-v1');
   assert.equal(manifest.patchSetVersion, 'emception-glue-v3');
+  assert.equal(manifest.toolchainLockHash, PROVENANCE.toolchainLockHash);
+  assert.equal(manifest.buildReceiptHash, PROVENANCE.buildReceiptHash);
+  assert.deepEqual(manifest.sourceProvenance, PROVENANCE.sourceProvenance);
+  assert.equal(manifest.generated, '1970-01-01T00:00:00Z');
   assert.match(manifest.buildFingerprint, /^[a-f0-9]{64}$/);
   assert.deepEqual(manifest.profiles.clang.imports, []);
   assert.deepEqual(manifest.profiles.clang.exports, []);
@@ -62,6 +76,9 @@ test('generateReleaseManifest creates a clean schema-v2 release with wasm profil
   assert.equal(manifest.files['/.emception-symlinks.json'], undefined);
   await assert.rejects(readFile(path.join(paths.outputDir, 'stale.txt')));
   await assert.rejects(readFile(path.join(paths.outputDir, 'usr', 'lib', 'python3.13', 'test', 'ignored.py')));
+  const repeated = await generateReleaseManifest(manifestOptions);
+  assert.equal(repeated.buildFingerprint, manifest.buildFingerprint);
+  assert.equal(await readFile(paths.manifestFile, 'utf8'), firstManifestSource);
 });
 
 test('generateReleaseManifest rejects an unpatched mutable sysroot path', async (context) => {
@@ -77,6 +94,7 @@ test('generateReleaseManifest rejects an unpatched mutable sysroot path', async 
       runtimeAbi: 'abi',
       patchSetVersion: 'patch',
       toolVersions: {},
+      ...PROVENANCE,
     }),
     /release input must be a staged sysroot/,
   );
@@ -94,6 +112,9 @@ test('generate-manifest CLI assembles the canonical build paths', async (context
       await readFile(path.join(workspaceRoot, 'toolchain', filename)),
     );
   }
+  const receipt = path.join(paths.root, 'artifacts', 'toolchain', 'receipts', 'glue.json');
+  await mkdir(path.dirname(receipt), { recursive: true });
+  await writeFile(receipt, '{"schemaVersion":1,"name":"glue"}\n');
 
   const tsxCli = path.resolve(import.meta.dirname, '../../node_modules/tsx/dist/cli.mjs');
   const manifestScript = path.resolve(import.meta.dirname, '../generate-manifest.ts');
@@ -108,4 +129,7 @@ test('generate-manifest CLI assembles the canonical build paths', async (context
   assert.equal(manifest.artifactVersion, '9.8.7');
   assert.equal(manifest.schemaVersion, 2);
   assert.equal(manifest.profiles.clang.wasm, '/usr/lib/clang.wasm');
+  assert.match(manifest.toolchainLockHash, /^[a-f0-9]{64}$/);
+  assert.match(manifest.buildReceiptHash, /^[a-f0-9]{64}$/);
+  assert.equal(manifest.sourceProvenance.llvm.revision, '7b58716d96c3ae4c0c4e6f72e29b16137bb6224b');
 });

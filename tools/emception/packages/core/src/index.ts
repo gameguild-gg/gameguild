@@ -62,6 +62,7 @@ export type {
   ManifestBundle,
   ManifestEntry,
   ManifestToolVersions,
+  ToolchainSourceProvenance,
   ReleaseFSManifest,
   WasmArtifactProfile,
 } from './vfs/manifest.js';

@@ -6,6 +6,7 @@ import type {
   ManifestToolVersions,
   ReleaseFSManifest,
   WasmArtifactProfile,
+  ToolchainSourceProvenance,
 } from 'emception';
 
 export const RUNTIME_ABI = 'emception-browser-v1';
@@ -119,6 +120,27 @@ function parseProfile(value: unknown, name: string): WasmArtifactProfile {
   };
 }
 
+function optionalHash(record: Record<string, unknown>, key: string): string | undefined {
+  if (record[key] === undefined) return undefined;
+  const value = stringField(record, key);
+  if (!/^[a-f0-9]{64}$/.test(value)) throw new ManifestCompatibilityError(`manifest.${key} must be a SHA-256 hex string`);
+  return value;
+}
+
+function parseSourceProvenance(value: unknown): Record<string, ToolchainSourceProvenance> | undefined {
+  if (value === undefined) return undefined;
+  if (!isRecord(value)) throw new ManifestCompatibilityError('manifest.sourceProvenance must be an object map');
+  return Object.fromEntries(Object.entries(value).map(([name, entry]) => {
+    if (!isRecord(entry)) throw new ManifestCompatibilityError(`manifest.sourceProvenance.${name} must be an object`);
+    const sha256 = stringField(entry, 'sha256');
+    if (!/^[a-f0-9]{64}$/.test(sha256)) {
+      throw new ManifestCompatibilityError(`manifest.sourceProvenance.${name}.sha256 must be a SHA-256 hex string`);
+    }
+    const revision = entry.revision === undefined ? undefined : stringField(entry, 'revision');
+    return [name, { version: stringField(entry, 'version'), ...(revision ? { revision } : {}), sha256 }];
+  }));
+}
+
 function parseRelease(record: Record<string, unknown>, expectedRuntimeAbi: string): ReleaseFSManifest {
   if (record.version !== 2) throw new ManifestCompatibilityError('manifest.version must be 2 for schemaVersion 2');
   const runtimeAbi = stringField(record, 'runtimeAbi');
@@ -150,6 +172,9 @@ function parseRelease(record: Record<string, unknown>, expectedRuntimeAbi: strin
     baseUrl: stringField(record, 'baseUrl'),
     toolVersions: parseToolVersions(record.toolVersions),
     profiles,
+    toolchainLockHash: optionalHash(record, 'toolchainLockHash'),
+    buildReceiptHash: optionalHash(record, 'buildReceiptHash'),
+    sourceProvenance: parseSourceProvenance(record.sourceProvenance),
     files,
     bundles: parseBundles(recordField(record, 'bundles')),
   };
