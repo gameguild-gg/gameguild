@@ -41,6 +41,7 @@
     "prepublishOnly": "pnpm run build:lib",
     "stage:core:cdn": "node scripts/stage-core-cdn.mjs",
     "stage:toolchain:cdn": "node scripts/stage-toolchain-cdn.mjs",
+    "verify:release": "node scripts/verify-release.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "tsx scripts/clean.ts",
     "toolchain": "tsx scripts/toolchain/cli.ts",
