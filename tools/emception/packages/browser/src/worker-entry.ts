@@ -447,7 +447,7 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
           });
           URL.revokeObjectURL(jsBlobUrl);
 
-          // Wrappers exposed by tools/emception/userland/brotli/brotli-wrapper.c:
+          // Wrappers exposed by toolchain/overlays/brotli/brotli-wrapper.c:
           //   uint8_t* brotli_decompress_buffer(const uint8_t* in, size_t in_len, size_t* out_len);
           //   void     brotli_free_buffer(uint8_t* ptr);
           //   const char* brotli_get_last_error_message(void);

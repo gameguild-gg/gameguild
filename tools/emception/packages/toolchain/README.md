@@ -14,12 +14,12 @@ Application code normally installs `@gameguild/emception-browser`, which pins
 and validates this package. Direct installation is useful for self-hosting:
 
 ```bash
-npm install @gameguild/emception-toolchain@4.2.0
+npm install @gameguild/emception-toolchain@X.Y.Z
 ```
 
 Copy `node_modules/@gameguild/emception-toolchain/cdn/` to a static origin and
 pass its `manifest.json` URL to `createEmception()`.
 
-Artifacts are staged only from the canonical `build/cdn` release. The
+Artifacts are staged only from `artifacts/toolchain/release/cdn`. The
 `emception/cdn` export is a temporary compatibility copy produced from that
 same release, not an independent artifact source.

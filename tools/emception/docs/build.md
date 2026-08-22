@@ -5,50 +5,100 @@ the matching, versioned `@gameguild/emception-toolchain` release. Build from
 source when changing Emscripten/LLVM/Python, generated glue patches, libraries,
 or artifact packaging.
 
-## Prerequisites
+## Supported build environment
 
-- Node.js (current LTS) and pnpm
-- CMake 3.20 or newer
-- host Python 3
-- Ninja, curl, and a working Emscripten build environment
+The release gate runs only on Linux (`ubuntu-latest`). Local Windows builds are
+useful during development, but they are best-effort and are not a release
+guarantee.
+
+Linux prerequisites are Node.js, pnpm, host Python 3, CMake, Ninja, curl,
+Brotli, and a C/C++ build environment. The locked EMSDK is downloaded by the
+Toolchain itself.
 
 ## Quick build
 
 ```bash
-cd tools/emception
-pnpm install
-pnpm run build:all
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm --dir tools/emception toolchain doctor
+pnpm --dir tools/emception toolchain build all
+pnpm --dir tools/emception toolchain release
 ```
 
 The initial toolchain build is large. Package-only work can use:
 
 ```bash
-pnpm run test:packages
-pnpm run typecheck:packages
-pnpm run build:packages
+pnpm --dir tools/emception run test:packages
+pnpm --dir tools/emception run typecheck:packages
+pnpm --dir tools/emception run build:packages
 ```
 
-## Canonical release pipeline
+## Version ownership
 
-`build:all` first builds the package layers and toolchain inputs, then runs the
-serial release pipeline:
+`toolchain/toolchain.config.json` contains policy: Browser ABI, allowed release
+channels, CMake constraints, EMSDK component grouping, and overlay ownership.
+
+`toolchain/toolchain.lock.json` contains resolved versions only: immutable
+archive URL or commit, SHA-256, EMSDK revision, and workspace content hash.
+Builds never search for a latest release and do not accept per-tool version
+environment overrides.
+
+Useful maintenance commands:
+
+```bash
+pnpm --dir tools/emception toolchain outdated all
+pnpm --dir tools/emception toolchain update cmake latest --dry-run
+pnpm --dir tools/emception toolchain update cmake latest --verify
+pnpm --dir tools/emception toolchain update emsdk latest --verify
+```
+
+An EMSDK update resolves LLVM, Binaryen, Python, and SDL together. `--verify`
+writes a candidate lock under the disposable cache, builds the affected recipe
+graph, applies patches, and replaces the tracked lock atomically only after the
+verification succeeds.
+
+## Directory ownership
+
+```text
+toolchain/
+├── toolchain.config.json       # tracked policy
+├── toolchain.lock.json         # tracked immutable sources
+└── overlays/                   # tracked patches and project-owned code
+
+.cache/toolchain/               # disposable downloads, sources and builds
+artifacts/toolchain/            # canonical tools, sysroot, receipts and release
+packages/toolchain/cdn/         # npm staging only
+packages/core/cdn/              # deprecated compatibility copy
+public/cdn/                     # demos and GitHub Pages only
+```
+
+Use scoped cleanup instead of deleting directories by hand:
+
+```bash
+pnpm --dir tools/emception toolchain clean artifacts
+pnpm --dir tools/emception toolchain clean cache
+pnpm --dir tools/emception toolchain clean all
+```
+
+These commands do not remove `node_modules`, tracked overlays, or external
+checkouts outside the Toolchain cache.
+
+## Canonical build and release pipeline
 
 | Phase | Scripts | Output / invariant |
 | --- | --- | --- |
-| Packages | `build:packages:core`, `build:packages:xterm`, `build:packages:browser`, `typecheck` | runnable TypeScript packages before heavy work |
-| SDK/tools | `build:emsdk`, `build:emscripten:warmup`, `build:toolchain:parallel` | compiler, linker, Binaryen, CPython, CMake, curl |
-| Graphics | `build:graphics` | SDL3, ImGui, raylib, Allegro libraries and runtime pairs |
-| Working sysroot | `build:sysroot` | mutable `sysroot/` assembled from build outputs |
-| Freeze | `build:stage:sysroot` | clean `build/stage/sysroot` plus fingerprint receipt |
-| Patch | `patch:glue` | versioned patches applied only to staged generated glue |
-| Manifest | `build:manifest` | schema-v2 manifest and raw canonical `build/cdn` tree |
-| Package | `build:brotli`, `build:bundles`, `build:assert-no-dupes` | compressed, hash-checked release payload |
-| Publish staging | `deploy:cdn`, `stage:toolchain:cdn` | local CDN and authoritative toolchain npm payload |
-| Compatibility | `stage:core:cdn` | temporary compatibility copy in `emception/cdn` |
+| Resolve | lockfile and source manager | checksum-verified sources in the disposable cache |
+| Build | named recipes | tools and mutable sysroot under `artifacts/toolchain` |
+| Receipt | receipt engine | lock, recipe, overlay, dependency, command, version, and output hashes |
+| Freeze | staging recipe | immutable sysroot snapshot with content fingerprint |
+| Patch | glue recipe | versioned patches applied only to staged generated glue |
+| Manifest | manifest recipe | schema-v2 metadata populated from actual receipts |
+| Bundle | bundle recipe | deterministic Brotli archives and hashes |
+| Stage | release recipe | npm Toolchain, Core compatibility, and public CDN copies |
 
-`build:pipeline` starts from an existing working sysroot. `build:cdn` starts
-from an existing staged sysroot. Neither manifest generation nor glue patching
-accepts the mutable `sysroot/` as release input.
+`toolchain build` reuses an output only when its receipt identity matches and
+every output hash is intact. `toolchain release` validates those dependencies,
+then always regenerates the staged snapshot, glue, manifest, bundles, and
+publish directories.
 
 ## Generated glue policy
 
@@ -62,11 +112,12 @@ a release that the IDE would need to repair at runtime.
 
 ## Manifest v2 and ABI profiles
 
-`build:manifest` records:
+The manifest records:
 
 - package artifact version and complete build fingerprint;
 - Browser runtime ABI and glue patch-set version;
-- pinned tool versions;
+- versions detected by the recipes, lock hash, receipt hash, and source
+  provenance;
 - hashes, sizes, executability, and bundle placement for every file;
 - each WASM profile's matching glue path, WASM path, imports, exports, and
   pair-derived profile hash.
@@ -84,5 +135,17 @@ exports, Asyncify for browser I/O, and isolated linear memory.
 
 `@gameguild/emception-toolchain` is the canonical artifact package. The
 `emception/cdn` copy is a compatibility bridge and must not become a second
-independently generated release. Both copies are staged from the same
-`build/cdn` output.
+independently generated release. Both npm copies are staged byte-for-byte from
+the same canonical artifact release.
+
+## Versioning and publication
+
+The seven public packages form one Changesets fixed group. An implementation
+PR carries an explicit changeset; after it is merged, the Linux workflow opens
+a version PR. That PR is rebuilt using the final version. Once merged, the
+workflow packs every package, publishes `@gameguild/emception-toolchain`, waits
+for the registry, publishes consumers in dependency order, and creates
+`emception-vX.Y.Z`.
+
+The release gate requires package versions, `manifest.artifactVersion`, and the
+version embedded in the Browser default manifest URL to be identical.
