@@ -3,12 +3,12 @@ using GameGuild.API.Database;
 using GameGuild.API.Database.Migrations;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
+using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.UnitTests.Persistence;
 
@@ -35,26 +35,19 @@ public sealed class PostgreSqlFifoTransferGatewayTests
         sql.Should().Contain("SECURITY DEFINER");
     }
 
-    [DockerFact]
+    [Fact]
     public async Task WriterConsumesFifoFragmentsAndPersistsTheWholeTransferAtomically()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_fifo_transfer")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("fifo_transfer");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(database.ConnectionString)
                 .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(database.ConnectionString);
         await connection.OpenAsync();
         var sourceWallet = Guid.NewGuid();
         var destinationWallet = Guid.NewGuid();
@@ -222,15 +215,6 @@ public sealed class PostgreSqlFifoTransferGatewayTests
     }
 
     private sealed record PostingReceipt(Guid PostingId, long Sequence, bool Duplicate);
-
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
-    }
 
     private sealed class ExposedMigration : AddEconomyFifoTransferWriter
     {

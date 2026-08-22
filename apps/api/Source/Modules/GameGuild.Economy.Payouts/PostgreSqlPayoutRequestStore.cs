@@ -51,7 +51,7 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
     {
         ArgumentNullException.ThrowIfNull(request);
         Execute($"""
-            SELECT economy_private.create_payout_request_v1(
+            SELECT economy_private.create_payout_request_v2(
                 {request.Id},
                 {request.IdempotencyKey.Value},
                 {request.RequestHash},
@@ -86,6 +86,26 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
             : ToContract(row);
     }
 
+    public PayoutRequest GetForReview(Guid requestId, Guid tenantId)
+    {
+        if (requestId == Guid.Empty)
+        {
+            throw new ArgumentException("Payout request ID is required.", nameof(requestId));
+        }
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        }
+
+        var row = Read(
+            "SELECT * FROM economy_private.read_payout_request_for_review_v2({0}, {1})",
+            tenantId,
+            requestId).SingleOrDefault();
+        return row is null
+            ? throw new KeyNotFoundException($"Payout request {requestId:N} was not found.")
+            : ToContract(row);
+    }
+
     public IReadOnlyList<PayoutRequest> ListForPayee(Guid payeeId, int take)
     {
         if (payeeId == Guid.Empty)
@@ -108,6 +128,56 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
             .ToArray();
     }
 
+    public IReadOnlyList<PayoutRequest> ListForReview(Guid tenantId, int take)
+    {
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        }
+        if (take is < 1 or > 100)
+        {
+            throw new ArgumentOutOfRangeException(nameof(take), "Take must be between 1 and 100.");
+        }
+
+        return Read(
+                "SELECT * FROM economy_private.read_payout_requests_for_review_v2({0}, {1})",
+                tenantId,
+                take)
+            .OrderBy(row => row.CreatedAt)
+            .ThenBy(row => row.Id)
+            .Select(ToContract)
+            .ToArray();
+    }
+
+    public IReadOnlyList<PayoutRequestReviewAuditEvent> ListReviewAudit(Guid requestId, Guid tenantId)
+    {
+        if (requestId == Guid.Empty)
+        {
+            throw new ArgumentException("Payout request ID is required.", nameof(requestId));
+        }
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        }
+
+        return _db.Database.SqlQueryRaw<PayoutRequestReviewAuditEventRow>(
+                "SELECT * FROM economy_private.read_payout_request_review_audit_v2({0}, {1})",
+                tenantId,
+                requestId)
+            .AsNoTracking()
+            .OrderBy(item => item.OccurredAt)
+            .ThenBy(item => item.Id)
+            .Select(item => new PayoutRequestReviewAuditEvent(
+                item.Id,
+                item.RequestId,
+                item.TenantId,
+                item.ActorId,
+                item.Outcome,
+                item.Reason,
+                item.OccurredAt))
+            .ToArray();
+    }
+
     public PayoutRequest Update(PayoutRequest request, long expectedVersion)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -127,6 +197,48 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
         return request;
     }
 
+    public PayoutRequest Review(
+        PayoutRequest request,
+        long expectedVersion,
+        Guid tenantId,
+        Guid reviewerId,
+        PayoutRequestState outcome,
+        string reason)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (expectedVersion <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(expectedVersion));
+        }
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        }
+        if (reviewerId == Guid.Empty)
+        {
+            throw new ArgumentException("Reviewer ID is required.", nameof(reviewerId));
+        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+
+        try
+        {
+            var row = Read(
+                "SELECT * FROM economy_private.review_payout_request_v2({0}, {1}, {2}, {3}, {4}, {5}, {6})",
+                tenantId,
+                request.Id,
+                expectedVersion,
+                reviewerId,
+                (int)outcome,
+                reason.Trim(),
+                request.UpdatedAt).Single();
+            return ToContract(row);
+        }
+        catch (Exception exception) when (ContainsPayoutRequestFailure(exception))
+        {
+            throw Translate(exception);
+        }
+    }
+
     private IQueryable<PayoutRequestRow> Read(string sql, params object[] parameters) =>
         _db.Database.SqlQueryRaw<PayoutRequestRow>(sql, parameters).AsNoTracking();
 
@@ -136,16 +248,41 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
         {
             _db.Database.ExecuteSqlInterpolated(sql);
         }
-        catch (Exception exception) when (exception.Message.Contains("payout request", StringComparison.OrdinalIgnoreCase))
+        catch (Exception exception) when (ContainsPayoutRequestFailure(exception))
         {
             throw Translate(exception);
         }
     }
 
-    private static Exception Translate(Exception exception) =>
-        exception.Message.Contains("idempotency", StringComparison.OrdinalIgnoreCase)
-            ? new PayoutRequestReplayConflictException(exception.Message)
-            : new PayoutRequestStaleCommandException(exception.Message);
+    private static bool ContainsPayoutRequestFailure(Exception exception)
+    {
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (current.Message.Contains("payout request", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static Exception Translate(Exception exception)
+    {
+        var message = exception.Message;
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            if (current.Message.Contains("payout request", StringComparison.OrdinalIgnoreCase))
+            {
+                message = current.Message;
+                break;
+            }
+        }
+
+        return message.Contains("idempotency", StringComparison.OrdinalIgnoreCase)
+            ? new PayoutRequestReplayConflictException(message)
+            : new PayoutRequestStaleCommandException(message);
+    }
 
     private static PayoutRequest ToContract(PayoutRequestRow row) => new(
         row.Id,
@@ -157,7 +294,8 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
         row.State,
         row.Version,
         row.CreatedAt,
-        row.UpdatedAt);
+        row.UpdatedAt,
+        row.FirstApprovalActorId);
 }
 
 public sealed class PayoutRequestRow
@@ -172,4 +310,16 @@ public sealed class PayoutRequestRow
     public long Version { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public Guid? FirstApprovalActorId { get; set; }
+}
+
+public sealed class PayoutRequestReviewAuditEventRow
+{
+    public Guid Id { get; set; }
+    public Guid RequestId { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid ActorId { get; set; }
+    public PayoutRequestState Outcome { get; set; }
+    public string Reason { get; set; } = string.Empty;
+    public DateTimeOffset OccurredAt { get; set; }
 }

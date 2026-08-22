@@ -7,7 +7,6 @@ using GameGuild.Economy.Risk;
 using GameGuild.Economy.UnitTests.Persistence;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.UnitTests.Funding;
 
@@ -167,13 +166,13 @@ public sealed class HardToSoftConversionWorkflowTests
         }
     }
 
-    [DockerFact]
+    [Fact]
     public async Task ConvertAsync_ComposesTheAuthorizedWriterCallForZeroFeeAndFeeConversions()
     {
         await using var database = await PostgreSqlHardToSoftConversionGatewayTests.CreateDatabaseAsync();
-        await using var context = PostgreSqlHardToSoftConversionGatewayTests.CreateContext(database.GetConnectionString());
+        await using var context = PostgreSqlHardToSoftConversionGatewayTests.CreateContext(database.ConnectionString);
         await context.Database.MigrateAsync();
-        await using var connection = new Npgsql.NpgsqlConnection(database.GetConnectionString());
+        await using var connection = new Npgsql.NpgsqlConnection(database.ConnectionString);
         await connection.OpenAsync();
 
         var zeroFee = await ConvertWithPersistedWriterAsync(context, connection, 0);
@@ -292,15 +291,6 @@ public sealed class HardToSoftConversionWorkflowTests
             IsAuthenticated = true
         });
         return accessor;
-    }
-
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
     }
 
     private sealed class EnabledGate(Exception? exception = null) : IEconomyValueMovementDecisionGate

@@ -12,6 +12,12 @@ public sealed class EconomyRiskCompositionOptions
     public bool ValueMovingDecisionsEnabled { get; set; }
 
     public string[] EnabledCapabilities { get; set; } = [];
+
+    /// <summary>
+    /// Legal jurisdictions that may use value-moving Economy capabilities. An empty list is a
+    /// deliberate fail-closed rollout state, not a wildcard.
+    /// </summary>
+    public string[] AllowedJurisdictions { get; set; } = [];
 }
 
 public enum EconomyValueMovementCapability
@@ -42,7 +48,8 @@ public interface IEconomyValueMovementDecisionGate
 internal sealed class EconomyValueMovementDecisionGate(
     IOptions<EconomyRiskCompositionOptions> options) : IEconomyValueMovementDecisionGate
 {
-    public bool IsEnabled => options.Value.ValueMovingDecisionsEnabled;
+    public bool IsEnabled => options.Value.ValueMovingDecisionsEnabled &&
+                             EconomyValueMovementCapabilities.HasAllowedJurisdiction(options.Value.AllowedJurisdictions);
 
     public bool IsCapabilityEnabled(EconomyValueMovementCapability capability) =>
         IsEnabled && EconomyValueMovementCapabilities.Parse(options.Value.EnabledCapabilities).Contains(capability);
@@ -50,8 +57,17 @@ internal sealed class EconomyValueMovementDecisionGate(
     public void EnsureEnabled()
     {
         if (!IsEnabled)
+        {
+            if (options.Value.ValueMovingDecisionsEnabled &&
+                !EconomyValueMovementCapabilities.HasAllowedJurisdiction(options.Value.AllowedJurisdictions))
+            {
+                throw new EconomyValueMovementDisabledException(
+                    "Economy value-moving decisions are disabled because the global jurisdiction allowlist is empty.");
+            }
+
             throw new EconomyValueMovementDisabledException(
                 "Economy value-moving decisions are disabled until an explicit capability rollout is configured.");
+        }
     }
 
     public void EnsureEnabled(EconomyValueMovementCapability capability)
@@ -88,6 +104,9 @@ public static class EconomyValueMovementCapabilities
             throw new EconomyCapabilityConfigurationException(
                 "ValueMovingDecisionsEnabled requires at least one explicitly enabled Economy capability.");
     }
+
+    public static bool HasAllowedJurisdiction(IEnumerable<string>? configuredJurisdictions) =>
+        configuredJurisdictions?.Any(value => !string.IsNullOrWhiteSpace(value)) == true;
 }
 
 public static class EconomyRiskCompositionExtensions

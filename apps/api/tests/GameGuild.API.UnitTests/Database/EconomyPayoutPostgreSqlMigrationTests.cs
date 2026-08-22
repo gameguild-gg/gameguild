@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -21,22 +20,15 @@ public sealed class EconomyPayoutPostgreSqlMigrationTests
     [DockerFact]
     public async Task MigrationPersistsPayoutThroughProceduresAndRejectsDirectWriterMutation()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_payout")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_payout");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await SeedWalletAsync(connection);
 
@@ -85,23 +77,16 @@ public sealed class EconomyPayoutPostgreSqlMigrationTests
     [DockerFact]
     public async Task MigrationRollsBackPayoutFunctionsAndTables()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_payout_rollback")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_payout_rollback");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options);
         var migrator = context.GetService<IMigrator>();
         await migrator.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         (await ScalarAsync<string?>(connection,
             "SELECT to_regclass('public.economy_payout_operations')::text;"))

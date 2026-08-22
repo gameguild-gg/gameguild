@@ -341,12 +341,21 @@ public sealed class SelfServicePayoutRequestTests
 
         public PayoutRequest GetForPayee(Guid requestId, Guid payeeId) => _items.Single(item => item.Id == requestId && item.PayeeId == payeeId);
 
+        public PayoutRequest GetForReview(Guid requestId, Guid tenantId) =>
+            throw new NotSupportedException("Self-service tests do not use administrative payout review.");
+
         public IReadOnlyList<PayoutRequest> ListForPayee(Guid payeeId, int take) => _items
             .Where(item => item.PayeeId == payeeId)
             .OrderByDescending(item => item.CreatedAt)
             .ThenByDescending(item => item.Id)
             .Take(take)
             .ToArray();
+
+        public IReadOnlyList<PayoutRequest> ListForReview(Guid tenantId, int take) =>
+            throw new NotSupportedException("Self-service tests do not use administrative payout review.");
+
+        public IReadOnlyList<PayoutRequestReviewAuditEvent> ListReviewAudit(Guid requestId, Guid tenantId) =>
+            throw new NotSupportedException("Self-service tests do not use administrative payout review.");
 
         public PayoutRequest Update(PayoutRequest request, long expectedVersion)
         {
@@ -358,5 +367,14 @@ public sealed class SelfServicePayoutRequestTests
             _items[index] = request;
             return request;
         }
+
+        public PayoutRequest Review(
+            PayoutRequest request,
+            long expectedVersion,
+            Guid tenantId,
+            Guid reviewerId,
+            PayoutRequestState outcome,
+            string reason) =>
+            throw new NotSupportedException("Self-service tests do not use administrative payout review.");
     }
 }

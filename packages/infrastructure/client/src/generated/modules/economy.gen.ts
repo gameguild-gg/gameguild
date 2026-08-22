@@ -16,6 +16,135 @@ export class EconomyModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * List payout requests awaiting administrative review
+   */
+  async getAdminEconomyPayoutRequests(query?: {
+    take?: number;
+  }): Promise<
+    Result<
+      Array<Types.EconomyPayoutsQueriesEconomyPayoutRequestReview>,
+      ApiError
+    >
+  > {
+    const url = "/api/v1/admin/economy/payout-requests";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.EconomyPayoutsQueriesEconomyPayoutRequestReview>,
+      ApiError
+    >;
+  }
+
+  /**
+   * Record one independent payout approval
+   *
+   * The first approval waits for a different tenant administrator. Final approval records a decision only and does not reserve or dispatch value.
+   */
+  async postAdminEconomyPayoutRequestsApprove(
+    requestId: string,
+    body: Types.EconomyPayoutsCommandsReviewPayoutRequestInput,
+  ): Promise<
+    Result<Types.EconomyPayoutsQueriesEconomyPayoutRequestReview, ApiError>
+  > {
+    const url = `/api/v1/admin/economy/payout-requests/${requestId}/approve`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.EconomyPayoutsCommandsReviewPayoutRequestInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyPayoutsQueriesEconomyPayoutRequestReviewSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Get the immutable administrative review trail for a payout request
+   */
+  async getAdminEconomyPayoutRequestsAudit(
+    requestId: string,
+  ): Promise<
+    Result<
+      Array<Types.EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit>,
+      ApiError
+    >
+  > {
+    const url = `/api/v1/admin/economy/payout-requests/${requestId}/audit`;
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<
+      Array<Types.EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit>,
+      ApiError
+    >;
+  }
+
+  /**
+   * Reject a payout request with an immutable reason
+   */
+  async postAdminEconomyPayoutRequestsReject(
+    requestId: string,
+    body: Types.EconomyPayoutsCommandsReviewPayoutRequestInput,
+  ): Promise<
+    Result<Types.EconomyPayoutsQueriesEconomyPayoutRequestReview, ApiError>
+  > {
+    const url = `/api/v1/admin/economy/payout-requests/${requestId}/reject`;
+
+    // Validate request body
+    const validatedBody = safeParse(
+      Types.EconomyPayoutsCommandsReviewPayoutRequestInputSchema,
+      body,
+      "request",
+    );
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyPayoutsQueriesEconomyPayoutRequestReviewSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Get my Economy capability readiness
    */
   async getEconomyCapabilities(): Promise<

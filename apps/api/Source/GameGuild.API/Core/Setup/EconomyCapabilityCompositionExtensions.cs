@@ -89,6 +89,12 @@ public sealed class EconomyProviderCapabilityReadiness(
                 EconomyCapabilityReadinessState.Disabled,
                 ["The capability is not enabled for rollout."]);
 
+        if (!EconomyValueMovementCapabilities.HasAllowedJurisdiction(economy.AllowedJurisdictions))
+            return new EconomyCapabilityReadinessResult(
+                capability,
+                EconomyCapabilityReadinessState.Disabled,
+                ["The global Economy jurisdiction allowlist is empty."]);
+
         // Payout status reads are always available, but payout writes are composed only when the
         // durable reservation and settlement workflows have been explicitly enabled.
         if (capability == EconomyValueMovementCapability.PayoutExecution &&

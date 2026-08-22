@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -54,16 +53,9 @@ public sealed class EconomyFoundationPostgreSqlMigrationTests
     [DockerFact]
     public async Task Up_Current_Down_Enforces_Roles_Immutability_And_Atomic_Risk_Counter_Reservations()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_foundation")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_foundation");
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await ApplyUpAsync(connection);
 
@@ -90,9 +82,9 @@ public sealed class EconomyFoundationPostgreSqlMigrationTests
 
         await SeedRiskCounterScenarioAsync(connection);
         var reservationResults = await Task.WhenAll(
-            ReserveCounterAsync(container.GetConnectionString(),
+            ReserveCounterAsync(container.ConnectionString,
                 "81000000-0000-0000-0000-000000000001", "71000000-0000-0000-0000-000000000001"),
-            ReserveCounterAsync(container.GetConnectionString(),
+            ReserveCounterAsync(container.ConnectionString,
                 "81000000-0000-0000-0000-000000000002", "71000000-0000-0000-0000-000000000002"));
 
         reservationResults.Count(result => result.Reserved).Should().Be(1);
@@ -121,16 +113,9 @@ public sealed class EconomyFoundationPostgreSqlMigrationTests
     [DockerFact]
     public async Task Registered_Writer_Enforces_Capability_Risk_Idempotency_Shape_And_Concurrent_Chain_Order()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_writer")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_writer");
 
-        var connectionString = container.GetConnectionString();
+        var connectionString = container.ConnectionString;
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync();
         await ApplyUpAsync(connection);
@@ -243,16 +228,9 @@ public sealed class EconomyFoundationPostgreSqlMigrationTests
     [DockerFact]
     public async Task TopUp_Writer_Rejects_Absent_Mutated_Unconfirmed_Future_Reused_And_Overcredited_Sources()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_top_up_writer")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_top_up_writer");
 
-        var connectionString = container.GetConnectionString();
+        var connectionString = container.ConnectionString;
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync();
         await ApplyUpAsync(connection);
@@ -391,16 +369,9 @@ public sealed class EconomyFoundationPostgreSqlMigrationTests
     [DockerFact]
     public async Task Integrity_Constraints_Reject_Early_Maturity_OverAllocation_Overlap_Stale_Epoch_And_Lineage_Loss()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_integrity")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_integrity");
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await ApplyUpAsync(connection);
         await SeedIntegrityScenarioAsync(connection);
