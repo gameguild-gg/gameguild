@@ -14,11 +14,18 @@ enableBuildKeepalive('generate-manifest');
 
 const ROOT = process.cwd();
 const P = toolchainPaths(ROOT);
-const packageJson: unknown = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
-if (!packageJson || typeof packageJson !== 'object' || !('version' in packageJson) || typeof packageJson.version !== 'string') {
-  throw new Error('package.json must contain a string version');
+const toolchainPackageJson: unknown = JSON.parse(
+  fs.readFileSync(path.join(ROOT, 'packages', 'toolchain', 'package.json'), 'utf8'),
+);
+if (
+  !toolchainPackageJson
+  || typeof toolchainPackageJson !== 'object'
+  || !('version' in toolchainPackageJson)
+  || typeof toolchainPackageJson.version !== 'string'
+) {
+  throw new Error('packages/toolchain/package.json must contain a string version');
 }
-const { lock } = loadToolchainStateSync(ROOT);
+const { config, lock } = loadToolchainStateSync(ROOT);
 const sha256 = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 const glueReceipt = path.join(P.receipts, 'glue.json');
 if (!fs.existsSync(glueReceipt)) {
@@ -61,8 +68,8 @@ generateReleaseManifest({
   outputDir: process.env.OUTPUT_DIR ?? P.releaseCdn,
   manifestFile: process.env.MANIFEST_FILE ?? P.manifestFile,
   baseUrl: process.env.CDN_BASE_URL ?? '/cdn',
-  artifactVersion: process.env.ARTIFACT_VERSION ?? packageJson.version,
-  runtimeAbi: process.env.RUNTIME_ABI ?? 'emception-browser-v1',
+  artifactVersion: toolchainPackageJson.version,
+  runtimeAbi: config.runtimeAbi,
   patchSetVersion: PATCH_SET_VERSION,
   toolVersions,
   toolchainLockHash,
