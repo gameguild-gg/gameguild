@@ -43,6 +43,46 @@ test('toolchain paths separate tracked policy, disposable cache, and release art
   });
 });
 
+test('Windows Toolchain processes avoid direct cmd shims and remote tar parsing', async () => {
+  const { describePnpmFailure, pnpmInvocation } = await import('../toolchain/cli.ts');
+  const { normalizeWindowsCpythonMakefile } = await import('../lib/cpython-windows.ts');
+  const { rewriteMsysPathReferences, toMsysPath } = await import('../lib/posix-path.ts');
+  const { TOOLCHAIN_RECIPES } = await import('../toolchain/recipes.ts');
+
+  assert.deepEqual(pnpmInvocation('win32', 'C:\\Windows\\System32\\cmd.exe'), {
+    executable: 'C:\\Windows\\System32\\cmd.exe',
+    arguments: ['/d', '/s', '/c', 'pnpm'],
+  });
+  assert.deepEqual(pnpmInvocation('linux'), { executable: 'pnpm', arguments: [] });
+  assert.equal(toMsysPath('E:\\sources\\cpython\\configure', 'win32'), '/e/sources/cpython/configure');
+  assert.equal(toMsysPath('/sources/cpython/configure', 'linux'), '/sources/cpython/configure');
+  assert.equal(
+    rewriteMsysPathReferences('srcdir=/e/sources/cpython\n', 'E:\\sources\\cpython', 'win32'),
+    'srcdir=E:/sources/cpython\n',
+  );
+  assert.equal(
+    normalizeWindowsCpythonMakefile(
+      'srcdir=/e/sources/cpython\nSOABI=\t\tcpython-313\nMULTIARCH=\t\t\nMULTIARCH_CPPFLAGS = \nLIBS=\t\t-ldl -lpthread -latomic\n',
+      'E:\\sources\\cpython',
+    ),
+    'srcdir=E:/sources/cpython\nSOABI=\t\tcpython-313-wasm32-emscripten\n'
+      + 'MULTIARCH=\t\twasm32-emscripten\nMULTIARCH_CPPFLAGS = -DMULTIARCH=\\"wasm32-emscripten\\"\n'
+      + 'LIBS=\t\t-ldl -lpthread\n',
+  );
+  assert.match(
+    describePnpmFailure('recipe:emsdk', {
+      status: null,
+      signal: null,
+      error: Object.assign(new Error('spawnSync pnpm.cmd EINVAL'), { code: 'EINVAL' }),
+    }),
+    /recipe:emsdk.*EINVAL/,
+  );
+  assert.deepEqual(
+    TOOLCHAIN_RECIPES.emsdk.outputs,
+    ['.cache/toolchain/emsdk/upstream/emscripten/emcc.py'],
+  );
+});
+
 test('toolchain lock serialization is stable and validates the CMake major policy', async (context) => {
   const root = await temporaryRoot(context);
   const { calculateConfigHash, loadToolchainState, serializeToolchainLock } = await import('../toolchain/lock.ts');
@@ -325,6 +365,23 @@ test('locked source checksum is verified before extraction and workspace hashes 
   );
   assert.equal(await readFile(download, 'utf8'), poisoned.toString());
   await assert.rejects(readFile(path.join(destination, 'CMakeLists.txt')));
+});
+
+test('locked archives extract through the cross-platform Node implementation', async (context) => {
+  const { gzipSync } = await import('node:zlib');
+  const { createDeterministicTar } = await import('../lib/deterministic-tar.ts');
+  const { extractArchive } = await import('../toolchain/sources.ts');
+  const root = await temporaryRoot(context);
+  const archive = path.join(root, 'source.tar.gz');
+  const destination = path.join(root, 'extracted');
+  const tar = createDeterministicTar([
+    { path: '/source-root/CMakeLists.txt', data: new TextEncoder().encode('project(portable)\n') },
+  ]);
+  await writeFile(archive, gzipSync(tar));
+
+  extractArchive(archive, destination, 1);
+
+  assert.equal(await readFile(path.join(destination, 'CMakeLists.txt'), 'utf8'), 'project(portable)\n');
 });
 
 test('toolchain update dry-run is read-only and accepted updates replace the lock atomically', async (context) => {
