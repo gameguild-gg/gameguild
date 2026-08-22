@@ -24,6 +24,7 @@ export interface ExecuteBuildRecipeOptions {
   readonly recipes: Readonly<Record<string, BuildRecipe>>;
   readonly target: string;
   readonly force?: boolean;
+  readonly forceRecipes?: readonly string[];
   readonly environment?: NodeJS.ProcessEnv;
   readonly lockFile?: string;
   readonly runScript?: (script: string, environment?: NodeJS.ProcessEnv) => void;
@@ -147,7 +148,8 @@ export async function executeBuildRecipe(options: ExecuteBuildRecipeOptions): Pr
     } catch {
       currentOutputs = null;
     }
-    const reusable = !options.force
+    const forced = Boolean(options.force || options.forceRecipes?.includes(name));
+    const reusable = !forced
       && previous?.schemaVersion === 1
       && previous.name === name
       && stableJson(identity) === stableJson({
@@ -166,7 +168,7 @@ export async function executeBuildRecipe(options: ExecuteBuildRecipeOptions): Pr
       const commands: string[] = [];
       const context: BuildContext = {
         root: options.root,
-        force: Boolean(options.force),
+        force: forced,
         runScript(script, environment = options.environment ?? process.env) {
           commands.push(`pnpm run ${script}`);
           if (!options.runScript) throw new Error(`No script runner configured for recipe ${name}`);
