@@ -58,7 +58,7 @@
     "ci:web:build": "pnpm --filter @game-guild/web build",
     "ci:playwright:smoke": "pnpm --filter @game-guild/web test:browser:public",
     "ci:playwright:learning-student": "pnpm --filter @game-guild/web test:browser:learning-student",
-    "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo pnpm-lock.yaml"
+    "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo"
   },
   "packageManager": "pnpm@10.0.0",
   "engines": {
