@@ -40,7 +40,11 @@ describe("dashboard management navigation", () => {
       { title: "Settings", url: "/console/community/testing-lab/settings" },
     ]);
     expect(launchPad?.url).toBe("/console/community/launch-pad");
-    expect(platform?.items.map((item) => item.title)).toEqual(["Roles"]);
+    expect(platform?.items.map((item) => item.title)).toEqual(["Economy", "Roles"]);
+    const economy = platform?.items.find((item) => item.title === "Economy");
+    expect(economy?.subGroups?.map(({ title, url }) => ({ title, url }))).toEqual([
+      { title: "Payout review", url: "/console/economy/payout-reviews" },
+    ]);
     const learning = community?.items.find((item) => item.title === "Learning");
     expect(learning?.subGroups?.map(({ url }) => url)).toEqual([
       "/console/learning",
