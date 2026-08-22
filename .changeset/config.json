@@ -34,18 +34,16 @@
       "@game-guild/tailwind-config",
       "@game-guild/typescript-config",
       "@game-guild/ui",
-      "@game-guild/web",
+      "@game-guild/web"
+    ],
+    [
+      "emception",
+      "@gameguild/emception-toolchain",
       "@gameguild/emception-browser",
-      "@gameguild/emception-demo-next",
-      "@gameguild/emception-demo-react",
-      "@gameguild/emception-demo-run-react",
-      "@gameguild/emception-demo-run-webcomponent",
-      "@gameguild/emception-ide",
+      "@gameguild/emception-xterm",
       "@gameguild/emception-react",
       "@gameguild/emception-webcomponent",
-      "@gameguild/emception-xterm",
-      "emception",
-      "emception-workspace"
+      "@gameguild/emception-ide"
     ]
   ],
   "linked": [],
