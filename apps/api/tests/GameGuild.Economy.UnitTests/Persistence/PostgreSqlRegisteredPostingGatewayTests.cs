@@ -1,11 +1,11 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Economy.Contracts;
+using GameGuild.TestSupport.Economy;
 using GameGuild.Economy.Ledger;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.UnitTests.Persistence;
 
@@ -13,14 +13,14 @@ public sealed class PostgreSqlRegisteredPostingGatewayTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 10, 22, 0, 0, TimeSpan.Zero);
 
-    [DockerFact]
+    [Fact]
     public async Task Post_PersistsAuthorizedSpendInTheImmutableJournalAndReplaysIdempotently()
     {
         await using var database = await CreateDatabaseAsync();
-        await using var context = CreateContext(database.GetConnectionString());
+        await using var context = CreateContext(database.ConnectionString);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(database.GetConnectionString());
+        await using var connection = new NpgsqlConnection(database.ConnectionString);
         await connection.OpenAsync();
         var sourceWallet = Guid.NewGuid();
         var destinationWallet = Guid.NewGuid();
@@ -71,11 +71,11 @@ public sealed class PostgreSqlRegisteredPostingGatewayTests
             .Should().Be(1);
     }
 
-    [DockerFact]
+    [Fact]
     public async Task Post_RejectsAReferenceToAnUnprovisionedAccount()
     {
         await using var database = await CreateDatabaseAsync();
-        await using var context = CreateContext(database.GetConnectionString());
+        await using var context = CreateContext(database.ConnectionString);
         await context.Database.MigrateAsync();
 
         var request = new RegisteredPostingRequest(
@@ -101,18 +101,8 @@ public sealed class PostgreSqlRegisteredPostingGatewayTests
             .WithMessage("*not provisioned*");
     }
 
-    private static async Task<PostgreSqlContainer> CreateDatabaseAsync()
-    {
-        var database = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_registered_posting_gateway")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await database.StartAsync();
-        return database;
-    }
+    private static Task<EconomyPostgreSqlTestDatabase> CreateDatabaseAsync() =>
+        EconomyPostgreSqlTestDatabase.CreateAsync("registered_posting_gateway");
 
     private static ApplicationDbContext CreateContext(string connectionString) =>
         new(new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -171,12 +161,4 @@ public sealed class PostgreSqlRegisteredPostingGatewayTests
         return value is null or DBNull ? default! : (T)value;
     }
 
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
-    }
 }

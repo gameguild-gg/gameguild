@@ -12,8 +12,18 @@ public enum PayoutRequestState
     Submitted = 1,
     Cancelled = 2,
     Approved = 3,
-    Rejected = 4
+    Rejected = 4,
+    AwaitingSecondApproval = 5
 }
+
+public sealed record PayoutRequestReviewAuditEvent(
+    Guid Id,
+    Guid RequestId,
+    Guid TenantId,
+    Guid ActorId,
+    PayoutRequestState Outcome,
+    string Reason,
+    DateTimeOffset OccurredAt);
 
 public sealed record PayoutRequest(
     Guid Id,
@@ -25,7 +35,8 @@ public sealed record PayoutRequest(
     PayoutRequestState State,
     long Version,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt)
+    DateTimeOffset UpdatedAt,
+    Guid? FirstApprovalActorId = null)
 {
     public PayoutRequest Cancel(DateTimeOffset occurredAt)
     {
@@ -45,6 +56,56 @@ public sealed record PayoutRequest(
             UpdatedAt = occurredAt
         };
     }
+
+    public PayoutRequest Review(Guid reviewerId, PayoutRequestState outcome, DateTimeOffset occurredAt)
+    {
+        if (reviewerId == Guid.Empty)
+        {
+            throw new ArgumentException("Reviewer ID is required.", nameof(reviewerId));
+        }
+        if (reviewerId == PayeeId)
+        {
+            throw new PayoutRequestTransitionException("A payout requester cannot review their own request.");
+        }
+        if (outcome is not (PayoutRequestState.Approved or PayoutRequestState.Rejected))
+        {
+            throw new PayoutRequestTransitionException("Payout reviews must approve or reject the request.");
+        }
+        if (occurredAt < UpdatedAt)
+        {
+            throw new ArgumentOutOfRangeException(nameof(occurredAt), "Payout request timestamps cannot move backwards.");
+        }
+
+        return State switch
+        {
+            PayoutRequestState.Submitted when outcome == PayoutRequestState.Approved => this with
+            {
+                State = PayoutRequestState.AwaitingSecondApproval,
+                Version = checked(Version + 1),
+                UpdatedAt = occurredAt,
+                FirstApprovalActorId = reviewerId
+            },
+            PayoutRequestState.Submitted when outcome == PayoutRequestState.Rejected => this with
+            {
+                State = PayoutRequestState.Rejected,
+                Version = checked(Version + 1),
+                UpdatedAt = occurredAt
+            },
+            PayoutRequestState.AwaitingSecondApproval when FirstApprovalActorId is null =>
+                throw new PayoutRequestTransitionException(
+                    "A payout request awaiting second approval must retain the first approver."),
+            PayoutRequestState.AwaitingSecondApproval when FirstApprovalActorId == reviewerId =>
+                throw new PayoutRequestTransitionException(
+                    "The administrator who gave the first approval cannot complete the payout approval."),
+            PayoutRequestState.AwaitingSecondApproval => this with
+            {
+                State = outcome,
+                Version = checked(Version + 1),
+                UpdatedAt = occurredAt
+            },
+            _ => throw new PayoutRequestTransitionException("Only a submitted payout request can be reviewed.")
+        };
+    }
 }
 
 public interface IPayoutRequestStore
@@ -55,9 +116,23 @@ public interface IPayoutRequestStore
 
     PayoutRequest GetForPayee(Guid requestId, Guid payeeId);
 
+    PayoutRequest GetForReview(Guid requestId, Guid tenantId);
+
     IReadOnlyList<PayoutRequest> ListForPayee(Guid payeeId, int take);
 
+    IReadOnlyList<PayoutRequest> ListForReview(Guid tenantId, int take);
+
+    IReadOnlyList<PayoutRequestReviewAuditEvent> ListReviewAudit(Guid requestId, Guid tenantId);
+
     PayoutRequest Update(PayoutRequest request, long expectedVersion);
+
+    PayoutRequest Review(
+        PayoutRequest request,
+        long expectedVersion,
+        Guid tenantId,
+        Guid reviewerId,
+        PayoutRequestState outcome,
+        string reason);
 }
 
 public sealed class PayoutRequestReplayConflictException(string message) : InvalidOperationException(message);

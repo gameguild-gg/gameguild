@@ -23,10 +23,21 @@ public sealed class EconomyProviderCapabilityReadinessTests
     }
 
     [Fact]
-    public void EnabledNonProviderCapability_IsReadyWithoutStripe()
+    public void EnabledNonProviderCapability_IsDisabledUntilJurisdictionIsExplicitlyAllowed()
     {
         var readiness = CreateReadiness(
             enabledCapabilities: [nameof(EconomyValueMovementCapability.ConvertHardToSoft)]);
+
+        readiness.Assess(EconomyValueMovementCapability.ConvertHardToSoft)
+            .State.Should().Be(EconomyCapabilityReadinessState.Disabled);
+    }
+
+    [Fact]
+    public void EnabledNonProviderCapability_IsReadyWhenJurisdictionIsExplicitlyAllowed()
+    {
+        var readiness = CreateReadiness(
+            enabledCapabilities: [nameof(EconomyValueMovementCapability.ConvertHardToSoft)],
+            allowedJurisdictions: ["BR"]);
 
         readiness.Assess(EconomyValueMovementCapability.ConvertHardToSoft)
             .State.Should().Be(EconomyCapabilityReadinessState.Ready);
@@ -37,7 +48,8 @@ public sealed class EconomyProviderCapabilityReadinessTests
     {
         var readiness = CreateReadiness(
             enabledCapabilities: [nameof(EconomyValueMovementCapability.PayoutExecution)],
-            payoutWriteWorkflowEnabled: true);
+            payoutWriteWorkflowEnabled: true,
+            allowedJurisdictions: ["BR"]);
 
         readiness.Assess(EconomyValueMovementCapability.PayoutExecution)
             .State.Should().Be(EconomyCapabilityReadinessState.ProviderNotReady);
@@ -49,6 +61,7 @@ public sealed class EconomyProviderCapabilityReadinessTests
         var readiness = CreateReadiness(
             enabledCapabilities: [nameof(EconomyValueMovementCapability.PayoutExecution)],
             payoutWriteWorkflowEnabled: true,
+            allowedJurisdictions: ["BR"],
             gateway: new StripeGatewayOptions
             {
                 IsEnabled = true,
@@ -74,7 +87,8 @@ public sealed class EconomyProviderCapabilityReadinessTests
                 AccountId = "acct_platform",
                 LiveMode = false
             },
-            billing: CreateBilling());
+            billing: CreateBilling(),
+            allowedJurisdictions: ["BR"]);
 
         var result = readiness.Assess(EconomyValueMovementCapability.PayoutExecution);
 
@@ -106,7 +120,8 @@ public sealed class EconomyProviderCapabilityReadinessTests
         string[]? enabledCapabilities = null,
         bool payoutWriteWorkflowEnabled = false,
         StripeGatewayOptions? gateway = null,
-        BillingConfiguration? billing = null)
+        BillingConfiguration? billing = null,
+        string[]? allowedJurisdictions = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -119,7 +134,8 @@ public sealed class EconomyProviderCapabilityReadinessTests
             Options.Create(new EconomyRiskCompositionOptions
             {
                 ValueMovingDecisionsEnabled = enabledCapabilities is not null,
-                EnabledCapabilities = enabledCapabilities ?? []
+                EnabledCapabilities = enabledCapabilities ?? [],
+                AllowedJurisdictions = allowedJurisdictions ?? []
             }),
             Options.Create(gateway ?? new StripeGatewayOptions()),
             Options.Create(billing ?? new BillingConfiguration()),

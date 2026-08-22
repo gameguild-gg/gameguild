@@ -1,8 +1,8 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Economy.Contracts;
+using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.Treasury.UnitTests;
 
@@ -10,14 +10,12 @@ public sealed class PostgreSqlAdminWithdrawalStoreTests
 {
     private static readonly DateTimeOffset Time = new(2026, 8, 10, 18, 0, 0, TimeSpan.Zero);
 
-    [DockerFact]
+    [Fact]
     public async Task StoreAndAudit_PersistWithdrawalLifecycle()
     {
-        await using var container = new PostgreSqlBuilder().WithImage("postgres:16-alpine")
-            .WithDatabase("treasury_store").WithUsername("test").WithPassword("test").Build();
-        await container.StartAsync();
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("treasury_store");
         await using var context = new ApplicationDbContext(
-            new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(container.GetConnectionString()).Options);
+            new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(database.ConnectionString).Options);
         await context.Database.MigrateAsync();
 
         var store = new PostgreSqlAdminWithdrawalStore(context);
@@ -69,12 +67,4 @@ public sealed class PostgreSqlAdminWithdrawalStoreTests
         AdminWithdrawalRunState.PendingApproval, 1, 1, 1, new ReserveVersion(1), 1,
         new PolicyVersion(1), null, null, Time, Time);
 
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
-    }
 }
