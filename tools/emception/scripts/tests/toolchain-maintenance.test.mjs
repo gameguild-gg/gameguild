@@ -442,3 +442,52 @@ test('Browser manifest URL is generated from the matching package versions', asy
   await writeFile(path.join(toolchain, 'package.json'), '{"name":"@gameguild/emception-toolchain","version":"9.8.8"}');
   await assert.rejects(generateBrowserManifestUrl(root), /Browser 9\.8\.7 does not match Toolchain 9\.8\.8/);
 });
+
+test('release recipes can be forced without rebuilding verified tool dependencies', async (context) => {
+  const { calculateConfigHash, serializeToolchainLock } = await import('../toolchain/lock.ts');
+  const { executeBuildRecipe } = await import('../toolchain/receipts.ts');
+  const root = await temporaryRoot(context);
+  const config = { schemaVersion: 1, runtimeAbi: 'abi', constraints: { cmake: '<4' }, emsdkGroup: [] };
+  const lock = {
+    schemaVersion: 1,
+    configHash: calculateConfigHash(config),
+    tools: {
+      cmake: {
+        version: '3.31.12',
+        source: { kind: 'archive', url: 'https://example.invalid/cmake', sha256: 'c'.repeat(64) },
+      },
+    },
+  };
+  await writeFile(path.join(root, 'toolchain', 'toolchain.config.json'), `${JSON.stringify(config, null, 2)}\n`);
+  await writeFile(path.join(root, 'toolchain', 'toolchain.lock.json'), serializeToolchainLock(lock));
+  const dependencyOutput = path.join('artifacts', 'toolchain', 'tools', 'dependency.wasm');
+  const releaseOutput = path.join('artifacts', 'toolchain', 'release', 'cdn', 'manifest.json');
+  let dependencyRuns = 0;
+  let releaseRuns = 0;
+  const releaseForces = [];
+  const recipes = {
+    dependency: {
+      name: 'dependency', dependencies: [], lockEntries: ['cmake'], outputs: [dependencyOutput],
+      async run({ root: recipeRoot }) {
+        dependencyRuns += 1;
+        await mkdir(path.dirname(path.join(recipeRoot, dependencyOutput)), { recursive: true });
+        await writeFile(path.join(recipeRoot, dependencyOutput), `dependency-${dependencyRuns}`);
+      },
+    },
+    release: {
+      name: 'release', dependencies: ['dependency'], lockEntries: [], outputs: [releaseOutput],
+      async run({ root: recipeRoot, force }) {
+        releaseForces.push(force);
+        releaseRuns += 1;
+        await mkdir(path.dirname(path.join(recipeRoot, releaseOutput)), { recursive: true });
+        await writeFile(path.join(recipeRoot, releaseOutput), `release-${releaseRuns}`);
+      },
+    },
+  };
+
+  await executeBuildRecipe({ root, recipes, target: 'release' });
+  await executeBuildRecipe({ root, recipes, target: 'release', forceRecipes: ['release'] });
+
+  assert.deepEqual([dependencyRuns, releaseRuns], [1, 2]);
+  assert.deepEqual(releaseForces, [false, true]);
+});

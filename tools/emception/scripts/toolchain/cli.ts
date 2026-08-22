@@ -165,7 +165,15 @@ export async function runToolchainCli(args: readonly string[], dependencies: Too
   }
 
   if (command === 'release') {
-    runScript('build:cdn:serial');
+    await executeBuildRecipe({
+      root,
+      recipes: TOOLCHAIN_RECIPES,
+      target: 'release',
+      forceRecipes: ['stage', 'glue', 'manifest', 'brotli', 'bundles', 'release'],
+      environment: { ...process.env, EMCEPTION_FORCE_RELEASE: '1' },
+      runScript,
+      output,
+    });
     return;
   }
 
