@@ -67,7 +67,12 @@ pnpm run typecheck:packages
 pnpm run build:packages
 ```
 
-The complete SDK and artifact release is built with `pnpm run build:all`.
+The complete SDK and artifact release is built with:
+
+```bash
+pnpm toolchain build all
+pnpm toolchain release
+```
 
 ## Documentation
 
@@ -88,9 +93,10 @@ tools/emception/
 │   ├── webcomponent/  # custom elements
 │   └── xterm/         # terminal adapter
 ├── scripts/           # tool builds, staging, patching, packaging
-├── docs/
-├── sysroot/           # mutable build workspace (generated)
-└── build/stage/       # frozen release input (generated)
+├── toolchain/         # tracked config, lock and overlays
+├── .cache/toolchain/  # disposable sources and build cache
+├── artifacts/toolchain/ # canonical generated outputs and receipts
+└── docs/
 ```
 
 ## License

@@ -111,3 +111,18 @@ test('publication packs Toolchain first and waits for the registry before consum
   assert.equal(EMCEPTION_PUBLISH_ORDER[0].name, '@gameguild/emception-toolchain');
   assert.deepEqual(published, EMCEPTION_PUBLISH_ORDER.map(({ name }) => name));
 });
+
+test('maintained source and documentation use only canonical Toolchain paths', async () => {
+  const filenames = [
+    path.join(emceptionRoot, 'README.md'),
+    path.join(emceptionRoot, 'docs', 'architecture.md'),
+    path.join(emceptionRoot, 'docs', 'build.md'),
+    path.join(emceptionRoot, 'packages', 'toolchain', 'README.md'),
+    path.join(emceptionRoot, 'packages', 'browser', 'src', 'worker-entry.ts'),
+  ];
+  const stalePath = /(?:tools\/emception\/userland|build\/cdn|build\/stage|mutable `sysroot\/`|├── sysroot\/|tools\/emception\/tools\/emsdk)/;
+
+  for (const filename of filenames) {
+    assert.doesNotMatch(await readFile(filename, 'utf8'), stalePath, `${filename} references a removed Toolchain path`);
+  }
+});

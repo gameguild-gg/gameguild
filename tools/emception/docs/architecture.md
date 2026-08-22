@@ -40,18 +40,20 @@ or malformed profile before it initializes the VFS.
 
 ```mermaid
 flowchart LR
-  Build[Tool and library scripts] --> Mutable[sysroot/ mutable workspace]
-  Mutable -->|build:stage:sysroot| Stage[build/stage/sysroot snapshot]
+  Lock[toolchain.lock.json] --> Sources[.cache/toolchain sources and builds]
+  Overlays[toolchain/overlays] --> Sources
+  Sources --> Mutable[artifacts/toolchain/sysroot]
+  Mutable -->|stage| Stage[artifacts/toolchain/stage/sysroot snapshot]
   Stage -->|patch:glue| Patched[versioned patches on staged glue only]
-  Patched -->|build:manifest| Release[build/cdn canonical release]
+  Patched -->|manifest + bundles| Release[artifacts/toolchain/release/cdn]
   Release -->|bundles + hashes| Toolchain[@gameguild/emception-toolchain/cdn]
   Release -. compatibility copy .-> Core[emception/cdn]
 ```
 
-The mutable `sysroot/` is build input. Release scripts only accept
-`build/stage/sysroot`, so packaging cannot silently mutate or publish the
-working tree. `stage-sysroot.mjs` records a content fingerprint and file count
-before release processing.
+The mutable sysroot under `artifacts/toolchain` is build input. Release scripts
+only accept its frozen staged snapshot, so packaging cannot silently mutate or
+publish the working tree. `stage-sysroot.mjs` records a content fingerprint and
+file count before release processing.
 
 Generated glue patches live in `scripts/lib/glue-patches.mjs`. They are:
 
