@@ -271,6 +271,24 @@ test('build scripts select versions only from the toolchain lock', async () => {
   }
 });
 
+test('legacy Toolchain build commands are thin aliases to the maintenance CLI', async () => {
+  const root = path.resolve(import.meta.dirname, '..', '..');
+  const packageJson = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+  const aliases = [
+    'build:emsdk', 'build:binaryen', 'build:cpython', 'build:llvm', 'build:libcurl-lite',
+    'build:cmake', 'build:sdl3', 'build:imgui', 'build:raylib', 'build:allegro',
+    'build:sysroot', 'build:stage:sysroot', 'build:manifest', 'build:brotli', 'build:bundles',
+    'build:toolchain:light', 'build:toolchain:heavy', 'build:toolchain:parallel',
+    'build:graphics:parallel', 'build:graphics', 'build:cdn:serial', 'build:cdn', 'build:pipeline',
+  ];
+
+  for (const alias of aliases) {
+    assert.match(packageJson.scripts[alias], /^(?:pnpm )?toolchain (?:build|release)/, `${alias} bypasses the CLI`);
+  }
+  const recipes = await readFile(path.join(root, 'scripts', 'toolchain', 'recipes.ts'), 'utf8');
+  assert.doesNotMatch(recipes, /scriptRecipe\([^)]*'build:/s);
+});
+
 test('locked source checksum is verified before extraction and workspace hashes are deterministic', async (context) => {
   const { createHash } = await import('node:crypto');
   const { ensureLockedSource, hashDirectory } = await import('../toolchain/sources.ts');
