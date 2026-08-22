@@ -51,7 +51,13 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@game-guild/web"
+    "@game-guild/web",
+    "@game-guild/emception-ui",
+    "emception-workspace",
+    "@gameguild/emception-demo-next",
+    "@gameguild/emception-demo-react",
+    "@gameguild/emception-demo-run-react",
+    "@gameguild/emception-demo-run-webcomponent"
   ],
   "privatePackages": {
     "version": true,

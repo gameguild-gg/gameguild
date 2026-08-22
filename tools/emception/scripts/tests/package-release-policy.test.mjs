@@ -50,6 +50,9 @@ test('Changesets fixes only the seven public Emception packages together', async
   assert.deepEqual([...emceptionGroups[0]].sort(), expected);
   assert.equal(config.fixed.some((group) => group.includes('emception-workspace')), false);
   assert.equal(config.fixed.some((group) => group.some((name) => name.startsWith('@gameguild/emception-demo-'))), false);
+  assert.equal(config.ignore.includes('@game-guild/emception-ui'), true);
+  assert.equal(config.ignore.includes('emception-workspace'), true);
+  assert.equal(config.ignore.filter((name) => name.startsWith('@gameguild/emception-demo-')).length, 4);
 });
 
 test('Emception versioning rejects package manifests outside the seven-package release group', async () => {
