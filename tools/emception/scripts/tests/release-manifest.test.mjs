@@ -103,7 +103,12 @@ test('generateReleaseManifest rejects an unpatched mutable sysroot path', async 
 test('generate-manifest CLI assembles the canonical build paths', async (context) => {
   const paths = await fixture();
   context.after(() => rm(paths.root, { recursive: true, force: true }));
-  await writeFile(path.join(paths.root, 'package.json'), '{"version":"9.8.7"}');
+  await writeFile(path.join(paths.root, 'package.json'), '{"version":"0.0.0","private":true}');
+  await mkdir(path.join(paths.root, 'packages', 'toolchain'), { recursive: true });
+  await writeFile(
+    path.join(paths.root, 'packages', 'toolchain', 'package.json'),
+    '{"name":"@gameguild/emception-toolchain","version":"9.8.7"}',
+  );
   const workspaceRoot = path.resolve(import.meta.dirname, '..', '..');
   await mkdir(path.join(paths.root, 'toolchain'), { recursive: true });
   for (const filename of ['toolchain.config.json', 'toolchain.lock.json']) {
@@ -120,13 +125,19 @@ test('generate-manifest CLI assembles the canonical build paths', async (context
   const manifestScript = path.resolve(import.meta.dirname, '../generate-manifest.ts');
   const result = spawnSync(process.execPath, [tsxCli, manifestScript], {
     cwd: paths.root,
-    env: { ...process.env, STAGED_SYSPATH: paths.sysroot },
+    env: {
+      ...process.env,
+      STAGED_SYSPATH: paths.sysroot,
+      ARTIFACT_VERSION: '0.0.1',
+      RUNTIME_ABI: 'unsupported-override',
+    },
     encoding: 'utf8',
   });
   const manifest = JSON.parse(await readFile(paths.manifestFile, 'utf8'));
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(manifest.artifactVersion, '9.8.7');
+  assert.equal(manifest.runtimeAbi, 'emception-browser-v1');
   assert.equal(manifest.schemaVersion, 2);
   assert.equal(manifest.profiles.clang.wasm, '/usr/lib/clang.wasm');
   assert.match(manifest.toolchainLockHash, /^[a-f0-9]{64}$/);
