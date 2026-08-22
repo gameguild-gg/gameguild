@@ -308,3 +308,49 @@ test('locked source checksum is verified before extraction and workspace hashes 
   assert.equal(await readFile(download, 'utf8'), poisoned.toString());
   await assert.rejects(readFile(path.join(destination, 'CMakeLists.txt')));
 });
+
+test('toolchain update dry-run is read-only and accepted updates replace the lock atomically', async (context) => {
+  const { calculateConfigHash, serializeToolchainLock } = await import('../toolchain/lock.ts');
+  const { runToolchainCli } = await import('../toolchain/cli.ts');
+  const root = await temporaryRoot(context);
+  const config = {
+    schemaVersion: 1,
+    runtimeAbi: 'emception-browser-v1',
+    constraints: { cmake: '<4' },
+    emsdkGroup: [],
+  };
+  const lock = {
+    schemaVersion: 1,
+    configHash: calculateConfigHash(config),
+    tools: {
+      cmake: {
+        version: '3.31.12',
+        source: { kind: 'archive', url: 'https://example.invalid/old', sha256: 'a'.repeat(64) },
+      },
+    },
+  };
+  await writeFile(path.join(root, 'toolchain', 'toolchain.config.json'), `${JSON.stringify(config, null, 2)}\n`);
+  await writeFile(path.join(root, 'toolchain', 'toolchain.lock.json'), serializeToolchainLock(lock));
+  const provider = {
+    async latestVersion() { return '3.31.13'; },
+    async resolve(name, requested) {
+      assert.equal(name, 'cmake');
+      assert.equal(requested, 'latest');
+      return {
+        version: '3.31.13',
+        source: { kind: 'archive', url: 'https://example.invalid/new', sha256: 'b'.repeat(64) },
+      };
+    },
+    async inspectEmsdk() { throw new Error('not used'); },
+  };
+  const output = [];
+
+  await runToolchainCli(['update', 'cmake', 'latest', '--dry-run'], { root, provider, output: (line) => output.push(line) });
+  assert.equal((JSON.parse(await readFile(path.join(root, 'toolchain', 'toolchain.lock.json'), 'utf8'))).tools.cmake.version, '3.31.12');
+
+  await runToolchainCli(['update', 'cmake', 'latest'], { root, provider, output: (line) => output.push(line) });
+  assert.equal((JSON.parse(await readFile(path.join(root, 'toolchain', 'toolchain.lock.json'), 'utf8'))).tools.cmake.version, '3.31.13');
+  const toolchainEntries = await readdir(path.join(root, 'toolchain'));
+  assert.deepEqual(toolchainEntries.sort(), ['toolchain.config.json', 'toolchain.lock.json']);
+  assert.equal(output.some((line) => line.includes('dry-run')), true);
+});

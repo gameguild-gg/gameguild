@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, rename, rm, writeFile } from 'node:fs/promises';
 
 import { toolchainPaths } from './paths.ts';
 
@@ -148,4 +148,21 @@ export async function loadToolchainState(root: string = process.cwd()) {
   const lock = JSON.parse(lockSource) as ToolchainLock;
   validateToolchainState(config, lock);
   return { config, lock, paths } as const;
+}
+
+export async function writeToolchainLockAtomic(
+  root: string,
+  config: ToolchainConfig,
+  lock: ToolchainLock,
+): Promise<void> {
+  validateToolchainState(config, lock);
+  const paths = toolchainPaths(root);
+  const temporary = `${paths.lockFile}.tmp-${process.pid}`;
+  try {
+    await writeFile(temporary, serializeToolchainLock(lock), { encoding: 'utf8', flag: 'wx' });
+    await rename(temporary, paths.lockFile);
+  } catch (error) {
+    await rm(temporary, { force: true });
+    throw error;
+  }
 }

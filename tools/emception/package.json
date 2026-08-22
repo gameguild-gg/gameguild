@@ -43,6 +43,7 @@
     "stage:toolchain:cdn": "node scripts/stage-toolchain-cdn.mjs",
     "typecheck": "tsc --noEmit",
     "clean": "tsx scripts/clean.ts",
+    "toolchain": "tsx scripts/toolchain/cli.ts",
     "build:emsdk": "tsx scripts/setup-emsdk.ts",
     "build:binaryen": "tsx scripts/build-binaryen.ts",
     "build:cpython": "tsx scripts/build-cpython.ts",
