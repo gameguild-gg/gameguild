@@ -38,6 +38,7 @@
     "e2e:record:continue": "node scripts/e2e-record-continue.mjs",
     "typecheck": "turbo run typecheck",
     "typecheck:emception": "pnpm --dir tools/emception run typecheck:packages",
+    "version:emception": "node scripts/devops/version-emception.mjs",
     "lint": "turbo run lint",
     "format": "pnpm -r run format",
     "generate": "turbo run generate",
