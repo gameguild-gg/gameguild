@@ -50,3 +50,29 @@ test('Changesets fixes only the seven public Emception packages together', async
   assert.equal(config.fixed.some((group) => group.includes('emception-workspace')), false);
   assert.equal(config.fixed.some((group) => group.some((name) => name.startsWith('@gameguild/emception-demo-'))), false);
 });
+
+test('Emception versioning rejects package manifests outside the seven-package release group', async () => {
+  const { assertOnlyEmceptionPackageManifests } = await import(
+    '../../../../scripts/devops/emception-release-policy.mjs'
+  );
+  const allowed = [
+    'tools/emception/packages/core/package.json',
+    'tools/emception/packages/toolchain/package.json',
+    'tools/emception/packages/browser/package.json',
+    'tools/emception/packages/xterm/package.json',
+    'tools/emception/packages/react/package.json',
+    'tools/emception/packages/webcomponent/package.json',
+    'tools/emception/packages/ide/package.json',
+    'pnpm-lock.yaml',
+  ];
+
+  assert.doesNotThrow(() => assertOnlyEmceptionPackageManifests(allowed));
+  assert.throws(
+    () => assertOnlyEmceptionPackageManifests([...allowed, 'packages/infrastructure/ui-emception/package.json']),
+    /outside the Emception release group/,
+  );
+  assert.throws(
+    () => assertOnlyEmceptionPackageManifests([...allowed, 'tools/emception/package.json']),
+    /outside the Emception release group/,
+  );
+});
