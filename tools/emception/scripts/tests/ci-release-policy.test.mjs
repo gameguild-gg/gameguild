@@ -23,6 +23,12 @@ test('Emception CI is Linux-only, lockfile-driven, receipt-aware, and Changesets
   assert.doesNotMatch(workflow, /auto-changeset\.mjs --apply/);
   assert.match(workflow, /tools\/emception\/packages\/toolchain\/cdn/);
   assert.match(workflow, /emception-v\$\{VERSION\}/);
+  assert.equal(
+    workflow.indexOf('- name: Build all Emception packages')
+      < workflow.indexOf('- name: Generate clean release staging and packages'),
+    true,
+    'package clean/build must finish before the canonical CDN is staged',
+  );
 
   const ignore = await readFile(path.join(repoRoot, '.gitignore'), 'utf8');
   const rootPackage = JSON.parse(await readFile(path.join(repoRoot, 'package.json'), 'utf8'));

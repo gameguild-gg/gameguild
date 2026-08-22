@@ -158,9 +158,6 @@ jobs:
             pnpm --dir tools/emception toolchain build all
           fi
 
-      - name: Generate clean release staging and packages
-        run: pnpm --dir tools/emception toolchain release
-
       - name: Build all Emception packages
         run: pnpm run build:emception
 
@@ -171,6 +168,9 @@ jobs:
         run: |
           pnpm run test:emception
           pnpm run test:emception:types
+
+      - name: Generate clean release staging and packages
+        run: pnpm --dir tools/emception toolchain release
 
       - name: Verify release gates and npm package contents
         shell: bash
