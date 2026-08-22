@@ -40,7 +40,7 @@ const sysroot = (filename: string) => `artifacts/toolchain/sysroot/${filename}`;
 export const TOOLCHAIN_RECIPES: Readonly<Record<string, BuildRecipe>> = {
   emsdk: scriptRecipe(
     'emsdk', [], ['emsdk'],
-    ['.cache/toolchain/emsdk/upstream/emscripten/emcc'],
+    ['.cache/toolchain/emsdk/upstream/emscripten/emcc.py'],
     'recipe:emsdk',
   ),
   warmup: scriptRecipe(

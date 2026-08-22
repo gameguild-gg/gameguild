@@ -17,6 +17,8 @@ import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { normalizeWindowsCpythonMakefile } from './lib/cpython-windows.ts';
+import { toMsysPath } from './lib/posix-path.ts';
 import { loadToolchainStateSync, lockedTool, lockedVersion, pythonMajorMinor } from './toolchain/config.ts';
 import { ensureLockedSource } from './toolchain/sources.ts';
 
@@ -263,8 +265,11 @@ if (!fs.existsSync(path.join(BUILD_WASM_DIR, 'Makefile'))) {
     const buildTriple = process.platform === 'win32'
         ? runPosix('./config.guess', SOURCE_DIR).stdout
         : shell.exec(`"${path.join(SOURCE_DIR, 'config.guess')}"`, { silent: true }).stdout.trim();
+    const configureScript = process.platform === 'win32'
+        ? toMsysPath(path.join(SOURCE_DIR, 'configure'))
+        : path.join(SOURCE_DIR, 'configure');
     const configureArgs = [
-        quotePosix(path.join(SOURCE_DIR, 'configure')),
+        quotePosix(configureScript),
         '--host=wasm32-unknown-emscripten',
         `--build=${buildTriple}`,
         '--with-emscripten-target=browser',
@@ -285,6 +290,13 @@ if (!fs.existsSync(path.join(BUILD_WASM_DIR, 'Makefile'))) {
     console.log(configureCmd);
     if (process.platform === 'win32') runPosix(configureCmd, BUILD_WASM_DIR);
     else shell.exec(configureCmd);
+}
+
+if (process.platform === 'win32') {
+    const makefile = path.join(BUILD_WASM_DIR, 'Makefile');
+    const content = fs.readFileSync(makefile, 'utf8');
+    const normalized = normalizeWindowsCpythonMakefile(content, SOURCE_DIR);
+    if (normalized !== content) fs.writeFileSync(makefile, normalized);
 }
 
 // Build WASM

@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { extract as extractTar } from 'tar';
 
 import type { LockedTool, ToolName, ToolchainConfig, ToolchainLock } from './lock.ts';
 import { toolchainPaths } from './paths.ts';
@@ -85,6 +86,21 @@ function downloadLockedArchive(url: string, destination: string, expectedHash: s
   }
 }
 
+export function extractArchive(
+  archive: string,
+  destination: string,
+  stripComponents = 1,
+): void {
+  fs.mkdirSync(destination, { recursive: true });
+  extractTar({
+    file: archive,
+    cwd: destination,
+    strip: stripComponents,
+    sync: true,
+    preservePaths: false,
+  });
+}
+
 /** Materialize an exact lock entry into the disposable source cache. */
 export function ensureLockedSource(
   root: string,
@@ -122,14 +138,9 @@ export function ensureLockedSource(
 
   const temporary = `${destination}.extract-${process.pid}`;
   fs.rmSync(temporary, { recursive: true, force: true });
-  fs.mkdirSync(temporary, { recursive: true });
   try {
-    const extraction = spawnSync(
-      'tar',
-      ['-xf', archive, '--strip-components=1', '-C', temporary],
-      { stdio: 'inherit' },
-    );
-    if (extraction.status !== 0 || !fs.existsSync(path.join(temporary, keyFile))) {
+    extractArchive(archive, temporary);
+    if (!fs.existsSync(path.join(temporary, keyFile))) {
       throw new Error(`Failed to extract locked source ${name}@${tool.version}`);
     }
     fs.writeFileSync(

@@ -24,15 +24,37 @@ export interface ToolchainCliDependencies {
   runScript?: (script: string, environment?: NodeJS.ProcessEnv) => void;
 }
 
+export function pnpmInvocation(
+  platform: NodeJS.Platform = process.platform,
+  commandShell: string = process.env.ComSpec ?? 'cmd.exe',
+): { executable: string; arguments: string[] } {
+  return platform === 'win32'
+    ? { executable: commandShell, arguments: ['/d', '/s', '/c', 'pnpm'] }
+    : { executable: 'pnpm', arguments: [] };
+}
+
+export function describePnpmFailure(
+  script: string,
+  result: { status: number | null; signal: NodeJS.Signals | null; error?: Error },
+): string {
+  if (result.error) return `pnpm run ${script} could not start: ${result.error.message}`;
+  if (result.signal) return `pnpm run ${script} was terminated by signal ${result.signal}`;
+  return `pnpm run ${script} failed with exit ${result.status}`;
+}
+
 function isToolName(value: string): value is ToolName {
   return TOOL_NAMES.includes(value as ToolName);
 }
 
 function defaultRunner(root: string) {
   return (script: string, environment: NodeJS.ProcessEnv = process.env) => {
-    const executable = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-    const result = spawnSync(executable, ['run', script], { cwd: root, env: environment, stdio: 'inherit' });
-    if (result.status !== 0) throw new Error(`pnpm run ${script} failed with exit ${result.status}`);
+    const invocation = pnpmInvocation();
+    const result = spawnSync(invocation.executable, [...invocation.arguments, 'run', script], {
+      cwd: root,
+      env: environment,
+      stdio: 'inherit',
+    });
+    if (result.status !== 0) throw new Error(describePnpmFailure(script, result));
   };
 }
 
