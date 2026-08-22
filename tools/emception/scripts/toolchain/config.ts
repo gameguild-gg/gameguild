@@ -11,8 +11,9 @@ import { toolchainPaths } from './paths.ts';
 
 export function loadToolchainStateSync(root: string = process.cwd()) {
   const paths = toolchainPaths(root);
+  const lockFile = process.env.EMCEPTION_TOOLCHAIN_LOCK ?? paths.lockFile;
   const config = JSON.parse(readFileSync(paths.configFile, 'utf8')) as ToolchainConfig;
-  const lock = JSON.parse(readFileSync(paths.lockFile, 'utf8')) as ToolchainLock;
+  const lock = JSON.parse(readFileSync(lockFile, 'utf8')) as ToolchainLock;
   validateToolchainState(config, lock);
   return { config, lock, paths } as const;
 }

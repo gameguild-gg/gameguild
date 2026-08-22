@@ -138,11 +138,12 @@ export function validateToolchainState(config: ToolchainConfig, lock: ToolchainL
   }
 }
 
-export async function loadToolchainState(root: string = process.cwd()) {
+export async function loadToolchainState(root: string = process.cwd(), lockOverride?: string) {
   const paths = toolchainPaths(root);
+  const lockFile = lockOverride ?? process.env.EMCEPTION_TOOLCHAIN_LOCK ?? paths.lockFile;
   const [configSource, lockSource] = await Promise.all([
     readFile(paths.configFile, 'utf8'),
-    readFile(paths.lockFile, 'utf8'),
+    readFile(lockFile, 'utf8'),
   ]);
   const config = JSON.parse(configSource) as ToolchainConfig;
   const lock = JSON.parse(lockSource) as ToolchainLock;
