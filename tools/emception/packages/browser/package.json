@@ -36,7 +36,10 @@
     "access": "public"
   },
   "scripts": {
+    "generate:manifest-url": "node ../../scripts/generate-browser-manifest-url.mjs",
+    "prebuild": "npm run generate:manifest-url",
     "build": "npm run clean && tsc -p tsconfig.json && node -e \"const fs=require('fs');fs.copyFileSync('src/emscripten/subprocess_shim.py','dist/emscripten/subprocess_shim.py');fs.copyFileSync('../../public/coi-serviceworker.js','dist/coi-serviceworker.js')\"",
+    "pretypecheck": "npm run generate:manifest-url",
     "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node ../../scripts/run-node-tests.mjs tests",

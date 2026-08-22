@@ -25,6 +25,7 @@ public/cdn/usr/
 
 # Generated runtime loader assets
 src/loader/cdn/
+packages/browser/src/generated/
 
 # Test artifacts
 coverage/

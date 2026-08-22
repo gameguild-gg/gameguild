@@ -424,3 +424,21 @@ test('build receipts reject changed outputs, dependencies, recipes, and overlays
   assert.equal(receipt.includes(root), false);
   assert.equal(receipt.includes('generatedAt'), false);
 });
+
+test('Browser manifest URL is generated from the matching package versions', async (context) => {
+  const { generateBrowserManifestUrl } = await import('../generate-browser-manifest-url.mjs');
+  const root = await temporaryRoot(context);
+  const browser = path.join(root, 'packages', 'browser');
+  const toolchain = path.join(root, 'packages', 'toolchain');
+  await mkdir(path.join(browser, 'src'), { recursive: true });
+  await mkdir(toolchain, { recursive: true });
+  await writeFile(path.join(browser, 'package.json'), '{"name":"@gameguild/emception-browser","version":"9.8.7"}');
+  await writeFile(path.join(toolchain, 'package.json'), '{"name":"@gameguild/emception-toolchain","version":"9.8.7"}');
+
+  const result = await generateBrowserManifestUrl(root);
+  const generated = await readFile(result.output, 'utf8');
+  assert.match(generated, /@gameguild\/emception-toolchain@9\.8\.7\/cdn\/manifest\.json/);
+
+  await writeFile(path.join(toolchain, 'package.json'), '{"name":"@gameguild/emception-toolchain","version":"9.8.8"}');
+  await assert.rejects(generateBrowserManifestUrl(root), /Browser 9\.8\.7 does not match Toolchain 9\.8\.8/);
+});

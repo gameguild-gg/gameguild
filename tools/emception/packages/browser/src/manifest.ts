@@ -8,10 +8,9 @@ import type {
   WasmArtifactProfile,
   ToolchainSourceProvenance,
 } from 'emception';
+export { DEFAULT_MANIFEST_URL } from './generated/toolchain-manifest-url.js';
 
 export const RUNTIME_ABI = 'emception-browser-v1';
-export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/@gameguild/emception-toolchain@4.2.0/cdn/manifest.json';
-
 export class ManifestCompatibilityError extends Error {
   readonly name = 'ManifestCompatibilityError';
 }
