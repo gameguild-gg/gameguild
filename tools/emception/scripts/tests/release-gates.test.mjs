@@ -48,10 +48,10 @@ async function fixture(context) {
   for (const receipt of ['manifest', 'bundles', 'release']) {
     await writeFile(path.join(root, 'artifacts', 'toolchain', 'receipts', `${receipt}.json`), '{}\n');
   }
-  const generated = path.join(root, 'packages', 'browser', 'src', 'generated');
+  const generated = path.join(root, 'packages', 'browser', 'dist', 'generated');
   await mkdir(generated, { recursive: true });
   await writeFile(
-    path.join(generated, 'toolchain-manifest-url.ts'),
+    path.join(generated, 'toolchain-manifest-url.js'),
     "export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/@gameguild/emception-toolchain@7.8.9/cdn/manifest.json';\n",
   );
   return root;

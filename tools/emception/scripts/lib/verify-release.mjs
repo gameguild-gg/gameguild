@@ -75,7 +75,7 @@ export async function verifyEmceptionRelease(root = process.cwd()) {
 
   const expectedUrl = `https://cdn.jsdelivr.net/npm/@gameguild/emception-toolchain@${version}/cdn/manifest.json`;
   const generatedUrl = await readFile(
-    path.join(root, 'packages', 'browser', 'src', 'generated', 'toolchain-manifest-url.ts'),
+    path.join(root, 'packages', 'browser', 'dist', 'generated', 'toolchain-manifest-url.js'),
     'utf8',
   );
   if (!generatedUrl.includes(expectedUrl)) throw new Error(`Browser DEFAULT_MANIFEST_URL must contain ${expectedUrl}`);
