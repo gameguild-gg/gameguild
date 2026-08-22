@@ -10,7 +10,7 @@ async function temporaryRoot(context) {
   );
   context.after(async () => {
     const { rm } = await import('node:fs/promises');
-    await rm(root, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
   });
   await mkdir(path.join(root, 'toolchain'), { recursive: true });
   return root;
@@ -353,4 +353,74 @@ test('toolchain update dry-run is read-only and accepted updates replace the loc
   const toolchainEntries = await readdir(path.join(root, 'toolchain'));
   assert.deepEqual(toolchainEntries.sort(), ['toolchain.config.json', 'toolchain.lock.json']);
   assert.equal(output.some((line) => line.includes('dry-run')), true);
+});
+
+test('build receipts reject changed outputs, dependencies, recipes, and overlays', async (context) => {
+  const { calculateConfigHash, serializeToolchainLock } = await import('../toolchain/lock.ts');
+  const { executeBuildRecipe } = await import('../toolchain/receipts.ts');
+  const root = await temporaryRoot(context);
+  const config = { schemaVersion: 1, runtimeAbi: 'abi', constraints: { cmake: '<4' }, emsdkGroup: [] };
+  const lock = {
+    schemaVersion: 1,
+    configHash: calculateConfigHash(config),
+    tools: {
+      cmake: {
+        version: '3.31.12',
+        source: { kind: 'archive', url: 'https://example.invalid/cmake', sha256: 'c'.repeat(64) },
+      },
+    },
+  };
+  await writeFile(path.join(root, 'toolchain', 'toolchain.config.json'), `${JSON.stringify(config, null, 2)}\n`);
+  await writeFile(path.join(root, 'toolchain', 'toolchain.lock.json'), serializeToolchainLock(lock));
+  const overlay = path.join(root, 'toolchain', 'overlays', 'test', 'patch.txt');
+  await mkdir(path.dirname(overlay), { recursive: true });
+  await writeFile(overlay, 'patch-v1');
+  const depOutput = path.join('artifacts', 'toolchain', 'tools', 'dependency.wasm');
+  const childOutput = path.join('artifacts', 'toolchain', 'tools', 'child.wasm');
+  let dependencyRuns = 0;
+  let childRuns = 0;
+  const recipes = {
+    dependency: {
+      name: 'dependency', dependencies: [], lockEntries: ['cmake'], outputs: [depOutput],
+      async run({ root: recipeRoot }) {
+        dependencyRuns += 1;
+        const output = path.join(recipeRoot, depOutput);
+        await mkdir(path.dirname(output), { recursive: true });
+        await writeFile(output, `dependency-${dependencyRuns}`);
+      },
+    },
+    child: {
+      name: 'child', dependencies: ['dependency'], lockEntries: ['cmake'], outputs: [childOutput],
+      async run({ root: recipeRoot }) {
+        childRuns += 1;
+        const output = path.join(recipeRoot, childOutput);
+        await writeFile(output, `child-${childRuns}`);
+      },
+    },
+  };
+
+  await executeBuildRecipe({ root, recipes, target: 'child' });
+  await executeBuildRecipe({ root, recipes, target: 'child' });
+  assert.deepEqual([dependencyRuns, childRuns], [1, 1]);
+
+  await writeFile(path.join(root, depOutput), 'tampered');
+  await executeBuildRecipe({ root, recipes, target: 'child' });
+  assert.deepEqual([dependencyRuns, childRuns], [2, 2]);
+
+  await writeFile(overlay, 'patch-v2');
+  await executeBuildRecipe({ root, recipes, target: 'child' });
+  assert.deepEqual([dependencyRuns, childRuns], [3, 3]);
+
+  recipes.child = {
+    ...recipes.child,
+    async run({ root: recipeRoot }) {
+      childRuns += 1;
+      await writeFile(path.join(recipeRoot, childOutput), `changed-recipe-${childRuns}`);
+    },
+  };
+  await executeBuildRecipe({ root, recipes, target: 'child' });
+  assert.deepEqual([dependencyRuns, childRuns], [3, 4]);
+  const receipt = await readFile(path.join(root, 'artifacts', 'toolchain', 'receipts', 'child.json'), 'utf8');
+  assert.equal(receipt.includes(root), false);
+  assert.equal(receipt.includes('generatedAt'), false);
 });

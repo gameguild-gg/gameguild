@@ -1,38 +1,21 @@
 import { spawnSync } from 'node:child_process';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 import { cleanToolchain, type CleanScope } from './clean.ts';
-import { loadToolchainState, writeToolchainLockAtomic } from './lock.ts';
+import { loadToolchainState, serializeToolchainLock, writeToolchainLockAtomic } from './lock.ts';
 import type { ToolName } from './lock.ts';
 import { createToolSourceProvider } from './provider.ts';
+import { executeBuildRecipe } from './receipts.ts';
+import { TOOLCHAIN_RECIPES } from './recipes.ts';
 import { findOutdatedTools, hashDirectory, planToolchainUpdate, type ToolSourceProvider } from './sources.ts';
+import { toolchainPaths } from './paths.ts';
 
 const TOOL_NAMES: readonly ToolName[] = [
   'emsdk', 'llvm', 'binaryen', 'python', 'sdl3', 'cmake', 'brotli', 'imgui',
   'raylib', 'raygui', 'physac', 'allegro', 'curlLite', 'zstdWindows', 'msys2Make',
 ];
-
-const BUILD_SCRIPTS: Record<string, string> = {
-  emsdk: 'build:emsdk',
-  binaryen: 'build:binaryen',
-  python: 'build:cpython',
-  llvm: 'build:llvm',
-  cmake: 'build:cmake',
-  brotli: 'build:brotli',
-  curlLite: 'build:libcurl-lite',
-  sdl3: 'build:sdl3',
-  imgui: 'build:imgui',
-  raylib: 'build:raylib',
-  raygui: 'build:raylib',
-  physac: 'build:raylib',
-  allegro: 'build:allegro',
-  sysroot: 'build:sysroot',
-  light: 'build:toolchain:light',
-  heavy: 'build:toolchain:heavy',
-  graphics: 'build:graphics',
-  all: 'build:all',
-};
 
 export interface ToolchainCliDependencies {
   root?: string;
@@ -109,13 +92,40 @@ export async function runToolchainCli(args: readonly string[], dependencies: Too
     const changes = Object.entries(updated.tools)
       .filter(([name, tool]) => JSON.stringify(tool) !== JSON.stringify(state.lock.tools[name]))
       .map(([name, tool]) => `${name}: ${state.lock.tools[name]?.version ?? '(absent)'} -> ${tool.version}`);
-    if (rest.includes('--verify')) {
-      output('Verifying affected source identities before accepting the update...');
+    if (rest.includes('--verify') && changes.length > 0) {
+      output('Building and verifying the affected recipe graph before accepting the update...');
       for (const [name, tool] of Object.entries(updated.tools)) {
         if (tool.source.kind === 'workspace') {
           const actual = hashDirectory(path.resolve(root, tool.source.path));
           if (actual !== tool.source.contentHash) throw new Error(`Workspace hash mismatch for ${name}`);
         }
+      }
+      const paths = toolchainPaths(root);
+      const candidateLock = path.join(paths.cache, 'candidate.lock.json');
+      await mkdir(paths.cache, { recursive: true });
+      await writeFile(candidateLock, serializeToolchainLock(updated), 'utf8');
+      const candidateEnvironment = { ...process.env, EMCEPTION_TOOLCHAIN_LOCK: candidateLock };
+      const recipeTarget = target === 'emsdk' || target === 'all'
+        ? 'all'
+        : target === 'raygui' || target === 'physac'
+          ? 'raylib'
+          : target === 'zstdWindows' || target === 'msys2Make'
+            ? 'python'
+            : target;
+      try {
+        if (!TOOLCHAIN_RECIPES[recipeTarget]) throw new Error(`No verification recipe for ${target}`);
+        await executeBuildRecipe({
+          root,
+          recipes: TOOLCHAIN_RECIPES,
+          target: recipeTarget,
+          force: true,
+          lockFile: candidateLock,
+          environment: candidateEnvironment,
+          runScript,
+          output,
+        });
+      } finally {
+        await rm(candidateLock, { force: true });
       }
     }
     if (rest.includes('--dry-run')) {
@@ -139,9 +149,18 @@ export async function runToolchainCli(args: readonly string[], dependencies: Too
 
   if (command === 'build') {
     const target = rest.find((value) => !value.startsWith('--')) ?? 'all';
-    const script = BUILD_SCRIPTS[target];
-    if (!script) throw new Error(`Unknown build target: ${target}`);
-    runScript(script, { ...process.env, ...(rest.includes('--force') ? { EMCEPTION_FORCE_BUILD: '1' } : {}) });
+    const recipeTarget = target === 'raygui' || target === 'physac' ? 'raylib' : target;
+    if (!TOOLCHAIN_RECIPES[recipeTarget]) throw new Error(`Unknown build target: ${target}`);
+    const force = rest.includes('--force');
+    await executeBuildRecipe({
+      root,
+      recipes: TOOLCHAIN_RECIPES,
+      target: recipeTarget,
+      force,
+      environment: { ...process.env, ...(force ? { EMCEPTION_FORCE_BUILD: '1' } : {}) },
+      runScript,
+      output,
+    });
     return;
   }
 
@@ -152,8 +171,13 @@ export async function runToolchainCli(args: readonly string[], dependencies: Too
 
   if (command === 'verify') {
     runScript('test:scripts');
-    if (rest.includes('--heavy')) runScript('build:all');
-    else runScript('build:toolchain:light');
+    await executeBuildRecipe({
+      root,
+      recipes: TOOLCHAIN_RECIPES,
+      target: rest.includes('--heavy') ? 'all' : 'light',
+      runScript,
+      output,
+    });
     return;
   }
 
