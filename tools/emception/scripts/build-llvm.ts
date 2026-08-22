@@ -12,7 +12,7 @@ import path from 'path';
 import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
-import { setupEmsdk } from './lib/emsdk.ts';
+import { ensureBinaryenConcurrency, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { loadToolchainStateSync, lockedTool, lockedVersion } from './toolchain/config.ts';
 import { ensureLockedSource } from './toolchain/sources.ts';
@@ -44,6 +44,7 @@ if (LLVM_TOOL.source.kind !== 'git-archive') {
 const LLVM_VERSION = LLVM_TOOL.version;
 const LLVM_SRC_DIR = `llvm-project-${LLVM_TOOL.source.commit}`;
 const CONCURRENCY = Number(process.env.EMCEPTION_BUILD_CONCURRENCY || os.cpus().length);
+ensureBinaryenConcurrency(process.env, CONCURRENCY);
 
 function ensureCMakeBuildDirectory(buildDir: string): void {
     const relative = path.relative(LLVM_BUILD_ROOT, buildDir);

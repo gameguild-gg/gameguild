@@ -36,6 +36,16 @@ export function ensureWindowsEmsdkShell(environment: NodeJS.ProcessEnv = process
   environment.EMSDK_CMD = '1';
 }
 
+export function ensureBinaryenConcurrency(
+  environment: NodeJS.ProcessEnv = process.env,
+  concurrency: number,
+): void {
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    throw new Error(`Binaryen concurrency must be a positive integer, received ${concurrency}`);
+  }
+  environment.BINARYEN_CORES ??= String(concurrency);
+}
+
 function activatedEmsdkPath(config: string, variable: string): string {
   const expression = new RegExp(`^${variable}\\s*=\\s*emsdk_path\\s*\\+\\s*['\"]([^'\"]+)['\"]`, 'm');
   const match = expression.exec(config);
