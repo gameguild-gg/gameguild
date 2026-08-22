@@ -1878,10 +1878,10 @@ importers:
   tools/emception:
     dependencies:
       '@gameguild/emception-browser':
-        specifier: 4.2.0
+        specifier: workspace:*
         version: link:packages/browser
       '@gameguild/emception-xterm':
-        specifier: 4.2.0
+        specifier: workspace:*
         version: link:packages/xterm
     devDependencies:
       '@playwright/test':

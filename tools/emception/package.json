@@ -126,8 +126,8 @@
     "e2e:react": "npx playwright test --config=playwright.config.react.ts"
   },
   "dependencies": {
-    "@gameguild/emception-browser": "4.2.0",
-    "@gameguild/emception-xterm": "4.2.0"
+    "@gameguild/emception-browser": "workspace:*",
+    "@gameguild/emception-xterm": "workspace:*"
   },
   "peerDependencies": {
     "@xterm/xterm": "^6.0.0"
