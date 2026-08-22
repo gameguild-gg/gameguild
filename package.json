@@ -39,6 +39,7 @@
     "typecheck": "turbo run typecheck",
     "typecheck:emception": "pnpm --dir tools/emception run typecheck:packages",
     "version:emception": "node scripts/devops/version-emception.mjs",
+    "publish:emception": "node scripts/devops/publish-emception.mjs",
     "lint": "turbo run lint",
     "format": "pnpm -r run format",
     "generate": "turbo run generate",

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 
@@ -75,4 +76,35 @@ test('Emception versioning rejects package manifests outside the seven-package r
     () => assertOnlyEmceptionPackageManifests([...allowed, 'tools/emception/package.json']),
     /outside the Emception release group/,
   );
+});
+
+test('publication packs Toolchain first and waits for the registry before consumers', async (context) => {
+  const { EMCEPTION_PUBLISH_ORDER, publishEmception } = await import(
+    '../../../../scripts/devops/publish-emception.mjs'
+  );
+  const root = await mkdtemp(path.join(tmpdir(), 'emception-publish-'));
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const published = [];
+  let toolchainVisible = false;
+  for (const entry of EMCEPTION_PUBLISH_ORDER) {
+    const packageRoot = path.join(root, entry.directory);
+    await mkdir(packageRoot, { recursive: true });
+    await writeFile(path.join(packageRoot, 'package.json'), `${JSON.stringify({ name: entry.name, version: '1.2.3' })}\n`);
+  }
+  const runCommand = (_command, args) => {
+    if (args[0] === 'view') {
+      return { status: args[1].startsWith('@gameguild/emception-toolchain@') && toolchainVisible ? 0 : 1, stdout: '' };
+    }
+    if (args[0] === 'publish') {
+      const entry = EMCEPTION_PUBLISH_ORDER.find(({ directory }) => args[1] === `./${directory}`);
+      published.push(entry.name);
+      if (entry.name === '@gameguild/emception-toolchain') toolchainVisible = true;
+    }
+    return { status: 0, stdout: '[]' };
+  };
+
+  await publishEmception({ repoRoot: root, runCommand, wait: async () => {} });
+
+  assert.equal(EMCEPTION_PUBLISH_ORDER[0].name, '@gameguild/emception-toolchain');
+  assert.deepEqual(published, EMCEPTION_PUBLISH_ORDER.map(({ name }) => name));
 });
