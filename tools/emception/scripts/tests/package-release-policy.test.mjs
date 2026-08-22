@@ -41,6 +41,14 @@ test('published Emception packages have one version and the intended dependency 
   assert.equal(packages['@gameguild/emception-ide'].dependencies['@gameguild/emception-toolchain'], undefined);
 });
 
+test('private workspace links public packages without duplicating their release version', async () => {
+  const workspace = await json(path.join(emceptionRoot, 'package.json'));
+
+  assert.equal(workspace.private, true);
+  assert.equal(workspace.dependencies['@gameguild/emception-browser'], 'workspace:*');
+  assert.equal(workspace.dependencies['@gameguild/emception-xterm'], 'workspace:*');
+});
+
 test('Changesets fixes only the seven public Emception packages together', async () => {
   const config = await json(path.join(repoRoot, '.changeset', 'config.json'));
   const expected = [...EMCEPTION_PACKAGES].sort();
