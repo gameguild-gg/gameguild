@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -22,7 +21,7 @@ public sealed class CodingAssignmentJsonBodyMigrationTests
     public async Task Up_BackfillsV2CodingDefinition_AsV1CodingAssignmentContent()
     {
         await using var container = await StartPostgresAsync();
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreateSchemaAsync(connection);
 
@@ -88,7 +87,7 @@ public sealed class CodingAssignmentJsonBodyMigrationTests
     public async Task Up_IsIdempotent_RunningTwiceProducesSameStateAsOnce()
     {
         await using var container = await StartPostgresAsync();
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreateSchemaAsync(connection);
 
@@ -111,7 +110,7 @@ public sealed class CodingAssignmentJsonBodyMigrationTests
     public async Task Up_SkipsAssessmentsBelowSchemaVersion2(int definitionSchemaVersion)
     {
         await using var container = await StartPostgresAsync();
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreateSchemaAsync(connection);
 
@@ -128,7 +127,7 @@ public sealed class CodingAssignmentJsonBodyMigrationTests
     public async Task Up_SkipsAssessmentsWithNullDefinitionSchemaVersion()
     {
         await using var container = await StartPostgresAsync();
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreateSchemaAsync(connection);
 
@@ -145,7 +144,7 @@ public sealed class CodingAssignmentJsonBodyMigrationTests
     public async Task Up_SkipsNonCodingDefinitions()
     {
         await using var container = await StartPostgresAsync();
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreateSchemaAsync(connection);
 
@@ -164,7 +163,7 @@ public sealed class CodingAssignmentJsonBodyMigrationTests
     public async Task Up_PreservesV1ContentThatAlreadyHasType_DoesNotOverwrite()
     {
         await using var container = await StartPostgresAsync();
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreateSchemaAsync(connection);
 
@@ -186,7 +185,7 @@ public sealed class CodingAssignmentJsonBodyMigrationTests
     public async Task Down_DropsIndexWithoutTouchingJsonBody()
     {
         await using var container = await StartPostgresAsync();
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreateSchemaAsync(connection);
 
@@ -231,16 +230,9 @@ public sealed class CodingAssignmentJsonBodyMigrationTests
         }
         """;
 
-    private static async Task<PostgreSqlContainer> StartPostgresAsync()
+    private static async Task<EconomyPostgreSqlTestDatabase> StartPostgresAsync()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("coding_assignment_v1_migration")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("coding_assignment_v1_migration");
         return container;
     }
 

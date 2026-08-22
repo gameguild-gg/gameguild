@@ -3,7 +3,6 @@ using GameGuild.API.Database.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -31,15 +30,8 @@ public sealed class RepairLegacyProjectTeamOwnersMigrationTests
     [DockerFact]
     public async Task Up_Uses_A_SameTenant_Version_Author_And_Is_Idempotent_On_PostgreSql()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("project_owner_repair")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("project_owner_repair");
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await ExecuteAsync(connection, """
             CREATE TABLE projects (

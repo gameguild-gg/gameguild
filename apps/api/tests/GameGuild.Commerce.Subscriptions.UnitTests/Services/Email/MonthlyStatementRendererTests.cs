@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using FluentAssertions;
 using GameGuild.Commerce.Subscriptions.Services.Email.Renderers;
@@ -102,32 +103,41 @@ public sealed class MonthlyStatementRendererTests
     [Fact]
     public async Task RenderAsync_RegeneratesArtifacts_AndAttachesBothFiles()
     {
-        var builder = new Mock<IMonthlyStatementAttachmentBuilder>();
-        builder
-            .Setup(b => b.BuildAsync(TenantId, new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 31), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(BuildArtifacts());
+        var previousCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("pt-BR");
+            var builder = new Mock<IMonthlyStatementAttachmentBuilder>();
+            builder
+                .Setup(b => b.BuildAsync(TenantId, new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 31), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(BuildArtifacts());
 
-        var renderer = CreateRenderer(builder);
-        var notification = BuildNotification();
+            var renderer = CreateRenderer(builder);
+            var notification = BuildNotification();
 
-        var message = await renderer.RenderAsync(notification);
+            var message = await renderer.RenderAsync(notification);
 
-        message.Should().NotBeNull();
-        message!.ToEmail.Should().Be("member@example.com");
-        message.ToName.Should().Be("Member Name");
-        message.Subject.Should().Be("Your statement for July 2026 is ready");
-        message.PlainTextContent.Should().Contain("Net cash flow: $200.00");
-        message.PlainTextContent.Should().Contain("Closing balance: $500.00");
-        message.HtmlContent.Should().Contain("Net cash flow:</strong> $200.00");
-        message.Attachments.Should().HaveCount(2);
-        message.Attachments![0].FileName.Should().Be("statement.pdf");
-        message.Attachments[0].ContentType.Should().Be("application/pdf");
-        message.Attachments[0].Content.Should().Equal(new byte[] { 1, 2, 3 });
-        message.Attachments[1].FileName.Should().Be("statement.csv");
-        message.Attachments[1].ContentType.Should().Be("text/csv");
-        message.Attachments[1].Content.Should().Equal(new byte[] { 4, 5, 6 });
+            message.Should().NotBeNull();
+            message!.ToEmail.Should().Be("member@example.com");
+            message.ToName.Should().Be("Member Name");
+            message.Subject.Should().Be("Your statement for July 2026 is ready");
+            message.PlainTextContent.Should().Contain("Net cash flow: $200.00");
+            message.PlainTextContent.Should().Contain("Closing balance: $500.00");
+            message.HtmlContent.Should().Contain("Net cash flow:</strong> $200.00");
+            message.Attachments.Should().HaveCount(2);
+            message.Attachments![0].FileName.Should().Be("statement.pdf");
+            message.Attachments[0].ContentType.Should().Be("application/pdf");
+            message.Attachments[0].Content.Should().Equal(new byte[] { 1, 2, 3 });
+            message.Attachments[1].FileName.Should().Be("statement.csv");
+            message.Attachments[1].ContentType.Should().Be("text/csv");
+            message.Attachments[1].Content.Should().Equal(new byte[] { 4, 5, 6 });
 
-        builder.Verify(b => b.BuildAsync(TenantId, new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 31), It.IsAny<CancellationToken>()), Times.Once);
+            builder.Verify(b => b.BuildAsync(TenantId, new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 31), It.IsAny<CancellationToken>()), Times.Once);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previousCulture;
+        }
     }
 
     [Fact]

@@ -10,7 +10,6 @@ using GameGuild.TestingLab;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
-using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace GameGuild.API.UnitTests.Database;
@@ -18,21 +17,15 @@ namespace GameGuild.API.UnitTests.Database;
 [Collection(PostgreSqlTestCollection.Name)]
 public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
-        .WithDatabase("testing_event_races")
-        .WithUsername("test")
-        .WithPassword("test")
-        .WithCleanUp(true)
-        .Build();
+    private EconomyPostgreSqlTestDatabase _container = null!;
 
     private DbContextOptions<ApplicationDbContext> _options = null!;
 
     public async Task InitializeAsync()
     {
-        await _container.StartAsync();
+        _container = await EconomyPostgreSqlTestDatabase.CreateAsync("testing_event_races");
         _options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseNpgsql(_container.GetConnectionString())
+            .UseNpgsql(_container.ConnectionString)
             .Options;
         await using var context = new ApplicationDbContext(_options);
         await context.Database.EnsureCreatedAsync();
@@ -84,7 +77,7 @@ public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
 
         await using var gateContext = new ApplicationDbContext(_options);
         await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(slot.Id);
-        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await using var observer = new NpgsqlConnection(_container.ConnectionString);
         await observer.OpenAsync();
 
         var firstTask = ApproveAsync(firstApplication.Id, slot.Id, actor);
@@ -146,7 +139,7 @@ public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
 
         await using var gateContext = new ApplicationDbContext(_options);
         await using var gate = await new ProjectLifecycleLock(gateContext).AcquireAsync(slot.Id);
-        await using var observer = new NpgsqlConnection(_container.GetConnectionString());
+        await using var observer = new NpgsqlConnection(_container.ConnectionString);
         await observer.OpenAsync();
 
         var firstTask = RegisterAsync(slot.Id, ActorAccessor(firstTesterId, tenantId));
