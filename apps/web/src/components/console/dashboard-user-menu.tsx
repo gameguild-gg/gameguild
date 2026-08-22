@@ -90,9 +90,9 @@ export function DashboardUserMenu({ user }: { user: DashboardUser }) {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/workspace/settings">
+          <Link href="/workspace/settings/account">
             <Settings className="size-4" />
-            Settings
+            Account settings
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

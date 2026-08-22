@@ -24,6 +24,7 @@ import {
   BookOpen,
   ChevronRight,
   ClipboardList,
+  CircleDollarSign,
   FileText,
   FlaskConical,
   FolderOpen,
@@ -386,6 +387,20 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
   {
     label: 'Platform Management',
     items: [
+      {
+        title: 'Economy',
+        icon: CircleDollarSign,
+        requiredCapabilities: ['Economy.ManagePayouts'],
+        subGroups: [
+          {
+            title: 'Payout review',
+            url: '/console/economy/payout-reviews',
+            icon: ClipboardList,
+            items: [],
+            requiredCapabilities: ['Economy.ManagePayouts'],
+          },
+        ],
+      },
       {
         title: 'Roles',
         url: '/console/platform/roles',
