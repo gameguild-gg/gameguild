@@ -41,99 +41,107 @@ export const TOOLCHAIN_RECIPES: Readonly<Record<string, BuildRecipe>> = {
   emsdk: scriptRecipe(
     'emsdk', [], ['emsdk'],
     ['.cache/toolchain/emsdk/upstream/emscripten/emcc'],
-    'build:emsdk',
+    'recipe:emsdk',
+  ),
+  warmup: scriptRecipe(
+    'warmup', ['emsdk'], ['emsdk'], [],
+    'recipe:emscripten:warmup',
   ),
   binaryen: scriptRecipe(
-    'binaryen', ['emsdk'], ['emsdk', 'binaryen'],
+    'binaryen', ['warmup'], ['emsdk', 'binaryen'],
     ['wasm-opt', 'wasm-as', 'wasm-ctor-eval', 'wasm-emscripten-finalize', 'wasm-metadce']
       .flatMap((name) => [tool(`${name}.wasm`), tool(`${name}.mjs`)]),
-    'build:binaryen',
+    'recipe:binaryen',
   ),
   python: scriptRecipe(
-    'python', ['emsdk'], ['emsdk', 'python', 'zstdWindows', 'msys2Make'],
+    'python', ['warmup'], ['emsdk', 'python', 'zstdWindows', 'msys2Make'],
     [tool('python.wasm'), tool('python.mjs')],
-    'build:cpython',
+    'recipe:cpython',
   ),
   llvm: scriptRecipe(
-    'llvm', ['emsdk'], ['emsdk', 'llvm'],
+    'llvm', ['warmup'], ['emsdk', 'llvm'],
     [tool('clang.wasm'), tool('clang.mjs'), tool('lld.wasm'), tool('lld.mjs')],
-    'build:llvm',
+    'recipe:llvm',
   ),
   curlLite: scriptRecipe(
-    'curlLite', ['emsdk'], ['emsdk', 'curlLite'],
+    'curlLite', ['warmup'], ['emsdk', 'curlLite'],
     [tool('libcurl.a'), sysroot('usr/lib/libcurl.a'), sysroot('usr/include/curl/curl.h')],
-    'build:libcurl-lite',
+    'recipe:libcurl-lite',
   ),
   cmake: scriptRecipe(
     'cmake', ['emsdk', 'curlLite'], ['emsdk', 'cmake', 'curlLite'],
     [tool('cmake.wasm'), tool('cmake.mjs')],
-    'build:cmake',
+    'recipe:cmake',
   ),
   brotli: scriptRecipe(
-    'brotli', ['emsdk'], ['emsdk', 'brotli'],
+    'brotli', ['warmup'], ['emsdk', 'brotli'],
     ['artifacts/toolchain/release/cdn/brotli_wasm.js', 'artifacts/toolchain/release/cdn/brotli_wasm.wasm'],
-    'build:brotli',
+    'recipe:brotli',
   ),
   sdl3: scriptRecipe(
-    'sdl3', ['emsdk'], ['emsdk', 'sdl3'],
+    'sdl3', ['warmup'], ['emsdk', 'sdl3'],
     [sysroot('usr/lib/libSDL3.a'), sysroot('usr/lib/emscripten/sdl3-runtime.mjs'), sysroot('usr/lib/emscripten/sdl3-runtime.wasm')],
-    'build:sdl3',
+    'recipe:sdl3',
   ),
   imgui: scriptRecipe(
     'imgui', ['sdl3'], ['emsdk', 'sdl3', 'imgui'],
     [sysroot('usr/lib/libimgui.a'), sysroot('usr/include/imgui/imgui.h')],
-    'build:imgui',
+    'recipe:imgui',
   ),
   raylib: scriptRecipe(
     'raylib', ['sdl3'], ['emsdk', 'sdl3', 'raylib', 'raygui', 'physac'],
     [sysroot('usr/lib/libraylib.a'), sysroot('usr/lib/libraygui.a'), sysroot('usr/lib/libphysac.a'), sysroot('usr/lib/emscripten/raylib-runtime.mjs')],
-    'build:raylib',
+    'recipe:raylib',
   ),
   allegro: scriptRecipe(
-    'allegro', ['emsdk'], ['emsdk', 'allegro'],
+    'allegro', ['warmup'], ['emsdk', 'allegro'],
     [sysroot('usr/lib/liballegro.a'), sysroot('usr/lib/emscripten/allegro-runtime.mjs')],
-    'build:allegro',
+    'recipe:allegro',
   ),
   sysroot: scriptRecipe(
     'sysroot', ['binaryen', 'python', 'llvm', 'cmake', 'sdl3', 'imgui', 'raylib', 'allegro'],
     ['emsdk', 'binaryen', 'python', 'llvm', 'cmake', 'sdl3', 'imgui', 'raylib', 'raygui', 'physac', 'allegro', 'curlLite'],
     [sysroot('.emception-symlinks.json')],
-    'build:sysroot',
+    'recipe:sysroot',
   ),
   light: groupRecipe('light', ['cmake']),
   heavy: groupRecipe('heavy', ['binaryen', 'python', 'llvm']),
   graphics: groupRecipe('graphics', ['sdl3', 'imgui', 'raylib', 'allegro']),
+  toolchain: groupRecipe('toolchain', ['light', 'heavy']),
   all: groupRecipe('all', ['sysroot']),
   stage: scriptRecipe(
     'stage', ['sysroot'], [],
     ['artifacts/toolchain/stage/sysroot/.emception-symlinks.json'],
-    'build:stage:sysroot',
+    'recipe:stage:sysroot',
   ),
   glue: scriptRecipe(
     'glue', ['stage'], [],
     ['artifacts/toolchain/stage/sysroot/usr/lib/clang.mjs'],
-    'patch:glue',
+    'recipe:patch:glue',
   ),
   manifest: scriptRecipe(
     'manifest', ['glue'], [],
     [],
-    'build:manifest',
+    'recipe:manifest',
   ),
   bundles: scriptRecipe(
     'bundles', ['manifest', 'brotli'], ['brotli'],
     ['artifacts/toolchain/release/cdn/manifest.json'],
-    'build:bundles',
+    'recipe:bundles',
+  ),
+  assert: scriptRecipe(
+    'assert', ['bundles'], [], [],
+    'recipe:assert-no-dupes',
   ),
   release: {
     name: 'release',
-    dependencies: ['bundles'],
+    dependencies: ['assert'],
     lockEntries: [],
     outputs: ['packages/toolchain/cdn/manifest.json', 'packages/core/cdn/manifest.json', 'public/cdn/manifest.json'],
     run(context) {
-      context.runScript('build:assert-no-dupes');
-      context.runScript('deploy:cdn');
-      context.runScript('stage:toolchain:cdn');
-      context.runScript('stage:core:cdn');
+      context.runScript('recipe:deploy:cdn');
+      context.runScript('recipe:stage:toolchain:cdn');
+      context.runScript('recipe:stage:core:cdn');
     },
   },
 };
