@@ -83,6 +83,19 @@ test('Windows Toolchain processes avoid direct cmd shims and remote tar parsing'
   );
 });
 
+test('Binaryen optimization inherits the bounded Toolchain concurrency', async () => {
+  const { ensureBinaryenConcurrency } = await import('../lib/emsdk.ts');
+  const inherited = {};
+  const explicit = { BINARYEN_CORES: '2' };
+
+  ensureBinaryenConcurrency(inherited, 4);
+  ensureBinaryenConcurrency(explicit, 4);
+
+  assert.equal(inherited.BINARYEN_CORES, '4');
+  assert.equal(explicit.BINARYEN_CORES, '2');
+  assert.throws(() => ensureBinaryenConcurrency({}, 0), /positive integer/);
+});
+
 test('toolchain lock serialization is stable and validates the CMake major policy', async (context) => {
   const root = await temporaryRoot(context);
   const { calculateConfigHash, loadToolchainState, serializeToolchainLock } = await import('../toolchain/lock.ts');
