@@ -14,9 +14,6 @@ fi
 source "$ci_dir/economy-gate.sh"
 
 declare -a pnpm_command=(pnpm)
-if [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
-  pnpm_command=(pnpm.cmd)
-fi
 
 passed=0
 failed=0
@@ -439,6 +436,20 @@ test_whole_solution_allows_only_source_empty_scaffolds() {
     --validate-whole-solution-evidence "$root" "$log" "$trx"
 }
 
+test_whole_solution_scaffold_scan_prunes_build_outputs() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq -- '-type d \( -name bin -o -name obj \) -prune' "$gate" || return 1
+  ! grep -Fq -- "! -path '*/bin/*' ! -path '*/obj/*'" "$gate"
+}
+
+test_pnpm_invocation_uses_standard_command_on_every_host() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq 'declare -a pnpm_command=(pnpm)' "$gate" || return 1
+  ! grep -Fq 'pnpm_command=(pnpm.cmd)' "$gate"
+}
+
 test_whole_solution_isolates_vstest_processes() {
   local gate="$ci_dir/verify-economy.sh"
   local path_separator=$'\\'
@@ -560,6 +571,8 @@ run_test 'readiness requires consecutive successful probes' test_readiness_requi
 run_test 'process cleanup terminates Bash background processes' test_process_cleanup_stops_background_process
 run_test 'TRX evidence rejects skipped and zero-test suites' test_trx_rejects_skips_and_empty_suites
 run_test 'whole-solution evidence allows only named source-empty scaffolds' test_whole_solution_allows_only_source_empty_scaffolds
+run_test 'whole-solution scaffold scan prunes build outputs' test_whole_solution_scaffold_scan_prunes_build_outputs
+run_test 'pnpm invocation uses the standard command on every host' test_pnpm_invocation_uses_standard_command_on_every_host
 run_test 'whole-solution tests isolate VSTest processes' test_whole_solution_isolates_vstest_processes
 run_test 'whole-solution evidence recovers scaffold identity from TRX metadata' test_whole_solution_recovers_scaffold_identity_from_trx
 run_test 'Cobertura enforces line, branch, and method coverage' test_cobertura_requires_full_method_coverage

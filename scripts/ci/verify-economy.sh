@@ -140,8 +140,9 @@ assert_whole_solution_evidence() {
 
     [[ -f "$root/$project_path" ]] || economy_gate_error "Known whole-solution scaffold is missing: $project_path"
     project_directory="$(dirname "$root/$project_path")"
-    source_file="$(find "$project_directory" -type f -name '*.cs' \
-      ! -path '*/bin/*' ! -path '*/obj/*' -print -quit)"
+    source_file="$(find "$project_directory" \
+      \( -type d \( -name bin -o -name obj \) -prune \) -o \
+      \( -type f -name '*.cs' -print -quit \))"
     if [[ -n "$source_file" ]] || grep -qE '<Compile([[:space:]>])' "$root/$project_path"; then
       economy_gate_error "Known whole-solution scaffold contains C# source but produced zero tests: $project_path"
     fi
@@ -262,9 +263,6 @@ native_path() {
 cd "$repository_root"
 declare -a pnpm_command=(pnpm)
 if [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
-  # The Git Bash pnpm shim can block on Windows while the native command shim
-  # remains responsive. Keep CI on pnpm everywhere else.
-  pnpm_command=(pnpm.cmd)
   # The shared MSBuild server can retain stale compiler state on Windows hosts.
   # This is deliberately a host-only gate setting; it is not a container setting.
   export DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER=1
