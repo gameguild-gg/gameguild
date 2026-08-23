@@ -493,7 +493,7 @@ projecao atual:
 | `feedback.mode` | nenhum campo de Assessment | nao projetado |
 | `presentation.mode` | `Assessment.PresentationMode` | mapeado para enum C# |
 | `items` | nenhuma tabela/item relacional | fica apenas no content JSON |
-| `gradingKind` | `Assessment.GradingMethods` | nao e projetado por item; host usa `AutoGraded,InstructorGraded` fixo |
+| `gradingKind` | `Assessment.GradingMethods` | nao e projetado por item; host usa `AutoGraded,InstructorGraded` fixo, sem escolha explicita do professor |
 | `answerKeyRef`/`rubricRef` | `DefinitionPayload`/`RubricId` nao automaticos | sem mapeamento atual |
 
 A projecao cria quiz com `SubmissionModalities = StructuredAnswer`. Titulo,
@@ -511,6 +511,29 @@ descricao e `IsRequired` vem do `ProgramContent`, nao de grading.
 - `GroupSetId`, `RubricId` e politica de peer review;
 - disponibilidade operacional e regras de atraso;
 - `DefinitionPayload` para definicoes operacionais especificas.
+
+No codigo atual, `GradingMethods` possui somente as quatro flags acima e o
+backend ainda nao executa todas como pipeline. O alvo aprovado em
+`docs/plans/quiz-grading-end-to-end` adiciona `SelfGraded = 16` e formaliza:
+
+| Flag | Semantica |
+| --- | --- |
+| `PeerReview` | pares produzem a avaliacao primaria |
+| `AIGraded` | IA produz a avaliacao primaria |
+| `AutoGraded` | o sistema produz correcao deterministica |
+| `SelfGraded` | o proprio aluno produz sua autoavaliacao e nota |
+| `InstructorGraded` | o instrutor avalia ou revisa e finaliza por ultimo |
+
+Sao validos apenas um metodo primario ou um metodo primario seguido de
+`InstructorGraded`: `PeerReview`, `AIGraded`, `AutoGraded`, `SelfGraded`,
+`InstructorGraded`, `PeerReview,InstructorGraded`,
+`AIGraded,InstructorGraded`, `AutoGraded,InstructorGraded` e
+`SelfGraded,InstructorGraded`. Como a persistencia e bitmask, a ordem nao e
+armazenada; a precedencia final do instrutor precisa ser regra canonica do
+dominio. Grupo e peso nao alteram essa escolha.
+
+Esta secao descreve um alvo ainda nao implementado. Ate a conclusao da fase de
+dominio, serializers e DTOs reais ainda nao reconhecem `SelfGraded`.
 
 `Assessment.DefinitionPayload` e outro campo `jsonb`, versionado por
 `DefinitionSchemaVersion`. Ele nao e automaticamente o
@@ -646,9 +669,10 @@ Regras praticas:
 
 ## Lacunas e riscos atuais
 
-1. **O grading deterministico nao esta conectado ao backend.** Os algoritmos e
-   test vectors existem no package TypeScript, mas o submit C# nao os executa.
-   `AutoGraded` e hoje uma flag operacional, nao prova de auto-grading efetivo.
+1. **`GradingMethods` ainda nao executa o pipeline no backend.** O submit C# nao
+   inicia os estagios de IA, correcao deterministica, autoavaliacao ou revisao
+   docente conforme as combinacoes. O avaliador deterministico do package
+   tambem nao esta conectado, e `SelfGraded` ainda nao existe no enum atual.
 
 2. **Nao existe snapshot server-owned da definicao e do answer key por
    tentativa.** A avaliacao futura precisa evitar que uma edicao posterior do
