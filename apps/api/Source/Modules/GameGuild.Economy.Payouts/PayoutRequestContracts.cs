@@ -91,19 +91,33 @@ public sealed record PayoutRequest(
                 Version = checked(Version + 1),
                 UpdatedAt = occurredAt
             },
-            PayoutRequestState.AwaitingSecondApproval when FirstApprovalActorId is null =>
-                throw new PayoutRequestTransitionException(
-                    "A payout request awaiting second approval must retain the first approver."),
-            PayoutRequestState.AwaitingSecondApproval when FirstApprovalActorId == reviewerId =>
-                throw new PayoutRequestTransitionException(
-                    "The administrator who gave the first approval cannot complete the payout approval."),
-            PayoutRequestState.AwaitingSecondApproval => this with
-            {
-                State = outcome,
-                Version = checked(Version + 1),
-                UpdatedAt = occurredAt
-            },
+            PayoutRequestState.AwaitingSecondApproval => CompleteSecondApproval(reviewerId, outcome, occurredAt),
             _ => throw new PayoutRequestTransitionException("Only a submitted payout request can be reviewed.")
+        };
+    }
+
+    private PayoutRequest CompleteSecondApproval(
+        Guid reviewerId,
+        PayoutRequestState outcome,
+        DateTimeOffset occurredAt)
+    {
+        var firstApproverId = FirstApprovalActorId;
+        if (!firstApproverId.HasValue)
+        {
+            throw new PayoutRequestTransitionException(
+                "A payout request awaiting second approval must retain the first approver.");
+        }
+        if (firstApproverId.Value == reviewerId)
+        {
+            throw new PayoutRequestTransitionException(
+                "The administrator who gave the first approval cannot complete the payout approval.");
+        }
+
+        return this with
+        {
+            State = outcome,
+            Version = checked(Version + 1),
+            UpdatedAt = occurredAt
         };
     }
 }

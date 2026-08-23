@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using System.Reflection;
 
 namespace GameGuild.Economy.UnitTests.Persistence;
 
@@ -242,6 +243,24 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
             .Should().Be(1);
         (await ScalarAsync<long>(connection, $"SELECT \"AmountUnits\" FROM public.economy_journal_lines WHERE \"JournalEntryId\" IN (SELECT \"Id\" FROM public.economy_journal_entries WHERE \"PostingGroupId\" = '{feePosting.Value}') AND \"AccountId\" IN (SELECT \"Id\" FROM public.economy_accounts WHERE \"Code\" = 14);"))
             .Should().Be(1);
+    }
+
+    [Fact]
+    public async Task FeeReceiptReadRejectsWhenTheWriterDidNotPersistIt()
+    {
+        await using var database = await CreateDatabaseAsync();
+        await using var context = CreateContext(database.ConnectionString);
+        await context.Database.MigrateAsync();
+        var method = typeof(PostgreSqlHardToSoftConversionGateway).GetMethod(
+            "ReadFeeReceipt", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        Action read = () => method.Invoke(
+            new PostgreSqlHardToSoftConversionGateway(context),
+            [PostingId.New()]);
+
+        read.Should().Throw<TargetInvocationException>()
+            .Which.InnerException.Should().BeOfType<RegisteredPostingRejectedException>()
+            .Which.Message.Should().Contain("fee posting was not persisted");
     }
     internal static Task<EconomyPostgreSqlTestDatabase> CreateDatabaseAsync() =>
         EconomyPostgreSqlTestDatabase.CreateAsync("hard_to_soft_gateway");
