@@ -6,8 +6,13 @@ repository_root="$(cd "$script_dir/../.." && pwd)"
 artifact_root="$repository_root/artifacts/test-results/economy"
 manifest_path="$script_dir/economy-projects.json"
 summary_path="$artifact_root/preflight-summary.txt"
+timings_path="$artifact_root/timings.jsonl"
 gate_stage='initializing'
 run_sequence=0
+gate_started_epoch="$(date +%s)"
+gate_profile="${ECONOMY_GATE_PROFILE:-full}"
+test_hang_timeout="${ECONOMY_TEST_HANG_TIMEOUT:-5m}"
+whole_solution_jobs="${ECONOMY_WHOLE_SOLUTION_JOBS:-}"
 
 # shellcheck source=economy-gate.sh
 source "$script_dir/economy-gate.sh"
@@ -165,6 +170,26 @@ if (($#)); then
   exit 2
 fi
 
+case "$gate_profile" in
+  pr|full) ;;
+  *)
+    printf 'Unknown Economy gate profile: %s\n' "$gate_profile" >&2
+    exit 2
+    ;;
+esac
+
+if [[ -z "$whole_solution_jobs" ]]; then
+  if [[ "${GITHUB_ACTIONS:-}" == true ]]; then
+    whole_solution_jobs=2
+  else
+    whole_solution_jobs=1
+  fi
+fi
+[[ "$whole_solution_jobs" =~ ^[1-9][0-9]*$ ]] || {
+  printf 'ECONOMY_WHOLE_SOLUTION_JOBS must be a positive integer: %s\n' "$whole_solution_jobs" >&2
+  exit 2
+}
+
 api_pid=''
 web_pid=''
 postgres_container=''
@@ -172,6 +197,7 @@ economy_postgres_container=''
 garage_container=''
 testcontainers_baseline=''
 testcontainers_reaper_disabled=false
+declare -a whole_solution_worker_pids=()
 
 cleanup() {
   local status=$?
@@ -185,10 +211,15 @@ cleanup() {
   fi
   {
     printf 'gate=economy\n'
+    printf 'profile=%s\n' "$gate_profile"
     printf 'result=%s\n' "$gate_result"
     printf 'status=%s\n' "$status"
     printf 'stage=%s\n' "$gate_stage"
+    printf 'duration_seconds=%s\n' "$(( $(date +%s) - gate_started_epoch ))"
   } > "$summary_path"
+  for worker_pid in "${whole_solution_worker_pids[@]}"; do
+    stop_process_tree "$worker_pid"
+  done
   stop_process_tree "$web_pid"
   stop_process_tree "$api_pid"
   if [[ "$testcontainers_reaper_disabled" == true ]]; then
@@ -212,9 +243,16 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+record_timing() {
+  local sequence="$1" stage="$2" started_epoch="$3" status="$4"
+  printf '{"sequence":%s,"stage":"%s","durationSeconds":%s,"status":%s}\n' \
+    "$sequence" "$stage" "$(( $(date +%s) - started_epoch ))" "$status" >> "$timings_path"
+}
+
 run() {
   run_sequence=$((run_sequence + 1))
   local output_path="$artifact_root/logs/${run_sequence}-${gate_stage}.log"
+  local started_epoch="$(date +%s)"
   mkdir -p "$(dirname "$output_path")"
   printf '> '
   printf '%q ' "$@"
@@ -223,12 +261,15 @@ run() {
   "$@" 2>&1 | tee "$output_path"
   local command_status=${PIPESTATUS[0]}
   set -e
+  record_timing "$run_sequence" "$gate_stage" "$started_epoch" "$command_status"
   return "$command_status"
 }
 
 run_logged() {
   local output_path="$1"
   shift
+  run_sequence=$((run_sequence + 1))
+  local started_epoch="$(date +%s)"
   printf '> '
   printf '%q ' "$@"
   printf '\n'
@@ -236,12 +277,15 @@ run_logged() {
   "$@" 2>&1 | tee "$output_path"
   local command_status=${PIPESTATUS[0]}
   set -e
+  record_timing "$run_sequence" "$gate_stage" "$started_epoch" "$command_status"
   return "$command_status"
 }
 
 run_logged_append() {
   local output_path="$1"
   shift
+  run_sequence=$((run_sequence + 1))
+  local started_epoch="$(date +%s)"
   printf '> '
   printf '%q ' "$@"
   printf '\n'
@@ -249,7 +293,16 @@ run_logged_append() {
   "$@" 2>&1 | tee -a "$output_path"
   local command_status=${PIPESTATUS[0]}
   set -e
+  record_timing "$run_sequence" "$gate_stage" "$started_epoch" "$command_status"
   return "$command_status"
+}
+
+run_test_with_timeout() {
+  # VSTest's blame timeout starts only after a test begins. Bound the complete
+  # process group as well, so a testhost that stalls before reporting its first
+  # test cannot hold the gate indefinitely. --blame remains enabled below to
+  # collect a dump whenever VSTest has enough state to produce one.
+  run timeout --kill-after=30s "$test_hang_timeout" "$@"
 }
 
 native_path() {
@@ -263,9 +316,11 @@ native_path() {
 cd "$repository_root"
 declare -a pnpm_command=(pnpm)
 if [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
-  # The shared MSBuild server can retain stale compiler state on Windows hosts.
-  # This is deliberately a host-only gate setting; it is not a container setting.
+  # The shared MSBuild server and reusable worker nodes can retain stale compiler
+  # state on Windows hosts. These are deliberately host-only gate settings; they
+  # are not container settings.
   export DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER=1
+  export MSBUILDDISABLENODEREUSE=1
   export TESTCONTAINERS_RYUK_DISABLED=true
   testcontainers_reaper_disabled=true
   testcontainers_baseline="$(docker ps -aq --filter label=org.testcontainers=true)"
@@ -284,7 +339,7 @@ mkdir -p \
   "$artifact_root/publish"
 
 gate_stage='preflight-smoke'
-run "${pnpm_command[@]}" test:smoke
+run node --test scripts/devops/smoke-check.test.mjs
 gate_stage='preflight-manifest'
 assert_economy_manifest "$repository_root" "$manifest_path"
 
@@ -424,51 +479,23 @@ printf 'app_database=economy_ci\napp_port=%s\neconomy_test_database=economy_test
 
 gate_stage='build'
 run dotnet restore apps/api/GameGuild.sln --nologo
-run dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal
-# The solution omits a few API module projects. Build the API graph once so
-# warning-scope builds can safely keep project references disabled.
-run dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --verbosity minimal
-
-base_sha="${ECONOMY_BASE_SHA:-}"
-if [[ -z "$base_sha" ]]; then
-  base_sha="$(git merge-base HEAD develop 2>/dev/null || git rev-parse HEAD~1)"
-fi
-[[ -n "$base_sha" ]] || economy_gate_error 'Unable to determine warning-scope base SHA'
-
-mapfile -t changed_paths < <(git diff --name-only "$base_sha...HEAD")
-mapfile -t touched_commerce < <(get_touched_commerce_projects "$repository_root" "${changed_paths[@]}")
-economy_test_support_projects=(
-  'apps/api/tests/GameGuild.TestSupport.Economy/GameGuild.TestSupport.Economy.csproj'
-)
-for support_project in "${economy_test_support_projects[@]}"; do
-  run dotnet build "$support_project" -c Release --no-restore --nologo \
-    -p:BuildProjectReferences=false \
-    -p:TreatWarningsAsErrors=true \
-    -p:EnableNETAnalyzers=true \
-    -p:EnforceCodeStyleInBuild=true
-done
-
-warning_projects=("${economy_production[@]}" "${economy_tests[@]}" "${touched_commerce[@]}")
-
-if [[ "${ECONOMY_CI_PROBE_WARNING_FAILURE:-0}" == '1' ]]; then
-  warning_fixture="$artifact_root/warning-fixture"
-  mkdir -p "$warning_fixture"
-  printf '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>\n' > "$warning_fixture/WarningFixture.csproj"
-  printf 'namespace EconomyGateProbe; public static class WarningFixture { public static void Emit() { int intentionallyUnused = 1; } }\n' > "$warning_fixture/WarningFixture.cs"
-  run dotnet restore "$warning_fixture/WarningFixture.csproj" --nologo
-  warning_projects+=("$warning_fixture/WarningFixture.csproj")
-fi
-
-if ((${#warning_projects[@]} > 0)); then
-  mapfile -t warning_projects < <(printf '%s\n' "${warning_projects[@]}" | awk 'NF' | LC_ALL=C sort -u)
-  for project in "${warning_projects[@]}"; do
-    run dotnet build "$project" -c Release --no-restore --nologo \
-      -p:BuildProjectReferences=false \
-      -p:TreatWarningsAsErrors=true \
-      -p:EnableNETAnalyzers=true \
-      -p:EnforceCodeStyleInBuild=true
+if [[ "$gate_profile" == full ]]; then
+  run dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal \
+    -p:TreatWarningsAsErrors=true
+  run dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --verbosity minimal \
+    -p:TreatWarningsAsErrors=true
+else
+  for record in "${economy_coverage_records[@]}"; do
+    IFS=$'\t' read -r test_project _ _ _ <<< "$record"
+    run dotnet build "$test_project" -c Release --no-restore --nologo --verbosity minimal \
+      -p:TreatWarningsAsErrors=true
   done
 fi
+
+test_hang_arguments=(
+  --blame-hang-timeout "$test_hang_timeout"
+  --blame-hang-dump-type mini
+)
 
 for record in "${economy_coverage_records[@]}"; do
   gate_stage='economy-tests'
@@ -483,7 +510,7 @@ for record in "${economy_coverage_records[@]}"; do
     [[ -z "$include" ]] || include+=','
     include+="[$assembly]*"
   done
-  run dotnet test "$test_project" -c Release --no-build --nologo \
+  run_test_with_timeout dotnet test "$test_project" -c Release --no-build --nologo "${test_hang_arguments[@]}" \
     --logger "trx;LogFileName=$test_name.trx" \
     --results-directory "$results" \
     --collect 'XPlat Code Coverage' -- \
@@ -505,7 +532,34 @@ if [[ "${ECONOMY_CI_PROBE_COVERAGE_FAILURE:-0}" == '1' ]]; then
   assert_cobertura_coverage "$lowered" 'GameGuild.Economy.Probe' >/dev/null
 fi
 
-{
+run_whole_solution_test_project() {
+  local test_project="$1" whole_solution_results="$2"
+  local test_name results project_log
+
+  test_name="$(basename "${test_project%.csproj}")"
+  results="$whole_solution_results/$test_name"
+  project_log="$results/dotnet-test.log"
+  mkdir -p "$results"
+  run_logged "$project_log" timeout --kill-after=30s "$test_hang_timeout" \
+    dotnet test "$test_project" -c Release --no-build --nologo --verbosity minimal -m:1 "${test_hang_arguments[@]}" \
+    --logger "trx;LogFileName=$test_name.trx" \
+    --results-directory "$results"
+  [[ -f "$results/$test_name.trx" ]] || economy_gate_error "Whole-solution test project produced no TRX: $test_project"
+}
+
+wait_for_whole_solution_batch() {
+  local worker_pid worker_status=0
+
+  for worker_pid in "${whole_solution_worker_pids[@]}"; do
+    if ! wait "$worker_pid"; then
+      worker_status=1
+    fi
+  done
+  whole_solution_worker_pids=()
+  return "$worker_status"
+}
+
+if [[ "$gate_profile" == full ]]; then
   gate_stage='whole-solution-tests'
   whole_solution_results="$artifact_root/trx/whole-solution"
   whole_solution_log="$whole_solution_results/dotnet-test.log"
@@ -523,22 +577,22 @@ fi
   done
   ((${#whole_solution_projects[@]} > 0)) || economy_gate_error 'The solution does not contain test projects'
 
-  # A single solution-level VSTest host retains test-platform state across dozens of
-  # assemblies on Windows and can exhaust memory before the final projects run.
-  # Keep the same solution-derived project set, but use one process per project so
-  # process exit deterministically releases that state between test assemblies.
+  # Run isolated VSTest hosts in bounded batches. This releases state per assembly
+  # without serializing the entire solution on Linux CI.
   for test_project in "${whole_solution_projects[@]}"; do
-    test_name="$(basename "${test_project%.csproj}")"
-    results="$whole_solution_results/$test_name"
-    mkdir -p "$results"
-    run_logged_append "$whole_solution_log" dotnet test "$test_project" -c Release --no-build --nologo --verbosity minimal -m:1 \
-      --logger "trx;LogFileName=$test_name.trx" \
-      --results-directory "$results"
-    [[ -f "$results/$test_name.trx" ]] || economy_gate_error "Whole-solution test project produced no TRX: $test_project"
+    run_whole_solution_test_project "$test_project" "$whole_solution_results" &
+    whole_solution_worker_pids+=("$!")
+    if ((${#whole_solution_worker_pids[@]} >= whole_solution_jobs)); then
+      wait_for_whole_solution_batch
+    fi
   done
+  wait_for_whole_solution_batch
+  while IFS= read -r project_log; do
+    cat "$project_log" >> "$whole_solution_log"
+  done < <(find "$whole_solution_results" -type f -name 'dotnet-test.log' -print | LC_ALL=C sort)
   mapfile -t whole_solution_trx < <(find "$whole_solution_results" -type f -name '*.trx' -print | LC_ALL=C sort)
   assert_whole_solution_evidence "$repository_root" "$whole_solution_log" "${whole_solution_trx[@]}" >/dev/null
-}
+fi
 
 {
   gate_stage='provider-contract-tests'
@@ -547,7 +601,7 @@ fi
     name="$(basename "${project%.csproj}")"
     results="$artifact_root/trx/provider/$name"
     mkdir -p "$results"
-    run dotnet test "$project" -c Release --no-restore --nologo \
+    run_test_with_timeout dotnet test "$project" -c Release --no-restore --nologo "${test_hang_arguments[@]}" \
       --filter "$filter" \
       --logger "trx;LogFileName=$name.trx" \
       --results-directory "$results"
@@ -555,6 +609,7 @@ fi
   done
 }
 
+if [[ "$gate_profile" == full ]]; then
 {
   gate_stage='openapi-client'
   publish_directory="$artifact_root/publish/api"
@@ -611,6 +666,7 @@ fi
   run "${pnpm_command[@]}" --filter @game-guild/web test:browser:public
   assert_playwright_evidence "$playwright_evidence" >/dev/null
 }
+fi
 
 evidence_count="$(find "$artifact_root" -type f | wc -l | tr -d ' ')"
 ((evidence_count > 0)) || economy_gate_error "No verification evidence was written under $artifact_root"

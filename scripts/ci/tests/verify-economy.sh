@@ -98,6 +98,24 @@ test_repository_policy_runs_in_a_parallel_required_gate() {
   ! grep -Fq 'needs: [repository-policy-gate]' "$workflow" || return 1
 }
 
+test_workflow_uses_fast_pr_and_full_release_economy_profiles() {
+  local workflow="$repository_root/.github/workflows/main.yml"
+
+  grep -Fq 'name: Economy PR Gate' "$workflow" || return 1
+  grep -Fq 'name: Economy Release Gate' "$workflow" || return 1
+  grep -Fq 'ECONOMY_GATE_PROFILE: pr' "$workflow" || return 1
+  grep -Fq 'ECONOMY_GATE_PROFILE: full' "$workflow"
+}
+
+test_workflow_caches_gate_dependencies() {
+  local workflow="$repository_root/.github/workflows/main.yml"
+
+  grep -Fq 'actions/cache@v4' "$workflow" || return 1
+  grep -Fq 'nuget-packages-' "$workflow" || return 1
+  grep -Fq 'pnpm-store-' "$workflow" || return 1
+  grep -Fq 'playwright-browsers-' "$workflow"
+}
+
 test_economy_preflight_has_no_repository_policy_side_effect() {
   local gate="$ci_dir/verify-economy.sh"
 
@@ -105,6 +123,13 @@ test_economy_preflight_has_no_repository_policy_side_effect() {
   grep -Fq 'artifact_root="$repository_root/artifacts/test-results/economy"' "$gate" || return 1
   ! grep -Fq 'rm -rf "$repository_root/artifacts/test-results"' "$gate" || return 1
   grep -Fq 'preflight-summary.txt' "$gate"
+}
+
+test_economy_preflight_avoids_the_pnpm_install_lock() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq 'run node --test scripts/devops/smoke-check.test.mjs' "$gate" || return 1
+  ! grep -Fq 'run "${pnpm_command[@]}" test:smoke' "$gate"
 }
 
 test_economy_gate_rejects_stage_skips() {
@@ -117,9 +142,51 @@ test_economy_gate_rejects_stage_skips() {
   ! grep -Fq -- '--skip-browser' "$gate"
 }
 
-test_economy_gate_builds_shared_postgres_test_support() {
-  grep -Fq 'apps/api/tests/GameGuild.TestSupport.Economy/GameGuild.TestSupport.Economy.csproj' \
-    "$ci_dir/verify-economy.sh"
+test_economy_gate_bounds_hung_tests_and_records_timings() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq -- '--blame-hang-timeout "$test_hang_timeout"' "$gate" || return 1
+  grep -Fq -- '--blame-hang-dump-type mini' "$gate" || return 1
+  grep -Fq 'run_test_with_timeout()' "$gate" || return 1
+  grep -Fq 'timeout --kill-after=30s "$test_hang_timeout"' "$gate" || return 1
+  grep -Fq 'timings.jsonl' "$gate"
+}
+
+test_economy_gate_supports_fast_pr_and_full_release_profiles() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq 'case "$gate_profile" in' "$gate" || return 1
+  grep -Fq 'pr|full)' "$gate" || return 1
+  grep -Fq '[[ "$gate_profile" == full ]]' "$gate"
+}
+
+test_economy_gate_batches_whole_solution_tests() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq 'ECONOMY_WHOLE_SOLUTION_JOBS' "$gate" || return 1
+  grep -Fq 'whole_solution_worker_pids' "$gate"
+}
+
+test_economy_unit_tests_bound_parallelism_without_global_serialization() {
+  local assembly_info="$repository_root/apps/api/tests/GameGuild.Economy.UnitTests/AssemblyInfo.cs"
+  local database_support="$repository_root/apps/api/tests/GameGuild.TestSupport.Economy/EconomyPostgreSqlTestDatabase.cs"
+
+  grep -Fq '[assembly: CollectionBehavior(MaxParallelThreads = 3)]' "$assembly_info" || return 1
+  ! grep -Fq 'DisableTestParallelization = true' "$assembly_info" || return 1
+  ! rg -q '\[Collection\("Economy PostgreSQL"\)\]' \
+    "$repository_root/apps/api/tests/GameGuild.Economy.UnitTests" || return 1
+  grep -Fq 'GateRoleBootstrapLock' "$database_support" || return 1
+  grep -Fq 'EnsureGateRolesAsync' "$database_support" || return 1
+  grep -Fq 'adminBuilder.CommandTimeout = 120;' "$database_support"
+}
+
+test_economy_gate_builds_release_targets_strictly_once() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq 'dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal' "$gate" || return 1
+  grep -Fq 'dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --verbosity minimal' "$gate" || return 1
+  grep -Fq -- '-p:TreatWarningsAsErrors=true' "$gate" || return 1
+  ! grep -Fq 'warning_projects=' "$gate"
 }
 
 test_economy_gate_rejects_nested_postgres_testcontainers() {
@@ -294,6 +361,13 @@ test_windows_testcontainers_cleanup_is_gate_scoped() {
   grep -Fq 'label=org.testcontainers=true' "$gate"
 }
 
+test_windows_gate_disables_reusable_msbuild_workers() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq 'export DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER=1' "$gate" || return 1
+  grep -Fq 'export MSBUILDDISABLENODEREUSE=1' "$gate"
+}
+
 test_manifest_rejects_undeclared_project() {
   local root="$fixture_root/manifest-invalid"
   mkdir -p "$root/apps/api/Source/Modules/GameGuild.Economy"
@@ -314,6 +388,24 @@ test_manifest_accepts_declared_projects() {
   printf '{"schemaVersion":1,"projects":[{"productionProject":"%s","testProjects":["%s","%s"],"coverageAssemblies":["GameGuild.Economy"]}]}\n' \
     "$production" "$unit" "$integration" > "$root/manifest.json"
   assert_economy_manifest "$root" "$root/manifest.json" >/dev/null
+}
+
+test_manifest_requires_full_branch_coverage() {
+  "$PYTHON_BIN" - "$ci_dir/economy-projects.json" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    manifest = json.load(handle)
+
+exceptions = [
+    entry["productionProject"]
+    for entry in manifest["projects"]
+    if entry.get("minimumBranchRate", 1) != 1
+]
+if exceptions:
+    raise SystemExit(f"Economy branch coverage must be 100%: {', '.join(exceptions)}")
+PY
 }
 
 test_manifest_prunes_build_outputs() {
@@ -347,14 +439,14 @@ test_coverage_record_fields_preserve_empty_prefixes() {
   while IFS=$'\t' read -r record_type first second third fourth; do
     [[ "$record_type" == 'coverage' ]] || continue
     records+=("$first"$'\t'"$second"$'\t'"$third"$'\t'"$fourth")
-  done <<< $'coverage\tEconomy.UnitTests.csproj\tGameGuild.Economy\t__all__\t0.98'
+  done <<< $'coverage\tEconomy.UnitTests.csproj\tGameGuild.Economy\t__all__\t1'
 
   IFS=$'\t' read -r first second third fourth <<< "${records[0]}"
   [[ "$third" == '__all__' ]] && third=''
   assert_equal "$first" 'Economy.UnitTests.csproj' 'coverage test project must be preserved' || return 1
   assert_equal "$second" 'GameGuild.Economy' 'coverage assembly must be preserved' || return 1
   assert_equal "$third" '' 'an empty prefix list must remain empty' || return 1
-  assert_equal "$fourth" '0.98' 'branch threshold must not shift into the prefixes field'
+  assert_equal "$fourth" '1' 'branch threshold must not shift into the prefixes field'
 }
 
 test_warning_scope_finds_commerce_projects() {
@@ -454,7 +546,8 @@ test_whole_solution_isolates_vstest_processes() {
   local gate="$ci_dir/verify-economy.sh"
   local path_separator=$'\\'
 
-  grep -Fq 'run_logged_append()' "$gate" || return 1
+  grep -Fq 'run_whole_solution_test_project()' "$gate" || return 1
+  grep -Fq 'wait_for_whole_solution_batch()' "$gate" || return 1
   grep -Fq 'dotnet sln apps/api/GameGuild.sln list' "$gate" || return 1
   grep -Fq 'whole_solution_test_project()' "$gate" || return 1
   grep -Fq '<IsTestProject>[[:space:]]*false[[:space:]]*</IsTestProject>' "$gate" || return 1
@@ -462,6 +555,7 @@ test_whole_solution_isolates_vstest_processes() {
   grep -Fq 'economy_test_project "$test_project" && continue' "$gate" || return 1
   grep -Fq "tr '${path_separator}134' '/'" "$gate" || return 1
   grep -Fq 'for test_project in "${whole_solution_projects[@]}"; do' "$gate" || return 1
+  grep -Fq 'run_whole_solution_test_project "$test_project" "$whole_solution_results" &' "$gate" || return 1
   grep -Fq 'Whole-solution test project produced no TRX:' "$gate" || return 1
   ! grep -Fq 'dotnet test apps/api/GameGuild.sln' "$gate"
 }
@@ -494,20 +588,21 @@ XML
 test_cobertura_requires_full_method_coverage() {
   local coverage="$fixture_root/coverage.cobertura.xml"
   cat > "$coverage" <<'XML'
-<coverage><packages><package name="GameGuild.Economy" line-rate="1" branch-rate="1"><classes><class name="A"><methods><method name="Covered"><lines><line number="1" hits="1" /></lines></method><method name="Missed"><lines><line number="2" hits="0" /></lines></method></methods></class></classes></package></packages></coverage>
+<coverage><packages><package name="GameGuild.Economy" line-rate="1" branch-rate="1"><classes><class name="A"><methods><method name="Covered"><lines><line number="1" hits="1" /></lines></method><method name="Missed"><lines><line number="2" hits="0" /></lines></method></methods><lines><line number="1" hits="1" /><line number="2" hits="1" /></lines></class></classes></package></packages></coverage>
 XML
   assert_throws 'method coverage' assert_cobertura_coverage "$coverage" 'GameGuild.Economy' || return 1
   sed -i 's/number="2" hits="0"/number="2" hits="1"/' "$coverage"
   assert_cobertura_coverage "$coverage" 'GameGuild.Economy' >/dev/null
 }
 
-test_cobertura_respects_explicit_branch_threshold() {
+test_cobertura_requires_full_branch_coverage() {
   local coverage="$fixture_root/branch-threshold.cobertura.xml"
   cat > "$coverage" <<'XML'
-<coverage><packages><package name="GameGuild.Economy" line-rate="1" branch-rate="0.98"><classes><class name="A"><methods><method name="Covered"><lines><line number="1" hits="1" /></lines></method></methods></class></classes></package></packages></coverage>
+<coverage><packages><package name="GameGuild.Economy" line-rate="1" branch-rate="1"><classes><class name="A"><methods><method name="Covered"><lines><line number="1" hits="1" branch="true" condition-coverage="50% (1/2)" /></lines></method></methods><lines><line number="1" hits="1" branch="true" condition-coverage="50% (1/2)" /></lines></class></classes></package></packages></coverage>
 XML
   assert_throws 'branch coverage' assert_cobertura_coverage "$coverage" 'GameGuild.Economy' || return 1
-  assert_cobertura_coverage "$coverage" 'GameGuild.Economy' '' '0.98' >/dev/null
+  sed -i 's/condition-coverage="50% (1\/2)"/condition-coverage="100% (2\/2)"/g' "$coverage"
+  assert_cobertura_coverage "$coverage" 'GameGuild.Economy' >/dev/null
 }
 
 test_cobertura_supports_path_scoped_capabilities() {
@@ -543,9 +638,16 @@ run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
 run_test 'Emception publish opens a release PR to main' test_release_flow_opens_version_pr_to_main
 run_test 'repository policy runs in a parallel required gate' test_repository_policy_runs_in_a_parallel_required_gate
+run_test 'workflow uses fast PR and full release Economy profiles' test_workflow_uses_fast_pr_and_full_release_economy_profiles
+run_test 'workflow caches gate dependencies' test_workflow_caches_gate_dependencies
 run_test 'Economy preflight is independent and records its summary' test_economy_preflight_has_no_repository_policy_side_effect
+run_test 'Economy preflight avoids the pnpm install lock' test_economy_preflight_avoids_the_pnpm_install_lock
 run_test 'Economy gate rejects stage skips' test_economy_gate_rejects_stage_skips
-run_test 'Economy gate builds shared PostgreSQL test support' test_economy_gate_builds_shared_postgres_test_support
+run_test 'Economy gate bounds hung tests and records timings' test_economy_gate_bounds_hung_tests_and_records_timings
+run_test 'Economy gate supports fast PR and full release profiles' test_economy_gate_supports_fast_pr_and_full_release_profiles
+run_test 'Economy gate batches whole-solution tests' test_economy_gate_batches_whole_solution_tests
+run_test 'Economy unit tests bound parallelism without global serialization' test_economy_unit_tests_bound_parallelism_without_global_serialization
+run_test 'Economy gate builds strict release targets once' test_economy_gate_builds_release_targets_strictly_once
 run_test 'Economy gate rejects nested PostgreSQL Testcontainers' test_economy_gate_rejects_nested_postgres_testcontainers
 run_test 'Economy gate isolates global roles from application databases' test_economy_gate_isolates_global_economy_roles_from_application_databases
 run_test 'auto-changeset apply bumps the entire lockstep workspace' test_auto_changeset_bumps_entire_lockstep_workspace
@@ -561,8 +663,10 @@ run_test 'Coolify forwards Stripe gateway identity and mode' test_coolify_compos
 run_test 'published API uses its published content root' test_published_api_uses_published_content_root
 run_test 'whole-solution tests provision isolated Garage storage' test_whole_solution_provisions_garage
 run_test 'Windows Testcontainers cleanup is scoped to the Economy gate' test_windows_testcontainers_cleanup_is_gate_scoped
+run_test 'Windows Economy gate disables reusable MSBuild workers' test_windows_gate_disables_reusable_msbuild_workers
 run_test 'manifest rejects undeclared Economy projects' test_manifest_rejects_undeclared_project
 run_test 'manifest accepts declared Economy projects and tests' test_manifest_accepts_declared_projects
+run_test 'manifest requires 100 percent branch coverage' test_manifest_requires_full_branch_coverage
 run_test 'manifest prunes build outputs before project discovery' test_manifest_prunes_build_outputs
 run_test 'manifest records normalize Windows line endings' test_manifest_record_fields_normalize_windows_line_endings
 run_test 'coverage records preserve empty prefixes and branch threshold' test_coverage_record_fields_preserve_empty_prefixes
@@ -576,7 +680,7 @@ run_test 'pnpm invocation uses the standard command on every host' test_pnpm_inv
 run_test 'whole-solution tests isolate VSTest processes' test_whole_solution_isolates_vstest_processes
 run_test 'whole-solution evidence recovers scaffold identity from TRX metadata' test_whole_solution_recovers_scaffold_identity_from_trx
 run_test 'Cobertura enforces line, branch, and method coverage' test_cobertura_requires_full_method_coverage
-run_test 'Cobertura honors explicit branch thresholds' test_cobertura_respects_explicit_branch_threshold
+run_test 'Cobertura requires 100 percent branch coverage' test_cobertura_requires_full_branch_coverage
 run_test 'Cobertura supports path-scoped capability coverage' test_cobertura_supports_path_scoped_capabilities
 run_test 'Vitest and Playwright reject pending or skipped tests' test_json_evidence_rejects_pending_and_skipped
 run_test 'canonical JSON is deterministic and preserves arrays' test_canonical_json_preserves_arrays

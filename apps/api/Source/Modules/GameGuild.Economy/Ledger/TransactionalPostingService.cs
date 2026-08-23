@@ -458,10 +458,10 @@ public sealed class TransactionalPostingService
         }
     }
 
-    internal ProviderReversalResult ReverseTopUpUnderActiveFence(
+    internal T ReverseTopUpUnderActiveFence<T>(
         ReverseTopUpCommand command,
         Action<LedgerKernelTransaction> beforePosting,
-        Action<LedgerKernelTransaction, ProviderReversalResult> afterPosting)
+        Func<LedgerKernelTransaction, ProviderReversalResult, T> afterPosting)
     {
         ArgumentNullException.ThrowIfNull(beforePosting);
         ArgumentNullException.ThrowIfNull(afterPosting);
@@ -470,8 +470,7 @@ public sealed class TransactionalPostingService
         {
             beforePosting(transaction);
             var result = ReverseTopUpInTransaction(transaction, command, commandHash);
-            afterPosting(transaction, result);
-            return result;
+            return afterPosting(transaction, result);
         });
     }
 

@@ -8,6 +8,9 @@ on:
   pull_request:
     branches:
       - develop
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,6 +34,11 @@ jobs:
         with:
           node-version: '22'
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('package.json', 'apps/**/package.json') }}
+
       - name: Verify repository policy
         shell: bash
         run: bash scripts/ci/verify-repository-policy.sh
@@ -43,8 +51,60 @@ jobs:
           path: artifacts/test-results
           if-no-files-found: error
 
-  economy-gate:
-    name: Economy CI Gate
+  economy-pr-gate:
+    name: Economy PR Gate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6 # v6.0.10
+        with:
+          version: 10.0.0
+
+      - uses: actions/setup-node@v7 # v7.0.0
+        with:
+          node-version: '22'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('package.json', 'apps/**/package.json') }}
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-packages-${{ runner.os }}-${{ hashFiles('apps/api/**/*.csproj', 'apps/api/**/*.props', 'apps/api/**/*.targets', 'apps/api/**/NuGet.config') }}
+
+      - name: Install dependencies
+        run: pnpm ci:dependencies
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v6 # v6.0.0
+        with:
+          dotnet-version: '10.0.103'
+
+      - name: Verify economy PR profile
+        shell: bash
+        env:
+          ECONOMY_GATE_PROFILE: pr
+          ECONOMY_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: bash scripts/ci/verify-economy.sh
+
+      - name: Upload economy evidence
+        if: always()
+        uses: actions/upload-artifact@v7 # v4
+        with:
+          name: economy-pr-test-results-${{ github.sha }}
+          path: artifacts/test-results
+          if-no-files-found: error
+
+  economy-release-gate:
+    name: Economy Release Gate
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -60,6 +120,21 @@ jobs:
         with:
           node-version: '22'
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('package.json', 'apps/**/package.json') }}
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-packages-${{ runner.os }}-${{ hashFiles('apps/api/**/*.csproj', 'apps/api/**/*.props', 'apps/api/**/*.targets', 'apps/api/**/NuGet.config') }}
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package.json', 'apps/web/package.json') }}
+
       - name: Install dependencies
         run: pnpm ci:dependencies
 
@@ -71,9 +146,11 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm --filter @game-guild/web exec playwright install --with-deps chromium
 
-      - name: Verify economy baseline
+      - name: Verify economy release profile
         shell: bash
         env:
+          ECONOMY_GATE_PROFILE: full
+          ECONOMY_WHOLE_SOLUTION_JOBS: '2'
           ECONOMY_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: bash scripts/ci/verify-economy.sh
 
@@ -81,14 +158,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7 # v4
         with:
-          name: economy-test-results-${{ github.sha }}
+          name: economy-release-test-results-${{ github.sha }}
           path: artifacts/test-results
           if-no-files-found: error
 
   contributors:
     name: Contributors Visualization
     runs-on: ubuntu-latest
-    needs: [economy-gate]
+    needs: [economy-release-gate]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v7 # v4
