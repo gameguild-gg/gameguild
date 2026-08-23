@@ -97,7 +97,7 @@ test('Binaryen optimization inherits the bounded Toolchain concurrency', async (
 });
 
 test('Emscripten sysroot copies exclude host Python bytecode caches', async (context) => {
-  const { copyRuntimeSourceTree } = await import('../lib/runtime-source-tree.ts');
+  const { copyRuntimeDirectoryContents, copyRuntimeSourceTree } = await import('../lib/runtime-source-tree.ts');
   const root = await temporaryRoot(context);
   const source = path.join(root, 'tools');
   const destination = path.join(root, 'sysroot', 'tools');
@@ -115,6 +115,11 @@ test('Emscripten sysroot copies exclude host Python bytecode caches', async (con
   await assert.rejects(readFile(path.join(destination, '__pycache__', 'building.cpython-314.pyc')));
   await assert.rejects(readFile(path.join(destination, '__pycache__', 'stale.cpython-314.pyc')));
   await assert.rejects(readFile(path.join(destination, 'settings.pyo')));
+
+  const contentsDestination = path.join(root, 'include');
+  copyRuntimeDirectoryContents(source, contentsDestination);
+  assert.equal(await readFile(path.join(contentsDestination, 'building.py'), 'utf8'), 'runtime source');
+  await assert.rejects(readFile(path.join(contentsDestination, '__pycache__', 'building.cpython-314.pyc')));
 });
 
 test('sysroot cache revision does not change its executable pnpm script', async () => {
