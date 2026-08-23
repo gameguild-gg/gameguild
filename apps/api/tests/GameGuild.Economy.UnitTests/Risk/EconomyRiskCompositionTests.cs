@@ -27,7 +27,8 @@ public sealed class EconomyRiskCompositionTests
         var values = new Dictionary<string, string?>
         {
             [EconomyRiskCompositionOptions.SectionName + ":ValueMovingDecisionsEnabled"] = "true",
-            [EconomyRiskCompositionOptions.SectionName + ":EnabledCapabilities:0"] = "ConfirmHardCoinFunding"
+            [EconomyRiskCompositionOptions.SectionName + ":EnabledCapabilities:0"] = "ConfirmHardCoinFunding",
+            [EconomyRiskCompositionOptions.SectionName + ":AllowedJurisdictions:0"] = "BR"
         };
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
         var services = new ServiceCollection();
@@ -44,6 +45,27 @@ public sealed class EconomyRiskCompositionTests
             .Should().NotThrow();
         FluentActions.Invoking(() => gate.EnsureEnabled(EconomyValueMovementCapability.PayoutExecution))
             .Should().Throw<EconomyValueMovementDisabledException>();
+    }
+
+    [Fact]
+    public void ValueMovingDecisionsRemainDisabledWhenTheJurisdictionAllowlistIsEmpty()
+    {
+        var values = new Dictionary<string, string?>
+        {
+            [EconomyRiskCompositionOptions.SectionName + ":ValueMovingDecisionsEnabled"] = "true",
+            [EconomyRiskCompositionOptions.SectionName + ":EnabledCapabilities:0"] = "ConfirmHardCoinFunding"
+        };
+        var services = new ServiceCollection();
+        services.AddEconomyRiskComposition(new ConfigurationBuilder().AddInMemoryCollection(values).Build());
+
+        using var provider = services.BuildServiceProvider();
+        var gate = provider.GetRequiredService<IEconomyValueMovementDecisionGate>();
+
+        gate.IsEnabled.Should().BeFalse();
+        gate.IsCapabilityEnabled(EconomyValueMovementCapability.ConfirmHardCoinFunding).Should().BeFalse();
+        FluentActions.Invoking(() => gate.EnsureEnabled(EconomyValueMovementCapability.ConfirmHardCoinFunding))
+            .Should().Throw<EconomyValueMovementDisabledException>()
+            .WithMessage("*jurisdiction allowlist is empty*");
     }
 
     [Fact]

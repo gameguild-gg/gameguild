@@ -2,10 +2,10 @@ using FluentAssertions;
 using GameGuild;
 using GameGuild.API.Database;
 using GameGuild.Economy.Contracts;
+using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.Payouts.UnitTests;
 
@@ -13,21 +13,14 @@ public sealed class PostgreSqlPayoutOperationStoreTests
 {
     private static readonly DateTimeOffset Time = new(2026, 8, 10, 18, 0, 0, TimeSpan.Zero);
 
-    [DockerFact]
+    [Fact]
     public async Task Store_PersistsReadsTransitionsAndRecordsProviderEvidence()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_payout_store")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("payout_operation_store");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(database.ConnectionString)
                 .Options);
         await context.Database.MigrateAsync();
 
@@ -148,12 +141,4 @@ public sealed class PostgreSqlPayoutOperationStoreTests
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
-    }
 }

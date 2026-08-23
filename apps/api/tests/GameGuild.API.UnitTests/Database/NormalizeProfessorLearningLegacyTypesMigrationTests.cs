@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -15,17 +14,10 @@ public sealed class NormalizeProfessorLearningLegacyTypesMigrationTests
     [Fact]
     public async Task Up_NormalizesPersistedLegacyContentTypes()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("legacy_program_content_types")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("legacy_program_content_types");
         try
         {
-            await using var connection = new NpgsqlConnection(container.GetConnectionString());
+            await using var connection = new NpgsqlConnection(container.ConnectionString);
             await connection.OpenAsync();
             var pageId = Guid.NewGuid();
             var challengeId = Guid.NewGuid();

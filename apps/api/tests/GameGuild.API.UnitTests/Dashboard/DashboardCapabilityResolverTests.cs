@@ -53,6 +53,18 @@ public sealed class DashboardCapabilityResolverTests
     }
 
     [Fact]
+    public void Resolve_MapsWalletAdministrationToEconomyPayoutManagement()
+    {
+        var actor = Actor(
+            roles: Set("Member"),
+            permissions: Set("wallets:admin"));
+
+        var result = DashboardCapabilityResolver.Resolve(actor, []);
+
+        result.Should().BeEquivalentTo(DashboardCapabilities.EconomyManagePayouts);
+    }
+
+    [Fact]
     public void Resolve_GrantsAllManagementCapabilitiesToTenantAdmin()
     {
         var actor = Actor(roles: Set("TenantAdmin"));

@@ -3,7 +3,6 @@ using GameGuild.API.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
-using Testcontainers.PostgreSql;
 using GameGuild.API.Database.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
@@ -41,23 +40,16 @@ public sealed class EconomyConfirmedFundingWriterMigrationTests
     [DockerFact]
     public async Task Migration_InstallsWriterProceduresWithRestrictedExecutionOnPostgreSql()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_confirmed_funding")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_confirmed_funding");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await using var command = new NpgsqlCommand("""
             SELECT count(*)

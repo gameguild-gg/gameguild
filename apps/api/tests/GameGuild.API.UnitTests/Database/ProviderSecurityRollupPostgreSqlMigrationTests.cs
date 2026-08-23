@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -49,16 +48,9 @@ public sealed class ProviderSecurityRollupPostgreSqlMigrationTests
     [DockerFact]
     public async Task Up_Down_Current_Duplicates_And_Partial_Mappings_Are_Enforced_On_PostgreSql()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("provider_security_rollup")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("provider_security_rollup");
 
-        var connectionString = container.GetConnectionString();
+        var connectionString = container.ConnectionString;
         await using var context = CreateContext(connectionString);
         var migrator = context.GetService<IMigrator>();
         await migrator.MigrateAsync(PreviousMigration);

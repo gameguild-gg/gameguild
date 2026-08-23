@@ -3188,6 +3188,10 @@ export interface EconomyPayoutsCommandsCreateMyPayoutRequestInput {
   idempotencyKey?: string | null;
 }
 
+export interface EconomyPayoutsCommandsReviewPayoutRequestInput {
+  reason?: string | null;
+}
+
 export type EconomyPayoutsPayoutOperationState =
   | "Reserved"
   | "Dispatching"
@@ -3197,7 +3201,11 @@ export type EconomyPayoutsPayoutOperationState =
   | "Cancelled";
 
 export type EconomyPayoutsPayoutRequestState =
-  "Submitted" | "Cancelled" | "Approved" | "Rejected";
+  | "Submitted"
+  | "Cancelled"
+  | "Approved"
+  | "Rejected"
+  | "AwaitingSecondApproval";
 
 export interface EconomyPayoutsQueriesEconomyPayoutInput {
   id?: string;
@@ -3213,6 +3221,25 @@ export interface EconomyPayoutsQueriesEconomyPayoutOperation {
   hardCoinUnits?: number;
   state?: EconomyPayoutsPayoutOperationState;
   updatedAt?: string;
+}
+
+export interface EconomyPayoutsQueriesEconomyPayoutRequestReview {
+  id?: string;
+  createdAt?: string;
+  hardCoinUnits?: number;
+  payeeId?: string;
+  state?: EconomyPayoutsPayoutRequestState;
+  updatedAt?: string;
+  version?: number;
+  walletId?: string;
+}
+
+export interface EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit {
+  id?: string;
+  actorId?: string;
+  occurredAt?: string;
+  outcome?: EconomyPayoutsPayoutRequestState;
+  reason?: string | null;
 }
 
 export type EconomyRiskEconomyValueMovementCapability =
@@ -11865,10 +11892,13 @@ export let EconomyContractsProvenanceKindSchema: z.ZodType<EconomyContractsProve
 export let EconomyContractsWalletLifecycleStateSchema: z.ZodType<EconomyContractsWalletLifecycleState>;
 export let EconomyFundingSelfServiceHardToSoftConversionReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardToSoftConversionReceipt>;
 export let EconomyPayoutsCommandsCreateMyPayoutRequestInputSchema: z.ZodType<EconomyPayoutsCommandsCreateMyPayoutRequestInput>;
+export let EconomyPayoutsCommandsReviewPayoutRequestInputSchema: z.ZodType<EconomyPayoutsCommandsReviewPayoutRequestInput>;
 export let EconomyPayoutsPayoutOperationStateSchema: z.ZodType<EconomyPayoutsPayoutOperationState>;
 export let EconomyPayoutsPayoutRequestStateSchema: z.ZodType<EconomyPayoutsPayoutRequestState>;
 export let EconomyPayoutsQueriesEconomyPayoutInputSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutInput>;
 export let EconomyPayoutsQueriesEconomyPayoutOperationSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutOperation>;
+export let EconomyPayoutsQueriesEconomyPayoutRequestReviewSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutRequestReview>;
+export let EconomyPayoutsQueriesEconomyPayoutRequestReviewAuditSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit>;
 export let EconomyRiskEconomyValueMovementCapabilitySchema: z.ZodType<EconomyRiskEconomyValueMovementCapability>;
 export let ErrorSchema: z.ZodType<Error>;
 export let ErrorTypeSchema: z.ZodType<ErrorType>;
@@ -16679,6 +16709,11 @@ EconomyPayoutsCommandsCreateMyPayoutRequestInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
 });
 
+/** Zod schema for EconomyPayoutsCommandsReviewPayoutRequestInput */
+EconomyPayoutsCommandsReviewPayoutRequestInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
+
 /** Zod schema for EconomyPayoutsPayoutOperationState */
 EconomyPayoutsPayoutOperationStateSchema = z.enum([
   "Reserved",
@@ -16695,6 +16730,7 @@ EconomyPayoutsPayoutRequestStateSchema = z.enum([
   "Cancelled",
   "Approved",
   "Rejected",
+  "AwaitingSecondApproval",
 ]);
 
 /** Zod schema for EconomyPayoutsQueriesEconomyPayoutInput */
@@ -16713,6 +16749,27 @@ EconomyPayoutsQueriesEconomyPayoutOperationSchema = z.object({
   hardCoinUnits: z.number().int().optional(),
   state: z.lazy(() => EconomyPayoutsPayoutOperationStateSchema).optional(),
   updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for EconomyPayoutsQueriesEconomyPayoutRequestReview */
+EconomyPayoutsQueriesEconomyPayoutRequestReviewSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  payeeId: z.string().uuid().optional(),
+  state: z.lazy(() => EconomyPayoutsPayoutRequestStateSchema).optional(),
+  updatedAt: z.string().datetime().optional(),
+  version: z.number().int().optional(),
+  walletId: z.string().uuid().optional(),
+});
+
+/** Zod schema for EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit */
+EconomyPayoutsQueriesEconomyPayoutRequestReviewAuditSchema = z.object({
+  id: z.string().uuid().optional(),
+  actorId: z.string().uuid().optional(),
+  occurredAt: z.string().datetime().optional(),
+  outcome: z.lazy(() => EconomyPayoutsPayoutRequestStateSchema).optional(),
+  reason: z.string().nullable().optional(),
 });
 
 /** Zod schema for EconomyRiskEconomyValueMovementCapability */

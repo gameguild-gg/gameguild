@@ -17,3 +17,16 @@ html,
 body {
   height: 100%;
 }
+
+html[data-accessibility-high-contrast="true"] body {
+  filter: contrast(1.2);
+}
+
+html[data-accessibility-reduced-motion="true"] *,
+html[data-accessibility-reduced-motion="true"] *::before,
+html[data-accessibility-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+}

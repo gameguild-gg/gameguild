@@ -25,7 +25,8 @@
     {
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Payouts/GameGuild.Economy.Payouts.csproj",
       "testProjects": ["apps/api/tests/GameGuild.Economy.Payouts.UnitTests/GameGuild.Economy.Payouts.UnitTests.csproj"],
-      "coverageAssemblies": ["GameGuild.Economy.Payouts"]
+      "coverageAssemblies": ["GameGuild.Economy.Payouts"],
+      "minimumBranchRate": 0.98
     },
     {
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Treasury/GameGuild.Economy.Treasury.csproj",
