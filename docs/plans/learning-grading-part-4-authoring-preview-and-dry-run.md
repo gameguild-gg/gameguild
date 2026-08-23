@@ -1,5 +1,9 @@
 # Learning Grading Part 4: Authoring Preview and Dry Run
 
+> Este plano descreve o dry-run determinístico original. O fluxo canônico foi
+> ampliado para um test run completo de assessment em
+> [`quiz-grading-end-to-end/03-author-assessment-test-runs.md`](./quiz-grading-end-to-end/03-author-assessment-test-runs.md).
+
 ## Summary
 
 Part 4 adds author-facing preview flows for quiz content.
