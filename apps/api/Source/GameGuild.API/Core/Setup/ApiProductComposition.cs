@@ -4,7 +4,11 @@ using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
 using GameGuild.Compliance.FERPA;
 using GameGuild.Economy;
+using GameGuild.Economy.AdRewards;
+using GameGuild.Economy.Bounties;
+using GameGuild.Economy.Marketplace;
 using GameGuild.Economy.Payouts;
+using GameGuild.Economy.Treasury;
 using GameGuild.GameJams;
 using GameGuild.LaunchPad;
 using GameGuild.Learning.Assessments;
@@ -44,7 +48,11 @@ internal sealed class ApiProductComposition : IApiProductComposition
     [
         "Compliance.FERPA",
         "Economy",
+        "Economy.AdRewards",
+        "Economy.Bounties",
+        "Economy.Marketplace",
         "Economy.Payouts",
+        "Economy.Treasury",
         "GameJams",
         "LaunchPad",
         "Learning.Assessments",
@@ -74,10 +82,6 @@ internal sealed class ApiProductComposition : IApiProductComposition
     public IReadOnlyList<string> DisabledModules { get; } =
     [
         "Compliance.FinancialCrime",
-        "Economy.AdRewards",
-        "Economy.Bounties",
-        "Economy.Marketplace",
-        "Economy.Treasury",
         "TrustSafety"
     ];
 
@@ -86,7 +90,11 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddFerpaModule();
         builder.Services.AddEconomyCapabilityComposition(builder.Configuration);
         builder.Services.AddEconomyCoreComposition(builder.Configuration);
+        builder.Services.AddAdRewardsComposition(builder.Configuration);
+        builder.Services.AddBountiesComposition(builder.Configuration);
+        builder.Services.AddMarketplaceComposition(builder.Configuration);
         builder.Services.AddPayoutsComposition(builder.Configuration);
+        builder.Services.AddTreasuryComposition(builder.Configuration);
 
         builder.Services.AddFollowsModule();
         new GameGuild.Social.Announcements.AnnouncementsModule().ConfigureServices(builder.Services, builder.Configuration);

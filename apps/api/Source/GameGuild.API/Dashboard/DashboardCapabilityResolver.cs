@@ -24,6 +24,7 @@ public static class DashboardCapabilities
     public const string LaunchPadManageParticipants = "LaunchPad.ManageParticipants";
     public const string LaunchPadViewAnalytics = "LaunchPad.ViewAnalytics";
     public const string LaunchPadManageSettings = "LaunchPad.ManageSettings";
+    public const string EconomyManagePayouts = "Economy.ManagePayouts";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
     {
@@ -45,6 +46,7 @@ public static class DashboardCapabilities
         LaunchPadManageParticipants,
         LaunchPadViewAnalytics,
         LaunchPadManageSettings,
+        EconomyManagePayouts,
     };
 }
 
@@ -82,6 +84,9 @@ public static class DashboardCapabilityResolver
 
         if (actor.HasPermission(ProjectPermission.Keys.Admin))
             capabilities.Add(DashboardCapabilities.CommunityManageProjects);
+
+        if (actor.HasPermission(WalletsPermission.Keys.Admin))
+            capabilities.Add(DashboardCapabilities.EconomyManagePayouts);
 
         if (actor.HasAnyPermission("roles:read", "roles:create", "roles:update", "roles:delete", "roles:assign"))
             capabilities.Add(DashboardCapabilities.PlatformManageRoles);

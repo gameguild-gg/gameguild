@@ -2865,6 +2865,76 @@ export const postApiTestingLabSettingsResetEndpoint = {
   requiresAuth: true,
 } as const;
 
+/**
+ * List payout requests awaiting administrative review
+ */
+export interface GetAdminEconomyPayoutRequestsInput {
+  query?: {
+    take?: number;
+  };
+}
+export type GetAdminEconomyPayoutRequestsOutput =
+  Array<Types.EconomyPayoutsQueriesEconomyPayoutRequestReview>;
+export const getAdminEconomyPayoutRequestsEndpoint = {
+  operationId: "getAdminEconomyPayoutRequests" as const,
+  method: "GET" as const,
+  path: "/api/v1/admin/economy/payout-requests" as const,
+  tags: ["Economy"] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Record one independent payout approval
+ *
+ * The first approval waits for a different tenant administrator. Final approval records a decision only and does not reserve or dispatch value.
+ */
+export interface PostAdminEconomyPayoutRequestsApproveInput {
+  requestId: string;
+  body?: Types.EconomyPayoutsCommandsReviewPayoutRequestInput;
+}
+export type PostAdminEconomyPayoutRequestsApproveOutput =
+  Types.EconomyPayoutsQueriesEconomyPayoutRequestReview;
+export const postAdminEconomyPayoutRequestsApproveEndpoint = {
+  operationId: "postAdminEconomyPayoutRequestsApprove" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/payout-requests/{requestId}/approve" as const,
+  tags: ["Economy"] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get the immutable administrative review trail for a payout request
+ */
+export interface GetAdminEconomyPayoutRequestsAuditInput {
+  requestId: string;
+}
+export type GetAdminEconomyPayoutRequestsAuditOutput =
+  Array<Types.EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit>;
+export const getAdminEconomyPayoutRequestsAuditEndpoint = {
+  operationId: "getAdminEconomyPayoutRequestsAudit" as const,
+  method: "GET" as const,
+  path: "/api/v1/admin/economy/payout-requests/{requestId}/audit" as const,
+  tags: ["Economy"] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Reject a payout request with an immutable reason
+ */
+export interface PostAdminEconomyPayoutRequestsRejectInput {
+  requestId: string;
+  body?: Types.EconomyPayoutsCommandsReviewPayoutRequestInput;
+}
+export type PostAdminEconomyPayoutRequestsRejectOutput =
+  Types.EconomyPayoutsQueriesEconomyPayoutRequestReview;
+export const postAdminEconomyPayoutRequestsRejectEndpoint = {
+  operationId: "postAdminEconomyPayoutRequestsReject" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/payout-requests/{requestId}/reject" as const,
+  tags: ["Economy"] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAuthorizationResourcesHasPermissionInput {
   resourceType: string;
   resourceId: string;
@@ -19717,6 +19787,13 @@ export const endpoints = {
   patchApiTestingLabSettings: patchApiTestingLabSettingsEndpoint,
   getApiTestingLabSettingsExists: getApiTestingLabSettingsExistsEndpoint,
   postApiTestingLabSettingsReset: postApiTestingLabSettingsResetEndpoint,
+  getAdminEconomyPayoutRequests: getAdminEconomyPayoutRequestsEndpoint,
+  postAdminEconomyPayoutRequestsApprove:
+    postAdminEconomyPayoutRequestsApproveEndpoint,
+  getAdminEconomyPayoutRequestsAudit:
+    getAdminEconomyPayoutRequestsAuditEndpoint,
+  postAdminEconomyPayoutRequestsReject:
+    postAdminEconomyPayoutRequestsRejectEndpoint,
   getAuthorizationResourcesHasPermission:
     getAuthorizationResourcesHasPermissionEndpoint,
   getAuthorizationResourcesPermissions:

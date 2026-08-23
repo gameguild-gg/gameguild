@@ -75,7 +75,8 @@ public sealed class EconomyCoreModuleTests
         var enabled = new EconomyValueMovementDecisionGate(Options.Create(new EconomyRiskCompositionOptions
         {
             ValueMovingDecisionsEnabled = true,
-            EnabledCapabilities = ["ConvertHardToSoft"]
+            EnabledCapabilities = ["ConvertHardToSoft"],
+            AllowedJurisdictions = ["BR"]
         }));
         enabled.EnsureEnabled();
         enabled.IsCapabilityEnabled(EconomyValueMovementCapability.ConvertHardToSoft).Should().BeTrue();

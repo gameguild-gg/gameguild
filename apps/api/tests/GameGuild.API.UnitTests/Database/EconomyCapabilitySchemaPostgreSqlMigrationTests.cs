@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -60,16 +59,9 @@ public sealed class EconomyCapabilitySchemaPostgreSqlMigrationTests
     [DockerFact]
     public async Task UpDownAndCurrentEnforceCapabilityConstraintsOnPostgreSql()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_capability_rollup")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_capability_rollup");
 
-        var connectionString = container.GetConnectionString();
+        var connectionString = container.ConnectionString;
         await using var context = CreateContext(connectionString);
         var migrator = context.GetService<IMigrator>();
         await migrator.MigrateAsync(PreviousMigration);

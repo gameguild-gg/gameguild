@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -33,7 +32,7 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
     public async Task Up_Repairs_Active_Session_Project_Duplicates_Reconciles_Counts_And_Enforces_Uniqueness()
     {
         await using var container = await StartPostgresAsync("project_channel_duplicates");
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreatePrerequisiteTablesAsync(connection);
         var sessionId = Guid.NewGuid();
@@ -87,7 +86,7 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
     public async Task Up_Enforces_Active_Pair_Uniqueness_And_Project_Product_Foreign_Keys()
     {
         await using var container = await StartPostgresAsync("project_channel_integrity");
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreatePrerequisiteTablesAsync(connection);
         await ApplyUpAsync(connection);
@@ -125,7 +124,7 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
     public async Task Up_AllowsReplacementForSoftDeletedLaunchPlanAndRejectsSecondActivePlan()
     {
         await using var container = await StartPostgresAsync("project_channel_launch_plan_index");
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreatePrerequisiteTablesAsync(connection);
         var projectId = Guid.NewGuid();
@@ -151,7 +150,7 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
     public async Task Up_HoldsWriteConflictingLockThroughRepairAndUniqueIndexCreation()
     {
         await using var container = await StartPostgresAsync("project_channel_migration_lock");
-        await using var setup = new NpgsqlConnection(container.GetConnectionString());
+        await using var setup = new NpgsqlConnection(container.ConnectionString);
         await setup.OpenAsync();
         await CreatePrerequisiteTablesAsync(setup);
         var sessionId = Guid.NewGuid();
@@ -162,10 +161,10 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
             VALUES ('{Guid.NewGuid()}', '{sessionId}', '{projectId}', TRUE, NULL);
             """);
 
-        await using var gate = new NpgsqlConnection(container.GetConnectionString());
-        await using var migration = new NpgsqlConnection(container.GetConnectionString());
-        await using var writer = new NpgsqlConnection(container.GetConnectionString());
-        await using var observer = new NpgsqlConnection(container.GetConnectionString());
+        await using var gate = new NpgsqlConnection(container.ConnectionString);
+        await using var migration = new NpgsqlConnection(container.ConnectionString);
+        await using var writer = new NpgsqlConnection(container.ConnectionString);
+        await using var observer = new NpgsqlConnection(container.ConnectionString);
         await Task.WhenAll(gate.OpenAsync(), migration.OpenAsync(), writer.OpenAsync(), observer.OpenAsync());
         await using var gateTransaction = await gate.BeginTransactionAsync();
         await ExecuteAsync(gate, "LOCK TABLE testing_sessions IN ACCESS EXCLUSIVE MODE;", gateTransaction);
@@ -188,7 +187,7 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
     public async Task Down_AfterReplacementLaunchPlan_PreservesHistoryAndActiveUniqueness()
     {
         await using var container = await StartPostgresAsync("project_channel_down_launch_history");
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         await CreatePrerequisiteTablesAsync(connection);
         await ApplyUpAsync(connection);
@@ -210,16 +209,9 @@ public sealed class ProjectChannelPostgreSqlMigrationTests
             """);
     }
 
-    private static async Task<PostgreSqlContainer> StartPostgresAsync(string database)
+    private static async Task<EconomyPostgreSqlTestDatabase> StartPostgresAsync(string database)
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase(database)
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync(database);
         return container;
     }
 

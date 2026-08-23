@@ -3,12 +3,12 @@ using GameGuild.API.Database;
 using GameGuild.API.Database.Migrations;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
+using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.UnitTests.Persistence;
 
@@ -46,26 +46,19 @@ public sealed class PostgreSqlFifoFragmentReservationGatewayTests
         downSql.Should().Contain("ex_economy_fragment_root_ranges_no_overlap");
     }
 
-    [DockerFact]
+    [Fact]
     public async Task WriterReservesConfirmedLotsInFifoOrderAndPreventsASecondReservation()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_fifo_reservations")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("fifo_reservations");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(database.ConnectionString)
                 .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(database.ConnectionString);
         await connection.OpenAsync();
         var walletId = Guid.NewGuid();
         var firstRoot = Guid.NewGuid();
@@ -117,26 +110,19 @@ public sealed class PostgreSqlFifoFragmentReservationGatewayTests
         next.Sum(row => row.Amount.Units).Should().Be(20);
     }
 
-    [DockerFact]
+    [Fact]
     public async Task WriterRejectsPayoutReservationsUnlessEarnedHardIsMatureAndTheWalletIsClear()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_payout_fifo_eligibility")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("payout_fifo_eligibility");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(database.ConnectionString)
                 .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(database.ConnectionString);
         await connection.OpenAsync();
         var gateway = new PostgreSqlFifoFragmentReservationGateway(context);
 
@@ -305,15 +291,6 @@ public sealed class PostgreSqlFifoFragmentReservationGatewayTests
     }
 
     private sealed record ReservationRow(Guid ReservationId, Guid ParentLotId, long AmountUnits);
-
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
-    }
 
     private sealed class ExposedMigration : AddEconomyFifoReservationWriter
     {

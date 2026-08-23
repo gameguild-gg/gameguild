@@ -5,9 +5,9 @@ using GameGuild.Economy.Persistence;
 using GameGuild.Economy.Projections;
 using GameGuild.Economy.Queries;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.UnitTests.Queries;
 
@@ -15,30 +15,21 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
 {
     private static readonly DateTimeOffset RecordedAt = DateTimeOffset.Parse("2026-08-09T12:00:00Z");
     private readonly Dictionary<Guid, Guid> _accountIds = [];
-    private static bool DockerTestsEnabled =>
-        !string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal);
-
-    private readonly PostgreSqlContainer? _container = DockerTestsEnabled
-        ? new PostgreSqlBuilder()
-        .WithImage("postgres:17-alpine")
-        .WithDatabase("economy_wallet_queries")
-        .WithUsername("test")
-        .WithPassword("test")
-        .Build()
-        : null;
+    private EconomyPostgreSqlTestDatabase? _database;
 
     public async Task InitializeAsync()
     {
-        if (_container is null)
-            return;
-
-        await _container.StartAsync();
+        _database = await EconomyPostgreSqlTestDatabase.CreateAsync("wallet_queries");
         await ResetSchemaAsync();
     }
 
-    public Task DisposeAsync() => _container?.DisposeAsync().AsTask() ?? Task.CompletedTask;
+    public async Task DisposeAsync()
+    {
+        if (_database is not null)
+            await _database.DisposeAsync();
+    }
 
-    [DockerFact]
+    [Fact]
     public async Task GetMyWallet_ReturnsOnlyTheAuthenticatedTenantWallet()
     {
         await ResetSchemaAsync();
@@ -93,7 +84,7 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
             10, 20, 30, 40, 50, 60, 80, 90, 100, 110, 120, 140, RecordedAt, 130));
     }
 
-    [DockerFact]
+    [Fact]
     public async Task GetMyWallet_ReturnsNullWhenActorOwnsNoWallet()
     {
         await ResetSchemaAsync();
@@ -117,7 +108,7 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
-    [DockerFact]
+    [Fact]
     public async Task ListMyWalletTransactions_ReturnsEmptyWhenActorOwnsNoWallet()
     {
         await ResetSchemaAsync();
@@ -128,7 +119,7 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
         result.Should().BeEmpty();
     }
 
-    [DockerFact]
+    [Fact]
     public async Task ListMyWalletTransactions_ReturnsNewestLinesFromOnlyTheAuthenticatedWallet()
     {
         await ResetSchemaAsync();
@@ -171,7 +162,7 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
             ProvenanceKind.PurchasedHard));
     }
 
-    [DockerFact]
+    [Fact]
     public async Task GetMyWallet_UsesSafeDefaultsWithoutProjectionOrDebt()
     {
         await ResetSchemaAsync();
@@ -196,7 +187,7 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, RecordedAt, 0));
     }
 
-    [DockerFact]
+    [Fact]
     public async Task ListMyWalletTransactions_ClampsNonPositiveTakeToOne()
     {
         await ResetSchemaAsync();
@@ -287,14 +278,14 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
 
     private async Task ResetSchemaAsync()
     {
+        await (_database ?? throw new InvalidOperationException("The PostgreSQL fixture was not initialized.")).ResetAsync();
         await using var context = CreateContext();
-        await context.Database.EnsureDeletedAsync();
         await context.Database.EnsureCreatedAsync();
     }
 
     private EconomyWalletQueryDbContext CreateContext() => new(
         new DbContextOptionsBuilder<EconomyWalletQueryDbContext>()
-            .UseNpgsql(_container!.GetConnectionString())
+            .UseNpgsql((_database ?? throw new InvalidOperationException("The PostgreSQL fixture was not initialized.")).ConnectionString)
             .Options);
 
     private static EconomyWalletRow Wallet(Guid id, Guid ownerId, Guid tenantId) => new()
@@ -331,12 +322,4 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
             new EconomyModelConfiguration().Configure(modelBuilder);
     }
 
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
-    }
 }
