@@ -89,6 +89,7 @@ function receiptHash(filename: string): string {
 function recipeIdentity(recipe: BuildRecipe): string {
   return sha256(stableJson({
     name: recipe.name,
+    cacheKey: recipe.cacheKey ?? null,
     dependencies: recipe.dependencies,
     lockEntries: recipe.lockEntries,
     outputs: recipe.outputs,
