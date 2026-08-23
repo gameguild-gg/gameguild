@@ -8,6 +8,7 @@ export interface BuildContext {
 
 export interface BuildRecipe {
   readonly name: string;
+  readonly cacheKey?: string;
   readonly dependencies: readonly string[];
   readonly lockEntries: readonly ToolName[];
   readonly outputs: readonly string[];
@@ -20,9 +21,11 @@ function scriptRecipe(
   lockEntries: readonly ToolName[],
   outputs: readonly string[],
   script: string,
+  cacheKey: string = script,
 ): BuildRecipe {
   return {
     name,
+    cacheKey,
     dependencies,
     lockEntries,
     outputs,
@@ -31,7 +34,7 @@ function scriptRecipe(
 }
 
 function groupRecipe(name: string, dependencies: readonly string[]): BuildRecipe {
-  return { name, dependencies, lockEntries: [], outputs: [], run() {} };
+  return { name, cacheKey: `group:${name}`, dependencies, lockEntries: [], outputs: [], run() {} };
 }
 
 const tool = (filename: string) => `artifacts/toolchain/tools/${filename}`;
@@ -102,7 +105,8 @@ export const TOOLCHAIN_RECIPES: Readonly<Record<string, BuildRecipe>> = {
     'sysroot', ['binaryen', 'python', 'llvm', 'cmake', 'sdl3', 'imgui', 'raylib', 'allegro'],
     ['emsdk', 'binaryen', 'python', 'llvm', 'cmake', 'sdl3', 'imgui', 'raylib', 'raygui', 'physac', 'allegro', 'curlLite'],
     [sysroot('.emception-symlinks.json')],
-    'recipe:sysroot:no-host-bytecode-v2',
+    'recipe:sysroot',
+    'sysroot:no-host-bytecode-v2',
   ),
   light: groupRecipe('light', ['cmake']),
   heavy: groupRecipe('heavy', ['binaryen', 'python', 'llvm']),
@@ -135,6 +139,7 @@ export const TOOLCHAIN_RECIPES: Readonly<Record<string, BuildRecipe>> = {
   ),
   release: {
     name: 'release',
+    cacheKey: 'release:v1',
     dependencies: ['assert'],
     lockEntries: [],
     outputs: ['packages/toolchain/cdn/manifest.json', 'packages/core/cdn/manifest.json', 'public/cdn/manifest.json'],

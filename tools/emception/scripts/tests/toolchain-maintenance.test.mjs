@@ -117,6 +117,22 @@ test('Emscripten sysroot copies exclude host Python bytecode caches', async (con
   await assert.rejects(readFile(path.join(destination, 'settings.pyo')));
 });
 
+test('sysroot cache revision does not change its executable pnpm script', async () => {
+  const { TOOLCHAIN_RECIPES } = await import('../toolchain/recipes.ts');
+  const scripts = [];
+
+  await TOOLCHAIN_RECIPES.sysroot.run({
+    root: '/workspace/emception',
+    force: false,
+    runScript(script) {
+      scripts.push(script);
+    },
+  });
+
+  assert.deepEqual(scripts, ['recipe:sysroot']);
+  assert.equal(TOOLCHAIN_RECIPES.sysroot.cacheKey, 'sysroot:no-host-bytecode-v2');
+});
+
 test('toolchain lock serialization is stable and validates the CMake major policy', async (context) => {
   const root = await temporaryRoot(context);
   const { calculateConfigHash, loadToolchainState, serializeToolchainLock } = await import('../toolchain/lock.ts');
