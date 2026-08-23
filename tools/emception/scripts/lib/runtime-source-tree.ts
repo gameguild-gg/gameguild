@@ -8,6 +8,10 @@ function isHostPythonBytecode(source: string): boolean {
 
 export function pruneHostPythonBytecode(root: string): void {
   if (!fs.existsSync(root)) return;
+  if (!fs.statSync(root).isDirectory()) {
+    if (/\.py[co]$/i.test(path.basename(root))) fs.rmSync(root, { force: true });
+    return;
+  }
   for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     const filename = path.join(root, entry.name);
     if (entry.name === '__pycache__') {
