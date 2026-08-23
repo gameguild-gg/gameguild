@@ -3,7 +3,10 @@
  * Gerencia configurações globais e específicas por tipo de node
  */
 
-import type { ShikiTheme } from "@/components/block-content-editor/lib/shiki/themes"
+import {
+  SHIKI_THEME_CONFIGS,
+  type ShikiTheme,
+} from "@/components/block-content-editor/lib/shiki/themes"
 
 export type ModalSize = 'compact' | 'widescreen' | 'ultrawide' | 'fullscreen'
 export type WordWrap = 'on' | 'off'
@@ -263,6 +266,67 @@ export async function getEditorPreferences(nodeType?: string): Promise<EditorPre
  */
 export async function getAllPreferences(): Promise<AllPreferences> {
   return db.get()
+}
+
+type StoredEditorPreferencesInput = {
+  readonly modalSize?: string
+  readonly editor?: Record<string, unknown>
+  readonly preview?: Record<string, unknown>
+}
+
+function isModalSize(value: unknown): value is ModalSize {
+  return value === 'compact' || value === 'widescreen' || value === 'ultrawide' || value === 'fullscreen'
+}
+
+function isShikiTheme(value: unknown): value is ShikiTheme {
+  return typeof value === 'string' && value in SHIKI_THEME_CONFIGS
+}
+
+function isRenderWhitespace(value: unknown): value is RenderWhitespace {
+  return value === 'none' || value === 'boundary' || value === 'all'
+}
+
+function isRenderLineHighlight(value: unknown): value is RenderLineHighlight {
+  return value === 'none' || value === 'gutter' || value === 'line' || value === 'all' || value === 'rectangle'
+}
+
+function getStoredMonacoOptions(value: Record<string, unknown>): Partial<MonacoOptionsPreferences> {
+  const shikiTheme = value.shikiTheme
+  const fontSize = value.fontSize
+  const lineNumbers = value.lineNumbers
+  const wordWrap = value.wordWrap
+  const minimap = value.minimap
+  const tabSize = value.tabSize
+  const renderWhitespace = value.renderWhitespace
+  const renderLineHighlight = value.renderLineHighlight
+
+  return {
+    ...(isShikiTheme(shikiTheme) ? { shikiTheme } : {}),
+    ...(typeof fontSize === 'number' && Number.isFinite(fontSize) ? { fontSize } : {}),
+    ...(typeof lineNumbers === 'boolean' ? { lineNumbers } : {}),
+    ...(typeof wordWrap === 'boolean' ? { wordWrap } : {}),
+    ...(typeof minimap === 'boolean' ? { minimap } : {}),
+    ...(typeof tabSize === 'number' && Number.isFinite(tabSize) ? { tabSize } : {}),
+    ...(isRenderWhitespace(renderWhitespace) ? { renderWhitespace } : {}),
+    ...(isRenderLineHighlight(renderLineHighlight) ? { renderLineHighlight } : {}),
+  }
+}
+
+export async function applyStoredGlobalPreferences(
+  input: StoredEditorPreferencesInput,
+): Promise<void> {
+  const allPrefs = await db.get()
+  const modalSize = isModalSize(input.modalSize) ? input.modalSize : allPrefs.global.modalSize
+  const editor = input.editor
+    ? { ...allPrefs.global.editor, ...getStoredMonacoOptions(input.editor) }
+    : allPrefs.global.editor
+  const preview = input.preview
+    ? { ...allPrefs.global.preview, ...getStoredMonacoOptions(input.preview) }
+    : allPrefs.global.preview
+
+  allPrefs.global = { modalSize, editor, preview }
+  await db.set(allPrefs)
+  notifyPreferencesChanged()
 }
 
 export async function setGlobalPreference<K extends keyof EditorPreferences>(

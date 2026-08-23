@@ -2,39 +2,30 @@ using FluentAssertions;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Persistence;
+using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.UnitTests.Persistence;
 
 public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
 {
     private static readonly DateTimeOffset ObservedAt = DateTimeOffset.Parse("2026-07-18T12:00:00Z");
-    private static bool DockerTestsEnabled =>
-        !string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal);
-
-    private readonly PostgreSqlContainer? _container = DockerTestsEnabled
-        ? new PostgreSqlBuilder()
-        .WithImage("postgres:17-alpine")
-        .WithDatabase("economy_funding_races")
-        .WithUsername("test")
-        .WithPassword("test")
-        .Build()
-        : null;
+    private EconomyPostgreSqlTestDatabase? _database;
 
     public async Task InitializeAsync()
     {
-        if (_container is null)
-            return;
-
-        await _container.StartAsync();
+        _database = await EconomyPostgreSqlTestDatabase.CreateAsync("funding_races");
         await ResetSchemaAsync();
     }
 
-    public Task DisposeAsync() => _container?.DisposeAsync().AsTask() ?? Task.CompletedTask;
+    public async Task DisposeAsync()
+    {
+        if (_database is not null)
+            await _database.DisposeAsync();
+    }
 
-    [DockerFact]
+    [Fact]
     public async Task ConfirmationVersusFailure_HasOneTerminalWinnerAndAtMostOneMintRoot()
     {
         await ResetSchemaAsync();
@@ -85,7 +76,7 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
         }
     }
 
-    [DockerFact]
+    [Fact]
     public async Task ProviderLegAndCumulativeReversal_AreEnforcedByPostgreSql()
     {
         await ResetSchemaAsync();
@@ -209,14 +200,14 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
 
     private async Task ResetSchemaAsync()
     {
+        await (_database ?? throw new InvalidOperationException("The PostgreSQL fixture was not initialized.")).ResetAsync();
         await using var context = CreateContext();
-        await context.Database.EnsureDeletedAsync();
         await context.Database.EnsureCreatedAsync();
     }
 
     private FundingRaceDbContext CreateContext() => new(
         new DbContextOptionsBuilder<FundingRaceDbContext>()
-            .UseNpgsql(_container!.GetConnectionString())
+            .UseNpgsql((_database ?? throw new InvalidOperationException("The PostgreSQL fixture was not initialized.")).ConnectionString)
             .Options);
 
     private static EconomyWalletRow Wallet(Guid id) => new()
@@ -281,13 +272,5 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
     {
         protected override void OnModelCreating(ModelBuilder modelBuilder) =>
             new EconomyModelConfiguration().Configure(modelBuilder);
-    }
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
     }
 }

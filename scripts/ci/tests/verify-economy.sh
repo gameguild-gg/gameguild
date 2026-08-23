@@ -13,6 +13,11 @@ fi
 # shellcheck source=../economy-gate.sh
 source "$ci_dir/economy-gate.sh"
 
+declare -a pnpm_command=(pnpm)
+if [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
+  pnpm_command=(pnpm.cmd)
+fi
+
 passed=0
 failed=0
 fixture_root="$(mktemp -d "${TMPDIR:-/tmp}/economy-gate.XXXXXX")"
@@ -59,6 +64,7 @@ test_shell_only_ci_policy() {
   ! find "$ci_dir" -type f \( -name '*.ps1' -o -name '*.psm1' \) -print -quit | grep -q . || return 1
   ! grep -qiE 'pwsh|powershell|\.ps1|\.psm1' "$repository_root/.github/workflows/main.yml" || return 1
   grep -q '"ci:dependencies": "bash scripts/ci/install-and-audit-pnpm.sh"' "$repository_root/package.json" || return 1
+  grep -q '"ci:repository-policy": "bash scripts/ci/verify-repository-policy.sh"' "$repository_root/package.json" || return 1
   grep -q '"ci:economy": "bash scripts/ci/verify-economy.sh"' "$repository_root/package.json" || return 1
   grep -q 'pnpm install --no-lockfile --no-frozen-lockfile' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -q 'pnpm audit --json' "$ci_dir/install-and-audit-pnpm.sh" || return 1
@@ -86,6 +92,60 @@ test_release_flow_opens_version_pr_to_main() {
   grep -Fq 'git push origin "${TAG}"' "$emception_workflow"
 }
 
+test_repository_policy_runs_in_a_parallel_required_gate() {
+  local workflow="$repository_root/.github/workflows/main.yml"
+
+  grep -Fq 'repository-policy-gate:' "$workflow" || return 1
+  grep -Fq 'name: Repository Policy Gate' "$workflow" || return 1
+  grep -Fq 'run: bash scripts/ci/verify-repository-policy.sh' "$workflow" || return 1
+  ! grep -Fq 'needs: [repository-policy-gate]' "$workflow" || return 1
+}
+
+test_economy_preflight_has_no_repository_policy_side_effect() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  ! grep -Fq 'tests/verify-economy.sh' "$gate" || return 1
+  grep -Fq 'artifact_root="$repository_root/artifacts/test-results/economy"' "$gate" || return 1
+  ! grep -Fq 'rm -rf "$repository_root/artifacts/test-results"' "$gate" || return 1
+  grep -Fq 'preflight-summary.txt' "$gate"
+}
+
+test_economy_gate_rejects_stage_skips() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  ! grep -Fq -- '--skip-whole-solution' "$gate" || return 1
+  ! grep -Fq -- '--skip-provider-contracts' "$gate" || return 1
+  ! grep -Fq -- '--skip-openapi' "$gate" || return 1
+  ! grep -Fq -- '--skip-frontend' "$gate" || return 1
+  ! grep -Fq -- '--skip-browser' "$gate"
+}
+
+test_economy_gate_builds_shared_postgres_test_support() {
+  grep -Fq 'apps/api/tests/GameGuild.TestSupport.Economy/GameGuild.TestSupport.Economy.csproj' \
+    "$ci_dir/verify-economy.sh"
+}
+
+test_economy_gate_rejects_nested_postgres_testcontainers() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq "gate_stage='preflight-postgres-isolation'" "$gate" || return 1
+  grep -Fq 'ECONOMY_POSTGRES_CONNECTION' "$gate" || return 1
+  grep -Fq "rg --path-separator // -l --glob '*.cs' 'new PostgreSqlBuilder' apps/api/tests" "$gate" || return 1
+  grep -Fq 'GameGuild.TestSupport.Economy/' "$gate"
+}
+
+test_economy_gate_isolates_global_economy_roles_from_application_databases() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq 'economy_postgres_container="gameguild-economy-ci-tests-' "$gate" || return 1
+  grep -Fq "gate_stage='postgres-economy-tests'" "$gate" || return 1
+  grep -Fq -- '--env POSTGRES_DB=economy_tests' "$gate" || return 1
+  grep -Fq 'economy_connection_string=' "$gate" || return 1
+  grep -Fq 'export ECONOMY_POSTGRES_CONNECTION="$economy_connection_string"' "$gate" || return 1
+  grep -Fq 'export ConnectionStrings__DefaultConnection="$connection_string"' "$gate" || return 1
+  grep -Fq 'docker rm --force "$economy_postgres_container"' "$gate"
+}
+
 test_auto_changeset_bumps_entire_lockstep_workspace() {
   local script="$repository_root/scripts/devops/auto-changeset.mjs"
 
@@ -99,7 +159,7 @@ test_changesets_config_matches_lockstep_workspace() {
   local config="$repository_root/.changeset/config.json"
   local workspace_packages="$fixture_root/workspace-packages.json"
 
-  (cd "$repository_root" && pnpm list -r --depth -1 --json) > "$workspace_packages" || return 1
+  (cd "$repository_root" && "${pnpm_command[@]}" list -r --depth -1 --json) > "$workspace_packages" || return 1
   "$PYTHON_BIN" - "$repository_root/package.json" "$config" "$workspace_packages" <<'PY' || return 1
 import collections
 import json
@@ -139,7 +199,7 @@ if errors:
     raise SystemExit("; ".join(errors))
 PY
 
-  (cd "$repository_root" && pnpm exec changeset status >/dev/null)
+  (cd "$repository_root" && "${pnpm_command[@]}" dlx @changesets/cli@^3.0.0 status >/dev/null)
 }
 
 test_emception_emits_a_gate_result_for_every_main_push() {
@@ -155,7 +215,7 @@ test_emception_emits_a_gate_result_for_every_main_push() {
 }
 
 test_web_vitest_uses_direct_exec_for_json_evidence() {
-  grep -q 'pnpm --filter @game-guild/web exec vitest run --reporter=json' "$ci_dir/verify-economy.sh" || return 1
+  grep -Fq 'run env -u API_URL "${pnpm_command[@]}" --filter @game-guild/web exec vitest run --reporter=json' "$ci_dir/verify-economy.sh" || return 1
   ! grep -q 'pnpm --filter @game-guild/web run test --' "$ci_dir/verify-economy.sh"
 }
 
@@ -185,7 +245,7 @@ test_browser_server_uses_published_api() {
 }
 
 test_web_vitest_isolated_from_published_api() {
-  grep -q 'run env -u API_URL pnpm --filter @game-guild/web exec vitest run' "$ci_dir/verify-economy.sh"
+  grep -Fq 'run env -u API_URL "${pnpm_command[@]}" --filter @game-guild/web exec vitest run' "$ci_dir/verify-economy.sh"
 }
 
 test_local_api_readiness_enables_simulation_explicitly() {
@@ -221,11 +281,20 @@ test_whole_solution_provisions_garage() {
   local gate="$ci_dir/verify-economy.sh"
 
   grep -Fq "garage_container='gameguild-economy-ci-garage-" "$gate" || return 1
+  grep -Fq 'run env MSYS_NO_PATHCONV=1 docker run --detach --rm --name "$garage_container"' "$gate" || return 1
   grep -Fq 'dxflrs/garage:v2.3.0' "$gate" || return 1
   grep -Fq 'GARAGE_HOST=127.0.0.1' "$gate" || return 1
   grep -Fq 'export S3_SERVICE_URL="http://127.0.0.1:$garage_s3_port"' "$gate" || return 1
   grep -Fq 'export GARAGE_ADMIN_URL="http://127.0.0.1:$garage_admin_port"' "$gate" || return 1
   grep -Fq 'docker rm --force "$garage_container"' "$gate"
+}
+
+test_windows_testcontainers_cleanup_is_gate_scoped() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq 'export TESTCONTAINERS_RYUK_DISABLED=true' "$gate" || return 1
+  grep -Fq 'testcontainers_baseline' "$gate" || return 1
+  grep -Fq 'label=org.testcontainers=true' "$gate"
 }
 
 test_manifest_rejects_undeclared_project() {
@@ -247,6 +316,25 @@ test_manifest_accepts_declared_projects() {
   printf '<Project />\n' > "$root/$integration"
   printf '{"schemaVersion":1,"projects":[{"productionProject":"%s","testProjects":["%s","%s"],"coverageAssemblies":["GameGuild.Economy"]}]}\n' \
     "$production" "$unit" "$integration" > "$root/manifest.json"
+  assert_economy_manifest "$root" "$root/manifest.json" >/dev/null
+}
+
+test_manifest_prunes_build_outputs() {
+  local root="$fixture_root/manifest-build-outputs"
+  local production='apps/api/Source/Modules/GameGuild.Economy/GameGuild.Economy.csproj'
+  local unit='apps/api/tests/GameGuild.Economy.UnitTests/GameGuild.Economy.UnitTests.csproj'
+  local gate_library="$ci_dir/economy-gate.sh"
+
+  mkdir -p "$root/$(dirname "$production")" "$root/$(dirname "$unit")/bin/Release" "$root/$(dirname "$unit")/obj"
+  printf '<Project />\n' > "$root/$production"
+  printf '<Project />\n' > "$root/$unit"
+  printf '<Project />\n' > "$root/$(dirname "$unit")/bin/Release/Generated.csproj"
+  printf '<Project />\n' > "$root/$(dirname "$unit")/obj/Generated.csproj"
+  printf '{"schemaVersion":1,"projects":[{"productionProject":"%s","testProjects":["%s"],"coverageAssemblies":["GameGuild.Economy"]}]}\n' \
+    "$production" "$unit" > "$root/manifest.json"
+
+  grep -Fq 'for current, directories, filenames in os.walk(base_directory):' "$gate_library" || return 1
+  grep -Fq 'directories[:] = [directory for directory in directories if directory not in {"bin", "obj"}]' "$gate_library" || return 1
   assert_economy_manifest "$root" "$root/manifest.json" >/dev/null
 }
 
@@ -351,6 +439,22 @@ test_whole_solution_allows_only_source_empty_scaffolds() {
     --validate-whole-solution-evidence "$root" "$log" "$trx"
 }
 
+test_whole_solution_isolates_vstest_processes() {
+  local gate="$ci_dir/verify-economy.sh"
+  local path_separator=$'\\'
+
+  grep -Fq 'run_logged_append()' "$gate" || return 1
+  grep -Fq 'dotnet sln apps/api/GameGuild.sln list' "$gate" || return 1
+  grep -Fq 'whole_solution_test_project()' "$gate" || return 1
+  grep -Fq '<IsTestProject>[[:space:]]*false[[:space:]]*</IsTestProject>' "$gate" || return 1
+  grep -Fq 'economy_test_project()' "$gate" || return 1
+  grep -Fq 'economy_test_project "$test_project" && continue' "$gate" || return 1
+  grep -Fq "tr '${path_separator}134' '/'" "$gate" || return 1
+  grep -Fq 'for test_project in "${whole_solution_projects[@]}"; do' "$gate" || return 1
+  grep -Fq 'Whole-solution test project produced no TRX:' "$gate" || return 1
+  ! grep -Fq 'dotnet test apps/api/GameGuild.sln' "$gate"
+}
+
 test_whole_solution_recovers_scaffold_identity_from_trx() {
   local root="$fixture_root/whole-solution-trx-fallback"
   local project='apps/api/tests/GameGuild.Localization.IntegrationTests/GameGuild.Localization.IntegrationTests.csproj'
@@ -427,6 +531,12 @@ test_canonical_json_preserves_arrays() {
 run_test 'CI policy contains only shell scripts' test_shell_only_ci_policy
 run_test 'contributors visualization uses native xvfb' test_contributors_visualization_uses_native_xvfb
 run_test 'Emception publish opens a release PR to main' test_release_flow_opens_version_pr_to_main
+run_test 'repository policy runs in a parallel required gate' test_repository_policy_runs_in_a_parallel_required_gate
+run_test 'Economy preflight is independent and records its summary' test_economy_preflight_has_no_repository_policy_side_effect
+run_test 'Economy gate rejects stage skips' test_economy_gate_rejects_stage_skips
+run_test 'Economy gate builds shared PostgreSQL test support' test_economy_gate_builds_shared_postgres_test_support
+run_test 'Economy gate rejects nested PostgreSQL Testcontainers' test_economy_gate_rejects_nested_postgres_testcontainers
+run_test 'Economy gate isolates global roles from application databases' test_economy_gate_isolates_global_economy_roles_from_application_databases
 run_test 'auto-changeset apply bumps the entire lockstep workspace' test_auto_changeset_bumps_entire_lockstep_workspace
 run_test 'Changesets config matches the lockstep workspace policy' test_changesets_config_matches_lockstep_workspace
 run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
@@ -439,8 +549,10 @@ run_test 'local API readiness enables payment simulation explicitly' test_local_
 run_test 'Coolify forwards Stripe gateway identity and mode' test_coolify_compose_forwards_stripe_gateway_identity
 run_test 'published API uses its published content root' test_published_api_uses_published_content_root
 run_test 'whole-solution tests provision isolated Garage storage' test_whole_solution_provisions_garage
+run_test 'Windows Testcontainers cleanup is scoped to the Economy gate' test_windows_testcontainers_cleanup_is_gate_scoped
 run_test 'manifest rejects undeclared Economy projects' test_manifest_rejects_undeclared_project
 run_test 'manifest accepts declared Economy projects and tests' test_manifest_accepts_declared_projects
+run_test 'manifest prunes build outputs before project discovery' test_manifest_prunes_build_outputs
 run_test 'manifest records normalize Windows line endings' test_manifest_record_fields_normalize_windows_line_endings
 run_test 'coverage records preserve empty prefixes and branch threshold' test_coverage_record_fields_preserve_empty_prefixes
 run_test 'warning scope resolves touched Commerce projects' test_warning_scope_finds_commerce_projects
@@ -448,6 +560,7 @@ run_test 'readiness requires consecutive successful probes' test_readiness_requi
 run_test 'process cleanup terminates Bash background processes' test_process_cleanup_stops_background_process
 run_test 'TRX evidence rejects skipped and zero-test suites' test_trx_rejects_skips_and_empty_suites
 run_test 'whole-solution evidence allows only named source-empty scaffolds' test_whole_solution_allows_only_source_empty_scaffolds
+run_test 'whole-solution tests isolate VSTest processes' test_whole_solution_isolates_vstest_processes
 run_test 'whole-solution evidence recovers scaffold identity from TRX metadata' test_whole_solution_recovers_scaffold_identity_from_trx
 run_test 'Cobertura enforces line, branch, and method coverage' test_cobertura_requires_full_method_coverage
 run_test 'Cobertura honors explicit branch thresholds' test_cobertura_respects_explicit_branch_threshold

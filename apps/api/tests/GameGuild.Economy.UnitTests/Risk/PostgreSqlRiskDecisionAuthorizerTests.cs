@@ -3,9 +3,9 @@ using GameGuild.API.Database;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Persistence;
 using GameGuild.Economy.Risk;
+using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.UnitTests.Risk;
 
@@ -13,11 +13,11 @@ public sealed class PostgreSqlRiskDecisionAuthorizerTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 10, 20, 0, 0, TimeSpan.Zero);
 
-    [DockerFact]
+    [Fact]
     public async Task AllowsOnlyTheExactDurableAllowDecision()
     {
         await using var database = await CreateDatabaseAsync();
-        var context = CreateContext(database.GetConnectionString());
+        var context = CreateContext(database.ConnectionString);
         await using (context)
         {
             await context.Database.MigrateAsync();
@@ -34,11 +34,11 @@ public sealed class PostgreSqlRiskDecisionAuthorizerTests
         }
     }
 
-    [DockerFact]
+    [Fact]
     public async Task RejectsMissingOrDifferentDurableDecision()
     {
         await using var database = await CreateDatabaseAsync();
-        var context = CreateContext(database.GetConnectionString());
+        var context = CreateContext(database.ConnectionString);
         await using (context)
         {
             await context.Database.MigrateAsync();
@@ -62,11 +62,11 @@ public sealed class PostgreSqlRiskDecisionAuthorizerTests
         }
     }
 
-    [DockerFact]
+    [Fact]
     public async Task RejectsAStoredDenyDecisionAfterVerifyingItsBinding()
     {
         await using var database = await CreateDatabaseAsync();
-        var context = CreateContext(database.GetConnectionString());
+        var context = CreateContext(database.ConnectionString);
         await using (context)
         {
             await context.Database.MigrateAsync();
@@ -80,18 +80,8 @@ public sealed class PostgreSqlRiskDecisionAuthorizerTests
         }
     }
 
-    private static async Task<PostgreSqlContainer> CreateDatabaseAsync()
-    {
-        var database = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_risk_authorizer")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await database.StartAsync();
-        return database;
-    }
+    private static Task<EconomyPostgreSqlTestDatabase> CreateDatabaseAsync() =>
+        EconomyPostgreSqlTestDatabase.CreateAsync("risk_authorizer");
 
     private static ApplicationDbContext CreateContext(string connectionString) =>
         new(new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -179,12 +169,4 @@ public sealed class PostgreSqlRiskDecisionAuthorizerTests
         await context.SaveChangesAsync();
     }
 
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
-    }
 }

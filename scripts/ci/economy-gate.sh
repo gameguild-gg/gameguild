@@ -26,6 +26,7 @@ assert_economy_manifest() {
   local repository_root="$1" manifest_path="$2"
   "$PYTHON_BIN" - "$repository_root" "$manifest_path" <<'PY'
 import json
+import os
 import pathlib
 import sys
 
@@ -49,14 +50,21 @@ declared_tests = {
     for path in entry.get("testProjects", [])
 }
 
-discovered_production = {
-    path.relative_to(root).as_posix()
-    for path in root.glob("apps/api/Source/Modules/GameGuild.Economy*/**/*.csproj")
-}
-discovered_tests = {
-    path.relative_to(root).as_posix()
-    for path in root.glob("apps/api/tests/GameGuild.Economy*/**/*.csproj")
-}
+def discover_projects(relative_directory):
+    projects = set()
+    base_directory = root / relative_directory
+    for current, directories, filenames in os.walk(base_directory):
+        if pathlib.Path(current) == base_directory:
+            directories[:] = [directory for directory in directories if directory.startswith("GameGuild.Economy")]
+        else:
+            directories[:] = [directory for directory in directories if directory not in {"bin", "obj"}]
+        for filename in filenames:
+            if filename.endswith(".csproj"):
+                projects.add((pathlib.Path(current) / filename).relative_to(root).as_posix())
+    return projects
+
+discovered_production = discover_projects("apps/api/Source/Modules")
+discovered_tests = discover_projects("apps/api/tests")
 
 for path in sorted(discovered_production - declared_production):
     raise SystemExit(f"Discovered Economy production project is not declared in the manifest: {path}")

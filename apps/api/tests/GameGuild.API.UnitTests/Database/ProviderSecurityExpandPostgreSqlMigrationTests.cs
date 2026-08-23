@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -83,15 +82,8 @@ public sealed class ProviderSecurityExpandPostgreSqlMigrationTests
     [DockerFact]
     public async Task Ef_Migrator_Up_NoOp_Down_And_Current_Reapply_Preserve_Legacy_Rows_On_PostgreSql()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("provider_security_expand")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
-        var connectionString = container.GetConnectionString();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("provider_security_expand");
+        var connectionString = container.ConnectionString;
         await using var context = CreateContext(connectionString);
         var migrator = context.GetService<IMigrator>();
 

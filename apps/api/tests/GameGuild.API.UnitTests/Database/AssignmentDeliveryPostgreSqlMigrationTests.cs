@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -19,15 +18,8 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
     [DockerFact]
     public async Task RegisteredWorkflow_SerializesCueLinksAgainstUpdateAndTreeDeletion()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("task2_workflow_locks")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
-        await using var provider = CreateWorkflowProvider(container.GetConnectionString());
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("task2_workflow_locks");
+        await using var provider = CreateWorkflowProvider(container.ConnectionString);
         try
         {
             var fixture = await SeedWorkflowAsync(provider);
@@ -46,18 +38,11 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
     [DockerFact]
     public async Task SortedMultiContentLocks_CompleteWhenOpposingRequestsWouldDeadlockInReverseOrder()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("task2_ordered_locks")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("task2_ordered_locks");
         try
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options;
             var ordered = new[] { Guid.NewGuid(), Guid.NewGuid() }.OrderBy(id => id).ToArray();
             var lowId = ordered[0];
@@ -94,18 +79,11 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
     [DockerFact]
     public async Task AdvisoryLifecycleLocks_SerializeConcurrentCueLinkAndContentMutation()
     {
-        var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("task2_locks")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("task2_locks");
         try
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options;
             var contentId = Guid.NewGuid();
             await using var firstContext = new ApplicationDbContext(options);
@@ -136,18 +114,10 @@ public sealed class AssignmentDeliveryPostgreSqlMigrationTests
     [DockerFact]
     public async Task Up_AppliesLegacyRepairAndRejectsInvalidDeliveryContracts()
     {
-        var container = new PostgreSqlBuilder()
-                .WithImage("postgres:16-alpine")
-                .WithDatabase("task2_migration")
-                .WithUsername("test")
-                .WithPassword("test")
-                .WithCleanUp(true)
-                .Build();
-
-        await container.StartAsync();
+        var container = await EconomyPostgreSqlTestDatabase.CreateAsync("task2_migration");
         try
         {
-            await using var connection = new NpgsqlConnection(container.GetConnectionString());
+            await using var connection = new NpgsqlConnection(container.ConnectionString);
             await connection.OpenAsync();
             var assessmentId = Guid.NewGuid();
             var submissionId = Guid.NewGuid();

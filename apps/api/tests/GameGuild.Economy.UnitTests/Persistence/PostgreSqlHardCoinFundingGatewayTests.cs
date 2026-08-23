@@ -4,10 +4,10 @@ using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.UnitTests.Funding;
+using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.UnitTests.Persistence;
 
@@ -15,26 +15,19 @@ public sealed class PostgreSqlHardCoinFundingGatewayTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 10, 18, 0, 0, TimeSpan.Zero);
 
-    [DockerFact]
+    [Fact]
     public async Task ObserveThenConfirm_PersistsAnAuthorizedMintAndReplaysIdempotently()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_hard_coin_funding_gateway")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("hard_coin_funding_gateway");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(database.ConnectionString)
                 .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(database.ConnectionString);
         await connection.OpenAsync();
         var wallet = Guid.NewGuid();
         var capability = Guid.NewGuid();
@@ -168,12 +161,4 @@ public sealed class PostgreSqlHardCoinFundingGatewayTests
         return (T)(await command.ExecuteScalarAsync())!;
     }
 
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
-    }
 }

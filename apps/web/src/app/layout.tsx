@@ -1,6 +1,8 @@
 import React from 'react';
+import Script from 'next/script';
 import type { Metadata } from 'next';
 import { getLocale } from 'next-intl/server';
+import { DevelopmentReactDiagnostics } from '@/components/app/development-react-diagnostics';
 import '@/styles/globals.css';
 
 export const metadata: Metadata = {
@@ -22,7 +24,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body suppressHydrationWarning>{children}</body>
+      <head>
+        {process.env.NODE_ENV === 'development' &&
+          process.env.NEXT_PUBLIC_DISABLE_REACT_DEVTOOLS !== '1' && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+          )}
+      </head>
+      <body suppressHydrationWarning>
+        <DevelopmentReactDiagnostics />
+        {children}
+      </body>
     </html>
   );
 }

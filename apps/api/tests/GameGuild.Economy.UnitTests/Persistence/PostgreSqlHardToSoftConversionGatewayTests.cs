@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Economy.Contracts;
+using GameGuild.TestSupport.Economy;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Risk;
@@ -9,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Options;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.Economy.UnitTests.Persistence;
 
@@ -17,14 +17,14 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
 {
     internal static readonly DateTimeOffset Now = new(2026, 8, 10, 21, 0, 0, TimeSpan.Zero);
 
-    [DockerFact]
+    [Fact]
     public async Task IssueSelfServiceDecision_ReservesConfirmedFifoFragmentsAndAuditsEvidence()
     {
         await using var database = await CreateDatabaseAsync();
-        await using var context = CreateContext(database.GetConnectionString());
+        await using var context = CreateContext(database.ConnectionString);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(database.GetConnectionString());
+        await using var connection = new NpgsqlConnection(database.ConnectionString);
         await connection.OpenAsync();
         var wallet = Guid.NewGuid();
         var root = Guid.NewGuid();
@@ -84,14 +84,14 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_fragment_reservations WHERE \"OperationId\" = '{operation}';")).Should().Be(1);
     }
 
-    [DockerFact]
+    [Fact]
     public async Task Convert_ConsumesConfirmedHardCoinFifoAndPersistsSoftCoinIdempotently()
     {
         await using var database = await CreateDatabaseAsync();
-        await using var context = CreateContext(database.GetConnectionString());
+        await using var context = CreateContext(database.ConnectionString);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(database.GetConnectionString());
+        await using var connection = new NpgsqlConnection(database.ConnectionString);
         await connection.OpenAsync();
         var wallet = Guid.NewGuid();
         var root = Guid.NewGuid();
@@ -158,14 +158,14 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
             .Should().Be(1);
     }
 
-    [DockerFact]
+    [Fact]
     public async Task Convert_WithAFee_PersistsAndReturnsTheFeePostingReceipt()
     {
         await using var database = await CreateDatabaseAsync();
-        await using var context = CreateContext(database.GetConnectionString());
+        await using var context = CreateContext(database.ConnectionString);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(database.GetConnectionString());
+        await using var connection = new NpgsqlConnection(database.ConnectionString);
         await connection.OpenAsync();
         var wallet = Guid.NewGuid();
         var root = Guid.NewGuid();
@@ -243,18 +243,8 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
         (await ScalarAsync<long>(connection, $"SELECT \"AmountUnits\" FROM public.economy_journal_lines WHERE \"JournalEntryId\" IN (SELECT \"Id\" FROM public.economy_journal_entries WHERE \"PostingGroupId\" = '{feePosting.Value}') AND \"AccountId\" IN (SELECT \"Id\" FROM public.economy_accounts WHERE \"Code\" = 14);"))
             .Should().Be(1);
     }
-    internal static async Task<PostgreSqlContainer> CreateDatabaseAsync()
-    {
-        var database = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_hard_to_soft_gateway")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await database.StartAsync();
-        return database;
-    }
+    internal static Task<EconomyPostgreSqlTestDatabase> CreateDatabaseAsync() =>
+        EconomyPostgreSqlTestDatabase.CreateAsync("hard_to_soft_gateway");
 
     internal static ApplicationDbContext CreateContext(string connectionString)
     {
@@ -359,12 +349,4 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
         return value is null or DBNull ? default! : (T)value;
     }
 
-    private sealed class DockerFactAttribute : FactAttribute
-    {
-        public DockerFactAttribute()
-        {
-            if (string.Equals(Environment.GetEnvironmentVariable("SKIP_DOCKER_TESTS"), "1", StringComparison.Ordinal))
-                Skip = "Docker tests disabled by SKIP_DOCKER_TESTS=1.";
-        }
-    }
 }

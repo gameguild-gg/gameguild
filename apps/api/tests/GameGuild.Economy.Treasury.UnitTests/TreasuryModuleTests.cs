@@ -7,6 +7,15 @@ namespace GameGuild.Economy.Treasury.UnitTests;
 public sealed class TreasuryModuleTests
 {
     [Fact]
+    public void FailClosedProviderEvidenceVerifierRejectsEveryReceiptAndEvent()
+    {
+        var verifier = new FailClosedAdminWithdrawalProviderEvidenceVerifier();
+
+        verifier.Verify((AdminWithdrawalProviderReceipt)null!).Should().BeFalse();
+        verifier.Verify((AdminWithdrawalProviderEvent)null!).Should().BeFalse();
+    }
+
+    [Fact]
     public void ModuleAndCompositionHookRemainDisabledAndRegisterOnlyDurablePersistence()
     {
         var module = new TreasuryModule();
@@ -25,6 +34,10 @@ public sealed class TreasuryModuleTests
             descriptor.ServiceType == typeof(IAdminWithdrawalAuditTrail) &&
             descriptor.ImplementationType == typeof(PostgreSqlAdminWithdrawalAuditTrail) &&
             descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IAdminWithdrawalProviderEvidenceVerifier) &&
+            descriptor.ImplementationType == typeof(FailClosedAdminWithdrawalProviderEvidenceVerifier) &&
+            descriptor.Lifetime == ServiceLifetime.Singleton);
         services.Should().Contain(descriptor =>
             descriptor.ServiceType == typeof(IDurableAdminWithdrawalWorkflow) &&
             descriptor.ImplementationType == typeof(PostgreSqlDurableAdminWithdrawalWorkflow) &&

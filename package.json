@@ -50,6 +50,7 @@
     "smoke:live": "node scripts/devops/smoke-check.mjs --live",
     "test:smoke": "node --test scripts/devops/smoke-check.test.mjs",
     "ci:dependencies": "bash scripts/ci/install-and-audit-pnpm.sh",
+    "ci:repository-policy": "bash scripts/ci/verify-repository-policy.sh",
     "ci:economy": "bash scripts/ci/verify-economy.sh",
     "ci:api:publish": "dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo -o artifacts/test-results/publish/api",
     "ci:provider-contracts": "dotnet test apps/api/tests/GameGuild.Commerce.Billing.UnitTests/GameGuild.Commerce.Billing.UnitTests.csproj -c Release --no-restore --filter \"FullyQualifiedName~Stripe|FullyQualifiedName~Webhook\" && dotnet test apps/api/tests/GameGuild.Commerce.Payments.UnitTests/GameGuild.Commerce.Payments.UnitTests.csproj -c Release --no-restore --filter \"FullyQualifiedName~Stripe\"",
@@ -86,7 +87,6 @@
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^3.0.0",
     "@game-guild/eslint-config": "workspace:*",
     "@game-guild/prettier-config": "workspace:*",
     "@game-guild/typescript-config": "workspace:*",

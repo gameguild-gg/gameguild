@@ -4,7 +4,6 @@ using GameGuild.API.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -17,23 +16,16 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
     [DockerFact]
     public async Task WriterPersistsAnOwnedRequestAndOnlyAllowsThePayeeToCancelIt()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_payout_requests")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_payout_requests");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         var payeeId = Guid.NewGuid();
         var walletId = Guid.NewGuid();
@@ -46,7 +38,7 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
         directInsert.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
 
         await ExecuteAsWriterAsync(connection, $"""
-            SELECT economy_private.create_payout_request_v1(
+            SELECT economy_private.create_payout_request_v2(
                 {requestId}, {"request-1"}, {new string('a', 64)}, {payeeId}, {walletId}, {250}, {1}, {1},
                 {Now}, {Now});
             """);
@@ -79,23 +71,16 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
     [DockerFact]
     public async Task WriterRejectsARequestForAnotherPayeesWallet()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_payout_request_ownership")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_payout_request_ownership");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         var ownerId = Guid.NewGuid();
         var walletId = Guid.NewGuid();
@@ -104,7 +89,7 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
         var foreignRequest = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsWriterAsync(
             connection,
             $"""
-            SELECT economy_private.create_payout_request_v1(
+            SELECT economy_private.create_payout_request_v2(
                 {Guid.NewGuid()}, {"request-foreign"}, {new string('b', 64)}, {Guid.NewGuid()}, {walletId}, {250}, {1}, {1},
                 {Now}, {Now});
             """));
@@ -116,23 +101,16 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
     [DockerFact]
     public async Task WriterScopesIdempotencyKeysToThePayee()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_payout_request_idempotency")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_payout_request_idempotency");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         var firstPayee = Guid.NewGuid();
         var firstWallet = Guid.NewGuid();
@@ -142,10 +120,10 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
         await SeedWalletAsync(connection, secondPayee, secondWallet);
 
         await ExecuteAsWriterAsync(connection, $"""
-            SELECT economy_private.create_payout_request_v1(
+            SELECT economy_private.create_payout_request_v2(
                 {Guid.NewGuid()}, {"same-key"}, {new string('a', 64)}, {firstPayee}, {firstWallet}, {250}, {1}, {1},
                 {Now}, {Now});
-            SELECT economy_private.create_payout_request_v1(
+            SELECT economy_private.create_payout_request_v2(
                 {Guid.NewGuid()}, {"same-key"}, {new string('b', 64)}, {secondPayee}, {secondWallet}, {250}, {1}, {1},
                 {Now}, {Now});
             """);
@@ -160,9 +138,79 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
             """)).Should().Be(1);
     }
 
-    private static Task SeedWalletAsync(NpgsqlConnection connection, Guid ownerId, Guid walletId) => ExecuteAsync(connection, $"""
+    [DockerFact]
+    public async Task ReviewIsTenantScopedAppendOnlyAndRequiresTwoDifferentAdministrators()
+    {
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_payout_request_review");
+
+        await using var context = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql(container.ConnectionString)
+                .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
+                .Options);
+        await context.Database.MigrateAsync();
+
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
+        await connection.OpenAsync();
+        var tenantId = Guid.NewGuid();
+        var otherTenantId = Guid.NewGuid();
+        var payeeId = Guid.NewGuid();
+        var walletId = Guid.NewGuid();
+        var requestId = Guid.NewGuid();
+        var firstAdministratorId = Guid.NewGuid();
+        var secondAdministratorId = Guid.NewGuid();
+        await SeedWalletAsync(connection, payeeId, walletId, tenantId);
+
+        await ExecuteAsWriterAsync(connection, $"""
+            SELECT economy_private.create_payout_request_v2(
+                {requestId}, {"review-request"}, {new string('c', 64)}, {payeeId}, {walletId}, {250}, {1}, {1},
+                {Now}, {Now});
+            """);
+
+        (await ScalarAsync<long>(connection, $"""
+            SELECT COUNT(*)
+            FROM economy_private.read_payout_request_for_review_v2({otherTenantId}, {requestId});
+            """)).Should().Be(0);
+
+        await ExecuteAsWriterAsync(connection, $"""
+            SELECT economy_private.review_payout_request_v2(
+                {tenantId}, {requestId}, {1}, {firstAdministratorId}, {3}, {"approved after review"}, {Now.AddMinutes(1)});
+            """);
+
+        (await ScalarAsync<int>(connection, $"""
+            SELECT "State"
+            FROM economy_private.read_payout_request_for_review_v2({tenantId}, {requestId});
+            """)).Should().Be(5);
+
+        var duplicateApprover = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsWriterAsync(connection, $"""
+            SELECT economy_private.review_payout_request_v2(
+                {tenantId}, {requestId}, {2}, {firstAdministratorId}, {3}, {"duplicate approval"}, {Now.AddMinutes(2)});
+            """));
+        duplicateApprover.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
+
+        await ExecuteAsWriterAsync(connection, $"""
+            SELECT economy_private.review_payout_request_v2(
+                {tenantId}, {requestId}, {2}, {secondAdministratorId}, {3}, {"second independent approval"}, {Now.AddMinutes(2)});
+            """);
+
+        (await ScalarAsync<int>(connection, $"""
+            SELECT "State"
+            FROM economy_private.read_payout_request_for_review_v2({tenantId}, {requestId});
+            """)).Should().Be(3);
+        (await ScalarAsync<long>(connection, $"""
+            SELECT COUNT(*)
+            FROM economy_private.read_payout_request_review_audit_v2({tenantId}, {requestId});
+            """)).Should().Be(2);
+
+        var directAuditUpdate = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsWriterAsync(
+            connection,
+            $"""UPDATE public.economy_payout_request_review_audit_events SET "Reason" = {"mutated"};"""));
+        directAuditUpdate.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
+    }
+
+    private static Task SeedWalletAsync(NpgsqlConnection connection, Guid ownerId, Guid walletId, Guid? tenantId = null) => ExecuteAsync(connection, $"""
         INSERT INTO public.economy_wallets ("Id", "OwnerId", "TenantId", "State", "CreatedAt")
-        VALUES ({walletId}, {ownerId}, {Guid.NewGuid()}, {1}, {Now});
+        VALUES ({walletId}, {ownerId}, {tenantId ?? Guid.NewGuid()}, {1}, {Now});
         """);
 
     private static async Task ExecuteAsWriterAsync(NpgsqlConnection connection, FormattableString sql)

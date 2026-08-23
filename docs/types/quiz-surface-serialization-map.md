@@ -422,6 +422,10 @@ O adaptador de grading em [`structured-answer.ts`](../../packages/features/gradi
 
 ## Grading no content body
 
+O mapa completo dos contratos, adapters, projecao para Assessment, submissions
+e fronteiras de ownership esta em
+[`grading-serialization-map.md`](./grading-serialization-map.md).
+
 `ContentGradingDefinition`, de [`grading/src/types.ts`](../../packages/features/grading/src/types.ts), e persistido como campo irmao de `order` e `blocks`:
 
 ```ts
