@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import { copyRuntimeDirectoryContents, copyRuntimeSourceTree } from './lib/runtime-source-tree.ts';
 
 enableBuildKeepalive('populate-sysroot');
 
@@ -19,16 +20,6 @@ const SYSROOT = P.sysroot;
 const EMSDK_VERSION = lockedVersion(loadToolchainStateSync(ROOT).lock, 'emsdk');
 const VIRTUAL_LINKS_FILE = path.join(SYSROOT, '.emception-symlinks.json');
 const virtualLinks: Record<string, string> = {};
-
-function copyDirectoryContents(source: string, destination: string): void {
-    fs.mkdirSync(destination, { recursive: true });
-    for (const entry of fs.readdirSync(source)) {
-        fs.cpSync(path.join(source, entry), path.join(destination, entry), {
-            recursive: true,
-            force: true,
-        });
-    }
-}
 
 function declareToolLink(command: string, moduleName: string): void {
     fs.rmSync(path.join(SYSROOT, 'usr/bin', command), { force: true });
@@ -69,15 +60,15 @@ shell.mkdir('-p', path.join(SYSROOT, 'home/user'));
 // 3. Copy Emscripten toolchain driver scripts
 console.log('>> Copying Emscripten driver scripts...');
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'tools'))) {
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'tools'), path.join(SYSROOT, 'usr/lib/emscripten/'));
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'tools'), path.join(SYSROOT, 'usr/lib/emscripten/tools'));
 }
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'src'))) {
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'src'), path.join(SYSROOT, 'usr/lib/emscripten/'));
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'src'), path.join(SYSROOT, 'usr/lib/emscripten/src'));
 }
 // third_party contains pure-Python dependencies required at runtime (e.g. leb128, ply)
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'third_party'))) {
     console.log('>> Copying Emscripten third_party dependencies...');
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'third_party'), path.join(SYSROOT, 'usr/lib/emscripten/'));
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'third_party'), path.join(SYSROOT, 'usr/lib/emscripten/third_party'));
 }
 
 // Core Python driver files + data files required by emcc
@@ -132,17 +123,17 @@ if (fs.existsSync(buildingPath)) {
 // ensure_sysroot / install_system_headers expects them under EMSCRIPTEN_ROOT).
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'system/include'))) {
     console.log('>> Copying system headers...');
-    copyDirectoryContents(path.join(EMSCRIPTEN_ROOT, 'system/include'), path.join(SYSROOT, 'usr/include'));
+    copyRuntimeDirectoryContents(path.join(EMSCRIPTEN_ROOT, 'system/include'), path.join(SYSROOT, 'usr/include'));
     // Emscripten also looks for system/include under EMSCRIPTEN_ROOT
     shell.mkdir('-p', path.join(SYSROOT, 'usr/lib/emscripten/system'));
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'system/include'), path.join(SYSROOT, 'usr/lib/emscripten/system/'));
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'system/include'), path.join(SYSROOT, 'usr/lib/emscripten/system/include'));
 }
 
 // system/lib directory
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'system/lib'))) {
     console.log('>> Copying system libraries...');
     shell.mkdir('-p', path.join(SYSROOT, 'usr/lib/emscripten/system'));
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'system/lib'), path.join(SYSROOT, 'usr/lib/emscripten/system/'));
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'system/lib'), path.join(SYSROOT, 'usr/lib/emscripten/system/lib'));
 }
 
 // 4. Copy Emscripten cache (precompiled system .a libraries)
@@ -162,20 +153,20 @@ const CACHE_DIR = path.join(EMSCRIPTEN_ROOT, 'cache');
 if (fs.existsSync(path.join(CACHE_DIR, 'sysroot'))) {
     console.log('>> Copying cached sysroot libraries...');
     if (fs.existsSync(path.join(CACHE_DIR, 'sysroot/lib'))) {
-        copyDirectoryContents(
+        copyRuntimeDirectoryContents(
             path.join(CACHE_DIR, 'sysroot/lib'),
             path.join(SYSROOT, 'usr/lib/emscripten/cache-lib'),
         );
     }
     if (fs.existsSync(path.join(CACHE_DIR, 'sysroot/include'))) {
-        copyDirectoryContents(path.join(CACHE_DIR, 'sysroot/include'), path.join(SYSROOT, 'usr/include'));
+        copyRuntimeDirectoryContents(path.join(CACHE_DIR, 'sysroot/include'), path.join(SYSROOT, 'usr/include'));
     }
 }
 
 // 5. Copy Binaryen tools info
 if (fs.existsSync(path.join(BINARYEN_DIR, 'lib/binaryen'))) {
     console.log('>> Copying Binaryen support files...');
-    copyDirectoryContents(path.join(BINARYEN_DIR, 'lib/binaryen'), path.join(SYSROOT, 'usr/lib/binaryen'));
+    copyRuntimeDirectoryContents(path.join(BINARYEN_DIR, 'lib/binaryen'), path.join(SYSROOT, 'usr/lib/binaryen'));
 }
 
 // 5b. Copy clang resource-dir (builtin headers like stddef.h, stdarg.h, *intrin.h).
@@ -191,7 +182,7 @@ if (fs.existsSync(CLANG_RESOURCE_ROOT)) {
         if (!fs.existsSync(srcInclude)) continue;
         const destDir = path.join(SYSROOT, 'usr/lib/clang', ver, 'include');
         console.log(`>> Copying clang ${ver} resource-dir headers to ${destDir}...`);
-        copyDirectoryContents(srcInclude, destDir);
+        copyRuntimeDirectoryContents(srcInclude, destDir);
     }
 } else {
     console.warn(`>> WARN: clang resource-dir not found at ${CLANG_RESOURCE_ROOT}`);

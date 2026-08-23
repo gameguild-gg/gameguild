@@ -96,6 +96,27 @@ test('Binaryen optimization inherits the bounded Toolchain concurrency', async (
   assert.throws(() => ensureBinaryenConcurrency({}, 0), /positive integer/);
 });
 
+test('Emscripten sysroot copies exclude host Python bytecode caches', async (context) => {
+  const { copyRuntimeSourceTree } = await import('../lib/runtime-source-tree.ts');
+  const root = await temporaryRoot(context);
+  const source = path.join(root, 'tools');
+  const destination = path.join(root, 'sysroot', 'tools');
+
+  await mkdir(path.join(source, '__pycache__'), { recursive: true });
+  await mkdir(path.join(destination, '__pycache__'), { recursive: true });
+  await writeFile(path.join(source, 'building.py'), 'runtime source');
+  await writeFile(path.join(source, '__pycache__', 'building.cpython-314.pyc'), 'host cache');
+  await writeFile(path.join(source, 'settings.pyo'), 'host cache');
+  await writeFile(path.join(destination, '__pycache__', 'stale.cpython-314.pyc'), 'stale host cache');
+
+  copyRuntimeSourceTree(source, destination);
+
+  assert.equal(await readFile(path.join(destination, 'building.py'), 'utf8'), 'runtime source');
+  await assert.rejects(readFile(path.join(destination, '__pycache__', 'building.cpython-314.pyc')));
+  await assert.rejects(readFile(path.join(destination, '__pycache__', 'stale.cpython-314.pyc')));
+  await assert.rejects(readFile(path.join(destination, 'settings.pyo')));
+});
+
 test('toolchain lock serialization is stable and validates the CMake major policy', async (context) => {
   const root = await temporaryRoot(context);
   const { calculateConfigHash, loadToolchainState, serializeToolchainLock } = await import('../toolchain/lock.ts');

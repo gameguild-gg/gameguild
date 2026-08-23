@@ -102,7 +102,7 @@ export const TOOLCHAIN_RECIPES: Readonly<Record<string, BuildRecipe>> = {
     'sysroot', ['binaryen', 'python', 'llvm', 'cmake', 'sdl3', 'imgui', 'raylib', 'allegro'],
     ['emsdk', 'binaryen', 'python', 'llvm', 'cmake', 'sdl3', 'imgui', 'raylib', 'raygui', 'physac', 'allegro', 'curlLite'],
     [sysroot('.emception-symlinks.json')],
-    'recipe:sysroot',
+    'recipe:sysroot:no-host-bytecode-v2',
   ),
   light: groupRecipe('light', ['cmake']),
   heavy: groupRecipe('heavy', ['binaryen', 'python', 'llvm']),
