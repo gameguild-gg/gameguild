@@ -172,6 +172,35 @@ public sealed class ProviderDisputeWorkflowTests
     }
 
     [Fact]
+    public void OpenDisputeRejectsAConfirmedClaimWithoutSourceEvidence()
+    {
+        var fixture = SetupFundingWithoutSourceEvidence(SourceConfirmationState.Confirmed);
+
+        FluentActions.Invoking(() => fixture.Disputes.Handle(Notification(
+                fixture.SourceId, "evt-missing-confirmed-source", 1, 1, ProviderDisputeStatus.Open)))
+            .Should().Throw<InvalidOperationException>()
+            .WithMessage("*Confirmed source evidence was not found*");
+    }
+
+    [Fact]
+    public void WonDisputeRejectsADisputedClaimWithoutSourceEvidence()
+    {
+        var fixture = SetupFundingWithoutSourceEvidence(SourceConfirmationState.Disputed);
+        fixture.Store.Execute(transaction =>
+        {
+            transaction.SetProviderDisputeCase(new ProviderDisputeCase(
+                "dp-primary", fixture.SourceId, fixture.WalletId, ProviderDisputeStatus.Open,
+                1, 1, 0, 0, [], null, Time));
+            return 0;
+        });
+
+        FluentActions.Invoking(() => fixture.Disputes.Handle(Notification(
+                fixture.SourceId, "evt-missing-disputed-source", 2, 1, ProviderDisputeStatus.Won)))
+            .Should().Throw<InvalidOperationException>()
+            .WithMessage("*Disputed source evidence was not found*");
+    }
+
+    [Fact]
     public void OpenDispute_SortsPersistedReversalHistoryBeforePlanningTheIncrement()
     {
         var fixture = Setup(10);
@@ -602,6 +631,38 @@ public sealed class ProviderDisputeWorkflowTests
             new ProviderDisputeWorkflow(store, posting, fences),
             wallet,
             claim.SourceId);
+    }
+
+    private static Fixture SetupFundingWithoutSourceEvidence(SourceConfirmationState state)
+    {
+        var store = new InMemoryLedgerKernelStore();
+        var fences = new RootReversalFenceRegistry();
+        var posting = new TransactionalPostingService(store, fences: fences);
+        var wallet = WalletId.New();
+        var source = SourceStampId.New();
+        var claim = HardCoinFundingClaim.Observe(
+                source,
+                wallet,
+                new ProviderMonetaryLeg("stripe", "live", "acct_gameguild", $"pi_{Guid.NewGuid():N}", "capture"),
+                "provider-observation",
+                1,
+                Time)
+            .Transition(SourceConfirmationState.Confirmed, "provider-confirmation", Time.AddSeconds(1));
+        if (state == SourceConfirmationState.Disputed)
+            claim = claim.Transition(SourceConfirmationState.Disputed, "provider-dispute", Time.AddSeconds(2));
+
+        store.Execute(transaction =>
+        {
+            transaction.AddFundingClaim(claim);
+            return 0;
+        });
+        return new Fixture(
+            store,
+            fences,
+            posting,
+            new ProviderDisputeWorkflow(store, posting, fences),
+            wallet,
+            source);
     }
 
     private static ProviderDisputeNotification Notification(

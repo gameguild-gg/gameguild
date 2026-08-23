@@ -5,23 +5,30 @@ namespace GameGuild.TestSupport.Economy;
 
 public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
 {
+    private static readonly SemaphoreSlim GateRoleBootstrapLock = new(1, 1);
+    private static readonly SemaphoreSlim GateDatabaseLifecycleLock = new(1, 1);
+    private static bool _gateRolesBootstrapped;
+
     private readonly string? _adminConnectionString;
     private readonly string? _databaseName;
     private readonly PostgreSqlContainer? _container;
     private readonly bool _dropDatabaseOnDispose;
+    private readonly bool _usesGateDatabase;
 
     private EconomyPostgreSqlTestDatabase(
         string connectionString,
         string? adminConnectionString,
         string? databaseName,
         PostgreSqlContainer? container,
-        bool dropDatabaseOnDispose)
+        bool dropDatabaseOnDispose,
+        bool usesGateDatabase)
     {
         ConnectionString = connectionString;
         _adminConnectionString = adminConnectionString;
         _databaseName = databaseName;
         _container = container;
         _dropDatabaseOnDispose = dropDatabaseOnDispose;
+        _usesGateDatabase = usesGateDatabase;
     }
 
     public string ConnectionString { get; }
@@ -63,6 +70,7 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
             adminBuilder.ConnectionString,
             databaseBuilder.Database,
             container,
+            false,
             false);
     }
 
@@ -73,13 +81,21 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
             throw new InvalidOperationException("The PostgreSQL test database cannot be reset without an administrative connection.");
         }
 
-        NpgsqlConnection.ClearAllPools();
-        await using var connection = new NpgsqlConnection(_adminConnectionString);
-        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await DropDatabaseAsync(connection, _databaseName, cancellationToken).ConfigureAwait(false);
-        await using var createDatabase = connection.CreateCommand();
-        createDatabase.CommandText = $"CREATE DATABASE \"{_databaseName}\";";
-        await createDatabase.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        if (_usesGateDatabase)
+        {
+            await GateDatabaseLifecycleLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                await ResetGateDatabaseSchemaAsync(cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                GateDatabaseLifecycleLock.Release();
+            }
+            return;
+        }
+
+        await ResetDatabaseAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async ValueTask DisposeAsync()
@@ -97,9 +113,21 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
             return;
         }
 
-        await using var connection = new NpgsqlConnection(_adminConnectionString);
-        await connection.OpenAsync().ConfigureAwait(false);
-        await DropDatabaseAsync(connection, _databaseName, CancellationToken.None).ConfigureAwait(false);
+        if (_usesGateDatabase)
+        {
+            await GateDatabaseLifecycleLock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                await DropDatabaseAsync().ConfigureAwait(false);
+            }
+            finally
+            {
+                GateDatabaseLifecycleLock.Release();
+            }
+            return;
+        }
+
+        await DropDatabaseAsync().ConfigureAwait(false);
     }
 
     private static async Task<EconomyPostgreSqlTestDatabase> CreateFromGateAsync(
@@ -108,17 +136,32 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
         CancellationToken cancellationToken)
     {
         var adminBuilder = new NpgsqlConnectionStringBuilder(gateConnectionString) { Pooling = false };
-        await using var connection = new NpgsqlConnection(adminBuilder.ConnectionString);
-        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var databaseExists = connection.CreateCommand();
-        databaseExists.CommandText = "SELECT 1 FROM pg_database WHERE datname = @databaseName;";
-        databaseExists.Parameters.AddWithValue("databaseName", databaseName);
-        var exists = await databaseExists.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not null;
-        if (!exists)
+        // The disposable gate shares one PostgreSQL server across isolated test
+        // databases. Schema reset can briefly wait behind concurrent migrations;
+        // use an explicit administrative timeout instead of turning the complete
+        // test assembly into a serial queue.
+        adminBuilder.Timeout = 30;
+        adminBuilder.CommandTimeout = 120;
+        await GateDatabaseLifecycleLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            await using var createDatabase = connection.CreateCommand();
-            createDatabase.CommandText = $"CREATE DATABASE \"{databaseName}\";";
-            await createDatabase.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            await using var connection = new NpgsqlConnection(adminBuilder.ConnectionString);
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await EnsureGateRolesAsync(connection, cancellationToken).ConfigureAwait(false);
+            await using var databaseExists = connection.CreateCommand();
+            databaseExists.CommandText = "SELECT 1 FROM pg_database WHERE datname = @databaseName;";
+            databaseExists.Parameters.AddWithValue("databaseName", databaseName);
+            var exists = await databaseExists.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not null;
+            if (!exists)
+            {
+                await using var createDatabase = connection.CreateCommand();
+                createDatabase.CommandText = $"CREATE DATABASE \"{databaseName}\";";
+                await createDatabase.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            GateDatabaseLifecycleLock.Release();
         }
 
         var databaseBuilder = new NpgsqlConnectionStringBuilder(adminBuilder.ConnectionString)
@@ -131,7 +174,94 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
             adminBuilder.ConnectionString,
             databaseName,
             null,
+            false,
             true);
+    }
+
+    private async Task ResetDatabaseAsync(CancellationToken cancellationToken)
+    {
+        NpgsqlConnection.ClearAllPools();
+        await using var connection = new NpgsqlConnection(_adminConnectionString!);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await DropDatabaseAsync(connection, _databaseName!, cancellationToken).ConfigureAwait(false);
+        await using var createDatabase = connection.CreateCommand();
+        createDatabase.CommandText = $"CREATE DATABASE \"{_databaseName}\";";
+        await createDatabase.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task ResetGateDatabaseSchemaAsync(CancellationToken cancellationToken)
+    {
+        NpgsqlConnection.ClearAllPools();
+        await using var connection = new NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            DO $schemas$
+            DECLARE schema_name text;
+            BEGIN
+                FOR schema_name IN
+                    SELECT nspname
+                    FROM pg_namespace
+                    WHERE nspname NOT IN ('pg_catalog', 'information_schema', 'public')
+                      AND nspname NOT LIKE 'pg_%'
+                LOOP
+                    EXECUTE format('DROP SCHEMA IF EXISTS %I CASCADE', schema_name);
+                END LOOP;
+            END
+            $schemas$;
+            DROP SCHEMA public CASCADE;
+            CREATE SCHEMA public;
+            """;
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task DropDatabaseAsync()
+    {
+        await using var connection = new NpgsqlConnection(_adminConnectionString!);
+        await connection.OpenAsync().ConfigureAwait(false);
+        await DropDatabaseAsync(connection, _databaseName!, CancellationToken.None).ConfigureAwait(false);
+    }
+
+    private static async Task EnsureGateRolesAsync(
+        NpgsqlConnection connection,
+        CancellationToken cancellationToken)
+    {
+        await GateRoleBootstrapLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (_gateRolesBootstrapped)
+            {
+                return;
+            }
+
+            await using var command = connection.CreateCommand();
+            command.CommandText =
+                """
+                DO $roles$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'gameguild_economy_migration') THEN
+                        CREATE ROLE gameguild_economy_migration NOLOGIN;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'gameguild_economy_runtime') THEN
+                        CREATE ROLE gameguild_economy_runtime NOLOGIN;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'gameguild_economy_writer') THEN
+                        CREATE ROLE gameguild_economy_writer NOLOGIN;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'gameguild_economy_procedure_owner') THEN
+                        CREATE ROLE gameguild_economy_procedure_owner NOLOGIN;
+                    END IF;
+                END
+                $roles$;
+                """;
+            await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            _gateRolesBootstrapped = true;
+        }
+        finally
+        {
+            GateRoleBootstrapLock.Release();
+        }
     }
 
     private static string CreateDatabaseName(string databasePrefix)

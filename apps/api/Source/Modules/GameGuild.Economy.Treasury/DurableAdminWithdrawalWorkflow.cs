@@ -110,7 +110,10 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
         try
         {
             var run = operations.Get(request.RunId);
-            if (run.State == AdminWithdrawalRunState.Approved && run.Version == checked(request.ExpectedVersion + 1) && run.ApprovedBy == request.ApprovedBy)
+            if (run.State == AdminWithdrawalRunState.Approved &&
+                run.Version == checked(request.ExpectedVersion + 1) &&
+                run.ApprovedBy.HasValue &&
+                run.ApprovedBy.Value == request.ApprovedBy)
             {
                 await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 return run;
@@ -156,7 +159,9 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
             }
             if (run.State != AdminWithdrawalRunState.Approved || run.Version != request.ExpectedVersion ||
                 run.FencingToken != request.FencingToken || run.ExecutionEpoch != request.ExecutionEpoch ||
-                !run.ApprovedBy.HasValue || run.ApprovedBy == run.RequestedBy)
+                !run.ApprovedBy.HasValue)
+                throw new AdminWithdrawalStaleCommandException("Admin withdrawal dispatch command is stale, unapproved, or fenced.");
+            if (run.ApprovedBy.Value == run.RequestedBy)
                 throw new AdminWithdrawalStaleCommandException("Admin withdrawal dispatch command is stale, unapproved, or fenced.");
 
             var dispatching = run with

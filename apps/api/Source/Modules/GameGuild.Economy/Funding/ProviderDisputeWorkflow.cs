@@ -298,8 +298,7 @@ public sealed class ProviderDisputeWorkflow
     private ProviderDisputeCase HandleLost(ProviderDisputeNotification notification, string requestHash) =>
         WithRootFence(notification.SourceId, () =>
         {
-            ProviderDisputeCase? resolved = null;
-            _posting.ReverseTopUpUnderActiveFence(
+            return _posting.ReverseTopUpUnderActiveFence(
                 Reversal(notification),
                 beforePosting: transaction =>
                 {
@@ -310,7 +309,7 @@ public sealed class ProviderDisputeWorkflow
                 afterPosting: (transaction, reversal) =>
                 {
                     var current = transaction.FindProviderDisputeCase(notification.ProviderDisputeReference)!;
-                    resolved = current with
+                    var resolved = current with
                     {
                         Status = ProviderDisputeStatus.Lost,
                         LatestProviderSequence = notification.ProviderSequence,
@@ -320,8 +319,8 @@ public sealed class ProviderDisputeWorkflow
                     };
                     transaction.SetProviderDisputeCase(resolved);
                     transaction.AddProviderDisputeEvent(Event(notification, requestHash));
+                    return resolved;
                 });
-            return resolved ?? throw new InvalidOperationException("Lost dispute was not committed atomically.");
         });
 
     private ProviderDisputeCase RequiredOpenCase(

@@ -124,4 +124,13 @@ public sealed class EconomyRiskCompositionTests
         services.Should().NotContain(descriptor =>
             descriptor.ServiceType == typeof(Microsoft.Extensions.Options.IStartupValidator));
     }
+
+    [Fact]
+    public void JurisdictionAllowlistRequiresAtLeastOneNonWhitespaceEntry()
+    {
+        EconomyValueMovementCapabilities.HasAllowedJurisdiction(null).Should().BeFalse();
+        EconomyValueMovementCapabilities.HasAllowedJurisdiction([]).Should().BeFalse();
+        EconomyValueMovementCapabilities.HasAllowedJurisdiction(["", "   "]).Should().BeFalse();
+        EconomyValueMovementCapabilities.HasAllowedJurisdiction(["BR"]).Should().BeTrue();
+    }
 }

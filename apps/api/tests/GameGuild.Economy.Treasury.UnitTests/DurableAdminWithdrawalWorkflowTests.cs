@@ -195,6 +195,27 @@ public sealed class DurableAdminWithdrawalWorkflowTests
     }
 
     [Fact]
+    public async Task Approval_RejectsAnApprovedReplayWithoutAnApprover()
+    {
+        var approvedWithoutApprover = CreateRun() with
+        {
+            State = AdminWithdrawalRunState.Approved,
+            Version = 2,
+            ApprovedBy = null
+        };
+        var store = new InMemoryAdminWithdrawalStore();
+        store.Add(approvedWithoutApprover);
+        var context = new RecordingContext();
+        var workflow = CreateWorkflow(context, store, approvedWithoutApprover);
+
+        await FluentActions.Invoking(() => workflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
+                approvedWithoutApprover.Id, 1, Guid.NewGuid(), Time.AddMinutes(1))))
+            .Should().ThrowAsync<AdminWithdrawalStaleCommandException>();
+
+        context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task BeginDispatch_RejectsEveryStaleOrUnapprovedRunShape()
     {
         var approved = CreateRun() with { State = AdminWithdrawalRunState.Approved, ApprovedBy = Guid.NewGuid() };
