@@ -48,18 +48,69 @@ public sealed class PayoutRequestReviewQueryTests
             item.Reason == audit.Reason);
     }
 
+    [Fact]
+    public async Task ReviewQueueRejectsEveryMissingAdministratorContextPredicate()
+    {
+        var tenantId = Guid.NewGuid();
+
+        foreach (var actor in NonAdministratorContexts(tenantId))
+        {
+            var handler = new ListPayoutRequestsForReviewQueryHandler(actor, new ReviewStore([]));
+
+            await FluentActions.Awaiting(async () => await handler.Handle(
+                    new ListPayoutRequestsForReviewQuery(10),
+                    CancellationToken.None))
+                .Should().ThrowAsync<UnauthorizedAccessException>();
+        }
+    }
+
+    [Fact]
+    public async Task ReviewAuditRejectsEveryMissingAdministratorContextPredicate()
+    {
+        var tenantId = Guid.NewGuid();
+
+        foreach (var actor in NonAdministratorContexts(tenantId))
+        {
+            var handler = new ListPayoutRequestReviewAuditQueryHandler(actor, new ReviewStore([]));
+
+            await FluentActions.Awaiting(async () => await handler.Handle(
+                    new ListPayoutRequestReviewAuditQuery(Guid.NewGuid()),
+                    CancellationToken.None))
+                .Should().ThrowAsync<UnauthorizedAccessException>();
+        }
+    }
+
     private static ActorContextAccessor Administrator(Guid tenantId)
+    {
+        return Actor(true, Guid.NewGuid().ToString(), tenantId, true);
+    }
+
+    private static IEnumerable<ActorContextAccessor> NonAdministratorContexts(Guid tenantId)
+    {
+        yield return Actor(false, Guid.NewGuid().ToString(), tenantId, true);
+        yield return Actor(true, "not-a-guid", tenantId, true);
+        yield return Actor(true, Guid.NewGuid().ToString(), null, true);
+        yield return Actor(true, Guid.NewGuid().ToString(), tenantId, false);
+    }
+
+    private static ActorContextAccessor Actor(
+        bool isAuthenticated,
+        string subjectId,
+        Guid? tenantId,
+        bool hasAdministratorPermission)
     {
         var accessor = new ActorContextAccessor();
         accessor.SetActorContext(new ActorContext
         {
             ActorKind = ActorKind.User,
-            SubjectId = Guid.NewGuid().ToString(),
+            SubjectId = subjectId,
             TenantId = tenantId,
             Roles = new HashSet<string>(),
-            Permissions = new HashSet<string> { WalletsPermission.Keys.Admin },
+            Permissions = hasAdministratorPermission
+                ? new HashSet<string> { WalletsPermission.Keys.Admin }
+                : new HashSet<string>(),
             TypedAttributes = ActorAttributes.Empty,
-            IsAuthenticated = true
+            IsAuthenticated = isAuthenticated
         });
         return accessor;
     }

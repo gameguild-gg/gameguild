@@ -4,6 +4,7 @@ using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Persistence;
+using GameGuild.Economy.Risk;
 using GameGuild.Economy.UnitTests.Funding;
 using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
@@ -87,6 +88,21 @@ public sealed class PostgreSqlGatewayValidationTests
     }
 
     [Fact]
+    public void FundingObservationRejectsMissingActorTenantOrPolicyBeforeWriting()
+    {
+        using var context = CreateContext();
+        var gateway = new PostgreSqlHardCoinFundingGateway(context);
+        var request = FundingObservation();
+
+        FluentActions.Invoking(() => gateway.Observe(request with { ActorId = Guid.Empty }))
+            .Should().Throw<ArgumentException>().WithMessage("*Actor ID is required*");
+        FluentActions.Invoking(() => gateway.Observe(request with { TenantId = Guid.Empty }))
+            .Should().Throw<ArgumentException>().WithMessage("*Tenant ID is required*");
+        FluentActions.Invoking(() => gateway.Observe(request with { PolicyVersion = default }))
+            .Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
     public void FundingConfirmationRejectsAnUnknownObservedSource()
     {
         using var context = CreateContext();
@@ -115,6 +131,33 @@ public sealed class PostgreSqlGatewayValidationTests
 
         act.Should().Throw<RegisteredPostingRejectedException>()
             .WithMessage("*observed funding source was not found*");
+    }
+
+    [Fact]
+    public void FundingConfirmationRejectsAnObservedSourceWithoutItsFundingClaim()
+    {
+        using var context = CreateContext();
+        var source = new SourceStampId(Guid.NewGuid());
+        context.Set<EconomySourceStampRow>().Add(new EconomySourceStampRow
+        {
+            Id = source.Value,
+            EvidenceHash = "observed-evidence",
+            ObservedAt = Now
+        });
+        context.SaveChanges();
+        var key = new IdempotencyKey("missing-funding-claim");
+        var command = new ConfirmObservedTopUpCommand(
+            PostingId.New(), key, source, CreditLotId.New(), new ReserveVersion(1), new PolicyVersion(1),
+            "provider-confirmation", Now,
+            FundingAuthorizationFixture.Create(
+                PostingTemplateKind.ConfirmedTopUpMint, key, WalletId.New(),
+                new CoinAmount(CurrencyCode.HardCoin, 100), [source], Now,
+                new CoinAmount(CurrencyCode.HardCoin, 100)));
+
+        FluentActions.Invoking(() => new PostgreSqlHardCoinFundingGateway(context)
+                .Confirm(new PersistedHardCoinFundingConfirmation(command, Authority())))
+            .Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*observed funding claim was not found*");
     }
 
     [Fact]
@@ -189,6 +232,38 @@ public sealed class PostgreSqlGatewayValidationTests
     }
 
     [Fact]
+    public void FifoReservationRejectsInvalidOperationPurposeAmountAndTransitionStates()
+    {
+        using var context = CreateContext();
+        var gateway = new PostgreSqlFifoFragmentReservationGateway(context);
+        var valid = Reservation();
+
+        FluentActions.Invoking(() => gateway.Reserve(valid with { OperationId = Guid.Empty }))
+            .Should().Throw<ArgumentException>().WithMessage("*Operation ID is required*");
+        FluentActions.Invoking(() => gateway.Reserve(valid with { Purpose = (PersistedFragmentReservationPurpose)999 }))
+            .Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => gateway.Reserve(valid with
+            { Amount = new CoinAmount(CurrencyCode.HardCoin, 0) }))
+            .Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => gateway.Reserve(valid with
+            { Purpose = PersistedFragmentReservationPurpose.BountyEscrow }))
+            .Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*FIFO reservation writer rejected*");
+        FluentActions.Invoking(() => gateway.Transition(
+                Guid.Empty, PersistedFragmentReservationStatus.Reserved,
+                PersistedFragmentReservationStatus.Released, Now))
+            .Should().Throw<ArgumentException>().WithMessage("*Operation ID is required*");
+        FluentActions.Invoking(() => gateway.Transition(
+                valid.OperationId, (PersistedFragmentReservationStatus)999,
+                PersistedFragmentReservationStatus.Released, Now))
+            .Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => gateway.Transition(
+                valid.OperationId, PersistedFragmentReservationStatus.Reserved,
+                (PersistedFragmentReservationStatus)999, Now))
+            .Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
     public void RegisteredPostingRequestAndAuthorityRejectInvalidBoundaryContracts()
     {
         var authority = Authority();
@@ -258,9 +333,23 @@ public sealed class PostgreSqlGatewayValidationTests
         context.SaveChanges();
         var request = new RegisteredPostingRequest(Authority(), posting);
 
+        var sourceBoundPosting = posting with
+        {
+            Source = new SourceStampContract(
+                SourceStampId.New(),
+                "source-bound-posting",
+                SourceConfirmationState.Confirmed,
+                Now.AddMinutes(-1),
+                Now,
+                "source-bound")
+        };
         Action act = () => new PostgreSqlRegisteredPostingGateway(context).Post(request);
+        Action sourceBoundAct = () => new PostgreSqlRegisteredPostingGateway(context)
+            .Post(new RegisteredPostingRequest(Authority(), sourceBoundPosting));
 
         act.Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*registered economy writer rejected the posting*");
+        sourceBoundAct.Should().Throw<RegisteredPostingRejectedException>()
             .WithMessage("*registered economy writer rejected the posting*");
     }
 
@@ -345,6 +434,35 @@ public sealed class PostgreSqlGatewayValidationTests
         Classifies(new InvalidOperationException()).Should().BeTrue();
         Classifies(new Exception("wrapper", new TestDbException())).Should().BeTrue();
         Classifies(new ArgumentException()).Should().BeFalse();
+    }
+
+    [Fact]
+    public void DurableGatewaysRejectNonRelationalContextsAndClassifyDatabaseFailures()
+    {
+        var context = DispatchProxy.Create<IApplicationDbContext, NonRelationalApplicationDbContextProxy>();
+        Action[] construct =
+        [
+            () => _ = new PostgreSqlHardCoinFundingGateway(context),
+            () => _ = new PostgreSqlHardToSoftConversionGateway(context),
+            () => _ = new PostgreSqlProviderReversalGateway(context),
+            () => _ = new PostgreSqlFifoFragmentReservationGateway(context),
+            () => _ = new PostgreSqlFifoTransferGateway(context),
+            () => _ = new PostgreSqlRegisteredPostingGateway(context),
+            () => _ = new PostgreSqlRiskDecisionAuthorizer(context)
+        ];
+        var gatewayTypes = new[]
+        {
+            typeof(PostgreSqlHardCoinFundingGateway),
+            typeof(PostgreSqlHardToSoftConversionGateway),
+            typeof(PostgreSqlProviderReversalGateway),
+            typeof(PostgreSqlFifoFragmentReservationGateway),
+            typeof(PostgreSqlFifoTransferGateway)
+        };
+
+        foreach (var create in construct)
+            create.Should().Throw<InvalidOperationException>().WithMessage("*relational DbContext*");
+        foreach (var gatewayType in gatewayTypes)
+            AssertDatabaseFailureClassifier(gatewayType);
     }
 
     [Fact]
@@ -506,6 +624,30 @@ public sealed class PostgreSqlGatewayValidationTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
             .Options);
 
+    private static void AssertDatabaseFailureClassifier(Type gatewayType)
+    {
+        var method = gatewayType.GetMethod("IsDatabaseFailure", BindingFlags.NonPublic | BindingFlags.Static)!;
+        bool Classifies(Exception exception) => (bool)method.Invoke(null, [exception])!;
+
+        Classifies(new TestDbException()).Should().BeTrue();
+        Classifies(new DbUpdateException()).Should().BeTrue();
+        Classifies(new InvalidOperationException()).Should().BeTrue();
+        Classifies(new Exception("wrapper", new TestDbException())).Should().BeTrue();
+        Classifies(new ArgumentException()).Should().BeFalse();
+    }
+
+    private static PersistedHardCoinFundingObservation FundingObservation() => new(
+        new ObserveHardCoinTopUpCommand(
+            new SourceStampId(Guid.NewGuid()),
+            new WalletId(Guid.NewGuid()),
+            new ProviderMonetaryLeg("stripe", "test", "platform", "payment", "principal"),
+            "provider-observation",
+            100,
+            Now),
+        Guid.NewGuid(),
+        Guid.NewGuid(),
+        new PolicyVersion(1));
+
     private static RegisteredPostingAuthority Authority() => new(
         Guid.NewGuid(),
         Guid.NewGuid(),
@@ -600,4 +742,10 @@ public sealed class PostgreSqlGatewayValidationTests
         ProvenanceKind.ConvertedSoft);
 
     private sealed class TestDbException : DbException;
+
+    private class NonRelationalApplicationDbContextProxy : DispatchProxy
+    {
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>
+            throw new NotSupportedException();
+    }
 }

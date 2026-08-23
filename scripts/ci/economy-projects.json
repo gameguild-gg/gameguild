@@ -4,8 +4,7 @@
     {
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy/GameGuild.Economy.csproj",
       "testProjects": ["apps/api/tests/GameGuild.Economy.UnitTests/GameGuild.Economy.UnitTests.csproj"],
-      "coverageAssemblies": ["GameGuild.Economy"],
-      "minimumBranchRate": 0.98
+      "coverageAssemblies": ["GameGuild.Economy"]
     },
     {
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy.AdRewards/GameGuild.Economy.AdRewards.csproj",
@@ -25,14 +24,12 @@
     {
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Payouts/GameGuild.Economy.Payouts.csproj",
       "testProjects": ["apps/api/tests/GameGuild.Economy.Payouts.UnitTests/GameGuild.Economy.Payouts.UnitTests.csproj"],
-      "coverageAssemblies": ["GameGuild.Economy.Payouts"],
-      "minimumBranchRate": 0.98
+      "coverageAssemblies": ["GameGuild.Economy.Payouts"]
     },
     {
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Treasury/GameGuild.Economy.Treasury.csproj",
       "testProjects": ["apps/api/tests/GameGuild.Economy.Treasury.UnitTests/GameGuild.Economy.Treasury.UnitTests.csproj"],
-      "coverageAssemblies": ["GameGuild.Economy.Treasury"],
-      "minimumBranchRate": 0.98
+      "coverageAssemblies": ["GameGuild.Economy.Treasury"]
     }
   ],
   "providerContractProjects": [

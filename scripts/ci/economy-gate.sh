@@ -26,6 +26,7 @@ assert_economy_manifest() {
   local repository_root="$1" manifest_path="$2"
   "$PYTHON_BIN" - "$repository_root" "$manifest_path" <<'PY'
 import json
+import os
 import pathlib
 import sys
 
@@ -49,14 +50,21 @@ declared_tests = {
     for path in entry.get("testProjects", [])
 }
 
-discovered_production = {
-    path.relative_to(root).as_posix()
-    for path in root.glob("apps/api/Source/Modules/GameGuild.Economy*/**/*.csproj")
-}
-discovered_tests = {
-    path.relative_to(root).as_posix()
-    for path in root.glob("apps/api/tests/GameGuild.Economy*/**/*.csproj")
-}
+def discover_projects(relative_directory):
+    projects = set()
+    base_directory = root / relative_directory
+    for current, directories, filenames in os.walk(base_directory):
+        if pathlib.Path(current) == base_directory:
+            directories[:] = [directory for directory in directories if directory.startswith("GameGuild.Economy")]
+        else:
+            directories[:] = [directory for directory in directories if directory not in {"bin", "obj"}]
+        for filename in filenames:
+            if filename.endswith(".csproj"):
+                projects.add((pathlib.Path(current) / filename).relative_to(root).as_posix())
+    return projects
+
+discovered_production = discover_projects("apps/api/Source/Modules")
+discovered_tests = discover_projects("apps/api/tests")
 
 for path in sorted(discovered_production - declared_production):
     raise SystemExit(f"Discovered Economy production project is not declared in the manifest: {path}")
@@ -195,34 +203,31 @@ methods = [
 if not methods:
     raise SystemExit(f"Coverage assembly '{assembly}' contains zero methods")
 
-if prefixes:
-    lines = []
-    for class_node in classes:
-        class_lines = next(
-            (child for child in class_node if child.tag.rsplit("}", 1)[-1] == "lines"),
-            None,
+lines = []
+for class_node in classes:
+    class_lines = next(
+        (child for child in class_node if child.tag.rsplit("}", 1)[-1] == "lines"),
+        None,
+    )
+    if class_lines is not None:
+        lines.extend(
+            line for line in class_lines
+            if line.tag.rsplit("}", 1)[-1] == "line"
         )
-        if class_lines is not None:
-            lines.extend(
-                line for line in class_lines
-                if line.tag.rsplit("}", 1)[-1] == "line"
-            )
-    if not lines:
-        raise SystemExit(f"Coverage assembly '{assembly}' contains zero executable lines under {path_prefixes_csv}")
-    line_rate = sum(int(line.attrib.get("hits", "0")) > 0 for line in lines) / len(lines)
-    covered_branches = total_branches = 0
-    for line in lines:
-        if line.attrib.get("branch", "false").lower() != "true":
-            continue
-        match = re.search(r"\((\d+)/(\d+)\)", line.attrib.get("condition-coverage", ""))
-        if match is None:
-            raise SystemExit(f"Coverage branch evidence is malformed for assembly '{assembly}'")
-        covered_branches += int(match.group(1))
-        total_branches += int(match.group(2))
-    branch_rate = covered_branches / total_branches if total_branches else 1.0
-else:
-    line_rate = float(package.attrib.get("line-rate", "0"))
-    branch_rate = float(package.attrib.get("branch-rate", "0"))
+if not lines:
+    scope = f" under {path_prefixes_csv}" if prefixes else ""
+    raise SystemExit(f"Coverage assembly '{assembly}' contains zero executable lines{scope}")
+line_rate = sum(int(line.attrib.get("hits", "0")) > 0 for line in lines) / len(lines)
+covered_branches = total_branches = 0
+for line in lines:
+    if line.attrib.get("branch", "false").lower() != "true":
+        continue
+    match = re.search(r"\((\d+)/(\d+)\)", line.attrib.get("condition-coverage", ""))
+    if match is None:
+        raise SystemExit(f"Coverage branch evidence is malformed for assembly '{assembly}'")
+    covered_branches += int(match.group(1))
+    total_branches += int(match.group(2))
+branch_rate = covered_branches / total_branches if total_branches else 1.0
 
 covered_methods = sum(
     1 for method in methods

@@ -44,4 +44,25 @@ public sealed class PostingTemplateCatalogTests
         PostingTemplateCatalog.Find(PostingTemplateKind.Spend, PostingTemplate.CurrentVersion + 1).Should().BeNull();
         PostingTemplateCatalog.Find((PostingTemplateKind)int.MaxValue, PostingTemplate.CurrentVersion).Should().BeNull();
     }
+
+    [Fact]
+    public void VariableTemplateLineCountsRespectBothLowerAndOptionalUpperBounds()
+    {
+        var unbounded = PostingTemplateCatalog.Find(PostingTemplateKind.BountyEscrow, PostingTemplate.CurrentVersion)!;
+        var bounded = new PostingTemplateRegistration(
+            PostingTemplateKind.Spend,
+            PostingTemplate.CurrentVersion,
+            PostingAuthority.WalletOwner,
+            2,
+            null,
+            true,
+            4);
+
+        unbounded.AllowsLineCount(1).Should().BeFalse();
+        unbounded.AllowsLineCount(2).Should().BeTrue();
+        bounded.AllowsLineCount(1).Should().BeFalse();
+        bounded.AllowsLineCount(2).Should().BeTrue();
+        bounded.AllowsLineCount(4).Should().BeTrue();
+        bounded.AllowsLineCount(5).Should().BeFalse();
+    }
 }
