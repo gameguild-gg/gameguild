@@ -128,6 +128,7 @@ public sealed class ResourceUserScopedControllerCoverageTests
         => (await action()).Should().BeOfType<OkObjectResult>();
 }
 
+[Collection("ResourceUsageTypeRegistry")]
 public sealed class ResourceInfrastructureCoverageCompletionTests
 {
     [Fact]

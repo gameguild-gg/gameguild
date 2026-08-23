@@ -1,4 +1,6 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Economy.Payouts.Queries;
 
@@ -24,6 +26,42 @@ public sealed record EconomyPayoutRequestDto(
         request.UpdatedAt);
 }
 
+public sealed record EconomyPayoutRequestReviewDto(
+    Guid Id,
+    Guid PayeeId,
+    Guid WalletId,
+    long HardCoinUnits,
+    PayoutRequestState State,
+    long Version,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt)
+{
+    public static EconomyPayoutRequestReviewDto From(PayoutRequest request) => new(
+        request.Id,
+        request.PayeeId,
+        request.WalletId.Value,
+        request.Amount.Units,
+        request.State,
+        request.Version,
+        request.CreatedAt,
+        request.UpdatedAt);
+}
+
+public sealed record EconomyPayoutRequestReviewAuditDto(
+    Guid Id,
+    Guid ActorId,
+    PayoutRequestState Outcome,
+    string Reason,
+    DateTimeOffset OccurredAt)
+{
+    public static EconomyPayoutRequestReviewAuditDto From(PayoutRequestReviewAuditEvent auditEvent) => new(
+        auditEvent.Id,
+        auditEvent.ActorId,
+        auditEvent.Outcome,
+        auditEvent.Reason,
+        auditEvent.OccurredAt);
+}
+
 public sealed record ListMyPayoutOperationsQuery(Guid PayeeId, int Take)
     : IQuery<IReadOnlyList<EconomyPayoutOperationDto>>;
 
@@ -32,6 +70,14 @@ public sealed record GetMyPayoutOperationQuery(Guid PayeeId, Guid OperationId)
 
 public sealed record ListMyPayoutRequestsQuery(Guid PayeeId, int Take)
     : IQuery<IReadOnlyList<EconomyPayoutRequestDto>>;
+
+[AuthorizeRequest(WalletsPermission.Keys.Admin)]
+public sealed record ListPayoutRequestsForReviewQuery(int Take)
+    : IQuery<IReadOnlyList<EconomyPayoutRequestReviewDto>>;
+
+[AuthorizeRequest(WalletsPermission.Keys.Admin)]
+public sealed record ListPayoutRequestReviewAuditQuery(Guid RequestId)
+    : IQuery<IReadOnlyList<EconomyPayoutRequestReviewAuditDto>>;
 
 public sealed class ListMyPayoutOperationsQueryHandler(IPayoutOperationStore operations)
     : IQueryHandler<ListMyPayoutOperationsQuery, IReadOnlyList<EconomyPayoutOperationDto>>
@@ -103,5 +149,65 @@ public sealed class ListMyPayoutRequestsQueryHandler(IPayoutRequestStore request
             .Select(EconomyPayoutRequestDto.From)
             .ToArray();
         return Task.FromResult(result);
+    }
+}
+
+public sealed class ListPayoutRequestsForReviewQueryHandler(
+    IActorContextAccessor actorContextAccessor,
+    IPayoutRequestStore requests)
+    : IQueryHandler<ListPayoutRequestsForReviewQuery, IReadOnlyList<EconomyPayoutRequestReviewDto>>
+{
+    public Task<IReadOnlyList<EconomyPayoutRequestReviewDto>> Handle(
+        ListPayoutRequestsForReviewQuery request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        cancellationToken.ThrowIfCancellationRequested();
+        var tenantId = RequireWalletAdministratorTenant(actorContextAccessor);
+
+        IReadOnlyList<EconomyPayoutRequestReviewDto> result = requests
+            .ListForReview(tenantId, request.Take)
+            .Select(EconomyPayoutRequestReviewDto.From)
+            .ToArray();
+        return Task.FromResult(result);
+    }
+
+    private static Guid RequireWalletAdministratorTenant(IActorContextAccessor actorContextAccessor)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        return actor.IsAuthenticated && actor.SubjectIdAsGuid.HasValue && actor.TenantId is { } tenantId &&
+               actor.HasPermission(WalletsPermission.Keys.Admin)
+            ? tenantId
+            : throw new UnauthorizedAccessException("A tenant wallet administrator is required to review payout requests.");
+    }
+}
+
+public sealed class ListPayoutRequestReviewAuditQueryHandler(
+    IActorContextAccessor actorContextAccessor,
+    IPayoutRequestStore requests)
+    : IQueryHandler<ListPayoutRequestReviewAuditQuery, IReadOnlyList<EconomyPayoutRequestReviewAuditDto>>
+{
+    public Task<IReadOnlyList<EconomyPayoutRequestReviewAuditDto>> Handle(
+        ListPayoutRequestReviewAuditQuery request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        cancellationToken.ThrowIfCancellationRequested();
+        var tenantId = RequireWalletAdministratorTenant(actorContextAccessor);
+
+        IReadOnlyList<EconomyPayoutRequestReviewAuditDto> result = requests
+            .ListReviewAudit(request.RequestId, tenantId)
+            .Select(EconomyPayoutRequestReviewAuditDto.From)
+            .ToArray();
+        return Task.FromResult(result);
+    }
+
+    private static Guid RequireWalletAdministratorTenant(IActorContextAccessor actorContextAccessor)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        return actor.IsAuthenticated && actor.SubjectIdAsGuid.HasValue && actor.TenantId is { } tenantId &&
+               actor.HasPermission(WalletsPermission.Keys.Admin)
+            ? tenantId
+            : throw new UnauthorizedAccessException("A tenant wallet administrator is required to review payout requests.");
     }
 }

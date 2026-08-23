@@ -42,6 +42,14 @@ public class Post : EntityBase
         };
     }
 
+    public void AttachMedia(string mediaUrl, MediaType? mediaType)
+    {
+        if (string.IsNullOrWhiteSpace(mediaUrl)) throw new ArgumentException("Media URL is required.", nameof(mediaUrl));
+        MediaUrl = mediaUrl.Trim();
+        MediaType = mediaType;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
     public void Edit(string content)
     {
         Content = content;

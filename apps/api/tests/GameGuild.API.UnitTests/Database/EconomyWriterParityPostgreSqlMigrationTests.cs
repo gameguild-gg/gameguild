@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using NpgsqlTypes;
-using Testcontainers.PostgreSql;
 
 namespace GameGuild.API.UnitTests.Database;
 
@@ -21,22 +20,15 @@ public sealed class EconomyWriterParityPostgreSqlMigrationTests
     [DockerFact]
     public async Task CurrentSchemaMatchesEveryRegisteredPostingTemplateAndRejectsUnauthorizedConversion()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_writer_parity")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_writer_parity");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
 
         foreach (var registration in PostingTemplateCatalog.All)
@@ -75,23 +67,16 @@ public sealed class EconomyWriterParityPostgreSqlMigrationTests
     [DockerFact]
     public async Task MigrationCanRollBackAndForwardWithoutLeavingWriterDependenciesBehind()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_writer_rollback")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_writer_rollback");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options);
         var migrator = context.GetService<IMigrator>();
         await migrator.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         (await ValidateAsync(connection, PostingTemplateKind.ProviderConvertedSoftReversal,
             CanonicalLines(PostingTemplateKind.ProviderConvertedSoftReversal))).Should().BeTrue();
@@ -124,22 +109,15 @@ public sealed class EconomyWriterParityPostgreSqlMigrationTests
     [DockerFact]
     public async Task BountyReclaimValidatorAcceptsFeePairsAfterReturnPairs()
     {
-        await using var container = new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
-            .WithDatabase("economy_writer_bounty_fee_validation")
-            .WithUsername("test")
-            .WithPassword("test")
-            .WithCleanUp(true)
-            .Build();
-        await container.StartAsync();
+        await using var container = await EconomyPostgreSqlTestDatabase.CreateAsync("economy_writer_bounty_fee_validation");
 
         await using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseNpgsql(container.GetConnectionString())
+                .UseNpgsql(container.ConnectionString)
                 .Options);
         await context.Database.MigrateAsync();
 
-        await using var connection = new NpgsqlConnection(container.GetConnectionString());
+        await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
 
         var lines = Enumerable.Range(0, 10)

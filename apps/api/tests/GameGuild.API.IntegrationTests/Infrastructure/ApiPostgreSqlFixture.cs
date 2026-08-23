@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
-using Testcontainers.PostgreSql;
+using GameGuild.TestSupport.Economy;
 
 namespace GameGuild.API.IntegrationTests.Infrastructure;
 
@@ -21,21 +21,15 @@ public sealed class ApiPostgreSqlCollection : ICollectionFixture<ApiPostgreSqlFi
 
 public sealed class ApiPostgreSqlFixture : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
-        .WithDatabase("gameguild_api_integration")
-        .WithUsername("test")
-        .WithPassword("test")
-        .WithCleanUp(true)
-        .Build();
+    private EconomyPostgreSqlTestDatabase _container = null!;
 
     public WebApplicationFactory<Program> Factory { get; private set; } = null!;
 
     public async Task InitializeAsync()
     {
-        await _container.StartAsync();
-        await ApplyMigrationsAsync(_container.GetConnectionString());
-        Factory = new ApiPostgreSqlWebApplicationFactory(_container.GetConnectionString());
+        _container = await EconomyPostgreSqlTestDatabase.CreateAsync("api_integration");
+        await ApplyMigrationsAsync(_container.ConnectionString);
+        Factory = new ApiPostgreSqlWebApplicationFactory(_container.ConnectionString);
     }
 
     public async Task DisposeAsync()

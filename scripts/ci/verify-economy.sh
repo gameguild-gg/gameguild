@@ -3,8 +3,11 @@ set -Eeuo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repository_root="$(cd "$script_dir/../.." && pwd)"
-artifact_root="$repository_root/artifacts/test-results"
+artifact_root="$repository_root/artifacts/test-results/economy"
 manifest_path="$script_dir/economy-projects.json"
+summary_path="$artifact_root/preflight-summary.txt"
+gate_stage='initializing'
+run_sequence=0
 
 # shellcheck source=economy-gate.sh
 source "$script_dir/economy-gate.sh"
@@ -141,37 +144,50 @@ if [[ "${1:-}" == '--validate-whole-solution-evidence' ]]; then
   exit
 fi
 
-skip_whole_solution=false
-skip_provider_contracts=false
-skip_openapi=false
-skip_frontend=false
-skip_browser=false
-
-while (($#)); do
-  case "$1" in
-    --skip-whole-solution) skip_whole_solution=true ;;
-    --skip-provider-contracts) skip_provider_contracts=true ;;
-    --skip-openapi) skip_openapi=true ;;
-    --skip-frontend) skip_frontend=true ;;
-    --skip-browser) skip_browser=true ;;
-    *) printf 'Unknown argument: %s\n' "$1" >&2; exit 2 ;;
-  esac
-  shift
-done
+if (($#)); then
+  printf 'Unknown argument: %s\n' "$1" >&2
+  exit 2
+fi
 
 api_pid=''
 web_pid=''
 postgres_container=''
+economy_postgres_container=''
 garage_container=''
+testcontainers_baseline=''
+testcontainers_reaper_disabled=false
 
 cleanup() {
   local status=$?
   trap - EXIT INT TERM
   set +e
+  mkdir -p "$(dirname "$summary_path")"
+  if ((status == 0)); then
+    gate_result='passed'
+  else
+    gate_result='failed'
+  fi
+  {
+    printf 'gate=economy\n'
+    printf 'result=%s\n' "$gate_result"
+    printf 'status=%s\n' "$status"
+    printf 'stage=%s\n' "$gate_stage"
+  } > "$summary_path"
   stop_process_tree "$web_pid"
   stop_process_tree "$api_pid"
+  if [[ "$testcontainers_reaper_disabled" == true ]]; then
+    while IFS= read -r testcontainer_id; do
+      [[ -z "$testcontainer_id" ]] && continue
+      if ! grep -Fxq -- "$testcontainer_id" <<< "$testcontainers_baseline"; then
+        docker rm --force "$testcontainer_id" >/dev/null 2>&1 || true
+      fi
+    done < <(docker ps -aq --filter label=org.testcontainers=true)
+  fi
   if [[ -n "$postgres_container" ]]; then
     docker rm --force "$postgres_container" >/dev/null 2>&1 || true
+  fi
+  if [[ -n "$economy_postgres_container" ]]; then
+    docker rm --force "$economy_postgres_container" >/dev/null 2>&1 || true
   fi
   if [[ -n "$garage_container" ]]; then
     docker rm --force "$garage_container" >/dev/null 2>&1 || true
@@ -181,10 +197,17 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 run() {
+  run_sequence=$((run_sequence + 1))
+  local output_path="$artifact_root/logs/${run_sequence}-${gate_stage}.log"
+  mkdir -p "$(dirname "$output_path")"
   printf '> '
   printf '%q ' "$@"
   printf '\n'
-  "$@"
+  set +e
+  "$@" 2>&1 | tee "$output_path"
+  local command_status=${PIPESTATUS[0]}
+  set -e
+  return "$command_status"
 }
 
 run_logged() {
@@ -209,6 +232,14 @@ native_path() {
 }
 
 cd "$repository_root"
+if [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
+  # The shared MSBuild server can retain stale compiler state on Windows hosts.
+  # This is deliberately a host-only gate setting; it is not a container setting.
+  export DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER=1
+  export TESTCONTAINERS_RYUK_DISABLED=true
+  testcontainers_reaper_disabled=true
+  testcontainers_baseline="$(docker ps -aq --filter label=org.testcontainers=true)"
+fi
 rm -rf "$artifact_root"
 mkdir -p \
   "$artifact_root/trx/whole-solution" \
@@ -222,9 +253,20 @@ mkdir -p \
   "$artifact_root/postgres" \
   "$artifact_root/publish"
 
-run bash "$script_dir/tests/verify-economy.sh"
+gate_stage='preflight-smoke'
 run pnpm test:smoke
+gate_stage='preflight-manifest'
 assert_economy_manifest "$repository_root" "$manifest_path"
+
+gate_stage='preflight-postgres-isolation'
+mapfile -t nested_postgres_builders < <(
+  rg --path-separator // -l --glob '*.cs' 'new PostgreSqlBuilder' apps/api/tests \
+    | grep -v '^apps/api/tests/GameGuild.TestSupport.Economy/' \
+    || true
+)
+if ((${#nested_postgres_builders[@]})); then
+  economy_gate_error "PostgreSQL tests must use the gate-owned ECONOMY_POSTGRES_CONNECTION; nested Testcontainers builders found: ${nested_postgres_builders[*]}"
+fi
 
 declare -a economy_production=()
 declare -a economy_tests=()
@@ -265,7 +307,9 @@ for contract in manifest.get("providerContractProjects", []):
 PY
 )
 
-postgres_container="gameguild-economy-ci-$$-$RANDOM"
+postgres_container="gameguild-economy-ci-app-$$-$RANDOM"
+economy_postgres_container="gameguild-economy-ci-tests-$$-$RANDOM"
+gate_stage='postgres-app'
 run docker run --detach --rm --name "$postgres_container" \
   --env POSTGRES_DB=economy_ci \
   --env POSTGRES_USER=postgres \
@@ -273,16 +317,34 @@ run docker run --detach --rm --name "$postgres_container" \
   --publish 127.0.0.1::5432 \
   postgres:17-alpine >/dev/null
 
-postgres_probe() {
+app_postgres_probe() {
   docker exec "$postgres_container" psql --username postgres --dbname economy_ci --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
 }
-wait_for_consecutive_successes postgres_probe 2 90 1
+wait_for_consecutive_successes app_postgres_probe 2 90 1
 
 postgres_mapping="$(docker port "$postgres_container" '5432/tcp')"
 [[ "$postgres_mapping" =~ :([0-9]+)$ ]] || economy_gate_error "Could not resolve disposable PostgreSQL port from '$postgres_mapping'"
 postgres_port="${BASH_REMATCH[1]}"
 connection_string="Host=127.0.0.1;Port=$postgres_port;Database=economy_ci;Username=postgres;Password=postgres;Include Error Detail=true"
-export ECONOMY_POSTGRES_CONNECTION="$connection_string"
+
+gate_stage='postgres-economy-tests'
+run docker run --detach --rm --name "$economy_postgres_container" \
+  --env POSTGRES_DB=economy_tests \
+  --env POSTGRES_USER=postgres \
+  --env POSTGRES_PASSWORD=postgres \
+  --publish 127.0.0.1::5432 \
+  postgres:17-alpine >/dev/null
+
+economy_postgres_probe() {
+  docker exec "$economy_postgres_container" psql --username postgres --dbname economy_tests --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
+}
+wait_for_consecutive_successes economy_postgres_probe 2 90 1
+
+economy_postgres_mapping="$(docker port "$economy_postgres_container" '5432/tcp')"
+[[ "$economy_postgres_mapping" =~ :([0-9]+)$ ]] || economy_gate_error "Could not resolve Economy test PostgreSQL port from '$economy_postgres_mapping'"
+economy_postgres_port="${BASH_REMATCH[1]}"
+economy_connection_string="Host=127.0.0.1;Port=$economy_postgres_port;Database=economy_tests;Username=postgres;Password=postgres;Include Error Detail=true"
+export ECONOMY_POSTGRES_CONNECTION="$economy_connection_string"
 export ConnectionStrings__DefaultConnection="$connection_string"
 export ConnectionStrings__AuthenticationDb="$connection_string"
 export ConnectionStrings__MigrationConnection="$connection_string"
@@ -292,12 +354,14 @@ export SeedData__ImportSnapshotCourses=false
 probe_sql='SELECT 1;'
 [[ "${ECONOMY_CI_PROBE_POSTGRES_FAILURE:-0}" != '1' ]] || probe_sql='SELECT 1 / 0;'
 run docker exec "$postgres_container" psql --username postgres --dbname economy_ci --set ON_ERROR_STOP=1 --command "$probe_sql"
-printf 'database=economy_ci\nport=%s\n' "$postgres_port" > "$artifact_root/postgres/connection.txt"
+run docker exec "$economy_postgres_container" psql --username postgres --dbname economy_tests --set ON_ERROR_STOP=1 --command "$probe_sql"
+printf 'app_database=economy_ci\napp_port=%s\neconomy_test_database=economy_tests\neconomy_test_port=%s\n' \
+  "$postgres_port" "$economy_postgres_port" > "$artifact_root/postgres/connection.txt"
 
-if [[ "$skip_whole_solution" == false ]]; then
+{
   garage_container='gameguild-economy-ci-garage-'$$-$RANDOM
   garage_config="$(native_path "$repository_root/scripts/garage/garage.toml")"
-  run docker run --detach --rm --name "$garage_container" \
+  run env MSYS_NO_PATHCONV=1 docker run --detach --rm --name "$garage_container" \
     --env GARAGE_CONFIG_FILE=/etc/garage/garage.toml \
     --volume "$garage_config:/etc/garage/garage.toml:ro" \
     --publish 127.0.0.1::3900 \
@@ -326,8 +390,9 @@ if [[ "$skip_whole_solution" == false ]]; then
   export S3_ACCESS_KEY=GK111111111111111111111111
   export S3_SECRET_KEY=2222222222222222222222222222222222222222222222222222222222222222
   export S3_REGION=garage
-fi
+}
 
+gate_stage='build'
 run dotnet restore apps/api/GameGuild.sln --nologo
 run dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal
 # The solution omits a few API module projects. Build the API graph once so
@@ -342,6 +407,17 @@ fi
 
 mapfile -t changed_paths < <(git diff --name-only "$base_sha...HEAD")
 mapfile -t touched_commerce < <(get_touched_commerce_projects "$repository_root" "${changed_paths[@]}")
+economy_test_support_projects=(
+  'apps/api/tests/GameGuild.TestSupport.Economy/GameGuild.TestSupport.Economy.csproj'
+)
+for support_project in "${economy_test_support_projects[@]}"; do
+  run dotnet build "$support_project" -c Release --no-restore --nologo \
+    -p:BuildProjectReferences=false \
+    -p:TreatWarningsAsErrors=true \
+    -p:EnableNETAnalyzers=true \
+    -p:EnforceCodeStyleInBuild=true
+done
+
 warning_projects=("${economy_production[@]}" "${economy_tests[@]}" "${touched_commerce[@]}")
 
 if [[ "${ECONOMY_CI_PROBE_WARNING_FAILURE:-0}" == '1' ]]; then
@@ -365,6 +441,7 @@ if ((${#warning_projects[@]} > 0)); then
 fi
 
 for record in "${economy_coverage_records[@]}"; do
+  gate_stage='economy-tests'
   IFS=$'\t' read -r test_project assemblies_csv path_prefixes_csv minimum_branch_rate <<< "$record"
   [[ "$path_prefixes_csv" == '__all__' ]] && path_prefixes_csv=''
   test_name="$(basename "${test_project%.csproj}")"
@@ -398,7 +475,8 @@ if [[ "${ECONOMY_CI_PROBE_COVERAGE_FAILURE:-0}" == '1' ]]; then
   assert_cobertura_coverage "$lowered" 'GameGuild.Economy.Probe' >/dev/null
 fi
 
-if [[ "$skip_whole_solution" == false ]]; then
+{
+  gate_stage='whole-solution-tests'
   whole_solution_results="$artifact_root/trx/whole-solution"
   whole_solution_log="$whole_solution_results/dotnet-test.log"
   run_logged "$whole_solution_log" dotnet test apps/api/GameGuild.sln -c Release --no-build --nologo --verbosity minimal -m:1 \
@@ -408,9 +486,10 @@ if [[ "$skip_whole_solution" == false ]]; then
   whole_solution_trx=("$whole_solution_results"/*.trx)
   shopt -u nullglob
   assert_whole_solution_evidence "$repository_root" "$whole_solution_log" "${whole_solution_trx[@]}" >/dev/null
-fi
+}
 
-if [[ "$skip_provider_contracts" == false ]]; then
+{
+  gate_stage='provider-contract-tests'
   for record in "${provider_contracts[@]}"; do
     IFS=$'\t' read -r project filter <<< "$record"
     name="$(basename "${project%.csproj}")"
@@ -422,9 +501,10 @@ if [[ "$skip_provider_contracts" == false ]]; then
       --results-directory "$results"
     assert_trx_evidence "$results/$name.trx" >/dev/null
   done
-fi
+}
 
-if [[ "$skip_openapi" == false ]]; then
+{
+  gate_stage='openapi-client'
   publish_directory="$artifact_root/publish/api"
   run dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --output "$publish_directory"
   api_port="$(get_ephemeral_port)"
@@ -444,9 +524,10 @@ if [[ "$skip_openapi" == false ]]; then
   run curl --fail --silent --show-error "http://127.0.0.1:$api_port/swagger/v1/swagger.json" --output "$raw_openapi"
   canonicalize_json "$raw_openapi" "$captured_openapi"
   run bash "$script_dir/verify-openapi-client.sh" "$captured_openapi"
-fi
+}
 
-if [[ "$skip_frontend" == false ]]; then
+{
+  gate_stage='frontend'
   client_evidence="$artifact_root/vitest/client.json"
   run pnpm --filter @game-guild/client exec vitest run --reporter=json "--outputFile=$client_evidence"
   assert_vitest_evidence "$client_evidence" >/dev/null
@@ -456,9 +537,10 @@ if [[ "$skip_frontend" == false ]]; then
   run env -u API_URL pnpm --filter @game-guild/web exec vitest run --reporter=json "--outputFile=$web_evidence"
   assert_vitest_evidence "$web_evidence" >/dev/null
   GAMEGUILD_DISABLE_WEBPACK_CACHE=1 run pnpm --filter @game-guild/web build
-fi
+}
 
-if [[ "$skip_browser" == false ]]; then
+{
+  gate_stage='browser'
   web_port="$(get_ephemeral_port)"
   playwright_evidence="$artifact_root/playwright/public-smoke.json"
   standalone_web_root="$repository_root/apps/web/.next/standalone/apps/web"
@@ -476,8 +558,9 @@ if [[ "$skip_browser" == false ]]; then
   wait_http_ready "http://127.0.0.1:$web_port/" "$web_pid" 90
   run pnpm --filter @game-guild/web test:browser:public
   assert_playwright_evidence "$playwright_evidence" >/dev/null
-fi
+}
 
 evidence_count="$(find "$artifact_root" -type f | wc -l | tr -d ' ')"
 ((evidence_count > 0)) || economy_gate_error "No verification evidence was written under $artifact_root"
+gate_stage='completed'
 printf 'Economy verification passed with %s evidence files under %s\n' "$evidence_count" "$artifact_root"

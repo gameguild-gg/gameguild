@@ -30,6 +30,7 @@
       "@game-guild/ops",
       "@game-guild/prettier-config",
       "@game-guild/quiz",
+      "@game-guild/quiz-content",
       "@game-guild/quiz-surface",
       "@game-guild/tailwind-config",
       "@game-guild/typescript-config",

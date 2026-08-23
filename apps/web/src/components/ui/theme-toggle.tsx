@@ -4,6 +4,8 @@ import * as React from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
+import { updateThemePreferenceAction } from '@/lib/user-settings/actions';
+import type { ThemePreference } from '@/lib/user-settings/preferences-mappers';
 import { Button } from '@game-guild/ui/components/button';
 import {
   DropdownMenu,
@@ -14,6 +16,14 @@ import {
 
 export function ThemeToggle() {
   const { setTheme } = useTheme();
+  const [, startTransition] = React.useTransition();
+
+  function updateTheme(theme: ThemePreference): void {
+    setTheme(theme);
+    startTransition(async () => {
+      await updateThemePreferenceAction(theme);
+    });
+  }
 
   return (
     <DropdownMenu>
@@ -25,13 +35,13 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme('light')}>
+        <DropdownMenuItem onClick={() => updateTheme('light')}>
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('dark')}>
+        <DropdownMenuItem onClick={() => updateTheme('dark')}>
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('system')}>
+        <DropdownMenuItem onClick={() => updateTheme('system')}>
           System
         </DropdownMenuItem>
       </DropdownMenuContent>

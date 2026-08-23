@@ -41,6 +41,7 @@ public sealed class MonthlyStatementRenderer(
     IEmailFooterService footerService) : EmailRendererBase, IEmailRenderer
 {
     private static readonly JsonSerializerOptions MetadataOptions = new(JsonSerializerDefaults.Web);
+    private static readonly CultureInfo StatementCurrencyCulture = CultureInfo.GetCultureInfo("en-US");
 
     public NotificationType Type => NotificationType.MonthlyStatement;
 
@@ -62,8 +63,8 @@ public sealed class MonthlyStatementRenderer(
         var plainTextBody =
             $"Your monthly statement for {metadata.MonthLabel} is attached as PDF and CSV.\n\n" +
             $"Period: {metadata.FromDate:yyyy-MM-dd} to {metadata.ToDate:yyyy-MM-dd}\n" +
-            $"Net cash flow: {artifacts.Report.NetCashFlow:C2}\n" +
-            $"Closing balance: {artifacts.Report.ClosingBalance:C2}\n\n" +
+            $"Net cash flow: {FormatStatementAmount(artifacts.Report.NetCashFlow)}\n" +
+            $"Closing balance: {FormatStatementAmount(artifacts.Report.ClosingBalance)}\n\n" +
             $"Review the same statement online: {statementPageAbsoluteUrl}\n" +
             $"Related links: PDF {statementPdfAbsoluteUrl} | CSV {statementCsvAbsoluteUrl}";
 
@@ -71,8 +72,8 @@ public sealed class MonthlyStatementRenderer(
             <p>Your monthly statement for <strong>{metadata.MonthLabel}</strong> is attached as PDF and CSV.</p>
             <p>
                 <strong>Period:</strong> {metadata.FromDate:yyyy-MM-dd} to {metadata.ToDate:yyyy-MM-dd}<br />
-                <strong>Net cash flow:</strong> {artifacts.Report.NetCashFlow:C2}<br />
-                <strong>Closing balance:</strong> {artifacts.Report.ClosingBalance:C2}
+                <strong>Net cash flow:</strong> {FormatStatementAmount(artifacts.Report.NetCashFlow)}<br />
+                <strong>Closing balance:</strong> {FormatStatementAmount(artifacts.Report.ClosingBalance)}
             </p>
             <p>
                 Review the same statement online:
@@ -131,4 +132,7 @@ public sealed class MonthlyStatementRenderer(
 
     private static string BuildAbsoluteUrl(string baseUrl, string relativePath)
         => new Uri(new Uri(baseUrl.EndsWith('/') ? baseUrl : $"{baseUrl}/", UriKind.Absolute), relativePath.TrimStart('/')).ToString();
+
+    private static string FormatStatementAmount(decimal amount)
+        => amount.ToString("C2", StatementCurrencyCulture);
 }
