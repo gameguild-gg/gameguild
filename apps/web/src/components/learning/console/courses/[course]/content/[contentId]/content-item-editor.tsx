@@ -76,6 +76,7 @@ interface ContentItemEditorProps {
   item: ContentItemDetail;
   courseTitle: string;
   linkedAssessmentId?: string;
+  linkedAssessmentSlug?: string;
   // ponytail: raw [Flags] string from linked Assessment — editor does substring check
   // for "AutoGraded" rather than re-fetching the assessment.
   linkedAssessmentGradingMethods?: string;
@@ -87,6 +88,7 @@ export function ContentItemEditor({
   item,
   courseTitle,
   linkedAssessmentId,
+  linkedAssessmentSlug,
   linkedAssessmentGradingMethods,
   initialCodingDefinition,
 }: ContentItemEditorProps) {
@@ -316,25 +318,25 @@ export function ContentItemEditor({
     );
   }
 
-  function codingDefinitionRoute(assessmentId: string) {
+  function codingDefinitionRoute(assessmentSlug: string) {
     return (
       "/workspace/learning/courses/" +
       encodeURIComponent(courseId) +
       "/assessments/" +
-      assessmentId +
+      assessmentSlug +
       "/coding-definition"
     );
   }
 
   async function handleConfigureCoding() {
     setCodingError(null);
-    if (!linkedAssessmentId) {
+    if (!linkedAssessmentSlug && !linkedAssessmentId) {
       setCodingError(
         "No assessment is linked to this content item yet. Add an assessment in the Assessments tab first.",
       );
       return;
     }
-    router.push(codingDefinitionRoute(linkedAssessmentId));
+    router.push(codingDefinitionRoute(linkedAssessmentSlug ?? linkedAssessmentId!));
   }
 
   // ── Graded toggle handlers (Task 7) ──
@@ -669,10 +671,14 @@ export function ContentItemEditor({
                         variant="outline"
                         size="sm"
                         onClick={() =>
-                          linkedAssessmentId &&
-                          router.push(codingDefinitionRoute(linkedAssessmentId))
+                          (linkedAssessmentSlug ?? linkedAssessmentId) &&
+                          router.push(
+                            codingDefinitionRoute(
+                              linkedAssessmentSlug ?? linkedAssessmentId!,
+                            ),
+                          )
                         }
-                        disabled={!linkedAssessmentId}
+                        disabled={!linkedAssessmentSlug && !linkedAssessmentId}
                       >
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit Coding Tests

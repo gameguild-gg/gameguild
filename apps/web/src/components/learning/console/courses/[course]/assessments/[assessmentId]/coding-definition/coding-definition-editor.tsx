@@ -77,6 +77,7 @@ interface AssignmentFileRow {
 interface EditorProps {
   courseId: string;
   assessmentId: string;
+  assessmentSlug: string;
   programId: string;
   contentId: string | null;
   assessmentTitle: string;
@@ -91,6 +92,7 @@ interface TestRow {
 export function CodingDefinitionEditor({
   courseId,
   assessmentId,
+  assessmentSlug,
   programId,
   contentId,
   assessmentTitle,
@@ -436,7 +438,7 @@ export function CodingDefinitionEditor({
 
   function handleBack() {
     router.push(
-      `${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessmentId}`,
+      `${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessmentSlug}`,
     );
   }
 

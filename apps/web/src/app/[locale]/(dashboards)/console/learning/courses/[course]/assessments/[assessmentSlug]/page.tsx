@@ -14,11 +14,11 @@ import { AssessmentEditor } from "@/components/learning/console/courses/[course]
  */
 export default async function AssessmentDetailPage({
   params,
-}: PageProps<"/[locale]/console/learning/courses/[course]/assessments/[assessmentId]">): Promise<React.JSX.Element> {
-  const { course: courseId, assessmentId } = await params;
+}: PageProps<"/[locale]/console/learning/courses/[course]/assessments/[assessmentSlug]">): Promise<React.JSX.Element> {
+  const { course: courseId, assessmentSlug } = await params;
 
   const [assessment, assessmentGroups, courseContent] = await Promise.all([
-    getAssessment(assessmentId),
+    getAssessment(courseId, assessmentSlug),
     getCourseAssessmentGroups(courseId),
     getCourseContent(courseId),
   ]);

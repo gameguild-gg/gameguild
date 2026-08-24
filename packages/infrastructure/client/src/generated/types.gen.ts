@@ -6240,6 +6240,7 @@ export interface LearningAssessmentsAssessment {
   order?: number;
   peerReviewsRequiredCount?: number;
   presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  slug?: string | null;
   submissionModalities?: LearningAssessmentsSubmissionModality;
   timeLimitMinutes?: number | null;
   title?: string | null;
@@ -6359,6 +6360,7 @@ export interface LearningAssessmentsCreateAssessmentInput {
   maxAttempts?: number | null;
   maxScore?: number;
   presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  slug?: string | null;
   submissionModalities?: LearningAssessmentsSubmissionModality;
   timeLimitMinutes?: number | null;
   title?: string | null;
@@ -6629,6 +6631,7 @@ export interface LearningAssessmentsUpdateAssessmentInput {
   maxScore?: number | null;
   peerReviewsRequiredCount?: number | null;
   presentationMode?: LearningAssessmentsAssessmentPresentationMode;
+  slug?: string | null;
   submissionModalities?: LearningAssessmentsSubmissionModality;
   timeLimitMinutes?: number | null;
   title?: string | null;
@@ -7169,6 +7172,7 @@ export interface LearningCoursesCreateProgramContent {
   lessonFormat?: LearningCoursesLessonContentFormat;
   parentId?: string | null;
   programId: string;
+  slug?: string | null;
   sortOrder?: number;
   title: string;
   type: LearningCoursesProgramContentType;
@@ -7333,6 +7337,7 @@ export interface LearningCoursesProgramContent {
   parentTitle?: string | null;
   programId?: string;
   programTitle?: string | null;
+  slug?: string | null;
   sortOrder?: number;
   title?: string | null;
   type?: LearningCoursesProgramContentType;
@@ -7527,6 +7532,7 @@ export interface LearningCoursesUpdateProgramContent {
   isRequired?: boolean | null;
   jsonBody?: Record<string, unknown> | null;
   lessonFormat?: LearningCoursesLessonContentFormat;
+  slug?: string | null;
   sortOrder?: number | null;
   title?: string | null;
   type?: LearningCoursesProgramContentType;
@@ -20655,6 +20661,7 @@ LearningAssessmentsAssessmentSchema = z.object({
   presentationMode: z
     .lazy(() => LearningAssessmentsAssessmentPresentationModeSchema)
     .optional(),
+  slug: z.string().nullable().optional(),
   submissionModalities: z
     .lazy(() => LearningAssessmentsSubmissionModalitySchema)
     .optional(),
@@ -20809,6 +20816,7 @@ LearningAssessmentsCreateAssessmentInputSchema = z.object({
   presentationMode: z
     .lazy(() => LearningAssessmentsAssessmentPresentationModeSchema)
     .optional(),
+  slug: z.string().nullable().optional(),
   submissionModalities: z
     .lazy(() => LearningAssessmentsSubmissionModalitySchema)
     .optional(),
@@ -21148,6 +21156,7 @@ LearningAssessmentsUpdateAssessmentInputSchema = z.object({
   presentationMode: z
     .lazy(() => LearningAssessmentsAssessmentPresentationModeSchema)
     .optional(),
+  slug: z.string().nullable().optional(),
   submissionModalities: z
     .lazy(() => LearningAssessmentsSubmissionModalitySchema)
     .optional(),
@@ -21843,6 +21852,7 @@ LearningCoursesCreateProgramContentSchema = z.object({
     .optional(),
   parentId: z.string().uuid().nullable().optional(),
   programId: z.string().uuid(),
+  slug: z.string().min(0).max(220).nullable().optional(),
   sortOrder: z.number().int().optional(),
   title: z.string().min(0).max(255),
   type: z.lazy(() => LearningCoursesProgramContentTypeSchema),
@@ -22051,6 +22061,7 @@ LearningCoursesProgramContentSchema = z.object({
   parentTitle: z.string().nullable().optional(),
   programId: z.string().uuid().optional(),
   programTitle: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
   sortOrder: z.number().int().optional(),
   title: z.string().nullable().optional(),
   type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),
@@ -22301,6 +22312,7 @@ LearningCoursesUpdateProgramContentSchema = z.object({
   lessonFormat: z
     .lazy(() => LearningCoursesLessonContentFormatSchema)
     .optional(),
+  slug: z.string().min(0).max(220).nullable().optional(),
   sortOrder: z.number().int().nullable().optional(),
   title: z.string().min(0).max(255).nullable().optional(),
   type: z.lazy(() => LearningCoursesProgramContentTypeSchema).optional(),

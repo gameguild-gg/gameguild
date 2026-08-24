@@ -57,6 +57,7 @@ vi.mock("@/lib/learning/actions", () => ({
 
 const assessment = {
   id: "assessment-1",
+  slug: "assessment-1",
   courseId: "course-1",
   contentId: null,
   assessmentGroupId: "group-quizzes",

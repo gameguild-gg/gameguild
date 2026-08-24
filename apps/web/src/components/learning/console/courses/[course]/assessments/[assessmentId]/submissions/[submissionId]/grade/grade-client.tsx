@@ -28,6 +28,7 @@ type GradeState = 'idle' | 'grading' | 'ready' | 'posting' | 'done';
 export interface GradeClientProps {
   courseSlug: string;
   assessmentId: string;
+  assessmentSlug: string;
   submissionId: string;
   /** Full assignment (Public + Private tests + all files) — Task 4 wrapper. */
   assignment: CodingAssignmentContent;
@@ -89,6 +90,7 @@ export function mergeWorkspaceWithSubmission(
 export function GradeClient({
   courseSlug,
   assessmentId,
+  assessmentSlug,
   submissionId,
   assignment,
   submittedFiles,
@@ -191,7 +193,7 @@ export function GradeClient({
       }
       setGradeState('done');
       router.push(
-        `${learningBase}/courses/${encodeURIComponent(courseSlug)}/assessments/${encodeURIComponent(assessmentId)}`,
+        `${learningBase}/courses/${encodeURIComponent(courseSlug)}/assessments/${encodeURIComponent(assessmentSlug)}`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

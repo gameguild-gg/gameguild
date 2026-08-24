@@ -875,7 +875,7 @@ export function ContentTree({
                                       icon={Edit}
                                       onClick={() =>
                                         navigateToContentItem(
-                                          item.id,
+                                          item.slug || item.id,
                                         )
                                       }
                                       className="size-7"
@@ -984,7 +984,7 @@ export function ContentTree({
                                               icon={Edit}
                                               onClick={() =>
                                                 navigateToContentItem(
-                                                  sub.id,
+                                                  sub.slug || sub.id,
                                                 )
                                               }
                                               className="size-6"
