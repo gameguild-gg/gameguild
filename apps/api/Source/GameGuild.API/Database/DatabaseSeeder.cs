@@ -225,23 +225,27 @@ public static class DatabaseSeeder
             .FirstOrDefaultAsync(candidate => candidate.Slug == seed.Slug)
             .ConfigureAwait(false);
 
-        if (project is null)
+        if (project is not null)
         {
-            project = new Project
+            if (project.IsDeleted)
             {
-                Id = Guid.NewGuid(),
-                Slug = seed.Slug,
-                CreatedById = adminUser.Id
-            };
-            dbContext.Set<Project>().Add(project);
+                project.Restore();
+                await dbContext.SaveChangesAsync().ConfigureAwait(false);
+            }
+            return project;
         }
+
+        project = new Project
+        {
+            Id = Guid.NewGuid(),
+            Slug = seed.Slug,
+            CreatedById = adminUser.Id
+        };
+        dbContext.Set<Project>().Add(project);
 
         project.Title = seed.Title;
         project.ShortDescription = seed.ShortDescription;
         project.Description = $"{seed.ShortDescription} This seeded project backs real Testing Lab and Launch Pad workflows.";
-        // These demo records do not ship image assets. Keep the media fields empty so
-        // clients use their valid design-system fallback instead of requesting fabricated
-        // CDN paths (which surface as 404s in browsers and deployment smoke tests).
         project.ImageUrl = null;
         project.FeaturedImageUrl = null;
         project.DownloadUrl = $"https://downloads.gameguild.gg/{seed.Slug}/{seed.VersionNumber}.zip";
