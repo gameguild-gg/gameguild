@@ -93,17 +93,18 @@ export async function syncFilesToMonacoFS(files: CodeFile[], instanceId?: string
     }
     
     // Se Monaco está disponível, adicionar arquivos como extra libs para TypeScript
-    if (monacoInstance) {
+    const ts = monacoInstance?.languages?.typescript
+    if (ts) {
       files.forEach(file => {
         if (file.language === 'typescript' || file.language === 'javascript') {
           const fullPath = instanceId ? `file:///${instanceId}/${file.path}` : `file:///${file.path}`
           
           // Adicionar como lib extra para o TypeScript worker reconhecer
-          monacoInstance!.languages.typescript.typescriptDefaults.addExtraLib(
+          ts.typescriptDefaults.addExtraLib(
             file.content,
             fullPath
           )
-          monacoInstance!.languages.typescript.javascriptDefaults.addExtraLib(
+          ts.javascriptDefaults.addExtraLib(
             file.content,
             fullPath
           )
@@ -149,12 +150,13 @@ export async function updateMonacoFile(filePath: string, content: string, instan
     )
     
     // Atualizar extraLib se Monaco estiver disponível
-    if (monacoInstance) {
+    const tsUpdate = monacoInstance?.languages?.typescript
+    if (tsUpdate) {
       const fileExt = filePath.split('.').pop()
       if (fileExt === 'ts' || fileExt === 'tsx' || fileExt === 'js' || fileExt === 'jsx') {
         const libPath = instanceId ? `file:///${instanceId}/${filePath}` : `file:///${filePath}`
-        monacoInstance.languages.typescript.typescriptDefaults.addExtraLib(content, libPath)
-        monacoInstance.languages.typescript.javascriptDefaults.addExtraLib(content, libPath)
+        tsUpdate.typescriptDefaults.addExtraLib(content, libPath)
+        tsUpdate.javascriptDefaults.addExtraLib(content, libPath)
       }
     }
   } catch (error) {
