@@ -50,6 +50,20 @@ export interface TreeNode {
 export function deriveStorageKey(workspaceName?: string): string {
   return workspaceName ? `emception:ws:${workspaceName}` : WORKSPACE_STORAGE_KEY;
 }
+
+/**
+ * Resolve the exact localStorage key used for a workspace. Consumers can
+ * supply a stable key when migrating an existing persisted workspace; the
+ * default remains isolated by the optional logical workspace name.
+ */
+export function resolveWorkspaceStorageKey(workspaceName?: string, workspaceStorageKey?: string): string {
+  return workspaceStorageKey || deriveStorageKey(workspaceName);
+}
+
+/** A workspace becomes writable to localStorage only after its restore pass. */
+export function shouldPersistWorkspace(enableWorkspace: boolean, restored: boolean): boolean {
+  return enableWorkspace && restored;
+}
 export const TERMINAL_THEME = {
   background: '#181825',
   foreground: '#cdd6f4',
@@ -158,6 +172,11 @@ export interface IdeProps {
    * `emception:ws:<name>`. Omit to use the package's neutral default key.
    */
   workspaceName?: string;
+  /**
+   * Exact localStorage key for this workspace. This takes precedence over
+   * `workspaceName` and supports explicit migration of an existing workspace.
+   */
+  workspaceStorageKey?: string;
 
   // ── Panel toggles — all default to `true` ─────────────────────────────────
   /** Show the file-explorer sidebar. Default `true`. */
@@ -191,6 +210,8 @@ export interface IdeProps {
    * is ignored. Default `true`.
    */
   enableWorkspace?: boolean;
+  /** Show controls for creating new workspace files. Default `true`. */
+  allowFileCreation?: boolean;
 
   // ── Fullscreen ────────────────────────────────────────────────────────────
   /**

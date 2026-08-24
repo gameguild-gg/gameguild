@@ -43,6 +43,7 @@ interface FileExplorerProps {
     onCreateFile: (kind: 'text' | 'image') => void;
     onRename: () => void;
     onDelete: () => void;
+    allowFileCreation: boolean;
     fileTree: TreeNode[];
     footer?: ReactNode;
 }
@@ -57,6 +58,7 @@ export default function FileExplorer({
     onCreateFile,
     onRename,
     onDelete,
+    allowFileCreation,
     fileTree,
     footer,
 }: FileExplorerProps) {
@@ -151,14 +153,16 @@ export default function FileExplorer({
             </div>
 
             {/* New file buttons */}
-            <div style={{ display: 'flex', gap: '0.25rem', padding: '0.35rem 0.5rem', borderBottom: '1px solid #313244', background: '#181825', flexShrink: 0 }}>
-                <button onClick={() => onCreateFile('text')} style={actionBtnStyle} title="New source file (.cpp)">
-                    +Code
-                </button>
-                <button onClick={() => onCreateFile('image')} style={actionBtnStyle} title="New image file">
-                    +Img
-                </button>
-            </div>
+            {allowFileCreation && (
+                <div style={{ display: 'flex', gap: '0.25rem', padding: '0.35rem 0.5rem', borderBottom: '1px solid #313244', background: '#181825', flexShrink: 0 }}>
+                    <button onClick={() => onCreateFile('text')} style={actionBtnStyle} title="New source file (.cpp)">
+                        +Code
+                    </button>
+                    <button onClick={() => onCreateFile('image')} style={actionBtnStyle} title="New image file">
+                        +Img
+                    </button>
+                </div>
+            )}
 
             {/* Workspace label */}
             <div style={{ fontSize: '0.73rem', color: '#89b4fa', padding: '0.4rem 0.7rem', borderBottom: '1px solid #313244', fontWeight: 600, flexShrink: 0 }}>

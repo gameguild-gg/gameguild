@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { deriveStorageKey, WORKSPACE_STORAGE_KEY } from '../dist/components/ide-types.js';
+import {
+  deriveStorageKey,
+  resolveWorkspaceStorageKey,
+  shouldPersistWorkspace,
+  WORKSPACE_STORAGE_KEY,
+} from '../dist/components/ide-types.js';
 
 describe('WORKSPACE_STORAGE_KEY', () => {
   it('is package-specific without host-product branding', () => {
@@ -24,5 +29,24 @@ describe('deriveStorageKey', () => {
   it('keeps named workspaces isolated from one another and the default', () => {
     assert.notEqual(deriveStorageKey('a'), deriveStorageKey('b'));
     assert.notEqual(deriveStorageKey('any'), WORKSPACE_STORAGE_KEY);
+  });
+});
+
+describe('resolveWorkspaceStorageKey', () => {
+  it('uses an explicit storage key verbatim when a host needs to preserve an existing workspace', () => {
+    assert.equal(resolveWorkspaceStorageKey('ignored', 'host:workspace:42'), 'host:workspace:42');
+  });
+
+  it('falls back to the neutral derived key when no explicit key is provided', () => {
+    assert.equal(resolveWorkspaceStorageKey('demo'), 'emception:ws:demo');
+    assert.equal(resolveWorkspaceStorageKey('demo', ''), 'emception:ws:demo');
+  });
+});
+
+describe('shouldPersistWorkspace', () => {
+  it('waits for restoration before writing so an initial workspace cannot replace a draft', () => {
+    assert.equal(shouldPersistWorkspace(true, false), false);
+    assert.equal(shouldPersistWorkspace(true, true), true);
+    assert.equal(shouldPersistWorkspace(false, true), false);
   });
 });

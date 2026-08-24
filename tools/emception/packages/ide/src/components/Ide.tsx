@@ -10,7 +10,14 @@ import DockGroupPanel from './DockGroup.js';
 import FileExplorer from './FileExplorer.js';
 import type { DockGroup, IdeController, IdeExtension, IdeProps, OpenTab, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types.js';
 import { activateIdeExtensions, validateIdeExtensions } from './ide-extensions.js';
-import { DEFAULT_IMAGE, deriveStorageKey, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types.js';
+import {
+  DEFAULT_IMAGE,
+  parseWorkspaceBundle,
+  resolveArgs,
+  resolveWorkspaceStorageKey,
+  shouldPersistWorkspace,
+  workspaceConfigToState,
+} from './ide-types.js';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, resolveWsPath } from './ide-utils.js';
 import TerminalPanel from './TerminalPanel.js';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets.js';
@@ -144,12 +151,14 @@ export default function Ide({
   workspaceConfig,
   workspaceUrl,
   workspaceName,
+  workspaceStorageKey,
   enableFileExplorer = true,
   enableTabs = true,
   enableTerminal = true,
   enableCanvas = true,
   enableDocking = true,
   enableWorkspace = true,
+  allowFileCreation = true,
   fullscreen = false,
   onFullscreenChange,
   showHiddenFiles = false,
@@ -161,7 +170,7 @@ export default function Ide({
   theme = 'vs-dark',
 }: IdeProps) {
   const activeExtensions = useMemo(() => validateIdeExtensions(extensions), [extensions]);
-  const storageKey = deriveStorageKey(workspaceName);
+  const storageKey = resolveWorkspaceStorageKey(workspaceName, workspaceStorageKey);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -187,6 +196,7 @@ export default function Ide({
   const [openTabs, setOpenTabs] = useState<OpenTab[]>(initialState.openTabs);
   const [activeTabId, setActiveTabId] = useState(initialState.activeTabId);
   const [canvasIsRunning, setCanvasIsRunning] = useState(false);
+  const [workspaceRestored, setWorkspaceRestored] = useState(false);
 
   const [terminalTabs, setTerminalTabs] = useState<TerminalTab[]>([{ id: 'terminal-1', title: 'bash' }]);
   const [activeTerminalId, setActiveTerminalId] = useState('terminal-1');
@@ -240,14 +250,16 @@ export default function Ide({
       if (parsed.activeTabId) setActiveTabId(parsed.activeTabId);
     } catch {
       /* ignore storage read errors */
+    } finally {
+      setWorkspaceRestored(true);
     }
   }, []);
 
   useEffect(() => {
     try {
+      if (!shouldPersistWorkspace(enableWorkspace, workspaceRestored)) return;
       // Persist workspace files
       const filesToSave = files;
-      if (!enableWorkspace) return;
       window.localStorage.setItem(
         storageKey,
         JSON.stringify({
@@ -261,7 +273,7 @@ export default function Ide({
     } catch {
       /* ignore storage write errors */
     }
-  }, [files, selectedPath, expandedDirs, openTabs, activeTabId]);
+  }, [files, selectedPath, expandedDirs, openTabs, activeTabId, enableWorkspace, workspaceRestored, storageKey]);
 
   // ── Fetch workspace from URL ──────────────────────────────────
   useEffect(() => {
@@ -612,7 +624,7 @@ export default function Ide({
 
   const createFile = useCallback(
     (kind: 'text' | 'image') => {
-      if (readOnly) return;
+      if (readOnly || !allowFileCreation) return;
       const baseDir = '/user';
       const defaultName = kind === 'image' ? 'new-image.svg' : 'new-file.cpp';
       const input = window.prompt(`Create new ${kind} file`, `${baseDir}/${defaultName}`);
@@ -639,7 +651,7 @@ export default function Ide({
       setSelectedPath(path);
       ensureOpenTab(path, 'main');
     },
-    [files, ensureOpenTab, readOnly],
+    [files, ensureOpenTab, readOnly, allowFileCreation],
   );
 
   const renameSelectedFile = useCallback(() => {
@@ -1577,6 +1589,7 @@ export default function Ide({
                 onCreateFile={createFile}
                 onRename={renameSelectedFile}
                 onDelete={deleteSelectedFile}
+                allowFileCreation={allowFileCreation}
                 footer={renderExtensionSlot('explorerFooter')}
               />
             </Panel>
