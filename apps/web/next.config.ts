@@ -63,7 +63,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     authInterrupts: true,
-    // cpus: 1,
+    cpus: 1,
   },
   turbopack: {
     resolveAlias: {
