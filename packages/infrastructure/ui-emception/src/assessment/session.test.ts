@@ -179,7 +179,7 @@ describe('createAssessmentSession', () => {
       },
     ]);
     await expect(session.getSubmissionDelta()).resolves.toEqual([
-      { path: '/home/user/solution.cpp', content: 'int add(int a, int b) { return a - b; }' },
+      { path: 'solution.cpp', content: 'int add(int a, int b) { return a - b; }' },
     ]);
   });
 });

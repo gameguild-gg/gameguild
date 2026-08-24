@@ -61,14 +61,14 @@ function resolveDefinitionFile(
   workspacePath: string,
 ) {
   const direct = files[workspacePath];
-  if (direct) return direct;
+  if (direct) return { path: workspacePath, file: direct };
 
   const normalizedWorkspacePath = workspacePath.replace(/\\/g, '/').replace(/^\/+/, '');
   for (const [definitionPath, definitionFile] of Object.entries(files)) {
     const normalizedDefinitionPath = definitionPath.replace(/\\/g, '/').replace(/^\/+/, '');
     if (normalizedWorkspacePath === normalizedDefinitionPath
       || normalizedWorkspacePath.endsWith(`/${normalizedDefinitionPath}`)) {
-      return definitionFile;
+      return { path: definitionPath, file: definitionFile };
     }
   }
   return undefined;
@@ -148,9 +148,9 @@ export function createAssessmentSession(options: AssessmentSessionOptions): Asse
           if (allowNewFiles) delta.push({ path: file.path, content: file.content });
           continue;
         }
-        if (original.Visibility === 'Private' || original.Modifiable === false) continue;
-        if (file.content !== original.Content) {
-          delta.push({ path: file.path, content: file.content });
+        if (original.file.Visibility === 'Private' || original.file.Modifiable === false) continue;
+        if (file.content !== original.file.Content) {
+          delta.push({ path: original.path, content: file.content });
         }
       }
 
