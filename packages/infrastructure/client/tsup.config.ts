@@ -7,7 +7,7 @@ export default defineConfig({
     next: 'src/integrations/next/index.ts',
   },
   format: ['esm', 'cjs'],
-  dts: false,
+  dts: true,
   sourcemap: true,
   clean: true,
   splitting: true,
