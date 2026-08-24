@@ -78,8 +78,7 @@ internal static class PlatformIdentitySeeder
             changed = true;
         }
 
-        if (!adminUser.HasPassword ||
-            !BCrypt.Net.BCrypt.Verify(options.AdminPassword, adminUser.PasswordHash!))
+        if (!adminUser.HasPassword)
         {
             adminUser.SetPasswordHash(BCrypt.Net.BCrypt.HashPassword(options.AdminPassword));
             changed = true;
