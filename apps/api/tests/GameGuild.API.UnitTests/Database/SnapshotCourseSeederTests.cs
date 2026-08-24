@@ -89,6 +89,69 @@ public sealed class SnapshotCourseSeederTests
         }
     }
 
+    [Fact]
+    public async Task SeedAsync_When_Program_Is_SoftDeleted_Should_Not_Resurrect_It_Even_With_Force()
+    {
+        // Arrange
+        var (provider, dbContext) = CreateSeederServices();
+        await using (provider)
+        {
+            await SnapshotCourseSeeder.SeedAsync(provider, force: false);
+
+            var program = await dbContext.Set<CourseProgram>().FirstAsync();
+            program.SoftDelete();
+            await dbContext.SaveChangesAsync();
+
+            // Act - re-seed with force = true
+            var secondResult = await SnapshotCourseSeeder.SeedAsync(provider, force: true);
+
+            // Assert - program stays deleted and is not re-created
+            var reloadedProgram = await dbContext.Set<CourseProgram>()
+                .IgnoreQueryFilters()
+                .FirstAsync(candidate => candidate.Id == program.Id);
+            reloadedProgram.DeletedAt.Should().NotBeNull();
+            secondResult.CreatedPrograms.Should().Be(0);
+        }
+    }
+
+    [Fact]
+    public async Task SeedAsync_When_Content_Is_SoftDeleted_Should_Not_Resurrect_It_Even_With_Force()
+    {
+        // Arrange
+        var (provider, dbContext) = CreateSeederServices();
+        await using (provider)
+        {
+            await SnapshotCourseSeeder.SeedAsync(provider, force: false);
+
+            var content = await dbContext.Set<ProgramContent>().IgnoreQueryFilters().FirstAsync();
+            var programId = content.ProgramId;
+            var totalBefore = await dbContext.Set<ProgramContent>()
+                .IgnoreQueryFilters()
+                .CountAsync(candidate => candidate.ProgramId == programId);
+            content.SoftDelete();
+            await dbContext.SaveChangesAsync();
+
+            // Act - re-seed with force = true
+            await SnapshotCourseSeeder.SeedAsync(provider, force: true);
+
+            // Assert - content stays deleted and is not re-created or duplicated
+            var reloadedContent = await dbContext.Set<ProgramContent>()
+                .IgnoreQueryFilters()
+                .FirstAsync(candidate => candidate.Id == content.Id);
+            reloadedContent.DeletedAt.Should().NotBeNull();
+
+            var totalAfter = await dbContext.Set<ProgramContent>()
+                .IgnoreQueryFilters()
+                .CountAsync(candidate => candidate.ProgramId == programId);
+            totalAfter.Should().Be(totalBefore);
+
+            var activeAfter = await dbContext.Set<ProgramContent>()
+                .IgnoreQueryFilters()
+                .CountAsync(candidate => candidate.ProgramId == programId && candidate.DeletedAt == null);
+            activeAfter.Should().Be(totalBefore - 1);
+        }
+    }
+
     private static (ServiceProvider Provider, ApplicationDbContext DbContext) CreateSeederServices()
     {
         var services = new ServiceCollection();
