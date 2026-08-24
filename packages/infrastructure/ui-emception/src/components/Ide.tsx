@@ -440,7 +440,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         tty.writeLine('\x1b[36m[tests] Compiling...\x1b[0m');
         const clangResult = await client.run(
           nativePreset.compileTool,
-          nativePreset.compileArgv({ sourcePath: sourceFsPath, objectPath: objPath }),
+          nativePreset.compileArgv({ sourcePath: sourceFsPath, objectPath: objPath, wasmPath }),
           {
             cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => console.log(t),
@@ -458,7 +458,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
         tty.writeLine('\x1b[36m[tests] Linking...\x1b[0m');
         const lldResult = await client.run(
           nativePreset.linkTool,
-          nativePreset.linkArgv({ objectPath: objPath, wasmPath }),
+          nativePreset.linkArgv({ sourcePath: sourceFsPath, objectPath: objPath, wasmPath }),
           {
             cwd: resolvedConfig.compile.cwd ?? '/home/user',
             onStdout: (t: string) => console.log(t),
@@ -527,7 +527,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             tty.writeLine(`\x1b[36m[tests] Compiling doctest ${name}...\x1b[0m`);
             const dClangResult = await client.run(
               nativePreset.compileTool,
-              nativePreset.compileArgv({ sourcePath: combinedPath, objectPath: doctestObjPath }),
+              nativePreset.compileArgv({ sourcePath: combinedPath, objectPath: doctestObjPath, wasmPath: doctestWasmPath }),
               {
                 cwd: resolvedConfig.compile.cwd ?? '/home/user',
                 onStdout: (t: string) => console.log(t),
@@ -544,7 +544,7 @@ export default forwardRef<IdeHandle, IdeProps>(function Ide({
             tty.writeLine(`\x1b[36m[tests] Linking doctest ${name}...\x1b[0m`);
             const dLldResult = await client.run(
               nativePreset.linkTool,
-              nativePreset.linkArgv({ objectPath: doctestObjPath, wasmPath: doctestWasmPath }),
+              nativePreset.linkArgv({ sourcePath: combinedPath, objectPath: doctestObjPath, wasmPath: doctestWasmPath }),
               {
                 cwd: resolvedConfig.compile.cwd ?? '/home/user',
                 onStdout: (t: string) => console.log(t),
