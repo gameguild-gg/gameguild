@@ -19,7 +19,7 @@ export default async function GradeSubmissionPage({
   params: Promise<{
     locale: string;
     course: string;
-    assessmentId: string;
+    assessmentSlug: string;
     submissionId: string;
   }>;
 }): Promise<void> {

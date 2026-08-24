@@ -11,6 +11,8 @@ public class UpdateProgramContentDto {
 
   [StringLength(255)] public string? Title { get; set; }
 
+  [StringLength(220)] public string? Slug { get; set; }
+
   public string? Description { get; set; }
 
   public ProgramContentType? Type { get; set; }

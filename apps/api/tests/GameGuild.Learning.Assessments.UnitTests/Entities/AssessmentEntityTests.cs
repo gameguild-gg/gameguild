@@ -572,7 +572,7 @@ public class AssessmentDtoTests
     {
         var id = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        var dto = new AssessmentDto(id, courseId, null, "Quiz", "Desc",
+        var dto = new AssessmentDto(id, courseId, null, "Quiz", "quiz", "Desc",
             AssessmentType.Quiz, 50, 15, 3, false, 1,
             DateTime.UtcNow, DateTime.UtcNow.AddDays(7), null, null, null, null, true);
 
@@ -580,6 +580,7 @@ public class AssessmentDtoTests
         dto.CourseId.Should().Be(courseId);
         dto.ContentId.Should().BeNull();
         dto.Title.Should().Be("Quiz");
+        dto.Slug.Should().Be("quiz");
         dto.MaxScore.Should().Be(50);
         dto.TimeLimitMinutes.Should().Be(15);
         dto.MaxAttempts.Should().Be(3);

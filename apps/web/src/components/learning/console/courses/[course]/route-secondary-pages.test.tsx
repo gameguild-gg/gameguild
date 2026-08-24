@@ -175,10 +175,10 @@ import CompletionAnalyticsPage from "@/app/[locale]/(dashboards)/workspace/learn
 import EngagementAnalyticsPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/analytics/engagement/page";
 import RevenueAnalyticsPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/analytics/revenue/page";
 import AssessmentsLayout from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/assessments/layout";
-import AssessmentDetailPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/assessments/[assessmentId]/page";
+import AssessmentDetailPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/assessments/[assessmentSlug]/page";
 import CertificatesLayout from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/certificates/layout";
 import CertificateTemplateDetailPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/certificates/[templateId]/page";
-import ContentItemPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentId]/page";
+import ContentItemPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentSlug]/page";
 import ListingLayout from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/layout";
 import ListingFaqPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/faq/page";
 import ListingPricingPage from "@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/listing/pricing/page";
