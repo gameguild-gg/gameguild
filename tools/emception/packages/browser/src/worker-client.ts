@@ -99,6 +99,10 @@ export class WorkerClient {
         return this.orch.writeFile(path, data);
     }
 
+    async deleteFile(path: string): Promise<void> {
+        return this.orch.deleteFile(path);
+    }
+
     async listDir(path: string): Promise<string[]> {
         return this.orch.listDir(path);
     }

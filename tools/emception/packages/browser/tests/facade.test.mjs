@@ -9,6 +9,7 @@ function makeStubClient(overrides = {}) {
     run: async () => ({ exitCode: 0, stdout: 'hi\n', stderr: '', durationMs: 1, timedOut: false }),
     getFile: async () => null,
     writeFile: async () => {},
+    deleteFile: async () => {},
     listDir: async () => [],
     resetVfs: async () => {},
     boot: async () => {},
@@ -48,4 +49,16 @@ test('facade preserves the core API surface', () => {
   assert.equal(typeof api.runTests, 'function');
   assert.equal(typeof api.on, 'function');
   assert.equal(typeof api.dispose, 'function');
+  assert.equal(typeof api.workspace.deleteFile, 'function');
+});
+
+test('facade forwards workspace deletion to the Worker client', async () => {
+  const deletedPaths = [];
+  const api = wrapWorkerClient(makeStubClient({
+    deleteFile: async (path) => { deletedPaths.push(path); },
+  }));
+
+  await api.workspace.deleteFile('/home/user/private-test.cpp');
+
+  assert.deepEqual(deletedPaths, ['/home/user/private-test.cpp']);
 });

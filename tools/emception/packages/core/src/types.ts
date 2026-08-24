@@ -337,6 +337,8 @@ export interface WorkspaceAPI {
   reset(name?: string): Promise<void>;
   readFile(path: string): Promise<Uint8Array | null>;
   writeFile(path: string, data: Uint8Array | string, meta?: Partial<FileEntry>): Promise<void>;
+  /** Delete a workspace file. Rejects when the file does not exist. */
+  deleteFile(path: string): Promise<void>;
   listFiles(opts?: { includeHidden?: boolean; includeSolution?: boolean }): Promise<Array<{ path: string } & FileEntry>>;
   setVisibility(path: string, v: FileEntry['visibility']): Promise<void>;
   getBuild(): Promise<WorkspaceBuildConfig>;

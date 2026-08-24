@@ -215,6 +215,7 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
         readFile: (path: string) => client.getFile(path),
         writeFile: async (path: string, data: Uint8Array | string, _meta?: Partial<FileEntry>) =>
             client.writeFile(path, toBytes(data)),
+        deleteFile: (path: string) => client.deleteFile(path),
         listFiles: async (_opts?) => walkDir(mountPath()),
         setVisibility: async (_path: string, _v: FileEntry['visibility']) => { /* metadata-only, no-op */ },
         getBuild: async () => currentBuild,
