@@ -141,4 +141,45 @@ describe('createAssessmentSession', () => {
       '/home/user/functional_0_test.cpp',
     );
   });
+
+  it('compares workspace-resolved files with a relative definition path before creating a submission delta', async () => {
+    const options = createOptions('learner');
+    const definition = {
+      ...options.definition,
+      Data: {
+        Files: {
+          'solution.cpp': {
+            Content: 'int add(int a, int b) { return a + b; }',
+            Encoding: 'text' as const,
+            Visibility: 'Public' as const,
+            Modifiable: true,
+          },
+        },
+      },
+    };
+    const controller = {
+      ...options.controller,
+      getFiles: jest.fn(async () => [
+        {
+          path: '/home/user/solution.cpp',
+          type: 'text' as const,
+          content: 'int add(int a, int b) { return a + b; }',
+        },
+      ]),
+    };
+    const session = createAssessmentSession({ ...options, definition, controller });
+
+    await expect(session.getSubmissionDelta()).resolves.toEqual([]);
+
+    controller.getFiles.mockResolvedValueOnce([
+      {
+        path: '/home/user/solution.cpp',
+        type: 'text' as const,
+        content: 'int add(int a, int b) { return a - b; }',
+      },
+    ]);
+    await expect(session.getSubmissionDelta()).resolves.toEqual([
+      { path: '/home/user/solution.cpp', content: 'int add(int a, int b) { return a - b; }' },
+    ]);
+  });
 });

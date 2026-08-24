@@ -51,6 +51,30 @@ function isTextFile(file: WorkspaceFile): boolean {
 }
 
 /**
+ * Assessment definitions may use relative paths while the vanilla workspace
+ * resolves those files against its configured cwd. Match the exact contract
+ * first, then the relative suffix, so a starter is never submitted merely
+ * because the editor made its path absolute.
+ */
+function resolveDefinitionFile(
+  files: CodingAssessmentDefinition['Data']['Files'],
+  workspacePath: string,
+) {
+  const direct = files[workspacePath];
+  if (direct) return direct;
+
+  const normalizedWorkspacePath = workspacePath.replace(/\\/g, '/').replace(/^\/+/, '');
+  for (const [definitionPath, definitionFile] of Object.entries(files)) {
+    const normalizedDefinitionPath = definitionPath.replace(/\\/g, '/').replace(/^\/+/, '');
+    if (normalizedWorkspacePath === normalizedDefinitionPath
+      || normalizedWorkspacePath.endsWith(`/${normalizedDefinitionPath}`)) {
+      return definitionFile;
+    }
+  }
+  return undefined;
+}
+
+/**
  * Creates the single canonical assessment executor.
  *
  * The function deliberately has no React or layout dependency: a visual host
@@ -119,7 +143,7 @@ export function createAssessmentSession(options: AssessmentSessionOptions): Asse
 
       for (const file of visibleFiles) {
         if (!isTextFile(file)) continue;
-        const original = definitionFiles[file.path];
+        const original = resolveDefinitionFile(definitionFiles, file.path);
         if (!original) {
           if (allowNewFiles) delta.push({ path: file.path, content: file.content });
           continue;
