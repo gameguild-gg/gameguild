@@ -47,7 +47,7 @@ function ResourceCard({ item }: { item: LearningContentLibraryItem }) {
           </span>
         </div>
         <Button asChild variant="outline" size="sm" className="justify-between">
-          <Link href={`/workspace/learning/courses/${item.courseId}/content/${item.slug || item.id}`}>
+          <Link href={`/workspace/learning/courses/${item.courseSlug || item.courseId}/content/${item.slug || item.id}`}>
             Edit resource
             <ExternalLink className="size-4" />
           </Link>
