@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@gameguild/emception-browser": "workspace:*",
+    "@gameguild/emception-ide": "workspace:*",
     "emception": "workspace:*"
   },
   "exports": {

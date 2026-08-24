@@ -1667,6 +1667,9 @@ importers:
       '@gameguild/emception-browser':
         specifier: workspace:*
         version: link:../../../tools/emception/packages/browser
+      '@gameguild/emception-ide':
+        specifier: workspace:*
+        version: link:../../../tools/emception/packages/ide
       '@monaco-editor/react':
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.56.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)

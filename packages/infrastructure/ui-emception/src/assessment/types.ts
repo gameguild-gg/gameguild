@@ -69,7 +69,12 @@ export interface CodingAssessmentFile {
 export interface CodingAssessmentDefinition {
   readonly Type: 'coding-assignment';
   readonly Version: 1;
-  readonly Environment: unknown;
+  readonly Environment: {
+    readonly Language?: string;
+    readonly Tools?: string;
+    readonly LibBundle?: string | null;
+    readonly AllowStudentCreateFiles?: boolean;
+  };
   readonly Data: {
     readonly Files: Readonly<Record<string, CodingAssessmentFile>>;
   };

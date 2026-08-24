@@ -112,7 +112,16 @@ export function buildAssessmentExecutionPlan(
   const cases = tests.map((test, index) => toPlanCase(test, index, overlay));
   const sources = Object.entries(definition.Data.Files)
     .filter(([, file]) => (file.Encoding ?? 'text') === 'text')
+    .filter(([, file]) => scope === 'full' || file.Visibility !== 'Private')
     .map(([path]) => path);
+
+  if (scope === 'full') {
+    for (const [path, file] of Object.entries(definition.Data.Files)) {
+      if (file.Visibility === 'Private' && (file.Encoding ?? 'text') === 'text') {
+        overlay.push({ path, content: file.Content });
+      }
+    }
+  }
 
   return {
     plan: { build: { sources }, cases },

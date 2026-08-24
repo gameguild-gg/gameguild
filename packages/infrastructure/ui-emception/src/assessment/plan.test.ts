@@ -25,6 +25,12 @@ const assignment: CodingAssessmentDefinition = {
         Visibility: 'Public',
         Modifiable: false,
       },
+      '/home/user/private-fixture.cpp': {
+        Content: 'int fixture() { return 42; }',
+        Encoding: 'text',
+        Visibility: 'Private',
+        Modifiable: false,
+      },
     },
   },
   Tests: {
@@ -80,6 +86,7 @@ describe('buildAssessmentExecutionPlan', () => {
     expect(execution.overlay[0]?.content).toContain('TEST_CASE("0:public-addition")');
     expect(JSON.stringify(execution)).not.toContain('private-test-secret');
     expect(execution.plan.build?.sources).toEqual(['/home/user/solution.cpp']);
+    expect(execution.plan.build?.sources).not.toContain('/home/user/private-fixture.cpp');
   });
 
   it('includes private cases only in full scope', () => {
@@ -93,5 +100,10 @@ describe('buildAssessmentExecutionPlan', () => {
       weight: 7,
     });
     expect(execution.weights).toEqual([2, 7]);
+    expect(execution.plan.build?.sources).toContain('/home/user/private-fixture.cpp');
+    expect(execution.overlay).toContainEqual({
+      path: '/home/user/private-fixture.cpp',
+      content: 'int fixture() { return 42; }',
+    });
   });
 });
