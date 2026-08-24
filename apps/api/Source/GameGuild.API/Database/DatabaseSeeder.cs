@@ -68,7 +68,8 @@ public static class DatabaseSeeder
         configuration?["Seed:DefaultTenantName"] ?? "GameGuild Platform",
         configuration?["Seed:DefaultTenantSlug"] ?? "gameguild-platform",
         configuration?["Seed:DefaultTenantDescription"] ?? "Default platform tenant for GameGuild administration.",
-        configuration?["Seed:AdminTenantRole"] ?? "SystemAdmin");
+        configuration?["Seed:AdminTenantRole"] ?? "SystemAdmin",
+        ForcePasswordReset: !string.IsNullOrWhiteSpace(configuration?["Seed:AdminPassword"]));
 
     private static async Task SeedRolesAsync(RoleManager<Role> roleManager, ILogger? logger)
     {
