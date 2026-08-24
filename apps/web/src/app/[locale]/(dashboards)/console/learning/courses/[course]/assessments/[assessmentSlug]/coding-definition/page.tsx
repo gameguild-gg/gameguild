@@ -21,12 +21,12 @@ export default async function CodingDefinitionPage({
   params: Promise<{
     locale: string;
     course: string;
-    assessmentId: string;
+    assessmentSlug: string;
   }>;
 }): Promise<React.JSX.Element> {
-  const { course: courseId, assessmentId } = await params;
+  const { course: courseId, assessmentSlug } = await params;
 
-  const assessment = await getAssessment(assessmentId);
+  const assessment = await getAssessment(courseId, assessmentSlug);
   if (!assessment) {
     notFound();
   }
@@ -45,7 +45,8 @@ export default async function CodingDefinitionPage({
   return (
     <CodingDefinitionEditor
       courseId={courseId}
-      assessmentId={assessmentId}
+      assessmentId={assessment.id}
+      assessmentSlug={assessmentSlug}
       programId={programId}
       contentId={contentId}
       assessmentTitle={assessment.title}

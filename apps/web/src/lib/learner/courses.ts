@@ -26,6 +26,7 @@ export interface LearningCourseSummary {
 
 export interface CourseAttendanceItem {
   id: string;
+  slug?: string;
   title: string;
   type: "lesson" | "activity" | "quiz" | "assignment" | "peer-review";
   status: "locked" | "available" | "in-progress" | "completed";
@@ -393,6 +394,7 @@ export async function getCourseAttendanceData(
 
         return {
           id: item.id,
+          slug: item.slug ?? undefined,
           title: item.title ?? "Untitled content",
           type: mapItemType(item.type),
           status,

@@ -35,15 +35,15 @@ export default async function GradeSubmissionPage({
   params: Promise<{
     locale: string;
     course: string;
-    assessmentId: string;
+    assessmentSlug: string;
     submissionId: string;
   }>;
 }): Promise<React.JSX.Element> {
-  const { course, assessmentId, submissionId } = await params;
+  const { course, assessmentSlug, submissionId } = await params;
 
   // Translate the Next.js route param into the v1 ProgramContent address.
   // `courseId` IS `programId` in this stack (per Task 8 learnings).
-  const assessment = await getAssessment(assessmentId);
+  const assessment = await getAssessment(course, assessmentSlug);
   if (!assessment || !assessment.contentId) {
     notFound();
   }
@@ -62,7 +62,8 @@ export default async function GradeSubmissionPage({
   return (
     <GradeClient
       courseSlug={course}
-      assessmentId={assessmentId}
+      assessmentId={assessment.id}
+      assessmentSlug={assessmentSlug}
       submissionId={submissionId}
       assignment={assignment}
       submittedFiles={submittedFiles}

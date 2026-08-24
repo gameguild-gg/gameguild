@@ -7,24 +7,24 @@ import { SubmissionsList } from '@/components/learning/console/courses/[course]/
 /**
  * Instructor view: list of submissions for an assessment.
  *
- * Route: /[locale]/workspace/learning/courses/[course]/assessments/[assessmentId]/submissions
+ * Route: /[locale]/console/learning/courses/[course]/assessments/[assessmentId]/submissions
  *
  * ponytail: simple list render; add server-side pagination when submission count exceeds 200
  */
 export default async function AssessmentSubmissionsPage({
   params,
 }: {
-  params: Promise<{ locale: string; course: string; assessmentId: string }>;
+  params: Promise<{ locale: string; course: string; assessmentSlug: string }>;
 }): Promise<React.JSX.Element> {
-  const { course, assessmentId } = await params;
+  const { course, assessmentSlug } = await params;
 
-  const [assessment, submissions] = await Promise.all([
-    getAssessment(assessmentId),
-    getAssessmentSubmissions(assessmentId),
-  ]);
+  const assessment = await getAssessment(course, assessmentSlug);
+  const submissions = assessment
+    ? await getAssessmentSubmissions(assessment.id)
+    : [];
 
   const maxScore = assessment?.maxScore ?? 0;
-  const backHref = `/workspace/learning/courses/${course}/assessments/${assessmentId}`;
+  const backHref = `/console/learning/courses/${course}/assessments/${assessmentSlug}`;
 
   return (
     <div className="flex flex-col gap-4 p-6">
@@ -45,7 +45,8 @@ export default async function AssessmentSubmissionsPage({
       </header>
       <SubmissionsList
         courseSlug={course}
-        assessmentId={assessmentId}
+        assessmentId={assessment?.id ?? assessmentSlug}
+        assessmentSlug={assessmentSlug}
         maxScore={maxScore}
         submissions={submissions}
       />
