@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { ToolchainPreset } from 'emception';
 import React from 'react';
 
 const mockFiles = new Set<string>();
@@ -35,19 +36,21 @@ const mockController = {
   setFilesReadOnly: jest.fn(),
 };
 
+let mockIdeProps: Record<string, unknown> | null = null;
+
 jest.mock('@gameguild/emception-ide', () => {
   const MockReact = require('react') as typeof import('react');
-  function Ide({
-    onReady,
-    extensions,
-  }: {
+  function Ide(props: {
     onReady?: (nextController: typeof mockController) => void;
     extensions?: readonly {
       id: string;
       toolbarEnd?: (nextController: typeof mockController) => React.ReactNode;
       bottomPanel?: (nextController: typeof mockController) => React.ReactNode;
     }[];
+    [key: string]: unknown;
   }) {
+    const { onReady, extensions } = props;
+    mockIdeProps = props;
     MockReact.useEffect(() => {
       onReady?.(mockController);
     }, [onReady]);
@@ -121,6 +124,7 @@ describe('CodingAssessmentEditor', () => {
     mockRuntime.workspace.deleteFile.mockClear();
     mockRunTests.mockClear();
     mockController.setFilesReadOnly.mockClear();
+    mockIdeProps = null;
   });
 
   it('uses the vanilla IDE controller and keeps generated test files out of the visible editor state', async () => {
@@ -159,5 +163,58 @@ describe('CodingAssessmentEditor', () => {
     const plan = mockRunTests.mock.calls[0]?.[0];
     expect(plan.cases).toHaveLength(1);
     expect(JSON.stringify(plan)).not.toContain('private-test-secret');
+  });
+
+  it('preserves a host workspace and draft key without exposing private definition files to learner mode', async () => {
+    render(
+      <CodingAssessmentEditor
+        mode="learner"
+        definition={{
+          ...definition,
+          Environment: { AllowStudentCreateFiles: false },
+          Data: {
+            Files: {
+              ...definition.Data.Files,
+              '/home/user/private-fixture.txt': {
+                Content: 'private-fixture-secret',
+                Encoding: 'text',
+                Visibility: 'Private',
+                Modifiable: false,
+              },
+            },
+          },
+        }}
+        workspaceStorageKey="gameguild:assessment:42"
+        workspaceConfig={{
+          id: 'host-cpp',
+          label: 'Host C++ workspace',
+          compile: {
+            tool: 'clang',
+            args: [],
+            output: 'main.wasm',
+            toolchain: 'cpp' as ToolchainPreset,
+          },
+          run: { type: 'wasi-terminal', tool: 'wasi-run', args: ['wasi-run', 'main.wasm'] },
+          features: { canvas: false },
+          files: {
+            '/home/user/solution.cpp': { encoding: 'text', content: 'int add(int a, int b) { return 42; }' },
+            '/home/user/private-fixture.txt': { encoding: 'text', content: 'must-not-render' },
+          },
+        }}
+      />,
+    );
+
+    await screen.findByTestId('vanilla-ide');
+    const props = mockIdeProps as {
+      allowFileCreation: boolean;
+      enableWorkspace: boolean;
+      workspaceStorageKey: string;
+      workspaceConfig: { files: Record<string, { content: string }> };
+    };
+    expect(props.allowFileCreation).toBe(false);
+    expect(props.enableWorkspace).toBe(true);
+    expect(props.workspaceStorageKey).toBe('gameguild:assessment:42');
+    expect(props.workspaceConfig.files['/home/user/solution.cpp']?.content).toContain('return 42');
+    expect(props.workspaceConfig.files['/home/user/private-fixture.txt']).toBeUndefined();
   });
 });
