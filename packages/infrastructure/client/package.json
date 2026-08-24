@@ -13,27 +13,27 @@
         "default": "./dist/index.js"
       },
       "require": {
-        "types": "./dist/index.d.ts",
+        "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
     },
     "./react": {
       "import": {
-        "types": "./dist/integrations/react/index.d.ts",
+        "types": "./dist/react.d.ts",
         "default": "./dist/react.js"
       },
       "require": {
-        "types": "./dist/integrations/react/index.d.ts",
+        "types": "./dist/react.d.cts",
         "default": "./dist/react.cjs"
       }
     },
     "./next": {
       "import": {
-        "types": "./dist/integrations/next/index.d.ts",
+        "types": "./dist/next.d.ts",
         "default": "./dist/next.js"
       },
       "require": {
-        "types": "./dist/integrations/next/index.d.ts",
+        "types": "./dist/next.d.cts",
         "default": "./dist/next.cjs"
       }
     }
@@ -48,7 +48,7 @@
     "generate": "tsx scripts/generate.ts",
     "generate:watch": "tsx scripts/generate.ts --watch",
     "generate:diff": "tsx scripts/diff.ts",
-    "build": "tsup && tsc -p tsconfig.build.json",
+    "build": "tsup",
     "build:watch": "tsup --watch",
     "dev": "tsup --watch",
     "test": "vitest run",
