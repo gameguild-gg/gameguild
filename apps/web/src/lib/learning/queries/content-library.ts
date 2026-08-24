@@ -4,6 +4,7 @@ import { cache } from 'react';
 
 export interface LearningContentLibraryItem {
   id: string;
+  slug: string;
   courseId: string;
   courseTitle: string;
   courseSlug: string;
@@ -97,6 +98,7 @@ export const getLearningContentLibrary = cache(async (): Promise<{
             .filter((item) => Boolean(item.id))
             .map((item) => ({
               id: String(item.id),
+              slug: item.slug ?? String(item.id),
               courseId,
               courseTitle: course.title ?? 'Untitled course',
               courseSlug: course.slug ?? '',
