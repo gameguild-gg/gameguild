@@ -107,14 +107,10 @@ const api = spawn(
     },
   }
 );
-// Next.js needs the client's dist to exist before it starts. build:watch
-// produces it within seconds (the JS build is fast; slow DTS can lag) — much
-// faster than dev:web's serial full client build before `next dev`.
-async function waitForFile(file) {
-  while (!existsSync(file)) await new Promise((r) => setTimeout(r, 1000));
-}
+// Build client up front so dist/index.js exists before starting watchers/web
+const initialBuild = run('pnpm', ['--filter', '@game-guild/client', 'run', 'build']);
+await new Promise((resolve) => initialBuild.on('exit', resolve));
 
-await waitForFile('packages/infrastructure/client/dist/index.js');
 const children = [
   run('pnpm', ['--filter', '@game-guild/client', 'run', 'generate:watch']),
   run('pnpm', ['--filter', '@game-guild/client', 'run', 'build:watch']),
