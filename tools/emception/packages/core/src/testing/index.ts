@@ -27,20 +27,4 @@ export {
     type FunctionalTestCase,
     type FunctionalTestSignature,
 } from './functional/harness.js';
-export {
-    buildTestPlan,
-    type BuildTestPlanMode,
-    type BuildTestPlanOptions,
-    type BuildTestPlanResult,
-    type BundleFileMeta,
-    type CodingAssignmentContent,
-    type FileEncoding,
-    type FileVisibility,
-    type FunctionalTestCase as WireFunctionalTestCase,
-    type GeneratedFile,
-    type Test,
-    type TestFunctionData,
-    type TestSuite,
-    type WireFunctionParameterType,
-} from './assignment-plan.js';
 

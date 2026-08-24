@@ -44,7 +44,7 @@ describe('toWorkspaceFsPath', () => {
     expect(toWorkspaceFsPath('/user/lib/utils.cpp', 'abc-123')).toBe('/home/user/lib/utils.cpp');
     expect(toWorkspaceFsPath('/other/canvas', 'abc-123')).toBe('/home/user/canvas');
   });
-  it('normalizes /home/user/* (buildTestPlan output shape) to /home/user/*', () => {
+  it('normalizes /home/user/* (assessment-plan output shape) to /home/user/*', () => {
     expect(toWorkspaceFsPath('/home/user/functional_0_test.cpp')).toBe('/home/user/functional_0_test.cpp');
     expect(toWorkspaceFsPath('/home/user/solution.cpp')).toBe('/home/user/solution.cpp');
   });

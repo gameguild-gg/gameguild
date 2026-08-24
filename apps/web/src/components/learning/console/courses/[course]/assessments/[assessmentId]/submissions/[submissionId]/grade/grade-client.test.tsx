@@ -17,6 +17,10 @@ const gradeActionMock = vi.hoisted(() => ({
   gradeSubmission: vi.fn(),
 }));
 
+const assessmentPlanMock = vi.hoisted(() => ({
+  build: vi.fn(),
+}));
+
 vi.mock('next/navigation', () => ({
   usePathname: () => '/workspace/learning',
   useRouter: () => routerMocks,
@@ -45,14 +49,17 @@ vi.mock('@game-guild/emception-ui', () => {
       { 'data-testid': 'mock-results' },
       `cases=${report.cases.length} max=${maxScore ?? '?'}`,
     );
-  return { Ide, TestResultsPanel };
+  return {
+    Ide,
+    TestResultsPanel,
+    buildAssessmentExecutionPlan: assessmentPlanMock.build,
+  };
 });
 
 vi.mock('@/lib/learning/grade-action', () => ({
   gradeSubmission: gradeActionMock.gradeSubmission,
 }));
 
-import * as emceptionTesting from 'emception/testing';
 import { GradeClient, mergeWorkspaceWithSubmission } from './grade-client';
 import { gradeSubmission } from '@/lib/learning/grade-action';
 import type { CodingAssignmentContent } from '@/lib/coding-assignment/client';
@@ -163,25 +170,23 @@ describe('mergeWorkspaceWithSubmission (criteria a, b)', () => {
 });
 
 describe('GradeClient (criteria c, d, e, f)', () => {
-  let buildTestPlanSpy: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
     ideMock.setFiles.mockReset();
     ideMock.getFiles.mockReset();
     ideMock.runTests.mockReset();
     routerMocks.push.mockReset();
     vi.mocked(gradeSubmission).mockReset();
-    buildTestPlanSpy?.mockRestore();
     ideMock.setFiles.mockResolvedValue(undefined);
     ideMock.getFiles.mockResolvedValue([
       { path: '/home/user/main.cpp', content: '// student main' },
       { path: '/home/user/secret.cpp', content: '// secret solution — workspace only' },
       { path: '/home/user/student.cpp', content: '// student-created file' },
     ]);
-    buildTestPlanSpy = vi.spyOn(emceptionTesting, 'buildTestPlan');
-    buildTestPlanSpy.mockReturnValue({
+    assessmentPlanMock.build.mockReset();
+    assessmentPlanMock.build.mockReturnValue({
       plan: samplePlan,
-      generatedFiles: [],
+      overlay: [],
+      weights: [],
     });
   });
 
@@ -205,12 +210,13 @@ describe('GradeClient (criteria c, d, e, f)', () => {
     expect(byPath['/home/user/student.cpp']).toBe('// student-created file');
   });
 
-  it('Run Tests invokes buildTestPlan + re-seeds IDE with harness + calls runTests (c)', async () => {
-    buildTestPlanSpy.mockReturnValue({
+  it('Run Tests invokes the assessment plan builder + re-seeds IDE with harness + calls runTests (c)', async () => {
+    assessmentPlanMock.build.mockReturnValue({
       plan: samplePlan,
-      generatedFiles: [
+      overlay: [
         { path: '/home/user/functional_2_test.cpp', content: '// harness' },
       ],
+      weights: [],
     });
     ideMock.runTests.mockResolvedValue(sampleReport);
 
@@ -222,9 +228,7 @@ describe('GradeClient (criteria c, d, e, f)', () => {
     fireEvent.click(screen.getByTestId('grade-button'));
 
     await waitFor(() => {
-      expect(buildTestPlanSpy).toHaveBeenCalledWith(sampleAssignment, {
-        mode: 'full',
-      });
+      expect(assessmentPlanMock.build).toHaveBeenCalledWith(sampleAssignment, 'full');
     });
     await waitFor(() => {
       expect(ideMock.runTests).toHaveBeenCalledWith(samplePlan);

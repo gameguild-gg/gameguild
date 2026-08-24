@@ -1,12 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ASSIGNMENT_SAMPLES, Ide, TestResultsPanel, type CodingLanguage, type IdeHandle, type TestReport, type WorkspaceConfig } from '@game-guild/emception-ui';
-import { buildTestPlan } from 'emception/testing';
-// Cast bridge: the web `CodingAssignmentContent` (lib/coding-assignment/types)
-// uses `readonly` arrays; the emception mapper input uses mutable arrays. The
-// wire shape is identical at runtime — only TS strictness differs.
-import type { CodingAssignmentContent as EmceptionAssignmentContent } from 'emception/testing';
+import { ASSIGNMENT_SAMPLES, buildAssessmentExecutionPlan, Ide, TestResultsPanel, type CodingLanguage, type IdeHandle, type TestReport, type WorkspaceConfig } from '@game-guild/emception-ui';
 import { scoreSubmission, formatFeedback, type BackendTestCaseDto, type ScoringDefinition } from '@/lib/emception/scoring';
 import type { CodeFile } from '@/lib/coding-assignment/code-payload';
 import type { CodingAssignmentContent } from '@/lib/coding-assignment/client';
@@ -101,7 +96,7 @@ export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifest
 
   const fullPlan = useMemo(() => {
     try {
-      return buildTestPlan(assignment as unknown as EmceptionAssignmentContent, { mode: 'full' });
+      return buildAssessmentExecutionPlan(assignment, 'full');
     } catch {
       return null;
     }
@@ -149,8 +144,8 @@ export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifest
     setReport(null);
     setComputed(null);
     try {
-      // (e.1) Task 7 mapper — Public + Private cases + harness files.
-      const { plan, generatedFiles } = buildTestPlan(assignment as unknown as EmceptionAssignmentContent, { mode: 'full' });
+      // (e.1) Assessment mapper — Public + Private cases + harness files.
+      const { plan, overlay: generatedFiles } = buildAssessmentExecutionPlan(assignment, 'full');
 
       // (e.2) Re-seed IDE with [current workspace, generated harnesses]. The
       // generated harness paths are stable across runs (`functional_<i>_test.cpp`)

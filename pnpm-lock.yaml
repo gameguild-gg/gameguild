@@ -1676,6 +1676,9 @@ importers:
       '@xterm/xterm':
         specifier: ^6.0.0
         version: 6.0.0
+      emception:
+        specifier: workspace:*
+        version: link:../../../tools/emception/packages/core
       react:
         specifier: 19.2.3
         version: 19.2.3

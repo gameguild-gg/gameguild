@@ -20,3 +20,19 @@ export { CMAKE_PRESET, CPP_SDL3_PRESET, CPP_TERMINAL_PRESET, DEFAULT_PRESET, PRE
 export { ASSIGNMENT_SAMPLES } from './components/assignment-samples';
 export type { AssignmentSample, CodingLanguage } from './components/assignment-samples';
 export type { GradingCase, GradingPlan } from './components/ide-types';
+export { buildAssessmentExecutionPlan } from './assessment/plan';
+export type { AssessmentExecutionPlan, AssessmentOverlayFile, AssessmentTestScope } from './assessment/plan';
+export type {
+  CodingAssessmentDefinition,
+  CodingAssessmentFile,
+  CodingAssessmentFileEncoding,
+  CodingAssessmentFileVisibility,
+  CodingAssessmentFunction,
+  CodingAssessmentFunctionalCase,
+  CodingAssessmentFunctionalTest,
+  CodingAssessmentNamedParameter,
+  CodingAssessmentParameter,
+  CodingAssessmentParameterType,
+  CodingAssessmentStandardTest,
+  CodingAssessmentTest,
+} from './assessment/types';
