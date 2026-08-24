@@ -3,8 +3,10 @@ import { describe, it } from 'node:test';
 
 import {
   deriveStorageKey,
+  mergeRestoredWorkspaceFiles,
   resolveWorkspaceStorageKey,
   shouldPersistWorkspace,
+  workspaceFilesForStorage,
   WORKSPACE_STORAGE_KEY,
 } from '../dist/components/ide-types.js';
 
@@ -48,5 +50,30 @@ describe('shouldPersistWorkspace', () => {
     assert.equal(shouldPersistWorkspace(true, false), false);
     assert.equal(shouldPersistWorkspace(true, true), true);
     assert.equal(shouldPersistWorkspace(false, true), false);
+  });
+});
+
+describe('workspace persistence files', () => {
+  const starter = {
+    '/user/main.cpp': { path: '/user/main.cpp', type: 'text', content: '// starter' },
+    '/user/logo.png': { path: '/user/logo.png', type: 'image', content: 'data:image/png;base64,large' },
+  };
+
+  it('does not persist image data into localStorage', () => {
+    assert.deepEqual(workspaceFilesForStorage(starter), {
+      '/user/main.cpp': starter['/user/main.cpp'],
+    });
+  });
+
+  it('restores saved text while retaining missing static images from the workspace descriptor', () => {
+    assert.deepEqual(
+      mergeRestoredWorkspaceFiles(starter, {
+        '/user/main.cpp': { path: '/user/main.cpp', type: 'text', content: '// draft' },
+      }),
+      {
+        '/user/main.cpp': { path: '/user/main.cpp', type: 'text', content: '// draft' },
+        '/user/logo.png': starter['/user/logo.png'],
+      },
+    );
   });
 });

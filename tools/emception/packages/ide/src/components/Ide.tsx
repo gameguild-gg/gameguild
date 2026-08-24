@@ -12,10 +12,12 @@ import type { DockGroup, IdeController, IdeExtension, IdeProps, OpenTab, Termina
 import { activateIdeExtensions, validateIdeExtensions } from './ide-extensions.js';
 import {
   DEFAULT_IMAGE,
+  mergeRestoredWorkspaceFiles,
   parseWorkspaceBundle,
   resolveArgs,
   resolveWorkspaceStorageKey,
   shouldPersistWorkspace,
+  workspaceFilesForStorage,
   workspaceConfigToState,
 } from './ide-types.js';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, resolveWsPath } from './ide-utils.js';
@@ -241,7 +243,7 @@ export default function Ide({
         activeTabId?: string;
       };
       if (parsed.files && Object.keys(parsed.files).length > 0) {
-        const nextFiles = Object.fromEntries(Object.entries(parsed.files));
+        const nextFiles = mergeRestoredWorkspaceFiles(initialState.files, parsed.files);
         setFiles(nextFiles);
       }
       if (parsed.selectedPath) setSelectedPath(parsed.selectedPath);
@@ -259,7 +261,7 @@ export default function Ide({
     try {
       if (!shouldPersistWorkspace(enableWorkspace, workspaceRestored)) return;
       // Persist workspace files
-      const filesToSave = files;
+      const filesToSave = workspaceFilesForStorage(files);
       window.localStorage.setItem(
         storageKey,
         JSON.stringify({
