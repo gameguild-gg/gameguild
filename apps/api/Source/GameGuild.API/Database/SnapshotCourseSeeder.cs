@@ -10,6 +10,8 @@ using CourseProgram = GameGuild.Learning.Courses.Program;
 /// <summary>
 /// Imports legacy snapshot course content from the main snapshot web data tree into the live API database.
 /// This is intentionally a one-shot developer utility, not a normal startup seed.
+/// Soft-deleted programs and contents are never re-imported or restored, so administrator
+/// deletions survive redeploys even when the import (or force import) runs again.
 /// </summary>
 public static partial class SnapshotCourseSeeder
 {
@@ -45,6 +47,14 @@ public static partial class SnapshotCourseSeeder
                 .FirstOrDefaultAsync(item => item.Slug == definition.Slug, cancellationToken)
                 .ConfigureAwait(false);
 
+            if (program is not null && program.IsDeleted)
+            {
+                logger.LogInformation(
+                    "Snapshot course program '{Slug}' was soft-deleted. Skipping re-seed to respect the deletion.",
+                    definition.Slug);
+                continue;
+            }
+
             if (program is not null && !force)
             {
                 logger.LogInformation(
@@ -62,10 +72,6 @@ public static partial class SnapshotCourseSeeder
 
                 db.Set<CourseProgram>().Add(program);
                 importedPrograms++;
-            }
-            else if (program.IsDeleted)
-            {
-                program.Restore();
             }
 
             ApplyProgramDefinition(program, definition);
@@ -86,6 +92,14 @@ public static partial class SnapshotCourseSeeder
 
                 var existingContent = existingContents.FirstOrDefault(item => TryGetImportedSourceKey(item.Body) == sourceKey);
 
+                if (existingContent is not null && existingContent.IsDeleted)
+                {
+                    logger.LogInformation(
+                        "Snapshot content '{SourceKey}' was soft-deleted. Skipping re-seed to respect the deletion.",
+                        sourceKey);
+                    continue;
+                }
+
                 if (existingContent is null)
                 {
                     existingContent = new ProgramContent
@@ -97,10 +111,6 @@ public static partial class SnapshotCourseSeeder
                     db.Set<ProgramContent>().Add(existingContent);
                     existingContents.Add(existingContent);
                     importedContents++;
-                }
-                else if (existingContent.IsDeleted)
-                {
-                    existingContent.Restore();
                 }
 
                 ApplyContentDefinition(existingContent, program.Id, sourceKey, contentDefinition);
