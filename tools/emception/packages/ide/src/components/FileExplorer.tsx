@@ -1,4 +1,4 @@
-import { type JSX, useCallback, useRef, useState } from 'react';
+import { type JSX, type ReactNode, useCallback, useRef, useState } from 'react';
 import type { DockGroup, TreeNode, WorkspaceFile } from './ide-types.js';
 import { fileName } from './ide-utils.js';
 
@@ -44,6 +44,7 @@ interface FileExplorerProps {
     onRename: () => void;
     onDelete: () => void;
     fileTree: TreeNode[];
+    footer?: ReactNode;
 }
 
 export default function FileExplorer({
@@ -57,6 +58,7 @@ export default function FileExplorer({
     onRename,
     onDelete,
     fileTree,
+    footer,
 }: FileExplorerProps) {
     const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; path: string } | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -254,6 +256,7 @@ export default function FileExplorer({
                     ))}
                 </div>
             )}
+            {footer}
         </aside>
     );
 }

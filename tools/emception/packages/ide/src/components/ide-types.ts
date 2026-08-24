@@ -10,6 +10,7 @@ export type { BundleFile, CompileConfig, EmceptionAPI, RunConfig, RunType, TestC
 
 import type { BrowserEmceptionAPI } from '@gameguild/emception-browser';
 import type { WorkspaceConfig } from 'emception';
+import type { ReactNode } from 'react';
 
 // ── IDE-only layout types (not in @emception/core) ──────────────────
 
@@ -27,6 +28,8 @@ export interface WorkspaceFile {
   path: string;
   type: 'text' | 'image';
   content: string;
+  /** Prevent modifications to this file while keeping it visible. */
+  readonly?: boolean;
 }
 
 export type OpenTab = { id: string; path: string; type: 'text' | 'image'; group: DockGroup } | { id: 'canvas'; type: 'canvas'; group: DockGroup };
@@ -102,6 +105,23 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
  */
 export type InjectedEmceptionAPI = BrowserEmceptionAPI;
 
+/** Public controller for neutral host composition around an IDE instance. */
+export interface IdeController {
+  readonly api: InjectedEmceptionAPI;
+  getFiles(): Promise<readonly WorkspaceFile[]>;
+  replaceFiles(files: readonly WorkspaceFile[]): Promise<void>;
+  setFilesReadOnly(paths: readonly string[], readOnly: boolean): void;
+}
+
+/** A generic contribution to an IDE lifecycle and layout. */
+export interface IdeExtension {
+  readonly id: string;
+  onReady?(controller: IdeController): void | (() => void);
+  toolbarEnd?(controller: IdeController): ReactNode;
+  explorerFooter?(controller: IdeController): ReactNode;
+  bottomPanel?(controller: IdeController): ReactNode;
+}
+
 /**
  * Full reactive props for `<Ide>`.
  *
@@ -121,6 +141,12 @@ export interface IdeProps {
    * to this API. The caller is responsible for disposal.
    */
   api?: InjectedEmceptionAPI;
+  /** Called after boot and initial workspace synchronization complete. */
+  onReady?: (controller: IdeController) => void;
+  /** Called after active generic extensions have been disposed. */
+  onDispose?: () => void;
+  /** Ordered generic lifecycle and layout contributions. */
+  extensions?: readonly IdeExtension[];
 
   // ── Workspace ─────────────────────────────────────────────────────────────
   /** Static workspace descriptor. Takes priority over `workspaceUrl`. */

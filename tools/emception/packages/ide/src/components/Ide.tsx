@@ -3,12 +3,13 @@ import { TOOLCHAIN_PRESETS as EMCEPTION_PRESETS, createEmception } from '@gamegu
 import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
 import { ToolchainPreset } from 'emception';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup.js';
 import FileExplorer from './FileExplorer.js';
-import type { DockGroup, IdeProps, OpenTab, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types.js';
+import type { DockGroup, IdeController, IdeExtension, IdeProps, OpenTab, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types.js';
+import { activateIdeExtensions, validateIdeExtensions } from './ide-extensions.js';
 import { DEFAULT_IMAGE, deriveStorageKey, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types.js';
 import { buildFileTree, inferLanguage, isSourceFile, isTextFile, resolveWsPath } from './ide-utils.js';
 import TerminalPanel from './TerminalPanel.js';
@@ -137,6 +138,9 @@ export default function Ide({
   title = 'Emception',
   manifestUrl,
   api: injectedApi,
+  onReady,
+  onDispose,
+  extensions,
   workspaceConfig,
   workspaceUrl,
   workspaceName,
@@ -156,6 +160,7 @@ export default function Ide({
   readOnly = false,
   theme = 'vs-dark',
 }: IdeProps) {
+  const activeExtensions = useMemo(() => validateIdeExtensions(extensions), [extensions]);
   const storageKey = deriveStorageKey(workspaceName);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
@@ -188,6 +193,7 @@ export default function Ide({
 
   const [status, setStatus] = useState('Initializing...');
   const [isReady, setIsReady] = useState(false);
+  const [publishedController, setPublishedController] = useState<IdeController | null>(null);
   const [terminalReady, setTerminalReady] = useState(false);
   const [executionPhase, setExecutionPhase] = useState<'idle' | 'compiling' | 'running'>('idle');
   /** Set to true by handleStop so the catch block in handleCompile knows it was intentional */
@@ -297,6 +303,68 @@ export default function Ide({
     }
     console.log(`${P} VFS sync complete (${textFiles.length} files)`);
   }, []);
+
+  const replaceFiles = useCallback(async (nextFiles: readonly WorkspaceFile[]) => {
+    const next = Object.fromEntries(nextFiles.map((file) => [file.path, { ...file }])) as Record<string, WorkspaceFile>;
+    const api = apiRef.current;
+    if (api) {
+      for (const previousFile of Object.values(filesRef.current)) {
+        if (previousFile.type !== 'text' || next[previousFile.path]) continue;
+        if (await api.workspace.readFile(previousFile.path) !== null) {
+          await api.workspace.deleteFile(previousFile.path);
+        }
+      }
+      await syncFilesToVfs(next);
+    }
+    filesRef.current = next;
+    setFiles(next);
+    const nextOpenTabs: OpenTab[] = Object.values(next).map((file) => ({
+      id: `tab:${file.path}`,
+      path: file.path,
+      type: file.type,
+      group: 'main',
+    }));
+    setOpenTabs(nextOpenTabs);
+    const nextPath = nextFiles[0]?.path ?? '';
+    setSelectedPath(nextPath);
+    setActiveTabId(nextPath ? `tab:${nextPath}` : '');
+  }, [syncFilesToVfs]);
+
+  const setFilesReadOnly = useCallback((paths: readonly string[], nextReadOnly: boolean) => {
+    const pathSet = new Set(paths);
+    setFiles((previous) => {
+      const next = { ...previous };
+      for (const path of pathSet) {
+        const file = next[path];
+        if (file) next[path] = { ...file, readonly: nextReadOnly };
+      }
+      filesRef.current = next;
+      return next;
+    });
+  }, []);
+
+  const publishController = useCallback((api: BrowserEmceptionAPI) => {
+    const controller: IdeController = {
+      api,
+      getFiles: async () => Object.values(filesRef.current).map((file) => ({ ...file })),
+      replaceFiles,
+      setFilesReadOnly,
+    };
+    setPublishedController(controller);
+  }, [replaceFiles, setFilesReadOnly]);
+
+  useEffect(() => {
+    if (!publishedController) return;
+    const disposeExtensions = activateIdeExtensions(activeExtensions, publishedController);
+    onReady?.(publishedController);
+    return () => {
+      try {
+        disposeExtensions();
+      } finally {
+        onDispose?.();
+      }
+    };
+  }, [activeExtensions, onDispose, onReady, publishedController]);
 
   // ── Switch workspace preset ───────────────────────────────────
   const switchWorkspace = useCallback(
@@ -419,6 +487,11 @@ export default function Ide({
         (window as unknown as Record<string, unknown>).__emception_api__ = result;
         // Sync current workspace files into VFS so /home/user is populated on boot
         await syncFilesToVfs(filesRef.current);
+        if (!isMounted()) {
+          if (ownsApi) result.dispose();
+          return;
+        }
+        publishController(result);
         setStatus('Ready');
         setIsReady(true);
         xterm.writeln('\x1b[32mSystem Ready.\x1b[0m');
@@ -429,7 +502,7 @@ export default function Ide({
         xterm.writeln(`\x1b[31mBoot failed: ${err}\x1b[0m`);
       }
     },
-    [injectedApi, manifestUrl, syncFilesToVfs],
+    [injectedApi, manifestUrl, publishController, syncFilesToVfs],
   );
 
   useEffect(() => {
@@ -441,6 +514,7 @@ export default function Ide({
       apiRef.current?.canvas.stop();
       if (ownsApiRef.current) apiRef.current?.dispose();
       apiRef.current = null;
+      setPublishedController(null);
       ownsApiRef.current = false;
     };
   }, [terminalReady, manifestUrl, doBootstrap]);
@@ -538,6 +612,7 @@ export default function Ide({
 
   const createFile = useCallback(
     (kind: 'text' | 'image') => {
+      if (readOnly) return;
       const baseDir = '/user';
       const defaultName = kind === 'image' ? 'new-image.svg' : 'new-file.cpp';
       const input = window.prompt(`Create new ${kind} file`, `${baseDir}/${defaultName}`);
@@ -564,11 +639,11 @@ export default function Ide({
       setSelectedPath(path);
       ensureOpenTab(path, 'main');
     },
-    [files, ensureOpenTab],
+    [files, ensureOpenTab, readOnly],
   );
 
   const renameSelectedFile = useCallback(() => {
-    if (!selectedPath || !files[selectedPath]) return;
+    if (readOnly || !selectedPath || !files[selectedPath] || files[selectedPath].readonly) return;
     const nextPath = window.prompt('Rename file', selectedPath);
     if (!nextPath || nextPath === selectedPath) return;
     if (files[nextPath]) {
@@ -588,10 +663,10 @@ export default function Ide({
     );
     setSelectedPath(norm);
     setActiveTabId((cur) => (cur === `tab:${selectedPath}` ? `tab:${norm}` : cur));
-  }, [selectedPath, files]);
+  }, [selectedPath, files, readOnly]);
 
   const deleteSelectedFile = useCallback(() => {
-    if (!selectedPath || !files[selectedPath]) return;
+    if (readOnly || !selectedPath || !files[selectedPath] || files[selectedPath].readonly) return;
     if (!window.confirm(`Delete ${selectedPath}?`)) return;
     setFiles((prev) => {
       const c = { ...prev };
@@ -600,7 +675,7 @@ export default function Ide({
     });
     closeTab(`tab:${selectedPath}`);
     setSelectedPath(Object.keys(files).find((p) => p !== selectedPath) ?? '');
-  }, [selectedPath, files, closeTab]);
+  }, [selectedPath, files, closeTab, readOnly]);
 
   const resetWorkspace = useCallback(async () => {
     if (!window.confirm('Reset the workspace to the default demo files and layout?')) return;
@@ -678,6 +753,7 @@ export default function Ide({
   };
 
   const handleEditorChange = useCallback((path: string, value: string) => {
+    if (readOnly || filesRef.current[path]?.readonly) return;
     setFiles((prev) => {
       const next = { ...prev, [path]: { ...prev[path], content: value } };
       // Update ref immediately so handleCompile (which reads filesRef.current)
@@ -685,7 +761,7 @@ export default function Ide({
       filesRef.current = next;
       return next;
     });
-  }, []);
+  }, [readOnly]);
 
   const syncMonacoModels = useCallback(() => {
     const monaco = monacoRef.current;
@@ -1329,6 +1405,13 @@ export default function Ide({
   const canRecompileWhileRunning = executionPhase === 'running' && resolvedConfig.run.type === 'canvas';
   const canCompile = isReady && activeFile?.type === 'text' && (executionPhase === 'idle' || canRecompileWhileRunning);
   const showCompileButton = executionPhase !== 'running' || canRecompileWhileRunning;
+  const renderExtensionSlot = (slot: keyof Pick<IdeExtension, 'toolbarEnd' | 'explorerFooter' | 'bottomPanel'>) => {
+    if (!publishedController) return null;
+    return activeExtensions.map((extension) => {
+      const content = extension[slot]?.(publishedController);
+      return content === undefined || content === null ? null : <Fragment key={extension.id}>{content}</Fragment>;
+    });
+  };
 
   const ideContent = (
     <div
@@ -1466,6 +1549,7 @@ export default function Ide({
           >
             Reset
           </button>
+          {renderExtensionSlot('toolbarEnd')}
         </div>
       </header>
 
@@ -1493,6 +1577,7 @@ export default function Ide({
                 onCreateFile={createFile}
                 onRename={renameSelectedFile}
                 onDelete={deleteSelectedFile}
+                footer={renderExtensionSlot('explorerFooter')}
               />
             </Panel>
             <Separator style={resizerStyle} />
@@ -1520,6 +1605,7 @@ export default function Ide({
                     onEditorMount={handleEditorDidMount}
                     onEditorChange={handleEditorChange}
                     canvasIsRunning={canvasIsRunning}
+                    readOnly={readOnly}
                   />
                 </Panel>
                 {hasRightGroup && (
@@ -1540,6 +1626,7 @@ export default function Ide({
                         onEditorMount={handleEditorDidMount}
                         onEditorChange={handleEditorChange}
                         canvasIsRunning={canvasIsRunning}
+                        readOnly={readOnly}
                       />
                     </Panel>
                   </>
@@ -1565,6 +1652,7 @@ export default function Ide({
                     onEditorMount={handleEditorDidMount}
                     onEditorChange={handleEditorChange}
                     canvasIsRunning={canvasIsRunning}
+                    readOnly={readOnly}
                   />
                 </Panel>
               </>
@@ -1589,6 +1677,8 @@ export default function Ide({
           </Group>
         </Panel>
       </Group>
+
+      {renderExtensionSlot('bottomPanel')}
 
       {/* ── Status bar ── */}
       <div
