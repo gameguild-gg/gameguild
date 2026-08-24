@@ -32,6 +32,28 @@ export interface WorkspaceFile {
   readonly?: boolean;
 }
 
+/** Return the workspace subset suitable for localStorage. */
+export function workspaceFilesForStorage(files: Record<string, WorkspaceFile>): Record<string, WorkspaceFile> {
+  return Object.fromEntries(
+    Object.entries(files).filter(([, file]) => file.type !== 'image'),
+  );
+}
+
+/**
+ * Restore persisted text without losing static image assets excluded from
+ * localStorage. Text deliberately remains the persisted source of truth.
+ */
+export function mergeRestoredWorkspaceFiles(
+  initialFiles: Record<string, WorkspaceFile>,
+  restoredFiles: Record<string, WorkspaceFile>,
+): Record<string, WorkspaceFile> {
+  const files = { ...restoredFiles };
+  for (const [path, initialFile] of Object.entries(initialFiles)) {
+    if (initialFile.type === 'image' && !files[path]) files[path] = initialFile;
+  }
+  return files;
+}
+
 export type OpenTab = { id: string; path: string; type: 'text' | 'image'; group: DockGroup } | { id: 'canvas'; type: 'canvas'; group: DockGroup };
 
 export interface TerminalTab {
