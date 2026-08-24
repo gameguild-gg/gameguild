@@ -36,3 +36,13 @@ export type {
   CodingAssessmentStandardTest,
   CodingAssessmentTest,
 } from './assessment/types';
+export { createAssessmentSession } from './assessment/session';
+export type {
+  AssessmentController,
+  AssessmentEditorMode,
+  AssessmentFile,
+  AssessmentRunResult,
+  AssessmentSession,
+  AssessmentSessionOptions,
+  AssessmentSessionStatus,
+} from './assessment/session';
