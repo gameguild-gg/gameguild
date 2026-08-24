@@ -46,3 +46,5 @@ export type {
   AssessmentSessionOptions,
   AssessmentSessionStatus,
 } from './assessment/session';
+export { CodingAssessmentEditor } from './components/CodingAssessmentEditor';
+export type { CodingAssessmentEditorProps } from './components/CodingAssessmentEditor';
