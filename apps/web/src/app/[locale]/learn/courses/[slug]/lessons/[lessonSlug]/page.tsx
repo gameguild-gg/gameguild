@@ -11,16 +11,16 @@ import { notFound } from 'next/navigation';
 export default async function LessonPage({
   params,
 }: {
-  params: Promise<{ lessonId: string; slug: string }>;
+  params: Promise<{ lessonSlug: string; slug: string }>;
 }) {
-  const { lessonId, slug } = await params;
+  const { lessonSlug, slug } = await params;
   const access = await getCourseAccessData(slug);
 
   if (access.kind === 'not-found') notFound();
   if (access.kind !== 'ready') return <CourseAccessGate access={access} />;
 
   const items = access.course.modules.flatMap((module) => module.items);
-  const itemIndex = items.findIndex((candidate) => candidate.id === lessonId);
+  const itemIndex = items.findIndex((candidate) => candidate.slug === lessonSlug || candidate.id === lessonSlug);
   const item = items[itemIndex];
   if (!item || item.type !== 'lesson') notFound();
 
@@ -77,7 +77,7 @@ export default async function LessonPage({
       <nav aria-label="Lesson navigation" className="flex justify-between gap-4 border-t pt-6">
         {previous ? (
           <Button asChild variant="outline">
-            <Link href={`${courseHref}/lessons/${previous.id}`}>
+            <Link href={`${courseHref}/lessons/${previous.slug || previous.id}`}>
               <ArrowLeft className="size-4" />
               Previous
             </Link>
@@ -87,7 +87,7 @@ export default async function LessonPage({
         )}
         {next ? (
           <Button asChild>
-            <Link href={`${courseHref}/lessons/${next.id}`}>
+            <Link href={`${courseHref}/lessons/${next.slug || next.id}`}>
               Next
               <ArrowRight className="size-4" />
             </Link>

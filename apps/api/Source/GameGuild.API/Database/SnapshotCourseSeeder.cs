@@ -17,7 +17,10 @@ public static partial class SnapshotCourseSeeder
     private const string ImportMarkerPrefix = "<!-- gameguild-source:";
     private const string ImportMarkerSuffix = " -->";
 
-    public static async Task<SnapshotCourseImportResult> SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+    public static async Task<SnapshotCourseImportResult> SeedAsync(
+        IServiceProvider serviceProvider,
+        bool force = false,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(serviceProvider);
 
@@ -26,7 +29,7 @@ public static partial class SnapshotCourseSeeder
         var db = serviceProvider.GetRequiredService<ApplicationDbContext>();
 
         var coursesRoot = ResolveCoursesRoot(environment.ContentRootPath);
-        logger.LogInformation("Importing snapshot courses from {CoursesRoot}", coursesRoot);
+        logger.LogInformation("Importing snapshot courses from {CoursesRoot} (force: {Force})", coursesRoot, force);
 
         var definitionSet = LoadCourseDefinitions(coursesRoot, logger);
         var definitions = definitionSet.Definitions;
@@ -41,6 +44,14 @@ public static partial class SnapshotCourseSeeder
                 .Include(item => item.ProgramContents)
                 .FirstOrDefaultAsync(item => item.Slug == definition.Slug, cancellationToken)
                 .ConfigureAwait(false);
+
+            if (program is not null && !force)
+            {
+                logger.LogInformation(
+                    "Snapshot course program '{Slug}' is already seeded in database. Skipping re-seed (force = false).",
+                    definition.Slug);
+                continue;
+            }
 
             if (program is null)
             {
@@ -143,7 +154,9 @@ public static partial class SnapshotCourseSeeder
         var publicProgramCount = await db.Set<CourseProgram>()
             .CountAsync(item => item.Status == ContentStatus.Published && item.Visibility == ContentVisibility.Public, cancellationToken)
             .ConfigureAwait(false);
-        var databaseName = db.Database.GetDbConnection().Database;
+        var databaseName = db.Database.IsRelational()
+            ? db.Database.GetDbConnection().Database
+            : db.Database.ProviderName ?? "InMemory";
 
         logger.LogInformation(
             "Imported {ProgramCount} snapshot programs and {ContentCount} snapshot contents from {ImportSource}. DbContext now sees {PublicProgramCount} published/public programs in database {DatabaseName}.",
