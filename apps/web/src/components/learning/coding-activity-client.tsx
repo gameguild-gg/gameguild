@@ -9,13 +9,13 @@ import {
 } from '@/lib/learner/activity-actions';
 import {
   ASSIGNMENT_SAMPLES,
+  buildAssessmentExecutionPlan,
   type CodingLanguage,
   type GradingPlan,
   type IdeHandle,
   type TestReport,
   type WorkspaceConfig,
 } from '@game-guild/emception-ui';
-import { testing as emceptionTesting } from 'emception';
 import { Button } from '@game-guild/ui/components/button';
 import Script from 'next/script';
 import {
@@ -68,22 +68,15 @@ export interface CodingActivityClientProps {
 }
 
 /**
- * Map v1 Tests.Public → emception GradingPlan via the shared assignment-plan
+ * Map v1 Tests.Public → emception GradingPlan via the GameGuild assessment
  * mapper (standard → stdio case; functional group → doctest case + generated
  * harness the Ide's run-tests handler compiles against the student sources).
  * Private tests never enter the plan (public-only mode) — the server also
  * strips them from the student fetch, so the exclusion is enforced twice.
  */
-type WireAssignment = Parameters<typeof emceptionTesting.buildTestPlan>[0];
-
 function publicTestsToGradingPlan(assignment: CodingAssignmentContent): GradingPlan {
-  const { plan, generatedFiles } = emceptionTesting.buildTestPlan(
-    // Wire shapes identical; the web type declares readonly arrays the mapper
-    // does not — the mismatch is declarative only.
-    assignment as unknown as WireAssignment,
-    { mode: 'public-only' },
-  );
-  return { cases: plan.cases, generatedFiles };
+  const { plan, overlay } = buildAssessmentExecutionPlan(assignment, 'public');
+  return { cases: plan.cases, generatedFiles: overlay };
 }
 
 export function CodingActivityClient({

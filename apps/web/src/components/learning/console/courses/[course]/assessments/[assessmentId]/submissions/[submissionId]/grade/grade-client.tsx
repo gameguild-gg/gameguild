@@ -5,16 +5,10 @@ import { useRouter } from 'next/navigation';
 import {
   Ide,
   TestResultsPanel,
+  buildAssessmentExecutionPlan,
   type IdeHandle,
   type TestReport,
 } from '@game-guild/emception-ui';
-import { buildTestPlan } from 'emception/testing';
-// Cast bridge: the web `CodingAssignmentContent` (lib/coding-assignment/types)
-// uses `readonly` arrays; the emception mapper input uses mutable arrays. The
-// wire shape is identical at runtime — only TS strictness differs.
-import type {
-  CodingAssignmentContent as EmceptionAssignmentContent,
-} from 'emception/testing';
 import {
   scoreSubmission,
   formatFeedback,
@@ -139,11 +133,8 @@ export function GradeClient({
     setReport(null);
     setScore(null);
     try {
-      // (e.1) Task 7 mapper — Public + Private cases + harness files.
-      const { plan, generatedFiles } = buildTestPlan(
-        assignment as unknown as EmceptionAssignmentContent,
-        { mode: 'full' },
-      );
+      // (e.1) Assessment mapper — Public + Private cases + harness files.
+      const { plan, overlay: generatedFiles } = buildAssessmentExecutionPlan(assignment, 'full');
 
       // (e.2) Re-seed IDE with [current workspace, generated harnesses]. The
       // generated harness paths are stable across runs (`functional_<i>_test.cpp`)

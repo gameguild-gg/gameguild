@@ -6,10 +6,13 @@ import type { LearningAssessmentsAssessmentSubmission } from '@game-guild/client
 import { parseSubmittedModalities, SubmissionViewer } from './submission-viewer';
 import { CodeGraderPanel, mergeWorkspaceWithSubmission } from './code-grader-panel';
 import type { CodingAssignmentContent } from '@/lib/coding-assignment/client';
-import * as emceptionTesting from 'emception/testing';
 
 const actionsMock = vi.hoisted(() => ({
   fetchSubmission: vi.fn(),
+}));
+
+const assessmentPlanMock = vi.hoisted(() => ({
+  build: vi.fn(),
 }));
 
 const ideMock = vi.hoisted(() => {
@@ -45,7 +48,12 @@ vi.mock('@game-guild/emception-ui', () => {
       },
     },
   };
-  return { Ide, TestResultsPanel, ASSIGNMENT_SAMPLES };
+  return {
+    Ide,
+    TestResultsPanel,
+    ASSIGNMENT_SAMPLES,
+    buildAssessmentExecutionPlan: assessmentPlanMock.build,
+  };
 });
 
 // --- Fixtures ---------------------------------------------------------------
@@ -417,8 +425,6 @@ describe('mergeWorkspaceWithSubmission', () => {
 // --- CodeGraderPanel -------------------------------------------------------
 
 describe('CodeGraderPanel', () => {
-  let buildTestPlanSpy: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
     ideMock.setFiles.mockReset();
     ideMock.getFiles.mockReset();
@@ -431,8 +437,8 @@ describe('CodeGraderPanel', () => {
         content: '// secret solution — workspace only',
       },
     ]);
-    buildTestPlanSpy?.mockRestore();
-    buildTestPlanSpy = vi.spyOn(emceptionTesting, 'buildTestPlan').mockReturnValue({ plan: samplePlan, generatedFiles: [] });
+    assessmentPlanMock.build.mockReset();
+    assessmentPlanMock.build.mockReturnValue({ plan: samplePlan, overlay: [], weights: [] });
   });
 
   it('seeds the IDE with the merged workspace (Private file NOT overridden)', async () => {
@@ -494,7 +500,7 @@ describe('CodeGraderPanel', () => {
   // build the FULL plan — Public + Private cases — not the student-visible
   // public-only plan. A flip back to 'public-only' would silently drop Private
   // cases from the instructor grade.
-  it('run tests builds the test plan with mode "full" (Public + Private)', async () => {
+  it('run tests builds the assessment execution plan in full scope (Public + Private)', async () => {
     ideMock.runTests.mockResolvedValue(sampleReport);
 
     render(
@@ -509,30 +515,8 @@ describe('CodeGraderPanel', () => {
 
     fireEvent.click(screen.getByTestId('run-tests-button'));
 
-    await waitFor(() => expect(buildTestPlanSpy).toHaveBeenCalled());
-    expect(buildTestPlanSpy.mock.calls[0]![1]).toEqual({ mode: 'full' });
-  });
-
-  // End-to-end plan shape (no buildTestPlan mock): the real mapper must emit
-  // one case per Public AND per Private test for the instructor 'full' plan.
-  it('real buildTestPlan(full) includes BOTH Public and Private test cases', () => {
-    buildTestPlanSpy.mockRestore();
-    const { plan } = emceptionTesting.buildTestPlan(
-      sampleAssignment as unknown as Parameters<typeof emceptionTesting.buildTestPlan>[0],
-      { mode: 'full' },
-    );
-    const names = plan.cases.map((c) => (c as { name?: string }).name).sort();
-    expect(names).toEqual(['case1', 'case2', 'case3']); // 2 Public + 1 Private
-  });
-
-  it('real buildTestPlan(public-only) excludes Private cases (contrast for the guard above)', () => {
-    buildTestPlanSpy.mockRestore();
-    const { plan } = emceptionTesting.buildTestPlan(
-      sampleAssignment as unknown as Parameters<typeof emceptionTesting.buildTestPlan>[0],
-      { mode: 'public-only' },
-    );
-    const names = plan.cases.map((c) => (c as { name?: string }).name).sort();
-    expect(names).toEqual(['case1', 'case2']); // Public only
+    await waitFor(() => expect(assessmentPlanMock.build).toHaveBeenCalled());
+    expect(assessmentPlanMock.build).toHaveBeenCalledWith(sampleAssignment, 'full');
   });
 
   // Bug #1 robustness: when the student submitted no code (payload '{}' or null

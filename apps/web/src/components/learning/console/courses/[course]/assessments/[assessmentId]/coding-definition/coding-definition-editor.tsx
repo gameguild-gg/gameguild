@@ -36,13 +36,7 @@ import {
   type Test,
 } from "@/lib/coding-assignment/actions";
 import type { FileEncoding } from "@/lib/coding-assignment/types";
-// ponytail: same import path + cast bridge as the speedgrader code-grader-panel. The web
-// CodingAssignmentContent uses readonly arrays; the emception mapper input
-// uses mutable arrays. Wire shape is identical at runtime.
-import { buildTestPlan } from "emception/testing";
-import type {
-  CodingAssignmentContent as EmceptionAssignmentContent,
-} from "emception/testing";
+import { buildAssessmentExecutionPlan } from "@game-guild/emception-ui";
 import { StandardTestEditor } from "./standard-test-editor";
 import { FunctionalTestEditor } from "./functional-test-editor";
 import { useLearningBase } from '@/lib/learning/use-learning-base';
@@ -182,7 +176,7 @@ export function CodingDefinitionEditor({
   }, [testRows]);
 
   // ── Derived test plan for in-IDE "Run Tests" ──
-  // Rebuilds the v1 content from current rows + runs buildTestPlan so the Ide
+  // Rebuilds the v1 content from current rows + runs the assessment mapper so the Ide
   // gets a fresh GradingPlan on every authoring edit. Returns undefined when
   // there are no tests or the plan cannot be built (e.g. a functional group
   // with zero cases mid-authoring) — the Ide then hides the Run Tests button.
@@ -196,11 +190,8 @@ export function CodingDefinitionEditor({
         testRows,
         maxScore,
       });
-      const { plan, generatedFiles } = buildTestPlan(
-        content as unknown as EmceptionAssignmentContent,
-        { mode: "full" },
-      );
-      return { ...plan, generatedFiles };
+      const { plan, overlay } = buildAssessmentExecutionPlan(content, "full");
+      return { ...plan, generatedFiles: overlay };
     } catch {
       return undefined;
     }
