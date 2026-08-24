@@ -8,6 +8,7 @@
  *   run()           — correlated request/response + per-run stdout/stderr callbacks
  *   getFile()       — correlated VFS read
  *   writeFile()     — correlated VFS write (zero-copy buffer transfer)
+ *   deleteFile()    — correlated VFS deletion
  *   listDir()       — correlated VFS directory listing
  *   resetVfs()      — correlated VFS reset
  *   sendStdinByte() — fire-and-forget stdin byte to the worker
@@ -22,6 +23,7 @@
 
 import type {
   BootErrorMessage,
+  DeleteFileResultMessage,
   GetFileResultMessage,
   ListDirResultMessage,
   MainToWorkerMessage,
@@ -288,6 +290,18 @@ export class WorkerOrchestrator {
     }
   }
 
+  /** Delete a file from the Worker VFS overlay. */
+  async deleteFile(path: string): Promise<void> {
+    const msg = (await this.rpc.request(
+      (id) => ({ type: 'deleteFile' as const, id, path }),
+      undefined,
+      `deleteFile(${path})`,
+    )) as DeleteFileResultMessage;
+    if (!msg.ok) {
+      throw new Error(msg.error ?? 'deleteFile failed');
+    }
+  }
+
   /** List the entries in a VFS directory. */
   async listDir(path: string): Promise<string[]> {
     const msg = (await this.rpc.request((id) => ({ type: 'listDir' as const, id, path }), undefined, `listDir(${path})`)) as ListDirResultMessage;
@@ -421,9 +435,10 @@ function extractResponseId(msg: WorkerToMainMessage): number | undefined {
     case 'runResult':
     case 'getFileResult':
     case 'writeFileResult':
+    case 'deleteFileResult':
     case 'listDirResult':
     case 'resetVfsResult':
-      return (msg as RunResultMessage | GetFileResultMessage | WriteFileResultMessage | ListDirResultMessage | ResetVfsResultMessage).id;
+      return (msg as RunResultMessage | GetFileResultMessage | WriteFileResultMessage | DeleteFileResultMessage | ListDirResultMessage | ResetVfsResultMessage).id;
     default:
       return undefined;
   }

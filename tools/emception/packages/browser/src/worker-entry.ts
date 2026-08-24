@@ -534,6 +534,23 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
       }
       break;
 
+    case 'deleteFile':
+      if (!vfs) {
+        post({ type: 'deleteFileResult', id: msg.id, ok: false, error: 'Not booted' });
+        break;
+      }
+      try {
+        const deleted = await vfs.overlay.deleteFile(msg.path);
+        if (!deleted) {
+          post({ type: 'deleteFileResult', id: msg.id, ok: false, error: `File not found: ${msg.path}` });
+        } else {
+          post({ type: 'deleteFileResult', id: msg.id, ok: true });
+        }
+      } catch (err) {
+        post({ type: 'deleteFileResult', id: msg.id, ok: false, error: String(err) });
+      }
+      break;
+
     case 'listDir':
       if (!vfs) {
         post({ type: 'listDirResult', id: msg.id, entries: [] });
