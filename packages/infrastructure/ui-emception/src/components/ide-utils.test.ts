@@ -1,4 +1,5 @@
-import { SDL_DEMO_CODE, workspaceStorageKey } from './ide-types';
+import { SDL_DEMO_CODE } from './ide-types';
+import { workspaceStorageKey } from '../assessment/workspace-storage';
 import { buildFileTree, buildSDL3ArgsPort, detectsSDL, fileName, inferLanguage, isSourceFile, isTextFile, toWorkspaceFsPath } from './ide-utils';
 
 // ─── isSourceFile ────────────────────────────────────────────────────────────

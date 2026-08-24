@@ -25,35 +25,12 @@ export interface GradingPlan {
 export type TabType = 'text' | 'image' | 'canvas';
 export type DockGroup = 'main' | 'right' | 'bottom';
 
-export const WORKSPACE_STORAGE_KEY = 'gameguild.emception.workspace.v1';
+export {
+  legacyAssessmentToken as legacyAssignmentToken,
+  WORKSPACE_STORAGE_KEY,
+  workspaceStorageKey,
+} from '../assessment/workspace-storage';
 export const SDL_CANVAS_PATH = '/user/sdl-canvas';
-
-/**
- * Per-assignment localStorage key. Returns the legacy v1 global key when no
- * token is supplied (backward compat for non-assignment consumers). When a
- * workspaceId is supplied alongside the token, the key is additionally
- * namespaced per workspace so preset switches never restore another
- * language's stale tab layout (e.g. cpp tabs over an SDL canvas workspace).
- */
-export function workspaceStorageKey(assignmentToken?: string, workspaceId?: string): string {
-  if (assignmentToken && workspaceId) {
-    return `gameguild.emception.workspace.${assignmentToken}.${workspaceId}.v2`;
-  }
-  return assignmentToken
-    ? `gameguild.emception.workspace.${assignmentToken}.v2`
-    : WORKSPACE_STORAGE_KEY;
-}
-
-/**
- * Token shape before userId-namespacing: the raw suffix after the LAST ':'.
- * `userId:assessmentId` → `assessmentId`; a bare token maps to itself, so the
- * legacy read is a no-op for consumers that never namespaced (instructor editor).
- */
-export function legacyAssignmentToken(assignmentToken?: string): string | undefined {
-  if (!assignmentToken) return undefined;
-  const idx = assignmentToken.lastIndexOf(':');
-  return idx === -1 ? assignmentToken : assignmentToken.slice(idx + 1);
-}
 
 export interface WorkspaceFile {
   path: string;
