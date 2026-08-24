@@ -12,6 +12,12 @@ export interface CodingAssessmentEditorProps {
   readonly definition: CodingAssessmentDefinition;
   readonly manifestUrl?: string;
   readonly title?: string;
+  /** Optional host workspace configuration, preserving its language and tools. */
+  readonly workspaceConfig?: WorkspaceConfig;
+  /** Exact localStorage key used to restore an existing learner workspace. */
+  readonly workspaceStorageKey?: string;
+  /** Persist the workspace through the underlying neutral IDE. Default `true`. */
+  readonly enableWorkspace?: boolean;
   readonly maxScore?: number;
   readonly passingScore?: number;
   readonly onReady?: (controller: IdeController) => void;
@@ -39,13 +45,21 @@ function visibleDefinitionFiles(
 function createWorkspaceConfig(
   definition: CodingAssessmentDefinition,
   mode: AssessmentEditorMode,
+  hostWorkspaceConfig?: WorkspaceConfig,
 ): WorkspaceConfig {
-  const files = visibleDefinitionFiles(definition, mode);
+  const definitionFiles = visibleDefinitionFiles(definition, mode);
+  const hostFiles = Object.fromEntries(
+    Object.entries(hostWorkspaceConfig?.files ?? {}).filter(([path]) => {
+      const definitionFile = definition.Data.Files[path];
+      return mode === 'author' || definitionFile?.Visibility !== 'Private';
+    }),
+  );
+  const files = { ...definitionFiles, ...hostFiles };
   const entryPoint = Object.keys(files).find((path) => /(^|\/)main\.(?:c|cc|cpp|cxx)$/i.test(path))
     ?? Object.keys(files)[0]
     ?? '/home/user/main.cpp';
 
-  return {
+  const defaultConfig: WorkspaceConfig = {
     id: 'gameguild-assessment',
     label: 'Coding assessment',
     compile: {
@@ -68,6 +82,13 @@ function createWorkspaceConfig(
       terminalInput: true,
       showTestButton: false,
     },
+    files,
+  };
+
+  if (!hostWorkspaceConfig) return defaultConfig;
+  return {
+    ...defaultConfig,
+    ...hostWorkspaceConfig,
     files,
   };
 }
@@ -95,6 +116,9 @@ export function CodingAssessmentEditor({
   definition,
   manifestUrl,
   title = 'Coding assessment',
+  workspaceConfig: hostWorkspaceConfig,
+  workspaceStorageKey,
+  enableWorkspace = true,
   maxScore = 100,
   passingScore = 60,
   onReady,
@@ -108,9 +132,9 @@ export function CodingAssessmentEditor({
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
 
-  const workspaceConfig = useMemo(
-    () => createWorkspaceConfig(definition, mode),
-    [definition, mode],
+  const resolvedWorkspaceConfig = useMemo(
+    () => createWorkspaceConfig(definition, mode, hostWorkspaceConfig),
+    [definition, hostWorkspaceConfig, mode],
   );
   const scope = mode === 'learner' ? 'public' : 'full';
 
@@ -186,8 +210,10 @@ export function CodingAssessmentEditor({
     <Ide
       title={title}
       manifestUrl={manifestUrl}
-      workspaceConfig={workspaceConfig}
-      enableWorkspace={false}
+      workspaceConfig={resolvedWorkspaceConfig}
+      workspaceStorageKey={workspaceStorageKey}
+      enableWorkspace={enableWorkspace}
+      allowFileCreation={mode !== 'learner' || definition.Environment.AllowStudentCreateFiles !== false}
       onReady={receiveController}
       extensions={extensions}
     />
