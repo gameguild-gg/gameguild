@@ -1,17 +1,97 @@
-import type { NativePreset } from '@gameguild/emception-browser';
-import { TOOLCHAIN_PRESETS as EMCEPTION_PRESETS, bootInWorker } from '@gameguild/emception-browser';
+import type { BrowserEmceptionAPI, BrowserStdin, CanvasToolchain, NativePreset } from '@gameguild/emception-browser';
+import { TOOLCHAIN_PRESETS as EMCEPTION_PRESETS, createEmception } from '@gameguild/emception-browser';
 import type { OnMount } from '@monaco-editor/react';
 import { Terminal } from '@xterm/xterm';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { ToolchainPreset } from 'emception';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import DockGroupPanel from './DockGroup.js';
 import FileExplorer from './FileExplorer.js';
-import type { DockGroup, IdeProps, OpenTab, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types.js';
-import { DEFAULT_IMAGE, deriveStorageKey, parseWorkspaceBundle, resolveArgs, workspaceConfigToState } from './ide-types.js';
-import { buildFileTree, inferLanguage, isSourceFile, isTextFile, makeWasiStubs, resolveWsPath } from './ide-utils.js';
+import type { DockGroup, IdeController, IdeExtension, IdeProps, OpenTab, TerminalTab, WorkspaceConfig, WorkspaceFile } from './ide-types.js';
+import { activateIdeExtensions, validateIdeExtensions } from './ide-extensions.js';
+import {
+  DEFAULT_IMAGE,
+  mergeRestoredWorkspaceFiles,
+  parseWorkspaceBundle,
+  resolveArgs,
+  resolveWorkspaceStorageKey,
+  shouldPersistWorkspace,
+  workspaceFilesForStorage,
+  workspaceConfigToState,
+} from './ide-types.js';
+import { buildFileTree, inferLanguage, isSourceFile, isTextFile, resolveWsPath } from './ide-utils.js';
 import TerminalPanel from './TerminalPanel.js';
 import { DEFAULT_PRESET, PRESETS, PRESET_IDS } from './workspace-presets.js';
+
+interface IdeTerminal {
+  clear(): void;
+  dispose(): void;
+  readByteExclusive(): number | Promise<number>;
+  write(text: string): void;
+  writeError(text: string): void;
+  writeLine(text: string): void;
+}
+
+interface IdeRunOptions {
+  cwd?: string;
+  env?: Record<string, string>;
+  hints?: { bundlesNeeded?: string[] };
+  stdin?: BrowserStdin;
+  onStdout?: (text: string) => void;
+  onStderr?: (text: string) => void;
+}
+
+function createIdeTerminal(terminal: Terminal, onClear: () => void): IdeTerminal {
+  const bytes: number[] = [];
+  const waiters: Array<(byte: number) => void> = [];
+  const subscription = terminal.onData((data) => {
+    for (let index = 0; index < data.length; index += 1) {
+      const byte = data.charCodeAt(index);
+      const waiter = waiters.shift();
+      if (waiter) waiter(byte);
+      else bytes.push(byte);
+    }
+  });
+  return {
+    clear: () => {
+      terminal.clear();
+      onClear();
+    },
+    dispose: () => subscription.dispose(),
+    readByteExclusive: () => bytes.shift() ?? new Promise<number>((resolve) => waiters.push(resolve)),
+    write: (text) => terminal.write(text),
+    writeError: (text) => terminal.writeln(`\x1b[31m${text}\x1b[0m`),
+    writeLine: (text) => terminal.writeln(text),
+  };
+}
+
+async function runTool(api: BrowserEmceptionAPI, tool: string, argv: string[], options: IdeRunOptions = {}) {
+  const stdoutDecoder = new TextDecoder();
+  const stderrDecoder = new TextDecoder();
+  return api.run(tool, argv, {
+    cwd: options.cwd,
+    env: options.env,
+    stdin: options.stdin,
+    preloadBundles: options.hints?.bundlesNeeded,
+    stdout: options.onStdout ? (chunk) => options.onStdout?.(stdoutDecoder.decode(chunk, { stream: true })) : 'capture',
+    stderr: options.onStderr ? (chunk) => options.onStderr?.(stderrDecoder.decode(chunk, { stream: true })) : 'capture',
+  });
+}
+
+function resolveCanvasToolchain(toolchain: WorkspaceConfig['compile']['toolchain']): CanvasToolchain | null {
+  switch (toolchain) {
+    case ToolchainPreset.SDL_CPP:
+    case ToolchainPreset.SDL_C:
+    case ToolchainPreset.Raylib_CPP:
+    case ToolchainPreset.Raylib_C:
+    case ToolchainPreset.Allegro_CPP:
+    case ToolchainPreset.Allegro_C:
+      return toolchain;
+    default:
+      return null;
+  }
+}
 
 /** Creates a line-buffered stdin reader from the tty. Shared by WASI, CMake, and Python paths. */
 function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<number> | null }): () => Promise<number> {
@@ -62,20 +142,25 @@ function makeLineBufferedStdin(tty: { readByteExclusive: () => number | Promise<
 }
 
 export type { IdeProps };
-type WorkerBoot = Awaited<ReturnType<typeof bootInWorker>>;
 
 export default function Ide({
   title = 'Emception',
-  manifestUrl = '/cdn/manifest.json',
+  manifestUrl,
+  api: injectedApi,
+  onReady,
+  onDispose,
+  extensions,
   workspaceConfig,
   workspaceUrl,
   workspaceName,
+  workspaceStorageKey,
   enableFileExplorer = true,
   enableTabs = true,
   enableTerminal = true,
   enableCanvas = true,
   enableDocking = true,
   enableWorkspace = true,
+  allowFileCreation = true,
   fullscreen = false,
   onFullscreenChange,
   showHiddenFiles = false,
@@ -86,7 +171,8 @@ export default function Ide({
   readOnly = false,
   theme = 'vs-dark',
 }: IdeProps) {
-  const storageKey = deriveStorageKey(workspaceName);
+  const activeExtensions = useMemo(() => validateIdeExtensions(extensions), [extensions]);
+  const storageKey = resolveWorkspaceStorageKey(workspaceName, workspaceStorageKey);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -94,18 +180,11 @@ export default function Ide({
   const canvasHolderRef = useRef<HTMLDivElement | null>(null);
   /** The div inside whichever DockGroupPanel currently shows the canvas tab */
   const canvasHostElRef = useRef<HTMLDivElement | null>(null);
-  const orchestratorRef = useRef<WorkerBoot | null>(null);
+  const apiRef = useRef<BrowserEmceptionAPI | null>(null);
+  const ownsApiRef = useRef(false);
+  const terminalIORef = useRef<IdeTerminal | null>(null);
   const xtermRef = useRef<Terminal | null>(null);
   const terminalLogRef = useRef<HTMLPreElement | null>(null);
-  /** Tracks blob URLs created for SDL output so they can be revoked on reset/unmount */
-  const sdlBlobUrlsRef = useRef<string[]>([]);
-  /** Tracks the injected SDL script element for cleanup on recompile/reset/unmount */
-  const sdlScriptRef = useRef<HTMLScriptElement | null>(null);
-  /** Tracks the live SDL3 Emscripten module so its RAF loop can be stopped */
-
-  const sdlModuleRef = useRef<{ pauseMainLoop?: () => void } | null>(null);
-  /** Active runtime error listener for canvas modules (removed on teardown) */
-  const runtimeErrorHandlerRef = useRef<((event: ErrorEvent) => void) | null>(null);
 
   // Resolve the active workspace config: prop > fetched bundle > default preset
   const [activePresetId, setActivePresetId] = useState<string>(workspaceConfig?.id ?? DEFAULT_PRESET.id);
@@ -119,12 +198,14 @@ export default function Ide({
   const [openTabs, setOpenTabs] = useState<OpenTab[]>(initialState.openTabs);
   const [activeTabId, setActiveTabId] = useState(initialState.activeTabId);
   const [canvasIsRunning, setCanvasIsRunning] = useState(false);
+  const [workspaceRestored, setWorkspaceRestored] = useState(false);
 
   const [terminalTabs, setTerminalTabs] = useState<TerminalTab[]>([{ id: 'terminal-1', title: 'bash' }]);
   const [activeTerminalId, setActiveTerminalId] = useState('terminal-1');
 
   const [status, setStatus] = useState('Initializing...');
   const [isReady, setIsReady] = useState(false);
+  const [publishedController, setPublishedController] = useState<IdeController | null>(null);
   const [terminalReady, setTerminalReady] = useState(false);
   const [executionPhase, setExecutionPhase] = useState<'idle' | 'compiling' | 'running'>('idle');
   /** Set to true by handleStop so the catch block in handleCompile knows it was intentional */
@@ -162,7 +243,7 @@ export default function Ide({
         activeTabId?: string;
       };
       if (parsed.files && Object.keys(parsed.files).length > 0) {
-        const nextFiles = Object.fromEntries(Object.entries(parsed.files));
+        const nextFiles = mergeRestoredWorkspaceFiles(initialState.files, parsed.files);
         setFiles(nextFiles);
       }
       if (parsed.selectedPath) setSelectedPath(parsed.selectedPath);
@@ -171,14 +252,16 @@ export default function Ide({
       if (parsed.activeTabId) setActiveTabId(parsed.activeTabId);
     } catch {
       /* ignore storage read errors */
+    } finally {
+      setWorkspaceRestored(true);
     }
   }, []);
 
   useEffect(() => {
     try {
+      if (!shouldPersistWorkspace(enableWorkspace, workspaceRestored)) return;
       // Persist workspace files
-      const filesToSave = files;
-      if (!enableWorkspace) return;
+      const filesToSave = workspaceFilesForStorage(files);
       window.localStorage.setItem(
         storageKey,
         JSON.stringify({
@@ -192,7 +275,7 @@ export default function Ide({
     } catch {
       /* ignore storage write errors */
     }
-  }, [files, selectedPath, expandedDirs, openTabs, activeTabId]);
+  }, [files, selectedPath, expandedDirs, openTabs, activeTabId, enableWorkspace, workspaceRestored, storageKey]);
 
   // ── Fetch workspace from URL ──────────────────────────────────
   useEffect(() => {
@@ -223,18 +306,79 @@ export default function Ide({
 
   // ── Sync workspace files into the Worker VFS (/home/user) ─────
   const syncFilesToVfs = useCallback(async (filesToSync: Record<string, WorkspaceFile>) => {
-    const orch = orchestratorRef.current;
-    if (!orch) return;
+    const api = apiRef.current;
+    if (!api) return;
     const P = '[Emception:IDE]';
-    const { client } = orch;
     const enc = new TextEncoder();
     const textFiles = Object.values(filesToSync).filter((f) => f.type === 'text' && isTextFile(f.path));
     for (const file of textFiles) {
-      await client.writeFile(file.path, enc.encode(file.content));
+      await api.workspace.writeFile(file.path, enc.encode(file.content));
       console.log(`${P} VFS sync: ${file.path}`);
     }
     console.log(`${P} VFS sync complete (${textFiles.length} files)`);
   }, []);
+
+  const replaceFiles = useCallback(async (nextFiles: readonly WorkspaceFile[]) => {
+    const next = Object.fromEntries(nextFiles.map((file) => [file.path, { ...file }])) as Record<string, WorkspaceFile>;
+    const api = apiRef.current;
+    if (api) {
+      for (const previousFile of Object.values(filesRef.current)) {
+        if (previousFile.type !== 'text' || next[previousFile.path]) continue;
+        if (await api.workspace.readFile(previousFile.path) !== null) {
+          await api.workspace.deleteFile(previousFile.path);
+        }
+      }
+      await syncFilesToVfs(next);
+    }
+    filesRef.current = next;
+    setFiles(next);
+    const nextOpenTabs: OpenTab[] = Object.values(next).map((file) => ({
+      id: `tab:${file.path}`,
+      path: file.path,
+      type: file.type,
+      group: 'main',
+    }));
+    setOpenTabs(nextOpenTabs);
+    const nextPath = nextFiles[0]?.path ?? '';
+    setSelectedPath(nextPath);
+    setActiveTabId(nextPath ? `tab:${nextPath}` : '');
+  }, [syncFilesToVfs]);
+
+  const setFilesReadOnly = useCallback((paths: readonly string[], nextReadOnly: boolean) => {
+    const pathSet = new Set(paths);
+    setFiles((previous) => {
+      const next = { ...previous };
+      for (const path of pathSet) {
+        const file = next[path];
+        if (file) next[path] = { ...file, readonly: nextReadOnly };
+      }
+      filesRef.current = next;
+      return next;
+    });
+  }, []);
+
+  const publishController = useCallback((api: BrowserEmceptionAPI) => {
+    const controller: IdeController = {
+      api,
+      getFiles: async () => Object.values(filesRef.current).map((file) => ({ ...file })),
+      replaceFiles,
+      setFilesReadOnly,
+    };
+    setPublishedController(controller);
+  }, [replaceFiles, setFilesReadOnly]);
+
+  useEffect(() => {
+    if (!publishedController) return;
+    const disposeExtensions = activateIdeExtensions(activeExtensions, publishedController);
+    onReady?.(publishedController);
+    return () => {
+      try {
+        disposeExtensions();
+      } finally {
+        onDispose?.();
+      }
+    };
+  }, [activeExtensions, onDispose, onReady, publishedController]);
 
   // ── Switch workspace preset ───────────────────────────────────
   const switchWorkspace = useCallback(
@@ -244,20 +388,7 @@ export default function Ide({
       const P = '[Emception:IDE]';
       console.log(`${P} ===== WORKSPACE SWITCH: "${activePresetId}" → "${presetId}" =====`);
 
-      // Stop SDL3 loop if running
-      const sdlMod = sdlModuleRef.current;
-      if (sdlMod) {
-        try {
-          sdlMod.pauseMainLoop?.();
-        } catch {
-          /* ignore */
-        }
-        sdlModuleRef.current = null;
-      }
-      sdlScriptRef.current?.remove();
-      sdlScriptRef.current = null;
-      sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      sdlBlobUrlsRef.current = [];
+      apiRef.current?.canvas.stop();
       // Reset canvas state
       const canvas = canvasRef.current;
       if (canvas) {
@@ -269,13 +400,13 @@ export default function Ide({
       stoppedRef.current = true;
 
       // Reset VFS in the Worker to clear stale build artifacts from the previous workspace
-      if (orchestratorRef.current) {
-        const { client, tty } = orchestratorRef.current;
-        tty.clear();
-        tty.writeLine(`\x1b[33mSwitching workspace...\x1b[0m`);
+      if (apiRef.current) {
+        const tty = terminalIORef.current;
+        tty?.clear();
+        tty?.writeLine(`\x1b[33mSwitching workspace...\x1b[0m`);
         try {
           console.log(`${P} Resetting Worker VFS (clearing /tmp and /home/user)...`);
-          await client.resetVfs();
+          await apiRef.current.workspace.reset();
           console.log(`${P} Worker VFS reset complete`);
         } catch (err) {
           console.warn(`${P} VFS reset failed, continuing:`, err);
@@ -308,8 +439,8 @@ export default function Ide({
         });
       }
 
-      if (orchestratorRef.current) {
-        orchestratorRef.current.tty.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
+      if (apiRef.current) {
+        terminalIORef.current?.writeLine(`\x1b[32mSwitched to workspace: ${preset.label}\x1b[0m`);
         // Sync new workspace files into VFS so /home/user is populated immediately
         await syncFilesToVfs(state.files);
       }
@@ -320,6 +451,10 @@ export default function Ide({
 
   const handleBootTerminalReady = useCallback((term: Terminal) => {
     xtermRef.current = term;
+    terminalIORef.current?.dispose();
+    terminalIORef.current = createIdeTerminal(term, () => {
+      if (terminalLogRef.current) terminalLogRef.current.textContent = '';
+    });
     (window as Window & { __xterm__?: Terminal }).__xterm__ = term;
     term.writeln('\x1b[32mWelcome to the Browser C/C++ Toolchain!\x1b[0m');
     term.writeln('Booting system...');
@@ -334,7 +469,7 @@ export default function Ide({
       setStatus('Booting toolchain...');
       try {
         // Mirror ALL xterm output to a hidden DOM element for Playwright E2E tests.
-        // Must be patched BEFORE bootInWorker so the MiniShell banner (sent by the
+        // Must be patched BEFORE createEmception so the MiniShell banner (sent by the
         // Worker before the 'booted' reply) is also captured in the log.
         // eslint-disable-next-line no-control-regex
         const stripAnsi = (s: string) => s.replace(/\u001b\[[\d;]*m/g, '');
@@ -355,23 +490,22 @@ export default function Ide({
           xtermAny.__emceptionLogPatched = true;
         }
 
-        const result = await bootInWorker(manifestUrl, xterm);
+        const result = injectedApi ?? await createEmception({ manifestUrl, container: xterm, tty: 'xterm' });
+        const ownsApi = !injectedApi;
         if (!isMounted()) {
-          result.client.terminate();
+          if (ownsApi) result.dispose();
           return;
         }
-        // Patch tty.clear to also clear the mirror log so each compile run starts fresh.
-        const origClear = result.tty.clear.bind(result.tty);
-        result.tty.clear = () => {
-          origClear();
-          if (log.current) log.current.textContent = '';
-        };
-        orchestratorRef.current = result;
-        // Expose worker client on window for E2E / debug access
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).__emception_client__ = result.client;
+        apiRef.current = result;
+        ownsApiRef.current = ownsApi;
+        (window as unknown as Record<string, unknown>).__emception_api__ = result;
         // Sync current workspace files into VFS so /home/user is populated on boot
         await syncFilesToVfs(filesRef.current);
+        if (!isMounted()) {
+          if (ownsApi) result.dispose();
+          return;
+        }
+        publishController(result);
         setStatus('Ready');
         setIsReady(true);
         xterm.writeln('\x1b[32mSystem Ready.\x1b[0m');
@@ -382,7 +516,7 @@ export default function Ide({
         xterm.writeln(`\x1b[31mBoot failed: ${err}\x1b[0m`);
       }
     },
-    [manifestUrl, syncFilesToVfs],
+    [injectedApi, manifestUrl, publishController, syncFilesToVfs],
   );
 
   useEffect(() => {
@@ -391,16 +525,18 @@ export default function Ide({
     doBootstrap(() => mounted);
     return () => {
       mounted = false;
-      orchestratorRef.current?.client.terminate();
-      orchestratorRef.current = null;
+      apiRef.current?.canvas.stop();
+      if (ownsApiRef.current) apiRef.current?.dispose();
+      apiRef.current = null;
+      setPublishedController(null);
+      ownsApiRef.current = false;
     };
   }, [terminalReady, manifestUrl, doBootstrap]);
 
-  // Revoke SDL blob URLs and remove injected script on unmount
   useEffect(() => {
     return () => {
-      sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      sdlScriptRef.current?.remove();
+      terminalIORef.current?.dispose();
+      terminalIORef.current = null;
     };
   }, []);
 
@@ -490,6 +626,7 @@ export default function Ide({
 
   const createFile = useCallback(
     (kind: 'text' | 'image') => {
+      if (readOnly || !allowFileCreation) return;
       const baseDir = '/user';
       const defaultName = kind === 'image' ? 'new-image.svg' : 'new-file.cpp';
       const input = window.prompt(`Create new ${kind} file`, `${baseDir}/${defaultName}`);
@@ -516,11 +653,11 @@ export default function Ide({
       setSelectedPath(path);
       ensureOpenTab(path, 'main');
     },
-    [files, ensureOpenTab],
+    [files, ensureOpenTab, readOnly, allowFileCreation],
   );
 
   const renameSelectedFile = useCallback(() => {
-    if (!selectedPath || !files[selectedPath]) return;
+    if (readOnly || !selectedPath || !files[selectedPath] || files[selectedPath].readonly) return;
     const nextPath = window.prompt('Rename file', selectedPath);
     if (!nextPath || nextPath === selectedPath) return;
     if (files[nextPath]) {
@@ -540,10 +677,10 @@ export default function Ide({
     );
     setSelectedPath(norm);
     setActiveTabId((cur) => (cur === `tab:${selectedPath}` ? `tab:${norm}` : cur));
-  }, [selectedPath, files]);
+  }, [selectedPath, files, readOnly]);
 
   const deleteSelectedFile = useCallback(() => {
-    if (!selectedPath || !files[selectedPath]) return;
+    if (readOnly || !selectedPath || !files[selectedPath] || files[selectedPath].readonly) return;
     if (!window.confirm(`Delete ${selectedPath}?`)) return;
     setFiles((prev) => {
       const c = { ...prev };
@@ -552,27 +689,13 @@ export default function Ide({
     });
     closeTab(`tab:${selectedPath}`);
     setSelectedPath(Object.keys(files).find((p) => p !== selectedPath) ?? '');
-  }, [selectedPath, files, closeTab]);
+  }, [selectedPath, files, closeTab, readOnly]);
 
   const resetWorkspace = useCallback(async () => {
     if (!window.confirm('Reset the workspace to the default demo files and layout?')) return;
     const P = '[Emception:IDE]';
     console.log(`${P} ===== WORKSPACE RESET =====`);
-    // Stop SDL3 loop if running
-    const sdlMod = sdlModuleRef.current;
-    if (sdlMod) {
-      try {
-        sdlMod.pauseMainLoop?.();
-      } catch {
-        /* ignore */
-      }
-      sdlModuleRef.current = null;
-    }
-    // Revoke any outstanding SDL blob URLs and remove injected script
-    sdlScriptRef.current?.remove();
-    sdlScriptRef.current = null;
-    sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    sdlBlobUrlsRef.current = [];
+    apiRef.current?.canvas.stop();
     // Reset canvas state
     const resetCanvas = canvasRef.current;
     if (resetCanvas) {
@@ -584,10 +707,10 @@ export default function Ide({
     stoppedRef.current = true;
 
     // Reset VFS in the Worker to clear stale build artifacts
-    if (orchestratorRef.current) {
+    if (apiRef.current) {
       try {
         console.log(`${P} Resetting Worker VFS...`);
-        await orchestratorRef.current.client.resetVfs();
+        await apiRef.current.workspace.reset();
         console.log(`${P} Worker VFS reset complete`);
       } catch (err) {
         console.warn(`${P} VFS reset failed, continuing:`, err);
@@ -603,9 +726,9 @@ export default function Ide({
     setActiveTabId(state.activeTabId);
     setTerminalTabs([{ id: 'terminal-1', title: 'bash' }]);
     setActiveTerminalId('terminal-1');
-    if (orchestratorRef.current) {
-      orchestratorRef.current.tty.clear();
-      orchestratorRef.current.tty.writeLine('\x1b[32mWorkspace reset.\x1b[0m');
+    if (apiRef.current) {
+      terminalIORef.current?.clear();
+      terminalIORef.current?.writeLine('\x1b[32mWorkspace reset.\x1b[0m');
     } else {
       xtermRef.current?.clear();
       xtermRef.current?.writeln('\x1b[32mWorkspace reset.\x1b[0m');
@@ -644,6 +767,7 @@ export default function Ide({
   };
 
   const handleEditorChange = useCallback((path: string, value: string) => {
+    if (readOnly || filesRef.current[path]?.readonly) return;
     setFiles((prev) => {
       const next = { ...prev, [path]: { ...prev[path], content: value } };
       // Update ref immediately so handleCompile (which reads filesRef.current)
@@ -651,7 +775,7 @@ export default function Ide({
       filesRef.current = next;
       return next;
     });
-  }, []);
+  }, [readOnly]);
 
   const syncMonacoModels = useCallback(() => {
     const monaco = monacoRef.current;
@@ -700,27 +824,9 @@ export default function Ide({
   (window as unknown as Record<string, unknown>).__setFileContent = handleEditorChange;
 
   const teardownSdlRuntime = useCallback(() => {
-    const sdlMod = sdlModuleRef.current;
-    if (!sdlMod && !sdlScriptRef.current && sdlBlobUrlsRef.current.length === 0) return false;
-
-    if (runtimeErrorHandlerRef.current) {
-      window.removeEventListener('error', runtimeErrorHandlerRef.current);
-      runtimeErrorHandlerRef.current = null;
-    }
-
-    try {
-      sdlMod?.pauseMainLoop?.();
-    } catch {
-      /* ignore */
-    }
-
-    sdlModuleRef.current = null;
-    sdlScriptRef.current?.remove();
-    sdlScriptRef.current = null;
-    sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    sdlBlobUrlsRef.current = [];
-
     const canvas = canvasRef.current;
+    const wasRunning = canvas?.dataset.sdlRunning === 'true';
+    apiRef.current?.canvas.stop();
     if (canvas) {
       canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
       delete canvas.dataset.sdlRunning;
@@ -728,11 +834,13 @@ export default function Ide({
     }
 
     setCanvasIsRunning(false);
-    return true;
+    return wasRunning;
   }, []);
 
   const handleCompile = async () => {
-    if (!orchestratorRef.current || !activeFile || activeFile.type !== 'text') return;
+    const api = apiRef.current;
+    const tty = terminalIORef.current;
+    if (!api || !tty || !activeFile || activeFile.type !== 'text') return;
     stoppedRef.current = false;
     setExecutionPhase('compiling');
     setActiveTerminalId('terminal-1');
@@ -743,7 +851,6 @@ export default function Ide({
       editorRef.current?.focus();
     };
     const tTotal = performance.now();
-    const { client, tty } = orchestratorRef.current;
     // Read from filesRef.current (updated immediately by handleEditorChange)
     // instead of the render-time `files` closure, so e2e __setFileContent
     // updates are always picked up even before React re-renders.
@@ -771,7 +878,7 @@ export default function Ide({
       console.log(`${P} COMPILE & RUN START`);
       const enc = new TextEncoder();
       for (const file of textFiles) {
-        await client.writeFile(file.path, enc.encode(file.content));
+        await api.workspace.writeFile(file.path, enc.encode(file.content));
         console.log(`${P} Synced ${file.path}`);
       }
 
@@ -786,7 +893,7 @@ export default function Ide({
         tty.writeLine(`\x1b[36mRunning ${pyFile}...\x1b[0m`);
         setExecutionPhase('running');
         const lineBufferedStdin = makeLineBufferedStdin(tty);
-        await client.run(args[0], args, {
+        await runTool(api, args[0], args, {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
@@ -812,7 +919,7 @@ export default function Ide({
         setStatus('CMake configure...');
         tty.writeLine('\x1b[36mCMake configure...\x1b[0m');
         const configArgs = resolvedConfig.compile.args;
-        const configResult = await client.run(configArgs[0], configArgs, {
+        const configResult = await runTool(api, configArgs[0], configArgs, {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.writeLine(t);
@@ -830,7 +937,7 @@ export default function Ide({
         setStatus('Ninja build...');
         tty.writeLine('\x1b[36mNinja build...\x1b[0m');
         const buildDir = configArgs.includes('-B') ? configArgs[configArgs.indexOf('-B') + 1] : '/home/user/build';
-        const ninjaResult = await client.run('ninja', ['ninja', '-C', buildDir], {
+        const ninjaResult = await runTool(api, 'ninja', ['ninja', '-C', buildDir], {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.writeLine(t);
@@ -851,7 +958,7 @@ export default function Ide({
         const runArgs = resolvedConfig.run.args ?? ['wasi-run', resolvedConfig.compile.output];
         setExecutionPhase('running');
         const lineBufferedStdin = makeLineBufferedStdin(tty);
-        await client.run(runArgs[0], runArgs, {
+        await runTool(api, runArgs[0], runArgs, {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
@@ -866,7 +973,7 @@ export default function Ide({
         return;
       }
 
-      // ── Canvas path (SDL3 two-step OR generic emcc single-step) ─
+      // ── Canvas path ──────────────────────────────────────────────
       if (runType === 'canvas') {
         if (!compileTarget) {
           setExecutionPhase('idle');
@@ -874,602 +981,70 @@ export default function Ide({
           tty.writeError('No .c/.cpp source file found in workspace.');
           return;
         }
-        setStatus('Compiling...');
-        tty.writeLine(`Compiling ${compileTarget}...`);
 
-        const sourceFsPath = compileTarget;
-
-        const { toolchain } = resolvedConfig.compile;
-        const isSDL3 = toolchain?.startsWith('sdl') ?? false;
-        const isAllegro = toolchain?.startsWith('allegro') ?? false;
-        const isRaylib = toolchain?.startsWith('raylib') ?? false;
-
-        if (!isSDL3 && !isRaylib && !isAllegro) {
-          // ── Generic emcc single-step path (raylib, etc.) ────────
-          tty.writeLine('\x1b[36mCanvas compile...\x1b[0m');
-          const compileArgv = resolveArgs(resolvedConfig.compile.args, sourceFsPath);
-          const canvasCompile = await client.run(compileArgv[0], compileArgv, {
-            cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
-            onStdout: (t: string) => {
-              tty.writeLine(t);
-            },
-            onStderr: (t: string) => {
-              tty.writeError(t);
-            },
-          });
-          const canvasDuration = ((performance.now() - t0) / 1000).toFixed(2);
-          if (canvasCompile.exitCode !== 0) {
-            setExecutionPhase('idle');
-            setStatus(`Canvas compilation failed (${canvasDuration}s)`);
-            tty.writeLine(`\x1b[31mCanvas compile step failed (exit ${canvasCompile.exitCode})\x1b[0m`);
-            return;
-          }
-          tty.writeLine(`\x1b[32mCompiled in ${canvasDuration}s \u2014 loading...\x1b[0m`);
-
-          const jsOutPath = resolveWsPath(cwd, resolvedConfig.compile.output || 'main.js');
-          const jsBytes = await client.getFile(jsOutPath);
-          if (!jsBytes) {
-            setExecutionPhase('idle');
-            tty.writeError(`${jsOutPath} not found \u2014 emcc may have failed to produce output`);
-            return;
-          }
-
-          setCanvasIsRunning(true);
-          ensureCanvasTab('right');
-          setActiveTabId(`tab:${compileTarget}`);
-          await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-
-          const canvas = canvasRef.current;
-          if (!canvas) {
-            setExecutionPhase('idle');
-            tty.writeError('Canvas element not found \u2014 open the Canvas tab first');
-            return;
-          }
-          canvas.dataset.sdlRunning = 'true';
-          canvas.style.display = 'block';
-          canvas.width = 800;
-          canvas.height = 600;
-
-          // Provide window.Module so emcc SINGLE_FILE output targets our canvas.
-          (window as unknown as Record<string, unknown>)['Module'] = {
-            canvas,
-            print: (s: string) => tty.writeLine(s),
-            printErr: (s: string) => tty.writeError(s),
-          };
-
-          sdlScriptRef.current?.remove();
-          sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-          sdlBlobUrlsRef.current = [];
-
-          const jsText = new TextDecoder().decode(jsBytes instanceof Uint8Array ? jsBytes : new Uint8Array(jsBytes as ArrayBuffer));
-          const jsBlob = new Blob([jsText], { type: 'application/javascript' });
-          const jsBlobUrl = URL.createObjectURL(jsBlob);
-          sdlBlobUrlsRef.current = [jsBlobUrl];
-
-          const script = document.createElement('script');
-          script.src = jsBlobUrl;
-          document.head.appendChild(script);
-          sdlScriptRef.current = script;
-          sdlModuleRef.current = null;
-
-          setExecutionPhase('running');
-          setStatus(`Canvas done (${((performance.now() - tTotal) / 1000).toFixed(1)}s) \u2014 running`);
-          tty.writeLine('\x1b[32mCanvas rendering in canvas tab \u2192\x1b[0m');
+        const toolchain = resolveCanvasToolchain(resolvedConfig.compile.toolchain);
+        if (!toolchain) {
+          setExecutionPhase('idle');
+          setStatus('Unsupported canvas toolchain');
+          tty.writeError(`Canvas workspaces require an SDL3, raylib, or Allegro preset; received '${resolvedConfig.compile.toolchain}'.`);
           return;
         }
 
-        // ── Two-step clang+wasm-ld path (SDL3, raylib, or Allegro) ──
-        // All three use a MODULARIZE runtime mjs for WebGL/emscripten_set_main_loop.
-        // SDL3 exports SDL_App* callbacks; raylib and Allegro export main() and
-        // register their loop via emscripten_set_main_loop — callMain() handles all.
-        const canvasLabel = isSDL3 ? 'SDL3' : isAllegro ? 'allegro' : 'raylib';
-        const canvasPreset = EMCEPTION_PRESETS[toolchain!] as NativePreset;
-        const runtimePath = isAllegro
-          ? '/usr/lib/emscripten/allegro-runtime.mjs'
-          : isRaylib
-            ? '/usr/lib/emscripten/raylib-runtime.mjs'
-            : '/usr/lib/emscripten/sdl3-runtime.mjs';
-        tty.writeLine(`\x1b[36m${canvasLabel} detected \u2014 compiling object...\x1b[0m`);
-
-        const sdlObjPath = '/tmp/emception-canvas-main.o';
         const compileCwd = resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`;
         const wasmPath = resolveWsPath(compileCwd, resolvedConfig.compile.output || 'main.wasm');
+        const label = toolchain.startsWith('sdl') ? 'SDL3' : toolchain.startsWith('raylib') ? 'raylib' : 'allegro';
+        setStatus(`Compiling ${label}...`);
+        tty.writeLine(`\x1b[36m${label} canvas build...\x1b[0m`);
 
-        const sdlPaths = { sourcePath: sourceFsPath, objectPath: sdlObjPath, wasmPath };
-        // Map canvas preset name to the CDN bundle name used by the hints system.
-        const canvasBundleName = isSDL3 ? 'sdl3' : isAllegro ? 'allegro' : 'raylib';
-        const canvasRunHints = { bundlesNeeded: [canvasBundleName] };
-        const sdlCompile = await client.run(canvasPreset.compileTool, canvasPreset.compileArgv(sdlPaths), {
-          cwd: compileCwd,
-          onStdout: (t: string) => {
-            console.log(t);
-            tty.writeLine(t);
-          },
-          onStderr: (t: string) => {
-            console.error(t);
-            tty.writeError(t);
-          },
-          hints: canvasRunHints,
-        });
-
-        const sdlDuration = ((performance.now() - t0) / 1000).toFixed(2);
-        if (sdlCompile.exitCode !== 0) {
-          setExecutionPhase('idle');
-          setStatus(`${canvasLabel} compilation failed (${sdlDuration}s)`);
-          tty.writeLine(`\x1b[31m${canvasLabel} compile step failed (exit ${sdlCompile.exitCode})\x1b[0m`);
-          return;
-        }
-
-        tty.writeLine(`\x1b[36m${canvasLabel} linking (wasm-ld)...\x1b[0m`);
-
-        const sdlLink = await client.run(canvasPreset.linkTool, canvasPreset.linkArgv(sdlPaths), {
-          cwd: compileCwd,
-          onStdout: (t: string) => {
-            console.log(t);
-            tty.writeLine(t);
-          },
-          onStderr: (t: string) => {
-            console.error(t);
-            tty.writeError(t);
-          },
-          hints: canvasRunHints,
-        });
-
-        if (sdlLink.exitCode !== 0) {
-          setExecutionPhase('idle');
-          setStatus(`${canvasLabel} compilation failed (${sdlDuration}s)`);
-          tty.writeLine(`\x1b[31m${canvasLabel} link step failed (exit ${sdlLink.exitCode})\x1b[0m`);
-          return;
-        }
-
-        tty.writeLine(`\x1b[32m${canvasLabel} compiled in ${sdlDuration}s \u2014 loading...\x1b[0m`);
-
-        // Read the compiled WASM binary from the VFS.
-        const wasmBytes = await client.getFile(wasmPath);
-        if (!wasmBytes) {
-          setExecutionPhase('idle');
-          tty.writeError('main.wasm not found — emcc may have failed to produce it alongside main.js');
-          return;
-        }
-
-        // Read the pre-built SDL3 JS runtime shell from the VFS
-        // (used for both SDL3 and raylib - provides emscripten_set_main_loop & WebGL)
-        const runtimeBytes = await client.getFile(runtimePath);
-        if (!runtimeBytes) {
-          setExecutionPhase('idle');
-          tty.writeError(`${runtimePath} not found in VFS — rebuild the CDN bundle`);
-          return;
-        }
-
-        // Mark canvas tab as SDL-active (keeps the canvas element visible)
         setCanvasIsRunning(true);
         ensureCanvasTab('right');
         setActiveTabId(`tab:${compileTarget}`);
-
-        // Wait for React to flush + browser to paint so canvasRef.current is ready
         await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 
         const canvas = canvasRef.current;
         if (!canvas) {
+          setCanvasIsRunning(false);
           setExecutionPhase('idle');
-          tty.writeError('SDL canvas element not found \u2014 open the SDL Canvas tab first');
+          tty.writeError('Canvas element not found.');
           return;
         }
-
-        // Flag the canvas as SDL-active so the host callback shows it
         canvas.dataset.sdlRunning = 'true';
         canvas.style.display = 'block';
-
-        // Initialize to the SDL demo's expected render size so the runtime
-        // attaches to a correctly sized target immediately.
         canvas.width = 800;
         canvas.height = 600;
 
-        // Revoke previous SDL blob URLs
-        sdlScriptRef.current?.remove();
-        sdlBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-        sdlBlobUrlsRef.current = [];
-
-        // Patch sdl3-runtime.mjs before creating the blob URL.
-        let runtimeText = new TextDecoder().decode(runtimeBytes instanceof Uint8Array ? runtimeBytes : new Uint8Array(runtimeBytes as ArrayBuffer));
-        const emAsmFallback = (varName: string) =>
-          `if(!ASM_CONSTS[${varName}]){var _s=UTF8ToString(${varName});` + `ASM_CONSTS[${varName}]=eval("(function($0,$1,$2,$3,$4,$5,$6,$7,$8,$9){"+_s+"})");}`;
-        runtimeText = runtimeText
-          .replace('var _main,_SDL_free,', 'var _free,_main,_SDL_free,')
-          .replace('_malloc=wasmExports["malloc"]', '_malloc=wasmExports["malloc"]||wasmExports["SDL_malloc"]')
-          .replace(
-            '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"]',
-            '_SDL_free=Module["_SDL_free"]=wasmExports["SDL_free"];_free=wasmExports["free"]||_SDL_free',
-          )
-          .replace(
-            'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var ret=_malloc(size)',
-            'var stringToNewUTF8=str=>{var size=lengthBytesUTF8(str)+1;var allocFn=_malloc||_SDL_malloc;var ret=allocFn(size)',
-          );
-        const ORIG_RUNEMASM = 'var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[code](...args)}';
-        const ORIG_RUNMTEMASM =
-          'var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);return ASM_CONSTS[emAsmAddr](...args)}';
-        if (runtimeText.includes(ORIG_RUNEMASM)) {
-          runtimeText = runtimeText.replace(
-            ORIG_RUNEMASM,
-            `var runEmAsmFunction=(code,sigPtr,argbuf)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('code')}return ASM_CONSTS[code](...args)}`,
-          );
-        } else {
-          tty.writeError('sdl3-runtime patch: runEmAsmFunction not found — EM_ASM may fail');
-        }
-        if (runtimeText.includes(ORIG_RUNMTEMASM)) {
-          runtimeText = runtimeText.replace(
-            ORIG_RUNMTEMASM,
-            `var runMainThreadEmAsm=(emAsmAddr,sigPtr,argbuf,sync)=>{var args=readEmAsmArgs(sigPtr,argbuf);${emAsmFallback('emAsmAddr')}return ASM_CONSTS[emAsmAddr](...args)}`,
-          );
-        }
-
-        // Patch: Scope SDL3's keyboard event handlers to the canvas element.
-        const ORIG_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{var keyEventData=JSEvents.keyEvent';
-        const PATCHED_KEY_HANDLER = 'var keyEventHandlerFunc=e=>{if(Module["canvas"]&&e.target!==Module["canvas"])return;var keyEventData=JSEvents.keyEvent';
-        if (runtimeText.includes(ORIG_KEY_HANDLER)) {
-          runtimeText = runtimeText.replace(ORIG_KEY_HANDLER, PATCHED_KEY_HANDLER);
-        } else if (isSDL3) {
-          tty.writeError('sdl3-runtime patch: keyEventHandlerFunc not found — keyboard may be captured globally');
-        }
-
-        // Patch: Catch WebAssembly.RuntimeError (e.g. memory access out of bounds) inside
-        // callUserCallback so it never propagates to the browser's uncaught-error handler.
-        // Without this, any WASM trap in the RAF loop causes Chromium to crash the tab.
-        // We set ABORT=1 so subsequent loop iterations are skipped, then pause the main loop.
-        const ORIG_CALL_USER_CB = 'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){handleException(e)}finally{maybeExit()}}';
-        const PATCHED_CALL_USER_CB =
-          'var callUserCallback=func=>{if(ABORT){return}try{return func()}catch(e){' +
-          'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return;}' +
-          'handleException(e)}finally{maybeExit()}}';
-        if (runtimeText.includes(ORIG_CALL_USER_CB)) {
-          runtimeText = runtimeText.replace(ORIG_CALL_USER_CB, PATCHED_CALL_USER_CB);
-        } else {
-          tty.writeError('sdl3-runtime patch: callUserCallback not found — WASM traps may crash the tab');
-        }
-
-        // Patch: emsdk 6.x dropped `wasmBinary=Module["wasmBinary"]` from the runtime
-        // glue, so raylib/allegro (which use the runtime's native instantiate path)
-        // can't see the wasmBinary we pass via createModule() and fall through to
-        // readAsync() → "both async and sync fetching of the wasm failed".
-        // Restore the assignment. Verified needle present in sdl3/raylib/allegro runtimes.
-        const ORIG_WASMBINARY_DECL = 'var wasmBinary;var ABORT=false';
-        const PATCHED_WASMBINARY_DECL = 'var wasmBinary=Module["wasmBinary"];var ABORT=false';
-        if (runtimeText.includes(ORIG_WASMBINARY_DECL)) {
-          runtimeText = runtimeText.replace(ORIG_WASMBINARY_DECL, PATCHED_WASMBINARY_DECL);
-        } else {
-          tty.writeError('runtime patch: wasmBinary declaration needle not found — raylib/allegro load may fail');
-        }
-
-        // emsdk 6.x instantiateAsync() always falls through to instantiateArrayBuffer
-        // (which fetches the .wasm) even when binary is supplied, breaking in-browser
-        // wasmBinary usage. Short-circuit when binary is provided.
-        const ORIG_INSTANTIATE_ASYNC = 'instantiateAsync(binary,binaryFile,imports){if(!binary){try{var response=fetch(';
-        const PATCHED_INSTANTIATE_ASYNC = 'instantiateAsync(binary,binaryFile,imports){if(binary){return WebAssembly.instantiate(binary,imports)}if(!binary){try{var response=fetch(';
-        if (runtimeText.includes(ORIG_INSTANTIATE_ASYNC)) {
-          runtimeText = runtimeText.replace(ORIG_INSTANTIATE_ASYNC, PATCHED_INSTANTIATE_ASYNC);
-        } else {
-          tty.writeError('runtime patch: instantiateAsync needle not found — raylib/allegro load may fail');
-        }
-
-        // Patch: Also intercept RuntimeError in handleException itself, which is called by
-        // callMain and other paths, so any WASM trap outside the main loop is also contained.
-        const ORIG_HANDLE_EX = 'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}quit_(1,e)}';
-        const PATCHED_HANDLE_EX =
-          'var handleException=e=>{if(e instanceof ExitStatus||e=="unwind"){return EXITSTATUS}' +
-          'if(e instanceof WebAssembly.RuntimeError){ABORT=1;try{Module.pauseMainLoop?.();}catch(_){}return EXITSTATUS}' +
-          'quit_(1,e)}';
-        if (runtimeText.includes(ORIG_HANDLE_EX)) {
-          runtimeText = runtimeText.replace(ORIG_HANDLE_EX, PATCHED_HANDLE_EX);
-        } else {
-          tty.writeError('sdl3-runtime patch: handleException not found — WASM traps may crash the tab');
-        }
-
-        // Create a blob URL for the ES6 runtime module so we can dynamically import it
-        const runtimeBlob = new Blob([new TextEncoder().encode(runtimeText)], { type: 'application/javascript' });
-        const runtimeUrl = URL.createObjectURL(runtimeBlob);
-        sdlBlobUrlsRef.current = [runtimeUrl];
-
-        // Dynamically import the MODULARIZE ES6 factory and instantiate with WASM + canvas
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { default: createModule } = await import(/* webpackIgnore: true */ /* @vite-ignore */ runtimeUrl as any);
-
-        // Let the SDL3 runtime create its own memory with ALLOW_MEMORY_GROWTH.
-        // The patched getHeapMax() in sdl3-runtime.mjs limits growth to 256MB.
-        const wasmMemory = null;
-        const wasiStubs = makeWasiStubs(
-          () => wasmMemory,
-          (s: string) => tty.writeLine(s),
+        const result = await api.canvas.buildAndStart(
+          {
+            toolchain,
+            sourcePath: compileTarget,
+            cwd: compileCwd,
+            wasmPath,
+            onStdout: (text) => tty.writeLine(text),
+            onStderr: (text) => tty.writeError(text),
+          },
+          {
+            canvas,
+            onStdout: (text) => tty.writeLine(text),
+            onStderr: (text) => tty.writeError(text),
+          },
         );
 
-        let sdlLoadOk = true;
-        let sdlCallbackFns: { init?: (appstate: number, argc: number, argv: number) => number; iterate?: (appstate: number) => number } | null = null;
-        let wasmMemoryRef: WebAssembly.Memory | null = null;
-        const missingRaylibImports = new Set<string>();
-        const moduleTimeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SDL3 module load timeout (30s)')), 30_000));
-        const sdlMod = await Promise.race([
-          createModule({
-            canvas: canvas,
-            keyboardListeningElement: canvas,
-            wasmBinary: wasmBytes,
-            locateFile: (filename: string) => filename,
-            // For raylib: prevent the runtime from calling main() internally
-            // (via its own run() → callMain() path). Without this, main() fires
-            // twice — once from the runtime and once from our explicit entry
-            // invocation below — causing InitWindow + emscripten_set_main_loop
-            // to execute twice, registering duplicate RAF loops → crash.
-            // SDL3 is unaffected because its _main is a noop proxy.
-            // Allegro also exports user main() — same double-call hazard.
-            noInitialRun: isRaylib || isAllegro,
-            // SDL3 only: override instantiateWasm so we can patch callback
-            // lifecycle exports for callback-only apps. Raylib and Allegro have
-            // their own runtime glue and should use the runtime's native
-            // instantiate path.
-            ...(!isRaylib &&
-              !isAllegro && {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              instantiateWasm(info: any, receiveInstance: (inst: WebAssembly.Instance) => void) {
-                const envBase = {
-                  ...info.env,
-                  // Preserve runtime-provided memory growth handler when present.
-                  // Overriding this with a no-op can leave stale HEAP views and
-                  // lead to out-of-bounds traps after grow_memory.
-                  emscripten_notify_memory_growth: info?.env?.emscripten_notify_memory_growth ?? (() => { }),
-                  // Some builds import emscripten_asm_const_* helpers directly.
-                  // Delegate to available runtime helpers when possible.
-                  emscripten_asm_const_int: info?.env?.emscripten_asm_const_int ?? (() => 0),
-                  emscripten_asm_const_double:
-                    info?.env?.emscripten_asm_const_double ??
-                    ((...args: unknown[]) => {
-                      const fallback = info?.env?.emscripten_asm_const_int;
-                      return typeof fallback === 'function' ? Number(fallback(...args)) : 0;
-                    }),
-                  // Some raylib/emscripten link variants import env.exit/_exit.
-                  // Keep these as benign stubs so instantiation succeeds and the
-                  // app can drive its main loop normally in the browser runtime.
-                  exit: info?.env?.exit ?? (() => { }),
-                  _exit: info?.env?._exit ?? (() => { }),
-                  // _abort_js is the WASM import for C abort(). Newer Emscripten
-                  // runtimes include it; if the stub WASM didn't use abort() the
-                  // runtime omits it, but the user's WASM may still need it.
-                  _abort_js:
-                    info?.env?._abort_js ??
-                    (() => {
-                      throw new Error('abort()');
-                    }),
-                };
-                const env = new Proxy(envBase, {
-                  get(target, prop, receiver) {
-                    const value = Reflect.get(target, prop, receiver);
-                    if (typeof prop === 'string' && (prop.startsWith('gl') || prop.startsWith('emscripten_gl'))) {
-                      // Raylib may import bare GL symbols (e.g. glViewport) while
-                      // runtime glue commonly exposes emscripten_gl* wrappers.
-                      // If a GL import is missing or non-callable, map to wrapper
-                      // when present; otherwise provide a benign callable fallback
-                      // so WebAssembly.instantiate() doesn't fail with
-                      // "function import requires a callable".
-                      const toCallable = (candidate: unknown): (() => number) | unknown => {
-                        if (typeof candidate === 'function') return candidate;
-                        return () => 0;
-                      };
-
-                      if (typeof value === 'function') return value;
-                      const emscriptenName = prop.startsWith('emscripten_') ? prop : `emscripten_${prop}`;
-                      const mapped = Reflect.get(target, emscriptenName, receiver);
-                      return toCallable(mapped);
-                    }
-
-                    if (value !== undefined) return value;
-                    if (typeof prop === 'string') {
-                      // Allow benign no-op for selected optional symbols often
-                      // imported by browser GL/runtime variants.
-                      if (
-                        prop === 'exit' ||
-                        prop === '_exit' ||
-                        prop.startsWith('gl') ||
-                        prop.startsWith('emscripten_gl') ||
-                        prop.startsWith('emscripten_asm_const_')
-                      ) {
-                        return () => 0;
-                      }
-                      // C assert() / IM_ASSERT — compiled into any library built
-                      // without -DNDEBUG (e.g. Dear ImGui). Throw so the error
-                      // surfaces in the terminal rather than silently crashing.
-                      if (prop === '__assert_fail') {
-                        return (_cond: number, _file: number, line: number) => {
-                          let fileStr = '(unknown)';
-                          if (wasmMemoryRef) {
-                            try {
-                              const heap = new Uint8Array(wasmMemoryRef.buffer);
-                              const readStr = (ptr: number) => {
-                                let end = ptr;
-                                while (heap[end]) end++;
-                                return new TextDecoder().decode(heap.subarray(ptr, end));
-                              };
-                              fileStr = readStr(_file);
-                            } catch {
-                              /* ignore decode errors */
-                            }
-                          }
-                          throw new Error(`Assertion failed (${fileStr}:${line})`);
-                        };
-                      }
-                      // Raylib + emscripten JS libs can import additional helper
-                      // symbols (e.g. SetCanvasIdJs). Keep raylib/allegro permissive
-                      // here to avoid hard load failures; strict mode remains for SDL3.
-                      if (canvasLabel === 'raylib' || canvasLabel === 'allegro') {
-                        if (!missingRaylibImports.has(prop)) {
-                          missingRaylibImports.add(prop);
-                          tty.writeLine(`\x1b[33m${canvasLabel} missing env import shimmed: ${prop}\x1b[0m`);
-                        }
-                        return () => 0;
-                      }
-                      // Permissive like raylib/allegro: emsdk/clang/binaryen bumps
-                      // shift the import set, so an unknown import isn't necessarily
-                      // a linker mismatch — surface it but don't block instantiation.
-                      if (!missingRaylibImports.has(prop)) {
-                        missingRaylibImports.add(prop);
-                        tty.writeLine(`\x1b[33mSDL3 missing env import shimmed: ${prop}\x1b[0m`);
-                      }
-                      return () => 0;
-                    }
-                    throw new Error(`Missing WASM env import: ${String(prop)}`);
-                  },
-                });
-                const imports = { ...info, env, wasi_snapshot_preview1: wasiStubs };
-                tty.writeLine('\x1b[90mSDL3: instantiating WASM…\x1b[0m');
-                WebAssembly.instantiate(new Uint8Array(wasmBytes as unknown as ArrayBuffer), imports)
-                  .then((result) => {
-                    tty.writeLine('\x1b[90mSDL3: WASM ok, patching exports…\x1b[0m');
-                    const origExports = result.instance.exports;
-                    if (origExports.memory instanceof WebAssembly.Memory) {
-                      wasmMemoryRef = origExports.memory as WebAssembly.Memory;
-                    }
-                    // Capture callback exports directly from raw WASM exports so
-                    // we can drive callback-only SDL apps even when glue doesn't
-                    // surface these as Module methods.
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const raw = origExports as any;
-                    sdlCallbackFns = {
-                      init: typeof raw.SDL_AppInit === 'function' ? raw.SDL_AppInit.bind(raw) : undefined,
-                      iterate: typeof raw.SDL_AppIterate === 'function' ? raw.SDL_AppIterate.bind(raw) : undefined,
-                    };
-                    const patchedExports =
-                      typeof origExports['__wasm_call_ctors'] === 'function' && typeof (origExports as Record<string, unknown>)['main'] === 'function'
-                        ? origExports
-                        : new Proxy(origExports, {
-                          get(target, prop) {
-                            if (prop === '__wasm_call_ctors' && !(prop in target)) return () => { };
-                            if ((prop === 'main' || prop === '_main') && !(prop in target)) {
-                              const noOpMain = () => 0;
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              (noOpMain as any).__emceptionNoop = true;
-                              return noOpMain;
-                            }
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            return (target as any)[prop];
-                          },
-                        });
-                    const patchedInstance = new Proxy(result.instance, {
-                      get(target, prop) {
-                        if (prop === 'exports') return patchedExports;
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        return (target as any)[prop];
-                      },
-                    });
-                    tty.writeLine('\x1b[90mSDL3: calling receiveInstance…\x1b[0m');
-                    receiveInstance(patchedInstance);
-                  })
-                  .catch((err: unknown) => {
-                    tty.writeError(`${canvasLabel} WASM instantiation failed: ${err}`);
-                    setStatus(`${canvasLabel} load failed`);
-                  });
-                return {};
-              },
-            }),
-            print: (line: string) => tty.writeLine(line),
-            printErr: (line: string) => tty.writeError(line),
-          }),
-          moduleTimeout,
-        ]).catch((e: unknown) => {
-          sdlLoadOk = false;
-          tty.writeError(`${canvasLabel} module error: ${e}`);
-          // Surface error to console so e2e tests / devtools can see the full message + stack.
-
-          console.error(`[Emception:IDE] ${canvasLabel} module load error:`, e);
-          setStatus(`${canvasLabel} load failed`);
-          return null;
-        });
-
-        if (!sdlLoadOk) {
+        if ('phase' in result) {
+          delete canvas.dataset.sdlRunning;
+          canvas.style.display = 'none';
+          setCanvasIsRunning(false);
           setExecutionPhase('idle');
+          const failed = result.phase === 'compile' ? result.compile : result.link;
+          setStatus(`${label} ${result.phase} failed`);
+          tty.writeError(`${label} ${result.phase} failed (exit ${failed.exitCode})`);
           return;
         }
 
-        // Some SDL callback builds linked with --no-entry need an explicit kick
-        // from JS to start their lifecycle callbacks/main loop.
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const sdlAny = sdlMod as any;
-          let started = false;
-          const callbackFns = sdlCallbackFns as {
-            init?: (appstate: number, argc: number, argv: number) => number;
-            iterate?: (appstate: number) => number;
-          } | null;
-          const wasmFns = sdlAny?.asm ?? sdlAny?.wasmExports ?? {};
-          const appInit = callbackFns?.init ?? sdlAny?._SDL_AppInit ?? sdlAny?.SDL_AppInit ?? wasmFns?._SDL_AppInit ?? wasmFns?.SDL_AppInit;
-          const appIterate = callbackFns?.iterate ?? sdlAny?._SDL_AppIterate ?? sdlAny?.SDL_AppIterate ?? wasmFns?._SDL_AppIterate ?? wasmFns?.SDL_AppIterate;
-
-          // Prefer explicit callback lifecycle startup when exported.
-          if (typeof appInit === 'function' && typeof appIterate === 'function') {
-            tty.writeLine('\x1b[90mSDL3: starting callback lifecycle loop…\x1b[0m');
-            const initResult = appInit(0, 0, 0);
-            if (initResult !== 0) {
-              tty.writeLine(`\x1b[33mSDL3: AppInit returned non-continue (${initResult})\x1b[0m`);
-            }
-            const step = () => {
-              if (!sdlModuleRef.current) return;
-              try {
-                const iterateResult = appIterate(0);
-                // SDL_APP_CONTINUE == 0
-                if (iterateResult !== 0) {
-                  tty.writeLine(`\x1b[90mSDL3: iterate requested stop (${iterateResult})\x1b[0m`);
-                  return;
-                }
-              } catch (err: unknown) {
-                const msg = err instanceof Error ? err.message : String(err);
-                if (msg !== 'unwind') tty.writeError(`SDL3 iterate error: ${msg}`);
-                return;
-              }
-              requestAnimationFrame(step);
-            };
-            requestAnimationFrame(step);
-            started = true;
-          } else if (typeof sdlAny?.callMain === 'function') {
-            tty.writeLine('\x1b[90mSDL3: calling main entry…\x1b[0m');
-            sdlAny.callMain([]);
-            started = true;
-          } else if (typeof sdlAny?._main === 'function' && !sdlAny._main.__emceptionNoop) {
-            tty.writeLine('\x1b[90mSDL3: invoking _main…\x1b[0m');
-            sdlAny._main(0, 0);
-            started = true;
-          } else if (typeof sdlAny?._SDL_main === 'function') {
-            tty.writeLine('\x1b[90mSDL3: invoking _SDL_main…\x1b[0m');
-            sdlAny._SDL_main(0, 0);
-            started = true;
-          }
-
-          if (!started) tty.writeLine('\x1b[33mSDL3 warning: no runnable entry/callback exports found.\x1b[0m');
-        } catch (e: unknown) {
-          const msg = e instanceof Error ? e.message : String(e);
-          // Emscripten may throw "unwind" to enter async main loop; ignore that.
-          if (msg !== 'unwind') {
-            tty.writeError(`${canvasLabel} entry invocation error: ${msg}`);
-          }
-        }
-
-        sdlModuleRef.current = sdlMod as { pauseMainLoop?: () => void } | null;
-        if (runtimeErrorHandlerRef.current) {
-          window.removeEventListener('error', runtimeErrorHandlerRef.current);
-          runtimeErrorHandlerRef.current = null;
-        }
-        const runtimeErrHandler = (event: ErrorEvent) => {
-          const msg = String(event.error?.message ?? event.message ?? '');
-          if (!msg.includes('memory access out of bounds')) return;
-          tty.writeError(`${canvasLabel} runtime trapped (memory out of bounds); stopping main loop.`);
-          try {
-            sdlModuleRef.current?.pauseMainLoop?.();
-          } catch {
-            /* ignore */
-          }
-          event.preventDefault?.();
-        };
-        runtimeErrorHandlerRef.current = runtimeErrHandler;
-        window.addEventListener('error', runtimeErrHandler);
         setExecutionPhase('running');
-        setStatus(`${canvasLabel} done (${((performance.now() - tTotal) / 1000).toFixed(1)}s) — running`);
-        tty.writeLine(`\x1b[32m${canvasLabel} rendering in canvas tab →\x1b[0m`);
+        setStatus(`${label} done (${((performance.now() - tTotal) / 1000).toFixed(1)}s) — running`);
+        tty.writeLine(`\x1b[32m${label} rendering in canvas tab →\x1b[0m`);
         return;
-      } // end canvas
+      }
 
       // ── Standard WASI terminal path ─────────────────────────────
       if (!compileTarget) {
@@ -1506,7 +1081,7 @@ export default function Ide({
         const isC = compileTarget.endsWith('.c');
         const directPreset = isC ? (EMCEPTION_PRESETS.c as NativePreset) : (EMCEPTION_PRESETS.cpp as NativePreset);
         const presetPaths = { sourcePath: sourceFsPath, objectPath: objPath, wasmPath };
-        const clangResult = await client.run(directPreset.compileTool, directPreset.compileArgv(presetPaths), {
+        const clangResult = await runTool(api, directPreset.compileTool, directPreset.compileArgv(presetPaths), {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             console.log(t);
@@ -1527,7 +1102,7 @@ export default function Ide({
         }
 
         tty.writeLine('\x1b[36mLinking (wasm-ld)...\x1b[0m');
-        const lldResult = await client.run(directPreset.linkTool, directPreset.linkArgv(presetPaths), {
+        const lldResult = await runTool(api, directPreset.linkTool, directPreset.linkArgv(presetPaths), {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             console.log(t);
@@ -1552,7 +1127,7 @@ export default function Ide({
         tty.writeLine(`\x1b[32mCompilation successful in ${dur}s\x1b[0m`);
 
         // Log output size for test verification
-        const wasmFile = await client.getFile(wasmPath);
+        const wasmFile = await api.workspace.readFile(wasmPath);
         const wasmSize = wasmFile ? wasmFile.length : 0;
         console.log(`${P} Compilation output: main.wasm=${wasmSize}B`);
 
@@ -1561,7 +1136,7 @@ export default function Ide({
         const lineBufferedStdin = makeLineBufferedStdin(tty);
         const runArgs = resolvedConfig.run.args ?? ['wasi-run', wasmPath];
         setExecutionPhase('running');
-        await client.run(runArgs[0], runArgs, {
+        await runTool(api, runArgs[0], runArgs, {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.write(t.replace(/\n/g, '\r\n'));
@@ -1581,7 +1156,7 @@ export default function Ide({
         resolvedConfig.compile.args.length > 0
           ? resolveArgs(resolvedConfig.compile.args, compileTarget)
           : ['emcc', compileTarget, '-o', resolveWsPath(cwd, resolvedConfig.compile.output || 'main.wasm'), '-O2'];
-      const result = await client.run(compileArgs[0], compileArgs, {
+      const result = await runTool(api, compileArgs[0], compileArgs, {
         cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
         onStdout: (t: string) => {
           console.log(t);
@@ -1602,7 +1177,7 @@ export default function Ide({
       setStatus('Compilation successful');
       tty.writeLine(`\x1b[32mCompilation successful in ${duration}s\x1b[0m`);
       const wasmPath = resolveWsPath(cwd, resolvedConfig.compile.output || 'main.wasm');
-      let wasmBytes = await client.getFile(wasmPath);
+      let wasmBytes = await api.workspace.readFile(wasmPath);
 
       // emcc may return before all subprocess-linked outputs are flushed to VFS.
       // Give the canonical artifact a short grace window before triggering fallback.
@@ -1610,7 +1185,7 @@ export default function Ide({
         const waitUntil = performance.now() + 12_000;
         while ((!wasmBytes || wasmBytes.length === 0) && performance.now() < waitUntil) {
           await new Promise<void>((resolve) => setTimeout(resolve, 120));
-          wasmBytes = await client.getFile(wasmPath);
+          wasmBytes = await api.workspace.readFile(wasmPath);
         }
       }
 
@@ -1619,7 +1194,7 @@ export default function Ide({
         const fallbackObj = '/tmp/emception-fallback-main.o';
         const sourceFsPath = compileTarget;
 
-        const clangFallback = await client.run(
+        const clangFallback = await runTool(api,
           'clang',
           [
             'clang',
@@ -1644,7 +1219,7 @@ export default function Ide({
 
         if (clangFallback.exitCode === 0) {
           const crtPath = '/usr/lib/emscripten/cache-lib/wasm32-emscripten/crt1.o';
-          const crtBytes = await client.getFile(crtPath);
+          const crtBytes = await api.workspace.readFile(crtPath);
           const magic = crtBytes
             ? Array.from((crtBytes as Uint8Array).slice(0, 8))
               .map((b: number) => b.toString(16).padStart(2, '0'))
@@ -1652,7 +1227,7 @@ export default function Ide({
             : 'none';
           tty.writeLine(`crt1.o probe: bytes=${crtBytes?.length ?? 0}, head=${magic}`);
 
-          const lldFallback = await client.run(
+          const lldFallback = await runTool(api,
             'wasm-ld',
             [
               'wasm-ld',
@@ -1695,14 +1270,14 @@ export default function Ide({
           tty.writeLine('\x1b[31mFallback compile step failed.\x1b[0m');
         }
 
-        wasmBytes = await client.getFile(wasmPath);
+        wasmBytes = await api.workspace.readFile(wasmPath);
       }
       console.log(`${P} Compilation output: main.wasm=${wasmBytes?.length ?? 0}`);
       tty.writeLine('Running...');
       const lineBufferedStdin = makeLineBufferedStdin(tty);
       const runArgs = resolvedConfig.run.args ?? ['wasi-run', resolvedConfig.compile.output || '/home/user/main.wasm'];
       setExecutionPhase('running');
-      await client.run(runArgs[0], runArgs, {
+      await runTool(api, runArgs[0], runArgs, {
         cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
         onStdout: (t: string) => {
           tty.write(t.replace(/\n/g, '\r\n'));
@@ -1729,14 +1304,15 @@ export default function Ide({
 
   const handleTest = async () => {
     const testConfig = resolvedConfig.test;
-    if (!orchestratorRef.current || !testConfig) return;
+    const api = apiRef.current;
+    const tty = terminalIORef.current;
+    if (!api || !tty || !testConfig) return;
     stoppedRef.current = false;
     setExecutionPhase('compiling');
     setActiveTerminalId('terminal-1');
     const restoreEditorFocus = () => {
       editorRef.current?.focus();
     };
-    const { client, tty } = orchestratorRef.current;
     const tTotal = performance.now();
     try {
       tty.clear();
@@ -1746,13 +1322,13 @@ export default function Ide({
       const textFiles = Object.values(files).filter((f) => f.type === 'text' && isTextFile(f.path));
       const enc = new TextEncoder();
       for (const file of textFiles) {
-        await client.writeFile(file.path, enc.encode(file.content));
+        await api.workspace.writeFile(file.path, enc.encode(file.content));
       }
 
       // Compile test if needed
       if (testConfig.compileArgs && testConfig.compileArgs.length > 0) {
         setStatus('Compiling tests...');
-        const compileResult = await client.run(testConfig.tool, testConfig.compileArgs, {
+        const compileResult = await runTool(api, testConfig.tool, testConfig.compileArgs, {
           cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
           onStdout: (t: string) => {
             tty.writeLine(t);
@@ -1773,7 +1349,7 @@ export default function Ide({
       setStatus('Running tests...');
       setExecutionPhase('running');
       const lineBufferedStdin = makeLineBufferedStdin(tty);
-      const runResult = await client.run(testConfig.runArgs[0], testConfig.runArgs, {
+      const runResult = await runTool(api, testConfig.runArgs[0], testConfig.runArgs, {
         cwd: resolvedConfig.compile.cwd ?? `/home/user/${resolvedConfig.id}`,
         onStdout: (t: string) => {
           tty.write(t.replace(/\n/g, '\r\n'));
@@ -1818,11 +1394,12 @@ export default function Ide({
     }
 
     // WASI path: the worker is actively running wasi-run — terminate and reboot.
-    if (!orchestratorRef.current) return;
+    const api = apiRef.current;
+    if (!api || !ownsApiRef.current) return;
     stoppedRef.current = true;
-    const { client } = orchestratorRef.current;
-    client.terminate();
-    orchestratorRef.current = null;
+    api.dispose();
+    apiRef.current = null;
+    ownsApiRef.current = false;
     setExecutionPhase('idle');
     setIsReady(false);
     setStatus('Stopped — rebooting...');
@@ -1842,6 +1419,13 @@ export default function Ide({
   const canRecompileWhileRunning = executionPhase === 'running' && resolvedConfig.run.type === 'canvas';
   const canCompile = isReady && activeFile?.type === 'text' && (executionPhase === 'idle' || canRecompileWhileRunning);
   const showCompileButton = executionPhase !== 'running' || canRecompileWhileRunning;
+  const renderExtensionSlot = (slot: keyof Pick<IdeExtension, 'toolbarEnd' | 'explorerFooter' | 'bottomPanel'>) => {
+    if (!publishedController) return null;
+    return activeExtensions.map((extension) => {
+      const content = extension[slot]?.(publishedController);
+      return content === undefined || content === null ? null : <Fragment key={extension.id}>{content}</Fragment>;
+    });
+  };
 
   const ideContent = (
     <div
@@ -1979,6 +1563,7 @@ export default function Ide({
           >
             Reset
           </button>
+          {renderExtensionSlot('toolbarEnd')}
         </div>
       </header>
 
@@ -2006,6 +1591,8 @@ export default function Ide({
                 onCreateFile={createFile}
                 onRename={renameSelectedFile}
                 onDelete={deleteSelectedFile}
+                allowFileCreation={allowFileCreation}
+                footer={renderExtensionSlot('explorerFooter')}
               />
             </Panel>
             <Separator style={resizerStyle} />
@@ -2033,6 +1620,7 @@ export default function Ide({
                     onEditorMount={handleEditorDidMount}
                     onEditorChange={handleEditorChange}
                     canvasIsRunning={canvasIsRunning}
+                    readOnly={readOnly}
                   />
                 </Panel>
                 {hasRightGroup && (
@@ -2053,6 +1641,7 @@ export default function Ide({
                         onEditorMount={handleEditorDidMount}
                         onEditorChange={handleEditorChange}
                         canvasIsRunning={canvasIsRunning}
+                        readOnly={readOnly}
                       />
                     </Panel>
                   </>
@@ -2078,6 +1667,7 @@ export default function Ide({
                     onEditorMount={handleEditorDidMount}
                     onEditorChange={handleEditorChange}
                     canvasIsRunning={canvasIsRunning}
+                    readOnly={readOnly}
                   />
                 </Panel>
               </>
@@ -2102,6 +1692,8 @@ export default function Ide({
           </Group>
         </Panel>
       </Group>
+
+      {renderExtensionSlot('bottomPanel')}
 
       {/* ── Status bar ── */}
       <div

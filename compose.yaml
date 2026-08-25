@@ -197,7 +197,7 @@ services:
       - Assets__Storage__Region=${S3_REGION:-garage}
       - Assets__Storage__ForcePathStyle=true
       - Assets__Storage__PresignedUrlExpiryMinutes=${S3_PRESIGNED_EXPIRY:-60}
-      - SeedData__ImportSnapshotCourses=${SEED_SNAPSHOT_COURSES:-true}
+      - SeedData__ImportSnapshotCourses=${SEED_SNAPSHOT_COURSES:-false}
       - OAuth__Google__ClientId=${GOOGLE_CLIENT_ID:-}
       - OAuth__Google__ClientSecret=${GOOGLE_CLIENT_SECRET:-}
       - OAuth__Discord__ClientId=${DISCORD_CLIENT_ID:-}

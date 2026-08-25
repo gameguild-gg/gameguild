@@ -44,9 +44,9 @@ export function CourseContentOutline({ course }: { course: CourseAttendanceData 
                 const isActivity = item.type !== 'lesson';
                 const isParticipatory = ['Discussion', 'Reflection', 'Survey'].includes(item.contentType || '');
                 const href = !isActivity
-                  ? `${courseHref}/lessons/${item.id}`
+                  ? `${courseHref}/lessons/${item.slug || item.id}`
                   : isParticipatory
-                    ? `${courseHref}/activities/content-${item.id}`
+                    ? `${courseHref}/activities/content-${item.slug || item.id}`
                     : `${courseHref}/activities`;
                 const locked = item.status === 'locked';
 

@@ -18,6 +18,8 @@ export interface TestReport {
 
 export interface TestResultsPanelProps {
   report: TestReport;
+  /** Score already computed by the canonical assessment session. */
+  score?: { score: number; passed: boolean };
   /** When provided, compute + display a weighted score. */
   maxScore?: number;
   passingScore?: number;
@@ -37,11 +39,11 @@ function computeLocalScore(report: TestReport, maxScore: number, passingScore: n
   return { score, passed: score >= passingScore };
 }
 
-export default function TestResultsPanel({ report, maxScore, passingScore, weights }: TestResultsPanelProps) {
+export default function TestResultsPanel({ report, score, maxScore, passingScore, weights }: TestResultsPanelProps) {
   const [expandedCase, setExpandedCase] = useState<number | null>(null);
   const total = report.cases.length;
   const hasScore = maxScore != null && passingScore != null;
-  const scoreResult = hasScore ? computeLocalScore(report, maxScore!, passingScore!, weights) : null;
+  const scoreResult = score ?? (hasScore ? computeLocalScore(report, maxScore!, passingScore!, weights) : null);
 
   return (
     <div
@@ -68,7 +70,7 @@ export default function TestResultsPanel({ report, maxScore, passingScore, weigh
         <span style={{ color: '#6c7086', fontSize: '0.7rem' }}>{report.totalDurationMs}ms</span>
         {hasScore && scoreResult && (
           <span style={{ marginLeft: 'auto', fontWeight: 600, color: scoreResult.passed ? '#a6e3a1' : '#f38ba8' }}>
-            Score: {scoreResult.score}/{maxScore}
+            Score: {scoreResult.score}{maxScore != null ? `/${maxScore}` : ''}
           </span>
         )}
       </div>

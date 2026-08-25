@@ -65,7 +65,8 @@ test_shell_only_ci_policy() {
   grep -q '"ci:economy": "bash scripts/ci/verify-economy.sh"' "$repository_root/package.json" || return 1
   grep -q 'pnpm install --no-lockfile --no-frozen-lockfile' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -q 'pnpm audit --json' "$ci_dir/install-and-audit-pnpm.sh" || return 1
-  [[ ! -e "$repository_root/pnpm-lock.yaml" ]]
+  grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$repository_root/.github/workflows/emception.yml" || return 1
+  [[ -f "$repository_root/pnpm-lock.yaml" ]]
 }
 
 test_contributors_visualization_uses_native_xvfb() {
@@ -82,11 +83,11 @@ test_release_flow_opens_version_pr_to_main() {
 
   [[ ! -e "$repository_root/.github/workflows/release.yml" ]] || return 1
   ! grep -Fq 'release.yml' "$main_workflow" || return 1
-  grep -Fq 'node scripts/devops/auto-changeset.mjs --apply' "$emception_workflow" || return 1
-  grep -Fq 'BRANCH="release/${VERSION}"' "$emception_workflow" || return 1
-  grep -Fq 'git push origin "${BRANCH}"' "$emception_workflow" || return 1
-  grep -Fq -- '--base main' "$emception_workflow" || return 1
-  grep -Fq 'git push origin "${TAG}"' "$emception_workflow"
+  grep -Fq 'uses: changesets/action@v2' "$emception_workflow" || return 1
+  grep -Fq 'version-script: pnpm run version:emception' "$emception_workflow" || return 1
+  grep -Fq 'run: pnpm run publish:emception' "$emception_workflow" || return 1
+  grep -Fq 'TAG="emception-v${VERSION}"' "$emception_workflow" || return 1
+  ! grep -Fq 'auto-changeset.mjs --apply' "$emception_workflow"
 }
 
 test_repository_policy_runs_in_a_parallel_required_gate() {
@@ -211,12 +212,12 @@ test_economy_gate_isolates_global_economy_roles_from_application_databases() {
 }
 
 test_auto_changeset_bumps_entire_lockstep_workspace() {
-  local script="$repository_root/scripts/devops/auto-changeset.mjs"
+  local policy="$repository_root/scripts/devops/emception-release-policy.mjs"
+  local versioner="$repository_root/scripts/devops/version-emception.mjs"
 
-  grep -Fq 'GameGuild.API.csproj' "$script" || return 1
-  grep -Fq 'function allPackageJsonPaths' "$script" || return 1
-  grep -Fq 'NEXT_VERSION=' "$script" || return 1
-  ! grep -Eq '"@changesets/cli"' "$repository_root/package.json"
+  grep -Fq 'assertOnlyEmceptionPackageManifests' "$policy" || return 1
+  grep -Fq "['exec', 'changeset', 'version']" "$versioner" || return 1
+  grep -Eq '"@changesets/cli"' "$repository_root/package.json"
 }
 
 test_changesets_config_matches_lockstep_workspace() {
@@ -249,14 +250,24 @@ missing = sorted(workspace - set(fixed))
 unknown = sorted(set(fixed) - workspace)
 
 errors = []
-if len(config.get("fixed", [])) != 1:
-    errors.append("the lockstep policy requires exactly one fixed group")
+emception = {
+    "emception",
+    "@gameguild/emception-toolchain",
+    "@gameguild/emception-browser",
+    "@gameguild/emception-xterm",
+    "@gameguild/emception-react",
+    "@gameguild/emception-webcomponent",
+    "@gameguild/emception-ide",
+}
+groups = [set(group) for group in config.get("fixed", [])]
+if len(groups) != 2:
+    errors.append("the release policy requires the platform and Emception fixed groups")
+if emception not in groups:
+    errors.append("the seven public Emception packages must have an isolated fixed group")
 if linked:
     errors.append(f"linked packages conflict with the lockstep fixed policy: {sorted(linked)}")
 if duplicates:
     errors.append(f"duplicate fixed packages: {duplicates}")
-if missing:
-    errors.append(f"workspace packages missing from the fixed group: {missing}")
 if unknown:
     errors.append(f"unknown packages in the fixed group: {unknown}")
 if errors:
@@ -648,8 +659,8 @@ run_test 'Economy unit tests bound parallelism without global serialization' tes
 run_test 'Economy gate builds strict release targets once' test_economy_gate_builds_release_targets_strictly_once
 run_test 'Economy gate rejects nested PostgreSQL Testcontainers' test_economy_gate_rejects_nested_postgres_testcontainers
 run_test 'Economy gate isolates global roles from application databases' test_economy_gate_isolates_global_economy_roles_from_application_databases
-run_test 'auto-changeset apply bumps the entire lockstep workspace' test_auto_changeset_bumps_entire_lockstep_workspace
-run_test 'Changesets config matches the lockstep workspace policy' test_changesets_config_matches_lockstep_workspace
+run_test 'Emception versioning is scoped to its fixed group' test_auto_changeset_bumps_entire_lockstep_workspace
+run_test 'Changesets config isolates the Emception release group' test_changesets_config_matches_lockstep_workspace
 run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup

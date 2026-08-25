@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/lexical-surface",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "type": "module",
   "description": "Reusable Lexical rich-document editing surface for GameGuild",
   "license": "UNLICENSED",

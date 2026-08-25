@@ -27,6 +27,7 @@ interface DockGroupPanelProps {
     onEditorMount: OnMount;
     onEditorChange: (path: string, value: string) => void;
     canvasIsRunning: boolean;
+    readOnly?: boolean;
 }
 
 export default function DockGroupPanel({
@@ -42,6 +43,7 @@ export default function DockGroupPanel({
     onEditorMount,
     onEditorChange,
     canvasIsRunning,
+    readOnly,
 }: DockGroupPanelProps) {
     const [draggingTabId, setDraggingTabId] = useState<string | null>(null);
 
@@ -67,6 +69,7 @@ export default function DockGroupPanel({
             onEditorMount={onEditorMount}
             onEditorChange={onEditorChange}
             canvasIsRunning={canvasIsRunning}
+            readOnly={readOnly}
         />
     );
 }
@@ -87,6 +90,7 @@ function DockGroupPanelInner({
     onEditorMount,
     onEditorChange,
     canvasIsRunning,
+    readOnly,
 }: {
     group: DockGroup;
     tabs: OpenTab[];
@@ -103,6 +107,7 @@ function DockGroupPanelInner({
     onEditorMount: OnMount;
     onEditorChange: (path: string, value: string) => void;
     canvasIsRunning: boolean;
+    readOnly?: boolean;
 }) {
     const animFrameRef = useRef(0);
     const [isDragOver, setIsDragOver] = useState(false);
@@ -323,6 +328,7 @@ function DockGroupPanelInner({
                             onMount={onEditorMount}
                             onChange={(value) => onEditorChange(localFile.path, value ?? '')}
                             options={{
+                                readOnly: readOnly || localFile.readonly,
                                 minimap: { enabled: false },
                                 fontSize: 14,
                                 fontFamily: '"Fira Code", monospace',

@@ -38,20 +38,22 @@ import type {
     WorkspaceBuildConfig,
     WorkspaceAPI,
 } from 'emception';
-import type { RunOptions as BrowserRunOptions } from './tool-runner.js';
+import { DEFAULT_MANIFEST_URL } from './manifest.js';
+import { createCanvasAPI } from './canvas.js';
+import type { CanvasAPI } from './canvas.js';
+import type { RunOptions as WorkerRunOptions } from './tool-runner.js';
 import { WorkerClient } from './worker-client.js';
 
 /**
  * Default manifest URL used when `manifestUrl` is omitted. Points at the
- * latest published `emception` package CDN payload on jsDelivr so a host can
+ * matching `@gameguild/emception-toolchain` package on jsDelivr so a host can
  * boot emception with zero configuration:
  *
  *     await createEmception({ container: el }); // uses DEFAULT_MANIFEST_URL
  *
- * Pin to a specific version in production by passing `manifestUrl`
- * explicitly, e.g. `https://cdn.jsdelivr.net/npm/emception@1.2.3/cdn/manifest.json`.
+ * Override `manifestUrl` only when self-hosting the same versioned artifacts.
  */
-export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/emception/cdn/manifest.json';
+export { DEFAULT_MANIFEST_URL } from './manifest.js';
 
 export interface CreateEmceptionOptions {
     /**
@@ -77,17 +79,28 @@ export interface CreateEmceptionOptions {
     /** Headless stderr sink. Only used when `tty: 'none'`. */
     onStderr?: (text: string) => void;
     /**
-     * URL of the manifest produced by `npm run build:manifest`.
+     * URL of a self-hosted manifest produced by `npm run build:manifest`.
      *
-    * If omitted, falls back to {@link DEFAULT_MANIFEST_URL} (the latest
-    * published `emception` CDN payload on jsDelivr). For production deploys
-     * pin a specific version or self-host the manifest under your own
-     * origin to avoid CDN drift.
+     * If omitted, falls back to {@link DEFAULT_MANIFEST_URL}, which pins the
+     * matching `@gameguild/emception-toolchain` version on jsDelivr.
      */
     manifestUrl?: string;
 }
 
-export async function createEmception(opts: CreateEmceptionOptions = {}): Promise<EmceptionAPI> {
+export type BrowserStdin = RunOptions['stdin'] | (() => number | null | Promise<number>);
+
+export type BrowserRunOptions = Omit<RunOptions, 'stdin'> & {
+    /** Browser byte reader used by interactive terminal programs. */
+    stdin?: BrowserStdin;
+};
+
+export interface BrowserEmceptionAPI extends Omit<EmceptionAPI, 'run'> {
+    run(cmd: string, argv?: string[], opts?: BrowserRunOptions): Promise<ToolResult>;
+    /** Browser-owned canvas build/runtime boundary. */
+    readonly canvas: CanvasAPI;
+}
+
+export async function createEmception(opts: CreateEmceptionOptions = {}): Promise<BrowserEmceptionAPI> {
     const manifestUrl = opts.manifestUrl ?? DEFAULT_MANIFEST_URL;
     const tty = opts.tty ?? (opts.container ? 'xterm' : 'none');
 
@@ -120,7 +133,7 @@ export async function createEmception(opts: CreateEmceptionOptions = {}): Promis
     return wrap(client);
 }
 
-function wrap(client: WorkerClient): EmceptionAPI {
+function wrap(client: WorkerClient): BrowserEmceptionAPI {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     const toBytes = (data: Uint8Array | string): Uint8Array =>
@@ -143,8 +156,12 @@ function wrap(client: WorkerClient): EmceptionAPI {
     const mountPath = () => `/home/user/${currentWorkspaceName}`;
 
     /** Translate a core RunOptions into the browser WorkerClient RunOptions. */
-    function toBrowserOpts(opts: RunOptions): BrowserRunOptions {
-        const browser: BrowserRunOptions = { cwd: opts.cwd ?? mountPath(), env: { ...currentBuild.env, ...opts.env } };
+    function toBrowserOpts(opts: BrowserRunOptions): WorkerRunOptions {
+        const browser: WorkerRunOptions = {
+            cwd: opts.cwd ?? mountPath(),
+            env: { ...currentBuild.env, ...opts.env },
+            hints: opts.preloadBundles ? { bundlesNeeded: [...opts.preloadBundles] } : undefined,
+        };
         if (typeof opts.stdout === 'function') {
             const fn = opts.stdout;
             browser.onStdout = (text: string) => { (fn as (c: Uint8Array) => void)(encoder.encode(text)); };
@@ -167,7 +184,7 @@ function wrap(client: WorkerClient): EmceptionAPI {
         return browser;
     }
 
-    async function run(cmd: string, argv?: string[], opts?: RunOptions): Promise<ToolResult> {
+    async function run(cmd: string, argv?: string[], opts?: BrowserRunOptions): Promise<ToolResult> {
         const start = Date.now();
         const result = await client.run(cmd, [...(argv ?? [])], toBrowserOpts(opts ?? {}));
         const toolResult: ToolResult = { ...result, durationMs: Date.now() - start, timedOut: false };
@@ -198,6 +215,7 @@ function wrap(client: WorkerClient): EmceptionAPI {
         readFile: (path: string) => client.getFile(path),
         writeFile: async (path: string, data: Uint8Array | string, _meta?: Partial<FileEntry>) =>
             client.writeFile(path, toBytes(data)),
+        deleteFile: (path: string) => client.deleteFile(path),
         listFiles: async (_opts?) => walkDir(mountPath()),
         setVisibility: async (_path: string, _v: FileEntry['visibility']) => { /* metadata-only, no-op */ },
         getBuild: async () => currentBuild,
@@ -264,7 +282,7 @@ function wrap(client: WorkerClient): EmceptionAPI {
             client.terminate();
         },
     };
-    return api;
+    return { ...api, canvas: createCanvasAPI(api) };
 }
 
 /**
@@ -273,7 +291,7 @@ function wrap(client: WorkerClient): EmceptionAPI {
  * the worker themselves via {@link bootInWorker} and need the same
  * high-level surface that {@link createEmception} returns.
  */
-export function wrapWorkerClient(client: WorkerClient): EmceptionAPI {
+export function wrapWorkerClient(client: WorkerClient): BrowserEmceptionAPI {
     return wrap(client);
 }
 

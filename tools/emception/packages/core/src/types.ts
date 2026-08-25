@@ -202,6 +202,9 @@ export type StdoutSink = 'capture' | WritableStream<Uint8Array> | ((chunk: Uint8
  *   `ToolResult.timedOut` to be `true` and `exitCode` to be non-zero.
  * - `signal` — cancel the run early by aborting this signal.
  * - `workspace` — override the workspace for this single invocation.
+ * - `preloadBundles` — release bundles to warm before invoking the tool. This
+ *   is an adapter-neutral performance hint; missing files are still resolved
+ *   through the manifest-backed VFS.
  */
 export interface RunOptions {
   cwd?: string;
@@ -212,6 +215,7 @@ export interface RunOptions {
   timeoutMs?: number;
   signal?: AbortSignal;
   workspace?: string;
+  preloadBundles?: string[];
 }
 
 export interface CompileOptions extends RunOptions {
@@ -333,6 +337,8 @@ export interface WorkspaceAPI {
   reset(name?: string): Promise<void>;
   readFile(path: string): Promise<Uint8Array | null>;
   writeFile(path: string, data: Uint8Array | string, meta?: Partial<FileEntry>): Promise<void>;
+  /** Delete a workspace file. Rejects when the file does not exist. */
+  deleteFile(path: string): Promise<void>;
   listFiles(opts?: { includeHidden?: boolean; includeSolution?: boolean }): Promise<Array<{ path: string } & FileEntry>>;
   setVisibility(path: string, v: FileEntry['visibility']): Promise<void>;
   getBuild(): Promise<WorkspaceBuildConfig>;

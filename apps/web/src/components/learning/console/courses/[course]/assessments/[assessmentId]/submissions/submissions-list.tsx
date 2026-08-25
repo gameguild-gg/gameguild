@@ -50,6 +50,7 @@ export function statusBadgeVariant(
 export interface SubmissionsListProps {
   courseSlug: string;
   assessmentId: string;
+  assessmentSlug: string;
   maxScore: number;
   submissions: LearningAssessmentsAssessmentSubmission[];
   error?: string;
@@ -59,6 +60,7 @@ export interface SubmissionsListProps {
 export function SubmissionsList({
   courseSlug,
   assessmentId,
+  assessmentSlug,
   maxScore,
   submissions,
   error,
@@ -110,6 +112,7 @@ export function SubmissionsList({
             submission={submission}
             courseSlug={courseSlug}
             assessmentId={assessmentId}
+            assessmentSlug={assessmentSlug}
             maxScore={maxScore}
           />
         ))}
@@ -122,6 +125,7 @@ interface SubmissionRowProps {
   submission: LearningAssessmentsAssessmentSubmission;
   courseSlug: string;
   assessmentId: string;
+  assessmentSlug: string;
   maxScore: number;
 }
 
@@ -129,6 +133,7 @@ function SubmissionRow({
   submission,
   courseSlug,
   assessmentId,
+  assessmentSlug,
   maxScore,
 }: SubmissionRowProps): React.JSX.Element {
   const learningBase = useLearningBase();
@@ -148,7 +153,7 @@ function SubmissionRow({
   const scoreLabel =
     submission.score != null ? `${submission.score}/${maxScore}` : '—';
 
-  const gradeHref = `${learningBase}/courses/${courseSlug}/assessments/${assessmentId}/submissions/${submission.id}/grade`;
+  const gradeHref = `${learningBase}/courses/${courseSlug}/assessments/${assessmentSlug}/submissions/${submission.id}/grade`;
 
   return (
     <TableRow data-testid={`submission-row-${submission.id}`}>

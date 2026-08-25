@@ -32,7 +32,6 @@ nul
 !.yarn/versions
 package-lock.json
 yarn.lock
-pnpm-lock.yaml
 .pnpm-store/
 
 # Environment files
@@ -131,7 +130,6 @@ tools/emception/logs/
 docs/devlog/2025-08-10-permissions-refactor-conversation-summary.md
 
 # Embedded upstream repos (avoid nested .git metadata/tooling conflicts)
-tools/emception/userland/**/.git/
 
 # Miscellaneous
 *.pem

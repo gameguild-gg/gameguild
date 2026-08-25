@@ -1,6 +1,6 @@
 {
   "name": "game-guild",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "description": "GameGuild Platform Monorepo",
   "author": "Matheus Martins <contact@matheusmartins.com>",
   "homepage": "https://gameguild.gg",
@@ -38,6 +38,8 @@
     "e2e:record:continue": "node scripts/e2e-record-continue.mjs",
     "typecheck": "turbo run typecheck",
     "typecheck:emception": "pnpm --dir tools/emception run typecheck:packages",
+    "version:emception": "node scripts/devops/version-emception.mjs",
+    "publish:emception": "node scripts/devops/publish-emception.mjs",
     "lint": "turbo run lint",
     "format": "pnpm -r run format",
     "generate": "turbo run generate",
@@ -57,7 +59,7 @@
     "ci:web:build": "pnpm --filter @game-guild/web build",
     "ci:playwright:smoke": "pnpm --filter @game-guild/web test:browser:public",
     "ci:playwright:learning-student": "pnpm --filter @game-guild/web test:browser:learning-student",
-    "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo pnpm-lock.yaml"
+    "clean": "rimraf --glob ./**/node_modules ./**/dist ./**/coverage ./**/build ./**/.next ./**/.turbo"
   },
   "packageManager": "pnpm@10.0.0",
   "engines": {

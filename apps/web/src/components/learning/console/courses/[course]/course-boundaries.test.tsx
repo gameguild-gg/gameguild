@@ -23,9 +23,9 @@ import ClassDetailError from '@/app/[locale]/(dashboards)/workspace/learning/cou
 import ClassDetailLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/classes/[classId]/loading';
 import ClassDetailNotFound from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/classes/[classId]/not-found';
 import ContentLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/loading';
-import ContentItemError from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentId]/error';
-import ContentItemLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentId]/loading';
-import ContentItemNotFound from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentId]/not-found';
+import ContentItemError from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentSlug]/error';
+import ContentItemLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentSlug]/loading';
+import ContentItemNotFound from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/content/[contentSlug]/not-found';
 import SettingsLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/settings/loading';
 import StudentsLoading from '@/app/[locale]/(dashboards)/workspace/learning/courses/[course]/students/loading';
 

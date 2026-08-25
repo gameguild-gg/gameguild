@@ -57,12 +57,7 @@ COPY . .
 
 RUN if [ -z "$AUTH_SECRET" ]; then echo "AUTH_SECRET build arg is required" >&2; exit 1; fi \
     && pnpm --filter @game-guild/client build \
-    && (pnpm --filter @game-guild/web build & pid=$!; \
-        while kill -0 "$pid" 2>/dev/null; do \
-          echo "web production build still running..."; \
-          sleep 30; \
-        done; \
-        wait "$pid")
+    && pnpm --filter @game-guild/web build
 
 FROM node:20-alpine AS runner
 

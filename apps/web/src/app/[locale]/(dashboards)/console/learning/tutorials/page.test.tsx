@@ -66,7 +66,7 @@ describe('LearningTutorialsPage', () => {
     expect(screen.queryByText('Midterm quiz')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /edit tutorial/i })).toHaveAttribute(
       'href',
-      '/console/learning/courses/course-1/content/lesson-1',
+      '/console/learning/courses/gameplay-prototyping/content/lesson-1',
     );
   });
 });

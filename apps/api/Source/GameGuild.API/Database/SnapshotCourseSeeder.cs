@@ -10,6 +10,8 @@ using CourseProgram = GameGuild.Learning.Courses.Program;
 /// <summary>
 /// Imports legacy snapshot course content from the main snapshot web data tree into the live API database.
 /// This is intentionally a one-shot developer utility, not a normal startup seed.
+/// Soft-deleted programs and contents are never re-imported or restored, so administrator
+/// deletions survive redeploys even when the import (or force import) runs again.
 /// </summary>
 public static partial class SnapshotCourseSeeder
 {
@@ -17,7 +19,10 @@ public static partial class SnapshotCourseSeeder
     private const string ImportMarkerPrefix = "<!-- gameguild-source:";
     private const string ImportMarkerSuffix = " -->";
 
-    public static async Task<SnapshotCourseImportResult> SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+    public static async Task<SnapshotCourseImportResult> SeedAsync(
+        IServiceProvider serviceProvider,
+        bool force = false,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(serviceProvider);
 
@@ -26,7 +31,7 @@ public static partial class SnapshotCourseSeeder
         var db = serviceProvider.GetRequiredService<ApplicationDbContext>();
 
         var coursesRoot = ResolveCoursesRoot(environment.ContentRootPath);
-        logger.LogInformation("Importing snapshot courses from {CoursesRoot}", coursesRoot);
+        logger.LogInformation("Importing snapshot courses from {CoursesRoot} (force: {Force})", coursesRoot, force);
 
         var definitionSet = LoadCourseDefinitions(coursesRoot, logger);
         var definitions = definitionSet.Definitions;
@@ -42,6 +47,22 @@ public static partial class SnapshotCourseSeeder
                 .FirstOrDefaultAsync(item => item.Slug == definition.Slug, cancellationToken)
                 .ConfigureAwait(false);
 
+            if (program is not null && program.IsDeleted)
+            {
+                logger.LogInformation(
+                    "Snapshot course program '{Slug}' was soft-deleted. Skipping re-seed to respect the deletion.",
+                    definition.Slug);
+                continue;
+            }
+
+            if (program is not null && !force)
+            {
+                logger.LogInformation(
+                    "Snapshot course program '{Slug}' is already seeded in database. Skipping re-seed (force = false).",
+                    definition.Slug);
+                continue;
+            }
+
             if (program is null)
             {
                 program = new CourseProgram
@@ -51,10 +72,6 @@ public static partial class SnapshotCourseSeeder
 
                 db.Set<CourseProgram>().Add(program);
                 importedPrograms++;
-            }
-            else if (program.IsDeleted)
-            {
-                program.Restore();
             }
 
             ApplyProgramDefinition(program, definition);
@@ -75,6 +92,14 @@ public static partial class SnapshotCourseSeeder
 
                 var existingContent = existingContents.FirstOrDefault(item => TryGetImportedSourceKey(item.Body) == sourceKey);
 
+                if (existingContent is not null && existingContent.IsDeleted)
+                {
+                    logger.LogInformation(
+                        "Snapshot content '{SourceKey}' was soft-deleted. Skipping re-seed to respect the deletion.",
+                        sourceKey);
+                    continue;
+                }
+
                 if (existingContent is null)
                 {
                     existingContent = new ProgramContent
@@ -86,10 +111,6 @@ public static partial class SnapshotCourseSeeder
                     db.Set<ProgramContent>().Add(existingContent);
                     existingContents.Add(existingContent);
                     importedContents++;
-                }
-                else if (existingContent.IsDeleted)
-                {
-                    existingContent.Restore();
                 }
 
                 ApplyContentDefinition(existingContent, program.Id, sourceKey, contentDefinition);
@@ -143,7 +164,9 @@ public static partial class SnapshotCourseSeeder
         var publicProgramCount = await db.Set<CourseProgram>()
             .CountAsync(item => item.Status == ContentStatus.Published && item.Visibility == ContentVisibility.Public, cancellationToken)
             .ConfigureAwait(false);
-        var databaseName = db.Database.GetDbConnection().Database;
+        var databaseName = db.Database.IsRelational()
+            ? db.Database.GetDbConnection().Database
+            : db.Database.ProviderName ?? "InMemory";
 
         logger.LogInformation(
             "Imported {ProgramCount} snapshot programs and {ContentCount} snapshot contents from {ImportSource}. DbContext now sees {PublicProgramCount} published/public programs in database {DatabaseName}.",
