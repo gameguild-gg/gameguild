@@ -26,6 +26,7 @@ export function buildContentTreeModel(
     const legacyFlatModuleId = `${courseId}-content`;
     const compatibilityModule: ContentItem = {
       id: legacyFlatModuleId,
+      slug: legacyFlatModuleId,
       parentId: null,
       order: 0,
       type: 'Module',
@@ -67,6 +68,7 @@ export function buildContentTreeModel(
   const virtualModuleId = `${courseId}-unassigned`;
   const virtualModule: ContentItem = {
     id: virtualModuleId,
+    slug: virtualModuleId,
     parentId: null,
     order: realTopModules.length,
     type: 'Module',

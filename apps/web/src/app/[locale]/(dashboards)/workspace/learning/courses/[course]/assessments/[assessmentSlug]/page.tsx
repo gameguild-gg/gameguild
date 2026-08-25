@@ -17,22 +17,23 @@ import { AssessmentEditor } from "@/components/learning/console/courses/[course]
  */
 export default async function AssessmentDetailPage({
   params,
-}: PageProps<"/[locale]/workspace/learning/courses/[course]/assessments/[assessmentId]">): Promise<React.JSX.Element> {
-  const { course: courseId, assessmentId } = await params;
+}: PageProps<"/[locale]/workspace/learning/courses/[course]/assessments/[assessmentSlug]">): Promise<React.JSX.Element> {
+  const { course: courseId, assessmentSlug } = await params;
 
-  const [assessment, assessmentGroups, courseContent, groupSets, rubric, canManage] =
+  const [assessment, assessmentGroups, courseContent, groupSets, canManage] =
     await Promise.all([
-      getAssessment(assessmentId),
+      getAssessment(courseId, assessmentSlug),
       getCourseAssessmentGroups(courseId),
       getCourseContent(courseId),
       getCourseGroupSets(courseId),
-      getAssessmentRubric(assessmentId),
       canManageCourse(courseId),
     ]);
 
   if (!assessment) {
     notFound();
   }
+
+  const rubric = await getAssessmentRubric(assessment.id);
 
   return (
     <AssessmentEditor

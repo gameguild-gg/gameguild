@@ -27,6 +27,10 @@ export default defineConfig({
         rootDir,
         '../../packages/infrastructure/client/src/integrations/react/index.ts',
       ),
+      '@game-guild/client/next': path.resolve(
+        rootDir,
+        '../../packages/infrastructure/client/src/integrations/next/index.ts',
+      ),
       '@game-guild/client': path.resolve(rootDir, '../../packages/infrastructure/client/src/index.ts'),
       'emception/testing': path.resolve(
         rootDir,

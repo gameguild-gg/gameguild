@@ -10,12 +10,12 @@ import { ContentItemEditor } from '@/components/learning/console/courses/[course
 
 export default async function ContentItemPage({
   params,
-}: PageProps<'/[locale]/workspace/learning/courses/[course]/content/[contentId]'>): Promise<React.JSX.Element> {
-  const { course: courseId, contentId } = await params;
+}: PageProps<'/[locale]/console/learning/courses/[course]/content/[contentSlug]'>): Promise<React.JSX.Element> {
+  const { course: courseId, contentSlug } = await params;
 
   const [course, contentItem] = await Promise.all([
     getCourse(courseId),
-    getContentItem(courseId, contentId),
+    getContentItem(courseId, contentSlug),
   ]);
 
   if (!course) {
@@ -39,6 +39,7 @@ export default async function ContentItemPage({
   const CODING_TYPES = new Set(["Assignment", "Project", "Code"]);
 
   let linkedAssessmentId: string | undefined;
+  let linkedAssessmentSlug: string | undefined;
   // ponytail: pass gradingMethods string so the editor can gate the coding-tests
   // link on the AutoGraded flag without a second fetch.
   let linkedAssessmentGradingMethods: string | undefined;
@@ -48,10 +49,11 @@ export default async function ContentItemPage({
   if (GRADED_TYPES.has(contentItem.type)) {
     const assessmentsResp = await getCourseAssessments(courseId);
     const linked = assessmentsResp.assessments.find(
-      (a) => a.contentId === contentId,
+      (a) => a.contentId === contentItem.id,
     );
     if (linked) {
       linkedAssessmentId = linked.id;
+      linkedAssessmentSlug = linked.slug;
       linkedAssessmentGradingMethods = linked.gradingMethods;
       if (CODING_TYPES.has(contentItem.type)) {
         initialCodingDefinition = await getCodingDefinitionPublic(linked.id);
@@ -65,6 +67,7 @@ export default async function ContentItemPage({
       item={contentItem}
       courseTitle={course.title}
       linkedAssessmentId={linkedAssessmentId}
+      linkedAssessmentSlug={linkedAssessmentSlug}
       linkedAssessmentGradingMethods={linkedAssessmentGradingMethods}
       initialCodingDefinition={initialCodingDefinition}
     />

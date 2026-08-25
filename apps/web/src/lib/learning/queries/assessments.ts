@@ -17,6 +17,12 @@ import {
 import { cache } from 'react';
 import { resolveCourseId } from './course';
 
+function isGuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value.trim(),
+  );
+}
+
 // =============================================================================
 // API CLIENT
 // =============================================================================
@@ -42,6 +48,7 @@ export type AssessmentPresentationMode = LearningAssessmentsAssessmentPresentati
 
 export interface Assessment {
   id: string;
+  slug: string;
   courseId: string;
   contentId: string | null;
   assessmentGroupId: string | null;
@@ -149,6 +156,7 @@ function mapAssessment(dto: LearningAssessmentsAssessment): Assessment {
 
   return {
     id: dto.id ?? '',
+    slug: dto.slug ?? dto.id ?? '',
     courseId: dto.courseId ?? '',
     contentId: dto.contentId ?? null,
     assessmentGroupId: groupFields.assessmentGroupId ?? null,
@@ -290,14 +298,19 @@ export const getCourseAssessmentAnalytics = cache(async (courseId: string): Prom
 /**
  * Fetch single assessment by ID.
  */
-export const getAssessment = cache(async (assessmentId: string): Promise<Assessment | null> => {
+export const getAssessment = cache(async (courseId: string, assessmentIdOrSlug: string): Promise<Assessment | null> => {
   try {
-    const assessmentsModule = createAssessmentsModule();
-    const result = await assessmentsModule.getAssessments(assessmentId);
-    if (!result.ok) {
-      return null;
+    if (isGuid(assessmentIdOrSlug)) {
+      const assessmentsModule = createAssessmentsModule();
+      const result = await assessmentsModule.getAssessments(assessmentIdOrSlug);
+      if (!result.ok) {
+        return null;
+      }
+      return mapAssessment(result.data);
     }
-    return mapAssessment(result.data);
+
+    const assessments = await getCourseAssessments(courseId);
+    return assessments.assessments.find((a) => a.slug === assessmentIdOrSlug) ?? null;
   } catch {
     return null;
   }

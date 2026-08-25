@@ -75,48 +75,50 @@ export function MonacoCodeEditor({
   const isDarkMode = (resolvedTheme || themeState) === "dark"
 
   const handleBeforeMount = useCallback(async (monaco: Monaco) => {
-    // Configure TypeScript/JavaScript compiler options.
-    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-      target: monaco.languages.typescript.ScriptTarget.ES2020,
-      allowNonTsExtensions: true,
-      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-      module: monaco.languages.typescript.ModuleKind.ESNext,
-      noEmit: true,
-      esModuleInterop: true,
-      jsx: monaco.languages.typescript.JsxEmit.React,
-      allowJs: true,
-      typeRoots: [],
-      allowSyntheticDefaultImports: true,
-      skipLibCheck: true,
-      skipDefaultLibCheck: true,
-    })
+    const ts = monaco?.languages?.typescript
+    if (ts) {
+      ts.typescriptDefaults.setCompilerOptions({
+        target: ts.ScriptTarget.ES2020,
+        allowNonTsExtensions: true,
+        moduleResolution: ts.ModuleResolutionKind.NodeJs,
+        module: ts.ModuleKind.ESNext,
+        noEmit: true,
+        esModuleInterop: true,
+        jsx: ts.JsxEmit.React,
+        allowJs: true,
+        typeRoots: [],
+        allowSyntheticDefaultImports: true,
+        skipLibCheck: true,
+        skipDefaultLibCheck: true,
+      })
 
-    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-      target: monaco.languages.typescript.ScriptTarget.ES2020,
-      allowNonTsExtensions: true,
-      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-      module: monaco.languages.typescript.ModuleKind.ESNext,
-      noEmit: true,
-      esModuleInterop: true,
-      jsx: monaco.languages.typescript.JsxEmit.React,
-      allowJs: true,
-      allowSyntheticDefaultImports: true,
-      skipLibCheck: true,
-      skipDefaultLibCheck: true,
-    })
+      ts.javascriptDefaults.setCompilerOptions({
+        target: ts.ScriptTarget.ES2020,
+        allowNonTsExtensions: true,
+        moduleResolution: ts.ModuleResolutionKind.NodeJs,
+        module: ts.ModuleKind.ESNext,
+        noEmit: true,
+        esModuleInterop: true,
+        jsx: ts.JsxEmit.React,
+        allowJs: true,
+        allowSyntheticDefaultImports: true,
+        skipLibCheck: true,
+        skipDefaultLibCheck: true,
+      })
 
-    // Disable semantic validation so missing-module errors don't bubble
-    // up in the in-memory file system.
-    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-      noSemanticValidation: true,
-      noSyntaxValidation: false,
-      diagnosticCodesToIgnore: [],
-    })
-    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-      noSemanticValidation: true,
-      noSyntaxValidation: false,
-      diagnosticCodesToIgnore: [],
-    })
+      // Disable semantic validation so missing-module errors don't bubble
+      // up in the in-memory file system.
+      ts.typescriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: false,
+        diagnosticCodesToIgnore: [],
+      })
+      ts.javascriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: false,
+        diagnosticCodesToIgnore: [],
+      })
+    }
 
     if (!pathCompletionRegistered) {
       registerPathCompletionProvider(monaco)

@@ -163,7 +163,8 @@ public sealed record CreateAssessmentRequest(
     bool AllowLateSubmissions = false,
     DateTime? LateSubmissionDeadline = null,
     Guid? ContentId = null,
-    AssessmentGradingMethod GradingMethods = AssessmentGradingMethod.InstructorGraded
+    AssessmentGradingMethod GradingMethods = AssessmentGradingMethod.InstructorGraded,
+    string? Slug = null
 );
 
 /// <summary>
@@ -192,7 +193,8 @@ public sealed record UpdateAssessmentRequest(
     AssessmentGradingMethod? GradingMethods = null,
     Guid? GroupSetId = null,
     bool ClearGroupSetId = false,
-    int? PeerReviewsRequiredCount = null
+    int? PeerReviewsRequiredCount = null,
+    string? Slug = null
 );
 
 /// <summary>

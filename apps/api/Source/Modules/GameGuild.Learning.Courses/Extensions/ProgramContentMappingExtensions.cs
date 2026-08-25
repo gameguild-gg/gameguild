@@ -27,6 +27,7 @@ public static class ProgramContentMappingExtensions
       ProgramId = content.ProgramId,
       ParentId = content.ParentId,
       Title = content.Title,
+      Slug = content.Slug,
       Description = content.Description ?? string.Empty,
       Type = normalizedType,
       Body = FormatBody(content.Body),
@@ -94,6 +95,7 @@ public static class ProgramContentMappingExtensions
       ProgramId = dto.ProgramId,
       ParentId = dto.ParentId,
       Title = dto.Title,
+      Slug = string.IsNullOrWhiteSpace(dto.Slug) ? dto.Title.ToSlugCase() : dto.Slug,
       Description = dto.Description,
       Type = NormalizeProfessorFacingType(dto.Type),
       Body = dto.Body,
@@ -118,6 +120,7 @@ public static class ProgramContentMappingExtensions
   {
     var wasLesson = NormalizeProfessorFacingType(content.Type) == ProgramContentType.Lesson;
     if (dto.Title != null) content.Title = dto.Title;
+    if (!string.IsNullOrWhiteSpace(dto.Slug)) content.Slug = dto.Slug;
     if (dto.Description != null) content.Description = dto.Description;
     if (dto.Type != null) content.Type = NormalizeProfessorFacingType(dto.Type.Value);
     if (dto.JsonBody is not null)

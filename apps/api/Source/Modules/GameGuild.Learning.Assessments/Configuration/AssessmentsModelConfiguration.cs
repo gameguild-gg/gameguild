@@ -15,6 +15,7 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             entity.ToTable("Assessments");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
+            entity.Property(e => e.Slug).HasMaxLength(220).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.Property(e => e.DefinitionPayload).HasColumnType("jsonb");
             entity.Property(e => e.DefinitionSchemaVersion).HasDefaultValue(1);
@@ -45,6 +46,7 @@ public sealed class AssessmentsModelConfiguration : IModelConfiguration
             });
             entity.HasIndex(e => e.CourseId);
             entity.HasIndex(e => e.AssessmentGroupId);
+            entity.HasIndex(e => e.Slug);
             entity.HasOne(e => e.AssessmentGroup)
                 .WithMany()
                 .HasForeignKey(e => e.AssessmentGroupId)

@@ -68,7 +68,8 @@ public static class DatabaseSeeder
         configuration?["Seed:DefaultTenantName"] ?? "GameGuild Platform",
         configuration?["Seed:DefaultTenantSlug"] ?? "gameguild-platform",
         configuration?["Seed:DefaultTenantDescription"] ?? "Default platform tenant for GameGuild administration.",
-        configuration?["Seed:AdminTenantRole"] ?? "SystemAdmin");
+        configuration?["Seed:AdminTenantRole"] ?? "SystemAdmin",
+        ForcePasswordReset: !string.IsNullOrWhiteSpace(configuration?["Seed:AdminPassword"]));
 
     private static async Task SeedRolesAsync(RoleManager<Role> roleManager, ILogger? logger)
     {
@@ -132,12 +133,28 @@ public static class DatabaseSeeder
         foreach (var seed in seedProjects)
         {
             var project = await EnsureSeedProjectAsync(dbContext, adminUser, seed).ConfigureAwait(false);
+            if (project is null)
+            {
+                logger?.LogInformation("  Seed project '{Slug}' is soft-deleted - skipping its demo workflows", seed.Slug);
+                continue;
+            }
+
             var version = await EnsureSeedProjectVersionAsync(dbContext, adminUser, project, seed).ConfigureAwait(false);
             await EnsureSeedProjectReleaseAsync(dbContext, project, seed).ConfigureAwait(false);
 
-            var request = await EnsureSeedTestingRequestAsync(dbContext, adminUser, version, seed).ConfigureAwait(false);
-            var location = locations.FirstOrDefault(candidate => candidate.Name == seed.TestingLocationName) ?? locations[0];
-            await EnsureSeedTestingSessionAsync(dbContext, adminUser, request, location, seed).ConfigureAwait(false);
+            if (version is not null)
+            {
+                var request = await EnsureSeedTestingRequestAsync(dbContext, adminUser, version, seed).ConfigureAwait(false);
+                if (request is not null)
+                {
+                    var location = locations.FirstOrDefault(candidate => candidate.Name == seed.TestingLocationName);
+                    if (location is not null)
+                    {
+                        await EnsureSeedTestingSessionAsync(dbContext, adminUser, request, location, seed).ConfigureAwait(false);
+                    }
+                }
+            }
+
             await EnsureSeedLaunchPlanAsync(dbContext, project, seed).ConfigureAwait(false);
         }
 
@@ -192,6 +209,10 @@ public static class DatabaseSeeder
                 };
                 dbContext.Set<TestingLocation>().Add(location);
             }
+            else if (location.IsDeleted)
+            {
+                continue;
+            }
 
             location.Description = definition.Description;
             location.IsVirtual = definition.IsVirtual;
@@ -202,7 +223,6 @@ public static class DatabaseSeeder
             location.VirtualUrl = definition.VirtualUrl;
             location.Equipment = definition.Equipment;
             location.Status = LocationStatus.Active;
-            location.DeletedAt = null;
             location.Touch();
         }
 
@@ -215,7 +235,7 @@ public static class DatabaseSeeder
             .ConfigureAwait(false);
     }
 
-    private static async Task<Project> EnsureSeedProjectAsync(
+    private static async Task<Project?> EnsureSeedProjectAsync(
         ApplicationDbContext dbContext,
         AppUser adminUser,
         DemoWorkflowSeed seed)
@@ -225,23 +245,22 @@ public static class DatabaseSeeder
             .FirstOrDefaultAsync(candidate => candidate.Slug == seed.Slug)
             .ConfigureAwait(false);
 
-        if (project is null)
+        if (project is not null)
         {
-            project = new Project
-            {
-                Id = Guid.NewGuid(),
-                Slug = seed.Slug,
-                CreatedById = adminUser.Id
-            };
-            dbContext.Set<Project>().Add(project);
+            return project.IsDeleted ? null : project;
         }
+
+        project = new Project
+        {
+            Id = Guid.NewGuid(),
+            Slug = seed.Slug,
+            CreatedById = adminUser.Id
+        };
+        dbContext.Set<Project>().Add(project);
 
         project.Title = seed.Title;
         project.ShortDescription = seed.ShortDescription;
         project.Description = $"{seed.ShortDescription} This seeded project backs real Testing Lab and Launch Pad workflows.";
-        // These demo records do not ship image assets. Keep the media fields empty so
-        // clients use their valid design-system fallback instead of requesting fabricated
-        // CDN paths (which surface as 404s in browsers and deployment smoke tests).
         project.ImageUrl = null;
         project.FeaturedImageUrl = null;
         project.DownloadUrl = $"https://downloads.gameguild.gg/{seed.Slug}/{seed.VersionNumber}.zip";
@@ -255,34 +274,36 @@ public static class DatabaseSeeder
         project.Visibility = ContentVisibility.Public;
         project.CreatedById = adminUser.Id;
         project.PublishedAt ??= SystemClock.UtcNow.AddDays(-14);
-        project.DeletedAt = null;
         project.Touch();
 
         await dbContext.SaveChangesAsync().ConfigureAwait(false);
         return project;
     }
 
-    private static async Task<ProjectVersion> EnsureSeedProjectVersionAsync(
+    private static async Task<ProjectVersion?> EnsureSeedProjectVersionAsync(
         ApplicationDbContext dbContext,
         AppUser adminUser,
         Project project,
         DemoWorkflowSeed seed)
     {
         var version = await dbContext.Set<ProjectVersion>()
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(candidate => candidate.ProjectId == project.Id && candidate.VersionNumber == seed.VersionNumber)
             .ConfigureAwait(false);
 
-        if (version is null)
+        if (version is not null)
         {
-            version = new ProjectVersion
-            {
-                Id = Guid.NewGuid(),
-                ProjectId = project.Id,
-                VersionNumber = seed.VersionNumber,
-                CreatedById = adminUser.Id
-            };
-            dbContext.Set<ProjectVersion>().Add(version);
+            return version.IsDeleted ? null : version;
         }
+
+        version = new ProjectVersion
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = project.Id,
+            VersionNumber = seed.VersionNumber,
+            CreatedById = adminUser.Id
+        };
+        dbContext.Set<ProjectVersion>().Add(version);
 
         version.ReleaseNotes = $"{seed.Title} seeded build for moderated playtesting and launch readiness.";
         version.Status = "testing";
@@ -299,8 +320,14 @@ public static class DatabaseSeeder
         DemoWorkflowSeed seed)
     {
         var release = await dbContext.Set<ProjectRelease>()
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(candidate => candidate.ProjectId == project.Id && candidate.ReleaseVersion == seed.VersionNumber)
             .ConfigureAwait(false);
+
+        if (release is not null && release.IsDeleted)
+        {
+            return;
+        }
 
         if (release is null)
         {
@@ -327,7 +354,7 @@ public static class DatabaseSeeder
         release.Touch();
     }
 
-    private static async Task<TestingRequest> EnsureSeedTestingRequestAsync(
+    private static async Task<TestingRequest?> EnsureSeedTestingRequestAsync(
         ApplicationDbContext dbContext,
         AppUser adminUser,
         ProjectVersion version,
@@ -338,6 +365,11 @@ public static class DatabaseSeeder
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(candidate => candidate.ProjectVersionId == version.Id && candidate.Title == title)
             .ConfigureAwait(false);
+
+        if (request is not null && request.IsDeleted)
+        {
+            return null;
+        }
 
         if (request is null)
         {
@@ -364,7 +396,6 @@ public static class DatabaseSeeder
         request.Priority = TestingPriority.High;
         request.EstimatedDurationHours = 2;
         request.Mode = TestingMode.Online;
-        request.DeletedAt = null;
         request.Touch();
 
         await dbContext.SaveChangesAsync().ConfigureAwait(false);
@@ -383,6 +414,11 @@ public static class DatabaseSeeder
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(candidate => candidate.TestingRequestId == request.Id && candidate.SessionName == sessionName)
             .ConfigureAwait(false);
+
+        if (session is not null && session.IsDeleted)
+        {
+            return;
+        }
 
         if (session is null)
         {
@@ -409,7 +445,6 @@ public static class DatabaseSeeder
         session.ManagerId = adminUser.Id;
         session.ManagerUserId = adminUser.Id;
         session.CreatedById = adminUser.Id;
-        session.DeletedAt = null;
         session.Touch();
     }
 
@@ -423,6 +458,11 @@ public static class DatabaseSeeder
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(candidate => candidate.ProjectId == project.Id)
             .ConfigureAwait(false);
+
+        if (plan is not null && plan.IsDeleted)
+        {
+            return;
+        }
 
         if (plan is null)
         {
@@ -439,7 +479,6 @@ public static class DatabaseSeeder
         plan.TargetLaunchAt = SystemClock.UtcNow.AddDays(30);
         plan.LaunchedAt = null;
         plan.Channels = seed.Channels.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        plan.DeletedAt = null;
 
         var checklistDefinitions = new[]
         {
@@ -453,6 +492,11 @@ public static class DatabaseSeeder
         foreach (var (category, title, isComplete) in checklistDefinitions)
         {
             var item = plan.ChecklistItems.FirstOrDefault(candidate => candidate.Category == category && candidate.Title == title);
+            if (item is not null && item.IsDeleted)
+            {
+                continue;
+            }
+
             if (item is null)
             {
                 item = new LaunchChecklistItem
@@ -468,7 +512,6 @@ public static class DatabaseSeeder
             item.IsRequired = true;
             item.IsComplete = isComplete;
             item.CompletedAt = isComplete ? SystemClock.UtcNow.AddDays(-1) : null;
-            item.DeletedAt = null;
             item.Touch();
         }
 
