@@ -1,9 +1,11 @@
 /**
  * Generate .tar.br bundle archives from the CDN file tree.
  *
- * Reads build/manifest.json (produced by generate-manifest.ts), groups files
+ * Reads artifacts/toolchain/release/cdn/manifest.json (produced by
+ * generate-manifest.ts), groups files
  * into bundles, creates tar archives, compresses them with brotli, writes the
- * bundles into build/cdn/, and rewrites manifest.json with bundle metadata.
+ * bundles into artifacts/toolchain/release/cdn/, and rewrites manifest.json
+ * with bundle metadata.
  *
  * EVERY file must belong to a bundle -- no unbundled individual downloads.
  *
@@ -36,68 +38,23 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import { fileURLToPath } from 'url';
 import * as zlib from 'zlib';
+import { pruneFullyDeduplicatedBundles } from './lib/bundle-planning.ts';
+import { createDeterministicTar } from './lib/deterministic-tar.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = process.cwd();
-const OUTPUT_DIR = process.env.OUTPUT_DIR || path.join(ROOT, 'build', 'cdn');
-const MANIFEST_FILE = process.env.MANIFEST_FILE || path.join(ROOT, 'build', 'manifest.json');
+const P = toolchainPaths(ROOT);
+const OUTPUT_DIR = process.env.OUTPUT_DIR || P.releaseCdn;
+const MANIFEST_FILE = process.env.MANIFEST_FILE || P.manifestFile;
 
 enableBuildKeepalive('generate-bundles');
 
 // ──────────────────── helpers ────────────────────
-
-/** Create a POSIX tar archive (in memory) from a list of {path, data} entries. */
-function createTar(entries: { path: string; data: Uint8Array; executable?: boolean }[]): Buffer {
-  const blocks: Buffer[] = [];
-
-  for (const entry of entries) {
-    // File name (strip leading / for tar convention)
-    const name = entry.path.replace(/^\//, '');
-    const header = Buffer.alloc(512);
-
-    // name (0–99)
-    header.write(name.slice(0, 100), 0, 100, 'utf-8');
-    // mode (100–107)
-    header.write((entry.executable ? '0000755' : '0000644') + '\0', 100, 8, 'utf-8');
-    // uid (108–115)
-    header.write('0000000\0', 108, 8, 'utf-8');
-    // gid (116–123)
-    header.write('0000000\0', 116, 8, 'utf-8');
-    // size (124–135) – 11 octal digits + NUL
-    header.write(entry.data.length.toString(8).padStart(11, '0') + '\0', 124, 12, 'utf-8');
-    // mtime (136–147)
-    const mtime = Math.floor(Date.now() / 1000);
-    header.write(mtime.toString(8).padStart(11, '0') + '\0', 136, 12, 'utf-8');
-    // typeflag (156) – '0' = regular file
-    header[156] = 48; // ASCII '0'
-    // magic (257–262) "ustar\0"
-    header.write('ustar\0', 257, 6, 'utf-8');
-    // version (263–264) "00"
-    header.write('00', 263, 2, 'utf-8');
-
-    // Compute checksum: sum of all bytes with checksum field (148–155) as spaces
-    header.fill(0x20, 148, 156); // 8 spaces
-    let chksum = 0;
-    for (let i = 0; i < 512; i++) chksum += header[i];
-    header.write(chksum.toString(8).padStart(6, '0') + '\0 ', 148, 8, 'utf-8');
-
-    blocks.push(header);
-
-    // File data padded to 512-byte boundary
-    const dataBlock = Buffer.alloc(Math.ceil(entry.data.length / 512) * 512);
-    dataBlock.set(entry.data);
-    blocks.push(dataBlock);
-  }
-
-  // End-of-archive marker (two 512-byte zero blocks)
-  blocks.push(Buffer.alloc(1024));
-
-  return Buffer.concat(blocks);
-}
 
 /** SHA-256 hex hash of a buffer. */
 function sha256(data: Buffer): string {
@@ -500,6 +457,10 @@ async function main() {
     console.log(`  After  (uncompressed total): ${(afterUncompressedBytes / (1024 * 1024)).toFixed(1)} MB`);
   }
 
+  for (const name of pruneFullyDeduplicatedBundles(bundleFiles, manifest.files)) {
+    console.log(`  Skipping fully deduplicated bundle: ${name}`);
+  }
+
   // ── Generate tar.br archives ──
 
   const cpuCount = os.cpus().length;
@@ -556,7 +517,7 @@ async function main() {
     });
 
     // Create tar
-    const tar = createTar(entries);
+    const tar = createDeterministicTar(entries);
     totalUncompressed += tar.length;
 
     // Determine output path

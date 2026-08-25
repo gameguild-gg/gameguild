@@ -5,9 +5,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import shell from 'shelljs';
 import { defineBuildScript } from './lib/build-script.ts';
-import { paths } from './lib/paths.ts';
+import { toolchainPaths } from './toolchain/paths.ts';
 
 const CDN_METADATA_FILES = new Set(['.gitignore', '.npmignore']);
 const REQUIRED_EXACT_FILES = new Set(['manifest.json', 'brotli_wasm.js', 'brotli_wasm.wasm']);
@@ -48,21 +47,23 @@ function pruneCdnToPublishPayload(rootDir: string, log: (message: string) => voi
 defineBuildScript({
     label: 'deploy-cdn',
     run: async ({ step, log }) => {
-        const P = paths();
+        const P = toolchainPaths();
         // The Next.js app root is the emception directory itself (not a separate web/ subdir).
         const dest = fs.existsSync(path.join(P.root, 'web'))
             ? path.join(P.root, 'web/public/cdn')
             : P.publicCdn;
 
-        await step(`copy build/cdn → ${dest}`, () => {
-            shell.rm('-rf', dest);
-            shell.mkdir('-p', dest);
-            shell.cp('-r', path.join(P.buildCdn, '*'), dest);
+        await step(`copy canonical release → ${dest}`, () => {
+            if (!fs.existsSync(P.releaseCdn)) {
+                throw new Error(`CDN release directory not found: ${P.releaseCdn}`);
+            }
+            fs.rmSync(dest, { recursive: true, force: true });
+            fs.cpSync(P.releaseCdn, dest, { recursive: true, force: true });
         });
 
         await step('copy manifest.json', () => {
             if (fs.existsSync(P.manifestFile)) {
-                shell.cp(P.manifestFile, dest);
+                fs.copyFileSync(P.manifestFile, path.join(dest, 'manifest.json'));
             } else {
                 log(`WARN: manifest.json not found at ${P.manifestFile}`);
             }
@@ -70,19 +71,19 @@ defineBuildScript({
 
         await step('verify brotli decompressor', () => {
             // Brotli decompressor (browser-side) is built locally by `npm run build:brotli`.
-            // Output (`brotli_wasm.js` + `brotli_wasm.wasm`) lives in build/cdn/ and is
+            // Output (`brotli_wasm.js` + `brotli_wasm.wasm`) lives in the canonical release and is
             // already shipped to the deploy target by the wildcard copy above.
-            const brotliJs = path.join(P.buildCdn, 'brotli_wasm.js');
-            const brotliWasm = path.join(P.buildCdn, 'brotli_wasm.wasm');
+            const brotliJs = path.join(P.releaseCdn, 'brotli_wasm.js');
+            const brotliWasm = path.join(P.releaseCdn, 'brotli_wasm.wasm');
             if (!fs.existsSync(brotliJs) || !fs.existsSync(brotliWasm)) {
                 throw new Error(
-                    `Locally-built brotli not found in ${P.buildCdn}. Run \`npm run build:brotli\` first.`,
+                    `Locally-built brotli not found in ${P.releaseCdn}. Run \`npm run build:brotli\` first.`,
                 );
             }
             // Remove the legacy filename if a previous build left it behind.
             const legacy = path.join(dest, 'brotli_wasm_bg.wasm');
             if (fs.existsSync(legacy)) {
-                shell.rm('-f', legacy);
+                fs.rmSync(legacy, { force: true });
             }
             const deployed = path.join(dest, 'brotli_wasm.wasm');
             if (!fs.existsSync(deployed)) {

@@ -1,0 +1,24 @@
+From: Emception maintainers
+Subject: [PATCH] sysconfig: load explicit target data during cross-build
+
+When a Windows interpreter bootstraps a POSIX-like Emscripten target, os.name
+still selects the native Windows configuration. An explicit
+_PYTHON_SYSCONFIGDATA_NAME is the cross-build contract for loading the target
+configuration, so give it precedence without changing native initialization.
+---
+ Lib/sysconfig/__init__.py | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/Lib/sysconfig/__init__.py b/Lib/sysconfig/__init__.py
+--- a/Lib/sysconfig/__init__.py
++++ b/Lib/sysconfig/__init__.py
+@@ -499,5 +499,7 @@
+-    if os.name == 'nt':
++    if "_PYTHON_SYSCONFIGDATA_NAME" in os.environ:
++        _init_posix(_CONFIG_VARS)
++    elif os.name == 'nt':
+         _init_non_posix(_CONFIG_VARS)
+         _CONFIG_VARS['VPATH'] = sys._vpath
+-    if os.name == 'posix':
++    elif os.name == 'posix':
+         _init_posix(_CONFIG_VARS)

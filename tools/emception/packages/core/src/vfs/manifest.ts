@@ -1,38 +1,68 @@
-/**
- * Sysroot manifest types: shape produced by `tools/emception/scripts/generate-manifest.ts`
- * and consumed by LazyFS (in `@emception/browser`).
- *
- * Pure types — no runtime dependencies.
- */
+/** Pure artifact-manifest contracts shared by core and browser adapters. */
 
 export interface ManifestEntry {
-    size: number;
-    hash: string;
-    executable?: boolean;
-    symlink?: string;
-    bundle?: string;
-    priority?: 'critical' | 'high' | 'normal' | 'low';
+  size?: number;
+  hash?: string;
+  executable?: boolean;
+  symlink?: string;
+  bundle?: string;
+  priority?: 'critical' | 'high' | 'normal' | 'low';
 }
 
 export interface ManifestBundle {
-    files: string[];
-    url: string;
-    size: number;
-    hash: string;
+  files: string[];
+  url: string;
+  size: number;
+  hash: string;
 }
 
-export interface FSManifest {
-    version: number;
-    generated: string;
-    baseUrl: string;
-    toolVersions?: {
-        pythonMajorMinor: string;
-        pythonMajorMinorCompact: string;
-    };
-    files: {
-        [path: string]: ManifestEntry;
-    };
-    bundles: {
-        [name: string]: ManifestBundle;
-    };
+export interface ManifestToolVersions {
+  pythonMajorMinor: string;
+  pythonMajorMinorCompact: string;
+  readonly [tool: string]: string;
 }
+
+export interface WasmArtifactProfile {
+  readonly kind: string;
+  readonly glue: string;
+  readonly wasm: string;
+  readonly profileHash: string;
+  readonly imports: readonly string[];
+  readonly exports: readonly string[];
+}
+
+export interface ToolchainSourceProvenance {
+  readonly version: string;
+  readonly revision?: string;
+  readonly sha256: string;
+}
+
+interface ManifestBase {
+  version: 1 | 2;
+  generated: string;
+  baseUrl: string;
+  toolVersions?: ManifestToolVersions;
+  files: Record<string, ManifestEntry>;
+  bundles: Record<string, ManifestBundle>;
+}
+
+export interface LegacyFSManifest extends ManifestBase {
+  version: 1;
+  schemaVersion?: never;
+}
+
+export interface ReleaseFSManifest extends ManifestBase {
+  version: 2;
+  schemaVersion: 2;
+  artifactVersion: string;
+  runtimeAbi: string;
+  patchSetVersion: string;
+  buildFingerprint: string;
+  toolVersions: ManifestToolVersions;
+  profiles: Record<string, WasmArtifactProfile>;
+  toolchainLockHash?: string;
+  buildReceiptHash?: string;
+  sourceProvenance?: Record<string, ToolchainSourceProvenance>;
+}
+
+export type FSManifest = LegacyFSManifest | ReleaseFSManifest;

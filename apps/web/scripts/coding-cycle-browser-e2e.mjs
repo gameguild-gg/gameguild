@@ -18,9 +18,9 @@
  *
  *   Phase 2 STUDENT UI:
  *     - real sign-in form → activity URL → IDE boots (REAL WASM)
- *     - Test Cases tab lists exactly the PUBLIC tests (private name ABSENT)
- *     - Run Tests → public tests FAIL (starter code)
- *     - TYPE real code into Monaco (keyboard.type) → Run Tests → public
+ *     - learner workspace never renders the private test name
+ *     - Run public tests → public tests FAIL (starter code)
+ *     - TYPE real code into Monaco (keyboard.type) → Run public tests → public
  *       tests PASS → Submit → success redirect
  *
  *   Phase 3 PAYLOAD CHECK (API): GET the submission → assert codePayload
@@ -100,6 +100,20 @@ const PG_LOG = resolve(RUNTIME, "pg.log");
 const HEADLESS = !["0", "false", "no"].includes(
   (process.env.CODING_CYCLE_HEADLESS ?? "true").toLowerCase(),
 );
+// CI uses Playwright's managed browser. Local Windows machines may instead
+// point this at an installed Chrome when the matching Playwright download is
+// intentionally absent (for example after clearing disk space).
+const CHROMIUM_EXECUTABLE_PATH = process.env.CODING_CYCLE_CHROMIUM_EXECUTABLE;
+// A developer can reuse a known-current API build when validating only the
+// browser flow. This is opt-in: CI and the default command still compile API
+// sources before the isolated cycle starts.
+const API_NO_BUILD = process.env.CODING_CYCLE_API_NO_BUILD === "1";
+// A disposable database starts empty and the API currently applies more than
+// one hundred migrations. Four minutes is insufficient on a cold Windows
+// volume; callers can lower or raise this without editing the runner.
+const API_BOOT_TIMEOUT_MS = Number(
+  process.env.CODING_CYCLE_API_BOOT_TIMEOUT_MS ?? 900_000,
+);
 
 // Generous: first WASM boot downloads ~tens of MB of brotli bundles from
 // /emception/* (localhost) + JITs clang.wasm. Each run-tests compile is
@@ -143,6 +157,19 @@ function releaseRunLock() {
 
 function stopChild(entry) {
   if (!entry?.proc || entry.proc.exitCode != null || entry.proc.killed) return;
+  if (process.platform === "win32") {
+    // `dotnet run` starts MSBuild children. Killing only the launcher leaks
+    // those processes and prevents a second isolated cycle from starting.
+    try {
+      spawnSync("taskkill", ["/pid", String(entry.proc.pid), "/t", "/f"], {
+        stdio: "ignore",
+      });
+      return;
+    } catch {
+      try { entry.proc.kill("SIGTERM"); } catch { /* already gone */ }
+      return;
+    }
+  }
   try {
     // Negative pid kills the whole process group (spawned detached).
     process.kill(-entry.proc.pid, "SIGTERM");
@@ -330,15 +357,26 @@ async function bootStack() {
   const api = spawn(
     "dotnet",
     [
-      "run", "--no-launch-profile",
+      "run", "--no-launch-profile", ...(API_NO_BUILD ? ["--no-build"] : []),
       "--project", "apps/api/Source/GameGuild.API/GameGuild.API.csproj",
       "--urls", `http://127.0.0.1:${API_PORT}`,
     ],
-    { cwd: REPO_ROOT, env: { ...process.env, ...envArrayToObject(apiEnv) }, detached: true, stdio: ["ignore", "pipe", "pipe"] },
+    {
+      cwd: REPO_ROOT,
+      env: { ...process.env, ...envArrayToObject(apiEnv) },
+      detached: process.platform !== "win32",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
   );
   children.push({ proc: api, label: "api" });
   pipeLog(api, API_LOG);
-  await waitForHttp(`${API_BASE}/ready`, "GameGuild API", API_LOG, 240_000, api);
+  await waitForHttp(
+    `${API_BASE}/ready`,
+    "GameGuild API",
+    API_LOG,
+    API_BOOT_TIMEOUT_MS,
+    api,
+  );
   log("API ready");
 
   // --- Next.js web ---
@@ -364,7 +402,16 @@ async function bootStack() {
   const web = spawn(
     process.platform === "win32" ? "pnpm.cmd" : "pnpm",
     ["exec", "next", "dev", "--webpack", "--port", String(WEB_PORT)],
-    { cwd: WEB_DIR, env: { ...process.env, ...envArrayToObject(webEnv) }, detached: true, stdio: ["ignore", "pipe", "pipe"] },
+    {
+      cwd: WEB_DIR,
+      env: { ...process.env, ...envArrayToObject(webEnv) },
+      detached: process.platform !== "win32",
+      // Node cannot spawn a .cmd file with pipes directly on Windows. The
+      // command is fixed in this runner, and taskkill below still tears down
+      // the shell's complete process tree.
+      shell: process.platform === "win32",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
   );
   children.push({ proc: web, label: "web" });
   pipeLog(web, WEB_LOG);
@@ -805,55 +852,50 @@ async function signIn(page, email, password) {
 async function waitForIdeReady(page, scope, timeoutMs, label) {
   const status = scope.locator('[data-testid="status"]').first();
   await status.waitFor({ state: "attached", timeout: 30_000 });
-  // 'Ready' or 'Tests complete'/'Test error' (already-booted) both indicate boot done.
+  // Assessment runs leave the neutral IDE status untouched; only its normal
+  // ready/error states establish that the underlying toolchain booted.
   await page.waitForFunction(
     (sel) => {
       const el = document.querySelector(sel);
       const t = el?.textContent ?? "";
-      return /Ready|Tests complete|Test error|Error:/.test(t);
+      return /Ready|Error:/.test(t);
     },
     '[data-testid="status"]',
     { timeout: timeoutMs },
   );
   const text = (await status.textContent()) ?? "";
-  if (/Error:/.test(text) && !/Tests complete|Ready/.test(text)) {
+  if (/Error:/.test(text) && !/Ready/.test(text)) {
     throw new Error(`${label} IDE boot error: ${text}`);
   }
 }
 
-async function clickBottomTab(page, name) {
-  // The bottom tab bar buttons are plain <button> with text content.
-  const btn = page.locator("button", { hasText: name }).first();
-  await btn.waitFor({ state: "visible", timeout: 15_000 });
-  await btn.click();
-}
-
 async function studentRunTestsAndWait(page) {
-  // Two-stage wait: (1) the synchronous 'Running tests...' status flip
-  // proves the click landed — guards against resolving on stale text when
-  // a later run produces the SAME final text as the previous one; then
-  // (2) the terminal pattern.
-  const statusSel = '[data-testid="status"]';
-  const runBtn = page.getByTestId("run-tests-button").first();
+  // Assessment execution is a host extension over the neutral IDE, so it
+  // reports completion through its results panel rather than the IDE's legacy
+  // built-in test status. The temporarily disabled button proves the new run
+  // has settled before its result rows are inspected below.
+  const runBtn = page.getByRole("button", { name: "Run public tests" }).first();
   await runBtn.waitFor({ state: "visible", timeout: 15_000 });
   await runBtn.click();
+  await page.getByTestId("test-results-panel").waitFor({
+    state: "visible",
+    timeout: RUN_TESTS_TIMEOUT_MS,
+  });
   await page.waitForFunction(
-    (sel) => /Running tests/.test((document.querySelector(sel)?.textContent ?? "")),
-    statusSel,
-    { timeout: 15_000 },
-  );
-  await page.waitForFunction(
-    (sel) => /Tests complete|Test error/.test((document.querySelector(sel)?.textContent ?? "").trim()),
-    statusSel,
+    () =>
+      Array.from(document.querySelectorAll("button")).some(
+        (button) => button.textContent?.trim() === "Run public tests" && !button.disabled,
+      ),
+    undefined,
     { timeout: RUN_TESTS_TIMEOUT_MS },
   );
 }
 
 async function graderRunTestsAndWait(graderPanel) {
-  // The grader panel drives the IDE imperatively (ideRef.runTests) — the Ide
-  // status line NEVER changes in grader mode. Wait on the panel's own
-  // outcomes instead: computed score (success) or the error alert (failure).
-  const runBtn = graderPanel.getByTestId("run-tests-button").first();
+  // Grading uses the same session composition as the learner, but runs the
+  // full plan (public plus private) and projects the computed score to its
+  // host panel.
+  const runBtn = graderPanel.getByRole("button", { name: "Run full tests" }).first();
   await runBtn.waitFor({ state: "visible", timeout: 15_000 });
   await runBtn.click();
   await Promise.any([
@@ -908,25 +950,13 @@ async function studentJourney(fixture, browser) {
     record("IDE boots (status Ready)", true);
     await screenshot(page, "student-ide-booted");
 
-    // Test Cases tab — exactly the PUBLIC tests.
-    await clickBottomTab(page, "Test Cases");
-    const casesPanel = page.getByTestId("test-cases-panel");
-    await casesPanel.waitFor({ state: "visible", timeout: 15_000 });
-    const rowCount = await casesPanel.locator('[data-testid="test-case-row"]').count();
-    const caseNames = await casesPanel.locator('[data-testid="test-case-row"]').evaluateAll((rows) =>
-      rows.map((r) => r.querySelector('td')?.textContent?.trim() ?? '')
-    );
-    const hasPrintsSum = caseNames.some((n) => /prints-sum/.test(n));
-    const hasAddFn = caseNames.some((n) => /add-fn/.test(n));
-    record("public test 'prints-sum' listed", hasPrintsSum, caseNames.join("|"));
-    record("public test 'add-fn' listed", hasAddFn, caseNames.join("|"));
+    // The neutral IDE no longer owns GameGuild's test-case panel. The learner
+    // sees public outcomes only after an explicit public run.
     const bodyText = await page.locator("body").innerText();
     record("private test 'secret-exit' ABSENT from student view", !/secret-exit/.test(bodyText), "must not appear");
-    await screenshot(page, "student-test-cases");
 
-    // Run Tests #1 — starter code fails both public tests.
+    // Run public tests #1 — starter code fails both public tests.
     await studentRunTestsAndWait(page);
-    // Student IDE auto-switched to Test Results tab.
     const resultsPanel = page.getByTestId("test-results-panel");
     await resultsPanel.waitFor({ state: "visible", timeout: 15_000 });
     const rows1 = await resultsPanel.locator('[data-testid^="test-case-"]').filter({ hasNot: page.locator('[data-testid^="test-case-diagnostic-"]') }).count();
@@ -938,6 +968,8 @@ async function studentJourney(fixture, browser) {
     });
     const printsSumFailing = rowTexts1.some((t) => /prints-sum/.test(t) && /\u2717/.test(t));
     const addFnFailing = rowTexts1.some((t) => /add-fn/.test(t) && /\u2717/.test(t));
+    record("public test 'prints-sum' ran", rowTexts1.some((t) => /prints-sum/.test(t)), rowTexts1.join(" | "));
+    record("public test 'add-fn' ran", rowTexts1.some((t) => /add-fn/.test(t)), rowTexts1.join(" | "));
     record("starter code: 'prints-sum' FAILS", printsSumFailing, rowTexts1.join(" | "));
     record("starter code: 'add-fn' FAILS", addFnFailing, rowTexts1.join(" | "));
     await screenshot(page, "student-run1-failing");
@@ -1108,9 +1140,9 @@ async function instructorJourney(fixture, browser) {
 
     // Run Tests — full plan (public + private).
     await graderRunTestsAndWait(graderPanel);
-    // Two results panels exist in grader mode now (the panel's own + the
-    // IDE's internal one) — scope to the IDE's slot for a unique match.
-    const graderResults = graderPanel.getByTestId("test-results-slot").getByTestId("test-results-panel");
+    // The result panel is contributed by CodingAssessmentEditor itself. The
+    // grading host only adds the score projection above the neutral IDE.
+    const graderResults = graderPanel.getByTestId("test-results-panel");
     await graderResults.waitFor({ state: "visible", timeout: 30_000 });
     const graderRowTexts = await graderResults.evaluate((el) => {
       return Array.from(el.querySelectorAll('[data-testid^="test-case-"]')).filter((n) =>
@@ -1298,7 +1330,12 @@ async function main() {
 
   const results = [];
   // ONE browser, TWO contexts (student / instructor) — clean separation.
-  const browser = await chromium.launch({ headless: HEADLESS });
+  const browser = await chromium.launch({
+    headless: HEADLESS,
+    ...(CHROMIUM_EXECUTABLE_PATH
+      ? { executablePath: CHROMIUM_EXECUTABLE_PATH }
+      : {}),
+  });
   try {
     // Phase 2 — student UI (hard).
     try {

@@ -24,23 +24,25 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 
 enableBuildKeepalive('build-sdl3');
 
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const EMSDK_VERSION = lockedVersion(loadToolchainStateSync(ROOT).lock, 'emsdk');
 setupEmsdk(EMSDK_VERSION);
 
 const EMSDK_DIR = getEmsdkDir();
 const EMCC = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'emcc');
 
-const SYSROOT = path.join(ROOT, 'sysroot');
+const SYSROOT = P.sysroot;
 const SYSROOT_LIB = path.join(SYSROOT, 'usr', 'lib');
 const SYSROOT_INC = path.join(SYSROOT, 'usr', 'include');
 const EMSCRIPTEN_DIR = path.join(SYSROOT_LIB, 'emscripten');
@@ -117,6 +119,7 @@ int main(void) {
 );
 
 console.log('Building SDL3 via emsdk port (-sUSE_SDL=3) — downloads SDL3 on first run...');
+console.log('  SDL3 remains a pinned experimental Emscripten port; suppressing its known driver diagnostic.');
 console.log(`  emcc: ${EMCC}`);
 
 const result = shell.exec(
@@ -124,6 +127,7 @@ const result = shell.exec(
         `"${EMCC}"`,
         `"${STUB_C}"`,
         '-sUSE_SDL=3',
+        '-Wno-experimental',
         '-sENVIRONMENT=web',
         '-sALLOW_MEMORY_GROWTH=1',
         '-sMODULARIZE=1',
@@ -146,12 +150,11 @@ if (result.code !== 0) {
 
 // ── Step 2: save sdl3-runtime.mjs ─────────────────────────────────────────
 const OUTPUT_MJS = path.join(EMSCRIPTEN_DIR, 'sdl3-runtime.mjs');
+const OUTPUT_WASM = path.join(EMSCRIPTEN_DIR, 'sdl3-runtime.wasm');
 fs.copyFileSync(TMP_JS, OUTPUT_MJS);
+fs.copyFileSync(TMP_WASM, OUTPUT_WASM);
 const mjsSize = (fs.statSync(OUTPUT_MJS).size / 1024).toFixed(1);
-console.log(`Saved sdl3-runtime.mjs (${mjsSize} KB) → ${path.relative(ROOT, OUTPUT_MJS)}`);
-
-// Clean up the stub WASM — users supply their own WASM at runtime.
-if (fs.existsSync(TMP_WASM)) fs.rmSync(TMP_WASM);
+console.log(`Saved canvas runtime pair (${mjsSize} KB glue) → ${path.relative(ROOT, EMSCRIPTEN_DIR)}`);
 
 // ── Step 3: copy libSDL3.a + headers from the emsdk cache ─────────────────
 //
@@ -197,7 +200,7 @@ console.log(`Deployed libSDL3.a → ${path.relative(ROOT, CACHE_LIB_DIR)}/`);
 
 // Copy SDL3 headers
 if (fs.existsSync(cacheIncSDL3)) {
-    shell.cp('-rf', path.join(cacheIncSDL3, '*.h'), path.join(SYSROOT_INC, 'SDL3', '/'));
+    fs.cpSync(cacheIncSDL3, path.join(SYSROOT_INC, 'SDL3'), { recursive: true });
     console.log(`Deployed SDL3 headers → sysroot/usr/include/SDL3/`);
 } else {
     console.warn(`Warning: SDL3 headers not found in emsdk cache at ${cacheIncSDL3}`);
@@ -210,7 +213,7 @@ if (fs.existsSync(cacheIncSDL3)) {
 // a file-system lock (which is forbidden in the browser sandbox).
 // tool-runner.ts aliases /home/user/.emscripten_cache/ports
 //                      → /usr/lib/emscripten_ports
-const sdl3PortPy = path.join(SYSROOT, 'usr', 'lib', 'emscripten', 'tools', 'ports', 'sdl3.py');
+const sdl3PortPy = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'tools', 'ports', 'sdl3.py');
 if (fs.existsSync(sdl3PortPy)) {
     const src = fs.readFileSync(sdl3PortPy, 'utf-8');
     const m = src.match(/^VERSION\s*=\s*['"]([^'"]+)['"]/m);

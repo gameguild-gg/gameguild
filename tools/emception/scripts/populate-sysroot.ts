@@ -1,10 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import { copyRuntimeDirectoryContents, copyRuntimeSourceTree } from './lib/runtime-source-tree.ts';
 
 enableBuildKeepalive('populate-sysroot');
 
@@ -12,9 +14,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const ROOT = path.resolve(__dirname, '..');
+const P = toolchainPaths(ROOT);
 const EMSDK_DIR = getEmsdkDir();
-const SYSROOT = path.join(ROOT, 'sysroot');
-const EMSDK_VERSION = process.argv[2] || process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const SYSROOT = P.sysroot;
+const EMSDK_VERSION = lockedVersion(loadToolchainStateSync(ROOT).lock, 'emsdk');
+const VIRTUAL_LINKS_FILE = path.join(SYSROOT, '.emception-symlinks.json');
+const virtualLinks: Record<string, string> = {};
+
+function declareToolLink(command: string, moduleName: string): void {
+    fs.rmSync(path.join(SYSROOT, 'usr/bin', command), { force: true });
+    virtualLinks[`/usr/bin/${command}`] = `/usr/lib/${moduleName}.wasm`;
+}
 
 // Ensure we fail on error
 shell.config.fatal = true;
@@ -50,15 +60,15 @@ shell.mkdir('-p', path.join(SYSROOT, 'home/user'));
 // 3. Copy Emscripten toolchain driver scripts
 console.log('>> Copying Emscripten driver scripts...');
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'tools'))) {
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'tools'), path.join(SYSROOT, 'usr/lib/emscripten/'));
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'tools'), path.join(SYSROOT, 'usr/lib/emscripten/tools'));
 }
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'src'))) {
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'src'), path.join(SYSROOT, 'usr/lib/emscripten/'));
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'src'), path.join(SYSROOT, 'usr/lib/emscripten/src'));
 }
 // third_party contains pure-Python dependencies required at runtime (e.g. leb128, ply)
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'third_party'))) {
     console.log('>> Copying Emscripten third_party dependencies...');
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'third_party'), path.join(SYSROOT, 'usr/lib/emscripten/'));
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'third_party'), path.join(SYSROOT, 'usr/lib/emscripten/third_party'));
 }
 
 // Core Python driver files + data files required by emcc
@@ -113,17 +123,17 @@ if (fs.existsSync(buildingPath)) {
 // ensure_sysroot / install_system_headers expects them under EMSCRIPTEN_ROOT).
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'system/include'))) {
     console.log('>> Copying system headers...');
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'system/include/*'), path.join(SYSROOT, 'usr/include/'));
+    copyRuntimeDirectoryContents(path.join(EMSCRIPTEN_ROOT, 'system/include'), path.join(SYSROOT, 'usr/include'));
     // Emscripten also looks for system/include under EMSCRIPTEN_ROOT
     shell.mkdir('-p', path.join(SYSROOT, 'usr/lib/emscripten/system'));
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'system/include'), path.join(SYSROOT, 'usr/lib/emscripten/system/'));
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'system/include'), path.join(SYSROOT, 'usr/lib/emscripten/system/include'));
 }
 
 // system/lib directory
 if (fs.existsSync(path.join(EMSCRIPTEN_ROOT, 'system/lib'))) {
     console.log('>> Copying system libraries...');
     shell.mkdir('-p', path.join(SYSROOT, 'usr/lib/emscripten/system'));
-    shell.cp('-r', path.join(EMSCRIPTEN_ROOT, 'system/lib'), path.join(SYSROOT, 'usr/lib/emscripten/system/'));
+    copyRuntimeSourceTree(path.join(EMSCRIPTEN_ROOT, 'system/lib'), path.join(SYSROOT, 'usr/lib/emscripten/system/lib'));
 }
 
 // 4. Copy Emscripten cache (precompiled system .a libraries)
@@ -143,18 +153,20 @@ const CACHE_DIR = path.join(EMSCRIPTEN_ROOT, 'cache');
 if (fs.existsSync(path.join(CACHE_DIR, 'sysroot'))) {
     console.log('>> Copying cached sysroot libraries...');
     if (fs.existsSync(path.join(CACHE_DIR, 'sysroot/lib'))) {
-        shell.mkdir('-p', path.join(SYSROOT, 'usr/lib/emscripten/cache-lib'));
-        shell.cp('-r', path.join(CACHE_DIR, 'sysroot/lib/*'), path.join(SYSROOT, 'usr/lib/emscripten/cache-lib/'));
+        copyRuntimeDirectoryContents(
+            path.join(CACHE_DIR, 'sysroot/lib'),
+            path.join(SYSROOT, 'usr/lib/emscripten/cache-lib'),
+        );
     }
     if (fs.existsSync(path.join(CACHE_DIR, 'sysroot/include'))) {
-        shell.cp('-r', path.join(CACHE_DIR, 'sysroot/include/*'), path.join(SYSROOT, 'usr/include/'));
+        copyRuntimeDirectoryContents(path.join(CACHE_DIR, 'sysroot/include'), path.join(SYSROOT, 'usr/include'));
     }
 }
 
 // 5. Copy Binaryen tools info
 if (fs.existsSync(path.join(BINARYEN_DIR, 'lib/binaryen'))) {
     console.log('>> Copying Binaryen support files...');
-    shell.cp('-r', path.join(BINARYEN_DIR, 'lib/binaryen/*'), path.join(SYSROOT, 'usr/lib/binaryen/'));
+    copyRuntimeDirectoryContents(path.join(BINARYEN_DIR, 'lib/binaryen'), path.join(SYSROOT, 'usr/lib/binaryen'));
 }
 
 // 5b. Copy clang resource-dir (builtin headers like stddef.h, stdarg.h, *intrin.h).
@@ -170,8 +182,7 @@ if (fs.existsSync(CLANG_RESOURCE_ROOT)) {
         if (!fs.existsSync(srcInclude)) continue;
         const destDir = path.join(SYSROOT, 'usr/lib/clang', ver, 'include');
         console.log(`>> Copying clang ${ver} resource-dir headers to ${destDir}...`);
-        shell.mkdir('-p', destDir);
-        shell.cp('-r', path.join(srcInclude, '*'), destDir);
+        copyRuntimeDirectoryContents(srcInclude, destDir);
     }
 } else {
     console.warn(`>> WARN: clang resource-dir not found at ${CLANG_RESOURCE_ROOT}`);
@@ -197,55 +208,32 @@ createWrapper('em++', 'emcc');
 createWrapper('emar', 'emar');
 createWrapper('emranlib', 'emranlib');
 
-// Symlinks for LLVM tools
+// Virtual links for LLVM tools. They are materialized by the release manifest,
+// so building the sysroot never depends on host symlink privileges.
 // In the micro-kernel architecture, tools are standalone .wasm modules.
 // clang++ and wasm-ld are aliases handled by the TypeScript tool runner,
 // so they don't need separate symlinks on disk.
 const llvmTools = ['clang', 'lld', 'llvm-ar', 'llvm-nm', 'llvm-objcopy', 'llc'];
-llvmTools.forEach(tool => {
-    const dest = path.join(SYSROOT, 'usr/bin', tool);
-    try {
-        if (fs.existsSync(dest) || fs.lstatSync(dest).isSymbolicLink()) fs.unlinkSync(dest);
-    } catch (e) { }
-    fs.symlinkSync(`/usr/lib/${tool}.wasm`, dest);
-});
+llvmTools.forEach(tool => declareToolLink(tool, tool));
 // clang++ -> clang, wasm-ld -> lld (aliases)
-for (const [alias, target] of [['clang++', 'clang'], ['wasm-ld', 'lld']] as const) {
-    const dest = path.join(SYSROOT, 'usr/bin', alias);
-    try {
-        if (fs.existsSync(dest) || fs.lstatSync(dest).isSymbolicLink()) fs.unlinkSync(dest);
-    } catch (e) { }
-    fs.symlinkSync(`/usr/lib/${target}.wasm`, dest);
+const llvmAliases: ReadonlyArray<readonly [string, string]> = [['clang++', 'clang'], ['wasm-ld', 'lld']];
+for (const [alias, target] of llvmAliases) {
+    declareToolLink(alias, target);
 }
 
 const binaryenTools = ['wasm-opt', 'wasm-as', 'wasm-emscripten-finalize', 'wasm-metadce', 'wasm-ctor-eval'];
-binaryenTools.forEach(tool => {
-    const dest = path.join(SYSROOT, 'usr/bin', tool);
-    try {
-        if (fs.existsSync(dest) || fs.lstatSync(dest).isSymbolicLink()) fs.unlinkSync(dest);
-    } catch (e) { }
-    fs.symlinkSync(`/usr/lib/${tool}.wasm`, dest);
-});
+binaryenTools.forEach(tool => declareToolLink(tool, tool));
+declareToolLink('python3', 'python');
 
-const pythonDest = path.join(SYSROOT, 'usr/bin/python3');
-try {
-    if (fs.existsSync(pythonDest) || fs.lstatSync(pythonDest).isSymbolicLink()) fs.unlinkSync(pythonDest);
-} catch (e) { }
-fs.symlinkSync('/usr/lib/python.wasm', pythonDest);
-
-  // 6b. Symlinks for build tools (cmake, curl)
-  const buildTools = ['cmake', 'curl'];
+// 6b. Virtual links for build tools (cmake, curl)
+const buildTools = ['cmake', 'curl'];
 buildTools.forEach(tool => {
-    const dest = path.join(SYSROOT, 'usr/bin', tool);
-    try {
-        if (fs.existsSync(dest) || fs.lstatSync(dest).isSymbolicLink()) fs.unlinkSync(dest);
-    } catch (e) { }
-    // Only create symlink if the .wasm exists in sysroot
     const wasmPath = path.join(SYSROOT, 'usr/lib', `${tool}.wasm`);
     if (fs.existsSync(wasmPath)) {
-        fs.symlinkSync(`/usr/lib/${tool}.wasm`, dest);
+        declareToolLink(tool, tool);
     }
 });
+fs.writeFileSync(VIRTUAL_LINKS_FILE, `${JSON.stringify(virtualLinks, null, 2)}\n`);
 
 // 7. Write emscripten.config
 const configContent = `import os

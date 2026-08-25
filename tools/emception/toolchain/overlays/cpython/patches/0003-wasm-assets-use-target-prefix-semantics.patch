@@ -1,0 +1,21 @@
+From: Emception maintainers
+Subject: [PATCH] wasm assets: parse install prefix with target semantics
+
+The WASM install prefix describes the Emscripten target filesystem, not the
+native bootstrap host. pathlib.Path turns /usr into the current drive's usr
+directory on Windows, so derive the relative asset path with POSIX semantics.
+---
+ Tools/wasm/wasm_assets.py | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Tools/wasm/wasm_assets.py b/Tools/wasm/wasm_assets.py
+--- a/Tools/wasm/wasm_assets.py
++++ b/Tools/wasm/wasm_assets.py
+@@ -195,2 +195,2 @@
+-    default=pathlib.Path("/usr/local"),
+-    type=path,
++    default=pathlib.PurePosixPath("/usr/local"),
++    type=pathlib.PurePosixPath,
+@@ -203 +203 @@
+-    relative_prefix = args.prefix.relative_to(pathlib.Path("/"))
++    relative_prefix = args.prefix.relative_to(pathlib.PurePosixPath("/"))

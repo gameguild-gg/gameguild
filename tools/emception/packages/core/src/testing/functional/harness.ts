@@ -25,7 +25,7 @@
  *     weight equally across cases (lazy default).
  *
  * Student solution files are NOT referenced here — they are linked at grade
- * time via `plan.build.sources` (set by the assignment-plan mapper). The
+ * time via `plan.build.sources` (set by the host's TestPlan mapper). The
  * engine's `doctest` handler at `engine.ts:186-227` compiles
  * `plan.build.sources` + `test.sourceFiles` together and runs the resulting
  * binary.
@@ -71,9 +71,8 @@ export interface FunctionalTestSignature {
 }
 
 /**
- * One case within a FunctionalTestGroup. Mirrors the v2 backend DTO
- * (`FunctionalTestCase` in `Models/CodingAssignmentContent/Test.cs`):
- * PascalCase field names per the v1 wire convention.
+ * One case within a functional test group. The PascalCase field names are a
+ * generic compatibility format for host-side test-plan mappers.
  *
  * `Inputs[i]` aligns positionally with `FunctionalTestSignature.parameters[i]`.
  */
@@ -145,7 +144,7 @@ export function serializeCppLiteral(param: FunctionParameter): string {
  * ONE `extern "C"` forward decl + ONE TEST_CASE block containing N CHECK
  * lines (one per case).
  *
- * `options.index` is assigned by the caller (the assignment-plan mapper) and
+ * `options.index` is assigned by the caller (the host's TestPlan mapper) and
  * seeds the harness filename + doctest TEST_CASE name uniqueness across
  * multiple groups compiled into the same binary. Defaults to 0.
  * `options.name` overrides the TEST_CASE label (defaults to

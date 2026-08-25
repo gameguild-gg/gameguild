@@ -2,20 +2,25 @@ import "@testing-library/jest-dom/vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { IdeHandle } from "@game-guild/emception-ui";
 
 const routerMocks = vi.hoisted(() => ({
   push: vi.fn(),
 }));
 
-const ideMock = vi.hoisted(() => ({
-  getFiles: vi.fn<
-    () => Promise<Array<{ path: string; content: string }>>
-  >(),
-  addFile: vi.fn(),
-  removeFile: vi.fn(),
-  setFileMeta: vi.fn(),
-}));
+const ideMock = vi.hoisted(() => {
+  const getFiles = vi.fn<
+    () => Promise<Array<{ path: string; content: string; type: "text" }>>
+  >();
+
+  return {
+    getFiles,
+    replaceFiles: vi.fn(
+      async (files: Array<{ path: string; content: string; type: "text" }>) => {
+        getFiles.mockResolvedValue(files);
+      },
+    ),
+  };
+});
 
 const putMock = vi.hoisted(() => vi.fn());
 
@@ -65,15 +70,16 @@ const assignmentSamplesMock = vi.hoisted(() => ({
   },
 }));
 
-// ponytail: capture the latest props handed to the IDE mock so tests can assert
-// on workspaceConfig / tests without a rendered JSON preview card (removed in
-// the editor refinements plan).
+// Capture the latest composed editor props without booting the WASM runtime.
 let lastIdeProps: {
   workspaceConfig?: { id?: string; files?: Record<string, unknown> };
-  tests?: { Public?: unknown[]; Private?: unknown[] };
   allowCreateFiles?: boolean;
-  onAllowCreateFilesChange?: (v: boolean) => void;
 } = {};
+let lastAssessmentEditorProps: {
+  mode?: string;
+  workspaceConfig?: { id?: string; files?: Record<string, unknown> };
+  extensions?: readonly { id: string }[];
+} | null = null;
 
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
@@ -96,81 +102,75 @@ vi.mock("next/navigation", () => ({
 vi.mock("@game-guild/emception-ui", async () => {
   const React = await import("react");
 
-  // ponytail: the page now composes StandardTest/FunctionalTestGroup editors
-  // inside `testsPanelSlot`. The mock surfaces them by rendering props.testsPanelSlot
-  // as children, and echoes `props.tests` back via getAuthoredState — mirroring the
-  // real IDE's contract (T6/T7) where authored.tests === what the page passed in.
-  // useImperativeHandle has no deps array → handle recreated every render →
-  // closure always captures the latest props. getAuthoredState also echoes the
-  // active workspace (files + presetId = workspaceConfig.id), matching the real
-  // Ide's authored-state contract; the preset picker mirrors the Ide header
-  // workspace <select> (rendered when presetOptions is supplied).
-  const Ide = React.forwardRef<IdeHandle, Record<string, unknown>>((props, ref) => {
-    React.useImperativeHandle(ref, () => ({
-      getFiles: ideMock.getFiles,
-      getAuthoredState: async () => ({
-        files: Object.entries(
-          (props.workspaceConfig as { files?: Record<string, { content: string }> } | undefined)
-            ?.files ?? {},
-        ).map(([path, bundle]) => ({ path, content: bundle.content })),
-        fileMeta: {},
-        tests: props.tests,
-        presetId: (props.workspaceConfig as { id?: string } | undefined)?.id ?? "cpp",
-      }),
-      runTests: vi.fn(),
-      compileAndRun: vi.fn(),
-      setFiles: vi.fn(),
-      reset: vi.fn(),
-      addFile: ideMock.addFile,
-      removeFile: ideMock.removeFile,
-      setFileMeta: ideMock.setFileMeta,
-      getModifiedFiles: vi.fn(),
-    }));
-    lastIdeProps = props as typeof lastIdeProps;
-    // Mirror the package contract (FileExplorer workspace header): the compact
-    // 🔓/🔒 toggle renders only when onAllowCreateFilesChange is present.
-    const createToggle = props.onAllowCreateFilesChange
-      ? React.createElement(
-          "button",
-          {
-            "data-testid": "allow-student-create",
-            onClick: () =>
-              (props.onAllowCreateFilesChange as (v: boolean) => void)(
-                !props.allowCreateFiles,
-              ),
-          },
-          props.allowCreateFiles ? "🔓" : "🔒",
-        )
-      : null;
-    const presetPicker = Array.isArray(props.presetOptions)
-      ? React.createElement(
-          "select",
-          {
-            "data-testid": "preset-picker",
-            value: (props.workspaceConfig as { id?: string } | undefined)?.id ?? "",
-            onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
-              (props.onPresetChange as ((v: string) => void) | undefined)?.(e.target.value),
-          },
-          ...(props.presetOptions as Array<{ value: string; label: string }>).map((o) =>
-            React.createElement("option", { key: o.value, value: o.value }, o.label),
-          ),
-        )
-      : null;
+  function CodingAssessmentEditor(props: {
+    mode?: string;
+    definition?: {
+      Environment?: { AllowStudentCreateFiles?: boolean };
+      Tests?: { Public?: unknown[]; Private?: unknown[] };
+    };
+    workspaceConfig?: { id?: string; files?: Record<string, unknown> };
+    extensions?: readonly {
+      id: string;
+      toolbarEnd?: () => React.ReactNode;
+      explorerFooter?: (controller: {
+        getFiles: typeof ideMock.getFiles;
+        replaceFiles: typeof ideMock.replaceFiles;
+      }) => React.ReactNode;
+      bottomPanel?: () => React.ReactNode;
+    }[];
+    onReady?: (controller: {
+      getFiles: typeof ideMock.getFiles;
+      replaceFiles: typeof ideMock.replaceFiles;
+    }) => void;
+  }) {
+    lastAssessmentEditorProps = props;
+    lastIdeProps = {
+      workspaceConfig: props.workspaceConfig,
+      allowCreateFiles: props.definition?.Environment?.AllowStudentCreateFiles,
+    };
+    React.useEffect(() => {
+      props.onReady?.({
+        getFiles: ideMock.getFiles,
+        replaceFiles: ideMock.replaceFiles,
+      });
+    }, [props.onReady]);
     return React.createElement(
       "div",
-      { "data-testid": "mock-ide" },
-      presetPicker,
-      createToggle,
-      (props.testsPanelSlot as React.ReactNode) ?? null,
+      { "data-testid": "mock-assessment-editor" },
+      React.createElement(
+        "div",
+        { "data-testid": "mock-assessment-surface" },
+        ...((props.extensions ?? []).map((extension) =>
+          React.createElement(
+            React.Fragment,
+            { key: extension.id },
+            extension.toolbarEnd?.(),
+            extension.explorerFooter?.({
+              getFiles: ideMock.getFiles,
+              replaceFiles: ideMock.replaceFiles,
+            }),
+            extension.bottomPanel?.(),
+          ),
+        )),
+      ),
     );
-  });
-  Ide.displayName = "Ide";
+  }
 
   return {
-    ASSIGNMENT_SAMPLES: assignmentSamplesMock,
-    Ide,
+    CodingAssessmentEditor,
   };
 });
+
+vi.mock("@game-guild/emception-ui/assessment/presets", () => ({
+  ASSIGNMENT_SAMPLES: assignmentSamplesMock,
+  createAssessmentWorkspaceConfig: (
+    language: keyof typeof assignmentSamplesMock,
+    files: Record<string, unknown>,
+  ) => ({
+    ...assignmentSamplesMock[language].workspaceConfig,
+    files,
+  }),
+}));
 
 vi.mock("@/lib/coding-assignment/actions", async () => {
   const actual = await vi.importActual<
@@ -183,7 +183,7 @@ vi.mock("@/lib/coding-assignment/actions", async () => {
 });
 
 import { CodingDefinitionEditor } from "./coding-definition-editor";
-import { ASSIGNMENT_SAMPLES } from "@game-guild/emception-ui";
+import { ASSIGNMENT_SAMPLES } from "@game-guild/emception-ui/assessment/presets";
 import { putCodingAssignmentAction } from "@/lib/coding-assignment/actions";
 import type { CodingAssignmentContent } from "@/lib/coding-assignment/client";
 
@@ -198,17 +198,46 @@ const baseProps = {
 
 describe("CodingDefinitionEditor", () => {
   beforeEach(() => {
+    lastAssessmentEditorProps = null;
     vi.clearAllMocks();
     lastIdeProps = {};
     ideMock.getFiles.mockReset();
     ideMock.getFiles.mockResolvedValue([
-      { path: "/user/main.cpp", content: "// edited starter" },
+      { path: "/user/main.cpp", content: "// edited starter", type: "text" },
     ]);
-    ideMock.addFile.mockResolvedValue(undefined);
-    ideMock.removeFile.mockResolvedValue(undefined);
-    ideMock.setFileMeta.mockResolvedValue(undefined);
     putMock.mockReset();
     putMock.mockResolvedValue({ success: true });
+  });
+
+  it("composes the author workspace through CodingAssessmentEditor", async () => {
+    render(<CodingDefinitionEditor {...baseProps} initialContent={null} />);
+
+    await screen.findByTestId("mock-assessment-editor");
+    expect(lastAssessmentEditorProps?.mode).toBe("author");
+    expect(lastAssessmentEditorProps?.workspaceConfig?.id).toBe("cpp");
+    expect(lastAssessmentEditorProps?.extensions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "gameguild-assessment-authoring" }),
+      ]),
+    );
+  });
+
+  it("keeps GameGuild file policies in its authoring extension", async () => {
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} initialContent={null} />);
+
+    await act(async () => {});
+    ideMock.getFiles.mockResolvedValue([
+      { path: "/user/main.cpp", content: "// edited starter", type: "text" },
+      { path: "/user/private-helper.cpp", content: "int hidden() { return 42; }", type: "text" },
+    ]);
+    await user.click(await screen.findByTestId("sync-file-policies"));
+    const visibility = await screen.findByLabelText(
+      "Visibility for /user/private-helper.cpp",
+    );
+    await user.selectOptions(visibility, "Private");
+
+    expect(visibility).toHaveValue("Private");
   });
 
   it("auto-seeds the C++ sample on mount when initialContent is null", async () => {
@@ -217,7 +246,7 @@ describe("CodingDefinitionEditor", () => {
     const sample = ASSIGNMENT_SAMPLES.cpp;
 
     // The IDE only renders once the seed useEffect populates fileRows.
-    await screen.findByTestId("mock-ide");
+    await screen.findByTestId("mock-assessment-surface");
     expect(
       Object.keys(lastIdeProps.workspaceConfig?.files ?? {}),
     ).toContain("/user/main.cpp");
