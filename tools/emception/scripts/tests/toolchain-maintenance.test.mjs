@@ -96,6 +96,21 @@ test('Binaryen optimization inherits the bounded Toolchain concurrency', async (
   assert.throws(() => ensureBinaryenConcurrency({}, 0), /positive integer/);
 });
 
+test('LLVM driver objects are built through their CMake subdirectory targets', async () => {
+  const root = path.resolve(import.meta.dirname, '..', '..');
+  const source = await readFile(path.join(root, 'scripts', 'build-llvm.ts'), 'utf8');
+
+  assert.match(
+    source,
+    /cmake --build "\$\{driverSubdir\}"[^\n]+--target \$\{requiredObjs\.join\(' '\)\}/,
+  );
+  assert.match(
+    source,
+    /cmake --build "\$\{lldSubdir\}"[^\n]+--target \$\{requiredObjs\.join\(' '\)\}/,
+  );
+  assert.doesNotMatch(source, /CMakeFiles\/(?:clang|lld)\.dir\/\$\{obj\}/);
+});
+
 test('Emscripten sysroot copies exclude host Python bytecode caches', async (context) => {
   const { copyRuntimeDirectoryContents, copyRuntimeSourceTree } = await import('../lib/runtime-source-tree.ts');
   const root = await temporaryRoot(context);
