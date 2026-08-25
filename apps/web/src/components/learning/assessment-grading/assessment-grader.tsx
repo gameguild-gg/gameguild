@@ -4,9 +4,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   CodingAssessmentEditor,
   type AssessmentRunResult,
-  type CodingLanguage,
 } from '@game-guild/emception-ui';
-import { createAssessmentWorkspaceConfig } from '@game-guild/emception-ui/assessment/presets';
+import {
+  createAssessmentWorkspaceConfig,
+  type CodingLanguage,
+} from '@game-guild/emception-ui/assessment/presets';
 
 import { formatFeedback } from '@/lib/emception/scoring';
 import type { CodeFile } from '@/lib/coding-assignment/code-payload';

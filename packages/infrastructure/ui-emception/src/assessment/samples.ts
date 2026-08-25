@@ -1,4 +1,4 @@
-import type { GradingCase, GradingPlan, WorkspaceConfig } from './ide-types';
+import type { WorkspaceConfig } from 'emception';
 
 // ── C++ stdin/stdout starter with grading plan ───────────────────
 
@@ -100,34 +100,17 @@ int main(void) {
 
 export type CodingLanguage = 'cpp' | 'c' | 'sdl-cpp' | 'raylib-cpp' | 'allegro-cpp';
 
+type AssessmentSampleWorkspace = WorkspaceConfig & {
+  readonly layout: {
+    readonly activeFile: string;
+    readonly openTabs: readonly { readonly path: string; readonly group: string }[];
+    readonly expandedDirs?: readonly string[];
+  };
+};
+
 export interface AssignmentSample {
-  workspaceConfig: WorkspaceConfig;
-  plan: GradingPlan;
+  workspaceConfig: AssessmentSampleWorkspace;
 }
-
-const STDIO_CASE: GradingCase = {
-  kind: 'stdio',
-  name: 'echo stdin',
-  stdin: 'hello world',
-  expectedStdout: 'hello world',
-  weight: 2,
-  hidden: false,
-};
-
-const DOCTEST_CASE: GradingCase = {
-  kind: 'doctest',
-  name: 'unit tests',
-  sourceFiles: ['/user/test.cpp'],
-  weight: 3,
-  hidden: true,
-};
-
-const GRAPHICS_BUILD_CASE: GradingCase = {
-  kind: 'custom',
-  name: 'renders without crashing',
-  weight: 1,
-  hidden: false,
-};
 
 export const ASSIGNMENT_SAMPLES: Record<CodingLanguage, AssignmentSample> = {
   cpp: {
@@ -161,10 +144,6 @@ export const ASSIGNMENT_SAMPLES: Record<CodingLanguage, AssignmentSample> = {
       files: {
         '/user/main.cpp': { encoding: 'text', content: STARTER_CPP },
       },
-    },
-    plan: {
-      cases: [STDIO_CASE, DOCTEST_CASE],
-      build: { sources: ['/user/main.cpp'] },
     },
   },
 
@@ -213,19 +192,6 @@ int main(void) {
         },
       },
     },
-    plan: {
-      cases: [
-        {
-          kind: 'stdio',
-          name: 'echo stdin',
-          stdin: 'hello world',
-          expectedStdout: 'hello world',
-          weight: 2,
-          hidden: false,
-        },
-      ],
-      build: { sources: ['/user/main.c'] },
-    },
   },
 
   'sdl-cpp': {
@@ -252,7 +218,7 @@ int main(void) {
         sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/sdl-main.cpp' },
       },
       run: {
-        type: 'sdl3-canvas',
+        type: 'canvas',
       },
       features: {
         canvas: true,
@@ -270,10 +236,6 @@ int main(void) {
       files: {
         '/user/sdl-main.cpp': { encoding: 'text', content: STARTER_SDL },
       },
-    },
-    plan: {
-      cases: [GRAPHICS_BUILD_CASE],
-      build: { sources: ['/user/sdl-main.cpp'] },
     },
   },
 
@@ -302,7 +264,7 @@ int main(void) {
         sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/raylib-main.cpp' },
       },
       run: {
-        type: 'sdl3-canvas',
+        type: 'canvas',
       },
       features: {
         canvas: true,
@@ -320,10 +282,6 @@ int main(void) {
       files: {
         '/user/raylib-main.cpp': { encoding: 'text', content: STARTER_RAYLIB },
       },
-    },
-    plan: {
-      cases: [GRAPHICS_BUILD_CASE],
-      build: { sources: ['/user/raylib-main.cpp'] },
     },
   },
 
@@ -343,7 +301,7 @@ int main(void) {
         sourceDetect: { extensions: ['.cpp', '.c'], entryPoint: '/user/allegro-main.cpp' },
       },
       run: {
-        type: 'sdl3-canvas',
+        type: 'canvas',
       },
       features: {
         canvas: true,
@@ -361,10 +319,6 @@ int main(void) {
       files: {
         '/user/allegro-main.cpp': { encoding: 'text', content: STARTER_ALLEGRO },
       },
-    },
-    plan: {
-      cases: [GRAPHICS_BUILD_CASE],
-      build: { sources: ['/user/allegro-main.cpp'] },
     },
   },
 };

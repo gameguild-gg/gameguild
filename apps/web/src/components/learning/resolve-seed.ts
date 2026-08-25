@@ -1,7 +1,8 @@
 import type { CodingAssignmentContent, FileEncoding } from '@/lib/coding-assignment/types';
-// Deep import: the package root pulls in Ide.tsx → the browser worker module,
-// which vite cannot resolve in the web test environment.
-import { legacyAssignmentToken, workspaceStorageKey } from '@game-guild/emception-ui/ide-types';
+import {
+  legacyAssessmentToken,
+  workspaceStorageKey,
+} from '@game-guild/emception-ui/assessment/storage';
 
 /** Workspace seed — shape produced by `publicSeedFiles` and consumed by the
  *  assessment workspace configuration (image seeds carry `encoding: 'base64'`). */
@@ -38,7 +39,7 @@ export function hasRestorableDraft(token: string, presetId: string): boolean {
   if (typeof window === 'undefined') return false;
   for (const key of [
     workspaceStorageKey(token, presetId),
-    workspaceStorageKey(legacyAssignmentToken(token), presetId),
+    workspaceStorageKey(legacyAssessmentToken(token), presetId),
   ]) {
     const raw = window.localStorage.getItem(key);
     if (raw == null) continue;

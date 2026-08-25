@@ -126,7 +126,6 @@ vi.mock("@game-guild/emception-ui", async () => {
     lastAssessmentEditorProps = props;
     lastIdeProps = {
       workspaceConfig: props.workspaceConfig,
-      tests: props.definition?.Tests,
       allowCreateFiles: props.definition?.Environment?.AllowStudentCreateFiles,
     };
     React.useEffect(() => {
@@ -158,10 +157,20 @@ vi.mock("@game-guild/emception-ui", async () => {
   }
 
   return {
-    ASSIGNMENT_SAMPLES: assignmentSamplesMock,
     CodingAssessmentEditor,
   };
 });
+
+vi.mock("@game-guild/emception-ui/assessment/presets", () => ({
+  ASSIGNMENT_SAMPLES: assignmentSamplesMock,
+  createAssessmentWorkspaceConfig: (
+    language: keyof typeof assignmentSamplesMock,
+    files: Record<string, unknown>,
+  ) => ({
+    ...assignmentSamplesMock[language].workspaceConfig,
+    files,
+  }),
+}));
 
 vi.mock("@/lib/coding-assignment/actions", async () => {
   const actual = await vi.importActual<
@@ -174,7 +183,7 @@ vi.mock("@/lib/coding-assignment/actions", async () => {
 });
 
 import { CodingDefinitionEditor } from "./coding-definition-editor";
-import { ASSIGNMENT_SAMPLES } from "@game-guild/emception-ui";
+import { ASSIGNMENT_SAMPLES } from "@game-guild/emception-ui/assessment/presets";
 import { putCodingAssignmentAction } from "@/lib/coding-assignment/actions";
 import type { CodingAssignmentContent } from "@/lib/coding-assignment/client";
 
