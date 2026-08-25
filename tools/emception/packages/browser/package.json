@@ -36,14 +36,18 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && node -e \"const fs=require('fs');fs.copyFileSync('src/emscripten/subprocess_shim.py','dist/emscripten/subprocess_shim.py');fs.copyFileSync('../../public/coi-serviceworker.js','dist/coi-serviceworker.js')\"",
+    "generate:manifest-url": "node ../../scripts/generate-browser-manifest-url.mjs",
+    "prebuild": "pnpm run generate:manifest-url",
+    "build": "pnpm run clean && tsc -p tsconfig.json && node -e \"const fs=require('fs');fs.copyFileSync('src/emscripten/subprocess_shim.py','dist/emscripten/subprocess_shim.py');fs.copyFileSync('../../public/coi-serviceworker.js','dist/coi-serviceworker.js')\"",
+    "pretypecheck": "pnpm run generate:manifest-url",
     "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
-    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+    "test": "npm run build && node ../../scripts/run-node-tests.mjs tests",
+    "clean": "node -e \"const fs=require('fs');for(const path of ['dist','tsconfig.tsbuildinfo'])fs.rmSync(path,{recursive:true,force:true})\""
   },
   "dependencies": {
-    "emception": "*",
-    "@gameguild/emception-xterm": "*"
+    "emception": "4.2.0",
+    "@gameguild/emception-xterm": "4.2.0"
   },
   "devDependencies": {
     "typescript": "^5.3.0"

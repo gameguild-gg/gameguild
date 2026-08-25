@@ -1,8 +1,13 @@
 # Fluxo ponta a ponta de quiz, avaliação e nota
 
-Status: proposto.
+Status: diagnóstico arquivado.
 
-Data da avaliação: 2026-08-19.
+Data da avaliação: 2026-08-19. Revisado em 2026-08-20.
+
+> O plano executável e as decisões canônicas foram separados em
+> [`quiz-grading-end-to-end/`](./quiz-grading-end-to-end/README.md) em
+> 2026-08-21. Este documento preserva a auditoria detalhada do estado
+> encontrado e não deve ser usado isoladamente para implementar workflows.
 
 ## Resumo executivo
 
@@ -31,9 +36,11 @@ Há atualmente dois fluxos de aluno:
    textarea genérica e envia `{ "answer": "..." }`, em vez do documento de
    respostas estruturadas do quiz.
 
-Além disso, `AutoGraded` é hoje apenas uma flag. A API não executa o avaliador
-de quiz ao receber a submissão. O avaliador existente está no package
-TypeScript e ainda não existe no limite confiável da API C#.
+Além disso, `GradingMethods` é hoje principalmente uma configuração persistida.
+A API ainda não executa o pipeline completo indicado pelas flags. Em especial,
+`AutoGraded` representa autoavaliação pelo próprio aluno, não correção
+automática pelo sistema. Os fluxos de IA, autoavaliação e revisão final pelo
+instrutor ainda não estão conectados de ponta a ponta.
 
 A conclusão é:
 
@@ -41,12 +48,15 @@ A conclusão é:
   tentativa e permite ao professor aplicar uma nota global;
 - o fluxo manual específico de quiz ainda precisa unir a interface do quiz à
   submissão oficial e mostrar questões e respostas corretamente ao professor;
-- o fluxo automático está mais distante, pois exige entrega segura da prova,
+- o fluxo por IA está mais distante, pois exige entrega segura da prova,
   versão imutável da definição, avaliador no servidor e persistência do
   resultado por questão;
-- o fluxo híbrido, com questões automáticas e manuais no mesmo quiz, deve ser
-  tratado como resultado natural dos dois fluxos, não como uma terceira
-  implementação independente.
+- grupo e peso controlam participação no gradebook, mas não escolhem quem
+  avalia nem obrigam revisão humana;
+- `InstructorGraded`, quando combinado com outro método, representa sempre a
+  última etapa do pipeline e impede a publicação até a revisão do professor;
+- sem `InstructorGraded`, o resultado do avaliador primário pode ser finalizado
+  e publicado diretamente, conforme a política de feedback.
 
 Antes de qualquer disponibilização para alunos, há um bloqueio de segurança:
 um aluno matriculado pode receber o `ProgramContent.JsonBody` completo pela API
@@ -65,11 +75,20 @@ O fluxo completo deve permitir:
 4. o aluno iniciar uma tentativa e receber somente uma definição segura;
 5. o aluno responder usando a interface real de `quiz-surface`;
 6. a API receber respostas estruturadas e imutáveis para aquela tentativa;
-7. a API avaliar automaticamente as questões determinísticas;
-8. questões manuais seguirem para a fila do professor;
-9. o resultado final ser calculado e persistido uma única vez;
-10. o aluno ver estado, nota e feedback conforme a política configurada;
-11. o gradebook consumir somente resultados oficiais produzidos pela API.
+7. o instrutor escolher exatamente um avaliador primário: pares, IA, aluno ou
+   o próprio instrutor;
+8. o instrutor poder acrescentar revisão docente final aos workflows de pares,
+   IA ou autoavaliação;
+9. a API executar as etapas na ordem canônica, sempre deixando
+   `InstructorGraded` por último quando presente;
+10. o avaliador primário publicar diretamente quando não houver revisão do
+    instrutor;
+11. o professor poder aprovar ou alterar o resultado na etapa final, com toda
+    alteração registrada em auditoria;
+12. o resultado final corrente ser persistido com histórico imutável de suas
+    etapas, aprovações e regrades;
+13. o aluno ver estado, nota e feedback conforme a política configurada;
+14. o gradebook consumir somente resultados que concluíram todo o pipeline.
 
 ## Vocabulário e fonte de verdade
 
@@ -93,20 +112,60 @@ Deve possuir ou projetar:
 - limite de tempo e tentativas;
 - modo de apresentação;
 - grupo de assessment e respectivo papel no gradebook;
-- capacidades de correção derivadas das questões.
+- workflow de avaliação escolhido pelo instrutor.
 
 ### Assessment group
 
-O grupo decide a participação no resultado do curso:
+O grupo decide somente a participação no resultado do curso:
 
 - sem grupo: assessment ainda não organizado para o gradebook;
 - grupo de peso zero: prática ou avaliação formativa, com resultado oficial,
   mas sem contribuição para a nota final;
-- grupo com peso positivo: avaliação que contribui para o gradebook.
+- grupo com peso positivo: avaliação que contribui para o gradebook conforme o
+  peso configurado.
+
+O peso não limita `GradingMethods`. O instrutor pode selecionar qualquer
+workflow válido, inclusive publicação direta por pares, IA ou autoavaliação em
+um grupo de peso positivo. Essa é uma decisão acadêmica explícita do instrutor,
+não uma regra inferida pelo gradebook.
 
 Isso substitui a necessidade de um `resultUse` separado. `feedback` e
 `gradebook` não são propriedades do quiz nem modos alternativos do motor de
 grading. São interpretações da colocação do assessment na estrutura do curso.
+
+### Pipeline de avaliação
+
+`GradingMethods` representa atores e fases do workflow:
+
+- `PeerReview`: pares produzem a avaliação primária;
+- `AIGraded`: a IA produz a avaliação primária;
+- `AutoGraded`: o próprio aluno produz sua autoavaliação e nota;
+- `InstructorGraded`: o instrutor avalia diretamente ou, quando combinado com
+  outro método, revisa e finaliza o resultado produzido anteriormente.
+
+Combinações válidas:
+
+| Flags | Ordem canônica | Publicação |
+| --- | --- | --- |
+| `PeerReview` | pares | após concluir a política de pares |
+| `AIGraded` | IA | após concluir a avaliação por IA |
+| `AutoGraded` | aluno | após concluir a autoavaliação |
+| `InstructorGraded` | instrutor | após a avaliação do instrutor |
+| `PeerReview,InstructorGraded` | pares -> instrutor | após revisão do instrutor |
+| `AIGraded,InstructorGraded` | IA -> instrutor | após revisão do instrutor |
+| `AutoGraded,InstructorGraded` | aluno -> instrutor | após revisão do instrutor |
+
+Somente um método entre `PeerReview`, `AIGraded` e `AutoGraded` pode ser o
+avaliador primário. `InstructorGraded` pode aparecer sozinho ou junto de um
+deles. Assim, há no máximo duas flags e, quando há duas, a etapa do instrutor
+sempre possui precedência de finalização e ocorre por último.
+
+Como uma bitmask não preserva ordem, a precedência não depende da ordem textual
+recebida pela API. Ela deve ser uma regra canônica validada no domínio.
+
+O professor continua podendo revisar uma avaliação já finalizada. Qualquer
+mudança posterior é um regrade e deve exigir motivo, preservar o valor anterior
+e gerar evento de auditoria.
 
 ### Assessment submission
 
@@ -117,10 +176,12 @@ de verdade para:
 - número e tempo da tentativa;
 - estado da correção;
 - resultado por questão;
+- método primário, resultado e atores de cada estágio;
+- estado e autor da revisão docente, quando configurada;
 - nota total;
-- aprovação;
+- resultado de aprovação ou reprovação acadêmica;
 - feedback;
-- auditoria da correção automática ou docente.
+- auditoria de cada estágio, revisão, override ou regrade.
 
 ### Packages de quiz e grading
 
@@ -182,9 +243,10 @@ desse contrato. O editor mostra essencialmente:
 - `maxScore`;
 - `passingScore`.
 
-As questões são classificadas automaticamente pelo sincronizador. Ainda não há
-uma experiência clara para o professor confirmar que uma questão será
-automática, manual ou bloqueada por falta de suporte.
+As questões são classificadas pelo sincronizador conforme a capacidade técnica
+do motor de correção. Essa classificação não é `GradingMethods`: ela descreve
+como um item pode ser processado dentro de uma etapa, enquanto
+`GradingMethods` escolhe quem produz e quem finaliza a avaliação inteira.
 
 Há também uma contradição a resolver: o package ainda admite `passingScore` no
 conteúdo, enquanto a API calcula aprovação usando `Program.PassingScore`. A
@@ -208,16 +270,26 @@ ligado, ela cria ou atualiza um `Assessment` com:
 - score máximo;
 - tentativas e limite de tempo;
 - apresentação;
-- `AutoGraded,InstructorGraded` fixo.
+- `AutoGraded,InstructorGraded` fixo, apesar de `AutoGraded` significar
+  autoavaliação do aluno e não ser um default neutro para quizzes.
 
 Quando grading é desligado, a aplicação remove logicamente o assessment.
+
+A escolha já é persistida em `Assessments.GradingMethods`, uma coluna inteira
+que representa o enum `[Flags]`. A tela atual converte as flags para checkboxes
+e salva cada alteração imediatamente. Portanto, não falta estrutura para
+armazenar a escolha; faltam semântica de workflow, validação e uma apresentação
+adequada ao professor.
 
 Problemas atuais:
 
 - content e assessment podem divergir se a primeira chamada funcionar e a
   segunda falhar;
 - a API não impõe um único assessment ativo para um conteúdo;
-- `GradingMethods` não é derivado do inventário real de questões;
+- `GradingMethods` não é validado como um pipeline de no máximo um avaliador
+  primário mais revisão opcional do instrutor;
+- os métodos aparecem como checkboxes técnicos na lateral e permitem
+  combinações sem explicar o fluxo resultante;
 - a tela de assessment permite alterar propriedades derivadas e criar
   combinações incoerentes com o quiz;
 - `Assessment.DefinitionPayload` existe, mas o salvamento do quiz não o usa
@@ -283,10 +355,10 @@ o lifecycle oficial.
 
 Proximidade estimada: 30% para o fluxo oficial completo.
 
-### 5. Correção automática no servidor
+### 5. Avaliação por IA no servidor
 
-Estado atual: contrato e algoritmo de referência existem; execução oficial não
-existe.
+Estado atual: existe um avaliador determinístico de referência, mas a execução
+oficial do workflow `AIGraded` não existe.
 
 `@game-guild/grading` implementa `gradeDeterministicQuizSubmission`. Ele:
 
@@ -312,10 +384,17 @@ Para `StructuredAnswerPayload`, a validação atual confirma somente que o texto
 é JSON sintaticamente válido. Ela não confirma a versão, a forma de `answers`,
 os IDs das questões nem a whitelist de campos de cada tipo.
 
-Ele não verifica `AutoGraded`, não carrega uma resposta correta versionada, não
-executa um avaliador e não chama `Grade` automaticamente.
+Ele não interpreta o pipeline de `GradingMethods`, não carrega uma resposta
+correta versionada, não executa o estágio `AIGraded` e não encaminha o
+resultado para uma eventual revisão `InstructorGraded`.
 
-Portanto, marcar `AutoGraded` hoje não produz correção automática.
+`AutoGraded` também não possui hoje o fluxo de autoavaliação pelo aluno: não há
+contrato específico para o aluno atribuir score e feedback, nem transição que
+finalize ou encaminhe essa avaliação para revisão docente.
+
+O modelo atual possui `AssessmentGroup.WeightPercent`, `GradedBy` e `GradedAt`,
+mas o serviço não diferencia o ator primário, as etapas concluídas e a revisão
+docente opcional antes de incluir o resultado no gradebook.
 
 Proximidade estimada: 15%.
 
@@ -342,12 +421,12 @@ O SpeedGrader também possui um `QuizViewer`, mas ele lê somente o
 serializadas sem carregar o texto e as opções da questão. O professor pode
 aplicar uma nota total, mas não corrige adequadamente questão por questão.
 
-Para quiz manual ou híbrido, falta:
+Para avaliação docente integral ou revisão docente após outro método, falta:
 
 - carregar a mesma revisão imutável usada na tentativa;
 - renderizar a questão e a resposta do aluno em contexto;
-- permitir score e feedback por questão manual;
-- preservar os pontos automáticos em quizzes híbridos;
+- permitir score e feedback por questão;
+- preservar o resultado do avaliador primário durante a revisão;
 - calcular a nota total no servidor a partir dos resultados por item;
 - impedir uma nota agregada incompatível com os itens.
 
@@ -373,7 +452,7 @@ completo não está fechado.
 Também faltam:
 
 - resultado por questão;
-- indicação clara de `aguardando correção` em quizzes manuais ou híbridos;
+- indicação clara do estágio atual do workflow;
 - aplicação real da política de liberação de feedback;
 - controle de quando respostas corretas podem ser reveladas;
 - histórico ou escolha canônica entre múltiplas tentativas;
@@ -393,7 +472,9 @@ real atual do quiz.
 | Lifecycle genérico de submissão | forte | 80% |
 | Correção manual genérica | forte | 70% |
 | Correção manual específica de quiz | parcial | 40% |
-| Correção automática confiável no servidor | ausente | 15% |
+| Avaliação por IA confiável no servidor | ausente | 15% |
+| Autoavaliação do aluno | ausente | 10% |
+| Avaliação por pares | parcial | 35% |
 | Resultado do quiz para o aluno | parcial | 30% |
 | Gradebook ponderado | parcial e ambíguo | 45% |
 | Segurança da definição para o aluno | bloqueio crítico | 20% |
@@ -455,17 +536,40 @@ Cada tentativa precisa referenciar uma revisão imutável da definição. Essa
 revisão deve conter a definição completa para o servidor e permitir a projeção
 segura para aluno e professor.
 
-### P1. `AutoGraded` não tem comportamento
+### P1. `GradingMethods` ainda não governa o workflow
 
-A flag deve ser derivada da capacidade das questões e acionar um caso de uso
-real na API. Ela não deve depender de um checkbox livre na tela de assessment.
+A escolha do workflow pertence ao instrutor e já pode ser persistida em
+`Assessment.GradingMethods`. O backend ainda precisa rejeitar combinações
+inválidas e executar um caso de uso real para cada combinação aceita.
+
+`AutoGraded` isolado significa que o aluno se autoavalia e o resultado é
+finalizado sem revisão docente. `AutoGraded,InstructorGraded` significa que o
+aluno se autoavalia e o professor revisa, altera se necessário e finaliza.
+Essa semântica independe do grupo e de seu peso.
+
+### P1. Revisão docente e override não são regras do domínio atual
+
+`AssessmentSubmission.Grade` transforma `Submitted/Late` diretamente em
+`Graded`. Ele não possui uma etapa de resultado sugerido aguardando aprovação e
+não permite regrade de uma submissão já finalizada.
+
+`GradedBy` identifica quem aplicou a nota final, mas sozinho não registra:
+
+- o score produzido pelo avaliador primário;
+- aceitação sem alterações;
+- diferença entre resultado primário e resultado final;
+- motivo do override;
+- histórico de regrades.
+
+Esses comportamentos precisam ser impostos na API. Esconder ou mostrar um
+botão na UI não oferece a garantia acadêmica necessária.
 
 ### P1. Resultado por questão não é persistido oficialmente
 
 O `GradeResult` do package possui itens, mas `AssessmentSubmission` guarda
 apenas score total, aprovação, feedback e rubrica. Sem resultado por item não é
-possível fechar corretamente o fluxo híbrido ou fazer auditoria de uma nota
-automática.
+possível fechar corretamente um workflow em duas etapas ou fazer auditoria de
+uma nota produzida por pares, IA ou pelo aluno.
 
 ### P1. O limite de tempo não é aplicado
 
@@ -486,7 +590,7 @@ cálculo.
 - assessments sem grupo;
 - grupos de peso positivo;
 - múltiplas tentativas;
-- submissões ainda pendentes;
+- submissões que ainda não concluíram todas as etapas do workflow;
 - arredondamento;
 - nota final do curso.
 
@@ -497,7 +601,8 @@ Precisam ser consolidadas:
 - `passingScore` do quiz, `Assessment.PassingScore` remanescente e
   `Program.PassingScore`;
 - pontos por item e `Assessment.MaxScore`;
-- `GradingMethods` livre na tela versus capacidade derivada das questões;
+- workflow escolhido em `GradingMethods` versus pré-requisitos operacionais de
+  cada avaliador;
 - título e descrição do content versus assessment;
 - políticas de tentativas no documento e no assessment.
 
@@ -599,30 +704,42 @@ A API deve validar:
 O `StructuredAnswerPayload` não deve conter `gradeResult`. Resultado e resposta
 são evidências diferentes e possuem autores diferentes.
 
-### 5. Classificação das questões
+### 5. Escolha e validação do workflow
 
-Na publicação, o servidor deve derivar o modo do assessment:
+A seleção pertence ao instrutor em `Assessment.GradingMethods` e independe do
+peso do grupo. O domínio deve aceitar somente:
 
-| Inventário | `GradingMethods` derivado | Resultado no envio |
-| --- | --- | --- |
-| somente determinísticas | `AutoGraded` | nota final imediata |
-| somente manuais | `InstructorGraded` | aguarda professor |
-| determinísticas e manuais | `AutoGraded,InstructorGraded` | parcial, aguarda professor |
-| qualquer item sem suporte | publicação bloqueada | não publicável |
+```text
+PeerReview
+AIGraded
+AutoGraded
+InstructorGraded
+PeerReview,InstructorGraded
+AIGraded,InstructorGraded
+AutoGraded,InstructorGraded
+```
 
-O professor pode escolher explicitamente tornar uma questão manual, mesmo que
-ela tenha avaliador determinístico. O contrário não é permitido: uma questão
-sem avaliador não pode ser forçada a automática.
+As três primeiras flags são mutuamente exclusivas como avaliador primário.
+`InstructorGraded` pode ser o avaliador único ou a etapa final de revisão. As
+combinações `PeerReview,AIGraded`, `PeerReview,AutoGraded`,
+`AIGraded,AutoGraded` e qualquer conjunto com três ou quatro flags devem ser
+rejeitadas pela API.
 
-Inventário atual aproximado do adapter:
+O conteúdo ainda pode declarar capacidades e pré-requisitos técnicos, mas eles
+não escolhem o workflow:
 
-- determinísticas: single choice, multiple choice, true/false, fill in the
-  blank, short answer, matching, ordering, categorization, rating quando há
-  chave, hotspot e highlight;
-- manuais: essay e qualquer questão marcada explicitamente como manual;
-- sem suporte automático atual: numeric e formula;
-- incompletas: questões sem chave suficiente devem bloquear publicação ou ser
-  convertidas explicitamente para manual.
+- `PeerReview` exige política de quantidade, distribuição e consolidação das
+  avaliações dos pares;
+- `AIGraded` exige avaliador disponível para todos os itens ou uma política
+  explícita de falha;
+- `AutoGraded` exige uma superfície de autoavaliação para o aluno, com score e
+  feedback validados pelo servidor;
+- `InstructorGraded` exige entrada na fila docente, seja para correção integral
+  ou revisão final.
+
+O inventário determinístico do adapter continua útil dentro do estágio de IA
+ou como referência de conformidade, mas não deve ser confundido com a flag
+`AutoGraded`.
 
 ### 6. Avaliador confiável no servidor
 
@@ -669,13 +786,50 @@ interface QuizGradeResultV1 {
 }
 ```
 
+O resultado deve ser envolvido pelo estado operacional do pipeline, sem
+misturar essa política no adapter de quiz:
+
+```ts
+interface AssessmentEvaluationV1 {
+  schemaVersion: 1;
+  configuredMethods: Array<
+    "PeerReview" | "AIGraded" | "AutoGraded" | "InstructorGraded"
+  >;
+  stages: Array<{
+    method: "PeerReview" | "AIGraded" | "AutoGraded" | "InstructorGraded";
+    status: "pending" | "in-progress" | "completed";
+    result?: QuizGradeResultV1;
+    actorIds?: string[];
+    completedAt?: string;
+  }>;
+  finalization: {
+    status: "pending" | "finalized";
+    method?: "PeerReview" | "AIGraded" | "AutoGraded" | "InstructorGraded";
+    finalizedBy?: string;
+    finalizedAt?: string;
+  };
+}
+```
+
+Cada estágio registra quem avaliou, qual resultado produziu e quando terminou.
+`finalization` responde se todo o pipeline terminou e qual método publicou o
+resultado final. A exigência de professor deriva exclusivamente da presença de
+`InstructorGraded` após um avaliador primário, nunca do peso.
+
 Recomendação inicial: persistir esse contrato em um campo JSONB versionado da
 submissão. Isso mantém o resultado por item coeso e evita criar uma tabela por
 resposta antes de existir necessidade real de consultas analíticas nesse
 nível.
 
-O score agregado deve ser calculado pelo servidor a partir dos itens. O
-professor não deve enviar um total arbitrário que contradiga o detalhamento.
+O score agregado deve ser validado e consolidado pelo servidor a partir dos
+itens. Aluno, pares e professor podem enviar scores somente pelos endpoints de
+seu estágio e dentro dos limites da definição; nenhum deles deve conseguir
+injetar uma nota por meio do payload de respostas do quiz.
+
+Se o professor alterar o resultado primário, o resultado final deve ser
+montado a partir dos itens sobrescritos. O evento de auditoria deve registrar o
+resultado anterior, o resultado final, os itens alterados, o professor e o
+motivo.
 
 ### 8. Estados de correção
 
@@ -684,44 +838,47 @@ O fluxo de domínio precisa distinguir:
 ```text
 InProgress
   -> Submitted ou Late
-  -> AwaitingReview, quando restam itens manuais
-  -> Graded, quando todos os itens foram resolvidos
+  -> AwaitingPeerReview, AwaitingAIEvaluation, AwaitingSelfAssessment
+     ou AwaitingInstructorGrading, conforme o avaliador primário
+  -> EvaluatedAwaitingInstructor, quando há `InstructorGraded` após o primário
+  -> Graded, quando a última etapa configurada terminou
 ```
 
-`AwaitingReview` pode ser inicialmente uma projeção de `Submitted/Late` mais
-resultado pendente, mas deve existir no contrato da UI. Caso essa distinção
-seja importante para consultas e notificações, deve virar estado persistido.
+Esses estados podem começar como projeções de `Submitted/Late` mais o estágio
+corrente em `EvaluationPayload`, mas devem existir no contrato da UI. Caso a
+distinção seja importante para consultas, filas e notificações, deve virar
+estado persistido com novos valores, sem renumerar os existentes.
 
-Para correção totalmente automática, `Submit` pode chegar a `Graded` na mesma
-transação.
+O peso não altera as transições. A presença de `InstructorGraded` após o método
+primário é o único fator que cria `EvaluatedAwaitingInstructor`.
 
 Para execução assíncrona futura, usar outbox/job idempotente e manter uma chave
 de execução por submissão e revisão. Não criar isso antes de haver necessidade
 de processamento assíncrono.
 
-### 9. Correção manual e híbrida
+### 9. Avaliação docente e workflows em duas etapas
 
 O SpeedGrader deve receber:
 
 - revisão autoral da questão, autorizada para professor;
 - resposta estruturada do aluno;
-- resultado automático já produzido;
-- itens manuais ainda pendentes;
+- resultado do avaliador primário, quando houver;
+- itens que ainda exigem decisão docente;
 - score e feedback previamente salvos.
 
 A UI deve reutilizar uma superfície read-only de `quiz-surface`, com extensão
 para score e feedback por item. Ela não deve reconstruir questões a partir de
 IDs exibidos como texto.
 
-Em quiz híbrido:
+Quando `InstructorGraded` estiver sozinho, o professor produz a avaliação
+integral. Quando estiver combinado, a tela deve carregar o resultado de pares,
+IA ou autoavaliação e oferecer `Aprovar` e `Editar avaliação`. Aprovar sem
+alterações também é um evento auditável. Editar exige motivo e registra o
+delta.
 
-1. o servidor corrige os itens determinísticos no envio;
-2. grava os resultados automáticos como imutáveis ou regradáveis com auditoria;
-3. coloca na fila somente os itens manuais pendentes;
-4. o professor pontua os itens manuais;
-5. o servidor consolida a nota final;
-6. a submissão passa para `Graded`;
-7. o aluno é notificado conforme a política de feedback.
+Sem `InstructorGraded`, a conclusão do estágio primário finaliza a submissão.
+Com `InstructorGraded`, ela entra na fila docente e somente a revisão final a
+move para `Graded`.
 
 ### 10. Visualização do resultado pelo aluno
 
@@ -742,6 +899,11 @@ Ela deve mostrar, conforme permitido:
 Uma prática de grupo peso zero ainda pode mostrar score e feedback. Ela apenas
 não contribui para a nota ponderada do curso.
 
+Quando `InstructorGraded` estiver pendente, o aluno deve ver `Aguardando
+revisão do instrutor` e não uma nota tratada como final. A política de feedback pode
+permitir mostrar que a submissão foi recebida, mas não pode fazer um resultado
+provisório parecer nota aplicada.
+
 ## Divisão de responsabilidades entre Content e Assessment
 
 | Propriedade | Fonte de verdade | Editável onde |
@@ -749,7 +911,7 @@ não contribui para a nota ponderada do curso.
 | enunciados e opções | quiz content | editor do quiz |
 | respostas corretas | quiz content privado | editor do quiz |
 | pontos por questão | grading do content | editor do quiz |
-| capacidade auto/manual | derivada das questões | exibida, não livre |
+| capacidades técnicas por item | derivadas das questões | exibidas, não livres |
 | score máximo | soma/projeção dos itens | exibido no assessment |
 | vínculo com content | projeção | bloqueado no assessment de quiz |
 | modalidade estruturada | projeção | bloqueada para quiz |
@@ -757,12 +919,228 @@ não contribui para a nota ponderada do curso.
 | tentativas e tempo | assessment | editor de assessment |
 | apresentação | assessment | editor de assessment |
 | grupo e peso | assessment group | assessment/gradebook |
+| avaliador primário e revisão docente | `Assessment.GradingMethods` | editor de assessment |
 | passing score | curso | configurações do curso |
 | resposta do aluno | submission | somente leitura após envio |
-| resultado por questão | submission/servidor | automático ou professor |
-| nota final da tentativa | submission/servidor | derivada dos itens |
+| resultado de cada estágio | submission/servidor | ator autorizado do estágio |
+| override por questão | submission/servidor | professor, com motivo |
+| finalização do pipeline | submission e auditoria | último método configurado |
+| nota final da tentativa | submission/servidor | resultado do último estágio |
 
 Essa matriz evita que o mesmo campo seja editável em content e assessment.
+
+## Impacto no backend e na persistência
+
+A estrutura de `GradingMethods` já consegue representar a escolha de workflow.
+`AssessmentGroup.WeightPercent` permanece ortogonal e participa somente do
+cálculo do gradebook.
+
+### Estrutura já existente
+
+`AssessmentGradingMethod` é um enum `[Flags]` com valores estáveis:
+
+```text
+None               0
+PeerReview         1
+AIGraded           2
+AutoGraded         4
+InstructorGraded   8
+```
+
+`Assessments.GradingMethods` já é uma coluna `integer`, com default
+`InstructorGraded` e constraint que aceita somente os bits conhecidos. Não há
+uma tabela de grading methods; a combinação é persistida como bitmask no
+próprio assessment.
+
+A constraint atual impede bits desconhecidos, mas ainda aceita combinações
+semanticamente inválidas. Os valores válidos para assessments avaliados são:
+
+```text
+1   PeerReview
+2   AIGraded
+4   AutoGraded
+8   InstructorGraded
+9   PeerReview,InstructorGraded
+10  AIGraded,InstructorGraded
+12  AutoGraded,InstructorGraded
+```
+
+O valor `0` (`None`) pode ser aceito durante rascunho se esse estado for útil,
+mas deve ser rejeitado na publicação. A validação deve existir no domínio e
+pode ser reforçada substituindo a constraint atual por uma lista explícita de
+valores, sem criar coluna ou tabela.
+
+Na API web, as flags trafegam pelos nomes separados por vírgula, por exemplo:
+
+```text
+AutoGraded,InstructorGraded
+```
+
+Create, update, DTOs e editor já leem e gravam essa escolha. O que não existe é
+a execução das flags por `SubmitAsync`, fila, aprovação e gradebook.
+
+### Semântica a formalizar
+
+| Método primário | Sem instrutor | Com `InstructorGraded` |
+| --- | --- | --- |
+| `PeerReview` | pares avaliam e publicam | pares avaliam; instrutor revisa e publica |
+| `AIGraded` | IA avalia e publica | IA avalia; instrutor revisa e publica |
+| `AutoGraded` | aluno se autoavalia e publica | aluno se autoavalia; instrutor revisa e publica |
+| `InstructorGraded` | instrutor avalia e publica | não se aplica |
+
+O backend deve validar a cardinalidade e executar a ordem canônica. O fato de
+as flags chegarem como `InstructorGraded,AIGraded` ou
+`AIGraded,InstructorGraded` não muda a sequência: o instrutor sempre vem por
+último.
+
+Com essa definição, não é necessário criar `ApprovalPolicy`. A revisão já é
+representada pela presença de `InstructorGraded` depois do método primário.
+
+`AutoGraded` é um nome internamente ambíguo em inglês. Enquanto o enum for
+mantido, comentários de domínio, contratos e UI devem chamá-lo explicitamente
+de `Autoavaliação do aluno` e nunca de correção automática. Como o produto não
+foi lançado, renomear o membro para `SelfGraded` preservando o valor persistido
+`4` também é uma alternativa mais clara antes da implementação do workflow.
+
+### Evolução mínima recomendada
+
+Em `Assessment`, nenhuma nova coluna é necessária para escolher avaliador ou
+revisão.
+
+Em `AssessmentSubmission`, continua necessário persistir a execução do
+pipeline:
+
+```text
+EvaluationPayload   jsonb, versionado
+```
+
+Responsabilidades:
+
+- `EvaluationPayload` guarda métodos configurados, estágio corrente, resultados
+  por item, atores, overrides e versão de cada avaliador;
+- `GradedBy/GradedAt` podem registrar o ator humano final quando houver um único
+  finalizador, mas não substituem o histórico de estágios;
+- `AIGraded` pode finalizar sem `GradedBy` humano quando não houver revisão;
+- `AutoGraded` deve identificar o aluno como autor da autoavaliação;
+- `PeerReview` precisa preservar os pares participantes mesmo que o resultado
+  consolidado não possua um único `GradedBy`;
+- o evento de auditoria diferencia aprovação sem mudança, override e regrade;
+- o ID do professor sempre vem do ator autenticado. O controller atual já
+  substitui `GradedBy` recebido pelo ID desse ator.
+
+`EvaluatedAwaitingInstructor` pode inicialmente ser um novo valor no enum
+persistido `SubmissionStatus`, sem adicionar outra coluna de status. Deve-se
+usar valor numérico novo, sem renumerar estados existentes.
+
+### Auditoria
+
+A tabela geral `AuditLogs` já existente pode receber eventos de:
+
+```text
+EvaluationStageCompleted
+InstructorReviewApproved
+EvaluationOverridden
+EvaluationRegraded
+```
+
+Cada evento deve identificar `AssessmentSubmission`, revisão da definição,
+versão do avaliador, ator, score anterior, score novo, itens alterados e motivo.
+Uma tabela acadêmica de auditoria separada só se justifica se retenção,
+consultas ou permissões futuras não puderem ser atendidas por `AuditLogs`.
+
+`AuditLogs` registra história; não deve ser usado como fonte do estado corrente
+da avaliação.
+
+### O que exige mudança de regra no backend
+
+- `SubmitAsync` precisa iniciar o estágio primário correto;
+- filas distintas precisam encaminhar trabalho a pares, IA, aluno ou instrutor;
+- `GradeSubmissionAsync` precisa autorizar o ator do estágio e distinguir
+  avaliação, revisão, override e regrade;
+- uma submissão `Graded` precisa aceitar regrade autorizado sem apagar seu
+  histórico;
+- o gradebook precisa ignorar resultados cujo pipeline ainda não terminou;
+- endpoints de aluno precisam distinguir resultado provisório de nota final;
+- toda alteração deve produzir evento de auditoria com antes, depois e motivo.
+
+Portanto, isso não é uma alteração apenas de package ou interface. A ordem e a
+autorização de cada estágio devem existir no servidor para não poderem ser
+contornadas.
+
+### Zelo na migration
+
+A migration necessária para o resultado por estágios deve ser única e coesa,
+com:
+
+- `EvaluationPayload` como `jsonb` nullable enquanto não houver avaliação;
+- índice apenas se uma consulta real justificar;
+- nenhuma tabela por questão;
+- nenhum dual-read, campo legacy ou fallback permanente, pois o produto ainda
+  não foi lançado;
+- testes do modelo EF e do banco para os estados permitidos.
+
+Se a garantia também for aplicada no banco, a mesma evolução deve substituir
+`CK_Assessments_GradingMethods` por uma constraint que aceite somente
+`0, 1, 2, 4, 8, 9, 10, 12`. Isso altera apenas uma regra da coluna existente.
+Não cria estrutura de persistência adicional.
+
+Não deve ser criada coluna para um workflow já representado por
+`GradingMethods`. A alteração de schema fica restrita ao estado que realmente
+não existe hoje: o resultado detalhado e os estágios da avaliação.
+
+## UX da escolha de grading
+
+Os checkboxes crus na lateral expõem o formato de armazenamento, não uma
+decisão compreensível do professor. A combinação de flags deve continuar no
+contrato e no banco, mas a interface deve apresentar workflows válidos.
+
+### Localização
+
+Criar uma seção principal `Workflow de avaliação` logo após `Scoring`, antes de
+rubrica e disponibilidade. A lateral pode mostrar somente um resumo do workflow
+escolhido.
+
+Essa decisão não deve ficar misturada a linked content, apresentação, grupo e
+outros campos operacionais menores.
+
+### Controle
+
+Usar dois controles sequenciais, em vez de expor combinações de flags.
+
+Primeiro, uma seleção exclusiva de avaliador primário:
+
+```text
+Avaliação por pares       PeerReview
+Avaliação por IA          AIGraded
+Autoavaliação do aluno    AutoGraded
+Avaliação pelo instrutor  InstructorGraded
+```
+
+Quando o primário não for o instrutor, mostrar em seguida:
+
+```text
+[ ] Exigir revisão final do instrutor
+    O professor aprova ou ajusta o resultado antes da publicação.
+```
+
+Ativar essa opção acrescenta `InstructorGraded`. Se o avaliador primário já
+for o instrutor, o controle de revisão não aparece. A UI pode mostrar abaixo um
+resumo da sequência, por exemplo `IA -> revisão do instrutor -> publicação`.
+
+### Capacidade e validação
+
+- grupo e peso não habilitam nem bloqueiam métodos;
+- exatamente um avaliador primário é obrigatório para um assessment avaliado;
+- somente `InstructorGraded` pode ser acrescentado ao primário;
+- a API normaliza a ordem e rejeita todas as outras combinações;
+- cada método deve indicar seus pré-requisitos ainda não configurados;
+- `PeerReview` mantém quantidade e política de pares em sua seção específica;
+- `AIGraded` deve ficar indisponível enquanto seu executor não estiver
+  operacional;
+- `AutoGraded` exige configurar a experiência de autoavaliação do aluno;
+- o backend repete todas as validações, independentemente da UI;
+- a escolha deve ser salva com o restante do assessment, evitando chamadas
+  imediatas por checkbox que possam deixar configuração parcial.
 
 ## APIs-alvo
 
@@ -776,7 +1154,13 @@ POST /assessments/{assessmentId}/quiz-attempts/start
 GET  /assessment-submissions/{submissionId}/quiz-attempt
 POST /assessment-submissions/{submissionId}/quiz-submit
 GET  /assessment-submissions/{submissionId}/quiz-review
-PUT  /assessment-submissions/{submissionId}/quiz-manual-results
+POST /assessment-submissions/{submissionId}/self-evaluation
+POST /assessment-submissions/{submissionId}/peer-evaluations
+POST /assessment-submissions/{submissionId}/ai-evaluation
+POST /assessment-submissions/{submissionId}/instructor-evaluation
+POST /assessment-submissions/{submissionId}/instructor-review
+POST /assessment-submissions/{submissionId}/override
+POST /assessment-submissions/{submissionId}/regrade
 GET  /assessment-submissions/{submissionId}/quiz-result
 ```
 
@@ -786,6 +1170,11 @@ Regras:
 - `quiz-attempt` retorna somente a projeção learner-safe;
 - `quiz-review` exige correção ou gestão e retorna definição e respostas em
   contexto;
+- cada endpoint de estágio valida o método configurado e o papel do ator;
+- `instructor-review` aceita o resultado primário sem alteração e registra o
+  professor;
+- `override` altera itens antes da primeira aprovação e exige motivo;
+- `regrade` altera resultado já finalizado, exige motivo e preserva histórico;
 - `quiz-result` retorna apenas campos liberados ao aluno;
 - o endpoint genérico de content não substitui nenhum desses contratos;
 - salvar quiz e reconciliar assessment ocorre no mesmo caso de uso da API.
@@ -805,6 +1194,12 @@ Tarefas:
 - fixar `QuizStructuredSubmissionV1` e `QuizGradeResultV1`;
 - definir a classificação das questões suportadas;
 - definir que assessment group controla a participação no gradebook;
+- formalizar `PeerReview`, `AIGraded`, `AutoGraded` e `InstructorGraded` como
+  atores e etapas do pipeline;
+- validar um único avaliador primário e `InstructorGraded` opcional por último;
+- retirar qualquer limitação de workflow baseada em grupo ou peso;
+- definir eventos de auditoria para conclusão de estágio, revisão, override e
+  regrade;
 - registrar a matriz de ownership deste documento em testes de arquitetura;
 - atualizar os mapas em `docs/types` depois da estabilização.
 
@@ -845,7 +1240,11 @@ Tarefas:
   mesma transação;
 - remover `reconcileQuizAssessment` do browser;
 - impor no banco um único assessment ativo por `ContentId` quando aplicável;
-- derivar `GradingMethods` do inventário real;
+- validar cardinalidade, combinações e pré-requisitos de `GradingMethods`;
+- substituir os checkboxes laterais por workflows exclusivos na área principal
+  do editor;
+- salvar workflow, grupo e demais alterações de assessment de forma coerente,
+  sem persistência imediata isolada por checkbox;
 - projetar `MaxScore`, modalidade e apresentação sem permitir edição
   contraditória;
 - manter no assessment editor somente configurações operacionais;
@@ -855,6 +1254,7 @@ Critério de saída:
 
 - não existe estado em que quiz foi salvo e a projeção falhou;
 - reabrir content e assessment mostra valores coerentes;
+- o professor escolhe um workflow compreensível sem manipular flags cruas;
 - concorrência não cria assessments duplicados.
 
 ### Fase 3. Unificar a experiência do aluno
@@ -882,7 +1282,7 @@ Critério de saída:
 
 ### Fase 4. Completar primeiro o fluxo manual
 
-Objetivo: entregar um MVP confiável mesmo antes da correção automática.
+Objetivo: entregar um MVP confiável com `InstructorGraded` como método único.
 
 Tarefas:
 
@@ -891,6 +1291,8 @@ Tarefas:
 - carregar definição, resposta e revisão no SpeedGrader;
 - criar review read-only de quiz com score e feedback por item;
 - consolidar a nota no servidor;
+- concluir a nota quando o instrutor terminar o estágio configurado;
+- registrar aprovação, alterações e motivo no audit log;
 - notificar o aluno;
 - exibir nota, estado e feedback na rota da tentativa;
 - respeitar a política de liberação de feedback.
@@ -901,48 +1303,57 @@ Critério de saída:
 - aluno vê o resultado oficial correto;
 - grade e feedback não dependem do browser do professor para cálculo agregado.
 
-### Fase 5. Implementar correção automática no servidor
+### Fase 5. Implementar `AIGraded`
 
-Objetivo: fechar a modalidade automática para tipos determinísticos.
+Objetivo: executar a avaliação por IA como método primário oficial.
 
 Tarefas:
 
-- implementar o avaliador C# por tipo de questão suportado;
+- implementar o avaliador confiável no servidor, usando os avaliadores
+  determinísticos quando aplicável e IA somente conforme o contrato definido;
 - adicionar vetores de conformidade compartilhados com
   `@game-guild/grading`;
-- validar answer key e resposta pela revisão da tentativa;
-- persistir `QuizGradeResultV1`;
-- concluir submissões totalmente determinísticas como `Graded`;
-- registrar origem, versão do avaliador e auditoria;
-- tornar submit + grading transacional e idempotente;
+- validar definição e resposta pela revisão da tentativa;
+- persistir resultado, versão do avaliador e evidências em
+  `EvaluationPayload`;
+- com `AIGraded`, finalizar e publicar ao concluir o estágio;
+- com `AIGraded,InstructorGraded`, encaminhar o resultado para revisão docente;
+- permitir aprovação sem alteração e override por item com motivo;
+- tornar submit e avaliação transacionais ou idempotentes;
 - permitir regrade administrativo versionado sem apagar o resultado anterior;
-- garantir que o cliente não consiga injetar score ou correção.
+- garantir que o cliente não consiga injetar o resultado da IA.
 
 Critério de saída:
 
-- os mesmos vetores produzem o mesmo resultado em TypeScript e C#;
-- uma submissão automática recebe nota sem intervenção humana;
+- os mesmos vetores suportados produzem resultados compatíveis em TypeScript e
+  C#;
+- a presença de `InstructorGraded`, e somente ela, decide se há revisão final;
+- grupo e peso não alteram o pipeline;
 - retries não duplicam nota, notificação ou tentativa.
 
-### Fase 6. Completar quizzes híbridos
+### Fase 6. Implementar `AutoGraded` e completar `PeerReview`
 
-Objetivo: combinar itens automáticos e manuais em uma tentativa.
+Objetivo: fechar os demais avaliadores primários e suas combinações com revisão
+docente.
 
 Tarefas:
 
-- persistir imediatamente resultados determinísticos;
-- manter itens manuais como pendentes;
-- filtrar a fila para mostrar somente trabalho humano necessário;
-- impedir liberação de nota final antes de todos os itens obrigatórios;
-- permitir ao professor revisar o resultado automático sem alterá-lo
-  silenciosamente;
-- consolidar score e estado após o último item manual;
+- criar a superfície de autoavaliação para o aluno atribuir score e feedback;
+- validar no servidor identidade, limites e estrutura da autoavaliação;
+- completar distribuição, quantidade e consolidação de avaliações por pares;
+- registrar todos os atores sem expor identidades quando a política de pares
+  exigir anonimato;
+- finalizar diretamente `AutoGraded` e `PeerReview` isolados;
+- encaminhar combinações com `InstructorGraded` para a fila docente;
+- permitir ao professor aprovar ou alterar o resultado primário;
 - definir override e regrade com auditoria.
 
 Critério de saída:
 
-- quiz misto mantém pontos automáticos, recebe pontos manuais e gera uma única
-  nota final reproduzível.
+- aluno, pares e instrutor somente atuam no estágio para o qual possuem
+  autorização;
+- todas as sete combinações válidas chegam a uma única nota final reproduzível;
+- combinações inválidas são rejeitadas pela API.
 
 ### Fase 7. Fechar gradebook e experiência de resultado
 
@@ -952,6 +1363,8 @@ Tarefas:
 
 - implementar cálculo ponderado por assessment group;
 - excluir grupos de peso zero da nota final sem ocultar seus resultados;
+- excluir do gradebook toda avaliação cujo pipeline ainda não terminou;
+- não alterar ou reenfileirar o workflow quando o peso do grupo mudar;
 - definir política de tentativa usada no gradebook: última, melhor ou outra
   opção explicitamente configurada;
 - tratar assessments sem grupo;
@@ -974,19 +1387,21 @@ Tarefas:
 
 - métricas para tentativas iniciadas, enviadas, pendentes e corrigidas;
 - logs com `assessmentId`, `submissionId`, revisão e versão do avaliador;
-- alertas para submissões automáticas presas;
-- testes de concorrência em start, submit, auto-grade e correção manual;
+- eventos auditáveis por estágio, revisão, override e regrade,
+  com score anterior, novo score, itens alterados e motivo;
+- alertas para submissões presas em qualquer estágio;
+- testes de concorrência em start, submit, avaliação e revisão;
 - testes de autorização em todos os DTOs full, review e learner-safe;
-- testes E2E para manual, automático, híbrido, atraso, timeout e múltiplas
-  tentativas;
+- testes E2E para os quatro avaliadores primários, revisão docente, atraso,
+  timeout e múltiplas tentativas;
 - testes de edição do quiz após início e após envio;
 - testes de feedback antes e depois da liberação;
 - limpeza dos caminhos antigos somente após cobertura funcional equivalente.
 
 Critério de saída:
 
-- os três modos, prática sem grading, grading manual e grading automático ou
-  híbrido, possuem E2E reproduzível e telemetria suficiente para diagnóstico.
+- os quatro avaliadores primários e as três combinações com revisão docente
+  possuem E2E reproduzível e telemetria suficiente para diagnóstico.
 
 ## Ordem recomendada de entrega
 
@@ -1003,67 +1418,88 @@ professor cria -> aluno responde -> professor corrige -> aluno vê resultado
 Ele aproveita a parte mais madura da API e não exige adiar segurança ou
 versionamento.
 
-### Marco B. MVP automático
+### Marco B. Avaliação por IA
 
 Executar Fase 5 sobre a base do Marco A.
 
-Não é recomendável criar uma correção automática antes de unificar a tentativa
+Não é recomendável criar avaliação por IA antes de unificar a tentativa
 e proteger a definição, pois isso produziria uma nota sem uma cadeia de
 evidência confiável.
 
-### Marco C. Híbrido e gradebook completo
+`AIGraded` isolado publica o resultado ao concluir. Com
+`InstructorGraded`, o mesmo resultado permanece provisório até a revisão do
+professor. O peso não altera nenhum dos dois caminhos.
+
+### Marco C. Autoavaliação, pares e gradebook completo
 
 Executar Fases 6 e 7.
 
-O híbrido deixa de ser complexo depois que resultado por item e correção manual
-já são oficiais. O gradebook deve ser fechado antes de considerar o fluxo
-acadêmico completo.
+Autoavaliação e avaliação por pares reutilizam o resultado por estágios e a
+revisão docente já implementados. O gradebook deve ser fechado antes de
+considerar o fluxo acadêmico completo.
 
 ## Testes ponta a ponta obrigatórios
 
-### Quiz automático
+### Avaliação por IA
 
-1. professor cria questões determinísticas e define pontos;
+1. professor seleciona `AIGraded`;
 2. publicação cria assessment e revisão;
-3. aluno recebe documento sem respostas corretas;
-4. aluno inicia e envia respostas estruturadas;
-5. API calcula cada item e a nota total;
-6. submission termina como `Graded`;
-7. aluno vê nota e feedback permitido;
-8. gradebook usa a tentativa conforme grupo e política;
+3. aluno recebe documento sem respostas corretas e envia respostas estruturadas;
+4. IA produz resultado por item e nota total;
+5. sem `InstructorGraded`, submission termina como `Graded` e publica o
+   resultado;
+6. com `InstructorGraded`, submission aguarda revisão docente;
+7. professor aprova sem alterações ou registra override com motivo;
+8. grupo e peso não mudam as transições;
 9. reenvio da mesma requisição não duplica efeitos.
 
-### Quiz manual
+### Avaliação pelo instrutor
 
 1. professor cria questão manual ou marca questões como manuais;
 2. aluno responde pela interface correta;
 3. submission fica aguardando revisão;
 4. professor vê enunciado e resposta na revisão original;
 5. professor aplica score e feedback por item;
-6. API calcula o total e conclui a submission;
-7. aluno vê a avaliação;
-8. gradebook é atualizado quando o grupo tem peso positivo.
+6. professor aprova o resultado final;
+7. API calcula o total e conclui a submission;
+8. aluno vê a avaliação;
+9. gradebook é atualizado quando o grupo tem peso positivo.
 
-### Quiz híbrido
+### Autoavaliação
 
-1. professor combina questões determinísticas e manuais;
-2. API corrige os itens automáticos no envio;
-3. nota final permanece pendente;
-4. professor vê somente os itens que exigem decisão humana, sem perder o
-   contexto completo;
-5. conclusão manual consolida exatamente uma nota;
-6. aluno recebe resultado conforme a política.
+1. professor seleciona `AutoGraded`;
+2. após responder, o aluno recebe a superfície de autoavaliação;
+3. o aluno atribui scores e feedback dentro dos limites permitidos;
+4. a API valida e consolida o resultado;
+5. sem `InstructorGraded`, a autoavaliação é finalizada e publicada;
+6. com `InstructorGraded`, o professor revisa e pode alterar com motivo;
+7. a autoria do aluno e qualquer alteração docente permanecem auditáveis.
+
+### Avaliação por pares
+
+1. professor seleciona `PeerReview` e configura sua política;
+2. a API distribui as submissões somente a pares autorizados;
+3. as avaliações são consolidadas conforme a política;
+4. sem `InstructorGraded`, o resultado consolidado é publicado;
+5. com `InstructorGraded`, o resultado segue para revisão docente;
+6. anonimato, conflitos e atores permanecem auditáveis conforme a política.
 
 ### Segurança e consistência
 
 1. aluno não encontra answer key em nenhum endpoint genérico ou específico;
 2. professor autorizado recebe a definição full;
 3. alteração posterior do quiz não muda uma tentativa existente;
-4. questão sem suporte não é publicada como automática;
+4. método sem executor ou pré-requisito não pode ser publicado;
 5. timeout é verificado pelo relógio do servidor;
 6. content e assessment não divergem sob falha ou concorrência;
 7. score agregado sempre equivale à soma dos itens;
-8. grupo peso zero não afeta a nota final.
+8. grupo peso zero não afeta a nota final;
+9. mudar o peso não altera o workflow nem reabre submissões finalizadas;
+10. combinações fora das sete permitidas são rejeitadas;
+11. `InstructorGraded` combinado sempre é executado por último;
+12. conclusão de estágio, revisão sem alteração, override e regrade geram
+    eventos distintos;
+13. regrade preserva valor anterior, novo valor, ator, data e motivo.
 
 ## Definição de fluxo completo
 
@@ -1076,14 +1512,19 @@ verdadeiras:
 - o aluno nunca recebe dados privados de correção;
 - o player oficial envia respostas estruturadas pela submission oficial;
 - limite de tempo e tentativas são impostos no servidor;
-- questões automáticas são avaliadas no servidor;
-- questões manuais aparecem com contexto no SpeedGrader;
-- quizzes híbridos preservam e consolidam resultados por item;
-- score oficial não é calculado ou fornecido pelo cliente;
+- `GradingMethods` admite somente as sete combinações formalizadas;
+- pares, IA, aluno ou instrutor executam somente seus estágios autorizados;
+- `InstructorGraded` combinado sempre revisa e finaliza por último;
+- sem `InstructorGraded`, o avaliador primário finaliza o resultado;
+- peso e grupo não alteram o workflow escolhido;
+- o score informado pelo aluno em `AutoGraded` passa por contrato e validação
+  próprios, separado do payload de respostas;
+- questões e resultados aparecem com contexto nas superfícies de cada ator;
+- professor pode aprovar, sobrescrever e reavaliar com histórico imutável;
 - aluno vê estado, nota e feedback conforme política;
 - grupo e peso controlam a participação no gradebook;
 - dashboard, progresso e integrações leem o mesmo resultado oficial;
-- testes E2E cobrem automático, manual, híbrido e segurança.
+- testes E2E cobrem os quatro métodos primários, revisão docente e segurança.
 
 ## Arquivos e módulos diretamente envolvidos
 
@@ -1138,10 +1579,11 @@ apps/api/Source/Modules/GameGuild.Learning.Workspaces/Queries/GetLearnerDashboar
 
 ## Conclusão
 
-O projeto está mais perto de um fluxo manual completo do que de um fluxo
-automático. A maior parte da infraestrutura genérica de tentativa e correção
-manual já existe. A autoria e a experiência visual do quiz também estão
-avançadas.
+O projeto está mais perto do fluxo `InstructorGraded` isolado. A maior parte da
+infraestrutura genérica de tentativa e correção docente já existe. A autoria e
+a experiência visual do quiz também estão avançadas. `PeerReview` está
+parcialmente implementado; `AIGraded`, `AutoGraded` e os workflows em duas
+etapas ainda precisam de execução real.
 
 O próximo passo não deve ser adicionar mais controles ao editor isoladamente.
 Deve ser fechar a cadeia de confiança:
@@ -1150,13 +1592,19 @@ Deve ser fechar a cadeia de confiança:
 definição versionada e segura
 -> tentativa oficial
 -> resposta estruturada
--> resultado oficial
--> revisão docente quando necessária
+-> avaliador primário autorizado
+-> revisão docente, somente quando configurada
+-> resultado oficial auditável
 -> visualização do aluno
 -> gradebook
 ```
 
-A sequência recomendada é entregar primeiro o MVP manual seguro, depois ligar o
-avaliador automático no servidor e, por fim, consolidar o híbrido e o
-gradebook. Essa ordem produz valor completo a cada marco e evita construir
-automação sobre um fluxo de submissão ainda fragmentado.
+A sequência recomendada é entregar primeiro o workflow docente seguro, depois
+ligar `AIGraded` e a revisão opcional e, por fim, completar autoavaliação,
+avaliação por pares e gradebook. Essa ordem produz valor completo a cada marco
+e evita construir novos avaliadores sobre um fluxo de submissão ainda
+fragmentado.
+
+Peso define contribuição acadêmica, não precedência. A presença de
+`InstructorGraded` é a única configuração que exige revisão final do professor;
+sem ela, o avaliador primário publica o resultado.

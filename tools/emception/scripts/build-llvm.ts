@@ -9,55 +9,94 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
-import { detectLLVMGitCommit, detectLLVMVersion, resolveAvailableLLVMRelease } from './lib/detect-versions.ts';
-import { setupEmsdk } from './lib/emsdk.ts';
+import { ensureBinaryenConcurrency, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedTool, lockedVersion } from './toolchain/config.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-llvm');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, '..');
-const BUILD_DIR = path.join(ROOT, 'build');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot/usr/lib');
-const LLVM_DIR = path.join(ROOT, 'userland/llvm');
+const P = toolchainPaths(ROOT);
+const BUILD_DIR = P.tools;
+const SYSROOT_LIB = path.join(P.sysroot, 'usr', 'lib');
+const LLVM_SOURCE_ROOT = path.join(P.sources, 'llvm');
+const LLVM_BUILD_ROOT = path.join(P.builds, 'llvm');
 
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 
-// Setup EMSDK first so we can detect the bundled LLVM version
+// Setup the exact EMSDK recorded by the lock.
 setupEmsdk(EMSDK_VERSION);
 
-// Detect LLVM version from emsdk. If the exact version (or same-major
-// release) has a published tarball we use that; otherwise we clone from
-// the llvm-project git repo at the exact commit the emsdk was built with.
-const DETECTED_LLVM = process.env.LLVM_VERSION || detectLLVMVersion();
-const LLVM_GIT_COMMIT = detectLLVMGitCommit();
-let LLVM_VERSION: string;
-let LLVM_USE_GIT = false;
-try {
-    LLVM_VERSION = process.env.LLVM_VERSION || resolveAvailableLLVMRelease(PINNED.LLVM_VERSION);
-} catch {
-    // No released tarball available — fall back to git clone
-    LLVM_VERSION = DETECTED_LLVM;
-    LLVM_USE_GIT = true;
+const LLVM_TOOL = lockedTool(lock, 'llvm');
+if (LLVM_TOOL.source.kind !== 'git-archive') {
+    throw new Error('llvm must use an immutable git-archive source');
 }
-// If the resolved version's major doesn't match the detected major, use git
-if (parseInt(LLVM_VERSION) !== parseInt(DETECTED_LLVM)) {
-    console.log(`    Resolved LLVM ${LLVM_VERSION} does not match detected major ${DETECTED_LLVM.split('.')[0]}; using git clone instead.`);
-    LLVM_VERSION = DETECTED_LLVM;
-    LLVM_USE_GIT = true;
+const LLVM_VERSION = LLVM_TOOL.version;
+const LLVM_SRC_DIR = `llvm-project-${LLVM_TOOL.source.commit}`;
+const CONCURRENCY = Number(process.env.EMCEPTION_BUILD_CONCURRENCY || os.cpus().length);
+ensureBinaryenConcurrency(process.env, CONCURRENCY);
+
+function ensureCMakeBuildDirectory(buildDir: string): void {
+    const relative = path.relative(LLVM_BUILD_ROOT, buildDir);
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
+        throw new Error(`Refusing to manage LLVM build directory outside ${LLVM_BUILD_ROOT}: ${buildDir}`);
+    }
+
+    const cachePath = path.join(buildDir, 'CMakeCache.txt');
+    if (fs.existsSync(cachePath)) {
+        const hasBuildSystem = fs.existsSync(path.join(buildDir, 'build.ninja'))
+            || fs.existsSync(path.join(buildDir, 'Makefile'))
+            || fs.readdirSync(buildDir).some(entry => entry.endsWith('.sln') || entry.endsWith('.slnx'));
+        if (!hasBuildSystem) {
+            console.log(`Resetting ${relative}: cached CMake configuration is incomplete.`);
+            fs.rmSync(buildDir, { recursive: true, force: true });
+        }
+    }
+    fs.mkdirSync(buildDir, { recursive: true });
 }
-const LLVM_SRC_DIR = LLVM_USE_GIT ? 'llvm-project-git' : `llvm-project-${LLVM_VERSION}.src`;
-const LLVM_TARBALL = `llvm-project-${LLVM_VERSION}.src.tar.xz`;
-const LLVM_URL = `https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/${LLVM_TARBALL}`;
-const LLVM_GIT_URL = 'https://github.com/llvm/llvm-project.git';
-const CONCURRENCY = os.cpus().length;
+
+function nativeToolPath(buildDir: string, name: string): string {
+    const suffix = process.platform === 'win32' ? '.exe' : '';
+    const executable = `${name}${suffix}`;
+    const candidates = [
+        path.join(buildDir, 'bin', executable),
+        path.join(buildDir, 'Release', 'bin', executable),
+        path.join(buildDir, 'bin', 'Release', executable),
+    ];
+    const resolved = candidates.find(candidate => fs.existsSync(candidate));
+    if (!resolved) {
+        throw new Error(`Native LLVM tool was not produced: ${name} (${candidates.join(', ')})`);
+    }
+    return resolved;
+}
+
+function writeResponseFile(responseFile: string, argumentsList: string[]): boolean {
+    const content = argumentsList.map(argument => JSON.stringify(argument)).join('\n');
+    const previous = fs.existsSync(responseFile) ? fs.readFileSync(responseFile, 'utf8') : undefined;
+    if (previous === content) {
+        return false;
+    }
+    fs.writeFileSync(responseFile, content);
+    return true;
+}
+
+function linkArtifactsAreCurrent(outputs: string[], inputs: string[], responseChanged: boolean): boolean {
+    if (responseChanged || outputs.some(output => !fs.existsSync(output) || fs.statSync(output).size === 0)) {
+        return false;
+    }
+    const oldestOutput = Math.min(...outputs.map(output => fs.statSync(output).mtimeMs));
+    return inputs.every(input => fs.existsSync(input) && fs.statSync(input).mtimeMs <= oldestOutput);
+}
 
 /** Common Emscripten flags for standalone tool modules */
 const STANDALONE_FLAGS = [
@@ -122,110 +161,96 @@ async function main() {
 }
 
 function setupSource() {
-    shell.mkdir('-p', LLVM_DIR);
-    shell.cd(LLVM_DIR);
-    if (!fs.existsSync(LLVM_SRC_DIR)) {
-        if (LLVM_USE_GIT) {
-            const commit = LLVM_GIT_COMMIT;
-            if (!commit) {
-                throw new Error(
-                    'Cannot determine LLVM git commit from emsdk clang. ' +
-                    'Set LLVM_VERSION env var to a specific released version.',
-                );
-            }
-            console.log(`Cloning LLVM from git at commit ${commit}...`);
-            // Shallow clone to save time/space, then checkout the exact commit
-            shell.exec(`git clone --depth 1 "${LLVM_GIT_URL}" "${LLVM_SRC_DIR}"`);
-            shell.cd(LLVM_SRC_DIR);
-            shell.exec(`git fetch --depth 1 origin ${commit}`);
-            shell.exec(`git checkout ${commit}`);
-            shell.cd(LLVM_DIR);
-        } else {
-            if (!fs.existsSync(LLVM_TARBALL)) {
-                console.log(`Downloading LLVM source from ${LLVM_URL}...`);
-                shell.exec(`curl -fSL -o "${LLVM_TARBALL}" "${LLVM_URL}"`);
-            }
-            console.log('Extracting LLVM source...');
-            shell.exec(`tar -xf "${LLVM_TARBALL}"`);
-        }
-    } else {
-        console.log('LLVM source already present.');
-    }
+    ensureLockedSource(
+        ROOT,
+        lock,
+        'llvm',
+        path.join(LLVM_SOURCE_ROOT, LLVM_SRC_DIR),
+        'llvm/CMakeLists.txt',
+    );
 }
 
 function buildNativeTableGen() {
     console.log('>>> Building native llvm-tblgen and clang-tblgen...');
-    const nativeBuildDir = path.join(LLVM_DIR, 'build-native');
-    shell.mkdir('-p', nativeBuildDir);
-    shell.cd(nativeBuildDir);
+    const nativeBuildDir = path.join(LLVM_BUILD_ROOT, 'native');
+    ensureCMakeBuildDirectory(nativeBuildDir);
 
-    if (!fs.existsSync(path.join(nativeBuildDir, 'Makefile'))) {
-        const cmd = `cmake "../${LLVM_SRC_DIR}/llvm" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DLLVM_TARGETS_TO_BUILD="WebAssembly" \
-            -DLLVM_ENABLE_PROJECTS="clang;lld" \
-            -DLLVM_INCLUDE_TESTS=OFF \
-            -DLLVM_INCLUDE_BENCHMARKS=OFF \
-            -DLLVM_INCLUDE_EXAMPLES=OFF`;
+    if (!fs.existsSync(path.join(nativeBuildDir, 'CMakeCache.txt'))) {
+        const sourceDir = path.join(LLVM_SOURCE_ROOT, LLVM_SRC_DIR, 'llvm');
+        const cmd = [
+            'cmake',
+            `-S "${sourceDir}"`,
+            `-B "${nativeBuildDir}"`,
+            '-DCMAKE_BUILD_TYPE=Release',
+            '-DLLVM_TARGETS_TO_BUILD="WebAssembly"',
+            '-DLLVM_ENABLE_PROJECTS="clang;lld"',
+            '-DLLVM_INCLUDE_TESTS=OFF',
+            '-DLLVM_INCLUDE_BENCHMARKS=OFF',
+            '-DLLVM_INCLUDE_EXAMPLES=OFF',
+        ].join(' ');
         shell.exec(cmd);
     }
 
-    shell.exec(`make -j${CONCURRENCY} llvm-tblgen clang-tblgen`);
-    shell.cd(LLVM_DIR);
+    shell.exec(`cmake --build "${nativeBuildDir}" --config Release --parallel ${CONCURRENCY} --target llvm-tblgen clang-tblgen`);
+    shell.cd(LLVM_SOURCE_ROOT);
 }
 
 function buildStaticLLVM() {
     console.log('>>> Building static LLVM libraries...');
-    const wasmBuildDir = path.join(LLVM_DIR, 'build-wasm');
-    const nativeBuildDir = path.join(LLVM_DIR, 'build-native');
+    const wasmBuildDir = path.join(LLVM_BUILD_ROOT, 'wasm');
+    const nativeBuildDir = path.join(LLVM_BUILD_ROOT, 'native');
 
-    const llvmTblGen = path.join(nativeBuildDir, 'bin/llvm-tblgen');
-    const clangTblGen = path.join(nativeBuildDir, 'bin/clang-tblgen');
+    const llvmTblGen = nativeToolPath(nativeBuildDir, 'llvm-tblgen');
+    const clangTblGen = nativeToolPath(nativeBuildDir, 'clang-tblgen');
 
-    if (!fs.existsSync(wasmBuildDir)) {
-        shell.mkdir('-p', wasmBuildDir);
-    }
+    ensureCMakeBuildDirectory(wasmBuildDir);
 
     // Configure — static build only, no SIDE_MODULE, no shared libs
-    if (!fs.existsSync(path.join(wasmBuildDir, 'Makefile'))) {
+    if (!fs.existsSync(path.join(wasmBuildDir, 'CMakeCache.txt'))) {
         console.log('Configuring LLVM for WebAssembly (static)...');
-        const cmd = `emcmake cmake -S "${LLVM_SRC_DIR}/llvm" -B "${wasmBuildDir}" \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_FLAGS="" \
-            -DCMAKE_C_FLAGS="" \
-            -DLLVM_TARGETS_TO_BUILD="WebAssembly" \
-            -DLLVM_ENABLE_PROJECTS="clang;lld" \
-            -DLLVM_TABLEGEN="${llvmTblGen}" \
-            -DCLANG_TABLEGEN="${clangTblGen}" \
-            -DCMAKE_CROSSCOMPILING=ON \
-            -DLLVM_DEFAULT_TARGET_TRIPLE="wasm32-unknown-emscripten" \
-            -DLLVM_ENABLE_THREADS=OFF \
-            -DLLVM_ENABLE_PIC=OFF \
-            -DLLVM_INCLUDE_TESTS=OFF \
-            -DLLVM_INCLUDE_BENCHMARKS=OFF \
-            -DLLVM_INCLUDE_EXAMPLES=OFF \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DLLVM_BUILD_LLVM_DYLIB=OFF \
-            -DLLVM_LINK_LLVM_DYLIB=OFF \
-            -DUNIX=1`;
+        const sourceDir = path.join(LLVM_SOURCE_ROOT, LLVM_SRC_DIR, 'llvm');
+        const cmd = [
+            'emcmake cmake',
+            `-S "${sourceDir}"`,
+            `-B "${wasmBuildDir}"`,
+            '-DCMAKE_BUILD_TYPE=Release',
+            '-DCMAKE_CXX_FLAGS=""',
+            '-DCMAKE_C_FLAGS=""',
+            '-DLLVM_TARGETS_TO_BUILD="WebAssembly"',
+            '-DLLVM_ENABLE_PROJECTS="clang;lld"',
+            `-DLLVM_TABLEGEN="${llvmTblGen}"`,
+            `-DCLANG_TABLEGEN="${clangTblGen}"`,
+            '-DCMAKE_CROSSCOMPILING=ON',
+            '-DLLVM_HOST_TRIPLE="wasm32-unknown-emscripten"',
+            '-DLLVM_DEFAULT_TARGET_TRIPLE="wasm32-unknown-emscripten"',
+            '-DLLVM_ENABLE_THREADS=OFF',
+            '-DLLVM_ENABLE_PIC=OFF',
+            '-DLLVM_INCLUDE_TESTS=OFF',
+            '-DLLVM_INCLUDE_BENCHMARKS=OFF',
+            '-DLLVM_INCLUDE_EXAMPLES=OFF',
+            '-DBUILD_SHARED_LIBS=OFF',
+            '-DLLVM_BUILD_LLVM_DYLIB=OFF',
+            '-DLLVM_LINK_LLVM_DYLIB=OFF',
+            '-DUNIX=1',
+        ].join(' ');
 
         shell.exec(cmd);
     }
 
     console.log('Building LLVM static libraries...');
-    shell.exec(`emmake make -C "${wasmBuildDir}" -j${CONCURRENCY} llvm-libraries`);
+    shell.exec(`cmake --build "${wasmBuildDir}" --parallel ${CONCURRENCY} --target llvm-libraries`);
 }
 
 function buildClang() {
     console.log('>>> Building clang.wasm (standalone)...');
-    const wasmBuildDir = path.join(LLVM_DIR, 'build-wasm');
+    const wasmBuildDir = path.join(LLVM_BUILD_ROOT, 'wasm');
 
     // Build clang tablegen targets and static libraries
     console.log('Building clang tablegen targets...');
-    shell.exec(`emmake make -C "${wasmBuildDir}" -j${CONCURRENCY} clang-tablegen-targets`);
+    shell.exec(`cmake --build "${wasmBuildDir}" --parallel ${CONCURRENCY} --target clang-tablegen-targets`);
 
     console.log('Building clang static libraries...');
-    shell.exec(`emmake make -C "${wasmBuildDir}" -j${CONCURRENCY} clang-libraries`);
+    shell.exec(`cmake --build "${wasmBuildDir}" --parallel ${CONCURRENCY} --target clang-libraries`);
 
     // Build clang driver object files — the driver consists of several .cpp files:
     //   driver.cpp     → clang_main()
@@ -237,11 +262,16 @@ function buildClang() {
     const driverSubdir = path.join(wasmBuildDir, 'tools/clang/tools/driver');
     const driverObjDir = path.join(driverSubdir, 'CMakeFiles/clang.dir');
 
-    // Build the CMake-managed objects (driver + cc1 frontends)
-    shell.exec(`emmake make -C "${driverSubdir}" -j${CONCURRENCY} driver.cpp.o cc1_main.cpp.o cc1as_main.cpp.o cc1gen_reproducer_main.cpp.o`);
+    const requiredObjs = [
+        'driver.cpp.o',
+        'cc1_main.cpp.o',
+        'cc1as_main.cpp.o',
+        'cc1gen_reproducer_main.cpp.o',
+        'clang-driver.cpp.o',
+    ];
+    shell.exec(`cmake --build "${driverSubdir}" --parallel ${CONCURRENCY} --target ${requiredObjs.join(' ')}`);
 
     // Verify they all exist
-    const requiredObjs = ['driver.cpp.o', 'cc1_main.cpp.o', 'cc1as_main.cpp.o', 'cc1gen_reproducer_main.cpp.o'];
     for (const obj of requiredObjs) {
         if (!fs.existsSync(path.join(driverObjDir, obj))) {
             console.error(`ERROR: Clang driver object not found: ${obj}`);
@@ -249,27 +279,11 @@ function buildClang() {
         }
     }
 
-    // clang-driver.cpp is auto-generated by CMake from llvm-driver-template.cpp.in
-    // and provides main() which calls clang_main(). We must compile it manually
-    // since our build script bypasses CMake's final link step.
-    const driverMainSrc = path.join(driverSubdir, 'clang-driver.cpp');
-    const driverMainObj = path.join(driverObjDir, 'clang-driver.cpp.o');
-    if (!fs.existsSync(driverMainSrc)) {
-        console.error(`ERROR: Generated clang-driver.cpp not found at ${driverMainSrc}`);
-        process.exit(1);
-    }
-    const includeFlags = [
-        `-I${path.join(wasmBuildDir, 'include')}`,
-        `-I${path.join(LLVM_DIR, LLVM_SRC_DIR, 'llvm/include')}`,
-        `-I${path.join(wasmBuildDir, 'tools/clang/tools/driver')}`,
-        `-I${path.join(LLVM_DIR, LLVM_SRC_DIR, 'clang/include')}`,
-        `-I${path.join(wasmBuildDir, 'tools/clang/include')}`,
-    ].join(' ');
-    console.log('Compiling clang-driver.cpp (provides main())...');
-    shell.exec(`em++ -Os -std=c++17 -DLLVM_BUILD_STATIC ${includeFlags} -c "${driverMainSrc}" -o "${driverMainObj}"`);
-
     // Collect all driver objects for linking
-    const allDriverObjects = shell.ls(path.join(driverObjDir, '*.o'));
+    const allDriverObjects = fs.readdirSync(driverObjDir)
+        .filter(entry => entry.endsWith('.o'))
+        .sort()
+        .map(entry => path.join(driverObjDir, entry));
 
     console.log('Linking clang.wasm (standalone)...');
     const clangMjs = path.join(BUILD_DIR, 'clang.mjs');
@@ -278,7 +292,10 @@ function buildClang() {
     shell.mkdir('-p', BUILD_DIR);
 
     // Find LLVM static libraries
-    const allLLVMLibs = shell.ls(path.join(libDir, 'libLLVM*.a'));
+    const allLLVMLibs = fs.readdirSync(libDir)
+        .filter(entry => entry.startsWith('libLLVM') && entry.endsWith('.a'))
+        .sort()
+        .map(entry => path.join(libDir, entry));
     if (allLLVMLibs.length === 0) {
         console.error('ERROR: No libLLVM*.a found');
         process.exit(1);
@@ -295,7 +312,10 @@ function buildClang() {
     console.log(`  Using ${llvmLibs.length}/${allLLVMLibs.length} LLVM libs (excluded: ${[...excludedLLVMLibs].join(', ')})`);
 
     // Find clang static libraries (exclude combined libs to avoid duplicate symbols)
-    const allClangLibs = shell.ls(path.join(libDir, 'libclang*.a'));
+    const allClangLibs = fs.readdirSync(libDir)
+        .filter(entry => entry.startsWith('libclang') && entry.endsWith('.a'))
+        .sort()
+        .map(entry => path.join(libDir, entry));
     const clangLibs = allClangLibs.filter(l => {
         const name = path.basename(l);
         return name !== 'libclang-cpp.a' && name !== 'libclang.a';
@@ -305,67 +325,58 @@ function buildClang() {
         process.exit(1);
     }
 
-    const cmd = `em++ \
-        ${STANDALONE_FLAGS} \
-        ${allDriverObjects.map(o => `"${o}"`).join(' ')} \
-        -Wl,--whole-archive \
-        -Wl,--start-group ${clangLibs.map(l => `"${l}"`).join(' ')} ${llvmLibs.map(l => `"${l}"`).join(' ')} -Wl,--end-group \
-        -Wl,--no-whole-archive \
-        -Os \
-        -o "${clangMjs}"`;
+    const linkArguments = [
+        ...STANDALONE_FLAGS.split(' '),
+        ...allDriverObjects,
+        '-Wl,--whole-archive',
+        '-Wl,--start-group',
+        ...clangLibs,
+        ...llvmLibs,
+        '-Wl,--end-group',
+        '-Wl,--no-whole-archive',
+        '-Os',
+        '-o',
+        clangMjs,
+    ];
+    const responseFile = path.join(BUILD_DIR, 'clang-link.rsp');
+    const responseChanged = writeResponseFile(responseFile, linkArguments);
 
-    shell.exec(cmd);
+    if (linkArtifactsAreCurrent([clangMjs, clangWasm], [...allDriverObjects, ...clangLibs, ...llvmLibs, responseFile], responseChanged)) {
+        console.log('Clang link artifacts are current.');
+        return;
+    }
+    shell.exec(`em++ @"${responseFile}"`);
     console.log(`Created ${clangWasm} + ${clangMjs}`);
 }
 
 function buildLLD() {
     console.log('>>> Building lld.wasm (standalone)...');
-    const wasmBuildDir = path.join(LLVM_DIR, 'build-wasm');
+    const wasmBuildDir = path.join(LLVM_BUILD_ROOT, 'wasm');
 
-    // Some environments can lose the wasm build dir between clang and lld
-    // phases (e.g. interrupted runs or external cleanup). Recreate/reconfigure
-    // on demand so `build:llvm` remains resumable.
-    if (!fs.existsSync(wasmBuildDir) || !fs.existsSync(path.join(wasmBuildDir, 'Makefile'))) {
+    if (!fs.existsSync(path.join(wasmBuildDir, 'CMakeCache.txt'))) {
         console.warn('LLD step detected missing build-wasm directory; reconfiguring LLVM wasm build...');
         buildStaticLLVM();
     }
 
     // Build lld static libraries
     console.log('Building lld static libraries...');
-    shell.exec(`emmake make -C "${wasmBuildDir}" -j${CONCURRENCY} lld-libraries`);
-
-    const objPathRel = 'tools/lld/tools/lld/CMakeFiles/lld.dir/lld.cpp.o';
-    const objPath = path.join(wasmBuildDir, objPathRel);
+    shell.exec(`cmake --build "${wasmBuildDir}" --parallel ${CONCURRENCY} --target lld-libraries`);
 
     console.log('Ensuring lld driver objects are built...');
     const lldSubdir = path.join(wasmBuildDir, 'tools/lld/tools/lld');
-    shell.exec(`emmake make -C "${lldSubdir}" -j${CONCURRENCY} lld.cpp.o`);
-
-    if (!fs.existsSync(objPath)) {
-        console.error(`ERROR: LLD driver object not found at ${objPath}`);
-        process.exit(1);
-    }
-
-    // Compile lld-driver.cpp (auto-generated by CMake, provides main() wrapper
-    // that calls lld_main()) — same pattern as clang-driver.cpp
-    const lldDriverSrc = path.join(lldSubdir, 'lld-driver.cpp');
     const lldObjDir = path.join(lldSubdir, 'CMakeFiles/lld.dir');
-    const lldDriverObj = path.join(lldObjDir, 'lld-driver.cpp.o');
-    if (!fs.existsSync(lldDriverSrc)) {
-        console.error(`ERROR: Generated lld-driver.cpp not found at ${lldDriverSrc}`);
-        process.exit(1);
+    const requiredObjs = ['lld.cpp.o', 'lld-driver.cpp.o'];
+    shell.exec(`cmake --build "${lldSubdir}" --parallel ${CONCURRENCY} --target ${requiredObjs.join(' ')}`);
+    for (const obj of requiredObjs) {
+        if (!fs.existsSync(path.join(lldObjDir, obj))) {
+            console.error(`ERROR: LLD driver object not found: ${obj}`);
+            process.exit(1);
+        }
     }
-    const lldIncludeFlags = [
-        `-I${path.join(wasmBuildDir, 'include')}`,
-        `-I${path.join(LLVM_DIR, LLVM_SRC_DIR, 'llvm/include')}`,
-        `-I${path.join(LLVM_DIR, LLVM_SRC_DIR, 'lld/include')}`,
-        `-I${path.join(wasmBuildDir, 'tools/lld/include')}`,
-    ].join(' ');
-    console.log('Compiling lld-driver.cpp (provides main())...');
-    shell.exec(`em++ -Os -std=c++17 -DLLVM_BUILD_STATIC ${lldIncludeFlags} -c "${lldDriverSrc}" -o "${lldDriverObj}"`);
-
-    const objDir = path.dirname(objPath);
-    const objects = shell.ls(path.join(objDir, '*.o'));
+    const objects = fs.readdirSync(lldObjDir)
+        .filter(entry => entry.endsWith('.o'))
+        .sort()
+        .map(entry => path.join(lldObjDir, entry));
 
     console.log('Linking lld.wasm (standalone)...');
     const lldMjs = path.join(BUILD_DIR, 'lld.mjs');
@@ -373,31 +384,47 @@ function buildLLD() {
     const libDir = path.join(wasmBuildDir, 'lib');
 
     // Find LLVM static libraries
-    const allLLVMLibs = shell.ls(path.join(libDir, 'libLLVM*.a'));
+    const allLLVMLibs = fs.readdirSync(libDir)
+        .filter(entry => entry.startsWith('libLLVM') && entry.endsWith('.a'))
+        .sort()
+        .map(entry => path.join(libDir, entry));
 
     // Exclude libLLVMOptDriver.a (duplicate cl::opt registrations)
     const excludedLLVMLibs = new Set([
         'libLLVMOptDriver.a',
     ]);
-    const llvmLibs = allLLVMLibs.filter((l: string) => !excludedLLVMLibs.has(path.basename(l)));
+    const llvmLibs = allLLVMLibs.filter(library => !excludedLLVMLibs.has(path.basename(library)));
 
     // Find lld static libraries
-    const lldLibs = shell.ls(path.join(libDir, 'liblld*.a'));
+    const lldLibs = fs.readdirSync(libDir)
+        .filter(entry => entry.startsWith('liblld') && entry.endsWith('.a'))
+        .sort()
+        .map(entry => path.join(libDir, entry));
     if (lldLibs.length === 0) {
         console.error('ERROR: No liblld*.a found');
         process.exit(1);
     }
 
-    const cmd = `em++ \
-        ${STANDALONE_FLAGS} \
-        ${objects.map((o: string) => `"${o}"`).join(' ')} \
-        -Wl,--whole-archive \
-        -Wl,--start-group ${lldLibs.map((l: string) => `"${l}"`).join(' ')} ${llvmLibs.map((l: string) => `"${l}"`).join(' ')} -Wl,--end-group \
-        -Wl,--no-whole-archive \
-        -Os \
-        -o "${lldMjs}"`;
-
-    shell.exec(cmd);
+    const linkArguments = [
+        ...STANDALONE_FLAGS.split(' '),
+        ...objects,
+        '-Wl,--whole-archive',
+        '-Wl,--start-group',
+        ...lldLibs,
+        ...llvmLibs,
+        '-Wl,--end-group',
+        '-Wl,--no-whole-archive',
+        '-Os',
+        '-o',
+        lldMjs,
+    ];
+    const responseFile = path.join(BUILD_DIR, 'lld-link.rsp');
+    const responseChanged = writeResponseFile(responseFile, linkArguments);
+    if (linkArtifactsAreCurrent([lldMjs, lldWasm], [...objects, ...lldLibs, ...llvmLibs, responseFile], responseChanged)) {
+        console.log('LLD link artifacts are current.');
+        return;
+    }
+    shell.exec(`em++ @"${responseFile}"`);
     console.log(`Created ${lldWasm} + ${lldMjs}`);
 }
 

@@ -57,6 +57,13 @@ export interface WriteFileMessage {
     data: Uint8Array;
 }
 
+/** Delete a file from the kernel VFS overlay. */
+export interface DeleteFileMessage {
+    type: 'deleteFile';
+    id: number;
+    path: string;
+}
+
 /** List directory contents. */
 export interface ListDirMessage {
     type: 'listDir';
@@ -76,6 +83,7 @@ export type MainToWorkerMessage =
     | StdinMessage
     | GetFileMessage
     | WriteFileMessage
+    | DeleteFileMessage
     | ListDirMessage
     | ResetVfsMessage;
 
@@ -152,6 +160,14 @@ export interface WriteFileResultMessage {
     error?: string;
 }
 
+/** deleteFile result. */
+export interface DeleteFileResultMessage {
+    type: 'deleteFileResult';
+    id: number;
+    ok: boolean;
+    error?: string;
+}
+
 /** listDir result. */
 export interface ListDirResultMessage {
     type: 'listDirResult';
@@ -218,6 +234,7 @@ export type WorkerToMainMessage =
     | RunResultMessage
     | GetFileResultMessage
     | WriteFileResultMessage
+    | DeleteFileResultMessage
     | ListDirResultMessage
     | ResetVfsResultMessage
     | ShellOutputMessage

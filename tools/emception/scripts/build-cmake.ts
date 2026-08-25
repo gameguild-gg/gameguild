@@ -8,142 +8,54 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { standaloneFlags } from './lib/emcc-flags.ts';
-import { setupEmsdk } from './lib/emsdk.ts';
+import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-cmake');
 
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 setupEmsdk(EMSDK_VERSION);
 
 const CONCURRENCY = os.cpus().length;
 
-const USERLAND_DIR = path.join(ROOT, 'userland', 'cmake');
-const OUTPUT_DIR = path.join(ROOT, 'build');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
-const LIBCURL_INC = path.join(ROOT, 'userland', 'libcurl-lite', 'include');
+const SOURCE_ROOT = path.join(P.sources, 'cmake');
+const OUTPUT_DIR = P.tools;
+const SYSROOT_LIB = path.join(P.sysroot, 'usr', 'lib');
+const LIBCURL_INC = path.join(P.overlays, 'libcurl-lite', 'include');
 const LIBCURL_A = path.join(OUTPUT_DIR, 'libcurl.a');
 
 // 4 MB stack — CMake can do deep recursion.
 const STANDALONE_FLAGS = standaloneFlags({ stackSize: 4 * 1024 * 1024, asyncifyStackSize: 65536 });
 
-shell.mkdir('-p', USERLAND_DIR);
+shell.mkdir('-p', SOURCE_ROOT);
 shell.mkdir('-p', OUTPUT_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 
-// Detect latest CMake release
-const GITHUB_AUTH = process.env.GITHUB_TOKEN
-    ? `-H "Authorization: token ${process.env.GITHUB_TOKEN}"`
-    : '';
-
-function detectCMakeVersion(): string {
-    const envVer = process.env.CMAKE_VERSION;
-    if (envVer) return envVer;
-
-    // CMake 4.x changed CMakeBuildUtilities.cmake: when CMAKE_USE_SYSTEM_CURL=ON it
-    // forces CMAKE_USE_SYSTEM_ZLIB=ON via a regular set() that overrides our -D flag,
-    // and Emscripten's cross-compile sysroot has no system zlib. Cap at 3.x.
-    const FALLBACK_CMAKE_VERSION = PINNED.CMAKE_VERSION;
-    console.log('Detecting latest CMake 3.x release...');
-    const prevFatal = shell.config.fatal;
-    shell.config.fatal = false;
-    const result = shell.exec(
-        `curl -fsSL ${GITHUB_AUTH} "https://api.github.com/repos/Kitware/CMake/releases?per_page=100"`,
-        { silent: true },
-    );
-    shell.config.fatal = prevFatal;
-    if (result.code !== 0) {
-        console.warn(`  GitHub API unavailable (exit ${result.code}), using fallback ${FALLBACK_CMAKE_VERSION}`);
-        return FALLBACK_CMAKE_VERSION;
-    }
-    const releases = JSON.parse(result.stdout) as Array<{
-        tag_name: string;
-        prerelease: boolean;
-        draft: boolean;
-    }>;
-    for (const rel of releases) {
-        if (rel.prerelease || rel.draft) continue;
-        const m = rel.tag_name.match(/^v(3\.\d+\.\d+)$/);
-        if (m) {
-            console.log(`  Latest CMake 3.x release: ${m[1]}`);
-            return m[1];
-        }
-    }
-    throw new Error('No CMake 3.x release found in recent 100 releases');
+function findFilesByExtension(rootDir: string, extension: string): string[] {
+    return fs.readdirSync(rootDir, { recursive: true, encoding: 'utf8' })
+        .filter(relativePath => relativePath.endsWith(extension))
+        .map(relativePath => path.join(rootDir, relativePath));
 }
 
-function escapeRegex(input: string): string {
-    return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function isCMakeSourceDir(dirPath: string): boolean {
-    if (!fs.existsSync(path.join(dirPath, 'CMakeLists.txt'))) return false;
-    // bundled libarchive version file must exist for cross-compilation configure
-    if (!fs.existsSync(path.join(dirPath, 'Utilities', 'cmlibarchive', 'build', 'version'))) return false;
-    return true;
-}
-
-function findExistingSourceDir(version: string): string | null {
-    const candidates = new Set<string>([
-        path.join(USERLAND_DIR, `cmake-${version}`),
-        path.join(USERLAND_DIR, `CMake-${version}`),
-    ]);
-
-    const versionPattern = new RegExp(`^cmake[-_]?${escapeRegex(version)}$`, 'i');
-    for (const entry of fs.readdirSync(USERLAND_DIR, { withFileTypes: true })) {
-        if (!entry.isDirectory()) continue;
-        if (versionPattern.test(entry.name)) {
-            candidates.add(path.join(USERLAND_DIR, entry.name));
-        }
-    }
-
-    for (const candidate of candidates) {
-        if (isCMakeSourceDir(candidate)) return candidate;
-    }
-    return null;
-}
-
-function ensureCMakeSource(version: string): string {
-    const existing = findExistingSourceDir(version);
-    if (existing) {
-        console.log(`Using existing CMake source dir: ${path.basename(existing)}`);
-        return existing;
-    }
-
-    const normalizedSourceDir = path.join(USERLAND_DIR, `cmake-${version}`);
-    // Remove any incomplete source directory (e.g. gitignore stripped build/ subdirs)
-    if (fs.existsSync(normalizedSourceDir)) {
-        console.log(`Removing incomplete cmake source dir: ${path.basename(normalizedSourceDir)}`);
-        shell.rm('-rf', normalizedSourceDir);
-    }
-    const tarball = `v${version}.tar.gz`;
-
-    console.log(`Downloading CMake ${version}...`);
-    shell.cd(USERLAND_DIR);
-    shell.exec(`curl -fSL ${GITHUB_AUTH} -o "${tarball}" "https://github.com/Kitware/CMake/archive/refs/tags/${tarball}"`);
-
-    shell.rm('-rf', normalizedSourceDir);
-    shell.mkdir('-p', normalizedSourceDir);
-    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${normalizedSourceDir}"`);
-    shell.rm('-f', tarball);
-
-    if (!isCMakeSourceDir(normalizedSourceDir)) {
-        throw new Error(`Extracted CMake source is invalid: ${normalizedSourceDir}`);
-    }
-
-    console.log(`Extracted CMake source to: ${path.basename(normalizedSourceDir)}`);
-    return normalizedSourceDir;
-}
-
-const CMAKE_VERSION = detectCMakeVersion();
-const SOURCE_DIR = ensureCMakeSource(CMAKE_VERSION);
-const BUILD_WASM_DIR = path.join(SOURCE_DIR, 'build-wasm');
+const CMAKE_VERSION = lockedVersion(lock, 'cmake');
+const SOURCE_DIR = ensureLockedSource(
+    ROOT,
+    lock,
+    'cmake',
+    path.join(SOURCE_ROOT, `cmake-${CMAKE_VERSION}`),
+    'Utilities/cmlibarchive/build/version',
+);
+const BUILD_WASM_DIR = path.join(P.builds, 'cmake', 'wasm');
 
 shell.cd(SOURCE_DIR);
 
@@ -338,7 +250,6 @@ patchSource(
 
 // 3. Build with emcmake
 console.log('Cross-compiling CMake for WASM...');
-if (fs.existsSync(BUILD_WASM_DIR)) shell.rm('-rf', BUILD_WASM_DIR);
 shell.mkdir('-p', BUILD_WASM_DIR);
 
 // CMake needs to find our libcurl-lite
@@ -365,7 +276,7 @@ console.log(cmakeCmd);
 shell.exec(cmakeCmd);
 
 // Build only the cmake executable (not ctest, cpack, etc.)
-shell.exec(`emmake make -C "${BUILD_WASM_DIR}" -j${CONCURRENCY} cmake`);
+shell.exec(`cmake --build "${BUILD_WASM_DIR}" --parallel ${CONCURRENCY} --target cmake`);
 
 // 4. Re-link as standalone module
 console.log('Linking CMake as standalone WASM module...');
@@ -374,16 +285,18 @@ const toolWasm = path.join(OUTPUT_DIR, 'cmake.wasm');
 const toolMjs = path.join(OUTPUT_DIR, 'cmake.mjs');
 
 // Find the CMake libraries produced by the build.
-const cmakeLibs = shell.find(BUILD_WASM_DIR)
-    .filter(f => f.endsWith('.a') && !f.includes('CMakeTmp'));
+const cmakeLibs = findFilesByExtension(BUILD_WASM_DIR, '.a')
+    .filter(f => !f.includes('CMakeTmp'));
 
 // Find the main object files — these contain main() and are NOT in any .a
-const cmakeMainObjs = shell.find(path.join(BUILD_WASM_DIR, 'Source', 'CMakeFiles', 'cmake.dir'))
-    .filter(f => f.endsWith('.o'));
+const cmakeMainObjs = findFilesByExtension(
+    path.join(BUILD_WASM_DIR, 'Source', 'CMakeFiles', 'cmake.dir'),
+    '.o',
+);
 
 // Emscripten's sysroot zlib — CMake uses it instead of bundled cmzlib
 const EMSDK_ZLIB = path.join(
-    ROOT, 'tools', 'emsdk', 'upstream', 'emscripten', 'cache', 'sysroot',
+    getEmsdkDir(), 'upstream', 'emscripten', 'cache', 'sysroot',
     'lib', 'wasm32-emscripten', 'libz.a',
 );
 
@@ -400,7 +313,7 @@ const linkCmd = [
     STANDALONE_FLAGS,
     '-Os',
     `-o "${toolMjs}"`,
-].filter(Boolean).join(' \\\n    ');
+].filter(Boolean).join(' ');
 
 console.log(linkCmd);
 shell.exec(linkCmd);
@@ -410,45 +323,6 @@ if (!fs.existsSync(toolWasm)) {
     process.exit(1);
 }
 console.log(`Created ${toolWasm} + ${toolMjs}`);
-
-// 4b. Patch Emscripten glue: fix PIPEFS.poll to return POLLHUP on closed pipe ends
-// Without this, kwsys ProcessUNIX.c's poll() loop spins forever because
-// Emscripten's PIPEFS.poll returns 0 (no events) instead of POLLHUP when the
-// other end of a pipe is closed, and Emscripten's ___syscall_poll ignores the
-// timeout parameter.
-{
-    const mjsContent = fs.readFileSync(toolMjs, 'utf8');
-    const pipefsNeedle = 'poll(stream,timeout,notifyCallback){var pipe=stream.node.pipe;if((stream.flags&2097155)===1){return 256|4}for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1}}return 0}';
-    const pipefsReplacement = 'poll(stream,timeout,notifyCallback){var pipe=stream.node.pipe;if((stream.flags&2097155)===1){if(pipe.refcnt<=1)return 4|8;return 256|4}if(pipe.refcnt<=1){for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1|16}}return 16}for(var bucket of pipe.buckets){if(bucket.offset-bucket.roffset>0){return 64|1}}return 0}';
-    if (mjsContent.includes(pipefsReplacement)) {
-        console.log('  [pipefs-pollhup] already applied — skipping');
-    } else if (!mjsContent.includes(pipefsNeedle)) {
-        console.warn('  [pipefs-pollhup] needle not found in cmake.mjs — upstream Emscripten may have changed');
-    } else {
-        fs.writeFileSync(toolMjs, mjsContent.replace(pipefsNeedle, pipefsReplacement));
-        console.log('  [pipefs-pollhup] applied');
-    }
-}
-
-// 4c. Patch ___syscall_poll: return POLLHUP on pipe fds with infinite timeout
-// Emscripten's ___syscall_poll ignores the timeout parameter — it returns 0
-// immediately even when timeout=-1.  Since Emscripten can never spawn child
-// processes (no fork/clone), an infinite-timeout poll on a pipe will never
-// succeed.  Inject POLLHUP (read-end) / POLLERR (write-end) so callers like
-// kwsys ProcessUNIX.c break out of their retry loops.
-{
-    const mjsContent = fs.readFileSync(toolMjs, 'utf8');
-    const pollNeedle = 'if(stream.stream_ops.poll){flags=stream.stream_ops.poll(stream,-1)}else{flags=5}';
-    const pollReplacement = 'if(stream.stream_ops.poll){flags=stream.stream_ops.poll(stream,-1);if(flags===0&&timeout<0&&stream.node&&stream.node.pipe){flags=(stream.flags&2097155)===1?12:16}}else{flags=5}';
-    if (mjsContent.includes(pollReplacement)) {
-        console.log('  [syscall-poll-pipe-hup] already applied — skipping');
-    } else if (!mjsContent.includes(pollNeedle)) {
-        console.warn('  [syscall-poll-pipe-hup] needle not found in cmake.mjs — upstream Emscripten may have changed');
-    } else {
-        fs.writeFileSync(toolMjs, mjsContent.replace(pollNeedle, pollReplacement));
-        console.log('  [syscall-poll-pipe-hup] applied');
-    }
-}
 
 // 5. Deploy to sysroot
 console.log('Deploying to sysroot...');
@@ -460,7 +334,7 @@ for (const ext of ['.wasm', '.mjs']) {
 // 6. Copy CMake data files (Modules/, Templates/) to sysroot.
 // Without these, cmake fails at runtime with "Could not find CMAKE_ROOT".
 const CMAKE_MAJOR_MINOR = CMAKE_VERSION.split('.').slice(0, 2).join('.');
-const SYSROOT_CMAKE_DATA = path.join(ROOT, 'sysroot', 'usr', 'share', `cmake-${CMAKE_MAJOR_MINOR}`);
+const SYSROOT_CMAKE_DATA = path.join(P.sysroot, 'usr', 'share', `cmake-${CMAKE_MAJOR_MINOR}`);
 shell.mkdir('-p', SYSROOT_CMAKE_DATA);
 
 const modulesDir = path.join(SOURCE_DIR, 'Modules');
@@ -479,21 +353,8 @@ if (fs.existsSync(templatesDir)) {
     console.warn('WARNING: CMake Templates/ directory not found in source tree');
 }
 
-// Deploy Emception runtime toolchain file for cmake compiler detection
-const toolchainSrc = path.join(ROOT, 'sysroot', 'usr', 'share', `cmake-${CMAKE_MAJOR_MINOR}`, 'toolchain-emception.cmake');
-if (!fs.existsSync(toolchainSrc)) {
-    console.warn('WARNING: toolchain-emception.cmake not found — cmake compiler detection may fail');
-}
-console.log(`Toolchain file: ${toolchainSrc}`);
-
-// 7. Apply glue patches (systemCallback, Asyncify hooks, ENV merge) to the freshly
-// deployed cmake.mjs in both build/ and sysroot/. Without these patches,
-// std::system() returns -52 (ENOSYS) and callMain() cannot suspend for async I/O.
-console.log('Applying glue patches to cmake.mjs...');
-shell.cd(ROOT);
-const patchGlueResult = shell.exec('npx tsx scripts/patch-glue.ts', { silent: false });
-if (patchGlueResult.code !== 0) {
-    console.error('WARNING: patch:glue failed — cmake.mjs may be missing systemCallback patches');
-}
+// The browser ToolRunner pre-seeds CMake's compiler and system metadata in the
+// build tree. No standalone CMAKE_TOOLCHAIN_FILE is deployed with this runtime.
+console.log('CMake runtime compiler metadata is pre-seeded by the browser ToolRunner.');
 
 console.log('>>> CMake build complete.');

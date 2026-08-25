@@ -14,142 +14,62 @@
  *   - sysroot/usr/include/raylib/{raylib,raymath,rlgl,raygui,physac,rlights}.h
  *   - sysroot/usr/lib/emscripten/raylib-runtime.mjs  (MODULARIZE=1 JS factory)
  *
- * Versions: latest GitHub release tags (override via *_VERSION env vars).
+ * Versions: exact entries from toolchain.lock.json.
  */
 
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
+import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { patchRaylibSource } from './lib/source-compatibility.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import type { ToolName } from './toolchain/lock.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-raylib');
 
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 setupEmsdk(EMSDK_VERSION);
 
 const EMSDK_DIR = getEmsdkDir();
 const EMCC = path.join(EMSDK_DIR, 'upstream', 'emscripten', 'emcc');
 
-const USERLAND_DIR = path.join(ROOT, 'userland', 'raylib');
-const BUILD_DIR = path.join(ROOT, 'build', 'raylib');
-const SYSROOT_LIB = path.join(ROOT, 'sysroot', 'usr', 'lib');
-const SYSROOT_INC = path.join(ROOT, 'sysroot', 'usr', 'include');
+const SOURCE_ROOT = path.join(P.sources, 'raylib');
+const BUILD_DIR = path.join(P.builds, 'raylib');
+const SYSROOT_LIB = path.join(P.sysroot, 'usr', 'lib');
+const SYSROOT_INC = path.join(P.sysroot, 'usr', 'include');
 const RAYLIB_INC = path.join(SYSROOT_INC, 'raylib');
 const CONCURRENCY = os.cpus().length;
 
-shell.mkdir('-p', USERLAND_DIR);
+shell.mkdir('-p', SOURCE_ROOT);
 shell.mkdir('-p', BUILD_DIR);
 shell.mkdir('-p', SYSROOT_LIB);
 shell.mkdir('-p', RAYLIB_INC);
 
-// ─────────────── version detection ───────────────
-
-function curlJson(url: string): any {
-    const exec = (extra = '') =>
-        shell.exec(`curl -fsSL ${extra} "${url}"`, { silent: true, fatal: false });
-    let res = process.env.GITHUB_TOKEN
-        ? exec(`-H "Authorization: Bearer ${process.env.GITHUB_TOKEN}"`)
-        : exec();
-    if (res.code !== 0 && process.env.GITHUB_TOKEN) {
-        console.warn(`  Authenticated GitHub call failed for ${url}, retrying without token...`);
-        res = exec();
-    }
-    if (res.code !== 0) throw new Error(`Failed to GET ${url}`);
-    return JSON.parse(res.stdout);
-}
-
-function detectLatestTag(repo: string, envVar: string, fallback: string): string {
-    const env = process.env[envVar];
-    if (env) return env;
-    console.log(`Detecting latest release for ${repo}...`);
-    let tag: string | undefined;
-    try {
-        tag = curlJson(`https://api.github.com/repos/${repo}/releases/latest`).tag_name;
-    } catch {
-        // GitHub API unavailable
-    }
-    if (tag) {
-        console.log(`  ${repo} latest: ${tag}`);
-        return tag;
-    }
-    console.warn(`  GitHub API unavailable for ${repo}, using pinned ${fallback}`);
-    return fallback;
-}
-
-function detectLatestDefaultBranchSha(repo: string, envVar: string, fallback: string): string {
-    // Fallback for repos without releases (raygui/physac/rlights publish via tags or only default branch).
-    const env = process.env[envVar];
-    if (env) return env;
-    console.log(`Detecting latest tag/branch for ${repo}...`);
-    // Try latest release first
-    const releasesRes = shell.exec(
-        `curl -fsSL "https://api.github.com/repos/${repo}/releases/latest"`,
-        { silent: true, fatal: false },
-    );
-    if (releasesRes.code === 0) {
-        try {
-            const tag = JSON.parse(releasesRes.stdout).tag_name;
-            if (tag) {
-                console.log(`  ${repo} latest release: ${tag}`);
-                return tag;
-            }
-        } catch {
-            // fall through
-        }
-    }
-    // GitHub API unavailable — use pinned fallback
-    console.warn(`  GitHub API unavailable for ${repo}, using pinned ${fallback}`);
-    return fallback;
-}
-
-// ─────────────── source download ───────────────
-
-function downloadTarball(repo: string, tag: string, destName: string, keyFile = 'CMakeLists.txt'): string {
-    const destDir = path.join(USERLAND_DIR, destName);
-    const isSourceValid = fs.existsSync(path.join(destDir, keyFile));
-    if (isSourceValid) {
-        console.log(`Using existing source: ${destName}`);
-        return destDir;
-    }
-    if (fs.existsSync(destDir)) {
-        console.log(`Removing incomplete source dir: ${destName}`);
-        shell.rm('-rf', destDir);
-    }
-    shell.mkdir('-p', destDir);
-    const tarball = path.join(USERLAND_DIR, `${destName}.tar.gz`);
-    console.log(`Downloading ${repo} @ ${tag}...`);
-    // Try refs/tags first, then refs/heads (for branch fallback).
-    const tryUrls = [
-        `https://github.com/${repo}/archive/refs/tags/${tag}.tar.gz`,
-        `https://github.com/${repo}/archive/refs/heads/${tag}.tar.gz`,
-    ];
-    let ok = false;
-    for (const url of tryUrls) {
-        const res = shell.exec(`curl -fSL -o "${tarball}" "${url}"`, { silent: true, fatal: false });
-        if (res.code === 0) {
-            ok = true;
-            break;
-        }
-    }
-    if (!ok) throw new Error(`Failed to download ${repo} @ ${tag}`);
-    shell.exec(`tar xzf "${tarball}" --strip-components=1 -C "${destDir}"`);
-    shell.rm('-f', tarball);
-    return destDir;
-}
-
 // ─────────────── 1. raylib via CMake ───────────────
 
-const RAYLIB_TAG = detectLatestTag('raysan5/raylib', 'RAYLIB_VERSION', PINNED.RAYLIB_VERSION);
-const RAYLIB_SRC = downloadTarball('raysan5/raylib', RAYLIB_TAG, `raylib-${RAYLIB_TAG}`);
+const RAYLIB_TAG = lockedVersion(lock, 'raylib');
+const RAYLIB_SRC = ensureLockedSource(
+    ROOT,
+    lock,
+    'raylib',
+    path.join(SOURCE_ROOT, `raylib-${RAYLIB_TAG}`),
+    'CMakeLists.txt',
+);
+console.log(patchRaylibSource(RAYLIB_SRC)
+    ? 'Applied raylib Emscripten compatibility patches.'
+    : 'Raylib Emscripten compatibility patches already applied.');
 
 const RAYLIB_BUILD = path.join(BUILD_DIR, 'raylib-build');
-if (fs.existsSync(RAYLIB_BUILD)) shell.rm('-rf', RAYLIB_BUILD);
 shell.mkdir('-p', RAYLIB_BUILD);
 
 console.log('Configuring raylib (PLATFORM=Web)...');
@@ -160,8 +80,6 @@ const raylibCmakeCmd = [
     '-DCMAKE_BUILD_TYPE=Release',
     '-DPLATFORM=Web',
     '-DBUILD_EXAMPLES=OFF',
-    '-DBUILD_GAMES=OFF',
-    '-DSUPPORT_GIF_RECORDING=OFF',
     '-DGRAPHICS=GRAPHICS_API_OPENGL_ES3',
     '-DBUILD_SHARED_LIBS=OFF',
 ].join(' ');
@@ -169,7 +87,7 @@ console.log(raylibCmakeCmd);
 shell.exec(raylibCmakeCmd);
 
 console.log('Building raylib...');
-shell.exec(`emmake make -C "${RAYLIB_BUILD}" -j${CONCURRENCY} raylib`);
+shell.exec(`cmake --build "${RAYLIB_BUILD}" --parallel ${CONCURRENCY} --target raylib`);
 
 // raylib's CMake puts libraylib.a under raylib/ subdir
 const candidates = [
@@ -197,19 +115,13 @@ console.log('Deployed raylib headers to sysroot/usr/include/raylib/');
 // Because libraylib.a references _emscripten_gl*, malloc/free, and
 // emscripten_set_main_loop, emcc emits a full MODULARIZE JS factory that
 // includes all GL infrastructure (GL.createContext, GL.makeContextCurrent,
-// GLctx, RAF MainLoop) that the IDE needs to run user WASM at runtime.
-//
-// The stub itself does nothing at runtime — the IDE patches it in-browser:
-//   - GLFW stubs → real GL.createContext / GL.makeContextCurrent calls
-//   - wasmImports extended with emscripten_webgl_* entries
+// GLctx, RAF MainLoop) used by the browser canvas API. The generated WASM is
+// retained as the glue's ABI anchor and recorded in the release manifest.
 
-const EMSCRIPTEN_DIR = path.join(ROOT, 'sysroot', 'usr', 'lib', 'emscripten');
+const EMSCRIPTEN_DIR = path.join(P.sysroot, 'usr', 'lib', 'emscripten');
 shell.mkdir('-p', EMSCRIPTEN_DIR);
 
 const RAYLIB_STUB_C = path.join(os.tmpdir(), 'raylib_runtime_stub.c');
-const TMP_RAYLIB_JS = path.join(os.tmpdir(), 'raylib-runtime.js');
-const TMP_RAYLIB_WASM = path.join(os.tmpdir(), 'raylib-runtime.wasm');
-
 fs.writeFileSync(
     RAYLIB_STUB_C,
     `#include <raylib.h>
@@ -233,12 +145,12 @@ int main(void) {
 );
 
 console.log('Generating raylib-runtime.mjs (MODULARIZE JS factory)...');
-const runtimeResult = shell.exec(
-    [
-        `"${EMCC}"`,
-        `"${RAYLIB_STUB_C}"`,
-        `"${path.join(SYSROOT_LIB, 'libraylib.a')}"`,
-        `-I"${RAYLIB_INC}"`,
+const runtimePair = buildCanvasRuntimePair({
+    compiler: EMCC,
+    sourcePath: RAYLIB_STUB_C,
+    libraryPaths: [path.join(SYSROOT_LIB, 'libraylib.a')],
+    includeDirectories: [RAYLIB_INC],
+    flags: [
         '-sENVIRONMENT=web',
         '-sALLOW_MEMORY_GROWTH=1',
         '-sUSE_GLFW=3',
@@ -251,53 +163,37 @@ const runtimeResult = shell.exec(
         '-sEXPORTED_FUNCTIONS=_main,_malloc,_free',
         '-sEXPORTED_RUNTIME_METHODS=ccall,cwrap,getValue,setValue,UTF8ToString,stringToUTF8,lengthBytesUTF8',
         '-O2',
-        `-o "${TMP_RAYLIB_JS}"`,
-    ].join(' '),
-    { silent: false },
-);
-
-if (runtimeResult.code !== 0) {
-    console.error('emcc raylib-runtime.mjs generation failed');
-    process.exit(1);
-}
-
-const OUTPUT_MJS = path.join(EMSCRIPTEN_DIR, 'raylib-runtime.mjs');
-fs.copyFileSync(TMP_RAYLIB_JS, OUTPUT_MJS);
-const mjsSize = (fs.statSync(OUTPUT_MJS).size / 1024).toFixed(1);
-console.log(`Saved raylib-runtime.mjs (${mjsSize} KB) → ${path.relative(ROOT, OUTPUT_MJS)}`);
-
-if (fs.existsSync(TMP_RAYLIB_WASM)) fs.rmSync(TMP_RAYLIB_WASM);
+    ],
+    outputDirectory: EMSCRIPTEN_DIR,
+    runtimeName: 'raylib-runtime',
+});
+const mjsSize = (fs.statSync(runtimePair.gluePath).size / 1024).toFixed(1);
+console.log(`Saved raylib runtime pair (${mjsSize} KB glue) → ${path.relative(ROOT, EMSCRIPTEN_DIR)}`);
 
 // ─────────────── 2. companion libs ───────────────
 
-interface HeaderOnlyLib {
-    libName: string;        // libNAME.a
-    headerName: string;     // raygui.h
-    implMacro: string;      // RAYGUI_IMPLEMENTATION
-    prelude?: string;       // extra source emitted before #include of the header
-    extraHeaders?: string[];
+type HeaderOnlyLib = {
+    readonly libName: string;        // libNAME.a
+    readonly headerName: string;     // raygui.h
+    readonly implMacro: string;      // RAYGUI_IMPLEMENTATION
+    readonly prelude?: string;       // extra source emitted before #include of the header
+    readonly extraHeaders?: readonly string[];
     // Source = remote tarball OR local path inside an existing source tree.
-    repo?: string;
-    envVar?: string;
-    fallback?: string;      // pinned version used when GitHub API is unavailable
-    headerSubpath?: string;
-    localHeader?: string;   // absolute path to header on disk (skips download)
-}
+    readonly tool?: ToolName;
+    readonly headerSubpath?: string;
+    readonly localHeader?: string;   // absolute path to header on disk (skips download)
+};
 
-const COMPANIONS: HeaderOnlyLib[] = [
+const COMPANIONS: readonly HeaderOnlyLib[] = [
     {
-        repo: 'raysan5/raygui',
-        envVar: 'RAYGUI_VERSION',
-        fallback: PINNED.RAYGUI_VERSION,
+        tool: 'raygui',
         libName: 'raygui',
         headerName: 'raygui.h',
         implMacro: 'RAYGUI_IMPLEMENTATION',
         headerSubpath: 'src/raygui.h',
     },
     {
-        repo: 'victorfisac/Physac',
-        envVar: 'PHYSAC_VERSION',
-        fallback: PINNED.PHYSAC_VERSION,
+        tool: 'physac',
         libName: 'physac',
         headerName: 'physac.h',
         implMacro: 'PHYSAC_IMPLEMENTATION',
@@ -333,24 +229,24 @@ for (const lib of COMPANIONS) {
         }
         headerPath = lib.localHeader;
     } else {
-        if (!lib.repo || !lib.envVar) {
-            console.warn(`  ${lib.libName}: missing repo/envVar, skipping`);
+        if (!lib.tool) {
+            console.warn(`  ${lib.libName}: missing tool identity, skipping`);
             continue;
         }
-        const tag = detectLatestDefaultBranchSha(lib.repo, lib.envVar, lib.fallback ?? 'master');
+        const tag = lockedVersion(lock, lib.tool);
         const keyFile = lib.headerSubpath || lib.headerName;
-        let srcDir: string;
-        try {
-            srcDir = downloadTarball(lib.repo, tag, `${lib.libName}-${tag}`, keyFile);
-        } catch (e) {
-            console.warn(`  ${lib.repo}: download failed, skipping (${(e as Error).message})`);
-            continue;
-        }
+        const srcDir = ensureLockedSource(
+            ROOT,
+            lock,
+            lib.tool,
+            path.join(SOURCE_ROOT, `${lib.libName}-${tag}`),
+            keyFile,
+        );
         headerPath = lib.headerSubpath
             ? path.join(srcDir, lib.headerSubpath)
             : path.join(srcDir, lib.headerName);
         if (!fs.existsSync(headerPath)) {
-            console.warn(`  ${lib.repo}: header ${headerPath} not found, skipping`);
+            console.warn(`  ${lib.tool}: header ${headerPath} not found, skipping`);
             continue;
         }
     }

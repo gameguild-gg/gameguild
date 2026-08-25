@@ -2,11 +2,7 @@
 
 A complete C/C++ toolchain — clang, lld, wasm-opt, emcc — running entirely in the browser as WebAssembly. Compile, link, and execute C/C++ from a web page. No local toolchain, no server.
 
-**Runtime-agnostic core**: Pure TypeScript, **DOM-free**, no Web Worker / `worker_threads` / fetch / fs assumptions. This package is consumed by the `@gameguild/emception-*` adapters and also publishes the bundled `cdn/*` runtime payload.
-
-## Live Demo
-
-Try it in action at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
+**Runtime-agnostic core**: Pure TypeScript, **DOM-free**, no Web Worker / `worker_threads` / fetch / fs assumptions. This package is consumed by the `@gameguild/emception-*` adapters. Generated artifacts are owned by `@gameguild/emception-toolchain`.
 
 ## Which package do I need?
 
@@ -20,9 +16,9 @@ Most consumers do **not** build from source. Pick a published package:
 | Build a full IDE shell (editor + tabs + canvas) | `@gameguild/emception-ide`                                               | `<Ide>` React component, `<emception-ide>` custom element |
 | Implement a custom runtime adapter              | `emception` + any adapter (browser, Node, Electron)                      | `RuntimeAdapter` interface, presets, UI config |
 
-Bundled CDN payload:
+Toolchain payload:
 
-- **`emception/cdn/*`** — manifest, Brotli bundles, and the browser decompressor. Self-host by copying this directory to your app's `/cdn/` path, or rely on the default jsDelivr URL used by `@gameguild/emception-browser`.
+- **`@gameguild/emception-toolchain/cdn/*`** — canonical manifest, Brotli bundles, generated glue, and matching WASM. The `emception/cdn/*` export is retained only as a compatibility copy of the same release.
 
 Optional peer:
 
@@ -54,9 +50,9 @@ console.log(run.stdout);
 em.dispose();
 ```
 
-### Self-host the bundled CDN payload
+### Self-host the toolchain payload
 
-If you want to serve the runtime assets from your own origin, copy the published `cdn/` directory from the `emception` package into your app's public `/cdn/` directory and point the runtime at `/cdn/manifest.json`.
+Copy the published `cdn/` directory from `@gameguild/emception-toolchain` into your app's public `/cdn/` directory and point the Browser runtime at `/cdn/manifest.json`.
 
 ### Drop-in IDE (React)
 
@@ -139,7 +135,7 @@ export interface RuntimeAdapter {
 }
 ```
 
-`@gameguild/emception-browser` provides the implementation. `emception` (core) itself never instantiates one; it just defines the contract and ships pure helpers that adapters compose.
+`@gameguild/emception-browser` provides the implementation. `emception` (core) itself never instantiates one; it defines the contract and ships pure helpers that adapters compose.
 
 ## Events
 
@@ -183,4 +179,4 @@ Adapters **do not** throw for tool failures — non-zero exit, crash, and timeou
 npm test --workspace=emception
 ```
 
-159 zero-dep `node:test` cases covering the build resolver, seed hashing, in-memory workspace, compile-argv, cancellation, clang-query matcher, doctest parser, test-engine handlers, ToolResult contract, attribute parsing, view-config validator, ZIP writer/parser, workspace transfer, runtime feature guards, and event-map shape.
+The zero-dependency `node:test` suite covers the build resolver, seed hashing, in-memory workspace, compile argv, cancellation, clang-query matcher, doctest parser, test-engine handlers, ToolResult contract, attribute parsing, view-config validation, ZIP transfer, runtime feature guards, and event-map shape.

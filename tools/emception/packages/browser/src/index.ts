@@ -20,6 +20,9 @@ export {
     TTYBridge,
     type BootResult,
     type BrowserBridge,
+    type BrowserEmceptionAPI,
+    type BrowserRunOptions,
+    type BrowserStdin,
     type CreateEmceptionOptions,
     type EmceptionAPI,
     type IOProvider,
@@ -29,11 +32,29 @@ export {
     type WorkerBootResult
 } from './boot.js';
 
+export {
+    createCanvasAPI,
+    type CanvasAPI,
+    type CanvasArtifact,
+    type CanvasBuildOptions,
+    type CanvasBuildFailure,
+    type CanvasBuildResult,
+    type CanvasCompileFailure,
+    type CanvasLinkFailure,
+    type CanvasToolchain,
+} from './canvas.js';
+export {
+    startCanvasArtifact,
+    type CanvasRuntimeDependencies,
+    type CanvasSession,
+    type CanvasStartOptions,
+} from './canvas-runtime.js';
+
 // Lower-level VFS surface (LazyFS, IDBFS, mountVFSFS) for advanced consumers
 // that want to compose their own VFSManager.
 export { IDBFS, LazyFS, mountVFSFS, type FileEntry, type FSManifest, type IDBFSOptions, type MountVFSFSOptions, type VFSFSRuntime } from './vfs/index.js';
 
-export const DEFAULT_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/emception/cdn/manifest.json';
+export { DEFAULT_MANIFEST_URL, ManifestCompatibilityError, RUNTIME_ABI, parseManifest, type ParseManifestOptions } from './manifest.js';
 
 // Headless build presets + compileAndRun helper.
 export {

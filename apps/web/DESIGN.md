@@ -75,6 +75,14 @@ The dashboard uses a fixed navigation shell with a fluid main region. All grids 
 - **States:** hidden, open, dismiss to editing, discard draft.
 - **Accessibility:** modal focus trap, explicit consequence copy, safe action first in DOM order.
 
+### Project Scope Header
+- **Structure:** compact secondary header -> scope context -> dropdown trigger -> all-projects and Team-project links.
+- **Variants:** all accessible Projects; Projects related to one active Team.
+- **Spacing:** `gap-3` within the header, `px-3 py-2` within the switcher trigger, and semantic borders separating it from the Project grid.
+- **States:** closed, open, all selected, Team selected, no Teams available, and an invalid URL scope falling back to all Projects.
+- **Accessibility:** the trigger names the current scope; every menu option is a real link with `aria-current` on the selected scope; keyboard focus and dismissal come from the shared dropdown primitive.
+- **Layout:** a wrapping cluster on wide surfaces and a full-width trigger on narrow surfaces, with no horizontal overflow at 390px.
+
 ## 6. Motion & Interaction
 
 - Micro feedback uses the existing UI primitive transitions (100-300ms) and only `opacity` or `transform`.
