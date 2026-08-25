@@ -27,12 +27,12 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "pnpm run clean && tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "node -e \"const fs=require('fs');for(const path of ['dist','tsconfig.tsbuildinfo'])fs.rmSync(path,{recursive:true,force:true})\""
   },
   "dependencies": {
-    "emception": "*"
+    "emception": "4.2.0"
   },
   "peerDependencies": {
     "@xterm/xterm": "^6.0.0"

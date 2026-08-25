@@ -39,6 +39,7 @@ export { WorkerOrchestrator, type WorkerOrchestratorOptions, type WorkerRunOptio
 export { compileMatcher, queryClangAst, runMatcher, type ClangAstNode, type CompiledMatcher, type MatchResult } from './testing/clang-query/matcher.js';
 export { parseDoctestConsole, type DoctestCounts, type DoctestFailure, type DoctestReport } from './testing/doctest/parse.js';
 export { runTests, type TestKindHandler } from './testing/engine.js';
+export { withWorkspaceOverlay, type WorkspaceOverlayFile, type WorkspaceOverlayTarget } from './testing/workspace-overlay.js';
 export { HeadlessIOProvider, type HeadlessIOProviderOptions } from './tty/headless.js';
 export type { IOProvider } from './tty/io-provider.js';
 export { LineBuffer } from './tty/line-buffer.js';
@@ -56,7 +57,16 @@ export {
 } from './ui/adapters.js';
 export { diffViewConfigs, normalizeViewConfig, toAttributes, type NormalizedViewConfig, type ViewConfigInput } from './ui/config.js';
 export type { FSStats, IFileSystem } from './vfs/interface.js';
-export type { FSManifest, ManifestBundle, ManifestEntry } from './vfs/manifest.js';
+export type {
+  FSManifest,
+  LegacyFSManifest,
+  ManifestBundle,
+  ManifestEntry,
+  ManifestToolVersions,
+  ToolchainSourceProvenance,
+  ReleaseFSManifest,
+  WasmArtifactProfile,
+} from './vfs/manifest.js';
 export { OverlayFS } from './vfs/overlay.js';
 export type { MainToWorkerMessage, WorkerToMainMessage } from './worker-protocol.js';
 export { resolveBuild, type ResolveBuildInput, type ResolvedBuild } from './workspace/build-resolver.js';

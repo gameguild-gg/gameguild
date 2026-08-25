@@ -30,17 +30,17 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "pnpm run clean && tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "test": "node --test 'tests/*.test.mjs'",
-    "clean": "rm -rf dist"
+    "test": "npm run build && node ../../scripts/run-node-tests.mjs tests",
+    "clean": "node -e \"const fs=require('fs');for(const path of ['dist','tsconfig.tsbuildinfo'])fs.rmSync(path,{recursive:true,force:true})\""
   },
   "dependencies": {
-    "@gameguild/emception-browser": "*",
-    "emception": "*"
+    "@gameguild/emception-browser": "4.2.0",
+    "emception": "4.2.0"
   },
   "peerDependencies": {
-    "@gameguild/emception-xterm": "*"
+    "@gameguild/emception-xterm": "^4.2.0"
   },
   "peerDependenciesMeta": {
     "@gameguild/emception-xterm": {

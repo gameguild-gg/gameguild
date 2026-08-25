@@ -353,6 +353,23 @@ test('writeFile — rejects on ok:false', async () => {
     ch.port2.close();
 });
 
+test('deleteFile — sends a correlated VFS deletion request', async () => {
+    const ch = pair();
+    const orch = makeOrch(ch.port1);
+
+    const deletePromise = orch.deleteFile('/home/user/private-test.cpp');
+
+    const msg = await nextMsg(ch.port2);
+    assert.equal(msg.type, 'deleteFile');
+    assert.equal(msg.path, '/home/user/private-test.cpp');
+
+    ch.port2.postMessage({ type: 'deleteFileResult', id: msg.id, ok: true });
+    await deletePromise;
+
+    await orch.dispose();
+    ch.port2.close();
+});
+
 test('listDir — returns entries array', async () => {
     const ch = pair();
     const orch = makeOrch(ch.port1);

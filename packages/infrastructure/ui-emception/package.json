@@ -5,14 +5,19 @@
   "type": "module",
   "main": "./src/index.ts",
   "scripts": {
-    "test": "jest"
+    "test": "jest --runInBand"
   },
   "dependencies": {
-    "@gameguild/emception-browser": "workspace:*"
+    "@gameguild/emception-browser": "workspace:*",
+    "@gameguild/emception-ide": "workspace:*",
+    "emception": "workspace:*"
   },
   "exports": {
     ".": "./src/index.ts",
-    "./ide-types": "./src/components/ide-types.ts",
+    "./assessment/editor": "./src/assessment/editor.ts",
+    "./assessment/plan": "./src/assessment/plan.ts",
+    "./assessment/presets": "./src/assessment/presets.ts",
+    "./assessment/storage": "./src/assessment/workspace-storage.ts",
     "./styles/theme.css": "./src/styles/theme.css"
   },
   "peerDependencies": {

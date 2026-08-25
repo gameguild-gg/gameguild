@@ -72,7 +72,7 @@ const reactConfig = {
       },
     ],
   },
-  testMatch: ['<rootDir>/src/**/*.(test|spec).(js|jsx|ts|tsx)'],
+  testMatch: ['**/*.{test,spec}.{js,jsx,ts,tsx}'],
   // React-specific optimizations
   testEnvironmentOptions: {
     url: 'http://localhost:3000',
