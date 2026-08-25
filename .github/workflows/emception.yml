@@ -100,10 +100,9 @@ jobs:
         uses: actions/setup-node@v7 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
 
       - name: Install workspace dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
+        run: pnpm install --no-lockfile --no-frozen-lockfile --ignore-scripts
 
       - name: Cache immutable Toolchain downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
