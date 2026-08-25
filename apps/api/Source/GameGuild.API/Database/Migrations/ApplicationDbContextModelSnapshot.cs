@@ -12453,6 +12453,11 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<Guid?>("RubricId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("character varying(220)");
+
                     b.Property<int>("SubmissionModalities")
                         .HasColumnType("integer");
 
@@ -12482,6 +12487,8 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("AssessmentGroupId");
 
                     b.HasIndex("CourseId");
+
+                    b.HasIndex("Slug");
 
                     b.ToTable("Assessments", null, t =>
                         {
@@ -13991,6 +13998,11 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<Guid>("ProgramId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("character varying(220)");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
@@ -14022,6 +14034,8 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("ParentId");
 
                     b.HasIndex("ProgramId");
+
+                    b.HasIndex("Slug");
 
                     b.HasIndex("SortOrder");
 

@@ -1,5 +1,6 @@
 
 using System.Text.Json;
+using GameGuild.Learning.Courses;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -15,6 +16,7 @@ public class Assessment : EntityBase
     public Guid? RubricId { get; private set; }
     public AssessmentGroup? AssessmentGroup { get; private set; }
     public string Title { get; private set; } = string.Empty;
+    public string Slug { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public AssessmentType Type { get; private set; }
     public int MaxScore { get; private set; }
@@ -46,7 +48,8 @@ public class Assessment : EntityBase
         bool isRequired = true,
         Guid? assessmentGroupId = null,
         Guid? contentId = null,
-        AssessmentGradingMethod gradingMethods = AssessmentGradingMethod.InstructorGraded)
+        AssessmentGradingMethod gradingMethods = AssessmentGradingMethod.InstructorGraded,
+        string? slug = null)
     {
         ValidateMaxScore(maxScore);
 
@@ -57,6 +60,7 @@ public class Assessment : EntityBase
             ContentId = contentId,
             AssessmentGroupId = assessmentGroupId,
             Title = title,
+            Slug = string.IsNullOrWhiteSpace(slug) ? title.ToSlugCase() : slug,
             Type = NormalizeType(type),
             MaxScore = maxScore,
             IsRequired = isRequired,
@@ -240,9 +244,11 @@ public class Assessment : EntityBase
         AssessmentGradingMethod? gradingMethods = null,
         Guid? groupSetId = null,
         bool clearGroupSetId = false,
-        int? peerReviewsRequiredCount = null)
+        int? peerReviewsRequiredCount = null,
+        string? slug = null)
     {
         if (title != null) Title = title;
+        if (!string.IsNullOrWhiteSpace(slug)) Slug = slug;
         Description = description;
         var nextMaxScore = maxScore ?? MaxScore;
         ValidateMaxScore(nextMaxScore);

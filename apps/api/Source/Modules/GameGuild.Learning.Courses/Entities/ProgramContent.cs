@@ -16,6 +16,7 @@ namespace GameGuild.Learning.Courses;
 [Index(nameof(Type))]
 [Index(nameof(IsRequired))]
 [Index(nameof(TenantId))]
+[Index(nameof(Slug))]
 public class ProgramContent : EntityBase
 {
     /// <summary>
@@ -35,6 +36,14 @@ public class ProgramContent : EntityBase
     [Required]
     [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// URL-friendly slug. Defaults to the sluggified title; stable once set.
+    /// Used as the public route key (e.g. /courses/{course}/content/{slug}).
+    /// </summary>
+    [Required]
+    [MaxLength(220)]
+    public string Slug { get; set; } = string.Empty;
 
     /// <summary>
     /// Content description
@@ -189,6 +198,11 @@ public class ProgramContent : EntityBase
     /// </summary>
     public void NormalizeLearningContract()
     {
+        if (string.IsNullOrWhiteSpace(Slug))
+        {
+            Slug = Title.ToSlugCase();
+        }
+
         Type = Type switch
         {
             ProgramContentType.Page => ProgramContentType.Lesson,

@@ -1,6 +1,6 @@
 {
   "name": "@game-guild/typescript-config",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "description": "TypeScript configuration for GameGuild monorepo projects",
   "license": "UNLICENSED",
   "author": "Matheus Martins <contact@matheusmartins.com>",

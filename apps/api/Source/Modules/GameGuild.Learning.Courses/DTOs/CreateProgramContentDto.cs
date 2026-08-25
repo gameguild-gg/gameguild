@@ -10,6 +10,8 @@ public class CreateProgramContentDto {
 
   [Required][StringLength(255)] public string Title { get; set; } = string.Empty;
 
+  [StringLength(220)] public string? Slug { get; set; }
+
   public string Description { get; set; } = string.Empty;
 
   [Required] public ProgramContentType Type { get; set; }

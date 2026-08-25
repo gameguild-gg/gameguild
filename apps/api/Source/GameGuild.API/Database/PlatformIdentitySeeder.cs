@@ -13,7 +13,8 @@ internal sealed record PlatformIdentitySeedOptions(
     string TenantName,
     string TenantSlug,
     string TenantDescription,
-    string AdminTenantRole);
+    string AdminTenantRole,
+    bool ForcePasswordReset = true);
 
 internal sealed record PlatformIdentitySeedResult(
     AppUser AdminUser,
@@ -79,7 +80,7 @@ internal static class PlatformIdentitySeeder
         }
 
         if (!adminUser.HasPassword ||
-            !BCrypt.Net.BCrypt.Verify(options.AdminPassword, adminUser.PasswordHash!))
+            (options.ForcePasswordReset && !BCrypt.Net.BCrypt.Verify(options.AdminPassword, adminUser.PasswordHash!)))
         {
             adminUser.SetPasswordHash(BCrypt.Net.BCrypt.HashPassword(options.AdminPassword));
             changed = true;

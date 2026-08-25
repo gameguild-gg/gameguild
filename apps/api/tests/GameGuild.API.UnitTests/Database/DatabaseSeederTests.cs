@@ -118,6 +118,34 @@ public sealed class DatabaseSeederTests
         sessions.Should().OnlyContain(session => session.TestingRequest != null && session.Location != null);
     }
 
+    [Fact]
+    public async Task SeedAsync_When_Showcase_Project_Is_SoftDeleted_Should_Not_Resurrect_It()
+    {
+        var services = CreateSeederServices("UnitTestAdmin123!");
+        await using var provider = services.BuildServiceProvider();
+
+        await DatabaseSeeder.SeedAsync(provider);
+
+        var dbContext = provider.GetRequiredService<ApplicationDbContext>();
+        var project = await dbContext.Set<Project>()
+            .IgnoreQueryFilters()
+            .SingleAsync(candidate => candidate.Slug == "gameguild-showcase-neon-runner");
+        project.SoftDelete();
+        await dbContext.SaveChangesAsync();
+
+        await DatabaseSeeder.SeedAsync(provider);
+
+        var reloadedProject = await dbContext.Set<Project>()
+            .IgnoreQueryFilters()
+            .SingleAsync(candidate => candidate.Slug == "gameguild-showcase-neon-runner");
+        reloadedProject.DeletedAt.Should().NotBeNull();
+
+        var visibleProjects = await dbContext.Set<Project>()
+            .Where(candidate => candidate.Slug.StartsWith("gameguild-showcase-") && candidate.DeletedAt == null)
+            .ToListAsync();
+        visibleProjects.Should().HaveCount(2);
+    }
+
     private static ServiceCollection CreateSeederServices(string adminPassword)
     {
         var services = new ServiceCollection();

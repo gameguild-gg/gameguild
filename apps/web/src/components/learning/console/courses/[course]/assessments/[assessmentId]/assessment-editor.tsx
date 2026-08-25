@@ -483,7 +483,7 @@ export function AssessmentEditor({
         {canManage && (
           <Button variant="outline" size="sm" asChild>
             <Link
-              href={`${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessment.id}/submissions`}
+              href={`${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessment.slug}/submissions`}
               data-testid="grade-submissions-button"
             >
               <ClipboardCheck className="mr-2 h-4 w-4" />
@@ -826,7 +826,7 @@ export function AssessmentEditor({
                   return assessment.contentId != null ? (
                     <div className="space-y-1">
                       <Link
-                        href={`${learningBase}/courses/${encodeURIComponent(courseId)}/content/${assessment.contentId}`}
+                        href={`${learningBase}/courses/${encodeURIComponent(courseId)}/content/${item?.slug ?? assessment.contentId}`}
                         className="text-sm text-primary underline-offset-4 hover:underline"
                         data-testid="linked-content-link"
                       >
@@ -1026,7 +1026,7 @@ export function AssessmentEditor({
                 className="w-full"
                 onClick={() =>
                   router.push(
-                    `${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessment.id}/coding-definition`,
+                    `${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${assessment.slug}/coding-definition`,
                   )
                 }
               >
