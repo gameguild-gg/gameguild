@@ -353,11 +353,8 @@ if (fs.existsSync(templatesDir)) {
     console.warn('WARNING: CMake Templates/ directory not found in source tree');
 }
 
-// Deploy Emception runtime toolchain file for cmake compiler detection
-const toolchainSrc = path.join(P.sysroot, 'usr', 'share', `cmake-${CMAKE_MAJOR_MINOR}`, 'toolchain-emception.cmake');
-if (!fs.existsSync(toolchainSrc)) {
-    console.warn('WARNING: toolchain-emception.cmake not found — cmake compiler detection may fail');
-}
-console.log(`Toolchain file: ${toolchainSrc}`);
+// The browser ToolRunner pre-seeds CMake's compiler and system metadata in the
+// build tree. No standalone CMAKE_TOOLCHAIN_FILE is deployed with this runtime.
+console.log('CMake runtime compiler metadata is pre-seeded by the browser ToolRunner.');
 
 console.log('>>> CMake build complete.');
