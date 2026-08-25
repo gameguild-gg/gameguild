@@ -3,8 +3,8 @@ import type { CodingAssignmentContent, FileEncoding } from '@/lib/coding-assignm
 // which vite cannot resolve in the web test environment.
 import { legacyAssignmentToken, workspaceStorageKey } from '@game-guild/emception-ui/ide-types';
 
-/** IDE-seedable file — shape produced by `publicSeedFiles` and consumed by
- *  `IdeHandle.setFiles`/`addFile` (image seeds carry `encoding: 'base64'`). */
+/** Workspace seed — shape produced by `publicSeedFiles` and consumed by the
+ *  assessment workspace configuration (image seeds carry `encoding: 'base64'`). */
 export interface SeedFile {
   path: string;
   content: string;
@@ -30,9 +30,9 @@ export function publicSeedFiles(assignment: CodingAssignmentContent): Array<{
 
 /**
  * Draft probe for the PRE-MOUNT window: same key pair + parse gate as
- * IdeHandle.hasStoredDraft, but callable before the lazy <Ide> exists.
- * Post-mount the IDE's persistence effect writes initial state, making
- * every probe trivially true (learning #8) — hence the pre-mount design.
+ * the vanilla workspace persistence contract, but callable before the lazy
+ * assessment editor exists. Its post-mount persistence effect writes initial
+ * state, making every probe trivially true (learning #8) — hence this design.
  */
 export function hasRestorableDraft(token: string, presetId: string): boolean {
   if (typeof window === 'undefined') return false;
