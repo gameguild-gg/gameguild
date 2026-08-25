@@ -11,11 +11,13 @@ import React, {
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Plus, Save } from "lucide-react";
 import {
-  ASSIGNMENT_SAMPLES,
   CodingAssessmentEditor,
-  type CodingLanguage,
 } from "@game-guild/emception-ui";
-import { createAssessmentWorkspaceConfig } from "@game-guild/emception-ui/assessment/presets";
+import {
+  ASSIGNMENT_SAMPLES,
+  createAssessmentWorkspaceConfig,
+  type CodingLanguage,
+} from "@game-guild/emception-ui/assessment/presets";
 import type { WorkspaceConfig } from "emception";
 import {
   Card,
