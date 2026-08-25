@@ -65,8 +65,8 @@ test_shell_only_ci_policy() {
   grep -q '"ci:economy": "bash scripts/ci/verify-economy.sh"' "$repository_root/package.json" || return 1
   grep -q 'pnpm install --no-lockfile --no-frozen-lockfile' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -q 'pnpm audit --json' "$ci_dir/install-and-audit-pnpm.sh" || return 1
-  grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$repository_root/.github/workflows/emception.yml" || return 1
-  [[ -f "$repository_root/pnpm-lock.yaml" ]]
+  grep -Fq 'pnpm install --no-lockfile --no-frozen-lockfile --ignore-scripts' "$repository_root/.github/workflows/emception.yml" || return 1
+  [[ ! -e "$repository_root/pnpm-lock.yaml" ]]
 }
 
 test_contributors_visualization_uses_native_xvfb() {
