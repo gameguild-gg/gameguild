@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { IdeExtension } from '@gameguild/emception-ide';
 import type { ToolchainPreset } from 'emception';
 import React from 'react';
 
@@ -216,5 +217,27 @@ describe('CodingAssessmentEditor', () => {
     expect(props.workspaceStorageKey).toBe('gameguild:assessment:42');
     expect(props.workspaceConfig.files['/home/user/solution.cpp']?.content).toContain('return 42');
     expect(props.workspaceConfig.files['/home/user/private-fixture.txt']).toBeUndefined();
+  });
+
+  it('composes host extensions with the assessment execution extension', async () => {
+    const hostExtension: IdeExtension = {
+      id: 'host-action',
+      toolbarEnd: () => <button type="button">Host action</button>,
+    };
+
+    render(
+      <CodingAssessmentEditor
+        mode="author"
+        definition={definition}
+        extensions={[hostExtension]}
+      />,
+    );
+
+    expect(await screen.findByRole('button', { name: 'Host action' })).toBeVisible();
+    const props = mockIdeProps as { extensions: readonly { id: string }[] };
+    expect(props.extensions.map((extension) => extension.id)).toEqual([
+      'gameguild-assessment-execution',
+      'host-action',
+    ]);
   });
 });
