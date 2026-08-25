@@ -90,6 +90,7 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState, useTransition } from "react";
+import { normalizeSlug, slugify } from "@/lib/slugify";
 
 interface ContentTreeProps {
   courseId: string;
@@ -289,15 +290,19 @@ export function ContentTree({
     [realModules],
   );
 
-  // Add Module dialog state
+  // Add Module dialog state (shared with the Add Submodule dialog)
   const [showAddModule, setShowAddModule] = useState(false);
   const [moduleTitle, setModuleTitle] = useState("");
   const [moduleDescription, setModuleDescription] = useState("");
+  const [moduleSlug, setModuleSlug] = useState("");
+  const [moduleAutoSlug, setModuleAutoSlug] = useState(true);
 
   // Add Lesson dialog state
   const [showAddLesson, setShowAddLesson] = useState(false);
   const [lessonParentId, setLessonParentId] = useState("");
   const [lessonTitle, setLessonTitle] = useState("");
+  const [lessonSlug, setLessonSlug] = useState("");
+  const [lessonAutoSlug, setLessonAutoSlug] = useState(true);
   const [lessonType, setLessonType] =
     useState<LearningCoursesProgramContentType>("Lesson");
   const [lessonFormat, setLessonFormat] = useState<LessonContentFormat>(
@@ -315,6 +320,8 @@ export function ContentTree({
   const [editTarget, setEditTarget] = useState<ContentItem | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editSlug, setEditSlug] = useState("");
+  const [editAutoSlug, setEditAutoSlug] = useState(true);
 
   const [error, setError] = useState("");
 
@@ -436,10 +443,40 @@ export function ContentTree({
     });
   }
 
-  function openAddSubmoduleDialog(parentId: string) {
-    setSubmoduleParentId(parentId);
+  function resetModuleDialogState() {
     setModuleTitle("");
     setModuleDescription("");
+    setModuleSlug("");
+    setModuleAutoSlug(true);
+  }
+
+  function handleModuleTitleChange(value: string) {
+    setModuleTitle(value);
+    if (moduleAutoSlug) {
+      setModuleSlug(slugify(value));
+    }
+  }
+
+  function handleModuleSlugChange(value: string) {
+    setModuleAutoSlug(false);
+    setModuleSlug(slugify(value));
+  }
+
+  function handleLessonTitleChange(value: string) {
+    setLessonTitle(value);
+    if (lessonAutoSlug) {
+      setLessonSlug(slugify(value));
+    }
+  }
+
+  function handleLessonSlugChange(value: string) {
+    setLessonAutoSlug(false);
+    setLessonSlug(slugify(value));
+  }
+
+  function openAddSubmoduleDialog(parentId: string) {
+    setSubmoduleParentId(parentId);
+    resetModuleDialogState();
     setError("");
   }
 
@@ -455,13 +492,13 @@ export function ContentTree({
         parentId: submoduleParentId,
         title: moduleTitle.trim(),
         description: moduleDescription.trim(),
+        ...(normalizeSlug(moduleSlug) ? { slug: normalizeSlug(moduleSlug) } : {}),
         type: "Module",
         sortOrder: parentChildren.length,
       });
       if (result.success) {
         setSubmoduleParentId(null);
-        setModuleTitle("");
-        setModuleDescription("");
+        resetModuleDialogState();
         router.refresh();
       } else {
         setError(result.error);
@@ -486,13 +523,13 @@ export function ContentTree({
         courseId,
         title: moduleTitle.trim(),
         description: moduleDescription.trim(),
+        ...(normalizeSlug(moduleSlug) ? { slug: normalizeSlug(moduleSlug) } : {}),
         type: "Module",
         sortOrder: realModules.length,
       });
       if (result.success) {
         setShowAddModule(false);
-        setModuleTitle("");
-        setModuleDescription("");
+        resetModuleDialogState();
         router.refresh();
       } else {
         setError(result.error);
@@ -511,6 +548,7 @@ export function ContentTree({
         courseId,
         parentId: normalizeParentId(lessonParentId),
         title: lessonTitle.trim(),
+        ...(normalizeSlug(lessonSlug) ? { slug: normalizeSlug(lessonSlug) } : {}),
         type: lessonType,
         ...(lessonType === "Lesson" ? { lessonFormat } : {}),
         sortOrder: parentChildren.length,
@@ -518,6 +556,8 @@ export function ContentTree({
       if (result.success) {
         setShowAddLesson(false);
         setLessonTitle("");
+        setLessonSlug("");
+        setLessonAutoSlug(true);
         setLessonType("Lesson");
         setLessonFormat(DEFAULT_LESSON_FORMAT);
         router.refresh();
@@ -544,6 +584,8 @@ export function ContentTree({
   function openAddLessonDialog(parentId: string) {
     setLessonParentId(parentId);
     setLessonTitle("");
+    setLessonSlug("");
+    setLessonAutoSlug(true);
     setLessonType("Lesson" as LearningCoursesProgramContentType);
     setLessonFormat(DEFAULT_LESSON_FORMAT);
     setError("");
@@ -554,6 +596,8 @@ export function ContentTree({
     setEditTarget(item);
     setEditTitle(item.title);
     setEditDescription(item.description ?? "");
+    setEditSlug(item.slug);
+    setEditAutoSlug(item.slug === slugify(item.title));
     setError("");
   }
 
@@ -566,6 +610,7 @@ export function ContentTree({
         contentId: editTarget.id,
         title: editTitle.trim(),
         description: editDescription.trim(),
+        slug: normalizeSlug(editSlug) || normalizeSlug(editTitle),
       });
       if (result.success) {
         setEditTarget(null);
@@ -1094,8 +1139,7 @@ export function ContentTree({
             variant="outline"
             className="w-full border-dashed"
             onClick={() => {
-              setModuleTitle("");
-              setModuleDescription("");
+              resetModuleDialogState();
               setError("");
               setShowAddModule(true);
             }}
@@ -1125,9 +1169,22 @@ export function ContentTree({
                 id="module-title"
                 placeholder="e.g. Introduction to Game Design"
                 value={moduleTitle}
-                onChange={(e) => setModuleTitle(e.target.value)}
+                onChange={(e) => handleModuleTitleChange(e.target.value)}
                 autoFocus
               />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="module-slug">URL Slug (optional)</Label>
+              <Input
+                id="module-slug"
+                placeholder="introduction-to-game-design"
+                value={moduleSlug}
+                onChange={(e) => handleModuleSlugChange(e.target.value)}
+                onBlur={() => setModuleSlug(normalizeSlug(moduleSlug))}
+              />
+              <p className="text-muted-foreground text-xs">
+                Auto-generated from title. Edit to customize.
+              </p>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="module-desc">Description (optional)</Label>
@@ -1171,9 +1228,22 @@ export function ContentTree({
                 id="lesson-title"
                 placeholder="e.g. Setting Up Your Environment"
                 value={lessonTitle}
-                onChange={(e) => setLessonTitle(e.target.value)}
+                onChange={(e) => handleLessonTitleChange(e.target.value)}
                 autoFocus
               />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="lesson-slug">URL Slug (optional)</Label>
+              <Input
+                id="lesson-slug"
+                placeholder="setting-up-your-environment"
+                value={lessonSlug}
+                onChange={(e) => handleLessonSlugChange(e.target.value)}
+                onBlur={() => setLessonSlug(normalizeSlug(lessonSlug))}
+              />
+              <p className="text-muted-foreground text-xs">
+                Auto-generated from title. Edit to customize.
+              </p>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="lesson-type">Type</Label>
@@ -1291,9 +1361,29 @@ export function ContentTree({
               <Input
                 id="edit-module-title"
                 value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
+                onChange={(e) => {
+                  setEditTitle(e.target.value);
+                  if (editAutoSlug) {
+                    setEditSlug(slugify(e.target.value));
+                  }
+                }}
                 autoFocus
               />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="edit-module-slug">URL Slug</Label>
+              <Input
+                id="edit-module-slug"
+                value={editSlug}
+                onChange={(e) => {
+                  setEditAutoSlug(false);
+                  setEditSlug(slugify(e.target.value));
+                }}
+                onBlur={() => setEditSlug(normalizeSlug(editSlug))}
+              />
+              <p className="text-muted-foreground text-xs">
+                Auto-generated from title. Edit to customize.
+              </p>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="edit-module-desc">Description (optional)</Label>
@@ -1341,9 +1431,22 @@ export function ContentTree({
                 id="submodule-title"
                 placeholder="e.g. Part A: Fundamentals"
                 value={moduleTitle}
-                onChange={(e) => setModuleTitle(e.target.value)}
+                onChange={(e) => handleModuleTitleChange(e.target.value)}
                 autoFocus
               />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="submodule-slug">URL Slug (optional)</Label>
+              <Input
+                id="submodule-slug"
+                placeholder="part-a-fundamentals"
+                value={moduleSlug}
+                onChange={(e) => handleModuleSlugChange(e.target.value)}
+                onBlur={() => setModuleSlug(normalizeSlug(moduleSlug))}
+              />
+              <p className="text-muted-foreground text-xs">
+                Auto-generated from title. Edit to customize.
+              </p>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="submodule-desc">Description (optional)</Label>

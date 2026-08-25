@@ -617,11 +617,66 @@ describe('Create Assessment dialog', () => {
         expect(createAssessment).toHaveBeenCalledWith({
           courseId: 'course-1',
           title: 'Final Exam',
+          slug: 'final-exam',
           type: 'Assignment',
           assessmentGroupId: null,
           gradingMethods: 'InstructorGraded',
         });
       });
+    });
+
+    it('creates an assessment with a normalized custom slug', async () => {
+      const user = userEvent.setup();
+      render(
+        <AssessmentsList
+          courseId="course-1"
+          assessments={groupedAssessments}
+          total={groupedAssessments.length}
+          assessmentGroups={assessmentGroups}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /create assessment/i }));
+      const dialog = await screen.findByRole('dialog', { name: /create assessment/i });
+      await user.type(within(dialog).getByLabelText(/title/i), 'Final Exam');
+      expect(within(dialog).getByLabelText(/url slug/i)).toHaveValue('final-exam');
+
+      await user.clear(within(dialog).getByLabelText(/url slug/i));
+      await user.type(within(dialog).getByLabelText(/url slug/i), 'Final EXAM 2026!');
+      expect(within(dialog).getByLabelText(/url slug/i)).toHaveValue('final-exam-2026');
+
+      await user.click(within(dialog).getByRole('button', { name: /create assessment/i }));
+
+      await waitFor(() => {
+        expect(createAssessment).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Final Exam',
+            slug: 'final-exam-2026',
+          }),
+        );
+      });
+    });
+
+    it('strips the slug trailing dash on blur', async () => {
+      const user = userEvent.setup();
+      render(
+        <AssessmentsList
+          courseId="course-1"
+          assessments={groupedAssessments}
+          total={groupedAssessments.length}
+          assessmentGroups={assessmentGroups}
+        />,
+      );
+
+      await user.click(screen.getByRole('button', { name: /create assessment/i }));
+      const dialog = await screen.findByRole('dialog', { name: /create assessment/i });
+      const slugInput = within(dialog).getByLabelText(/url slug/i);
+
+      await user.type(slugInput, 'final exam ');
+      expect(slugInput).toHaveValue('final-exam-');
+
+      fireEvent.blur(slugInput);
+      expect(slugInput).toHaveValue('final-exam');
     });
 
     it('keeps the create button disabled while the title is empty', async () => {

@@ -89,6 +89,7 @@ const item = {
   order: 1,
   type: "Questionnaire",
   title: "Intro quiz",
+  slug: "intro-quiz",
   description: "First knowledge check.",
   status: "published",
   duration: 20,
@@ -129,6 +130,7 @@ const lessonItemMarkdownEmpty = {
   order: 2,
   type: "Lesson",
   title: "Intro lesson",
+  slug: "intro-lesson",
   description: "Markdown-format lesson.",
   status: "published",
   duration: 15,
@@ -148,6 +150,7 @@ const lessonItemMarkdownBody = {
   order: 3,
   type: "Lesson",
   title: "Markdown lesson",
+  slug: "markdown-lesson",
   description: "Has a Markdown body.",
   status: "published",
   duration: 15,
@@ -169,6 +172,7 @@ const lessonItemLexical = {
   order: 4,
   type: "Lesson",
   title: "Lexical lesson",
+  slug: "lexical-lesson",
   description: "Has a Lexical body.",
   status: "published",
   duration: 15,
@@ -199,6 +203,7 @@ const assignmentItem = {
   order: 5,
   type: "Assignment",
   title: "Hello world coding task",
+  slug: "hello-world-coding-task",
   description: "Echo stdin to stdout.",
   status: "published",
   duration: 60,
@@ -313,6 +318,7 @@ describe("ContentItemEditor", () => {
         courseId: "course-1",
         contentId: "content-1",
         title: "Updated quiz",
+        slug: "updated-quiz",
         description: "Updated description.",
         body: undefined,
         jsonBody: item.jsonBody,
@@ -323,6 +329,94 @@ describe("ContentItemEditor", () => {
     });
     expect(routerMocks.refresh).toHaveBeenCalled();
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
+  });
+
+  it("slug follows the title while untouched, then detaches and normalizes once edited directly", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const titleInput = screen.getByLabelText(/^title$/i);
+    const slugInput = screen.getByLabelText(/url slug/i);
+    expect(slugInput).toHaveValue("intro-quiz");
+
+    await user.clear(titleInput);
+    await user.type(titleInput, "Advanced Quiz!!");
+    expect(slugInput).toHaveValue("advanced-quiz");
+
+    await user.clear(slugInput);
+    await user.type(slugInput, "My Custom SLUG!");
+    expect(slugInput).toHaveValue("my-custom-slug");
+
+    await user.clear(titleInput);
+    await user.type(titleInput, "Another Title");
+    expect(slugInput).toHaveValue("my-custom-slug");
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Another Title",
+          slug: "my-custom-slug",
+        }),
+      );
+    });
+  });
+
+  it("keeps a trailing dash while typing spaces and strips it on blur", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const slugInput = screen.getByLabelText(/url slug/i);
+
+    await user.clear(slugInput);
+    await user.type(slugInput, " ");
+    expect(slugInput).toHaveValue("");
+
+    await user.clear(slugInput);
+    await user.type(slugInput, "content ");
+    expect(slugInput).toHaveValue("content-");
+
+    await user.type(slugInput, " ");
+    expect(slugInput).toHaveValue("content-");
+
+    fireEvent.blur(slugInput);
+    expect(slugInput).toHaveValue("content");
+  });
+
+  it("derives the slug from the title on save when the slug field is cleared", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.clear(screen.getByLabelText(/url slug/i));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Intro quiz",
+          slug: "intro-quiz",
+        }),
+      );
+    });
   });
 
   it("saves quiz grading metadata inside structured jsonBody", async () => {
@@ -516,6 +610,7 @@ describe("ContentItemEditor", () => {
         courseId: "course-1",
         contentId: "lesson-2",
         title: "Markdown lesson",
+        slug: "markdown-lesson",
         description: "Has a Markdown body.",
         body: "# existing markdown",
         jsonBody: undefined,
@@ -551,6 +646,7 @@ describe("ContentItemEditor", () => {
         courseId: "course-1",
         contentId: "lesson-3",
         title: "Lexical lesson",
+        slug: "lexical-lesson",
         description: "Has a Lexical body.",
         body: undefined,
         jsonBody: lessonItemLexical.jsonBody,

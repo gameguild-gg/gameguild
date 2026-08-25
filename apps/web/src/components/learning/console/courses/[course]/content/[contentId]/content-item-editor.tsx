@@ -57,6 +57,7 @@ import {
 } from "@/lib/learning/actions";
 import { CONTENT_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
 import { getLessonFormatLabel } from "@/lib/learning/lesson-formats";
+import { normalizeSlug, slugify } from "@/lib/slugify";
 import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-renderer";
 import { LessonContentEditor } from "./lesson-content-editor";
 import { LessonCodeEditor } from "./lesson-code-editor";
@@ -97,6 +98,12 @@ export function ContentItemEditor({
   const [isPending, startTransition] = useTransition();
 
   const [title, setTitle] = useState(item.title);
+  const [slug, setSlug] = useState(item.slug);
+  // Auto while the slug still mirrors the sluggified title; editing the slug
+  // directly detaches it so later title edits stop overwriting it.
+  const [autoSlug, setAutoSlug] = useState(
+    () => item.slug === slugify(item.title),
+  );
   const [description, setDescription] = useState(item.description ?? "");
   const [visibility, setVisibility] = useState<string>(
     item.status === "published" ? "Public" : "Private",
@@ -187,6 +194,18 @@ export function ContentItemEditor({
 
   const contentTypeLabel = formatContentTypeLabel(item.type);
 
+  function handleTitleChange(value: string) {
+    setTitle(value);
+    if (autoSlug) {
+      setSlug(slugify(value));
+    }
+  }
+
+  function handleSlugChange(value: string) {
+    setAutoSlug(false);
+    setSlug(slugify(value));
+  }
+
   function handleSave() {
     if (!title.trim()) {
       setError("Title is required.");
@@ -225,6 +244,10 @@ export function ContentItemEditor({
         courseId,
         contentId: item.id,
         title: title.trim(),
+        // Backend keeps the stored slug when sent whitespace — derive locally
+        // so a cleared field can't silently revert to the old slug. Re-slugify
+        // to strip the trailing hyphen live typing can leave behind.
+        slug: normalizeSlug(slug) || normalizeSlug(title),
         description: description.trim() || undefined,
         body: bodyToSave,
         ...(isLesson
@@ -495,9 +518,23 @@ export function ContentItemEditor({
                 <Input
                   id="title"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => handleTitleChange(e.target.value)}
                   placeholder="Content title"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="slug">URL Slug</Label>
+                <Input
+                  id="slug"
+                  value={slug}
+                  onChange={(e) => handleSlugChange(e.target.value)}
+                  onBlur={() => setSlug(normalizeSlug(slug))}
+                  placeholder="introduction-to-game-development"
+                />
+                <p className="text-muted-foreground text-xs">
+                  Auto-generated from title. Edit to customize.
+                </p>
               </div>
 
               <div className="space-y-2">
