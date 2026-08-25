@@ -1,7 +1,6 @@
 'use client';
 
-import type { GradingPlan, TestReport } from '@game-guild/emception-ui';
-import type { TestPlan } from 'emception';
+import type { TestPlan, TestReport } from 'emception';
 import { computeScore } from '@/lib/emception/scoring';
 
 export function PublicTestEstimateBanner({
@@ -11,7 +10,7 @@ export function PublicTestEstimateBanner({
   passingScore,
 }: {
   report: TestReport;
-  plan: GradingPlan;
+  plan: TestPlan;
   maxScore: number;
   passingScore: number;
 }) {
@@ -21,7 +20,7 @@ export function PublicTestEstimateBanner({
     if (plan.cases.length > 0) {
       const { score } = computeScore(
         report,
-        plan as unknown as TestPlan,
+        plan,
         maxScore,
         passingScore,
       );

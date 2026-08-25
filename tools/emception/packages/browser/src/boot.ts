@@ -5,6 +5,7 @@
 import { TTYBridge } from '@gameguild/emception-xterm';
 import { OverlayFS } from 'emception';
 import { detectAsyncStrategy } from './async-bridge.js';
+import { ManifestCompatibilityError, parseManifest } from './manifest.js';
 import { FetchBridge } from './net/fetch-bridge.js';
 import { MiniShell } from './shell.js';
 import { ToolRunner } from './tool-runner.js';
@@ -34,8 +35,9 @@ async function fetchManifestWithRetry(manifestUrl: string, attempts = 3): Promis
         throw new Error('received HTML instead of manifest JSON');
       }
 
-      return JSON.parse(raw) as FSManifest;
+      return parseManifest(JSON.parse(raw), { onLegacy: (message) => console.warn(`${message} Source: ${manifestUrl}`) });
     } catch (err) {
+      if (err instanceof ManifestCompatibilityError) throw err;
       lastError = err;
       if (attempt < attempts) {
         await sleep(200 * attempt);
@@ -72,7 +74,7 @@ export async function boot(manifestUrl: string, terminalContainerOrTerminal: HTM
 
   // Resolve bundle URLs relative to the manifest directory
   if (manifest.bundles) {
-    for (const bundle of Object.values(manifest.bundles as Record<string, { url?: string }>)) {
+    for (const bundle of Object.values(manifest.bundles)) {
       if (bundle.url && !bundle.url.startsWith('http')) {
         const bakedBase = '/cdn';
         const relativePath = bundle.url.startsWith(bakedBase)
@@ -218,8 +220,14 @@ export async function bootInWorker(
 
 export { LineBuffer } from 'emception';
 export type { IOProvider } from 'emception';
-export { createEmception, type CreateEmceptionOptions } from './createEmception.js';
-export type { EmceptionAPI } from 'emception';
+export {
+  createEmception,
+  type BrowserEmceptionAPI,
+  type BrowserRunOptions,
+  type BrowserStdin,
+  type CreateEmceptionOptions,
+} from './createEmception.js';
+export type { BrowserEmceptionAPI as EmceptionAPI } from './createEmception.js';
 export { createBrowserBridge, SUBPROCESS_SHIM, type BrowserBridge } from './emscripten/index.js';
 export { decompressBrotli, isBrotliSupported } from './loader/brotli.js';
 export { clearModuleCache, loadModuleFactory } from './loader/wasm-module.js';

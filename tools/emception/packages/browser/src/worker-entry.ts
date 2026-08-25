@@ -13,6 +13,7 @@
 import type { IOProvider, MainToWorkerMessage, WorkerToMainMessage } from 'emception';
 import { OverlayFS } from 'emception';
 import { detectAsyncStrategy } from './async-bridge.js';
+import { ManifestCompatibilityError, parseManifest } from './manifest.js';
 import { FetchBridge } from './net/fetch-bridge.js';
 import { MiniShell } from './shell.js';
 import { ToolRunner } from './tool-runner.js';
@@ -64,7 +65,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchManifestWithRetry(manifestUrl: string, attempts = 3): Promise<FSManifest & { toolVersions?: Record<string, string> }> {
+async function fetchManifestWithRetry(manifestUrl: string, attempts = 3): Promise<FSManifest> {
   let lastError: unknown;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
@@ -81,8 +82,9 @@ async function fetchManifestWithRetry(manifestUrl: string, attempts = 3): Promis
         throw new Error('received HTML instead of manifest JSON');
       }
 
-      return JSON.parse(raw) as FSManifest & { toolVersions?: Record<string, string> };
+      return parseManifest(JSON.parse(raw), { onLegacy: (message) => console.warn(`${message} Source: ${manifestUrl}`) });
     } catch (err) {
+      if (err instanceof ManifestCompatibilityError) throw err;
       lastError = err;
       if (attempt < attempts) {
         await sleep(200 * attempt);
@@ -266,7 +268,7 @@ async function handleBoot(manifestUrl: string, toolVersions?: { pythonMajorMinor
 
   // Also resolve bundle URLs relative to the manifest directory
   if (manifest.bundles) {
-    for (const bundle of Object.values(manifest.bundles as Record<string, { url?: string }>)) {
+    for (const bundle of Object.values(manifest.bundles)) {
       if (bundle.url && !bundle.url.startsWith('http')) {
         // Bundle URLs like "/cdn/usr/lib/clang.tar.br" need the same treatment.
         // Strip the baseUrl prefix (e.g. "/cdn") from the baked-in URL to get
@@ -445,7 +447,7 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
           });
           URL.revokeObjectURL(jsBlobUrl);
 
-          // Wrappers exposed by tools/emception/userland/brotli/brotli-wrapper.c:
+          // Wrappers exposed by toolchain/overlays/brotli/brotli-wrapper.c:
           //   uint8_t* brotli_decompress_buffer(const uint8_t* in, size_t in_len, size_t* out_len);
           //   void     brotli_free_buffer(uint8_t* ptr);
           //   const char* brotli_get_last_error_message(void);
@@ -529,6 +531,23 @@ self.onmessage = async (ev: MessageEvent<MainToWorkerMessage>) => {
         post({ type: 'writeFileResult', id: msg.id, ok: true });
       } catch (err) {
         post({ type: 'writeFileResult', id: msg.id, ok: false, error: String(err) });
+      }
+      break;
+
+    case 'deleteFile':
+      if (!vfs) {
+        post({ type: 'deleteFileResult', id: msg.id, ok: false, error: 'Not booted' });
+        break;
+      }
+      try {
+        const deleted = await vfs.overlay.deleteFile(msg.path);
+        if (!deleted) {
+          post({ type: 'deleteFileResult', id: msg.id, ok: false, error: `File not found: ${msg.path}` });
+        } else {
+          post({ type: 'deleteFileResult', id: msg.id, ok: true });
+        }
+      } catch (err) {
+        post({ type: 'deleteFileResult', id: msg.id, ok: false, error: String(err) });
       }
       break;
 

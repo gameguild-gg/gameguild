@@ -304,7 +304,6 @@ run_test_with_timeout() {
   # collect a dump whenever VSTest has enough state to produce one.
   run timeout --kill-after=30s "$test_hang_timeout" "$@"
 }
-
 native_path() {
   if [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
     cygpath -w "$1"

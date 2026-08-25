@@ -31,7 +31,7 @@ export const DEFAULT_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
       <rect width="800" height="520" fill="url(#g)"/>
       <circle cx="190" cy="150" r="72" fill="#89b4fa" opacity="0.75"/>
       <circle cx="610" cy="370" r="90" fill="#f38ba8" opacity="0.55"/>
-      <text x="50%" y="45%" font-size="42" text-anchor="middle" fill="#cdd6f4" font-family="Inter, Segoe UI, Arial">GameGuild Workspace</text>
+      <text x="50%" y="45%" font-size="42" text-anchor="middle" fill="#cdd6f4" font-family="Inter, Segoe UI, Arial">Emception Workspace</text>
       <text x="50%" y="55%" font-size="22" text-anchor="middle" fill="#a6adc8" font-family="Inter, Segoe UI, Arial">Image tab preview</text>
     </svg>`,
 )}`;

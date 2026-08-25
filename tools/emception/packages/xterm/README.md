@@ -2,10 +2,6 @@
 
 [xterm.js](https://xtermjs.org/) bridge for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception). Wraps a `Terminal` as a `StdinInput` / `StdoutSink` consumable by `@gameguild/emception-browser`'s `EmceptionAPI`.
 
-## Live Demo
-
-Try it at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
-
 ## Install
 
 ```bash

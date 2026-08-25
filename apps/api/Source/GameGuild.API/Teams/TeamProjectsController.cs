@@ -34,11 +34,16 @@ public sealed class TeamProjectsController(
         if (!await teamAuthorization.HasAuthorityAsync(teamId, TeamMemberAuthority.Viewer, cancellationToken).ConfigureAwait(false))
             return NotFound();
 
-        var rows = await projectAuthorization.ApplyWorkspaceAccess(
-                context.Set<Project>().AsNoTracking().Where(project => project.DeletedAt == null))
-            .SelectMany(project => project.Teams
-                .Where(team => team.TeamId == teamId && team.IsActive && team.EndedAt == null && team.DeletedAt == null)
-                .Select(team => new TeamProjectSummary(
+        var visibleProjects = projectAuthorization.ApplyWorkspaceAccess(
+            context.Set<Project>().AsNoTracking().Where(project => project.DeletedAt == null));
+
+        var rows = await (
+                from project in visibleProjects
+                join team in context.Set<ProjectTeam>().AsNoTracking()
+                    on project.Id equals team.ProjectId
+                where team.TeamId == teamId && team.IsActive && team.EndedAt == null && team.DeletedAt == null
+                orderby project.UpdatedAt descending
+                select new TeamProjectSummary(
                     project.Id,
                     project.Title,
                     project.Slug,
@@ -46,8 +51,7 @@ public sealed class TeamProjectsController(
                     project.Visibility,
                     team.Role,
                     team.ParticipationMode,
-                    project.UpdatedAt)))
-            .OrderByDescending(project => project.UpdatedAt)
+                    project.UpdatedAt))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         return Ok(rows);
