@@ -147,6 +147,19 @@ function releaseRunLock() {
 
 function stopChild(entry) {
   if (!entry?.proc || entry.proc.exitCode != null || entry.proc.killed) return;
+  if (process.platform === "win32") {
+    // `dotnet run` starts MSBuild children. Killing only the launcher leaks
+    // those processes and prevents a second isolated cycle from starting.
+    try {
+      spawnSync("taskkill", ["/pid", String(entry.proc.pid), "/t", "/f"], {
+        stdio: "ignore",
+      });
+      return;
+    } catch {
+      try { entry.proc.kill("SIGTERM"); } catch { /* already gone */ }
+      return;
+    }
+  }
   try {
     // Negative pid kills the whole process group (spawned detached).
     process.kill(-entry.proc.pid, "SIGTERM");
@@ -338,7 +351,12 @@ async function bootStack() {
       "--project", "apps/api/Source/GameGuild.API/GameGuild.API.csproj",
       "--urls", `http://127.0.0.1:${API_PORT}`,
     ],
-    { cwd: REPO_ROOT, env: { ...process.env, ...envArrayToObject(apiEnv) }, detached: true, stdio: ["ignore", "pipe", "pipe"] },
+    {
+      cwd: REPO_ROOT,
+      env: { ...process.env, ...envArrayToObject(apiEnv) },
+      detached: process.platform !== "win32",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
   );
   children.push({ proc: api, label: "api" });
   pipeLog(api, API_LOG);
@@ -368,7 +386,12 @@ async function bootStack() {
   const web = spawn(
     process.platform === "win32" ? "pnpm.cmd" : "pnpm",
     ["exec", "next", "dev", "--webpack", "--port", String(WEB_PORT)],
-    { cwd: WEB_DIR, env: { ...process.env, ...envArrayToObject(webEnv) }, detached: true, stdio: ["ignore", "pipe", "pipe"] },
+    {
+      cwd: WEB_DIR,
+      env: { ...process.env, ...envArrayToObject(webEnv) },
+      detached: process.platform !== "win32",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
   );
   children.push({ proc: web, label: "web" });
   pipeLog(web, WEB_LOG);
