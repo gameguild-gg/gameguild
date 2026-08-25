@@ -108,6 +108,12 @@ const CHROMIUM_EXECUTABLE_PATH = process.env.CODING_CYCLE_CHROMIUM_EXECUTABLE;
 // browser flow. This is opt-in: CI and the default command still compile API
 // sources before the isolated cycle starts.
 const API_NO_BUILD = process.env.CODING_CYCLE_API_NO_BUILD === "1";
+// A disposable database starts empty and the API currently applies more than
+// one hundred migrations. Four minutes is insufficient on a cold Windows
+// volume; callers can lower or raise this without editing the runner.
+const API_BOOT_TIMEOUT_MS = Number(
+  process.env.CODING_CYCLE_API_BOOT_TIMEOUT_MS ?? 900_000,
+);
 
 // Generous: first WASM boot downloads ~tens of MB of brotli bundles from
 // /emception/* (localhost) + JITs clang.wasm. Each run-tests compile is
@@ -364,7 +370,13 @@ async function bootStack() {
   );
   children.push({ proc: api, label: "api" });
   pipeLog(api, API_LOG);
-  await waitForHttp(`${API_BASE}/ready`, "GameGuild API", API_LOG, 240_000, api);
+  await waitForHttp(
+    `${API_BASE}/ready`,
+    "GameGuild API",
+    API_LOG,
+    API_BOOT_TIMEOUT_MS,
+    api,
+  );
   log("API ready");
 
   // --- Next.js web ---
