@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ASSIGNMENT_SAMPLES, buildAssessmentExecutionPlan, Ide, TestResultsPanel, type CodingLanguage, type IdeHandle, type TestReport, type WorkspaceConfig } from '@game-guild/emception-ui';
-import { scoreSubmission, formatFeedback, type BackendTestCaseDto, type ScoringDefinition } from '@/lib/emception/scoring';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  CodingAssessmentEditor,
+  type AssessmentRunResult,
+  type CodingLanguage,
+} from '@game-guild/emception-ui';
+import { createAssessmentWorkspaceConfig } from '@game-guild/emception-ui/assessment/presets';
+
+import { formatFeedback } from '@/lib/emception/scoring';
 import type { CodeFile } from '@/lib/coding-assignment/code-payload';
 import type { CodingAssignmentContent } from '@/lib/coding-assignment/client';
-import { Button } from '@game-guild/ui/components/button';
-import { Loader2 } from 'lucide-react';
-
-type GradeState = 'idle' | 'grading' | 'ready';
 
 export interface ComputedScore {
   score: number;
@@ -16,210 +18,134 @@ export interface ComputedScore {
 }
 
 export interface CodeGraderPanelProps {
-  /** Full assignment (Public + Private tests + all files) — Task 4 wrapper. */
+  /** Full assignment, including instructor-only files and private tests. */
   assignment: CodingAssignmentContent;
-  /** Submitted student files (code-payload parsed server-side or client-side). */
+  /** Submitted student files parsed from the immutable submission payload. */
   submittedFiles: CodeFile[];
   maxScore: number;
   manifestUrl: string;
-  /** Submission id — namespaces Ide localStorage per submission to prevent stale-data blink. */
+  /** Identifies the immutable submission being reviewed. */
   submissionId?: string;
-  /** Run-tests result seeds the grading panel's score input. */
+  /** Receives the full-test score for the surrounding feedback/submit UI. */
   onComputedScore?: (result: ComputedScore) => void;
 }
 
-/**
- * Build the Set of Private workspace file paths. The submission MUST NOT
- * override these (Metis #30) — Private files carry the instructor's solution
- * or fixtures the student never sees.
- *
- * Memoized once per assignment.
- */
 function buildPrivatePaths(assignment: CodingAssignmentContent): Set<string> {
   return new Set(
     Object.entries(assignment.Data.Files)
-      .filter(([, meta]) => meta.Visibility === 'Private')
+      .filter(([, file]) => file.Visibility === 'Private')
       .map(([path]) => path),
   );
 }
 
 /**
- * Merge the instructor's workspace with the student's submission.
- *
- * - Start from the workspace (Public + Private).
- * - For each submitted file:
- *     - IF its path matches a Private workspace path → log + skip (Metis #30).
- *     - ELSE override the workspace file (or add it if student-created).
- *
- * Pure + exported so the merge contract is unit-testable without rendering.
+ * Merge the frozen instructor workspace with student code. A submission can
+ * never replace a private instructor file, even if it maliciously includes an
+ * identical path.
  */
-export function mergeWorkspaceWithSubmission(assignment: CodingAssignmentContent, submittedFiles: CodeFile[]): CodeFile[] {
+export function mergeWorkspaceWithSubmission(
+  assignment: CodingAssignmentContent,
+  submittedFiles: CodeFile[],
+): CodeFile[] {
   const privatePaths = buildPrivatePaths(assignment);
   const merged = new Map<string, string>();
-  for (const [path, meta] of Object.entries(assignment.Data.Files)) {
-    merged.set(path, meta.Content);
+
+  for (const [path, file] of Object.entries(assignment.Data.Files)) {
+    merged.set(path, file.Content);
   }
   for (const file of submittedFiles) {
     if (privatePaths.has(file.path)) {
-      // ponytail: console.warn is the only side-effect — no DB row, no telemetry.
-      // Backend already rejects the same path on submit; this is the second-line
-      // guard for adversarial payloads.
-      console.warn(`[grade] Submission attempted to override Private workspace file ${file.path}; skipping per Metis #30`);
+      console.warn(
+        `[grade] Submission attempted to override private workspace file ${file.path}; skipping`,
+      );
       continue;
     }
     merged.set(file.path, file.content);
   }
-  return Array.from(merged.entries()).map(([path, content]) => ({
-    path,
-    content,
-  }));
+
+  return [...merged].map(([path, content]) => ({ path, content }));
 }
 
 /**
- * SpeedGrader code viewer — the emception IDE with the merged workspace plus
- * the full (Public + Private) test-run flow. Moved from the legacy
- * `grade-client.tsx`; the score/feedback/submit UX lives in the grading panel.
+ * GameGuild's grader composition over the vanilla assessment editor.
+ *
+ * The UI deliberately receives only the visible submission/public files. The
+ * editor's assessment session supplies private files and tests as a temporary
+ * VFS overlay for the full client-side run, so they are never editor state or
+ * browser-visible workspace files.
  */
-export function CodeGraderPanel({ assignment, submittedFiles, maxScore, manifestUrl, submissionId, onComputedScore }: CodeGraderPanelProps): React.JSX.Element {
-  const ideRef = useRef<IdeHandle | null>(null);
-  const [ideMounted, setIdeMounted] = useState(false);
-  const setIdeRef = useCallback((handle: IdeHandle | null) => {
-    ideRef.current = handle;
-    setIdeMounted(Boolean(handle));
-  }, []);
-  const [gradeState, setGradeState] = useState<GradeState>('idle');
-  const [report, setReport] = useState<TestReport | null>(null);
+export function CodeGraderPanel({
+  assignment,
+  submittedFiles,
+  maxScore,
+  manifestUrl,
+  submissionId,
+  onComputedScore,
+}: CodeGraderPanelProps): React.JSX.Element {
   const [computed, setComputed] = useState<ComputedScore | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const mergedFiles = useMemo(() => mergeWorkspaceWithSubmission(assignment, submittedFiles), [assignment, submittedFiles]);
-
-  const fullPlan = useMemo(() => {
-    try {
-      return buildAssessmentExecutionPlan(assignment, 'full');
-    } catch {
-      return null;
-    }
-  }, [assignment]);
-
-  const language = (assignment.Environment.Language as CodingLanguage | undefined) ?? 'cpp';
-  const sample = ASSIGNMENT_SAMPLES[language] ?? ASSIGNMENT_SAMPLES.cpp;
-
-  const workspaceConfig = useMemo<WorkspaceConfig>(() => {
-    const files: WorkspaceConfig['files'] = {};
-    for (const file of mergedFiles) {
-      files[file.path] = { encoding: 'text', content: file.content };
-    }
-    const firstPath = mergedFiles[0]?.path ?? sample.workspaceConfig.layout.activeFile;
-    return {
-      ...sample.workspaceConfig,
-      id: submissionId ?? sample.workspaceConfig.id,
-      layout: {
-        ...sample.workspaceConfig.layout,
-        activeFile: firstPath,
-        openTabs: [{ path: firstPath, group: 'main' as const }],
-      },
-      files,
-    };
-  }, [sample, mergedFiles, submissionId]);
-
-  // ponytail: empty submittedFiles means the student submitted no code (payload
-  // '{}' or null) OR the codePayload failed to parse (logged in submission-viewer).
-  // The merged workspace still seeds the IDE with the instructor template, so
-  // without this notice the instructor sees a generic/template IDE and can't
-  // tell "no student code" from a rendering bug.
+  const mergedFiles = useMemo(
+    () => mergeWorkspaceWithSubmission(assignment, submittedFiles),
+    [assignment, submittedFiles],
+  );
+  const workspaceConfig = useMemo(() => {
+    const privatePaths = buildPrivatePaths(assignment);
+    const files = Object.fromEntries(
+      mergedFiles
+        .filter((file) => !privatePaths.has(file.path))
+        .map((file) => [
+          file.path,
+          {
+            encoding: assignment.Data.Files[file.path]?.Encoding ?? 'text',
+            content: file.content,
+          },
+        ]),
+    );
+    const language = (assignment.Environment.Language || 'cpp') as CodingLanguage;
+    return createAssessmentWorkspaceConfig(language, files);
+  }, [assignment, mergedFiles]);
   const noStudentCode = submittedFiles.length === 0;
 
-  // Seed the IDE with the merged workspace once mounted.
-  useEffect(() => {
-    if (!ideMounted || mergedFiles.length === 0) return;
-    ideRef.current?.setFiles(mergedFiles).catch((err) => {
-      console.error('Failed to seed IDE with merged workspace:', err);
-    });
-  }, [ideMounted, mergedFiles]);
-
-  async function handleRunTests() {
-    setGradeState('grading');
-    setError(null);
-    setReport(null);
-    setComputed(null);
-    try {
-      // (e.1) Assessment mapper — Public + Private cases + harness files.
-      const { plan, overlay: generatedFiles } = buildAssessmentExecutionPlan(assignment, 'full');
-
-      // (e.2) Re-seed IDE with [current workspace, generated harnesses]. The
-      // generated harness paths are stable across runs (`functional_<i>_test.cpp`)
-      // so de-dupe them against any prior run.
-      const currentFiles = (await ideRef.current!.getFiles()) as CodeFile[];
-      const harnessPaths = new Set(generatedFiles.map((f) => f.path));
-      const merged = [...currentFiles.filter((f: CodeFile) => !harnessPaths.has(f.path)), ...generatedFiles];
-      await ideRef.current!.setFiles(merged);
-
-      // (e.3) Run + (e.4) report. Engine contract (Metis #33): tool failures
-      // resolve as a `ToolResult` with non-zero exit code; the test report
-      // surfaces them as failing cases — `runTests` does NOT reject here.
-      const r = (await ideRef.current!.runTests(plan as never)) as TestReport;
-
-      // (f) Compute weighted score via the shared scoring utility.
-      // ponytail: passingScore=0 — grader doesn't compute pass/fail; server's
-      // GradeSubmissionAsync loads Program.PassingScore for the snapshot.
-      const definition: ScoringDefinition = {
-        testPlan: { cases: plan.cases as unknown as BackendTestCaseDto[] },
-        maxScore,
-        passingScore: 0,
+  const handleRunResult = useCallback(
+    (result: AssessmentRunResult) => {
+      const next = {
+        score: result.score.score,
+        autoFeedback: formatFeedback(result.report, result.score.score),
       };
-      const result = scoreSubmission(definition, r);
-      const next: ComputedScore = {
-        score: result.score,
-        autoFeedback: formatFeedback(r, result.score),
-      };
-      setReport(r);
       setComputed(next);
       onComputedScore?.(next);
-      setGradeState('ready');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setGradeState('idle');
-    }
-  }
+    },
+    [onComputedScore],
+  );
 
   return (
     <div data-testid="code-grader-panel" className="flex h-full flex-col gap-3 p-3">
-      <div className="flex items-center gap-3">
-        <Button type="button" variant="outline" size="sm" onClick={handleRunTests} disabled={gradeState === 'grading'} data-testid="run-tests-button">
-          {gradeState === 'grading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" data-testid="run-tests-spinner" /> : null}
-          Run Tests
-        </Button>
-        {computed && (
-          <p className="text-sm font-semibold" data-testid="computed-score">
-            Computed score: {computed.score} / {maxScore}
-          </p>
-        )}
-      </div>
+      {computed ? (
+        <p className="text-sm font-semibold" data-testid="computed-score">
+          Computed score: {computed.score} / {maxScore}
+        </p>
+      ) : null}
 
-      {error && (
-        <div role="alert" className="rounded border border-red-500 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
-          {error}
+      {noStudentCode ? (
+        <div
+          data-testid="no-student-code"
+          className="rounded border border-amber-500 bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200"
+        >
+          This submission contains no student code. The editor shows the assignment template only.
         </div>
-      )}
-
-      {noStudentCode && (
-        <div data-testid="no-student-code" className="rounded border border-amber-500 bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
-          This submission contains no student code. The IDE shows the assignment template only.
-        </div>
-      )}
-
-      {report && <TestResultsPanel report={report} maxScore={maxScore} />}
+      ) : null}
 
       <div className="min-h-[400px] flex-1 border">
-        <Ide
-          ref={setIdeRef}
+        <CodingAssessmentEditor
+          mode="grader"
+          definition={assignment}
           manifestUrl={manifestUrl}
-          maxScore={maxScore}
-          assignmentToken={submissionId}
+          title="Grade submission"
           workspaceConfig={workspaceConfig}
-          testPlan={fullPlan?.plan as any}
-          testMode="full"
+          workspaceStorageKey={submissionId ? `emception:grader:${submissionId}` : undefined}
+          enableWorkspace={false}
+          maxScore={maxScore}
+          passingScore={0}
+          onRunResult={handleRunResult}
         />
       </div>
     </div>
