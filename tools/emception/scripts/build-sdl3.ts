@@ -119,6 +119,7 @@ int main(void) {
 );
 
 console.log('Building SDL3 via emsdk port (-sUSE_SDL=3) — downloads SDL3 on first run...');
+console.log('  SDL3 remains a pinned experimental Emscripten port; suppressing its known driver diagnostic.');
 console.log(`  emcc: ${EMCC}`);
 
 const result = shell.exec(
@@ -126,6 +127,7 @@ const result = shell.exec(
         `"${EMCC}"`,
         `"${STUB_C}"`,
         '-sUSE_SDL=3',
+        '-Wno-experimental',
         '-sENVIRONMENT=web',
         '-sALLOW_MEMORY_GROWTH=1',
         '-sMODULARIZE=1',

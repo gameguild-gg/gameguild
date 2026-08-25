@@ -25,6 +25,7 @@ import shell from 'shelljs';
 import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { patchRaylibSource } from './lib/source-compatibility.ts';
 import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 import type { ToolName } from './toolchain/lock.ts';
 import { ensureLockedSource } from './toolchain/sources.ts';
@@ -64,6 +65,9 @@ const RAYLIB_SRC = ensureLockedSource(
     path.join(SOURCE_ROOT, `raylib-${RAYLIB_TAG}`),
     'CMakeLists.txt',
 );
+console.log(patchRaylibSource(RAYLIB_SRC)
+    ? 'Applied raylib Emscripten compatibility patches.'
+    : 'Raylib Emscripten compatibility patches already applied.');
 
 const RAYLIB_BUILD = path.join(BUILD_DIR, 'raylib-build');
 shell.mkdir('-p', RAYLIB_BUILD);
@@ -76,8 +80,6 @@ const raylibCmakeCmd = [
     '-DCMAKE_BUILD_TYPE=Release',
     '-DPLATFORM=Web',
     '-DBUILD_EXAMPLES=OFF',
-    '-DBUILD_GAMES=OFF',
-    '-DSUPPORT_GIF_RECORDING=OFF',
     '-DGRAPHICS=GRAPHICS_API_OPENGL_ES3',
     '-DBUILD_SHARED_LIBS=OFF',
 ].join(' ');

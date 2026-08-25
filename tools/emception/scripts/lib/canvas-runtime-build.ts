@@ -8,6 +8,7 @@ export type CanvasRuntimeBuild = {
     readonly sourcePath: string;
     readonly libraryPaths: readonly string[];
     readonly includeDirectories: readonly string[];
+    readonly systemIncludeDirectories?: readonly string[];
     readonly flags: readonly string[];
     readonly outputDirectory: string;
     readonly runtimeName: string;
@@ -30,6 +31,18 @@ export class CanvasRuntimeBuildError extends Error {
     }
 }
 
+export function canvasRuntimeCompilerArguments(build: CanvasRuntimeBuild, outputPath: string): string[] {
+    return [
+        `"${build.compiler}"`,
+        `"${build.sourcePath}"`,
+        ...build.libraryPaths.map((libraryPath) => `"${libraryPath}"`),
+        ...build.includeDirectories.map((includeDirectory) => `-I"${includeDirectory}"`),
+        ...(build.systemIncludeDirectories ?? []).map((includeDirectory) => `-isystem "${includeDirectory}"`),
+        ...build.flags,
+        `-o "${outputPath}"`,
+    ];
+}
+
 export function buildCanvasRuntimePair(build: CanvasRuntimeBuild): CanvasRuntimePair {
     const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'emception-canvas-runtime-'));
     const temporaryGluePath = path.join(temporaryDirectory, `${build.runtimeName}.mjs`);
@@ -37,14 +50,7 @@ export function buildCanvasRuntimePair(build: CanvasRuntimeBuild): CanvasRuntime
 
     try {
         const result = shell.exec(
-            [
-                `"${build.compiler}"`,
-                `"${build.sourcePath}"`,
-                ...build.libraryPaths.map((libraryPath) => `"${libraryPath}"`),
-                ...build.includeDirectories.map((includeDirectory) => `-I"${includeDirectory}"`),
-                ...build.flags,
-                `-o "${temporaryGluePath}"`,
-            ].join(' '),
+            canvasRuntimeCompilerArguments(build, temporaryGluePath).join(' '),
             { silent: false, fatal: false },
         );
 
