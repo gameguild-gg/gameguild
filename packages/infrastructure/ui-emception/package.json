@@ -14,6 +14,10 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./assessment/editor": "./src/assessment/editor.ts",
+    "./assessment/plan": "./src/assessment/plan.ts",
+    "./assessment/presets": "./src/assessment/presets.ts",
+    "./assessment/storage": "./src/assessment/workspace-storage.ts",
     "./ide-types": "./src/components/ide-types.ts",
     "./styles/theme.css": "./src/styles/theme.css"
   },
