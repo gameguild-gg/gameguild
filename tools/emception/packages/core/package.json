@@ -50,7 +50,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "npm run clean && tsc -p tsconfig.json",
+    "build": "pnpm run clean && tsc -p tsconfig.json",
     "prepack": "npm run build && node ../../scripts/stage-core-cdn.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node ../../scripts/run-node-tests.mjs tests",

@@ -27,7 +27,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "npm run clean && tsc -p tsconfig.json",
+    "build": "pnpm run clean && tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
     "clean": "node -e \"const fs=require('fs');for(const path of ['dist','tsconfig.tsbuildinfo'])fs.rmSync(path,{recursive:true,force:true})\""
   },
