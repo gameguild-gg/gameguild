@@ -85,21 +85,25 @@ export const TOOLCHAIN_RECIPES: Readonly<Record<string, BuildRecipe>> = {
     'sdl3', ['warmup'], ['emsdk', 'sdl3'],
     [sysroot('usr/lib/libSDL3.a'), sysroot('usr/lib/emscripten/sdl3-runtime.mjs'), sysroot('usr/lib/emscripten/sdl3-runtime.wasm')],
     'recipe:sdl3',
+    'sdl3:expected-experimental-diagnostic-v2',
   ),
   imgui: scriptRecipe(
     'imgui', ['sdl3'], ['emsdk', 'sdl3', 'imgui'],
     [sysroot('usr/lib/libimgui.a'), sysroot('usr/include/imgui/imgui.h')],
     'recipe:imgui',
+    'imgui:system-sysroot-headers-v2',
   ),
   raylib: scriptRecipe(
     'raylib', ['sdl3'], ['emsdk', 'sdl3', 'raylib', 'raygui', 'physac'],
     [sysroot('usr/lib/libraylib.a'), sysroot('usr/lib/libraygui.a'), sysroot('usr/lib/libphysac.a'), sysroot('usr/lib/emscripten/raylib-runtime.mjs')],
     'recipe:raylib',
+    'raylib:emscripten-source-compatibility-v2',
   ),
   allegro: scriptRecipe(
     'allegro', ['warmup'], ['emsdk', 'allegro'],
     [sysroot('usr/lib/liballegro.a'), sysroot('usr/lib/emscripten/allegro-runtime.mjs')],
     'recipe:allegro',
+    'allegro:emscripten-source-compatibility-v5',
   ),
   sysroot: scriptRecipe(
     'sysroot', ['binaryen', 'python', 'llvm', 'cmake', 'sdl3', 'imgui', 'raylib', 'allegro'],

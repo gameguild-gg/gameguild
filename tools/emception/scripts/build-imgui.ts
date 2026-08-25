@@ -82,7 +82,7 @@ const CXXFLAGS = [
     // No -fwasm-exceptions: incompatible with -mno-reference-types (Asyncify).
     `-I"${SOURCE_DIR}"`,
     `-I"${SOURCE_DIR}/backends"`,
-    `-I"${path.join(SYSROOT_INC)}"`,  // For SDL3/SDL.h
+    `-isystem "${SYSROOT_INC}"`,  // SDL3 plus copied libc headers are system headers
 ].join(' ');
 
 // Compile all source files to object files

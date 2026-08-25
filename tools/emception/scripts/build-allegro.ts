@@ -18,7 +18,6 @@
  *   - sysroot/usr/lib/liballegro_image.a
  *   - sysroot/usr/lib/liballegro_primitives.a
  *   - sysroot/usr/lib/liballegro_font.a
- *   - sysroot/usr/lib/liballegro_ttf.a
  *   - sysroot/usr/lib/liballegro_audio.a
  *   - sysroot/usr/lib/liballegro_acodec.a
  *   - sysroot/usr/lib/liballegro_color.a
@@ -38,6 +37,7 @@ import shell from 'shelljs';
 import { buildCanvasRuntimePair } from './lib/canvas-runtime-build.ts';
 import { getEmsdkDir, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { patchAllegroSource } from './lib/source-compatibility.ts';
 import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
 import { ensureLockedSource } from './toolchain/sources.ts';
 
@@ -76,6 +76,9 @@ const ALLEGRO_SRC = ensureLockedSource(
     path.join(SOURCE_ROOT, `allegro-${ALLEGRO_TAG}`),
     'CMakeLists.txt',
 );
+console.log(patchAllegroSource(ALLEGRO_SRC)
+    ? 'Applied Allegro Emscripten compatibility patches.'
+    : 'Allegro Emscripten compatibility patches already applied.');
 
 const ALLEGRO_BUILD = path.join(BUILD_DIR, 'allegro-build');
 shell.mkdir('-p', ALLEGRO_BUILD);
@@ -97,7 +100,6 @@ const allegroCmakeCmd = [
     `-S "${ALLEGRO_SRC}"`,
     `-B "${ALLEGRO_BUILD}"`,
     '-DCMAKE_BUILD_TYPE=Release',
-    '-DCMAKE_POLICY_VERSION_MINIMUM=3.5',
     '-DSHARED=off',
     '-DWANT_DEMO=off',
     '-DWANT_EXAMPLES=off',
@@ -112,11 +114,22 @@ const allegroCmakeCmd = [
     // Enabled addons (build/v1 scope; native_dialog/video/physfs intentionally
     // excluded). Note: acodec is auto-built with WANT_AUDIO and has no flag.
     '-DWANT_IMAGE=on',
+    '-DWANT_IMAGE_FREEIMAGE=off',
+    '-DWANT_IMAGE_PNG=off',
+    '-DWANT_IMAGE_JPG=off',
+    '-DWANT_IMAGE_WEBP=off',
     '-DWANT_PRIMITIVES=on',
     '-DWANT_FONT=on',
-    '-DWANT_TTF=on',
+    '-DWANT_TTF=off',
     '-DWANT_AUDIO=on',
     '-DWANT_OPENAL=off',
+    '-DWANT_OPENSL=off',
+    '-DWANT_FLAC=off',
+    '-DWANT_DUMB=off',
+    '-DWANT_OPENMPT=off',
+    '-DWANT_VORBIS=off',
+    '-DWANT_OPUS=off',
+    '-DWANT_MP3=off',
     '-DWANT_COLOR=on',
     '-DWANT_MEMFILE=on',
     '-DWANT_NATIVE_DIALOG=off',
@@ -142,7 +155,6 @@ const archives: readonly ArchiveSpec[] = [
     { sysrootName: 'liballegro_image.a', candidates: ['liballegro_image-static.a', 'liballegro_image_static.a', 'liballegro_image.a'], required: true },
     { sysrootName: 'liballegro_primitives.a', candidates: ['liballegro_primitives-static.a', 'liballegro_primitives_static.a', 'liballegro_primitives.a'], required: true },
     { sysrootName: 'liballegro_font.a', candidates: ['liballegro_font-static.a', 'liballegro_font_static.a', 'liballegro_font.a'], required: true },
-    { sysrootName: 'liballegro_ttf.a', candidates: ['liballegro_ttf-static.a', 'liballegro_ttf_static.a', 'liballegro_ttf.a'], required: false },
     { sysrootName: 'liballegro_audio.a', candidates: ['liballegro_audio-static.a', 'liballegro_audio_static.a', 'liballegro_audio.a'], required: true },
     { sysrootName: 'liballegro_acodec.a', candidates: ['liballegro_acodec-static.a', 'liballegro_acodec_static.a', 'liballegro_acodec.a'], required: true },
     { sysrootName: 'liballegro_color.a', candidates: ['liballegro_color-static.a', 'liballegro_color_static.a', 'liballegro_color.a'], required: true },
@@ -304,7 +316,8 @@ const runtimePair = buildCanvasRuntimePair({
     compiler: EMCC,
     sourcePath: ALLEGRO_STUB_C,
     libraryPaths: runtimeLibraryPaths,
-    includeDirectories: [SYSROOT_INC],
+    includeDirectories: [],
+    systemIncludeDirectories: [SYSROOT_INC],
     flags: [
         '-sENVIRONMENT=web',
         '-sALLOW_MEMORY_GROWTH=1',
