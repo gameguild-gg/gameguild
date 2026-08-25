@@ -100,6 +100,10 @@ const PG_LOG = resolve(RUNTIME, "pg.log");
 const HEADLESS = !["0", "false", "no"].includes(
   (process.env.CODING_CYCLE_HEADLESS ?? "true").toLowerCase(),
 );
+// CI uses Playwright's managed browser. Local Windows machines may instead
+// point this at an installed Chrome when the matching Playwright download is
+// intentionally absent (for example after clearing disk space).
+const CHROMIUM_EXECUTABLE_PATH = process.env.CODING_CYCLE_CHROMIUM_EXECUTABLE;
 
 // Generous: first WASM boot downloads ~tens of MB of brotli bundles from
 // /emception/* (localhost) + JITs clang.wasm. Each run-tests compile is
@@ -1283,7 +1287,12 @@ async function main() {
 
   const results = [];
   // ONE browser, TWO contexts (student / instructor) — clean separation.
-  const browser = await chromium.launch({ headless: HEADLESS });
+  const browser = await chromium.launch({
+    headless: HEADLESS,
+    ...(CHROMIUM_EXECUTABLE_PATH
+      ? { executablePath: CHROMIUM_EXECUTABLE_PATH }
+      : {}),
+  });
   try {
     // Phase 2 — student UI (hard).
     try {
