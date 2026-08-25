@@ -8,14 +8,23 @@ const routerMocks = vi.hoisted(() => ({
   push: vi.fn(),
 }));
 
-const ideMock = vi.hoisted(() => ({
-  getFiles: vi.fn<
-    () => Promise<Array<{ path: string; content: string }>>
-  >(),
-  addFile: vi.fn(),
-  removeFile: vi.fn(),
-  setFileMeta: vi.fn(),
-}));
+const ideMock = vi.hoisted(() => {
+  const getFiles = vi.fn<
+    () => Promise<Array<{ path: string; content: string; type: "text" }>>
+  >();
+
+  return {
+    getFiles,
+    replaceFiles: vi.fn(
+      async (files: Array<{ path: string; content: string; type: "text" }>) => {
+        getFiles.mockResolvedValue(files);
+      },
+    ),
+    addFile: vi.fn(),
+    removeFile: vi.fn(),
+    setFileMeta: vi.fn(),
+  };
+});
 
 const putMock = vi.hoisted(() => vi.fn());
 
@@ -74,6 +83,11 @@ let lastIdeProps: {
   allowCreateFiles?: boolean;
   onAllowCreateFilesChange?: (v: boolean) => void;
 } = {};
+let lastAssessmentEditorProps: {
+  mode?: string;
+  workspaceConfig?: { id?: string; files?: Record<string, unknown> };
+  extensions?: readonly { id: string }[];
+} | null = null;
 
 Object.defineProperties(HTMLElement.prototype, {
   hasPointerCapture: { value: vi.fn(() => false) },
@@ -166,8 +180,64 @@ vi.mock("@game-guild/emception-ui", async () => {
   });
   Ide.displayName = "Ide";
 
+  function CodingAssessmentEditor(props: {
+    mode?: string;
+    definition?: {
+      Environment?: { AllowStudentCreateFiles?: boolean };
+      Tests?: { Public?: unknown[]; Private?: unknown[] };
+    };
+    workspaceConfig?: { id?: string; files?: Record<string, unknown> };
+    extensions?: readonly {
+      id: string;
+      toolbarEnd?: () => React.ReactNode;
+      explorerFooter?: (controller: {
+        getFiles: typeof ideMock.getFiles;
+        replaceFiles: typeof ideMock.replaceFiles;
+      }) => React.ReactNode;
+      bottomPanel?: () => React.ReactNode;
+    }[];
+    onReady?: (controller: {
+      getFiles: typeof ideMock.getFiles;
+      replaceFiles: typeof ideMock.replaceFiles;
+    }) => void;
+  }) {
+    lastAssessmentEditorProps = props;
+    lastIdeProps = {
+      workspaceConfig: props.workspaceConfig,
+      tests: props.definition?.Tests,
+      allowCreateFiles: props.definition?.Environment?.AllowStudentCreateFiles,
+    };
+    React.useEffect(() => {
+      props.onReady?.({
+        getFiles: ideMock.getFiles,
+        replaceFiles: ideMock.replaceFiles,
+      });
+    }, [props.onReady]);
+    return React.createElement(
+      "div",
+      { "data-testid": "mock-assessment-editor" },
+      React.createElement(
+        "div",
+        { "data-testid": "mock-ide" },
+        ...((props.extensions ?? []).map((extension) =>
+          React.createElement(
+            React.Fragment,
+            { key: extension.id },
+            extension.toolbarEnd?.(),
+            extension.explorerFooter?.({
+              getFiles: ideMock.getFiles,
+              replaceFiles: ideMock.replaceFiles,
+            }),
+            extension.bottomPanel?.(),
+          ),
+        )),
+      ),
+    );
+  }
+
   return {
     ASSIGNMENT_SAMPLES: assignmentSamplesMock,
+    CodingAssessmentEditor,
     Ide,
   };
 });
@@ -198,17 +268,49 @@ const baseProps = {
 
 describe("CodingDefinitionEditor", () => {
   beforeEach(() => {
+    lastAssessmentEditorProps = null;
     vi.clearAllMocks();
     lastIdeProps = {};
     ideMock.getFiles.mockReset();
     ideMock.getFiles.mockResolvedValue([
-      { path: "/user/main.cpp", content: "// edited starter" },
+      { path: "/user/main.cpp", content: "// edited starter", type: "text" },
     ]);
     ideMock.addFile.mockResolvedValue(undefined);
     ideMock.removeFile.mockResolvedValue(undefined);
     ideMock.setFileMeta.mockResolvedValue(undefined);
     putMock.mockReset();
     putMock.mockResolvedValue({ success: true });
+  });
+
+  it("composes the author workspace through CodingAssessmentEditor", async () => {
+    render(<CodingDefinitionEditor {...baseProps} initialContent={null} />);
+
+    await screen.findByTestId("mock-assessment-editor");
+    expect(lastAssessmentEditorProps?.mode).toBe("author");
+    expect(lastAssessmentEditorProps?.workspaceConfig?.id).toBe("cpp");
+    expect(lastAssessmentEditorProps?.extensions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "gameguild-assessment-authoring" }),
+      ]),
+    );
+  });
+
+  it("keeps GameGuild file policies in its authoring extension", async () => {
+    const user = userEvent.setup();
+    render(<CodingDefinitionEditor {...baseProps} initialContent={null} />);
+
+    await act(async () => {});
+    ideMock.getFiles.mockResolvedValue([
+      { path: "/user/main.cpp", content: "// edited starter", type: "text" },
+      { path: "/user/private-helper.cpp", content: "int hidden() { return 42; }", type: "text" },
+    ]);
+    await user.click(await screen.findByTestId("sync-file-policies"));
+    const visibility = await screen.findByLabelText(
+      "Visibility for /user/private-helper.cpp",
+    );
+    await user.selectOptions(visibility, "Private");
+
+    expect(visibility).toHaveValue("Private");
   });
 
   it("auto-seeds the C++ sample on mount when initialContent is null", async () => {
