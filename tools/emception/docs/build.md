@@ -7,13 +7,25 @@ or artifact packaging.
 
 ## Supported build environment
 
-The release gate runs only on Linux (`ubuntu-latest`). Local Windows builds are
-useful during development, but they are best-effort and are not a release
-guarantee.
+The release gate runs only on Linux (`ubuntu-latest`). Local macOS arm64 builds
+run the same locked maintenance pipeline and are supported for validation, but
+only the Linux gate is a release guarantee. Local Windows builds are useful
+during development, but they are best-effort.
 
 Linux prerequisites are Node.js, pnpm, host Python 3, CMake, Ninja, curl,
 Brotli, and a C/C++ build environment. The locked EMSDK is downloaded by the
 Toolchain itself.
+
+On macOS arm64, install Xcode Command Line Tools, Node.js, pnpm, and the host
+build tools before running the pipeline:
+
+```bash
+xcode-select --install
+brew install cmake ninja brotli
+```
+
+Xcode supplies Clang and the system curl. The locked EMSDK supplies its own
+Node.js and Python runtimes after the host bootstrap completes.
 
 ## Quick build
 
@@ -31,6 +43,19 @@ pnpm --dir tools/emception run test:packages
 pnpm --dir tools/emception run typecheck:packages
 pnpm --dir tools/emception run build:packages
 ```
+
+### Graphics capability notes
+
+SDL3 is supplied by the version-pinned Emscripten port, which upstream still
+classifies as experimental. The build reports that status once and suppresses
+the port driver's repeated experimental diagnostic.
+
+The Allegro WebAssembly recipe builds the SDL/OpenGL ES core plus the image,
+font, audio, acodec, color, primitives, and memfile addons. Optional native
+dependencies that are not shipped in the browser sysroot are disabled
+explicitly: FreeImage, PNG, JPEG, WebP, FreeType/TTF, OpenAL/OpenSL, FLAC,
+DUMB, OpenMPT, Vorbis, Opus, and MP3. CMake's `NO` capability summary for
+these libraries is expected and is not a host prerequisite failure.
 
 ## Version ownership
 
