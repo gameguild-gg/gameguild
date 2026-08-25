@@ -45,6 +45,7 @@ import {
   updateAssessment,
 } from "@/lib/learning/actions";
 import { useLearningBase } from '@/lib/learning/use-learning-base';
+import { normalizeSlug, slugify } from "@/lib/slugify";
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: "Quiz", label: "Quiz" },
@@ -110,6 +111,12 @@ export function AssessmentEditor({
   const isQuiz = assessment.type === "Quiz";
 
   const [title, setTitle] = useState(assessment.title);
+  const [slug, setSlug] = useState(assessment.slug);
+  // Auto while the slug still mirrors the sluggified title; editing the slug
+  // directly detaches it so later title edits stop overwriting it.
+  const [autoSlug, setAutoSlug] = useState(
+    () => assessment.slug === slugify(assessment.title),
+  );
   const [description, setDescription] = useState(assessment.description ?? "");
   const [maxScore, setMaxScore] = useState(String(assessment.maxScore));
   const [passingScore, setPassingScore] = useState(
@@ -163,6 +170,18 @@ export function AssessmentEditor({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  function handleTitleChange(value: string) {
+    setTitle(value);
+    if (autoSlug) {
+      setSlug(slugify(value));
+    }
+  }
+
+  function handleSlugChange(value: string) {
+    setAutoSlug(false);
+    setSlug(slugify(value));
+  }
+
   function handleSave() {
     if (!title.trim()) {
       setError("Title is required.");
@@ -176,6 +195,10 @@ export function AssessmentEditor({
         courseId,
         assessmentId: assessment.id,
         title: title.trim(),
+        // Backend keeps the stored slug when sent whitespace — derive locally
+        // so a cleared field can't silently revert to the old slug. Re-slugify
+        // to strip the trailing hyphen live typing can leave behind.
+        slug: normalizeSlug(slug) || normalizeSlug(title),
         description: description.trim() || undefined,
         maxScore: Number(maxScore) || undefined,
         passingScore: Number(passingScore) || undefined,
@@ -510,9 +533,23 @@ export function AssessmentEditor({
                 <Input
                   id="title"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => handleTitleChange(e.target.value)}
                   placeholder="Assessment title"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="slug">URL Slug</Label>
+                <Input
+                  id="slug"
+                  value={slug}
+                  onChange={(e) => handleSlugChange(e.target.value)}
+                  onBlur={() => setSlug(normalizeSlug(slug))}
+                  placeholder="midterm-exam"
+                />
+                <p className="text-muted-foreground text-xs">
+                  Auto-generated from title. Edit to customize.
+                </p>
               </div>
 
               <div className="space-y-2">

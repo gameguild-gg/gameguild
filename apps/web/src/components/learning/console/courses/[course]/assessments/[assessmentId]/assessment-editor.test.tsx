@@ -202,6 +202,7 @@ describe("AssessmentEditor", () => {
         courseId: "course-1",
         assessmentId: "assessment-1",
         title: "Updated Quiz",
+        slug: "assessment-1",
         description: "Updated instructions.",
         maxScore: 20,
         passingScore: 14,
@@ -217,6 +218,77 @@ describe("AssessmentEditor", () => {
     });
     expect(routerMocks.refresh).toHaveBeenCalled();
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
+  });
+
+  it("keeps a customized slug detached from title edits and normalizes manual slug input", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+      />,
+    );
+
+    const slugInput = screen.getByLabelText(/url slug/i);
+    expect(slugInput).toHaveValue("assessment-1");
+
+    await user.clear(screen.getByLabelText(/^title$/i));
+    await user.type(screen.getByLabelText(/^title$/i), "New Title");
+    expect(slugInput).toHaveValue("assessment-1");
+
+    await user.clear(slugInput);
+    await user.type(slugInput, "Final EXAM v2!");
+    expect(slugInput).toHaveValue("final-exam-v2");
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "New Title",
+          slug: "final-exam-v2",
+        }),
+      );
+    });
+  });
+
+  it("strips the slug trailing dash on blur", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+      />,
+    );
+
+    const slugInput = screen.getByLabelText(/url slug/i);
+    await user.clear(slugInput);
+    await user.type(slugInput, "final exam ");
+    expect(slugInput).toHaveValue("final-exam-");
+
+    fireEvent.blur(slugInput);
+    expect(slugInput).toHaveValue("final-exam");
+  });
+
+  it("auto-syncs the slug from the title while it mirrors the sluggified title", async () => {
+    const user = userEvent.setup();
+    const mirrored = { ...assessment, slug: "schema-patterns-quiz" };
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={mirrored}
+        assessmentGroups={groups}
+      />,
+    );
+
+    const slugInput = screen.getByLabelText(/url slug/i);
+    expect(slugInput).toHaveValue("schema-patterns-quiz");
+
+    await user.clear(screen.getByLabelText(/^title$/i));
+    await user.type(screen.getByLabelText(/^title$/i), "Updated Quiz");
+    expect(slugInput).toHaveValue("updated-quiz");
   });
 
   it("shows API errors and deletes after explicit confirmation", async () => {

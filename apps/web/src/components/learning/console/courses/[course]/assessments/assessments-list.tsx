@@ -15,6 +15,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Link, usePathname, useRouter } from '@/i18n/navigation';
 import { createAssessment, createAssessmentGroup, deleteAssessmentGroup, updateAssessment, updateAssessmentGroup } from '@/lib/learning/actions';
 import type { Assessment, AssessmentGroup, AssessmentType, CourseAssessmentAnalytics } from '@/lib/learning/queries/assessments';
+import { normalizeSlug, slugify } from '@/lib/slugify';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import { Card, CardContent } from '@game-guild/ui/components/card';
@@ -277,6 +278,8 @@ export function AssessmentsList({
 
   const [showCreateAssessment, setShowCreateAssessment] = useState(false);
   const [newAssessmentTitle, setNewAssessmentTitle] = useState('');
+  const [newAssessmentSlug, setNewAssessmentSlug] = useState('');
+  const [newAssessmentAutoSlug, setNewAssessmentAutoSlug] = useState(true);
   const [newAssessmentType, setNewAssessmentType] = useState<AssessmentType>('Assignment');
   const [newAssessmentGroupId, setNewAssessmentGroupId] = useState<string>(NO_GROUP_VALUE);
   const [newAssessmentGradingMethods, setNewAssessmentGradingMethods] = useState<Set<AssessmentGradingMethodFlag>>(
@@ -431,8 +434,22 @@ export function AssessmentsList({
     });
   }
 
+  function handleNewAssessmentTitleChange(value: string) {
+    setNewAssessmentTitle(value);
+    if (newAssessmentAutoSlug) {
+      setNewAssessmentSlug(slugify(value));
+    }
+  }
+
+  function handleNewAssessmentSlugChange(value: string) {
+    setNewAssessmentAutoSlug(false);
+    setNewAssessmentSlug(slugify(value));
+  }
+
   function resetCreateAssessmentForm() {
     setNewAssessmentTitle('');
+    setNewAssessmentSlug('');
+    setNewAssessmentAutoSlug(true);
     setNewAssessmentType('Assignment');
     setNewAssessmentGroupId(NO_GROUP_VALUE);
     setNewAssessmentGradingMethods(new Set<AssessmentGradingMethodFlag>(['InstructorGraded']));
@@ -455,6 +472,7 @@ export function AssessmentsList({
       const result = await createAssessment({
         courseId,
         title: trimmedTitle,
+        ...(normalizeSlug(newAssessmentSlug) ? { slug: normalizeSlug(newAssessmentSlug) } : {}),
         type: newAssessmentType,
         assessmentGroupId: newAssessmentGroupId === NO_GROUP_VALUE ? null : newAssessmentGroupId,
         gradingMethods: [...newAssessmentGradingMethods].join(','),
@@ -838,9 +856,23 @@ export function AssessmentsList({
               <Input
                 id="new-assessment-title"
                 value={newAssessmentTitle}
-                onChange={(e) => setNewAssessmentTitle(e.target.value)}
+                onChange={(e) => handleNewAssessmentTitleChange(e.target.value)}
                 placeholder="e.g. Midterm Exam"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-assessment-slug">URL Slug (optional)</Label>
+              <Input
+                id="new-assessment-slug"
+                value={newAssessmentSlug}
+                onChange={(e) => handleNewAssessmentSlugChange(e.target.value)}
+                onBlur={() => setNewAssessmentSlug(normalizeSlug(newAssessmentSlug))}
+                placeholder="midterm-exam"
+              />
+              <p className="text-muted-foreground text-xs">
+                Auto-generated from title. Edit to customize.
+              </p>
             </div>
 
             <div className="space-y-2">
