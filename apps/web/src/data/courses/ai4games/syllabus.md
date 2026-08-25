@@ -34,25 +34,26 @@ This is a work in progress, and the schedule is subject to change. Every change 
 
 :::
 
-## Schedule for Fall 2025
+## Schedule for Fall 2026
 
-College dates for the Fall 2025 semester:
+College dates for the Fall 2026 semester:
 
 | Event                                     | Date              |
 | ----------------------------------------- | ----------------- |
-| Classes Begin                             | Aug. 25           |
-| Add/Drop                                  | Aug. 25 - 29      |
-| No Classes - College remains open         | Sept. 19          |
-| Indigenous Peoples Day Holiday Observance | Oct. 13           |
-| Last Day to Withdraw                      | Nov. 07           |
-| Thanksgiving Break                        | Nov. 24 - Nov. 28 |
-| Last Day of Classes                       | Dec. 05           |
-| Finals                                    | Dec. 08 - Dec. 12 |
-| Winter Break                              | Dec. 15 - Jan. 09 |
+| Classes Begin                             | Aug. 24           |
+| Add/Drop                                  | Aug. 24 - 28      |
+| No Classes - College remains open         | Sept. 18          |
+| Indigenous Peoples Day Holiday Observance | Oct. 12           |
+| Registration for Spring Classes           | Oct. 26 - Nov. 06 |
+| Last Day to Withdraw                      | Nov. 06           |
+| Thanksgiving Break                        | Nov. 23 - Nov. 27 |
+| Last Day of Classes                       | Dec. 04           |
+| Finals                                    | Dec. 07 - Dec. 11 |
+| Winter Break                              | Dec. 12 - Jan. 10 |
 
 ## Weekly schedule
 
-- Week 01. 2025/08/25 - 2025/08/29
+- Week 01. 2026/08/24 - 2026/08/28
   - Topics:
     - **Introduction**
     - **Game AI History**
@@ -64,64 +65,64 @@ College dates for the Fall 2025 semester:
     5. Take the quiz on Canvas;
     6. [Setup your machine and repository](setup);
     7. Start the [Flocking Simulation](flocking);
-- Week 02. 2025/09/01 - 2025/09/05
+- Week 02. 2026/08/31 - 2026/09/04
   - Topic: **Behavioral Agents**
   - Presentation: [Flocking](https://docs.google.com/presentation/d/1OBEY-tb_ubgoq6Mk9lEsCFaYLINni3oPwjH8iAXEQQM/edit?usp=sharing)
   - Formal Assignment: [Flocking](flocking)
   - Interactive Assignment: [Flocking](https://github.com/gameguild-gg/mobagen/tree/master/examples/flocking)
-- Week 03. 2025/09/08 - 2025/09/12
+- Week 03. 2026/09/07 - 2026/09/11
   - Topic: **Finite Automata** and **2D Grids**
   - Formal Assignment: [Formal Game of Life](life)
   - Interactive Assignment: [Interactive Game of Life](https://github.com/gameguild-gg/mobagen/tree/master/examples/life)
-- Week 04. 2025/09/15 - 2025/09/19
+- Week 04. 2026/09/14 - 2026/09/18
   - Topics:
     - **Depth First Search**
     - **Random walk**
     - **Maze Generation**
   - Formal Assignment: [Formal Maze](maze)
   - Interactive Assignment: [Interactive Maze](https://github.com/gameguild-gg/mobagen/tree/master/examples/maze)
-- Week 05. 2025/09/22 - 2025/09/26
+- Week 05. 2026/09/21 - 2026/09/25
   - Topics:
     - **Breadth First Search**
     - **Path Finding**
   - Interactive Assignment: [Catch the Cat](https://github.com/gameguild-gg/mobagen/tree/master/examples/catchthecat)
-- Week 06. 2025/09/29 - 2025/10/03
+- Week 06. 2026/09/28 - 2026/10/02
   - Topics:
     - **A\* Search**
     - **Path Finding**
   - Interactive Assignment: [Catch the Cat](https://github.com/gameguild-gg/mobagen/tree/master/examples/catchthecat)
-- Week 07. 2025/10/06 - 2025/10/10
+- Week 07. 2026/10/05 - 2026/10/09
   - Topic:
     - **MidTerms**
     - **Catch the Cat Challenge** and **Competition**
   - [Catch the Cat](https://github.com/gameguild-gg/mobagen/tree/master/examples/catchthecat)
-- Week 8. 2025/10/13 - 2025/10/17
+- Week 8. 2026/10/12 - 2026/10/16
   - Topic:
     - **Spatial Quantization, Partitioning and Hashing**
   - Readings: [Spatial Quantization](spatial-quantization)
-- Week 9. 2025/10/20 - 2025/10/24
+- Week 9. 2026/10/19 - 2026/10/23
   - Topic:
     - **Pathfinding on Continuous Space**
   - Formal Assignment: [PathFinding on continuous space](pathfinding-continuous)
-- Week 10. 2025/10/27 - 2025/10/31
+- Week 10. 2026/10/26 - 2026/10/30
   - Topic: **Randomness** and **Noise functions**
   - Formal Assignment: [Noise functions](noise)
-- Week 11. 2025/11/03 - 2025/11/07
+- Week 11. 2026/11/02 - 2026/11/06
   - Topic:
     - **Procedural Content Generation**
   - Interactive Assignment: [Scenario Generation](https://github.com/gameguild-gg/mobagen/tree/master/examples/scenario)
-- Week 12. 2025/11/10 - 2025/11/14
+- Week 12. 2026/11/09 - 2026/11/13
   - Topic:
     - **Procedural Content Generation**
   - Interactive Assignment: [Scenario Generation](https://github.com/gameguild-gg/mobagen/tree/master/examples/scenario)
-- Week 13. 2025/11/17 - 2025/11/21
+- Week 13. 2026/11/16 - 2026/11/20
   - Topic: Work sessions for final project
   - Assignment: [Final Project](final-project)
-- Week 14. 2025/11/24 - 2025/11/28
+- Week 14. 2026/11/23 - 2026/11/27
   - Topic: Thanksgiving Break
-- Week 15. 2025/12/01 - 2025/12/05
+- Week 15. 2026/11/30 - 2026/12/04
   - Topic: Work sessions for final project
   - Assignment: [Final Project](final-project)
-- Week 16. 2025/12/08 - 2025/12/12
+- Week 16. 2026/12/07 - 2026/12/11
   - Topic: Finals Presentation
   - Assignment: [Final Project](final-project)

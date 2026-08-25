@@ -323,6 +323,7 @@ function mapContentDto(
 
   return {
     id: dto.id!,
+    slug: dto.slug ?? dto.id!,
     parentId: dto.parentId ?? null,
     order: dto.sortOrder ?? 0,
     type: dto.type ?? "Lesson",
@@ -356,12 +357,12 @@ function mapContentDetailDto(
 
 function findContentDto(
   dtos: LearningCoursesProgramContent[],
-  contentId: string,
+  contentIdOrSlug: string,
 ): LearningCoursesProgramContent | null {
   for (const dto of dtos) {
-    if (dto.id === contentId) return dto;
+    if (dto.id === contentIdOrSlug || dto.slug === contentIdOrSlug) return dto;
 
-    const child = findContentDto(dto.children ?? [], contentId);
+    const child = findContentDto(dto.children ?? [], contentIdOrSlug);
     if (child) return child;
   }
 
@@ -408,21 +409,23 @@ export const getCourseContent = cache(
 export const getContentItem = cache(
   async (
     courseId: string,
-    contentId: string,
+    contentIdOrSlug: string,
   ): Promise<CourseContentItemDetailViewModel | null> => {
     try {
       const resolvedCourseId = await resolveCourseId(courseId);
       const { content } = createCourseModules();
-      const result = await content.getCoursesContentById(
-        resolvedCourseId,
-        contentId,
-      );
 
-      if (result.ok) return mapContentDetailDto(result.data);
+      if (isGuid(contentIdOrSlug)) {
+        const result = await content.getCoursesContentById(
+          resolvedCourseId,
+          contentIdOrSlug,
+        );
+        if (result.ok) return mapContentDetailDto(result.data);
+      }
 
       const courseContent = await content.getCoursesContent(resolvedCourseId);
       const fallbackDto = courseContent.ok
-        ? findContentDto(courseContent.data, contentId)
+        ? findContentDto(courseContent.data, contentIdOrSlug)
         : null;
       return fallbackDto ? mapContentDetailDto(fallbackDto) : null;
     } catch {

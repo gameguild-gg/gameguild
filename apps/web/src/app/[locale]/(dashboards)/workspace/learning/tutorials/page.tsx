@@ -48,7 +48,7 @@ function TutorialRow({ item, index }: { item: LearningContentLibraryItem; index:
           </div>
         </div>
         <Button asChild variant="outline" size="sm" className="shrink-0">
-          <Link href={`/workspace/learning/courses/${item.courseId}/content/${item.id}`}>
+          <Link href={`/workspace/learning/courses/${item.courseSlug || item.courseId}/content/${item.slug || item.id}`}>
             Edit tutorial
             <ExternalLink className="ml-2 size-4" />
           </Link>

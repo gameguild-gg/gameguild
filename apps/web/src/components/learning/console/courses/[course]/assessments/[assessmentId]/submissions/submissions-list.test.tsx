@@ -70,6 +70,7 @@ vi.mock('lucide-react', () => ({
 const baseProps = {
   courseSlug: 'course-1',
   assessmentId: 'assessment-1',
+  assessmentSlug: 'assessment-1',
   maxScore: 100,
 };
 

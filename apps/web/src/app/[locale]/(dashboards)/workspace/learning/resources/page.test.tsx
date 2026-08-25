@@ -52,7 +52,7 @@ describe('LearningResourcesPage', () => {
     expect(screen.getByText('Boss AI Production')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /edit resource/i })).toHaveAttribute(
       'href',
-      '/workspace/learning/courses/course-1/content/content-1',
+      '/workspace/learning/courses/boss-ai-production/content/content-1',
     );
   });
 });

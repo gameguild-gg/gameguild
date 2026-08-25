@@ -2,10 +2,6 @@
 
 `<emception-run>` custom element for [emception](https://github.com/gameguild-gg/gameguild/tree/main/tools/emception). Framework-free, no React/Vue/Svelte runtime required.
 
-## Live Demo
-
-Try it at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
-
 ## Install
 
 ```bash

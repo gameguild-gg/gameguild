@@ -1,71 +1,59 @@
 /**
  * Build Brotli for both Node.js CLI and WebAssembly browser decompression.
  *
- * Downloads the latest Brotli release, compiles the CLI natively (using gcc),
+ * Downloads the locked Brotli release, compiles the CLI natively (using gcc),
  * and generates the WASM module for browser use via Emscripten.
  */
 
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { toolchainPaths } from './toolchain/paths.ts';
 import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
-import { PINNED } from './lib/pinned-versions.ts';
+import { loadToolchainStateSync, lockedVersion } from './toolchain/config.ts';
+import { ensureLockedSource } from './toolchain/sources.ts';
 
 enableBuildKeepalive('build-brotli');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = process.cwd();
+const P = toolchainPaths(ROOT);
 
 // Ensure shell commands fail on error
 shell.config.fatal = true;
 
-const EMSDK_VERSION = process.env.EMSDK_VERSION || PINNED.EMSDK_VERSION;
+const { lock } = loadToolchainStateSync(ROOT);
+const EMSDK_VERSION = lockedVersion(lock, 'emsdk');
 
 // Brotli version to use
-const BROTLI_VERSION = process.env.BROTLI_VERSION || PINNED.BROTLI_VERSION;
+const BROTLI_VERSION = lockedVersion(lock, 'brotli');
 
 // Directories
-const USERLAND_DIR = path.join(ROOT, 'userland', 'brotli');
-const SOURCE_DIR = path.join(USERLAND_DIR, `brotli-v${BROTLI_VERSION}`);
-const BUILD_DIR = path.join(ROOT, 'build');
-const CDN_DIR = path.join(BUILD_DIR, 'cdn');
+const SOURCE_ROOT = path.join(P.sources, 'brotli');
+const SOURCE_DIR = path.join(SOURCE_ROOT, `brotli-v${BROTLI_VERSION}`);
+const CLI_BUILD_DIR = path.join(P.builds, 'brotli', 'native');
+const WASM_BUILD_DIR = path.join(P.builds, 'brotli', 'wasm');
+const BUILD_DIR = P.tools;
+const CDN_DIR = P.releaseCdn;
 
 // Setup EMSDK first
 setupEmsdk(EMSDK_VERSION);
 
-// 1. Download Brotli source if not already present
-if (!fs.existsSync(SOURCE_DIR)) {
-  console.log(`Downloading Brotli v${BROTLI_VERSION}...`);
-  shell.mkdir('-p', USERLAND_DIR);
-  shell.cd(USERLAND_DIR);
-  const tarball = `v${BROTLI_VERSION}.tar.gz`;
-  shell.exec(`curl -fSL -o "${tarball}" "https://github.com/google/brotli/archive/refs/tags/v${BROTLI_VERSION}.tar.gz"`);
-  shell.exec(`tar xzf "${tarball}"`);
-  shell.rm(tarball);
-}
-
-// Rename the extracted directory (brotli-<version> -> brotli-v<version>)
-const extractedDir = path.join(USERLAND_DIR, `brotli-${BROTLI_VERSION}`);
-if (fs.existsSync(extractedDir) && !fs.existsSync(SOURCE_DIR)) {
-  shell.mv(extractedDir, SOURCE_DIR);
-}
+ensureLockedSource(ROOT, lock, 'brotli', SOURCE_DIR, 'CMakeLists.txt');
 
 shell.cd(SOURCE_DIR);
 
 // 2. Create build directories
-shell.mkdir('-p', path.join(SOURCE_DIR, 'build-cli'));
 shell.mkdir('-p', BUILD_DIR);
 shell.mkdir('-p', CDN_DIR);
 
 // 3. Build Brotli CLI for Node.js (native compilation with gcc)
 console.log('Building Brotli CLI (native, for Node.js)...');
 
-const CLI_BUILD_DIR = path.join(SOURCE_DIR, 'build-cli');
-shell.rm('-rf', CLI_BUILD_DIR);
 shell.mkdir('-p', CLI_BUILD_DIR);
 shell.cd(SOURCE_DIR);
 
@@ -81,25 +69,28 @@ shell.exec(cmakeCmd);
 shell.cd(CLI_BUILD_DIR);
 
 // Build the CLI
-shell.exec(`make -C "${CLI_BUILD_DIR}" -j${os.cpus().length}`);
+shell.exec(`cmake --build "${CLI_BUILD_DIR}" --config MinSizeRel --parallel ${os.cpus().length} --target brotli`);
 
 // Copy the CLI to build/brotli
-const cliOutput = path.join(CLI_BUILD_DIR, 'brotli');
-if (fs.existsSync(cliOutput)) {
-  shell.cp('-f', cliOutput, path.join(BUILD_DIR, 'brotli'));
-  shell.exec(`chmod +x "${path.join(BUILD_DIR, 'brotli')}"`);
-  console.log(`Copied Brotli CLI to ${BUILD_DIR}/brotli`);
+const cliCandidates = [
+  path.join(CLI_BUILD_DIR, 'brotli'),
+  path.join(CLI_BUILD_DIR, 'brotli.exe'),
+  path.join(CLI_BUILD_DIR, 'MinSizeRel', 'brotli.exe'),
+];
+const cliOutput = cliCandidates.find(candidate => fs.existsSync(candidate));
+const cliDestination = path.join(BUILD_DIR, process.platform === 'win32' ? 'brotli.exe' : 'brotli');
+if (cliOutput) {
+  fs.copyFileSync(cliOutput, cliDestination);
+  if (process.platform !== 'win32') fs.chmodSync(cliDestination, 0o755);
+  console.log(`Copied Brotli CLI to ${cliDestination}`);
 } else {
-  console.error('ERROR: Brotli CLI not found in build directory');
+  console.error(`ERROR: Brotli CLI not found: ${cliCandidates.join(', ')}`);
   process.exit(1);
 }
 
 // 4. Build Brotli WASM for browser decompression
 console.log('Building Brotli WASM (browser)...');
 
-const WASM_BUILD_DIR = path.join(SOURCE_DIR, 'build-wasm');
-// shelljs.rm -rf chokes on some emcc-produced files; use the real /bin/rm.
-shell.exec(`rm -rf "${WASM_BUILD_DIR}"`);
 shell.mkdir('-p', WASM_BUILD_DIR);
 shell.cd(SOURCE_DIR);
 
@@ -119,7 +110,9 @@ shell.cd(WASM_BUILD_DIR);
 // Brotli's CMakeLists with BROTLI_BUILD_CLI=OFF + BROTLI_BUILD_BROTLI_CMD=OFF
 // does NOT produce a working browser-loadable .js/.wasm pair (no MODULARIZE,
 // no exported wrappers), so we link our own wrapper manually below.
-shell.exec(`emmake make -C "${WASM_BUILD_DIR}" -j${os.cpus().length} brotlidec brotlicommon`);
+shell.exec(
+  `cmake --build "${WASM_BUILD_DIR}" --config MinSizeRel --parallel ${os.cpus().length} --target brotlidec brotlicommon`,
+);
 
 const libDec = path.join(WASM_BUILD_DIR, 'libbrotlidec.a');
 const libCommon = path.join(WASM_BUILD_DIR, 'libbrotlicommon.a');
@@ -133,7 +126,7 @@ if (!fs.existsSync(libDec) || !fs.existsSync(libCommon)) {
 //    Output: brotli_wasm.mjs + brotli_wasm.wasm (renamed to .js after link).
 console.log('Linking brotli wrapper into MODULARIZE-d ES module...');
 
-const wrapperSrc = path.join(USERLAND_DIR, 'brotli-wrapper.c');
+const wrapperSrc = path.join(P.overlays, 'brotli', 'brotli-wrapper.c');
 if (!fs.existsSync(wrapperSrc)) {
   console.error(`ERROR: missing brotli wrapper source: ${wrapperSrc}`);
   process.exit(1);
@@ -179,6 +172,6 @@ shell.mv(wasmMjs, wasmJs);
 
 // Verify output
 console.log('\nBuild complete!');
-console.log(`  CLI: ${path.join(BUILD_DIR, 'brotli')}`);
+console.log(`  CLI: ${cliDestination}`);
 console.log(`  CDN WASM JS: ${wasmJs}`);
 console.log(`  CDN WASM: ${wasmWasm}`);

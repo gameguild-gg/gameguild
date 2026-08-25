@@ -2,7 +2,6 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IdeHandle } from '@game-guild/emception-ui';
 import type { LearningAssessmentsGradingQueueAssessment, LearningAssessmentsGradingQueueItem } from '@game-guild/client';
 import { GradingPanel } from './grading-panel';
 import { gradeSubmission } from '@/lib/learning/grade-action';

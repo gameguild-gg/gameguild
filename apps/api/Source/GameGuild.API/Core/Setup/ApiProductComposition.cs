@@ -153,9 +153,11 @@ internal sealed class ApiProductComposition : IApiProductComposition
         var explicitImport = arguments.Any(argument =>
             string.Equals(argument, "--import-snapshot-courses", StringComparison.OrdinalIgnoreCase));
 
+        var forceImport = explicitImport || ShouldForceImportSnapshotCourses(app.Configuration);
+
         if (explicitImport)
         {
-            await ImportSnapshotCoursesAsync(app, "Snapshot course import complete", true, cancellationToken)
+            await ImportSnapshotCoursesAsync(app, "Snapshot course import complete", failOnError: true, force: true, cancellationToken)
                 .ConfigureAwait(false);
             return false;
         }
@@ -165,7 +167,8 @@ internal sealed class ApiProductComposition : IApiProductComposition
             await ImportSnapshotCoursesAsync(
                     app,
                     "Snapshot course startup import complete",
-                    false,
+                    failOnError: false,
+                    force: forceImport,
                     cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -192,16 +195,25 @@ internal sealed class ApiProductComposition : IApiProductComposition
         return bool.TryParse(configuredValue, out var enabled) && enabled;
     }
 
+    private static bool ShouldForceImportSnapshotCourses(IConfiguration configuration)
+    {
+        var configuredValue = configuration["SeedData:ForceImportSnapshotCourses"]
+            ?? Environment.GetEnvironmentVariable("FORCE_SEED_SNAPSHOT_COURSES");
+
+        return bool.TryParse(configuredValue, out var force) && force;
+    }
+
     private static async Task ImportSnapshotCoursesAsync(
         WebApplication app,
         string message,
         bool failOnError,
+        bool force,
         CancellationToken cancellationToken)
     {
         try
         {
             using var scope = app.Services.CreateScope();
-            var result = await SnapshotCourseSeeder.SeedAsync(scope.ServiceProvider, cancellationToken)
+            var result = await SnapshotCourseSeeder.SeedAsync(scope.ServiceProvider, force, cancellationToken)
                 .ConfigureAwait(false);
             app.Logger.LogInformation(
                 "{Message}. Parsed {ParsedPrograms} programs and {ParsedContents} contents from {CoursesRoot}. Created {CreatedPrograms} new programs and {CreatedContents} contents. DbContext sees {PublicProgramCount} published/public programs in database {DatabaseName}.",

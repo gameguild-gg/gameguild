@@ -52,7 +52,8 @@ public class AssessmentService : IAssessmentService
                 request.IsRequired,
                 request.AssessmentGroupId,
                 request.ContentId,
-                request.GradingMethods);
+                request.GradingMethods,
+                request.Slug);
 
             // Set optional properties using internal setters
             assessment.SetDescription(request.Description);
@@ -215,7 +216,8 @@ public class AssessmentService : IAssessmentService
                 request.GradingMethods,
                 groupSetId: request.GroupSetId,
                 clearGroupSetId: request.ClearGroupSetId,
-                peerReviewsRequiredCount: request.PeerReviewsRequiredCount);
+                peerReviewsRequiredCount: request.PeerReviewsRequiredCount,
+                slug: request.Slug);
 
             var groupValidation = await EnsureGroupMatchesCourseAsync(assessment.AssessmentGroupId, assessment.CourseId).ConfigureAwait(false);
             if (!groupValidation.IsSuccess)

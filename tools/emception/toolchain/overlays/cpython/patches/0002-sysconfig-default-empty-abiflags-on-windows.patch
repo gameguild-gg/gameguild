@@ -1,0 +1,17 @@
+From: Emception maintainers
+Subject: [PATCH] sysconfig: default to empty ABI flags on Windows
+
+The native Windows interpreter used to bootstrap an Emscripten cross-build
+does not expose sys.abiflags. Match the existing optional handling elsewhere
+in sysconfig so the explicitly supplied target sysconfig data name can be
+used without evaluating an invalid fallback.
+---
+ Lib/sysconfig/__init__.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Lib/sysconfig/__init__.py b/Lib/sysconfig/__init__.py
+--- a/Lib/sysconfig/__init__.py
++++ b/Lib/sysconfig/__init__.py
+@@ -341 +341 @@
+-        f'_sysconfigdata_{sys.abiflags}_{sys.platform}_{multiarch}',
++        f'_sysconfigdata_{getattr(sys, "abiflags", "")}_{sys.platform}_{multiarch}',

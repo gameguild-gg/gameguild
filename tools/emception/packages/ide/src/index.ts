@@ -2,13 +2,10 @@
 
 export type { EmceptionAPI } from 'emception';
 export { default as Ide } from './components/Ide.js';
-export type { IdeProps, InjectedEmceptionAPI } from './components/ide-types.js';
+export type { IdeController, IdeExtension, IdeProps, InjectedEmceptionAPI, WorkspaceFile } from './components/ide-types.js';
 export { ELEMENT_NAME, EmceptionIdeElement, registerEmceptionIde } from './webcomponent/emception-ide.js';
 
-// ── Workspace presets + types (re-exported from @emception/core) ──────────
-// Public surface preserved for back-compat with the legacy
-// `@gameguild/emception-ui` package: consumers can keep importing
-// `PRESETS`, `WorkspaceConfig`, etc. from `@emception/ide`.
+// ── Workspace presets + types (re-exported from emception core) ───────────
 export {
   parseWorkspaceBundle,
   resolveArgs,

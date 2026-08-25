@@ -7,7 +7,7 @@
 import { createClient } from '@game-guild/client';
 
 async function loadNextIntegrationModule() {
-  return import('../../../../../packages/infrastructure/client/dist/next.js');
+  return import('@game-guild/client/next');
 }
 
 describe('API Client Integration', () => {

@@ -8,7 +8,9 @@
 export { DEFAULT_CODE, DEFAULT_HEADER, DEFAULT_IMAGE, parseWorkspaceBundle, resolveArgs, SDL_DEMO_CODE } from 'emception';
 export type { BundleFile, CompileConfig, EmceptionAPI, RunConfig, RunType, TestConfig, WorkspaceConfig, WorkspaceFeatures } from 'emception';
 
-import type { EmceptionAPI, WorkspaceConfig } from 'emception';
+import type { BrowserEmceptionAPI } from '@gameguild/emception-browser';
+import type { WorkspaceConfig } from 'emception';
+import type { ReactNode } from 'react';
 
 // ── IDE-only layout types (not in @emception/core) ──────────────────
 
@@ -19,14 +21,37 @@ export type DockGroup = 'main' | 'right' | 'bottom';
 
 export type TabType = 'text' | 'image' | 'canvas';
 
-/** @deprecated — use {@link deriveStorageKey} instead. Kept for legacy apps that have
- *  data under this key and haven't migrated to a named workspace. */
-export const WORKSPACE_STORAGE_KEY = 'gameguild.emception.workspace.v1';
+/** Default localStorage key used when no named workspace is configured. */
+export const WORKSPACE_STORAGE_KEY = 'emception.workspace.v1';
 
 export interface WorkspaceFile {
   path: string;
   type: 'text' | 'image';
   content: string;
+  /** Prevent modifications to this file while keeping it visible. */
+  readonly?: boolean;
+}
+
+/** Return the workspace subset suitable for localStorage. */
+export function workspaceFilesForStorage(files: Record<string, WorkspaceFile>): Record<string, WorkspaceFile> {
+  return Object.fromEntries(
+    Object.entries(files).filter(([, file]) => file.type !== 'image'),
+  );
+}
+
+/**
+ * Restore persisted text without losing static image assets excluded from
+ * localStorage. Text deliberately remains the persisted source of truth.
+ */
+export function mergeRestoredWorkspaceFiles(
+  initialFiles: Record<string, WorkspaceFile>,
+  restoredFiles: Record<string, WorkspaceFile>,
+): Record<string, WorkspaceFile> {
+  const files = { ...restoredFiles };
+  for (const [path, initialFile] of Object.entries(initialFiles)) {
+    if (initialFile.type === 'image' && !files[path]) files[path] = initialFile;
+  }
+  return files;
 }
 
 export type OpenTab = { id: string; path: string; type: 'text' | 'image'; group: DockGroup } | { id: 'canvas'; type: 'canvas'; group: DockGroup };
@@ -43,10 +68,23 @@ export interface TreeNode {
   children: TreeNode[];
 }
 
-/** Derive the localStorage key from a workspace name.
- *  Falls back to the legacy key so existing stored data is not lost. */
+/** Derive the localStorage key from a workspace name. */
 export function deriveStorageKey(workspaceName?: string): string {
   return workspaceName ? `emception:ws:${workspaceName}` : WORKSPACE_STORAGE_KEY;
+}
+
+/**
+ * Resolve the exact localStorage key used for a workspace. Consumers can
+ * supply a stable key when migrating an existing persisted workspace; the
+ * default remains isolated by the optional logical workspace name.
+ */
+export function resolveWorkspaceStorageKey(workspaceName?: string, workspaceStorageKey?: string): string {
+  return workspaceStorageKey || deriveStorageKey(workspaceName);
+}
+
+/** A workspace becomes writable to localStorage only after its restore pass. */
+export function shouldPersistWorkspace(enableWorkspace: boolean, restored: boolean): boolean {
+  return enableWorkspace && restored;
 }
 export const TERMINAL_THEME = {
   background: '#181825',
@@ -101,7 +139,24 @@ export function workspaceConfigToState(config: WorkspaceConfig): {
  * The API surface accepted by the Ide component for an injected emception
  * instance. Compatible with `createEmception()` from `@gameguild/emception-browser`.
  */
-export type InjectedEmceptionAPI = EmceptionAPI;
+export type InjectedEmceptionAPI = BrowserEmceptionAPI;
+
+/** Public controller for neutral host composition around an IDE instance. */
+export interface IdeController {
+  readonly api: InjectedEmceptionAPI;
+  getFiles(): Promise<readonly WorkspaceFile[]>;
+  replaceFiles(files: readonly WorkspaceFile[]): Promise<void>;
+  setFilesReadOnly(paths: readonly string[], readOnly: boolean): void;
+}
+
+/** A generic contribution to an IDE lifecycle and layout. */
+export interface IdeExtension {
+  readonly id: string;
+  onReady?(controller: IdeController): void | (() => void);
+  toolbarEnd?(controller: IdeController): ReactNode;
+  explorerFooter?(controller: IdeController): ReactNode;
+  bottomPanel?(controller: IdeController): ReactNode;
+}
 
 /**
  * Full reactive props for `<Ide>`.
@@ -114,7 +169,7 @@ export interface IdeProps {
   // ── Boot ──────────────────────────────────────────────────────────────────
   /** Title shown in the header bar. */
   title?: string;
-  /** URL of the sysroot manifest. Defaults to `/cdn/manifest.json`. */
+  /** URL of a self-hosted manifest. Omit to use the Browser package's versioned default. */
   manifestUrl?: string;
   /**
    * Pre-built emception instance.
@@ -122,6 +177,12 @@ export interface IdeProps {
    * to this API. The caller is responsible for disposal.
    */
   api?: InjectedEmceptionAPI;
+  /** Called after boot and initial workspace synchronization complete. */
+  onReady?: (controller: IdeController) => void;
+  /** Called after active generic extensions have been disposed. */
+  onDispose?: () => void;
+  /** Ordered generic lifecycle and layout contributions. */
+  extensions?: readonly IdeExtension[];
 
   // ── Workspace ─────────────────────────────────────────────────────────────
   /** Static workspace descriptor. Takes priority over `workspaceUrl`. */
@@ -130,10 +191,14 @@ export interface IdeProps {
   workspaceUrl?: string;
   /**
    * Logical workspace name — used to derive the IDB/localStorage key as
-   * `emception:ws:<name>`. Omit to keep the legacy key so
-   * previously saved state is not lost.
+   * `emception:ws:<name>`. Omit to use the package's neutral default key.
    */
   workspaceName?: string;
+  /**
+   * Exact localStorage key for this workspace. This takes precedence over
+   * `workspaceName` and supports explicit migration of an existing workspace.
+   */
+  workspaceStorageKey?: string;
 
   // ── Panel toggles — all default to `true` ─────────────────────────────────
   /** Show the file-explorer sidebar. Default `true`. */
@@ -167,6 +232,8 @@ export interface IdeProps {
    * is ignored. Default `true`.
    */
   enableWorkspace?: boolean;
+  /** Show controls for creating new workspace files. Default `true`. */
+  allowFileCreation?: boolean;
 
   // ── Fullscreen ────────────────────────────────────────────────────────────
   /**

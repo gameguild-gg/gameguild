@@ -1,39 +1,36 @@
-# `tools/emception/packages/` — emception monorepo
+# Emception packages
 
-6 published packages:
+Seven public packages are built from this workspace:
 
-| Package                                              | Tier    | Purpose                                                                                         |
-| ---------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
-| [`emception`](core/)                                 | Core    | Types, EmceptionCore, VFS, tool registry, build resolver, test engine, presets, RuntimeAdapter, and published `cdn/*` runtime assets. |
-| [`@gameguild/emception-browser`](browser/)           | Adapter | Web Worker spawn, IDB workspace store, OffscreenCanvas + SDL helpers, COI preflight.            |
-| [`@gameguild/emception-xterm`](xterm/)               | I/O     | xterm.js stdin/stdout/stderr bridge.                                                            |
-| [`@gameguild/emception-react`](react/)               | UI      | `<EmceptionRun>`, `<EmceptionTerminal>`, `<EmceptionCanvas>`, `useEmception()`.                 |
-| [`@gameguild/emception-webcomponent`](webcomponent/) | UI      | `<emception-run>` custom element. No framework deps.                                            |
-| [`@gameguild/emception-ide`](ide/)                   | UI      | Reactive `<Ide>` React 19 + `<emception-ide>` custom-element wrapper (light DOM).               |
+| Package | Tier | Responsibility |
+| --- | --- | --- |
+| [`@gameguild/emception-toolchain`](toolchain/) | artifacts | canonical manifest, compressed sysroot, generated glue/WASM pairs |
+| [`emception`](core/) | core | runtime-neutral contracts, VFS/build/test engines, presets |
+| [`@gameguild/emception-browser`](browser/) | runtime | Worker boot, browser persistence, streams, canvas execution |
+| [`@gameguild/emception-xterm`](xterm/) | I/O | xterm byte-stream adapter |
+| [`@gameguild/emception-react`](react/) | UI | React bindings and hooks |
+| [`@gameguild/emception-webcomponent`](webcomponent/) | UI | framework-free `<emception-run>` |
+| [`@gameguild/emception-ide`](ide/) | UI | vanilla IDE React component and custom element |
 
-The unscoped meta-package [`emception`](../package.json) at `tools/emception/` forwards exports from `@gameguild/emception-browser` + `@gameguild/emception-xterm`.
+The workspace root is private and is not a meta-package.
 
-## Live Demo
+## Dependency direction
 
-Try the packages in action at [gameguild-gg.github.io/gameguild/](https://gameguild-gg.github.io/gameguild/) — features a live IDE with working templates for C++, SDL3, Raylib, CMake, and Python.
-
-## Build order (topological)
-
-```
-emception (core + cdn)
-  → emception-browser, node (parallel)
-    → emception-xterm
-      → emception-react, emception-webcomponent, emception-ide (parallel)
-        → emception (meta)
+```text
+toolchain artifacts ──loaded by──> browser
+core contracts ──────────────────> browser ──> IDE / React / custom element
+core contracts ──────────────────> xterm  ───> optional terminal integration
 ```
 
-## Scripts
+Generated artifact ownership does not flow upward into UI packages. The
+Browser validates and executes artifact profiles; the IDE only consumes the
+Browser's public API.
+
+## Verification
 
 ```bash
-npm run typecheck:packages --workspace=tools/emception
-npm run build:packages     --workspace=tools/emception
-npm run clean:packages     --workspace=tools/emception
-
-# meta package
-cd tools/emception && npm run build:lib
+cd tools/emception
+pnpm run test:packages
+pnpm run typecheck:packages
+pnpm run build:packages
 ```
