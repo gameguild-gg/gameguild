@@ -46,8 +46,8 @@
     "clean": "node -e \"const fs=require('fs');for(const path of ['dist','tsconfig.tsbuildinfo'])fs.rmSync(path,{recursive:true,force:true})\""
   },
   "dependencies": {
-    "emception": "4.2.0",
-    "@gameguild/emception-xterm": "4.2.0"
+    "emception": "4.3.0",
+    "@gameguild/emception-xterm": "4.3.0"
   },
   "devDependencies": {
     "typescript": "^5.3.0"

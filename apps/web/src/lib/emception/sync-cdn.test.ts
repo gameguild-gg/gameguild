@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 // Guard logic lives in the script itself (node runs it directly, so it must be
 // plain ESM); vitest can import .mjs via a relative path regardless of its
 // `src/**` include pattern (include only governs test discovery).
-import { manifestsMatch, syncEmceptionCdn, JSDELIVR_MANIFEST_URL } from '../../../scripts/sync-emception-cdn.mjs';
+import { EMCEPTION_VERSION, JSDELIVR_MANIFEST_URL, NPM_REGISTRY_URL, manifestsMatch, syncEmceptionCdn } from '../../../scripts/sync-emception-cdn.mjs';
 
 const tempDirs: string[] = [];
 
@@ -17,6 +17,13 @@ async function makeTree() {
 
 afterEach(async () => {
   await Promise.all(tempDirs.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true })));
+});
+
+describe('workspace version pin', () => {
+  it('uses the workspace emception version for npm and jsDelivr', () => {
+    expect(NPM_REGISTRY_URL).toBe(`https://registry.npmjs.org/emception/${EMCEPTION_VERSION}`);
+    expect(JSDELIVR_MANIFEST_URL).toBe(`https://cdn.jsdelivr.net/npm/emception@${EMCEPTION_VERSION}/cdn/manifest.json`);
+  });
 });
 
 describe('manifestsMatch', () => {
@@ -63,7 +70,11 @@ describe('syncEmceptionCdn — tier 1 (local WASM build, real fs)', () => {
     await fs.writeFile(path.join(src, 'bundle.tar.br'), 'bytes');
 
     const logs: string[] = [];
-    const result = await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: (m) => logs.push(m) });
+    const result = await syncEmceptionCdn({
+      srcDir: src,
+      tgtDir: tgt,
+      log: (m) => logs.push(m),
+    });
 
     expect(result).toEqual({ tier: 1, action: 'synced', source: src });
     expect(await fs.readFile(path.join(tgt, 'manifest.json'), 'utf8')).toBe('{"version":1}');
@@ -80,7 +91,11 @@ describe('syncEmceptionCdn — tier 1 (local WASM build, real fs)', () => {
     await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} });
 
     const logs: string[] = [];
-    const result = await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: (m) => logs.push(m) });
+    const result = await syncEmceptionCdn({
+      srcDir: src,
+      tgtDir: tgt,
+      log: (m) => logs.push(m),
+    });
 
     expect(result).toEqual({ tier: 1, action: 'skip', source: src });
     expect(logs.join('\n')).toContain('up to date');
@@ -95,7 +110,11 @@ describe('syncEmceptionCdn — tier 1 (local WASM build, real fs)', () => {
     await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} });
 
     await fs.writeFile(path.join(src, 'manifest.json'), '{"version":3}');
-    const result = await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} });
+    const result = await syncEmceptionCdn({
+      srcDir: src,
+      tgtDir: tgt,
+      log: () => {},
+    });
 
     expect(result).toEqual({ tier: 1, action: 'synced', source: src });
     expect(await fs.readFile(path.join(tgt, 'manifest.json'), 'utf8')).toBe('{"version":3}');
@@ -115,7 +134,9 @@ describe('syncEmceptionCdn — tier 2 (npm tarball, mocked fetch + extract)', ()
 
     // fetch should never be called for tier 2 in the cache-hit path; if it is,
     // fail the test by throwing.
-    const fetchImpl = vi.fn(async () => { throw new Error('fetch should not be called (cache hit)'); });
+    const fetchImpl = vi.fn(async () => {
+      throw new Error('fetch should not be called (cache hit)');
+    });
 
     const logs: string[] = [];
     const result = await syncEmceptionCdn({
@@ -139,7 +160,7 @@ describe('syncEmceptionCdn — tier 2 (npm tarball, mocked fetch + extract)', ()
     const npmCache = path.join(root, 'npm-cache');
 
     const fetchImpl = vi.fn(async (url: string) => {
-      if (url === 'https://registry.npmjs.org/emception/latest') return { ok: false, status: 500 };
+      if (url === NPM_REGISTRY_URL) return { ok: false, status: 500 };
       if (url === JSDELIVR_MANIFEST_URL) return { ok: true };
       throw new Error(`unexpected fetch ${url}`);
     });
@@ -168,7 +189,7 @@ describe('syncEmceptionCdn — tier 3 (jsDelivr fallback) and exhaustion', () =>
     const npmCache = path.join(root, 'npm-cache');
 
     const fetchImpl = vi.fn(async (url: string) => {
-      if (url === 'https://registry.npmjs.org/emception/latest') return { ok: false, status: 500 };
+      if (url === NPM_REGISTRY_URL) return { ok: false, status: 500 };
       if (url === JSDELIVR_MANIFEST_URL) return { ok: false, status: 503 };
       throw new Error(`unexpected fetch ${url}`);
     });

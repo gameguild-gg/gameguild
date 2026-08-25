@@ -3,7 +3,8 @@
 //
 // Three-tier fallback chain:
 //   Tier 1 (dev primary): tools/emception/public/cdn (local WASM build)
-//   Tier 2 (Docker always; dev fallback): npm emception@latest tarball, cdn/
+//   Tier 2 (Docker always; dev fallback): npm tarball matching the workspace
+//                                         emception version, cdn/
 //                                         subset extracted on demand into cache.
 //   Tier 3 (last resort): jsDelivr URL — no sync, instruct env var so the app
 //                         fetches WASM at runtime.
@@ -18,20 +19,24 @@ import { fileURLToPath } from 'node:url';
 const execFileP = promisify(execFile);
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const CORE_PACKAGE_JSON = path.join(REPO_ROOT, 'tools/emception/packages/core/package.json');
+const corePackage = JSON.parse(await fs.readFile(CORE_PACKAGE_JSON, 'utf8'));
+if (typeof corePackage.version !== 'string' || corePackage.version.length === 0) {
+  throw new Error(`${CORE_PACKAGE_JSON} must contain a version`);
+}
+
+export const EMCEPTION_VERSION = corePackage.version;
 export const SOURCE_LOCAL = path.join(REPO_ROOT, 'tools/emception/public/cdn');
-export const SOURCE_NPM_CACHE = path.join(REPO_ROOT, 'node_modules/.cache/emception-cdn');
+export const SOURCE_NPM_CACHE = path.join(REPO_ROOT, 'node_modules/.cache/emception-cdn', EMCEPTION_VERSION);
 export const TARGET = path.join(REPO_ROOT, 'apps/web/public/emception');
-export const JSDELIVR_MANIFEST_URL = 'https://cdn.jsdelivr.net/npm/emception@latest/cdn/manifest.json';
-const NPM_REGISTRY_URL = 'https://registry.npmjs.org/emception/latest';
+export const JSDELIVR_MANIFEST_URL = `https://cdn.jsdelivr.net/npm/emception@${EMCEPTION_VERSION}/cdn/manifest.json`;
+export const NPM_REGISTRY_URL = `https://registry.npmjs.org/emception/${EMCEPTION_VERSION}`;
 
 // Byte-compare of the two manifest.json files. Any missing/unreadable file on
 // either side counts as "no match" so the caller re-copies.
 export async function manifestsMatch(srcManifestPath, tgtManifestPath) {
   try {
-    const [src, tgt] = await Promise.all([
-      fs.readFile(srcManifestPath),
-      fs.readFile(tgtManifestPath),
-    ]);
+    const [src, tgt] = await Promise.all([fs.readFile(srcManifestPath), fs.readFile(tgtManifestPath)]);
     return src.equals(tgt);
   } catch {
     return false;
@@ -67,10 +72,12 @@ async function resolveNpmTarballUrlWith(fetchImpl) {
 // package — every target (macOS dev, alpine Docker) ships tar in $PATH.
 async function extractTarball(tgzPath, destDir) {
   await fs.mkdir(destDir, { recursive: true });
-  await execFileP('tar', ['-xzf', tgzPath, '-C', destDir]);
+  await execFileP('tar', ['-xzf', path.basename(tgzPath), 'package/cdn'], {
+    cwd: destDir,
+  });
 }
 
-// Tier 2: download emception@latest tarball, extract package/cdn/ subset into
+// Tier 2: download the workspace emception version, extract package/cdn/ into
 // the cache dir. Re-uses the cache if a previous extraction is present.
 export async function fetchNpmTarball({ cacheDir, log = console.log, fetchImpl = fetch, extractImpl = extractTarball }) {
   // npm tarballs already wrap their contents in a top-level `package/` dir, so
@@ -86,7 +93,7 @@ export async function fetchNpmTarball({ cacheDir, log = console.log, fetchImpl =
 
   await fs.mkdir(cacheDir, { recursive: true });
 
-  log('fetching emception@latest tarball URL from npm registry...');
+  log(`fetching emception@${EMCEPTION_VERSION} tarball URL from npm registry...`);
   const tarballUrl = await resolveNpmTarballUrlWith(fetchImpl);
 
   log(`downloading ${tarballUrl}...`);
@@ -95,12 +102,15 @@ export async function fetchNpmTarball({ cacheDir, log = console.log, fetchImpl =
   const tarballBuf = Buffer.from(await tarballResp.arrayBuffer());
   await fs.writeFile(cachedTarball, tarballBuf);
 
-  await fs.rm(path.join(cachedExtractedRoot, 'package'), { recursive: true, force: true });
+  await fs.rm(path.join(cachedExtractedRoot, 'package'), {
+    recursive: true,
+    force: true,
+  });
   log('extracting cdn/ subset from tarball...');
   await extractImpl(cachedTarball, cachedExtractedRoot);
 
   if (!(await directoryNotEmpty(cachedCdn))) {
-    throw new Error('npm tarball did not contain package/cdn/ — emception@latest may be malformed');
+    throw new Error(`npm tarball did not contain package/cdn/ — emception@${EMCEPTION_VERSION} may be malformed`);
   }
   return cachedCdn;
 }
@@ -154,18 +164,23 @@ export async function syncEmceptionCdn({
     return { tier: 1, action: 'synced', source: srcDir };
   }
 
-  // Tier 2: npm emception@latest tarball.
+  // Tier 2: npm tarball pinned to the workspace emception version.
   if (fetchNpm && npmCacheDir) {
     try {
-      const npmCdnDir = await fetchNpmTarball({ cacheDir: npmCacheDir, log, fetchImpl, extractImpl });
+      const npmCdnDir = await fetchNpmTarball({
+        cacheDir: npmCacheDir,
+        log,
+        fetchImpl,
+        extractImpl,
+      });
       const npmManifest = path.join(npmCdnDir, 'manifest.json');
       const tgtManifest = path.join(tgtDir, 'manifest.json');
       if ((await exists(tgtManifest)) && (await manifestsMatch(npmManifest, tgtManifest))) {
-        log('emception cdn up to date (npm emception@latest)');
+        log(`emception cdn up to date (npm emception@${EMCEPTION_VERSION})`);
         return { tier: 2, action: 'skip', source: npmCdnDir };
       }
       await copyDirCounted(npmCdnDir, tgtDir, log);
-      log(`synced from npm emception@latest: ${npmCdnDir}`);
+      log(`synced from npm emception@${EMCEPTION_VERSION}: ${npmCdnDir}`);
       return { tier: 2, action: 'synced', source: npmCdnDir };
     } catch (err) {
       log(`npm fetch failed: ${err.message}`);
@@ -181,8 +196,7 @@ export async function syncEmceptionCdn({
   }
 
   throw new Error(
-    'No emception CDN source available. Run `pnpm --dir tools/emception run build:all`, ' +
-      'or set NEXT_PUBLIC_EMCEPTION_MANIFEST_URL manually.',
+    'No emception CDN source available. Run `pnpm --dir tools/emception run build:all`, ' + 'or set NEXT_PUBLIC_EMCEPTION_MANIFEST_URL manually.',
   );
 }
 
