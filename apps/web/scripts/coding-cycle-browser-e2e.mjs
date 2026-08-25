@@ -104,6 +104,10 @@ const HEADLESS = !["0", "false", "no"].includes(
 // point this at an installed Chrome when the matching Playwright download is
 // intentionally absent (for example after clearing disk space).
 const CHROMIUM_EXECUTABLE_PATH = process.env.CODING_CYCLE_CHROMIUM_EXECUTABLE;
+// A developer can reuse a known-current API build when validating only the
+// browser flow. This is opt-in: CI and the default command still compile API
+// sources before the isolated cycle starts.
+const API_NO_BUILD = process.env.CODING_CYCLE_API_NO_BUILD === "1";
 
 // Generous: first WASM boot downloads ~tens of MB of brotli bundles from
 // /emception/* (localhost) + JITs clang.wasm. Each run-tests compile is
@@ -347,7 +351,7 @@ async function bootStack() {
   const api = spawn(
     "dotnet",
     [
-      "run", "--no-launch-profile",
+      "run", "--no-launch-profile", ...(API_NO_BUILD ? ["--no-build"] : []),
       "--project", "apps/api/Source/GameGuild.API/GameGuild.API.csproj",
       "--urls", `http://127.0.0.1:${API_PORT}`,
     ],
