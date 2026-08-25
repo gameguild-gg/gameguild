@@ -20,6 +20,8 @@ export interface CodingAssessmentEditorProps {
   readonly enableWorkspace?: boolean;
   readonly maxScore?: number;
   readonly passingScore?: number;
+  /** Additional neutral IDE contributions supplied by the GameGuild host. */
+  readonly extensions?: readonly IdeExtension[];
   readonly onReady?: (controller: IdeController) => void;
   readonly onSessionReady?: (session: AssessmentSession) => void;
   readonly onRunResult?: (result: AssessmentRunResult) => void;
@@ -121,6 +123,7 @@ export function CodingAssessmentEditor({
   enableWorkspace = true,
   maxScore = 100,
   passingScore = 60,
+  extensions: hostExtensions = [],
   onReady,
   onSessionReady,
   onRunResult,
@@ -204,7 +207,8 @@ export function CodingAssessmentEditor({
         </>
       ),
     },
-  ], [error, mode, result, run, running, session]);
+    ...hostExtensions,
+  ], [error, hostExtensions, mode, result, run, running, session]);
 
   return (
     <Ide
