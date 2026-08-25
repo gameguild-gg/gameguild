@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { IdeHandle } from '@game-guild/emception-ui';
 import type { LearningAssessmentsAssessmentSubmission } from '@game-guild/client';
 import { parseSubmittedModalities, SubmissionViewer } from './submission-viewer';
 import { CodeGraderPanel, mergeWorkspaceWithSubmission } from './code-grader-panel';
@@ -11,18 +10,18 @@ const actionsMock = vi.hoisted(() => ({
   fetchSubmission: vi.fn(),
 }));
 
-const assessmentPlanMock = vi.hoisted(() => ({
-  build: vi.fn(),
-}));
+interface MockCodingAssessmentEditorProps {
+  readonly mode: string;
+  readonly manifestUrl?: string;
+  readonly workspaceConfig?: {
+    readonly files: Readonly<Record<string, { readonly content: string; readonly encoding?: string }>>;
+  };
+  readonly onRunResult?: (result: unknown) => void;
+}
 
-const ideMock = vi.hoisted(() => {
-  const setFiles = vi.fn<(files: Array<{ path: string; content: string }>) => Promise<void>>();
-  setFiles.mockResolvedValue(undefined);
-  const getFiles = vi.fn<() => Promise<Array<{ path: string; content: string }>>>();
-  getFiles.mockResolvedValue([]);
-  const runTests = vi.fn<(plan: unknown) => Promise<unknown>>();
-  return { setFiles, getFiles, runTests };
-});
+const assessmentEditorMock = vi.hoisted(() => ({
+  props: undefined as MockCodingAssessmentEditorProps | undefined,
+}));
 
 vi.mock('./speedgrader-actions', () => ({
   fetchSubmissionAction: actionsMock.fetchSubmission,
@@ -30,31 +29,33 @@ vi.mock('./speedgrader-actions', () => ({
 
 vi.mock('@game-guild/emception-ui', () => {
   const React = require('react') as typeof import('react');
-  const Ide = React.forwardRef<IdeHandle, { manifestUrl?: string }>((props, ref) => {
-    React.useImperativeHandle(ref, () => ({
-      setFiles: ideMock.setFiles,
-      getFiles: ideMock.getFiles,
-      runTests: ideMock.runTests,
-    }));
-    return React.createElement('div', { 'data-testid': 'mock-ide', 'data-manifest-url': props.manifestUrl });
-  });
-  const TestResultsPanel = ({ report, maxScore }: { report: { cases: { name: string; passed: boolean }[] }; maxScore?: number }) =>
-    React.createElement('div', { 'data-testid': 'mock-results' }, `cases=${report.cases.length} max=${maxScore ?? '?'}`);
-  const ASSIGNMENT_SAMPLES = {
-    cpp: {
-      workspaceConfig: {
-        id: 'cpp',
-        layout: { activeFile: '/user/main.cpp', openTabs: [{ path: '/user/main.cpp', group: 'main' }] },
+  const CodingAssessmentEditor = (props: MockCodingAssessmentEditorProps) => {
+    assessmentEditorMock.props = props;
+    return React.createElement(
+      'button',
+      {
+        type: 'button',
+        'data-testid': 'mock-coding-assessment-editor',
+        'data-manifest-url': props.manifestUrl,
+        onClick: () => props.onRunResult?.({
+          report: sampleReport,
+          score: { score: 67 },
+        }),
       },
-    },
+      'Emit grader result',
+    );
   };
   return {
-    Ide,
-    TestResultsPanel,
-    ASSIGNMENT_SAMPLES,
-    buildAssessmentExecutionPlan: assessmentPlanMock.build,
+    CodingAssessmentEditor,
   };
 });
+
+vi.mock('@game-guild/emception-ui/assessment/presets', () => ({
+  createAssessmentWorkspaceConfig: (language: string, files: Record<string, { content: string; encoding?: string }>) => ({
+    id: language,
+    files,
+  }),
+}));
 
 // --- Fixtures ---------------------------------------------------------------
 
@@ -90,15 +91,6 @@ const sampleAssignment: CodingAssignmentContent = {
     Private: [{ kind: 'standard', Name: 'case3', Stdout: 'c', Weight: 1 }],
   },
   Grading: { MaxScore: 100 },
-};
-
-const samplePlan = {
-  build: { sources: ['/home/user/main.cpp'] },
-  cases: [
-    { kind: 'stdio', expectedStdout: 'a', weight: 1 },
-    { kind: 'stdio', expectedStdout: 'b', weight: 1 },
-    { kind: 'stdio', expectedStdout: 'c', weight: 1 },
-  ],
 };
 
 const sampleReport = {
@@ -238,8 +230,8 @@ describe('manifest URL resolution', () => {
 
     render(<SubmissionViewer submissionId="sub-1" codingAssignment={sampleAssignment} />);
 
-    const ide = await screen.findByTestId('mock-ide');
-    expect(ide).toHaveAttribute('data-manifest-url', '/emception/manifest.json');
+    const editor = await screen.findByTestId('mock-coding-assessment-editor');
+    expect(editor).toHaveAttribute('data-manifest-url', '/emception/manifest.json');
   });
 
   it('passes an explicit manifestUrl through to the Ide', async () => {
@@ -256,8 +248,8 @@ describe('manifest URL resolution', () => {
       />,
     );
 
-    const ide = await screen.findByTestId('mock-ide');
-    expect(ide).toHaveAttribute('data-manifest-url', 'https://cdn.example.test/emception/manifest.json');
+    const editor = await screen.findByTestId('mock-coding-assessment-editor');
+    expect(editor).toHaveAttribute('data-manifest-url', 'https://cdn.example.test/emception/manifest.json');
   });
 });
 
@@ -426,22 +418,10 @@ describe('mergeWorkspaceWithSubmission', () => {
 
 describe('CodeGraderPanel', () => {
   beforeEach(() => {
-    ideMock.setFiles.mockReset();
-    ideMock.getFiles.mockReset();
-    ideMock.runTests.mockReset();
-    ideMock.setFiles.mockResolvedValue(undefined);
-    ideMock.getFiles.mockResolvedValue([
-      { path: '/home/user/main.cpp', content: '// student main' },
-      {
-        path: '/home/user/secret.cpp',
-        content: '// secret solution — workspace only',
-      },
-    ]);
-    assessmentPlanMock.build.mockReset();
-    assessmentPlanMock.build.mockReturnValue({ plan: samplePlan, overlay: [], weights: [] });
+    assessmentEditorMock.props = undefined;
   });
 
-  it('seeds the IDE with the merged workspace (Private file NOT overridden)', async () => {
+  it('composes the grader editor with only student-visible files', async () => {
     render(
       <CodeGraderPanel
         assignment={sampleAssignment}
@@ -454,16 +434,21 @@ describe('CodeGraderPanel', () => {
       />,
     );
 
-    await waitFor(() => expect(ideMock.setFiles).toHaveBeenCalled());
-    const seeded = ideMock.setFiles.mock.calls[0][0];
-    const byPath = Object.fromEntries(seeded.map((f) => [f.path, f.content]));
-    expect(byPath['/home/user/main.cpp']).toBe('// student main');
-    expect(byPath['/home/user/secret.cpp']).toBe('// secret solution — workspace only');
+    await waitFor(() => expect(assessmentEditorMock.props).toBeDefined());
+    expect(assessmentEditorMock.props).toMatchObject({
+      mode: 'grader',
+      manifestUrl: '/emception/manifest.json',
+      workspaceConfig: {
+        files: {
+          '/home/user/main.cpp': { content: '// student main' },
+        },
+      },
+    });
+    expect(assessmentEditorMock.props?.workspaceConfig?.files['/home/user/secret.cpp']).toBeUndefined();
   });
 
-  it('run tests reports the computed score via onComputedScore', async () => {
+  it('forwards the composed full-test result as an automatic score', async () => {
     const onComputedScore = vi.fn();
-    ideMock.runTests.mockResolvedValue(sampleReport);
 
     render(
       <CodeGraderPanel
@@ -474,49 +459,12 @@ describe('CodeGraderPanel', () => {
         onComputedScore={onComputedScore}
       />,
     );
-    await waitFor(() => expect(ideMock.setFiles).toHaveBeenCalled());
-
-    fireEvent.click(screen.getByTestId('run-tests-button'));
+    await waitFor(() => expect(assessmentEditorMock.props).toBeDefined());
+    screen.getByRole('button', { name: 'Emit grader result' }).click();
 
     await waitFor(() => expect(onComputedScore).toHaveBeenCalled());
-    // 2/3 passing × 100 → 67
     expect(onComputedScore).toHaveBeenCalledWith(expect.objectContaining({ score: 67 }));
     expect(screen.getByTestId('computed-score')).toHaveTextContent('67');
-    expect(screen.getByTestId('mock-results')).toBeInTheDocument();
-  });
-
-  it('shows an error alert when run tests rejects', async () => {
-    ideMock.runTests.mockRejectedValue(new Error('boot failed'));
-
-    render(<CodeGraderPanel assignment={sampleAssignment} submittedFiles={[]} maxScore={100} manifestUrl="/emception/manifest.json" />);
-    await waitFor(() => expect(ideMock.setFiles).toHaveBeenCalled());
-
-    fireEvent.click(screen.getByTestId('run-tests-button'));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('boot failed');
-  });
-
-  // Regression guard (Metis #33 / original design): instructor run-tests must
-  // build the FULL plan — Public + Private cases — not the student-visible
-  // public-only plan. A flip back to 'public-only' would silently drop Private
-  // cases from the instructor grade.
-  it('run tests builds the assessment execution plan in full scope (Public + Private)', async () => {
-    ideMock.runTests.mockResolvedValue(sampleReport);
-
-    render(
-      <CodeGraderPanel
-        assignment={sampleAssignment}
-        submittedFiles={[{ path: '/home/user/main.cpp', content: '// student main' }]}
-        maxScore={100}
-        manifestUrl="/emception/manifest.json"
-      />,
-    );
-    await waitFor(() => expect(ideMock.setFiles).toHaveBeenCalled());
-
-    fireEvent.click(screen.getByTestId('run-tests-button'));
-
-    await waitFor(() => expect(assessmentPlanMock.build).toHaveBeenCalled());
-    expect(assessmentPlanMock.build).toHaveBeenCalledWith(sampleAssignment, 'full');
   });
 
   // Bug #1 robustness: when the student submitted no code (payload '{}' or null
@@ -531,7 +479,7 @@ describe('CodeGraderPanel', () => {
         manifestUrl="/emception/manifest.json"
       />,
     );
-    await waitFor(() => expect(ideMock.setFiles).toHaveBeenCalled());
+    await waitFor(() => expect(assessmentEditorMock.props).toBeDefined());
     expect(screen.getByTestId('no-student-code')).toBeInTheDocument();
   });
 
@@ -544,7 +492,7 @@ describe('CodeGraderPanel', () => {
         manifestUrl="/emception/manifest.json"
       />,
     );
-    await waitFor(() => expect(ideMock.setFiles).toHaveBeenCalled());
+    await waitFor(() => expect(assessmentEditorMock.props).toBeDefined());
     expect(screen.queryByTestId('no-student-code')).not.toBeInTheDocument();
   });
 });
