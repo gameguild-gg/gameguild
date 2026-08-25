@@ -12,11 +12,11 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Plus, Save } from "lucide-react";
 import {
   ASSIGNMENT_SAMPLES,
-  Ide,
+  CodingAssessmentEditor,
   type CodingLanguage,
-  type IdeHandle,
-  type WorkspaceConfig,
 } from "@game-guild/emception-ui";
+import { createAssessmentWorkspaceConfig } from "@game-guild/emception-ui/assessment/presets";
+import type { WorkspaceConfig } from "emception";
 import {
   Card,
   CardContent,
@@ -36,7 +36,6 @@ import {
   type Test,
 } from "@/lib/coding-assignment/actions";
 import type { FileEncoding } from "@/lib/coding-assignment/types";
-import { buildAssessmentExecutionPlan } from "@game-guild/emception-ui";
 import { StandardTestEditor } from "./standard-test-editor";
 import { FunctionalTestEditor } from "./functional-test-editor";
 import { useLearningBase } from '@/lib/learning/use-learning-base';
@@ -65,13 +64,66 @@ const FUNCTION_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 const AUTOSAVE_DELAY_MS = 30_000;
 
-/** In-memory file row mirrored from initialContent + IDE getAuthoredState(). */
+/** In-memory file row mirrored from the definition and neutral IDE controller. */
 interface AssignmentFileRow {
   path: string;
   content: string;
   encoding: FileEncoding;
   visibility: FileVisibility;
   modifiable: boolean;
+}
+
+/** The subset of the neutral IDE controller required by GameGuild authoring. */
+interface AssessmentIdeController {
+  getFiles(): Promise<readonly AssessmentWorkspaceFile[]>;
+  replaceFiles(files: readonly AssessmentWorkspaceFile[]): Promise<void>;
+}
+
+interface AssessmentWorkspaceFile {
+  path: string;
+  type: "text" | "image";
+  content: string;
+}
+
+interface AssessmentIdeExtension {
+  id: string;
+  toolbarEnd?: () => React.ReactNode;
+  explorerFooter?: () => React.ReactNode;
+  bottomPanel?: () => React.ReactNode;
+}
+
+/**
+ * Reconcile source files from the neutral IDE controller while retaining the
+ * assessment policy owned by GameGuild. New text files are deliberately public
+ * and modifiable until the author changes their policy in the host extension.
+ */
+function reconcileAssignmentFiles(
+  rows: readonly AssignmentFileRow[],
+  liveFiles: readonly AssessmentWorkspaceFile[],
+): AssignmentFileRow[] {
+  const liveTextByPath = new Map(
+    liveFiles
+      .filter((file) => file.type === "text")
+      .map((file) => [file.path, file]),
+  );
+  const knownPaths = new Set(rows.map((row) => row.path));
+  const refreshedRows = rows
+    .filter((row) => row.encoding !== "text" || liveTextByPath.has(row.path))
+    .map((row) => ({
+      ...row,
+      content: liveTextByPath.get(row.path)?.content ?? row.content,
+    }));
+  const additions = [...liveTextByPath.values()]
+    .filter((file) => !knownPaths.has(file.path))
+    .map<AssignmentFileRow>((file) => ({
+      path: file.path,
+      content: file.content,
+      encoding: "text",
+      visibility: "Public",
+      modifiable: true,
+    }));
+
+  return [...refreshedRows, ...additions];
 }
 
 interface EditorProps {
@@ -101,7 +153,7 @@ export function CodingDefinitionEditor({
   const learningBase = useLearningBase();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const ideRef = useRef<IdeHandle | null>(null);
+  const ideControllerRef = useRef<AssessmentIdeController | null>(null);
 
   // ── Editor state ──
   const initialLang = (initialContent?.Environment.Language as CodingLanguage) ?? "cpp";
@@ -142,7 +194,7 @@ export function CodingDefinitionEditor({
   const performSaveRef = useRef<() => Promise<void>>(async () => {});
 
   // ── WorkspaceConfig for the IDE — derive from language preset + files ──
-  const workspaceConfig = useMemo<WorkspaceConfig | null>(() => {
+  const workspaceConfig = useMemo(() => {
     const sample = ASSIGNMENT_SAMPLES[language as CodingLanguage];
     if (!sample) return null;
     const files: WorkspaceConfig["files"] = {};
@@ -150,54 +202,12 @@ export function CodingDefinitionEditor({
       files[row.path] = { encoding: row.encoding, content: row.content };
     }
     // ponytail: if no files yet, fall back to the preset so the IDE has something to boot with.
-    return {
-      ...sample.workspaceConfig,
-      files: Object.keys(files).length > 0 ? files : sample.workspaceConfig.files,
-    };
+    return createAssessmentWorkspaceConfig(
+      language,
+      Object.keys(files).length > 0 ? files : sample.workspaceConfig.files,
+    );
   }, [language, fileRows]);
 
-  // ── IDE authoring props ──
-  const fileMeta = useMemo(
-    () =>
-      Object.fromEntries(
-        fileRows.map((r) => [
-          r.path,
-          { visibility: r.visibility, modifiable: r.modifiable },
-        ]),
-      ) as Record<string, { visibility: FileVisibility; modifiable: boolean }>,
-    [fileRows],
-  );
-
-  const testSuite = useMemo<{ Public: Test[]; Private: Test[] }>(() => {
-    const Public: Test[] = [];
-    const Private: Test[] = [];
-    for (const row of testRows) {
-      (row.visibility === "Public" ? Public : Private).push(row.test);
-    }
-    return { Public, Private };
-  }, [testRows]);
-
-  // ── Derived test plan for in-IDE "Run Tests" ──
-  // Rebuilds the v1 content from current rows + runs the assessment mapper so the Ide
-  // gets a fresh GradingPlan on every authoring edit. Returns undefined when
-  // there are no tests or the plan cannot be built (e.g. a functional group
-  // with zero cases mid-authoring) — the Ide then hides the Run Tests button.
-  const authoredTestPlan = useMemo(() => {
-    if (testRows.length === 0) return undefined;
-    try {
-      const content = buildContent({
-        language,
-        allowStudentCreateFiles,
-        fileRows,
-        testRows,
-        maxScore,
-      });
-      const { plan, overlay } = buildAssessmentExecutionPlan(content, "full");
-      return { ...plan, generatedFiles: overlay };
-    } catch {
-      return undefined;
-    }
-  }, [language, allowStudentCreateFiles, fileRows, testRows, maxScore]);
 
   // ── Auto-seed default sample on first mount when no initialContent ──
   // The Language preset Card used to host this seed via handleLanguageChange;
@@ -232,6 +242,20 @@ export function CodingDefinitionEditor({
       modifiable: true,
     }));
     setFileRows(rows);
+    const controller = ideControllerRef.current;
+    if (controller) {
+      void controller
+        .replaceFiles(
+          rows.map(({ path, content }) => ({ path, content, type: "text" as const })),
+        )
+        .catch((replaceError) => {
+          setError(
+            replaceError instanceof Error
+              ? `Could not switch editor workspace: ${replaceError.message}`
+              : "Could not switch editor workspace.",
+          );
+        });
+    }
     // ponytail: do NOT seed testRows here — authoring flows expect add-*
     // clicks to produce row index 0. Seeding files only keeps the IDE useful
     // on first mount without breaking test-row assumptions.
@@ -291,19 +315,18 @@ export function CodingDefinitionEditor({
     setTestRows((prev) => prev.filter((_, i) => i !== idx));
   }
 
-  function handleFileMetaChange(
-    path: string,
-    patch: Partial<{ visibility: FileVisibility; modifiable: boolean }>,
-  ) {
-    setFileRows((prev) =>
-      prev.map((row) => (row.path === path ? { ...row, ...patch } : row)),
-    );
-  }
-
-  // ponytail: IDE doesn't mutate tests outside the slot; kept for API parity.
-  // If a future IDE feature needs to push tests inward, narrow + setTestRows here.
-  function handleTestsChange(_next: unknown) {
-    /* no-op */
+  async function synchronizeFilePolicies(controller: AssessmentIdeController) {
+    try {
+      const liveFiles = await controller.getFiles();
+      setFileRows((previous) => reconcileAssignmentFiles(previous, liveFiles));
+      setError(null);
+    } catch (readError) {
+      setError(
+        readError instanceof Error
+          ? `Could not read editor files: ${readError.message}`
+          : "Could not read editor files.",
+      );
+    }
   }
 
   async function performSave() {
@@ -316,64 +339,29 @@ export function CodingDefinitionEditor({
     setError(null);
     setSaved(false);
 
-    // Pull the latest authored state from the IDE: files + fileMeta + tests + presetId.
+    // Pull source edits from the neutral controller. Assessment policy stays in
+    // this component, so the IDE never owns visibility, tests, or language.
     let liveFileRows = fileRows;
-    let liveTestRows = testRows;
-    let liveLanguage = language;
-
-    if (ideRef.current) {
+    if (ideControllerRef.current) {
       try {
-        const authored = await ideRef.current.getAuthoredState();
-        const liveMap = new Map(authored.files.map((f) => [f.path, f]));
-        const knownPaths = new Set(fileRows.map((r) => r.path));
-        // Refresh content + meta of known rows.
-        const refreshed = fileRows.map((row) => ({
-          ...row,
-          content: liveMap.get(row.path)?.content ?? row.content,
-          encoding: liveMap.get(row.path)?.encoding ?? row.encoding,
-          visibility: authored.fileMeta[row.path]?.visibility ?? row.visibility,
-          modifiable: authored.fileMeta[row.path]?.modifiable ?? row.modifiable,
-        }));
-        // Carry IDE-only additions (files created in-frame via FileExplorer).
-        const additions: AssignmentFileRow[] = authored.files
-          .filter((f) => !knownPaths.has(f.path))
-          .map((f) => ({
-            path: f.path,
-            content: f.content,
-            encoding: f.encoding ?? "text",
-            visibility: (authored.fileMeta[f.path]?.visibility ?? "Public") as FileVisibility,
-            modifiable: authored.fileMeta[f.path]?.modifiable ?? true,
-          }));
-        liveFileRows = [...refreshed, ...additions];
-
-        // authored.tests is opaque (echoed from our `tests` prop); narrow to TestSuite.
-        const suite = authored.tests as { Public?: Test[]; Private?: Test[] } | undefined;
-        if (suite) {
-          liveTestRows = [
-            ...(suite.Public ?? []).map((test) => ({ test, visibility: "Public" as FileVisibility })),
-            ...(suite.Private ?? []).map((test) => ({ test, visibility: "Private" as FileVisibility })),
-          ];
-        }
-
-        // Guard: authored.presetId is the workspaceConfig id — only trust it
-        // when it maps to a known language, otherwise DEFAULT_TOOLS lookup
-        // yields undefined and the backend rejects the payload.
-        if (
-          authored.presetId &&
-          LANGUAGE_OPTIONS.some((o) => o.value === authored.presetId)
-        ) {
-          liveLanguage = authored.presetId as CodingLanguage;
-        }
-      } catch {
-        // ponytail: IDE not booted — keep authored state from React.
+        const liveFiles = await ideControllerRef.current.getFiles();
+        liveFileRows = reconcileAssignmentFiles(fileRows, liveFiles);
+      } catch (readError) {
+        setError(
+          readError instanceof Error
+            ? `Could not read editor files: ${readError.message}`
+            : "Could not read editor files.",
+        );
+        savingRef.current = false;
+        return;
       }
     }
 
     const content = buildContent({
-      language: liveLanguage,
+      language,
       allowStudentCreateFiles,
       fileRows: liveFileRows,
-      testRows: liveTestRows,
+      testRows,
       maxScore,
     });
 
@@ -489,22 +477,120 @@ export function CodingDefinitionEditor({
           </CardHeader>
           <CardContent className="space-y-4">
             <div data-testid="ide-mount" className="h-[70vh] min-h-[500px]">
-              <Ide
-                ref={ideRef}
+              <CodingAssessmentEditor
+                mode="author"
+                definition={buildContent({
+                  language,
+                  allowStudentCreateFiles,
+                  fileRows,
+                  testRows,
+                  maxScore,
+                })}
                 workspaceConfig={workspaceConfig}
-                assignmentToken={assessmentId}
-                presetOptions={LANGUAGE_OPTIONS}
-                onPresetChange={(v) => handleLanguageChange(v as CodingLanguage)}
-                fileMeta={fileMeta}
-                onFileMetaChange={handleFileMetaChange}
-                allowCreateFiles={allowStudentCreateFiles}
-                onAllowCreateFilesChange={setAllowStudentCreateFiles}
-                tests={testSuite}
-                onTestsChange={handleTestsChange}
-                testPlan={authoredTestPlan}
-                testMode="full"
                 maxScore={maxScore}
-                testsPanelSlot={
+                onReady={(controller) => {
+                  ideControllerRef.current = controller;
+                }}
+                extensions={[
+                  {
+                    id: "gameguild-assessment-authoring",
+                    toolbarEnd: () => (
+                      <div className="flex items-center gap-2">
+                        <select
+                          aria-label="Workspace preset"
+                          data-testid="preset-picker"
+                          value={language}
+                          onChange={(event) =>
+                            handleLanguageChange(event.target.value as CodingLanguage)
+                          }
+                        >
+                          {LANGUAGE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          data-testid="allow-student-create"
+                          onClick={() =>
+                            setAllowStudentCreateFiles((value) => !value)
+                          }
+                        >
+                          {allowStudentCreateFiles ? "🔓" : "🔒"}
+                        </button>
+                      </div>
+                    ),
+                    explorerFooter: () => (
+                      <section
+                        aria-label="Assignment file policies"
+                        className="space-y-2 border-t border-border p-2 text-xs"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <strong>File policies</strong>
+                          <button
+                            type="button"
+                            data-testid="sync-file-policies"
+                            onClick={() => {
+                              const controller = ideControllerRef.current;
+                              if (!controller) {
+                                setError("Editor is still loading. Try again shortly.");
+                                return;
+                              }
+                              void synchronizeFilePolicies(controller);
+                            }}
+                          >
+                            Sync files
+                          </button>
+                        </div>
+                        {fileRows.map((row) => (
+                          <div key={row.path} className="space-y-1">
+                            <p className="truncate font-mono" title={row.path}>
+                              {row.path}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <select
+                                aria-label={`Visibility for ${row.path}`}
+                                value={row.visibility}
+                                onChange={(event) =>
+                                  setFileRows((previous) =>
+                                    previous.map((file) =>
+                                      file.path === row.path
+                                        ? {
+                                            ...file,
+                                            visibility: event.target.value as FileVisibility,
+                                          }
+                                        : file,
+                                    ),
+                                  )
+                                }
+                              >
+                                <option value="Public">Public</option>
+                                <option value="Private">Private</option>
+                              </select>
+                              <label className="flex items-center gap-1">
+                                <input
+                                  aria-label={`Student can edit ${row.path}`}
+                                  type="checkbox"
+                                  checked={row.modifiable}
+                                  onChange={(event) =>
+                                    setFileRows((previous) =>
+                                      previous.map((file) =>
+                                        file.path === row.path
+                                          ? { ...file, modifiable: event.target.checked }
+                                          : file,
+                                      ),
+                                    )
+                                  }
+                                />
+                                Editable
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </section>
+                    ),
+                    bottomPanel: () => (
                   <div className="space-y-4">
                     {testRows.length === 0 && (
                       <p
@@ -562,7 +648,9 @@ export function CodingDefinitionEditor({
                       </Button>
                     </div>
                   </div>
-                }
+                    ),
+                  },
+                ] satisfies readonly AssessmentIdeExtension[]}
               />
             </div>
           </CardContent>
