@@ -41,6 +41,7 @@ import * as path from 'path';
 import { toolchainPaths } from './toolchain/paths.ts';
 import { fileURLToPath } from 'url';
 import * as zlib from 'zlib';
+import { pruneFullyDeduplicatedBundles } from './lib/bundle-planning.ts';
 import { createDeterministicTar } from './lib/deterministic-tar.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
 
@@ -454,6 +455,10 @@ async function main() {
     console.log(`  Uncompressed bytes saved:   ${(savedBytes / (1024 * 1024)).toFixed(1)} MB`);
     console.log(`  Before (uncompressed total): ${(beforeUncompressedBytes / (1024 * 1024)).toFixed(1)} MB`);
     console.log(`  After  (uncompressed total): ${(afterUncompressedBytes / (1024 * 1024)).toFixed(1)} MB`);
+  }
+
+  for (const name of pruneFullyDeduplicatedBundles(bundleFiles, manifest.files)) {
+    console.log(`  Skipping fully deduplicated bundle: ${name}`);
   }
 
   // ── Generate tar.br archives ──
