@@ -34,7 +34,6 @@ import {
   FolderKanban,
   Globe2,
   MailCheck,
-  Plus,
   Palette,
   MessageSquareText,
   Rocket,
@@ -95,19 +94,13 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
       },
       {
         title: 'Projects',
+        url: '/workspace/projects',
         icon: FolderKanban,
-        subGroups: [
-          { title: 'Overview', url: '/workspace/projects', icon: LayoutDashboard, items: [] },
-          { title: 'New project', url: '/workspace/projects/new', icon: Plus, items: [] },
-        ],
       },
       {
         title: 'Teams',
+        url: '/workspace/teams',
         icon: Users,
-        subGroups: [
-          { title: 'Overview', url: '/workspace/teams', icon: LayoutDashboard, items: [] },
-          { title: 'New team', url: '/workspace/teams/new', icon: Plus, items: [] },
-        ],
       },
       {
         title: 'Learning',
