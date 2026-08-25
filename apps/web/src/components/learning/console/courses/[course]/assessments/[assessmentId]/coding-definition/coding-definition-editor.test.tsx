@@ -2,7 +2,6 @@ import "@testing-library/jest-dom/vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { IdeHandle } from "@game-guild/emception-ui";
 
 const routerMocks = vi.hoisted(() => ({
   push: vi.fn(),
@@ -20,9 +19,6 @@ const ideMock = vi.hoisted(() => {
         getFiles.mockResolvedValue(files);
       },
     ),
-    addFile: vi.fn(),
-    removeFile: vi.fn(),
-    setFileMeta: vi.fn(),
   };
 });
 
@@ -74,14 +70,10 @@ const assignmentSamplesMock = vi.hoisted(() => ({
   },
 }));
 
-// ponytail: capture the latest props handed to the IDE mock so tests can assert
-// on workspaceConfig / tests without a rendered JSON preview card (removed in
-// the editor refinements plan).
+// Capture the latest composed editor props without booting the WASM runtime.
 let lastIdeProps: {
   workspaceConfig?: { id?: string; files?: Record<string, unknown> };
-  tests?: { Public?: unknown[]; Private?: unknown[] };
   allowCreateFiles?: boolean;
-  onAllowCreateFilesChange?: (v: boolean) => void;
 } = {};
 let lastAssessmentEditorProps: {
   mode?: string;
@@ -109,76 +101,6 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@game-guild/emception-ui", async () => {
   const React = await import("react");
-
-  // ponytail: the page now composes StandardTest/FunctionalTestGroup editors
-  // inside `testsPanelSlot`. The mock surfaces them by rendering props.testsPanelSlot
-  // as children, and echoes `props.tests` back via getAuthoredState — mirroring the
-  // real IDE's contract (T6/T7) where authored.tests === what the page passed in.
-  // useImperativeHandle has no deps array → handle recreated every render →
-  // closure always captures the latest props. getAuthoredState also echoes the
-  // active workspace (files + presetId = workspaceConfig.id), matching the real
-  // Ide's authored-state contract; the preset picker mirrors the Ide header
-  // workspace <select> (rendered when presetOptions is supplied).
-  const Ide = React.forwardRef<IdeHandle, Record<string, unknown>>((props, ref) => {
-    React.useImperativeHandle(ref, () => ({
-      getFiles: ideMock.getFiles,
-      getAuthoredState: async () => ({
-        files: Object.entries(
-          (props.workspaceConfig as { files?: Record<string, { content: string }> } | undefined)
-            ?.files ?? {},
-        ).map(([path, bundle]) => ({ path, content: bundle.content })),
-        fileMeta: {},
-        tests: props.tests,
-        presetId: (props.workspaceConfig as { id?: string } | undefined)?.id ?? "cpp",
-      }),
-      runTests: vi.fn(),
-      compileAndRun: vi.fn(),
-      setFiles: vi.fn(),
-      reset: vi.fn(),
-      addFile: ideMock.addFile,
-      removeFile: ideMock.removeFile,
-      setFileMeta: ideMock.setFileMeta,
-      getModifiedFiles: vi.fn(),
-    }));
-    lastIdeProps = props as typeof lastIdeProps;
-    // Mirror the package contract (FileExplorer workspace header): the compact
-    // 🔓/🔒 toggle renders only when onAllowCreateFilesChange is present.
-    const createToggle = props.onAllowCreateFilesChange
-      ? React.createElement(
-          "button",
-          {
-            "data-testid": "allow-student-create",
-            onClick: () =>
-              (props.onAllowCreateFilesChange as (v: boolean) => void)(
-                !props.allowCreateFiles,
-              ),
-          },
-          props.allowCreateFiles ? "🔓" : "🔒",
-        )
-      : null;
-    const presetPicker = Array.isArray(props.presetOptions)
-      ? React.createElement(
-          "select",
-          {
-            "data-testid": "preset-picker",
-            value: (props.workspaceConfig as { id?: string } | undefined)?.id ?? "",
-            onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
-              (props.onPresetChange as ((v: string) => void) | undefined)?.(e.target.value),
-          },
-          ...(props.presetOptions as Array<{ value: string; label: string }>).map((o) =>
-            React.createElement("option", { key: o.value, value: o.value }, o.label),
-          ),
-        )
-      : null;
-    return React.createElement(
-      "div",
-      { "data-testid": "mock-ide" },
-      presetPicker,
-      createToggle,
-      (props.testsPanelSlot as React.ReactNode) ?? null,
-    );
-  });
-  Ide.displayName = "Ide";
 
   function CodingAssessmentEditor(props: {
     mode?: string;
@@ -218,7 +140,7 @@ vi.mock("@game-guild/emception-ui", async () => {
       { "data-testid": "mock-assessment-editor" },
       React.createElement(
         "div",
-        { "data-testid": "mock-ide" },
+        { "data-testid": "mock-assessment-surface" },
         ...((props.extensions ?? []).map((extension) =>
           React.createElement(
             React.Fragment,
@@ -238,7 +160,6 @@ vi.mock("@game-guild/emception-ui", async () => {
   return {
     ASSIGNMENT_SAMPLES: assignmentSamplesMock,
     CodingAssessmentEditor,
-    Ide,
   };
 });
 
@@ -275,9 +196,6 @@ describe("CodingDefinitionEditor", () => {
     ideMock.getFiles.mockResolvedValue([
       { path: "/user/main.cpp", content: "// edited starter", type: "text" },
     ]);
-    ideMock.addFile.mockResolvedValue(undefined);
-    ideMock.removeFile.mockResolvedValue(undefined);
-    ideMock.setFileMeta.mockResolvedValue(undefined);
     putMock.mockReset();
     putMock.mockResolvedValue({ success: true });
   });
@@ -319,7 +237,7 @@ describe("CodingDefinitionEditor", () => {
     const sample = ASSIGNMENT_SAMPLES.cpp;
 
     // The IDE only renders once the seed useEffect populates fileRows.
-    await screen.findByTestId("mock-ide");
+    await screen.findByTestId("mock-assessment-surface");
     expect(
       Object.keys(lastIdeProps.workspaceConfig?.files ?? {}),
     ).toContain("/user/main.cpp");
