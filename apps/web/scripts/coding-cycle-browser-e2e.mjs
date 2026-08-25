@@ -406,6 +406,10 @@ async function bootStack() {
       cwd: WEB_DIR,
       env: { ...process.env, ...envArrayToObject(webEnv) },
       detached: process.platform !== "win32",
+      // Node cannot spawn a .cmd file with pipes directly on Windows. The
+      // command is fixed in this runner, and taskkill below still tears down
+      // the shell's complete process tree.
+      shell: process.platform === "win32",
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
