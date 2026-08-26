@@ -904,6 +904,124 @@ async function upsertCourse(token, program, { dryRun, apiUrl }) {
   return { action: 'update', courseId: existing.id };
 }
 
+// Task 6 — content upsert. GET /v1/courses/{id}/content returns ProgramContentDtos where a
+// top-level item ALSO nests its descendants in children[] (ProgramContentMappingExtensions
+// :46) — flatten walks both levels; duplicate entries are identical DTOs, so last-write-wins
+// on the slug map is harmless. Placement is Kahn-style: each pass takes every unplaced item
+// whose parentSourceId is null or already placed; a pass that places nothing means a cycle
+// or a dangling parent ref (declaration order is NOT trusted — intro2gpro declares the
+// assignment before its parent production). POST bodies carry programId (must match the
+// URL, ProgramContentController.cs:100) and parentId; PUT bodies carry neither beyond id
+// (:114) — reparent lives on the /move endpoint, out of scope. Any 4xx from request()
+// aborts the remaining writes; rerun is idempotent, so partial state is safe.
+
+function flattenContentTree(items, out = []) {
+  for (const item of items) {
+    if (!item || typeof item !== 'object') continue;
+    out.push(item);
+    if (Array.isArray(item.children)) flattenContentTree(item.children, out);
+  }
+  return out;
+}
+
+async function fetchExistingContentBySlug(token, courseId, apiUrl) {
+  const existingBySlug = new Map();
+  // Dry-run create path has no courseId yet — nothing can exist to match against.
+  if (courseId === null) return existingBySlug;
+  const content = await request('GET', `/v1/courses/${courseId}/content`, { token, apiUrl });
+  for (const dto of flattenContentTree(Array.isArray(content) ? content : [])) {
+    if (typeof dto.slug === 'string' && dto.slug !== '') {
+      existingBySlug.set(dto.slug, { id: dto.id, slug: dto.slug, parentId: dto.parentId ?? null });
+    }
+  }
+  return existingBySlug;
+}
+
+// Ten fields shared by the create and update payloads, in wire order after the leading keys.
+function contentUpsertFields(item) {
+  return {
+    title: item.title,
+    description: item.description,
+    type: item.type,
+    body: item.body,
+    lessonFormat: item.lessonFormat,
+    sortOrder: item.sortOrder,
+    isRequired: item.isRequired,
+    estimatedMinutes: item.estimatedMinutes,
+    visibility: 'Public',
+    slug: item.predictedSlug,
+  };
+}
+
+function assertResponseSlug(item, response) {
+  const actual = response && typeof response === 'object' ? response.slug : undefined;
+  if (actual !== item.predictedSlug) {
+    throw new Error(`slug drift on ${item.sourceId}: sent ${item.predictedSlug} server ${actual}`);
+  }
+}
+
+async function upsertContent(token, courseId, model, { dryRun, apiUrl }) {
+  const existingBySlug = await fetchExistingContentBySlug(token, courseId, apiUrl);
+
+  const idBySourceId = new Map();
+  const unplaced = [...model.items];
+  let created = 0;
+  let updated = 0;
+
+  while (unplaced.length > 0) {
+    const ready = unplaced.filter(
+      (item) => item.parentSourceId === null || idBySourceId.has(item.parentSourceId),
+    );
+    if (ready.length === 0) {
+      throw new Error(
+        `content dependency cycle or dangling parent: ${unplaced.map((item) => item.sourceId).join(', ')}`,
+      );
+    }
+
+    for (const item of ready) {
+      const existing = existingBySlug.get(item.predictedSlug) ?? null;
+      const parentId = item.parentSourceId === null ? null : idBySourceId.get(item.parentSourceId);
+
+      if (existing !== null) {
+        const payload = { id: existing.id, ...contentUpsertFields(item) };
+        if (dryRun) {
+          console.log(`[content] update ${item.predictedSlug}`);
+          idBySourceId.set(item.sourceId, existing.id);
+        } else {
+          const response = await request(
+            'PUT',
+            `/v1/courses/${courseId}/content/${existing.id}`,
+            { token, apiUrl, body: payload },
+          );
+          assertResponseSlug(item, response);
+          idBySourceId.set(item.sourceId, response.id);
+        }
+        updated += 1;
+      } else {
+        const payload = { programId: courseId, parentId, ...contentUpsertFields(item) };
+        if (dryRun) {
+          console.log(`[content] create ${item.predictedSlug}`);
+          // Placeholder id lets children place in dry-run too.
+          idBySourceId.set(item.sourceId, item.predictedSlug);
+        } else {
+          const response = await request(
+            'POST',
+            `/v1/courses/${courseId}/content`,
+            { token, apiUrl, body: payload },
+          );
+          assertResponseSlug(item, response);
+          idBySourceId.set(item.sourceId, response.id);
+        }
+        created += 1;
+      }
+    }
+
+    for (const item of ready) unplaced.splice(unplaced.indexOf(item), 1);
+  }
+
+  return { created, updated, items: model.items.length };
+}
+
 // ===== orchestration (task 8) =====
 
 async function main() {
@@ -945,17 +1063,17 @@ async function main() {
     process.exit(0);
   }
 
-  // Task 5 main flow: parse → model → sign-in → metadata upsert. buildImportModel throws
-  // on orphaned skips — main().catch(fail) turns that into exit 1 BEFORE any HTTP call.
-  // Content upsert (task 6), prune (task 7) and the summary (task 8) land in later stages.
+  // Main flow: parse → model → sign-in → metadata upsert → content upsert.
+  // buildImportModel throws on orphaned skips — main().catch(fail) turns that into exit 1
+  // BEFORE any HTTP call. Prune (task 7) and the summary (task 8) land in later stages.
   const parsed = parseCourseDir(args.slug);
   const model = buildImportModel(parsed, args.skipSourceIds);
   const session = await signIn({ apiUrl: env.apiUrl, email: env.email, password: env.password });
-  await upsertCourse(session.accessToken, model.program, {
-    dryRun: args.mode !== 'execute',
-    apiUrl: env.apiUrl,
-  });
-  console.log('[stage] metadata complete (content stages land in tasks 6-8)');
+  const dryRun = args.mode !== 'execute';
+  const course = await upsertCourse(session.accessToken, model.program, { dryRun, apiUrl: env.apiUrl });
+  console.log('[stage] metadata complete');
+  await upsertContent(session.accessToken, course.courseId, model, { dryRun, apiUrl: env.apiUrl });
+  console.log('[stage] content complete (prune/orchestration land in tasks 7-8)');
   process.exit(0);
 }
 
