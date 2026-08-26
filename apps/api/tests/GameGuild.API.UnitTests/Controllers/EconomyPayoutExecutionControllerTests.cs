@@ -60,7 +60,7 @@ public sealed class EconomyPayoutExecutionControllerTests
     }
 
     [Fact]
-    public async Task ReserveDerivesTenantActorAndFreshMfaEvidenceFromTheActorContext()
+    public async Task ReserveDerivesTenantActorAndConsumesAnOperationBoundStepUpReceipt()
     {
         var tenantId = Guid.NewGuid();
         var actorId = Guid.NewGuid();
@@ -76,18 +76,24 @@ public sealed class EconomyPayoutExecutionControllerTests
                     command.Reauthentication.ActorId == actorId &&
                     command.Reauthentication.TransactionBinding == "reserve-fingerprint" &&
                     command.Reauthentication.Assurance == GameGuild.Economy.Risk.ReauthenticationAssurance.MultiFactor &&
-                    command.Reauthentication.EvidenceHash.Length == 64),
+                    command.Reauthentication.EvidenceHash ==
+                    TestEconomyStepUpExecutor.EvidenceHash("reserve-receipt")),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(operation);
-        var controller = AdminController(payouts.Object, Actor(tenantId, actorId));
+        var stepUp = new TestEconomyStepUpExecutor();
+        var controller = AdminController(payouts.Object, Actor(tenantId, actorId), stepUp);
 
         var result = await controller.Reserve(
             requestId,
-            new ReserveApprovedPayoutExecutionRequest("BR", riskDecisionId, "reserve-fingerprint"),
+            new ReserveApprovedPayoutExecutionRequest(
+                "BR", riskDecisionId, "reserve-fingerprint", "reserve-receipt"),
             CancellationToken.None);
 
         result.Should().BeOfType<OkObjectResult>().Which.Value
             .Should().Be(EconomyPayoutExecutionOperationDto.From(operation));
+        stepUp.Calls.Should().ContainSingle().Which.Should().Match<(GameGuild.API.Authorization.EconomyStepUpOperation Operation, string Receipt)>(
+            call => call.Operation.OperationType == "economy.payout.reserve" &&
+                    call.Receipt == "reserve-receipt");
         payouts.VerifyAll();
     }
 
@@ -117,7 +123,7 @@ public sealed class EconomyPayoutExecutionControllerTests
         (await controller.Dispatch(
                 operation.Id,
                 new DispatchPayoutExecutionRequest(
-                    operation.Version, "BR", Guid.NewGuid(), "dispatch-fingerprint"),
+                    operation.Version, "BR", Guid.NewGuid(), "dispatch-fingerprint", "dispatch-receipt"),
                 CancellationToken.None))
             .Should().BeOfType<OkObjectResult>();
         (await controller.Reconcile(operation.Id, CancellationToken.None))
@@ -128,28 +134,24 @@ public sealed class EconomyPayoutExecutionControllerTests
     }
 
     [Fact]
-    public async Task AdministrativeMovementRequiresPermissionAndFreshBoundMfa()
+    public async Task AdministrativeMovementRequiresPermissionAndAValidStepUpReceipt()
     {
         var payouts = new Mock<IDurablePayoutApplicationService>(MockBehavior.Strict);
         var tenantId = Guid.NewGuid();
         var actorId = Guid.NewGuid();
-        var request = new ReserveApprovedPayoutExecutionRequest("BR", Guid.NewGuid(), "fingerprint");
+        var request = new ReserveApprovedPayoutExecutionRequest(
+            "BR", Guid.NewGuid(), "fingerprint", "receipt");
         var noPermission = AdminController(payouts.Object, Actor(tenantId, actorId, permission: false));
         (await noPermission.Reserve(Guid.NewGuid(), request, CancellationToken.None))
             .Should().BeOfType<ForbidResult>();
 
-        foreach (var attributes in new[]
-                 {
-                     Attributes() with { MfaVerified = false },
-                     Attributes() with { SessionId = null, TokenId = null },
-                     Attributes() with { AuthenticatedAt = Now.AddMinutes(-6) },
-                     Attributes() with { TokenExpiresAt = Now }
-                 })
+        var rejectingStepUp = new TestEconomyStepUpExecutor
         {
-            var controller = AdminController(payouts.Object, Actor(tenantId, actorId, attributes: attributes));
-            (await controller.Reserve(Guid.NewGuid(), request, CancellationToken.None))
-                .Should().BeOfType<ConflictObjectResult>();
-        }
+            Failure = new GameGuild.Identity.Authentication.StepUpReceiptInvalidException("invalid receipt")
+        };
+        var controller = AdminController(payouts.Object, Actor(tenantId, actorId), rejectingStepUp);
+        (await controller.Reserve(Guid.NewGuid(), request, CancellationToken.None))
+            .Should().BeOfType<ConflictObjectResult>();
         payouts.VerifyNoOtherCalls();
     }
 
@@ -203,7 +205,9 @@ public sealed class EconomyPayoutExecutionControllerTests
 
     private static EconomyPayoutExecutionAdministrationController AdminController(
         IDurablePayoutApplicationService payouts,
-        ActorContext actor) => new(payouts, Accessor(actor), new FixedTimeProvider(Now));
+        ActorContext actor,
+        TestEconomyStepUpExecutor? stepUp = null) =>
+        new(payouts, stepUp ?? new TestEconomyStepUpExecutor(), Accessor(actor), new FixedTimeProvider(Now));
 
     private static EconomyStripeConnectWebhookController WebhookController(
         IStripeConnectWebhookNormalizer normalizer,

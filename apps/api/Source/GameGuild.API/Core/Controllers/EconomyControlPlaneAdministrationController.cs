@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Asp.Versioning;
+using GameGuild.API.Authorization;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Operations;
 using GameGuild.Economy.Projections;
@@ -23,12 +24,12 @@ public sealed record ProposeEconomyPolicyRequest(
     DateTimeOffset ExpiresAt,
     bool ProviderReady);
 
-public sealed record ApproveEconomyPolicyRequest(string ReauthenticationHash);
+public sealed record ApproveEconomyPolicyRequest(string StepUpReceipt);
 public sealed record ActivateEconomyKillSwitchRequest(
     Guid Id,
     EconomyValueMovementCapability? Capability,
     string Reason);
-public sealed record EconomyReauthenticationRequest(string ReauthenticationHash);
+public sealed record EconomyStepUpRequest(string StepUpReceipt);
 public sealed record InspectEconomyCapabilityReadinessRequest(
     string SubjectReference,
     string JurisdictionCode,
@@ -66,6 +67,7 @@ public sealed class EconomyControlPlaneAdministrationController(
     IEconomyAnchorVerificationService anchorVerification,
     IEconomyProjectionGenerationService projections,
     IEconomyReserveCustodyControlPlane reserves,
+    IEconomyStepUpExecutor stepUp,
     IActorContextAccessor actorContextAccessor,
     TimeProvider timeProvider) : BaseApiController
 {
@@ -102,11 +104,19 @@ public sealed class EconomyControlPlaneAdministrationController(
     {
         if (!TryActor(EconomyPermission.Keys.ManagePolicies, out _, out var actorId)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return Ok(await policies.ApproveAsync(
-            policyId,
-            actorId,
-            request.ReauthenticationHash,
-            timeProvider.GetUtcNow(),
+        var operation = EconomyStepUpOperation.Create(
+            "economy.policy.approve",
+            $"policy:{policyId:N}",
+            policyId.ToString("N"));
+        return Ok(await stepUp.ExecuteAsync(
+            operation,
+            request.StepUpReceipt,
+            (evidenceHash, token) => policies.ApproveAsync(
+                policyId,
+                actorId,
+                evidenceHash,
+                timeProvider.GetUtcNow(),
+                token).AsTask(),
             cancellationToken).ConfigureAwait(false));
     }
 
@@ -174,15 +184,23 @@ public sealed class EconomyControlPlaneAdministrationController(
     [ProducesResponseType(typeof(EconomyKillSwitchState), StatusCodes.Status200OK)]
     public async Task<IActionResult> ProposeKillSwitchRelease(
         Guid killSwitchId,
-        [FromBody] EconomyReauthenticationRequest request,
+        [FromBody] EconomyStepUpRequest request,
         CancellationToken cancellationToken)
     {
         if (!TryActor(EconomyPermission.Keys.ManageKillSwitches, out _, out var actorId)) return Forbid();
-        return Ok(await killSwitches.ProposeReleaseAsync(
-            killSwitchId,
-            actorId,
-            request.ReauthenticationHash,
-            timeProvider.GetUtcNow(),
+        var operation = EconomyStepUpOperation.Create(
+            "economy.kill-switch.release.propose",
+            $"kill-switch:{killSwitchId:N}",
+            killSwitchId.ToString("N"));
+        return Ok(await stepUp.ExecuteAsync(
+            operation,
+            request.StepUpReceipt,
+            (evidenceHash, token) => killSwitches.ProposeReleaseAsync(
+                killSwitchId,
+                actorId,
+                evidenceHash,
+                timeProvider.GetUtcNow(),
+                token).AsTask(),
             cancellationToken).ConfigureAwait(false));
     }
 
@@ -190,15 +208,23 @@ public sealed class EconomyControlPlaneAdministrationController(
     [ProducesResponseType(typeof(EconomyKillSwitchState), StatusCodes.Status200OK)]
     public async Task<IActionResult> ApproveKillSwitchRelease(
         Guid killSwitchId,
-        [FromBody] EconomyReauthenticationRequest request,
+        [FromBody] EconomyStepUpRequest request,
         CancellationToken cancellationToken)
     {
         if (!TryActor(EconomyPermission.Keys.ManageKillSwitches, out _, out var actorId)) return Forbid();
-        return Ok(await killSwitches.ApproveReleaseAsync(
-            killSwitchId,
-            actorId,
-            request.ReauthenticationHash,
-            timeProvider.GetUtcNow(),
+        var operation = EconomyStepUpOperation.Create(
+            "economy.kill-switch.release.approve",
+            $"kill-switch:{killSwitchId:N}",
+            killSwitchId.ToString("N"));
+        return Ok(await stepUp.ExecuteAsync(
+            operation,
+            request.StepUpReceipt,
+            (evidenceHash, token) => killSwitches.ApproveReleaseAsync(
+                killSwitchId,
+                actorId,
+                evidenceHash,
+                timeProvider.GetUtcNow(),
+                token).AsTask(),
             cancellationToken).ConfigureAwait(false));
     }
 
@@ -274,15 +300,23 @@ public sealed class EconomyControlPlaneAdministrationController(
     [ProducesResponseType(typeof(ProjectionGenerationState), StatusCodes.Status200OK)]
     public async Task<IActionResult> ApproveProjection(
         long generation,
-        [FromBody] EconomyReauthenticationRequest request,
+        [FromBody] EconomyStepUpRequest request,
         CancellationToken cancellationToken)
     {
         if (!TryActor(EconomyPermission.Keys.OperateLedger, out _, out var actorId)) return Forbid();
-        return Ok(await projections.ApproveAndTryActivateAsync(
-            generation,
-            actorId,
-            request.ReauthenticationHash,
-            timeProvider.GetUtcNow(),
+        var operation = EconomyStepUpOperation.Create(
+            "economy.projection.approve",
+            $"projection:{generation}",
+            generation.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        return Ok(await stepUp.ExecuteAsync(
+            operation,
+            request.StepUpReceipt,
+            (evidenceHash, token) => projections.ApproveAndTryActivateAsync(
+                generation,
+                actorId,
+                evidenceHash,
+                timeProvider.GetUtcNow(),
+                token).AsTask(),
             cancellationToken).ConfigureAwait(false));
     }
 
@@ -334,15 +368,23 @@ public sealed class EconomyControlPlaneAdministrationController(
     [ProducesResponseType(typeof(ReserveHead), StatusCodes.Status200OK)]
     public async Task<IActionResult> ApproveReserve(
         Guid proposalId,
-        [FromBody] EconomyReauthenticationRequest request,
+        [FromBody] EconomyStepUpRequest request,
         CancellationToken cancellationToken)
     {
         if (!TryActor(EconomyPermission.Keys.ManageReserves, out _, out var actorId)) return Forbid();
-        return Ok(await reserves.ApproveAndActivateAsync(
-            proposalId,
-            actorId,
-            request.ReauthenticationHash,
-            timeProvider.GetUtcNow(),
+        var operation = EconomyStepUpOperation.Create(
+            "economy.reserve.approve",
+            $"reserve:{proposalId:N}",
+            proposalId.ToString("N"));
+        return Ok(await stepUp.ExecuteAsync(
+            operation,
+            request.StepUpReceipt,
+            (evidenceHash, token) => reserves.ApproveAndActivateAsync(
+                proposalId,
+                actorId,
+                evidenceHash,
+                timeProvider.GetUtcNow(),
+                token).AsTask(),
             cancellationToken).ConfigureAwait(false));
     }
 

@@ -1,3 +1,4 @@
+using GameGuild.API.Authorization;
 using GameGuild.API.Database;
 using GameGuild.API.HealthChecks;
 using GameGuild.API.HostedServices;
@@ -91,6 +92,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddFerpaModule();
         builder.Services.AddEconomyCapabilityComposition(builder.Configuration);
         builder.Services.AddEconomyCoreComposition(builder.Configuration);
+        builder.Services.AddScoped<IEconomyStepUpExecutor, EconomyStepUpExecutor>();
         builder.Services.AddAdRewardsComposition(builder.Configuration);
         builder.Services.AddBountiesComposition(builder.Configuration);
         builder.Services.AddMarketplaceComposition(builder.Configuration);

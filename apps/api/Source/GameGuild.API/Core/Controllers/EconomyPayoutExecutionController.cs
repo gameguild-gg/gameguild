@@ -1,7 +1,5 @@
-using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using Asp.Versioning;
+using GameGuild.API.Authorization;
 using GameGuild.API.Setup;
 using GameGuild.Economy.Payouts;
 using GameGuild.Economy.Risk;
@@ -16,13 +14,15 @@ namespace GameGuild.API.Controllers;
 public sealed record ReserveApprovedPayoutExecutionRequest(
     string JurisdictionCode,
     Guid RiskDecisionId,
-    string OperationFingerprint);
+    string OperationFingerprint,
+    string StepUpReceipt);
 
 public sealed record DispatchPayoutExecutionRequest(
     long ExpectedVersion,
     string JurisdictionCode,
     Guid RiskDecisionId,
-    string OperationFingerprint);
+    string OperationFingerprint,
+    string StepUpReceipt);
 
 public sealed record EconomyPayoutExecutionOperationDto(
     Guid Id,
@@ -130,11 +130,10 @@ public sealed class EconomyPayoutAccountController(
 [Authorize]
 public sealed class EconomyPayoutExecutionAdministrationController(
     IDurablePayoutApplicationService payouts,
+    IEconomyStepUpExecutor stepUp,
     IActorContextAccessor actorContextAccessor,
     TimeProvider timeProvider) : BaseApiController
 {
-    private static readonly TimeSpan ReauthenticationLifetime = TimeSpan.FromMinutes(5);
-
     [HttpPost("{requestId:guid}/reserve")]
     [EndpointSummary("Reserve FIFO funds for a fully approved payout request")]
     [EndpointDescription("Tenant and actor authority come exclusively from the authenticated actor context. Fresh MFA and the full capability control plane are required.")]
@@ -147,13 +146,23 @@ public sealed class EconomyPayoutExecutionAdministrationController(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        var operation = EconomyStepUpOperation.Create(
+            "economy.payout.reserve",
+            $"payout-request:{requestId:N}",
+            requestId.ToString("N"),
+            request.JurisdictionCode,
+            request.RiskDecisionId.ToString("N"),
+            request.OperationFingerprint);
         return ExecuteProtectedAsync(
+            operation,
+            request.StepUpReceipt,
             request.OperationFingerprint,
-            (tenantId, actorId, evidence) => payouts.ReserveApprovedAsync(
+            (tenantId, actorId, evidence, token) => payouts.ReserveApprovedAsync(
                 new ReserveApprovedPayoutCommand(
                     tenantId, actorId, requestId, request.JurisdictionCode,
                     request.RiskDecisionId, request.OperationFingerprint, evidence),
-                cancellationToken));
+                token),
+            cancellationToken);
     }
 
     [HttpPost("operations/{operationId:guid}/dispatch")]
@@ -167,14 +176,25 @@ public sealed class EconomyPayoutExecutionAdministrationController(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        var operation = EconomyStepUpOperation.Create(
+            "economy.payout.dispatch",
+            $"payout-operation:{operationId:N}",
+            operationId.ToString("N"),
+            request.ExpectedVersion.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            request.JurisdictionCode,
+            request.RiskDecisionId.ToString("N"),
+            request.OperationFingerprint);
         return ExecuteProtectedAsync(
+            operation,
+            request.StepUpReceipt,
             request.OperationFingerprint,
-            (tenantId, actorId, evidence) => payouts.DispatchAsync(
+            (tenantId, actorId, evidence, token) => payouts.DispatchAsync(
                 new DispatchPayoutOperationCommand(
                     tenantId, actorId, operationId, request.ExpectedVersion,
                     request.JurisdictionCode, request.RiskDecisionId,
                     request.OperationFingerprint, evidence),
-                cancellationToken));
+                token),
+            cancellationToken);
     }
 
     [HttpPost("operations/{operationId:guid}/reconcile")]
@@ -223,13 +243,30 @@ public sealed class EconomyPayoutExecutionAdministrationController(
     }
 
     private async Task<IActionResult> ExecuteProtectedAsync(
+        EconomyStepUpOperation operation,
+        string receipt,
         string operationFingerprint,
-        Func<Guid, Guid, ReauthenticationEvidence, ValueTask<PayoutOperation>> action)
+        Func<Guid, Guid, ReauthenticationEvidence, CancellationToken, ValueTask<PayoutOperation>> action,
+        CancellationToken cancellationToken)
     {
-        if (!TryOperator(out var tenantId, out var actorId, out var actor)) return Forbid();
-        if (!TryCreateReauthentication(actor, operationFingerprint, timeProvider.GetUtcNow(), out var evidence))
-            return Conflict("A fresh MFA-authenticated session is required for payout value movement.");
-        return await ExecuteAsync(() => action(tenantId, actorId, evidence)).ConfigureAwait(false);
+        if (!TryOperator(out var tenantId, out var actorId, out _)) return Forbid();
+        var now = timeProvider.GetUtcNow();
+        return await ExecuteAsync(() => new ValueTask<PayoutOperation>(stepUp.ExecuteAsync(
+            operation,
+            receipt,
+            (evidenceHash, token) => action(
+                tenantId,
+                actorId,
+                new ReauthenticationEvidence(
+                    actorId,
+                    ProtectedOperationKind.Payout,
+                    operationFingerprint,
+                    ReauthenticationAssurance.MultiFactor,
+                    now,
+                    now.AddMinutes(1),
+                    evidenceHash),
+                token).AsTask(),
+            cancellationToken))).ConfigureAwait(false);
     }
 
     private static async Task<IActionResult> ExecuteAsync(Func<ValueTask<PayoutOperation>> action)
@@ -247,7 +284,8 @@ public sealed class EconomyPayoutExecutionAdministrationController(
                                           PayoutStaleCommandException or
                                           PayoutProviderBindingException or
                                           ReauthenticationEvidenceException or
-                                          EconomyCapabilityAuthorizationException)
+                                          EconomyCapabilityAuthorizationException or
+                                          GameGuild.Identity.Authentication.StepUpReceiptInvalidException)
         {
             return new ConflictObjectResult(exception.Message);
         }
@@ -266,41 +304,6 @@ public sealed class EconomyPayoutExecutionAdministrationController(
         return true;
     }
 
-    internal static bool TryCreateReauthentication(
-        ActorContext actor,
-        string operationFingerprint,
-        DateTimeOffset now,
-        out ReauthenticationEvidence evidence)
-    {
-        evidence = null!;
-        if (!actor.IsMfaVerified || actor.SubjectIdAsGuid is not { } actorId ||
-            actor.TenantId is not { } tenantId || actor.TypedAttributes.AuthenticatedAt is not { } issuedAt ||
-            issuedAt > now)
-            return false;
-        var sessionBinding = actor.TypedAttributes.SessionId ?? actor.TypedAttributes.TokenId;
-        if (string.IsNullOrWhiteSpace(sessionBinding) || string.IsNullOrWhiteSpace(operationFingerprint))
-            return false;
-        var expiresAt = issuedAt.Add(ReauthenticationLifetime);
-        if (actor.TypedAttributes.TokenExpiresAt is { } tokenExpiresAt && tokenExpiresAt < expiresAt)
-            expiresAt = tokenExpiresAt;
-        if (expiresAt <= now) return false;
-        var evidenceHash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join('|',
-            tenantId.ToString("N"),
-            actorId.ToString("N"),
-            sessionBinding.Trim(),
-            issuedAt.UtcTicks.ToString(CultureInfo.InvariantCulture),
-            expiresAt.UtcTicks.ToString(CultureInfo.InvariantCulture),
-            operationFingerprint.Trim()))));
-        evidence = new ReauthenticationEvidence(
-            actorId,
-            ProtectedOperationKind.Payout,
-            operationFingerprint.Trim(),
-            ReauthenticationAssurance.MultiFactor,
-            issuedAt,
-            expiresAt,
-            evidenceHash);
-        return true;
-    }
 }
 
 [ApiVersion("1.0")]

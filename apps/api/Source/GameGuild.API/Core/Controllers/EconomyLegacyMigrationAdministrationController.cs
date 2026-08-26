@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.API.Authorization;
 using GameGuild.Economy.Operations;
 using GameGuild.Economy.Risk;
 using GameGuild.Identity.Authorization;
@@ -17,11 +18,11 @@ public sealed record BackfillLegacyEconomyWalletRequest(
     Guid RiskDecisionId,
     string OperationFingerprint);
 
-public sealed record ProposeLegacyEconomyCutoverRequest(string Reason, string ReauthenticationHash);
+public sealed record ProposeLegacyEconomyCutoverRequest(string Reason, string StepUpReceipt);
 
-public sealed record ApproveLegacyEconomyCutoverRequest(string ReauthenticationHash);
+public sealed record ApproveLegacyEconomyCutoverRequest(string StepUpReceipt);
 
-public sealed record RollbackLegacyEconomyCutoverRequest(string Reason, string ReauthenticationHash);
+public sealed record RollbackLegacyEconomyCutoverRequest(string Reason, string StepUpReceipt);
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/admin/economy/legacy-migration/batches")]
@@ -29,6 +30,7 @@ public sealed record RollbackLegacyEconomyCutoverRequest(string Reason, string R
 [Authorize]
 public sealed class EconomyLegacyMigrationAdministrationController(
     ILegacyEconomyShadowMigration migration,
+    IEconomyStepUpExecutor stepUp,
     IActorContextAccessor actorContextAccessor,
     TimeProvider timeProvider) : BaseApiController
 {
@@ -102,15 +104,25 @@ public sealed class EconomyLegacyMigrationAdministrationController(
     {
         if (!TryActor(out var tenantId, out var actorId)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return await ExecuteAsync(() => migration.ProposeCutoverAsync(
-            new ProposeLegacyEconomyCutoverCommand(
-                batchId,
-                tenantId,
-                actorId,
-                request.Reason,
-                request.ReauthenticationHash,
-                timeProvider.GetUtcNow()),
-            cancellationToken)).ConfigureAwait(false);
+        var operation = EconomyStepUpOperation.Create(
+            "economy.legacy-cutover.propose",
+            $"legacy-cutover:{batchId:N}",
+            batchId.ToString("N"),
+            request.Reason);
+        return await ExecuteAsync(() => new ValueTask<LegacyEconomyShadowBatchView>(
+            stepUp.ExecuteAsync(
+                operation,
+                request.StepUpReceipt,
+                (evidenceHash, token) => migration.ProposeCutoverAsync(
+                    new ProposeLegacyEconomyCutoverCommand(
+                        batchId,
+                        tenantId,
+                        actorId,
+                        request.Reason,
+                        evidenceHash,
+                        timeProvider.GetUtcNow()),
+                    token).AsTask(),
+                cancellationToken))).ConfigureAwait(false);
     }
 
     [HttpPost("{batchId:guid}/cutover:approve")]
@@ -122,14 +134,23 @@ public sealed class EconomyLegacyMigrationAdministrationController(
     {
         if (!TryActor(out var tenantId, out var actorId)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return await ExecuteAsync(() => migration.ApproveCutoverAsync(
-            new ApproveLegacyEconomyCutoverCommand(
-                batchId,
-                tenantId,
-                actorId,
-                request.ReauthenticationHash,
-                timeProvider.GetUtcNow()),
-            cancellationToken)).ConfigureAwait(false);
+        var operation = EconomyStepUpOperation.Create(
+            "economy.legacy-cutover.approve",
+            $"legacy-cutover:{batchId:N}",
+            batchId.ToString("N"));
+        return await ExecuteAsync(() => new ValueTask<LegacyEconomyShadowBatchView>(
+            stepUp.ExecuteAsync(
+                operation,
+                request.StepUpReceipt,
+                (evidenceHash, token) => migration.ApproveCutoverAsync(
+                    new ApproveLegacyEconomyCutoverCommand(
+                        batchId,
+                        tenantId,
+                        actorId,
+                        evidenceHash,
+                        timeProvider.GetUtcNow()),
+                    token).AsTask(),
+                cancellationToken))).ConfigureAwait(false);
     }
 
     [HttpPost("{batchId:guid}/cutover:rollback")]
@@ -141,15 +162,25 @@ public sealed class EconomyLegacyMigrationAdministrationController(
     {
         if (!TryActor(out var tenantId, out var actorId)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return await ExecuteAsync(() => migration.RollbackCutoverAsync(
-            new RollbackLegacyEconomyCutoverCommand(
-                batchId,
-                tenantId,
-                actorId,
-                request.Reason,
-                request.ReauthenticationHash,
-                timeProvider.GetUtcNow()),
-            cancellationToken)).ConfigureAwait(false);
+        var operation = EconomyStepUpOperation.Create(
+            "economy.legacy-cutover.rollback",
+            $"legacy-cutover:{batchId:N}",
+            batchId.ToString("N"),
+            request.Reason);
+        return await ExecuteAsync(() => new ValueTask<LegacyEconomyShadowBatchView>(
+            stepUp.ExecuteAsync(
+                operation,
+                request.StepUpReceipt,
+                (evidenceHash, token) => migration.RollbackCutoverAsync(
+                    new RollbackLegacyEconomyCutoverCommand(
+                        batchId,
+                        tenantId,
+                        actorId,
+                        request.Reason,
+                        evidenceHash,
+                        timeProvider.GetUtcNow()),
+                    token).AsTask(),
+                cancellationToken))).ConfigureAwait(false);
     }
 
     private async Task<IActionResult> ExecuteAsync(
