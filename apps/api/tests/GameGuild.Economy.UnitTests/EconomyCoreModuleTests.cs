@@ -66,6 +66,15 @@ public sealed class EconomyCoreModuleTests
             descriptor.ServiceType == typeof(IRiskReviewStore) &&
             descriptor.ImplementationType == typeof(PostgreSqlRiskReviewStore));
         services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IEconomyProtectedOperationTransaction) &&
+            descriptor.ImplementationType == typeof(EconomyProtectedOperationTransaction));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IEconomyProtectedOperationRiskDecisionIssuer) &&
+            descriptor.ImplementationType == typeof(PostgreSqlEconomyProtectedOperationRiskDecisionIssuer));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IEconomyProtectedOperationOrchestrator) &&
+            descriptor.ImplementationType == typeof(EconomyProtectedOperationOrchestrator));
+        services.Should().Contain(descriptor =>
             descriptor.ServiceType == typeof(IEconomyCapabilityPolicyStore) &&
             descriptor.ImplementationType == typeof(PostgreSqlEconomyCapabilityPolicyStore));
         services.Should().Contain(descriptor =>

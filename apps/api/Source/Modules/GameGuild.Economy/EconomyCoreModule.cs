@@ -58,6 +58,10 @@ public sealed class EconomyCoreModule : ModuleBase
         services.AddScoped<IEconomyCapabilityEvaluator, EconomyCapabilityEvaluator>();
         services.AddScoped<IEconomyCapabilityReadinessInspector, EconomyCapabilityReadinessInspector>();
         services.AddScoped<IEconomyCapabilityAuthorizationService, EconomyCapabilityAuthorizationService>();
+        services.AddScoped<IEconomyProtectedOperationTransaction, EconomyProtectedOperationTransaction>();
+        services.AddScoped<IEconomyProtectedOperationRiskDecisionIssuer,
+            PostgreSqlEconomyProtectedOperationRiskDecisionIssuer>();
+        services.AddScoped<IEconomyProtectedOperationOrchestrator, EconomyProtectedOperationOrchestrator>();
         services.AddScoped<PostgreSqlComplianceEvidenceStore>();
         services.AddScoped<IComplianceEvidenceStore>(provider =>
             provider.GetRequiredService<PostgreSqlComplianceEvidenceStore>());
