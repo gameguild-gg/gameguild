@@ -12,6 +12,8 @@
 //                           (only meaningful with --execute; dry-run lists candidates)
 //   --skip-source-ids <csv> comma-separated sourceIds to exclude from the import
 //   --self-check            offline parse-only assertions; no creds, no HTTP
+//   --auth-probe            test-only: sign in with env creds, print token length
+//                           + tenantId, exit; no API reads/writes beyond sign-in
 //
 // Env:
 //   GG_API_URL      API base (default https://api.gameguild.gg)
@@ -45,6 +47,7 @@ function parseArgs(argv) {
     pruneStale: false,
     skipSourceIds: [],
     selfCheck: false,
+    authProbe: false,
   };
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -82,6 +85,9 @@ function parseArgs(argv) {
       case '--self-check':
         args.selfCheck = true;
         break;
+      case '--auth-probe':
+        args.authProbe = true;
+        break;
       default:
         fail(`unknown flag: ${flag}`);
     }
@@ -89,8 +95,11 @@ function parseArgs(argv) {
 
   if (!args.slug) fail('slug required');
   if (args.execute && args.selfCheck) fail('--execute and --self-check are mutually exclusive');
+  if (args.authProbe && args.execute) fail('--auth-probe and --execute are mutually exclusive');
+  if (args.authProbe && args.selfCheck) fail('--auth-probe and --self-check are mutually exclusive');
 
-  if (args.selfCheck) args.mode = 'selfcheck';
+  if (args.authProbe) args.mode = 'authprobe';
+  else if (args.selfCheck) args.mode = 'selfcheck';
   else if (args.execute) args.mode = 'execute';
   else args.mode = 'dryrun';
 
@@ -763,19 +772,63 @@ function runSelfCheck(args) {
 }
 
 // ===== api client (task 4) =====
+// Sign-in is rate-limited (10/min) — signIn() is called ONCE per run. Token values and
+// passwords never reach stdout or evidence: logHttp lines carry method/url/status/ok only,
+// and urls stay relative (purge-courses JSONL precedent).
+
+async function signIn({ apiUrl, email, password }) {
+  const response = await fetch(`${apiUrl}/v1/auth/sign-in`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  const bodyText = await response.text();
+  logHttp({ method: 'POST', url: '/v1/auth/sign-in', status: response.status, ok: response.ok });
+  if (!response.ok) {
+    throw new Error(`POST /v1/auth/sign-in -> ${response.status}: ${bodyText}`);
+  }
+  const data = JSON.parse(bodyText);
+  if (typeof data.accessToken !== 'string' || data.accessToken.length === 0) {
+    throw new Error(
+      `sign-in response has no accessToken (top-level keys: ${Object.keys(data).join(', ')})`,
+    );
+  }
+  return { accessToken: data.accessToken, tenantId: data.tenantId ?? null };
+}
+
+async function request(method, path, { token, body, apiUrl }) {
+  const response = await fetch(`${apiUrl}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const bodyText = await response.text();
+  logHttp({ method, url: path, status: response.status, ok: response.ok });
+  if (!response.ok) {
+    throw new Error(`${method} ${path} -> ${response.status}: ${bodyText}`);
+  }
+  if (bodyText === '') return null;
+  return JSON.parse(bodyText);
+}
 
 // ===== upsert (task 5-7) =====
 
 // ===== orchestration (task 8) =====
 
-function main() {
+async function main() {
   const args = parseArgs(process.argv.slice(2));
 
   const courseDir = path.join(COURSES_ROOT, args.slug);
   const indexPath = path.join(courseDir, 'index.ts');
   // Self-check resolves the course dir itself (parseCourseDir, GG_COURSES_ROOT-aware) and
   // reports a missing index.ts as a self-check failure instead of an early exit.
-  if (args.mode !== 'selfcheck' && !existsSync(indexPath)) fail(`index.ts not found: ${indexPath}`);
+  // Auth-probe is network-only and never reads the course folder.
+  if (args.mode !== 'selfcheck' && args.mode !== 'authprobe' && !existsSync(indexPath)) {
+    fail(`index.ts not found: ${indexPath}`);
+  }
 
   const env = resolveEnv();
   validateEnv(env, args.mode);
@@ -794,8 +847,18 @@ function main() {
   // so the value never reaches stdout or evidence logs.
   logEvent({ type: 'creds', email: env.email, password: maskSecret(env.password) });
 
+  // Test-only smoke path: one sign-in POST, token LENGTH only, then exit. Dry-run/execute
+  // flows pick up signIn in task 8 (orchestration).
+  if (args.mode === 'authprobe') {
+    const session = await signIn({ apiUrl: env.apiUrl, email: env.email, password: env.password });
+    console.log(
+      `[auth] ok tokenLength=${session.accessToken.length} tenantId=${session.tenantId ?? 'null'}`,
+    );
+    process.exit(0);
+  }
+
   console.log('[todo] scaffold complete — parser/API/import stages land in tasks 2-8');
   process.exit(0);
 }
 
-main();
+main().catch((err) => fail(err.message));
