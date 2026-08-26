@@ -189,6 +189,9 @@ jobs:
       - name: Stage CDN into demos
         run: node scripts/sync-emception-cdn.mjs
 
+      - name: Run instructor and learner coding assessment cycle
+        run: pnpm --dir apps/web run test:browser:coding-cycle
+
       - name: Run browser C++ compilation smoke test
         run: pnpm run test:emception:e2e
 

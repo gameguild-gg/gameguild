@@ -295,6 +295,7 @@ test_emception_ci_validates_develop_pull_requests() {
   grep -A 3 '^  push:' "$workflow" | grep -Fx '      - develop' || return 1
   grep -A 3 '^  pull_request:' "$workflow" | grep -Fx '      - develop' || return 1
   grep -Fq 'apps/web/(Dockerfile|scripts/(sync-emception-cdn|coding-cycle-browser-e2e)\.mjs|src/lib/emception/)' "$workflow"
+  grep -Fq 'pnpm --dir apps/web run test:browser:coding-cycle' "$workflow"
 }
 
 test_web_vitest_uses_direct_exec_for_json_evidence() {
