@@ -437,6 +437,19 @@ test('locked source checksum is verified before extraction and workspace hashes 
   await assert.rejects(readFile(path.join(destination, 'CMakeLists.txt')));
 });
 
+test('workspace source hashes ignore checkout line-ending representation', async (context) => {
+  const { hashDirectory } = await import('../toolchain/sources.ts');
+  const root = await temporaryRoot(context);
+  const lf = path.join(root, 'lf');
+  const crlf = path.join(root, 'crlf');
+  await mkdir(lf, { recursive: true });
+  await mkdir(crlf, { recursive: true });
+  await writeFile(path.join(lf, 'overlay.c'), 'int main(void) {\n  return 0;\n}\n');
+  await writeFile(path.join(crlf, 'overlay.c'), 'int main(void) {\r\n  return 0;\r\n}\r\n');
+
+  assert.equal(hashDirectory(lf), hashDirectory(crlf));
+});
+
 test('locked archives extract through the cross-platform Node implementation', async (context) => {
   const { gzipSync } = await import('node:zlib');
   const { createDeterministicTar } = await import('../lib/deterministic-tar.ts');
