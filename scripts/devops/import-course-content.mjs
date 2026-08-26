@@ -11,6 +11,10 @@
 //   --prune-stale           delete content whose slug is not in the imported set
 //                           (only meaningful with --execute; dry-run lists candidates)
 //   --skip-source-ids <csv> comma-separated sourceIds to exclude from the import
+//   --group-by-week        group lessons under synthesized "Week NN" Module containers:
+//                           week derived from title /^Week\s+(\d+)\s*:/i (no prefix → 01);
+//                           lessons re-parented onto their week module and a post-upsert
+//                           move stage reconciles server parents via POST .../move
 //   --self-check            offline parse-only assertions; no creds, no HTTP
 //   --auth-probe            test-only: sign in with env creds, print token length
 //                           + tenantId, exit; no API reads/writes beyond sign-in
@@ -24,13 +28,15 @@
 // {ts,method,url,status,ok} to .omo/evidence/import-course-content/<mode>-<runTs>.jsonl
 //
 // Flow (dry-run default): parse course folder → build import model → sign-in →
-// course metadata upsert → content upsert (parents-first) → stale prune → summary:
+// course metadata upsert → content upsert (parents-first) → parent reconciliation
+// (--group-by-week only) → stale prune → summary:
 //   [summary] course  : <slug> -> <courseId> (<create|update>)
-//   [summary] content : N created, N updated, N deleted, N skipped
+//   [summary] content : N created, N updated, [N moved,] N deleted, N skipped
 //   [summary] mode    : <mode>, prune: on|off
-//   [summary] json    : {"slug","courseId","courseAction","contents":{created,updated,deleted},"skipped","pruneEnabled","mode"}
-// Dry-run counts are planned actions (deleted = stale candidates, labeled "(planned)");
-// execute counts are actual API results.
+//   [summary] json    : {"slug","courseId","courseAction","contents":{created,updated[,moved],deleted},"skipped","pruneEnabled","mode"}
+// The moved count (human + json) appears only with --group-by-week; without the flag the
+// output is byte-identical to the pre-grouping script. Dry-run counts are planned actions
+// (deleted = stale candidates, labeled "(planned)"); execute counts are actual API results.
 
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
@@ -55,6 +61,7 @@ function parseArgs(argv) {
     execute: false,
     pruneStale: false,
     skipSourceIds: [],
+    groupByWeek: false,
     selfCheck: false,
     authProbe: false,
   };
@@ -77,6 +84,9 @@ function parseArgs(argv) {
         break;
       case '--prune-stale':
         args.pruneStale = true;
+        break;
+      case '--group-by-week':
+        args.groupByWeek = true;
         break;
       case '--skip-source-ids': {
         const value = argv[i + 1];
@@ -618,7 +628,7 @@ function normalizeSlug(value) {
 
 // Filters parsed contents by the skip list and projects everything onto API wire shapes.
 // Throws when a kept item's parent was skipped — silent reparenting would move subtrees.
-function buildImportModel(parsed, skipSourceIds) {
+function buildImportModel(parsed, skipSourceIds, { groupByWeek = false } = {}) {
   const skipSet = new Set(skipSourceIds);
   const kept = parsed.contents.filter((content) => !skipSet.has(content.sourceId));
 
@@ -631,40 +641,88 @@ function buildImportModel(parsed, skipSourceIds) {
   }
 
   const program = parsed.program;
-  return {
-    program: {
-      slug: program.slug,
-      title: program.title,
-      description: program.description,
-      thumbnail: program.thumbnail,
-      estimatedHours: program.estimatedHours,
-      category: parseProgramCategory(null, program.rawCategory, program.title, program.description, program.slug),
-      difficulty: parseProgramDifficulty(null, program.rawDifficulty, program.title, program.description, program.slug),
-      enrollmentStatus: parseEnrollmentStatus(null, program.rawEnrollmentStatus),
-    },
-    items: kept.map((content) => ({
-      sourceId: content.sourceId,
-      parentSourceId: content.parentSourceId,
-      title: content.title,
-      description: content.description,
-      type: toApiType(
-        parseProgramContentType(
-          content.typeComment,
-          content.rawType,
-          content.title,
-          content.description,
-          content.sourceId,
-          content.bodyImportName,
-        ),
-      ),
-      lessonFormat: 'Markdown',
-      sortOrder: content.sortOrder,
-      isRequired: content.isRequired,
-      estimatedMinutes: content.estimatedMinutes,
-      body: content.body,
-      predictedSlug: normalizeSlug(content.title),
-    })),
+  const programModel = {
+    slug: program.slug,
+    title: program.title,
+    description: program.description,
+    thumbnail: program.thumbnail,
+    estimatedHours: program.estimatedHours,
+    category: parseProgramCategory(null, program.rawCategory, program.title, program.description, program.slug),
+    difficulty: parseProgramDifficulty(null, program.rawDifficulty, program.title, program.description, program.slug),
+    enrollmentStatus: parseEnrollmentStatus(null, program.rawEnrollmentStatus),
   };
+  const lessons = kept.map((content) => ({
+    sourceId: content.sourceId,
+    parentSourceId: content.parentSourceId,
+    title: content.title,
+    description: content.description,
+    type: toApiType(
+      parseProgramContentType(
+        content.typeComment,
+        content.rawType,
+        content.title,
+        content.description,
+        content.sourceId,
+        content.bodyImportName,
+      ),
+    ),
+    lessonFormat: 'Markdown',
+    sortOrder: content.sortOrder,
+    isRequired: content.isRequired,
+    estimatedMinutes: content.estimatedMinutes,
+    body: content.body,
+    predictedSlug: normalizeSlug(content.title),
+  }));
+
+  if (!groupByWeek) {
+    return { program: programModel, items: lessons };
+  }
+
+  // --group-by-week: synthesize one Module container per distinct week (sorted asc) and
+  // REPLACE every lesson's parent with its week module — the week-08 assignment re-parents
+  // off intro2gpro-production onto the week-08 module, so 3-level nesting cannot survive.
+  // Modules prepend to items; the upsertContent topo loop needs no change (modules have
+  // null parents → pass 1, lessons depend on module sourceIds → later passes). isModule
+  // marks containers so payloads carry null body/lessonFormat/estimatedMinutes and the
+  // move stage can skip them.
+  const weeks = [...new Set(lessons.map((item) => weekNumberOf(item.title)))].sort((a, b) => a - b);
+  const modules = weeks.map((week) => {
+    const nn = String(week).padStart(2, '0');
+    return {
+      sourceId: `__module-week-${nn}`,
+      parentSourceId: null,
+      title: `Week ${nn}`,
+      description: '',
+      type: 'Module',
+      lessonFormat: null,
+      sortOrder: week,
+      isRequired: true,
+      estimatedMinutes: null,
+      body: null,
+      predictedSlug: `week-${nn}`,
+      isModule: true,
+    };
+  });
+
+  const reParented = lessons.map((item) => ({
+    ...item,
+    parentSourceId: weekModuleSourceId(weekNumberOf(item.title)),
+  }));
+
+  return { program: programModel, items: [...modules, ...reParented] };
+}
+
+// Week derivation for --group-by-week: lesson titles carry an optional "Week NN:" prefix;
+// a missing prefix maps to week 1 (e.g. "Course Syllabus" lives under Week 01).
+const WeekPrefixRegex = /^Week\s+(\d+)\s*:/i;
+
+function weekNumberOf(title) {
+  const match = WeekPrefixRegex.exec(title);
+  return match ? Number.parseInt(match[1], 10) : 1;
+}
+
+function weekModuleSourceId(weekNumber) {
+  return `__module-week-${String(weekNumber).padStart(2, '0')}`;
 }
 
 // ===== self-check (tasks 2-3) =====
@@ -778,6 +836,51 @@ function runSelfCheck(args) {
     model.items.length === 13 && modelAll.items.length === 16,
     `skipped=${model.items.length} all=${modelAll.items.length}`,
   );
+
+  // Task 12 (--group-by-week only): module containers + re-parented lessons. Without the
+  // flag the 9 asserts above are the whole self-check (regression guarantee).
+  if (args.groupByWeek) {
+    const weekModel = buildImportModel(parsed, skipIds, { groupByWeek: true });
+    const modules = weekModel.items.filter((item) => item.isModule);
+    const expectedModuleSlugs = Array.from(
+      { length: 10 },
+      (_, i) => `week-${String(i + 1).padStart(2, '0')}`,
+    );
+    assertSelfCheck(
+      'week-modules',
+      modules.length === 10
+        && JSON.stringify(modules.map((item) => item.predictedSlug)) === JSON.stringify(expectedModuleSlugs)
+        && modules.every((item) => item.type === 'Module'),
+      `modules=${JSON.stringify(modules.map((item) => item.predictedSlug))}`,
+    );
+
+    const bySlug = Object.fromEntries(weekModel.items.map((item) => [item.predictedSlug, item]));
+    assertSelfCheck(
+      'week-placement-syllabus',
+      bySlug['course-syllabus'] !== undefined
+        && bySlug['course-syllabus'].parentSourceId === '__module-week-01',
+      `parent=${bySlug['course-syllabus']?.parentSourceId ?? 'missing'}`,
+    );
+
+    const assignment = bySlug['week-08-game-development-assignment'];
+    assertSelfCheck(
+      'week-placement-assignment',
+      assignment !== undefined
+        && assignment.parentSourceId === '__module-week-08'
+        && assignment.parentSourceId !== 'intro2gpro-production',
+      `parent=${assignment?.parentSourceId ?? 'missing'}`,
+    );
+
+    const moduleSourceIds = new Set(modules.map((item) => item.sourceId));
+    const orphan = weekModel.items.find(
+      (item) => !item.isModule && !moduleSourceIds.has(item.parentSourceId),
+    );
+    assertSelfCheck(
+      'no-orphan-lessons',
+      orphan === undefined,
+      `orphan=${orphan ? orphan.sourceId : 'none'}`,
+    );
+  }
 }
 
 // ===== api client (task 4) =====
@@ -1031,6 +1134,64 @@ async function upsertContent(token, courseId, model, { dryRun, apiUrl }) {
   return { created, updated, items: model.items.length };
 }
 
+// Task 12 — parent reconciliation (--group-by-week). Upserts never change parentId
+// (UpdateProgramContentDto has no such field — T6), so after the upsert the server tree
+// can still carry stale parents. This stage fresh-GETs the content tree and, for every
+// non-module item whose server parentId differs from its desired week-module parent,
+// POSTs /v1/courses/{pid}/content/{id}/move with MoveContentDto wire fields
+// {contentId, newParentId, newSortOrder} — contentId must equal the URL id
+// (ProgramContentController.cs:181); newParentId is nullable; newSortOrder is a required
+// int (the item's own sortOrder). No mismatch → no call (idempotent re-run = 0 moves).
+// Dry-run only PRINTS planned moves — request() logs every POST to evidence, so a
+// dry-run census must stay free of move calls. Skipped entirely without --group-by-week
+// (byte-identical no-flag output) and on the dry-run create path (no courseId yet).
+async function reconcileParents(token, courseId, model, { dryRun, groupByWeek, apiUrl }) {
+  if (!groupByWeek || courseId === null) return { moved: 0, planned: 0 };
+
+  const content = await request('GET', `/v1/courses/${courseId}/content`, { token, apiUrl });
+  const serverBySlug = new Map();
+  for (const dto of flattenContentTree(Array.isArray(content) ? content : [])) {
+    if (dto && typeof dto === 'object' && typeof dto.slug === 'string' && dto.slug !== '') {
+      serverBySlug.set(dto.slug, { id: dto.id, parentId: dto.parentId ?? null });
+    }
+  }
+
+  const moduleSlugBySourceId = new Map(
+    model.items.filter((item) => item.isModule).map((item) => [item.sourceId, item.predictedSlug]),
+  );
+
+  let moved = 0;
+  let planned = 0;
+  for (const item of model.items) {
+    if (item.isModule) continue;
+    const server = serverBySlug.get(item.predictedSlug);
+    if (!server) continue;
+
+    const parentSlug = item.parentSourceId !== null
+      ? moduleSlugBySourceId.get(item.parentSourceId) ?? null
+      : null;
+    const serverParent = parentSlug !== null ? serverBySlug.get(parentSlug) : undefined;
+    // A module missing from the server only happens in dry-run (execute creates modules in
+    // the upsert before this stage); the sentinel forces a parent mismatch so the move is
+    // still planned.
+    const desiredParentId = parentSlug === null ? null : serverParent ? serverParent.id : '__pending__';
+    if (server.parentId === desiredParentId) continue;
+
+    if (dryRun) {
+      console.log(`[content] move ${item.predictedSlug} -> ${parentSlug ?? 'top'}`);
+      planned += 1;
+    } else {
+      await request('POST', `/v1/courses/${courseId}/content/${server.id}/move`, {
+        token,
+        apiUrl,
+        body: { contentId: server.id, newParentId: desiredParentId, newSortOrder: item.sortOrder },
+      });
+      moved += 1;
+    }
+  }
+  return { moved, planned };
+}
+
 // Task 7 — stale prune, scoped and opt-in. Scoped by construction: every URL below embeds
 // ${courseId}, so only content under the imported program can ever be listed or deleted.
 // Items with a null/empty slug are NEVER delete candidates — unmarked content is foreign
@@ -1093,15 +1254,21 @@ async function pruneStale(token, courseId, model, { dryRun, pruneStale, apiUrl }
 // deleted = stale candidates (prune.planned) regardless of --prune-stale, so the summary
 // always shows what an execute run WOULD prune (the mode line's prune flag says whether it
 // will). Execute counts are actual responses — pruneStale's deleted already excludes the
-// tolerated 404s. The human content line labels dry-run numbers "(planned)"; the json line
-// carries raw numbers (T9/T10 evidence greps it) with keys in fixed order.
-function printSummary(args, slug, course, content, prune, dryRun) {
+// tolerated 404s. With --group-by-week a moved count (reconcileParents: dry-run planned /
+// execute actual) joins both lines between updated and deleted; without the flag neither
+// line mentions moved (byte-identical output). The human content line labels dry-run
+// numbers "(planned)"; the json line carries raw numbers (T9/T10 evidence greps it) with
+// keys in fixed order.
+function printSummary(args, slug, course, content, moves, prune, dryRun) {
   const deleted = dryRun ? prune.planned.length : prune.deleted;
   const deletedLabel = dryRun ? `${deleted} deleted (planned)` : `${deleted} deleted`;
+  const moved = dryRun ? moves.planned : moves.moved;
+  const movedLabel = args.groupByWeek ? (dryRun ? `${moved} moved (planned)` : `${moved} moved`) : null;
 
   console.log(`[summary] course  : ${slug} -> ${course.courseId ?? 'n/a'} (${course.action})`);
   console.log(
-    `[summary] content : ${content.created} created, ${content.updated} updated, ${deletedLabel}` +
+    `[summary] content : ${content.created} created, ${content.updated} updated` +
+      `${movedLabel !== null ? `, ${movedLabel}` : ''}, ${deletedLabel}` +
       `, ${args.skipSourceIds.length} skipped`,
   );
   console.log(`[summary] mode    : ${args.mode}, prune: ${args.pruneStale ? 'on' : 'off'}`);
@@ -1110,7 +1277,12 @@ function printSummary(args, slug, course, content, prune, dryRun) {
       slug,
       courseId: course.courseId,
       courseAction: course.action,
-      contents: { created: content.created, updated: content.updated, deleted },
+      contents: {
+        created: content.created,
+        updated: content.updated,
+        ...(args.groupByWeek ? { moved } : {}),
+        deleted,
+      },
       skipped: args.skipSourceIds.length,
       pruneEnabled: args.pruneStale,
       mode: args.mode,
@@ -1156,17 +1328,23 @@ async function main() {
     process.exit(0);
   }
 
-  // Main flow: parse → model → sign-in → metadata upsert → content upsert → prune → summary.
-  // buildImportModel throws on orphaned skips — main().catch(fail) turns that into exit 1
-  // BEFORE any HTTP call.
+  // Main flow: parse → model → sign-in → metadata upsert → content upsert → parent
+  // reconciliation (--group-by-week) → prune → summary. buildImportModel throws on
+  // orphaned skips — main().catch(fail) turns that into exit 1 BEFORE any HTTP call.
   const parsed = parseCourseDir(args.slug);
-  const model = buildImportModel(parsed, args.skipSourceIds);
+  const model = buildImportModel(parsed, args.skipSourceIds, { groupByWeek: args.groupByWeek });
   const session = await signIn({ apiUrl: env.apiUrl, email: env.email, password: env.password });
   const dryRun = args.mode !== 'execute';
   const course = await upsertCourse(session.accessToken, model.program, { dryRun, apiUrl: env.apiUrl });
   console.log('[stage] metadata complete');
   const content = await upsertContent(session.accessToken, course.courseId, model, { dryRun, apiUrl: env.apiUrl });
   console.log('[stage] content complete');
+  const moves = await reconcileParents(session.accessToken, course.courseId, model, {
+    dryRun,
+    groupByWeek: args.groupByWeek,
+    apiUrl: env.apiUrl,
+  });
+  if (args.groupByWeek) console.log('[stage] move complete');
   const prune = await pruneStale(session.accessToken, course.courseId, model, {
     dryRun,
     pruneStale: args.pruneStale,
@@ -1174,7 +1352,7 @@ async function main() {
   });
   console.log('[stage] prune complete');
 
-  printSummary(args, model.program.slug, course, content, prune, dryRun);
+  printSummary(args, model.program.slug, course, content, moves, prune, dryRun);
   process.exit(0);
 }
 
