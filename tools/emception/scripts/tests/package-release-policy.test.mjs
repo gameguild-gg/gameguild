@@ -77,6 +77,18 @@ test('private workspace links public packages without duplicating their release 
   assert.equal(workspace.dependencies['@gameguild/emception-xterm'], 'workspace:*');
 });
 
+test('package tests build Xterm before testing Browser from a clean checkout', async () => {
+  const workspace = await json(path.join(emceptionRoot, 'package.json'));
+  const packageTests = workspace.scripts['test:packages'];
+
+  assert.match(packageTests, /test:packages:xterm/);
+  assert.equal(
+    packageTests.indexOf('test:packages:xterm') < packageTests.indexOf('test:packages:browser'),
+    true,
+    'Browser imports Xterm declarations from its built package output',
+  );
+});
+
 test('Changesets fixes only the seven public Emception packages together', async () => {
   const config = await json(path.join(repoRoot, '.changeset', 'config.json'));
   const expected = [...EMCEPTION_PACKAGES].sort();
