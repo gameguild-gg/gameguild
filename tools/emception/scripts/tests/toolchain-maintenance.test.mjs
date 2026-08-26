@@ -100,19 +100,26 @@ test('Binaryen optimization inherits the bounded Toolchain concurrency', async (
   assert.throws(() => ensureBinaryenConcurrency({}, 0), /positive integer/);
 });
 
-test('LLVM driver objects are built through their CMake subdirectory targets', async () => {
+test('LLVM driver objects are built from the root CMake generator directory', async () => {
   const root = path.resolve(import.meta.dirname, '..', '..');
   const source = await readFile(path.join(root, 'scripts', 'build-llvm.ts'), 'utf8');
 
   assert.match(
     source,
-    /cmake --build "\$\{driverSubdir\}"[^\n]+--target \$\{requiredObjs\.join\(' '\)\}/,
+    /const driverTargets = requiredObjs\.map\(obj => `tools\/clang\/tools\/driver\/CMakeFiles\/clang\.dir\/\$\{obj\}`\);/,
   );
   assert.match(
     source,
-    /cmake --build "\$\{lldSubdir\}"[^\n]+--target \$\{requiredObjs\.join\(' '\)\}/,
+    /cmake --build "\$\{wasmBuildDir\}"[^\n]+--target \$\{driverTargets\.join\(' '\)\}/,
   );
-  assert.doesNotMatch(source, /CMakeFiles\/(?:clang|lld)\.dir\/\$\{obj\}/);
+  assert.match(
+    source,
+    /const lldTargets = requiredObjs\.map\(obj => `tools\/lld\/tools\/lld\/CMakeFiles\/lld\.dir\/\$\{obj\}`\);/,
+  );
+  assert.match(
+    source,
+    /cmake --build "\$\{wasmBuildDir\}"[^\n]+--target \$\{lldTargets\.join\(' '\)\}/,
+  );
 });
 
 test('Emscripten sysroot copies exclude host Python bytecode caches', async (context) => {
