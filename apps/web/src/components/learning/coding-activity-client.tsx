@@ -143,6 +143,7 @@ export function CodingActivityClient({
     if (submitting) return;
     setSubmitting(true);
     try {
+      await sessionRef.current?.run('public');
       // The assessment session returns only editable public changes plus
       // permitted student-created text files.
       const modified = (await sessionRef.current?.getSubmissionDelta()) ?? [];
