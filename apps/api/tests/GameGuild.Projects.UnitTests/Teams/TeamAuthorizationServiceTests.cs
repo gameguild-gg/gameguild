@@ -3,6 +3,8 @@ using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using GameGuild.Teams;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GameGuild.Projects.UnitTests.Teams;
 
@@ -26,6 +28,7 @@ public sealed class TeamAuthorizationServiceTests : IDisposable
     [InlineData(TeamMemberAuthority.Viewer, TeamMemberAuthority.Viewer, true)]
     [InlineData(TeamMemberAuthority.Viewer, TeamMemberAuthority.Manager, false)]
     [InlineData(TeamMemberAuthority.Manager, TeamMemberAuthority.Manager, true)]
+    [InlineData(TeamMemberAuthority.Owner, TeamMemberAuthority.Viewer, true)]
     public async Task HasAuthority_Should_Use_Typed_Active_Membership(
         TeamMemberAuthority actual,
         TeamMemberAuthority required,
@@ -40,6 +43,33 @@ public sealed class TeamAuthorizationServiceTests : IDisposable
         var allowed = await CreateService().HasAuthorityAsync(team.Id, required);
 
         allowed.Should().Be(expected);
+    }
+
+    [Fact]
+    public async Task Owner_Should_Satisfy_Viewer_Authority_With_String_Backed_Relational_Storage()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=False");
+        await connection.OpenAsync();
+        await using var context = new TeamAuthorizationTestDbContext(
+            new DbContextOptionsBuilder<TeamAuthorizationTestDbContext>()
+                .UseSqlite(connection)
+                .Options);
+        await context.Database.EnsureCreatedAsync();
+        context.Set<User>().Add(new User { Id = _actorId, IsActive = true });
+        context.Set<TenantMember>().Add(new TenantMember
+        {
+            UserId = _actorId,
+            TenantId = _tenantId,
+            IsActive = true
+        });
+        var team = Team.Create(_tenantId, "Studio", "studio", _actorId);
+        context.Set<Team>().Add(team);
+        await context.SaveChangesAsync();
+
+        var allowed = await new TeamAuthorizationService(context, _actorAccessor.Object)
+            .HasAuthorityAsync(team.Id, TeamMemberAuthority.Viewer);
+
+        allowed.Should().BeTrue("an Owner must inherit Viewer access even when authority is stored as text");
     }
 
     [Fact]
@@ -139,4 +169,18 @@ public sealed class TeamAuthorizationServiceTests : IDisposable
             AuthScheme = "Bearer",
             IsAuthenticated = true
         });
+
+    private sealed class TeamAuthorizationTestDbContext(DbContextOptions<TeamAuthorizationTestDbContext> options)
+        : DbContext(options), IApplicationDbContext
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<User>().HasKey(user => user.Id);
+            modelBuilder.Entity<TenantMember>().HasKey(member => member.Id);
+            new TeamsModelConfiguration().Configure(modelBuilder);
+        }
+
+        Task<IDbContextTransaction> IApplicationDbContext.BeginTransactionAsync(
+            CancellationToken cancellationToken) => Database.BeginTransactionAsync(cancellationToken);
+    }
 }

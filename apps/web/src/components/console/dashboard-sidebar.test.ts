@@ -84,6 +84,19 @@ describe("dashboard management navigation", () => {
     ]);
   });
 
+  it("keeps Projects and Teams as direct workspace links without child routes", () => {
+    const workspace = dashboardNavigationData.find(
+      (group) => group.label === "My Workspace",
+    );
+    const projects = workspace?.items.find((item) => item.title === "Projects");
+    const teams = workspace?.items.find((item) => item.title === "Teams");
+
+    expect(projects).toMatchObject({ url: "/workspace/projects" });
+    expect(projects?.subGroups).toBeUndefined();
+    expect(teams).toMatchObject({ url: "/workspace/teams" });
+    expect(teams?.subGroups).toBeUndefined();
+  });
+
   it("shows only the administrative module granted to the actor", () => {
     const navigation = filterDashboardNavigation(dashboardNavigationData, [
       "TestingLab.ManageEvents",

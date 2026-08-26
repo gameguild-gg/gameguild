@@ -59,14 +59,18 @@ public sealed class TeamAuthorizationService(
         if (!activeTenantMember) return false;
         if (CanManageTeams(actor)) return true;
 
-        return await context.Set<TeamMember>().AsNoTracking().AnyAsync(member =>
-            member.TeamId == teamId &&
-            member.UserId == userId &&
-            member.Authority >= required &&
-            member.IsActive &&
-            member.LeftAt == null &&
-            member.DeletedAt == null,
-                cancellationToken).ConfigureAwait(false);
+        var authority = await context.Set<TeamMember>().AsNoTracking()
+            .Where(member =>
+                member.TeamId == teamId &&
+                member.UserId == userId &&
+                member.IsActive &&
+                member.LeftAt == null &&
+                member.DeletedAt == null)
+            .Select(member => (TeamMemberAuthority?)member.Authority)
+            .SingleOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return authority.HasValue && authority.Value >= required;
     }
 
     public async Task<bool> CanRestoreAsync(Guid teamId, CancellationToken cancellationToken = default)
