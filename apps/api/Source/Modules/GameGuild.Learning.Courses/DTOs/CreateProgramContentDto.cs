@@ -16,7 +16,7 @@ public class CreateProgramContentDto {
 
   [Required] public ProgramContentType Type { get; set; }
 
-  public string Body { get; set; } = "{}";
+  public string? Body { get; set; }
 
   public JsonElement? JsonBody { get; set; }
 
