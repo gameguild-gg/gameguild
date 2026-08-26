@@ -25,8 +25,6 @@ public sealed class EconomyCoreModule : ModuleBase
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.AddEconomyRiskComposition(configuration);
-        services.AddOptions<SelfServiceHardToSoftRiskDecisionOptions>()
-            .Bind(configuration.GetSection(SelfServiceHardToSoftRiskDecisionOptions.SectionName));
         services.AddScoped<IRiskDecisionAuthorizer, PostgreSqlRiskDecisionAuthorizer>();
         services.AddScoped<IHardToSoftConversionRiskEvidenceVerifier, HardToSoftConversionRiskEvidenceVerifier>();
         services.AddScoped<IHardToSoftConversionRiskDecisionIssuer, PostgreSqlHardToSoftConversionRiskDecisionIssuer>();
@@ -40,6 +38,7 @@ public sealed class EconomyCoreModule : ModuleBase
         services.AddScoped<IHardCoinFundingGateway, PostgreSqlHardCoinFundingGateway>();
         services.AddScoped<IAdRewardIssuanceGateway, PostgreSqlAdRewardIssuanceGateway>();
         services.AddScoped<IHardToSoftConversionGateway, PostgreSqlHardToSoftConversionGateway>();
+        services.AddScoped<IHardToSoftConversionPolicyResolver, HardToSoftConversionPolicyResolver>();
         services.AddScoped<IHardToSoftConversionWorkflow, PostgreSqlHardToSoftConversionWorkflow>();
         services.AddScoped<PostgreSqlFifoFragmentReservationGateway>();
         services.AddScoped<IFifoFragmentReservationGateway>(provider =>

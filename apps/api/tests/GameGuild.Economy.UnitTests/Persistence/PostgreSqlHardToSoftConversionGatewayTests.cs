@@ -8,7 +8,6 @@ using GameGuild.Economy.Risk;
 using GameGuild.Economy.UnitTests.Funding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Options;
 using Npgsql;
 using System.Reflection;
 
@@ -51,13 +50,7 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
             "seeded-decision-not-used-by-issuer");
         await InsertCurrentCoveredReserveHeadAsync(connection);
 
-        var issuer = new PostgreSqlHardToSoftConversionRiskDecisionIssuer(
-            context,
-            Options.Create(new SelfServiceHardToSoftRiskDecisionOptions
-            {
-                MaxHardCoinUnitsPerDay = 100,
-                DecisionLifetimeSeconds = 300
-            }));
+        var issuer = new PostgreSqlHardToSoftConversionRiskDecisionIssuer(context);
         var request = new HardToSoftConversionRiskDecisionRequest(
             actor,
             tenant,
@@ -66,6 +59,11 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
             new IdempotencyKey(idempotencyKey),
             0,
             10,
+            100,
+            300,
+            "BRA",
+            7,
+            "signed-policy-hash",
             [
                 new(ExternalRiskSource.FinancialCrime, 1, Now.AddMinutes(-1), Now.AddMinutes(5), ExternalRiskOutcome.Allow, "financial-crime-evidence"),
                 new(ExternalRiskSource.TrustSafety, 1, Now.AddMinutes(-1), Now.AddMinutes(5), ExternalRiskOutcome.Allow, "trust-safety-evidence")
@@ -77,7 +75,8 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
         issued.SourceRoots.Should().Equal(root);
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_fragment_reservations WHERE \"OperationId\" = '{operation}' AND \"RootSourceStampId\" = '{root}' AND \"Purpose\" = 3;")).Should().Be(1);
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_counter_reservations WHERE \"RiskDecisionId\" = '{issued.Id}' AND \"AmountUnits\" = 10;")).Should().Be(1);
-        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_audit_evidence WHERE \"RiskDecisionId\" = '{issued.Id}';")).Should().Be(2);
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_audit_evidence WHERE \"RiskDecisionId\" = '{issued.Id}';")).Should().Be(3);
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_audit_evidence WHERE \"RiskDecisionId\" = '{issued.Id}' AND \"EvidenceHash\" = 'signed-policy-hash' AND \"Payload\"->>'kind' = 'signed-capability-policy' AND \"Payload\"->>'jurisdictionCode' = 'BRA';")).Should().Be(1);
 
         var replay = await issuer.IssueAsync(request, CancellationToken.None);
         replay.Id.Should().Be(issued.Id);

@@ -2,7 +2,6 @@ using FluentAssertions;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Risk;
-using Microsoft.Extensions.Options;
 
 namespace GameGuild.Economy.UnitTests.Risk;
 
@@ -12,32 +11,27 @@ public sealed class HardToSoftConversionRiskDecisionIssuerTests
     public async Task IssueAsync_RejectsAnUnconfiguredDailyLimitBeforeTouchingPersistence()
     {
         var issuer = new PostgreSqlHardToSoftConversionRiskDecisionIssuer(
-            null!,
-            Options.Create(new SelfServiceHardToSoftRiskDecisionOptions
-            {
-                MaxHardCoinUnitsPerDay = 0
-            }));
+            null!);
 
-        var act = () => issuer.IssueAsync(Request(), CancellationToken.None);
+        var act = () => issuer.IssueAsync(
+            Request() with { MaximumHardCoinUnitsPerDay = 0 }, CancellationToken.None);
 
         await act.Should().ThrowAsync<EconomySelfServiceCommandRejectedException>()
             .WithMessage("*daily risk limit*");
     }
 
     [Fact]
-    public async Task IssueAsync_RejectsARequestThatExceedsTheConfiguredDailyLimitBeforeTouchingPersistence()
+    public async Task IssueAsync_RejectsARequestThatExceedsTheSignedDailyLimitBeforeTouchingPersistence()
     {
         var issuer = new PostgreSqlHardToSoftConversionRiskDecisionIssuer(
-            null!,
-            Options.Create(new SelfServiceHardToSoftRiskDecisionOptions
-            {
-                MaxHardCoinUnitsPerDay = 99
-            }));
+            null!);
 
-        var act = () => issuer.IssueAsync(Request() with { TotalHardCoinUnits = 100 }, CancellationToken.None);
+        var act = () => issuer.IssueAsync(
+            Request() with { TotalHardCoinUnits = 100, MaximumHardCoinUnitsPerDay = 99 },
+            CancellationToken.None);
 
         await act.Should().ThrowAsync<EconomySelfServiceCommandRejectedException>()
-            .WithMessage("*exceeds the configured daily HardCoin risk limit*");
+            .WithMessage("*exceeds the signed daily HardCoin risk limit*");
     }
 
     [Theory]
@@ -55,11 +49,7 @@ public sealed class HardToSoftConversionRiskDecisionIssuerTests
             _ => throw new ArgumentOutOfRangeException(nameof(missingIdentifier))
         };
         var issuer = new PostgreSqlHardToSoftConversionRiskDecisionIssuer(
-            null!,
-            Options.Create(new SelfServiceHardToSoftRiskDecisionOptions
-            {
-                MaxHardCoinUnitsPerDay = 200
-            }));
+            null!);
 
         var act = () => issuer.IssueAsync(request, CancellationToken.None);
 
@@ -73,14 +63,10 @@ public sealed class HardToSoftConversionRiskDecisionIssuerTests
     public async Task IssueAsync_RejectsAnUnsafeDecisionLifetimeBeforeTouchingPersistence(int lifetimeSeconds)
     {
         var issuer = new PostgreSqlHardToSoftConversionRiskDecisionIssuer(
-            null!,
-            Options.Create(new SelfServiceHardToSoftRiskDecisionOptions
-            {
-                MaxHardCoinUnitsPerDay = 200,
-                DecisionLifetimeSeconds = lifetimeSeconds
-            }));
+            null!);
 
-        var act = () => issuer.IssueAsync(Request(), CancellationToken.None);
+        var act = () => issuer.IssueAsync(
+            Request() with { DecisionLifetimeSeconds = lifetimeSeconds }, CancellationToken.None);
 
         await act.Should().ThrowAsync<EconomySelfServiceCommandRejectedException>()
             .WithMessage("*lifetime must be between 30 and 900 seconds*");
@@ -97,6 +83,11 @@ public sealed class HardToSoftConversionRiskDecisionIssuerTests
             new IdempotencyKey("issuer-test-key"),
             0,
             100,
+            200,
+            300,
+            "BRA",
+            7,
+            "signed-policy-hash",
             [
                 new(ExternalRiskSource.FinancialCrime, 1, now.AddMinutes(-1), now.AddMinutes(5), ExternalRiskOutcome.Allow, "financial-crime"),
                 new(ExternalRiskSource.TrustSafety, 1, now.AddMinutes(-1), now.AddMinutes(5), ExternalRiskOutcome.Allow, "trust-safety")
