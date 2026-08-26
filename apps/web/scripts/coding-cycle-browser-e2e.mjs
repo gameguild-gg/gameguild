@@ -278,19 +278,15 @@ async function bootStack() {
   assertPortAvailable(API_PORT, "GameGuild API");
   assertPortAvailable(WEB_PORT, "GameGuild web");
 
-  // Ensure the emception CDN payload is synced into apps/web/public/emception.
-  const manifestPath = resolve(WEB_DIR, "public/emception/manifest.json");
-  if (!existsSync(manifestPath)) {
-    log("syncing emception CDN payload (public/emception missing)");
-    const sync = spawn("node", ["scripts/sync-emception-cdn.mjs"], {
-      cwd: WEB_DIR,
-      stdio: "inherit",
-    });
-    await new Promise((res, rej) => {
-      sync.on("exit", (c) => (c === 0 ? res() : rej(new Error(`sync:emception exit ${c}`))));
-      sync.on("error", rej);
-    });
-  }
+  log("syncing canonical emception Toolchain release");
+  const sync = spawn("node", ["scripts/sync-emception-cdn.mjs"], {
+    cwd: WEB_DIR,
+    stdio: "inherit",
+  });
+  await new Promise((res, rej) => {
+    sync.on("exit", (c) => (c === 0 ? res() : rej(new Error(`sync:emception exit ${c}`))));
+    sync.on("error", rej);
+  });
 
   // --- disposable postgres ---
   log(`starting disposable postgres on ${PG_PORT} (${PG_IMAGE})`);
