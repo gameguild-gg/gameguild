@@ -22,6 +22,15 @@
 //
 // Evidence: every HTTP call is appended as one JSONL line
 // {ts,method,url,status,ok} to .omo/evidence/import-course-content/<mode>-<runTs>.jsonl
+//
+// Flow (dry-run default): parse course folder → build import model → sign-in →
+// course metadata upsert → content upsert (parents-first) → stale prune → summary:
+//   [summary] course  : <slug> -> <courseId> (<create|update>)
+//   [summary] content : N created, N updated, N deleted, N skipped
+//   [summary] mode    : <mode>, prune: on|off
+//   [summary] json    : {"slug","courseId","courseAction","contents":{created,updated,deleted},"skipped","pruneEnabled","mode"}
+// Dry-run counts are planned actions (deleted = stale candidates, labeled "(planned)");
+// execute counts are actual API results.
 
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
@@ -1079,6 +1088,36 @@ async function pruneStale(token, courseId, model, { dryRun, pruneStale, apiUrl }
 
 // ===== orchestration (task 8) =====
 
+// Final block: three human lines + one machine line. Dry-run counts are PLANNED actions —
+// upsertContent's created/updated already increment on the printed dry-run lines, and
+// deleted = stale candidates (prune.planned) regardless of --prune-stale, so the summary
+// always shows what an execute run WOULD prune (the mode line's prune flag says whether it
+// will). Execute counts are actual responses — pruneStale's deleted already excludes the
+// tolerated 404s. The human content line labels dry-run numbers "(planned)"; the json line
+// carries raw numbers (T9/T10 evidence greps it) with keys in fixed order.
+function printSummary(args, slug, course, content, prune, dryRun) {
+  const deleted = dryRun ? prune.planned.length : prune.deleted;
+  const deletedLabel = dryRun ? `${deleted} deleted (planned)` : `${deleted} deleted`;
+
+  console.log(`[summary] course  : ${slug} -> ${course.courseId ?? 'n/a'} (${course.action})`);
+  console.log(
+    `[summary] content : ${content.created} created, ${content.updated} updated, ${deletedLabel}` +
+      `, ${args.skipSourceIds.length} skipped`,
+  );
+  console.log(`[summary] mode    : ${args.mode}, prune: ${args.pruneStale ? 'on' : 'off'}`);
+  console.log(
+    `[summary] json    : ${JSON.stringify({
+      slug,
+      courseId: course.courseId,
+      courseAction: course.action,
+      contents: { created: content.created, updated: content.updated, deleted },
+      skipped: args.skipSourceIds.length,
+      pruneEnabled: args.pruneStale,
+      mode: args.mode,
+    })}`,
+  );
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
@@ -1108,8 +1147,7 @@ async function main() {
   // so the value never reaches stdout or evidence logs.
   logEvent({ type: 'creds', email: env.email, password: maskSecret(env.password) });
 
-  // Test-only smoke path: one sign-in POST, token LENGTH only, then exit. Dry-run/execute
-  // flows pick up signIn in task 8 (orchestration).
+  // Test-only smoke path: one sign-in POST, token LENGTH only, then exit.
   if (args.mode === 'authprobe') {
     const session = await signIn({ apiUrl: env.apiUrl, email: env.email, password: env.password });
     console.log(
@@ -1118,23 +1156,25 @@ async function main() {
     process.exit(0);
   }
 
-  // Main flow: parse → model → sign-in → metadata upsert → content upsert.
+  // Main flow: parse → model → sign-in → metadata upsert → content upsert → prune → summary.
   // buildImportModel throws on orphaned skips — main().catch(fail) turns that into exit 1
-  // BEFORE any HTTP call. Prune (task 7) and the summary (task 8) land in later stages.
+  // BEFORE any HTTP call.
   const parsed = parseCourseDir(args.slug);
   const model = buildImportModel(parsed, args.skipSourceIds);
   const session = await signIn({ apiUrl: env.apiUrl, email: env.email, password: env.password });
   const dryRun = args.mode !== 'execute';
   const course = await upsertCourse(session.accessToken, model.program, { dryRun, apiUrl: env.apiUrl });
   console.log('[stage] metadata complete');
-  await upsertContent(session.accessToken, course.courseId, model, { dryRun, apiUrl: env.apiUrl });
+  const content = await upsertContent(session.accessToken, course.courseId, model, { dryRun, apiUrl: env.apiUrl });
   console.log('[stage] content complete');
-  await pruneStale(session.accessToken, course.courseId, model, {
+  const prune = await pruneStale(session.accessToken, course.courseId, model, {
     dryRun,
     pruneStale: args.pruneStale,
     apiUrl: env.apiUrl,
   });
-  console.log('[stage] prune complete (orchestration lands in task 8)');
+  console.log('[stage] prune complete');
+
+  printSummary(args, model.program.slug, course, content, prune, dryRun);
   process.exit(0);
 }
 
