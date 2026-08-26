@@ -292,7 +292,7 @@ async function signIn(page, email = adminEmail, password = adminPassword) {
   await visit(page, '/sign-in', 'sign in');
   await waitForClientHydration(page);
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
+  await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click({ noWaitAfter: true });
   await page.waitForURL(/\/dashboard/, { timeout: 60_000 });
 }

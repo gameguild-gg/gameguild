@@ -371,7 +371,7 @@ async function run() {
     await waitForClientHydration(page);
     await waitForReactControl(page, page.getByLabel("Email"));
     await page.getByLabel("Email").fill(adminEmail);
-    await page.getByLabel("Password").fill(adminPassword);
+    await page.getByLabel("Password", { exact: true }).fill(adminPassword);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await waitForLocation(
       page,

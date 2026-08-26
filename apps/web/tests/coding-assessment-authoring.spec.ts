@@ -48,7 +48,7 @@ test.describe.skip("Coding Assessment Authoring", () => {
     // 1. Sign in as admin.
     await page.goto(`${WEB_BASE_URL}/sign-in`, { waitUntil: "domcontentloaded" });
     await page.getByLabel("Email").fill(ADMIN_EMAIL);
-    await page.getByLabel("Password").fill(ADMIN_PASSWORD);
+    await page.getByLabel("Password", { exact: true }).fill(ADMIN_PASSWORD);
     await page
       .getByRole("button", { name: "Sign in", exact: true })
       .click();
@@ -122,7 +122,7 @@ test.describe.skip("Coding Assessment Authoring", () => {
     // 1. Sign in as admin.
     await page.goto(`${WEB_BASE_URL}/sign-in`, { waitUntil: "domcontentloaded" });
     await page.getByLabel("Email").fill(ADMIN_EMAIL);
-    await page.getByLabel("Password").fill(ADMIN_PASSWORD);
+    await page.getByLabel("Password", { exact: true }).fill(ADMIN_PASSWORD);
     await page
       .getByRole("button", { name: "Sign in", exact: true })
       .click();
