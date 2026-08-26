@@ -44,6 +44,29 @@ public sealed class EconomyProtectedOperationOrchestratorTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_UsesTheServerSelectedProtectedSubjectForJurisdictionAndEvidence()
+    {
+        var subjectId = Guid.Parse("98000000-0000-0000-0000-000000000020");
+        var resolver = new FixedJurisdictionResolver();
+        var issuer = new CapturingIssuer(new EconomyProtectedRiskDecision(
+            DecisionId, RiskOutcome.Allow, EconomyProtectedOperationState.Ready, null, []));
+        var capabilities = new CapturingCapabilityService();
+        var orchestrator = new EconomyProtectedOperationOrchestrator(
+            AuthenticatedActor(), resolver, issuer, capabilities, new CapturingTransaction());
+        var intent = Intent() with { ProtectedSubjectId = subjectId };
+
+        await orchestrator.ExecuteAsync(intent, (_, _) => Task.FromResult(true), default);
+
+        resolver.SubjectId.Should().Be(subjectId);
+        issuer.Request!.ActorId.Should().Be(ActorId);
+        issuer.Request.SubjectReference.Should().Be(EconomySubjectReference.ForUser(TenantId, subjectId));
+        capabilities.Context!.ActorId.Should().Be(ActorId);
+        capabilities.Context.SubjectReference.Should().Be(EconomySubjectReference.ForUser(TenantId, subjectId));
+        EconomyProtectedOperationOrchestrator.Fingerprint(TenantId, ActorId, intent)
+            .Should().NotBe(EconomyProtectedOperationOrchestrator.Fingerprint(TenantId, ActorId, Intent()));
+    }
+
+    [Fact]
     public async Task ExecuteAsync_PersistsReviewOutcomeWithoutInvokingTheProtectedMutation()
     {
         var reviewId = Guid.NewGuid();
@@ -140,11 +163,17 @@ public sealed class EconomyProtectedOperationOrchestratorTests
 
     private sealed class FixedJurisdictionResolver : IEconomyJurisdictionResolver
     {
+        public Guid SubjectId { get; private set; }
+
         public ValueTask<EconomyJurisdictionResolution> ResolveAsync(
             Guid tenantId, Guid actorId, string? providerJurisdiction,
             string? destinationJurisdiction, DateTimeOffset evaluatedAt,
-            CancellationToken cancellationToken) => ValueTask.FromResult(
-            new EconomyJurisdictionResolution("BRA", 3, 7, "kyc-evidence"));
+            CancellationToken cancellationToken)
+        {
+            SubjectId = actorId;
+            return ValueTask.FromResult(
+                new EconomyJurisdictionResolution("BRA", 3, 7, "kyc-evidence"));
+        }
     }
 
     private sealed class CapturingIssuer(EconomyProtectedRiskDecision result)
