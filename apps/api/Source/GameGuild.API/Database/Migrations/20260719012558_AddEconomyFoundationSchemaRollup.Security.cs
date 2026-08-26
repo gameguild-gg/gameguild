@@ -905,18 +905,17 @@ public partial class AddEconomyFoundationSchemaRollup
             """);
     }
 
-    private static void RemoveRoles(MigrationBuilder migrationBuilder)
+    private static void RemoveRolePrivileges(MigrationBuilder migrationBuilder)
     {
+        // PostgreSQL roles are cluster-scoped and can be shared by other databases.
+        // The database rollback removes only ownership and privileges in this database;
+        // cluster bootstrap remains responsible for the roles' lifecycle.
         migrationBuilder.Sql(
             """
             DROP OWNED BY gameguild_economy_runtime;
             DROP OWNED BY gameguild_economy_writer;
             DROP OWNED BY gameguild_economy_procedure_owner;
             DROP OWNED BY gameguild_economy_migration;
-            DROP ROLE IF EXISTS gameguild_economy_runtime;
-            DROP ROLE IF EXISTS gameguild_economy_writer;
-            DROP ROLE IF EXISTS gameguild_economy_procedure_owner;
-            DROP ROLE IF EXISTS gameguild_economy_migration;
             """);
     }
 }

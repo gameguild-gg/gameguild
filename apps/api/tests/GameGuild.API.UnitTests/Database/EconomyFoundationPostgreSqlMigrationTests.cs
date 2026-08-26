@@ -41,6 +41,7 @@ public sealed class EconomyFoundationPostgreSqlMigrationTests
             .Should().BeEquivalentTo(createdTables);
 
         var sql = string.Join('\n', up.Operations.OfType<SqlOperation>().Select(operation => operation.Sql));
+        var downSql = string.Join('\n', down.Operations.OfType<SqlOperation>().Select(operation => operation.Sql));
         sql.Should().Contain("SECURITY DEFINER");
         sql.Should().Contain("SET search_path = pg_catalog, economy_private");
         sql.Should().Contain("reserve_risk_counter_v1");
@@ -48,6 +49,8 @@ public sealed class EconomyFoundationPostgreSqlMigrationTests
         sql.Should().Contain("deny_immutable_mutation_v1");
         sql.Should().NotContain("GRANT SELECT ON ALL TABLES IN SCHEMA public");
         sql.Should().NotContain("GRANT ALL ON ALL TABLES IN SCHEMA public");
+        downSql.Should().Contain("DROP OWNED BY gameguild_economy_runtime");
+        downSql.Should().NotContain("DROP ROLE");
     }
 
     [DockerFact]
@@ -103,7 +106,7 @@ public sealed class EconomyFoundationPostgreSqlMigrationTests
         (await ScalarAsync<long>(connection, "SELECT count(*) FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE 'economy_%';"))
             .Should().Be(0);
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM pg_roles WHERE rolname = ANY (ARRAY[{string.Join(',', EconomyRoles.Select(role => $"'{role}'"))}]);"))
-            .Should().Be(0);
+            .Should().Be(EconomyRoles.Length);
 
         await ApplyUpAsync(connection);
         (await ScalarAsync<long>(connection, "SELECT count(*) FROM pg_tables WHERE schemaname = 'public' AND tablename LIKE 'economy_%';"))
