@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
@@ -17,7 +18,7 @@ public class PolicyGateService(
     /// <summary>
     ///     Hard-coded gates that cannot be bypassed.
     /// </summary>
-    private static readonly List<Func<PolicyGateContext, GateEvaluationDetail?>> StaticGates =
+    private static readonly ImmutableArray<Func<PolicyGateContext, GateEvaluationDetail?>> StaticGates =
     [
         // Block all requests from localhost in production (example)
         context =>
