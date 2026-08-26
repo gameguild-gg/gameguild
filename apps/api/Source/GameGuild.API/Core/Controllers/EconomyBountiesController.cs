@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.Economy.Bounties;
 using GameGuild.Economy.Contracts;
+using GameGuild.Economy.Risk;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
@@ -16,16 +17,15 @@ public sealed record CreateMyBountyRequest(
     int MinimumReputation,
     bool RequiresInstructorVerification,
     DateTimeOffset ExpiresAt,
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     string IdempotencyKey);
 
 public sealed record CompleteMyBountyRequest(
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     string IdempotencyKey);
+
+public sealed record BountyProtectedOperationFailureResponse(
+    EconomyProtectedOperationState State,
+    Guid? ReviewId,
+    IReadOnlyList<string> Diagnostics);
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/economy/bounties")]
@@ -42,23 +42,20 @@ public sealed class EconomyBountiesController(
         [FromBody] CreateMyBountyRequest request,
         CancellationToken cancellationToken)
     {
-        if (!TryActor(out var tenantId, out var actorId)) return Forbid();
+        if (!TryActor(out _, out _)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        var result = await bounties.CreateAsync(new CreateDurableBountyRequest(
-            tenantId,
-            actorId,
-            new CoinAmount(request.Currency, request.AmountUnits),
-            new BountyEligibilityRequirements(
-                request.RequiresPrerequisite,
-                request.MinimumReputation,
-                request.RequiresInstructorVerification),
-            request.ExpiresAt,
-            request.JurisdictionCode,
-            request.RiskDecisionId,
-            request.OperationFingerprint,
-            new IdempotencyKey(request.IdempotencyKey),
-            timeProvider.GetUtcNow()), cancellationToken);
-        return CreatedAtAction(nameof(Get), new { version = "1", bountyId = result.Id.Value }, result);
+        return await ExecuteProtectedAsync(
+            () => bounties.CreateAsync(new CreateDurableBountyRequest(
+                new CoinAmount(request.Currency, request.AmountUnits),
+                new BountyEligibilityRequirements(
+                    request.RequiresPrerequisite,
+                    request.MinimumReputation,
+                    request.RequiresInstructorVerification),
+                request.ExpiresAt,
+                new IdempotencyKey(request.IdempotencyKey),
+                timeProvider.GetUtcNow()), cancellationToken).AsTask(),
+            result => CreatedAtAction(
+                nameof(Get), new { version = "1", bountyId = result.Id.Value }, result));
     }
 
     [HttpGet]
@@ -88,17 +85,14 @@ public sealed class EconomyBountiesController(
         [FromBody] CompleteMyBountyRequest request,
         CancellationToken cancellationToken)
     {
-        if (!TryActor(out var tenantId, out var actorId)) return Forbid();
+        if (!TryActor(out _, out _)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return Ok(await bounties.ClaimAsync(new ClaimDurableBountyRequest(
-            tenantId,
-            actorId,
-            new BountyId(bountyId),
-            request.JurisdictionCode,
-            request.RiskDecisionId,
-            request.OperationFingerprint,
-            new IdempotencyKey(request.IdempotencyKey),
-            timeProvider.GetUtcNow()), cancellationToken));
+        return await ExecuteProtectedAsync(
+            () => bounties.ClaimAsync(new ClaimDurableBountyRequest(
+                new BountyId(bountyId),
+                new IdempotencyKey(request.IdempotencyKey),
+                timeProvider.GetUtcNow()), cancellationToken).AsTask(),
+            Ok);
     }
 
     [HttpPost("{bountyId:guid}:reclaim")]
@@ -108,17 +102,36 @@ public sealed class EconomyBountiesController(
         [FromBody] CompleteMyBountyRequest request,
         CancellationToken cancellationToken)
     {
-        if (!TryActor(out var tenantId, out var actorId)) return Forbid();
+        if (!TryActor(out _, out _)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return Ok(await bounties.ReclaimAsync(new ReclaimDurableBountyRequest(
-            tenantId,
-            actorId,
-            new BountyId(bountyId),
-            request.JurisdictionCode,
-            request.RiskDecisionId,
-            request.OperationFingerprint,
-            new IdempotencyKey(request.IdempotencyKey),
-            timeProvider.GetUtcNow()), cancellationToken));
+        return await ExecuteProtectedAsync(
+            () => bounties.ReclaimAsync(new ReclaimDurableBountyRequest(
+                new BountyId(bountyId),
+                new IdempotencyKey(request.IdempotencyKey),
+                timeProvider.GetUtcNow()), cancellationToken).AsTask(),
+            Ok);
+    }
+
+    private static async Task<IActionResult> ExecuteProtectedAsync(
+        Func<Task<DurableBountyView>> action,
+        Func<DurableBountyView, IActionResult> success)
+    {
+        try
+        {
+            return success(await action().ConfigureAwait(false));
+        }
+        catch (EconomyProtectedOperationException exception)
+        {
+            var status = exception.State switch
+            {
+                EconomyProtectedOperationState.Denied => StatusCodes.Status403Forbidden,
+                EconomyProtectedOperationState.ReviewRequired or EconomyProtectedOperationState.Hold or
+                    EconomyProtectedOperationState.Challenge => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status503ServiceUnavailable
+            };
+            return new ObjectResult(new BountyProtectedOperationFailureResponse(
+                exception.State, exception.ReviewId, exception.Diagnostics)) { StatusCode = status };
+        }
     }
 
     private bool TryActor(out Guid tenantId, out Guid actorId)

@@ -3,6 +3,7 @@ using GameGuild.Economy.Bounties.Persistence;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Risk;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Economy.Bounties.UnitTests;
@@ -10,6 +11,19 @@ namespace GameGuild.Economy.Bounties.UnitTests;
 public sealed class DurableBountyApplicationServiceTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 25, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void SelfServiceCommandsExposeOnlyBusinessIntent()
+    {
+        typeof(CreateDurableBountyRequest).GetProperties().Select(property => property.Name)
+            .Should().BeEquivalentTo([
+                "Amount", "Eligibility", "ExpiresAt", "IdempotencyKey", "RequestedAt"
+            ]);
+        typeof(ClaimDurableBountyRequest).GetProperties().Select(property => property.Name)
+            .Should().BeEquivalentTo(["BountyId", "IdempotencyKey", "RequestedAt"]);
+        typeof(ReclaimDurableBountyRequest).GetProperties().Select(property => property.Name)
+            .Should().BeEquivalentTo(["BountyId", "IdempotencyKey", "RequestedAt"]);
+    }
 
     [Fact]
     public async Task CreateAsync_UsesSignedPolicyServerLotsCapabilityReceiptAndPostingAuthority()
@@ -28,15 +42,14 @@ public sealed class DurableBountyApplicationServiceTests
         result.ExpiresAt.Should().Be(request.ExpiresAt);
         result.Version.Should().Be(1);
         fixture.Lots.Requests.Should().ContainSingle().Which.WalletId.Should().Be(fixture.PosterWallet.WalletId);
-        fixture.Capabilities.Contexts.Should().ContainSingle().Which.Should().BeEquivalentTo(new
+        fixture.Orchestrator.Intents.Should().ContainSingle().Which.Should().BeEquivalentTo(new
         {
-            request.TenantId,
-            request.ActorId,
-            SubjectReference = EconomySubjectReference.ForUser(request.TenantId, request.ActorId),
-            JurisdictionCode = "BR",
             Capability = EconomyValueMovementCapability.BountyEscrow,
-            request.RiskDecisionId,
-            OperationFingerprint = "create-bounty"
+            TemplateKind = PostingTemplateKind.BountyEscrow,
+            SourceWalletId = fixture.PosterWallet.WalletId,
+            DestinationWalletId = fixture.EscrowWallet.WalletId,
+            ProviderReferenceHash = "policy-hash",
+            DestinationJurisdictionCode = "BR"
         });
         fixture.Authority.Requests.Should().ContainSingle();
         fixture.Authority.Requests[0].CapabilityName.Should().Be("bounty-escrow");
@@ -54,8 +67,7 @@ public sealed class DurableBountyApplicationServiceTests
         await using var fixture = await Fixture.CreateAsync();
         var escrow = fixture.AddEscrow(BountyStatus.Open);
         var request = new ClaimDurableBountyRequest(
-            fixture.TenantId, fixture.ActorId, escrow.Id, " br ", fixture.RiskDecisionId,
-            " claim-bounty ", new IdempotencyKey("claim-1"), Now);
+            escrow.Id, new IdempotencyKey("claim-1"), Now);
 
         var result = await fixture.Service.ClaimAsync(request);
 
@@ -63,7 +75,7 @@ public sealed class DurableBountyApplicationServiceTests
         result.TerminalEvent.Should().NotBeNull();
         fixture.Claims.Requests.Should().ContainSingle();
         fixture.Claims.Requests[0].ClaimantWalletId.Should().Be(fixture.PosterWallet.WalletId);
-        fixture.Capabilities.Contexts.Should().ContainSingle().Which.SourceRootHashes.Should().ContainSingle();
+        fixture.Orchestrator.Intents.Should().ContainSingle().Which.SourceRoots.Should().ContainSingle();
         fixture.Authority.Requests.Should().ContainSingle();
         fixture.Authority.Requests[0].CapabilityName.Should().Be("bounty-claim");
         fixture.Authority.Requests[0].TemplateKind.Should().Be(PostingTemplateKind.BountyClaim);
@@ -75,8 +87,7 @@ public sealed class DurableBountyApplicationServiceTests
         await using var fixture = await Fixture.CreateAsync();
         var escrow = fixture.AddEscrow(BountyStatus.Expired);
         var request = new ReclaimDurableBountyRequest(
-            fixture.TenantId, fixture.ActorId, escrow.Id, "BR", fixture.RiskDecisionId,
-            "reclaim-bounty", new IdempotencyKey("reclaim-1"), Now);
+            escrow.Id, new IdempotencyKey("reclaim-1"), Now);
 
         var result = await fixture.Service.ReclaimAsync(request);
 
@@ -176,12 +187,10 @@ public sealed class DurableBountyApplicationServiceTests
         await FluentActions.Awaiting(() => fixture.Service.CreateAsync(fixture.CreateRequest()).AsTask())
             .Should().ThrowAsync<BountyPolicyUnavailableException>();
         await FluentActions.Awaiting(() => fixture.Service.ClaimAsync(new ClaimDurableBountyRequest(
-                fixture.TenantId, fixture.ActorId, escrow.Id, "BR", fixture.RiskDecisionId,
-                "claim", new IdempotencyKey("claim-policy"), Now)).AsTask())
+                escrow.Id, new IdempotencyKey("claim-policy"), Now)).AsTask())
             .Should().ThrowAsync<BountyPolicyUnavailableException>();
         await FluentActions.Awaiting(() => fixture.Service.ReclaimAsync(new ReclaimDurableBountyRequest(
-                fixture.TenantId, fixture.ActorId, escrow.Id, "BR", fixture.RiskDecisionId,
-                "reclaim", new IdempotencyKey("reclaim-policy"), Now)).AsTask())
+                escrow.Id, new IdempotencyKey("reclaim-policy"), Now)).AsTask())
             .Should().ThrowAsync<BountyPolicyUnavailableException>();
     }
 
@@ -195,26 +204,22 @@ public sealed class DurableBountyApplicationServiceTests
             .Should().ThrowAsync<BountyPolicyUnavailableException>();
     }
 
-    [Theory]
-    [InlineData("tenant")]
-    [InlineData("actor")]
-    [InlineData("risk")]
-    [InlineData("jurisdiction")]
-    [InlineData("fingerprint")]
-    public async Task Commands_RejectMissingProtectedContext(string missing)
+    [Fact]
+    public async Task CommandsRequireAuthenticatedTenantActor()
     {
         await using var fixture = await Fixture.CreateAsync();
-        var request = fixture.CreateRequest() with
+        fixture.ActorContexts.SetActorContext(new ActorContext
         {
-            TenantId = missing == "tenant" ? Guid.Empty : fixture.TenantId,
-            ActorId = missing == "actor" ? Guid.Empty : fixture.ActorId,
-            RiskDecisionId = missing == "risk" ? Guid.Empty : fixture.RiskDecisionId,
-            JurisdictionCode = missing == "jurisdiction" ? " " : "BR",
-            OperationFingerprint = missing == "fingerprint" ? " " : "create"
-        };
+            ActorKind = ActorKind.User,
+            SubjectId = fixture.ActorId.ToString(),
+            TenantId = fixture.TenantId,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = false
+        });
 
-        await FluentActions.Awaiting(() => fixture.Service.CreateAsync(request).AsTask())
-            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => fixture.Service.CreateAsync(fixture.CreateRequest()).AsTask())
+            .Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
     [Fact]
@@ -238,41 +243,60 @@ public sealed class DurableBountyApplicationServiceTests
             IBountyPostableLotReader lots,
             IBountyEscrowStore escrows,
             IBountyTerminalEventStore terminals,
+            IActorContextAccessor actorContexts,
+            IEconomyJurisdictionResolver jurisdictions,
             IEconomyCapabilityPolicyStore policies,
-            IEconomyCapabilityAuthorizationService capabilities,
+            IEconomyProtectedOperationOrchestrator orchestrator,
             IRegisteredPostingCapabilityResolver authority,
             IDurableBountyEscrowPostWorkflow posts,
             IDurableBountyClaimWorkflow claims,
             IDurableBountyReclaimWorkflow reclaims) =>
-            new DurableBountyApplicationService(context, wallets, lots, escrows, terminals, policies,
-                capabilities, authority, posts, claims, reclaims);
+            new DurableBountyApplicationService(context, wallets, lots, escrows, terminals,
+                actorContexts, jurisdictions, policies, orchestrator, authority, posts, claims, reclaims);
 
         FluentActions.Invoking(() => create(new NonRelationalApplicationContext(), fixture.Wallets,
-                fixture.Lots, fixture.Escrows, fixture.Terminals, fixture.Policies, fixture.Capabilities,
-                fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims))
+                fixture.Lots, fixture.Escrows, fixture.Terminals, fixture.ActorContexts,
+                fixture.Jurisdictions, fixture.Policies, fixture.Orchestrator, fixture.Authority,
+                fixture.Posts, fixture.Claims, fixture.Reclaims))
             .Should().Throw<InvalidOperationException>();
         Action[] nullPorts =
         [
             () => create(fixture.Context, null!, fixture.Lots, fixture.Escrows, fixture.Terminals,
-                fixture.Policies, fixture.Capabilities, fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims),
+                fixture.ActorContexts, fixture.Jurisdictions, fixture.Policies, fixture.Orchestrator,
+                fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims),
             () => create(fixture.Context, fixture.Wallets, null!, fixture.Escrows, fixture.Terminals,
-                fixture.Policies, fixture.Capabilities, fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims),
+                fixture.ActorContexts, fixture.Jurisdictions, fixture.Policies, fixture.Orchestrator,
+                fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims),
             () => create(fixture.Context, fixture.Wallets, fixture.Lots, null!, fixture.Terminals,
-                fixture.Policies, fixture.Capabilities, fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims),
+                fixture.ActorContexts, fixture.Jurisdictions, fixture.Policies, fixture.Orchestrator,
+                fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims),
             () => create(fixture.Context, fixture.Wallets, fixture.Lots, fixture.Escrows, null!,
-                fixture.Policies, fixture.Capabilities, fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims),
+                fixture.ActorContexts, fixture.Jurisdictions, fixture.Policies, fixture.Orchestrator,
+                fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims),
             () => create(fixture.Context, fixture.Wallets, fixture.Lots, fixture.Escrows, fixture.Terminals,
-                null!, fixture.Capabilities, fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims),
+                null!, fixture.Jurisdictions, fixture.Policies, fixture.Orchestrator, fixture.Authority,
+                fixture.Posts, fixture.Claims, fixture.Reclaims),
             () => create(fixture.Context, fixture.Wallets, fixture.Lots, fixture.Escrows, fixture.Terminals,
-                fixture.Policies, null!, fixture.Authority, fixture.Posts, fixture.Claims, fixture.Reclaims),
+                fixture.ActorContexts, null!, fixture.Policies, fixture.Orchestrator, fixture.Authority,
+                fixture.Posts, fixture.Claims, fixture.Reclaims),
             () => create(fixture.Context, fixture.Wallets, fixture.Lots, fixture.Escrows, fixture.Terminals,
-                fixture.Policies, fixture.Capabilities, null!, fixture.Posts, fixture.Claims, fixture.Reclaims),
+                fixture.ActorContexts, fixture.Jurisdictions, null!, fixture.Orchestrator, fixture.Authority,
+                fixture.Posts, fixture.Claims, fixture.Reclaims),
             () => create(fixture.Context, fixture.Wallets, fixture.Lots, fixture.Escrows, fixture.Terminals,
-                fixture.Policies, fixture.Capabilities, fixture.Authority, null!, fixture.Claims, fixture.Reclaims),
+                fixture.ActorContexts, fixture.Jurisdictions, fixture.Policies, null!, fixture.Authority,
+                fixture.Posts, fixture.Claims, fixture.Reclaims),
             () => create(fixture.Context, fixture.Wallets, fixture.Lots, fixture.Escrows, fixture.Terminals,
-                fixture.Policies, fixture.Capabilities, fixture.Authority, fixture.Posts, null!, fixture.Reclaims),
+                fixture.ActorContexts, fixture.Jurisdictions, fixture.Policies, fixture.Orchestrator, null!,
+                fixture.Posts, fixture.Claims, fixture.Reclaims),
             () => create(fixture.Context, fixture.Wallets, fixture.Lots, fixture.Escrows, fixture.Terminals,
-                fixture.Policies, fixture.Capabilities, fixture.Authority, fixture.Posts, fixture.Claims, null!)
+                fixture.ActorContexts, fixture.Jurisdictions, fixture.Policies, fixture.Orchestrator,
+                fixture.Authority, null!, fixture.Claims, fixture.Reclaims),
+            () => create(fixture.Context, fixture.Wallets, fixture.Lots, fixture.Escrows, fixture.Terminals,
+                fixture.ActorContexts, fixture.Jurisdictions, fixture.Policies, fixture.Orchestrator,
+                fixture.Authority, fixture.Posts, null!, fixture.Reclaims),
+            () => create(fixture.Context, fixture.Wallets, fixture.Lots, fixture.Escrows, fixture.Terminals,
+                fixture.ActorContexts, fixture.Jurisdictions, fixture.Policies, fixture.Orchestrator,
+                fixture.Authority, fixture.Posts, fixture.Claims, null!)
         ];
         nullPorts.Should().AllSatisfy(action =>
             FluentActions.Invoking(action).Should().Throw<ArgumentNullException>());
@@ -313,14 +337,25 @@ public sealed class DurableBountyApplicationServiceTests
             Lots = new LotReader(CreateLot(PosterWallet.WalletId));
             Escrows = new EscrowStore();
             Terminals = new TerminalStore();
+            ActorContexts = new TestActorContextAccessor();
+            ActorContexts.SetActorContext(new ActorContext
+            {
+                ActorKind = ActorKind.User,
+                SubjectId = ActorId.ToString(),
+                TenantId = TenantId,
+                Roles = new HashSet<string>(),
+                Permissions = new HashSet<string>(),
+                IsAuthenticated = true
+            });
+            Jurisdictions = new JurisdictionResolver();
             Policies = new PolicyStore(Policy(EconomyValueMovementCapability.BountyEscrow));
-            Capabilities = new AuthorizationService();
+            Orchestrator = new ProtectedOperationOrchestrator(TenantId, ActorId, RiskDecisionId);
             Authority = new PostingAuthorityResolver();
             Posts = new PostWorkflow(Escrows);
             Claims = new ClaimWorkflow(this);
             Reclaims = new ReclaimWorkflow(this);
             Service = new DurableBountyApplicationService(context, Wallets, Lots, Escrows, Terminals,
-                Policies, Capabilities, Authority, Posts, Claims, Reclaims);
+                ActorContexts, Jurisdictions, Policies, Orchestrator, Authority, Posts, Claims, Reclaims);
         }
 
         public BountiesApplicationContext Context { get; }
@@ -333,8 +368,10 @@ public sealed class DurableBountyApplicationServiceTests
         public LotReader Lots { get; }
         public EscrowStore Escrows { get; }
         public TerminalStore Terminals { get; }
+        public TestActorContextAccessor ActorContexts { get; }
+        public JurisdictionResolver Jurisdictions { get; }
         public PolicyStore Policies { get; }
-        public AuthorizationService Capabilities { get; }
+        public ProtectedOperationOrchestrator Orchestrator { get; }
         public PostingAuthorityResolver Authority { get; }
         public PostWorkflow Posts { get; }
         public ClaimWorkflow Claims { get; }
@@ -352,8 +389,8 @@ public sealed class DurableBountyApplicationServiceTests
         }
 
         public CreateDurableBountyRequest CreateRequest() => new(
-            TenantId, ActorId, new CoinAmount(CurrencyCode.HardCoin, 25), BountyEligibilityRequirements.None,
-            Now.AddDays(2), " br ", RiskDecisionId, " create-bounty ",
+            new CoinAmount(CurrencyCode.HardCoin, 25), BountyEligibilityRequirements.None,
+            Now.AddDays(2),
             new IdempotencyKey("post-1"), Now);
 
         public EconomyCapabilityPolicy Policy(
@@ -421,6 +458,13 @@ public sealed class DurableBountyApplicationServiceTests
             CancellationToken cancellationToken) => Database.BeginTransactionAsync(cancellationToken);
     }
 
+    private sealed class TestActorContextAccessor : IActorContextAccessor
+    {
+        public ActorContext ActorContext { get; private set; } = ActorContext.Anonymous;
+        public void SetActorContext(ActorContext context) => ActorContext = context;
+        public void ClearActorContext() => ActorContext = ActorContext.Anonymous;
+    }
+
     private sealed class WalletDirectory(EconomyWalletIdentity owner, EconomyWalletIdentity escrow)
         : IEconomyWalletDirectory
     {
@@ -477,19 +521,41 @@ public sealed class DurableBountyApplicationServiceTests
             throw new NotSupportedException();
     }
 
-    private sealed class AuthorizationService : IEconomyCapabilityAuthorizationService
+    private sealed class JurisdictionResolver : IEconomyJurisdictionResolver
     {
-        public List<EconomyCapabilityEvaluationContext> Contexts { get; } = [];
-        public ValueTask<CapabilityAuthorizationReceipt> AuthorizeAndConsumeAsync(
-            EconomyCapabilityEvaluationContext context, CancellationToken cancellationToken)
+        public ValueTask<EconomyJurisdictionResolution> ResolveAsync(
+            Guid tenantId,
+            Guid actorId,
+            string? providerJurisdiction,
+            string? destinationJurisdiction,
+            DateTimeOffset evaluatedAt,
+            CancellationToken cancellationToken) => ValueTask.FromResult(
+            new EconomyJurisdictionResolution("BR", 2, 7, "jurisdiction-evidence"));
+    }
+
+    private sealed class ProtectedOperationOrchestrator(
+        Guid tenantId,
+        Guid actorId,
+        Guid riskDecisionId) : IEconomyProtectedOperationOrchestrator
+    {
+        public List<EconomyProtectedOperationIntent> Intents { get; } = [];
+
+        public async Task<TResult> ExecuteAsync<TResult>(
+            EconomyProtectedOperationIntent intent,
+            Func<EconomyProtectedOperationAuthorization, CancellationToken, Task<TResult>> operation,
+            CancellationToken cancellationToken)
         {
-            Contexts.Add(context);
-            return ValueTask.FromResult(new CapabilityAuthorizationReceipt(
-                Guid.NewGuid(), context.TenantId, context.ActorId, context.SubjectReference,
-                context.JurisdictionCode, context.Capability, context.OperationFingerprint,
-                7, 11, context.RiskDecisionId, 3, context.ProviderHash, context.DestinationHash,
-                context.SourceRootHashes, ["evidence-hash"], context.EvaluatedAt,
-                context.EvaluatedAt.AddMinutes(5), "receipt-hash", "receipt-key", "receipt-signature"));
+            Intents.Add(intent);
+            var fingerprint = $"server-{intent.Capability}-{intent.IdempotencyKey.Value}";
+            var receipt = new CapabilityAuthorizationReceipt(
+                Guid.NewGuid(), tenantId, actorId, EconomySubjectReference.ForUser(tenantId, actorId),
+                "BR", intent.Capability, fingerprint, 7, 11, riskDecisionId, 3,
+                intent.ProviderReferenceHash, intent.DestinationHash,
+                intent.SourceRoots.Select(root => root.Value.ToString("N")).ToArray(),
+                ["evidence-hash"], intent.RequestedAt, intent.RequestedAt.AddMinutes(5),
+                "receipt-hash", "receipt-key", "receipt-signature");
+            return await operation(new EconomyProtectedOperationAuthorization(
+                tenantId, actorId, "BR", riskDecisionId, fingerprint, receipt), cancellationToken);
         }
     }
 

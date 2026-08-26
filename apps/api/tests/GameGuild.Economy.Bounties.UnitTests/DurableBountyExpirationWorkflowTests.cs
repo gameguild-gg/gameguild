@@ -16,6 +16,7 @@ public sealed class DurableBountyExpirationWorkflowTests
     {
         await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("bounty_expiration");
         await using var context = new PostgreSqlBountiesContext(database.ConnectionString);
+        await context.Database.EnsureCreatedAsync();
         var oldest = Bounty(BountyStatus.Open, Now.AddMinutes(-10), "oldest");
         var next = Bounty(BountyStatus.Open, Now.AddMinutes(-5), "next");
         var future = Bounty(BountyStatus.Open, Now.AddMinutes(5), "future");
@@ -51,6 +52,7 @@ public sealed class DurableBountyExpirationWorkflowTests
     {
         await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("bounty_reclaim_prepare");
         await using var context = new PostgreSqlBountiesContext(database.ConnectionString);
+        await context.Database.EnsureCreatedAsync();
         var due = Bounty(BountyStatus.Expired, Now.AddMinutes(-1), "due");
         var future = Bounty(BountyStatus.Expired, Now.AddMinutes(1), "future");
         context.AddRange(due, future);
