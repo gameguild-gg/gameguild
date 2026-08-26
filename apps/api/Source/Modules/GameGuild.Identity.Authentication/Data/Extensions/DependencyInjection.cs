@@ -3,6 +3,7 @@ using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -96,6 +97,9 @@ public static class DataDependencyInjection
 
         // Composite MFA service for backward compatibility
         services.AddScoped<IMfaService, MfaService>();
+        services.AddScoped<IStepUpChallengeStore, PostgreSqlStepUpChallengeStore>();
+        services.AddScoped<IStepUpReceiptService, StepUpReceiptService>();
+        services.TryAddSingleton(TimeProvider.System);
 
         // Session management
         services.AddScoped<ISessionManagementService, SessionManagementService>();
