@@ -43,7 +43,7 @@ test('toolchain paths separate tracked policy, disposable cache, and release art
   });
 });
 
-test('Windows Toolchain processes avoid direct cmd shims and remote tar parsing', async () => {
+test('Toolchain processes use portable pnpm launchers and avoid remote tar parsing', async () => {
   const { describePnpmFailure, pnpmInvocation } = await import('../toolchain/cli.ts');
   const { normalizeWindowsCpythonMakefile } = await import('../lib/cpython-windows.ts');
   const { rewriteMsysPathReferences, toMsysPath } = await import('../lib/posix-path.ts');
@@ -54,6 +54,10 @@ test('Windows Toolchain processes avoid direct cmd shims and remote tar parsing'
     arguments: ['/d', '/s', '/c', 'pnpm'],
   });
   assert.deepEqual(pnpmInvocation('linux'), { executable: 'pnpm', arguments: [] });
+  assert.deepEqual(pnpmInvocation('darwin', '/bin/sh', false), {
+    executable: 'corepack',
+    arguments: ['pnpm'],
+  });
   assert.equal(toMsysPath('E:\\sources\\cpython\\configure', 'win32'), '/e/sources/cpython/configure');
   assert.equal(toMsysPath('/sources/cpython/configure', 'linux'), '/sources/cpython/configure');
   assert.equal(
