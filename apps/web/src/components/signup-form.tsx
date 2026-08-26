@@ -21,6 +21,7 @@ import {
   FieldLabel,
 } from "@game-guild/ui/components/field"
 import { Input } from "@game-guild/ui/components/input"
+import { PasswordInput } from "@/components/ui/password-input"
 
 export function SignupForm({
   className,
@@ -150,10 +151,9 @@ export function SignupForm({
                 <Field className="grid grid-cols-2 gap-4">
                   <Field>
                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input
+                    <PasswordInput
                       id="password"
                       name="password"
-                      type="password"
                       autoComplete="new-password"
                       required
                       disabled={isLoading}
@@ -169,10 +169,9 @@ export function SignupForm({
                     <FieldLabel htmlFor="confirm-password">
                       Confirm Password
                     </FieldLabel>
-                    <Input
+                    <PasswordInput
                       id="confirm-password"
                       name="confirm-password"
-                      type="password"
                       autoComplete="new-password"
                       required
                       disabled={isLoading}
