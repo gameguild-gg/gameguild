@@ -11,6 +11,7 @@ internal sealed class SumSubApplicantBindingRow
     public string ExternalUserIdHash { get; set; } = string.Empty;
     public string IdempotencyKeyHash { get; set; } = string.Empty;
     public KycAmlState State { get; set; }
+    public string? JurisdictionCode { get; set; }
     public long EvidenceVersion { get; set; }
     public DateTimeOffset? LastProviderIssuedAt { get; set; }
     public string? LastProviderEventId { get; set; }
@@ -47,6 +48,9 @@ public sealed class SumSubEvidenceModelConfiguration : IModelConfiguration
                 table.HasCheckConstraint(
                     "ck_compliance_sumsub_applicant_bindings_version",
                     "\"EvidenceVersion\" >= 0");
+                table.HasCheckConstraint(
+                    "ck_compliance_sumsub_applicant_bindings_jurisdiction",
+                    "\"JurisdictionCode\" IS NULL OR \"JurisdictionCode\" ~ '^[A-Z]{3}$'");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.Id).ValueGeneratedNever();
@@ -54,6 +58,7 @@ public sealed class SumSubEvidenceModelConfiguration : IModelConfiguration
             builder.Property(row => row.ApplicantId).HasMaxLength(256);
             builder.Property(row => row.ExternalUserIdHash).HasMaxLength(128);
             builder.Property(row => row.IdempotencyKeyHash).HasMaxLength(128);
+            builder.Property(row => row.JurisdictionCode).HasMaxLength(3).IsFixedLength();
             builder.Property(row => row.LastProviderEventId).HasMaxLength(256);
             builder.HasIndex(row => new { row.TenantId, row.SubjectHash }).IsUnique();
             builder.HasIndex(row => row.ApplicantId).IsUnique();

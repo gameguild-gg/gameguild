@@ -1265,6 +1265,9 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 table.HasCheckConstraint(
                     "ck_economy_compliance_evidence_lifetime",
                     "\"ExpiresAt\" > \"IssuedAt\" AND \"ReceivedAt\" >= \"IssuedAt\"");
+                table.HasCheckConstraint(
+                    "ck_economy_compliance_evidence_jurisdiction",
+                    "\"JurisdictionCode\" IS NULL OR \"JurisdictionCode\" ~ '^[A-Z]{3}$'");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.Provider).HasMaxLength(100);
@@ -1272,6 +1275,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.Property(row => row.ProviderEventId).HasMaxLength(256);
             builder.Property(row => row.SubjectHash).HasMaxLength(128);
             builder.Property(row => row.EvidenceKind).HasMaxLength(100);
+            builder.Property(row => row.JurisdictionCode).HasMaxLength(3).IsFixedLength();
             builder.Property(row => row.Result).HasMaxLength(100);
             builder.Property(row => row.PayloadHash).HasMaxLength(128);
             builder.Property(row => row.RawObjectReference).HasMaxLength(1000);

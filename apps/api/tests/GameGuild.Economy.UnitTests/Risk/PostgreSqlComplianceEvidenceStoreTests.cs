@@ -41,7 +41,10 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
             envelope.Provider, envelope.Environment, envelope.ProviderEventId, envelope.TenantId,
             envelope.SubjectHash, envelope.EvidenceKind, envelope.Version, envelope.Result,
             envelope.PolicyVersion, envelope.EvidenceHash, envelope.SignatureVerified,
-            envelope.IssuedAt, envelope.ExpiresAt));
+            envelope.IssuedAt, envelope.ExpiresAt)
+        {
+            JurisdictionCode = "BRA"
+        });
 
         var tracked = await context.Set<EconomyComplianceEvidenceRow>().SingleAsync();
         tracked.Result = "not-an-enum";
@@ -124,6 +127,7 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
 
         await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("compliance_evidence_boundaries");
         await using var context = CreateContext(database.ConnectionString);
+        await context.Database.EnsureCreatedAsync();
         var store = new PostgreSqlComplianceEvidenceStore(context);
         (await store.ReadLatestAsync(TenantId, "missing", ComplianceEvidenceKinds.KycAml,
             CancellationToken.None)).Should().BeNull();
@@ -148,6 +152,8 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
             valid with { EvidenceKind = " " },
             valid with { Version = 0 },
             valid with { PolicyVersion = 0 },
+            valid with { JurisdictionCode = null },
+            valid with { JurisdictionCode = "BR" },
             valid with { PayloadHash = " " },
             valid with { RawObjectReference = " " },
             valid with { EvidenceHash = " " },
@@ -167,6 +173,7 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
     {
         await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("compliance_evidence_ordering");
         await using var context = CreateContext(database.ConnectionString);
+        await context.Database.EnsureCreatedAsync();
         var store = new PostgreSqlComplianceEvidenceStore(context);
         await store.IngestAsync(Envelope(1), CancellationToken.None);
 
@@ -192,7 +199,8 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
         payloadHash: "payload-hash-" + version,
         signatureVerified: true,
         rawObjectReference: "s3://encrypted/raw-event",
-        receivedAt: Now);
+        receivedAt: Now,
+        jurisdictionCode: "BRA");
 
     private static ComplianceDbContext CreateContext(string connectionString) => new(
         new DbContextOptionsBuilder<ComplianceDbContext>()

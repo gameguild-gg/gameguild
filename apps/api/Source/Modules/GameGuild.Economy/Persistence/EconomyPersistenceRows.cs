@@ -661,6 +661,7 @@ internal sealed class EconomyComplianceEvidenceRow
     public Guid TenantId { get; set; }
     public string SubjectHash { get; set; } = string.Empty;
     public string EvidenceKind { get; set; } = string.Empty;
+    public string? JurisdictionCode { get; set; }
     public long Version { get; set; }
     public string Result { get; set; } = string.Empty;
     public long PolicyVersion { get; set; }

@@ -42,6 +42,7 @@ public sealed record ComplianceEvidenceEnvelope(
     DateTimeOffset ReceivedAt)
 {
     public string EvidenceKind { get; init; } = ComplianceEvidenceKinds.KycAml;
+    public string? JurisdictionCode { get; init; }
 
     public static ComplianceEvidenceEnvelope Create(
         string provider,
@@ -57,8 +58,12 @@ public sealed record ComplianceEvidenceEnvelope(
         string payloadHash,
         bool signatureVerified,
         string rawObjectReference,
-        DateTimeOffset receivedAt)
+        DateTimeOffset receivedAt,
+        string? jurisdictionCode = null)
     {
+        var normalizedJurisdiction = string.IsNullOrWhiteSpace(jurisdictionCode)
+            ? null
+            : EconomyJurisdictionCode.Require(jurisdictionCode, nameof(jurisdictionCode));
         var canonical = string.Join(
             '\n',
             provider,
@@ -74,7 +79,8 @@ public sealed record ComplianceEvidenceEnvelope(
             payloadHash,
             signatureVerified.ToString(CultureInfo.InvariantCulture),
             rawObjectReference,
-            receivedAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));
+            receivedAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture),
+            normalizedJurisdiction ?? string.Empty);
         var evidenceHash = Convert.ToHexString(
             SHA256.HashData(Encoding.UTF8.GetBytes(canonical))).ToLowerInvariant();
         return new ComplianceEvidenceEnvelope(
@@ -92,7 +98,10 @@ public sealed record ComplianceEvidenceEnvelope(
             signatureVerified,
             rawObjectReference,
             evidenceHash,
-            receivedAt);
+            receivedAt)
+        {
+            JurisdictionCode = normalizedJurisdiction
+        };
     }
 }
 
@@ -127,7 +136,10 @@ public sealed record DurableComplianceEvidence(
     string EvidenceHash,
     bool SignatureVerified,
     DateTimeOffset IssuedAt,
-    DateTimeOffset ExpiresAt);
+    DateTimeOffset ExpiresAt)
+{
+    public string? JurisdictionCode { get; init; }
+}
 
 public interface IComplianceEvidenceReader
 {
@@ -245,6 +257,7 @@ public sealed class PostgreSqlComplianceEvidenceStore : IComplianceEvidenceStore
             TenantId = envelope.TenantId,
             SubjectHash = envelope.SubjectHash,
             EvidenceKind = envelope.EvidenceKind,
+            JurisdictionCode = envelope.JurisdictionCode,
             Version = envelope.Version,
             Result = envelope.Result.ToString(),
             PolicyVersion = envelope.PolicyVersion,
@@ -295,6 +308,14 @@ public sealed class PostgreSqlComplianceEvidenceStore : IComplianceEvidenceStore
             throw new ArgumentOutOfRangeException(nameof(envelope), "Compliance evidence version must be positive.");
         if (envelope.PolicyVersion <= 0)
             throw new ArgumentOutOfRangeException(nameof(envelope), "Compliance policy version must be positive.");
+        if (envelope.JurisdictionCode is not null &&
+            EconomyJurisdictionCode.NormalizeOptional(envelope.JurisdictionCode) != envelope.JurisdictionCode)
+            throw new ArgumentException("Compliance evidence jurisdiction is invalid.", nameof(envelope));
+        if (envelope.EvidenceKind == ComplianceEvidenceKinds.KycAml &&
+            envelope.Result == ComplianceEvidenceResult.Approved &&
+            envelope.JurisdictionCode is null)
+            throw new ArgumentException(
+                "Approved KYC/AML evidence requires a verified jurisdiction.", nameof(envelope));
         ArgumentException.ThrowIfNullOrWhiteSpace(envelope.PayloadHash);
         ArgumentException.ThrowIfNullOrWhiteSpace(envelope.RawObjectReference);
         ArgumentException.ThrowIfNullOrWhiteSpace(envelope.EvidenceHash);
@@ -323,7 +344,10 @@ public sealed class PostgreSqlComplianceEvidenceStore : IComplianceEvidenceStore
         return new DurableComplianceEvidence(
             row.Provider, row.Environment, row.ProviderEventId, row.TenantId, row.SubjectHash,
             row.EvidenceKind, row.Version, result, row.PolicyVersion, row.EvidenceHash,
-            row.SignatureVerified, row.IssuedAt, row.ExpiresAt);
+            row.SignatureVerified, row.IssuedAt, row.ExpiresAt)
+        {
+            JurisdictionCode = row.JurisdictionCode
+        };
     }
 }
 
