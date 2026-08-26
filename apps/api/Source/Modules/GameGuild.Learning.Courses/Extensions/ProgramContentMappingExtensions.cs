@@ -98,7 +98,7 @@ public static class ProgramContentMappingExtensions
       Slug = string.IsNullOrWhiteSpace(dto.Slug) ? dto.Title.ToSlugCase() : dto.Slug,
       Description = dto.Description,
       Type = NormalizeProfessorFacingType(dto.Type),
-      Body = dto.Body,
+      Body = dto.Body ?? "{}",
       JsonBody = dto.JsonBody is null ? null : JsonSerializer.Serialize(dto.JsonBody),
       LessonFormat = dto.LessonFormat ?? LessonContentFormatInference.FromBody(dto.Body),
       SortOrder = dto.SortOrder,

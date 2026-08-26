@@ -51,6 +51,42 @@ public sealed class LessonContractTests
     }
 
     [Fact]
+    public void ToEntity_WhenBodyIsOmitted_ShouldPersistDefaultBody()
+    {
+        var dto = new CreateProgramContentDto
+        {
+            ProgramId = Guid.NewGuid(),
+            Title = "Week 01",
+            Type = ProgramContentType.Module,
+        };
+
+        var module = dto.ToEntity();
+
+        module.Body.Should().Be("{}");
+    }
+
+    [Fact]
+    public void ToEntity_WhenBodyIsNull_ShouldPersistDefaultBody()
+    {
+        var dto = CreateLessonDto("# Lesson body");
+        dto.Body = null;
+
+        var lesson = dto.ToEntity();
+
+        lesson.Body.Should().Be("{}");
+    }
+
+    [Fact]
+    public void ToEntity_WhenBodyIsProvided_ShouldPersistItVerbatim()
+    {
+        var dto = CreateLessonDto("# Lesson body");
+
+        var lesson = dto.ToEntity();
+
+        lesson.Body.Should().Be("# Lesson body");
+    }
+
+    [Fact]
     public void ApplyUpdates_WhenAssignmentBecomesLesson_ShouldInferFormat()
     {
         var content = new ProgramContent
