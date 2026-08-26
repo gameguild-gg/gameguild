@@ -81,21 +81,26 @@ public sealed class EconomyLegacyMigrationAdministrationControllerTests
         migration.Setup(service => service.ProposeCutoverAsync(
                 It.Is<ProposeLegacyEconomyCutoverCommand>(command =>
                     command.BatchId == batchId && command.TenantId == tenantId && command.ActorId == actorId &&
-                    command.Reason == "cutover" && command.ReauthenticationHash == "proposal-proof" &&
+                    command.Reason == "cutover" && command.ReauthenticationHash ==
+                    TestEconomyStepUpExecutor.EvidenceHash("proposal-receipt") &&
                     command.ProposedAt == Now), default))
             .ReturnsAsync(view);
         migration.Setup(service => service.ApproveCutoverAsync(
                 It.Is<ApproveLegacyEconomyCutoverCommand>(command =>
                     command.BatchId == batchId && command.TenantId == tenantId && command.ActorId == actorId &&
-                    command.ReauthenticationHash == "approval-proof" && command.ApprovedAt == Now), default))
+                    command.ReauthenticationHash == TestEconomyStepUpExecutor.EvidenceHash("approval-receipt") &&
+                    command.ApprovedAt == Now), default))
             .ReturnsAsync(view);
         migration.Setup(service => service.RollbackCutoverAsync(
                 It.Is<RollbackLegacyEconomyCutoverCommand>(command =>
                     command.BatchId == batchId && command.TenantId == tenantId && command.ActorId == actorId &&
-                    command.Reason == "rollback" && command.ReauthenticationHash == "rollback-proof" &&
+                    command.Reason == "rollback" && command.ReauthenticationHash ==
+                    TestEconomyStepUpExecutor.EvidenceHash("rollback-receipt") &&
                     command.RolledBackAt == Now), default))
             .ReturnsAsync(view);
-        var controller = CreateController(migration.Object, tenantId: tenantId, actorId: actorId);
+        var stepUp = new TestEconomyStepUpExecutor();
+        var controller = CreateController(
+            migration.Object, tenantId: tenantId, actorId: actorId, stepUp: stepUp);
 
         (await controller.Get(batchId, default)).Should().BeOfType<OkObjectResult>();
         (await controller.Capture(new(batchId, "BR"), default)).Should().BeOfType<ObjectResult>()
@@ -103,12 +108,16 @@ public sealed class EconomyLegacyMigrationAdministrationControllerTests
         (await controller.Backfill(batchId, new(legacyWalletId, riskDecisionId, "backfill"), default))
             .Should().BeOfType<OkObjectResult>();
         (await controller.Reconcile(batchId, default)).Should().BeOfType<OkObjectResult>();
-        (await controller.ProposeCutover(batchId, new("cutover", "proposal-proof"), default))
+        (await controller.ProposeCutover(batchId, new("cutover", "proposal-receipt"), default))
             .Should().BeOfType<OkObjectResult>();
-        (await controller.ApproveCutover(batchId, new("approval-proof"), default))
+        (await controller.ApproveCutover(batchId, new("approval-receipt"), default))
             .Should().BeOfType<OkObjectResult>();
-        (await controller.RollbackCutover(batchId, new("rollback", "rollback-proof"), default))
+        (await controller.RollbackCutover(batchId, new("rollback", "rollback-receipt"), default))
             .Should().BeOfType<OkObjectResult>();
+        stepUp.Calls.Select(call => (call.Operation.OperationType, call.Receipt)).Should().Equal(
+            ("economy.legacy-cutover.propose", "proposal-receipt"),
+            ("economy.legacy-cutover.approve", "approval-receipt"),
+            ("economy.legacy-cutover.rollback", "rollback-receipt"));
         migration.VerifyAll();
     }
 
@@ -146,7 +155,8 @@ public sealed class EconomyLegacyMigrationAdministrationControllerTests
         ILegacyEconomyShadowMigration migration,
         bool authorized = true,
         Guid? tenantId = null,
-        Guid? actorId = null)
+        Guid? actorId = null,
+        TestEconomyStepUpExecutor? stepUp = null)
     {
         var actorContext = new Mock<IActorContextAccessor>();
         actorContext.SetupGet(accessor => accessor.ActorContext).Returns(new ActorContext
@@ -162,7 +172,7 @@ public sealed class EconomyLegacyMigrationAdministrationControllerTests
             IsAuthenticated = true
         });
         return new EconomyLegacyMigrationAdministrationController(
-            migration, actorContext.Object, new FixedTimeProvider());
+            migration, stepUp ?? new TestEconomyStepUpExecutor(), actorContext.Object, new FixedTimeProvider());
     }
 
     private static LegacyEconomyShadowBatchView View(Guid batchId, Guid tenantId) => new(

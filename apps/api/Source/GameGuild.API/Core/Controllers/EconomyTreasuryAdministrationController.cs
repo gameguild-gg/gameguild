@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.API.Authorization;
 using GameGuild.API.Setup;
 using GameGuild.Economy.Reserves;
 using GameGuild.Economy.Risk;
@@ -20,12 +21,13 @@ public sealed record ProposeTreasuryWithdrawalRequest(
     string OperationFingerprint,
     string IdempotencyKey);
 
-public sealed record ApproveTreasuryWithdrawalRequest(long ExpectedVersion);
+public sealed record ApproveTreasuryWithdrawalRequest(long ExpectedVersion, string StepUpReceipt);
 
 public sealed record DispatchTreasuryWithdrawalRequest(
     long ExpectedVersion,
     Guid RiskDecisionId,
-    string OperationFingerprint);
+    string OperationFingerprint,
+    string StepUpReceipt);
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/admin/economy/treasury/withdrawals")]
@@ -33,6 +35,7 @@ public sealed record DispatchTreasuryWithdrawalRequest(
 [Authorize]
 public sealed class EconomyTreasuryAdministrationController(
     IDurableAdminWithdrawalApplicationService withdrawals,
+    IEconomyStepUpExecutor stepUp,
     IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     [HttpGet]
@@ -107,9 +110,18 @@ public sealed class EconomyTreasuryAdministrationController(
     {
         if (!TryActor(out var tenantId, out var actorId)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return await ExecuteAsync(() => withdrawals.ApproveAsync(
-            new ApproveAdminWithdrawalCommand(
-                tenantId, actorId, runId, request.ExpectedVersion), cancellationToken)).ConfigureAwait(false);
+        var operation = EconomyStepUpOperation.Create(
+            "economy.treasury.approve",
+            $"treasury-withdrawal:{runId:N}",
+            runId.ToString("N"),
+            request.ExpectedVersion.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        return await ExecuteAsync(() => stepUp.ExecuteAsync(
+            operation,
+            request.StepUpReceipt,
+            (_, token) => withdrawals.ApproveAsync(
+                new ApproveAdminWithdrawalCommand(
+                    tenantId, actorId, runId, request.ExpectedVersion), token),
+            cancellationToken)).ConfigureAwait(false);
     }
 
     [HttpPost("{runId:guid}/dispatch")]
@@ -126,14 +138,25 @@ public sealed class EconomyTreasuryAdministrationController(
     {
         if (!TryActor(out var tenantId, out var actorId)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return await ExecuteAsync(() => withdrawals.DispatchAsync(
-            new DispatchAdminWithdrawalCommand(
-                tenantId,
-                actorId,
-                runId,
-                request.ExpectedVersion,
-                request.RiskDecisionId,
-                request.OperationFingerprint),
+        var operation = EconomyStepUpOperation.Create(
+            "economy.treasury.dispatch",
+            $"treasury-withdrawal:{runId:N}",
+            runId.ToString("N"),
+            request.ExpectedVersion.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            request.RiskDecisionId.ToString("N"),
+            request.OperationFingerprint);
+        return await ExecuteAsync(() => stepUp.ExecuteAsync(
+            operation,
+            request.StepUpReceipt,
+            (_, token) => withdrawals.DispatchAsync(
+                new DispatchAdminWithdrawalCommand(
+                    tenantId,
+                    actorId,
+                    runId,
+                    request.ExpectedVersion,
+                    request.RiskDecisionId,
+                    request.OperationFingerprint),
+                token),
             cancellationToken)).ConfigureAwait(false);
     }
 
@@ -187,6 +210,10 @@ public sealed class EconomyTreasuryAdministrationController(
         catch (AdminWithdrawalStaleCommandException exception) { return Conflict(exception.Message); }
         catch (AdminWithdrawalEvidenceException exception) { return Conflict(exception.Message); }
         catch (AdminWithdrawalEligibilityException exception) { return Conflict(exception.Message); }
+        catch (GameGuild.Identity.Authentication.StepUpReceiptInvalidException exception)
+        {
+            return Conflict(exception.Message);
+        }
     }
 
     private bool TryActor(out Guid tenantId, out Guid actorId)
