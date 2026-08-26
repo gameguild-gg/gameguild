@@ -29,9 +29,9 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
             walletId,
             workflow: workflow,
             fencingToken: 91);
-        var command = new ProposeAdminWithdrawalCommand(
-            tenantId, actorId, new DateOnly(2026, 8, 1), 500, "DESTINATION-HASH", "us",
-            Guid.NewGuid(), "PROPOSAL-FINGERPRINT", "treasury-august");
+        var command = CreateProposalCommand(
+            tenantId, actorId, new DateOnly(2026, 8, 1), 500,
+            "DESTINATION-HASH", "treasury-august");
 
         var run = await service.ProposeAsync(command);
 
@@ -48,7 +48,7 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
         workflow.Reservations.Should().ContainSingle();
         workflow.Reservations.Single().ProviderHash.Should().Be("stripe-platform-provider");
         workflow.Reservations.Single().JurisdictionCode.Should().Be("US");
-        workflow.Reservations.Single().SubjectReference.Should().Be($"treasury:{tenantId:N}");
+        workflow.Reservations.Single().ReauthenticationEvidenceHash.Should().Be(Hash("reauth-evidence"));
     }
 
     [Fact]
@@ -56,9 +56,9 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
     {
         var tenantId = Guid.NewGuid();
         var actorId = Guid.NewGuid();
-        var command = new ProposeAdminWithdrawalCommand(
-            tenantId, actorId, new DateOnly(2026, 8, 1), 500, "destination-hash", "US",
-            Guid.NewGuid(), "proposal-fingerprint", "replay-key");
+        var command = CreateProposalCommand(
+            tenantId, actorId, new DateOnly(2026, 8, 1), 500,
+            "destination-hash", "replay-key");
         var walletId = WalletId.New();
         var policy = CreatePolicy(tenantId, walletId, 3);
         var store = new InMemoryAdminWithdrawalStore();
@@ -106,17 +106,17 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
             walletId,
             workflow,
             reservations: [CreateFragment(run, root)]);
-        var riskDecisionId = Guid.NewGuid();
+        var dispatchActor = Guid.NewGuid();
 
-        var dispatching = await service.DispatchAsync(new DispatchAdminWithdrawalCommand(
-            tenantId, Guid.NewGuid(), run.Id, run.Version, riskDecisionId, "dispatch-fingerprint"));
+        var dispatching = await service.DispatchAsync(CreateDispatchCommand(
+            tenantId, dispatchActor, run.Id, run.Version));
 
         dispatching.State.Should().Be(AdminWithdrawalRunState.Dispatching);
         var request = workflow.Dispatches.Should().ContainSingle().Subject;
-        request.RiskDecisionId.Should().Be(riskDecisionId);
+        request.DispatchedBy.Should().Be(dispatchActor);
         request.ProviderHash.Should().Be("stripe-platform-provider");
-        request.SourceRootHashes.Should().Equal(rootHash);
-        request.DispatchSnapshotHash.Should().MatchRegex("^[0-9a-f]{64}$");
+        request.SourceRoots.Should().Equal(root);
+        request.ReauthenticationEvidenceHash.Should().Be(Hash("reauth-evidence"));
     }
 
     [Fact]
@@ -143,8 +143,8 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
             CreateReserve(run.ReserveVersion.Value),
             walletId,
             reservations: [CreateFragment(run, root)]);
-        var command = new DispatchAdminWithdrawalCommand(
-            tenantId, Guid.NewGuid(), run.Id, run.Version, Guid.NewGuid(), "dispatch-fingerprint");
+        var dispatchActor = Guid.NewGuid();
+        var command = CreateDispatchCommand(tenantId, dispatchActor, run.Id, run.Version);
 
         await FluentActions.Invoking(() => service.DispatchAsync(command))
             .Should().ThrowAsync<AdminWithdrawalStaleCommandException>()
@@ -213,14 +213,14 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
     [InlineData("null")]
     [InlineData("tenant")]
     [InlineData("actor")]
-    [InlineData("risk")]
     [InlineData("period")]
     [InlineData("amount")]
     [InlineData("destination")]
-    [InlineData("jurisdiction")]
-    [InlineData("fingerprint")]
     [InlineData("idempotency")]
     [InlineData("long-destination")]
+    [InlineData("reauth-null")]
+    [InlineData("reauth-binding")]
+    [InlineData("reauth-assurance")]
     public async Task ProposeAsync_RejectsEveryInvalidCommandShape(string invalid)
     {
         var tenantId = Guid.NewGuid();
@@ -228,22 +228,31 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
         var service = CreateService(
             new InMemoryAdminWithdrawalStore(), new AdminWithdrawalAuditTrail(),
             CreatePolicy(tenantId, walletId, 3), CreateReserve(4), walletId);
-        ProposeAdminWithdrawalCommand? command = new(
-            tenantId, Guid.NewGuid(), new DateOnly(2026, 8, 1), 500,
-            "destination-hash", "US", Guid.NewGuid(), "fingerprint", "key");
+        var actorId = Guid.NewGuid();
+        ProposeAdminWithdrawalCommand? command = CreateProposalCommand(
+            tenantId, actorId, new DateOnly(2026, 8, 1), 500, "destination-hash", "key");
         command = invalid switch
         {
             "null" => null,
             "tenant" => command with { TenantId = Guid.Empty },
             "actor" => command with { ActorId = Guid.Empty },
-            "risk" => command with { RiskDecisionId = Guid.Empty },
             "period" => command with { PeriodStart = new DateOnly(2026, 8, 2) },
             "amount" => command with { AmountUnits = 0 },
             "destination" => command with { DestinationHash = " " },
-            "jurisdiction" => command with { JurisdictionCode = " " },
-            "fingerprint" => command with { OperationFingerprint = " " },
             "idempotency" => command with { IdempotencyKey = " " },
             "long-destination" => command with { DestinationHash = new string('a', 129) },
+            "reauth-null" => command with { Reauthentication = null! },
+            "reauth-binding" => command with
+            {
+                Reauthentication = command.Reauthentication with { TransactionBinding = "wrong" }
+            },
+            "reauth-assurance" => command with
+            {
+                Reauthentication = command.Reauthentication with
+                {
+                    Assurance = ReauthenticationAssurance.Password
+                }
+            },
             _ => command
         };
 
@@ -262,11 +271,11 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
         var service = CreateService(
             new InMemoryAdminWithdrawalStore(), new AdminWithdrawalAuditTrail(),
             CreatePolicy(tenantId, walletId, 3), CreateReserve(4), walletId);
-        var command = new ProposeAdminWithdrawalCommand(
+        var command = CreateProposalCommand(
             tenantId, Guid.NewGuid(), new DateOnly(2026, 8, 1),
             invalid == "below-minimum" ? 99 : invalid == "above-maximum" ? 10_001 : 500,
             invalid == "destination" ? "not-allowed" : "destination-hash",
-            "US", Guid.NewGuid(), "fingerprint", "key-" + invalid);
+            "key-" + invalid);
 
         await FluentActions.Awaiting(async () => await service.ProposeAsync(command).AsTask())
             .Should().ThrowAsync<AdminWithdrawalEligibilityException>();
@@ -288,9 +297,9 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
             new SelectivePolicyStore(null, global), new ConfigurableSignatureVerifier(true),
             CreateReserve(4), walletId, tenantId, workflow: workflow);
 
-        var result = await service.ProposeAsync(new ProposeAdminWithdrawalCommand(
+        var result = await service.ProposeAsync(CreateProposalCommand(
             tenantId, Guid.NewGuid(), new DateOnly(2026, 8, 1), 500,
-            "destination-hash", "US", Guid.NewGuid(), "fingerprint", "global-key"));
+            "destination-hash", "global-key"));
 
         result.PolicyVersion.Value.Should().Be(3);
         workflow.Reservations.Should().ContainSingle();
@@ -327,9 +336,9 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
             new SelectivePolicyStore(policy, null), new ConfigurableSignatureVerifier(signatureValid),
             CreateReserve(4), walletId, tenantId);
 
-        await FluentActions.Awaiting(async () => await service.ProposeAsync(new ProposeAdminWithdrawalCommand(
+        await FluentActions.Awaiting(async () => await service.ProposeAsync(CreateProposalCommand(
                 tenantId, Guid.NewGuid(), new DateOnly(2026, 8, 1), 500,
-                "destination-hash", "US", Guid.NewGuid(), "fingerprint", "policy-" + invalid)).AsTask())
+                "destination-hash", "policy-" + invalid)).AsTask())
             .Should().ThrowAsync<AdminWithdrawalExecutionDisabledException>();
     }
 
@@ -374,9 +383,9 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
             new SelectivePolicyStore(policy, null), new ConfigurableSignatureVerifier(true),
             CreateReserve(4), walletId, tenantId);
 
-        await FluentActions.Awaiting(async () => await service.ProposeAsync(new ProposeAdminWithdrawalCommand(
+        await FluentActions.Awaiting(async () => await service.ProposeAsync(CreateProposalCommand(
                 tenantId, Guid.NewGuid(), new DateOnly(2026, 8, 1), 1,
-                "destination-hash", "US", Guid.NewGuid(), "fingerprint", "payload-" + invalid)).AsTask())
+                "destination-hash", "payload-" + invalid)).AsTask())
             .Should().ThrowAsync<AdminWithdrawalExecutionDisabledException>();
     }
 
@@ -415,9 +424,9 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
             new SelectivePolicyStore(policy, null), new ConfigurableSignatureVerifier(true),
             reserve, walletId, tenantId);
 
-        await FluentActions.Awaiting(async () => await service.ProposeAsync(new ProposeAdminWithdrawalCommand(
+        await FluentActions.Awaiting(async () => await service.ProposeAsync(CreateProposalCommand(
                 tenantId, Guid.NewGuid(), new DateOnly(2026, 8, 1), amount,
-                "destination-hash", "US", Guid.NewGuid(), "fingerprint", "reserve-" + invalid)).AsTask())
+                "destination-hash", "reserve-" + invalid)).AsTask())
             .Should().ThrowAsync<Exception>();
     }
 
@@ -454,24 +463,27 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
     [InlineData("tenant")]
     [InlineData("actor")]
     [InlineData("run")]
-    [InlineData("risk")]
     [InlineData("version")]
-    [InlineData("fingerprint")]
+    [InlineData("reauth-null")]
+    [InlineData("reauth-binding")]
     public async Task DispatchAsync_RejectsEveryInvalidCommandShape(string invalid)
     {
         var fixture = CreateDispatchFixture("valid");
-        DispatchAdminWithdrawalCommand? command = new(
-            fixture.Run.TenantId, Guid.NewGuid(), fixture.Run.Id, fixture.Run.Version,
-            Guid.NewGuid(), "fingerprint");
+        var actorId = Guid.NewGuid();
+        DispatchAdminWithdrawalCommand? command = CreateDispatchCommand(
+            fixture.Run.TenantId, actorId, fixture.Run.Id, fixture.Run.Version);
         command = invalid switch
         {
             "null" => null,
             "tenant" => command with { TenantId = Guid.Empty },
             "actor" => command with { ActorId = Guid.Empty },
             "run" => command with { RunId = Guid.Empty },
-            "risk" => command with { RiskDecisionId = Guid.Empty },
             "version" => command with { ExpectedVersion = 0 },
-            "fingerprint" => command with { OperationFingerprint = " " },
+            "reauth-null" => command with { Reauthentication = null! },
+            "reauth-binding" => command with
+            {
+                Reauthentication = command.Reauthentication with { TransactionBinding = "wrong" }
+            },
             _ => command
         };
 
@@ -503,14 +515,19 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
     [InlineData("fragments-empty")]
     [InlineData("fragments-incomplete")]
     [InlineData("roots-changed")]
-    [InlineData("fingerprint-long")]
+    [InlineData("reauth-binding")]
     public async Task DispatchAsync_FailsClosedForEveryStaleAuthorityOrEvidenceBinding(string invalid)
     {
         var fixture = CreateDispatchFixture(invalid);
-        var command = new DispatchAdminWithdrawalCommand(
-            fixture.Run.TenantId, Guid.NewGuid(), fixture.Run.Id,
-            invalid == "version" ? fixture.Run.Version + 1 : fixture.Run.Version,
-            Guid.NewGuid(), invalid == "fingerprint-long" ? new string('a', 129) : "fingerprint");
+        var actorId = Guid.NewGuid();
+        var expectedVersion = invalid == "version" ? fixture.Run.Version + 1 : fixture.Run.Version;
+        var command = CreateDispatchCommand(
+            fixture.Run.TenantId, actorId, fixture.Run.Id, expectedVersion);
+        if (invalid == "reauth-binding")
+            command = command with
+            {
+                Reauthentication = command.Reauthentication with { TransactionBinding = "wrong" }
+            };
 
         await FluentActions.Awaiting(() => fixture.Service.DispatchAsync(command))
             .Should().ThrowAsync<Exception>();
@@ -724,6 +741,7 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
         new StubReservationReader(reservations ?? []),
         workflow ?? new RecordingWorkflow(),
         provider ?? new RecordingProvider(null),
+        new FixedJurisdictionResolver(),
         new FixedTimeProvider(Now));
 
     private static DurableAdminWithdrawalApplicationService CreateService(
@@ -747,6 +765,7 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
         new StubReservationReader(reservations ?? []),
         workflow ?? new RecordingWorkflow(),
         provider ?? new RecordingProvider(null),
+        new FixedJurisdictionResolver(),
         new FixedTimeProvider(Now));
 
     private static EconomyCapabilityPolicy CreatePolicy(Guid tenantId, WalletId walletId, long version)
@@ -794,9 +813,48 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
         run.ReserveVersion.Value,
         0,
         Guid.NewGuid(),
+        Hash("reservation-operation-fingerprint"),
+        Hash("reauth-evidence"),
         "reservation-receipt-hash",
         [rootHash],
         ["evidence-hash"]);
+
+    private static ProposeAdminWithdrawalCommand CreateProposalCommand(
+        Guid tenantId,
+        Guid actorId,
+        DateOnly periodStart,
+        long amountUnits,
+        string destinationHash,
+        string idempotencyKey)
+    {
+        var normalizedDestination = destinationHash.Trim().ToLowerInvariant();
+        var normalizedKey = idempotencyKey.Trim();
+        var binding = TreasuryProtectedOperationBinding.Proposal(
+            periodStart, amountUnits, normalizedDestination, normalizedKey);
+        return new ProposeAdminWithdrawalCommand(
+            tenantId, actorId, periodStart, amountUnits, destinationHash, idempotencyKey,
+            Reauthentication(actorId, binding));
+    }
+
+    private static DispatchAdminWithdrawalCommand CreateDispatchCommand(
+        Guid tenantId,
+        Guid actorId,
+        Guid runId,
+        long expectedVersion) => new(
+        tenantId,
+        actorId,
+        runId,
+        expectedVersion,
+        Reauthentication(actorId, TreasuryProtectedOperationBinding.Dispatch(runId, expectedVersion)));
+
+    private static ReauthenticationEvidence Reauthentication(Guid actorId, string binding) => new(
+        actorId,
+        ProtectedOperationKind.AdministrativeAdjustment,
+        binding,
+        ReauthenticationAssurance.MultiFactor,
+        Now.AddMinutes(-1),
+        Now.AddMinutes(5),
+        Hash("reauth-evidence"));
 
     private static PersistedFragmentReservation CreateFragment(
         AdminWithdrawalRun run,
@@ -844,7 +902,7 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
             {
                 Id = request.RunId, State = AdminWithdrawalRunState.Dispatching,
                 ApprovedBy = Guid.NewGuid(), Version = request.ExpectedVersion + 1,
-                DispatchSnapshotHash = request.DispatchSnapshotHash
+                DispatchSnapshotHash = Hash(request.ReauthenticationEvidenceHash + request.ProviderHash)
             });
         }
 
@@ -862,6 +920,19 @@ public sealed class DurableAdminWithdrawalApplicationServiceTests
                 ProviderTransferId = value.ProviderTransferId
             });
         }
+    }
+
+    private sealed class FixedJurisdictionResolver : IEconomyJurisdictionResolver
+    {
+        public ValueTask<EconomyJurisdictionResolution> ResolveAsync(
+            Guid tenantId,
+            Guid actorId,
+            string? providerJurisdiction,
+            string? destinationJurisdiction,
+            DateTimeOffset evaluatedAt,
+            CancellationToken cancellationToken) =>
+            ValueTask.FromResult(new EconomyJurisdictionResolution(
+                "US", 1, 1, Hash("jurisdiction-evidence")));
     }
 
     private sealed class RecordingPolicyStore(EconomyCapabilityPolicy? policy) : IEconomyCapabilityPolicyStore
