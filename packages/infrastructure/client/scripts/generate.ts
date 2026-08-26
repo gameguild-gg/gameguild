@@ -12,6 +12,7 @@
 
 import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { userInfo } from 'os';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -43,6 +44,8 @@ interface GeneratorMetadata {
   hash: string;
   apiVersion: string | undefined;
   source: string;
+  generatedAt: string;
+  generatedBy: string;
 }
 
 /**
@@ -69,15 +72,43 @@ function loadMetadata(): GeneratorMetadata | null {
 }
 
 /**
+ * Metadata written before provenance tracking existed lacks generatedAt /
+ * generatedBy; treat it as stale so the next run migrates it.
+ */
+function hasProvenanceFields(metadata: GeneratorMetadata | null): boolean {
+  return metadata !== null && metadata.generatedAt !== undefined && metadata.generatedBy !== undefined;
+}
+
+/**
+ * Resolve the user running the generator. os.userInfo() works on POSIX and
+ * Windows without a shell; it can throw on POSIX without a passwd entry, so
+ * fall back to USER / USERNAME before giving up.
+ */
+function resolveGeneratorUser(): string {
+  try {
+    const username = userInfo().username;
+    if (username) {
+      return username;
+    }
+  } catch {
+    // userInfo() unavailable — use environment lookup below.
+  }
+
+  return process.env.USER ?? process.env.USERNAME ?? 'unknown';
+}
+
+/**
  * Save generation metadata for incremental builds
  */
 function saveMetadata(hash: string, spec: OpenApiSpec): void {
-  // No wall-clock timestamp: CI diffs this file against regenerated output,
-  // and a changing timestamp makes the diff fail on every run.
+  // generatedAt/generatedBy are provenance and intentionally differ per run;
+  // diffing consumers must ignore them.
   const metadata: GeneratorMetadata = {
     hash,
     apiVersion: spec.info?.version,
     source: CONFIG.generatedSourceLabel,
+    generatedAt: new Date().toISOString(),
+    generatedBy: resolveGeneratorUser(),
   };
 
   if (!existsSync(dirname(CONFIG.metadataFile))) {
@@ -127,7 +158,7 @@ async function generate(): Promise<void> {
 
     // Step 2: Check if regeneration is needed
     const metadata = loadMetadata();
-    if (!CONFIG.force && metadata?.hash === currentHash) {
+    if (!CONFIG.force && metadata?.hash === currentHash && hasProvenanceFields(metadata)) {
       console.log('✅ API spec unchanged, skipping generation\n');
       return;
     }
