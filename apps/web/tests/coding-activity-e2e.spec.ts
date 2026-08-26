@@ -162,7 +162,7 @@ async function signInAsAdmin(page: Page) {
     { timeout: 30_000 },
   );
   await page.getByLabel("Email").fill(ADMIN_EMAIL);
-  await page.getByLabel("Password").fill(ADMIN_PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(ADMIN_PASSWORD);
   await page
     .getByRole("button", { name: "Sign in", exact: true })
     .click();

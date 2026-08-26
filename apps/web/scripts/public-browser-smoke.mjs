@@ -96,7 +96,7 @@ async function runRealAuthFlow(page) {
   await page.getByRole('heading', { name: /Welcome back to GameGuild/i }).waitFor({ timeout: 20_000 });
 
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
+  await page.getByLabel('Password', { exact: true }).fill(password);
   await waitForClientHydration(page);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await assertSignedInDashboard(page, 'Sign-in redirect');
@@ -167,7 +167,7 @@ async function main() {
     await page.goto(routeUrl('/sign-in'), { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: /Welcome back to GameGuild/i }).waitFor();
     await page.getByLabel('Email').waitFor();
-    await page.getByLabel('Password').waitFor();
+    await page.getByLabel('Password', { exact: true }).waitFor();
 
     await page.goto(routeUrl('/sign-up'), { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: /Create your GameGuild account/i }).waitFor();
