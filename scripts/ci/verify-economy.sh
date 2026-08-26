@@ -344,7 +344,7 @@ assert_economy_manifest "$repository_root" "$manifest_path"
 
 gate_stage='preflight-postgres-isolation'
 mapfile -t nested_postgres_builders < <(
-  rg --path-separator // -l --glob '*.cs' 'new PostgreSqlBuilder' apps/api/tests \
+  grep -RIl --include='*.cs' 'new PostgreSqlBuilder' apps/api/tests \
     | grep -v '^apps/api/tests/GameGuild.TestSupport.Economy/' \
     || true
 )
