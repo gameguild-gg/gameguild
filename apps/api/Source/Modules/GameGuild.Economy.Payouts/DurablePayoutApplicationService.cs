@@ -13,9 +13,6 @@ public sealed record ReserveApprovedPayoutCommand(
     Guid TenantId,
     Guid ActorId,
     Guid RequestId,
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     ReauthenticationEvidence Reauthentication);
 
 public sealed record DispatchPayoutOperationCommand(
@@ -23,9 +20,6 @@ public sealed record DispatchPayoutOperationCommand(
     Guid ActorId,
     Guid OperationId,
     long ExpectedVersion,
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     ReauthenticationEvidence Reauthentication);
 
 public sealed record ReconcilePayoutOperationCommand(
@@ -75,6 +69,7 @@ public sealed class DurablePayoutApplicationService(
     IPayoutFencingTokenAllocator fencingTokens,
     IFifoFragmentReservationReader reservationReader,
     IConnectPayoutProvider provider,
+    IEconomyJurisdictionResolver jurisdictionResolver,
     IDurablePayoutReservationWorkflow reservationWorkflow,
     IDurablePayoutSettlementWorkflow settlementWorkflow,
     TimeProvider timeProvider) : IDurablePayoutApplicationService
@@ -120,13 +115,15 @@ public sealed class DurablePayoutApplicationService(
         if (replay is not null) return replay;
 
         var now = timeProvider.GetUtcNow();
-        var jurisdiction = NormalizeJurisdiction(command.JurisdictionCode);
-        var operationFingerprint = NormalizeBinding(command.OperationFingerprint, nameof(command.OperationFingerprint));
+        var jurisdiction = await jurisdictionResolver.ResolveAsync(
+            command.TenantId, payoutRequest.PayeeId, null, null, now, cancellationToken)
+            .ConfigureAwait(false);
+        var transactionBinding = PayoutProtectedOperationBinding.Reservation(command.RequestId);
         var reauthentication = ReauthenticationEvidenceValidator.RequireFresh(
             command.Reauthentication,
             command.ActorId,
             ProtectedOperationKind.Payout,
-            operationFingerprint,
+            transactionBinding,
             ReauthenticationAssurance.MultiFactor,
             now);
         var wallet = await wallets.GetWalletAsync(
@@ -137,7 +134,7 @@ public sealed class DurablePayoutApplicationService(
         var account = await provider.GetAccountAsync(payoutRequest.PayeeId, cancellationToken).ConfigureAwait(false);
         ValidateReadyAccount(account, payoutRequest.PayeeId, now);
         var (policy, settings) = await LoadPolicyAsync(
-            command.TenantId, jurisdiction, now, cancellationToken).ConfigureAwait(false);
+            command.TenantId, jurisdiction.JurisdictionCode, now, cancellationToken).ConfigureAwait(false);
         if (payoutRequest.Amount.Units < settings.MinimumAmountUnits ||
             payoutRequest.Amount.Units > settings.MaximumAmountUnits)
             throw new PayoutEligibilityException("Payout amount is outside the signed policy limits.");
@@ -180,18 +177,15 @@ public sealed class DurablePayoutApplicationService(
             reserve.Version,
             reserve.AuthorizationEpoch,
             new PolicyVersion(policy.Version),
-            command.RiskDecisionId,
+            Guid.Empty,
             now,
             now,
             command.TenantId);
         return await reservationWorkflow.ReserveAsync(
             new DurablePayoutReservationRequest(
                 operation,
-                EconomySubjectReference.ForUser(command.TenantId, payoutRequest.PayeeId),
-                jurisdiction,
-                command.RiskDecisionId,
+                jurisdiction.JurisdictionCode,
                 reauthentication.EvidenceHash,
-                operationFingerprint,
                 settings.ProviderHash),
             cancellationToken).ConfigureAwait(false);
     }
@@ -206,17 +200,20 @@ public sealed class DurablePayoutApplicationService(
             throw new PayoutStaleCommandException("Payout is not reserved at the requested version.");
 
         var now = timeProvider.GetUtcNow();
-        var operationFingerprint = NormalizeBinding(command.OperationFingerprint, nameof(command.OperationFingerprint));
+        var transactionBinding = PayoutProtectedOperationBinding.Dispatch(
+            command.OperationId, command.ExpectedVersion);
         var reauthentication = ReauthenticationEvidenceValidator.RequireFresh(
             command.Reauthentication,
             command.ActorId,
             ProtectedOperationKind.Payout,
-            operationFingerprint,
+            transactionBinding,
             ReauthenticationAssurance.MultiFactor,
             now);
-        var jurisdiction = NormalizeJurisdiction(command.JurisdictionCode);
+        var jurisdiction = await jurisdictionResolver.ResolveAsync(
+            operation.TenantId, operation.PayeeId, null, null, now, cancellationToken)
+            .ConfigureAwait(false);
         var (policy, settings) = await LoadPolicyAsync(
-            operation.TenantId, jurisdiction, now, cancellationToken).ConfigureAwait(false);
+            operation.TenantId, jurisdiction.JurisdictionCode, now, cancellationToken).ConfigureAwait(false);
         if (policy.Version != operation.PolicyVersion.Value)
             throw new PayoutStaleCommandException("The signed payout policy changed before dispatch.");
         var reserve = await reserves.CurrentHeadAsync(now, cancellationToken).ConfigureAwait(false);
@@ -233,21 +230,8 @@ public sealed class DurablePayoutApplicationService(
             operation.Id, PersistedFragmentReservationStatus.Reserved);
         if (fragments.Count == 0 || fragments.Sum(item => item.Amount.Units) != operation.Amount.Units)
             throw new PayoutStaleCommandException("Payout FIFO reservations are missing or incomplete.");
-        var rootHashes = fragments.Select(item => Hash(item.RootSourceStampId.Value.ToString("N")))
-            .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
-        var dispatchSnapshotHash = Hash(string.Join('|',
-            operation.TenantId.ToString("N"),
-            operation.Id.ToString("N"),
-            operation.Version.ToString(CultureInfo.InvariantCulture),
-            operation.FencingToken.ToString(CultureInfo.InvariantCulture),
-            operation.KillSwitchEpoch.ToString(CultureInfo.InvariantCulture),
-            operation.ProviderBindingHash,
-            operation.EligibilityHash,
-            command.RiskDecisionId.ToString("N"),
-            reauthentication.EvidenceHash,
-            operationFingerprint,
-            settings.ProviderHash,
-            string.Join(',', rootHashes)));
+        var sourceRoots = fragments.Select(item => item.RootSourceStampId)
+            .Distinct().OrderBy(item => item.Value).ToArray();
         return await settlementWorkflow.BeginDispatchAsync(
             new DurablePayoutDispatchRequest(
                 operation.Id,
@@ -255,14 +239,10 @@ public sealed class DurablePayoutApplicationService(
                 operation.Version,
                 operation.FencingToken,
                 operation.KillSwitchEpoch,
-                EconomySubjectReference.ForUser(operation.TenantId, operation.PayeeId),
-                jurisdiction,
-                command.RiskDecisionId,
+                jurisdiction.JurisdictionCode,
                 reauthentication.EvidenceHash,
-                operationFingerprint,
                 settings.ProviderHash,
-                rootHashes,
-                dispatchSnapshotHash,
+                sourceRoots,
                 now),
             cancellationToken).ConfigureAwait(false);
     }
@@ -349,10 +329,8 @@ public sealed class DurablePayoutApplicationService(
     {
         ArgumentNullException.ThrowIfNull(command);
         ValidateIdentity(command.TenantId, command.ActorId);
-        if (command.RequestId == Guid.Empty || command.RiskDecisionId == Guid.Empty)
-            throw new ArgumentException("Payout request and risk decision IDs are required.", nameof(command));
-        ArgumentException.ThrowIfNullOrWhiteSpace(command.JurisdictionCode);
-        ArgumentException.ThrowIfNullOrWhiteSpace(command.OperationFingerprint);
+        if (command.RequestId == Guid.Empty)
+            throw new ArgumentException("Payout request ID is required.", nameof(command));
         ArgumentNullException.ThrowIfNull(command.Reauthentication);
     }
 
@@ -360,11 +338,9 @@ public sealed class DurablePayoutApplicationService(
     {
         ArgumentNullException.ThrowIfNull(command);
         ValidateIdentity(command.TenantId, command.ActorId);
-        if (command.OperationId == Guid.Empty || command.RiskDecisionId == Guid.Empty)
-            throw new ArgumentException("Payout operation and risk decision IDs are required.", nameof(command));
+        if (command.OperationId == Guid.Empty)
+            throw new ArgumentException("Payout operation ID is required.", nameof(command));
         if (command.ExpectedVersion <= 0) throw new ArgumentOutOfRangeException(nameof(command));
-        ArgumentException.ThrowIfNullOrWhiteSpace(command.JurisdictionCode);
-        ArgumentException.ThrowIfNullOrWhiteSpace(command.OperationFingerprint);
         ArgumentNullException.ThrowIfNull(command.Reauthentication);
     }
 
@@ -419,15 +395,6 @@ public sealed class DurablePayoutApplicationService(
         ((int)item.Outcome).ToString(CultureInfo.InvariantCulture),
         item.Reason,
         item.OccurredAt.UtcTicks.ToString(CultureInfo.InvariantCulture)));
-
-    private static string NormalizeJurisdiction(string value)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(value);
-        var normalized = value.Trim().ToUpperInvariant();
-        if (normalized.Length is < 2 or > 16)
-            throw new ArgumentOutOfRangeException(nameof(value), "Jurisdiction codes must contain 2 to 16 characters.");
-        return normalized;
-    }
 
     private static string NormalizeBinding(string value, string parameterName)
     {

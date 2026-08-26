@@ -11,11 +11,8 @@ namespace GameGuild.Economy.Payouts;
 
 public sealed record DurablePayoutReservationRequest(
     PayoutOperation Operation,
-    string SubjectReference,
     string JurisdictionCode,
-    Guid RiskDecisionId,
     string ReauthenticationEvidenceHash,
-    string OperationFingerprint,
     string ProviderHash);
 
 public interface IDurablePayoutReservationWorkflow
@@ -29,7 +26,7 @@ public sealed class PostgreSqlDurablePayoutReservationWorkflow(
     IApplicationDbContext dbContext,
     IPayoutOperationStore operations,
     IFifoFragmentReservationGateway reservations,
-    IEconomyCapabilityAuthorizationService capabilityAuthorization,
+    IEconomyProtectedOperationOrchestrator orchestrator,
     IPayoutAuthorizationEvidenceWriter authorizationEvidence,
     IRegisteredPostingCapabilityResolver capabilityResolver,
     IRegisteredPostingGateway postings) : IDurablePayoutReservationWorkflow
@@ -48,7 +45,7 @@ public sealed class PostgreSqlDurablePayoutReservationWorkflow(
         if (replay is not null)
             return replay;
         return await PostgreSqlTransactionExecutor.ExecuteAsync(
-            dbContext, IsolationLevel.ReadCommitted, async _ =>
+            dbContext, IsolationLevel.Serializable, async transactionToken =>
         {
             replay = operations.FindReplay(operation.TenantId, operation.IdempotencyKey.Value, operation.RequestHash);
             if (replay is not null)
@@ -65,72 +62,97 @@ public sealed class PostgreSqlDurablePayoutReservationWorkflow(
             if (fragments.Sum(fragment => fragment.Amount.Units) != operation.Amount.Units)
                 throw new RegisteredPostingRejectedException("Payout FIFO reservations do not match the requested hard-coin amount.");
 
-            var rootHashes = fragments
-                .Select(fragment => Hash(fragment.RootSourceStampId.Value.ToString("N")))
-                .Distinct(StringComparer.Ordinal)
-                .Order(StringComparer.Ordinal)
+            var sourceRoots = fragments
+                .Select(fragment => fragment.RootSourceStampId)
+                .Distinct()
+                .OrderBy(root => root.Value)
                 .ToArray();
-            var receipt = await capabilityAuthorization.AuthorizeAndConsumeAsync(
-                new EconomyCapabilityEvaluationContext(
-                    operation.TenantId,
-                    operation.ActorId,
-                    request.SubjectReference.Trim(),
-                    request.JurisdictionCode.Trim().ToUpperInvariant(),
-                    EconomyValueMovementCapability.PayoutExecution,
-                    request.RiskDecisionId,
-                    request.OperationFingerprint.Trim(),
-                    request.ProviderHash.Trim(),
-                    operation.DestinationHash,
-                    rootHashes,
-                    operation.CreatedAt),
-                cancellationToken).ConfigureAwait(false);
-            if (receipt.TenantId != operation.TenantId || receipt.ActorId != operation.ActorId ||
-                receipt.RiskDecisionId != request.RiskDecisionId ||
-                receipt.PolicyVersion != operation.PolicyVersion.Value ||
-                receipt.ReserveVersion != operation.ReserveVersion.Value ||
-                !string.Equals(receipt.ProviderHash, request.ProviderHash.Trim(), StringComparison.Ordinal) ||
-                !string.Equals(receipt.DestinationHash, operation.DestinationHash, StringComparison.Ordinal) ||
-                !receipt.SourceRootHashes.SequenceEqual(rootHashes, StringComparer.Ordinal))
-                throw new InvalidOperationException(
-                    "The payout capability receipt does not match the durable reservation snapshot.");
-            var authority = await capabilityResolver.ResolveAuthorityAsync(
-                ReservationCapabilityName,
+            var intent = new EconomyProtectedOperationIntent(
+                EconomyValueMovementCapability.PayoutExecution,
                 PostingTemplateKind.PayoutReservation,
-                receipt,
-                cancellationToken).ConfigureAwait(false);
-            if (authority.TenantId != operation.TenantId || authority.ActorId != operation.ActorId ||
-                authority.RiskDecisionId != receipt.RiskDecisionId)
-                throw new InvalidOperationException(
-                    "The registered posting authority does not match the payout actor and tenant.");
-            var authorizedOperation = operation with { KillSwitchEpoch = receipt.KillSwitchEpoch };
-            operations.Add(authorizedOperation);
-            await authorizationEvidence.AppendAsync(
-                new PayoutAuthorizationEvidence(
-                    authorizedOperation.Id,
-                    authorizedOperation.TenantId,
-                    authorizedOperation.ActorId,
-                    PayoutAuthorizationPhase.Reservation,
-                    authorizedOperation.RiskDecisionId,
-                    request.ReauthenticationEvidenceHash.Trim(),
-                    Hash(request.OperationFingerprint.Trim()),
-                    receipt.Id,
-                    receipt.ReceiptHash,
-                    authorizedOperation.CreatedAt),
-                cancellationToken).ConfigureAwait(false);
+                operation.WalletId,
+                operation.WalletId,
+                operation.Amount,
+                [new RiskCurrencyLeg(operation.Amount.Currency, operation.Amount.Units)],
+                sourceRoots,
+                request.ProviderHash.Trim(),
+                operation.DestinationHash,
+                operation.IdempotencyKey,
+                operation.CreatedAt,
+                ProtectedSubjectId: operation.PayeeId);
+            return await orchestrator.ExecuteAsync(intent, async (authorization, operationToken) =>
+            {
+                var receipt = authorization.Receipt;
+                EnsureAuthorization(operation, request, sourceRoots, authorization);
+                var authority = await capabilityResolver.ResolveAuthorityAsync(
+                    ReservationCapabilityName,
+                    PostingTemplateKind.PayoutReservation,
+                    receipt,
+                    operationToken).ConfigureAwait(false);
+                if (authority.TenantId != operation.TenantId || authority.ActorId != operation.ActorId ||
+                    authority.RiskDecisionId != receipt.RiskDecisionId)
+                    throw new InvalidOperationException(
+                        "The registered posting authority does not match the payout actor and tenant.");
+                var authorizedOperation = operation with
+                {
+                    RiskDecisionId = authorization.RiskDecisionId,
+                    KillSwitchEpoch = receipt.KillSwitchEpoch
+                };
+                operations.Add(authorizedOperation);
+                await authorizationEvidence.AppendAsync(
+                    new PayoutAuthorizationEvidence(
+                        authorizedOperation.Id,
+                        authorizedOperation.TenantId,
+                        authorizedOperation.ActorId,
+                        PayoutAuthorizationPhase.Reservation,
+                        authorization.RiskDecisionId,
+                        request.ReauthenticationEvidenceHash.Trim(),
+                        Hash(authorization.OperationFingerprint),
+                        receipt.Id,
+                        receipt.ReceiptHash,
+                        authorizedOperation.CreatedAt),
+                    operationToken).ConfigureAwait(false);
 
-            postings.Post(new RegisteredPostingRequest(
-                authority,
-                CreateReservationPosting(authorizedOperation),
-                fragments.Select(fragment => new RegisteredPostingAllocation(
-                    1,
-                    fragment.ParentLotId,
-                    fragment.Amount.Units,
-                    [fragment.Range]))
-                    .ToArray()));
+                postings.Post(new RegisteredPostingRequest(
+                    authority,
+                    CreateReservationPosting(authorizedOperation),
+                    fragments.Select(fragment => new RegisteredPostingAllocation(
+                        1,
+                        fragment.ParentLotId,
+                        fragment.Amount.Units,
+                        [fragment.Range]))
+                        .ToArray()));
 
-            await Task.CompletedTask;
-            return authorizedOperation;
+                return authorizedOperation;
+            }, transactionToken).ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static void EnsureAuthorization(
+        PayoutOperation operation,
+        DurablePayoutReservationRequest request,
+        IReadOnlyList<SourceStampId> sourceRoots,
+        EconomyProtectedOperationAuthorization authorization)
+    {
+        var receipt = authorization.Receipt;
+        var rootHashes = sourceRoots.Select(root => Hash(root.Value.ToString("N"))).ToArray();
+        if (authorization.TenantId != operation.TenantId || authorization.ActorId != operation.ActorId ||
+            !string.Equals(authorization.JurisdictionCode, request.JurisdictionCode.Trim(),
+                StringComparison.Ordinal) ||
+            receipt.TenantId != operation.TenantId || receipt.ActorId != operation.ActorId ||
+            !string.Equals(receipt.SubjectReference,
+                EconomySubjectReference.ForUser(operation.TenantId, operation.PayeeId),
+                StringComparison.Ordinal) ||
+            !string.Equals(receipt.JurisdictionCode, authorization.JurisdictionCode,
+                StringComparison.Ordinal) ||
+            receipt.RiskDecisionId != authorization.RiskDecisionId ||
+            receipt.PolicyVersion != operation.PolicyVersion.Value ||
+            receipt.ReserveVersion != operation.ReserveVersion.Value ||
+            !string.Equals(receipt.ProviderHash, request.ProviderHash.Trim(), StringComparison.Ordinal) ||
+            !string.Equals(receipt.DestinationHash, operation.DestinationHash, StringComparison.Ordinal) ||
+            !receipt.SourceRootHashes.SequenceEqual(rootHashes, StringComparer.Ordinal))
+            throw new InvalidOperationException(
+                "The payout capability receipt does not match the durable reservation snapshot.");
     }
 
     private static PostingRequest CreateReservationPosting(PayoutOperation operation) => new(
@@ -172,19 +194,17 @@ public sealed class PostgreSqlDurablePayoutReservationWorkflow(
             throw new InvalidOperationException("Only a new reserved payout operation can create an immutable reservation posting.");
         if (operation.Amount.Currency != CurrencyCode.HardCoin || operation.Amount.Units <= 0)
             throw new ArgumentException("Payout reservations require a positive hard-coin amount.", nameof(request));
-        if (operation.RiskDecisionId != request.RiskDecisionId)
-            throw new InvalidOperationException("Payout operation and capability request must use the same risk decision.");
+        if (operation.RiskDecisionId != Guid.Empty)
+            throw new InvalidOperationException("New payout reservations cannot carry a client-issued risk decision.");
         if (operation.KillSwitchEpoch < 0)
             throw new ArgumentOutOfRangeException(nameof(request), "Payout kill-switch epochs cannot be negative.");
         if (operation.FencingToken <= 0 || operation.ReserveAuthorizationEpoch <= 0)
             throw new ArgumentException("Payout reservation control epochs must be positive.", nameof(request));
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.SubjectReference);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.JurisdictionCode);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.ReauthenticationEvidenceHash);
         if (request.ReauthenticationEvidenceHash.Trim().Length != 64)
             throw new ArgumentException(
                 "Payout reauthentication evidence hashes must contain 64 characters.", nameof(request));
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.OperationFingerprint);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.ProviderHash);
         ArgumentException.ThrowIfNullOrWhiteSpace(operation.RequestHash);
         ArgumentException.ThrowIfNullOrWhiteSpace(operation.ProviderAccountId);

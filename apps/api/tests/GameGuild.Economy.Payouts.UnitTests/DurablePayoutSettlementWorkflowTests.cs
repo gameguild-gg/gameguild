@@ -11,6 +11,7 @@ namespace GameGuild.Economy.Payouts.UnitTests;
 public sealed class DurablePayoutSettlementWorkflowTests
 {
     private static readonly DateTimeOffset Time = new(2026, 8, 10, 19, 0, 0, TimeSpan.Zero);
+    private static readonly Guid DecisionId = Guid.Parse("93000000-0000-0000-0000-000000000001");
 
     [Fact]
     public async Task BeginDispatch_TransitionsAFencedReservationAndAllowsOnlyTheExactRetry()
@@ -19,23 +20,23 @@ public sealed class DurablePayoutSettlementWorkflowTests
         var store = new InMemoryPayoutOperationStore();
         store.Add(operation);
         var context = new RecordingContext();
-        var capabilities = new RecordingCapabilityAuthorization();
+        var orchestrator = new RecordingProtectedOrchestrator(operation);
         var evidence = new RecordingAuthorizationEvidenceWriter();
-        var workflow = CreateWorkflow(context, store, capabilities: capabilities, authorizationEvidence: evidence);
+        var workflow = CreateWorkflow(context, store, orchestrator: orchestrator, authorizationEvidence: evidence);
         var request = CreateDispatchRequest(operation);
 
         var dispatching = await workflow.BeginDispatchAsync(request);
 
         dispatching.State.Should().Be(PayoutOperationState.Dispatching);
         dispatching.Version.Should().Be(2);
-        dispatching.DispatchSnapshotHash.Should().Be("dispatch-snapshot");
+        dispatching.DispatchSnapshotHash.Should().HaveLength(64);
         context.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
 
         var replay = await workflow.BeginDispatchAsync(request);
         replay.Should().BeEquivalentTo(dispatching);
         context.Transactions.Should().HaveCount(2);
         context.Transactions[1].CommitCalled.Should().BeTrue();
-        capabilities.Contexts.Should().ContainSingle();
+        orchestrator.Intents.Should().ContainSingle().Which.ProtectedSubjectId.Should().Be(operation.PayeeId);
         evidence.Records.Should().ContainSingle().Which.Should().Match<PayoutAuthorizationEvidence>(item =>
             item.OperationId == operation.Id &&
             item.TenantId == operation.TenantId &&
@@ -45,7 +46,7 @@ public sealed class DurablePayoutSettlementWorkflowTests
             item.OperationFingerprintHash.Length == 64 &&
             item.CapabilityReceiptHash == "receipt-hash");
 
-        var stale = request with { ExpectedVersion = operation.Version, DispatchSnapshotHash = "other-snapshot" };
+        var stale = request with { ExpectedVersion = operation.Version + 1 };
         await FluentActions.Invoking(() => workflow.BeginDispatchAsync(stale))
             .Should().ThrowAsync<PayoutStaleCommandException>();
     }
@@ -57,7 +58,9 @@ public sealed class DurablePayoutSettlementWorkflowTests
         var store = new InMemoryPayoutOperationStore();
         store.Add(operation);
         var context = new RecordingContext();
-        var workflow = CreateWorkflow(context, store, new RecordingReservations(transitionCount: 0));
+        var workflow = CreateWorkflow(
+            context, store, new RecordingReservations(transitionCount: 0),
+            orchestrator: new RecordingProtectedOrchestrator(operation));
 
         await FluentActions.Invoking(() => workflow.BeginDispatchAsync(CreateDispatchRequest(operation)))
             .Should().ThrowAsync<PayoutStaleCommandException>();
@@ -164,18 +167,12 @@ public sealed class DurablePayoutSettlementWorkflowTests
                  {
                      validDispatch with { OperationId = Guid.Empty },
                      validDispatch with { ActorId = Guid.Empty },
-                     validDispatch with { RiskDecisionId = Guid.Empty },
-                     validDispatch with { SubjectReference = " " },
                      validDispatch with { JurisdictionCode = " " },
                      validDispatch with { ReauthenticationEvidenceHash = " " },
                      validDispatch with { ReauthenticationEvidenceHash = "too-short" },
-                     validDispatch with { OperationFingerprint = " " },
                      validDispatch with { ProviderHash = " " },
-                     validDispatch with { SourceRootHashes = null! },
-                     validDispatch with { SourceRootHashes = [] },
-                     validDispatch with { SourceRootHashes = [" "] },
-                     validDispatch with { DispatchSnapshotHash = " " },
-                     validDispatch with { DispatchSnapshotHash = new string('x', 129) }
+                     validDispatch with { SourceRoots = null! },
+                     validDispatch with { SourceRoots = [] }
                  })
             await FluentActions.Invoking(() => workflow.BeginDispatchAsync(invalid))
                 .Should().ThrowAsync<ArgumentException>();
@@ -203,29 +200,30 @@ public sealed class DurablePayoutSettlementWorkflowTests
     [Fact]
     public async Task BeginDispatch_AtomicallyRejectsEveryUnboundCapabilityReceipt()
     {
-        foreach (var mutate in new Func<CapabilityAuthorizationReceipt, CapabilityAuthorizationReceipt>[]
+        foreach (var (binding, mutate) in new (string, Func<CapabilityAuthorizationReceipt, CapabilityAuthorizationReceipt>)[]
                  {
-                     receipt => receipt with { TenantId = Guid.NewGuid() },
-                     receipt => receipt with { ActorId = Guid.NewGuid() },
-                     receipt => receipt with { SubjectReference = "other-subject" },
-                     receipt => receipt with { RiskDecisionId = Guid.NewGuid() },
-                     receipt => receipt with { PolicyVersion = 2 },
-                     receipt => receipt with { ReserveVersion = 2 },
-                     receipt => receipt with { KillSwitchEpoch = 4 },
-                     receipt => receipt with { ProviderHash = "other-provider" },
-                     receipt => receipt with { DestinationHash = "other-destination" },
-                     receipt => receipt with { SourceRootHashes = ["other-root"] }
+                     ("tenant", receipt => receipt with { TenantId = Guid.NewGuid() }),
+                     ("actor", receipt => receipt with { ActorId = Guid.NewGuid() }),
+                     ("subject", receipt => receipt with { SubjectReference = "other-subject" }),
+                     ("jurisdiction", receipt => receipt with { JurisdictionCode = "OTHER" }),
+                     ("risk", receipt => receipt with { RiskDecisionId = Guid.NewGuid() }),
+                     ("policy", receipt => receipt with { PolicyVersion = 2 }),
+                     ("reserve", receipt => receipt with { ReserveVersion = 2 }),
+                     ("kill-switch", receipt => receipt with { KillSwitchEpoch = 4 }),
+                     ("provider", receipt => receipt with { ProviderHash = "other-provider" }),
+                     ("destination", receipt => receipt with { DestinationHash = "other-destination" }),
+                     ("source-root", receipt => receipt with { SourceRootHashes = ["other-root"] })
                  })
         {
             var operation = CreateOperation();
             var store = new InMemoryPayoutOperationStore();
             store.Add(operation);
             var context = new RecordingContext();
-            var capabilities = new RecordingCapabilityAuthorization { MutateReceipt = mutate };
-            var workflow = CreateWorkflow(context, store, capabilities: capabilities);
+            var orchestrator = new RecordingProtectedOrchestrator(operation) { MutateReceipt = mutate };
+            var workflow = CreateWorkflow(context, store, orchestrator: orchestrator);
 
             await FluentActions.Invoking(() => workflow.BeginDispatchAsync(CreateDispatchRequest(operation)))
-                .Should().ThrowAsync<PayoutStaleCommandException>();
+                .Should().ThrowAsync<PayoutStaleCommandException>("the {0} binding changed", binding);
 
             store.Get(operation.Id).State.Should().Be(PayoutOperationState.Reserved);
             context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
@@ -318,7 +316,7 @@ public sealed class DurablePayoutSettlementWorkflowTests
         RecordingPostings? postings = null,
         IPayoutProviderEvidenceVerifier? evidence = null,
         RecordingProviderAuthorityIssuer? authorityIssuer = null,
-        RecordingCapabilityAuthorization? capabilities = null,
+        RecordingProtectedOrchestrator? orchestrator = null,
         RecordingAuthorizationEvidenceWriter? authorizationEvidence = null)
     {
         var postingsGateway = postings ?? new RecordingPostings();
@@ -327,7 +325,7 @@ public sealed class DurablePayoutSettlementWorkflowTests
             context,
             store,
             reservations ?? new RecordingReservations(),
-            capabilities ?? new RecordingCapabilityAuthorization(),
+            orchestrator ?? new RecordingProtectedOrchestrator(null),
             authorizationEvidence ?? new RecordingAuthorizationEvidenceWriter(),
             postingsGateway,
             postingsGateway.Authorities,
@@ -341,14 +339,10 @@ public sealed class DurablePayoutSettlementWorkflowTests
         operation.Version,
         operation.FencingToken,
         operation.KillSwitchEpoch,
-        EconomySubjectReference.ForUser(operation.TenantId, operation.PayeeId),
         "BR",
-        operation.RiskDecisionId,
         new string('a', 64),
-        "dispatch-fingerprint",
         "provider-hash",
-        ["source-root"],
-        "dispatch-snapshot",
+        [SourceStampId.New()],
         Time.AddMinutes(1));
 
     private static PayoutOperation CreateOperation() => new(
@@ -465,24 +459,37 @@ public sealed class DurablePayoutSettlementWorkflowTests
         }
     }
 
-    private sealed class RecordingCapabilityAuthorization : IEconomyCapabilityAuthorizationService
+    private sealed class RecordingProtectedOrchestrator(PayoutOperation? operation)
+        : IEconomyProtectedOperationOrchestrator
     {
-        public List<EconomyCapabilityEvaluationContext> Contexts { get; } = [];
+        public List<EconomyProtectedOperationIntent> Intents { get; } = [];
         public Func<CapabilityAuthorizationReceipt, CapabilityAuthorizationReceipt>? MutateReceipt { get; init; }
 
-        public ValueTask<CapabilityAuthorizationReceipt> AuthorizeAndConsumeAsync(
-            EconomyCapabilityEvaluationContext context,
+        public async Task<TResult> ExecuteAsync<TResult>(
+            EconomyProtectedOperationIntent intent,
+            Func<EconomyProtectedOperationAuthorization, CancellationToken, Task<TResult>> protectedOperation,
             CancellationToken cancellationToken)
         {
-            Contexts.Add(context);
+            var current = operation ?? throw new InvalidOperationException("A dispatch operation is required.");
+            Intents.Add(intent);
+            var fingerprint = "server-issued-dispatch-fingerprint";
+            var rootHashes = intent.SourceRoots.Select(root => Hash(root.Value.ToString("N"))).ToArray();
             var receipt = new CapabilityAuthorizationReceipt(
-                Guid.NewGuid(), context.TenantId, context.ActorId, context.SubjectReference,
-                context.JurisdictionCode, context.Capability, context.OperationFingerprint,
-                1, 1, context.RiskDecisionId, 3, context.ProviderHash, context.DestinationHash,
-                context.SourceRootHashes, ["evidence"], Time, Time.AddMinutes(5), "receipt-hash",
+                Guid.NewGuid(), current.TenantId, current.ActorId,
+                EconomySubjectReference.ForUser(current.TenantId, current.PayeeId),
+                "BR", intent.Capability, fingerprint,
+                current.PolicyVersion.Value, current.ReserveVersion.Value, DecisionId,
+                current.KillSwitchEpoch, intent.ProviderReferenceHash, intent.DestinationHash,
+                rootHashes, ["evidence"], Time, Time.AddMinutes(5), "receipt-hash",
                 "key", "signature");
-            return ValueTask.FromResult(MutateReceipt?.Invoke(receipt) ?? receipt);
+            receipt = MutateReceipt?.Invoke(receipt) ?? receipt;
+            return await protectedOperation(new EconomyProtectedOperationAuthorization(
+                current.TenantId, current.ActorId, "BR", DecisionId, fingerprint, receipt),
+                cancellationToken);
         }
+
+        private static string Hash(string value) => Convert.ToHexStringLower(
+            System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value)));
     }
 
     private sealed class RecordingProviderAuthorityIssuer :

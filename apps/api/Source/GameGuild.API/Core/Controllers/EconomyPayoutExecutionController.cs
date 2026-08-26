@@ -11,18 +11,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.API.Controllers;
 
-public sealed record ReserveApprovedPayoutExecutionRequest(
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
-    string StepUpReceipt);
+public sealed record ReserveApprovedPayoutExecutionRequest(string StepUpReceipt);
 
 public sealed record DispatchPayoutExecutionRequest(
     long ExpectedVersion,
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     string StepUpReceipt);
+
+public sealed record PayoutProtectedOperationFailureResponse(
+    EconomyProtectedOperationState State,
+    Guid? ReviewId,
+    IReadOnlyList<string> Diagnostics);
 
 public sealed record EconomyPayoutExecutionOperationDto(
     Guid Id,
@@ -140,27 +138,24 @@ public sealed class EconomyPayoutExecutionAdministrationController(
     [ProducesResponseType(typeof(EconomyPayoutExecutionOperationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(PayoutProtectedOperationFailureResponse), StatusCodes.Status503ServiceUnavailable)]
     public Task<IActionResult> Reserve(
         Guid requestId,
         [FromBody] ReserveApprovedPayoutExecutionRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        var transactionBinding = PayoutProtectedOperationBinding.Reservation(requestId);
         var operation = EconomyStepUpOperation.Create(
             "economy.payout.reserve",
             $"payout-request:{requestId:N}",
-            requestId.ToString("N"),
-            request.JurisdictionCode,
-            request.RiskDecisionId.ToString("N"),
-            request.OperationFingerprint);
+            transactionBinding);
         return ExecuteProtectedAsync(
             operation,
             request.StepUpReceipt,
-            request.OperationFingerprint,
+            transactionBinding,
             (tenantId, actorId, evidence, token) => payouts.ReserveApprovedAsync(
-                new ReserveApprovedPayoutCommand(
-                    tenantId, actorId, requestId, request.JurisdictionCode,
-                    request.RiskDecisionId, request.OperationFingerprint, evidence),
+                new ReserveApprovedPayoutCommand(tenantId, actorId, requestId, evidence),
                 token),
             cancellationToken);
     }
@@ -170,29 +165,26 @@ public sealed class EconomyPayoutExecutionAdministrationController(
     [ProducesResponseType(typeof(EconomyPayoutExecutionOperationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(PayoutProtectedOperationFailureResponse), StatusCodes.Status503ServiceUnavailable)]
     public Task<IActionResult> Dispatch(
         Guid operationId,
         [FromBody] DispatchPayoutExecutionRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        var transactionBinding = PayoutProtectedOperationBinding.Dispatch(
+            operationId, request.ExpectedVersion);
         var operation = EconomyStepUpOperation.Create(
             "economy.payout.dispatch",
             $"payout-operation:{operationId:N}",
-            operationId.ToString("N"),
-            request.ExpectedVersion.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            request.JurisdictionCode,
-            request.RiskDecisionId.ToString("N"),
-            request.OperationFingerprint);
+            transactionBinding);
         return ExecuteProtectedAsync(
             operation,
             request.StepUpReceipt,
-            request.OperationFingerprint,
+            transactionBinding,
             (tenantId, actorId, evidence, token) => payouts.DispatchAsync(
                 new DispatchPayoutOperationCommand(
-                    tenantId, actorId, operationId, request.ExpectedVersion,
-                    request.JurisdictionCode, request.RiskDecisionId,
-                    request.OperationFingerprint, evidence),
+                    tenantId, actorId, operationId, request.ExpectedVersion, evidence),
                 token),
             cancellationToken);
     }
@@ -278,6 +270,18 @@ public sealed class EconomyPayoutExecutionAdministrationController(
         catch (KeyNotFoundException)
         {
             return new NotFoundResult();
+        }
+        catch (EconomyProtectedOperationException exception)
+        {
+            var status = exception.State switch
+            {
+                EconomyProtectedOperationState.Denied => StatusCodes.Status403Forbidden,
+                EconomyProtectedOperationState.ReviewRequired or EconomyProtectedOperationState.Hold or
+                    EconomyProtectedOperationState.Challenge => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status503ServiceUnavailable
+            };
+            return new ObjectResult(new PayoutProtectedOperationFailureResponse(
+                exception.State, exception.ReviewId, exception.Diagnostics)) { StatusCode = status };
         }
         catch (Exception exception) when (exception is PayoutEligibilityException or
                                           PayoutExecutionDisabledException or

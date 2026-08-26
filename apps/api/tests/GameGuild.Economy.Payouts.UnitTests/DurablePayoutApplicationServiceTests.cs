@@ -13,6 +13,24 @@ public sealed class DurablePayoutApplicationServiceTests
     private static readonly DateTimeOffset Now = new(2026, 8, 26, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public void ProtectedOperationBindingsAreCanonicalAndRejectIncompleteTargets()
+    {
+        var requestId = Guid.NewGuid();
+        var operationId = Guid.NewGuid();
+
+        PayoutProtectedOperationBinding.Reservation(requestId)
+            .Should().Be(PayoutProtectedOperationBinding.Reservation(requestId)).And.HaveLength(64);
+        PayoutProtectedOperationBinding.Dispatch(operationId, 1)
+            .Should().NotBe(PayoutProtectedOperationBinding.Dispatch(operationId, 2));
+        FluentActions.Invoking(() => PayoutProtectedOperationBinding.Reservation(Guid.Empty))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => PayoutProtectedOperationBinding.Dispatch(Guid.Empty, 1))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => PayoutProtectedOperationBinding.Dispatch(operationId, 0))
+            .Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Fact]
     public async Task AccountOnboardingAndStatusRequireATenantOwnedWalletAndBoundProviderAccount()
     {
         var fixture = new Fixture();
@@ -42,13 +60,14 @@ public sealed class DurablePayoutApplicationServiceTests
         operation.ReserveAuthorizationEpoch.Should().Be(7);
         operation.FencingToken.Should().Be(91);
         operation.KillSwitchEpoch.Should().Be(3);
+        operation.RiskDecisionId.Should().NotBeEmpty();
         operation.ProviderBindingHash.Should().MatchRegex("^[0-9a-f]{64}$");
         operation.EligibilityHash.Should().MatchRegex("^[0-9a-f]{64}$");
         var durable = fixture.ReservationWorkflow.Requests.Should().ContainSingle().Subject;
         durable.JurisdictionCode.Should().Be("BR");
         durable.ProviderHash.Should().Be("stripe-connect-provider");
         durable.ReauthenticationEvidenceHash.Should().MatchRegex("^[0-9a-f]{64}$");
-        durable.SubjectReference.Should().Be(EconomySubjectReference.ForUser(fixture.TenantId, fixture.PayeeId));
+        fixture.Jurisdictions.Subjects.Should().ContainSingle().Which.Should().Be(fixture.PayeeId);
     }
 
     [Fact]
@@ -78,9 +97,7 @@ public sealed class DurablePayoutApplicationServiceTests
         dispatching.State.Should().Be(PayoutOperationState.Dispatching);
         var dispatch = fixture.SettlementWorkflow.Dispatches.Should().ContainSingle().Subject;
         dispatch.ActorId.Should().Be(fixture.ActorId);
-        dispatch.SubjectReference.Should().Be(EconomySubjectReference.ForUser(fixture.TenantId, fixture.PayeeId));
-        dispatch.SourceRootHashes.Should().ContainSingle().Which.Should().MatchRegex("^[0-9a-f]{64}$");
-        dispatch.DispatchSnapshotHash.Should().MatchRegex("^[0-9a-f]{64}$");
+        dispatch.SourceRoots.Should().ContainSingle();
         dispatch.ReauthenticationEvidenceHash.Should().MatchRegex("^[0-9a-f]{64}$");
         dispatch.KillSwitchEpoch.Should().Be(operation.KillSwitchEpoch);
     }
@@ -161,7 +178,8 @@ public sealed class DurablePayoutApplicationServiceTests
         fixture = new Fixture();
         var command = fixture.ReserveCommand() with
         {
-            Reauthentication = fixture.Reauthentication() with { ExpiresAt = Now }
+            Reauthentication = fixture.Reauthentication(
+                PayoutProtectedOperationBinding.Reservation(fixture.Request.Id)) with { ExpiresAt = Now }
         };
         await FluentActions.Awaiting(async () => await fixture.Service.ReserveApprovedAsync(command))
             .Should().ThrowAsync<ReauthenticationEvidenceException>();
@@ -213,23 +231,11 @@ public sealed class DurablePayoutApplicationServiceTests
                 fixture.ReserveCommand() with { RequestId = Guid.Empty }))
             .Should().ThrowAsync<ArgumentException>();
         await FluentActions.Awaiting(async () => await fixture.Service.ReserveApprovedAsync(
-                fixture.ReserveCommand() with { RiskDecisionId = Guid.Empty }))
-            .Should().ThrowAsync<ArgumentException>();
-        await FluentActions.Awaiting(async () => await fixture.Service.ReserveApprovedAsync(
-                fixture.ReserveCommand() with { JurisdictionCode = " " }))
-            .Should().ThrowAsync<ArgumentException>();
-        await FluentActions.Awaiting(async () => await fixture.Service.ReserveApprovedAsync(
-                fixture.ReserveCommand() with { JurisdictionCode = "B" }))
-            .Should().ThrowAsync<ArgumentOutOfRangeException>();
-        await FluentActions.Awaiting(async () => await fixture.Service.ReserveApprovedAsync(
-                fixture.ReserveCommand() with { JurisdictionCode = new string('B', 17) }))
-            .Should().ThrowAsync<ArgumentOutOfRangeException>();
-        await FluentActions.Awaiting(async () => await fixture.Service.ReserveApprovedAsync(
-                fixture.ReserveCommand() with { OperationFingerprint = " " }))
-            .Should().ThrowAsync<ArgumentException>();
-        await FluentActions.Awaiting(async () => await fixture.Service.ReserveApprovedAsync(
-                fixture.ReserveCommand() with { OperationFingerprint = new string('x', 129) }))
-            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+                fixture.ReserveCommand() with
+                {
+                    Reauthentication = fixture.Reauthentication("client-selected-binding")
+                }))
+            .Should().ThrowAsync<ReauthenticationEvidenceException>();
         await FluentActions.Awaiting(async () => await fixture.Service.ReserveApprovedAsync(
                 fixture.ReserveCommand() with { Reauthentication = null! }))
             .Should().ThrowAsync<ArgumentNullException>();
@@ -380,10 +386,7 @@ public sealed class DurablePayoutApplicationServiceTests
                  {
                      fixture.DispatchCommand(operation) with { ActorId = Guid.Empty },
                      fixture.DispatchCommand(operation) with { OperationId = Guid.Empty },
-                     fixture.DispatchCommand(operation) with { RiskDecisionId = Guid.Empty },
                      fixture.DispatchCommand(operation) with { ExpectedVersion = 0 },
-                     fixture.DispatchCommand(operation) with { JurisdictionCode = " " },
-                     fixture.DispatchCommand(operation) with { OperationFingerprint = " " },
                      fixture.DispatchCommand(operation) with { Reauthentication = null! }
                  })
             await FluentActions.Awaiting(async () => await fixture.Service.DispatchAsync(command))
@@ -417,6 +420,7 @@ public sealed class DurablePayoutApplicationServiceTests
         public RecordingFencingTokens FencingTokens { get; } = new();
         public RecordingReservationReader ReservationReader { get; } = new();
         public RecordingProvider Provider { get; }
+        public RecordingJurisdictionResolver Jurisdictions { get; } = new();
         public RecordingReservationWorkflow ReservationWorkflow { get; } = new();
         public RecordingSettlementWorkflow SettlementWorkflow { get; } = new();
         public DurablePayoutApplicationService Service { get; }
@@ -435,19 +439,19 @@ public sealed class DurablePayoutApplicationServiceTests
             Provider = new RecordingProvider(ReadyAccount(PayeeId));
             Service = new DurablePayoutApplicationService(
                 Requests, Operations, Wallets, Policies, Signatures, Reserves, FencingTokens,
-                ReservationReader, Provider, ReservationWorkflow, SettlementWorkflow,
+                ReservationReader, Provider, Jurisdictions, ReservationWorkflow, SettlementWorkflow,
                 new FixedTimeProvider(Now));
         }
 
         public ReserveApprovedPayoutCommand ReserveCommand() => new(
-            TenantId, ActorId, Request.Id, "br", Guid.NewGuid(), "operation-fingerprint",
-            Reauthentication());
+            TenantId, ActorId, Request.Id,
+            Reauthentication(PayoutProtectedOperationBinding.Reservation(Request.Id)));
 
         public DispatchPayoutOperationCommand DispatchCommand(PayoutOperation operation) => new(
-            TenantId, ActorId, operation.Id, operation.Version, "BR", Guid.NewGuid(),
-            "dispatch-fingerprint", Reauthentication("dispatch-fingerprint"));
+            TenantId, ActorId, operation.Id, operation.Version,
+            Reauthentication(PayoutProtectedOperationBinding.Dispatch(operation.Id, operation.Version)));
 
-        public ReauthenticationEvidence Reauthentication(string binding = "operation-fingerprint") => new(
+        public ReauthenticationEvidence Reauthentication(string binding) => new(
             ActorId, ProtectedOperationKind.Payout, binding,
             ReauthenticationAssurance.MultiFactor, Now.AddMinutes(-1), Now.AddMinutes(4), Hash("reauth"));
 
@@ -593,13 +597,35 @@ public sealed class DurablePayoutApplicationServiceTests
         public ValueTask<PayoutProviderEvent> ReconcileAsync(Guid operationId, string providerPayoutId, CancellationToken cancellationToken = default) => ValueTask.FromResult(ReconciliationEvent);
     }
 
+    private sealed class RecordingJurisdictionResolver : IEconomyJurisdictionResolver
+    {
+        public List<Guid> Subjects { get; } = [];
+
+        public ValueTask<EconomyJurisdictionResolution> ResolveAsync(
+            Guid tenantId,
+            Guid actorId,
+            string? providerJurisdiction,
+            string? destinationJurisdiction,
+            DateTimeOffset evaluatedAt,
+            CancellationToken cancellationToken)
+        {
+            Subjects.Add(actorId);
+            return ValueTask.FromResult(new EconomyJurisdictionResolution(
+                "BR", 1, 1, Hash("jurisdiction-evidence")));
+        }
+    }
+
     private sealed class RecordingReservationWorkflow : IDurablePayoutReservationWorkflow
     {
         public List<DurablePayoutReservationRequest> Requests { get; } = [];
         public Task<PayoutOperation> ReserveAsync(DurablePayoutReservationRequest request, CancellationToken cancellationToken = default)
         {
             Requests.Add(request);
-            return Task.FromResult(request.Operation with { KillSwitchEpoch = 3 });
+            return Task.FromResult(request.Operation with
+            {
+                KillSwitchEpoch = 3,
+                RiskDecisionId = Guid.NewGuid()
+            });
         }
     }
 
@@ -613,7 +639,7 @@ public sealed class DurablePayoutApplicationServiceTests
             return Task.FromResult(new PayoutOperation(
                 request.OperationId, new IdempotencyKey("dispatch-result"), Hash("request"),
                 Guid.NewGuid(), Guid.NewGuid(), WalletId.New(), new CoinAmount(CurrencyCode.HardCoin, 1),
-                "acct", Hash("destination"), Hash("binding"), Hash("eligibility"), request.DispatchSnapshotHash,
+                "acct", Hash("destination"), Hash("binding"), Hash("eligibility"), Hash("dispatch-snapshot"),
                 null, PayoutOperationState.Dispatching, request.ExpectedVersion + 1, request.FencingToken,
                 request.KillSwitchEpoch, new ReserveVersion(1), 1, new PolicyVersion(1), Guid.NewGuid(),
                 request.OccurredAt, request.OccurredAt, Guid.NewGuid()));

@@ -3,6 +3,7 @@ using FluentAssertions;
 using GameGuild.API.Controllers;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Payouts;
+using GameGuild.Economy.Risk;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Http;
@@ -14,6 +15,17 @@ namespace GameGuild.API.UnitTests.Controllers;
 public sealed class EconomyPayoutExecutionControllerTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 26, 18, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void ProtectedExecutionRequestsExposeOnlyServerVerifiableBusinessIntent()
+    {
+        typeof(ReserveApprovedPayoutExecutionRequest).GetProperties().Select(property => property.Name)
+            .Should().Equal(nameof(ReserveApprovedPayoutExecutionRequest.StepUpReceipt));
+        typeof(DispatchPayoutExecutionRequest).GetProperties().Select(property => property.Name)
+            .Should().Equal(
+                nameof(DispatchPayoutExecutionRequest.ExpectedVersion),
+                nameof(DispatchPayoutExecutionRequest.StepUpReceipt));
+    }
 
     [Fact]
     public async Task AccountEndpointsUseOnlyTheAuthenticatedTenantAndPayee()
@@ -65,16 +77,15 @@ public sealed class EconomyPayoutExecutionControllerTests
         var tenantId = Guid.NewGuid();
         var actorId = Guid.NewGuid();
         var requestId = Guid.NewGuid();
-        var riskDecisionId = Guid.NewGuid();
         var operation = Operation(tenantId, actorId);
+        var transactionBinding = PayoutProtectedOperationBinding.Reservation(requestId);
         var payouts = new Mock<IDurablePayoutApplicationService>(MockBehavior.Strict);
         payouts.Setup(service => service.ReserveApprovedAsync(
                 It.Is<ReserveApprovedPayoutCommand>(command =>
                     command.TenantId == tenantId && command.ActorId == actorId &&
-                    command.RequestId == requestId && command.RiskDecisionId == riskDecisionId &&
-                    command.JurisdictionCode == "BR" && command.OperationFingerprint == "reserve-fingerprint" &&
+                    command.RequestId == requestId &&
                     command.Reauthentication.ActorId == actorId &&
-                    command.Reauthentication.TransactionBinding == "reserve-fingerprint" &&
+                    command.Reauthentication.TransactionBinding == transactionBinding &&
                     command.Reauthentication.Assurance == GameGuild.Economy.Risk.ReauthenticationAssurance.MultiFactor &&
                     command.Reauthentication.EvidenceHash ==
                     TestEconomyStepUpExecutor.EvidenceHash("reserve-receipt")),
@@ -85,8 +96,7 @@ public sealed class EconomyPayoutExecutionControllerTests
 
         var result = await controller.Reserve(
             requestId,
-            new ReserveApprovedPayoutExecutionRequest(
-                "BR", riskDecisionId, "reserve-fingerprint", "reserve-receipt"),
+            new ReserveApprovedPayoutExecutionRequest("reserve-receipt"),
             CancellationToken.None);
 
         result.Should().BeOfType<OkObjectResult>().Which.Value
@@ -109,7 +119,9 @@ public sealed class EconomyPayoutExecutionControllerTests
         payouts.Setup(service => service.DispatchAsync(
                 It.Is<DispatchPayoutOperationCommand>(command =>
                     command.TenantId == tenantId && command.ActorId == actorId &&
-                    command.OperationId == operation.Id && command.ExpectedVersion == operation.Version),
+                    command.OperationId == operation.Id && command.ExpectedVersion == operation.Version &&
+                    command.Reauthentication.TransactionBinding ==
+                    PayoutProtectedOperationBinding.Dispatch(operation.Id, operation.Version)),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(dispatching);
         payouts.Setup(service => service.ReconcileAsync(
@@ -122,8 +134,7 @@ public sealed class EconomyPayoutExecutionControllerTests
 
         (await controller.Dispatch(
                 operation.Id,
-                new DispatchPayoutExecutionRequest(
-                    operation.Version, "BR", Guid.NewGuid(), "dispatch-fingerprint", "dispatch-receipt"),
+                new DispatchPayoutExecutionRequest(operation.Version, "dispatch-receipt"),
                 CancellationToken.None))
             .Should().BeOfType<OkObjectResult>();
         (await controller.Reconcile(operation.Id, CancellationToken.None))
@@ -139,8 +150,7 @@ public sealed class EconomyPayoutExecutionControllerTests
         var payouts = new Mock<IDurablePayoutApplicationService>(MockBehavior.Strict);
         var tenantId = Guid.NewGuid();
         var actorId = Guid.NewGuid();
-        var request = new ReserveApprovedPayoutExecutionRequest(
-            "BR", Guid.NewGuid(), "fingerprint", "receipt");
+        var request = new ReserveApprovedPayoutExecutionRequest("receipt");
         var noPermission = AdminController(payouts.Object, Actor(tenantId, actorId, permission: false));
         (await noPermission.Reserve(Guid.NewGuid(), request, CancellationToken.None))
             .Should().BeOfType<ForbidResult>();
@@ -153,6 +163,34 @@ public sealed class EconomyPayoutExecutionControllerTests
         (await controller.Reserve(Guid.NewGuid(), request, CancellationToken.None))
             .Should().BeOfType<ConflictObjectResult>();
         payouts.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(EconomyProtectedOperationState.Denied, StatusCodes.Status403Forbidden)]
+    [InlineData(EconomyProtectedOperationState.ReviewRequired, StatusCodes.Status409Conflict)]
+    [InlineData(EconomyProtectedOperationState.Hold, StatusCodes.Status409Conflict)]
+    [InlineData(EconomyProtectedOperationState.ComplianceUnavailable, StatusCodes.Status503ServiceUnavailable)]
+    public async Task AdministrativeMovementMapsProtectedOperationStateWithoutLeakingEvidence(
+        EconomyProtectedOperationState state,
+        int expectedStatus)
+    {
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var reviewId = Guid.NewGuid();
+        var payouts = new Mock<IDurablePayoutApplicationService>(MockBehavior.Strict);
+        payouts.Setup(service => service.ReserveApprovedAsync(
+                It.IsAny<ReserveApprovedPayoutCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new EconomyProtectedOperationException(
+                state, reviewId, ["safe diagnostic"]));
+        var controller = AdminController(payouts.Object, Actor(tenantId, actorId));
+
+        var result = await controller.Reserve(
+            Guid.NewGuid(), new ReserveApprovedPayoutExecutionRequest("receipt"), default);
+
+        var response = result.Should().BeOfType<ObjectResult>().Subject;
+        response.StatusCode.Should().Be(expectedStatus);
+        response.Value.Should().BeEquivalentTo(new PayoutProtectedOperationFailureResponse(
+            state, reviewId, ["safe diagnostic"]));
     }
 
     [Fact]
