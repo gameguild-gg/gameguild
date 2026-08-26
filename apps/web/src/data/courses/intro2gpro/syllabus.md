@@ -46,7 +46,7 @@ If you have any accommodations and want to use your rights, or if you are facing
 - I am a very open person, so you can ask me anything. I will not answer everything, but I will try to help you to find the answers;
 - If you feel that you are failing, please reach out to me, remember: I want you to succeed. Allow me to create contingency plans for you.
 
-## Schedule for Fall 2024
+## Schedule for Fall 2026
 
 ::: warning
     
@@ -54,19 +54,20 @@ This is a work in progress, and the schedule is subject to change. Every change 
 
 :::
 
-College dates for the Fall 2025 semester:
+College dates for the Fall 2026 semester:
 
 | Event                                     | Date              |
 | ----------------------------------------- | ----------------- |
-| Classes Begin                             | Aug. 25           |
-| Add/Drop                                  | Aug. 25 - 29      |
-| No Classes - College remains open         | Sept. 19          |
-| Indigenous Peoples Day Holiday Observance | Oct. 13           |
-| Last Day to Withdraw                      | Nov. 07           |
-| Thanksgiving Break                        | Nov. 24 - Nov. 28 |
-| Last Day of Classes                       | Dec. 05           |
-| Finals                                    | Dec. 08 - Dec. 12 |
-| Winter Break                              | Dec. 15 - Jan. 09 |
+| Classes Begin                             | Aug. 24           |
+| Add/Drop                                  | Aug. 24 - 28      |
+| No Classes - College remains open         | Sept. 18           |
+| Indigenous Peoples Day Holiday Observance | Oct. 12           |
+| Registration for Spring Classes           | Oct. 26 - Nov. 06 |
+| Last Day to Withdraw                      | Nov. 06           |
+| Thanksgiving Break                        | Nov. 23 - Nov. 27 |
+| Last Day of Classes                       | Dec. 04           |
+| Finals                                    | Dec. 07 - Dec. 11 |
+| Winter Break                              | Dec. 12 - Jan. 10 |
 
 ::: note
 
@@ -74,73 +75,88 @@ This schedule is based on other's works, specially [Eric Winebredder](https://ww
 
 :::
 
-- Week 1: 2025/08/25 - 2025/08/29
+- Week 1: 2026/08/24 - 2026/08/28
     - Topics: 
         - Syllabus, Icebreakers. 
         - Success in Game Development
     - Assignment:
       - Interview a game programmer
-- Week 2: 2025/09/01 - 2025/09/05
+- Week 2: 2026/08/31 - 2026/09/04
     - Topics:
         - Game Dev History
     - Assignment: Game Tools Exploration
 
-- Week 3: 2025/09/08 - 2025/09/12
+- Week 3: 2026/09/07 - 2026/09/11
     - Topics:
         - Game Development Fields
     - Assignment: Job Hunt
-- Week 4: 2025/09/15 - 2025/09/19
+- Week 4: 2026/09/14 - 2026/09/18
     - Topics:
         - Game Industry Issues
     - Assignment: Research on Game Industry Issues
-- Week 5: 2025/09/22 - 2025/09/26
+- Week 5: 2026/09/21 - 2026/09/25
     - Topics:
         - Game Issues Work
     - Assignment: Game Issues Research
-- Week 6: 2025/09/29 - 2025/10/03
+- Week 6: 2026/09/28 - 2026/10/02
     - Topics:
         - Game Issues Presentations
     - Assignment: Game Issues Presentation
-- Week 7: 2025/10/06 - 2025/10/10
+- Week 7: 2026/10/05 - 2026/10/09
     - Topics:
         - Unity + Git
     - Assignment:
         - Repo setup
         - Git merge check
-- Week 8: 2025/10/14 - 2025/10/17
+- Week 8: 2026/10/13 - 2026/10/16
     - Topics:
         - Unity + Git
     - Assignment: Simple Unity Project
-- Week 9: 2025/10/20 - 2025/10/24
+- Week 9: 2026/10/19 - 2026/10/23
     - Topics:
         - Intro to Game Production Pipeline
         - Tools for Brainstorming and Planning
     - Assignment:
         - Idea Prototyping
         - Game Idea Presentation
-- Week 10: 2025/10/27 - 2025/10/31
+- Week 10: 2026/10/26 - 2026/10/30
     - Topics:
         - Ideation Presentations
     - Assignment: Game Prototype
-- Week 11: 2025/11/03 - 2025/11/07
+- Week 11: 2026/11/02 - 2026/11/06
     - Topics:
         - Work sessions
     - Assignment: Game Prototype Checkpoint
-- Week 12: 2025/11/10 - 2025/11/14
+- Week 12: 2026/11/09 - 2026/11/13
     - Topics:
         - QA Testing
     - Assignment: Final Project Work
-- Week 13: 2025/11/17 - 2025/11/21
+- Week 13: 2026/11/16 - 2026/11/20
     - Topics:
         - QA Testing
     - Assignment: Final Project
-- Week 14: 2025/11/24 - 2025/11/28
+- Week 14: 2026/11/23 - 2026/11/27
     - Topics:
         - Thanksgiving Break
-- Week 15: 2025/12/01 - 2025/12/05
+- Week 15: 2026/11/30 - 2026/12/04
     - Topics:
         - QA, Work sessions, How to publish
     - Assignment: Final Project Presentations
-- Finals: 2025/12/08 - 2025/12/12
+- Finals: 2026/12/07 - 2026/12/11
     - Topics:
         - Presentations
+
+## Champlain College Competencies
+
+This course leans on a subset of Champlain's twelve competencies; forcing all twelve in would be padding. ([Full list](https://competencies.champlain.edu/competencies/))
+
+| Competency | Where it shows up |
+| --- | --- |
+| **[Communication](https://competencies.champlain.edu/communication/)** | Explicit course LO ("Effective Communication and Presentation"); interview write-up, Game Issues Presentation, Final Project Presentation |
+| **[Creativity](https://competencies.champlain.edu/creativity/)** | Idea Prototyping and Game Idea Presentation (Week 9) require brainstorming and iterating on original concepts, not a single correct answer |
+| **[Collaboration](https://competencies.champlain.edu/collaboration/)** | Game Prototype and Final Project are team-based; QA Testing weeks require coordinating roles under a deadline |
+| **[Technology Literacy](https://competencies.champlain.edu/technology-literacy/)** | Game Tools Exploration, Unity + Git assignments (Weeks 7-8) — applying real dev tools to a concrete production problem |
+| **[Information Literacy](https://competencies.champlain.edu/information-literacy/)** | Job Hunt and Research on Game Industry Issues require finding, evaluating, and citing sources on the industry |
+| **[Inquiry](https://competencies.champlain.edu/inquiry/)** | Game Industry Issues research and the game-programmer interview are open-ended explorations with no single "correct" finding |
+| **[Integration](https://competencies.champlain.edu/integration/)** | The final project asks you to combine design, prototyping, and QA into one shippable product across Weeks 9-15 |
+
