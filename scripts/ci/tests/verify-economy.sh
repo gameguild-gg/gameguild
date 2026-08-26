@@ -176,7 +176,7 @@ test_economy_unit_tests_bound_parallelism_without_global_serialization() {
 
   grep -Fq '[assembly: CollectionBehavior(MaxParallelThreads = 3)]' "$assembly_info" || return 1
   ! grep -Fq 'DisableTestParallelization = true' "$assembly_info" || return 1
-  ! rg -q '\[Collection\("Economy PostgreSQL"\)\]' \
+  ! grep -R -Fq --include='*.cs' '[Collection("Economy PostgreSQL")]' \
     "$repository_root/apps/api/tests/GameGuild.Economy.UnitTests" || return 1
   grep -Fq 'GateRoleBootstrapLock' "$database_support" || return 1
   grep -Fq 'EnsureGateRolesAsync' "$database_support" || return 1
