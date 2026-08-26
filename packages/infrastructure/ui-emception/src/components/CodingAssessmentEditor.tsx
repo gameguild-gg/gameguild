@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AssessmentEditorMode, AssessmentRunResult, AssessmentSession } from '../assessment/session';
 import { createAssessmentSession } from '../assessment/session';
 import type { CodingAssessmentDefinition } from '../assessment/types';
+import { normalizeAssessmentWorkspacePath } from '../assessment/paths';
 import TestResultsPanel from './TestResultsPanel';
 
 export interface CodingAssessmentEditorProps {
@@ -35,7 +36,7 @@ function visibleDefinitionFiles(
     Object.entries(definition.Data.Files)
       .filter(([, file]) => mode === 'author' || file.Visibility !== 'Private')
       .map(([path, file]) => [
-        path,
+        normalizeAssessmentWorkspacePath(path),
         {
           encoding: file.Encoding ?? 'text',
           content: file.Content,
@@ -52,9 +53,13 @@ function createWorkspaceConfig(
   const definitionFiles = visibleDefinitionFiles(definition, mode);
   const hostFiles = Object.fromEntries(
     Object.entries(hostWorkspaceConfig?.files ?? {}).filter(([path]) => {
-      const definitionFile = definition.Data.Files[path];
+      const definitionFile = Object.entries(definition.Data.Files).find(
+        ([definitionPath]) =>
+          normalizeAssessmentWorkspacePath(definitionPath)
+          === normalizeAssessmentWorkspacePath(path),
+      )?.[1];
       return mode === 'author' || definitionFile?.Visibility !== 'Private';
-    }),
+    }).map(([path, file]) => [normalizeAssessmentWorkspacePath(path), file]),
   );
   const files = { ...definitionFiles, ...hostFiles };
   const entryPoint = Object.keys(files).find((path) => /(^|\/)main\.(?:c|cc|cpp|cxx)$/i.test(path))
@@ -154,7 +159,7 @@ export function CodingAssessmentEditor({
     const readOnlyPaths = Object.entries(definition.Data.Files)
       .filter(([, file]) => file.Modifiable === false)
       .filter(([path, file]) => mode === 'author' || file.Visibility !== 'Private')
-      .map(([path]) => path);
+      .map(([path]) => normalizeAssessmentWorkspacePath(path));
     controller.setFilesReadOnly(readOnlyPaths, true);
 
     const nextSession = createAssessmentSession({

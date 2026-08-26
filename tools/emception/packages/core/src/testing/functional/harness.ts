@@ -1,5 +1,5 @@
 /**
- * FunctionalTestGroup C/C++ doctest harness generator.
+ * FunctionalTestGroup C/C++ self-contained harness generator.
  *
  * v1 supports four primitive parameter types (String, Boolean, Integer,
  * Float). Array/Dictionary are rejected at serialization time — the upstream
@@ -10,7 +10,8 @@
  * A FunctionalTestGroup carries ONE function signature + N cases. The
  * generated harness is a single self-contained .cpp file:
  *
- *   - `#include "doctest.h"` — single-include ship from the sysroot.
+ *   - no external test-framework header — the compiled toolchain must not
+ *     depend on a header that the assessment workspace did not provide.
  *   - `#include <string>` — needed whenever `std::string` is in the signature.
  *   - `extern "C"` forward declaration (emitted ONCE) — bounds C++ name
  *     mangling so a student-defined global-scope function with the identical
@@ -140,12 +141,12 @@ export function serializeCppLiteral(param: FunctionParameter): string {
 }
 
 /**
- * Generate a doctest harness `.cpp` source for one FunctionalTestGroup:
+ * Generate a self-contained harness `.cpp` source for one FunctionalTestGroup:
  * ONE `extern "C"` forward decl + ONE TEST_CASE block containing N CHECK
  * lines (one per case).
  *
  * `options.index` is assigned by the caller (the host's TestPlan mapper) and
- * seeds the harness filename + doctest TEST_CASE name uniqueness across
+ * seeds the harness filename + result label uniqueness across
  * multiple groups compiled into the same binary. Defaults to 0.
  * `options.name` overrides the TEST_CASE label (defaults to
  * `signature.functionName`).
@@ -170,21 +171,44 @@ export function generateDoctestHarness(
     const retType = mapCppType(signature.returnType.type);
     const index = options?.index ?? 0;
     const label = options?.name ?? signature.functionName;
+    const needsStringHeader = signature.returnType.type === 'String' ||
+        signature.parameters.some((parameter) => parameter.type === 'String');
 
     const checks = cases.map((c) => {
         const argLiterals = c.Inputs.map((p) => serializeCppLiteral(p)).join(', ');
         const expectedLiteral = serializeCppLiteral(c.Expected);
-        return `    CHECK(${signature.functionName}(${argLiterals}) == ${expectedLiteral});`;
+        const expression = `${signature.functionName}(${argLiterals}) == ${expectedLiteral}`;
+        return `        check(${expression}, "${escapeCppString(expression)}");`;
     });
 
     const lines: string[] = [
-        '#include "doctest.h"',
-        '#include <string>',
-        '',
+        ...(needsStringHeader ? ['#include <string>', ''] : []),
+        'extern "C" int printf(const char*, ...);',
         `extern "C" ${retType} ${signature.functionName}(${paramTypes});`,
-        `TEST_CASE("${index}:${label}") {`,
+        '',
+        'namespace {',
+        'struct EmceptionFunctionalTest {',
+        '    EmceptionFunctionalTest() {',
+        `        constexpr const char* testName = "${escapeCppString(`${index}:${label}`)}";`,
+        '        int assertions = 0;',
+        '        int failures = 0;',
+        '        const auto check = [&](bool passed, const char* expression) {',
+        '            ++assertions;',
+        '            if (!passed) {',
+        '                ++failures;',
+        '                printf("[doctest] %s: CHECK failed: %s\\n", testName, expression);',
+        '            }',
+        '        };',
         ...checks,
-        '}',
+        '        const int passedCases = failures == 0 ? 1 : 0;',
+        '        const int failedCases = failures == 0 ? 0 : 1;',
+        '        printf("[doctest] test cases: 1 | %d passed | %d failed | 0 skipped\\n", passedCases, failedCases);',
+        '        printf("[doctest] assertions: %d | %d passed | %d failed |\\n", assertions, assertions - failures, failures);',
+        '        printf("[doctest] Status: %s!\\n", failures == 0 ? "SUCCESS" : "FAILURE");',
+        '    }',
+        '};',
+        'const EmceptionFunctionalTest emceptionFunctionalTest;',
+        '} // namespace',
         '',
     ];
 
