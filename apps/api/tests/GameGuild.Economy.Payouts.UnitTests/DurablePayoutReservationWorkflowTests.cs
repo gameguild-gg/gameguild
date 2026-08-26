@@ -11,6 +11,7 @@ namespace GameGuild.Economy.Payouts.UnitTests;
 public sealed class DurablePayoutReservationWorkflowTests
 {
     private static readonly DateTimeOffset Time = new(2026, 8, 11, 7, 0, 0, TimeSpan.Zero);
+    private static readonly Guid DecisionId = Guid.Parse("92000000-0000-0000-0000-000000000001");
 
     public static IEnumerable<object[]> InvalidOperations()
     {
@@ -23,6 +24,7 @@ public sealed class DurablePayoutReservationWorkflowTests
         yield return ["negative kill switch epoch", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { KillSwitchEpoch = -1 }), typeof(ArgumentOutOfRangeException)];
         yield return ["missing fencing token", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { FencingToken = 0 }), typeof(ArgumentException)];
         yield return ["missing reserve authorization epoch", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { ReserveAuthorizationEpoch = 0 }), typeof(ArgumentException)];
+        yield return ["client risk decision", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { RiskDecisionId = Guid.NewGuid() }), typeof(InvalidOperationException)];
         yield return ["missing request hash", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { RequestHash = " " }), typeof(ArgumentException)];
         yield return ["missing provider account", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { ProviderAccountId = " " }), typeof(ArgumentException)];
         yield return ["missing destination", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { DestinationHash = " " }), typeof(ArgumentException)];
@@ -43,8 +45,9 @@ public sealed class DurablePayoutReservationWorkflowTests
 
         var reserved = await workflow.ReserveAsync(CreateRequest(operation));
 
-        reserved.Should().BeEquivalentTo(operation);
-        store.Get(operation.Id).Should().BeEquivalentTo(operation);
+        var authorizedOperation = operation with { RiskDecisionId = DecisionId, KillSwitchEpoch = 3 };
+        reserved.Should().BeEquivalentTo(authorizedOperation);
+        store.Get(operation.Id).Should().BeEquivalentTo(authorizedOperation);
         reservations.Requests.Should().ContainSingle().Which.Should().Be(new FifoFragmentReservationRequest(
             operation.Id,
             operation.WalletId,
@@ -68,7 +71,7 @@ public sealed class DurablePayoutReservationWorkflowTests
             item.TenantId == operation.TenantId &&
             item.ActorId == operation.ActorId &&
             item.Phase == PayoutAuthorizationPhase.Reservation &&
-            item.RiskDecisionId == operation.RiskDecisionId &&
+            item.RiskDecisionId == DecisionId &&
             item.ReauthenticationEvidenceHash == new string('a', 64) &&
             item.OperationFingerprintHash.Length == 64 &&
             item.CapabilityReceiptHash == "receipt-hash");
@@ -151,10 +154,19 @@ public sealed class DurablePayoutReservationWorkflowTests
     {
         var operation = CreateOperation();
         var context = new RecordingContext();
-        var invalidReceipt = new RecordingCapabilityAuthorization { ReturnUnboundReceipt = true };
+        var invalidReceipt = new RecordingProtectedOrchestrator(operation) { ReturnUnboundReceipt = true };
         var workflow = CreateWorkflow(context, new InMemoryPayoutOperationStore(),
             new RecordingReservations(operation), new RecordingPostings(), invalidReceipt);
 
+        await FluentActions.Invoking(() => workflow.ReserveAsync(CreateRequest(operation)))
+            .Should().ThrowAsync<InvalidOperationException>();
+
+        var invalidJurisdiction = new RecordingProtectedOrchestrator(operation)
+        {
+            ReturnUnboundJurisdiction = true
+        };
+        workflow = CreateWorkflow(new RecordingContext(), new InMemoryPayoutOperationStore(),
+            new RecordingReservations(operation), new RecordingPostings(), invalidJurisdiction);
         await FluentActions.Invoking(() => workflow.ReserveAsync(CreateRequest(operation)))
             .Should().ThrowAsync<InvalidOperationException>();
 
@@ -182,10 +194,13 @@ public sealed class DurablePayoutReservationWorkflowTests
                 validRequest with { Operation = operation with { TenantId = Guid.Empty } }))
             .Should().ThrowAsync<ArgumentException>();
         await FluentActions.Invoking(() => workflow.ReserveAsync(
-                validRequest with { RiskDecisionId = Guid.NewGuid() }))
+                validRequest with { Operation = operation with { RiskDecisionId = Guid.NewGuid() } }))
             .Should().ThrowAsync<InvalidOperationException>();
         await FluentActions.Invoking(() => workflow.ReserveAsync(
                 validRequest with { ReauthenticationEvidenceHash = " " }))
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Invoking(() => workflow.ReserveAsync(
+                validRequest with { JurisdictionCode = " " }))
             .Should().ThrowAsync<ArgumentException>();
         await FluentActions.Invoking(() => workflow.ReserveAsync(
                 validRequest with { ReauthenticationEvidenceHash = "too-short" }))
@@ -197,24 +212,21 @@ public sealed class DurablePayoutReservationWorkflowTests
         IPayoutOperationStore store,
         RecordingReservations reservations,
         RecordingPostings postings,
-        RecordingCapabilityAuthorization? capabilities = null,
+        RecordingProtectedOrchestrator? orchestrator = null,
         RecordingPostingResolver? resolver = null,
         RecordingAuthorizationEvidenceWriter? evidence = null) => new(
         context,
         store,
         reservations,
-        capabilities ?? new RecordingCapabilityAuthorization(),
+        orchestrator ?? new RecordingProtectedOrchestrator(reservations.Operation),
         evidence ?? new RecordingAuthorizationEvidenceWriter(),
         resolver ?? new RecordingPostingResolver(),
         postings);
 
     private static DurablePayoutReservationRequest CreateRequest(PayoutOperation operation) => new(
         operation,
-        EconomySubjectReference.ForUser(operation.TenantId, operation.PayeeId),
         "BR",
-        operation.RiskDecisionId,
         new string('a', 64),
-        "operation-fingerprint",
         "provider-hash");
 
     private static PayoutOperation CreateOperation() => new(
@@ -238,7 +250,7 @@ public sealed class DurablePayoutReservationWorkflowTests
         new ReserveVersion(1),
         1,
         new PolicyVersion(1),
-        Guid.NewGuid(),
+        Guid.Empty,
         Time,
         Time,
         Guid.NewGuid());
@@ -280,6 +292,7 @@ public sealed class DurablePayoutReservationWorkflowTests
 
     private sealed class RecordingReservations(PayoutOperation operation, long? amountUnits = null) : IFifoFragmentReservationGateway
     {
+        public PayoutOperation Operation { get; } = operation;
         private readonly PersistedFragmentReservation _fragment = new(
             Guid.NewGuid(),
             operation.Id,
@@ -321,22 +334,35 @@ public sealed class DurablePayoutReservationWorkflowTests
         }
     }
 
-    private sealed class RecordingCapabilityAuthorization : IEconomyCapabilityAuthorizationService
+    private sealed class RecordingProtectedOrchestrator(PayoutOperation operation)
+        : IEconomyProtectedOperationOrchestrator
     {
         public bool ReturnUnboundReceipt { get; init; }
+        public bool ReturnUnboundJurisdiction { get; init; }
 
-        public ValueTask<CapabilityAuthorizationReceipt> AuthorizeAndConsumeAsync(
-            EconomyCapabilityEvaluationContext context,
+        public async Task<TResult> ExecuteAsync<TResult>(
+            EconomyProtectedOperationIntent intent,
+            Func<EconomyProtectedOperationAuthorization, CancellationToken, Task<TResult>> protectedOperation,
             CancellationToken cancellationToken)
         {
-            var tenantId = ReturnUnboundReceipt ? Guid.NewGuid() : context.TenantId;
-            return ValueTask.FromResult(new CapabilityAuthorizationReceipt(
-                Guid.NewGuid(), tenantId, context.ActorId, context.SubjectReference,
-                context.JurisdictionCode, context.Capability, context.OperationFingerprint,
-                1, 1, context.RiskDecisionId, 3, context.ProviderHash, context.DestinationHash,
-                context.SourceRootHashes, ["evidence"], Time, Time.AddMinutes(5),
-                "receipt-hash", "key", "signature"));
+            var tenantId = ReturnUnboundReceipt ? Guid.NewGuid() : operation.TenantId;
+            var jurisdiction = ReturnUnboundJurisdiction ? "OTHER" : "BR";
+            var fingerprint = "server-issued-operation-fingerprint";
+            var rootHashes = intent.SourceRoots.Select(root => Hash(root.Value.ToString("N"))).ToArray();
+            var receipt = new CapabilityAuthorizationReceipt(
+                Guid.NewGuid(), tenantId, operation.ActorId,
+                EconomySubjectReference.ForUser(operation.TenantId, operation.PayeeId),
+                jurisdiction, intent.Capability, fingerprint,
+                operation.PolicyVersion.Value, operation.ReserveVersion.Value, DecisionId, 3,
+                intent.ProviderReferenceHash, intent.DestinationHash,
+                rootHashes, ["evidence"], Time, Time.AddMinutes(5),
+                "receipt-hash", "key", "signature");
+            return await protectedOperation(new EconomyProtectedOperationAuthorization(
+                tenantId, operation.ActorId, jurisdiction, DecisionId, fingerprint, receipt), cancellationToken);
         }
+
+        private static string Hash(string value) => Convert.ToHexStringLower(
+            System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(value)));
     }
 
     private sealed class RecordingPostingResolver : IRegisteredPostingCapabilityResolver

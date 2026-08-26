@@ -16,14 +16,10 @@ public sealed record DurablePayoutDispatchRequest(
     long ExpectedVersion,
     long FencingToken,
     long KillSwitchEpoch,
-    string SubjectReference,
     string JurisdictionCode,
-    Guid RiskDecisionId,
     string ReauthenticationEvidenceHash,
-    string OperationFingerprint,
     string ProviderHash,
-    IReadOnlyList<string> SourceRootHashes,
-    string DispatchSnapshotHash,
+    IReadOnlyList<SourceStampId> SourceRoots,
     DateTimeOffset OccurredAt);
 
 public sealed record DurablePayoutProviderEventRequest(PayoutProviderEvent ProviderEvent);
@@ -47,7 +43,7 @@ public sealed class PostgreSqlDurablePayoutSettlementWorkflow(
     IApplicationDbContext dbContext,
     IPayoutOperationStore operations,
     IFifoFragmentReservationGateway reservations,
-    IEconomyCapabilityAuthorizationService capabilityAuthorization,
+    IEconomyProtectedOperationOrchestrator orchestrator,
     IPayoutAuthorizationEvidenceWriter authorizationEvidence,
     IRegisteredPostingGateway postings,
     IProviderEvidencePostingAuthorityIssuer providerAuthority,
@@ -60,79 +56,96 @@ public sealed class PostgreSqlDurablePayoutSettlementWorkflow(
     {
         ValidateDispatchRequest(request);
         return await PostgreSqlTransactionExecutor.ExecuteAsync(
-            dbContext, IsolationLevel.ReadCommitted, async _ =>
+            dbContext, IsolationLevel.Serializable, async transactionToken =>
         {
             var operation = operations.Get(request.OperationId);
             if (operation.State == PayoutOperationState.Dispatching &&
-                operation.Version == checked(request.ExpectedVersion + 1) &&
-                string.Equals(operation.DispatchSnapshotHash, request.DispatchSnapshotHash.Trim(), StringComparison.Ordinal))
+                operation.Version == checked(request.ExpectedVersion + 1))
                 return operation;
 
             ValidateDispatchTransition(operation, request);
-            var receipt = await capabilityAuthorization.AuthorizeAndConsumeAsync(
-                new EconomyCapabilityEvaluationContext(
-                    operation.TenantId,
-                    request.ActorId,
-                    request.SubjectReference,
-                    request.JurisdictionCode,
-                    EconomyValueMovementCapability.PayoutExecution,
-                    request.RiskDecisionId,
-                    request.OperationFingerprint,
-                    request.ProviderHash,
-                    operation.DestinationHash,
-                    request.SourceRootHashes,
-                    request.OccurredAt),
-                cancellationToken).ConfigureAwait(false);
-            ValidateDispatchReceipt(operation, request, receipt);
-            var dispatching = operation.Transition(
-                PayoutOperationState.Dispatching,
-                request.OccurredAt,
-                dispatchSnapshotHash: request.DispatchSnapshotHash.Trim());
-            var persisted = operations.Update(dispatching, operation.Version);
-            await authorizationEvidence.AppendAsync(
-                new PayoutAuthorizationEvidence(
-                    operation.Id,
-                    operation.TenantId,
-                    request.ActorId,
-                    PayoutAuthorizationPhase.Dispatch,
-                    request.RiskDecisionId,
-                    request.ReauthenticationEvidenceHash.Trim(),
-                    Hash(request.OperationFingerprint.Trim()),
-                    receipt.Id,
-                    receipt.ReceiptHash,
-                    request.OccurredAt),
-                cancellationToken).ConfigureAwait(false);
-            var transitioned = reservations.Transition(
-                operation.Id,
-                PersistedFragmentReservationStatus.Reserved,
-                PersistedFragmentReservationStatus.Dispatching,
-                request.OccurredAt);
-            if (transitioned <= 0)
-                throw new PayoutStaleCommandException(
-                    "Payout fragments are no longer reserved for dispatch.");
-            var command = new PayoutDispatchCommand(
-                operation.Id,
-                dispatching.Version,
-                operation.FencingToken,
-                operation.KillSwitchEpoch,
-                operation.ProviderAccountId,
-                operation.DestinationHash,
+            var intent = new EconomyProtectedOperationIntent(
+                EconomyValueMovementCapability.PayoutExecution,
+                PostingTemplateKind.PayoutSuccess,
+                operation.WalletId,
+                operation.WalletId,
                 operation.Amount,
-                dispatching.DispatchSnapshotHash!,
-                operation.IdempotencyKey.Value + ":dispatch",
-                request.OccurredAt);
-            var payload = JsonSerializer.Serialize(command);
-            await dispatchOutbox.AddAsync(new PayoutDispatchOutboxRow
+                [new RiskCurrencyLeg(operation.Amount.Currency, operation.Amount.Units)],
+                request.SourceRoots,
+                request.ProviderHash.Trim(),
+                operation.DestinationHash,
+                new IdempotencyKey(operation.IdempotencyKey.Value + ":dispatch"),
+                request.OccurredAt,
+                ProtectedSubjectId: operation.PayeeId);
+            return await orchestrator.ExecuteAsync(intent, async (authorization, operationToken) =>
             {
-                Id = DeterministicGuid(operation.Id, "dispatch-outbox"),
-                OperationId = operation.Id,
-                IdempotencyKey = command.IdempotencyKey,
-                Payload = payload,
-                PayloadHash = Hash(payload),
-                CreatedAt = request.OccurredAt,
-                AvailableAt = request.OccurredAt
-            }, cancellationToken).ConfigureAwait(false);
-            return persisted;
+                ValidateDispatchReceipt(operation, request, authorization);
+                var rootHashes = request.SourceRoots
+                    .Select(root => Hash(root.Value.ToString("N")))
+                    .ToArray();
+                var dispatchSnapshotHash = Hash(string.Join('|',
+                    operation.TenantId.ToString("N"),
+                    operation.Id.ToString("N"),
+                    operation.Version.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    operation.FencingToken.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    operation.KillSwitchEpoch.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    operation.ProviderBindingHash,
+                    operation.EligibilityHash,
+                    authorization.RiskDecisionId.ToString("N"),
+                    request.ReauthenticationEvidenceHash.Trim(),
+                    authorization.OperationFingerprint,
+                    request.ProviderHash.Trim(),
+                    string.Join(',', rootHashes)));
+                var dispatching = operation.Transition(
+                    PayoutOperationState.Dispatching,
+                    request.OccurredAt,
+                    dispatchSnapshotHash: dispatchSnapshotHash);
+                var persisted = operations.Update(dispatching, operation.Version);
+                await authorizationEvidence.AppendAsync(
+                    new PayoutAuthorizationEvidence(
+                        operation.Id,
+                        operation.TenantId,
+                        request.ActorId,
+                        PayoutAuthorizationPhase.Dispatch,
+                        authorization.RiskDecisionId,
+                        request.ReauthenticationEvidenceHash.Trim(),
+                        Hash(authorization.OperationFingerprint),
+                        authorization.Receipt.Id,
+                        authorization.Receipt.ReceiptHash,
+                        request.OccurredAt),
+                    operationToken).ConfigureAwait(false);
+                var transitioned = reservations.Transition(
+                    operation.Id,
+                    PersistedFragmentReservationStatus.Reserved,
+                    PersistedFragmentReservationStatus.Dispatching,
+                    request.OccurredAt);
+                if (transitioned <= 0)
+                    throw new PayoutStaleCommandException(
+                        "Payout fragments are no longer reserved for dispatch.");
+                var command = new PayoutDispatchCommand(
+                    operation.Id,
+                    dispatching.Version,
+                    operation.FencingToken,
+                    operation.KillSwitchEpoch,
+                    operation.ProviderAccountId,
+                    operation.DestinationHash,
+                    operation.Amount,
+                    dispatchSnapshotHash,
+                    operation.IdempotencyKey.Value + ":dispatch",
+                    request.OccurredAt);
+                var payload = JsonSerializer.Serialize(command);
+                await dispatchOutbox.AddAsync(new PayoutDispatchOutboxRow
+                {
+                    Id = DeterministicGuid(operation.Id, "dispatch-outbox"),
+                    OperationId = operation.Id,
+                    IdempotencyKey = command.IdempotencyKey,
+                    Payload = payload,
+                    PayloadHash = Hash(payload),
+                    CreatedAt = request.OccurredAt,
+                    AvailableAt = request.OccurredAt
+                }, operationToken).ConfigureAwait(false);
+                return persisted;
+            }, transactionToken).ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
     }
 
@@ -254,24 +267,19 @@ public sealed class PostgreSqlDurablePayoutSettlementWorkflow(
     {
         if (request.OperationId == Guid.Empty)
             throw new ArgumentException("Payout operation ID is required.", nameof(request));
-        if (request.ActorId == Guid.Empty || request.RiskDecisionId == Guid.Empty)
-            throw new ArgumentException("Payout dispatch actor and risk decision IDs are required.", nameof(request));
+        if (request.ActorId == Guid.Empty)
+            throw new ArgumentException("Payout dispatch actor ID is required.", nameof(request));
         if (request.ExpectedVersion <= 0 || request.FencingToken <= 0 || request.KillSwitchEpoch < 0)
             throw new ArgumentOutOfRangeException(nameof(request), "Payout dispatch control versions must be positive.");
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.SubjectReference);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.JurisdictionCode);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.ReauthenticationEvidenceHash);
         if (request.ReauthenticationEvidenceHash.Trim().Length != 64)
             throw new ArgumentException(
                 "Payout reauthentication evidence hashes must contain 64 characters.", nameof(request));
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.OperationFingerprint);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.ProviderHash);
-        ArgumentNullException.ThrowIfNull(request.SourceRootHashes);
-        if (request.SourceRootHashes.Count == 0 || request.SourceRootHashes.Any(string.IsNullOrWhiteSpace))
-            throw new ArgumentException("Payout dispatch requires immutable source-root hashes.", nameof(request));
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.DispatchSnapshotHash);
-        if (request.DispatchSnapshotHash.Trim().Length > 128)
-            throw new ArgumentException("Dispatch snapshot hashes cannot exceed 128 characters.", nameof(request));
+        ArgumentNullException.ThrowIfNull(request.SourceRoots);
+        if (request.SourceRoots.Count == 0 || request.SourceRoots.Any(root => root.Value == Guid.Empty))
+            throw new ArgumentException("Payout dispatch requires immutable source roots.", nameof(request));
     }
 
     private static void ValidateDispatchTransition(PayoutOperation operation, DurablePayoutDispatchRequest request)
@@ -332,17 +340,26 @@ public sealed class PostgreSqlDurablePayoutSettlementWorkflow(
     private static void ValidateDispatchReceipt(
         PayoutOperation operation,
         DurablePayoutDispatchRequest request,
-        CapabilityAuthorizationReceipt receipt)
+        EconomyProtectedOperationAuthorization authorization)
     {
-        if (receipt.TenantId != operation.TenantId || receipt.ActorId != request.ActorId ||
-            !string.Equals(receipt.SubjectReference, request.SubjectReference, StringComparison.Ordinal) ||
-            receipt.RiskDecisionId != request.RiskDecisionId ||
+        var receipt = authorization.Receipt;
+        var rootHashes = request.SourceRoots.Select(root => Hash(root.Value.ToString("N"))).ToArray();
+        if (authorization.TenantId != operation.TenantId || authorization.ActorId != request.ActorId ||
+            !string.Equals(authorization.JurisdictionCode, request.JurisdictionCode.Trim(),
+                StringComparison.Ordinal) ||
+            receipt.TenantId != operation.TenantId || receipt.ActorId != request.ActorId ||
+            !string.Equals(receipt.SubjectReference,
+                EconomySubjectReference.ForUser(operation.TenantId, operation.PayeeId),
+                StringComparison.Ordinal) ||
+            !string.Equals(receipt.JurisdictionCode, authorization.JurisdictionCode,
+                StringComparison.Ordinal) ||
+            receipt.RiskDecisionId != authorization.RiskDecisionId ||
             receipt.PolicyVersion != operation.PolicyVersion.Value ||
             receipt.ReserveVersion != operation.ReserveVersion.Value ||
             receipt.KillSwitchEpoch != operation.KillSwitchEpoch ||
             !string.Equals(receipt.ProviderHash, request.ProviderHash, StringComparison.Ordinal) ||
             !string.Equals(receipt.DestinationHash, operation.DestinationHash, StringComparison.Ordinal) ||
-            !receipt.SourceRootHashes.SequenceEqual(request.SourceRootHashes, StringComparer.Ordinal))
+            !receipt.SourceRootHashes.SequenceEqual(rootHashes, StringComparer.Ordinal))
             throw new PayoutStaleCommandException(
                 "The dispatch capability receipt does not match the reserved payout snapshot.");
     }
