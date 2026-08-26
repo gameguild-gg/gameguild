@@ -282,6 +282,49 @@ const nextConfig: NextConfig = {
 
     config.resolve.alias = {
       ...config.resolve.alias,
+      // The isolated coding-cycle runner must exercise the packages checked
+      // out beside this app. A developer may have another worktree mounted
+      // through node_modules, which would otherwise make a green browser run
+      // validate stale Emception code instead of the change under test.
+      ...(process.env.CODING_CYCLE_E2E === "1"
+        ? {
+            // `$` makes this entry exact. Without it, webpack consumes every
+            // `@game-guild/emception-ui/assessment/*` import with this root
+            // alias before it reaches the file aliases below.
+            "@game-guild/emception-ui$": path.resolve(
+              __dirname,
+              "../../packages/infrastructure/ui-emception/src",
+            ),
+            "@game-guild/emception-ui/assessment/editor": path.resolve(
+              __dirname,
+              "../../packages/infrastructure/ui-emception/src/assessment/editor.ts",
+            ),
+            "@game-guild/emception-ui/assessment/plan": path.resolve(
+              __dirname,
+              "../../packages/infrastructure/ui-emception/src/assessment/plan.ts",
+            ),
+            "@game-guild/emception-ui/assessment/presets": path.resolve(
+              __dirname,
+              "../../packages/infrastructure/ui-emception/src/assessment/presets.ts",
+            ),
+            "@game-guild/emception-ui/assessment/storage": path.resolve(
+              __dirname,
+              "../../packages/infrastructure/ui-emception/src/assessment/workspace-storage.ts",
+            ),
+            emception: path.resolve(
+              __dirname,
+              "../../tools/emception/packages/core/dist",
+            ),
+            "@gameguild/emception-browser": path.resolve(
+              __dirname,
+              "../../tools/emception/packages/browser/dist",
+            ),
+            "@gameguild/emception-ide": path.resolve(
+              __dirname,
+              "../../tools/emception/packages/ide/dist",
+            ),
+          }
+        : {}),
       "@game-guild/dotnet-wasm": path.resolve(
         __dirname,
         "../../packages/infrastructure/wasm/dotnet/src/index.ts",

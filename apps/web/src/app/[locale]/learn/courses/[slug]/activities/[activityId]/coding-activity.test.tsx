@@ -1,22 +1,28 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { useLayoutEffect, type ReactNode } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
-  auth: vi.fn(),
-  buildPlan: vi.fn(),
-  createWorkspace: vi.fn(),
-  EditorRender: vi.fn(),
-  getCodingAssignmentPublic: vi.fn(),
-  getCourseAccessData: vi.fn(),
-  getCourseLearnerContext: vi.fn(),
-  getMyProjects: vi.fn(),
-  getMySubmissions: vi.fn(),
-  getToken: vi.fn(),
-  submitAssessment: vi.fn(),
-  computeScore: vi.fn(),
-  useRouterPush: vi.fn(),
-}));
+const mocks = vi.hoisted(() => {
+  const EditorRender = vi.fn();
+  return {
+    auth: vi.fn(),
+    buildPlan: vi.fn(),
+    createWorkspace: vi.fn(),
+    EditorRender,
+    getCodingAssignmentPublic: vi.fn(),
+    getCourseAccessData: vi.fn(),
+    getCourseLearnerContext: vi.fn(),
+    getMyProjects: vi.fn(),
+    getMySubmissions: vi.fn(),
+    getToken: vi.fn(),
+    submitAssessment: vi.fn(),
+    computeScore: vi.fn(),
+    useRouterPush: vi.fn(),
+  };
+});
 
 vi.mock('@/lib/learner/courses', () => ({ getCourseAccessData: mocks.getCourseAccessData }));
 vi.mock('@/lib/learner/records', () => ({
@@ -55,6 +61,7 @@ vi.mock('@game-guild/emception-ui/assessment/storage', () => ({
 }));
 
 import LearnerActivityPage from './page';
+import { CodingActivityClient } from '@/components/learning/coding-activity-client';
 
 function makeAssessment(overrides: Record<string, unknown> = {}) {
   return {
@@ -155,6 +162,26 @@ describe('coding activity page', () => {
       weights: [],
     }));
     stubAssessmentEditor();
+  });
+
+  it('keeps the browser-only IDE out of the server render', () => {
+    const markup = renderToStaticMarkup(
+      <CodingActivityClient
+        assessmentId="assessment-1"
+        enrollmentId="enrollment-1"
+        slug="test-course"
+        assignment={makeAssignment()}
+      />,
+    );
+
+    expect(markup).toContain('data-testid="ide-skeleton"');
+    expect(mocks.EditorRender).not.toHaveBeenCalled();
+    expect(
+      readFileSync(
+        resolve(process.cwd(), 'src/components/learning/coding-activity-client.tsx'),
+        'utf8',
+      ),
+    ).not.toContain("from 'next/dynamic'");
   });
 
   it('mounts the composed assessment editor with public seed, a per-user draft key, and no legacy IDE props', async () => {
