@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
 import { DEFAULT_MANIFEST_URL, ManifestCompatibilityError, RUNTIME_ABI, parseManifest } from '../dist/manifest.js';
@@ -41,10 +42,11 @@ test('parseManifest preserves optional toolchain provenance and still accepts ol
   assert.equal(parsed.sourceProvenance.llvm.version, '23.0.0git');
 });
 
-test('default manifest URL is versioned and owned by the toolchain package', () => {
+test('default manifest URL is versioned and owned by the matching toolchain package', async () => {
+  const toolchainPackage = JSON.parse(await readFile(new URL('../../toolchain/package.json', import.meta.url), 'utf8'));
   assert.equal(
     DEFAULT_MANIFEST_URL,
-    'https://cdn.jsdelivr.net/npm/@gameguild/emception-toolchain@4.2.0/cdn/manifest.json',
+    `https://cdn.jsdelivr.net/npm/@gameguild/emception-toolchain@${toolchainPackage.version}/cdn/manifest.json`,
   );
 });
 
