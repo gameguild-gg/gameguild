@@ -1022,6 +1022,61 @@ async function upsertContent(token, courseId, model, { dryRun, apiUrl }) {
   return { created, updated, items: model.items.length };
 }
 
+// Task 7 — stale prune, scoped and opt-in. Scoped by construction: every URL below embeds
+// ${courseId}, so only content under the imported program can ever be listed or deleted.
+// Items with a null/empty slug are NEVER delete candidates — unmarked content is foreign
+// or pre-slug data, so it gets a report-only line and stays untouched. The DELETE
+// endpoint soft-deletes and cascades the subtree (ProgramContentController.cs:129-143);
+// 404 is tolerated (already gone), every other error — including the 400
+// schedule/assessment guard — rethrows fail-fast with the verbatim body already embedded
+// in request()'s "METHOD path -> status: body" message.
+async function pruneStale(token, courseId, model, { dryRun, pruneStale, apiUrl }) {
+  const importedSlugs = new Set(model.items.map((item) => item.predictedSlug));
+
+  // Fresh snapshot AFTER the upsert so freshly created/updated slugs are excluded. The
+  // response nests children inside top-level DTOs (T6); keying by id dedupes the flatten.
+  // Dry-run create path for a missing course has no courseId → nothing can be stale.
+  const stale = [];
+  if (courseId !== null) {
+    const content = await request('GET', `/v1/courses/${courseId}/content`, { token, apiUrl });
+    const byId = new Map();
+    for (const dto of flattenContentTree(Array.isArray(content) ? content : [])) {
+      if (dto && typeof dto === 'object' && dto.id) byId.set(dto.id, dto);
+    }
+    for (const dto of byId.values()) {
+      if (typeof dto.slug === 'string' && dto.slug !== '') {
+        if (!importedSlugs.has(dto.slug)) stale.push({ id: dto.id, slug: dto.slug });
+      } else {
+        console.log(`[prune] unmarked item left untouched: ${dto.id}`);
+      }
+    }
+  }
+  const planned = stale.map((item) => item.slug);
+
+  if (!pruneStale) {
+    console.log(`[prune] skipped (needs --prune-stale): ${planned.join(',') || 'none'}`);
+    return { deleted: 0, planned };
+  }
+
+  if (dryRun) {
+    for (const item of stale) console.log(`[content] delete ${item.slug}`);
+    return { deleted: 0, planned };
+  }
+
+  let deleted = 0;
+  for (const item of stale) {
+    try {
+      await request('DELETE', `/v1/courses/${courseId}/content/${item.id}`, { token, apiUrl });
+    } catch (err) {
+      if (!err.message.includes('-> 404')) throw err;
+      console.log(`[prune] already gone ${item.slug}`);
+      continue;
+    }
+    deleted += 1;
+  }
+  return { deleted, planned };
+}
+
 // ===== orchestration (task 8) =====
 
 async function main() {
@@ -1073,7 +1128,13 @@ async function main() {
   const course = await upsertCourse(session.accessToken, model.program, { dryRun, apiUrl: env.apiUrl });
   console.log('[stage] metadata complete');
   await upsertContent(session.accessToken, course.courseId, model, { dryRun, apiUrl: env.apiUrl });
-  console.log('[stage] content complete (prune/orchestration land in tasks 7-8)');
+  console.log('[stage] content complete');
+  await pruneStale(session.accessToken, course.courseId, model, {
+    dryRun,
+    pruneStale: args.pruneStale,
+    apiUrl: env.apiUrl,
+  });
+  console.log('[stage] prune complete (orchestration lands in task 8)');
   process.exit(0);
 }
 
