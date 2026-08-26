@@ -332,6 +332,323 @@ function parseCourseDir(slug) {
   return parseCourse(path.join(root, slug));
 }
 
+// ===== inference (task 3) =====
+// Ported verbatim from SnapshotCourseSeeder.cs: ParseProgramContentType (:818-907),
+// ParseProgramCategory + ByHeuristic (:604-738), ParseProgramDifficulty (:740-783),
+// ParseEnrollmentStatus (:785-816). C# enum returns become API wire strings.
+// Keyword-vs-raw combination semantics (as in the C#): comment/semantic keyword hits always WIN
+// over the raw int; the raw int is only a fallback when no keyword matched — and raw 0 never
+// has its own arm in the difficulty/enrollment switches, so it falls to the default
+// (Beginner/Open).
+
+// C# :818-907. Returns the pre-normalization ProgramContentType name ('Page'/'Challenge'
+// included); toApiType() maps those to API-valid wire values.
+function parseProgramContentType(typeComment, rawType, title, description, sourceId, bodyImportName) {
+  const normalized = normalizeLabel(typeComment);
+  const semanticHint = normalizeLabel(`${title} ${description} ${sourceId} ${bodyImportName}`);
+
+  if (normalized.includes('assignment')) return 'Assignment';
+  if (
+    normalized.includes('questionnaire') || normalized.includes('quiz') || normalized.includes('test')
+  ) {
+    return 'Questionnaire';
+  }
+  if (normalized.includes('discussion')) return 'Discussion';
+  if (normalized.includes('code')) return 'Code';
+  if (normalized.includes('challenge')) return 'Challenge';
+  if (normalized.includes('reflection')) return 'Reflection';
+  if (normalized.includes('survey')) return 'Survey';
+  if (normalized.includes('lesson')) return 'Lesson';
+  if (
+    semanticHint.includes('syllabus') || semanticHint.includes('lecture') || semanticHint.includes('readings')
+    || semanticHint.includes('reveal') || semanticHint.includes('slides')
+  ) {
+    return 'Lesson';
+  }
+  if (normalized.includes('page')) return 'Page';
+  if (semanticHint.includes('quiz')) return 'Questionnaire';
+  if (
+    semanticHint.includes('assignment') || semanticHint.includes('exercise') || semanticHint.includes('project')
+    || semanticHint.includes('midterm') || semanticHint.includes('final')
+  ) {
+    return 'Assignment';
+  }
+
+  switch (rawType) {
+    case 0: return 'Page';
+    case 1: return 'Lesson';
+    case 2: return 'Assignment';
+    case 3: return 'Questionnaire';
+    // C# `_` arm; also catches rawType null.
+    default: return 'Page';
+  }
+}
+
+// 'Page' and 'Challenge' are legacy: "normalized on read and not valid for new content"
+// (types.gen.ts:7375-7385 — LearningCoursesProgramContentType lists neither). Map them to
+// their modern equivalents before anything reaches the create/update API.
+function toApiType(inferredType) {
+  if (inferredType === 'Page') return 'Lesson';
+  if (inferredType === 'Challenge') return 'Assignment';
+  return inferredType;
+}
+
+// C# :604-638. categoryComment is always null at the call site: no courses/*/index.ts carries
+// program-level trailing comments (verified intro2gpro) and the T2 parser keeps them
+// unextracted; the slug map / heuristic / raw fallback decide in practice.
+function parseProgramCategory(categoryComment, rawCategory, title, description, slug) {
+  const normalized = normalizeLabel(categoryComment);
+  const semanticHint = normalizeLabel(`${categoryComment} ${title} ${description} ${slug}`);
+  const normalizedSlug = normalizeLabel(slug);
+
+  if (normalizedSlug.length > 0) {
+    switch (normalizedSlug) {
+      case 'python':
+      case 'dsa':
+        return 'Programming';
+      case 'portfolio':
+        return 'Design';
+      case 'intro2gpro':
+      case 'networking':
+        return 'GameDevelopment';
+      case 'gamepublishing':
+        return 'Business';
+      case 'databases':
+        return 'Database';
+      case 'dataanalysis':
+        return 'DataScience';
+      case 'ai4games':
+      case 'ai4games2':
+        return 'AI';
+      default:
+        return parseProgramCategoryByHeuristic(normalized, semanticHint, rawCategory);
+    }
+  }
+
+  return parseProgramCategoryByHeuristic(normalized, semanticHint, rawCategory);
+}
+
+// C# :631-738. 'WebDevelopment' is a valid wire value (types.gen.ts:8851-8867 ProgramCategory).
+function parseProgramCategoryByHeuristic(normalized, semanticHint, rawCategory) {
+  if (
+    semanticHint.includes('database') || semanticHint.includes('sql') || semanticHint.includes('nosql')
+  ) {
+    return 'Database';
+  }
+
+  if (
+    semanticHint.includes('datascience') || semanticHint.includes('dataanalysis')
+    || semanticHint.includes('analytics') || semanticHint.includes('pandas')
+  ) {
+    return 'DataScience';
+  }
+
+  if (
+    normalized.includes('design') || semanticHint.includes('portfolio')
+    || semanticHint.includes('userexperience') || semanticHint.includes('userinterface')
+    || semanticHint.includes('uidesign') || semanticHint.includes('uxdesign')
+    || semanticHint.includes('visualdesign') || semanticHint.includes('interactiondesign')
+  ) {
+    return 'Design';
+  }
+
+  if (
+    semanticHint.includes('artificialintelligence') || semanticHint.includes('machinelearning')
+    || semanticHint.includes('pathfinding') || semanticHint.includes('behaviortree')
+    || semanticHint.includes('minmax') || semanticHint.includes('mcts')
+    || semanticHint.includes('gameai')
+  ) {
+    return 'AI';
+  }
+
+  if (
+    semanticHint.includes('gamedevelopment') || semanticHint.includes('gameprogramming')
+    || semanticHint.includes('unity') || semanticHint.includes('unreal')
+    || (semanticHint.includes('game') && semanticHint.includes('dev'))
+  ) {
+    return 'GameDevelopment';
+  }
+
+  if (
+    normalized.includes('gamedevelopment')
+    || (normalized.includes('game') && normalized.includes('dev'))
+  ) {
+    return 'GameDevelopment';
+  }
+
+  if (normalized.includes('programming')) {
+    return 'Programming';
+  }
+
+  if (normalized.includes('datascience') || normalized.includes('dataanalysis')) {
+    return 'DataScience';
+  }
+
+  if (normalized.includes('database')) {
+    return 'Database';
+  }
+
+  if (normalized.includes('business')) {
+    return 'Business';
+  }
+
+  if (normalized.includes('design')) {
+    return 'Design';
+  }
+
+  if (normalized.includes('webdevelopment') || normalized.includes('web')) {
+    return 'WebDevelopment';
+  }
+
+  if (
+    normalized.includes('ai') || normalized.includes('artificialintelligence')
+    || normalized.includes('machinelearning')
+  ) {
+    return 'AI';
+  }
+
+  if (rawCategory !== null) {
+    switch (rawCategory) {
+      case 0: return 'Programming';
+      case 1: return 'GameDevelopment';
+      case 2: return 'Design';
+      case 3: return 'Business';
+      default: return 'Other';
+    }
+  }
+
+  return 'Other';
+}
+
+// C# :740-783. semanticHint (comment+title+description+slug) keywords outrank everything:
+// advanced|mastery → Advanced, then intermediate → Intermediate; then typeComment keywords;
+// raw int only decides when nothing matched — raw 0 falls to the default arm → Beginner.
+function parseProgramDifficulty(difficultyComment, rawDifficulty, title, description, slug) {
+  const normalized = normalizeLabel(difficultyComment);
+  const semanticHint = normalizeLabel(`${difficultyComment} ${title} ${description} ${slug}`);
+
+  if (semanticHint.includes('advanced') || semanticHint.includes('mastery')) {
+    return 'Advanced';
+  }
+
+  if (semanticHint.includes('intermediate')) {
+    return 'Intermediate';
+  }
+
+  if (normalized.includes('intermediate')) {
+    return 'Intermediate';
+  }
+
+  if (normalized.includes('advanced')) {
+    return 'Advanced';
+  }
+
+  if (normalized.includes('expert')) {
+    return 'Expert';
+  }
+
+  if (rawDifficulty !== null) {
+    switch (rawDifficulty) {
+      case 1: return 'Intermediate';
+      case 2: return 'Advanced';
+      case 3: return 'Expert';
+      default: return 'Beginner';
+    }
+  }
+
+  return 'Beginner';
+}
+
+// C# :785-816. Comment keywords only (no title/description hint here); raw fallback 1→Closed,
+// 2→InviteOnly, 3→Waitlist, else (incl. 0) → Open.
+function parseEnrollmentStatus(enrollmentStatusComment, rawEnrollmentStatus) {
+  const normalized = normalizeLabel(enrollmentStatusComment);
+
+  if (normalized.includes('closed')) return 'Closed';
+  if (normalized.includes('inviteonly')) return 'InviteOnly';
+  if (normalized.includes('waitlist')) return 'Waitlist';
+
+  if (rawEnrollmentStatus !== null) {
+    switch (rawEnrollmentStatus) {
+      case 1: return 'Closed';
+      case 2: return 'InviteOnly';
+      case 3: return 'Waitlist';
+      default: return 'Open';
+    }
+  }
+
+  return 'Open';
+}
+
+// Ported from apps/web/src/lib/slugify.ts (:14-29), which mirrors backend
+// StringExtensions.ToSlugCase: lowercase; whitespace/underscore/dot runs → single hyphen;
+// chars outside [a-z0-9-] dropped; hyphen runs collapsed; hyphens-only → ''.
+function slugifyValue(value) {
+  const slug = value
+    .toLowerCase()
+    .replace(/[\s_.]+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-');
+  return /^-+$/.test(slug) ? '' : slug;
+}
+
+// Submit-time normalization (slugify.ts :27-29): slugify plus leading/trailing hyphen
+// removal, matching backend Trim('-'). Idempotent.
+function normalizeSlug(value) {
+  return slugifyValue(value).replace(/^-+|-+$/g, '');
+}
+
+// Filters parsed contents by the skip list and projects everything onto API wire shapes.
+// Throws when a kept item's parent was skipped — silent reparenting would move subtrees.
+function buildImportModel(parsed, skipSourceIds) {
+  const skipSet = new Set(skipSourceIds);
+  const kept = parsed.contents.filter((content) => !skipSet.has(content.sourceId));
+
+  for (const content of kept) {
+    if (content.parentSourceId !== null && skipSet.has(content.parentSourceId)) {
+      throw new Error(
+        `skip-source-ids orphaned ${content.sourceId} (parent ${content.parentSourceId} skipped)`,
+      );
+    }
+  }
+
+  const program = parsed.program;
+  return {
+    program: {
+      slug: program.slug,
+      title: program.title,
+      description: program.description,
+      thumbnail: program.thumbnail,
+      estimatedHours: program.estimatedHours,
+      category: parseProgramCategory(null, program.rawCategory, program.title, program.description, program.slug),
+      difficulty: parseProgramDifficulty(null, program.rawDifficulty, program.title, program.description, program.slug),
+      enrollmentStatus: parseEnrollmentStatus(null, program.rawEnrollmentStatus),
+    },
+    items: kept.map((content) => ({
+      sourceId: content.sourceId,
+      parentSourceId: content.parentSourceId,
+      title: content.title,
+      description: content.description,
+      type: toApiType(
+        parseProgramContentType(
+          content.typeComment,
+          content.rawType,
+          content.title,
+          content.description,
+          content.sourceId,
+          content.bodyImportName,
+        ),
+      ),
+      lessonFormat: 'Markdown',
+      sortOrder: content.sortOrder,
+      isRequired: content.isRequired,
+      estimatedMinutes: content.estimatedMinutes,
+      body: content.body,
+      predictedSlug: normalizeSlug(content.title),
+    })),
+  };
+}
+
 // ===== self-check (tasks 2-3) =====
 
 function assertSelfCheck(name, ok, detail) {
@@ -378,6 +695,70 @@ function runSelfCheck(args) {
     'md-bodies-nonempty',
     fromFile.every((content) => content.body.length > 0),
     `empty=${fromFile.filter((content) => content.body.length === 0).map((content) => content.sourceId).join(',') || 'none'}`,
+  );
+
+  // Task 3: inference + import model.
+  const skipIds = [
+    'intro2gpro-technical-challenges',
+    'intro2gpro-design-challenges',
+    'intro2gpro-business-challenges',
+  ];
+
+  let model;
+  let modelAll;
+  try {
+    model = buildImportModel(parsed, skipIds);
+    modelAll = buildImportModel(parsed, []);
+  } catch (err) {
+    console.log(`[self-check] FAIL model: ${err.message}`);
+    process.exit(1);
+  }
+
+  for (const item of model.items) {
+    console.log(`[self-check] predicted-slug ${item.predictedSlug}`);
+  }
+
+  // Verbatim-port note: 'Week 01: Interview a Game Developer' has description
+  // 'Assignment to interview a game programmer…' → semanticHint 'assignment' → Assignment.
+  // The plan's "other 11 → Lesson" expectation missed that keyword; this assert matches the
+  // C# chain as ported (syllabus→Lesson, assignment→Assignment, interview→Assignment, rest
+  // →Lesson via Page→Lesson).
+  const expectedTypes = Object.fromEntries(model.items.map((item) => [item.sourceId, 'Lesson']));
+  expectedTypes['intro2gpro-assignment'] = 'Assignment';
+  expectedTypes['intro2gpro-interview'] = 'Assignment';
+  const actualTypes = Object.fromEntries(model.items.map((item) => [item.sourceId, item.type]));
+  assertSelfCheck(
+    'type-map',
+    JSON.stringify(actualTypes) === JSON.stringify(expectedTypes),
+    `types=${JSON.stringify(actualTypes)}`,
+  );
+
+  const slugs = model.items.map((item) => item.predictedSlug);
+  assertSelfCheck(
+    'slugs-unique',
+    new Set(slugs).size === slugs.length,
+    `distinct=${new Set(slugs).size}/${slugs.length}`,
+  );
+  assertSelfCheck(
+    'no-stub-collision',
+    !slugs.includes('course-overview'),
+    'a predictedSlug equals the prod stub slug course-overview',
+  );
+
+  assertSelfCheck(
+    'program-fields',
+    model.program.category === 'GameDevelopment'
+      && model.program.difficulty === 'Beginner'
+      && model.program.enrollmentStatus === 'Open'
+      && model.program.estimatedHours === 45
+      && model.program.description.startsWith('Students will be introduced'),
+    `program=${JSON.stringify(model.program)}`,
+  );
+
+  assertSelfCheck(
+    'skip-filter',
+    model.items.length === 13 && modelAll.items.length === 16,
+    `skipped=${model.items.length} all=${modelAll.items.length}`,
   );
 }
 
