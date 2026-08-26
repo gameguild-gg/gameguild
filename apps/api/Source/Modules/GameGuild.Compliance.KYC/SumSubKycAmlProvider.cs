@@ -22,7 +22,11 @@ public enum KycAmlState
 public sealed record KycAmlApplicantRequest(string ExternalUserId, string LevelName);
 public sealed record KycAmlApplicant(string ApplicantId, string ExternalUserId, KycAmlState State);
 public sealed record KycAmlAccessToken(string Token, string ExternalUserId);
-public sealed record KycAmlStatus(string ApplicantId, string ExternalUserId, KycAmlState State);
+public sealed record KycAmlStatus(
+    string ApplicantId,
+    string ExternalUserId,
+    KycAmlState State,
+    string? JurisdictionCode = null);
 
 public interface IKycAmlProvider
 {
@@ -128,7 +132,14 @@ public sealed class SumSubKycAmlProvider : IKycAmlProvider
         using var response = await SendAsync(HttpMethod.Get, path, string.Empty, cancellationToken);
         response.EnsureSuccessStatusCode();
         var applicant = await ReadApplicantAsync(response, cancellationToken);
-        return new KycAmlStatus(applicant.Id, applicant.ExternalUserId, MapState(applicant.Review));
+        var jurisdiction = SumSubApplicantJurisdiction.Normalize(applicant.Info?.Country)
+            ?? SumSubApplicantJurisdiction.Normalize(applicant.Country)
+            ?? SumSubApplicantJurisdiction.Normalize(applicant.FixedInfo?.Country);
+        return new KycAmlStatus(
+            applicant.Id,
+            applicant.ExternalUserId,
+            MapState(applicant.Review),
+            jurisdiction);
     }
 
     public bool VerifyWebhook(
@@ -217,7 +228,12 @@ public sealed class SumSubKycAmlProvider : IKycAmlProvider
     private sealed record ApplicantResponse(
         [property: JsonPropertyName("id")] string Id,
         [property: JsonPropertyName("externalUserId")] string ExternalUserId,
-        [property: JsonPropertyName("review")] ReviewResponse? Review);
+        [property: JsonPropertyName("review")] ReviewResponse? Review,
+        [property: JsonPropertyName("country")] string? Country,
+        [property: JsonPropertyName("info")] ApplicantInfoResponse? Info,
+        [property: JsonPropertyName("fixedInfo")] ApplicantInfoResponse? FixedInfo);
+    private sealed record ApplicantInfoResponse(
+        [property: JsonPropertyName("country")] string? Country);
     private sealed record ReviewResponse(
         [property: JsonPropertyName("reviewStatus")] string ReviewStatus,
         [property: JsonPropertyName("reviewResult")] ReviewResultResponse? ReviewResult);

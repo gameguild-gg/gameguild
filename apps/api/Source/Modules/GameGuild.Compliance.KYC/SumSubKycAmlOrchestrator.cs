@@ -17,7 +17,10 @@ public sealed record KycAmlOnboarding(
     string ApplicantId,
     string SubjectHash,
     KycAmlState State,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt)
+{
+    public string? JurisdictionCode { get; init; }
+}
 
 public sealed record SumSubWebhookIngestionResult(
     ComplianceEvidenceIngestionStatus Status,
@@ -190,12 +193,15 @@ public sealed class SumSubKycAmlOrchestrator : IKycAmlOrchestrator
         }
 
         var state = MapWebhookState(root);
+        var jurisdiction = await ResolveApprovedJurisdictionAsync(
+            binding.ApplicantId, state, cancellationToken);
         var ingestion = await PublishAsync(
             binding, providerEventId, state, issuedAt, receivedAt,
-            stored.PayloadHash, stored.Reference, cancellationToken);
+            stored.PayloadHash, stored.Reference, jurisdiction, cancellationToken);
         if (ingestion.Status == ComplianceEvidenceIngestionStatus.Published)
         {
             binding.State = state;
+            binding.JurisdictionCode = jurisdiction;
             binding.EvidenceVersion++;
             binding.LastProviderIssuedAt = issuedAt;
             binding.LastProviderEventId = providerEventId;
@@ -232,10 +238,12 @@ public sealed class SumSubKycAmlOrchestrator : IKycAmlOrchestrator
             ProviderName, _policy.Environment, eventId, normalized, cancellationToken);
         var result = await PublishAsync(
             binding, eventId, status.State, reconciledAt, reconciledAt,
-            stored.PayloadHash, stored.Reference, cancellationToken);
+            stored.PayloadHash, stored.Reference,
+            RequireApprovedJurisdiction(status), cancellationToken);
         if (result.Status == ComplianceEvidenceIngestionStatus.Published)
         {
             binding.State = status.State;
+            binding.JurisdictionCode = RequireApprovedJurisdiction(status);
             binding.EvidenceVersion++;
             binding.LastProviderIssuedAt = reconciledAt;
             binding.LastProviderEventId = eventId;
@@ -253,6 +261,7 @@ public sealed class SumSubKycAmlOrchestrator : IKycAmlOrchestrator
         DateTimeOffset receivedAt,
         string payloadHash,
         string rawReference,
+        string? jurisdictionCode,
         CancellationToken cancellationToken)
     {
         var lifetime = state == KycAmlState.Approved
@@ -263,8 +272,33 @@ public sealed class SumSubKycAmlOrchestrator : IKycAmlOrchestrator
         var envelope = ComplianceEvidenceEnvelope.Create(
             ProviderName, _policy.Environment.Trim(), providerEventId, binding.TenantId,
             binding.SubjectHash, binding.EvidenceVersion + 1, MapResult(state), issuedAt,
-            issuedAt.Add(lifetime), _policy.PolicyVersion, payloadHash, true, rawReference, receivedAt);
+            issuedAt.Add(lifetime), _policy.PolicyVersion, payloadHash, true, rawReference, receivedAt,
+            jurisdictionCode);
         return _evidence.IngestAsync(envelope, cancellationToken);
+    }
+
+    private async Task<string?> ResolveApprovedJurisdictionAsync(
+        string applicantId,
+        KycAmlState state,
+        CancellationToken cancellationToken)
+    {
+        if (state != KycAmlState.Approved)
+            return null;
+
+        var status = await _provider.GetStatusAsync(applicantId, cancellationToken);
+        if (!string.Equals(status.ApplicantId, applicantId, StringComparison.Ordinal))
+            throw new SumSubProtocolException("SumSub status was returned for another applicant.");
+        return RequireApprovedJurisdiction(status);
+    }
+
+    private static string? RequireApprovedJurisdiction(KycAmlStatus status)
+    {
+        if (status.State != KycAmlState.Approved)
+            return null;
+
+        return SumSubApplicantJurisdiction.Normalize(status.JurisdictionCode)
+            ?? throw new SumSubProtocolException(
+                "Approved SumSub evidence does not contain a verified ISO alpha-3 jurisdiction.");
     }
 
     private async Task<SumSubApplicantBindingRow> BindingAsync(
@@ -330,7 +364,10 @@ public sealed class SumSubKycAmlOrchestrator : IKycAmlOrchestrator
     };
 
     private static KycAmlOnboarding Map(SumSubApplicantBindingRow row) =>
-        new(row.ApplicantId, row.SubjectHash, row.State, row.UpdatedAt);
+        new(row.ApplicantId, row.SubjectHash, row.State, row.UpdatedAt)
+        {
+            JurisdictionCode = row.JurisdictionCode
+        };
 
     private static string Hash(string value) =>
         Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(value)));

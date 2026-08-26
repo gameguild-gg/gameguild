@@ -109,6 +109,7 @@ public sealed class SumSubKycAmlOrchestratorTests
         published.State.Should().Be(KycAmlState.Approved);
         duplicate.Status.Should().Be(ComplianceEvidenceIngestionStatus.Duplicate);
         evidence.Envelopes.Should().ContainSingle().Which.Result.Should().Be(ComplianceEvidenceResult.Approved);
+        evidence.Envelopes.Single().JurisdictionCode.Should().Be("BRA");
 
         var conflicting = Payload(onboarding.ApplicantId, "event-1", "completed", "RED");
         await FluentActions.Awaiting(() => service.IngestWebhookAsync(
@@ -329,6 +330,7 @@ public sealed class SumSubKycAmlOrchestratorTests
         public List<(string ExternalUserId, string LevelName, int Lifetime)> TokenRequests { get; } = [];
         public bool VerifyResult { get; set; } = true;
         public KycAmlState StatusState { get; set; } = KycAmlState.Approved;
+        public string? StatusJurisdiction { get; set; } = "BRA";
 
         public Task<KycAmlApplicant> CreateApplicantAsync(KycAmlApplicantRequest request, CancellationToken cancellationToken)
         {
@@ -348,7 +350,7 @@ public sealed class SumSubKycAmlOrchestratorTests
         }
 
         public Task<KycAmlStatus> GetStatusAsync(string applicantId, CancellationToken cancellationToken) =>
-            Task.FromResult(new KycAmlStatus(applicantId, "external-user", StatusState));
+            Task.FromResult(new KycAmlStatus(applicantId, "external-user", StatusState, StatusJurisdiction));
 
         public bool VerifyWebhook(
             ReadOnlySpan<byte> rawPayload,
