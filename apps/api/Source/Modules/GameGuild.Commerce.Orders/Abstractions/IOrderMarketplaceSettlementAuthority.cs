@@ -9,19 +9,11 @@ public enum OrderMarketplaceCurrencyChoice
 
 public sealed record CompleteOrderMarketplaceSettlement(
     OrderMarketplaceCurrencyChoice CurrencyChoice,
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     string IdempotencyKey);
 
 public sealed record OrderMarketplaceSettlementRequest(
-    Guid TenantId,
-    Guid ActorId,
     Guid OrderId,
     OrderMarketplaceCurrencyChoice CurrencyChoice,
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     string IdempotencyKey);
 
 public sealed record OrderMarketplaceSettlementDecision(

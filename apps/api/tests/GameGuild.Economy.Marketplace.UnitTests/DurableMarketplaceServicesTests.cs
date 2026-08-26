@@ -3,6 +3,7 @@ using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Marketplace.Persistence;
 using GameGuild.Economy.Risk;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -35,16 +36,14 @@ public sealed class DurableMarketplaceServicesTests
         result.SettledAt.Should().Be(Now);
         fixture.Reservations.Requests.Should().ContainSingle();
         fixture.Reservations.Requests[0].Legs.Should().Equal(new CoinAmount(CurrencyCode.HardCoin, 200));
-        fixture.Authorization.Contexts.Should().ContainSingle().Which.Should().BeEquivalentTo(new
+        fixture.Orchestrator.Authorizations.Should().ContainSingle().Which.Should().BeEquivalentTo(new
         {
-            request.TenantId,
-            request.ActorId,
-            SubjectReference = "buyer-subject",
+            fixture.TenantId,
+            ActorId = fixture.BuyerId,
             JurisdictionCode = "BR",
-            Capability = EconomyValueMovementCapability.MarketplaceSettlement,
-            request.RiskDecisionId,
-            OperationFingerprint = "settle-order"
         });
+        fixture.Orchestrator.Intents.Should().ContainSingle().Which.Capability
+            .Should().Be(EconomyValueMovementCapability.MarketplaceSettlement);
         fixture.Authority.Requests.Should().ContainSingle();
         fixture.Authority.Requests[0].Name.Should().Be("marketplace-settlement");
         fixture.Authority.Requests[0].Kind.Should().Be(PostingTemplateKind.MarketplaceSettlement);
@@ -67,6 +66,23 @@ public sealed class DurableMarketplaceServicesTests
         await FluentActions.Awaiting(() => fixture.Settlements.SettleAsync(
                 request with { IdempotencyKey = new IdempotencyKey("different-settlement") }).AsTask())
             .Should().ThrowAsync<MarketplaceIdempotencyConflictException>();
+    }
+
+    [Theory]
+    [InlineData("settlement")]
+    [InlineData("refund")]
+    public async Task ProtectedOperation_RequiresAuthenticatedTenantActor(string operation)
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        fixture.ActorContexts.ClearActorContext();
+
+        Func<Task> act = operation == "settlement"
+            ? () => fixture.Settlements.SettleAsync(fixture.SettlementRequest()).AsTask()
+            : () => fixture.Refunds.RefundAsync(
+                fixture.RefundRequest(Guid.NewGuid(), 1, "unauthenticated")).AsTask();
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        fixture.Orchestrator.Intents.Should().BeEmpty();
     }
 
     [Fact]
@@ -129,7 +145,7 @@ public sealed class DurableMarketplaceServicesTests
         full.CumulativeRefundedQuantity.Should().Be(2);
         full.SettlementStatus.Should().Be(MarketplaceSettlementStatus.Refunded);
         full.EntitlementStatus.Should().Be(MarketplaceEntitlementStatus.Revoked);
-        fixture.Authorization.Contexts.Last().Capability.Should().Be(EconomyValueMovementCapability.MarketplaceRefund);
+        fixture.Orchestrator.Intents.Last().Capability.Should().Be(EconomyValueMovementCapability.MarketplaceRefund);
         fixture.Authority.Requests.Last().Should().Be(("marketplace-refund", PostingTemplateKind.MarketplaceRefund));
         settlement.PostingId.Value.Should().NotBeEmpty();
     }
@@ -167,9 +183,11 @@ public sealed class DurableMarketplaceServicesTests
             .Should().ThrowAsync<MarketplaceRefundException>();
 
         var settlement = await fixture.Settlements.SettleAsync(fixture.SettlementRequest());
+        fixture.SetActor(Guid.NewGuid());
         await FluentActions.Awaiting(() => fixture.Refunds.RefundAsync(
-                fixture.RefundRequest(settlement.SettlementId, 1, "wrong-buyer") with { ActorId = Guid.NewGuid() }).AsTask())
+                fixture.RefundRequest(settlement.SettlementId, 1, "wrong-buyer")).AsTask())
             .Should().ThrowAsync<MarketplaceRefundException>();
+        fixture.SetActor(fixture.BuyerId);
         await FluentActions.Awaiting(() => fixture.Refunds.RefundAsync(
                 fixture.RefundRequest(settlement.SettlementId, 3, "excess")).AsTask())
             .Should().ThrowAsync<MarketplaceRefundException>();
@@ -188,12 +206,12 @@ public sealed class DurableMarketplaceServicesTests
     {
         await using var fixture = await Fixture.CreateAsync();
         var settlement = await fixture.Settlements.SettleAsync(fixture.SettlementRequest());
+        fixture.SetActor(Guid.NewGuid());
 
         var result = await fixture.Refunds.RefundAsync(fixture.RefundRequest(
             settlement.SettlementId, 1, "operations") with
         {
-            Authority = MarketplaceRefundAuthority.Operations,
-            ActorId = Guid.NewGuid()
+            Authority = MarketplaceRefundAuthority.Operations
         });
 
         result.Quantity.Should().Be(1);
@@ -306,67 +324,45 @@ public sealed class DurableMarketplaceServicesTests
 
         FluentActions.Invoking(() => new DurableMarketplaceSettlementService(
                 context, fixture.Orders, fixture.Policies, fixture.Wallets, fixture.Reservations,
-                fixture.Authorization, fixture.Authority, fixture.SettlementLedger))
+                fixture.ActorContexts, fixture.Jurisdictions, fixture.Orchestrator,
+                fixture.Authority, fixture.SettlementLedger))
             .Should().Throw<InvalidOperationException>();
         FluentActions.Invoking(() => new DurableMarketplaceRefundService(
-                context, fixture.Policies, fixture.Authorization, fixture.Authority, fixture.RefundLedger))
+                context, fixture.Policies, fixture.ActorContexts, fixture.Jurisdictions,
+                fixture.Orchestrator, fixture.Authority, fixture.RefundLedger))
             .Should().Throw<InvalidOperationException>();
     }
 
     [Theory]
-    [InlineData("tenant")]
-    [InlineData("actor")]
     [InlineData("order")]
-    [InlineData("risk")]
     [InlineData("choice")]
-    [InlineData("subject")]
-    [InlineData("jurisdiction")]
-    [InlineData("fingerprint")]
-    public async Task Settlement_RejectsInvalidProtectedRequest(string invalid)
+    public async Task Settlement_RejectsInvalidBusinessIntent(string invalid)
     {
         await using var fixture = await Fixture.CreateAsync();
         var request = fixture.SettlementRequest() with
         {
-            TenantId = invalid == "tenant" ? Guid.Empty : fixture.TenantId,
-            ActorId = invalid == "actor" ? Guid.Empty : fixture.BuyerId,
             OrderId = invalid == "order" ? Guid.Empty : fixture.OrderId,
-            RiskDecisionId = invalid == "risk" ? Guid.Empty : fixture.RiskDecisionId,
-            CurrencyChoice = invalid == "choice" ? (MarketplaceCurrencyChoice)999 : MarketplaceCurrencyChoice.Hard,
-            SubjectReference = invalid == "subject" ? " " : "buyer",
-            JurisdictionCode = invalid == "jurisdiction" ? " " : "BR",
-            OperationFingerprint = invalid == "fingerprint" ? " " : "settle"
+            CurrencyChoice = invalid == "choice" ? (MarketplaceCurrencyChoice)999 : MarketplaceCurrencyChoice.Hard
         };
         await FluentActions.Awaiting(() => fixture.Settlements.SettleAsync(request).AsTask())
             .Should().ThrowAsync<ArgumentException>();
     }
 
     [Theory]
-    [InlineData("tenant")]
-    [InlineData("actor")]
     [InlineData("settlement")]
-    [InlineData("risk")]
     [InlineData("authority")]
     [InlineData("quantity")]
     [InlineData("reason")]
     [InlineData("reason-long")]
-    [InlineData("subject")]
-    [InlineData("jurisdiction")]
-    [InlineData("fingerprint")]
-    public async Task Refund_RejectsInvalidProtectedRequest(string invalid)
+    public async Task Refund_RejectsInvalidBusinessIntent(string invalid)
     {
         await using var fixture = await Fixture.CreateAsync();
         var request = fixture.RefundRequest(Guid.NewGuid(), 1, "reason") with
         {
-            TenantId = invalid == "tenant" ? Guid.Empty : fixture.TenantId,
-            ActorId = invalid == "actor" ? Guid.Empty : fixture.BuyerId,
             SettlementId = invalid == "settlement" ? Guid.Empty : Guid.NewGuid(),
-            RiskDecisionId = invalid == "risk" ? Guid.Empty : fixture.RiskDecisionId,
             Authority = invalid == "authority" ? (MarketplaceRefundAuthority)999 : MarketplaceRefundAuthority.SelfService,
             Quantity = invalid == "quantity" ? 0 : 1,
-            ReasonCode = invalid == "reason" ? " " : invalid == "reason-long" ? new string('x', 101) : "reason",
-            SubjectReference = invalid == "subject" ? " " : "buyer",
-            JurisdictionCode = invalid == "jurisdiction" ? " " : "BR",
-            OperationFingerprint = invalid == "fingerprint" ? " " : "refund"
+            ReasonCode = invalid == "reason" ? " " : invalid == "reason-long" ? new string('x', 101) : "reason"
         };
         await FluentActions.Awaiting(() => fixture.Refunds.RefundAsync(request).AsTask())
             .Should().ThrowAsync<ArgumentException>();
@@ -389,14 +385,18 @@ public sealed class DurableMarketplaceServicesTests
                 "policy-hash", "key-1", "signature"));
             Wallets = new WalletDirectory(BuyerWallet, SellerWallet, PlatformWallet, BuyerId, SellerId);
             Reservations = new ReservationGateway();
-            Authorization = new AuthorizationService();
+            ActorContexts = new TestActorContextAccessor();
+            SetActor(BuyerId);
+            Jurisdictions = new JurisdictionResolver();
+            Orchestrator = new ProtectedOperationOrchestrator(ActorContexts, RiskDecisionId);
             Authority = new AuthorityResolver();
             SettlementLedger = new SettlementGateway(context, Reservations);
             RefundLedger = new RefundGateway(context);
             Settlements = new DurableMarketplaceSettlementService(
-                context, Orders, Policies, Wallets, Reservations, Authorization, Authority, SettlementLedger);
+                context, Orders, Policies, Wallets, Reservations, ActorContexts, Jurisdictions,
+                Orchestrator, Authority, SettlementLedger);
             Refunds = new DurableMarketplaceRefundService(
-                context, Policies, Authorization, Authority, RefundLedger);
+                context, Policies, ActorContexts, Jurisdictions, Orchestrator, Authority, RefundLedger);
         }
 
         public Guid TenantId { get; } = Guid.NewGuid();
@@ -414,7 +414,9 @@ public sealed class DurableMarketplaceServicesTests
         public PolicyReader Policies { get; }
         public WalletDirectory Wallets { get; }
         public ReservationGateway Reservations { get; }
-        public AuthorizationService Authorization { get; }
+        public TestActorContextAccessor ActorContexts { get; }
+        public JurisdictionResolver Jurisdictions { get; }
+        public ProtectedOperationOrchestrator Orchestrator { get; }
         public AuthorityResolver Authority { get; }
         public SettlementGateway SettlementLedger { get; }
         public RefundGateway RefundLedger { get; }
@@ -431,13 +433,22 @@ public sealed class DurableMarketplaceServicesTests
         }
 
         public SettleAuthoritativeMarketplaceOrderRequest SettlementRequest() => new(
-            TenantId, BuyerId, OrderId, MarketplaceCurrencyChoice.Hard, " buyer-subject ", " br ",
-            RiskDecisionId, " settle-order ", new IdempotencyKey("settlement-1"), Now);
+            OrderId, MarketplaceCurrencyChoice.Hard, new IdempotencyKey("settlement-1"), Now);
 
         public RefundAuthoritativeMarketplaceOrderRequest RefundRequest(
             Guid settlementId, int quantity, string reason, string key = "refund-1") => new(
-            TenantId, BuyerId, MarketplaceRefundAuthority.SelfService, settlementId, quantity, reason,
-            " buyer-subject ", " br ", RiskDecisionId, " refund-order ", new IdempotencyKey(key), Now.AddHours(1));
+            MarketplaceRefundAuthority.SelfService, settlementId, quantity, reason,
+            new IdempotencyKey(key), Now.AddHours(1));
+
+        public void SetActor(Guid actorId) => ActorContexts.Set(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = actorId.ToString(),
+            TenantId = TenantId,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        });
 
         public ValueTask DisposeAsync() => Context.DisposeAsync();
     }
@@ -512,19 +523,55 @@ public sealed class DurableMarketplaceServicesTests
         }
     }
 
-    private sealed class AuthorizationService : IEconomyCapabilityAuthorizationService
+    private sealed class JurisdictionResolver : IEconomyJurisdictionResolver
     {
-        public List<EconomyCapabilityEvaluationContext> Contexts { get; } = [];
-        public ValueTask<CapabilityAuthorizationReceipt> AuthorizeAndConsumeAsync(
-            EconomyCapabilityEvaluationContext context, CancellationToken cancellationToken)
+        public ValueTask<EconomyJurisdictionResolution> ResolveAsync(
+            Guid tenantId,
+            Guid actorId,
+            string? providerJurisdiction,
+            string? destinationJurisdiction,
+            DateTimeOffset evaluatedAt,
+            CancellationToken cancellationToken) =>
+            ValueTask.FromResult(new EconomyJurisdictionResolution("BR", 1, 1, "jurisdiction-evidence"));
+    }
+
+    private sealed class TestActorContextAccessor : IActorContextAccessor
+    {
+        public ActorContext ActorContext { get; private set; } = ActorContext.Anonymous;
+        public void Set(ActorContext context) => SetActorContext(context);
+        public void SetActorContext(ActorContext context) => ActorContext = context;
+        public void ClearActorContext() => ActorContext = ActorContext.Anonymous;
+    }
+
+    private sealed class ProtectedOperationOrchestrator(
+        TestActorContextAccessor actorContexts,
+        Guid riskDecisionId) : IEconomyProtectedOperationOrchestrator
+    {
+        public List<EconomyProtectedOperationIntent> Intents { get; } = [];
+        public List<EconomyProtectedOperationAuthorization> Authorizations { get; } = [];
+
+        public async Task<TResult> ExecuteAsync<TResult>(
+            EconomyProtectedOperationIntent intent,
+            Func<EconomyProtectedOperationAuthorization, CancellationToken, Task<TResult>> operation,
+            CancellationToken cancellationToken)
         {
-            Contexts.Add(context);
-            return ValueTask.FromResult(new CapabilityAuthorizationReceipt(
-                Guid.NewGuid(), context.TenantId, context.ActorId, context.SubjectReference,
-                context.JurisdictionCode, context.Capability, context.OperationFingerprint,
-                7, 11, context.RiskDecisionId, 3, context.ProviderHash, context.DestinationHash,
-                context.SourceRootHashes, ["evidence"], context.EvaluatedAt, context.EvaluatedAt.AddMinutes(5),
-                "receipt-hash", "receipt-key", "receipt-signature"));
+            Intents.Add(intent);
+            var actor = actorContexts.ActorContext;
+            var tenantId = actor.TenantId ?? throw new InvalidOperationException();
+            var actorId = actor.SubjectIdAsGuid ?? throw new InvalidOperationException();
+            var fingerprint = $"server-fingerprint-{Intents.Count}";
+            var receipt = new CapabilityAuthorizationReceipt(
+                Guid.NewGuid(), tenantId, actorId,
+                EconomySubjectReference.ForUser(tenantId, actorId),
+                "BR", intent.Capability, fingerprint,
+                7, 11, riskDecisionId, 3, intent.ProviderReferenceHash, intent.DestinationHash,
+                intent.SourceRoots.Select(root => root.Value.ToString("N")).ToArray(),
+                ["evidence"], intent.RequestedAt, intent.RequestedAt.AddMinutes(5),
+                "receipt-hash", "receipt-key", "receipt-signature");
+            var authorization = new EconomyProtectedOperationAuthorization(
+                tenantId, actorId, "BR", riskDecisionId, fingerprint, receipt);
+            Authorizations.Add(authorization);
+            return await operation(authorization, cancellationToken);
         }
     }
 

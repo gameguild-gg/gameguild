@@ -1,7 +1,6 @@
 using FluentAssertions;
 using GameGuild.Commerce.Orders;
 using GameGuild.Economy.Contracts;
-using GameGuild.Economy.Risk;
 using Xunit;
 
 namespace GameGuild.Economy.Marketplace.UnitTests;
@@ -19,19 +18,14 @@ public sealed class CommerceOrderMarketplaceSettlementAuthorityTests
         var now = new DateTimeOffset(2026, 8, 26, 12, 0, 0, TimeSpan.Zero);
         var request = new OrderMarketplaceSettlementRequest(
             Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
             commerceChoice,
-            "br",
-            Guid.NewGuid(),
-            "order-fingerprint",
             "order-idempotency");
         var settlementId = Guid.NewGuid();
         var durable = new RecordingSettlementService(new DurableMarketplaceSettlementResult(
                 settlementId,
                 request.OrderId,
                 Guid.NewGuid(),
-                request.ActorId,
+                Guid.NewGuid(),
                 Guid.NewGuid(),
                 MarketplaceSettlementStatus.Settled,
                 MarketplaceEntitlementStatus.PendingGrant,
@@ -49,14 +43,8 @@ public sealed class CommerceOrderMarketplaceSettlementAuthorityTests
 
         durable.Request.Should().NotBeNull();
         var mapped = durable.Request!;
-        mapped.TenantId.Should().Be(request.TenantId);
-        mapped.ActorId.Should().Be(request.ActorId);
         mapped.OrderId.Should().Be(request.OrderId);
         mapped.CurrencyChoice.Should().Be(economyChoice);
-        mapped.SubjectReference.Should().Be(EconomySubjectReference.ForUser(request.TenantId, request.ActorId));
-        mapped.JurisdictionCode.Should().Be(request.JurisdictionCode);
-        mapped.RiskDecisionId.Should().Be(request.RiskDecisionId);
-        mapped.OperationFingerprint.Should().Be(request.OperationFingerprint);
         mapped.IdempotencyKey.Should().Be(new IdempotencyKey(request.IdempotencyKey));
         mapped.SettledAt.Should().Be(now);
         result.IsAccepted.Should().BeTrue();
@@ -72,12 +60,7 @@ public sealed class CommerceOrderMarketplaceSettlementAuthorityTests
             new FixedTimeProvider(DateTimeOffset.UtcNow));
         var request = new OrderMarketplaceSettlementRequest(
             Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
             (OrderMarketplaceCurrencyChoice)0,
-            "BR",
-            Guid.NewGuid(),
-            "fingerprint",
             "idempotency");
 
         var action = async () => await authority.SettleAsync(request, CancellationToken.None);

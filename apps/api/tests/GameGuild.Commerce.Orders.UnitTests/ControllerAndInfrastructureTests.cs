@@ -161,14 +161,11 @@ public class OrdersControllerTests
     }
 
     [Fact]
-    public async Task CompleteOrder_MapsEconomyMarketplaceEvidence()
+    public async Task CompleteOrder_MapsEconomyMarketplaceIntent()
     {
         var order = CreateTestOrder();
         var evidence = new CompleteOrderMarketplaceSettlement(
             OrderMarketplaceCurrencyChoice.FixedMix,
-            "BR",
-            Guid.NewGuid(),
-            "operation",
             "idempotency");
         _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(
                 It.Is<CompleteOrderCommand>(command =>
@@ -534,12 +531,7 @@ public class OrdersInfrastructureTests
 
         var result = await authority.SettleAsync(new OrderMarketplaceSettlementRequest(
             Guid.NewGuid(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
             OrderMarketplaceCurrencyChoice.Hard,
-            "BR",
-            Guid.NewGuid(),
-            "operation",
             "idempotency"));
 
         result.IsAccepted.Should().BeFalse();

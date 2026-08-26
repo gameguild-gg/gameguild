@@ -55,13 +55,8 @@ public sealed class CompleteOrderCommandHandler(
             var authority = marketplaceSettlementAuthority ?? new DenyOrderMarketplaceSettlementAuthority();
             var decision = await authority.SettleAsync(
                 new OrderMarketplaceSettlementRequest(
-                    order.TenantId.Value,
-                    order.UserId,
                     order.Id,
                     settlement.CurrencyChoice,
-                    settlement.JurisdictionCode,
-                    settlement.RiskDecisionId,
-                    settlement.OperationFingerprint,
                     settlement.IdempotencyKey),
                 cancellationToken).ConfigureAwait(false);
             if (!decision.IsAccepted || !decision.SettlementId.HasValue)

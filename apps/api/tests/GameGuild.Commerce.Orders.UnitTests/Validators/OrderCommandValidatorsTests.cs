@@ -41,19 +41,13 @@ public class CompleteOrderCommandValidatorTests
     }
 
     [Fact]
-    public void ShouldValidateEconomyMarketplaceSettlementEvidence()
+    public void ShouldValidateEconomyMarketplaceSettlementIntent()
     {
         var invalid = new CompleteOrderMarketplaceSettlement(
             (OrderMarketplaceCurrencyChoice)0,
-            string.Empty,
-            Guid.Empty,
-            string.Empty,
             string.Empty);
         var valid = new CompleteOrderMarketplaceSettlement(
             OrderMarketplaceCurrencyChoice.FixedMix,
-            "BR",
-            Guid.NewGuid(),
-            "operation",
             "idempotency");
 
         _sut.TestValidate(new CompleteOrderCommand(Guid.NewGuid(), MarketplaceSettlement: invalid))
