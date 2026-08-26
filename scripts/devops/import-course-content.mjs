@@ -816,6 +816,94 @@ async function request(method, path, { token, body, apiUrl }) {
 
 // ===== upsert (task 5-7) =====
 
+// Task 5 — course metadata upsert. The PUT body is EXACTLY the nine UpdateProgramDto
+// fields we own (UpdateProgramDto.cs:3-23, camelCase on the wire); metadata, status,
+// videoShowcaseUrl, creatorId and friends are deliberately never sent — prod keeps
+// whatever it already has (nullable fields left out of the payload stay untouched).
+function coursePutPayload(program) {
+  return {
+    title: program.title,
+    description: program.description,
+    slug: program.slug,
+    thumbnail: program.thumbnail,
+    estimatedHours: program.estimatedHours,
+    visibility: 'Public',
+    category: program.category,
+    difficulty: program.difficulty,
+    enrollmentStatus: program.enrollmentStatus,
+  };
+}
+
+// One-line dry-run payload summary; description truncated to a prefix for eyeballing.
+function summarizeCoursePut(payload) {
+  return {
+    title: payload.title,
+    description: payload.description.length > 60
+      ? `${payload.description.slice(0, 60)}...`
+      : payload.description,
+    estimatedHours: payload.estimatedHours,
+    category: payload.category,
+    difficulty: payload.difficulty,
+    enrollmentStatus: payload.enrollmentStatus,
+    slug: payload.slug,
+  };
+}
+
+async function upsertCourse(token, program, { dryRun, apiUrl }) {
+  const payload = coursePutPayload(program);
+
+  let existing = null;
+  try {
+    existing = await request(
+      'GET',
+      `/v1/courses/slug/${encodeURIComponent(program.slug)}`,
+      { token, apiUrl },
+    );
+  } catch (err) {
+    // request() throws "METHOD path -> status: body"; only 404 means "not found".
+    if (!err.message.includes('-> 404')) throw err;
+    existing = null;
+  }
+
+  if (existing === null) {
+    if (dryRun) {
+      console.log('[course] create (dry-run) — would POST /v1/courses then PUT the 9-key payload');
+      console.log(`[course] payload ${JSON.stringify(summarizeCoursePut(payload))}`);
+      return { action: 'create', courseId: null };
+    }
+    const created = await request('POST', '/v1/courses', {
+      token,
+      apiUrl,
+      body: {
+        title: program.title,
+        description: program.description,
+        slug: program.slug,
+        thumbnail: program.thumbnail,
+      },
+    });
+    console.log(`[course] create ${created.id}`);
+    await request('PUT', `/v1/courses/${created.id}`, { token, apiUrl, body: payload });
+    return { action: 'create', courseId: created.id };
+  }
+
+  // Paranoia: a slug lookup must never hand back a different slug.
+  if (existing.id && existing.slug !== program.slug) {
+    throw new Error(
+      `slug endpoint returned id=${existing.id} with slug=${JSON.stringify(existing.slug)},`
+        + ` expected ${JSON.stringify(program.slug)}`,
+    );
+  }
+
+  if (dryRun) {
+    console.log(`[course] update ${existing.id}`);
+    console.log(`[course] payload ${JSON.stringify(summarizeCoursePut(payload))}`);
+    return { action: 'update', courseId: existing.id };
+  }
+
+  await request('PUT', `/v1/courses/${existing.id}`, { token, apiUrl, body: payload });
+  return { action: 'update', courseId: existing.id };
+}
+
 // ===== orchestration (task 8) =====
 
 async function main() {
@@ -857,7 +945,17 @@ async function main() {
     process.exit(0);
   }
 
-  console.log('[todo] scaffold complete — parser/API/import stages land in tasks 2-8');
+  // Task 5 main flow: parse → model → sign-in → metadata upsert. buildImportModel throws
+  // on orphaned skips — main().catch(fail) turns that into exit 1 BEFORE any HTTP call.
+  // Content upsert (task 6), prune (task 7) and the summary (task 8) land in later stages.
+  const parsed = parseCourseDir(args.slug);
+  const model = buildImportModel(parsed, args.skipSourceIds);
+  const session = await signIn({ apiUrl: env.apiUrl, email: env.email, password: env.password });
+  await upsertCourse(session.accessToken, model.program, {
+    dryRun: args.mode !== 'execute',
+    apiUrl: env.apiUrl,
+  });
+  console.log('[stage] metadata complete (content stages land in tasks 6-8)');
   process.exit(0);
 }
 
