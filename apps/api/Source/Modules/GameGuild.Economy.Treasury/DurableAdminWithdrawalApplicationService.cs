@@ -14,10 +14,8 @@ public sealed record ProposeAdminWithdrawalCommand(
     DateOnly PeriodStart,
     long AmountUnits,
     string DestinationHash,
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
-    string IdempotencyKey);
+    string IdempotencyKey,
+    ReauthenticationEvidence Reauthentication);
 
 public sealed record ApproveAdminWithdrawalCommand(
     Guid TenantId,
@@ -30,8 +28,7 @@ public sealed record DispatchAdminWithdrawalCommand(
     Guid ActorId,
     Guid RunId,
     long ExpectedVersion,
-    Guid RiskDecisionId,
-    string OperationFingerprint);
+    ReauthenticationEvidence Reauthentication);
 
 public sealed record ReconcileAdminWithdrawalCommand(
     Guid TenantId,
@@ -77,6 +74,7 @@ public sealed class DurableAdminWithdrawalApplicationService(
     IFifoFragmentReservationReader reservationReader,
     IDurableAdminWithdrawalWorkflow workflow,
     IAdminWithdrawalProvider provider,
+    IEconomyJurisdictionResolver jurisdictionResolver,
     TimeProvider timeProvider) : IDurableAdminWithdrawalApplicationService
 {
     private const long UsdNanosPerHardUnit = 10_000_000;
@@ -86,11 +84,21 @@ public sealed class DurableAdminWithdrawalApplicationService(
         CancellationToken cancellationToken = default)
     {
         ValidateProposal(command);
-        var jurisdiction = command.JurisdictionCode.Trim().ToUpperInvariant();
         var destinationHash = NormalizeHash(command.DestinationHash, nameof(command.DestinationHash));
-        var operationFingerprint = NormalizeHash(
-            command.OperationFingerprint, nameof(command.OperationFingerprint));
         var idempotencyKey = new IdempotencyKey(command.IdempotencyKey.Trim());
+        var now = timeProvider.GetUtcNow();
+        var transactionBinding = TreasuryProtectedOperationBinding.Proposal(
+            command.PeriodStart, command.AmountUnits, destinationHash, idempotencyKey.Value);
+        var reauthentication = ReauthenticationEvidenceValidator.RequireFresh(
+            command.Reauthentication,
+            command.ActorId,
+            ProtectedOperationKind.AdministrativeAdjustment,
+            transactionBinding,
+            ReauthenticationAssurance.MultiFactor,
+            now);
+        var jurisdiction = await jurisdictionResolver.ResolveAsync(
+            command.TenantId, command.ActorId, null, null, now, cancellationToken)
+            .ConfigureAwait(false);
         var requestHash = Hash(Canonicalize(new
         {
             tenant_id = command.TenantId,
@@ -98,17 +106,14 @@ public sealed class DurableAdminWithdrawalApplicationService(
             period_start = command.PeriodStart,
             amount_units = command.AmountUnits,
             destination_hash = destinationHash,
-            jurisdiction_code = jurisdiction,
-            risk_decision_id = command.RiskDecisionId,
-            operation_fingerprint = operationFingerprint,
+            jurisdiction_code = jurisdiction.JurisdictionCode,
             idempotency_key = idempotencyKey.Value
         }));
         var replay = runs.FindReplay(command.TenantId, idempotencyKey.Value, requestHash);
         if (replay is not null) return replay;
 
-        var now = timeProvider.GetUtcNow();
         var (policy, executionPolicy) = await LoadPolicyAsync(
-            command.TenantId, jurisdiction, now, cancellationToken).ConfigureAwait(false);
+            command.TenantId, jurisdiction.JurisdictionCode, now, cancellationToken).ConfigureAwait(false);
         if (command.AmountUnits < executionPolicy.MinimumAmountUnits ||
             command.AmountUnits > executionPolicy.MaximumAmountUnits)
             throw new AdminWithdrawalEligibilityException(
@@ -148,10 +153,8 @@ public sealed class DurableAdminWithdrawalApplicationService(
         return await workflow.ReserveAsync(
             new DurableAdminWithdrawalReservationRequest(
                 run,
-                SubjectReference(command.TenantId),
-                jurisdiction,
-                command.RiskDecisionId,
-                operationFingerprint,
+                jurisdiction.JurisdictionCode,
+                reauthentication.EvidenceHash,
                 executionPolicy.ProviderHash),
             cancellationToken).ConfigureAwait(false);
     }
@@ -185,6 +188,15 @@ public sealed class DurableAdminWithdrawalApplicationService(
                 "Administrative withdrawal is not approved at the requested version.");
         var authorization = ReadAuthorizationSnapshot(run);
         var now = timeProvider.GetUtcNow();
+        var transactionBinding = TreasuryProtectedOperationBinding.Dispatch(
+            command.RunId, command.ExpectedVersion);
+        var reauthentication = ReauthenticationEvidenceValidator.RequireFresh(
+            command.Reauthentication,
+            command.ActorId,
+            ProtectedOperationKind.AdministrativeAdjustment,
+            transactionBinding,
+            ReauthenticationAssurance.MultiFactor,
+            now);
         var (policy, executionPolicy) = await LoadPolicyAsync(
             run.TenantId, authorization.JurisdictionCode, now, cancellationToken).ConfigureAwait(false);
         if (policy.Version != run.PolicyVersion.Value ||
@@ -207,37 +219,13 @@ public sealed class DurableAdminWithdrawalApplicationService(
         if (fragments.Count == 0 || fragments.Sum(fragment => fragment.Amount.Units) != run.Amount.Units)
             throw new AdminWithdrawalStaleCommandException(
                 "Administrative withdrawal FIFO reservations are missing or incomplete.");
-        var rootHashes = fragments.Select(fragment => Hash(fragment.RootSourceStampId.Value.ToString("N")))
-            .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+        var sourceRoots = fragments.Select(fragment => fragment.RootSourceStampId)
+            .Distinct().OrderBy(root => root.Value).ToArray();
+        var rootHashes = sourceRoots.Select(root => Hash(root.Value.ToString("N"))).ToArray();
         if (!rootHashes.SequenceEqual(authorization.SourceRootHashes, StringComparer.Ordinal))
             throw new AdminWithdrawalStaleCommandException(
                 "Administrative withdrawal source provenance changed before dispatch.");
 
-        var operationFingerprint = NormalizeHash(
-            command.OperationFingerprint, nameof(command.OperationFingerprint));
-        var dispatchSnapshotHash = Hash(Canonicalize(new
-        {
-            tenant_id = run.TenantId,
-            run_id = run.Id,
-            version = run.Version,
-            fencing_token = run.FencingToken,
-            execution_epoch = run.ExecutionEpoch,
-            amount_units = run.Amount.Units,
-            source_asset_key = run.SourceAssetKey,
-            destination_hash = run.DestinationHash,
-            policy_version = policy.Version,
-            policy_hash = policy.PayloadHash,
-            reserve_version = reserve.Version.Value,
-            reserve_authorization_epoch = reserve.AuthorizationEpoch,
-            reserve_evidence_hash = reserve.EvidenceHash,
-            reservation_receipt_hash = authorization.ReceiptHash,
-            reservation_evidence_hashes = authorization.EvidenceHashes.Order(StringComparer.Ordinal),
-            source_root_hashes = rootHashes,
-            dispatched_by = command.ActorId,
-            risk_decision_id = command.RiskDecisionId,
-            operation_fingerprint = operationFingerprint,
-            occurred_at = now
-        }));
         return await workflow.BeginDispatchAsync(
             new DurableAdminWithdrawalDispatchRequest(
                 run.TenantId,
@@ -245,15 +233,12 @@ public sealed class DurableAdminWithdrawalApplicationService(
                 run.Version,
                 run.FencingToken,
                 run.ExecutionEpoch,
-                dispatchSnapshotHash,
                 now,
                 command.ActorId,
-                authorization.SubjectReference,
                 authorization.JurisdictionCode,
-                command.RiskDecisionId,
-                operationFingerprint,
+                reauthentication.EvidenceHash,
                 authorization.ProviderHash,
-                rootHashes),
+                sourceRoots),
             cancellationToken).ConfigureAwait(false);
     }
 
@@ -340,6 +325,8 @@ public sealed class DurableAdminWithdrawalApplicationService(
                 string.IsNullOrWhiteSpace(snapshot.SubjectReference) ||
                 string.IsNullOrWhiteSpace(snapshot.JurisdictionCode) ||
                 string.IsNullOrWhiteSpace(snapshot.ProviderHash) ||
+                string.IsNullOrWhiteSpace(snapshot.OperationFingerprintHash) ||
+                string.IsNullOrWhiteSpace(snapshot.ReauthenticationEvidenceHash) ||
                 string.IsNullOrWhiteSpace(snapshot.ReceiptHash) ||
                 snapshot.SourceRootHashes.Count == 0)
                 throw new AdminWithdrawalEvidenceException(
@@ -413,28 +400,24 @@ public sealed class DurableAdminWithdrawalApplicationService(
     private static void ValidateProposal(ProposeAdminWithdrawalCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        if (command.TenantId == Guid.Empty || command.ActorId == Guid.Empty || command.RiskDecisionId == Guid.Empty)
-            throw new ArgumentException("Tenant, actor, and risk decision are required.", nameof(command));
+        if (command.TenantId == Guid.Empty || command.ActorId == Guid.Empty)
+            throw new ArgumentException("Tenant and actor are required.", nameof(command));
         if (command.PeriodStart.Day != 1)
             throw new ArgumentException("Withdrawal period must start on the first day of a month.", nameof(command));
         if (command.AmountUnits <= 0) throw new ArgumentOutOfRangeException(nameof(command));
         ArgumentException.ThrowIfNullOrWhiteSpace(command.DestinationHash);
-        ArgumentException.ThrowIfNullOrWhiteSpace(command.JurisdictionCode);
-        ArgumentException.ThrowIfNullOrWhiteSpace(command.OperationFingerprint);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.IdempotencyKey);
+        ArgumentNullException.ThrowIfNull(command.Reauthentication);
     }
 
     private static void ValidateDispatch(DispatchAdminWithdrawalCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);
-        if (command.TenantId == Guid.Empty || command.ActorId == Guid.Empty ||
-            command.RunId == Guid.Empty || command.RiskDecisionId == Guid.Empty)
-            throw new ArgumentException("Tenant, actor, run, and risk decision are required.", nameof(command));
+        if (command.TenantId == Guid.Empty || command.ActorId == Guid.Empty || command.RunId == Guid.Empty)
+            throw new ArgumentException("Tenant, actor, and run are required.", nameof(command));
         if (command.ExpectedVersion <= 0) throw new ArgumentOutOfRangeException(nameof(command));
-        ArgumentException.ThrowIfNullOrWhiteSpace(command.OperationFingerprint);
+        ArgumentNullException.ThrowIfNull(command.Reauthentication);
     }
-
-    private static string SubjectReference(Guid tenantId) => $"treasury:{tenantId:N}";
 
     private static string NormalizeHash(string value, string parameterName)
     {

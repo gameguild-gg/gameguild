@@ -16,18 +16,19 @@ public sealed record ProposeTreasuryWithdrawalRequest(
     DateOnly PeriodStart,
     long AmountUnits,
     string DestinationHash,
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
-    string IdempotencyKey);
+    string IdempotencyKey,
+    string StepUpReceipt);
 
 public sealed record ApproveTreasuryWithdrawalRequest(long ExpectedVersion, string StepUpReceipt);
 
 public sealed record DispatchTreasuryWithdrawalRequest(
     long ExpectedVersion,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     string StepUpReceipt);
+
+public sealed record TreasuryProtectedOperationFailureResponse(
+    EconomyProtectedOperationState State,
+    Guid? ReviewId,
+    IReadOnlyList<string> Diagnostics);
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/admin/economy/treasury/withdrawals")]
@@ -36,7 +37,8 @@ public sealed record DispatchTreasuryWithdrawalRequest(
 public sealed class EconomyTreasuryAdministrationController(
     IDurableAdminWithdrawalApplicationService withdrawals,
     IEconomyStepUpExecutor stepUp,
-    IActorContextAccessor actorContextAccessor) : BaseApiController
+    IActorContextAccessor actorContextAccessor,
+    TimeProvider timeProvider) : BaseApiController
 {
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<AdminWithdrawalRun>), StatusCodes.Status200OK)]
@@ -83,18 +85,26 @@ public sealed class EconomyTreasuryAdministrationController(
     {
         if (!TryActor(out var tenantId, out var actorId)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return await ExecuteAsync(async () => await withdrawals.ProposeAsync(
-            new ProposeAdminWithdrawalCommand(
-                tenantId,
-                actorId,
-                request.PeriodStart,
-                request.AmountUnits,
-                request.DestinationHash,
-                request.JurisdictionCode,
-                request.RiskDecisionId,
-                request.OperationFingerprint,
-                request.IdempotencyKey),
-            cancellationToken).ConfigureAwait(false), created: true).ConfigureAwait(false);
+        var transactionBinding = TreasuryProtectedOperationBinding.Proposal(
+            request.PeriodStart, request.AmountUnits, request.DestinationHash, request.IdempotencyKey);
+        var operation = EconomyStepUpOperation.Create(
+            "economy.treasury.propose",
+            $"treasury-period:{request.PeriodStart:yyyy-MM-dd}",
+            transactionBinding);
+        return await ExecuteAsync(() => stepUp.ExecuteAsync(
+            operation,
+            request.StepUpReceipt,
+            (evidenceHash, token) => withdrawals.ProposeAsync(
+                new ProposeAdminWithdrawalCommand(
+                    tenantId,
+                    actorId,
+                    request.PeriodStart,
+                    request.AmountUnits,
+                    request.DestinationHash,
+                    request.IdempotencyKey,
+                    Reauthentication(actorId, transactionBinding, evidenceHash)),
+                token).AsTask(),
+            cancellationToken), created: true).ConfigureAwait(false);
     }
 
     [HttpPost("{runId:guid}/approve")]
@@ -138,24 +148,22 @@ public sealed class EconomyTreasuryAdministrationController(
     {
         if (!TryActor(out var tenantId, out var actorId)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
+        var transactionBinding = TreasuryProtectedOperationBinding.Dispatch(
+            runId, request.ExpectedVersion);
         var operation = EconomyStepUpOperation.Create(
             "economy.treasury.dispatch",
             $"treasury-withdrawal:{runId:N}",
-            runId.ToString("N"),
-            request.ExpectedVersion.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            request.RiskDecisionId.ToString("N"),
-            request.OperationFingerprint);
+            transactionBinding);
         return await ExecuteAsync(() => stepUp.ExecuteAsync(
             operation,
             request.StepUpReceipt,
-            (_, token) => withdrawals.DispatchAsync(
+            (evidenceHash, token) => withdrawals.DispatchAsync(
                 new DispatchAdminWithdrawalCommand(
                     tenantId,
                     actorId,
                     runId,
                     request.ExpectedVersion,
-                    request.RiskDecisionId,
-                    request.OperationFingerprint),
+                    Reauthentication(actorId, transactionBinding, evidenceHash)),
                 token),
             cancellationToken)).ConfigureAwait(false);
     }
@@ -197,6 +205,18 @@ public sealed class EconomyTreasuryAdministrationController(
                 diagnostics = exception.Diagnostics
             });
         }
+        catch (EconomyProtectedOperationException exception)
+        {
+            var status = exception.State switch
+            {
+                EconomyProtectedOperationState.Denied => StatusCodes.Status403Forbidden,
+                EconomyProtectedOperationState.ReviewRequired or EconomyProtectedOperationState.Hold or
+                    EconomyProtectedOperationState.Challenge => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status503ServiceUnavailable
+            };
+            return new ObjectResult(new TreasuryProtectedOperationFailureResponse(
+                exception.State, exception.ReviewId, exception.Diagnostics)) { StatusCode = status };
+        }
         catch (ReserveInputUnknownException exception)
         {
             return StatusCode(StatusCodes.Status503ServiceUnavailable, exception.Message);
@@ -210,6 +230,7 @@ public sealed class EconomyTreasuryAdministrationController(
         catch (AdminWithdrawalStaleCommandException exception) { return Conflict(exception.Message); }
         catch (AdminWithdrawalEvidenceException exception) { return Conflict(exception.Message); }
         catch (AdminWithdrawalEligibilityException exception) { return Conflict(exception.Message); }
+        catch (ReauthenticationEvidenceException exception) { return Conflict(exception.Message); }
         catch (GameGuild.Identity.Authentication.StepUpReceiptInvalidException exception)
         {
             return Conflict(exception.Message);
@@ -223,5 +244,21 @@ public sealed class EconomyTreasuryAdministrationController(
         actorId = actor.SubjectIdAsGuid ?? Guid.Empty;
         return actor.IsAuthenticated && tenantId != Guid.Empty && actorId != Guid.Empty &&
                actor.HasPermission(EconomyPermission.Keys.OperateTreasury);
+    }
+
+    private ReauthenticationEvidence Reauthentication(
+        Guid actorId,
+        string transactionBinding,
+        string evidenceHash)
+    {
+        var now = timeProvider.GetUtcNow();
+        return new ReauthenticationEvidence(
+            actorId,
+            ProtectedOperationKind.AdministrativeAdjustment,
+            transactionBinding,
+            ReauthenticationAssurance.MultiFactor,
+            now,
+            now.AddMinutes(1),
+            evidenceHash);
     }
 }

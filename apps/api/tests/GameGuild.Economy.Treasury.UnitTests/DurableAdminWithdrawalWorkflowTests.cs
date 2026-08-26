@@ -25,7 +25,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var postings = new RecordingPostings();
         var providerAuthority = new AcceptProviderAuthority();
         var workflow = new PostgreSqlDurableAdminWithdrawalWorkflow(
-            context, operations, audit, reservations, new AcceptCapabilityAuthorization(),
+            context, operations, audit, reservations, new AcceptCapabilityAuthorization(run),
             new AcceptCapabilityResolver(), postings, providerAuthority, new AcceptEvidence(),
             new RecordingDispatchOutbox());
 
@@ -33,7 +33,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var approved = await workflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
             run.TenantId, run.Id, reserved.Version, Guid.NewGuid(), Time.AddMinutes(1)));
         var dispatching = await workflow.BeginDispatchAsync(CreateDispatchRequest(
-            run, approved.Version, occurredAt: Time.AddMinutes(2), snapshotHash: "custody-snapshot"));
+            run, approved.Version, occurredAt: Time.AddMinutes(2)));
         var providerEvent = CreateProviderEvent(dispatching, AdminWithdrawalProviderOutcome.Succeeded);
         var terminal = await workflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
             providerEvent));
@@ -82,7 +82,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
             operations,
             new AdminWithdrawalAuditTrail(),
             new RecordingReservations(run),
-            new AcceptCapabilityAuthorization(),
+            new AcceptCapabilityAuthorization(run),
             new AcceptCapabilityResolver(),
             new RecordingPostings(),
             new AcceptProviderAuthority(),
@@ -161,7 +161,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var context = new RecordingContext();
         var operations = new InMemoryAdminWithdrawalStore();
         var reservations = new RecordingReservations(run);
-        var authorization = new AcceptCapabilityAuthorization();
+        var authorization = new AcceptCapabilityAuthorization(run);
         var resolver = new AcceptCapabilityResolver();
         var workflow = new PostgreSqlDurableAdminWithdrawalWorkflow(
             context,
@@ -210,7 +210,8 @@ public sealed class DurableAdminWithdrawalWorkflowTests
                 context,
                 new InMemoryAdminWithdrawalStore(),
                 run,
-                capabilityAuthorization: new AcceptCapabilityAuthorization((evaluation, receipt) => mutate(receipt)),
+                capabilityAuthorization: new AcceptCapabilityAuthorization(
+                    run, (evaluation, receipt) => mutate(receipt)),
                 postings: postings);
 
             await FluentActions.Invoking(() => workflow.ReserveAsync(CreateReservationRequest(run)))
@@ -329,7 +330,6 @@ public sealed class DurableAdminWithdrawalWorkflowTests
     [InlineData("actor")]
     [InlineData("policy")]
     [InlineData("reserve")]
-    [InlineData("risk")]
     [InlineData("provider")]
     [InlineData("destination")]
     [InlineData("roots")]
@@ -343,13 +343,12 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var store = new InMemoryAdminWithdrawalStore();
         store.Add(approved);
         var context = new RecordingContext();
-        var authorization = new AcceptCapabilityAuthorization((_, receipt) => invalid switch
+        var authorization = new AcceptCapabilityAuthorization(approved, (_, receipt) => invalid switch
         {
             "tenant" => receipt with { TenantId = Guid.NewGuid() },
             "actor" => receipt with { ActorId = Guid.NewGuid() },
             "policy" => receipt with { PolicyVersion = receipt.PolicyVersion + 1 },
             "reserve" => receipt with { ReserveVersion = receipt.ReserveVersion + 1 },
-            "risk" => receipt with { RiskDecisionId = Guid.NewGuid() },
             "provider" => receipt with { ProviderHash = "changed-provider" },
             "destination" => receipt with { DestinationHash = "changed-destination" },
             "roots" => receipt with { SourceRootHashes = ["changed-root"] },
@@ -396,21 +395,18 @@ public sealed class DurableAdminWithdrawalWorkflowTests
             valid with { TenantId = Guid.Empty },
             valid with { RunId = Guid.Empty },
             valid with { DispatchedBy = Guid.Empty },
-            valid with { RiskDecisionId = Guid.Empty },
             valid with { ExpectedVersion = 0 },
             valid with { FencingToken = 0 },
             valid with { ExecutionEpoch = 0 },
-            valid with { DispatchSnapshotHash = " " },
-            valid with { SubjectReference = " " },
             valid with { JurisdictionCode = " " },
-            valid with { OperationFingerprint = " " },
+            valid with { ReauthenticationEvidenceHash = " " },
+            valid with { ReauthenticationEvidenceHash = "short" },
             valid with { ProviderHash = " " },
-            valid with { SourceRootHashes = null! },
-            valid with { SourceRootHashes = [] },
-            valid with { SourceRootHashes = [" "] },
-            valid with { SourceRootHashes = ["root", "root"] },
-            valid with { DispatchSnapshotHash = new string('x', 129) }
+            valid with { SourceRoots = null! },
+            valid with { SourceRoots = [] },
+            valid with { SourceRoots = [SourceStampId.New(), SourceStampId.New()] }
         ];
+        invalid[^1] = invalid[^1]! with { SourceRoots = [valid.SourceRoots[0], valid.SourceRoots[0]] };
 
         foreach (var request in invalid)
         {
@@ -464,10 +460,9 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         await AssertReserveRejectedAsync(validRun with { ExecutionEpoch = 0 }, typeof(ArgumentOutOfRangeException));
         await AssertReserveRejectedAsync(validRun with { ReserveAuthorizationEpoch = 0 }, typeof(ArgumentOutOfRangeException));
 
-        await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { SubjectReference = " " });
         await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { JurisdictionCode = " " });
-        await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { RiskDecisionId = Guid.Empty });
-        await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { OperationFingerprint = " " });
+        await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { ReauthenticationEvidenceHash = " " });
+        await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { ReauthenticationEvidenceHash = "short" });
         await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { ProviderHash = " " });
 
         var shapeContext = new RecordingContext();
@@ -493,9 +488,6 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(
                 CreateDispatchRequest(validRun) with { ExecutionEpoch = 0 }))
             .Should().ThrowAsync<ArgumentOutOfRangeException>();
-        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(
-                CreateDispatchRequest(validRun) with { DispatchSnapshotHash = new string('x', 129) }))
-            .Should().ThrowAsync<ArgumentException>();
         var missingRunId = CreateProviderEvent(validRun, AdminWithdrawalProviderOutcome.Failed) with { RunId = Guid.Empty };
         await FluentActions.Invoking(() => shapeWorkflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
                 missingRunId)))
@@ -665,7 +657,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         long? fragmentUnits = null,
         long transitionCount = 1,
         IAdminWithdrawalProviderEvidenceVerifier? evidence = null,
-        IEconomyCapabilityAuthorizationService? capabilityAuthorization = null,
+        IEconomyProtectedOperationOrchestrator? capabilityAuthorization = null,
         IRegisteredPostingCapabilityResolver? capabilityResolver = null,
         IRegisteredPostingGateway? postings = null,
         IProviderEvidencePostingAuthorityIssuer? providerAuthority = null) => new(
@@ -673,7 +665,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         operations,
         new AdminWithdrawalAuditTrail(),
         new RecordingReservations(reservationRun, fragmentUnits, transitionCount),
-        capabilityAuthorization ?? new AcceptCapabilityAuthorization(),
+        capabilityAuthorization ?? new AcceptCapabilityAuthorization(reservationRun),
         capabilityResolver ?? new AcceptCapabilityResolver(),
         postings ?? new RecordingPostings(),
         providerAuthority ?? new AcceptProviderAuthority(),
@@ -706,10 +698,8 @@ public sealed class DurableAdminWithdrawalWorkflowTests
 
     private static DurableAdminWithdrawalReservationRequest CreateReservationRequest(AdminWithdrawalRun run) => new(
         run,
-        $"tenant:{run.TenantId:N}:treasury",
         "US",
-        Guid.NewGuid(),
-        $"admin-withdrawal:{run.Id:N}",
+        Hash("reauth-evidence"),
         "stripe-platform");
 
     private static DurableAdminWithdrawalDispatchRequest CreateDispatchRequest(
@@ -717,22 +707,18 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         long? expectedVersion = null,
         long? fencingToken = null,
         long? executionEpoch = null,
-        DateTimeOffset? occurredAt = null,
-        string snapshotHash = "snapshot") => new(
+        DateTimeOffset? occurredAt = null) => new(
         run.TenantId,
         run.Id,
         expectedVersion ?? run.Version,
         fencingToken ?? run.FencingToken,
         executionEpoch ?? run.ExecutionEpoch,
-        snapshotHash,
         occurredAt ?? Time,
-        Guid.NewGuid(),
-        $"tenant:{run.TenantId:N}:treasury",
+        run.RequestedBy,
         "US",
-        Guid.NewGuid(),
-        $"admin-withdrawal-dispatch:{run.Id:N}",
+        Hash("reauth-evidence"),
         "stripe-platform",
-        ["source-root-hash"]);
+        [SourceStampId.New()]);
 
     private static AdminWithdrawalProviderEvent CreateProviderEvent(
         AdminWithdrawalRun run,
@@ -824,16 +810,36 @@ public sealed class DurableAdminWithdrawalWorkflowTests
     }
 
     private sealed class AcceptCapabilityAuthorization(
+        AdminWithdrawalRun run,
         Func<EconomyCapabilityEvaluationContext, CapabilityAuthorizationReceipt, CapabilityAuthorizationReceipt>? mutate = null)
-        : IEconomyCapabilityAuthorizationService
+        : IEconomyProtectedOperationOrchestrator
     {
         public List<EconomyCapabilityEvaluationContext> Contexts { get; } = [];
 
-        public ValueTask<CapabilityAuthorizationReceipt> AuthorizeAndConsumeAsync(
-            EconomyCapabilityEvaluationContext context,
+        public async Task<TResult> ExecuteAsync<TResult>(
+            EconomyProtectedOperationIntent intent,
+            Func<EconomyProtectedOperationAuthorization, CancellationToken, Task<TResult>> operation,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            var actorId = run.RequestedBy;
+            var riskDecisionId = Guid.NewGuid();
+            var operationFingerprint = Hash($"{intent.TemplateKind}:{intent.IdempotencyKey.Value}");
+            var rootHashes = intent.SourceRoots
+                .Select(root => Hash(root.Value.ToString("N")))
+                .ToArray();
+            var context = new EconomyCapabilityEvaluationContext(
+                run.TenantId,
+                actorId,
+                EconomySubjectReference.ForUser(run.TenantId, actorId),
+                "US",
+                intent.Capability,
+                riskDecisionId,
+                operationFingerprint,
+                intent.ProviderReferenceHash,
+                intent.DestinationHash,
+                rootHashes,
+                intent.RequestedAt);
             Contexts.Add(context);
             var receipt = new CapabilityAuthorizationReceipt(
                 Guid.NewGuid(),
@@ -843,8 +849,8 @@ public sealed class DurableAdminWithdrawalWorkflowTests
                 context.JurisdictionCode,
                 context.Capability,
                 context.OperationFingerprint,
-                1,
-                1,
+                run.PolicyVersion.Value,
+                run.ReserveVersion.Value,
                 context.RiskDecisionId,
                 1,
                 context.ProviderHash,
@@ -856,7 +862,15 @@ public sealed class DurableAdminWithdrawalWorkflowTests
                 "receipt-hash",
                 "test-key",
                 "signature");
-            return ValueTask.FromResult(mutate?.Invoke(context, receipt) ?? receipt);
+            receipt = mutate?.Invoke(context, receipt) ?? receipt;
+            var authorization = new EconomyProtectedOperationAuthorization(
+                receipt.TenantId,
+                receipt.ActorId,
+                receipt.JurisdictionCode,
+                receipt.RiskDecisionId,
+                receipt.OperationFingerprint,
+                receipt);
+            return await operation(authorization, cancellationToken);
         }
     }
 

@@ -12,10 +12,8 @@ namespace GameGuild.Economy.Treasury;
 
 public sealed record DurableAdminWithdrawalReservationRequest(
     AdminWithdrawalRun Run,
-    string SubjectReference,
     string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
+    string ReauthenticationEvidenceHash,
     string ProviderHash);
 
 public sealed record DurableAdminWithdrawalApprovalRequest(
@@ -31,15 +29,12 @@ public sealed record DurableAdminWithdrawalDispatchRequest(
     long ExpectedVersion,
     long FencingToken,
     long ExecutionEpoch,
-    string DispatchSnapshotHash,
     DateTimeOffset OccurredAt,
     Guid DispatchedBy,
-    string SubjectReference,
     string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
+    string ReauthenticationEvidenceHash,
     string ProviderHash,
-    IReadOnlyList<string> SourceRootHashes);
+    IReadOnlyList<SourceStampId> SourceRoots);
 
 public sealed record DurableAdminWithdrawalProviderEventRequest(
     AdminWithdrawalProviderEvent ProviderEvent);
@@ -54,6 +49,8 @@ public sealed record AdminWithdrawalAuthorizationSnapshot(
     long ReserveVersion,
     long KillSwitchEpoch,
     Guid RiskDecisionId,
+    string OperationFingerprintHash,
+    string ReauthenticationEvidenceHash,
     string ReceiptHash,
     IReadOnlyList<string> SourceRootHashes,
     IReadOnlyList<string> EvidenceHashes);
@@ -75,7 +72,7 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
     IAdminWithdrawalStore operations,
     IAdminWithdrawalAuditTrail audit,
     IFifoFragmentReservationGateway reservations,
-    IEconomyCapabilityAuthorizationService capabilityAuthorization,
+    IEconomyProtectedOperationOrchestrator orchestrator,
     IRegisteredPostingCapabilityResolver capabilityResolver,
     IRegisteredPostingGateway postings,
     IProviderEvidencePostingAuthorityIssuer providerAuthority,
@@ -95,7 +92,7 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
         if (replay is not null)
             return replay;
         return await PostgreSqlTransactionExecutor.ExecuteAsync(
-            dbContext, IsolationLevel.ReadCommitted, async _ =>
+            dbContext, IsolationLevel.Serializable, async transactionToken =>
         {
             replay = operations.FindReplay(request.Run.TenantId, request.Run.IdempotencyKey.Value, request.Run.RequestHash);
             if (replay is not null)
@@ -115,66 +112,65 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
             if (fragments.Sum(fragment => fragment.Amount.Units) != request.Run.Amount.Units)
                 throw new AdminWithdrawalEligibilityException("Administrative withdrawal FIFO reservations do not match the requested amount.");
 
-            var receipt = await capabilityAuthorization.AuthorizeAndConsumeAsync(
-                new EconomyCapabilityEvaluationContext(
-                    request.Run.TenantId,
-                    request.Run.RequestedBy,
-                    request.SubjectReference.Trim(),
-                    request.JurisdictionCode.Trim().ToUpperInvariant(),
-                    EconomyValueMovementCapability.AdminWithdrawalExecution,
-                    request.RiskDecisionId,
-                    request.OperationFingerprint.Trim(),
-                    request.ProviderHash.Trim(),
-                    request.Run.DestinationHash,
-                    fragments.Select(fragment => Hash(fragment.RootSourceStampId.Value.ToString("N")))
-                        .Distinct(StringComparer.Ordinal)
-                        .Order(StringComparer.Ordinal)
-                        .ToArray(),
-                    request.Run.CreatedAt),
-                cancellationToken).ConfigureAwait(false);
-            if (receipt.TenantId != request.Run.TenantId || receipt.ActorId != request.Run.RequestedBy ||
-                receipt.PolicyVersion != request.Run.PolicyVersion.Value ||
-                receipt.ReserveVersion != request.Run.ReserveVersion.Value)
-                throw new AdminWithdrawalEligibilityException(
-                    "The Treasury capability receipt does not match the durable withdrawal snapshot.");
-            var authority = await capabilityResolver.ResolveAuthorityAsync(
-                ReservationCapabilityName,
+            var sourceRoots = fragments.Select(fragment => fragment.RootSourceStampId)
+                .Distinct().OrderBy(root => root.Value).ToArray();
+            var intent = new EconomyProtectedOperationIntent(
+                EconomyValueMovementCapability.AdminWithdrawalExecution,
                 PostingTemplateKind.AdminWithdrawalReservation,
-                receipt,
-                cancellationToken).ConfigureAwait(false);
-            if (authority.TenantId != request.Run.TenantId || authority.ActorId != request.Run.RequestedBy)
-                throw new AdminWithdrawalEligibilityException(
-                    "The registered posting authority does not match the Treasury withdrawal actor and tenant.");
-
-            postings.Post(new RegisteredPostingRequest(
-                authority,
-                CreateReservationPosting(request.Run),
-                fragments.Select(fragment => new RegisteredPostingAllocation(
-                    1,
-                    fragment.ParentLotId,
-                    fragment.Amount.Units,
-                    [fragment.Range]))
-                    .ToArray()));
-            audit.Append(
-                request.Run.TenantId,
-                request.Run.Id,
-                "reserved",
-                request.Run.RequestedBy,
-                JsonSerializer.Serialize(new AdminWithdrawalAuthorizationSnapshot(
-                    request.Run.RequestHash,
-                    receipt.SubjectReference,
-                    receipt.JurisdictionCode,
-                    receipt.ProviderHash,
-                    receipt.DestinationHash,
-                    receipt.PolicyVersion,
-                    receipt.ReserveVersion,
-                    receipt.KillSwitchEpoch,
-                    receipt.RiskDecisionId,
-                    receipt.ReceiptHash,
-                    receipt.SourceRootHashes,
-                    receipt.EvidenceHashes)),
+                request.Run.PlatformFeeWalletId,
+                request.Run.PlatformFeeWalletId,
+                request.Run.Amount,
+                [new RiskCurrencyLeg(request.Run.Amount.Currency, request.Run.Amount.Units)],
+                sourceRoots,
+                request.ProviderHash.Trim(),
+                request.Run.DestinationHash,
+                request.Run.IdempotencyKey,
                 request.Run.CreatedAt);
-            return request.Run;
+            return await orchestrator.ExecuteAsync(intent, async (authorization, operationToken) =>
+            {
+                var receipt = authorization.Receipt;
+                ValidateReservationAuthorization(request, authorization, sourceRoots);
+                var authority = await capabilityResolver.ResolveAuthorityAsync(
+                    ReservationCapabilityName,
+                    PostingTemplateKind.AdminWithdrawalReservation,
+                    receipt,
+                    operationToken).ConfigureAwait(false);
+                if (authority.TenantId != request.Run.TenantId || authority.ActorId != request.Run.RequestedBy)
+                    throw new AdminWithdrawalEligibilityException(
+                        "The registered posting authority does not match the Treasury withdrawal actor and tenant.");
+
+                postings.Post(new RegisteredPostingRequest(
+                    authority,
+                    CreateReservationPosting(request.Run),
+                    fragments.Select(fragment => new RegisteredPostingAllocation(
+                        1,
+                        fragment.ParentLotId,
+                        fragment.Amount.Units,
+                        [fragment.Range]))
+                        .ToArray()));
+                audit.Append(
+                    request.Run.TenantId,
+                    request.Run.Id,
+                    "reserved",
+                    request.Run.RequestedBy,
+                    JsonSerializer.Serialize(new AdminWithdrawalAuthorizationSnapshot(
+                        request.Run.RequestHash,
+                        receipt.SubjectReference,
+                        receipt.JurisdictionCode,
+                        receipt.ProviderHash,
+                        receipt.DestinationHash,
+                        receipt.PolicyVersion,
+                        receipt.ReserveVersion,
+                        receipt.KillSwitchEpoch,
+                        authorization.RiskDecisionId,
+                        Hash(authorization.OperationFingerprint),
+                        request.ReauthenticationEvidenceHash.Trim(),
+                        receipt.ReceiptHash,
+                        receipt.SourceRootHashes,
+                        receipt.EvidenceHashes)),
+                    request.Run.CreatedAt);
+                return request.Run;
+            }, transactionToken).ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
     }
 
@@ -184,7 +180,7 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
     {
         ValidateApprovalRequest(request);
         return await PostgreSqlTransactionExecutor.ExecuteAsync(
-            dbContext, IsolationLevel.ReadCommitted, async _ =>
+            dbContext, IsolationLevel.Serializable, async transactionToken =>
         {
             var run = operations.Get(request.TenantId, request.RunId);
             if (run.State == AdminWithdrawalRunState.Approved &&
@@ -217,11 +213,11 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
     {
         ValidateDispatchRequest(request);
         return await PostgreSqlTransactionExecutor.ExecuteAsync(
-            dbContext, IsolationLevel.ReadCommitted, async _ =>
+            dbContext, IsolationLevel.Serializable, async transactionToken =>
         {
             var run = operations.Get(request.TenantId, request.RunId);
-            if (run.State == AdminWithdrawalRunState.Dispatching && run.Version == checked(request.ExpectedVersion + 1) &&
-                string.Equals(run.DispatchSnapshotHash, request.DispatchSnapshotHash.Trim(), StringComparison.Ordinal))
+            if (run.State == AdminWithdrawalRunState.Dispatching &&
+                run.Version == checked(request.ExpectedVersion + 1))
                 return run;
             if (run.State != AdminWithdrawalRunState.Approved || run.Version != request.ExpectedVersion ||
                 run.FencingToken != request.FencingToken || run.ExecutionEpoch != request.ExecutionEpoch ||
@@ -230,78 +226,86 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
             if (run.ApprovedBy.Value == run.RequestedBy)
                 throw new AdminWithdrawalStaleCommandException("Admin withdrawal dispatch command is stale, unapproved, or fenced.");
 
-            var receipt = await capabilityAuthorization.AuthorizeAndConsumeAsync(
-                new EconomyCapabilityEvaluationContext(
-                    run.TenantId,
-                    request.DispatchedBy,
-                    request.SubjectReference.Trim(),
-                    request.JurisdictionCode.Trim().ToUpperInvariant(),
-                    EconomyValueMovementCapability.AdminWithdrawalExecution,
-                    request.RiskDecisionId,
-                    request.OperationFingerprint.Trim(),
-                    request.ProviderHash.Trim(),
-                    run.DestinationHash,
-                    request.SourceRootHashes,
-                    request.OccurredAt),
-                cancellationToken).ConfigureAwait(false);
-            if (receipt.TenantId != run.TenantId || receipt.ActorId != request.DispatchedBy ||
-                receipt.PolicyVersion != run.PolicyVersion.Value ||
-                receipt.ReserveVersion != run.ReserveVersion.Value ||
-                receipt.RiskDecisionId != request.RiskDecisionId ||
-                !string.Equals(receipt.ProviderHash, request.ProviderHash.Trim(), StringComparison.Ordinal) ||
-                !string.Equals(receipt.DestinationHash, run.DestinationHash, StringComparison.Ordinal) ||
-                !receipt.SourceRootHashes.SequenceEqual(request.SourceRootHashes, StringComparer.Ordinal))
-                throw new AdminWithdrawalStaleCommandException(
-                    "The dispatch capability receipt is not bound to the durable withdrawal snapshot.");
-
-            var dispatching = run with
-            {
-                State = AdminWithdrawalRunState.Dispatching,
-                Version = checked(run.Version + 1),
-                DispatchSnapshotHash = request.DispatchSnapshotHash.Trim(),
-                UpdatedAt = request.OccurredAt
-            };
-            operations.Update(dispatching, run.Version);
-            var transitioned = reservations.Transition(
-                run.Id,
-                PersistedFragmentReservationStatus.Reserved,
-                PersistedFragmentReservationStatus.Dispatching,
-                request.OccurredAt);
-            if (transitioned <= 0)
-                throw new AdminWithdrawalStaleCommandException(
-                    "Administrative withdrawal fragments are no longer reserved for dispatch.");
-            var command = new AdminWithdrawalDispatchCommand(
-                run.Id,
-                run.TenantId,
-                dispatching.Version,
-                run.FencingToken,
-                run.ExecutionEpoch,
+            var intent = new EconomyProtectedOperationIntent(
+                EconomyValueMovementCapability.AdminWithdrawalExecution,
+                PostingTemplateKind.AdminWithdrawalSuccess,
+                run.PlatformFeeWalletId,
+                run.PlatformFeeWalletId,
                 run.Amount,
-                run.SourceAssetKey,
+                [new RiskCurrencyLeg(run.Amount.Currency, run.Amount.Units)],
+                request.SourceRoots,
+                request.ProviderHash.Trim(),
                 run.DestinationHash,
-                dispatching.DispatchSnapshotHash!,
-                run.IdempotencyKey.Value + ":dispatch",
+                new IdempotencyKey(run.IdempotencyKey.Value + ":dispatch"),
                 request.OccurredAt);
-            var payload = JsonSerializer.Serialize(command);
-            await dispatchOutbox.AddAsync(new AdminWithdrawalDispatchOutboxRow
+            return await orchestrator.ExecuteAsync(intent, async (authorization, operationToken) =>
             {
-                Id = DeterministicGuid(run.Id, "dispatch-outbox"),
-                RunId = run.Id,
-                TenantId = run.TenantId,
-                IdempotencyKey = command.IdempotencyKey,
-                Payload = payload,
-                PayloadHash = Hash(payload),
-                CreatedAt = request.OccurredAt,
-                AvailableAt = request.OccurredAt
-            }, cancellationToken).ConfigureAwait(false);
-            audit.Append(
-                run.TenantId,
-                run.Id,
-                "dispatching",
-                request.DispatchedBy,
-                Hash(string.Join('|', dispatching.DispatchSnapshotHash, receipt.ReceiptHash)),
-                request.OccurredAt);
-            return dispatching;
+                var receipt = authorization.Receipt;
+                ValidateDispatchAuthorization(run, request, authorization);
+                var rootHashes = request.SourceRoots
+                    .Select(root => Hash(root.Value.ToString("N"))).ToArray();
+                var dispatchSnapshotHash = Hash(string.Join('|',
+                    run.TenantId.ToString("N"),
+                    run.Id.ToString("N"),
+                    run.Version.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    run.FencingToken.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    run.ExecutionEpoch.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    run.RequestHash,
+                    run.DestinationHash,
+                    authorization.RiskDecisionId.ToString("N"),
+                    authorization.OperationFingerprint,
+                    request.ReauthenticationEvidenceHash.Trim(),
+                    request.ProviderHash.Trim(),
+                    string.Join(',', rootHashes)));
+                var dispatching = run with
+                {
+                    State = AdminWithdrawalRunState.Dispatching,
+                    Version = checked(run.Version + 1),
+                    DispatchSnapshotHash = dispatchSnapshotHash,
+                    UpdatedAt = request.OccurredAt
+                };
+                operations.Update(dispatching, run.Version);
+                var transitioned = reservations.Transition(
+                    run.Id,
+                    PersistedFragmentReservationStatus.Reserved,
+                    PersistedFragmentReservationStatus.Dispatching,
+                    request.OccurredAt);
+                if (transitioned <= 0)
+                    throw new AdminWithdrawalStaleCommandException(
+                        "Administrative withdrawal fragments are no longer reserved for dispatch.");
+                var command = new AdminWithdrawalDispatchCommand(
+                    run.Id,
+                    run.TenantId,
+                    dispatching.Version,
+                    run.FencingToken,
+                    run.ExecutionEpoch,
+                    run.Amount,
+                    run.SourceAssetKey,
+                    run.DestinationHash,
+                    dispatchSnapshotHash,
+                    run.IdempotencyKey.Value + ":dispatch",
+                    request.OccurredAt);
+                var payload = JsonSerializer.Serialize(command);
+                await dispatchOutbox.AddAsync(new AdminWithdrawalDispatchOutboxRow
+                {
+                    Id = DeterministicGuid(run.Id, "dispatch-outbox"),
+                    RunId = run.Id,
+                    TenantId = run.TenantId,
+                    IdempotencyKey = command.IdempotencyKey,
+                    Payload = payload,
+                    PayloadHash = Hash(payload),
+                    CreatedAt = request.OccurredAt,
+                    AvailableAt = request.OccurredAt
+                }, operationToken).ConfigureAwait(false);
+                audit.Append(
+                    run.TenantId,
+                    run.Id,
+                    "dispatching",
+                    request.DispatchedBy,
+                    Hash(string.Join('|', dispatchSnapshotHash, receipt.ReceiptHash)),
+                    request.OccurredAt);
+                return dispatching;
+            }, transactionToken).ConfigureAwait(false);
         }, cancellationToken).ConfigureAwait(false);
     }
 
@@ -444,12 +448,39 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
 
     private static void ValidateReservationAuthorization(DurableAdminWithdrawalReservationRequest request)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.SubjectReference);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.JurisdictionCode);
-        if (request.RiskDecisionId == Guid.Empty)
-            throw new ArgumentException("Risk decision ID is required.", nameof(request));
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.OperationFingerprint);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.ReauthenticationEvidenceHash);
+        if (request.ReauthenticationEvidenceHash.Trim().Length != 64)
+            throw new ArgumentException(
+                "Treasury reauthentication evidence hashes must contain 64 characters.", nameof(request));
         ArgumentException.ThrowIfNullOrWhiteSpace(request.ProviderHash);
+    }
+
+    private static void ValidateReservationAuthorization(
+        DurableAdminWithdrawalReservationRequest request,
+        EconomyProtectedOperationAuthorization authorization,
+        IReadOnlyList<SourceStampId> sourceRoots)
+    {
+        var run = request.Run;
+        var receipt = authorization.Receipt;
+        var rootHashes = sourceRoots.Select(root => Hash(root.Value.ToString("N"))).ToArray();
+        if (authorization.TenantId != run.TenantId || authorization.ActorId != run.RequestedBy ||
+            !string.Equals(authorization.JurisdictionCode, request.JurisdictionCode.Trim(),
+                StringComparison.Ordinal) ||
+            receipt.TenantId != run.TenantId || receipt.ActorId != run.RequestedBy ||
+            !string.Equals(receipt.SubjectReference,
+                EconomySubjectReference.ForUser(run.TenantId, run.RequestedBy),
+                StringComparison.Ordinal) ||
+            !string.Equals(receipt.JurisdictionCode, authorization.JurisdictionCode,
+                StringComparison.Ordinal) ||
+            receipt.RiskDecisionId != authorization.RiskDecisionId ||
+            receipt.PolicyVersion != run.PolicyVersion.Value ||
+            receipt.ReserveVersion != run.ReserveVersion.Value ||
+            !string.Equals(receipt.ProviderHash, request.ProviderHash.Trim(), StringComparison.Ordinal) ||
+            !string.Equals(receipt.DestinationHash, run.DestinationHash, StringComparison.Ordinal) ||
+            !receipt.SourceRootHashes.SequenceEqual(rootHashes, StringComparer.Ordinal))
+            throw new AdminWithdrawalEligibilityException(
+                "The Treasury capability receipt does not match the durable withdrawal snapshot.");
     }
 
     private static void ValidateApprovalRequest(DurableAdminWithdrawalApprovalRequest request)
@@ -463,24 +494,46 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
     private static void ValidateDispatchRequest(DurableAdminWithdrawalDispatchRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (request.TenantId == Guid.Empty || request.RunId == Guid.Empty ||
-            request.DispatchedBy == Guid.Empty || request.RiskDecisionId == Guid.Empty)
+        if (request.TenantId == Guid.Empty || request.RunId == Guid.Empty || request.DispatchedBy == Guid.Empty)
             throw new ArgumentException(
-                "Withdrawal tenant, run, dispatcher, and risk decision IDs are required.", nameof(request));
+                "Withdrawal tenant, run, and dispatcher IDs are required.", nameof(request));
         if (request.ExpectedVersion <= 0 || request.FencingToken <= 0 || request.ExecutionEpoch <= 0)
             throw new ArgumentOutOfRangeException(nameof(request), "Administrative withdrawal control versions must be positive.");
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.DispatchSnapshotHash);
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.SubjectReference);
         ArgumentException.ThrowIfNullOrWhiteSpace(request.JurisdictionCode);
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.OperationFingerprint);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.ReauthenticationEvidenceHash);
+        if (request.ReauthenticationEvidenceHash.Trim().Length != 64)
+            throw new ArgumentException(
+                "Treasury reauthentication evidence hashes must contain 64 characters.", nameof(request));
         ArgumentException.ThrowIfNullOrWhiteSpace(request.ProviderHash);
-        ArgumentNullException.ThrowIfNull(request.SourceRootHashes);
-        if (request.SourceRootHashes.Count == 0 ||
-            request.SourceRootHashes.Any(string.IsNullOrWhiteSpace) ||
-            request.SourceRootHashes.Distinct(StringComparer.Ordinal).Count() != request.SourceRootHashes.Count)
-            throw new ArgumentException("Dispatch requires distinct source-root evidence hashes.", nameof(request));
-        if (request.DispatchSnapshotHash.Trim().Length > 128)
-            throw new ArgumentException("Dispatch snapshot hashes cannot exceed 128 characters.", nameof(request));
+        ArgumentNullException.ThrowIfNull(request.SourceRoots);
+        if (request.SourceRoots.Count == 0 || request.SourceRoots.Distinct().Count() != request.SourceRoots.Count)
+            throw new ArgumentException("Dispatch requires distinct source roots.", nameof(request));
+    }
+
+    private static void ValidateDispatchAuthorization(
+        AdminWithdrawalRun run,
+        DurableAdminWithdrawalDispatchRequest request,
+        EconomyProtectedOperationAuthorization authorization)
+    {
+        var receipt = authorization.Receipt;
+        var rootHashes = request.SourceRoots.Select(root => Hash(root.Value.ToString("N"))).ToArray();
+        if (authorization.TenantId != run.TenantId || authorization.ActorId != request.DispatchedBy ||
+            !string.Equals(authorization.JurisdictionCode, request.JurisdictionCode.Trim(),
+                StringComparison.Ordinal) ||
+            receipt.TenantId != run.TenantId || receipt.ActorId != request.DispatchedBy ||
+            !string.Equals(receipt.SubjectReference,
+                EconomySubjectReference.ForUser(run.TenantId, request.DispatchedBy),
+                StringComparison.Ordinal) ||
+            !string.Equals(receipt.JurisdictionCode, authorization.JurisdictionCode,
+                StringComparison.Ordinal) ||
+            receipt.PolicyVersion != run.PolicyVersion.Value ||
+            receipt.ReserveVersion != run.ReserveVersion.Value ||
+            receipt.RiskDecisionId != authorization.RiskDecisionId ||
+            !string.Equals(receipt.ProviderHash, request.ProviderHash.Trim(), StringComparison.Ordinal) ||
+            !string.Equals(receipt.DestinationHash, run.DestinationHash, StringComparison.Ordinal) ||
+            !receipt.SourceRootHashes.SequenceEqual(rootHashes, StringComparer.Ordinal))
+            throw new AdminWithdrawalStaleCommandException(
+                "The dispatch capability receipt is not bound to the durable withdrawal snapshot.");
     }
 
     private static void ValidateProviderEventShape(AdminWithdrawalProviderEvent providerEvent)
