@@ -9,6 +9,7 @@ using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Persistence;
 using GameGuild.Economy.Risk;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Economy.AdRewards;
@@ -21,7 +22,9 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
     private readonly IDurableAdRewardPolicyReader _policies;
     private readonly IAdRewardSessionTokenProtector _tokens;
     private readonly IAdRewardProviderAdapterResolver _providerAdapters;
-    private readonly IEconomyCapabilityAuthorizationService _capabilities;
+    private readonly IActorContextAccessor _actorContexts;
+    private readonly IEconomyJurisdictionResolver _jurisdictions;
+    private readonly IEconomyProtectedOperationOrchestrator _orchestrator;
     private readonly IRegisteredPostingCapabilityResolver _postingAuthority;
     private readonly IAdRewardIssuanceGateway _issuance;
 
@@ -30,7 +33,9 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         IDurableAdRewardPolicyReader policies,
         IAdRewardSessionTokenProtector tokens,
         IAdRewardProviderAdapterResolver providerAdapters,
-        IEconomyCapabilityAuthorizationService capabilities,
+        IActorContextAccessor actorContexts,
+        IEconomyJurisdictionResolver jurisdictions,
+        IEconomyProtectedOperationOrchestrator orchestrator,
         IRegisteredPostingCapabilityResolver postingAuthority,
         IAdRewardIssuanceGateway issuance)
     {
@@ -38,7 +43,9 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         ArgumentNullException.ThrowIfNull(policies);
         ArgumentNullException.ThrowIfNull(tokens);
         ArgumentNullException.ThrowIfNull(providerAdapters);
-        ArgumentNullException.ThrowIfNull(capabilities);
+        ArgumentNullException.ThrowIfNull(actorContexts);
+        ArgumentNullException.ThrowIfNull(jurisdictions);
+        ArgumentNullException.ThrowIfNull(orchestrator);
         ArgumentNullException.ThrowIfNull(postingAuthority);
         ArgumentNullException.ThrowIfNull(issuance);
         _db = context as DbContext
@@ -47,7 +54,9 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         _policies = policies;
         _tokens = tokens;
         _providerAdapters = providerAdapters;
-        _capabilities = capabilities;
+        _actorContexts = actorContexts;
+        _jurisdictions = jurisdictions;
+        _orchestrator = orchestrator;
         _postingAuthority = postingAuthority;
         _issuance = issuance;
     }
@@ -57,8 +66,9 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         CancellationToken cancellationToken = default)
     {
         ValidateRequest(request);
+        var actor = RequiredActor();
         var claims = await _tokens.UnprotectAsync(request.Token, request.CompletedAt, cancellationToken);
-        EnsureActorScope(request, claims);
+        EnsureActorScope(actor, claims);
         var policy = await _policies.GetVersionAsync(
             claims.TenantId, claims.Network, claims.PolicyVersion, cancellationToken);
         if (!policy.Policy.IsEffective(request.CompletedAt) || !policy.Policy.IsReportCurrent(request.CompletedAt) ||
@@ -144,64 +154,73 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         var sourceStampId = new SourceStampId(DeterministicId(claims.SessionId, "source"));
         var postingId = new PostingId(DeterministicId(claims.SessionId, "posting"));
         var outputLotId = new CreditLotId(DeterministicId(claims.SessionId, "lot"));
-        var sourceRootHash = Hash(sourceStampId.Value.ToString("N"));
         var destinationHash = Hash(claims.WalletId.Value.ToString("N"));
-        ValidateMovementAuthorization(request);
-        var authorizationContext = new EconomyCapabilityEvaluationContext(
-            request.TenantId,
-            request.ActorId,
-            request.SubjectReference.Trim(),
-            request.JurisdictionCode.Trim().ToUpperInvariant(),
+        var jurisdiction = await _jurisdictions.ResolveAsync(
+            actor.TenantId,
+            actor.ActorId,
+            null,
+            null,
+            request.CompletedAt,
+            cancellationToken);
+        var intent = new EconomyProtectedOperationIntent(
             EconomyValueMovementCapability.IssueAdReward,
-            request.RiskDecisionId,
-            request.OperationFingerprint.Trim(),
+            PostingTemplateKind.AdRewardIssuance,
+            claims.WalletId,
+            claims.WalletId,
+            new CoinAmount(CurrencyCode.SoftCoin, quote.RewardSoftUnits),
+            [new RiskCurrencyLeg(CurrencyCode.SoftCoin, quote.RewardSoftUnits)],
+            [sourceStampId],
             policy.ProviderHash,
             destinationHash,
-            [sourceRootHash],
-            request.CompletedAt);
-        var receipt = await _capabilities.AuthorizeAndConsumeAsync(
-            authorizationContext, cancellationToken);
-        var authority = await _postingAuthority.ResolveAuthorityAsync(
-            RegisteredCapabilityName,
-            PostingTemplateKind.AdRewardIssuance,
-            receipt,
-            cancellationToken);
-        var posting = _issuance.Issue(new PersistedAdRewardIssuanceRequest(
-            authority,
-            postingId,
             request.IdempotencyKey,
-            sourceStampId,
-            outputLotId,
-            claims.WalletId,
-            quote.RewardSoftUnits,
-            new PolicyVersion(receipt.PolicyVersion),
-            new ReserveVersion(receipt.ReserveVersion),
-            claims.Network,
-            proof.ProviderEventId,
-            proofVerification!.EvidenceHash,
             request.CompletedAt,
-            receipt.ReceiptHash));
-        if (posting.PostingId != postingId)
-            throw new RegisteredPostingRejectedException(
-                "The ad reward writer returned an unexpected posting identity.");
+            DestinationJurisdictionCode: jurisdiction.JurisdictionCode);
+        return await _orchestrator.ExecuteAsync(intent, async (authorization, token) =>
+        {
+            EnsureAuthorization(authorization, actor, jurisdiction, policy);
+            var receipt = authorization.Receipt;
+            var authority = await _postingAuthority.ResolveAuthorityAsync(
+                RegisteredCapabilityName,
+                PostingTemplateKind.AdRewardIssuance,
+                receipt,
+                token);
+            var posting = _issuance.Issue(new PersistedAdRewardIssuanceRequest(
+                authority,
+                postingId,
+                request.IdempotencyKey,
+                sourceStampId,
+                outputLotId,
+                claims.WalletId,
+                quote.RewardSoftUnits,
+                new PolicyVersion(receipt.PolicyVersion),
+                new ReserveVersion(receipt.ReserveVersion),
+                claims.Network,
+                proof.ProviderEventId,
+                proofVerification!.EvidenceHash,
+                request.CompletedAt,
+                receipt.ReceiptHash));
+            if (posting.PostingId != postingId)
+                throw new RegisteredPostingRejectedException(
+                    "The ad reward writer returned an unexpected posting identity.");
 
-        UpsertAccumulator(accumulator, claims, quote, request.CompletedAt);
-        RecordBudgetConsumption(claims, quote.RewardSoftUnits, request.CompletedAt);
-        RecordAttribution(claims, quote, request.CompletedAt);
-        var completion = RecordCompletion(
-            session,
-            request,
-            claims,
-            quote,
-            idempotencyHash,
-            proof.ProviderEventId,
-            postingId,
-            outputLotId,
-            receipt,
-            DurableAdRewardSessionState.Posted,
-            AdRewardCompletionState.Issued);
-        await _db.SaveChangesAsync(cancellationToken);
-        return Map(completion, posting.IsDuplicate);
+            UpsertAccumulator(accumulator, claims, quote, request.CompletedAt);
+            RecordBudgetConsumption(claims, quote.RewardSoftUnits, request.CompletedAt);
+            RecordAttribution(claims, quote, request.CompletedAt);
+            var completion = RecordCompletion(
+                session,
+                request,
+                claims,
+                quote,
+                idempotencyHash,
+                proof.ProviderEventId,
+                postingId,
+                outputLotId,
+                receipt,
+                DurableAdRewardSessionState.Posted,
+                AdRewardCompletionState.Issued);
+            await _db.SaveChangesAsync(token);
+            return Map(completion, posting.IsDuplicate);
+        }, cancellationToken);
         }, cancellationToken);
     }
 
@@ -450,12 +469,36 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
     }
 
     private static void EnsureActorScope(
-        CompleteDurableAdRewardSessionRequest request,
+        ProtectedActor actor,
         DurableAdRewardSessionClaims claims)
     {
-        if (request.TenantId != claims.TenantId || request.ActorId != claims.UserId)
+        if (actor.TenantId != claims.TenantId || actor.ActorId != claims.UserId)
             throw new AdRewardRiskBindingException(
                 "The actor context does not own the durable ad reward session.");
+    }
+
+    private ProtectedActor RequiredActor()
+    {
+        var actor = _actorContexts.ActorContext;
+        if (!actor.IsAuthenticated || actor.TenantId is not { } tenantId ||
+            actor.SubjectIdAsGuid is not { } actorId)
+            throw new UnauthorizedAccessException(
+                "Ad reward completion requires an authenticated tenant actor.");
+        return new ProtectedActor(tenantId, actorId);
+    }
+
+    private static void EnsureAuthorization(
+        EconomyProtectedOperationAuthorization authorization,
+        ProtectedActor actor,
+        EconomyJurisdictionResolution jurisdiction,
+        AdRewardNetworkPolicySnapshot policy)
+    {
+        if (authorization.TenantId != actor.TenantId || authorization.ActorId != actor.ActorId ||
+            authorization.JurisdictionCode != jurisdiction.JurisdictionCode ||
+            authorization.Receipt.PolicyVersion != policy.Policy.Version.Value ||
+            authorization.Receipt.ProviderHash != policy.ProviderHash)
+            throw new AdRewardRiskBindingException(
+                "The protected operation authorization does not match the ad reward policy.");
     }
 
     private static void ValidatePlayback(
@@ -483,17 +526,6 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
     private static void ValidateRequest(CompleteDurableAdRewardSessionRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (request.TenantId == Guid.Empty || request.ActorId == Guid.Empty)
-            throw new ArgumentException("Tenant and actor IDs are required.", nameof(request));
-    }
-
-    private static void ValidateMovementAuthorization(CompleteDurableAdRewardSessionRequest request)
-    {
-        if (request.RiskDecisionId == Guid.Empty)
-            throw new ArgumentException("Risk decision ID is required for issuance.", nameof(request));
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.SubjectReference);
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.JurisdictionCode);
-        ArgumentException.ThrowIfNullOrWhiteSpace(request.OperationFingerprint);
     }
 
     private static string CompletionRequestHash(
@@ -534,4 +566,6 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
 
     private static string Hash(string value) => Convert.ToHexStringLower(
         SHA256.HashData(Encoding.UTF8.GetBytes(value)));
+
+    private sealed record ProtectedActor(Guid TenantId, Guid ActorId);
 }

@@ -58,16 +58,10 @@ public sealed record DurableAdRewardSessionResult(
     bool IsDuplicate);
 
 public sealed record CompleteDurableAdRewardSessionRequest(
-    Guid TenantId,
-    Guid ActorId,
-    string SubjectReference,
-    string JurisdictionCode,
     SignedAdRewardSession Token,
     AdPlaybackEvidence Playback,
     ProviderCompletionProof? ProviderProof,
     IdempotencyKey IdempotencyKey,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     DateTimeOffset CompletedAt);
 
 public sealed record DurableAdRewardCompletionResult(

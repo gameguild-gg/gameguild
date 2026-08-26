@@ -4,6 +4,7 @@ using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Risk;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -14,6 +15,15 @@ namespace GameGuild.Economy.AdRewards.UnitTests;
 public sealed class DurableAdRewardCompletionServiceTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 25, 14, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void CompletionRequestExposesOnlyPlaybackIntent()
+    {
+        typeof(CompleteDurableAdRewardSessionRequest).GetProperties().Select(property => property.Name)
+            .Should().BeEquivalentTo([
+                "Token", "Playback", "ProviderProof", "IdempotencyKey", "CompletedAt"
+            ]);
+    }
 
     [Fact]
     public async Task ImmediateCompletion_PersistsProofCapsPostingAttributionAndExactReplay()
@@ -57,16 +67,16 @@ public sealed class DurableAdRewardCompletionServiceTests
     public async Task ImmediateCompletion_AccumulatesRemainderWithoutAuthorizingMovement()
     {
         await using var fixture = await Fixture.CreateAsync("ad_complete_remainder");
-        var capabilities = new Capabilities();
+        var orchestrator = new ProtectedOperationOrchestrator(fixture.Claims);
         var issuance = new Issuance();
-        var service = fixture.Service(Policy(ecpm: 1), capabilities: capabilities, issuance: issuance);
+        var service = fixture.Service(Policy(ecpm: 1), orchestrator: orchestrator, issuance: issuance);
 
         var result = await service.CompleteAsync(fixture.Request());
 
         result.State.Should().Be(AdRewardCompletionState.AccumulatedRemainder);
         result.RewardSoftUnits.Should().Be(0);
         result.PostingId.Should().BeNull();
-        capabilities.Requests.Should().BeEmpty();
+        orchestrator.Intents.Should().BeEmpty();
         issuance.Requests.Should().BeEmpty();
         (await fixture.Context.Set<AdRewardCapConsumptionRow>().CountAsync()).Should().Be(0);
         (await fixture.Context.Set<AdRewardAccumulatorRow>().SingleAsync()).RemainderNumerator
@@ -98,11 +108,11 @@ public sealed class DurableAdRewardCompletionServiceTests
     public async Task DeferredCompletion_RecordsPendingClaimWithoutCapabilityOrPosting()
     {
         await using var fixture = await Fixture.CreateAsync("ad_complete_deferred");
-        var capabilities = new Capabilities();
+        var orchestrator = new ProtectedOperationOrchestrator(fixture.Claims);
         var issuance = new Issuance();
         var service = fixture.Service(
             Policy(issuanceMode: AdRewardIssuanceMode.DeferredReport),
-            capabilities: capabilities,
+            orchestrator: orchestrator,
             issuance: issuance);
         var request = fixture.Request() with { ProviderProof = null };
 
@@ -110,7 +120,7 @@ public sealed class DurableAdRewardCompletionServiceTests
 
         result.State.Should().Be(AdRewardCompletionState.PendingProviderReport);
         result.RewardSoftUnits.Should().Be(0);
-        capabilities.Requests.Should().BeEmpty();
+        orchestrator.Intents.Should().BeEmpty();
         issuance.Requests.Should().BeEmpty();
         (await fixture.Context.Set<AdRewardPendingClaimRow>().SingleAsync()).ProviderReportId.Should().BeNull();
         (await fixture.Context.Set<AdRewardSessionRow>().SingleAsync()).State
@@ -165,12 +175,11 @@ public sealed class DurableAdRewardCompletionServiceTests
     public async Task Completion_RequiresTheTenantActorToOwnTheSignedSession(string scenario)
     {
         await using var fixture = await Fixture.CreateAsync("ad_complete_scope");
-        var request = fixture.Request();
-        request = scenario == "tenant"
-            ? request with { TenantId = Guid.NewGuid() }
-            : request with { ActorId = Guid.NewGuid() };
+        fixture.ActorContexts.SetActorContext(Actor(
+            scenario == "tenant" ? Guid.NewGuid() : fixture.Claims.TenantId,
+            scenario == "actor" ? Guid.NewGuid() : fixture.Claims.UserId));
 
-        await FluentActions.Awaiting(() => fixture.Service(Policy()).CompleteAsync(request).AsTask())
+        await FluentActions.Awaiting(() => fixture.Service(Policy()).CompleteAsync(fixture.Request()).AsTask())
             .Should().ThrowAsync<AdRewardRiskBindingException>();
     }
 
@@ -200,25 +209,15 @@ public sealed class DurableAdRewardCompletionServiceTests
             .Should().ThrowAsync<AdRewardRiskBindingException>();
     }
 
-    [Theory]
-    [InlineData("risk")]
-    [InlineData("subject")]
-    [InlineData("jurisdiction")]
-    [InlineData("fingerprint")]
-    public async Task Issuance_RequiresCompleteMovementAuthorization(string scenario)
+    [Fact]
+    public async Task CompletionRequiresAuthenticatedTenantActor()
     {
         await using var fixture = await Fixture.CreateAsync("ad_complete_auth");
-        var request = fixture.Request();
-        request = scenario switch
-        {
-            "risk" => request with { RiskDecisionId = Guid.Empty },
-            "subject" => request with { SubjectReference = " " },
-            "jurisdiction" => request with { JurisdictionCode = " " },
-            _ => request with { OperationFingerprint = " " }
-        };
+        fixture.ActorContexts.SetActorContext(Actor(
+            fixture.Claims.TenantId, fixture.Claims.UserId, authenticated: false));
 
-        await FluentActions.Awaiting(() => fixture.Service(Policy()).CompleteAsync(request).AsTask())
-            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => fixture.Service(Policy()).CompleteAsync(fixture.Request()).AsTask())
+            .Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
     [Fact]
@@ -273,10 +272,6 @@ public sealed class DurableAdRewardCompletionServiceTests
         var request = fixture.Request();
         await FluentActions.Awaiting(() => service.CompleteAsync(null!).AsTask())
             .Should().ThrowAsync<ArgumentNullException>();
-        await FluentActions.Awaiting(() => service.CompleteAsync(request with { TenantId = Guid.Empty }).AsTask())
-            .Should().ThrowAsync<ArgumentException>();
-        await FluentActions.Awaiting(() => service.CompleteAsync(request with { ActorId = Guid.Empty }).AsTask())
-            .Should().ThrowAsync<ArgumentException>();
         await FluentActions.Awaiting(() => service.CompleteAsync(request with { Playback = null! }).AsTask())
             .Should().ThrowAsync<ArgumentNullException>();
 
@@ -312,22 +307,31 @@ public sealed class DurableAdRewardCompletionServiceTests
         var policy = new Policies(Policy());
         var tokens = new Tokens(new Dictionary<string, DurableAdRewardSessionClaims>());
         var resolver = new AdRewardProviderAdapterResolver([new Adapter("network-a")]);
-        var capabilities = new Capabilities();
+        var actorContexts = new TestActorContextAccessor();
+        var jurisdictions = new JurisdictionResolver();
+        var orchestrator = new ProtectedOperationOrchestrator(new DurableAdRewardSessionClaims(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), WalletId.New(), "network-a", "creative",
+            "device", "ip", "asn", "nonce", TimeSpan.FromSeconds(30), new PolicyVersion(1),
+            Now.AddMinutes(-2), Now.AddMinutes(3)));
         var authority = new Authority();
         var issuance = new Issuance();
 
         Action<IApplicationDbContext, IDurableAdRewardPolicyReader, IAdRewardSessionTokenProtector,
-            IAdRewardProviderAdapterResolver, IEconomyCapabilityAuthorizationService,
-            IRegisteredPostingCapabilityResolver, IAdRewardIssuanceGateway> create =
-            (a, b, c, d, e, f, g) => _ = new DurableAdRewardCompletionService(a, b, c, d, e, f, g);
-        FluentActions.Invoking(() => create(null!, policy, tokens, resolver, capabilities, authority, issuance)).Should().Throw<ArgumentNullException>();
-        FluentActions.Invoking(() => create(context, null!, tokens, resolver, capabilities, authority, issuance)).Should().Throw<ArgumentNullException>();
-        FluentActions.Invoking(() => create(context, policy, null!, resolver, capabilities, authority, issuance)).Should().Throw<ArgumentNullException>();
-        FluentActions.Invoking(() => create(context, policy, tokens, null!, capabilities, authority, issuance)).Should().Throw<ArgumentNullException>();
-        FluentActions.Invoking(() => create(context, policy, tokens, resolver, null!, authority, issuance)).Should().Throw<ArgumentNullException>();
-        FluentActions.Invoking(() => create(context, policy, tokens, resolver, capabilities, null!, issuance)).Should().Throw<ArgumentNullException>();
-        FluentActions.Invoking(() => create(context, policy, tokens, resolver, capabilities, authority, null!)).Should().Throw<ArgumentNullException>();
-        FluentActions.Invoking(() => create(context, policy, tokens, resolver, capabilities, authority, issuance)).Should().Throw<InvalidOperationException>();
+            IAdRewardProviderAdapterResolver, IActorContextAccessor, IEconomyJurisdictionResolver,
+            IEconomyProtectedOperationOrchestrator, IRegisteredPostingCapabilityResolver,
+            IAdRewardIssuanceGateway> create =
+            (a, b, c, d, e, f, g, h, i) =>
+                _ = new DurableAdRewardCompletionService(a, b, c, d, e, f, g, h, i);
+        FluentActions.Invoking(() => create(null!, policy, tokens, resolver, actorContexts, jurisdictions, orchestrator, authority, issuance)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => create(context, null!, tokens, resolver, actorContexts, jurisdictions, orchestrator, authority, issuance)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => create(context, policy, null!, resolver, actorContexts, jurisdictions, orchestrator, authority, issuance)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => create(context, policy, tokens, null!, actorContexts, jurisdictions, orchestrator, authority, issuance)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => create(context, policy, tokens, resolver, null!, jurisdictions, orchestrator, authority, issuance)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => create(context, policy, tokens, resolver, actorContexts, null!, orchestrator, authority, issuance)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => create(context, policy, tokens, resolver, actorContexts, jurisdictions, null!, authority, issuance)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => create(context, policy, tokens, resolver, actorContexts, jurisdictions, orchestrator, null!, issuance)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => create(context, policy, tokens, resolver, actorContexts, jurisdictions, orchestrator, authority, null!)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => create(context, policy, tokens, resolver, actorContexts, jurisdictions, orchestrator, authority, issuance)).Should().Throw<InvalidOperationException>();
     }
 
     private static AdRewardNetworkPolicySnapshot Policy(
@@ -350,6 +354,16 @@ public sealed class DurableAdRewardCompletionServiceTests
                 10_000, 10_000, 10_000, 10_000, 10_000_000_000, TimeSpan.FromDays(1)),
             ipMaximum, asnMaximum, "provider-hash", certified, "payload", "key", "signature");
     }
+
+    private static ActorContext Actor(Guid tenantId, Guid actorId, bool authenticated = true) => new()
+    {
+        ActorKind = ActorKind.User,
+        SubjectId = actorId.ToString(),
+        TenantId = tenantId,
+        Roles = new HashSet<string>(),
+        Permissions = new HashSet<string>(),
+        IsAuthenticated = authenticated
+    };
 
     private static AdRewardSessionRow AuxiliarySession(Guid tenantId) => new()
     {
@@ -381,12 +395,15 @@ public sealed class DurableAdRewardCompletionServiceTests
                 "device", "ip", "asn", "nonce", TimeSpan.FromSeconds(30), new PolicyVersion(1),
                 Now.AddMinutes(-2), Now.AddMinutes(3));
             Token = new SignedAdRewardSession("token-" + Claims.SessionId.ToString("N"));
+            ActorContexts = new TestActorContextAccessor();
+            ActorContexts.SetActorContext(Actor(Claims.TenantId, Claims.UserId));
         }
 
         private EconomyPostgreSqlTestDatabase Database { get; }
         public TestDbContext Context { get; }
         public DurableAdRewardSessionClaims Claims { get; }
         public SignedAdRewardSession Token { get; }
+        public TestActorContextAccessor ActorContexts { get; }
 
         public static async Task<Fixture> CreateAsync(string prefix)
         {
@@ -395,6 +412,7 @@ public sealed class DurableAdRewardCompletionServiceTests
                 .UseNpgsql(database.ConnectionString)
                 .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
                 .Options);
+            await context.Database.EnsureCreatedAsync();
             var fixture = new Fixture(database, context);
             await fixture.SeedSessionAsync();
             return fixture;
@@ -419,23 +437,25 @@ public sealed class DurableAdRewardCompletionServiceTests
         }
 
         public CompleteDurableAdRewardSessionRequest Request() => new(
-            Claims.TenantId, Claims.UserId, "subject", "br", Token,
+            Token,
             new AdPlaybackEvidence(Now.AddSeconds(-30), Now, TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(30), TimeSpan.Zero, [0, 25, 50, 75, 100]),
             new ProviderCompletionProof("network-a", "event-1", Claims.SessionId,
                 Claims.CreativeId, Now, "evidence", "signature"),
-            new IdempotencyKey("complete-session"), Guid.NewGuid(), "operation", Now);
+            new IdempotencyKey("complete-session"), Now);
 
         public DurableAdRewardCompletionService Service(
             AdRewardNetworkPolicySnapshot policy,
             Adapter? adapter = null,
-            Capabilities? capabilities = null,
+            ProtectedOperationOrchestrator? orchestrator = null,
             Issuance? issuance = null) => new(
             Context,
             new Policies(policy),
             new Tokens(new Dictionary<string, DurableAdRewardSessionClaims> { [Token.Value] = Claims }),
             new AdRewardProviderAdapterResolver([adapter ?? new Adapter("network-a")]),
-            capabilities ?? new Capabilities(),
+            ActorContexts,
+            new JurisdictionResolver(),
+            orchestrator ?? new ProtectedOperationOrchestrator(Claims),
             new Authority(),
             issuance ?? new Issuance());
 
@@ -489,19 +509,49 @@ public sealed class DurableAdRewardCompletionServiceTests
             ValueTask.FromResult(true);
     }
 
-    private sealed class Capabilities : IEconomyCapabilityAuthorizationService
+    private sealed class TestActorContextAccessor : IActorContextAccessor
     {
-        public List<EconomyCapabilityEvaluationContext> Requests { get; } = [];
-        public ValueTask<CapabilityAuthorizationReceipt> AuthorizeAndConsumeAsync(
-            EconomyCapabilityEvaluationContext context, CancellationToken cancellationToken)
+        public ActorContext ActorContext { get; private set; } = ActorContext.Anonymous;
+        public void SetActorContext(ActorContext context) => ActorContext = context;
+        public void ClearActorContext() => ActorContext = ActorContext.Anonymous;
+    }
+
+    private sealed class JurisdictionResolver : IEconomyJurisdictionResolver
+    {
+        public ValueTask<EconomyJurisdictionResolution> ResolveAsync(
+            Guid tenantId,
+            Guid actorId,
+            string? providerJurisdiction,
+            string? destinationJurisdiction,
+            DateTimeOffset evaluatedAt,
+            CancellationToken cancellationToken) => ValueTask.FromResult(
+            new EconomyJurisdictionResolution("BR", 1, 1, "jurisdiction-evidence"));
+    }
+
+    private sealed class ProtectedOperationOrchestrator(
+        DurableAdRewardSessionClaims claims) : IEconomyProtectedOperationOrchestrator
+    {
+        public List<EconomyProtectedOperationIntent> Intents { get; } = [];
+
+        public async Task<TResult> ExecuteAsync<TResult>(
+            EconomyProtectedOperationIntent intent,
+            Func<EconomyProtectedOperationAuthorization, CancellationToken, Task<TResult>> operation,
+            CancellationToken cancellationToken)
         {
-            Requests.Add(context);
-            return ValueTask.FromResult(new CapabilityAuthorizationReceipt(
-                Guid.NewGuid(), context.TenantId, context.ActorId, context.SubjectReference,
-                context.JurisdictionCode, context.Capability, context.OperationFingerprint,
-                1, 1, context.RiskDecisionId, 1, context.ProviderHash, context.DestinationHash,
-                context.SourceRootHashes, ["evidence"], context.EvaluatedAt, context.EvaluatedAt.AddMinutes(1),
-                "receipt-hash", "key", "signature"));
+            Intents.Add(intent);
+            var riskDecisionId = Guid.NewGuid();
+            var fingerprint = $"server-{intent.IdempotencyKey.Value}";
+            var receipt = new CapabilityAuthorizationReceipt(
+                Guid.NewGuid(), claims.TenantId, claims.UserId,
+                EconomySubjectReference.ForUser(claims.TenantId, claims.UserId),
+                "BR", intent.Capability, fingerprint, 1, 1, riskDecisionId, 1,
+                intent.ProviderReferenceHash, intent.DestinationHash,
+                intent.SourceRoots.Select(root => root.Value.ToString("N")).ToArray(),
+                ["evidence"], intent.RequestedAt, intent.RequestedAt.AddMinutes(1),
+                "receipt-hash", "key", "signature");
+            return await operation(new EconomyProtectedOperationAuthorization(
+                claims.TenantId, claims.UserId, "BR", riskDecisionId, fingerprint, receipt),
+                cancellationToken);
         }
     }
 

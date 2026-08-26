@@ -23,15 +23,11 @@ public sealed record CompleteMyAdRewardSessionRequest(
     string Token,
     AdPlaybackEvidence Playback,
     ProviderCompletionProof? ProviderProof,
-    string IdempotencyKey,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
-    string JurisdictionCode);
-public sealed record ConfirmMyDeferredAdRewardRequest(
-    string IdempotencyKey,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
-    string JurisdictionCode);
+    string IdempotencyKey);
+public sealed record AdRewardProtectedOperationFailureResponse(
+    EconomyProtectedOperationState State,
+    Guid? ReviewId,
+    IReadOnlyList<string> Diagnostics);
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/economy/ad-rewards")]
@@ -40,7 +36,6 @@ public sealed record ConfirmMyDeferredAdRewardRequest(
 public sealed class EconomyAdRewardsController(
     IDurableAdRewardSessionService sessions,
     IDurableAdRewardCompletionService completions,
-    IDurableDeferredAdRewardService deferred,
     IDurableAdRewardSessionReader reader,
     IEconomyWalletDirectory wallets,
     IActorContextAccessor actorContextAccessor,
@@ -73,30 +68,42 @@ public sealed class EconomyAdRewardsController(
 
     [HttpPost("sessions/{sessionId:guid}/complete")]
     [ProducesResponseType(typeof(DurableAdRewardCompletionResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AdRewardProtectedOperationFailureResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(AdRewardProtectedOperationFailureResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(AdRewardProtectedOperationFailureResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Complete(
         Guid sessionId,
         [FromBody] CompleteMyAdRewardSessionRequest request,
         CancellationToken cancellationToken)
     {
-        if (!TryActor(out var tenantId, out var actorId)) return Forbid();
+        if (!TryActor(out _, out _)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
         if (request.ProviderProof is not null && request.ProviderProof.SessionId != sessionId)
             return BadRequest("Provider proof is bound to another ad reward session.");
-        var result = await completions.CompleteAsync(new CompleteDurableAdRewardSessionRequest(
-            tenantId,
-            actorId,
-            EconomySubjectReference.ForUser(tenantId, actorId),
-            request.JurisdictionCode,
-            new SignedAdRewardSession(request.Token),
-            request.Playback,
-            request.ProviderProof,
-            new IdempotencyKey(request.IdempotencyKey),
-            request.RiskDecisionId,
-            request.OperationFingerprint,
-            timeProvider.GetUtcNow()), cancellationToken).ConfigureAwait(false);
-        return result.SessionId == sessionId
-            ? Ok(result)
-            : Conflict("The signed token is bound to another ad reward session.");
+        try
+        {
+            var result = await completions.CompleteAsync(new CompleteDurableAdRewardSessionRequest(
+                new SignedAdRewardSession(request.Token),
+                request.Playback,
+                request.ProviderProof,
+                new IdempotencyKey(request.IdempotencyKey),
+                timeProvider.GetUtcNow()), cancellationToken).ConfigureAwait(false);
+            return result.SessionId == sessionId
+                ? Ok(result)
+                : Conflict("The signed token is bound to another ad reward session.");
+        }
+        catch (EconomyProtectedOperationException exception)
+        {
+            var status = exception.State switch
+            {
+                EconomyProtectedOperationState.Denied => StatusCodes.Status403Forbidden,
+                EconomyProtectedOperationState.ReviewRequired or EconomyProtectedOperationState.Hold or
+                    EconomyProtectedOperationState.Challenge => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status503ServiceUnavailable
+            };
+            return new ObjectResult(new AdRewardProtectedOperationFailureResponse(
+                exception.State, exception.ReviewId, exception.Diagnostics)) { StatusCode = status };
+        }
     }
 
     [HttpGet("sessions/{sessionId:guid}")]
@@ -108,27 +115,6 @@ public sealed class EconomyAdRewardsController(
         var status = await reader.FindAsync(tenantId, actorId, sessionId, cancellationToken)
             .ConfigureAwait(false);
         return status is null ? NotFound() : Ok(status);
-    }
-
-    [HttpPost("sessions/{sessionId:guid}/confirm-deferred")]
-    [ProducesResponseType(typeof(DurableAdRewardCompletionResult), StatusCodes.Status200OK)]
-    public async Task<IActionResult> ConfirmDeferred(
-        Guid sessionId,
-        [FromBody] ConfirmMyDeferredAdRewardRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (!TryActor(out var tenantId, out var actorId)) return Forbid();
-        ArgumentNullException.ThrowIfNull(request);
-        return Ok(await deferred.ConfirmAsync(new ConfirmDeferredAdRewardRequest(
-            tenantId,
-            actorId,
-            sessionId,
-            EconomySubjectReference.ForUser(tenantId, actorId),
-            request.JurisdictionCode,
-            new IdempotencyKey(request.IdempotencyKey),
-            request.RiskDecisionId,
-            request.OperationFingerprint,
-            timeProvider.GetUtcNow()), cancellationToken).ConfigureAwait(false));
     }
 
     private bool TryActor(out Guid tenantId, out Guid actorId)
