@@ -1174,7 +1174,7 @@ namespace GameGuild.API.Database.Migrations
             migrationBuilder.DropTable(
                 name: "economy_source_stamps");
 
-            RemoveRoles(migrationBuilder);
+            RemoveRolePrivileges(migrationBuilder);
 
         }
     }
