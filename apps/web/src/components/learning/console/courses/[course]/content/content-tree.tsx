@@ -597,7 +597,7 @@ export function ContentTree({
     setEditTitle(item.title);
     setEditDescription(item.description ?? "");
     setEditSlug(item.slug);
-    setEditAutoSlug(item.slug === slugify(item.title));
+    setEditAutoSlug(true);
     setError("");
   }
 
