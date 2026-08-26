@@ -1,9 +1,5 @@
 # syntax=docker/dockerfile:1.6
 
-# ─── deps: workspace install + emception TS packages ────────────────────────
-# WASM CDN bundles are pulled from npm emception@latest (saves the ~40m local
-# emsdk/llvm/cpython build the previous Dockerfile ran). Only the cdn/ subset
-# of the npm tarball is extracted (~180MB).
 FROM node:20-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
 WORKDIR /repo
@@ -21,13 +17,12 @@ RUN pnpm install --no-frozen-lockfile --prefer-offline
 # Build emception workspace packages (ship TS source; dist/ required by apps/web build)
 RUN pnpm --dir tools/emception run build:packages
 
-# Fetch WASM CDN bundles from npm emception@latest (replaces 40m local build).
-# Extracts only the cdn/ subset of the npm tarball.
-RUN mkdir -p /repo/tools/emception/public/cdn /tmp/emception-extract && \
+RUN TOOLCHAIN_VERSION="$(node -p \"require('./tools/emception/packages/toolchain/package.json').version\")" && \
+    mkdir -p /repo/tools/emception/artifacts/toolchain/release/cdn /tmp/emception-extract && \
     cd /tmp/emception-extract && \
-    npm pack emception@latest && \
-    tar xzf emception-*.tgz && \
-    cp -r /tmp/emception-extract/package/cdn/. /repo/tools/emception/public/cdn/ && \
+    npm pack "@gameguild/emception-toolchain@${TOOLCHAIN_VERSION}" && \
+    tar xzf *.tgz && \
+    cp -r /tmp/emception-extract/package/cdn/. /repo/tools/emception/artifacts/toolchain/release/cdn/ && \
     rm -rf /tmp/emception-extract
 
 FROM deps AS builder
