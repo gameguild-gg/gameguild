@@ -537,6 +537,13 @@ public sealed class PostgreSqlProtectedChangeCooldownStore : IProtectedChangeCoo
 
 public interface IRiskReviewStore
 {
+    ValueTask<RiskReviewPage> ListAsync(
+        Guid tenantId,
+        RiskReviewStatus? status,
+        int limit,
+        string? cursor,
+        CancellationToken cancellationToken);
+
     ValueTask<RiskReviewCase> SubmitAsync(
         Guid tenantId,
         Guid reviewId,
@@ -573,12 +580,61 @@ public interface IRiskReviewStore
         CancellationToken cancellationToken);
 }
 
+public sealed record RiskReviewPage(
+    IReadOnlyList<RiskReviewCase> Items,
+    string? NextCursor);
+
 public sealed class PostgreSqlRiskReviewStore : IRiskReviewStore
 {
     private readonly DbContext _db;
 
     public PostgreSqlRiskReviewStore(IApplicationDbContext context) =>
         _db = PostgreSqlEntityRiskGraphStore.RequireRelationalContext(context);
+
+    public async ValueTask<RiskReviewPage> ListAsync(
+        Guid tenantId,
+        RiskReviewStatus? status,
+        int limit,
+        string? cursor,
+        CancellationToken cancellationToken)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("Tenant ID cannot be empty.", nameof(tenantId));
+        if (status is not null && !Enum.IsDefined(status.Value))
+            throw new ArgumentOutOfRangeException(nameof(status));
+        if (limit is < 1 or > 100) throw new ArgumentOutOfRangeException(nameof(limit));
+        var position = DecodeCursor(cursor);
+        var query = _db.Set<EconomyRiskReviewCaseRow>().AsNoTracking()
+            .Where(row => row.TenantId == tenantId);
+        if (status is not null) query = query.Where(row => row.Status == status.Value);
+        if (position is not null)
+        {
+            var submittedAt = position.Value.SubmittedAt;
+            var id = position.Value.Id;
+            query = query.Where(row => row.SubmittedAt < submittedAt ||
+                                       row.SubmittedAt == submittedAt && row.Id.CompareTo(id) > 0);
+        }
+
+        var rows = await query.OrderByDescending(row => row.SubmittedAt).ThenBy(row => row.Id)
+            .Take(limit + 1).ToArrayAsync(cancellationToken);
+        var pageRows = rows.Take(limit).ToArray();
+        var reviewIds = pageRows.Select(row => row.Id).ToArray();
+        var approvalEvents = reviewIds.Length == 0
+            ? []
+            : await _db.Set<EconomyRiskReviewEventRow>().AsNoTracking()
+                .Where(row => reviewIds.Contains(row.RiskReviewCaseId) &&
+                              (row.Kind == RiskReviewEventKind.ApprovalRecorded ||
+                               row.Kind == RiskReviewEventKind.Approved))
+                .OrderBy(row => row.Sequence)
+                .ToArrayAsync(cancellationToken);
+        var items = pageRows.Select(row => Map(
+            row,
+            approvalEvents.Where(item => item.RiskReviewCaseId == row.Id)
+                .Select(item => item.ActorId).ToArray())).ToArray();
+        var nextCursor = rows.Length > limit && pageRows.Length > 0
+            ? EncodeCursor(pageRows[^1].SubmittedAt, pageRows[^1].Id)
+            : null;
+        return new RiskReviewPage(items, nextCursor);
+    }
 
     public async ValueTask<RiskReviewCase> SubmitAsync(
         Guid tenantId,
@@ -756,6 +812,20 @@ public sealed class PostgreSqlRiskReviewStore : IRiskReviewStore
     private static RiskReviewCase Map(EconomyRiskReviewCaseRow row, IReadOnlyList<Guid> approvers) => new(
         row.Id, row.RiskDecisionId, row.SubmittedBy, row.Status, row.SubmittedAt, row.ResolvedAt,
         row.ResolvedBy, row.Resolution, row.RequiredApprovals, approvers, row.AppealOf);
+
+    internal static string EncodeCursor(DateTimeOffset submittedAt, Guid id) =>
+        $"{submittedAt.UtcTicks:X16}{id:N}";
+
+    internal static (DateTimeOffset SubmittedAt, Guid Id)? DecodeCursor(string? cursor)
+    {
+        if (string.IsNullOrWhiteSpace(cursor)) return null;
+        if (cursor.Length != 48 ||
+            !long.TryParse(cursor.AsSpan(0, 16), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var ticks) ||
+            !Guid.TryParseExact(cursor[16..], "N", out var id) ||
+            ticks < DateTimeOffset.MinValue.UtcTicks || ticks > DateTimeOffset.MaxValue.UtcTicks)
+            throw new ArgumentException("Risk review cursor is invalid.", nameof(cursor));
+        return (new DateTimeOffset(ticks, TimeSpan.Zero), id);
+    }
 
     private static void ValidateTenantReviewActor(Guid tenantId, Guid reviewId, Guid actorId)
     {

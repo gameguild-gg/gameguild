@@ -126,6 +126,27 @@ public sealed class PostgreSqlRiskControlPlaneTests
         var submitted = await store.SubmitAsync(
             TenantId, Guid.NewGuid(), decisionId, submitter, ["evidence-hash"], Now, 2,
             CancellationToken.None);
+        var laterDecision = await SeedDecisionAsync(context, 5, "later-review", RiskOutcome.Review);
+        var later = await store.SubmitAsync(
+            TenantId, Guid.NewGuid(), laterDecision, submitter, ["later-evidence"], Now.AddMinutes(1), 1,
+            CancellationToken.None);
+        var foreignTenant = Guid.NewGuid();
+        var foreignDecision = await SeedDecisionAsync(
+            context, 5, "foreign-review", RiskOutcome.Review, foreignTenant);
+        var foreign = await store.SubmitAsync(
+            foreignTenant, Guid.NewGuid(), foreignDecision, submitter, ["foreign-evidence"], Now, 1,
+            CancellationToken.None);
+
+        var firstPage = await store.ListAsync(
+            TenantId, RiskReviewStatus.Pending, 1, null, CancellationToken.None);
+        firstPage.Items.Should().ContainSingle().Which.Id.Should().Be(later.Id);
+        firstPage.NextCursor.Should().NotBeNullOrWhiteSpace();
+        var secondPage = await store.ListAsync(
+            TenantId, RiskReviewStatus.Pending, 1, firstPage.NextCursor, CancellationToken.None);
+        secondPage.Items.Should().ContainSingle().Which.Id.Should().Be(submitted.Id);
+        secondPage.NextCursor.Should().BeNull();
+        (await store.ListAsync(foreignTenant, null, 10, null, CancellationToken.None))
+            .Items.Should().ContainSingle().Which.Id.Should().Be(foreign.Id);
         await FluentActions.Awaiting(() => store.ApproveAsync(
                 TenantId, submitted.Id, submitter, RiskManualDecisionCode.EvidenceVerified,
                 "self approval", Now.AddMinutes(1), CancellationToken.None).AsTask())
@@ -146,6 +167,9 @@ public sealed class PostgreSqlRiskControlPlaneTests
             .Should().Equal(RiskReviewEventKind.Submitted, RiskReviewEventKind.ApprovalRecorded, RiskReviewEventKind.Approved);
         await FluentActions.Awaiting(() => store.CurrentAsync(Guid.NewGuid(), submitted.Id, CancellationToken.None).AsTask())
             .Should().ThrowAsync<KeyNotFoundException>();
+        await FluentActions.Awaiting(() => store.ListAsync(
+                TenantId, null, 10, "invalid", CancellationToken.None).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]
@@ -251,13 +275,15 @@ public sealed class PostgreSqlRiskControlPlaneTests
         RiskDbContext context,
         long amount,
         string fingerprint,
-        RiskOutcome outcome = RiskOutcome.Allow)
+        RiskOutcome outcome = RiskOutcome.Allow,
+        Guid? tenantId = null)
     {
+        var decisionTenant = tenantId ?? TenantId;
         var sourceWallet = Guid.NewGuid();
         var destinationWallet = Guid.NewGuid();
         context.Set<EconomyWalletRow>().AddRange(
-            new EconomyWalletRow { Id = sourceWallet, OwnerId = Guid.NewGuid(), TenantId = TenantId, State = WalletLifecycleState.Active, CreatedAt = Now },
-            new EconomyWalletRow { Id = destinationWallet, OwnerId = Guid.NewGuid(), TenantId = TenantId, State = WalletLifecycleState.Active, CreatedAt = Now });
+            new EconomyWalletRow { Id = sourceWallet, OwnerId = Guid.NewGuid(), TenantId = decisionTenant, State = WalletLifecycleState.Active, CreatedAt = Now },
+            new EconomyWalletRow { Id = destinationWallet, OwnerId = Guid.NewGuid(), TenantId = decisionTenant, State = WalletLifecycleState.Active, CreatedAt = Now });
         var id = Guid.NewGuid();
         context.Set<EconomyRiskDecisionRow>().Add(new EconomyRiskDecisionRow
         {
