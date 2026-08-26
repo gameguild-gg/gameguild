@@ -464,15 +464,27 @@ public sealed partial class MarketplaceSettlementCoordinatorTests
     }
 
     [Fact]
-    public void MarketplaceModule_IsExplicitlyDisabledAndCompositionPreservesServices()
+    public void MarketplaceModule_IsEnabledAndRegistersDurableWorkflows()
     {
         var module = new MarketplaceModule();
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().Build();
 
         module.Name.Should().Be("Economy.Marketplace");
-        module.EnabledByDefault.Should().BeFalse();
+        module.EnabledByDefault.Should().BeTrue();
         module.ConfigureServices(services, configuration).Should().BeSameAs(services);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IDurableMarketplaceSettlementService) &&
+            descriptor.ImplementationType == typeof(DurableMarketplaceSettlementService));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IDurableMarketplaceRefundService) &&
+            descriptor.ImplementationType == typeof(DurableMarketplaceRefundService));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IMarketplaceOutboxProcessor) &&
+            descriptor.ImplementationType == typeof(PostgreSqlMarketplaceOutboxProcessor));
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(GameGuild.Commerce.Orders.IOrderMarketplaceSettlementAuthority) &&
+            descriptor.ImplementationType == typeof(CommerceOrderMarketplaceSettlementAuthority));
         services.AddMarketplaceComposition(configuration).Should().BeSameAs(services);
     }
 

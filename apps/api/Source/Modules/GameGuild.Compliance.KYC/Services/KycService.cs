@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Compliance.KYC;
 
@@ -6,11 +7,16 @@ public class KycService : IKycService
 {
     private readonly IKycRepository _repository;
     private readonly ILogger<KycService> _logger;
+    private readonly KycPolicyOptions _policy;
 
-    public KycService(IKycRepository repository, ILogger<KycService> logger)
+    public KycService(
+        IKycRepository repository,
+        ILogger<KycService> logger,
+        IOptions<KycPolicyOptions> policy)
     {
         _repository = repository;
         _logger = logger;
+        _policy = policy.Value;
     }
 
     public async Task<Result<UserKycVerification>> SubmitVerificationAsync(
@@ -67,7 +73,7 @@ public class KycService : IKycService
 
             if (status == KycVerificationStatus.Approved)
             {
-                verification.ExpiresAt = SystemClock.UtcNow.AddYears(1); // Set expiration to 1 year
+                verification.ExpiresAt = SystemClock.UtcNow.Add(_policy.ApprovedEvidenceLifetime);
             }
 
             await _repository.UpdateAsync(verification, cancellationToken).ConfigureAwait(false);
@@ -231,7 +237,7 @@ public class KycService : IKycService
 
             if (status == KycVerificationStatus.Approved)
             {
-                verification.ExpiresAt = SystemClock.UtcNow.AddYears(1);
+                verification.ExpiresAt = SystemClock.UtcNow.Add(_policy.ApprovedEvidenceLifetime);
             }
 
             await _repository.UpdateAsync(verification, cancellationToken).ConfigureAwait(false);

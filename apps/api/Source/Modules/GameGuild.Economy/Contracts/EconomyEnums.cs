@@ -14,7 +14,8 @@ public enum ProvenanceKind
     AdRewardSoft = 4,
     SystemGrantSoft = 5,
     RefundRestoration = 6,
-    EscrowReturn = 7
+    EscrowReturn = 7,
+    MarketplaceSoft = 8
 }
 
 public enum SourceConfirmationState
@@ -65,7 +66,8 @@ public enum EconomyAccountCode
     AdminWithdrawalPayableHard = 12,
     RecoveryReceivableHard = 13,
     FeeRevenueHard = 14,
-    ProviderLossHard = 15
+    ProviderLossHard = 15,
+    RecoveryReceivableSoft = 16
 }
 
 public enum PostingAuthority
@@ -75,7 +77,8 @@ public enum PostingAuthority
     PlatformSystem = 3,
     EscrowCoordinator = 4,
     PayoutCoordinator = 5,
-    Administrator = 6
+    Administrator = 6,
+    MarketplaceCoordinator = 7
 }
 
 public enum PostingTemplateKind
@@ -103,7 +106,9 @@ public enum PostingTemplateKind
     AdRewardIssuance = 21,
     BountyEscrow = 22,
     BountyClaim = 23,
-    BountyReclaim = 24
+    BountyReclaim = 24,
+    MarketplaceSettlement = 25,
+    MarketplaceRefund = 26
 }
 
 public enum PostingStatus

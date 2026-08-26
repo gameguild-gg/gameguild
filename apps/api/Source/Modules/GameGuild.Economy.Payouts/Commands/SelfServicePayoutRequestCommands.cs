@@ -51,8 +51,8 @@ public sealed class CreateMyPayoutRequestCommandHandler(
             throw new PayoutRequestWalletUnavailableException(
                 "An active Economy wallet is required before requesting a payout.");
         }
-        var requestHash = ComputeRequestHash(actor, wallet.WalletId, command.Request.HardCoinUnits);
-        var replay = requests.FindReplay(actor, command.Request.IdempotencyKey.Trim(), requestHash);
+        var requestHash = ComputeRequestHash(actor.ActorId, wallet.WalletId, command.Request.HardCoinUnits);
+        var replay = requests.FindReplay(actor.TenantId, actor.ActorId, command.Request.IdempotencyKey.Trim(), requestHash);
         if (replay is not null)
         {
             return EconomyPayoutRequestDto.From(replay);
@@ -68,22 +68,23 @@ public sealed class CreateMyPayoutRequestCommandHandler(
             Guid.NewGuid(),
             new IdempotencyKey(command.Request.IdempotencyKey.Trim()),
             requestHash,
-            actor,
+            actor.ActorId,
             new WalletId(wallet.WalletId),
             new CoinAmount(CurrencyCode.HardCoin, command.Request.HardCoinUnits),
             PayoutRequestState.Submitted,
             1,
             now,
-            now);
+            now,
+            TenantId: actor.TenantId);
         requests.Add(request);
         return EconomyPayoutRequestDto.From(request);
     }
 
-    private static Guid RequireActor(IActorContextAccessor accessor)
+    private static PayoutSelfServiceActor RequireActor(IActorContextAccessor accessor)
     {
         var actor = accessor.ActorContext;
-        return actor.IsAuthenticated && actor.SubjectIdAsGuid is { } actorId && actor.TenantId.HasValue
-            ? actorId
+        return actor.IsAuthenticated && actor.SubjectIdAsGuid is { } actorId && actor.TenantId is { } tenantId
+            ? new PayoutSelfServiceActor(tenantId, actorId)
             : throw new UnauthorizedAccessException("An authenticated tenant actor is required for payout requests.");
     }
 
@@ -92,6 +93,8 @@ public sealed class CreateMyPayoutRequestCommandHandler(
         var payload = $"{actorId:N}|{walletId:N}|{amountUnits}";
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
     }
+
+    private sealed record PayoutSelfServiceActor(Guid TenantId, Guid ActorId);
 }
 
 public sealed class CancelMyPayoutRequestCommandHandler(
@@ -111,7 +114,7 @@ public sealed class CancelMyPayoutRequestCommandHandler(
             throw new UnauthorizedAccessException("An authenticated tenant actor is required for payout requests.");
         }
 
-        var current = requests.GetForPayee(command.RequestId, actorId);
+        var current = requests.GetForPayee(actor.TenantId.Value, command.RequestId, actorId);
         var cancelled = current.Cancel(DateTimeOffset.UtcNow);
         return Task.FromResult(EconomyPayoutRequestDto.From(requests.Update(cancelled, current.Version)));
     }

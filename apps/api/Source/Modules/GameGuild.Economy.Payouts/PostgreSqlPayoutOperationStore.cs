@@ -29,15 +29,41 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
             : ToContract(row);
     }
 
-    public IReadOnlyList<PayoutOperation> ListForPayee(Guid payeeId, int take)
+    public PayoutOperation GetForTenant(Guid tenantId, Guid operationId)
     {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        if (operationId == Guid.Empty)
+            throw new ArgumentException("Payout operation ID is required.", nameof(operationId));
+
+        var row = ReadOperations($"""
+            SELECT * FROM economy_private.read_payout_operation_for_tenant_v2({tenantId}, {operationId})
+            """).SingleOrDefault();
+        return row is null
+            ? throw new KeyNotFoundException($"Payout operation {operationId:N} was not found.")
+            : ToContract(row);
+    }
+
+    public IReadOnlyList<PayoutOperation> ListForTenant(Guid tenantId, int take)
+    {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        ValidateTake(take);
+        return ReadOperations($"""
+            SELECT * FROM economy_private.read_payout_operations_for_tenant_v2({tenantId}, {take})
+            """).Select(ToContract).ToArray();
+    }
+
+    public IReadOnlyList<PayoutOperation> ListForPayee(Guid tenantId, Guid payeeId, int take)
+    {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
         if (payeeId == Guid.Empty)
             throw new ArgumentException("Payee ID is required.", nameof(payeeId));
-        if (take is < 1 or > 100)
-            throw new ArgumentOutOfRangeException(nameof(take), "Take must be between 1 and 100.");
+        ValidateTake(take);
 
         return ReadOperations($"""
-            SELECT * FROM economy_private.read_payout_operations_by_payee_v1({payeeId}, {take})
+            SELECT * FROM economy_private.read_payout_operations_by_payee_v2({tenantId}, {payeeId}, {take})
             """)
             .OrderByDescending(row => row.CreatedAt)
             .ThenByDescending(row => row.Id)
@@ -45,13 +71,15 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
             .ToArray();
     }
 
-    public PayoutOperation? FindReplay(string idempotencyKey, string requestHash)
+    public PayoutOperation? FindReplay(Guid tenantId, string idempotencyKey, string requestHash)
     {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(requestHash);
 
         var row = ReadOperations($"""
-            SELECT * FROM economy_private.read_payout_operation_by_idempotency_v1({idempotencyKey.Trim()})
+            SELECT * FROM economy_private.read_payout_operation_by_idempotency_v2({tenantId}, {idempotencyKey.Trim()})
             """).SingleOrDefault();
 
         if (row is null)
@@ -66,10 +94,13 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
     public void Add(PayoutOperation operation)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        if (operation.TenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(operation));
 
         Execute($"""
-            SELECT economy_private.create_payout_operation_v1(
+            SELECT economy_private.create_payout_operation_v2(
                 {operation.Id},
+                {operation.TenantId},
                 {operation.IdempotencyKey.Value},
                 {operation.RequestHash},
                 {operation.ActorId},
@@ -215,5 +246,12 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
         new PolicyVersion(row.PolicyVersion),
         row.RiskDecisionId,
         row.CreatedAt,
-        row.UpdatedAt);
+        row.UpdatedAt,
+        row.TenantId);
+
+    private static void ValidateTake(int take)
+    {
+        if (take is < 1 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(take), "Take must be between 1 and 100.");
+    }
 }

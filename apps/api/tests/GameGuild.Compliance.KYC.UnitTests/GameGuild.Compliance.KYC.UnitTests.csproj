@@ -12,7 +12,7 @@
         <CollectCoverage>false</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <CoverletOutput>./TestResults/coverage.xml</CoverletOutput>
-        <Threshold>80</Threshold>
+        <Threshold>100</Threshold>
         <ThresholdType>line,branch,method</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
         <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>

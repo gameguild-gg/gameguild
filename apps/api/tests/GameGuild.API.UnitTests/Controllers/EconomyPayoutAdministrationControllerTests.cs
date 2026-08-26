@@ -101,7 +101,7 @@ public sealed class EconomyPayoutAdministrationControllerTests
             TenantId = Guid.NewGuid(),
             Roles = new HashSet<string>(),
             Permissions = walletAdmin
-                ? new HashSet<string> { WalletsPermission.Keys.Admin }
+                ? new HashSet<string> { EconomyPermission.Keys.ReviewPayouts }
                 : [],
             TypedAttributes = ActorAttributes.Empty,
             IsAuthenticated = true

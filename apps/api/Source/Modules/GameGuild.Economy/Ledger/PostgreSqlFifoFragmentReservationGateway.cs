@@ -12,14 +12,16 @@ public enum PersistedFragmentReservationPurpose
     HardToSoftConversion = 3,
     Spend = 4,
     ProviderReversal = 5,
-    BountyEscrow = 6
+    BountyEscrow = 6,
+    MarketplaceSettlement = 7
 }
 
 public enum PersistedFragmentReservationStatus
 {
     Reserved = 1,
     Released = 2,
-    Consumed = 3
+    Consumed = 3,
+    Dispatching = 4
 }
 
 public sealed record FifoFragmentReservationRequest(
@@ -51,7 +53,16 @@ public interface IFifoFragmentReservationGateway
         DateTimeOffset terminalAt);
 }
 
-public sealed class PostgreSqlFifoFragmentReservationGateway : IFifoFragmentReservationGateway
+public interface IFifoFragmentReservationReader
+{
+    IReadOnlyList<PersistedFragmentReservation> Read(
+        Guid operationId,
+        PersistedFragmentReservationStatus status);
+}
+
+public sealed class PostgreSqlFifoFragmentReservationGateway :
+    IFifoFragmentReservationGateway,
+    IFifoFragmentReservationReader
 {
     private readonly DbContext _db;
 
@@ -150,7 +161,58 @@ public sealed class PostgreSqlFifoFragmentReservationGateway : IFifoFragmentRese
         }
     }
 
+    public IReadOnlyList<PersistedFragmentReservation> Read(
+        Guid operationId,
+        PersistedFragmentReservationStatus status)
+    {
+        if (operationId == Guid.Empty) throw new ArgumentException("Operation ID is required.", nameof(operationId));
+        if (!Enum.IsDefined(status)) throw new ArgumentOutOfRangeException(nameof(status));
+
+        return _db.Database.SqlQuery<FifoFragmentReservationStateRow>($"""
+                SELECT reservation."Id", reservation."OperationId", reservation."ParentLotId",
+                       reservation."RootSourceStampId", reservation."ReversalEpoch",
+                       reservation."StartInclusive", reservation."EndExclusive", reservation."Currency",
+                       CASE WHEN reservation."Currency" = 1
+                            THEN (reservation."EndExclusive" - reservation."StartInclusive") / 1000
+                            ELSE (reservation."EndExclusive" - reservation."StartInclusive")
+                       END AS "AmountUnits"
+                FROM public.economy_fragment_reservations AS reservation
+                JOIN public.economy_credit_lots AS lot ON lot."Id" = reservation."ParentLotId"
+                WHERE reservation."OperationId" = {operationId} AND reservation."Status" = {(int)status}
+                ORDER BY lot."ConfirmedAt", lot."JournalSequence", lot."Id",
+                         reservation."StartInclusive", reservation."Id"
+                """)
+            .AsNoTracking()
+            .AsEnumerable()
+            .Select(row => new PersistedFragmentReservation(
+                row.Id,
+                row.OperationId,
+                new CreditLotId(row.ParentLotId),
+                new SourceStampId(row.RootSourceStampId),
+                row.ReversalEpoch,
+                new RootTraceRange(
+                    new SourceStampId(row.RootSourceStampId),
+                    row.StartInclusive,
+                    checked(row.EndExclusive - row.StartInclusive),
+                    row.ReversalEpoch),
+                new CoinAmount(row.Currency, row.AmountUnits)))
+            .ToArray();
+    }
+
     private static bool IsDatabaseFailure(Exception exception) =>
         exception is DbException or DbUpdateException or InvalidOperationException ||
         exception.GetBaseException() is DbException;
+}
+
+internal sealed class FifoFragmentReservationStateRow
+{
+    public Guid Id { get; set; }
+    public Guid OperationId { get; set; }
+    public Guid ParentLotId { get; set; }
+    public Guid RootSourceStampId { get; set; }
+    public long ReversalEpoch { get; set; }
+    public long StartInclusive { get; set; }
+    public long EndExclusive { get; set; }
+    public CurrencyCode Currency { get; set; }
+    public long AmountUnits { get; set; }
 }

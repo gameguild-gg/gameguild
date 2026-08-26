@@ -244,6 +244,17 @@ public sealed class EconomyWriterParityPostgreSqlMigrationTests
             Line(1, 6, 2, 2_000),
             Line(2, 4, 2, 2_000, DestinationWallet, 4)
         ],
+        PostingTemplateKind.MarketplaceSettlement =>
+        [
+            Line(1, 2, 1, 2, SourceWallet, 1),
+            Line(2, 3, 1, 1, DestinationWallet, 2),
+            Line(2, 3, 1, 1, DestinationWallet, 2)
+        ],
+        PostingTemplateKind.MarketplaceRefund =>
+        [
+            Line(1, 13, 1, 2),
+            Line(2, 2, 1, 2, DestinationWallet, 1)
+        ],
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
     };
 

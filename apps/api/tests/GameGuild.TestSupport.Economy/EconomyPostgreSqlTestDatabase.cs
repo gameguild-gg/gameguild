@@ -135,6 +135,10 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
         string databaseName,
         CancellationToken cancellationToken)
     {
+        var configuredTemplateDatabase = Environment.GetEnvironmentVariable("ECONOMY_POSTGRES_TEMPLATE_DATABASE");
+        var templateDatabase = string.IsNullOrWhiteSpace(configuredTemplateDatabase)
+            ? null
+            : ValidateDatabaseName(configuredTemplateDatabase, "ECONOMY_POSTGRES_TEMPLATE_DATABASE");
         var adminBuilder = new NpgsqlConnectionStringBuilder(gateConnectionString) { Pooling = false };
         // The disposable gate shares one PostgreSQL server across isolated test
         // databases. Schema reset can briefly wait behind concurrent migrations;
@@ -154,8 +158,21 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
             var exists = await databaseExists.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is not null;
             if (!exists)
             {
+                if (templateDatabase is not null)
+                {
+                    await using var templateExists = connection.CreateCommand();
+                    templateExists.CommandText = "SELECT 1 FROM pg_database WHERE datname = @databaseName;";
+                    templateExists.Parameters.AddWithValue("databaseName", templateDatabase);
+                    if (await templateExists.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) is null)
+                    {
+                        throw new InvalidOperationException(
+                            $"The Economy PostgreSQL template database '{templateDatabase}' does not exist.");
+                    }
+                }
                 await using var createDatabase = connection.CreateCommand();
-                createDatabase.CommandText = $"CREATE DATABASE \"{databaseName}\";";
+                createDatabase.CommandText = templateDatabase is null
+                    ? $"CREATE DATABASE \"{databaseName}\";"
+                    : $"CREATE DATABASE \"{databaseName}\" WITH TEMPLATE \"{templateDatabase}\" STRATEGY WAL_LOG;";
                 await createDatabase.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
         }
@@ -174,7 +191,7 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
             adminBuilder.ConnectionString,
             databaseName,
             null,
-            false,
+            true,
             true);
     }
 
@@ -294,6 +311,18 @@ public sealed class EconomyPostgreSqlTestDatabase : IAsyncDisposable
 
         var prefix = normalized[..Math.Min(normalized.Length, 22)];
         return $"economy_{prefix}_{Guid.NewGuid():N}";
+    }
+
+    private static string ValidateDatabaseName(string databaseName, string source)
+    {
+        var trimmed = databaseName.Trim();
+        if (trimmed.Length is 0 or > 63 || trimmed.Any(character =>
+                !char.IsAsciiLetterOrDigit(character) && character != '_'))
+        {
+            throw new InvalidOperationException(
+                $"{source} must contain only ASCII letters, digits, or underscores and be at most 63 characters.");
+        }
+        return trimmed;
     }
 
     private static async Task DropDatabaseAsync(

@@ -11,4 +11,7 @@
     <ProjectReference Include="..\GameGuild.Economy\GameGuild.Economy.csproj" />
     <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="GameGuild.Economy.AdRewards.UnitTests" />
+  </ItemGroup>
 </Project>

@@ -47,7 +47,8 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
         outcomes.Count(outcome => outcome is null).Should().Be(1);
         outcomes.Count(IsSerializedLoser).Should().Be(
             1,
-            "the losing transaction must fail through either the version token or immutable event sequence");
+            "the losing transaction must fail through either the version token or immutable event sequence; outcomes were {0}",
+            string.Join(" | ", outcomes.Select(DescribeOutcome)));
 
         await using var observer = CreateContext();
         var persisted = await observer.Set<EconomyFundingClaimRow>()
@@ -195,8 +196,20 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
     {
         DbUpdateConcurrencyException => true,
         DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } } => true,
-        _ => false
+        _ => exception?.GetBaseException() is PostgresException
+        {
+            SqlState: PostgresErrorCodes.DeadlockDetected or PostgresErrorCodes.SerializationFailure
+        }
     };
+
+    private static string DescribeOutcome(Exception? exception)
+    {
+        if (exception is null) return "success";
+        var root = exception.GetBaseException();
+        return root is PostgresException postgres
+            ? $"{exception.GetType().Name}/{postgres.SqlState}:{postgres.MessageText}"
+            : $"{exception.GetType().Name}/{root.GetType().Name}:{root.Message}";
+    }
 
     private async Task ResetSchemaAsync()
     {
