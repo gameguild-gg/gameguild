@@ -276,7 +276,7 @@ if errors:
     raise SystemExit("; ".join(errors))
 PY
 
-  (cd "$repository_root" && "${pnpm_command[@]}" dlx @changesets/cli@^3.0.0 status >/dev/null)
+  (cd "$repository_root" && "${pnpm_command[@]}" exec changeset status >/dev/null)
 }
 
 test_emception_emits_a_gate_result_for_every_main_push() {
