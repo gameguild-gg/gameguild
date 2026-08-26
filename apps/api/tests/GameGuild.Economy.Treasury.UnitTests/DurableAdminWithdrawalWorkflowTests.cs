@@ -2,8 +2,11 @@ using FluentAssertions;
 using GameGuild;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Risk;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace GameGuild.Economy.Treasury.UnitTests;
 
@@ -20,18 +23,20 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var audit = new AdminWithdrawalAuditTrail();
         var reservations = new RecordingReservations(run);
         var postings = new RecordingPostings();
+        var providerAuthority = new AcceptProviderAuthority();
         var workflow = new PostgreSqlDurableAdminWithdrawalWorkflow(
-            context, operations, audit, reservations, postings, new AcceptEvidence());
+            context, operations, audit, reservations, new AcceptCapabilityAuthorization(),
+            new AcceptCapabilityResolver(), postings, providerAuthority, new AcceptEvidence(),
+            new RecordingDispatchOutbox());
 
-        var reserved = await workflow.ReserveAsync(new DurableAdminWithdrawalReservationRequest(
-            run, CreateAuthority(run.RequestedBy)));
+        var reserved = await workflow.ReserveAsync(CreateReservationRequest(run));
         var approved = await workflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
-            run.Id, reserved.Version, Guid.NewGuid(), Time.AddMinutes(1)));
-        var dispatching = await workflow.BeginDispatchAsync(new DurableAdminWithdrawalDispatchRequest(
-            run.Id, approved.Version, run.FencingToken, run.ExecutionEpoch, "custody-snapshot", Time.AddMinutes(2)));
+            run.TenantId, run.Id, reserved.Version, Guid.NewGuid(), Time.AddMinutes(1)));
+        var dispatching = await workflow.BeginDispatchAsync(CreateDispatchRequest(
+            run, approved.Version, occurredAt: Time.AddMinutes(2), snapshotHash: "custody-snapshot"));
         var providerEvent = CreateProviderEvent(dispatching, AdminWithdrawalProviderOutcome.Succeeded);
         var terminal = await workflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-            providerEvent, CreateAuthority(Guid.NewGuid())));
+            providerEvent));
 
         terminal.State.Should().Be(AdminWithdrawalRunState.Succeeded);
         terminal.Version.Should().Be(4);
@@ -39,21 +44,30 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         postings.Requests.Select(request => request.Posting.Template.Kind).Should().Equal(
             PostingTemplateKind.AdminWithdrawalReservation,
             PostingTemplateKind.AdminWithdrawalSuccess);
-        reservations.Transitions.Should().ContainSingle().Which.Should().Be(new ReservationTransition(
-            run.Id,
-            PersistedFragmentReservationStatus.Reserved,
-            PersistedFragmentReservationStatus.Consumed,
-            providerEvent.ObservedAt));
+        reservations.Transitions.Should().Equal(
+            new ReservationTransition(
+                run.Id,
+                PersistedFragmentReservationStatus.Reserved,
+                PersistedFragmentReservationStatus.Dispatching,
+                Time.AddMinutes(2)),
+            new ReservationTransition(
+                run.Id,
+                PersistedFragmentReservationStatus.Dispatching,
+                PersistedFragmentReservationStatus.Consumed,
+                providerEvent.ObservedAt));
         audit.Events(run.Id).Select(item => item.Kind).Should().Equal("reserved", "approved", "dispatching", "succeeded");
         audit.Verify(run.Id).Should().BeTrue();
         context.Transactions.Should().HaveCount(4);
         context.Transactions.Should().OnlyContain(transaction => transaction.CommitCalled);
+        providerAuthority.Consumptions.Should().ContainSingle()
+            .Which.ConsumedAt.Should().Be(providerEvent.ObservedAt);
 
         var replay = await workflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-            providerEvent, CreateAuthority(Guid.NewGuid())));
+            providerEvent));
         replay.Should().BeEquivalentTo(terminal);
         postings.Requests.Should().HaveCount(2);
-        reservations.Transitions.Should().ContainSingle();
+        reservations.Transitions.Should().HaveCount(2);
+        providerAuthority.Consumptions.Should().ContainSingle();
     }
 
     [Fact]
@@ -68,11 +82,15 @@ public sealed class DurableAdminWithdrawalWorkflowTests
             operations,
             new AdminWithdrawalAuditTrail(),
             new RecordingReservations(run),
+            new AcceptCapabilityAuthorization(),
+            new AcceptCapabilityResolver(),
             new RecordingPostings(),
-            new AcceptEvidence());
+            new AcceptProviderAuthority(),
+            new AcceptEvidence(),
+            new RecordingDispatchOutbox());
 
         await FluentActions.Invoking(() => workflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
-                run.Id, run.Version, run.RequestedBy, Time.AddMinutes(1))))
+                run.TenantId, run.Id, run.Version, run.RequestedBy, Time.AddMinutes(1))))
             .Should().ThrowAsync<AdminWithdrawalApprovalException>();
 
         var approved = run with
@@ -89,7 +107,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
             DestinationHash = "wrong"
         };
         await FluentActions.Invoking(() => workflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-                badEvent, CreateAuthority(Guid.NewGuid()))))
+                badEvent)))
             .Should().ThrowAsync<AdminWithdrawalEvidenceException>();
     }
 
@@ -102,8 +120,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var replayContext = new RecordingContext();
         var replayWorkflow = CreateWorkflow(replayContext, replayStore, replayRun);
 
-        (await replayWorkflow.ReserveAsync(new DurableAdminWithdrawalReservationRequest(
-            replayRun, CreateAuthority(replayRun.RequestedBy)))).Should().BeSameAs(replayRun);
+        (await replayWorkflow.ReserveAsync(CreateReservationRequest(replayRun))).Should().BeSameAs(replayRun);
         replayContext.Transactions.Should().BeEmpty();
 
         var concurrentRun = CreateRun();
@@ -112,18 +129,16 @@ public sealed class DurableAdminWithdrawalWorkflowTests
             concurrentContext,
             new ReplayOnSecondReservationLookupStore(concurrentRun),
             concurrentRun);
-        (await concurrentWorkflow.ReserveAsync(new DurableAdminWithdrawalReservationRequest(
-            concurrentRun, CreateAuthority(concurrentRun.RequestedBy)))).Should().BeSameAs(concurrentRun);
-        concurrentContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        (await concurrentWorkflow.ReserveAsync(CreateReservationRequest(concurrentRun))).Should().BeSameAs(concurrentRun);
+        concurrentContext.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
 
         var occupiedPeriod = CreateRun();
-        var overlappingRun = CreateRun();
+        var overlappingRun = CreateRun() with { TenantId = occupiedPeriod.TenantId };
         var overlapStore = new InMemoryAdminWithdrawalStore();
         overlapStore.Add(occupiedPeriod);
         var overlapContext = new RecordingContext();
         var overlapWorkflow = CreateWorkflow(overlapContext, overlapStore, overlappingRun);
-        await FluentActions.Invoking(() => overlapWorkflow.ReserveAsync(new DurableAdminWithdrawalReservationRequest(
-                overlappingRun, CreateAuthority(overlappingRun.RequestedBy))))
+        await FluentActions.Invoking(() => overlapWorkflow.ReserveAsync(CreateReservationRequest(overlappingRun)))
             .Should().ThrowAsync<AdminWithdrawalOverlapException>();
         overlapContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
 
@@ -134,10 +149,91 @@ public sealed class DurableAdminWithdrawalWorkflowTests
             new InMemoryAdminWithdrawalStore(),
             mismatchedRun,
             fragmentUnits: mismatchedRun.Amount.Units - 1);
-        await FluentActions.Invoking(() => mismatchWorkflow.ReserveAsync(new DurableAdminWithdrawalReservationRequest(
-                mismatchedRun, CreateAuthority(mismatchedRun.RequestedBy))))
+        await FluentActions.Invoking(() => mismatchWorkflow.ReserveAsync(CreateReservationRequest(mismatchedRun)))
             .Should().ThrowAsync<AdminWithdrawalEligibilityException>();
         mismatchContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Reserve_BindsTheCapabilityReceiptToTheActualFifoRootsAndDurableRunSnapshot()
+    {
+        var run = CreateRun();
+        var context = new RecordingContext();
+        var operations = new InMemoryAdminWithdrawalStore();
+        var reservations = new RecordingReservations(run);
+        var authorization = new AcceptCapabilityAuthorization();
+        var resolver = new AcceptCapabilityResolver();
+        var workflow = new PostgreSqlDurableAdminWithdrawalWorkflow(
+            context,
+            operations,
+            new AdminWithdrawalAuditTrail(),
+            reservations,
+            authorization,
+            resolver,
+            new RecordingPostings(),
+            new AcceptProviderAuthority(),
+            new AcceptEvidence(),
+            new RecordingDispatchOutbox());
+
+        await workflow.ReserveAsync(CreateReservationRequest(run));
+
+        var evaluation = authorization.Contexts.Should().ContainSingle().Subject;
+        evaluation.TenantId.Should().Be(run.TenantId);
+        evaluation.ActorId.Should().Be(run.RequestedBy);
+        evaluation.Capability.Should().Be(EconomyValueMovementCapability.AdminWithdrawalExecution);
+        evaluation.SourceRootHashes.Should().Equal(Hash(reservations.Fragment.RootSourceStampId.Value.ToString("N")));
+        var resolution = resolver.Resolutions.Should().ContainSingle().Subject;
+        resolution.CapabilityName.Should().Be("admin-withdrawal-reservation");
+        resolution.TemplateKind.Should().Be(PostingTemplateKind.AdminWithdrawalReservation);
+        resolution.Receipt.PolicyVersion.Should().Be(run.PolicyVersion.Value);
+        resolution.Receipt.ReserveVersion.Should().Be(run.ReserveVersion.Value);
+        context.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Reserve_RollsBackWhenTheReceiptOrRegisteredAuthorityDoesNotMatchTheRun()
+    {
+        var run = CreateRun();
+        var mismatchedReceipts = new Func<CapabilityAuthorizationReceipt, CapabilityAuthorizationReceipt>[]
+        {
+            receipt => receipt with { TenantId = Guid.NewGuid() },
+            receipt => receipt with { ActorId = Guid.NewGuid() },
+            receipt => receipt with { PolicyVersion = receipt.PolicyVersion + 1 },
+            receipt => receipt with { ReserveVersion = receipt.ReserveVersion + 1 }
+        };
+
+        foreach (var mutate in mismatchedReceipts)
+        {
+            var context = new RecordingContext();
+            var postings = new RecordingPostings();
+            var workflow = CreateWorkflow(
+                context,
+                new InMemoryAdminWithdrawalStore(),
+                run,
+                capabilityAuthorization: new AcceptCapabilityAuthorization((evaluation, receipt) => mutate(receipt)),
+                postings: postings);
+
+            await FluentActions.Invoking(() => workflow.ReserveAsync(CreateReservationRequest(run)))
+                .Should().ThrowAsync<AdminWithdrawalEligibilityException>();
+            context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+            postings.Requests.Should().BeEmpty();
+        }
+
+        var authorityContext = new RecordingContext();
+        var authorityPostings = new RecordingPostings();
+        var authorityWorkflow = CreateWorkflow(
+            authorityContext,
+            new InMemoryAdminWithdrawalStore(),
+            run,
+            capabilityResolver: new AcceptCapabilityResolver((receipt, _) => new RegisteredPostingAuthority(
+                Guid.NewGuid(), receipt.ActorId, Guid.NewGuid(), receipt.RiskDecisionId,
+                receipt.OperationFingerprint, receipt.PolicyVersion)),
+            postings: authorityPostings);
+
+        await FluentActions.Invoking(() => authorityWorkflow.ReserveAsync(CreateReservationRequest(run)))
+            .Should().ThrowAsync<AdminWithdrawalEligibilityException>();
+        authorityContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        authorityPostings.Requests.Should().BeEmpty();
     }
 
     [Fact]
@@ -154,18 +250,18 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var approvalContext = new RecordingContext();
         var approvalWorkflow = CreateWorkflow(approvalContext, approvalStore, approvedRun);
         (await approvalWorkflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
-            approvedRun.Id, 1, approvedRun.ApprovedBy!.Value, Time.AddMinutes(1)))).Should().BeSameAs(approvedRun);
-        approvalContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+            approvedRun.TenantId, approvedRun.Id, 1, approvedRun.ApprovedBy!.Value, Time.AddMinutes(1)))).Should().BeSameAs(approvedRun);
+        approvalContext.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
 
         await FluentActions.Invoking(() => approvalWorkflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
-                approvedRun.Id, 1, Guid.NewGuid(), Time.AddMinutes(1))))
+                approvedRun.TenantId, approvedRun.Id, 1, Guid.NewGuid(), Time.AddMinutes(1))))
             .Should().ThrowAsync<AdminWithdrawalStaleCommandException>();
         var versionStaleRun = CreateRun() with { Version = 2 };
         var versionStaleStore = new InMemoryAdminWithdrawalStore();
         versionStaleStore.Add(versionStaleRun);
         var versionStaleWorkflow = CreateWorkflow(new RecordingContext(), versionStaleStore, versionStaleRun);
         await FluentActions.Invoking(() => versionStaleWorkflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
-                versionStaleRun.Id, 1, Guid.NewGuid(), Time.AddMinutes(1))))
+                versionStaleRun.TenantId, versionStaleRun.Id, 1, Guid.NewGuid(), Time.AddMinutes(1))))
             .Should().ThrowAsync<AdminWithdrawalStaleCommandException>();
 
         var dispatchingRun = approvedRun with
@@ -178,18 +274,18 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         dispatchStore.Add(dispatchingRun);
         var dispatchContext = new RecordingContext();
         var dispatchWorkflow = CreateWorkflow(dispatchContext, dispatchStore, dispatchingRun);
-        (await dispatchWorkflow.BeginDispatchAsync(new DurableAdminWithdrawalDispatchRequest(
-            dispatchingRun.Id, 2, dispatchingRun.FencingToken, dispatchingRun.ExecutionEpoch, "snapshot", Time.AddMinutes(2))))
+        (await dispatchWorkflow.BeginDispatchAsync(CreateDispatchRequest(
+            dispatchingRun, 2, occurredAt: Time.AddMinutes(2))))
             .Should().BeSameAs(dispatchingRun);
-        dispatchContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        dispatchContext.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
 
         var staleRun = CreateRun();
         var staleStore = new InMemoryAdminWithdrawalStore();
         staleStore.Add(staleRun);
         var staleContext = new RecordingContext();
         var staleWorkflow = CreateWorkflow(staleContext, staleStore, staleRun);
-        await FluentActions.Invoking(() => staleWorkflow.BeginDispatchAsync(new DurableAdminWithdrawalDispatchRequest(
-                staleRun.Id, staleRun.Version, staleRun.FencingToken, staleRun.ExecutionEpoch, "snapshot", Time)))
+        await FluentActions.Invoking(() => staleWorkflow.BeginDispatchAsync(CreateDispatchRequest(
+                staleRun, staleRun.Version)))
             .Should().ThrowAsync<AdminWithdrawalStaleCommandException>();
         staleContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
     }
@@ -209,7 +305,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var workflow = CreateWorkflow(context, store, approvedWithoutApprover);
 
         await FluentActions.Invoking(() => workflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
-                approvedWithoutApprover.Id, 1, Guid.NewGuid(), Time.AddMinutes(1))))
+                approvedWithoutApprover.TenantId, approvedWithoutApprover.Id, 1, Guid.NewGuid(), Time.AddMinutes(1))))
             .Should().ThrowAsync<AdminWithdrawalStaleCommandException>();
 
         context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
@@ -228,56 +324,189 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         await AssertDispatchStaleAsync(approved with { ApprovedBy = approved.RequestedBy }, 1, approved.FencingToken, approved.ExecutionEpoch);
     }
 
+    [Theory]
+    [InlineData("tenant")]
+    [InlineData("actor")]
+    [InlineData("policy")]
+    [InlineData("reserve")]
+    [InlineData("risk")]
+    [InlineData("provider")]
+    [InlineData("destination")]
+    [InlineData("roots")]
+    public async Task BeginDispatch_RejectsEveryUnboundCapabilityReceiptField(string invalid)
+    {
+        var approved = CreateRun() with
+        {
+            State = AdminWithdrawalRunState.Approved,
+            ApprovedBy = Guid.NewGuid()
+        };
+        var store = new InMemoryAdminWithdrawalStore();
+        store.Add(approved);
+        var context = new RecordingContext();
+        var authorization = new AcceptCapabilityAuthorization((_, receipt) => invalid switch
+        {
+            "tenant" => receipt with { TenantId = Guid.NewGuid() },
+            "actor" => receipt with { ActorId = Guid.NewGuid() },
+            "policy" => receipt with { PolicyVersion = receipt.PolicyVersion + 1 },
+            "reserve" => receipt with { ReserveVersion = receipt.ReserveVersion + 1 },
+            "risk" => receipt with { RiskDecisionId = Guid.NewGuid() },
+            "provider" => receipt with { ProviderHash = "changed-provider" },
+            "destination" => receipt with { DestinationHash = "changed-destination" },
+            "roots" => receipt with { SourceRootHashes = ["changed-root"] },
+            _ => receipt
+        });
+        var workflow = CreateWorkflow(
+            context, store, approved, capabilityAuthorization: authorization);
+
+        await FluentActions.Awaiting(() => workflow.BeginDispatchAsync(
+                CreateDispatchRequest(approved)))
+            .Should().ThrowAsync<AdminWithdrawalStaleCommandException>();
+        context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task BeginDispatch_RejectsWhenNoReservedFragmentCanTransition()
+    {
+        var approved = CreateRun() with
+        {
+            State = AdminWithdrawalRunState.Approved,
+            ApprovedBy = Guid.NewGuid()
+        };
+        var store = new InMemoryAdminWithdrawalStore();
+        store.Add(approved);
+        var context = new RecordingContext();
+        var workflow = CreateWorkflow(context, store, approved, transitionCount: 0);
+
+        await FluentActions.Awaiting(() => workflow.BeginDispatchAsync(
+                CreateDispatchRequest(approved)))
+            .Should().ThrowAsync<AdminWithdrawalStaleCommandException>();
+        context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task BeginDispatch_RejectsEveryInvalidRequestFieldBeforePersistence()
+    {
+        var run = CreateRun();
+        var context = new RecordingContext();
+        var workflow = CreateWorkflow(context, new InMemoryAdminWithdrawalStore(), run);
+        var valid = CreateDispatchRequest(run);
+        DurableAdminWithdrawalDispatchRequest?[] invalid =
+        [
+            null,
+            valid with { TenantId = Guid.Empty },
+            valid with { RunId = Guid.Empty },
+            valid with { DispatchedBy = Guid.Empty },
+            valid with { RiskDecisionId = Guid.Empty },
+            valid with { ExpectedVersion = 0 },
+            valid with { FencingToken = 0 },
+            valid with { ExecutionEpoch = 0 },
+            valid with { DispatchSnapshotHash = " " },
+            valid with { SubjectReference = " " },
+            valid with { JurisdictionCode = " " },
+            valid with { OperationFingerprint = " " },
+            valid with { ProviderHash = " " },
+            valid with { SourceRootHashes = null! },
+            valid with { SourceRootHashes = [] },
+            valid with { SourceRootHashes = [" "] },
+            valid with { SourceRootHashes = ["root", "root"] },
+            valid with { DispatchSnapshotHash = new string('x', 129) }
+        ];
+
+        foreach (var request in invalid)
+        {
+            await FluentActions.Awaiting(() => workflow.BeginDispatchAsync(request!))
+                .Should().ThrowAsync<Exception>();
+        }
+        context.Transactions.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("tenant")]
+    [InlineData("actor")]
+    public async Task ProviderEvent_RejectsPostingAuthorityBoundToAnotherActorOrTenant(string invalid)
+    {
+        var run = CreateRun() with
+        {
+            State = AdminWithdrawalRunState.Dispatching,
+            Version = 3,
+            ApprovedBy = Guid.NewGuid(),
+            DispatchSnapshotHash = "snapshot"
+        };
+        var store = new InMemoryAdminWithdrawalStore();
+        store.Add(run);
+        var context = new RecordingContext();
+        var providerAuthority = new AcceptProviderAuthority(request => CreateAuthority(
+            invalid == "actor" ? Guid.NewGuid() : request.ActorId,
+            invalid == "tenant" ? Guid.NewGuid() : request.TenantId));
+        var workflow = CreateWorkflow(
+            context, store, run, providerAuthority: providerAuthority);
+
+        await FluentActions.Awaiting(() => workflow.ApplyProviderEventAsync(
+                new DurableAdminWithdrawalProviderEventRequest(
+                    CreateProviderEvent(run, AdminWithdrawalProviderOutcome.Failed))))
+            .Should().ThrowAsync<AdminWithdrawalEvidenceException>();
+        context.Transactions.Should().BeEmpty();
+    }
+
     [Fact]
     public async Task Workflow_RejectsInvalidReservationApprovalDispatchAndProviderEventShapesBeforePersistence()
     {
         var validRun = CreateRun();
-        var authority = CreateAuthority(validRun.RequestedBy);
-        await AssertReserveRejectedAsync(validRun with { Id = Guid.Empty }, authority, typeof(ArgumentException));
-        await AssertReserveRejectedAsync(validRun with { PeriodStart = validRun.PeriodStart.AddDays(1) }, authority, typeof(ArgumentException));
-        await AssertReserveRejectedAsync(validRun with { State = AdminWithdrawalRunState.Approved }, authority, typeof(InvalidOperationException));
-        await AssertReserveRejectedAsync(validRun with { Version = 2 }, authority, typeof(InvalidOperationException));
-        await AssertReserveRejectedAsync(validRun with { ApprovedBy = Guid.NewGuid() }, authority, typeof(InvalidOperationException));
-        await AssertReserveRejectedAsync(validRun with { Amount = new CoinAmount(CurrencyCode.SoftCoin, 500) }, authority, typeof(AdminWithdrawalEligibilityException));
-        await AssertReserveRejectedAsync(validRun with { Amount = new CoinAmount(CurrencyCode.HardCoin, 0) }, authority, typeof(AdminWithdrawalEligibilityException));
-        await AssertReserveRejectedAsync(validRun with { FencingToken = 0 }, authority, typeof(ArgumentOutOfRangeException));
-        await AssertReserveRejectedAsync(validRun with { ExecutionEpoch = 0 }, authority, typeof(ArgumentOutOfRangeException));
-        await AssertReserveRejectedAsync(validRun with { ReserveAuthorizationEpoch = 0 }, authority, typeof(ArgumentOutOfRangeException));
-        await AssertReserveRejectedAsync(validRun, CreateAuthority(Guid.NewGuid()), typeof(InvalidOperationException));
+        await AssertReserveRejectedAsync(validRun with { Id = Guid.Empty }, typeof(ArgumentException));
+        await AssertReserveRejectedAsync(validRun with { TenantId = Guid.Empty }, typeof(ArgumentException));
+        await AssertReserveRejectedAsync(validRun with { PeriodStart = validRun.PeriodStart.AddDays(1) }, typeof(ArgumentException));
+        await AssertReserveRejectedAsync(validRun with { State = AdminWithdrawalRunState.Approved }, typeof(InvalidOperationException));
+        await AssertReserveRejectedAsync(validRun with { Version = 2 }, typeof(InvalidOperationException));
+        await AssertReserveRejectedAsync(validRun with { ApprovedBy = Guid.NewGuid() }, typeof(InvalidOperationException));
+        await AssertReserveRejectedAsync(validRun with { Amount = new CoinAmount(CurrencyCode.SoftCoin, 500) }, typeof(AdminWithdrawalEligibilityException));
+        await AssertReserveRejectedAsync(validRun with { Amount = new CoinAmount(CurrencyCode.HardCoin, 0) }, typeof(AdminWithdrawalEligibilityException));
+        await AssertReserveRejectedAsync(validRun with { FencingToken = 0 }, typeof(ArgumentOutOfRangeException));
+        await AssertReserveRejectedAsync(validRun with { ExecutionEpoch = 0 }, typeof(ArgumentOutOfRangeException));
+        await AssertReserveRejectedAsync(validRun with { ReserveAuthorizationEpoch = 0 }, typeof(ArgumentOutOfRangeException));
+
+        await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { SubjectReference = " " });
+        await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { JurisdictionCode = " " });
+        await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { RiskDecisionId = Guid.Empty });
+        await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { OperationFingerprint = " " });
+        await AssertReservationShapeRejectedAsync(CreateReservationRequest(validRun) with { ProviderHash = " " });
 
         var shapeContext = new RecordingContext();
         var shapeWorkflow = CreateWorkflow(shapeContext, new InMemoryAdminWithdrawalStore(), validRun);
         await FluentActions.Invoking(() => shapeWorkflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
-                Guid.Empty, 1, Guid.NewGuid(), Time)))
+                Guid.Empty, validRun.Id, 1, Guid.NewGuid(), Time)))
             .Should().ThrowAsync<ArgumentException>();
         await FluentActions.Invoking(() => shapeWorkflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
-                validRun.Id, 1, Guid.Empty, Time)))
+                validRun.TenantId, validRun.Id, 1, Guid.Empty, Time)))
             .Should().ThrowAsync<ArgumentException>();
         await FluentActions.Invoking(() => shapeWorkflow.ApproveAsync(new DurableAdminWithdrawalApprovalRequest(
-                validRun.Id, 0, Guid.NewGuid(), Time)))
+                validRun.TenantId, validRun.Id, 0, Guid.NewGuid(), Time)))
             .Should().ThrowAsync<ArgumentOutOfRangeException>();
-        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(new DurableAdminWithdrawalDispatchRequest(
-                Guid.Empty, 1, 1, 1, "snapshot", Time)))
+        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(
+                CreateDispatchRequest(validRun) with { RunId = Guid.Empty }))
             .Should().ThrowAsync<ArgumentException>();
-        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(new DurableAdminWithdrawalDispatchRequest(
-                validRun.Id, 0, 1, 1, "snapshot", Time)))
+        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(
+                CreateDispatchRequest(validRun) with { ExpectedVersion = 0 }))
             .Should().ThrowAsync<ArgumentOutOfRangeException>();
-        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(new DurableAdminWithdrawalDispatchRequest(
-                validRun.Id, 1, 0, 1, "snapshot", Time)))
+        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(
+                CreateDispatchRequest(validRun) with { FencingToken = 0 }))
             .Should().ThrowAsync<ArgumentOutOfRangeException>();
-        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(new DurableAdminWithdrawalDispatchRequest(
-                validRun.Id, 1, 1, 0, "snapshot", Time)))
+        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(
+                CreateDispatchRequest(validRun) with { ExecutionEpoch = 0 }))
             .Should().ThrowAsync<ArgumentOutOfRangeException>();
-        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(new DurableAdminWithdrawalDispatchRequest(
-                validRun.Id, 1, 1, 1, new string('x', 129), Time)))
+        await FluentActions.Invoking(() => shapeWorkflow.BeginDispatchAsync(
+                CreateDispatchRequest(validRun) with { DispatchSnapshotHash = new string('x', 129) }))
             .Should().ThrowAsync<ArgumentException>();
         var missingRunId = CreateProviderEvent(validRun, AdminWithdrawalProviderOutcome.Failed) with { RunId = Guid.Empty };
         await FluentActions.Invoking(() => shapeWorkflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-                missingRunId, CreateAuthority(Guid.NewGuid()))))
+                missingRunId)))
+            .Should().ThrowAsync<ArgumentException>();
+        var missingTenant = CreateProviderEvent(validRun, AdminWithdrawalProviderOutcome.Failed) with { TenantId = Guid.Empty };
+        await FluentActions.Invoking(() => shapeWorkflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
+                missingTenant)))
             .Should().ThrowAsync<ArgumentException>();
         var nonTerminalEvent = CreateProviderEvent(validRun, AdminWithdrawalProviderOutcome.Failed) with { Outcome = AdminWithdrawalProviderOutcome.Submitted };
         await FluentActions.Invoking(() => shapeWorkflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-                nonTerminalEvent, CreateAuthority(Guid.NewGuid()))))
+                nonTerminalEvent)))
             .Should().ThrowAsync<AdminWithdrawalEvidenceException>();
         shapeContext.Transactions.Should().BeEmpty();
     }
@@ -299,7 +528,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
             dispatchingRun,
             evidence: new RejectEvidence());
         await FluentActions.Invoking(() => rejectWorkflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-                CreateProviderEvent(dispatchingRun, AdminWithdrawalProviderOutcome.Failed), CreateAuthority(Guid.NewGuid()))))
+                CreateProviderEvent(dispatchingRun, AdminWithdrawalProviderOutcome.Failed))))
             .Should().ThrowAsync<AdminWithdrawalEvidenceException>();
         rejectContext.Transactions.Should().BeEmpty();
 
@@ -309,9 +538,9 @@ public sealed class DurableAdminWithdrawalWorkflowTests
             new ReplayOnSecondProviderEventLookupStore(dispatchingRun),
             dispatchingRun);
         (await replayWorkflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-            CreateProviderEvent(dispatchingRun, AdminWithdrawalProviderOutcome.Failed), CreateAuthority(Guid.NewGuid()))))
+            CreateProviderEvent(dispatchingRun, AdminWithdrawalProviderOutcome.Failed))))
             .Should().BeSameAs(dispatchingRun);
-        replayContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        replayContext.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
 
         var zeroTransitionStore = new InMemoryAdminWithdrawalStore();
         zeroTransitionStore.Add(dispatchingRun);
@@ -322,7 +551,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
             dispatchingRun,
             transitionCount: 0);
         await FluentActions.Invoking(() => zeroTransitionWorkflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-                CreateProviderEvent(dispatchingRun, AdminWithdrawalProviderOutcome.Failed), CreateAuthority(Guid.NewGuid()))))
+                CreateProviderEvent(dispatchingRun, AdminWithdrawalProviderOutcome.Failed))))
             .Should().ThrowAsync<AdminWithdrawalStaleCommandException>();
         zeroTransitionContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
 
@@ -332,7 +561,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var unorderedContext = new RecordingContext();
         var unorderedWorkflow = CreateWorkflow(unorderedContext, unorderedStore, unorderedRun);
         await FluentActions.Invoking(() => unorderedWorkflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-                CreateProviderEvent(unorderedRun, AdminWithdrawalProviderOutcome.Failed), CreateAuthority(Guid.NewGuid()))))
+                CreateProviderEvent(unorderedRun, AdminWithdrawalProviderOutcome.Failed))))
             .Should().ThrowAsync<AdminWithdrawalStaleCommandException>();
 
         var predatedStore = new InMemoryAdminWithdrawalStore();
@@ -341,7 +570,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var predatedWorkflow = CreateWorkflow(predatedContext, predatedStore, dispatchingRun);
         var predated = CreateProviderEvent(dispatchingRun, AdminWithdrawalProviderOutcome.Failed) with { ObservedAt = Time.AddMinutes(-1) };
         await FluentActions.Invoking(() => predatedWorkflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-                predated, CreateAuthority(Guid.NewGuid()))))
+                predated)))
             .Should().ThrowAsync<AdminWithdrawalEvidenceException>();
     }
 
@@ -371,8 +600,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var failureContext = new RecordingContext();
         var failureWorkflow = CreateWorkflow(failureContext, failureStore, dispatching);
         var failed = await failureWorkflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-            validFailure,
-            CreateAuthority(Guid.NewGuid())));
+            validFailure));
 
         failed.State.Should().Be(AdminWithdrawalRunState.Failed);
         failureContext.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
@@ -380,14 +608,23 @@ public sealed class DurableAdminWithdrawalWorkflowTests
 
     private static async Task AssertReserveRejectedAsync(
         AdminWithdrawalRun run,
-        RegisteredPostingAuthority authority,
         Type expectedException)
     {
         var context = new RecordingContext();
         var workflow = CreateWorkflow(context, new InMemoryAdminWithdrawalStore(), CreateRun());
-        var exception = await FluentActions.Invoking(() => workflow.ReserveAsync(new DurableAdminWithdrawalReservationRequest(run, authority)))
+        var exception = await FluentActions.Invoking(() => workflow.ReserveAsync(CreateReservationRequest(run)))
             .Should().ThrowAsync<Exception>();
         exception.Which.Should().BeOfType(expectedException);
+        context.Transactions.Should().BeEmpty();
+    }
+
+    private static async Task AssertReservationShapeRejectedAsync(
+        DurableAdminWithdrawalReservationRequest request)
+    {
+        var context = new RecordingContext();
+        var workflow = CreateWorkflow(context, new InMemoryAdminWithdrawalStore(), request.Run);
+        await FluentActions.Invoking(() => workflow.ReserveAsync(request))
+            .Should().ThrowAsync<ArgumentException>();
         context.Transactions.Should().BeEmpty();
     }
 
@@ -401,8 +638,8 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         store.Add(run);
         var context = new RecordingContext();
         var workflow = CreateWorkflow(context, store, run);
-        await FluentActions.Invoking(() => workflow.BeginDispatchAsync(new DurableAdminWithdrawalDispatchRequest(
-                run.Id, expectedVersion, fencingToken, executionEpoch, "snapshot", Time)))
+        await FluentActions.Invoking(() => workflow.BeginDispatchAsync(CreateDispatchRequest(
+                run, expectedVersion, fencingToken, executionEpoch)))
             .Should().ThrowAsync<AdminWithdrawalStaleCommandException>();
         context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
     }
@@ -416,10 +653,9 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         var context = new RecordingContext();
         var workflow = CreateWorkflow(context, store, run);
         await FluentActions.Invoking(() => workflow.ApplyProviderEventAsync(new DurableAdminWithdrawalProviderEventRequest(
-                providerEvent,
-                CreateAuthority(Guid.NewGuid()))))
+                providerEvent)))
             .Should().ThrowAsync<AdminWithdrawalEvidenceException>();
-        context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        context.Transactions.Should().BeEmpty();
     }
 
     private static PostgreSqlDurableAdminWithdrawalWorkflow CreateWorkflow(
@@ -428,15 +664,24 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         AdminWithdrawalRun reservationRun,
         long? fragmentUnits = null,
         long transitionCount = 1,
-        IAdminWithdrawalProviderEvidenceVerifier? evidence = null) => new(
+        IAdminWithdrawalProviderEvidenceVerifier? evidence = null,
+        IEconomyCapabilityAuthorizationService? capabilityAuthorization = null,
+        IRegisteredPostingCapabilityResolver? capabilityResolver = null,
+        IRegisteredPostingGateway? postings = null,
+        IProviderEvidencePostingAuthorityIssuer? providerAuthority = null) => new(
         context,
         operations,
         new AdminWithdrawalAuditTrail(),
         new RecordingReservations(reservationRun, fragmentUnits, transitionCount),
-        new RecordingPostings(),
-        evidence ?? new AcceptEvidence());
+        capabilityAuthorization ?? new AcceptCapabilityAuthorization(),
+        capabilityResolver ?? new AcceptCapabilityResolver(),
+        postings ?? new RecordingPostings(),
+        providerAuthority ?? new AcceptProviderAuthority(),
+        evidence ?? new AcceptEvidence(),
+        new RecordingDispatchOutbox());
 
     private static AdminWithdrawalRun CreateRun() => new(
+        Guid.NewGuid(),
         Guid.NewGuid(),
         new IdempotencyKey($"admin-withdrawal-{Guid.NewGuid():N}"),
         "request-hash",
@@ -459,11 +704,42 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         Time,
         Time);
 
+    private static DurableAdminWithdrawalReservationRequest CreateReservationRequest(AdminWithdrawalRun run) => new(
+        run,
+        $"tenant:{run.TenantId:N}:treasury",
+        "US",
+        Guid.NewGuid(),
+        $"admin-withdrawal:{run.Id:N}",
+        "stripe-platform");
+
+    private static DurableAdminWithdrawalDispatchRequest CreateDispatchRequest(
+        AdminWithdrawalRun run,
+        long? expectedVersion = null,
+        long? fencingToken = null,
+        long? executionEpoch = null,
+        DateTimeOffset? occurredAt = null,
+        string snapshotHash = "snapshot") => new(
+        run.TenantId,
+        run.Id,
+        expectedVersion ?? run.Version,
+        fencingToken ?? run.FencingToken,
+        executionEpoch ?? run.ExecutionEpoch,
+        snapshotHash,
+        occurredAt ?? Time,
+        Guid.NewGuid(),
+        $"tenant:{run.TenantId:N}:treasury",
+        "US",
+        Guid.NewGuid(),
+        $"admin-withdrawal-dispatch:{run.Id:N}",
+        "stripe-platform",
+        ["source-root-hash"]);
+
     private static AdminWithdrawalProviderEvent CreateProviderEvent(
         AdminWithdrawalRun run,
         AdminWithdrawalProviderOutcome outcome) => new(
         $"evt_{Guid.NewGuid():N}",
         run.Id,
+        run.TenantId,
         outcome,
         "transfer-1",
         run.FencingToken,
@@ -475,8 +751,11 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         "signature",
         Time.AddMinutes(3));
 
-    private static RegisteredPostingAuthority CreateAuthority(Guid actorId) => new(
-        Guid.NewGuid(), actorId, Guid.NewGuid(), Guid.NewGuid(), "economy-admin-withdrawal", 1);
+    private static RegisteredPostingAuthority CreateAuthority(Guid actorId, Guid tenantId) => new(
+        Guid.NewGuid(), actorId, tenantId, Guid.NewGuid(), "economy-admin-withdrawal", 1);
+
+    private static string Hash(string value) => Convert.ToHexStringLower(
+        SHA256.HashData(Encoding.UTF8.GetBytes(value)));
 
     private sealed class RecordingContext : IApplicationDbContext
     {
@@ -517,7 +796,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         long? fragmentUnits = null,
         long transitionCount = 1) : IFifoFragmentReservationGateway
     {
-        private readonly PersistedFragmentReservation _fragment = new(
+        public PersistedFragmentReservation Fragment { get; } = new(
             Guid.NewGuid(),
             run.Id,
             CreditLotId.New(),
@@ -526,7 +805,7 @@ public sealed class DurableAdminWithdrawalWorkflowTests
             new RootTraceRange(SourceStampId.New(), 0, checked(run.Amount.Units * 1000), 0),
             new CoinAmount(run.Amount.Currency, fragmentUnits ?? run.Amount.Units));
         public List<ReservationTransition> Transitions { get; } = [];
-        public IReadOnlyList<PersistedFragmentReservation> Reserve(FifoFragmentReservationRequest request) => [_fragment];
+        public IReadOnlyList<PersistedFragmentReservation> Reserve(FifoFragmentReservationRequest request) => [Fragment];
         public long Transition(Guid operationId, PersistedFragmentReservationStatus expected, PersistedFragmentReservationStatus next, DateTimeOffset terminalAt)
         {
             Transitions.Add(new ReservationTransition(operationId, expected, next, terminalAt));
@@ -541,6 +820,119 @@ public sealed class DurableAdminWithdrawalWorkflowTests
         {
             Requests.Add(request);
             return new RegisteredPostingReceipt(request.Posting.Id, 1, "journal-hash", false);
+        }
+    }
+
+    private sealed class AcceptCapabilityAuthorization(
+        Func<EconomyCapabilityEvaluationContext, CapabilityAuthorizationReceipt, CapabilityAuthorizationReceipt>? mutate = null)
+        : IEconomyCapabilityAuthorizationService
+    {
+        public List<EconomyCapabilityEvaluationContext> Contexts { get; } = [];
+
+        public ValueTask<CapabilityAuthorizationReceipt> AuthorizeAndConsumeAsync(
+            EconomyCapabilityEvaluationContext context,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Contexts.Add(context);
+            var receipt = new CapabilityAuthorizationReceipt(
+                Guid.NewGuid(),
+                context.TenantId,
+                context.ActorId,
+                context.SubjectReference,
+                context.JurisdictionCode,
+                context.Capability,
+                context.OperationFingerprint,
+                1,
+                1,
+                context.RiskDecisionId,
+                1,
+                context.ProviderHash,
+                context.DestinationHash,
+                context.SourceRootHashes,
+                ["evidence"],
+                context.EvaluatedAt,
+                context.EvaluatedAt.AddMinutes(5),
+                "receipt-hash",
+                "test-key",
+                "signature");
+            return ValueTask.FromResult(mutate?.Invoke(context, receipt) ?? receipt);
+        }
+    }
+
+    private sealed class AcceptCapabilityResolver(
+        Func<CapabilityAuthorizationReceipt, PostingTemplateKind, RegisteredPostingAuthority>? authorityFactory = null)
+        : IRegisteredPostingCapabilityResolver
+    {
+        public List<CapabilityResolution> Resolutions { get; } = [];
+
+        public Task<RegisteredPostingCapability> ResolveAsync(
+            string capabilityName,
+            PostingTemplateKind templateKind,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new RegisteredPostingCapability(Guid.NewGuid(), capabilityName, templateKind));
+
+        public Task<RegisteredPostingAuthority> ResolveAuthorityAsync(
+            string capabilityName,
+            PostingTemplateKind templateKind,
+            CapabilityAuthorizationReceipt receipt,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Resolutions.Add(new CapabilityResolution(capabilityName, templateKind, receipt));
+            return Task.FromResult(authorityFactory?.Invoke(receipt, templateKind) ?? new RegisteredPostingAuthority(
+                Guid.NewGuid(),
+                receipt.ActorId,
+                receipt.TenantId,
+                receipt.RiskDecisionId,
+                receipt.OperationFingerprint,
+                receipt.PolicyVersion));
+        }
+    }
+
+    private sealed record CapabilityResolution(
+        string CapabilityName,
+        PostingTemplateKind TemplateKind,
+        CapabilityAuthorizationReceipt Receipt);
+
+    private sealed class RecordingDispatchOutbox : IAdminWithdrawalDispatchOutboxWriter
+    {
+        public List<AdminWithdrawalDispatchOutboxRow> Rows { get; } = [];
+
+        public Task AddAsync(
+            AdminWithdrawalDispatchOutboxRow row,
+            CancellationToken cancellationToken = default)
+        {
+            Rows.Add(row);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class AcceptProviderAuthority(
+        Func<ProviderEvidencePostingAuthorityRequest, RegisteredPostingAuthority>? issue = null)
+        : IProviderEvidencePostingAuthorityIssuer
+    {
+        public List<ProviderEvidencePostingAuthorityRequest> Requests { get; } = [];
+        public List<(RegisteredPostingAuthority Authority, DateTimeOffset ConsumedAt)> Consumptions { get; } = [];
+
+        public ValueTask<RegisteredPostingAuthority> IssueAsync(
+            ProviderEvidencePostingAuthorityRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Requests.Add(request);
+            return ValueTask.FromResult(
+                issue?.Invoke(request) ?? CreateAuthority(request.ActorId, request.TenantId));
+        }
+
+        public ValueTask ConsumeAsync(
+            RegisteredPostingAuthority authority,
+            DateTimeOffset consumedAt,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Consumptions.Add((authority, consumedAt));
+            return ValueTask.CompletedTask;
         }
     }
 

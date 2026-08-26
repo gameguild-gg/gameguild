@@ -30,7 +30,8 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
         var payeeId = Guid.NewGuid();
         var walletId = Guid.NewGuid();
         var requestId = Guid.NewGuid();
-        await SeedWalletAsync(connection, payeeId, walletId);
+        var tenantId = Guid.NewGuid();
+        await SeedWalletAsync(connection, payeeId, walletId, tenantId);
 
         var directInsert = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsWriterAsync(
             connection,
@@ -38,33 +39,33 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
         directInsert.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
 
         await ExecuteAsWriterAsync(connection, $"""
-            SELECT economy_private.create_payout_request_v2(
-                {requestId}, {"request-1"}, {new string('a', 64)}, {payeeId}, {walletId}, {250}, {1}, {1},
+            SELECT economy_private.create_payout_request_v3(
+                {requestId}, {tenantId}, {"request-1"}, {new string('a', 64)}, {payeeId}, {walletId}, {250}, {1}, {1},
                 {Now}, {Now});
             """);
 
         (await ScalarAsync<long>(connection, $"""
             SELECT "AmountUnits"
-            FROM economy_private.read_payout_request_by_id_for_payee_v1({requestId}, {payeeId});
+            FROM economy_private.read_payout_request_by_id_for_payee_v3({tenantId}, {requestId}, {payeeId});
             """)).Should().Be(250);
 
         await ExecuteAsWriterAsync(connection, $"""
-            SELECT economy_private.transition_payout_request_v1(
-                {requestId}, {payeeId}, {1}, {2}, {Now.AddMinutes(1)});
+            SELECT economy_private.transition_payout_request_v3(
+                {tenantId}, {requestId}, {payeeId}, {1}, {2}, {Now.AddMinutes(1)});
             """);
 
         (await ScalarAsync<int>(connection, $"""
             SELECT "State"
-            FROM economy_private.read_payout_request_by_id_for_payee_v1({requestId}, {payeeId});
+            FROM economy_private.read_payout_request_by_id_for_payee_v3({tenantId}, {requestId}, {payeeId});
             """)).Should().Be(2);
         (await ScalarAsync<long>(connection, $"""
             SELECT "Version"
-            FROM economy_private.read_payout_request_by_id_for_payee_v1({requestId}, {payeeId});
+            FROM economy_private.read_payout_request_by_id_for_payee_v3({tenantId}, {requestId}, {payeeId});
             """)).Should().Be(2);
 
         var foreignCancellation = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsWriterAsync(
             connection,
-            $"""SELECT economy_private.transition_payout_request_v1({requestId}, {Guid.NewGuid()}, {2}, {2}, {Now.AddMinutes(2)});"""));
+            $"""SELECT economy_private.transition_payout_request_v3({tenantId}, {requestId}, {Guid.NewGuid()}, {2}, {2}, {Now.AddMinutes(2)});"""));
         foreignCancellation.SqlState.Should().Be("P0002");
     }
 
@@ -84,13 +85,14 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
         await connection.OpenAsync();
         var ownerId = Guid.NewGuid();
         var walletId = Guid.NewGuid();
-        await SeedWalletAsync(connection, ownerId, walletId);
+        var tenantId = Guid.NewGuid();
+        await SeedWalletAsync(connection, ownerId, walletId, tenantId);
 
         var foreignRequest = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsWriterAsync(
             connection,
             $"""
-            SELECT economy_private.create_payout_request_v2(
-                {Guid.NewGuid()}, {"request-foreign"}, {new string('b', 64)}, {Guid.NewGuid()}, {walletId}, {250}, {1}, {1},
+            SELECT economy_private.create_payout_request_v3(
+                {Guid.NewGuid()}, {tenantId}, {"request-foreign"}, {new string('b', 64)}, {Guid.NewGuid()}, {walletId}, {250}, {1}, {1},
                 {Now}, {Now});
             """));
 
@@ -116,25 +118,26 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
         var firstWallet = Guid.NewGuid();
         var secondPayee = Guid.NewGuid();
         var secondWallet = Guid.NewGuid();
-        await SeedWalletAsync(connection, firstPayee, firstWallet);
-        await SeedWalletAsync(connection, secondPayee, secondWallet);
+        var tenantId = Guid.NewGuid();
+        await SeedWalletAsync(connection, firstPayee, firstWallet, tenantId);
+        await SeedWalletAsync(connection, secondPayee, secondWallet, tenantId);
 
         await ExecuteAsWriterAsync(connection, $"""
-            SELECT economy_private.create_payout_request_v2(
-                {Guid.NewGuid()}, {"same-key"}, {new string('a', 64)}, {firstPayee}, {firstWallet}, {250}, {1}, {1},
+            SELECT economy_private.create_payout_request_v3(
+                {Guid.NewGuid()}, {tenantId}, {"same-key"}, {new string('a', 64)}, {firstPayee}, {firstWallet}, {250}, {1}, {1},
                 {Now}, {Now});
-            SELECT economy_private.create_payout_request_v2(
-                {Guid.NewGuid()}, {"same-key"}, {new string('b', 64)}, {secondPayee}, {secondWallet}, {250}, {1}, {1},
+            SELECT economy_private.create_payout_request_v3(
+                {Guid.NewGuid()}, {tenantId}, {"same-key"}, {new string('b', 64)}, {secondPayee}, {secondWallet}, {250}, {1}, {1},
                 {Now}, {Now});
             """);
 
         (await ScalarAsync<long>(connection, $"""
             SELECT COUNT(*)
-            FROM economy_private.read_payout_request_by_idempotency_v1({firstPayee}, {"same-key"});
+            FROM economy_private.read_payout_request_by_idempotency_v3({tenantId}, {firstPayee}, {"same-key"});
             """)).Should().Be(1);
         (await ScalarAsync<long>(connection, $"""
             SELECT COUNT(*)
-            FROM economy_private.read_payout_request_by_idempotency_v1({secondPayee}, {"same-key"});
+            FROM economy_private.read_payout_request_by_idempotency_v3({tenantId}, {secondPayee}, {"same-key"});
             """)).Should().Be(1);
     }
 
@@ -162,8 +165,8 @@ public sealed class EconomyPayoutRequestPostgreSqlMigrationTests
         await SeedWalletAsync(connection, payeeId, walletId, tenantId);
 
         await ExecuteAsWriterAsync(connection, $"""
-            SELECT economy_private.create_payout_request_v2(
-                {requestId}, {"review-request"}, {new string('c', 64)}, {payeeId}, {walletId}, {250}, {1}, {1},
+            SELECT economy_private.create_payout_request_v3(
+                {requestId}, {tenantId}, {"review-request"}, {new string('c', 64)}, {payeeId}, {walletId}, {250}, {1}, {1},
                 {Now}, {Now});
             """);
 

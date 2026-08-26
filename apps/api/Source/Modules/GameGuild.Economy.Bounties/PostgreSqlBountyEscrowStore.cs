@@ -12,6 +12,7 @@ namespace GameGuild.Economy.Bounties;
 /// </summary>
 public sealed record PersistedBountyEscrow(
     BountyId Id,
+    Guid TenantId,
     Guid PosterId,
     WalletId PosterWalletId,
     WalletId EscrowWalletId,
@@ -36,15 +37,16 @@ public sealed record PersistedBountyEscrowFragment(
 
 public sealed record CreateBountyEscrowPersistenceCommand(
     BountyEscrowPosition Position,
+    Guid TenantId,
     IdempotencyKey IdempotencyKey,
     string RequestHash,
     PostingId PostingId);
 
 public interface IBountyEscrowStore
 {
-    PersistedBountyEscrow Get(BountyId bountyId);
+    PersistedBountyEscrow Get(Guid tenantId, BountyId bountyId);
 
-    PersistedBountyEscrow? FindPostReplay(IdempotencyKey idempotencyKey, string requestHash);
+    PersistedBountyEscrow? FindPostReplay(Guid tenantId, IdempotencyKey idempotencyKey, string requestHash);
 
     PersistedBountyEscrow Create(CreateBountyEscrowPersistenceCommand command);
 }
@@ -65,10 +67,11 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
                 "PostgreSQL bounty persistence requires the application's relational DbContext.");
     }
 
-    public PersistedBountyEscrow Get(BountyId bountyId)
+    public PersistedBountyEscrow Get(Guid tenantId, BountyId bountyId)
     {
+        ValidateTenant(tenantId);
         var row = ReadBounties($"""
-            SELECT * FROM economy_private.read_bounty_escrow_by_id_v1({bountyId.Value})
+            SELECT * FROM economy_private.read_bounty_escrow_by_id_v2({tenantId}, {bountyId.Value})
             """).SingleOrDefault();
 
         return row is null
@@ -76,11 +79,12 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
             : ToContract(row);
     }
 
-    public PersistedBountyEscrow? FindPostReplay(IdempotencyKey idempotencyKey, string requestHash)
+    public PersistedBountyEscrow? FindPostReplay(Guid tenantId, IdempotencyKey idempotencyKey, string requestHash)
     {
+        ValidateTenant(tenantId);
         ArgumentException.ThrowIfNullOrWhiteSpace(requestHash);
         var row = ReadBounties($"""
-            SELECT * FROM economy_private.read_bounty_escrow_by_idempotency_v1({idempotencyKey.Value})
+            SELECT * FROM economy_private.read_bounty_escrow_by_idempotency_v2({tenantId}, {idempotencyKey.Value})
             """).SingleOrDefault();
 
         if (row is null)
@@ -98,6 +102,7 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
         ArgumentNullException.ThrowIfNull(command);
         ArgumentNullException.ThrowIfNull(command.Position);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.RequestHash);
+        ValidateTenant(command.TenantId);
         if (command.Position.Status != BountyStatus.Open)
             throw new BountyTerminalConflictException("Only an open bounty escrow can be persisted.");
         if (command.Position.Id.Value == Guid.Empty)
@@ -107,7 +112,8 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
         try
         {
             _db.Database.ExecuteSqlInterpolated($"""
-                SELECT economy_private.create_bounty_escrow_v3(
+                SELECT economy_private.create_bounty_escrow_v4(
+                    {command.TenantId},
                     {command.Position.Id.Value},
                     {command.Position.PosterId},
                     {command.Position.PosterWalletId.Value},
@@ -132,7 +138,7 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
                 "The persistent bounty escrow writer rejected the request.");
         }
 
-        return Get(command.Position.Id);
+        return Get(command.TenantId, command.Position.Id);
     }
 
     private IQueryable<BountyRow> ReadBounties(FormattableString sql) =>
@@ -143,7 +149,7 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
         if (string.IsNullOrWhiteSpace(row.RequestHash))
             throw new InvalidOperationException("A persisted bounty escrow is missing its immutable request hash.");
 
-        var fragments = ReadFragments(row.Id)
+        var fragments = ReadFragments(row.TenantId, row.Id)
             .AsEnumerable()
             .Select(fragment => new PersistedBountyEscrowFragment(
             new CreditLotId(fragment.ParentLotId),
@@ -156,6 +162,7 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
 
         return new PersistedBountyEscrow(
             new BountyId(row.Id),
+            row.TenantId,
             row.PosterId,
             new WalletId(row.PosterWalletId),
             new WalletId(row.EscrowWalletId),
@@ -174,10 +181,10 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
             fragments);
     }
 
-    private IQueryable<BountyEscrowFragmentProjection> ReadFragments(Guid bountyId) =>
+    private IQueryable<BountyEscrowFragmentProjection> ReadFragments(Guid tenantId, Guid bountyId) =>
         _db.Database.SqlQuery<BountyEscrowFragmentProjection>($"""
             SELECT "ParentLotId", "EscrowLotId", "Currency", "Provenance", "AmountUnits", "TraceUnitsPerCoinUnit", "SelectedRootRanges"
-            FROM economy_private.read_bounty_escrow_fragments_v3({bountyId})
+            FROM economy_private.read_bounty_escrow_fragments_v4({tenantId}, {bountyId})
             """);
 
     private static IReadOnlyList<RootTraceRange> DeserializeRanges(string payload)
@@ -208,6 +215,12 @@ public sealed class PostgreSqlBountyEscrowStore : IBountyEscrowStore
     private static bool IsDatabaseFailure(Exception exception) =>
         exception is DbUpdateException or InvalidOperationException ||
         exception.GetBaseException() is System.Data.Common.DbException;
+
+    private static void ValidateTenant(Guid tenantId)
+    {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("A non-quarantine tenant ID is required.", nameof(tenantId));
+    }
 
     private sealed record FragmentPayload(
         Guid ParentLotId,

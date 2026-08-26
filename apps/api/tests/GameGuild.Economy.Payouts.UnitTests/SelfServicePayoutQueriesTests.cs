@@ -10,14 +10,16 @@ public sealed class SelfServicePayoutQueriesTests
     public async Task ListReturnsOnlyTheAuthenticatedPayeeOperationsInReverseChronologicalOrder()
     {
         var payeeId = Guid.Parse("a1000000-0000-0000-0000-000000000001");
+        var tenantId = Guid.NewGuid();
         var store = new InMemoryPayoutOperationStore();
-        store.Add(CreateOperation(payeeId, 100, new DateTimeOffset(2026, 8, 10, 9, 0, 0, TimeSpan.Zero)));
-        var latest = CreateOperation(payeeId, 200, new DateTimeOffset(2026, 8, 10, 10, 0, 0, TimeSpan.Zero));
+        store.Add(CreateOperation(tenantId, payeeId, 100, new DateTimeOffset(2026, 8, 10, 9, 0, 0, TimeSpan.Zero)));
+        var latest = CreateOperation(tenantId, payeeId, 200, new DateTimeOffset(2026, 8, 10, 10, 0, 0, TimeSpan.Zero));
         store.Add(latest);
-        store.Add(CreateOperation(Guid.NewGuid(), 300, new DateTimeOffset(2026, 8, 10, 11, 0, 0, TimeSpan.Zero)));
+        store.Add(CreateOperation(tenantId, Guid.NewGuid(), 300, new DateTimeOffset(2026, 8, 10, 11, 0, 0, TimeSpan.Zero)));
+        store.Add(CreateOperation(Guid.NewGuid(), payeeId, 400, new DateTimeOffset(2026, 8, 10, 12, 0, 0, TimeSpan.Zero)));
         var handler = new ListMyPayoutOperationsQueryHandler(store);
 
-        var result = await handler.Handle(new ListMyPayoutOperationsQuery(payeeId, 10), CancellationToken.None);
+        var result = await handler.Handle(new ListMyPayoutOperationsQuery(tenantId, payeeId, 10), CancellationToken.None);
 
         result.Should().HaveCount(2);
         result[0].Id.Should().Be(latest.Id);
@@ -31,25 +33,27 @@ public sealed class SelfServicePayoutQueriesTests
     public async Task GetReturnsNullForMissingOrForeignOperations()
     {
         var payeeId = Guid.Parse("a1000000-0000-0000-0000-000000000002");
-        var foreign = CreateOperation(Guid.NewGuid(), 100, DateTimeOffset.UtcNow);
+        var tenantId = Guid.NewGuid();
+        var foreign = CreateOperation(tenantId, Guid.NewGuid(), 100, DateTimeOffset.UtcNow);
         var store = new InMemoryPayoutOperationStore();
         store.Add(foreign);
         var handler = new GetMyPayoutOperationQueryHandler(store);
 
-        (await handler.Handle(new GetMyPayoutOperationQuery(payeeId, foreign.Id), CancellationToken.None)).Should().BeNull();
-        (await handler.Handle(new GetMyPayoutOperationQuery(payeeId, Guid.NewGuid()), CancellationToken.None)).Should().BeNull();
+        (await handler.Handle(new GetMyPayoutOperationQuery(tenantId, payeeId, foreign.Id), CancellationToken.None)).Should().BeNull();
+        (await handler.Handle(new GetMyPayoutOperationQuery(tenantId, payeeId, Guid.NewGuid()), CancellationToken.None)).Should().BeNull();
     }
 
     [Fact]
     public async Task GetReturnsAStatusOnlyDtoForThePayee()
     {
         var payeeId = Guid.Parse("a1000000-0000-0000-0000-000000000003");
-        var operation = CreateOperation(payeeId, 450, DateTimeOffset.UtcNow);
+        var tenantId = Guid.NewGuid();
+        var operation = CreateOperation(tenantId, payeeId, 450, DateTimeOffset.UtcNow);
         var store = new InMemoryPayoutOperationStore();
         store.Add(operation);
         var handler = new GetMyPayoutOperationQueryHandler(store);
 
-        var result = await handler.Handle(new GetMyPayoutOperationQuery(payeeId, operation.Id), CancellationToken.None);
+        var result = await handler.Handle(new GetMyPayoutOperationQuery(tenantId, payeeId, operation.Id), CancellationToken.None);
 
         result.Should().NotBeNull();
         result!.Id.Should().Be(operation.Id);
@@ -62,15 +66,17 @@ public sealed class SelfServicePayoutQueriesTests
     {
         var store = new InMemoryPayoutOperationStore();
 
-        FluentActions.Invoking(() => store.ListForPayee(Guid.Empty, 10))
+        FluentActions.Invoking(() => store.ListForPayee(Guid.Empty, Guid.NewGuid(), 10))
             .Should().Throw<ArgumentException>();
-        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), 0))
+        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), Guid.Empty, 10))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), Guid.NewGuid(), 0))
             .Should().Throw<ArgumentOutOfRangeException>();
-        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), 101))
+        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), Guid.NewGuid(), 101))
             .Should().Throw<ArgumentOutOfRangeException>();
     }
 
-    private static PayoutOperation CreateOperation(Guid payeeId, long hardCoinUnits, DateTimeOffset createdAt) => new(
+    private static PayoutOperation CreateOperation(Guid tenantId, Guid payeeId, long hardCoinUnits, DateTimeOffset createdAt) => new(
         Guid.NewGuid(),
         new IdempotencyKey($"payout-{Guid.NewGuid():N}"),
         "request-hash",
@@ -93,5 +99,6 @@ public sealed class SelfServicePayoutQueriesTests
         new PolicyVersion(1),
         Guid.NewGuid(),
         createdAt,
-        createdAt);
+        createdAt,
+        tenantId);
 }

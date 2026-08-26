@@ -1,5 +1,6 @@
 using GameGuild.API.Database;
 using GameGuild.API.HealthChecks;
+using GameGuild.API.HostedServices;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
 using GameGuild.Compliance.FERPA;
@@ -95,6 +96,9 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddMarketplaceComposition(builder.Configuration);
         builder.Services.AddPayoutsComposition(builder.Configuration);
         builder.Services.AddTreasuryComposition(builder.Configuration);
+        builder.Services.AddOptions<EconomyDurableWorkerOptions>()
+            .Bind(builder.Configuration.GetSection(EconomyDurableWorkerOptions.SectionName));
+        builder.Services.AddHostedService<EconomyDurableWorker>();
 
         builder.Services.AddFollowsModule();
         new GameGuild.Social.Announcements.AnnouncementsModule().ConfigureServices(builder.Services, builder.Configuration);

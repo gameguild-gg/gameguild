@@ -72,7 +72,7 @@ public sealed class AdminWithdrawalCoordinator
             var rootSnapshot = _rootFences.Capture(roots);
             var fencingToken = checked(++_nextFencingToken);
             var run = new AdminWithdrawalRun(
-                request.RunId, request.IdempotencyKey, requestHash, request.PeriodStart,
+                request.RunId, request.TenantId, request.IdempotencyKey, requestHash, request.PeriodStart,
                 request.RequestedBy, null, request.PlatformFeeWalletId, amount,
                 request.SourceAssetKey.Trim(), request.DestinationHash.Trim(),
                 AdminWithdrawalRunState.PendingApproval, 1, fencingToken, _execution.Epoch,
@@ -200,7 +200,7 @@ public sealed class AdminWithdrawalCoordinator
         try
         {
             receipt = await _provider.DispatchAsync(new AdminWithdrawalDispatchCommand(
-                runId, dispatching.Version, fencingToken, executionEpoch,
+                runId, dispatching.TenantId, dispatching.Version, fencingToken, executionEpoch,
                 dispatching.Amount, dispatching.SourceAssetKey, dispatching.DestinationHash,
                 snapshotHash, dispatching.IdempotencyKey.Value, requestedAt), cancellationToken)
                 .ConfigureAwait(false);
@@ -230,7 +230,7 @@ public sealed class AdminWithdrawalCoordinator
             throw new AdminWithdrawalStaleCommandException(
                 "Only an in-flight or ambiguous withdrawal can be reconciled.");
         var providerEvent = await _provider.ReconcileAsync(
-            run.Id, run.IdempotencyKey.Value, run.ProviderTransferId, cancellationToken).ConfigureAwait(false);
+            run.TenantId, run.Id, run.IdempotencyKey.Value, run.ProviderTransferId, cancellationToken).ConfigureAwait(false);
         return ApplyProviderEvent(providerEvent, requestedAt);
     }
 
@@ -280,7 +280,7 @@ public sealed class AdminWithdrawalCoordinator
         {
             var providerEvent = new AdminWithdrawalProviderEvent(
                 $"dispatch:{receipt.ProviderTransferId}:{receipt.Outcome}",
-                receipt.RunId, receipt.Outcome, receipt.ProviderTransferId,
+                receipt.RunId, receipt.TenantId, receipt.Outcome, receipt.ProviderTransferId,
                 receipt.FencingToken, receipt.ExecutionEpoch, receipt.Amount,
                 receipt.SourceAssetKey, receipt.DestinationHash,
                 receipt.EvidenceHash, receipt.Signature, receipt.ObservedAt);
@@ -424,8 +424,8 @@ public sealed class AdminWithdrawalCoordinator
 
     private static void ValidateRequest(AdminWithdrawalReservationRequest request)
     {
-        if (request.RunId == Guid.Empty || request.RequestedBy == Guid.Empty)
-            throw new ArgumentException("Run and requester identities are required.", nameof(request));
+        if (request.RunId == Guid.Empty || request.TenantId == Guid.Empty || request.RequestedBy == Guid.Empty)
+            throw new ArgumentException("Run, tenant, and requester identities are required.", nameof(request));
         if (request.PeriodStart.Day != 1)
             throw new ArgumentException("Withdrawal period must start on the first day of a month.", nameof(request));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.ReserveAuthorizationEpoch);
@@ -455,6 +455,7 @@ public sealed class AdminWithdrawalCoordinator
     private static bool ReceiptMatches(
         AdminWithdrawalProviderReceipt receipt,
         AdminWithdrawalRun run) =>
+        receipt.TenantId == run.TenantId &&
         receipt.RunId == run.Id &&
         Enum.IsDefined(receipt.Outcome) &&
         !string.IsNullOrWhiteSpace(receipt.ProviderTransferId) &&
@@ -470,7 +471,8 @@ public sealed class AdminWithdrawalCoordinator
         AdminWithdrawalProviderEvent providerEvent,
         AdminWithdrawalRun run)
     {
-        if (string.IsNullOrWhiteSpace(providerEvent.ProviderTransferId) ||
+        if (providerEvent.TenantId != run.TenantId ||
+            string.IsNullOrWhiteSpace(providerEvent.ProviderTransferId) ||
             !Enum.IsDefined(providerEvent.Outcome) ||
             providerEvent.FencingToken != run.FencingToken ||
             providerEvent.ExecutionEpoch != run.ExecutionEpoch ||
@@ -554,7 +556,7 @@ public sealed class AdminWithdrawalCoordinator
                 range.Root.Value.ToString("N"), range.Start, range.Length, range.Epoch)))))));
 
     private static string RequestHash(AdminWithdrawalReservationRequest request) => Hash(string.Join('|',
-        request.RunId.ToString("N"), request.IdempotencyKey.Value, request.RequestedBy.ToString("N"),
+        request.RunId.ToString("N"), request.TenantId.ToString("N"), request.IdempotencyKey.Value, request.RequestedBy.ToString("N"),
         request.PlatformFeeWalletId.Value.ToString("N"), request.PeriodStart.ToString("O", CultureInfo.InvariantCulture),
         request.PolicyVersion.Value, request.ReserveVersion.Value, request.ReserveAuthorizationEpoch,
         request.SourceAssetKey.Trim(), request.DestinationHash.Trim(),
@@ -565,7 +567,7 @@ public sealed class AdminWithdrawalCoordinator
         IReadOnlyCollection<ValueFragmentReservation> reservations,
         TreasuryCustodyReport custody,
         DateTimeOffset requestedAt) => Hash(string.Join('|',
-        run.Id.ToString("N"), run.Version, run.FencingToken, run.ExecutionEpoch,
+        run.TenantId.ToString("N"), run.Id.ToString("N"), run.Version, run.FencingToken, run.ExecutionEpoch,
         run.Amount.Units, run.SourceAssetKey, run.DestinationHash,
         run.ReserveVersion.Value, run.ReserveAuthorizationEpoch,
         custody.EvidenceHash, custody.Signature,
@@ -574,13 +576,13 @@ public sealed class AdminWithdrawalCoordinator
             item.Id.ToString("N"), item.LotId.Value.ToString("N"), item.Amount.Units)))));
 
     private static string ProviderReceiptHash(AdminWithdrawalProviderReceipt receipt) => Hash(string.Join('|',
-        receipt.RunId.ToString("N"), (int)receipt.Outcome, receipt.ProviderTransferId,
+        receipt.TenantId.ToString("N"), receipt.RunId.ToString("N"), (int)receipt.Outcome, receipt.ProviderTransferId,
         receipt.FencingToken, receipt.ExecutionEpoch, receipt.Amount.Currency, receipt.Amount.Units,
         receipt.SourceAssetKey, receipt.DestinationHash, receipt.EvidenceHash,
         receipt.Signature, receipt.ObservedAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)));
 
     private static string ProviderEventHash(AdminWithdrawalProviderEvent providerEvent) => Hash(string.Join('|',
-        providerEvent.EventId, providerEvent.RunId.ToString("N"), (int)providerEvent.Outcome,
+        providerEvent.EventId, providerEvent.TenantId.ToString("N"), providerEvent.RunId.ToString("N"), (int)providerEvent.Outcome,
         providerEvent.ProviderTransferId, providerEvent.FencingToken, providerEvent.ExecutionEpoch,
         providerEvent.Amount.Currency, providerEvent.Amount.Units, providerEvent.SourceAssetKey,
         providerEvent.DestinationHash, providerEvent.EvidenceHash, providerEvent.Signature,

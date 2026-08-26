@@ -77,6 +77,7 @@ public sealed class BountyClaimPostingFactoryTests
     private static PersistedBountyEscrow CreateEscrow(BountyId bountyId) => new(
         bountyId,
         Guid.NewGuid(),
+        Guid.NewGuid(),
         WalletId.New(),
         WalletId.New(),
         new CoinAmount(CurrencyCode.HardCoin, 10),

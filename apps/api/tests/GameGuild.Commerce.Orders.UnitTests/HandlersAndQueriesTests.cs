@@ -664,6 +664,94 @@ public sealed class OrderCommandHandlerTests
     }
 
     [Fact]
+    public async Task CompleteOrderCommandHandler_DelegatesEconomySettlementAndLeavesFulfillmentToOutbox()
+    {
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Marketplace product", 40m);
+        var riskDecisionId = Guid.NewGuid();
+        var settlementId = Guid.NewGuid();
+        var repository = new Mock<IOrderRepository>();
+        repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+        var settlements = new Mock<IOrderMarketplaceSettlementAuthority>();
+        settlements.Setup(mock => mock.SettleAsync(
+                It.Is<OrderMarketplaceSettlementRequest>(request =>
+                    request.TenantId == order.TenantId &&
+                    request.ActorId == order.UserId &&
+                    request.OrderId == order.Id &&
+                    request.CurrencyChoice == OrderMarketplaceCurrencyChoice.Hard &&
+                    request.JurisdictionCode == "BR" &&
+                    request.RiskDecisionId == riskDecisionId &&
+                    request.OperationFingerprint == "marketplace-order" &&
+                    request.IdempotencyKey == "complete-order"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(OrderMarketplaceSettlementDecision.Accepted(settlementId, isDuplicate: false));
+
+        var handler = new CompleteOrderCommandHandler(
+            repository.Object,
+            Mock.Of<IEntitlementService>(),
+            Mock.Of<IApplicationDbContext>(),
+            OrderTestFactory.CreatePaymentAuthority(),
+            OrderTestFactory.CreateActor(order),
+            settlements.Object);
+
+        var result = await handler.Handle(
+            new CompleteOrderCommand(
+                order.Id,
+                MarketplaceSettlement: new CompleteOrderMarketplaceSettlement(
+                    OrderMarketplaceCurrencyChoice.Hard,
+                    "BR",
+                    riskDecisionId,
+                    "marketplace-order",
+                    "complete-order")),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.WasDuplicate.Should().BeFalse();
+        order.Status.Should().Be(OrderStatus.Pending);
+        repository.Verify(mock => mock.UpdateAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CompleteOrderCommandHandler_FailsClosedWhenEconomySettlementIsUnavailable()
+    {
+        var order = OrderTestFactory.CreatePendingOrder();
+        OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Marketplace product", 40m);
+        var repository = new Mock<IOrderRepository>();
+        repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+        var settlements = new Mock<IOrderMarketplaceSettlementAuthority>();
+        settlements.Setup(mock => mock.SettleAsync(
+                It.IsAny<OrderMarketplaceSettlementRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(OrderMarketplaceSettlementDecision.Rejected(
+                "Orders.EconomyMarketplaceDisabled",
+                "Economy Marketplace is disabled."));
+        var handler = new CompleteOrderCommandHandler(
+            repository.Object,
+            Mock.Of<IEntitlementService>(),
+            Mock.Of<IApplicationDbContext>(),
+            OrderTestFactory.CreatePaymentAuthority(),
+            OrderTestFactory.CreateActor(order),
+            settlements.Object);
+
+        var result = await handler.Handle(
+            new CompleteOrderCommand(
+                order.Id,
+                MarketplaceSettlement: new CompleteOrderMarketplaceSettlement(
+                    OrderMarketplaceCurrencyChoice.Soft,
+                    "BR",
+                    Guid.NewGuid(),
+                    "marketplace-order",
+                    "complete-order")),
+            CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Orders.EconomyMarketplaceDisabled");
+        order.Status.Should().Be(OrderStatus.Pending);
+    }
+
+    [Fact]
     public async Task CompleteOrderCommandHandler_GrantsEntitlementsAndCommitsWhenOrderIsPaid()
     {
         var order = OrderTestFactory.CreatePendingOrder();

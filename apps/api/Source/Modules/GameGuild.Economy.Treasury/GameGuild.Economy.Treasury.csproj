@@ -8,5 +8,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <ProjectReference Include="..\GameGuild.Economy\GameGuild.Economy.csproj" />
     <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+    <InternalsVisibleTo Include="GameGuild.Economy.Treasury.UnitTests" />
   </ItemGroup>
 </Project>

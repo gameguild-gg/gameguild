@@ -24,7 +24,7 @@ public sealed class BountyWorkflowBoundaryTests
             new RecordingPostings(), new RecordingClaimWriter(replayTerminals, request));
 
         (await replayWorkflow.ClaimAsync(request)).Should().BeSameAs(replay);
-        replayContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        replayContext.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
 
         var missingContext = new RecordingContext();
         var missingTerminals = new ScriptedTerminals(null, null, null);
@@ -105,7 +105,7 @@ public sealed class BountyWorkflowBoundaryTests
             new RecordingPostings(), new RecordingReclaimWriter(replayTerminals, request));
 
         (await replayWorkflow.ReclaimAsync(request)).Should().BeSameAs(replay);
-        replayContext.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        replayContext.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
 
         var missingContext = new RecordingContext();
         var missingTerminals = new ScriptedTerminals(null, null, null);
@@ -181,7 +181,7 @@ public sealed class BountyWorkflowBoundaryTests
             new RecordingPostings());
 
         (await workflow.PostAsync(request)).Should().BeSameAs(replay);
-        context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        context.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
 
         var collision = replay with { Id = BountyId.New() };
         var collisionWorkflow = new PostgreSqlDurableBountyEscrowPostWorkflow(
@@ -302,13 +302,13 @@ public sealed class BountyWorkflowBoundaryTests
         Guid.NewGuid(), actor, Guid.NewGuid(), Guid.NewGuid(), operation, 1);
 
     private static PersistedBountyEscrow ClaimEscrow(DurableBountyClaimRequest request) => new(
-        request.BountyId, Guid.NewGuid(), WalletId.New(), WalletId.New(),
+        request.BountyId, request.Authority.TenantId, Guid.NewGuid(), WalletId.New(), WalletId.New(),
         new CoinAmount(CurrencyCode.HardCoin, 10), BountyEligibilityRequirements.None, 0,
         BountyStatus.Open, new IdempotencyKey("post"), "hash", Now.AddDays(-1), Now.AddDays(1), 1,
         [Fragment(10)]);
 
     private static PersistedBountyEscrow ReclaimEscrow(DurableBountyReclaimRequest request) => new(
-        request.BountyId, request.PosterId, request.PosterWalletId, WalletId.New(),
+        request.BountyId, request.Authority.TenantId, request.PosterId, request.PosterWalletId, WalletId.New(),
         new CoinAmount(CurrencyCode.HardCoin, 10), BountyEligibilityRequirements.None, 0,
         BountyStatus.Open, new IdempotencyKey("post"), "hash", Now.AddDays(-2), Now.AddDays(-1), 1,
         [Fragment(10)]);
@@ -319,17 +319,17 @@ public sealed class BountyWorkflowBoundaryTests
         [new RootTraceRange(SourceStampId.New(), 0, checked(units * 1000), 0)]);
 
     private static PersistedBountyTerminalEvent ClaimTerminal(DurableBountyClaimRequest request) => new(
-        Guid.NewGuid(), request.BountyId, BountyStatus.Claimed, request.ClaimantId,
+        Guid.NewGuid(), request.Authority.TenantId, request.BountyId, BountyStatus.Claimed, request.ClaimantId,
         request.ClaimantWalletId, request.IdempotencyKey, request.Authority.RiskDecisionId,
         SourceStampId.New(), CreditLotId.New(), 0, 0, 1, [], request.ClaimedAt);
 
     private static PersistedBountyTerminalEvent ReclaimTerminal(DurableBountyReclaimRequest request) => new(
-        Guid.NewGuid(), request.BountyId, BountyStatus.Reclaimed, request.PosterId,
+        Guid.NewGuid(), request.Authority.TenantId, request.BountyId, BountyStatus.Reclaimed, request.PosterId,
         request.PosterWalletId, request.IdempotencyKey, request.Authority.RiskDecisionId,
         null, null, 10, 0, 1, [], request.ReclaimedAt);
 
     private static PersistedBountyEscrow PersistedPost(DurableBountyEscrowPostRequest request) => new(
-        request.Id, request.PosterId, request.PosterWalletId, request.EscrowWalletId, request.Amount,
+        request.Id, request.Authority.TenantId, request.PosterId, request.PosterWalletId, request.EscrowWalletId, request.Amount,
         request.Eligibility, request.ReclaimFeePpm, BountyStatus.Open, request.IdempotencyKey,
         request.RequestHash, request.PostedAt, request.ExpiresAt, 1, []);
 
@@ -383,8 +383,9 @@ public sealed class BountyWorkflowBoundaryTests
 
     private sealed class ScriptedEscrows(PersistedBountyEscrow escrow) : IBountyEscrowStore
     {
-        public PersistedBountyEscrow Get(BountyId bountyId) => escrow;
-        public PersistedBountyEscrow? FindPostReplay(IdempotencyKey idempotencyKey, string requestHash) => null;
+        public PersistedBountyEscrow Get(Guid tenantId, BountyId bountyId) =>
+            tenantId == escrow.TenantId ? escrow : throw new KeyNotFoundException();
+        public PersistedBountyEscrow? FindPostReplay(Guid tenantId, IdempotencyKey idempotencyKey, string requestHash) => null;
         public PersistedBountyEscrow Create(CreateBountyEscrowPersistenceCommand command) => escrow;
     }
 
@@ -393,10 +394,12 @@ public sealed class BountyWorkflowBoundaryTests
     {
         private readonly Queue<PersistedBountyTerminalEvent?> _results = new(results);
         private PersistedBountyTerminalEvent? _current;
-        public PersistedBountyTerminalEvent? FindByBounty(BountyId bountyId) =>
-            _current?.BountyId == bountyId ? _current : null;
-        public PersistedBountyTerminalEvent? FindByIdempotency(IdempotencyKey idempotencyKey) =>
-            _results.Count > 0 ? _results.Dequeue() : _current;
+        public PersistedBountyTerminalEvent? FindByBounty(Guid tenantId, BountyId bountyId) =>
+            _current?.TenantId == tenantId && _current.BountyId == bountyId ? _current : null;
+        public PersistedBountyTerminalEvent? FindByIdempotency(Guid tenantId, IdempotencyKey idempotencyKey) =>
+            (_results.Count > 0 ? _results.Dequeue() : _current) is { } result && result.TenantId == tenantId
+                ? result
+                : null;
         public void Set(PersistedBountyTerminalEvent value) => _current = value;
     }
 
@@ -435,9 +438,11 @@ public sealed class BountyWorkflowBoundaryTests
         params PersistedBountyEscrow?[] replays) : IBountyEscrowStore
     {
         private readonly Queue<PersistedBountyEscrow?> _replays = new(replays);
-        public PersistedBountyEscrow Get(BountyId bountyId) => persisted;
-        public PersistedBountyEscrow? FindPostReplay(IdempotencyKey idempotencyKey, string requestHash) =>
-            _replays.Count > 0 ? _replays.Dequeue() : null;
+        public PersistedBountyEscrow Get(Guid tenantId, BountyId bountyId) => persisted;
+        public PersistedBountyEscrow? FindPostReplay(Guid tenantId, IdempotencyKey idempotencyKey, string requestHash) =>
+            (_replays.Count > 0 ? _replays.Dequeue() : null) is { } replay && replay.TenantId == tenantId
+                ? replay
+                : null;
         public PersistedBountyEscrow Create(CreateBountyEscrowPersistenceCommand command) => persisted;
     }
 

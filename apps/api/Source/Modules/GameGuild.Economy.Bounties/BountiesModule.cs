@@ -7,7 +7,7 @@ namespace GameGuild.Economy.Bounties;
 public sealed class BountiesModule : ModuleBase
 {
     public override string Name => "Economy.Bounties";
-    public override bool EnabledByDefault => false;
+    public override bool EnabledByDefault => true;
     public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(services);
@@ -19,7 +19,13 @@ public sealed class BountiesModule : ModuleBase
         services.TryAddScoped<IBountyTerminalClaimWriter, PostgreSqlBountyTerminalClaimWriter>();
         services.TryAddScoped<IDurableBountyClaimWorkflow, PostgreSqlDurableBountyClaimWorkflow>();
         services.TryAddScoped<IBountyTerminalReclaimWriter, PostgreSqlBountyTerminalReclaimWriter>();
+        services.TryAddScoped<PostgreSqlBountyExpirationWorkflow>();
+        services.TryAddScoped<IDurableBountyExpirationWorkflow>(provider =>
+            provider.GetRequiredService<PostgreSqlBountyExpirationWorkflow>());
+        services.TryAddScoped<IBountyExpirationTransition>(provider =>
+            provider.GetRequiredService<PostgreSqlBountyExpirationWorkflow>());
         services.TryAddScoped<IDurableBountyReclaimWorkflow, PostgreSqlDurableBountyReclaimWorkflow>();
+        services.TryAddScoped<IDurableBountyApplicationService, DurableBountyApplicationService>();
         return services;
     }
 }

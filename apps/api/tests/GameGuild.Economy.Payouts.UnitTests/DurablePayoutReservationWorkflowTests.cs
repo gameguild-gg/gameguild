@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Risk;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -14,11 +15,12 @@ public sealed class DurablePayoutReservationWorkflowTests
     public static IEnumerable<object[]> InvalidOperations()
     {
         yield return ["missing operation ID", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { Id = Guid.Empty }), typeof(ArgumentException)];
+        yield return ["missing tenant ID", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { TenantId = Guid.Empty }), typeof(ArgumentException)];
         yield return ["non-reserved state", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { State = PayoutOperationState.Dispatching }), typeof(InvalidOperationException)];
         yield return ["non-initial version", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { Version = 2 }), typeof(InvalidOperationException)];
         yield return ["non-hard currency", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { Amount = new CoinAmount(CurrencyCode.SoftCoin, 700) }), typeof(ArgumentException)];
         yield return ["zero amount", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { Amount = new CoinAmount(CurrencyCode.HardCoin, 0) }), typeof(ArgumentException)];
-        yield return ["missing kill switch epoch", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { KillSwitchEpoch = 0 }), typeof(ArgumentException)];
+        yield return ["negative kill switch epoch", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { KillSwitchEpoch = -1 }), typeof(ArgumentOutOfRangeException)];
         yield return ["missing fencing token", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { FencingToken = 0 }), typeof(ArgumentException)];
         yield return ["missing reserve authorization epoch", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { ReserveAuthorizationEpoch = 0 }), typeof(ArgumentException)];
         yield return ["missing request hash", (Func<PayoutOperation, PayoutOperation>)(operation => operation with { RequestHash = " " }), typeof(ArgumentException)];
@@ -35,14 +37,13 @@ public sealed class DurablePayoutReservationWorkflowTests
         var context = new RecordingContext();
         var reservations = new RecordingReservations(operation);
         var postings = new RecordingPostings();
+        var evidence = new RecordingAuthorizationEvidenceWriter();
         var store = new InMemoryPayoutOperationStore();
-        var workflow = CreateWorkflow(context, store, reservations, postings);
+        var workflow = CreateWorkflow(context, store, reservations, postings, evidence: evidence);
 
-        var reserved = await workflow.ReserveAsync(new DurablePayoutReservationRequest(
-            operation,
-            CreateAuthority(operation)));
+        var reserved = await workflow.ReserveAsync(CreateRequest(operation));
 
-        reserved.Should().BeSameAs(operation);
+        reserved.Should().BeEquivalentTo(operation);
         store.Get(operation.Id).Should().BeEquivalentTo(operation);
         reservations.Requests.Should().ContainSingle().Which.Should().Be(new FifoFragmentReservationRequest(
             operation.Id,
@@ -62,6 +63,15 @@ public sealed class DurablePayoutReservationWorkflowTests
         posting.Allocations.Should().ContainSingle().Which.Should().Match<RegisteredPostingAllocation>(
             allocation => allocation.LineSequence == 1 && allocation.AmountUnits == operation.Amount.Units);
         context.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
+        evidence.Records.Should().ContainSingle().Which.Should().Match<PayoutAuthorizationEvidence>(item =>
+            item.OperationId == operation.Id &&
+            item.TenantId == operation.TenantId &&
+            item.ActorId == operation.ActorId &&
+            item.Phase == PayoutAuthorizationPhase.Reservation &&
+            item.RiskDecisionId == operation.RiskDecisionId &&
+            item.ReauthenticationEvidenceHash == new string('a', 64) &&
+            item.OperationFingerprintHash.Length == 64 &&
+            item.CapabilityReceiptHash == "receipt-hash");
     }
 
     [Fact]
@@ -73,7 +83,7 @@ public sealed class DurablePayoutReservationWorkflowTests
         store.Add(operation);
         var workflow = CreateWorkflow(context, store, new RecordingReservations(operation), new RecordingPostings());
 
-        var replay = await workflow.ReserveAsync(new DurablePayoutReservationRequest(operation, CreateAuthority(operation)));
+        var replay = await workflow.ReserveAsync(CreateRequest(operation));
 
         replay.Should().BeSameAs(operation);
         context.Transactions.Should().BeEmpty();
@@ -89,13 +99,13 @@ public sealed class DurablePayoutReservationWorkflowTests
         var store = new ReplayOnSecondLookupStore(operation);
         var workflow = CreateWorkflow(context, store, reservations, postings);
 
-        var replay = await workflow.ReserveAsync(new DurablePayoutReservationRequest(operation, CreateAuthority(operation)));
+        var replay = await workflow.ReserveAsync(CreateRequest(operation));
 
         replay.Should().BeSameAs(operation);
         store.AddCalled.Should().BeFalse();
         reservations.Requests.Should().BeEmpty();
         postings.Requests.Should().BeEmpty();
-        context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+        context.Transactions.Should().ContainSingle().Which.CommitCalled.Should().BeTrue();
     }
 
     [Fact]
@@ -107,9 +117,7 @@ public sealed class DurablePayoutReservationWorkflowTests
         var postings = new RecordingPostings();
         var workflow = CreateWorkflow(context, new InMemoryPayoutOperationStore(), reservations, postings);
 
-        await FluentActions.Invoking(() => workflow.ReserveAsync(new DurablePayoutReservationRequest(
-                operation,
-                CreateAuthority(operation))))
+        await FluentActions.Invoking(() => workflow.ReserveAsync(CreateRequest(operation)))
             .Should().ThrowAsync<RegisteredPostingRejectedException>();
 
         postings.Requests.Should().BeEmpty();
@@ -129,9 +137,7 @@ public sealed class DurablePayoutReservationWorkflowTests
         var postings = new RecordingPostings();
         var workflow = CreateWorkflow(context, new InMemoryPayoutOperationStore(), reservations, postings);
 
-        var exception = await FluentActions.Invoking(() => workflow.ReserveAsync(new DurablePayoutReservationRequest(
-                operation,
-                CreateAuthority(operation))))
+        var exception = await FluentActions.Invoking(() => workflow.ReserveAsync(CreateRequest(operation)))
             .Should().ThrowAsync<Exception>();
 
         exception.Which.Should().BeOfType(expectedException);
@@ -141,27 +147,75 @@ public sealed class DurablePayoutReservationWorkflowTests
     }
 
     [Fact]
-    public async Task Reserve_RejectsAuthoritiesThatDoNotBindTheOperationActorAndRiskDecision()
+    public async Task Reserve_RejectsCapabilityReceiptsAndAuthoritiesThatDoNotBindTheOperation()
     {
         var operation = CreateOperation();
         var context = new RecordingContext();
-        var workflow = CreateWorkflow(context, new InMemoryPayoutOperationStore(), new RecordingReservations(operation), new RecordingPostings());
-        var differentActor = new RegisteredPostingAuthority(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), operation.RiskDecisionId, "risk", 1);
-        var differentRisk = new RegisteredPostingAuthority(Guid.NewGuid(), operation.ActorId, Guid.NewGuid(), Guid.NewGuid(), "risk", 1);
+        var invalidReceipt = new RecordingCapabilityAuthorization { ReturnUnboundReceipt = true };
+        var workflow = CreateWorkflow(context, new InMemoryPayoutOperationStore(),
+            new RecordingReservations(operation), new RecordingPostings(), invalidReceipt);
 
-        await FluentActions.Invoking(() => workflow.ReserveAsync(new DurablePayoutReservationRequest(operation, differentActor)))
-            .Should().ThrowAsync<InvalidOperationException>();
-        await FluentActions.Invoking(() => workflow.ReserveAsync(new DurablePayoutReservationRequest(operation, differentRisk)))
+        await FluentActions.Invoking(() => workflow.ReserveAsync(CreateRequest(operation)))
             .Should().ThrowAsync<InvalidOperationException>();
 
-        context.Transactions.Should().BeEmpty();
+        var unboundAuthority = new RecordingPostingResolver { ReturnUnboundAuthority = true };
+        workflow = CreateWorkflow(new RecordingContext(), new InMemoryPayoutOperationStore(),
+            new RecordingReservations(operation), new RecordingPostings(), resolver: unboundAuthority);
+        await FluentActions.Invoking(() => workflow.ReserveAsync(CreateRequest(operation)))
+            .Should().ThrowAsync<InvalidOperationException>();
+
+        context.Transactions.Should().ContainSingle().Which.RollbackCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Reserve_RejectsTenantAndRiskBindingsInsideTheDurableRequest()
+    {
+        var operation = CreateOperation();
+        var workflow = CreateWorkflow(
+            new RecordingContext(),
+            new InMemoryPayoutOperationStore(),
+            new RecordingReservations(operation),
+            new RecordingPostings());
+        var validRequest = CreateRequest(operation);
+
+        await FluentActions.Invoking(() => workflow.ReserveAsync(
+                validRequest with { Operation = operation with { TenantId = Guid.Empty } }))
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Invoking(() => workflow.ReserveAsync(
+                validRequest with { RiskDecisionId = Guid.NewGuid() }))
+            .Should().ThrowAsync<InvalidOperationException>();
+        await FluentActions.Invoking(() => workflow.ReserveAsync(
+                validRequest with { ReauthenticationEvidenceHash = " " }))
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Invoking(() => workflow.ReserveAsync(
+                validRequest with { ReauthenticationEvidenceHash = "too-short" }))
+            .Should().ThrowAsync<ArgumentException>();
     }
 
     private static PostgreSqlDurablePayoutReservationWorkflow CreateWorkflow(
         RecordingContext context,
         IPayoutOperationStore store,
         RecordingReservations reservations,
-        RecordingPostings postings) => new(context, store, reservations, postings);
+        RecordingPostings postings,
+        RecordingCapabilityAuthorization? capabilities = null,
+        RecordingPostingResolver? resolver = null,
+        RecordingAuthorizationEvidenceWriter? evidence = null) => new(
+        context,
+        store,
+        reservations,
+        capabilities ?? new RecordingCapabilityAuthorization(),
+        evidence ?? new RecordingAuthorizationEvidenceWriter(),
+        resolver ?? new RecordingPostingResolver(),
+        postings);
+
+    private static DurablePayoutReservationRequest CreateRequest(PayoutOperation operation) => new(
+        operation,
+        EconomySubjectReference.ForUser(operation.TenantId, operation.PayeeId),
+        "BR",
+        operation.RiskDecisionId,
+        new string('a', 64),
+        "operation-fingerprint",
+        "provider-hash");
 
     private static PayoutOperation CreateOperation() => new(
         Guid.NewGuid(),
@@ -186,15 +240,8 @@ public sealed class DurablePayoutReservationWorkflowTests
         new PolicyVersion(1),
         Guid.NewGuid(),
         Time,
-        Time);
-
-    private static RegisteredPostingAuthority CreateAuthority(PayoutOperation operation) => new(
-        Guid.NewGuid(),
-        operation.ActorId,
-        Guid.NewGuid(),
-        operation.RiskDecisionId,
-        "payout-reservation",
-        1);
+        Time,
+        Guid.NewGuid());
 
     private sealed class RecordingContext : IApplicationDbContext
     {
@@ -261,13 +308,67 @@ public sealed class DurablePayoutReservationWorkflowTests
         }
     }
 
+    private sealed class RecordingAuthorizationEvidenceWriter : IPayoutAuthorizationEvidenceWriter
+    {
+        public List<PayoutAuthorizationEvidence> Records { get; } = [];
+
+        public Task AppendAsync(
+            PayoutAuthorizationEvidence evidence,
+            CancellationToken cancellationToken = default)
+        {
+            Records.Add(evidence);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class RecordingCapabilityAuthorization : IEconomyCapabilityAuthorizationService
+    {
+        public bool ReturnUnboundReceipt { get; init; }
+
+        public ValueTask<CapabilityAuthorizationReceipt> AuthorizeAndConsumeAsync(
+            EconomyCapabilityEvaluationContext context,
+            CancellationToken cancellationToken)
+        {
+            var tenantId = ReturnUnboundReceipt ? Guid.NewGuid() : context.TenantId;
+            return ValueTask.FromResult(new CapabilityAuthorizationReceipt(
+                Guid.NewGuid(), tenantId, context.ActorId, context.SubjectReference,
+                context.JurisdictionCode, context.Capability, context.OperationFingerprint,
+                1, 1, context.RiskDecisionId, 3, context.ProviderHash, context.DestinationHash,
+                context.SourceRootHashes, ["evidence"], Time, Time.AddMinutes(5),
+                "receipt-hash", "key", "signature"));
+        }
+    }
+
+    private sealed class RecordingPostingResolver : IRegisteredPostingCapabilityResolver
+    {
+        public bool ReturnUnboundAuthority { get; init; }
+
+        public Task<RegisteredPostingCapability> ResolveAsync(
+            string capabilityName,
+            PostingTemplateKind templateKind,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<RegisteredPostingAuthority> ResolveAuthorityAsync(
+            string capabilityName,
+            PostingTemplateKind templateKind,
+            CapabilityAuthorizationReceipt receipt,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new RegisteredPostingAuthority(
+                Guid.NewGuid(), receipt.ActorId,
+                ReturnUnboundAuthority ? Guid.NewGuid() : receipt.TenantId,
+                receipt.RiskDecisionId, receipt.OperationFingerprint, 1));
+    }
+
     private sealed class ReplayOnSecondLookupStore(PayoutOperation replay) : IPayoutOperationStore
     {
         private int _lookups;
         public bool AddCalled { get; private set; }
         public PayoutOperation Get(Guid operationId) => throw new NotSupportedException();
-        public IReadOnlyList<PayoutOperation> ListForPayee(Guid payeeId, int take) => throw new NotSupportedException();
-        public PayoutOperation? FindReplay(string idempotencyKey, string requestHash) => ++_lookups == 2 ? replay : null;
+        public PayoutOperation GetForTenant(Guid tenantId, Guid operationId) => throw new NotSupportedException();
+        public IReadOnlyList<PayoutOperation> ListForTenant(Guid tenantId, int take) => throw new NotSupportedException();
+        public IReadOnlyList<PayoutOperation> ListForPayee(Guid tenantId, Guid payeeId, int take) => throw new NotSupportedException();
+        public PayoutOperation? FindReplay(Guid tenantId, string idempotencyKey, string requestHash) => ++_lookups == 2 ? replay : null;
         public void Add(PayoutOperation operation) => AddCalled = true;
         public PayoutOperation Update(PayoutOperation operation, long expectedVersion) => throw new NotSupportedException();
         public PayoutProviderEventRecord? FindProviderEvent(string eventId, string eventHash) => throw new NotSupportedException();

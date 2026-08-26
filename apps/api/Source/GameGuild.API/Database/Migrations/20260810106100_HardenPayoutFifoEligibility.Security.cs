@@ -6,7 +6,7 @@ namespace GameGuild.API.Database.Migrations;
 
 public partial class HardenPayoutFifoEligibility
 {
-    private static void InstallHardenedPayoutFifoEligibility(MigrationBuilder migrationBuilder)
+    internal static void InstallHardenedPayoutFifoEligibility(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.Sql(
             """
@@ -38,11 +38,12 @@ public partial class HardenPayoutFifoEligibility
                             required_trace bigint;
                             remaining_trace bigint;
                             selected_trace bigint;
+                            candidate_held boolean;
                             existing record;
                         BEGIN
                             IF p_operation_id IS NULL OR p_wallet_id IS NULL OR p_required_units <= 0
-                               OR p_currency NOT IN (1, 2) OR p_provenance NOT IN (1, 2, 3, 4)
-                               OR p_purpose NOT BETWEEN 1 AND 5 OR p_reserved_at IS NULL THEN
+                               OR p_currency NOT IN (1, 2) OR p_provenance NOT BETWEEN 1 AND 8
+                               OR p_purpose NOT BETWEEN 1 AND 7 OR p_reserved_at IS NULL THEN
                                 RAISE EXCEPTION 'FIFO reservation arguments are invalid' USING ERRCODE = '22023';
                             END IF;
 
@@ -82,11 +83,11 @@ public partial class HardenPayoutFifoEligibility
                                 RAISE EXCEPTION 'FIFO reservation wallet does not exist' USING ERRCODE = '23503';
                             END IF;
 
-                            IF p_purpose = 1 AND (p_currency <> 1 OR p_provenance <> 2) THEN
-                                RAISE EXCEPTION 'payout requires mature earned hard fragments' USING ERRCODE = '22023';
+                            IF p_purpose IN (1, 2) AND (p_currency <> 1 OR p_provenance <> 2) THEN
+                                RAISE EXCEPTION 'cash-out requires mature earned hard fragments' USING ERRCODE = '22023';
                             END IF;
 
-                            IF p_purpose = 1 AND EXISTS (
+                            IF p_purpose IN (1, 2) AND EXISTS (
                                 SELECT 1
                                 FROM public.economy_holds hold
                                 WHERE hold."WalletId" = p_wallet_id
@@ -94,16 +95,16 @@ public partial class HardenPayoutFifoEligibility
                                   AND hold."Status" = 1
                                   AND hold."EffectiveAt" <= p_reserved_at
                             ) THEN
-                                RAISE EXCEPTION 'payout is blocked by an active hard-coin hold' USING ERRCODE = 'P0001';
+                                RAISE EXCEPTION 'cash-out is blocked by an active hard-coin hold' USING ERRCODE = 'P0001';
                             END IF;
 
-                            IF p_purpose = 1 AND EXISTS (
+                            IF p_purpose IN (1, 2) AND EXISTS (
                                 SELECT 1
                                 FROM public.economy_wallet_debts debt
                                 WHERE debt."WalletId" = p_wallet_id
                                   AND debt."OutstandingHardUnits" > 0
                             ) THEN
-                                RAISE EXCEPTION 'payout is blocked by an outstanding hard-coin debt' USING ERRCODE = 'P0001';
+                                RAISE EXCEPTION 'cash-out is blocked by an outstanding hard-coin debt' USING ERRCODE = 'P0001';
                             END IF;
 
                             FOR candidate IN
@@ -116,7 +117,7 @@ public partial class HardenPayoutFifoEligibility
                                   AND lot."Provenance" = p_provenance
                                   AND lot."State" = 1
                                   AND (
-                                      p_purpose <> 1 OR (
+                                      p_purpose NOT IN (1, 2) OR (
                                           lot."CashOutEligible"
                                           AND lot."OriginalMaturesAt" <= p_reserved_at
                                           AND source_stamp."State" = 2
@@ -128,6 +129,27 @@ public partial class HardenPayoutFifoEligibility
                                 FOR UPDATE
                             LOOP
                                 EXIT WHEN remaining_trace = 0;
+
+                                -- Marketplace proceeds remain unavailable while their
+                                -- refund-window hold is active. Resolve this relation
+                                -- dynamically so a migration downgrade can retain the
+                                -- hardened FIFO function after Marketplace tables leave.
+                                candidate_held := false;
+                                IF pg_catalog.to_regclass('public.economy_marketplace_settlement_credits') IS NOT NULL THEN
+                                    EXECUTE $held$
+                                        SELECT EXISTS (
+                                            SELECT 1
+                                            FROM public.economy_marketplace_settlement_credits credit
+                                            JOIN public.economy_holds hold
+                                              ON hold."Id" = credit."RefundHoldId"
+                                            WHERE credit."CreditLotId" = $1
+                                              AND hold."Status" = 1
+                                              AND hold."EffectiveAt" <= $2)
+                                    $held$ INTO candidate_held USING candidate."Id", p_reserved_at;
+                                END IF;
+                                IF candidate_held THEN
+                                    CONTINUE;
+                                END IF;
 
                                 FOR source_range IN
                                     SELECT range_row."RootSourceStampId", range_row."ReversalEpoch",
@@ -157,7 +179,7 @@ public partial class HardenPayoutFifoEligibility
                                             WHERE reservation."ParentLotId" = candidate."Id"
                                               AND reservation."RootSourceStampId" = source_range."RootSourceStampId"
                                               AND reservation."ReversalEpoch" = source_range."ReversalEpoch"
-                                              AND reservation."Status" = 1
+                                              AND reservation."Status" IN (1, 4)
                                         )
                                         SELECT lower(fragment)::bigint AS start_inclusive, upper(fragment)::bigint AS end_exclusive
                                         FROM unnest(
@@ -204,6 +226,13 @@ public partial class HardenPayoutFifoEligibility
 
             ALTER FUNCTION economy_private.reserve_fifo_fragments_v1(uuid,uuid,integer,integer,bigint,integer,timestamptz)
                 OWNER TO gameguild_economy_procedure_owner;
+            DO $acl$
+            BEGIN
+                IF pg_catalog.to_regclass('public.economy_marketplace_settlement_credits') IS NOT NULL THEN
+                    EXECUTE 'GRANT SELECT ON TABLE public.economy_marketplace_settlement_credits TO gameguild_economy_procedure_owner';
+                END IF;
+            END
+            $acl$;
             REVOKE ALL ON FUNCTION economy_private.reserve_fifo_fragments_v1(uuid,uuid,integer,integer,bigint,integer,timestamptz) FROM PUBLIC;
             GRANT EXECUTE ON FUNCTION economy_private.reserve_fifo_fragments_v1(uuid,uuid,integer,integer,bigint,integer,timestamptz)
                 TO gameguild_economy_writer;

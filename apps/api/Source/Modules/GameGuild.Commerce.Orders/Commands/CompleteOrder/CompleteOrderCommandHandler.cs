@@ -12,7 +12,8 @@ public sealed class CompleteOrderCommandHandler(
     IEntitlementService entitlementService,
     IApplicationDbContext dbContext,
     IOrderPaymentAuthority paymentAuthority,
-    IActorContextAccessor actorContextAccessor)
+    IActorContextAccessor actorContextAccessor,
+    IOrderMarketplaceSettlementAuthority? marketplaceSettlementAuthority = null)
     : ICommandHandler<CompleteOrderCommand, Result<OrderOperationResult>>
 {
     public async Task<Result<OrderOperationResult>> Handle(
@@ -32,6 +33,47 @@ public sealed class CompleteOrderCommandHandler(
         if (order.Status == OrderStatus.Fulfilled)
         {
             return Result.Success(OrderOperationResult.FromOrder(order, wasDuplicate: true));
+        }
+
+        if (request.MarketplaceSettlement is not null)
+        {
+            if (request.PaymentId.HasValue ||
+                !string.IsNullOrWhiteSpace(request.PaymentProviderReference) ||
+                !string.IsNullOrWhiteSpace(request.PaymentMethod))
+                return Result.Failure<OrderOperationResult>(
+                    Error.Validation(
+                        "Orders.MixedSettlementAuthority",
+                        "Fiat payment references cannot be combined with Economy Marketplace settlement."));
+            if (order.Status is not (OrderStatus.Pending or OrderStatus.Processing) ||
+                !order.TenantId.HasValue)
+                return Result.Failure<OrderOperationResult>(
+                    Error.Forbidden(
+                        "Orders.EconomyMarketplaceIneligible",
+                        "The order is not eligible for Economy Marketplace settlement."));
+
+            var settlement = request.MarketplaceSettlement;
+            var authority = marketplaceSettlementAuthority ?? new DenyOrderMarketplaceSettlementAuthority();
+            var decision = await authority.SettleAsync(
+                new OrderMarketplaceSettlementRequest(
+                    order.TenantId.Value,
+                    order.UserId,
+                    order.Id,
+                    settlement.CurrencyChoice,
+                    settlement.JurisdictionCode,
+                    settlement.RiskDecisionId,
+                    settlement.OperationFingerprint,
+                    settlement.IdempotencyKey),
+                cancellationToken).ConfigureAwait(false);
+            if (!decision.IsAccepted || !decision.SettlementId.HasValue)
+                return Result.Failure<OrderOperationResult>(
+                    Error.Forbidden(
+                        decision.ErrorCode ?? "Orders.EconomyMarketplaceRejected",
+                        decision.ErrorDescription ?? "Economy Marketplace rejected the settlement."));
+
+            return Result.Success(OrderOperationResult.FromMarketplaceSettlement(
+                order,
+                decision.SettlementId.Value,
+                decision.IsDuplicate));
         }
 
         if (request.PaymentId.HasValue ||

@@ -62,20 +62,20 @@ public sealed record EconomyPayoutRequestReviewAuditDto(
         auditEvent.OccurredAt);
 }
 
-public sealed record ListMyPayoutOperationsQuery(Guid PayeeId, int Take)
+public sealed record ListMyPayoutOperationsQuery(Guid TenantId, Guid PayeeId, int Take)
     : IQuery<IReadOnlyList<EconomyPayoutOperationDto>>;
 
-public sealed record GetMyPayoutOperationQuery(Guid PayeeId, Guid OperationId)
+public sealed record GetMyPayoutOperationQuery(Guid TenantId, Guid PayeeId, Guid OperationId)
     : IQuery<EconomyPayoutOperationDto?>;
 
-public sealed record ListMyPayoutRequestsQuery(Guid PayeeId, int Take)
+public sealed record ListMyPayoutRequestsQuery(Guid TenantId, Guid PayeeId, int Take)
     : IQuery<IReadOnlyList<EconomyPayoutRequestDto>>;
 
-[AuthorizeRequest(WalletsPermission.Keys.Admin)]
+[AuthorizeRequest(EconomyPermission.Keys.ReviewPayouts)]
 public sealed record ListPayoutRequestsForReviewQuery(int Take)
     : IQuery<IReadOnlyList<EconomyPayoutRequestReviewDto>>;
 
-[AuthorizeRequest(WalletsPermission.Keys.Admin)]
+[AuthorizeRequest(EconomyPermission.Keys.ReviewPayouts)]
 public sealed record ListPayoutRequestReviewAuditQuery(Guid RequestId)
     : IQuery<IReadOnlyList<EconomyPayoutRequestReviewAuditDto>>;
 
@@ -90,7 +90,7 @@ public sealed class ListMyPayoutOperationsQueryHandler(IPayoutOperationStore ope
         cancellationToken.ThrowIfCancellationRequested();
 
         IReadOnlyList<EconomyPayoutOperationDto> result = operations
-            .ListForPayee(request.PayeeId, request.Take)
+            .ListForPayee(request.TenantId, request.PayeeId, request.Take)
             .Select(ToDto)
             .ToArray();
         return Task.FromResult(result);
@@ -116,7 +116,7 @@ public sealed class GetMyPayoutOperationQueryHandler(IPayoutOperationStore opera
 
         try
         {
-            var operation = operations.Get(request.OperationId);
+            var operation = operations.GetForTenant(request.TenantId, request.OperationId);
             if (operation.PayeeId != request.PayeeId)
                 return Task.FromResult<EconomyPayoutOperationDto?>(null);
 
@@ -145,7 +145,7 @@ public sealed class ListMyPayoutRequestsQueryHandler(IPayoutRequestStore request
         cancellationToken.ThrowIfCancellationRequested();
 
         IReadOnlyList<EconomyPayoutRequestDto> result = requests
-            .ListForPayee(request.PayeeId, request.Take)
+            .ListForPayee(request.TenantId, request.PayeeId, request.Take)
             .Select(EconomyPayoutRequestDto.From)
             .ToArray();
         return Task.FromResult(result);
@@ -176,9 +176,9 @@ public sealed class ListPayoutRequestsForReviewQueryHandler(
     {
         var actor = actorContextAccessor.ActorContext;
         return actor.IsAuthenticated && actor.SubjectIdAsGuid.HasValue && actor.TenantId is { } tenantId &&
-               actor.HasPermission(WalletsPermission.Keys.Admin)
+               actor.HasPermission(EconomyPermission.Keys.ReviewPayouts)
             ? tenantId
-            : throw new UnauthorizedAccessException("A tenant wallet administrator is required to review payout requests.");
+            : throw new UnauthorizedAccessException("The Economy payout-review permission is required.");
     }
 }
 
@@ -206,8 +206,8 @@ public sealed class ListPayoutRequestReviewAuditQueryHandler(
     {
         var actor = actorContextAccessor.ActorContext;
         return actor.IsAuthenticated && actor.SubjectIdAsGuid.HasValue && actor.TenantId is { } tenantId &&
-               actor.HasPermission(WalletsPermission.Keys.Admin)
+               actor.HasPermission(EconomyPermission.Keys.ReviewPayouts)
             ? tenantId
-            : throw new UnauthorizedAccessException("A tenant wallet administrator is required to review payout requests.");
+            : throw new UnauthorizedAccessException("The Economy payout-review permission is required.");
     }
 }

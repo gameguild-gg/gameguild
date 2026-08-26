@@ -99,6 +99,30 @@ public sealed class DurableBountyClaimWorkflowTests
         context.Transactions.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task Claim_RejectsForeignTenantAndUnscopedAuthority()
+    {
+        var request = CreateRequest();
+        var foreign = CreateEscrow(request) with { TenantId = Guid.NewGuid() };
+        var foreignTerminals = new RecordingTerminalStore();
+        var foreignWorkflow = new PostgreSqlDurableBountyClaimWorkflow(
+            new RecordingContext(), new RecordingEscrows(foreign, ignoreTenant: true),
+            foreignTerminals, new RecordingPostings(),
+            new RecordingTerminalWriter(foreignTerminals, request));
+        await FluentActions.Invoking(() => foreignWorkflow.ClaimAsync(request))
+            .Should().ThrowAsync<BountyClaimIneligibleException>();
+
+        var unscoped = CreateRequest();
+        SetTenant(unscoped.Authority, Guid.Empty);
+        var unscopedTerminals = new RecordingTerminalStore();
+        var unscopedWorkflow = new PostgreSqlDurableBountyClaimWorkflow(
+            new RecordingContext(), new RecordingEscrows(CreateEscrow(unscoped)),
+            unscopedTerminals, new RecordingPostings(),
+            new RecordingTerminalWriter(unscopedTerminals, unscoped));
+        await FluentActions.Invoking(() => unscopedWorkflow.ClaimAsync(unscoped))
+            .Should().ThrowAsync<ArgumentException>();
+    }
+
     private static DurableBountyClaimRequest CreateRequest()
     {
         var claimantId = Guid.NewGuid();
@@ -114,8 +138,15 @@ public sealed class DurableBountyClaimWorkflowTests
             new PolicyVersion(3));
     }
 
+    private static void SetTenant(RegisteredPostingAuthority authority, Guid tenantId) =>
+        typeof(RegisteredPostingAuthority)
+            .GetField("<TenantId>k__BackingField", System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic)!
+            .SetValue(authority, tenantId);
+
     private static PersistedBountyEscrow CreateEscrow(DurableBountyClaimRequest request) => new(
         request.BountyId,
+        request.Authority.TenantId,
         Guid.NewGuid(),
         WalletId.New(),
         WalletId.New(),
@@ -140,6 +171,7 @@ public sealed class DurableBountyClaimWorkflowTests
 
     private static PersistedBountyTerminalEvent CreateTerminal(DurableBountyClaimRequest request) => new(
         Guid.NewGuid(),
+        request.Authority.TenantId,
         request.BountyId,
         BountyStatus.Claimed,
         request.ClaimantId,
@@ -154,20 +186,23 @@ public sealed class DurableBountyClaimWorkflowTests
         [],
         request.ClaimedAt);
 
-    private sealed class RecordingEscrows(PersistedBountyEscrow escrow) : IBountyEscrowStore
+    private sealed class RecordingEscrows(PersistedBountyEscrow escrow, bool ignoreTenant = false) : IBountyEscrowStore
     {
-        public PersistedBountyEscrow Get(BountyId bountyId) => bountyId == escrow.Id
+        public PersistedBountyEscrow Get(Guid tenantId, BountyId bountyId) =>
+            (ignoreTenant || tenantId == escrow.TenantId) && bountyId == escrow.Id
             ? escrow
             : throw new KeyNotFoundException();
-        public PersistedBountyEscrow? FindPostReplay(IdempotencyKey idempotencyKey, string requestHash) => null;
+        public PersistedBountyEscrow? FindPostReplay(Guid tenantId, IdempotencyKey idempotencyKey, string requestHash) => null;
         public PersistedBountyEscrow Create(CreateBountyEscrowPersistenceCommand command) => throw new NotSupportedException();
     }
 
     private sealed class RecordingTerminalStore(PersistedBountyTerminalEvent? existing = null) : IBountyTerminalEventStore
     {
         private PersistedBountyTerminalEvent? _event = existing;
-        public PersistedBountyTerminalEvent? FindByBounty(BountyId bountyId) => _event?.BountyId == bountyId ? _event : null;
-        public PersistedBountyTerminalEvent? FindByIdempotency(IdempotencyKey idempotencyKey) => _event?.IdempotencyKey == idempotencyKey ? _event : null;
+        public PersistedBountyTerminalEvent? FindByBounty(Guid tenantId, BountyId bountyId) =>
+            _event?.TenantId == tenantId && _event.BountyId == bountyId ? _event : null;
+        public PersistedBountyTerminalEvent? FindByIdempotency(Guid tenantId, IdempotencyKey idempotencyKey) =>
+            _event?.TenantId == tenantId && _event.IdempotencyKey == idempotencyKey ? _event : null;
         public void Set(PersistedBountyTerminalEvent value) => _event = value;
     }
 

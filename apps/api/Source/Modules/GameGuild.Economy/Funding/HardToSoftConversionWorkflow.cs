@@ -1,3 +1,4 @@
+using System.Data;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -125,10 +126,9 @@ public sealed class PostgreSqlHardToSoftConversionWorkflow(
         if (context is not DbContext dbContext || !dbContext.Database.IsRelational())
             return await IssueAndPostAsync().ConfigureAwait(false);
 
-        await using var transaction = await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        var result = await IssueAndPostAsync().ConfigureAwait(false);
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-        return result;
+        return await PostgreSqlTransactionExecutor.ExecuteAsync(
+                dbContext, IsolationLevel.Serializable, _ => IssueAndPostAsync(), cancellationToken)
+            .ConfigureAwait(false);
     }
 
     internal static IReadOnlyList<Guid> ParseRootIds(string sourceRoots)

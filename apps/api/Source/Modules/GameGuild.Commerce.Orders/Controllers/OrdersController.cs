@@ -118,7 +118,12 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
         [FromBody] CompleteOrderRequest? request = null,
         CancellationToken cancellationToken = default)
     {
-        var command = new CompleteOrderCommand(orderId, request?.PaymentId, request?.PaymentProviderReference, request?.PaymentMethod);
+        var command = new CompleteOrderCommand(
+            orderId,
+            request?.PaymentId,
+            request?.PaymentProviderReference,
+            request?.PaymentMethod,
+            request?.MarketplaceSettlement);
         var result = await sender.Send<Result<OrderOperationResult>>(command, cancellationToken).ConfigureAwait(false);
 
         return ToOrderActionResult(result);
@@ -394,10 +399,12 @@ public sealed record AddOrderItemRequest(
 /// <param name="PaymentId">Optional internal Payment entity ID for Payment→Order linkage</param>
 /// <param name="PaymentProviderReference">Optional external payment provider reference</param>
 /// <param name="PaymentMethod">Optional payment method description (e.g., "card", "bank_transfer")</param>
+/// <param name="MarketplaceSettlement">Signed Economy Marketplace authorization evidence; mutually exclusive with fiat payment references.</param>
 public sealed record CompleteOrderRequest(
     Guid? PaymentId = null,
     string? PaymentProviderReference = null,
-    string? PaymentMethod = null);
+    string? PaymentMethod = null,
+    CompleteOrderMarketplaceSettlement? MarketplaceSettlement = null);
 
 /// <summary>Request to cancel an order</summary>
 public sealed record CancelOrderRequest(string? Reason = null);

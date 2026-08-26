@@ -107,12 +107,12 @@ public sealed class EconomyWalletController(
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
     {
-        if (!TryGetSelfServiceActorId(out var actorId))
+        if (!TryGetSelfServiceActor(out var tenantId, out var actorId))
             return Forbid();
         if (take is < 1 or > 100)
             return BadRequest("Take must be between 1 and 100.");
 
-        var payouts = await sender.Send(new ListMyPayoutOperationsQuery(actorId, take), cancellationToken)
+        var payouts = await sender.Send(new ListMyPayoutOperationsQuery(tenantId, actorId, take), cancellationToken)
             .ConfigureAwait(false);
         return Ok(payouts);
     }
@@ -161,12 +161,12 @@ public sealed class EconomyWalletController(
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
     {
-        if (!TryGetSelfServiceActorId(out var actorId))
+        if (!TryGetSelfServiceActor(out var tenantId, out var actorId))
             return Forbid();
         if (take is < 1 or > 100)
             return BadRequest("Take must be between 1 and 100.");
 
-        var requests = await sender.Send(new ListMyPayoutRequestsQuery(actorId, take), cancellationToken)
+        var requests = await sender.Send(new ListMyPayoutRequestsQuery(tenantId, actorId, take), cancellationToken)
             .ConfigureAwait(false);
         return Ok(requests);
     }
@@ -212,10 +212,10 @@ public sealed class EconomyWalletController(
         Guid operationId,
         CancellationToken cancellationToken = default)
     {
-        if (!TryGetSelfServiceActorId(out var actorId))
+        if (!TryGetSelfServiceActor(out var tenantId, out var actorId))
             return Forbid();
 
-        var payout = await sender.Send(new GetMyPayoutOperationQuery(actorId, operationId), cancellationToken)
+        var payout = await sender.Send(new GetMyPayoutOperationQuery(tenantId, actorId, operationId), cancellationToken)
             .ConfigureAwait(false);
         return payout is null ? NotFound() : Ok(payout);
     }
@@ -226,12 +226,14 @@ public sealed class EconomyWalletController(
         return actor.IsAuthenticated && actor.SubjectIdAsGuid.HasValue && actor.TenantId.HasValue;
     }
 
-    private bool TryGetSelfServiceActorId(out Guid actorId)
+    private bool TryGetSelfServiceActor(out Guid tenantId, out Guid actorId)
     {
+        tenantId = Guid.Empty;
         actorId = Guid.Empty;
         if (!HasSelfServiceContext())
             return false;
 
+        tenantId = actorContextAccessor.ActorContext.TenantId!.Value;
         actorId = actorContextAccessor.ActorContext.SubjectIdAsGuid!.Value;
         return true;
     }

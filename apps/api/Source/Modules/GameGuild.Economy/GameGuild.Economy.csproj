@@ -8,6 +8,8 @@
     <Using Remove="Microsoft.EntityFrameworkCore" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AWSSDK.KeyManagementService" />
+    <PackageReference Include="AWSSDK.S3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
   </ItemGroup>
   <ItemGroup>

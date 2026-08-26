@@ -18,12 +18,16 @@ public sealed class BountiesPersistenceModelTests
         entities.Select(entity => entity.GetTableName()).Should().BeEquivalentTo(
             "economy_bounties",
             "economy_bounty_escrow_fragments",
+            "economy_bounty_expiration_events",
             "economy_bounty_terminal_events");
 
         Entity(entities, "economy_bounties").GetIndexes()
             .Should().Contain(index => index.IsUnique &&
                 index.Properties.Select(property => property.Name).SequenceEqual(new[] { "IdempotencyKey" }));
         Entity(entities, "economy_bounty_terminal_events").GetIndexes()
+            .Should().Contain(index => index.IsUnique &&
+                index.Properties.Select(property => property.Name).SequenceEqual(new[] { "BountyId" }));
+        Entity(entities, "economy_bounty_expiration_events").GetIndexes()
             .Should().Contain(index => index.IsUnique &&
                 index.Properties.Select(property => property.Name).SequenceEqual(new[] { "BountyId" }));
         Entity(entities, "economy_bounty_escrow_fragments").GetCheckConstraints()
