@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - develop
   pull_request:
     branches:
       - main
+      - develop
   workflow_dispatch:
     inputs:
       publish_packages:
@@ -63,7 +65,7 @@ jobs:
               heavy=true
             else
               CHANGED="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
-              if grep -Eq '^(\.changeset/|\.github/workflows/emception\.yml|demos/emception-[^/]+/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|scripts/devops/(emception-release-policy|publish-emception|version-emception)\.mjs|scripts/sync-emception-cdn\.mjs|tools/emception/)' <<< "$CHANGED"; then
+              if grep -Eq '^(\.changeset/|\.github/workflows/emception\.yml|apps/web/(Dockerfile|scripts/(sync-emception-cdn|coding-cycle-browser-e2e)\.mjs|src/lib/emception/)|demos/emception-[^/]+/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|scripts/devops/(emception-release-policy|publish-emception|version-emception)\.mjs|scripts/sync-emception-cdn\.mjs|tools/emception/)' <<< "$CHANGED"; then
                 required=true
               fi
               if grep -Eq '^tools/emception/(toolchain/|scripts/(build-|deploy-|generate-|patch-|populate-|setup-|stage-|toolchain/|warmup-)|package\.json)' <<< "$CHANGED"; then

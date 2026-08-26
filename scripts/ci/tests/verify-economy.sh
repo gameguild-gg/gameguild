@@ -63,9 +63,11 @@ test_shell_only_ci_policy() {
   grep -q '"ci:dependencies": "bash scripts/ci/install-and-audit-pnpm.sh"' "$repository_root/package.json" || return 1
   grep -q '"ci:repository-policy": "bash scripts/ci/verify-repository-policy.sh"' "$repository_root/package.json" || return 1
   grep -q '"ci:economy": "bash scripts/ci/verify-economy.sh"' "$repository_root/package.json" || return 1
-  grep -q 'pnpm install --no-lockfile --no-frozen-lockfile' "$ci_dir/install-and-audit-pnpm.sh" || return 1
+  grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$ci_dir/install-and-audit-pnpm.sh" || return 1
+  grep -Fq 'repository pnpm lockfile is required' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -q 'pnpm audit --json' "$ci_dir/install-and-audit-pnpm.sh" || return 1
   grep -Fq 'pnpm install --frozen-lockfile --ignore-scripts' "$repository_root/.github/workflows/emception.yml" || return 1
+  ! grep -Fq 'pnpm-lock.yaml|*/pnpm-lock.yaml' "$repository_root/scripts/repository-hygiene.sh" || return 1
   [[ -f "$repository_root/pnpm-lock.yaml" ]]
 }
 
@@ -287,6 +289,14 @@ test_emception_emits_a_gate_result_for_every_main_push() {
   grep -Fq 'required: ${{ steps.changes.outputs.required }}' "$workflow" || return 1
   grep -Fq 'needs: detect-emception-changes' "$workflow" || return 1
   grep -Fq "if: needs.detect-emception-changes.outputs.required == 'true'" "$workflow"
+}
+
+test_emception_ci_validates_develop_pull_requests() {
+  local workflow="$repository_root/.github/workflows/emception.yml"
+
+  grep -A 3 '^  push:' "$workflow" | grep -Fx '      - develop' || return 1
+  grep -A 3 '^  pull_request:' "$workflow" | grep -Fx '      - develop' || return 1
+  grep -Fq 'apps/web/(Dockerfile|scripts/(sync-emception-cdn|coding-cycle-browser-e2e)\.mjs|src/lib/emception/)' "$workflow"
 }
 
 test_web_vitest_uses_direct_exec_for_json_evidence() {
@@ -662,6 +672,7 @@ run_test 'Economy gate isolates global roles from application databases' test_ec
 run_test 'Emception versioning is scoped to its fixed group' test_auto_changeset_bumps_entire_lockstep_workspace
 run_test 'Changesets config isolates the Emception release group' test_changesets_config_matches_lockstep_workspace
 run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
+run_test 'Emception CI validates Toolchain-consuming changes on develop' test_emception_ci_validates_develop_pull_requests
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
 run_test 'standalone web server uses an origin-safe bind address' test_standalone_web_server_uses_origin_safe_bind_address

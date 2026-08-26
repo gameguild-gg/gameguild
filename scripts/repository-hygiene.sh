@@ -27,8 +27,8 @@ while IFS= read -r path; do
     temp/*|LEGACY/*|old/*)
       report "legacy snapshot is tracked: ${path}"
       ;;
-    package-lock.json|*/package-lock.json|pnpm-lock.yaml|*/pnpm-lock.yaml|yarn.lock|*/yarn.lock)
-      report "ignored package-manager lock file is tracked: ${path}"
+    package-lock.json|*/package-lock.json|yarn.lock|*/yarn.lock)
+      report "unapproved package-manager lock file is tracked: ${path}"
       ;;
     gource.txt|*/gource.txt|gource.mp4|*/gource.mp4|contributors/gource.gif)
       report "generated Gource output is tracked: ${path}"
