@@ -1111,6 +1111,9 @@ async function upsertContent(token, courseId, model, { dryRun, apiUrl }) {
         updated += 1;
       } else {
         const payload = { programId: courseId, parentId, ...contentUpsertFields(item) };
+        // CreateProgramContentDto.Body is non-nullable with a "{}" default that applies
+        // only when the key is ABSENT — module creates must omit body entirely (null → 400).
+        if (item.isModule) delete payload.body;
         if (dryRun) {
           console.log(`[content] create ${item.predictedSlug}`);
           // Placeholder id lets children place in dry-run too.
