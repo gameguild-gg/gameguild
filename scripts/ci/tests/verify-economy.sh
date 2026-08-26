@@ -168,6 +168,12 @@ test_economy_gate_batches_whole_solution_tests() {
   grep -Fq 'whole_solution_worker_pids' "$gate"
 }
 
+test_whole_solution_log_excludes_aggregate_output() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq 'find "$whole_solution_results" -mindepth 2 -type f -name' "$gate"
+}
+
 test_economy_unit_tests_bound_parallelism_without_global_serialization() {
   local assembly_info="$repository_root/apps/api/tests/GameGuild.Economy.UnitTests/AssemblyInfo.cs"
   local database_support="$repository_root/apps/api/tests/GameGuild.TestSupport.Economy/EconomyPostgreSqlTestDatabase.cs"
@@ -655,6 +661,7 @@ run_test 'Economy gate rejects stage skips' test_economy_gate_rejects_stage_skip
 run_test 'Economy gate bounds hung tests and records timings' test_economy_gate_bounds_hung_tests_and_records_timings
 run_test 'Economy gate supports fast PR and full release profiles' test_economy_gate_supports_fast_pr_and_full_release_profiles
 run_test 'Economy gate batches whole-solution tests' test_economy_gate_batches_whole_solution_tests
+run_test 'whole-solution log excludes aggregate output' test_whole_solution_log_excludes_aggregate_output
 run_test 'Economy unit tests bound parallelism without global serialization' test_economy_unit_tests_bound_parallelism_without_global_serialization
 run_test 'Economy gate builds strict release targets once' test_economy_gate_builds_release_targets_strictly_once
 run_test 'Economy gate rejects nested PostgreSQL Testcontainers' test_economy_gate_rejects_nested_postgres_testcontainers
