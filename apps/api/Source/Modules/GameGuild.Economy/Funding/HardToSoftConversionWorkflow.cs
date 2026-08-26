@@ -12,7 +12,6 @@ namespace GameGuild.Economy.Funding;
 
 public sealed record SelfServiceHardToSoftConversionRequest(
     long PrincipalHardCoinUnits,
-    long FeeHardCoinUnits,
     string IdempotencyKey);
 
 public sealed record SelfServiceHardToSoftConversionReceipt(
@@ -39,6 +38,7 @@ public sealed class PostgreSqlHardToSoftConversionWorkflow(
     IActorContextAccessor actorContextAccessor,
     IEconomyValueMovementDecisionGate decisionGate,
     IHardToSoftConversionRiskEvidenceVerifier riskEvidenceVerifier,
+    IHardToSoftConversionPolicyResolver policyResolver,
     IHardToSoftConversionRiskDecisionIssuer riskDecisionIssuer) : IHardToSoftConversionWorkflow
 {
     public async Task<SelfServiceHardToSoftConversionReceipt> ConvertAsync(
@@ -50,12 +50,20 @@ public sealed class PostgreSqlHardToSoftConversionWorkflow(
         decisionGate.EnsureEnabled(EconomyValueMovementCapability.ConvertHardToSoft);
 
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.PrincipalHardCoinUnits);
-        ArgumentOutOfRangeException.ThrowIfNegative(request.FeeHardCoinUnits);
 
         var key = new IdempotencyKey(request.IdempotencyKey);
         var actor = actorContextAccessor.ActorContext;
         if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } actorId || actor.TenantId is not { } tenantId)
             throw new UnauthorizedAccessException("Economy conversion requires an authenticated user and tenant context.");
+
+        var requestedAt = DateTimeOffset.UtcNow;
+        var policy = await policyResolver.ResolveAsync(
+            tenantId,
+            actorId,
+            request.PrincipalHardCoinUnits,
+            requestedAt,
+            cancellationToken);
+        var feeHardCoinUnits = policy.FeeHardCoinUnits;
 
         var externalEvidence = await riskEvidenceVerifier
             .VerifyAsync(actorId, tenantId, cancellationToken)
@@ -71,11 +79,10 @@ public sealed class PostgreSqlHardToSoftConversionWorkflow(
             throw new EconomySelfServiceCommandRejectedException("The authenticated user has no active Economy wallet.");
 
         var principalPostingId = DeterministicGuid("hard-to-soft:principal", key.Value);
-        var feePostingId = request.FeeHardCoinUnits == 0
+        var feePostingId = feeHardCoinUnits == 0
             ? (Guid?)null
             : DeterministicGuid("hard-to-soft:fee", key.Value);
         var outputLotId = DeterministicGuid("hard-to-soft:output", key.Value);
-        var requestedAt = DateTimeOffset.UtcNow;
 
         async Task<SelfServiceHardToSoftConversionReceipt> IssueAndPostAsync()
         {
@@ -86,8 +93,13 @@ public sealed class PostgreSqlHardToSoftConversionWorkflow(
                         new WalletId(walletId.Value),
                         principalPostingId,
                         key,
-                        request.FeeHardCoinUnits,
-                        checked(request.PrincipalHardCoinUnits + request.FeeHardCoinUnits),
+                        feeHardCoinUnits,
+                        checked(request.PrincipalHardCoinUnits + feeHardCoinUnits),
+                        policy.MaximumHardCoinUnitsPerDay,
+                        policy.DecisionLifetimeSeconds,
+                        policy.JurisdictionCode,
+                        policy.PolicyVersion,
+                        policy.PolicyHash,
                         externalEvidence,
                         requestedAt),
                     cancellationToken)
@@ -107,7 +119,7 @@ public sealed class PostgreSqlHardToSoftConversionWorkflow(
                         {outputLotId},
                         {decision.SourceRoots.ToArray()},
                         {request.PrincipalHardCoinUnits},
-                        {request.FeeHardCoinUnits},
+                        {feeHardCoinUnits},
                         {requestedAt},
                         {null})
                     """)

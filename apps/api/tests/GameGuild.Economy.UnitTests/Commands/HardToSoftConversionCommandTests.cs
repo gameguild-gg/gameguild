@@ -19,22 +19,21 @@ public sealed class HardToSoftConversionCommandTests
         var workflow = new CapturingWorkflow(receipt);
         var handler = new ConvertMyHardToSoftCommandHandler(workflow);
         var command = new ConvertMyHardToSoftCommand(
-            new ConvertMyHardToSoftRequest(100, 3, "conversion-key"));
+            new ConvertMyHardToSoftRequest(100, "conversion-key"));
 
         var result = await handler.Handle(command, CancellationToken.None);
 
-        workflow.Request.Should().Be(new SelfServiceHardToSoftConversionRequest(100, 3, "conversion-key"));
+        workflow.Request.Should().Be(new SelfServiceHardToSoftConversionRequest(100, "conversion-key"));
         result.Should().Be(receipt);
     }
 
     [Theory]
-    [InlineData(0, 0, true)]
-    [InlineData(100, -1, true)]
-    [InlineData(100, 0, false)]
-    public void Validator_RejectsInvalidCoinAmounts(long principalUnits, long feeUnits, bool shouldFail)
+    [InlineData(0, true)]
+    [InlineData(100, false)]
+    public void Validator_RejectsInvalidPrincipal(long principalUnits, bool shouldFail)
     {
         var command = new ConvertMyHardToSoftCommand(
-            new ConvertMyHardToSoftRequest(principalUnits, feeUnits, "conversion-key"));
+            new ConvertMyHardToSoftRequest(principalUnits, "conversion-key"));
 
         var result = new ConvertMyHardToSoftCommandValidator().Validate(command);
 
@@ -45,7 +44,7 @@ public sealed class HardToSoftConversionCommandTests
     public void Validator_RequiresAnIdempotencyKey()
     {
         var command = new ConvertMyHardToSoftCommand(
-            new ConvertMyHardToSoftRequest(100, 0, string.Empty));
+            new ConvertMyHardToSoftRequest(100, string.Empty));
 
         var result = new ConvertMyHardToSoftCommandValidator().Validate(command);
 
