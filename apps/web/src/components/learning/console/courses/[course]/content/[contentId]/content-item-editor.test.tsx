@@ -22,6 +22,7 @@ const routerMocks = vi.hoisted(() => ({
   back: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
+  replace: vi.fn(),
 }));
 
 Object.defineProperties(HTMLElement.prototype, {
@@ -327,7 +328,10 @@ describe("ContentItemEditor", () => {
         estimatedMinutes: 35,
       });
     });
-    expect(routerMocks.refresh).toHaveBeenCalled();
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/content/updated-quiz",
+    );
+    expect(routerMocks.refresh).not.toHaveBeenCalled();
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
   });
 
@@ -367,6 +371,61 @@ describe("ContentItemEditor", () => {
         }),
       );
     });
+  });
+
+  it("regenerates the slug from the title even when the stored slug does not mirror it", async () => {
+    const user = userEvent.setup();
+    const backfilled = { ...item, slug: "0d5ee1a2-9c4b-4d0e-8f7a-3b2c1d0e5f6a" };
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={backfilled}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const slugInput = screen.getByLabelText(/url slug/i);
+    expect(slugInput).toHaveValue("0d5ee1a2-9c4b-4d0e-8f7a-3b2c1d0e5f6a");
+
+    await user.clear(screen.getByLabelText(/^title$/i));
+    await user.type(screen.getByLabelText(/^title$/i), "New Title");
+    expect(slugInput).toHaveValue("new-title");
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "New Title",
+          slug: "new-title",
+        }),
+      );
+    });
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/content/new-title",
+    );
+  });
+
+  it("replaces the URL with the edited slug after saving", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.clear(screen.getByLabelText(/url slug/i));
+    await user.type(screen.getByLabelText(/url slug/i), "renamed-slug");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(routerMocks.replace).toHaveBeenCalledWith(
+        "/workspace/learning/courses/course-1/content/renamed-slug",
+      );
+    });
+    expect(routerMocks.refresh).not.toHaveBeenCalled();
   });
 
   it("keeps a trailing dash while typing spaces and strips it on blur", async () => {

@@ -99,11 +99,10 @@ export function ContentItemEditor({
 
   const [title, setTitle] = useState(item.title);
   const [slug, setSlug] = useState(item.slug);
-  // Auto while the slug still mirrors the sluggified title; editing the slug
-  // directly detaches it so later title edits stop overwriting it.
-  const [autoSlug, setAutoSlug] = useState(
-    () => item.slug === slugify(item.title),
-  );
+  // Slug starts in auto mode regardless of the stored value (it may be a
+  // legacy backfill): title edits regenerate it until the slug is edited
+  // directly in this session, which detaches it.
+  const [autoSlug, setAutoSlug] = useState(true);
   const [description, setDescription] = useState(item.description ?? "");
   const [visibility, setVisibility] = useState<string>(
     item.status === "published" ? "Public" : "Private",
@@ -277,7 +276,19 @@ export function ContentItemEditor({
       }
 
       setSaved(true);
-      router.refresh();
+
+      // The route param IS the slug — after a slug change the current URL is
+      // stale, so replace it instead of refreshing in place.
+      const savedSlug = normalizeSlug(slug) || normalizeSlug(title);
+      if (savedSlug && savedSlug !== item.slug) {
+        router.replace(
+          `${learningBase}/courses/${encodeURIComponent(courseId)}/content/${savedSlug}` as Parameters<
+            typeof router.push
+          >[0],
+        );
+      } else {
+        router.refresh();
+      }
     });
   }
 

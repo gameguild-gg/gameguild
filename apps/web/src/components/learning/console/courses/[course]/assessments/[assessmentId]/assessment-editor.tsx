@@ -112,11 +112,10 @@ export function AssessmentEditor({
 
   const [title, setTitle] = useState(assessment.title);
   const [slug, setSlug] = useState(assessment.slug);
-  // Auto while the slug still mirrors the sluggified title; editing the slug
-  // directly detaches it so later title edits stop overwriting it.
-  const [autoSlug, setAutoSlug] = useState(
-    () => assessment.slug === slugify(assessment.title),
-  );
+  // Slug starts in auto mode regardless of the stored value (it may be a
+  // legacy backfill): title edits regenerate it until the slug is edited
+  // directly in this session, which detaches it.
+  const [autoSlug, setAutoSlug] = useState(true);
   const [description, setDescription] = useState(assessment.description ?? "");
   const [maxScore, setMaxScore] = useState(String(assessment.maxScore));
   const [passingScore, setPassingScore] = useState(
@@ -219,7 +218,17 @@ export function AssessmentEditor({
       }
 
       setSaved(true);
-      router.refresh();
+
+      // The editor route resolves by slug or id — after a slug change the
+      // current URL is stale, so replace it instead of refreshing in place.
+      const savedSlug = normalizeSlug(slug) || normalizeSlug(title);
+      if (savedSlug && savedSlug !== assessment.slug) {
+        router.replace(
+          `${learningBase}/courses/${encodeURIComponent(courseId)}/assessments/${savedSlug}`,
+        );
+      } else {
+        router.refresh();
+      }
     });
   }
 

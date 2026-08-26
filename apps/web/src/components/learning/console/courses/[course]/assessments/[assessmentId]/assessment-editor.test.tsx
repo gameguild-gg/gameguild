@@ -15,6 +15,7 @@ const routerMocks = vi.hoisted(() => ({
   back: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
+  replace: vi.fn(),
 }));
 
 Object.defineProperties(HTMLElement.prototype, {
@@ -202,7 +203,7 @@ describe("AssessmentEditor", () => {
         courseId: "course-1",
         assessmentId: "assessment-1",
         title: "Updated Quiz",
-        slug: "assessment-1",
+        slug: "updated-quiz",
         description: "Updated instructions.",
         maxScore: 20,
         passingScore: 14,
@@ -216,11 +217,14 @@ describe("AssessmentEditor", () => {
         presentationMode: "Continuous",
       });
     });
-    expect(routerMocks.refresh).toHaveBeenCalled();
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/assessments/updated-quiz",
+    );
+    expect(routerMocks.refresh).not.toHaveBeenCalled();
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
   });
 
-  it("keeps a customized slug detached from title edits and normalizes manual slug input", async () => {
+  it("regenerates the slug from title edits and detaches only after a direct slug edit", async () => {
     const user = userEvent.setup();
     render(
       <AssessmentEditor
@@ -235,10 +239,14 @@ describe("AssessmentEditor", () => {
 
     await user.clear(screen.getByLabelText(/^title$/i));
     await user.type(screen.getByLabelText(/^title$/i), "New Title");
-    expect(slugInput).toHaveValue("assessment-1");
+    expect(slugInput).toHaveValue("new-title");
 
     await user.clear(slugInput);
     await user.type(slugInput, "Final EXAM v2!");
+    expect(slugInput).toHaveValue("final-exam-v2");
+
+    await user.clear(screen.getByLabelText(/^title$/i));
+    await user.type(screen.getByLabelText(/^title$/i), "Another Title");
     expect(slugInput).toHaveValue("final-exam-v2");
 
     await user.click(screen.getByRole("button", { name: /save changes/i }));
@@ -246,11 +254,14 @@ describe("AssessmentEditor", () => {
     await waitFor(() => {
       expect(updateAssessment).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: "New Title",
+          title: "Another Title",
           slug: "final-exam-v2",
         }),
       );
     });
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/assessments/final-exam-v2",
+    );
   });
 
   it("strips the slug trailing dash on blur", async () => {
