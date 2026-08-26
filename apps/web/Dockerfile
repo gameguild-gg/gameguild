@@ -13,6 +13,7 @@ COPY apps/web/package.json ./apps/web/
 COPY packages ./packages
 COPY tools/emception/package.json ./tools/emception/
 COPY tools/emception/tsconfig.base.json ./tools/emception/
+COPY tools/emception/scripts ./tools/emception/scripts
 COPY tools/emception/packages ./tools/emception/packages
 COPY tools/emception/public/coi-serviceworker.js ./tools/emception/public/coi-serviceworker.js
 
