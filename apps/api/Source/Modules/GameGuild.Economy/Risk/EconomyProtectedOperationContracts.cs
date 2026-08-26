@@ -28,7 +28,8 @@ public sealed record EconomyProtectedOperationIntent(
     IdempotencyKey IdempotencyKey,
     DateTimeOffset RequestedAt,
     string? ProviderJurisdictionCode = null,
-    string? DestinationJurisdictionCode = null);
+    string? DestinationJurisdictionCode = null,
+    Guid? ProtectedSubjectId = null);
 
 public sealed record EconomyProtectedRiskDecisionRequest(
     Guid TenantId,

@@ -26,16 +26,17 @@ public sealed class EconomyProtectedOperationOrchestrator(
             actor.SubjectIdAsGuid is not { } actorId)
             throw new UnauthorizedAccessException(
                 "A protected Economy operation requires an authenticated tenant actor.");
+        var subjectId = intent.ProtectedSubjectId ?? actorId;
 
         var jurisdiction = await jurisdictionResolver.ResolveAsync(
             tenantId,
-            actorId,
+            subjectId,
             intent.ProviderJurisdictionCode,
             intent.DestinationJurisdictionCode,
             intent.RequestedAt,
             cancellationToken).ConfigureAwait(false);
         var fingerprint = Fingerprint(tenantId, actorId, intent);
-        var subjectReference = EconomySubjectReference.ForUser(tenantId, actorId);
+        var subjectReference = EconomySubjectReference.ForUser(tenantId, subjectId);
         var execution = await transaction.ExecuteAsync(async token =>
         {
             var decision = await riskDecisionIssuer.IssueAsync(
@@ -95,7 +96,7 @@ public sealed class EconomyProtectedOperationOrchestrator(
         EconomyProtectedOperationIntent intent)
     {
         ArgumentNullException.ThrowIfNull(intent);
-        var fields = new[]
+        var fields = new List<string>
         {
             tenantId.ToString("N"),
             actorId.ToString("N"),
@@ -113,6 +114,11 @@ public sealed class EconomyProtectedOperationOrchestrator(
             intent.IdempotencyKey.Value,
             intent.RequestedAt.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture)
         };
+        if (intent.ProtectedSubjectId is { } protectedSubjectId)
+        {
+            fields.Insert(2, "protected-subject-v1");
+            fields.Insert(3, protectedSubjectId.ToString("N"));
+        }
         var canonical = string.Concat(fields.Select(value =>
             $"{Encoding.UTF8.GetByteCount(value)}:{value}"));
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
@@ -128,6 +134,8 @@ public sealed class EconomyProtectedOperationOrchestrator(
         if (!Enum.IsDefined(intent.TemplateKind)) throw new ArgumentOutOfRangeException(nameof(intent));
         if (intent.SourceWalletId.Value == Guid.Empty || intent.DestinationWalletId.Value == Guid.Empty)
             throw new ArgumentException("Protected operation wallets are required.", nameof(intent));
+        if (intent.ProtectedSubjectId == Guid.Empty)
+            throw new ArgumentException("Protected operation subject IDs cannot be empty.", nameof(intent));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(intent.Amount.Units);
         ArgumentNullException.ThrowIfNull(intent.CurrencyLegs);
         if (intent.CurrencyLegs.Count == 0)
