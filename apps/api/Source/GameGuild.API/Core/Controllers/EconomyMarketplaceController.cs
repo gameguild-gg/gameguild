@@ -12,18 +12,17 @@ namespace GameGuild.API.Controllers;
 
 public sealed record SettleMyMarketplaceOrderRequest(
     MarketplaceCurrencyChoice CurrencyChoice,
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     string IdempotencyKey);
 
 public sealed record RefundMarketplaceSettlementRequest(
     int Quantity,
     string ReasonCode,
-    string JurisdictionCode,
-    Guid RiskDecisionId,
-    string OperationFingerprint,
     string IdempotencyKey);
+
+public sealed record MarketplaceProtectedOperationFailureResponse(
+    EconomyProtectedOperationState State,
+    Guid? ReviewId,
+    IReadOnlyList<string> Diagnostics);
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/economy/marketplace")]
@@ -37,48 +36,44 @@ public sealed class EconomyMarketplaceController(
 {
     [HttpPost("orders/{orderId:guid}:settle")]
     [ProducesResponseType(typeof(DurableMarketplaceSettlementResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MarketplaceProtectedOperationFailureResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(MarketplaceProtectedOperationFailureResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(MarketplaceProtectedOperationFailureResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Settle(
         Guid orderId,
         [FromBody] SettleMyMarketplaceOrderRequest request,
         CancellationToken cancellationToken)
     {
-        if (!TryActor(out var tenantId, out var actorId)) return Forbid();
+        if (!TryActor(out _, out _)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return Ok(await settlements.SettleAsync(new SettleAuthoritativeMarketplaceOrderRequest(
-            tenantId,
-            actorId,
-            orderId,
-            request.CurrencyChoice,
-            EconomySubjectReference.ForUser(tenantId, actorId),
-            request.JurisdictionCode,
-            request.RiskDecisionId,
-            request.OperationFingerprint,
-            new IdempotencyKey(request.IdempotencyKey),
-            timeProvider.GetUtcNow()), cancellationToken).ConfigureAwait(false));
+        return await MarketplaceProtectedOperationResponse.ExecuteAsync(() =>
+            settlements.SettleAsync(new SettleAuthoritativeMarketplaceOrderRequest(
+                orderId,
+                request.CurrencyChoice,
+                new IdempotencyKey(request.IdempotencyKey),
+                timeProvider.GetUtcNow()), cancellationToken).AsTask());
     }
 
     [HttpPost("settlements/{settlementId:guid}:refund")]
     [ProducesResponseType(typeof(DurableMarketplaceRefundResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MarketplaceProtectedOperationFailureResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(MarketplaceProtectedOperationFailureResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(MarketplaceProtectedOperationFailureResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Refund(
         Guid settlementId,
         [FromBody] RefundMarketplaceSettlementRequest request,
         CancellationToken cancellationToken)
     {
-        if (!TryActor(out var tenantId, out var actorId)) return Forbid();
+        if (!TryActor(out _, out _)) return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        return Ok(await refunds.RefundAsync(new RefundAuthoritativeMarketplaceOrderRequest(
-            tenantId,
-            actorId,
-            MarketplaceRefundAuthority.SelfService,
-            settlementId,
-            request.Quantity,
-            request.ReasonCode,
-            EconomySubjectReference.ForUser(tenantId, actorId),
-            request.JurisdictionCode,
-            request.RiskDecisionId,
-            request.OperationFingerprint,
-            new IdempotencyKey(request.IdempotencyKey),
-            timeProvider.GetUtcNow()), cancellationToken).ConfigureAwait(false));
+        return await MarketplaceProtectedOperationResponse.ExecuteAsync(() =>
+            refunds.RefundAsync(new RefundAuthoritativeMarketplaceOrderRequest(
+                MarketplaceRefundAuthority.SelfService,
+                settlementId,
+                request.Quantity,
+                request.ReasonCode,
+                new IdempotencyKey(request.IdempotencyKey),
+                timeProvider.GetUtcNow()), cancellationToken).AsTask());
     }
 
     private bool TryActor(out Guid tenantId, out Guid actorId)
@@ -105,6 +100,9 @@ public sealed class EconomyMarketplaceAdministrationController(
 {
     [HttpPost("settlements/{settlementId:guid}:refund")]
     [ProducesResponseType(typeof(DurableMarketplaceRefundResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(MarketplaceProtectedOperationFailureResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(MarketplaceProtectedOperationFailureResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(MarketplaceProtectedOperationFailureResponse), StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Refund(
         Guid settlementId,
         [FromBody] RefundMarketplaceSettlementRequest request,
@@ -115,19 +113,36 @@ public sealed class EconomyMarketplaceAdministrationController(
             !actor.HasPermission(EconomyPermission.Keys.OperateMarketplace))
             return Forbid();
         ArgumentNullException.ThrowIfNull(request);
-        var actorId = actor.SubjectIdAsGuid.Value;
-        return Ok(await refunds.RefundAsync(new RefundAuthoritativeMarketplaceOrderRequest(
-            actor.TenantId.Value,
-            actorId,
-            MarketplaceRefundAuthority.Operations,
-            settlementId,
-            request.Quantity,
-            request.ReasonCode,
-            EconomySubjectReference.ForUser(actor.TenantId.Value, actorId),
-            request.JurisdictionCode,
-            request.RiskDecisionId,
-            request.OperationFingerprint,
-            new IdempotencyKey(request.IdempotencyKey),
-            timeProvider.GetUtcNow()), cancellationToken).ConfigureAwait(false));
+        return await MarketplaceProtectedOperationResponse.ExecuteAsync(() =>
+            refunds.RefundAsync(new RefundAuthoritativeMarketplaceOrderRequest(
+                MarketplaceRefundAuthority.Operations,
+                settlementId,
+                request.Quantity,
+                request.ReasonCode,
+                new IdempotencyKey(request.IdempotencyKey),
+                timeProvider.GetUtcNow()), cancellationToken).AsTask());
+    }
+}
+
+internal static class MarketplaceProtectedOperationResponse
+{
+    public static async Task<IActionResult> ExecuteAsync<T>(Func<Task<T>> operation)
+    {
+        try
+        {
+            return new OkObjectResult(await operation().ConfigureAwait(false));
+        }
+        catch (EconomyProtectedOperationException exception)
+        {
+            var status = exception.State switch
+            {
+                EconomyProtectedOperationState.Denied => StatusCodes.Status403Forbidden,
+                EconomyProtectedOperationState.ReviewRequired or EconomyProtectedOperationState.Hold or
+                    EconomyProtectedOperationState.Challenge => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status503ServiceUnavailable
+            };
+            return new ObjectResult(new MarketplaceProtectedOperationFailureResponse(
+                exception.State, exception.ReviewId, exception.Diagnostics)) { StatusCode = status };
+        }
     }
 }

@@ -668,7 +668,6 @@ public sealed class OrderCommandHandlerTests
     {
         var order = OrderTestFactory.CreatePendingOrder();
         OrderTestFactory.AddLineItem(order, Guid.NewGuid(), "Marketplace product", 40m);
-        var riskDecisionId = Guid.NewGuid();
         var settlementId = Guid.NewGuid();
         var repository = new Mock<IOrderRepository>();
         repository.Setup(mock => mock.GetWithLineItemsAsync(order.Id, It.IsAny<CancellationToken>()))
@@ -676,13 +675,8 @@ public sealed class OrderCommandHandlerTests
         var settlements = new Mock<IOrderMarketplaceSettlementAuthority>();
         settlements.Setup(mock => mock.SettleAsync(
                 It.Is<OrderMarketplaceSettlementRequest>(request =>
-                    request.TenantId == order.TenantId &&
-                    request.ActorId == order.UserId &&
                     request.OrderId == order.Id &&
                     request.CurrencyChoice == OrderMarketplaceCurrencyChoice.Hard &&
-                    request.JurisdictionCode == "BR" &&
-                    request.RiskDecisionId == riskDecisionId &&
-                    request.OperationFingerprint == "marketplace-order" &&
                     request.IdempotencyKey == "complete-order"),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(OrderMarketplaceSettlementDecision.Accepted(settlementId, isDuplicate: false));
@@ -700,9 +694,6 @@ public sealed class OrderCommandHandlerTests
                 order.Id,
                 MarketplaceSettlement: new CompleteOrderMarketplaceSettlement(
                     OrderMarketplaceCurrencyChoice.Hard,
-                    "BR",
-                    riskDecisionId,
-                    "marketplace-order",
                     "complete-order")),
             CancellationToken.None);
 
@@ -740,9 +731,6 @@ public sealed class OrderCommandHandlerTests
                 order.Id,
                 MarketplaceSettlement: new CompleteOrderMarketplaceSettlement(
                     OrderMarketplaceCurrencyChoice.Soft,
-                    "BR",
-                    Guid.NewGuid(),
-                    "marketplace-order",
                     "complete-order")),
             CancellationToken.None);
 

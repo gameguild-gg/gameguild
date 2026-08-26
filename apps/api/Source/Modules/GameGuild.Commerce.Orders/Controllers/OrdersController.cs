@@ -399,7 +399,7 @@ public sealed record AddOrderItemRequest(
 /// <param name="PaymentId">Optional internal Payment entity ID for Payment→Order linkage</param>
 /// <param name="PaymentProviderReference">Optional external payment provider reference</param>
 /// <param name="PaymentMethod">Optional payment method description (e.g., "card", "bank_transfer")</param>
-/// <param name="MarketplaceSettlement">Signed Economy Marketplace authorization evidence; mutually exclusive with fiat payment references.</param>
+/// <param name="MarketplaceSettlement">Economy Marketplace settlement intent; mutually exclusive with fiat payment references.</param>
 public sealed record CompleteOrderRequest(
     Guid? PaymentId = null,
     string? PaymentProviderReference = null,

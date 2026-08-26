@@ -13,11 +13,8 @@ public sealed class CompleteOrderCommandValidator : AbstractValidator<CompleteOr
         RuleFor(x => x.MarketplaceSettlement)
             .Must(settlement => settlement is null ||
                 Enum.IsDefined(settlement.CurrencyChoice) &&
-                !string.IsNullOrWhiteSpace(settlement.JurisdictionCode) &&
-                settlement.RiskDecisionId != Guid.Empty &&
-                !string.IsNullOrWhiteSpace(settlement.OperationFingerprint) &&
                 !string.IsNullOrWhiteSpace(settlement.IdempotencyKey))
-            .WithMessage("Marketplace settlement requires valid currency, jurisdiction, risk, fingerprint and idempotency evidence.");
+            .WithMessage("Marketplace settlement requires a valid currency choice and idempotency key.");
         RuleFor(x => x)
             .Must(command => command.MarketplaceSettlement is null ||
                 command.PaymentId is null &&
