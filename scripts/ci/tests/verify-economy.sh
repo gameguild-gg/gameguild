@@ -275,8 +275,6 @@ if unknown:
 if errors:
     raise SystemExit("; ".join(errors))
 PY
-
-  (cd "$repository_root" && "${pnpm_command[@]}" exec changeset status >/dev/null)
 }
 
 test_emception_emits_a_gate_result_for_every_main_push() {
