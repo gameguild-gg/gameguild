@@ -115,6 +115,7 @@ export interface CourseContentItemViewModel {
   status: "draft" | "published" | "archived";
   visibility: LearningCoursesVisibility;
   duration: number | null;
+  estimatedMinutesSource: "Auto" | "Manual" | null;
   metadata: Record<string, unknown>;
   gradingConfig: ContentGradingDefinition | null;
   createdAt: string;
