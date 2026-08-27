@@ -85,6 +85,7 @@ const moduleOne = {
   title: 'Week 01',
   description: null,
   status: 'published',
+  visibility: 'Public',
   duration: null,
   metadata: {},
   gradingConfig: null,
