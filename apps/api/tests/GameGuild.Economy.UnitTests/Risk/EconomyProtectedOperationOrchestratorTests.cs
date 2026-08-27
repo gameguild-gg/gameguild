@@ -130,6 +130,41 @@ public sealed class EconomyProtectedOperationOrchestratorTests
         changed.Should().NotBe(first);
     }
 
+    [Fact]
+    public void ValidationRejectsEveryUnboundProtectedOperationShape()
+    {
+        var intent = Intent();
+        var invalid = new EconomyProtectedOperationIntent?[]
+        {
+            null,
+            intent with { Capability = (EconomyValueMovementCapability)0 },
+            intent with { TemplateKind = (PostingTemplateKind)0 },
+            intent with { SourceWalletId = default },
+            intent with { DestinationWalletId = default },
+            intent with { ProtectedSubjectId = Guid.Empty },
+            intent with { CurrencyLegs = null! },
+            intent with { CurrencyLegs = [] },
+            intent with { SourceRoots = null! },
+            intent with { ProviderReferenceHash = " " },
+            intent with { DestinationHash = " " }
+        };
+
+        foreach (var candidate in invalid)
+            FluentActions.Invoking(() => EconomyProtectedOperationOrchestrator.Validate(candidate!))
+                .Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void RejectionWithoutDiagnosticsUsesTheStructuredStateMessage()
+    {
+        var exception = new EconomyProtectedOperationException(
+            EconomyProtectedOperationState.Denied, null, []);
+
+        exception.Message.Should().Be(
+            "The protected Economy operation was rejected with state Denied.");
+        exception.Diagnostics.Should().BeEmpty();
+    }
+
     private static EconomyProtectedOperationIntent Intent() => new(
         EconomyValueMovementCapability.BountyEscrow,
         PostingTemplateKind.BountyEscrow,

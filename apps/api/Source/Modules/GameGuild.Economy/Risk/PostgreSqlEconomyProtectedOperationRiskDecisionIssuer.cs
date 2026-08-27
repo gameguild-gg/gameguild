@@ -289,7 +289,7 @@ public sealed class PostgreSqlEconomyProtectedOperationRiskDecisionIssuer :
         _db.Set<EconomyRiskAuditEvidenceRow>().AddRange(rows);
     }
 
-    private static void EnsureReplay(
+    internal static void EnsureReplay(
         EconomyRiskDecisionRow existing,
         EconomyProtectedRiskDecisionRequest request,
         EconomyCapabilityPolicy policy,
@@ -304,7 +304,7 @@ public sealed class PostgreSqlEconomyProtectedOperationRiskDecisionIssuer :
                 "The protected-operation idempotency key is bound to different authority inputs.");
     }
 
-    private static void Validate(EconomyProtectedRiskDecisionRequest request)
+    internal static void Validate(EconomyProtectedRiskDecisionRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Intent);
@@ -316,7 +316,7 @@ public sealed class PostgreSqlEconomyProtectedOperationRiskDecisionIssuer :
         ArgumentException.ThrowIfNullOrWhiteSpace(request.OperationFingerprint);
     }
 
-    private static EconomyProtectedRiskDecision Rejected(
+    internal static EconomyProtectedRiskDecision Rejected(
         EconomyProtectedOperationState state,
         string diagnostic) => new(Guid.Empty, RiskOutcome.Deny, state, null, [diagnostic]);
 }

@@ -27,7 +27,18 @@ public sealed class ComplianceEvidenceJurisdictionTests
         act.Should().Throw<ArgumentException>();
     }
 
-    private static ComplianceEvidenceEnvelope Create(string jurisdiction) =>
+    [Fact]
+    public void Create_CanonicallyOmitsAnUnavailableJurisdiction()
+    {
+        var omitted = Create(null);
+        var whitespace = Create(" ");
+
+        omitted.JurisdictionCode.Should().BeNull();
+        whitespace.JurisdictionCode.Should().BeNull();
+        whitespace.EvidenceHash.Should().Be(omitted.EvidenceHash);
+    }
+
+    private static ComplianceEvidenceEnvelope Create(string? jurisdiction) =>
         ComplianceEvidenceEnvelope.Create(
             "sumsub",
             "sandbox",

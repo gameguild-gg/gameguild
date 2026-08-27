@@ -144,7 +144,7 @@ public sealed class PostgreSqlFifoTransferGatewayTests
                 ('{Guid.NewGuid()}', '{sourceWallet}', 2, 1, 1, '{Now.AddMinutes(-3):O}'),
                 ('{Guid.NewGuid()}', '{destinationWallet}', 2, 1, 1, '{Now.AddMinutes(-3):O}');
             INSERT INTO public.economy_registered_capabilities ("Id", "Name", "AllowedTemplateKinds", "IsEnabled", "CreatedAt", "RevokedAt")
-            VALUES ('{capability}', 'fifo-transfer', '[4]'::jsonb, true, '{Now.AddMinutes(-3):O}', NULL);
+            VALUES ('{capability}', 'fifo-transfer-test-{capability:N}', '[4]'::jsonb, true, '{Now.AddMinutes(-3):O}', NULL);
             INSERT INTO public.economy_risk_counters (
                 "Id", "Dimension", "SubjectHash", "Operation", "Currency", "WindowStartedAt", "WindowEndsAt",
                 "CounterVersion", "MaxUnits", "UsedUnits", "UpdatedAt")

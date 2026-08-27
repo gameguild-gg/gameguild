@@ -5,6 +5,7 @@ using GameGuild.Economy.Policy;
 using GameGuild.Economy.Projections;
 using GameGuild.Economy.Reserves;
 using GameGuild.Economy.Risk;
+using GameGuild.Economy.Transfers;
 
 namespace GameGuild.Economy.Persistence;
 
@@ -457,6 +458,23 @@ internal sealed class EconomyRiskCounterReservationRow
     public RiskCounterReservationStatus Status { get; set; }
     public DateTimeOffset? ConsumedAt { get; set; }
     public DateTimeOffset? ReleasedAt { get; set; }
+}
+
+internal sealed class EconomySelfServiceTransferIntentRow
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid ActorId { get; set; }
+    public Guid RecipientUserId { get; set; }
+    public SelfServiceEconomyTransferType TransferType { get; set; }
+    public CurrencyCode Currency { get; set; }
+    public ProvenanceKind Provenance { get; set; }
+    public long AmountUnits { get; set; }
+    public string IdempotencyKey { get; set; } = string.Empty;
+    public string RequestHash { get; set; } = string.Empty;
+    public string ProviderReferenceHash { get; set; } = string.Empty;
+    public string DestinationHash { get; set; } = string.Empty;
+    public DateTimeOffset RequestedAt { get; set; }
 }
 
 internal sealed class EconomyProtectedChangeCooldownRow

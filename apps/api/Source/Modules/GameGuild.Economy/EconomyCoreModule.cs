@@ -7,6 +7,7 @@ using GameGuild.Economy.Integrations;
 using GameGuild.Economy.Integrations.AI;
 using GameGuild.Economy.Risk;
 using GameGuild.Economy.Reserves;
+using GameGuild.Economy.Transfers;
 using GameGuild.Economy.Projections;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,6 +55,10 @@ public sealed class EconomyCoreModule : ModuleBase
             provider.GetRequiredService<PostgreSqlMarketplaceLedgerGateway>());
         services.AddScoped<IProviderReversalGateway, PostgreSqlProviderReversalGateway>();
         services.AddScoped<IFifoTransferGateway, PostgreSqlFifoTransferGateway>();
+        services.AddScoped<ISelfServiceEconomyTransferIntentStore, PostgreSqlSelfServiceEconomyTransferIntentStore>();
+        services.AddScoped<ISelfServiceEconomyTransferSourceRootPlanner,
+            PostgreSqlSelfServiceEconomyTransferSourceRootPlanner>();
+        services.AddScoped<ISelfServiceEconomyTransferService, SelfServiceEconomyTransferService>();
         services.AddScoped<IEconomyCapabilityControlPlaneStore, PostgreSqlEconomyCapabilityControlPlaneStore>();
         services.AddScoped<IEconomyCapabilityEvaluator, EconomyCapabilityEvaluator>();
         services.AddScoped<IEconomyCapabilityReadinessInspector, EconomyCapabilityReadinessInspector>();
