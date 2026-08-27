@@ -75,8 +75,9 @@ internal static class DatabaseStartupInitializer
     {
         ArgumentNullException.ThrowIfNull(migrationContextFactory);
         var options = ResolveMigrationOptions(app.Configuration);
-        var failStartupOnMigrationFailure = app.Configuration.GetValue<bool?>("Database:FailStartupOnMigrationFailure")
-            ?? !DatabaseStartupConfiguration.AllowsRuntimeFallback(app.Environment.EnvironmentName);
+        var failStartupOnMigrationFailure = DatabaseStartupConfiguration.ResolveFailStartupOnMigrationFailure(
+            app.Configuration,
+            app.Environment.EnvironmentName);
         var attempt = 1;
 
         while (true)
