@@ -1198,6 +1198,31 @@ describe("ContentItemEditor — Reading-time estimation (Task 10)", () => {
     });
   });
 
+  it("reverts to Auto with a null estimate when a hydrated Manual value is cleared", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemManualDuration}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const field = screen.getByLabelText(/estimated minutes/i);
+    expect(field).toHaveValue(20);
+    await user.clear(field);
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estimatedMinutes: null,
+          estimatedMinutesSource: "Auto",
+        }),
+      );
+    });
+  });
+
   it("hydrates the duration field only for Manual items and hides the auto helper text", () => {
     render(
       <ContentItemEditor
