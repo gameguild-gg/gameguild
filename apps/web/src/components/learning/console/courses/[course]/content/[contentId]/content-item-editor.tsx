@@ -41,7 +41,7 @@ import {
 import { buttonVariants } from "@game-guild/ui/components/button";
 import { ArrowLeft, Clock, Eye, Loader2, Pencil, Save } from "lucide-react";
 import type { SerializedEditorState } from "lexical";
-import type { LearningCoursesLessonContentFormat } from "@game-guild/client";
+import type { LearningCoursesLessonContentFormat, LearningCoursesVisibility } from "@game-guild/client";
 import {
   readContentGradingDefinition,
   type ContentGradingDefinition,
@@ -55,7 +55,7 @@ import {
   updateAssessment,
   updateContent,
 } from "@/lib/learning/actions";
-import { CONTENT_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
+import { CONTENT_ITEM_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
 import { getLessonFormatLabel } from "@/lib/learning/lesson-formats";
 import { normalizeSlug, slugify } from "@/lib/slugify";
 import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-renderer";
@@ -104,9 +104,8 @@ export function ContentItemEditor({
   // directly in this session, which detaches it.
   const [autoSlug, setAutoSlug] = useState(true);
   const [description, setDescription] = useState(item.description ?? "");
-  const [visibility, setVisibility] = useState<string>(
-    item.status === "published" ? "Public" : "Private",
-  );
+  const [visibility, setVisibility] =
+    useState<LearningCoursesVisibility>(item.visibility);
   const [isRequired, setIsRequired] = useState<boolean>(
     (item.settings?.isRequired as boolean) ?? true,
   );
@@ -792,12 +791,17 @@ export function ContentItemEditor({
                 <Label htmlFor="visibility">
                   {contentTypeLabel} visibility
                 </Label>
-                <Select value={visibility} onValueChange={setVisibility}>
+                <Select
+                  value={visibility}
+                  onValueChange={(v) =>
+                    setVisibility(v as LearningCoursesVisibility)
+                  }
+                >
                   <SelectTrigger id="visibility">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CONTENT_VISIBILITIES.map((v) => (
+                    {CONTENT_ITEM_VISIBILITIES.map((v) => (
                       <SelectItem key={v} value={v}>
                         {formatEnumLabel(v)}
                       </SelectItem>

@@ -114,10 +114,11 @@ const typeConfig: Record<
   Project: { icon: Flag, label: "Project" },
 };
 
-const statusVariant: Record<string, "default" | "secondary" | "outline"> = {
-  published: "default",
-  draft: "secondary",
-  archived: "outline",
+const visibilityVariant: Record<string, "default" | "secondary" | "outline"> = {
+  Public: "default",
+  Private: "secondary",
+  Internal: "outline",
+  Restricted: "outline",
 };
 
 // Lesson types available when adding a new lesson (backend ProgramContentType values)
@@ -766,10 +767,10 @@ export function ContentTree({
             <div className="flex items-center gap-2">
               <Badge
                 variant={
-                  statusVariant[module.status] ?? "outline"
+                  visibilityVariant[module.visibility] ?? "outline"
                 }
               >
-                {module.status}
+                {module.visibility}
               </Badge>
               <span className="text-xs text-muted-foreground">
                 {children.length} items
@@ -899,13 +900,13 @@ export function ContentTree({
                                   </Badge>
                                   <Badge
                                     variant={
-                                      statusVariant[
-                                        item.status
+                                      visibilityVariant[
+                                        item.visibility
                                       ] ?? "outline"
                                     }
                                     className="text-xs"
                                   >
-                                    {item.status}
+                                    {item.visibility}
                                   </Badge>
                                   {item.duration != null &&
                                     item.duration > 0 && (
@@ -1015,13 +1016,13 @@ export function ContentTree({
                                           </Badge>
                                           <Badge
                                             variant={
-                                              statusVariant[
-                                                sub.status
+                                              visibilityVariant[
+                                                sub.visibility
                                               ] ?? "outline"
                                             }
                                             className="text-xs"
                                           >
-                                            {sub.status}
+                                            {sub.visibility}
                                           </Badge>
                                           <div className="flex items-center gap-1">
                                             <ContentActionButton
