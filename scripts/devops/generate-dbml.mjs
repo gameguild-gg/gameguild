@@ -228,13 +228,26 @@ export function redactSecrets(text, secrets) {
   return redacted;
 }
 
-// @dbml/cli's emitters (sql2dbml, db2dbml) produce two constructs that
+// @dbml/cli's emitters (sql2dbml, db2dbml) produce three constructs that
 // @dbml/core's parser rejects: optional-cardinality markers in Ref operators
-// (`?<?`, `<?`) and table-level `Checks { ... }` blocks. Neither carries
-// table/column identity (drift lives in tables and columns only), so Ref `?`
-// markers are folded out line-scoped and Checks blocks are dropped with
-// brace-depth tracking. Grammar quirk verified against the 320-table model
-// DBML: raw input fails BOTH 'dbmlv2' and 'dbml' with 470 diagnostics.
+// (`?<?`, `<?`), table-level `Checks { ... }` blocks, and column-level
+// `check: `...`` settings (db2dbml only). None carries table/column identity
+// (drift lives in tables and columns only), so Ref `?` markers are folded out
+// line-scoped, Checks blocks are dropped with brace-depth tracking, and check
+// settings are removed with their anchoring comma/bracket. Grammar quirk
+// verified against the 320-table model DBML: raw input fails BOTH 'dbmlv2'
+// and 'dbml' with 470 diagnostics.
+const CHECK_SETTING =
+  /\[\s*check: `[^`]*`\s*,\s*|,\s*check: `[^`]*`(?=\s*[,\]])|\[\s*check: `[^`]*`\s*\]/g;
+
+// check-first matches keep the opening `[` (more settings follow); every
+// other placement (sole / last / middle) removes cleanly.
+function foldCheckSettings(line) {
+  return line.replace(CHECK_SETTING, (match) =>
+    match.startsWith('[') && !match.endsWith(']') ? '[' : '',
+  );
+}
+
 export function prepareDbmlForCore(dbml) {
   const kept = [];
   let checksDepth = 0;
@@ -248,7 +261,8 @@ export function prepareDbmlForCore(dbml) {
       checksDepth = 1;
       continue;
     }
-    kept.push(line.trimStart().startsWith('Ref') ? line.replace(/\?/g, '') : line);
+    const folded = line.trimStart().startsWith('Ref') ? line.replace(/\?/g, '') : line;
+    kept.push(foldCheckSettings(folded));
   }
   return kept.join('\n');
 }

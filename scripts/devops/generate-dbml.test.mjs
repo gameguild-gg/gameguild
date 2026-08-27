@@ -526,6 +526,31 @@ test('prepareDbmlForCore leaves question marks in non-Ref lines alone', () => {
   assert.equal(prepareDbmlForCore(dbml), dbml);
 });
 
+test('prepareDbmlForCore folds column-level check settings db2dbml emits', () => {
+  // Shapes taken verbatim from db2dbml 10.1.1 live introspection output
+  // (gg-live.dbml): check-last, check-middle, check-first, check-sole, and a
+  // body containing `]` (ARRAY[...]) which must not end the setting early.
+  const dbml = [
+    'Table "tax_rates" {',
+    '  "Rate" numeric(5,4) [not null, check: `("Rate" >= (0)::numeric) AND ("Rate" <= (1)::numeric)`]',
+    '  "TimeSpentSeconds" int4 [not null, check: `"TimeSpentSeconds" >= 0`, default: 0]',
+    '  "PresentationMode" int4 [check: `"PresentationMode" = ANY (ARRAY[0, 1])`, not null]',
+    '  "AttemptNumber" int4 [check: `"AttemptNumber" > 0`]',
+    '  "Name" text [not null, unique]',
+    '}',
+  ].join('\n');
+
+  const prepared = prepareDbmlForCore(dbml);
+
+  assert.ok(!prepared.includes('check:'));
+  assert.ok(prepared.includes('"Rate" numeric(5,4) [not null]'));
+  assert.ok(prepared.includes('"TimeSpentSeconds" int4 [not null, default: 0]'));
+  assert.ok(prepared.includes('"PresentationMode" int4 [not null]'));
+  assert.ok(prepared.includes('"AttemptNumber" int4'));
+  assert.ok(prepared.includes('"Name" text [not null, unique]'));
+  assert.ok(!prepared.includes('[]'));
+});
+
 test('parseDbmlFile parses a table DBML and reports a labeled failure for garbage input', async () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'gg-dbml-'));
   try {
