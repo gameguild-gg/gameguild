@@ -50,6 +50,6 @@
     "@gameguild/emception-xterm": "4.3.0"
   },
   "devDependencies": {
-    "typescript": "^5.3.0"
+    "typescript": "^5.8.3"
   }
 }

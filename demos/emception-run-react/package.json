@@ -17,18 +17,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@gameguild/emception-browser": "*",
-    "@gameguild/emception-react": "*",
-    "@gameguild/emception-webcomponent": "*",
-    "emception": "*",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "@gameguild/emception-browser": "4.3.0",
+    "@gameguild/emception-react": "4.3.0",
+    "@gameguild/emception-webcomponent": "4.3.0",
+    "emception": "4.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.5",
-    "typescript": "^5.3.0",
+    "typescript": "^5.8.3",
     "vite": "^8.2.1"
   }
 }
