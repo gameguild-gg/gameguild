@@ -7,6 +7,9 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export function parseArgs(argv) {
+  if (argv.includes('--help')) {
+    return { mode: 'help' };
+  }
   if (argv.includes('--verify-db')) {
     return { mode: 'verify-db' };
   }
@@ -16,14 +19,20 @@ export function parseArgs(argv) {
   return { mode: 'generate' };
 }
 
-export function envToDsn(env) {
+// `schemas` narrows live introspection (db2dbml `?schemas=a,b,c`). The model
+// physically spans 7 schemas (public + gameguild.authentication, assets,
+// gameguild.resources, resources, gameguild.sla, auth — 32 of 320 tables),
+// so --verify-db passes the model-derived schema set; every other caller
+// keeps the public-only default.
+export function envToDsn(env, schemas = ['public']) {
   const database = env.POSTGRES_DB;
   if (!database) {
     throw new Error('POSTGRES_DB is required to build the database DSN (see .env.example)');
   }
+  const schemaList = schemas.map((schema) => encodeURIComponent(schema)).join(',');
   return `postgresql://${env.POSTGRES_USER}:${encodeURIComponent(env.POSTGRES_PASSWORD)}@${
     env.POSTGRES_HOST ?? 'localhost'
-  }:${env.POSTGRES_PORT ?? '5432'}/${database}?schemas=public`;
+  }:${env.POSTGRES_PORT ?? '5432'}/${database}?schemas=${schemaList}`;
 }
 
 // Dollar-quote tags per PostgreSQL rules: `$$`, `$roles$`, `$func$`, `$tag_name$`.
@@ -160,11 +169,96 @@ export function compareDbml(actual, expected) {
   return { ok: false, firstDivergence };
 }
 
+const VERIFY_ALLOWLIST = ['__efmigrationshistory'];
+
+// Pure drift classifier for --verify-db. Inputs are pre-normalized table
+// descriptors ({ name, columns }); __EFMigrationsHistory (created by EF at
+// migrate time, never part of the model) is allowlisted HERE so no caller can
+// forget it. All output arrays are sorted for deterministic reporting.
+export function computeDrift(modelTables, liveTables) {
+  const modelByName = new Map(modelTables.map((table) => [table.name, table]));
+  const liveByName = new Map(liveTables.map((table) => [table.name, table]));
+
+  const danglingTables = [...liveByName.keys()]
+    .filter((name) => !modelByName.has(name) && !VERIFY_ALLOWLIST.includes(name))
+    .sort();
+
+  const unmigratedTables = [...modelByName.keys()]
+    .filter((name) => !liveByName.has(name))
+    .sort();
+
+  const danglingColumns = [];
+  for (const [name, model] of modelByName) {
+    const live = liveByName.get(name);
+    if (live === undefined) {
+      continue;
+    }
+    const modelColumns = new Set(model.columns);
+    for (const column of live.columns) {
+      if (!modelColumns.has(column)) {
+        danglingColumns.push(`${name}.${column}`);
+      }
+    }
+  }
+
+  return { danglingTables, danglingColumns: danglingColumns.sort(), unmigratedTables };
+}
+
+// Pure exit-code contract for --verify-db (mirrors checkVerdict): any drift
+// class > 0 fails; only a fully clean comparison exits 0.
+export function verifyDbVerdict(drift) {
+  const driftCount =
+    drift.danglingTables.length + drift.danglingColumns.length + drift.unmigratedTables.length;
+  if (driftCount > 0) {
+    return { exitCode: 1 };
+  }
+  return { exitCode: 0, message: 'OK: live database matches the EF Core model.' };
+}
+
+// The DSN embeds the password; tool stderr that echoes it must be scrubbed
+// before printing. The DSN goes first (it contains the encoded password),
+// then each password form standalone.
+export function redactSecrets(text, secrets) {
+  let redacted = text;
+  for (const secret of secrets) {
+    if (secret) {
+      redacted = redacted.split(secret).join('<redacted>');
+    }
+  }
+  return redacted;
+}
+
+// @dbml/cli's emitters (sql2dbml, db2dbml) produce two constructs that
+// @dbml/core's parser rejects: optional-cardinality markers in Ref operators
+// (`?<?`, `<?`) and table-level `Checks { ... }` blocks. Neither carries
+// table/column identity (drift lives in tables and columns only), so Ref `?`
+// markers are folded out line-scoped and Checks blocks are dropped with
+// brace-depth tracking. Grammar quirk verified against the 320-table model
+// DBML: raw input fails BOTH 'dbmlv2' and 'dbml' with 470 diagnostics.
+export function prepareDbmlForCore(dbml) {
+  const kept = [];
+  let checksDepth = 0;
+  for (const line of dbml.split('\n')) {
+    if (checksDepth > 0) {
+      checksDepth += (line.match(/\{/g) ?? []).length;
+      checksDepth -= (line.match(/\}/g) ?? []).length;
+      continue;
+    }
+    if (/^\s*Checks\s*\{\s*$/.test(line)) {
+      checksDepth = 1;
+      continue;
+    }
+    kept.push(line.trimStart().startsWith('Ref') ? line.replace(/\?/g, '') : line);
+  }
+  return kept.join('\n');
+}
+
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const API_PROJECT = 'apps/api/Source/GameGuild.API/GameGuild.API.csproj';
 const MODEL_SQL_PATH = path.join(tmpdir(), 'gg-model.sql');
 const FILTERED_SQL_PATH = path.join(tmpdir(), 'gg-model-filtered.sql');
 const MODEL_DBML_PATH = path.join(tmpdir(), 'gg-model.dbml');
+const LIVE_DBML_PATH = path.join(tmpdir(), 'gg-live.dbml');
 const SPAWN_OPTS = { encoding: 'utf8', cwd: REPO_ROOT, maxBuffer: 16 * 1024 * 1024 };
 
 function runDotnet(args) {
@@ -383,6 +477,180 @@ function runCheckMode() {
   console.log(verdict.message);
 }
 
+export function usageText() {
+  return [
+    'usage: node scripts/devops/generate-dbml.mjs [--check | --verify-db | --help]',
+    '',
+    'modes:',
+    '  (default)     generate docs/schema.dbml from the EF Core model (dotnet ef dbcontext script + sql2dbml); deterministic, no timestamps',
+    '  --check       regenerate to a temp file and fail when the committed docs/schema.dbml is stale or the EF model has pending changes without a migration',
+    '  --verify-db   introspect the live Postgres (read-only) and report dangling tables/columns (in database, not in EF model) and unmigrated tables (in EF model, not in database); exit 1 on any drift',
+    '  --help        print this usage',
+    '',
+    '--verify-db environment (see .env.example; export them or copy .env.example to .env):',
+    '  POSTGRES_HOST      default localhost',
+    '  POSTGRES_PORT      default 5432',
+    '  POSTGRES_DB        database name (required)',
+    '  POSTGRES_USER      database user',
+    '  POSTGRES_PASSWORD  database password',
+    '',
+    'examples:',
+    '  corepack pnpm db:dbml',
+    '  corepack pnpm db:dbml:check',
+    '  POSTGRES_DB=gameguild POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres corepack pnpm db:dbml:verify',
+  ].join('\n');
+}
+
+// CompilerError from @dbml/core carries `message: undefined` and puts the
+// human-readable diagnostics in `error.diags[]` — extract a single-line
+// description without relying on the stack trace.
+function describeParseError(error) {
+  if (typeof error?.message === 'string' && error.message.length > 0) {
+    return error.message;
+  }
+  const firstDiag = Array.isArray(error?.diags) ? error.diags[0] : undefined;
+  if (firstDiag) {
+    const start = firstDiag.location?.start;
+    return start ? `${firstDiag.message} (line ${start.line}, column ${start.column})` : firstDiag.message;
+  }
+  return String(error);
+}
+
+// dbmlv2 first: the legacy 'dbml' grammar additionally requires a newline
+// before `}` and rejects some one-line shapes. Both grammars need the
+// prepareDbmlForCore folding (@dbml/cli emits constructs @dbml/core rejects).
+export async function parseDbmlFile(dbmlPath, label) {
+  const { Parser } = await import('@dbml/core');
+  const content = prepareDbmlForCore(readFileSync(dbmlPath, 'utf8'));
+  try {
+    return new Parser().parse(content, 'dbmlv2');
+  } catch {
+    try {
+      return new Parser().parse(content, 'dbml');
+    } catch (error) {
+      throw new Error(`could not parse ${label} DBML: ${describeParseError(error)}`);
+    }
+  }
+}
+
+function toNormalizedTables(database) {
+  return collectTables(database).map((table) => ({
+    name: normalizeName(table.name),
+    columns: (table.fields ?? []).map((field) => normalizeName(field.name)),
+  }));
+}
+
+// Live introspection must cover every schema the model physically spans, so
+// the schema list is derived from the freshly regenerated model DBML (never
+// from the committed docs/schema.dbml).
+function collectSchemaNames(database) {
+  const names = (database.schemas ?? []).map((schema) => normalizeName(schema.name));
+  return [...new Set(names.filter((name) => name.length > 0))].sort();
+}
+
+function runDb2Dbml(dsn) {
+  // @dbml/cli 10.x takes the database type as a SEPARATE leading argument;
+  // a bare DSN is misread as the type ("Unsupported database type: unknown").
+  const result = spawnSync(
+    'corepack',
+    ['pnpm', 'exec', 'db2dbml', 'postgres', dsn, '-o', LIVE_DBML_PATH],
+    SPAWN_OPTS,
+  );
+  // db2dbml drops a dbml-error.log into its cwd on every run (empty on
+  // success) — same litter as runSql2dbml.
+  rmSync(path.join(REPO_ROOT, 'dbml-error.log'), { force: true });
+  if (result.error?.code === 'ENOENT') {
+    throw new Error('corepack not found — it ships with Node.js >= 20');
+  }
+  if (result.error) {
+    throw new Error(`failed to start db2dbml: ${result.error.message}`);
+  }
+  return result;
+}
+
+function printDriftSection(title, items) {
+  console.log(title);
+  if (items.length === 0) {
+    console.log('none');
+    return;
+  }
+  for (const item of items) {
+    console.log(`  ${item}`);
+  }
+}
+
+function printDriftReport(drift) {
+  printDriftSection('DANGLING TABLES (in database, not in EF model):', drift.danglingTables);
+  printDriftSection('UNMIGRATED TABLES (in EF model, not in database):', drift.unmigratedTables);
+  printDriftSection('DANGLING COLUMNS:', drift.danglingColumns);
+  console.log(
+    `drift: ${drift.danglingTables.length} dangling tables, ${drift.danglingColumns.length} dangling columns, ${drift.unmigratedTables.length} unmigrated tables`,
+  );
+}
+
+// Model side FIRST (spec order flipped deliberately): the introspection DSN's
+// schema list derives from the freshly regenerated model, because
+// `?schemas=public` alone would hide the 32 tables living in the model's six
+// non-public schemas.
+async function verifyDatabaseDrift() {
+  const modelSummary = runGeneratePipeline(MODEL_DBML_PATH);
+  if (modelSummary.hadPendingChanges) {
+    console.log('INFO: model side reflects the working EF model (pending changes without a migration)');
+  }
+
+  const modelDatabase = await parseDbmlFile(modelSummary.outPath, 'model');
+  const modelTables = toNormalizedTables(modelDatabase);
+
+  const dsn = envToDsn(process.env, collectSchemaNames(modelDatabase));
+  const live = runDb2Dbml(dsn);
+  if (live.status !== 0 || !existsSync(LIVE_DBML_PATH)) {
+    const host = process.env.POSTGRES_HOST ?? 'localhost';
+    const port = process.env.POSTGRES_PORT ?? '5432';
+    const database = process.env.POSTGRES_DB;
+    // NEVER print the DSN (it embeds the password) — scrub every form of it.
+    const secrets = [
+      dsn,
+      encodeURIComponent(process.env.POSTGRES_PASSWORD ?? ''),
+      process.env.POSTGRES_PASSWORD ?? '',
+    ];
+    const stderr = redactSecrets(live.stderr || live.stdout || '', secrets).trim();
+    throw new Error(
+      `cannot introspect database at ${host}:${port}/${database} — is compose Postgres up? (docker compose up -d postgres)` +
+        (stderr.length > 0 ? `\n${stderr}` : ''),
+    );
+  }
+
+  const liveTables = toNormalizedTables(await parseDbmlFile(LIVE_DBML_PATH, 'live-database'));
+
+  const drift = computeDrift(modelTables, liveTables);
+  printDriftReport(drift);
+  const verdict = verifyDbVerdict(drift);
+  if (verdict.exitCode !== 0) {
+    process.exit(1);
+  }
+  console.log(verdict.message);
+}
+
+// --verify-db: the user's core requirement — surface anything the live
+// database has that the EF model no longer knows about (and vice versa).
+// Read-only: db2dbml introspects information_schema over the wire.
+async function runVerifyDbMode() {
+  try {
+    envToDsn(process.env); // fail fast on missing POSTGRES_* before any tooling runs
+  } catch (error) {
+    console.error(`generate-dbml: ${error.message}`);
+    console.error('Set POSTGRES_* vars (see .env.example) or copy .env.example to .env');
+    process.exit(1);
+  }
+
+  try {
+    await verifyDatabaseDrift();
+  } catch (error) {
+    console.error(`FAIL: ${error.message}`);
+    process.exit(1);
+  }
+}
+
 if (entryHref !== null && import.meta.url === entryHref) {
   const { mode } = parseArgs(process.argv.slice(2));
   if (mode === 'generate') {
@@ -397,9 +665,12 @@ if (entryHref !== null && import.meta.url === entryHref) {
     }
   } else if (mode === 'check') {
     runCheckMode();
+  } else if (mode === 'verify-db') {
+    runVerifyDbMode().catch((error) => {
+      console.error(`generate-dbml: ${error.message}`);
+      process.exit(1);
+    });
   } else {
-    console.error(`generate-dbml: mode '${mode}' is not implemented yet`);
-    console.error('usage: node scripts/devops/generate-dbml.mjs [--check | --verify-db]');
-    process.exit(1);
+    console.log(usageText());
   }
 }
