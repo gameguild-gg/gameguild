@@ -200,6 +200,33 @@ const lessonItemLexical = {
   updatedAt: "2026-01-02T00:00:00.000Z",
 } satisfies ContentItemDetail;
 
+// ── Task 10: reading-time estimation (auto hint / manual pin) ──
+
+// 400 words at 200 wpm → ~2 min auto estimate.
+const fourHundredWords = Array.from(
+  { length: 400 },
+  (_, i) => `word${i}`,
+).join(" ");
+
+const lessonItemMarkdownAutoHint = {
+  ...lessonItemMarkdownBody,
+  id: "lesson-auto",
+  title: "Auto estimate lesson",
+  slug: "auto-estimate-lesson",
+  content: fourHundredWords,
+  duration: null,
+  estimatedMinutesSource: null,
+} satisfies ContentItemDetail;
+
+const lessonItemManualDuration = {
+  ...lessonItemMarkdownBody,
+  id: "lesson-manual",
+  title: "Manual duration lesson",
+  slug: "manual-duration-lesson",
+  duration: 20,
+  estimatedMinutesSource: "Manual",
+} satisfies ContentItemDetail;
+
 // ── Assignment / Project: coding-assignment bridge ──
 
 const assignmentItem = {
@@ -331,6 +358,7 @@ describe("ContentItemEditor", () => {
         visibility: "Public",
         isRequired: true,
         estimatedMinutes: 35,
+        estimatedMinutesSource: "Manual",
       });
     });
     expect(routerMocks.replace).toHaveBeenCalledWith(
@@ -680,7 +708,8 @@ describe("ContentItemEditor", () => {
         jsonBody: undefined,
         visibility: "Public",
         isRequired: true,
-        estimatedMinutes: 15,
+        estimatedMinutes: null,
+        estimatedMinutesSource: "Auto",
         lessonFormat: "Markdown",
       });
     });
@@ -716,7 +745,8 @@ describe("ContentItemEditor", () => {
         jsonBody: lessonItemLexical.jsonBody,
         visibility: "Public",
         isRequired: true,
-        estimatedMinutes: 15,
+        estimatedMinutes: null,
+        estimatedMinutesSource: "Auto",
         lessonFormat: "Lexical",
       });
     });
@@ -1081,5 +1111,105 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
     expect(createAssessment).not.toHaveBeenCalled();
     // Switch state unchanged — still ON because no mutation ran.
     expect(screen.getByRole("switch", { name: /^graded$/i })).toBeChecked();
+  });
+});
+
+// ── Task 10: reading-time estimation (auto hint / manual pin) ──
+
+describe("ContentItemEditor — Reading-time estimation (Task 10)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
+    vi.mocked(createAssessment).mockResolvedValue({
+      success: true,
+      data: { id: "new-asmnt" },
+    });
+    vi.mocked(deleteAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
+    vi.mocked(restoreAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
+    vi.mocked(updateAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
+  });
+
+  it("shows the live auto estimate as the duration placeholder for a Markdown lesson", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownAutoHint}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(screen.getByLabelText(/estimated minutes/i)).toHaveAttribute(
+      "placeholder",
+      "Auto (~2 min)",
+    );
+  });
+
+  it("pins a manual estimate when a number is typed before saving", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownAutoHint}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.type(screen.getByLabelText(/estimated minutes/i), "15");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estimatedMinutes: 15,
+          estimatedMinutesSource: "Manual",
+        }),
+      );
+    });
+  });
+
+  it("sends a null estimate with Auto source when the field is left empty", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownAutoHint}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estimatedMinutes: null,
+          estimatedMinutesSource: "Auto",
+        }),
+      );
+    });
+  });
+
+  it("hydrates the duration field only for Manual items and hides the auto helper text", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemManualDuration}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(screen.getByLabelText(/estimated minutes/i)).toHaveValue(20);
+    expect(
+      screen.queryByText(/leave blank to keep auto/i),
+    ).not.toBeInTheDocument();
   });
 });
