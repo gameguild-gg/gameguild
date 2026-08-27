@@ -95,6 +95,8 @@ public class ProgramContent : EntityBase
     /// </summary>
     public int? EstimatedMinutes { get; set; }
 
+    public EstimatedMinutesSource EstimatedMinutesSource { get; set; } = EstimatedMinutesSource.Auto;
+
     /// <summary>
     /// Content visibility level
     /// </summary>
@@ -226,6 +228,7 @@ public class ProgramContent : EntityBase
             }
 
             RouteBodyByContentType();
+            RecalculateEstimatedReadingTime();
             return;
         }
 
@@ -240,6 +243,8 @@ public class ProgramContent : EntityBase
         {
             ActivitySettingsData = null;
         }
+
+        RecalculateEstimatedReadingTime();
     }
 
     /// <summary>
@@ -291,11 +296,30 @@ public class ProgramContent : EntityBase
         type is ProgramContentType.Lesson or ProgramContentType.Page;
 
     /// <summary>
+    /// Recomputes EstimatedMinutes from body word count (200 wpm) unless the source is Manual.
+    /// No extractable text (e.g. Video URL) leaves the stored value untouched.
+    /// </summary>
+    public void RecalculateEstimatedReadingTime()
+    {
+        if (EstimatedMinutesSource == EstimatedMinutesSource.Manual)
+        {
+            return;
+        }
+
+        var minutes = ReadingTimeEstimator.EstimateMinutes(Type, LessonFormat, Body, JsonBody);
+        if (minutes.HasValue)
+        {
+            EstimatedMinutes = minutes;
+        }
+    }
+
+    /// <summary>
     /// Updates estimated completion time
     /// </summary>
     public void UpdateEstimatedTime(int minutes)
     {
         EstimatedMinutes = minutes;
+        EstimatedMinutesSource = EstimatedMinutesSource.Manual;
         UpdatedAt = SystemClock.UtcNow;
     }
 
