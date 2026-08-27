@@ -8,7 +8,9 @@ import {
   envToDsn,
   normalizeName,
   parseArgs,
+  stripByteOrderMark,
   stripNonDdlStatements,
+  validateDbmlOutput,
 } from './generate-dbml.mjs';
 
 test('parseArgs defaults to generate mode when no flags are given', () => {
@@ -140,7 +142,7 @@ test('stripNonDdlStatements does not crash on $$ inside a string literal', () =>
 
 test('buildDbmlHeader returns the exact machine-generated header block with no timestamps', () => {
   const expected =
-    '// MACHINE-GENERATED from the EF Core model via `dotnet ef migrations script` + sql2dbml.\n' +
+    '// MACHINE-GENERATED from the EF Core model via `dotnet ef dbcontext script` + sql2dbml.\n' +
     '// DO NOT EDIT by hand — regenerate with: pnpm db:dbml\n' +
     '// This file reflects the actual EF Core model (no native Postgres enums; enum-like columns are text).\n' +
     '// Hand-curated design documentation (enums, business-rule notes): docs/program.dbml\n';
@@ -187,4 +189,33 @@ test('importing the module has zero side effects and exports its helpers', () =>
 
   assert.equal(probe.status, 0, probe.stderr);
   assert.equal(probe.stdout.trim(), 'function');
+});
+
+test('stripByteOrderMark removes a leading U+FEFF', () => {
+  assert.equal(stripByteOrderMark('﻿CREATE TABLE x'), 'CREATE TABLE x');
+});
+
+test('stripByteOrderMark leaves BOM-free text untouched and inner BOMs alone', () => {
+  assert.equal(stripByteOrderMark('CREATE TABLE x'), 'CREATE TABLE x');
+  assert.equal(stripByteOrderMark('a﻿b'), 'a﻿b');
+});
+
+test('validateDbmlOutput accepts DBML with tables and no migration history', () => {
+  const result = validateDbmlOutput('Table "users" {\n  id text\n}\n\nTable "orders" {\n  id text\n}\n');
+
+  assert.deepEqual(result, { ok: true, tableCount: 2 });
+});
+
+test('validateDbmlOutput rejects DBML without Table blocks', () => {
+  const result = validateDbmlOutput('-- nothing parsed\n');
+
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /no Table blocks/i);
+});
+
+test('validateDbmlOutput rejects an __EFMigrationsHistory leak case-insensitively', () => {
+  const result = validateDbmlOutput('Table "__EFMigrationsHistory" {\n  migration_id text\n}\n');
+
+  assert.equal(result.ok, false);
+  assert.match(result.reason, /__EFMigrationsHistory leaked/i);
 });
