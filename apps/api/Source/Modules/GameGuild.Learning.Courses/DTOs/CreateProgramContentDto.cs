@@ -16,7 +16,7 @@ public class CreateProgramContentDto {
 
   [Required] public ProgramContentType Type { get; set; }
 
-  public string Body { get; set; } = "{}";
+  public string? Body { get; set; }
 
   public JsonElement? JsonBody { get; set; }
 
@@ -29,6 +29,8 @@ public class CreateProgramContentDto {
   public bool IsRequired { get; set; } = true;
 
   public int? EstimatedMinutes { get; set; }
+
+  public EstimatedMinutesSource? EstimatedMinutesSource { get; set; }
 
   public Visibility Visibility { get; set; } = Visibility.Public;
 }

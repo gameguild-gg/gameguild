@@ -7194,6 +7194,7 @@ export interface LearningCoursesCreateProgramContent {
   body?: string | null;
   description?: string | null;
   estimatedMinutes?: number | null;
+  estimatedMinutesSource?: LearningCoursesEstimatedMinutesSource;
   isRequired?: boolean;
   jsonBody?: Record<string, unknown> | null;
   lessonFormat?: LearningCoursesLessonContentFormat;
@@ -7227,6 +7228,8 @@ export type LearningCoursesEnrollmentStatus =
   | "Closed"
   | "InviteOnly"
   | "Waitlist";
+
+export type LearningCoursesEstimatedMinutesSource = "Auto" | "Manual";
 
 export interface LearningCoursesGraderSummary {
   id?: string;
@@ -7357,6 +7360,7 @@ export interface LearningCoursesProgramContent {
   createdAt?: string;
   description?: string | null;
   estimatedMinutes?: number | null;
+  estimatedMinutesSource?: LearningCoursesEstimatedMinutesSource;
   isRequired?: boolean;
   jsonBody?: Record<string, unknown> | null;
   lessonFormat?: LearningCoursesLessonContentFormat;
@@ -7556,6 +7560,7 @@ export interface LearningCoursesUpdateProgramContent {
   body?: string | null;
   description?: string | null;
   estimatedMinutes?: number | null;
+  estimatedMinutesSource?: LearningCoursesEstimatedMinutesSource;
   isRequired?: boolean | null;
   jsonBody?: Record<string, unknown> | null;
   lessonFormat?: LearningCoursesLessonContentFormat;
@@ -12353,6 +12358,7 @@ export let LearningCoursesCreateProgramSchema: z.ZodType<LearningCoursesCreatePr
 export let LearningCoursesCreateProgramContentSchema: z.ZodType<LearningCoursesCreateProgramContent>;
 export let LearningCoursesEngagementMetricsSchema: z.ZodType<LearningCoursesEngagementMetrics>;
 export let LearningCoursesEnrollmentStatusSchema: z.ZodType<LearningCoursesEnrollmentStatus>;
+export let LearningCoursesEstimatedMinutesSourceSchema: z.ZodType<LearningCoursesEstimatedMinutesSource>;
 export let LearningCoursesGraderSummarySchema: z.ZodType<LearningCoursesGraderSummary>;
 export let LearningCoursesGradeStatisticsSchema: z.ZodType<LearningCoursesGradeStatistics>;
 export let LearningCoursesGradingConfigSchema: z.ZodType<LearningCoursesGradingConfig>;
@@ -21902,6 +21908,9 @@ LearningCoursesCreateProgramContentSchema = z.object({
   body: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
+  estimatedMinutesSource: z
+    .lazy(() => LearningCoursesEstimatedMinutesSourceSchema)
+    .optional(),
   isRequired: z.boolean().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z
@@ -21943,6 +21952,9 @@ LearningCoursesEnrollmentStatusSchema = z.enum([
   "InviteOnly",
   "Waitlist",
 ]);
+
+/** Zod schema for LearningCoursesEstimatedMinutesSource */
+LearningCoursesEstimatedMinutesSourceSchema = z.enum(["Auto", "Manual"]);
 
 /** Zod schema for LearningCoursesGraderSummary */
 LearningCoursesGraderSummarySchema = z.object({
@@ -22109,6 +22121,9 @@ LearningCoursesProgramContentSchema = z.object({
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
+  estimatedMinutesSource: z
+    .lazy(() => LearningCoursesEstimatedMinutesSourceSchema)
+    .optional(),
   isRequired: z.boolean().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z
@@ -22364,6 +22379,9 @@ LearningCoursesUpdateProgramContentSchema = z.object({
   body: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
+  estimatedMinutesSource: z
+    .lazy(() => LearningCoursesEstimatedMinutesSourceSchema)
+    .optional(),
   isRequired: z.boolean().nullable().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z

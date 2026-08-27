@@ -4,6 +4,7 @@ import type React from 'react';
 import type { ReactNode } from 'react';
 
 const legalNavLinks = [
+  { label: 'Legal', href: '/legal' },
   { label: 'Terms of Service', href: '/terms-of-service' },
   { label: 'Terms of Use', href: '/terms-of-use' },
   { label: 'Privacy', href: '/polices/privacy' },

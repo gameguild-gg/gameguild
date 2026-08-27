@@ -11,7 +11,7 @@
     "./postcss.config": "./postcss.config.mjs"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.0.0",
-    "tailwindcss": "^4.0.0"
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4"
   }
 }

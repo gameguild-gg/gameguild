@@ -171,7 +171,7 @@ async function run() {
     console.log('[community-admin-e2e] authentication');
     await visit(page, '/sign-in', 'sign in');
     await page.getByLabel('Email').fill(adminEmail);
-    await page.getByLabel('Password').fill(adminPassword);
+    await page.getByLabel('Password', { exact: true }).fill(adminPassword);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.waitForURL(/\/dashboard/, { timeout: 60_000 });
 

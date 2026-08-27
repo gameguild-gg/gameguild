@@ -141,6 +141,7 @@ const {
   addCourseSupportTicketMessage,
   resolveCourseSupportTicket,
   deleteAssessmentGroup,
+  updateAssessment,
   updateDiscussionPin,
   updateAssessmentGroup,
   resolveDiscussion,
@@ -804,6 +805,70 @@ describe("learning server actions", () => {
         type: "Questionnaire",
         jsonBody: { schemaVersion: 1, order: [], blocks: {} },
       }),
+    );
+  });
+
+  it("sends the explicit slug when creating content", async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce(
+      "1caa16bb-6810-4e53-bb0d-91f0d5702333",
+    );
+
+    await addContent({
+      courseId: "creature-design-by-admin",
+      parentId: "9ec3b854-89ca-4757-83fb-cfc823da1a5e",
+      title: "Gesture foundations",
+      slug: "gesture-foundations-intro",
+      type: "Lesson",
+    });
+
+    expect(mocks.postCoursesContent).toHaveBeenCalledWith(
+      "1caa16bb-6810-4e53-bb0d-91f0d5702333",
+      expect.objectContaining({
+        title: "Gesture foundations",
+        slug: "gesture-foundations-intro",
+      }),
+    );
+  });
+
+  it("omits the slug on content create so the backend derives it from the title", async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce(
+      "1caa16bb-6810-4e53-bb0d-91f0d5702333",
+    );
+
+    await addContent({
+      courseId: "creature-design-by-admin",
+      title: "Gesture foundations",
+      slug: "   ",
+      type: "Lesson",
+    });
+
+    const body = mocks.postCoursesContent.mock.calls[0]![1]!;
+    expect(body).not.toHaveProperty("slug");
+  });
+
+  it("forwards the slug when creating and updating assessments", async () => {
+    mocks.resolveCourseId.mockResolvedValueOnce(
+      "1caa16bb-6810-4e53-bb0d-91f0d5702333",
+    );
+
+    await createAssessment({
+      courseId: "creature-design-by-admin",
+      title: "Final review",
+      slug: "final-review-2026",
+      type: "Quiz",
+    });
+    expect(mocks.postAssessments).toHaveBeenCalledWith(
+      expect.objectContaining({ slug: "final-review-2026" }),
+    );
+
+    await updateAssessment({
+      courseId: "creature-design-by-admin",
+      assessmentId: "assessment-1",
+      slug: "final-review-retake",
+    });
+    expect(mocks.putAssessments).toHaveBeenCalledWith(
+      "assessment-1",
+      expect.objectContaining({ slug: "final-review-retake" }),
     );
   });
 

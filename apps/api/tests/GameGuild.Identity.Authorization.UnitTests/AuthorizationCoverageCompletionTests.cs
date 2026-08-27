@@ -1794,24 +1794,13 @@ public sealed class AuthorizationCoverageCompletionTests
         abac.Setup(a => a.EvaluateAsync(It.IsAny<AbacRequestContext>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AbacEvaluationResult(AbacDecision.Permit));
         var gateService = new PolicyGateService(conditional.Object, abac.Object, NullLogger<PolicyGateService>.Instance);
-        var staticGates = (List<Func<PolicyGateContext, GateEvaluationDetail?>>)typeof(PolicyGateService)
-            .GetField("StaticGates", BindingFlags.NonPublic | BindingFlags.Static)!
-            .GetValue(null)!;
-        staticGates.Add(_ => new GateEvaluationDetail(PolicyGateType.Static, true, "InjectedPass", null, TimeSpan.Zero));
-        try
+        var staticResult = await gateService.EvaluateGateAsync(PolicyGateType.Static, new PolicyGateContext
         {
-            var staticResult = await gateService.EvaluateGateAsync(PolicyGateType.Static, new PolicyGateContext
-            {
-                ActorId = Guid.NewGuid(),
-                ResourceType = "Document",
-                Action = "read"
-            });
-            staticResult.IsAllowed.Should().BeTrue();
-        }
-        finally
-        {
-            staticGates.RemoveAt(staticGates.Count - 1);
-        }
+            ActorId = Guid.NewGuid(),
+            ResourceType = "Document",
+            Action = "read"
+        });
+        staticResult.IsAllowed.Should().BeTrue();
 
         InvokePrivateStatic<IReadOnlyList<string>>(
                 typeof(PolicyGateService),
@@ -2321,19 +2310,15 @@ public sealed class AuthorizationCoverageCompletionTests
         var gateConditional = new Mock<IConditionalPolicyEvaluator>();
         var gateAbac = new Mock<IAbacPolicyEvaluator>();
         var gateService = new PolicyGateService(gateConditional.Object, gateAbac.Object, NullLogger<PolicyGateService>.Instance);
-        var staticGates = (List<Func<PolicyGateContext, GateEvaluationDetail?>>)typeof(PolicyGateService)
-            .GetField("StaticGates", BindingFlags.NonPublic | BindingFlags.Static)!
-            .GetValue(null)!;
-        staticGates.Add(_ => new GateEvaluationDetail(PolicyGateType.Static, false, "InjectedDeny", null, TimeSpan.Zero));
-        try
+        var staticDenied = await gateService.EvaluateGateAsync(PolicyGateType.Static, new PolicyGateContext
         {
-            (await gateService.EvaluateGateAsync(PolicyGateType.Static, new PolicyGateContext { ActorId = Guid.NewGuid(), ResourceType = "Document", Action = "read" }))
-                .DenialReason.Should().Be("Static gate denied access");
-        }
-        finally
-        {
-            staticGates.RemoveAt(staticGates.Count - 1);
-        }
+            ActorId = Guid.NewGuid(),
+            ResourceType = "Document",
+            Action = "read",
+            IpAddress = "127.0.0.1",
+            Attributes = new Dictionary<string, object> { ["environment"] = "production" }
+        });
+        staticDenied.DenialReason.Should().Be("Localhost access blocked in production");
         (await gateService.EvaluateGateAsync(PolicyGateType.Environment, new PolicyGateContext
         {
             ActorId = Guid.NewGuid(),

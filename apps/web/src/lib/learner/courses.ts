@@ -7,7 +7,7 @@ import {
   type LearningWorkspacesLearnerCourseSummary,
   type LearningWorkspacesLearnerDashboard,
 } from "@game-guild/client";
-import { flattenUniqueContent } from "@/lib/learner/content-tree";
+import { collectHiddenContentIds, flattenUniqueContent } from "@/lib/learner/content-tree";
 import { unstable_rethrow } from "next/navigation";
 
 export interface LearningCourseSummary {
@@ -344,10 +344,12 @@ export async function getCourseAttendanceData(
       };
     }
 
-    const flatContent = flattenUniqueContent(contentResult.data).filter(
-      (item): item is LearningCoursesProgramContent & { id: string } =>
-        Boolean(item.id),
-    );
+    const hiddenContentIds = collectHiddenContentIds(contentResult.data);
+    const flatContent = flattenUniqueContent(contentResult.data)
+      .filter(
+        (item): item is LearningCoursesProgramContent & { id: string } =>
+          item.id !== undefined && !hiddenContentIds.has(item.id),
+      );
     const progress =
       progressResult && progressResult.ok ? progressResult.data : undefined;
     const progressByContentId = getContentProgressMap(

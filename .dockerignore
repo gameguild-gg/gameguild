@@ -58,6 +58,8 @@ packages/**/node_modules/
 # userland/, scripts/, and the heavy build-output excludes are gone.
 !tools/emception/package.json
 !tools/emception/tsconfig.base.json
+!tools/emception/scripts/**
+tools/emception/scripts/tests/
 !tools/emception/packages/**
 tools/emception/packages/**/node_modules/
 tools/emception/packages/**/dist/

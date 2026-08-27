@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/syncpack/schema.json",
+  "versionGroups": [
+    {
+      "label": "peer ranges are API surface, not install targets",
+      "isIgnored": true,
+      "dependencyTypes": ["peer"]
+    },
+    {
+      "label": "emception toolchain stays on vite 8",
+      "dependencies": ["vite", "@vitejs/plugin-react"],
+      "packages": ["emception-workspace", "emception", "@gameguild/**", "@game-guild/dotnet-wasm"]
+    },
+    {
+      "label": "apps/web legacy xterm and panel stack",
+      "dependencies": ["@xterm/xterm", "@xterm/addon-fit", "@xterm/addon-web-links", "react-resizable-panels"],
+      "packages": ["@game-guild/web"]
+    },
+    {
+      "label": "quiz-surface pinned to jsdom 25",
+      "dependencies": ["jsdom"],
+      "packages": ["@game-guild/quiz-surface"]
+    },
+    {
+      "label": "emception-ui uses node types 26",
+      "dependencies": ["@types/node"],
+      "packages": ["@game-guild/emception-ui"]
+    }
+  ]
+}
