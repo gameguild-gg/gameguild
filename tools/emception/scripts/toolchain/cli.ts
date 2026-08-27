@@ -27,9 +27,12 @@ export interface ToolchainCliDependencies {
 export function pnpmInvocation(
   platform: NodeJS.Platform = process.platform,
   commandShell: string = process.env.ComSpec ?? 'cmd.exe',
+  hasPnpmCommand: boolean = true,
 ): { executable: string; arguments: string[] } {
   return platform === 'win32'
     ? { executable: commandShell, arguments: ['/d', '/s', '/c', 'pnpm'] }
+    : !hasPnpmCommand
+      ? { executable: 'corepack', arguments: ['pnpm'] }
     : { executable: 'pnpm', arguments: [] };
 }
 
@@ -54,7 +57,20 @@ function defaultRunner(root: string) {
       env: environment,
       stdio: 'inherit',
     });
-    if (result.status !== 0) throw new Error(describePnpmFailure(script, result));
+    if (result.status === 0) return;
+
+    if (process.platform !== 'win32' && result.error?.code === 'ENOENT') {
+      const fallback = pnpmInvocation(process.platform, process.env.ComSpec, false);
+      const fallbackResult = spawnSync(fallback.executable, [...fallback.arguments, 'run', script], {
+        cwd: root,
+        env: environment,
+        stdio: 'inherit',
+      });
+      if (fallbackResult.status === 0) return;
+      throw new Error(describePnpmFailure(script, fallbackResult));
+    }
+
+    throw new Error(describePnpmFailure(script, result));
   };
 }
 

@@ -8,27 +8,27 @@ import {
   type LearnerMutationResult,
 } from '@/lib/learner/activity-actions';
 import { buildAssessmentExecutionPlan } from '@game-guild/emception-ui/assessment/plan';
-import type { AssessmentRunResult, AssessmentSession } from '@game-guild/emception-ui/assessment/editor';
+import type {
+  AssessmentRunResult,
+  AssessmentSession,
+  CodingAssessmentEditorProps,
+} from '@game-guild/emception-ui/assessment/editor';
 import { createAssessmentWorkspaceConfig, type CodingLanguage } from '@game-guild/emception-ui/assessment/presets';
 import { workspaceStorageKey } from '@game-guild/emception-ui/assessment/storage';
 import { Button } from '@game-guild/ui/components/button';
 import type { TestReport, WorkspaceConfig } from 'emception';
 import Script from 'next/script';
 import {
-  lazy,
-  Suspense,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
+  type ComponentType,
   type FormEvent,
 } from 'react';
 import { PublicTestEstimateBanner } from './public-test-estimate-banner';
 import { publicSeedFiles, type SeedFile } from './resolve-seed';
-
-const CodingAssessmentEditor = lazy(
-  () => import('@game-guild/emception-ui/assessment/editor').then((m) => ({ default: m.CodingAssessmentEditor })),
-);
 
 function IdeSkeleton() {
   return (
@@ -72,6 +72,29 @@ export function CodingActivityClient({
   const [report, setReport] = useState<TestReport | null>(null);
   const [result, setResult] = useState<LearnerMutationResult | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
+  const [Editor, setEditor] = useState<ComponentType<CodingAssessmentEditorProps> | null>(null);
+  const [editorLoadError, setEditorLoadError] = useState<string | null>(null);
+
+  // The neutral IDE owns browser-only APIs (Monaco, Worker and WASM). Import it
+  // after hydration so the server never evaluates its module graph. This avoids
+  // Next's app-page loadable alias while keeping the IDE outside SSR.
+  useEffect(() => {
+    let active = true;
+
+    void import('@game-guild/emception-ui/assessment/editor')
+      .then(({ CodingAssessmentEditor }) => {
+        if (active) setEditor(() => CodingAssessmentEditor);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setEditorLoadError(error instanceof Error ? error.message : 'Unable to load the coding editor.');
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const receiveSession = useCallback((session: AssessmentSession) => {
     sessionRef.current = session;
     setSessionReady(true);
@@ -120,6 +143,7 @@ export function CodingActivityClient({
     if (submitting) return;
     setSubmitting(true);
     try {
+      await sessionRef.current?.run('public');
       // The assessment session returns only editable public changes plus
       // permitted student-created text files.
       const modified = (await sessionRef.current?.getSubmissionDelta()) ?? [];
@@ -144,8 +168,8 @@ export function CodingActivityClient({
       <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="h-[70vh] min-h-[500px]">
-          <Suspense fallback={<IdeSkeleton />}>
-            <CodingAssessmentEditor
+          {Editor ? (
+            <Editor
               mode="learner"
               definition={assignment}
               workspaceConfig={workspaceConfig}
@@ -159,7 +183,13 @@ export function CodingActivityClient({
               onSessionReady={receiveSession}
               onRunResult={receiveRunResult}
             />
-          </Suspense>
+          ) : editorLoadError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {editorLoadError}
+            </p>
+          ) : (
+            <IdeSkeleton />
+          )}
         </div>
       {report ? (
         <PublicTestEstimateBanner

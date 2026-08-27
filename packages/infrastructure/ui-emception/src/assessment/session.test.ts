@@ -5,6 +5,7 @@ import {
 
 type MockedSessionOptions = AssessmentSessionOptions & {
   readonly controller: AssessmentSessionOptions['controller'] & {
+    readonly syncWorkspace: jest.Mock;
     readonly api: AssessmentSessionOptions['controller']['api'] & {
       readonly runTests: jest.Mock;
     };
@@ -47,6 +48,7 @@ function createOptions(
           content: 'int add(int a, int b) { return a + b; }',
         },
       ]),
+      syncWorkspace: jest.fn(async () => {}),
     },
     definition: {
       Type: 'coding-assignment',
@@ -118,6 +120,18 @@ describe('createAssessmentSession', () => {
     );
     expect(result.scope).toBe('full');
     expect(result.score.score).toBe(50);
+  });
+
+  it('synchronizes the edited IDE workspace before applying its transient test overlay', async () => {
+    const options = createOptions('learner');
+    const session = createAssessmentSession(options);
+
+    await session.run('public');
+
+    expect(options.controller.syncWorkspace).toHaveBeenCalledTimes(1);
+    expect(options.controller.syncWorkspace.mock.invocationCallOrder[0]).toBeLessThan(
+      options.controller.api.runTests.mock.invocationCallOrder[0],
+    );
   });
 
   it('rejects a full run for a learner before it touches the VFS', async () => {

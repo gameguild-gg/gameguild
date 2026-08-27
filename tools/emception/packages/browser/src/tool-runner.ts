@@ -3149,16 +3149,16 @@ sys.excepthook = _hook
         options.onStderr?.(msg);
         return {
           exitCode: 1,
-          stdout: stdoutChunks.join('\n'),
-          stderr: stderrChunks.join('\n'),
+          stdout: stdoutChunks.join(''),
+          stderr: stderrChunks.join(''),
         };
       }
     }
 
     return {
       exitCode,
-      stdout: stdoutChunks.join('\n'),
-      stderr: stderrChunks.join('\n'),
+      stdout: stdoutChunks.join(''),
+      stderr: stderrChunks.join(''),
     };
   }
 

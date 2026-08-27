@@ -110,6 +110,89 @@ export function assertSharedAuthCookie(cookies, expectedDomain) {
   return authCookies;
 }
 
+/**
+ * Wait for a credentials form that a real browser can interact with.
+ *
+ * A cold Next route may expose its server shell before the client auth state
+ * releases the disabled controls. Browser scenarios must not treat either
+ * condition as a completed sign-in form.
+ */
+export async function waitForInteractiveCredentials(page, { timeoutMs = 180_000 } = {}) {
+  const email = page.getByLabel("Email");
+  const password = page.getByLabel("Password", { exact: true });
+  const submit = page.getByRole("button", { name: "Sign in", exact: true });
+
+  await Promise.all([
+    email.waitFor({ state: "visible", timeout: timeoutMs }),
+    password.waitFor({ state: "visible", timeout: timeoutMs }),
+    submit.waitFor({ state: "visible", timeout: timeoutMs }),
+  ]);
+  await page.waitForFunction(
+    () => {
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const submitButton = document.querySelector('button[type="submit"]');
+      return (
+        emailInput instanceof HTMLInputElement &&
+        passwordInput instanceof HTMLInputElement &&
+        submitButton instanceof HTMLButtonElement &&
+        !emailInput.disabled &&
+        !passwordInput.disabled &&
+        !submitButton.disabled
+      );
+    },
+    undefined,
+    { timeout: timeoutMs },
+  );
+
+  return { email, password, submit };
+}
+
+/**
+ * Wait until a credentials sign-in is authenticated.
+ *
+ * Most routes redirect after credentials complete, but a cold auth page can
+ * retain `/sign-in` while the session cookie has already been written. The
+ * caller may then deliberately navigate to its destination, so accepting the
+ * authenticated session avoids re-posting the form during that transition.
+ */
+export async function waitForAuthenticatedNavigation(page, { timeoutMs = 180_000 } = {}) {
+  const navigation = page.waitForURL(
+    (url) => {
+      const path = url.pathname.toLowerCase();
+      return !path.endsWith("/sign-in") && !path.endsWith("/sign-up");
+    },
+    { timeout: timeoutMs },
+  );
+
+  const session = (async () => {
+    if (typeof page.context !== "function") {
+      throw new Error("page context is unavailable while waiting for sign-in");
+    }
+
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const cookies = await page.context().cookies();
+      if (
+        cookies.some((cookie) => {
+          const name = cookie.name.replace(/^__Secure-/, "");
+          return (
+            name === "gameguild.session-token" ||
+            name.startsWith("gameguild.session-token.")
+          );
+        })
+      ) {
+        return;
+      }
+      await page.waitForTimeout(Math.min(250, Math.max(1, deadline - Date.now())));
+    }
+
+    throw new Error("credentials sign-in did not create a GameGuild session cookie");
+  })();
+
+  await Promise.any([navigation, session]);
+}
+
 export async function assertNoHorizontalOverflow(page, label) {
   const dimensions = await page.evaluate(() => ({
     documentWidth: Math.max(

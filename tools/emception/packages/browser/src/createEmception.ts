@@ -32,6 +32,7 @@ import type {
     EmceptionEventMap,
     EmceptionEventName,
     FileEntry,
+    NativeBuildConfig,
     RunOptions,
     ToolResult,
     Unsubscribe,
@@ -228,13 +229,69 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
         workspace,
         run,
         compileAndRun: async (sourceOrFiles?, opts?) => {
-            const { compileAndRun: pipeline } = await import('./presets.js');
+            const { compileAndRun: pipeline, TOOLCHAIN_PRESETS } = await import('./presets.js');
             const stdinStr = typeof opts?.stdin === 'string' && opts.stdin !== 'none' ? opts.stdin : undefined;
             let stdoutBuf = '';
             let stderrBuf = '';
             const onStdout = sinkToCallback(opts?.stdout, encoder, (s) => { stdoutBuf += s; });
             const onStderr = sinkToCallback(opts?.stderr, encoder, (s) => { stderrBuf += s; });
             const toolchain = (opts?.build?.toolchain as ToolchainPreset | undefined) ?? currentBuild.toolchain;
+
+            // `runTests` supplies existing VFS paths through build.sources.
+            // The low-level convenience pipeline accepts source *text* and
+            // writes it to its default main.cpp, so using it here would erase
+            // the contract of TestPlan and compile the wrong file. Compile
+            // every persisted source directly through the same public preset
+            // argv, then link them as one program.
+            const nativeBuild = toolchain === ToolchainPreset.CMake || toolchain === ToolchainPreset.Python
+                ? undefined
+                : opts?.build as Partial<NativeBuildConfig> | undefined;
+            const plannedSources = nativeBuild?.sources ?? opts?.sources;
+            if (sourceOrFiles === undefined && plannedSources && plannedSources.length > 0) {
+                const sourcePaths = [...new Set(plannedSources)];
+                const preset = TOOLCHAIN_PRESETS[toolchain];
+                if (!preset || !('compileTool' in preset) || !('linkTool' in preset)) {
+                    throw new Error(`compileAndRun: toolchain '${toolchain}' does not support native source builds`);
+                }
+
+                const objectPaths = sourcePaths.map((_, index) => `/tmp/emception-build-${index}.o`);
+                const wasmPath = nativeBuild?.output ?? '/tmp/emception-build.wasm';
+                const runOptions = {
+                    ...(opts?.cwd ? { cwd: opts.cwd } : {}),
+                    ...(opts?.stdout ? { stdout: opts.stdout } : {}),
+                    ...(opts?.stderr ? { stderr: opts.stderr } : {}),
+                };
+
+                for (let index = 0; index < sourcePaths.length; index++) {
+                    const compile = await run(
+                        preset.compileTool,
+                        preset.compileArgv({
+                            sourcePath: sourcePaths[index]!,
+                            objectPath: objectPaths[index]!,
+                        }),
+                        runOptions,
+                    );
+                    if (compile.exitCode !== 0) return compile;
+                }
+
+                const linkArgs = preset.linkArgv({
+                    objectPath: objectPaths[0]!,
+                    wasmPath,
+                });
+                const firstObjectIndex = linkArgs.indexOf(objectPaths[0]!);
+                if (firstObjectIndex === -1) {
+                    throw new Error('compileAndRun: preset linker argv does not contain its object path');
+                }
+                linkArgs.splice(firstObjectIndex, 1, ...objectPaths);
+                const link = await run(preset.linkTool, linkArgs, runOptions);
+                if (link.exitCode !== 0) return link;
+
+                return run('wasi-run', ['wasi-run', wasmPath], {
+                    ...runOptions,
+                    ...(stdinStr === undefined ? {} : { stdin: stdinStr }),
+                });
+            }
+
             // ponytail: CompileAndRunOptions has no timeoutMs field; the
             // underlying free-fn does not plumb timeouts through. Skip
             // silently until presets gains a timeout hook.

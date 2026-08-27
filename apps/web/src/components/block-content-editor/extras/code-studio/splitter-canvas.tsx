@@ -1,6 +1,6 @@
 "use client"
 
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { Group, Panel, Separator } from "react-resizable-panels"
 import {
   createContext,
   Fragment,
@@ -60,8 +60,8 @@ function useDragCtx(): DragCtxShape {
 }
 
 /**
- * Recursive renderer that walks a splitter tree and emits nested PanelGroup /
- * Panel / PanelResizeHandle from `react-resizable-panels`.
+ * Recursive renderer that walks a splitter tree and emits nested Group /
+ * Panel / Separator components from `react-resizable-panels` v4.
  *
  * In edit mode, each leaf is wrapped with a chrome bar (drag handle + × remove)
  * and four drop quadrants (top / right / bottom / left) so panels can be
@@ -290,17 +290,20 @@ interface SplitGroupProps {
 function SplitGroup({ node, renderLeaf, onSplitResize }: SplitGroupProps) {
   const { resizable } = useDragCtx()
   const handleLayout = useCallback(
-    (sizes: number[]) => {
-      onSplitResize?.(node.id, sizes)
+    (layout: Record<string, number>) => {
+      const fallbackSize = 100 / node.children.length
+      onSplitResize?.(
+        node.id,
+        node.children.map((child, index) => layout[childKeyFor(child, index)] ?? node.sizes[index] ?? fallbackSize),
+      )
     },
-    [node.id, onSplitResize],
+    [node, onSplitResize],
   )
 
   return (
-    <PanelGroup
-      direction={node.direction}
-      onLayout={resizable && onSplitResize ? handleLayout : undefined}
-      autoSaveId={undefined}
+    <Group
+      orientation={node.direction}
+      onLayoutChange={resizable && onSplitResize ? handleLayout : undefined}
       id={node.id}
       className="h-full w-full"
     >
@@ -310,21 +313,21 @@ function SplitGroup({ node, renderLeaf, onSplitResize }: SplitGroupProps) {
         return (
           <Fragment key={childKey}>
             <Panel
-              order={idx}
-              defaultSize={node.sizes[idx] ?? 100 / node.children.length}
-              minSize={minSize}
+              id={childKey}
+              defaultSize={`${node.sizes[idx] ?? 100 / node.children.length}%`}
+              minSize={`${minSize}%`}
               className="h-full w-full min-h-0 min-w-0"
             >
               <RenderNode node={child} renderLeaf={renderLeaf} onSplitResize={onSplitResize} />
             </Panel>
             {idx < node.children.length - 1 && (
-              <PanelResizeHandle
+              <Separator
                 disabled={!resizable}
                 className={cn(
                   "relative shrink-0 transition-colors",
                   node.direction === "horizontal" ? "w-1.5 cursor-col-resize" : "h-1.5 cursor-row-resize",
                   resizable
-                    ? "bg-transparent hover:bg-blue-500/40 data-resize-handle-active:bg-blue-500/60"
+                    ? "bg-transparent hover:bg-blue-500/40 data-[separator=active]:bg-blue-500/60"
                     : "bg-transparent pointer-events-none",
                 )}
               />
@@ -332,7 +335,7 @@ function SplitGroup({ node, renderLeaf, onSplitResize }: SplitGroupProps) {
           </Fragment>
         )
       })}
-    </PanelGroup>
+    </Group>
   )
 }
 

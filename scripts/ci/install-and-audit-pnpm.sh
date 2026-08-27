@@ -13,7 +13,8 @@ audit_report="$audit_root/audit.json"
 root_lock="$repository_root/pnpm-lock.yaml"
 virtual_store_lock="$repository_root/node_modules/.pnpm/lock.yaml"
 
-[[ ! -e "$root_lock" ]] || economy_gate_error "The repository pnpm lockfile must remain absent: $root_lock"
+[[ -f "$root_lock" ]] || economy_gate_error "The repository pnpm lockfile is required: $root_lock"
+lock_hash_before="$(sha256sum "$root_lock" | awk '{print $1}')"
 
 mkdir -p "$audit_root"
 rm -f "$audit_lock" "$audit_report"
@@ -21,15 +22,13 @@ rm -f "$audit_lock" "$audit_report"
 cd "$repository_root"
 export CI=true
 
-printf '> pnpm install --no-lockfile --no-frozen-lockfile\n'
-pnpm install --no-lockfile --no-frozen-lockfile
-[[ ! -e "$root_lock" ]] || economy_gate_error 'pnpm install unexpectedly created the intentionally absent repository lockfile'
+printf '> pnpm install --frozen-lockfile --ignore-scripts\n'
+pnpm install --frozen-lockfile --ignore-scripts
+lock_hash_after_install="$(sha256sum "$root_lock" | awk '{print $1}')"
+[[ "$lock_hash_before" == "$lock_hash_after_install" ]] || economy_gate_error 'pnpm install unexpectedly changed the repository lockfile'
 [[ -f "$virtual_store_lock" ]] || economy_gate_error "pnpm install did not produce its virtual-store resolution: $virtual_store_lock"
 
-# pnpm audit requires a lockfile. The freshly resolved virtual-store lock is copied
-# only into the asserted artifact tree; the repository root remains lock-free.
 cp "$virtual_store_lock" "$audit_lock"
-[[ ! -e "$root_lock" ]] || economy_gate_error 'pnpm audit preparation unexpectedly created the repository lockfile'
 
 export npm_config_lockfile_dir="$audit_root"
 printf '> pnpm audit --json\n'
@@ -38,7 +37,8 @@ pnpm audit --json >"$audit_report" 2>&1
 audit_exit_code=$?
 set -e
 
-[[ ! -e "$root_lock" ]] || economy_gate_error 'pnpm audit unexpectedly created the repository lockfile'
+lock_hash_after_audit="$(sha256sum "$root_lock" | awk '{print $1}')"
+[[ "$lock_hash_before" == "$lock_hash_after_audit" ]] || economy_gate_error 'pnpm audit unexpectedly changed the repository lockfile'
 
 advisory_count="$($PYTHON_BIN - "$audit_report" <<'PY'
 import json

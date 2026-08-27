@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { isUtf8 } from 'node:buffer';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -21,6 +22,11 @@ function walkDirectory(root: string, relative = ''): string[] {
     });
 }
 
+function normalizeTextLineEndings(content: Buffer): Buffer {
+  if (!isUtf8(content)) return content;
+  return Buffer.from(content.toString('utf8').replace(/\r\n?/g, '\n'));
+}
+
 /** Hash a workspace source tree without timestamps or absolute paths. */
 export function hashDirectory(root: string): string {
   if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
@@ -37,7 +43,7 @@ export function hashDirectory(root: string): string {
       hash.update(`directory\0${normalized}\0`);
     } else if (stat.isFile()) {
       hash.update(`file\0${normalized}\0`);
-      hash.update(fs.readFileSync(absolute));
+      hash.update(normalizeTextLineEndings(fs.readFileSync(absolute)));
       hash.update('\0');
     }
   }

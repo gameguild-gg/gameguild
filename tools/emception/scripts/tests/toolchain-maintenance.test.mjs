@@ -43,7 +43,7 @@ test('toolchain paths separate tracked policy, disposable cache, and release art
   });
 });
 
-test('Windows Toolchain processes avoid direct cmd shims and remote tar parsing', async () => {
+test('Toolchain processes use portable pnpm launchers and avoid remote tar parsing', async () => {
   const { describePnpmFailure, pnpmInvocation } = await import('../toolchain/cli.ts');
   const { normalizeWindowsCpythonMakefile } = await import('../lib/cpython-windows.ts');
   const { rewriteMsysPathReferences, toMsysPath } = await import('../lib/posix-path.ts');
@@ -54,6 +54,10 @@ test('Windows Toolchain processes avoid direct cmd shims and remote tar parsing'
     arguments: ['/d', '/s', '/c', 'pnpm'],
   });
   assert.deepEqual(pnpmInvocation('linux'), { executable: 'pnpm', arguments: [] });
+  assert.deepEqual(pnpmInvocation('darwin', '/bin/sh', false), {
+    executable: 'corepack',
+    arguments: ['pnpm'],
+  });
   assert.equal(toMsysPath('E:\\sources\\cpython\\configure', 'win32'), '/e/sources/cpython/configure');
   assert.equal(toMsysPath('/sources/cpython/configure', 'linux'), '/sources/cpython/configure');
   assert.equal(
@@ -96,19 +100,26 @@ test('Binaryen optimization inherits the bounded Toolchain concurrency', async (
   assert.throws(() => ensureBinaryenConcurrency({}, 0), /positive integer/);
 });
 
-test('LLVM driver objects are built through their CMake subdirectory targets', async () => {
+test('LLVM driver objects are built from the root CMake generator directory', async () => {
   const root = path.resolve(import.meta.dirname, '..', '..');
   const source = await readFile(path.join(root, 'scripts', 'build-llvm.ts'), 'utf8');
 
   assert.match(
     source,
-    /cmake --build "\$\{driverSubdir\}"[^\n]+--target \$\{requiredObjs\.join\(' '\)\}/,
+    /const driverTargets = requiredObjs\.map\(obj => `tools\/clang\/tools\/driver\/CMakeFiles\/clang\.dir\/\$\{obj\}`\);/,
   );
   assert.match(
     source,
-    /cmake --build "\$\{lldSubdir\}"[^\n]+--target \$\{requiredObjs\.join\(' '\)\}/,
+    /cmake --build "\$\{wasmBuildDir\}"[^\n]+--target \$\{driverTargets\.join\(' '\)\}/,
   );
-  assert.doesNotMatch(source, /CMakeFiles\/(?:clang|lld)\.dir\/\$\{obj\}/);
+  assert.match(
+    source,
+    /const lldTargets = requiredObjs\.map\(obj => `tools\/lld\/tools\/lld\/CMakeFiles\/lld\.dir\/\$\{obj\}`\);/,
+  );
+  assert.match(
+    source,
+    /cmake --build "\$\{wasmBuildDir\}"[^\n]+--target \$\{lldTargets\.join\(' '\)\}/,
+  );
 });
 
 test('Emscripten sysroot copies exclude host Python bytecode caches', async (context) => {
@@ -435,6 +446,19 @@ test('locked source checksum is verified before extraction and workspace hashes 
   );
   assert.equal(await readFile(download, 'utf8'), poisoned.toString());
   await assert.rejects(readFile(path.join(destination, 'CMakeLists.txt')));
+});
+
+test('workspace source hashes ignore checkout line-ending representation', async (context) => {
+  const { hashDirectory } = await import('../toolchain/sources.ts');
+  const root = await temporaryRoot(context);
+  const lf = path.join(root, 'lf');
+  const crlf = path.join(root, 'crlf');
+  await mkdir(lf, { recursive: true });
+  await mkdir(crlf, { recursive: true });
+  await writeFile(path.join(lf, 'overlay.c'), 'int main(void) {\n  return 0;\n}\n');
+  await writeFile(path.join(crlf, 'overlay.c'), 'int main(void) {\r\n  return 0;\r\n}\r\n');
+
+  assert.equal(hashDirectory(lf), hashDirectory(crlf));
 });
 
 test('locked archives extract through the cross-platform Node implementation', async (context) => {
