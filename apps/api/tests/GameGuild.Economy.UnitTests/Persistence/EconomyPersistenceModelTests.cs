@@ -73,6 +73,7 @@ public sealed class EconomyPersistenceModelTests
         "economy_self_service_transfer_intents",
         "economy_source_stamp_events",
         "economy_source_stamps",
+        "economy_top_up_intents",
         "economy_wallet_balance_projections",
         "economy_wallet_debt_events",
         "economy_wallet_debts",
@@ -143,6 +144,9 @@ public sealed class EconomyPersistenceModelTests
         "ux_economy_source_stamp_events_source_sequence",
         "ux_economy_source_stamps_internal_leg",
         "ux_economy_source_stamps_provider_reference",
+        "ux_economy_top_up_intents_actor_key",
+        "ux_economy_top_up_intents_payment",
+        "ux_economy_top_up_intents_provider_object",
         "ux_economy_wallet_debt_events_wallet_sequence",
         "ux_economy_worker_leases_name"
     ];
@@ -254,6 +258,9 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_root_reversal_states_cumulative_bounds",
             "ck_economy_root_reversal_states_epoch_nonnegative",
             "ck_economy_source_stamp_events_sequence_positive",
+            "ck_economy_top_up_intents_amount_positive",
+            "ck_economy_top_up_intents_provider_binding",
+            "ck_economy_top_up_intents_version_positive",
             "ck_economy_wallet_debt_events_delta_nonzero",
             "ck_economy_wallet_debt_events_sequence_positive",
             "ck_economy_wallet_debts_nonnegative",
@@ -349,6 +356,61 @@ public sealed class EconomyPersistenceModelTests
         fundingClaim.FindPrimaryKey()!.Properties.Select(property => property.Name)
             .Should().Equal("SourceStampId");
         fundingClaim.FindProperty("Version")!.IsConcurrencyToken.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TopUpIntentPersistsAuthorityProviderBindingAndConcurrency()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+
+        AssertProperties(
+            model,
+            "economy_top_up_intents",
+            "Id",
+            "PaymentId",
+            "TenantId",
+            "ActorId",
+            "WalletId",
+            "HardCoinUnits",
+            "UsdMinorUnits",
+            "JurisdictionCode",
+            "PolicyVersion",
+            "PolicyHash",
+            "Provider",
+            "IdempotencyKey",
+            "RequestHash",
+            "ProviderEnvironment",
+            "ProviderAccountId",
+            "ProviderObjectId",
+            "ProviderObjectType",
+            "ProviderMonetaryLeg",
+            "Status",
+            "RequestedAt",
+            "ProviderBoundAt",
+            "Version");
+        AssertUniqueIndex(
+            model,
+            "economy_top_up_intents",
+            "ux_economy_top_up_intents_actor_key",
+            "TenantId", "ActorId", "IdempotencyKey");
+        AssertUniqueIndex(
+            model,
+            "economy_top_up_intents",
+            "ux_economy_top_up_intents_payment",
+            "PaymentId");
+        AssertUniqueIndex(
+            model,
+            "economy_top_up_intents",
+            "ux_economy_top_up_intents_provider_object",
+            "Provider", "ProviderEnvironment", "ProviderAccountId", "ProviderObjectId",
+            "ProviderObjectType", "ProviderMonetaryLeg");
+        var topUp = model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "economy_top_up_intents");
+        topUp.FindProperty("Version")!.IsConcurrencyToken.Should().BeTrue();
+        topUp.GetIndexes().Single(index =>
+                index.GetDatabaseName() == "ux_economy_top_up_intents_provider_object")
+            .GetFilter().Should().Be("\"ProviderObjectId\" IS NOT NULL");
     }
 
     [Fact]

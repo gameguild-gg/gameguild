@@ -1,5 +1,6 @@
 using Amazon.KeyManagementService;
 using Amazon.S3;
+using GameGuild.Commerce.Billing;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Operations;
 using GameGuild.Economy.Funding;
@@ -37,6 +38,17 @@ public sealed class EconomyCoreModule : ModuleBase
         services.AddScoped<IEconomyWalletProvisioner, PostgreSqlEconomyWalletProvisioner>();
         services.AddScoped<ILegacyBalanceBackfillGateway, PostgreSqlLegacyBalanceBackfillGateway>();
         services.AddScoped<IHardCoinFundingGateway, PostgreSqlHardCoinFundingGateway>();
+        services.AddScoped<PostgreSqlEconomyTopUpIntentStore>();
+        services.AddScoped<IEconomyTopUpIntentStore>(provider =>
+            provider.GetRequiredService<PostgreSqlEconomyTopUpIntentStore>());
+        services.AddScoped<IEconomyTopUpReader>(provider =>
+            provider.GetRequiredService<PostgreSqlEconomyTopUpIntentStore>());
+        services.AddScoped<IEconomyTopUpSettlementStore>(provider =>
+            provider.GetRequiredService<PostgreSqlEconomyTopUpIntentStore>());
+        services.AddScoped<IHardCoinTopUpPolicyResolver, HardCoinTopUpPolicyResolver>();
+        services.AddScoped<IEconomyTopUpProvider, StripeEconomyTopUpProvider>();
+        services.AddScoped<ISelfServiceHardCoinTopUpService, SelfServiceHardCoinTopUpService>();
+        services.AddScoped<IStripeVerifiedEventConsumer, StripeEconomyTopUpEventConsumer>();
         services.AddScoped<IAdRewardIssuanceGateway, PostgreSqlAdRewardIssuanceGateway>();
         services.AddScoped<IHardToSoftConversionGateway, PostgreSqlHardToSoftConversionGateway>();
         services.AddScoped<IHardToSoftConversionPolicyResolver, HardToSoftConversionPolicyResolver>();
@@ -66,6 +78,8 @@ public sealed class EconomyCoreModule : ModuleBase
         services.AddScoped<IEconomyProtectedOperationTransaction, EconomyProtectedOperationTransaction>();
         services.AddScoped<IEconomyProtectedOperationRiskDecisionIssuer,
             PostgreSqlEconomyProtectedOperationRiskDecisionIssuer>();
+        services.AddScoped<IEconomyTrustedProtectedOperationAuthorizer,
+            EconomyTrustedProtectedOperationAuthorizer>();
         services.AddScoped<IEconomyProtectedOperationOrchestrator, EconomyProtectedOperationOrchestrator>();
         services.AddScoped<PostgreSqlComplianceEvidenceStore>();
         services.AddScoped<IComplianceEvidenceStore>(provider =>

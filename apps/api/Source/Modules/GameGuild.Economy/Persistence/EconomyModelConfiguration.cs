@@ -984,6 +984,78 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .HasForeignKey(row => row.RiskDecisionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        modelBuilder.Entity<EconomyTopUpIntentRow>(builder =>
+        {
+            builder.ToTable("economy_top_up_intents", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_top_up_intents_amount_positive",
+                    "\"HardCoinUnits\" > 0 AND \"UsdMinorUnits\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_top_up_intents_provider_binding",
+                    "(\"Status\" = 1 AND \"ProviderEnvironment\" IS NULL AND \"ProviderAccountId\" IS NULL AND " +
+                    "\"ProviderObjectId\" IS NULL AND \"ProviderObjectType\" IS NULL AND " +
+                    "\"ProviderMonetaryLeg\" IS NULL AND \"ProviderBoundAt\" IS NULL) OR " +
+                    "(\"Status\" <> 1 AND \"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND " +
+                    "\"ProviderObjectId\" IS NOT NULL AND \"ProviderObjectType\" IS NOT NULL AND " +
+                    "\"ProviderMonetaryLeg\" IS NOT NULL AND \"ProviderBoundAt\" IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "ck_economy_top_up_intents_version_positive",
+                    "\"Version\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_top_up_intents_event_state",
+                    "(\"LastProviderEventId\" IS NULL AND \"LastProviderEventAt\" IS NULL AND " +
+                    "\"LastProviderEvidenceHash\" IS NULL) OR (\"LastProviderEventId\" IS NOT NULL AND " +
+                    "\"LastProviderEventAt\" IS NOT NULL AND \"LastProviderEvidenceHash\" IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "ck_economy_top_up_intents_posting_state",
+                    "(\"Status\" = 5 AND \"PostingGroupId\" IS NOT NULL) OR " +
+                    "(\"Status\" <> 5 AND \"PostingGroupId\" IS NULL)");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.JurisdictionCode).HasMaxLength(16);
+            builder.Property(row => row.PolicyHash).HasMaxLength(128);
+            builder.Property(row => row.Provider).HasMaxLength(64);
+            builder.Property(row => row.IdempotencyKey).HasMaxLength(128);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.ProviderEnvironment).HasMaxLength(32);
+            builder.Property(row => row.ProviderAccountId).HasMaxLength(255);
+            builder.Property(row => row.ProviderObjectId).HasMaxLength(255);
+            builder.Property(row => row.ProviderObjectType).HasMaxLength(100);
+            builder.Property(row => row.ProviderMonetaryLeg).HasMaxLength(100);
+            builder.Property(row => row.LastProviderEventId).HasMaxLength(255);
+            builder.Property(row => row.LastProviderEvidenceHash).HasMaxLength(128);
+            builder.Property(row => row.FailureCode).HasMaxLength(100);
+            builder.Property(row => row.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            builder.Property(row => row.Version).IsConcurrencyToken();
+            builder.HasIndex(row => new { row.TenantId, row.ActorId, row.IdempotencyKey })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_top_up_intents_actor_key");
+            builder.HasIndex(row => row.PaymentId)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_top_up_intents_payment");
+            builder.HasIndex(row => new
+                {
+                    row.Provider,
+                    row.ProviderEnvironment,
+                    row.ProviderAccountId,
+                    row.ProviderObjectId,
+                    row.ProviderObjectType,
+                    row.ProviderMonetaryLeg
+                })
+                .IsUnique()
+                .HasFilter("\"ProviderObjectId\" IS NOT NULL")
+                .HasDatabaseName("ux_economy_top_up_intents_provider_object");
+            builder.HasOne<EconomyWalletRow>()
+                .WithMany()
+                .HasForeignKey(row => row.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyPostingGroupRow>()
+                .WithMany()
+                .HasForeignKey(row => row.PostingGroupId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 
     private static void ConfigureSelfServiceTransfers(ModelBuilder modelBuilder)

@@ -3,6 +3,7 @@ using System;
 using GameGuild.API.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameGuild.API.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260827153028_AddEconomySelfServiceTopUpIntents")]
+    partial class AddEconomySelfServiceTopUpIntents
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -10548,10 +10551,6 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<Guid>("ActorId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("FailureCode")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<long>("HardCoinUnits")
                         .HasColumnType("bigint");
 
@@ -10565,17 +10564,6 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 
-                    b.Property<DateTimeOffset?>("LastProviderEventAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("LastProviderEventId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("LastProviderEvidenceHash")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
                     b.Property<Guid>("PaymentId")
                         .HasColumnType("uuid");
 
@@ -10586,9 +10574,6 @@ namespace GameGuild.API.Database.Migrations
 
                     b.Property<long>("PolicyVersion")
                         .HasColumnType("bigint");
-
-                    b.Property<Guid?>("PostingGroupId")
-                        .HasColumnType("uuid");
 
                     b.Property<string>("Provider")
                         .IsRequired()
@@ -10632,11 +10617,6 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
                     b.Property<long>("UsdMinorUnits")
                         .HasColumnType("bigint");
 
@@ -10653,8 +10633,6 @@ namespace GameGuild.API.Database.Migrations
                         .IsUnique()
                         .HasDatabaseName("ux_economy_top_up_intents_payment");
 
-                    b.HasIndex("PostingGroupId");
-
                     b.HasIndex("WalletId");
 
                     b.HasIndex("TenantId", "ActorId", "IdempotencyKey")
@@ -10669,10 +10647,6 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("economy_top_up_intents", null, t =>
                         {
                             t.HasCheckConstraint("ck_economy_top_up_intents_amount_positive", "\"HardCoinUnits\" > 0 AND \"UsdMinorUnits\" > 0");
-
-                            t.HasCheckConstraint("ck_economy_top_up_intents_event_state", "(\"LastProviderEventId\" IS NULL AND \"LastProviderEventAt\" IS NULL AND \"LastProviderEvidenceHash\" IS NULL) OR (\"LastProviderEventId\" IS NOT NULL AND \"LastProviderEventAt\" IS NOT NULL AND \"LastProviderEvidenceHash\" IS NOT NULL)");
-
-                            t.HasCheckConstraint("ck_economy_top_up_intents_posting_state", "(\"Status\" = 5 AND \"PostingGroupId\" IS NOT NULL) OR (\"Status\" <> 5 AND \"PostingGroupId\" IS NULL)");
 
                             t.HasCheckConstraint("ck_economy_top_up_intents_provider_binding", "(\"Status\" = 1 AND \"ProviderEnvironment\" IS NULL AND \"ProviderAccountId\" IS NULL AND \"ProviderObjectId\" IS NULL AND \"ProviderObjectType\" IS NULL AND \"ProviderMonetaryLeg\" IS NULL AND \"ProviderBoundAt\" IS NULL) OR (\"Status\" <> 1 AND \"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderObjectId\" IS NOT NULL AND \"ProviderObjectType\" IS NOT NULL AND \"ProviderMonetaryLeg\" IS NOT NULL AND \"ProviderBoundAt\" IS NOT NULL)");
 
@@ -26881,11 +26855,6 @@ namespace GameGuild.API.Database.Migrations
 
             modelBuilder.Entity("GameGuild.Economy.Persistence.EconomyTopUpIntentRow", b =>
                 {
-                    b.HasOne("GameGuild.Economy.Persistence.EconomyPostingGroupRow", null)
-                        .WithMany()
-                        .HasForeignKey("PostingGroupId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("GameGuild.Economy.Persistence.EconomyWalletRow", null)
                         .WithMany()
                         .HasForeignKey("WalletId")

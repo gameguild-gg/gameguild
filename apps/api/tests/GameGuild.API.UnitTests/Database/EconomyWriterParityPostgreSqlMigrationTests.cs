@@ -55,13 +55,20 @@ public sealed class EconomyWriterParityPostgreSqlMigrationTests
                 OR has_table_privilege('gameguild_economy_writer', format('%I.%I', schemaname, tablename), 'DELETE'));
             """)).Should().Be(0);
 
-        (await ScalarAsync<long>(connection, """
-            SELECT count(*)
+        (await QueryStringsAsync(connection, """
+            SELECT procedure.proname
             FROM pg_proc procedure
             JOIN pg_namespace schema ON schema.oid = procedure.pronamespace
             WHERE schema.nspname = 'economy_private'
-              AND has_function_privilege('gameguild_economy_runtime', procedure.oid, 'EXECUTE');
-            """)).Should().Be(0);
+              AND has_function_privilege('gameguild_economy_runtime', procedure.oid, 'EXECUTE')
+            ORDER BY procedure.proname;
+            """)).Should().Equal(
+            "apply_economy_top_up_provider_event_v1",
+            "bind_economy_top_up_provider_v1",
+            "prepare_economy_top_up_intent_v1",
+            "prepare_self_service_transfer_intent_v1",
+            "read_economy_top_up_payment_fact_v1",
+            "reserve_self_service_transfer_roots_v1");
     }
 
     [DockerFact]
@@ -280,6 +287,18 @@ public sealed class EconomyWriterParityPostgreSqlMigrationTests
     {
         await using var command = new NpgsqlCommand(sql, connection);
         return (T)(await command.ExecuteScalarAsync())!;
+    }
+
+    private static async Task<IReadOnlyList<string>> QueryStringsAsync(
+        NpgsqlConnection connection,
+        string sql)
+    {
+        await using var command = new NpgsqlCommand(sql, connection);
+        await using var reader = await command.ExecuteReaderAsync();
+        var values = new List<string>();
+        while (await reader.ReadAsync())
+            values.Add(reader.GetString(0));
+        return values;
     }
 
     private sealed class DockerFactAttribute : FactAttribute
