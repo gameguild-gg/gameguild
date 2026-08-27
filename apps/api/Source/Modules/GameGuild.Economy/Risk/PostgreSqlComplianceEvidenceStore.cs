@@ -295,7 +295,7 @@ public sealed class PostgreSqlComplianceEvidenceStore : IComplianceEvidenceStore
         }, cancellationToken);
     }
 
-    private static void ValidateEnvelope(ComplianceEvidenceEnvelope envelope)
+    internal static void ValidateEnvelope(ComplianceEvidenceEnvelope envelope)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(envelope.Provider);
         ArgumentException.ThrowIfNullOrWhiteSpace(envelope.Environment);

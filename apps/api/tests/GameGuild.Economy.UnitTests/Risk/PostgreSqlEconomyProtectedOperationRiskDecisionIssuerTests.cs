@@ -63,6 +63,19 @@ public sealed class PostgreSqlEconomyProtectedOperationRiskDecisionIssuerTests
                 new RiskReviewCase(reviewId, decisionId, submittedBy, RiskReviewStatus.Pending,
                     submittedAt, null, null, null, approvals, [], null));
         var holds = new Mock<IComplianceHoldStore>();
+        holds.Setup(value => value.ActivateAsync(
+                It.IsAny<ComplianceHoldActivation>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ComplianceHoldActivation activation, CancellationToken _) => new ComplianceHold(
+                activation.Id,
+                activation.Scope,
+                activation.CaseReferenceHash,
+                activation.ReasonCode,
+                activation.EvidenceHash,
+                activation.ActorId,
+                activation.ActivatedAt,
+                activation.ExpiresAt,
+                null,
+                null));
         var issuer = new PostgreSqlEconomyProtectedOperationRiskDecisionIssuer(
             context, policyStore.Object, signature.Object, financialCrime, trustSafety,
             graph.Object, counters.Object, reviews.Object, holds.Object);
@@ -87,11 +100,132 @@ public sealed class PostgreSqlEconomyProtectedOperationRiskDecisionIssuerTests
             TenantId, review.ReviewId!.Value, review.Id, ActorId,
             It.IsAny<IReadOnlyList<string>>(), Now, 2, It.IsAny<CancellationToken>()), Times.Once);
 
+        trustSafety.Outcome = ExternalRiskOutcome.Deny;
+        var hold = await issuer.IssueAsync(Request(sourceWallet, destinationWallet, "hold"), default);
+        hold.State.Should().Be(EconomyProtectedOperationState.Hold);
+        hold.Outcome.Should().Be(RiskOutcome.Hold);
+        holds.Verify(value => value.ActivateAsync(
+            It.Is<ComplianceHoldActivation>(activation =>
+                activation.Scope.TenantId == TenantId && activation.ActorId == ActorId),
+            It.IsAny<CancellationToken>()), Times.Once);
+
         trustSafety.Outcome = ExternalRiskOutcome.Unavailable;
         var unavailable = await issuer.IssueAsync(Request(sourceWallet, destinationWallet, "unavailable"), default);
         unavailable.Id.Should().Be(Guid.Empty);
         unavailable.State.Should().Be(EconomyProtectedOperationState.ComplianceUnavailable);
-        (await context.Set<EconomyRiskDecisionRow>().CountAsync()).Should().Be(2);
+        (await context.Set<EconomyRiskDecisionRow>().CountAsync()).Should().Be(3);
+    }
+
+    [Fact]
+    public void ReplayValidationRejectsEveryChangedAuthorityInput()
+    {
+        var request = Request(WalletId.New().Value, WalletId.New().Value, "replay");
+        var policy = Policy();
+        var reserve = new EconomyReserveHeadRow { Version = 4 };
+        var assessment = new EconomyExternalRiskAssessment(
+            RiskOutcome.Allow,
+            EconomyProtectedOperationState.Ready,
+            [],
+            Now.AddMinutes(5));
+        EconomyRiskDecisionRow Matching() => new()
+        {
+            OperationFingerprint = request.OperationFingerprint,
+            Outcome = assessment.Outcome,
+            PolicyVersion = policy.Version,
+            ReserveVersion = reserve.Version,
+            TemplateKind = request.Intent.TemplateKind,
+            AmountUnits = request.Intent.Amount.Units
+        };
+
+        FluentActions.Invoking(() =>
+                PostgreSqlEconomyProtectedOperationRiskDecisionIssuer.EnsureReplay(
+                    Matching(), request, policy, reserve, assessment))
+            .Should().NotThrow();
+
+        var fingerprint = Matching();
+        fingerprint.OperationFingerprint = "different";
+        var outcome = Matching();
+        outcome.Outcome = RiskOutcome.Review;
+        var policyVersion = Matching();
+        policyVersion.PolicyVersion++;
+        var reserveVersion = Matching();
+        reserveVersion.ReserveVersion++;
+        var template = Matching();
+        template.TemplateKind = PostingTemplateKind.Spend;
+        var amount = Matching();
+        amount.AmountUnits++;
+
+        foreach (var existing in new[]
+                 {
+                     fingerprint, outcome, policyVersion, reserveVersion, template, amount
+                 })
+            FluentActions.Invoking(() =>
+                    PostgreSqlEconomyProtectedOperationRiskDecisionIssuer.EnsureReplay(
+                        existing, request, policy, reserve, assessment))
+                .Should().Throw<RiskDecisionReuseException>();
+    }
+
+    [Fact]
+    public void ValidationAndRejectionRemainFailClosedAtTheirBoundaries()
+    {
+        var request = Request(WalletId.New().Value, WalletId.New().Value, "validation");
+
+        FluentActions.Invoking(() =>
+                PostgreSqlEconomyProtectedOperationRiskDecisionIssuer.Validate(request))
+            .Should().NotThrow();
+        FluentActions.Invoking(() =>
+                PostgreSqlEconomyProtectedOperationRiskDecisionIssuer.Validate(
+                    request with { TenantId = Guid.Empty }))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() =>
+                PostgreSqlEconomyProtectedOperationRiskDecisionIssuer.Validate(
+                    request with { ActorId = Guid.Empty }))
+            .Should().Throw<ArgumentException>();
+
+        var rejected = PostgreSqlEconomyProtectedOperationRiskDecisionIssuer.Rejected(
+            EconomyProtectedOperationState.InvalidPolicy,
+            "signed policy unavailable");
+        rejected.Id.Should().BeEmpty();
+        rejected.Outcome.Should().Be(RiskOutcome.Deny);
+        rejected.State.Should().Be(EconomyProtectedOperationState.InvalidPolicy);
+        rejected.Diagnostics.Should().Equal("signed policy unavailable");
+    }
+
+    [Fact]
+    public void ConstructorRejectsEachMissingSecurityDependency()
+    {
+        using var context = CreateContext(
+            "Host=127.0.0.1;Port=5432;Database=unused;Username=unused;Password=unused");
+        var policies = Mock.Of<IEconomyCapabilityPolicyStore>();
+        var signatures = Mock.Of<ICapabilityPolicySignatureVerifier>();
+        var financialCrime = Mock.Of<IFinancialCrimeRiskInputSource>();
+        var trustSafety = Mock.Of<ITrustSafetyRiskInputSource>();
+        var graph = Mock.Of<IEntityRiskGraphStore>();
+        var counters = Mock.Of<IAggregateRiskCounterStore>();
+        var reviews = Mock.Of<IRiskReviewStore>();
+        var holds = Mock.Of<IComplianceHoldStore>();
+        Action[] invalid =
+        [
+            () => _ = new PostgreSqlEconomyProtectedOperationRiskDecisionIssuer(
+                context, null!, signatures, financialCrime, trustSafety, graph, counters, reviews, holds),
+            () => _ = new PostgreSqlEconomyProtectedOperationRiskDecisionIssuer(
+                context, policies, null!, financialCrime, trustSafety, graph, counters, reviews, holds),
+            () => _ = new PostgreSqlEconomyProtectedOperationRiskDecisionIssuer(
+                context, policies, signatures, null!, trustSafety, graph, counters, reviews, holds),
+            () => _ = new PostgreSqlEconomyProtectedOperationRiskDecisionIssuer(
+                context, policies, signatures, financialCrime, null!, graph, counters, reviews, holds),
+            () => _ = new PostgreSqlEconomyProtectedOperationRiskDecisionIssuer(
+                context, policies, signatures, financialCrime, trustSafety, null!, counters, reviews, holds),
+            () => _ = new PostgreSqlEconomyProtectedOperationRiskDecisionIssuer(
+                context, policies, signatures, financialCrime, trustSafety, graph, null!, reviews, holds),
+            () => _ = new PostgreSqlEconomyProtectedOperationRiskDecisionIssuer(
+                context, policies, signatures, financialCrime, trustSafety, graph, counters, null!, holds),
+            () => _ = new PostgreSqlEconomyProtectedOperationRiskDecisionIssuer(
+                context, policies, signatures, financialCrime, trustSafety, graph, counters, reviews, null!)
+        ];
+
+        foreach (var action in invalid)
+            FluentActions.Invoking(action).Should().Throw<ArgumentNullException>();
     }
 
     private static EconomyProtectedRiskDecisionRequest Request(

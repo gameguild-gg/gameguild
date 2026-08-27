@@ -2,6 +2,7 @@ using System.Data;
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Economy.Persistence;
+using GameGuild.Economy.Risk;
 using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -68,6 +69,17 @@ public sealed class PostgreSqlTransactionExecutorTests
             (IApplicationDbContext)context, IsolationLevel.ReadCommitted,
             _ => Task.FromResult(true), CancellationToken.None);
         routedThroughContractOverload.Should().BeTrue();
+
+        var protectedTransactionObserved = false;
+        var protectedResult = await new EconomyProtectedOperationTransaction(context).ExecuteAsync(
+            _ =>
+            {
+                protectedTransactionObserved = context.Database.CurrentTransaction is not null;
+                return Task.FromResult("protected");
+            },
+            CancellationToken.None);
+        protectedResult.Should().Be("protected");
+        protectedTransactionObserved.Should().BeTrue();
     }
 
     [Fact]

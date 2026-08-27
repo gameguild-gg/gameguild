@@ -127,7 +127,7 @@ public sealed class EconomyProtectedOperationOrchestrator(
     private static string HashRoot(SourceStampId root) => Convert.ToHexStringLower(
         SHA256.HashData(Encoding.UTF8.GetBytes(root.Value.ToString("N"))));
 
-    private static void Validate(EconomyProtectedOperationIntent intent)
+    internal static void Validate(EconomyProtectedOperationIntent intent)
     {
         ArgumentNullException.ThrowIfNull(intent);
         if (!Enum.IsDefined(intent.Capability)) throw new ArgumentOutOfRangeException(nameof(intent));

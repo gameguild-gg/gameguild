@@ -166,6 +166,21 @@ public sealed class PostgreSqlComplianceEvidenceStoreTests
             await FluentActions.Awaiting(() => store.IngestAsync(envelope, CancellationToken.None).AsTask())
                 .Should().ThrowAsync<ArgumentException>();
         }
+
+        var rejectedKyc = ComplianceEvidenceEnvelope.Create(
+            "sumsub", "sandbox", "rejected-kyc", TenantId, "subject-hash", 1,
+            ComplianceEvidenceResult.Rejected, Now.AddMinutes(-1), Now.AddDays(30), 7,
+            "payload-hash", true, "s3://encrypted/rejected-kyc", Now);
+        var approvedTrustSafety = rejectedKyc with
+        {
+            ProviderEventId = "approved-trust-safety",
+            Result = ComplianceEvidenceResult.Approved,
+            EvidenceKind = ComplianceEvidenceKinds.TrustSafety
+        };
+        FluentActions.Invoking(() => PostgreSqlComplianceEvidenceStore.ValidateEnvelope(rejectedKyc))
+            .Should().NotThrow();
+        FluentActions.Invoking(() => PostgreSqlComplianceEvidenceStore.ValidateEnvelope(approvedTrustSafety))
+            .Should().NotThrow();
     }
 
     [Fact]

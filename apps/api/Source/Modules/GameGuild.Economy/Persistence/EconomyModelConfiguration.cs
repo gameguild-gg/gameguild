@@ -1,5 +1,6 @@
 using GameGuild.Economy.Integrations.AI;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Transfers;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Economy.Persistence;
@@ -21,6 +22,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         ConfigureChain(modelBuilder);
         ConfigureReserves(modelBuilder);
         ConfigureRisk(modelBuilder);
+        ConfigureSelfServiceTransfers(modelBuilder);
         ConfigureControlPlane(modelBuilder);
         ConfigureLegacyShadowMigration(modelBuilder);
         ConfigureRegisteredPostingReceipt(modelBuilder);
@@ -981,6 +983,39 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .WithMany()
                 .HasForeignKey(row => row.RiskDecisionId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureSelfServiceTransfers(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EconomySelfServiceTransferIntentRow>(builder =>
+        {
+            builder.ToTable("economy_self_service_transfer_intents", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_self_service_transfer_intents_amount_positive",
+                    "\"AmountUnits\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_self_service_transfer_intents_type_valid",
+                    "\"TransferType\" IN (1, 2, 3)");
+                table.HasCheckConstraint(
+                    "ck_economy_self_service_transfer_intents_currency_provenance",
+                    "(\"Currency\" = 1 AND \"Provenance\" = 1) OR " +
+                    "(\"Currency\" = 2 AND \"Provenance\" = 3)");
+                table.HasCheckConstraint(
+                    "ck_economy_self_service_transfer_intents_parties_distinct",
+                    "\"ActorId\" <> \"RecipientUserId\"");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.IdempotencyKey).HasMaxLength(128);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.ProviderReferenceHash).HasMaxLength(128);
+            builder.Property(row => row.DestinationHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.TenantId, row.ActorId, row.IdempotencyKey })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_self_service_transfer_intents_actor_key");
+            builder.HasIndex(row => new { row.TenantId, row.RecipientUserId, row.RequestedAt })
+                .HasDatabaseName("ix_economy_self_service_transfer_intents_recipient_time");
         });
     }
 

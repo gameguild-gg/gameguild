@@ -95,7 +95,7 @@ public sealed class HardToSoftConversionPolicyResolver(
         }
     }
 
-    private static long ToLongCeiling(BigInteger numerator, int denominator)
+    internal static long ToLongCeiling(BigInteger numerator, int denominator)
     {
         var value = (numerator + denominator - 1) / denominator;
         if (value > long.MaxValue) throw new OverflowException();

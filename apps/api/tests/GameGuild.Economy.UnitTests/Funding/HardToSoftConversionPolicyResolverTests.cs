@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Numerics;
 using FluentAssertions;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Risk;
@@ -47,6 +48,15 @@ public sealed class HardToSoftConversionPolicyResolverTests
         var action = () => resolver.ResolveAsync(TenantId, ActorId, 100, Now, default).AsTask();
 
         await action.Should().ThrowAsync<EconomySelfServiceCommandRejectedException>();
+    }
+
+    [Fact]
+    public void CeilingConversionRejectsValuesOutsideThePersistentUnitRange()
+    {
+        FluentActions.Invoking(() => HardToSoftConversionPolicyResolver.ToLongCeiling(
+                (BigInteger.One + long.MaxValue) * 1_000_000,
+                1_000_000))
+            .Should().Throw<OverflowException>();
     }
 
     private static HardToSoftConversionPolicyResolver Resolver(
