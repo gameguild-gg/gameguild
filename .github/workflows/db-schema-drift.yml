@@ -95,6 +95,12 @@ jobs:
       - name: Restore dotnet local tools (dotnet-ef)
         run: dotnet tool restore # .config/dotnet-tools.json pins dotnet-ef 10.0.9
 
+      - name: Restore NuGet packages
+        # dotnet ef needs project.assets.json before it can evaluate the
+        # project; tool restore alone does not generate it (NETSDK1004 on a
+        # cold runner). Restores the API project and its referenced projects.
+        run: dotnet restore apps/api/Source/GameGuild.API/GameGuild.API.csproj
+
       - name: Apply EF migrations to the service database
         run: >-
           dotnet ef database update
