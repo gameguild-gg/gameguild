@@ -139,4 +139,56 @@ public class ProgramContentEstimatedTimeTests
 
         content.ToDto().EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Manual);
     }
+
+    [Fact]
+    public void ToEntity_DefaultsSourceToAuto()
+    {
+        var dto = new CreateProgramContentDto
+        {
+            ProgramId = Guid.NewGuid(),
+            Title = "T",
+            Type = ProgramContentType.Lesson,
+            Body = "{}",
+        };
+
+        var entity = dto.ToEntity();
+
+        entity.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Auto);
+    }
+
+    [Fact]
+    public void ToEntity_MapsExplicitManual()
+    {
+        var dto = new CreateProgramContentDto
+        {
+            ProgramId = Guid.NewGuid(),
+            Title = "T",
+            Type = ProgramContentType.Lesson,
+            Body = "{}",
+            EstimatedMinutes = 15,
+            EstimatedMinutesSource = EstimatedMinutesSource.Manual,
+        };
+
+        var entity = dto.ToEntity();
+
+        entity.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Manual);
+        entity.EstimatedMinutes.Should().Be(15);
+    }
+
+    [Fact]
+    public void ToEntity_ThenNormalize_AutoComputesFromBody()
+    {
+        var dto = new CreateProgramContentDto
+        {
+            ProgramId = Guid.NewGuid(),
+            Title = "T",
+            Type = ProgramContentType.Lesson,
+            Body = string.Join(" ", Enumerable.Repeat("word", 400)),
+        };
+
+        var entity = dto.ToEntity();
+
+        entity.EstimatedMinutes.Should().Be(2);
+        entity.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Auto);
+    }
 }
