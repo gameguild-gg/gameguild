@@ -262,6 +262,7 @@ export interface UpdateContentInput {
   sortOrder?: number;
   isRequired?: boolean;
   estimatedMinutes?: number;
+  estimatedMinutesSource?: "Auto" | "Manual";
   visibility?: string;
   lessonFormat?: string;
 }
