@@ -57,6 +57,7 @@ import {
 } from "@/lib/learning/actions";
 import { CONTENT_ITEM_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
 import { getLessonFormatLabel } from "@/lib/learning/lesson-formats";
+import { estimateReadingMinutes } from "@/lib/learning/reading-time";
 import { normalizeSlug, slugify } from "@/lib/slugify";
 import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-renderer";
 import { LessonContentEditor } from "./lesson-content-editor";
@@ -110,7 +111,9 @@ export function ContentItemEditor({
     (item.settings?.isRequired as boolean) ?? true,
   );
   const [estimatedMinutes, setEstimatedMinutes] = useState<string>(
-    item.duration != null ? String(item.duration) : "",
+    item.estimatedMinutesSource === "Manual" && item.duration != null
+      ? String(item.duration)
+      : "",
   );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -178,6 +181,28 @@ export function ContentItemEditor({
   }, [isLesson, item.lessonFormat, item.jsonBody]);
   const [selectedFormat, setSelectedFormat] =
     useState<LearningCoursesLessonContentFormat>(initialSelectedFormat);
+
+  // ponytail: refs mutate without re-render — the auto hint refreshes only on
+  // format change / preview toggle / save-refresh; that staleness is accepted for v1.
+  const autoHint = useMemo(() => {
+    if (!isLesson) return null;
+    switch (selectedFormat) {
+      case "Lexical":
+        return estimateReadingMinutes({
+          jsonBody: (editorStateRef.current ?? null) as Record<
+            string,
+            unknown
+          > | null,
+        });
+      case "Markdown":
+      case "RevealJs":
+        return estimateReadingMinutes({ body: codeBodyRef.current ?? null });
+      case "Video":
+        return null;
+      default:
+        return null;
+    }
+  }, [isLesson, selectedFormat, previewMode]);
 
   const handleEditorChange = useCallback((state: SerializedEditorState) => {
     editorStateRef.current = state;
@@ -254,9 +279,12 @@ export function ContentItemEditor({
         ...(isQuiz ? { jsonBody: jsonBodyToSave } : {}),
         visibility,
         isRequired,
-        estimatedMinutes: estimatedMinutes
+        // ponytail: null clears the manual pin server-side (Auto recomputes);
+        // UpdateContentInput lags the nullable wire type, hence the cast.
+        estimatedMinutes: (estimatedMinutes
           ? Number(estimatedMinutes)
-          : undefined,
+          : null) as number | undefined,
+        estimatedMinutesSource: estimatedMinutes ? "Manual" : "Auto",
       });
 
       if (!result.success) {
@@ -828,14 +856,33 @@ export function ContentItemEditor({
                   <Clock className="mr-1 inline h-3 w-3" />
                   Estimated minutes
                 </Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  min={0}
-                  value={estimatedMinutes}
-                  onChange={(e) => setEstimatedMinutes(e.target.value)}
-                  placeholder="e.g. 15"
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="duration"
+                    type="number"
+                    min={0}
+                    value={estimatedMinutes}
+                    onChange={(e) => setEstimatedMinutes(e.target.value)}
+                    placeholder={autoHint ? `Auto (~${autoHint} min)` : "Auto"}
+                  />
+                  {estimatedMinutes && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEstimatedMinutes("")}
+                      title="Reset to auto estimate"
+                    >
+                      Auto
+                    </Button>
+                  )}
+                </div>
+                {autoHint && !estimatedMinutes && (
+                  <p className="text-muted-foreground text-xs">
+                    Leave blank to keep auto (~{autoHint} min). Type a number to
+                    pin it manually.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
