@@ -45,7 +45,7 @@ export type {
   LearningCoursesProgramContentType,
 };
 
-function getApiClient() {
+function getApiClient(tenantId?: string) {
   const apiUrl =
     process.env.API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
@@ -53,6 +53,8 @@ function getApiClient() {
   return createServerClient({
     baseUrl: apiUrl,
     auth: { getAccessToken: () => getToken() },
+    // Sends X-Tenant-Id so the authorization API can resolve the actor tenant.
+    ...(tenantId ? { tenant: { getTenantId: async () => tenantId } } : {}),
   });
 }
 
@@ -266,6 +268,46 @@ export async function canManageCourse(
     ]);
 
     return Boolean(course?.creatorId && course.creatorId === session?.user?.id);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * True when the current viewer may edit the course: the instructor/course
+ * owner (creator), or a viewer holding the `Program.{courseId}.Edit`
+ * permission in the 3-layer DAC (platform role → tenant grants →
+ * ProgramPermissions).
+ *
+ * Mirrors the write-side gate: the authorization API resolves the composite
+ * `Program.{courseId}.Edit` string exactly like ProgramCrudController's
+ * [RequireResourcePermission] attribute, and the creator check mirrors
+ * ProgramContentController's CanManageContent resolution.
+ */
+export async function canEditCourse(
+  courseIdentifier: string,
+): Promise<boolean> {
+  try {
+    const [session, courseId] = await Promise.all([
+      auth(),
+      resolveCourseId(courseIdentifier),
+    ]);
+
+    if (!session?.user?.id) return false;
+
+    if (session.tenantId) {
+      const accessControl = new GeneratedApi.AccessControlResourcePermissionsModule(
+        getApiClient(session.tenantId),
+      );
+      const result = await accessControl.getAuthorizationResourcesHasPermission(
+        "Program",
+        courseId,
+        { tenantId: session.tenantId, permission: "Edit" },
+      );
+      if (result.ok && result.data.hasPermission) return true;
+    }
+
+    return canManageCourse(courseIdentifier);
   } catch {
     return false;
   }

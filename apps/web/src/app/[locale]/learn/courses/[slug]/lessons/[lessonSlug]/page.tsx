@@ -3,9 +3,10 @@ import { CourseAccessGate } from '@/components/learning/course-access-gate';
 import { LearnerLessonRenderer } from '@/components/learning/learner-lesson-renderer';
 import { LessonProgressControls } from '@/components/learning/lesson-progress-controls';
 import { getCourseAccessData } from '@/lib/learner/courses';
+import { canEditCourse } from '@/lib/learning/queries/course';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
-import { ArrowLeft, ArrowRight, Lock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Lock, Pencil } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
 export default async function LessonPage({
@@ -24,7 +25,9 @@ export default async function LessonPage({
   const item = items[itemIndex];
   if (!item || item.type !== 'lesson') notFound();
 
+  const canEdit = await canEditCourse(access.course.id);
   const courseHref = `/learn/courses/${slug}`;
+  const editHref = `/console/learning/courses/${slug}/content/${item.slug ?? item.id}`;
   const previous = [...items.slice(0, itemIndex)].reverse().find((candidate) => candidate.type === 'lesson');
   const next = items.slice(itemIndex + 1).find((candidate) => candidate.type === 'lesson');
 
@@ -40,6 +43,20 @@ export default async function LessonPage({
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">Lesson</Badge>
           {item.duration ? <Badge variant="secondary">{item.duration} min</Badge> : null}
+          {canEdit ? (
+            <Button
+              asChild
+              variant="ghost"
+              size="icon-xs"
+              className="ml-auto text-muted-foreground hover:text-foreground"
+              title="Edit lesson"
+            >
+              <Link href={editHref}>
+                <Pencil className="size-3.5" />
+                <span className="sr-only">Edit lesson</span>
+              </Link>
+            </Button>
+          ) : null}
         </div>
         <h1 className="mt-4 text-3xl font-semibold sm:text-4xl">{item.title}</h1>
         {item.description ? (
