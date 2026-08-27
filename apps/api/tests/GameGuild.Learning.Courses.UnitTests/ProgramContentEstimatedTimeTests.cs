@@ -69,4 +69,74 @@ public class ProgramContentEstimatedTimeTests
 
         content.EstimatedMinutes.Should().Be(45);
     }
+
+    [Fact]
+    public void ApplyUpdates_ManualValue_PinsSource()
+    {
+        var content = new ProgramContent
+        {
+            Title = "T",
+            Type = ProgramContentType.Lesson,
+            LessonFormat = LessonContentFormat.Markdown,
+            Body = string.Join(" ", Enumerable.Repeat("word", 400)),
+        };
+
+        content.ApplyUpdates(new UpdateProgramContentDto { EstimatedMinutes = 15 });
+
+        content.EstimatedMinutes.Should().Be(15);
+        content.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Manual);
+    }
+
+    [Fact]
+    public void ApplyUpdates_AutoReset_Recomputes()
+    {
+        var content = new ProgramContent
+        {
+            Title = "T",
+            Type = ProgramContentType.Lesson,
+            LessonFormat = LessonContentFormat.Markdown,
+            Body = string.Join(" ", Enumerable.Repeat("word", 400)),
+            EstimatedMinutes = 30,
+            EstimatedMinutesSource = EstimatedMinutesSource.Manual,
+        };
+
+        content.ApplyUpdates(new UpdateProgramContentDto { EstimatedMinutesSource = EstimatedMinutesSource.Auto });
+
+        content.EstimatedMinutes.Should().Be(2);
+        content.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Auto);
+    }
+
+    [Fact]
+    public void ApplyUpdates_NeitherSent_LeavesUntouched()
+    {
+        var content = new ProgramContent
+        {
+            Title = "T",
+            Type = ProgramContentType.Lesson,
+            LessonFormat = LessonContentFormat.Markdown,
+            Body = string.Join(" ", Enumerable.Repeat("word", 400)),
+            EstimatedMinutes = 30,
+            EstimatedMinutesSource = EstimatedMinutesSource.Manual,
+        };
+
+        content.ApplyUpdates(new UpdateProgramContentDto { Title = "New Title" });
+
+        content.EstimatedMinutes.Should().Be(30);
+        content.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Manual);
+    }
+
+    [Fact]
+    public void ToDto_MapsSource()
+    {
+        var content = new ProgramContent
+        {
+            Title = "T",
+            Type = ProgramContentType.Lesson,
+            LessonFormat = LessonContentFormat.Markdown,
+            Body = string.Join(" ", Enumerable.Repeat("word", 400)),
+            EstimatedMinutesSource = EstimatedMinutesSource.Manual,
+        };
+
+        content.ToDto().EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Manual);
+    }
 }
