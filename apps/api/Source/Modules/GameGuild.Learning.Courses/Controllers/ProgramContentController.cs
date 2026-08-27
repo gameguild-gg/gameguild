@@ -30,7 +30,7 @@ public class ProgramContentController(
   {
     var access = await ResolveContentAccessAsync(programId).ConfigureAwait(false);
 
-    if (!access.CanViewFullContent && !access.CanViewPublicOutline)
+    if (!access.HasAnyAccess)
     {
       return NotFound();
     }
@@ -39,20 +39,12 @@ public class ProgramContentController(
     {
       var topLevelContent = await contentService.GetTopLevelContentAsync(programId).ConfigureAwait(false);
       var topLevelDtos = topLevelContent.ToDtos().ToList();
-      if (!access.CanViewFullContent)
-      {
-        topLevelDtos = SanitizePublicContent(topLevelDtos);
-      }
-      return Ok(topLevelDtos);
+      return Ok(ResolveProjectedContent(topLevelDtos, access));
     }
 
     var content = await contentService.GetContentByProgramAsync(programId).ConfigureAwait(false);
     var contentDtos = content.ToDtos().ToList();
-    if (!access.CanViewFullContent)
-    {
-      contentDtos = SanitizePublicContent(contentDtos);
-    }
-    return Ok(contentDtos);
+    return Ok(ResolveProjectedContent(contentDtos, access));
   }
 
   /// <summary> Get specific program content by ID (resource-level Read permission required on parent Program) </summary>
@@ -61,7 +53,7 @@ public class ProgramContentController(
   public async Task<ActionResult<ProgramContentDto>> GetContent(Guid programId, Guid id)
   {
     var access = await ResolveContentAccessAsync(programId).ConfigureAwait(false);
-    if (!access.CanViewFullContent)
+    if (!access.CanManageContent && !access.CanViewLearnerContent)
     {
       return NotFound();
     }
@@ -69,6 +61,7 @@ public class ProgramContentController(
     var content = await contentService.GetContentByIdAsync(id).ConfigureAwait(false);
 
     if (content == null || content.ProgramId != programId) return NotFound();
+    if (!access.CanManageContent && content.Visibility == Visibility.Private) return NotFound();
 
     var contentDto = content.ToDto();
 
@@ -146,17 +139,19 @@ public class ProgramContentController(
   [HttpGet("{parentId}/children")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetChildContent(Guid programId, Guid parentId)
   {
-    if (!await HasFullCourseAccessAsync(programId).ConfigureAwait(false)) return NotFound();
+    var access = await ResolveContentAccessAsync(programId).ConfigureAwait(false);
+    if (!access.CanManageContent && !access.CanViewLearnerContent) return NotFound();
 
     // Verify parent belongs to the program
     var parent = await contentService.GetContentByIdAsync(parentId).ConfigureAwait(false);
 
     if (parent == null || parent.ProgramId != programId) return NotFound("Parent content not found or does not belong to this program");
+    if (!access.CanManageContent && parent.Visibility == Visibility.Private) return NotFound();
 
     var children = await contentService.GetContentByParentAsync(parentId).ConfigureAwait(false);
     var childrenDtos = children.ToDtos();
 
-    return Ok(childrenDtos);
+    return Ok(access.CanManageContent ? childrenDtos : ExcludePrivateContent(childrenDtos));
   }
 
   /// <summary> Reorder content within a program (resource-level Edit permission required on parent Program) </summary>
@@ -195,31 +190,37 @@ public class ProgramContentController(
   [HttpGet("required")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetRequiredContent(Guid programId)
   {
-    if (!await HasFullCourseAccessAsync(programId).ConfigureAwait(false)) return NotFound();
+    var access = await ResolveContentAccessAsync(programId).ConfigureAwait(false);
+    if (!access.CanManageContent && !access.CanViewLearnerContent) return NotFound();
 
     var requiredContent = await contentService.GetRequiredContentAsync(programId).ConfigureAwait(false);
     var contentDtos = requiredContent.ToDtos();
 
-    return Ok(contentDtos);
+    return Ok(access.CanManageContent ? contentDtos : ExcludePrivateContent(contentDtos));
   }
 
   /// <summary> Get content by type (resource-level Read permission required on parent Program) </summary>
   [HttpGet("by-type/{type}")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByType(Guid programId, ProgramContentType type)
   {
-    if (!await HasFullCourseAccessAsync(programId).ConfigureAwait(false)) return NotFound();
+    var access = await ResolveContentAccessAsync(programId).ConfigureAwait(false);
+    if (!access.CanManageContent && !access.CanViewLearnerContent) return NotFound();
 
     var content = await contentService.GetContentByTypeAsync(programId, type).ConfigureAwait(false);
     var contentDtos = content.ToDtos();
 
-    return Ok(contentDtos);
+    return Ok(access.CanManageContent ? contentDtos : ExcludePrivateContent(contentDtos));
   }
 
   /// <summary> Get content by visibility (resource-level Read permission required on parent Program) </summary>
   [HttpGet("by-visibility/{visibility}")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByVisibility(Guid programId, Visibility visibility)
   {
-    if (!await HasFullCourseAccessAsync(programId).ConfigureAwait(false)) return NotFound();
+    var access = await ResolveContentAccessAsync(programId).ConfigureAwait(false);
+    if (!access.CanManageContent && !access.CanViewLearnerContent) return NotFound();
+
+    // Learners cannot enumerate Private content even by explicit filter.
+    if (!access.CanManageContent && visibility == Visibility.Private) return Ok(Array.Empty<ProgramContentDto>());
 
     var content = await contentService.GetContentByVisibilityAsync(programId, visibility).ConfigureAwait(false);
     var contentDtos = content.ToDtos();
@@ -231,20 +232,22 @@ public class ProgramContentController(
   [HttpPost("search")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> SearchContent(Guid programId, [FromBody] SearchContentDto searchDto)
   {
-    if (!await HasFullCourseAccessAsync(programId).ConfigureAwait(false)) return NotFound();
+    var access = await ResolveContentAccessAsync(programId).ConfigureAwait(false);
+    if (!access.CanManageContent && !access.CanViewLearnerContent) return NotFound();
     if (searchDto.ProgramId != programId) return BadRequest("Program ID in URL must match Program ID in request body");
 
     var content = await contentService.SearchContentAsync(programId, searchDto.SearchTerm).ConfigureAwait(false);
     var contentDtos = content.ToDtos();
 
-    return Ok(contentDtos);
+    return Ok(access.CanManageContent ? contentDtos : ExcludePrivateContent(contentDtos));
   }
 
   /// <summary> Get content statistics for a program (resource-level Read permission required on parent Program) </summary>
   [HttpGet("stats")]
   public async Task<ActionResult<ContentStatsDto>> GetContentStats(Guid programId)
   {
-    if (!await HasFullCourseAccessAsync(programId).ConfigureAwait(false)) return NotFound();
+    var access = await ResolveContentAccessAsync(programId).ConfigureAwait(false);
+    if (!access.CanManageContent) return NotFound();
 
     var totalContent = await contentService.GetContentCountAsync(programId).ConfigureAwait(false);
     var requiredContent = await contentService.GetRequiredContentCountAsync(programId).ConfigureAwait(false);
@@ -319,7 +322,7 @@ public class ProgramContentController(
 
     if (actor.IsSystemAdmin)
     {
-      return new ContentAccessResolution(true, true);
+      return new ContentAccessResolution(true, true, true);
     }
 
     var currentUserId = GetCurrentUserId();
@@ -328,25 +331,19 @@ public class ProgramContentController(
       if (program.CreatorId == currentUserId.Value
           || await HasProgramManagementAccessAsync(programId, currentUserId.Value).ConfigureAwait(false))
       {
-        return new ContentAccessResolution(true, true);
+        return new ContentAccessResolution(true, true, true);
       }
 
       if (await HasStudentAccessAsync(programId, currentUserId.Value).ConfigureAwait(false))
       {
-        return new ContentAccessResolution(true, true);
+        return new ContentAccessResolution(false, true, true);
       }
     }
 
     var canViewPublicOutline = program.Status == ContentStatus.Published
         && program.Visibility == ContentVisibility.Public;
 
-    return new ContentAccessResolution(false, canViewPublicOutline);
-  }
-
-  private async Task<bool> HasFullCourseAccessAsync(Guid programId)
-  {
-    var access = await ResolveContentAccessAsync(programId).ConfigureAwait(false);
-    return access.CanViewFullContent;
+    return new ContentAccessResolution(false, false, canViewPublicOutline);
   }
 
   private async Task<bool> HasStudentAccessAsync(Guid programId, Guid userId)
@@ -385,6 +382,26 @@ public class ProgramContentController(
       permissionName).ConfigureAwait(false);
   }
 
+  private static List<ProgramContentDto> ResolveProjectedContent(List<ProgramContentDto> content, ContentAccessResolution access)
+  {
+    if (access.CanManageContent) return content;
+    if (access.CanViewLearnerContent) return ExcludePrivateContent(content);
+    return SanitizePublicContent(content);
+  }
+
+  private static List<ProgramContentDto> ExcludePrivateContent(IEnumerable<ProgramContentDto> content)
+  {
+    return content
+      .Where(item => item.Visibility != Visibility.Private)
+      .Select(item =>
+      {
+        item.Children = ExcludePrivateContent(item.Children);
+        item.ChildrenCount = item.Children.Count;
+        return item;
+      })
+      .ToList();
+  }
+
   private static List<ProgramContentDto> SanitizePublicContent(IEnumerable<ProgramContentDto> content)
   {
     return content
@@ -399,9 +416,13 @@ public class ProgramContentController(
       .ToList();
   }
 
-  private sealed record ContentAccessResolution(bool CanViewFullContent, bool CanViewPublicOutline)
+  private sealed record ContentAccessResolution(
+    bool CanManageContent,
+    bool CanViewLearnerContent,
+    bool CanViewPublicOutline)
   {
-    public static ContentAccessResolution None { get; } = new(false, false);
+    public static ContentAccessResolution None { get; } = new(false, false, false);
+    public bool HasAnyAccess => CanManageContent || CanViewLearnerContent || CanViewPublicOutline;
   }
 
   private Guid? GetCurrentUserId()
