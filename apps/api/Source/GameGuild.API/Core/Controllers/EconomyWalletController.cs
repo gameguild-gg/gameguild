@@ -4,6 +4,7 @@ using GameGuild.CQRS;
 using GameGuild.Economy.Commands;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
+using GameGuild.Economy.Integrations;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Payouts;
 using GameGuild.Economy.Payouts.Commands;
@@ -27,6 +28,8 @@ public sealed record EconomyTransferProtectedOperationFailureResponse(
     EconomyProtectedOperationState State,
     Guid? ReviewId,
     IReadOnlyList<string> Diagnostics);
+
+public sealed record EconomyTopUpFailureResponse(string State, string Message);
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/economy")]
@@ -123,6 +126,88 @@ public sealed class EconomyWalletController(
         {
             return Conflict("The Economy transfer could not be committed.");
         }
+    }
+
+    [HttpPost("top-ups")]
+    [EndpointSummary("Create my HardCoin top-up payment intent")]
+    [EndpointDescription("The server derives tenant, wallet, jurisdiction, signed quote, amount, provider binding, and idempotency authority.")]
+    [ProducesResponseType(typeof(SelfServiceHardCoinTopUpReceipt), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(EconomyTopUpFailureResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(EconomyTopUpFailureResponse), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> CreateMyTopUp(
+        [FromBody] CreateMyHardCoinTopUpRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!HasSelfServiceContext())
+            return Forbid();
+
+        ArgumentNullException.ThrowIfNull(request);
+        try
+        {
+            var receipt = await sender.Send(
+                new CreateMyHardCoinTopUpCommand(request), cancellationToken).ConfigureAwait(false);
+            return CreatedAtAction(nameof(GetMyTopUp), new { topUpId = receipt.TopUpId }, receipt);
+        }
+        catch (EconomyTopUpProviderUnavailableException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new EconomyTopUpFailureResponse(
+                "ProviderUnavailable", "The top-up provider is not available."));
+        }
+        catch (EconomyTopUpProviderAmbiguousException)
+        {
+            return Conflict(new EconomyTopUpFailureResponse(
+                "Ambiguous", "The top-up provider outcome requires reconciliation."));
+        }
+        catch (EconomyTopUpReplayConflictException)
+        {
+            return Conflict(new EconomyTopUpFailureResponse(
+                "Conflict", "The idempotency key is already bound to another top-up."));
+        }
+        catch (EconomySelfServiceCommandRejectedException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new EconomyTopUpFailureResponse(
+                "Disabled", "HardCoin top-up is disabled by the active Economy controls."));
+        }
+        catch (EconomyWalletUnavailableException)
+        {
+            return Conflict(new EconomyTopUpFailureResponse(
+                "WalletUnavailable", "An active Economy wallet is required."));
+        }
+    }
+
+    [HttpGet("top-ups")]
+    [EndpointSummary("List my HardCoin top-ups")]
+    [ProducesResponseType(typeof(IReadOnlyList<EconomyTopUpStatusDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListMyTopUps(
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        if (!HasSelfServiceContext())
+            return Forbid();
+        if (take is < 1 or > 100)
+            return BadRequest("Take must be between 1 and 100.");
+
+        var topUps = await sender.Send(new ListMyHardCoinTopUpsQuery(take), cancellationToken)
+            .ConfigureAwait(false);
+        return Ok(topUps);
+    }
+
+    [HttpGet("top-ups/{topUpId:guid}")]
+    [EndpointSummary("Get one of my HardCoin top-ups")]
+    [ProducesResponseType(typeof(EconomyTopUpStatusDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMyTopUp(
+        Guid topUpId,
+        CancellationToken cancellationToken)
+    {
+        if (!HasSelfServiceContext())
+            return Forbid();
+        if (topUpId == Guid.Empty)
+            return BadRequest("Top-up ID is required.");
+
+        var topUp = await sender.Send(new GetMyHardCoinTopUpQuery(topUpId), cancellationToken)
+            .ConfigureAwait(false);
+        return topUp is null ? NotFound() : Ok(topUp);
     }
 
     [HttpGet("capabilities")]

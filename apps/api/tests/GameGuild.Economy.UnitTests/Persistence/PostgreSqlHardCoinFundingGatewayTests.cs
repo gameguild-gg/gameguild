@@ -3,6 +3,8 @@ using GameGuild.API.Database;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Persistence;
+using GameGuild.Economy.Risk;
 using GameGuild.Economy.UnitTests.Funding;
 using GameGuild.TestSupport.Economy;
 using Microsoft.EntityFrameworkCore;
@@ -95,6 +97,23 @@ public sealed class PostgreSqlHardCoinFundingGatewayTests
         var replay = gateway.Confirm(new PersistedHardCoinFundingConfirmation(confirmation, authority));
         replay.IsDuplicate.Should().BeTrue();
         replay.JournalSequence.Should().Be(receipt.JournalSequence);
+        var durableReceipt = new CapabilityAuthorizationReceipt(
+            Guid.NewGuid(), tenant, actor, "top-up", "USA",
+            EconomyValueMovementCapability.ConfirmHardCoinFunding,
+            authority.RiskOperationFingerprint, 1, 1, riskDecision, 0,
+            "provider", "destination", [], ["evidence"],
+            Now, Now.AddMinutes(5), "receipt", "key", "signature");
+        var durableReplay = gateway.ConfirmDurable(new PersistedDurableHardCoinFundingConfirmation(
+            posting,
+            idempotencyKey,
+            source,
+            lot,
+            "provider-confirmation",
+            Now.AddMinutes(1),
+            durableReceipt,
+            authority));
+        durableReplay.IsDuplicate.Should().BeTrue();
+        durableReplay.JournalSequence.Should().Be(receipt.JournalSequence);
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_credit_lots WHERE \"Id\" = '{lot.Value}';"))
             .Should().Be(1);
         (await ScalarAsync<long>(connection, $"SELECT \"PurchasedHard\" FROM public.economy_wallet_balance_projections WHERE \"WalletId\" = '{wallet}';"))
@@ -118,6 +137,98 @@ public sealed class PostgreSqlHardCoinFundingGatewayTests
               AND "State" = 2;
             """))
             .Should().Be(1);
+    }
+
+    [Fact]
+    public void ConfirmDurable_RejectsNullOrIncompleteAuthorityBeforeReadingPersistence()
+    {
+        using var context = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+                .Options);
+        var gateway = new PostgreSqlHardCoinFundingGateway(context);
+        var request = DurableRequest();
+
+        FluentActions.Invoking(() => gateway.ConfirmDurable(null!))
+            .Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => gateway.ConfirmDurable(request with { Receipt = null! }))
+            .Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => gateway.ConfirmDurable(request with { Authority = null! }))
+            .Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => gateway.ConfirmDurable(request with { Evidence = "" }))
+            .Should().Throw<ArgumentException>();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    [InlineData(6)]
+    public void ConfirmDurable_RejectsEveryReceiptAuthorityMismatch(int mismatch)
+    {
+        using var context = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+                .Options);
+        var gateway = new PostgreSqlHardCoinFundingGateway(context);
+        var request = DurableRequest();
+        var changedReceipt = mismatch switch
+        {
+            0 => request.Receipt with { Capability = EconomyValueMovementCapability.Transfer },
+            1 => request.Receipt with { ActorId = Guid.NewGuid() },
+            2 => request.Receipt with { TenantId = Guid.NewGuid() },
+            3 => request.Receipt with { RiskDecisionId = Guid.NewGuid() },
+            4 => request.Receipt with { OperationFingerprint = "other" },
+            5 => request.Receipt with { IssuedAt = request.ConfirmedAt.AddTicks(1) },
+            _ => request.Receipt with { ExpiresAt = request.ConfirmedAt }
+        };
+
+        FluentActions.Invoking(() => gateway.ConfirmDurable(request with { Receipt = changedReceipt }))
+            .Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*does not authorize*");
+    }
+
+    [Fact]
+    public void ConfirmDurable_FailsClosedWhenObservedSourceOrFundingClaimIsMissing()
+    {
+        var request = DurableRequest();
+        using var missingSourceContext = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+                .Options);
+        FluentActions.Invoking(() =>
+                new PostgreSqlHardCoinFundingGateway(missingSourceContext).ConfirmDurable(request))
+            .Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*source was not found*");
+
+        using var missingClaimContext = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
+                .Options);
+        missingClaimContext.Set<EconomySourceStampRow>().Add(new EconomySourceStampRow
+        {
+            Id = request.SourceId.Value,
+            SourceKind = "provider",
+            InternalSourceId = "top-up",
+            SourceLegId = "capture",
+            EvidenceHash = "evidence",
+            Provenance = ProvenanceKind.PurchasedHard,
+            State = SourceConfirmationState.Observed,
+            ActorId = request.Authority.ActorId,
+            TenantId = request.Authority.TenantId,
+            PolicyVersion = 1,
+            AuthoritativeUnits = 100,
+            ObservedAt = Now
+        });
+        missingClaimContext.SaveChanges();
+
+        FluentActions.Invoking(() =>
+                new PostgreSqlHardCoinFundingGateway(missingClaimContext).ConfirmDurable(request))
+            .Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*funding claim was not found*");
     }
 
     private static Task SeedAsync(
@@ -159,6 +270,32 @@ public sealed class PostgreSqlHardCoinFundingGatewayTests
     {
         await using var command = new NpgsqlCommand(sql, connection);
         return (T)(await command.ExecuteScalarAsync())!;
+    }
+
+    private static PersistedDurableHardCoinFundingConfirmation DurableRequest()
+    {
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var riskDecisionId = Guid.NewGuid();
+        var confirmedAt = Now.AddMinutes(1);
+        const string fingerprint = "durable-funding";
+        var receipt = new CapabilityAuthorizationReceipt(
+            Guid.NewGuid(), tenantId, actorId, "top-up", "USA",
+            EconomyValueMovementCapability.ConfirmHardCoinFunding,
+            fingerprint, 1, 1, riskDecisionId, 0,
+            "provider", "destination", [], ["evidence"],
+            Now, confirmedAt.AddMinutes(1), "receipt", "key", "signature");
+        var authority = new RegisteredPostingAuthority(
+            Guid.NewGuid(), actorId, tenantId, riskDecisionId, fingerprint, 1);
+        return new PersistedDurableHardCoinFundingConfirmation(
+            PostingId.New(),
+            new IdempotencyKey("durable-funding"),
+            SourceStampId.New(),
+            CreditLotId.New(),
+            "evidence",
+            confirmedAt,
+            receipt,
+            authority);
     }
 
 }

@@ -3,6 +3,7 @@ using GameGuild.Commerce.Payments;
 using GameGuild.Economy.Integrations;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
+using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Reserves;
 using GameGuild.Economy.Risk;
 using Microsoft.Extensions.Configuration;
@@ -55,6 +56,45 @@ public sealed class StripeEconomyFundingAdapterTests
         first.ReserveVersion.Should().Be(new ReserveVersion(1));
         first.PolicyVersion.Should().Be(new PolicyVersion(1));
         first.Authorization.Should().BeSameAs(authorization);
+    }
+
+    [Fact]
+    public void DurableConfirmation_IsDeterministicAndBoundToTheCapabilityReceipt()
+    {
+        var payment = StripePayment(12.34m);
+        var fact = PaymentFact(payment);
+        var wallet = new WalletId(Guid.NewGuid());
+        var observation = _adapter.CreateObservation(fact, wallet, "observed", Now);
+        var claim = Claim(observation);
+        var tenantId = fact.TenantId;
+        var actorId = Guid.NewGuid();
+        var riskDecisionId = Guid.NewGuid();
+        const string fingerprint = "durable-stripe-confirmation";
+        var receipt = new CapabilityAuthorizationReceipt(
+            Guid.NewGuid(), tenantId, actorId, "top-up", "USA",
+            EconomyValueMovementCapability.ConfirmHardCoinFunding, fingerprint, 4, 3,
+            riskDecisionId, 0, "provider", "destination", [], ["evidence"],
+            Now, Now.AddMinutes(5), "receipt", "key", "signature");
+        var authorization = new EconomyProtectedOperationAuthorization(
+            tenantId, actorId, "USA", riskDecisionId, fingerprint, receipt);
+        var authority = new RegisteredPostingAuthority(
+            Guid.NewGuid(), actorId, tenantId, riskDecisionId, fingerprint, 1);
+
+        var first = _adapter.CreateDurableConfirmation(
+            fact, claim, authorization, authority, "settled", Now.AddMinutes(1));
+        var replay = _adapter.CreateDurableConfirmation(
+            fact, claim, authorization, authority, "settled", Now.AddMinutes(1));
+
+        first.Should().Be(replay);
+        first.SourceId.Should().Be(claim.SourceId);
+        first.Receipt.Should().BeSameAs(receipt);
+        first.Authority.Should().BeSameAs(authority);
+
+        var other = PaymentFact(StripePayment(12.34m, "pi_other"));
+        var otherClaim = Claim(_adapter.CreateObservation(other, wallet, "other", Now));
+        FluentActions.Invoking(() => _adapter.CreateDurableConfirmation(
+                fact, otherClaim, authorization, authority, "settled", Now.AddMinutes(1)))
+            .Should().Throw<InvalidOperationException>().WithMessage("*does not match*");
     }
 
     [Theory]
@@ -169,6 +209,18 @@ public sealed class StripeEconomyFundingAdapterTests
             "stripe", "test", "acct_platform", objectId, "payment_intent", "capture");
         return payment;
     }
+
+    private static EconomyTopUpPaymentFact PaymentFact(Payment payment) => new(
+        payment.Id,
+        payment.TenantId,
+        payment.Amount,
+        payment.Currency,
+        payment.Provider,
+        payment.ProviderEnvironment!,
+        payment.ProviderAccountId!,
+        payment.ProviderObjectId!,
+        payment.ProviderObjectType!,
+        payment.ProviderMonetaryLeg!);
 
     private static HardCoinFundingClaim Claim(ObserveHardCoinTopUpCommand observation) =>
         HardCoinFundingClaim.Observe(

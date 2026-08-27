@@ -2,6 +2,7 @@ using System.Data.Common;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Persistence;
+using GameGuild.Economy.Risk;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Economy.Funding;
@@ -16,11 +17,23 @@ public sealed record PersistedHardCoinFundingConfirmation(
     ConfirmObservedTopUpCommand Command,
     RegisteredPostingAuthority Authority);
 
+public sealed record PersistedDurableHardCoinFundingConfirmation(
+    PostingId PostingId,
+    IdempotencyKey IdempotencyKey,
+    SourceStampId SourceId,
+    CreditLotId CreditLotId,
+    string Evidence,
+    DateTimeOffset ConfirmedAt,
+    CapabilityAuthorizationReceipt Receipt,
+    RegisteredPostingAuthority Authority);
+
 public interface IHardCoinFundingGateway
 {
     HardCoinFundingClaim Observe(PersistedHardCoinFundingObservation request);
 
     RegisteredPostingReceipt Confirm(PersistedHardCoinFundingConfirmation request);
+
+    RegisteredPostingReceipt ConfirmDurable(PersistedDurableHardCoinFundingConfirmation request);
 }
 
 public sealed class PostgreSqlHardCoinFundingGateway : IHardCoinFundingGateway
@@ -114,6 +127,77 @@ public sealed class PostgreSqlHardCoinFundingGateway : IHardCoinFundingGateway
             command.ConfirmedAt);
         command.Authorization.EnsureSourceRoots([command.SourceId]);
 
+        return ConfirmCore(
+            command.PostingId,
+            command.IdempotencyKey,
+            command.SourceId,
+            command.CreditLotId,
+            command.ReserveVersion,
+            command.PolicyVersion,
+            command.Evidence,
+            command.ConfirmedAt,
+            request.Authority,
+            source,
+            funding,
+            amount);
+    }
+
+    public RegisteredPostingReceipt ConfirmDurable(PersistedDurableHardCoinFundingConfirmation request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(request.Receipt);
+        ArgumentNullException.ThrowIfNull(request.Authority);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.Evidence);
+        if (request.Receipt.Capability != EconomyValueMovementCapability.ConfirmHardCoinFunding ||
+            request.Receipt.ActorId != request.Authority.ActorId ||
+            request.Receipt.TenantId != request.Authority.TenantId ||
+            request.Receipt.RiskDecisionId != request.Authority.RiskDecisionId ||
+            !string.Equals(request.Receipt.OperationFingerprint,
+                request.Authority.RiskOperationFingerprint, StringComparison.Ordinal) ||
+            request.Receipt.IssuedAt > request.ConfirmedAt || request.Receipt.ExpiresAt <= request.ConfirmedAt)
+            throw new RegisteredPostingRejectedException(
+                "The durable funding receipt does not authorize this confirmation.");
+
+        var source = _db.Set<EconomySourceStampRow>()
+            .AsNoTracking()
+            .SingleOrDefault(row => row.Id == request.SourceId.Value)
+            ?? throw new RegisteredPostingRejectedException("The observed funding source was not found.");
+        var funding = _db.Set<EconomyFundingClaimRow>()
+            .AsNoTracking()
+            .SingleOrDefault(row => row.SourceStampId == request.SourceId.Value)
+            ?? throw new RegisteredPostingRejectedException("The observed funding claim was not found.");
+        var amount = new CoinAmount(CurrencyCode.HardCoin, funding.AuthoritativeUsdMinorUnits);
+
+        return ConfirmCore(
+            request.PostingId,
+            request.IdempotencyKey,
+            request.SourceId,
+            request.CreditLotId,
+            new ReserveVersion(request.Receipt.ReserveVersion),
+            new PolicyVersion(request.Receipt.PolicyVersion),
+            request.Evidence,
+            request.ConfirmedAt,
+            request.Authority,
+            source,
+            funding,
+            amount);
+    }
+
+    private RegisteredPostingReceipt ConfirmCore(
+        PostingId postingId,
+        IdempotencyKey idempotencyKey,
+        SourceStampId sourceId,
+        CreditLotId creditLotId,
+        ReserveVersion reserveVersion,
+        PolicyVersion policyVersion,
+        string evidence,
+        DateTimeOffset confirmedAt,
+        RegisteredPostingAuthority authority,
+        EconomySourceStampRow source,
+        EconomyFundingClaimRow funding,
+        CoinAmount amount)
+    {
+
         var providerLeg = new ProviderMonetaryLeg(
             funding.Provider,
             funding.Environment,
@@ -121,37 +205,37 @@ public sealed class PostgreSqlHardCoinFundingGateway : IHardCoinFundingGateway
             funding.ProviderObject,
             funding.ProviderMonetaryLeg);
         var confirmationEventHash = HardCoinFundingClaim.Observe(
-                command.SourceId,
+                sourceId,
                 new WalletId(funding.WalletId),
                 providerLeg,
                 "persistent-observation",
                 amount.Units,
                 funding.ObservedAt)
-            .Transition(SourceConfirmationState.Confirmed, command.Evidence, command.ConfirmedAt)
+            .Transition(SourceConfirmationState.Confirmed, evidence, confirmedAt)
             .Events[^1]
             .EvidenceHash;
         var sourceContract = new SourceStampContract(
-            command.SourceId,
+            sourceId,
             source.EvidenceHash,
             SourceConfirmationState.Confirmed,
             source.ObservedAt,
-            command.ConfirmedAt,
+            confirmedAt,
             source.ProviderReference);
         var posting = new PostingRequest(
-            command.PostingId,
+            postingId,
             new PostingTemplate(PostingTemplateKind.ConfirmedTopUpMint, PostingTemplate.CurrentVersion),
-            command.IdempotencyKey,
+            idempotencyKey,
             PostingAuthority.ProviderConfirmation,
-            command.ReserveVersion,
-            command.PolicyVersion,
+            reserveVersion,
+            policyVersion,
             sourceContract,
-            command.ConfirmedAt,
+            confirmedAt,
             [
                 new PostingLine(1, EntrySide.Debit, EconomyAccountCode.ExternalClearingHard, amount, null, null, null),
                 new PostingLine(2, EntrySide.Credit, EconomyAccountCode.PurchasedHardLiability,
-                    amount, new WalletId(funding.WalletId), command.CreditLotId, ProvenanceKind.PurchasedHard)
+                    amount, new WalletId(funding.WalletId), creditLotId, ProvenanceKind.PurchasedHard)
             ]);
-        var registered = new RegisteredPostingRequest(request.Authority, posting);
+        var registered = new RegisteredPostingRequest(authority, posting);
         var payload = RegisteredPostingPayloadFactory.Create(registered, ResolveAccountIds(posting.Lines));
 
         try
@@ -160,9 +244,9 @@ public sealed class PostgreSqlHardCoinFundingGateway : IHardCoinFundingGateway
                 .FromSqlInterpolated($"""
                     SELECT *
                     FROM economy_private.confirm_observed_hard_coin_top_up_v1(
-                        {request.Authority.CapabilityId},
-                        {request.Authority.ActorId},
-                        {request.Authority.TenantId},
+                        {authority.CapabilityId},
+                        {authority.ActorId},
+                        {authority.TenantId},
                         {posting.Id.Value},
                         {posting.IdempotencyKey.Value},
                         {(int)posting.Template.Kind},
@@ -170,15 +254,15 @@ public sealed class PostgreSqlHardCoinFundingGateway : IHardCoinFundingGateway
                         {(int)posting.Authority},
                         {posting.PolicyVersion.Value},
                         {posting.ReserveVersion.Value},
-                        {request.Authority.RiskDecisionId},
-                        {request.Authority.RiskOperationFingerprint},
-                        {request.Authority.ExpectedCounterVersion},
+                        {authority.RiskDecisionId},
+                        {authority.RiskOperationFingerprint},
+                        {authority.ExpectedCounterVersion},
                         {source.Id},
                         {source.EvidenceHash},
                         {posting.RequestedAt},
                         CAST({payload.Lines} AS jsonb),
                         {funding.Version},
-                        {command.CreditLotId.Value},
+                        {creditLotId.Value},
                         {confirmationEventHash},
                         {registered.DispatchSnapshotHash})
                     """)

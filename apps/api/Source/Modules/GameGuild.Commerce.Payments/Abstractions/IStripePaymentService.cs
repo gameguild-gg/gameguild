@@ -5,6 +5,10 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 public interface IStripePaymentService
 {
+    Task<GatewayPaymentIntentSetupResult> CreatePaymentIntentAsync(
+        GatewayPaymentIntentSetupRequest request,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     ///     Processes a payment through Stripe.
     /// </summary>
@@ -35,3 +39,19 @@ public interface IStripePaymentService
         string signature,
         string secret);
 }
+
+public sealed record GatewayPaymentIntentSetupRequest(
+    string IdempotencyKey,
+    decimal Amount,
+    string Currency,
+    string Description,
+    IReadOnlyDictionary<string, string> Metadata);
+
+public sealed record GatewayPaymentIntentSetupResult(
+    string? TransactionId,
+    PaymentStatus Status,
+    string? ClientSecret,
+    GatewayProviderMapping? ProviderMapping,
+    bool OutcomeUnknown = false,
+    string? ErrorCode = null,
+    string? ErrorMessage = null);

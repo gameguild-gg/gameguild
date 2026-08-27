@@ -20,7 +20,7 @@ public sealed class EconomyProtectedOperationOrchestratorTests
             DecisionId, RiskOutcome.Allow, EconomyProtectedOperationState.Ready, null, []));
         var capabilities = new CapturingCapabilityService();
         var transaction = new CapturingTransaction();
-        var orchestrator = new EconomyProtectedOperationOrchestrator(
+        var orchestrator = Orchestrator(
             accessor, new FixedJurisdictionResolver(), issuer, capabilities, transaction);
         var intent = Intent();
 
@@ -51,7 +51,7 @@ public sealed class EconomyProtectedOperationOrchestratorTests
         var issuer = new CapturingIssuer(new EconomyProtectedRiskDecision(
             DecisionId, RiskOutcome.Allow, EconomyProtectedOperationState.Ready, null, []));
         var capabilities = new CapturingCapabilityService();
-        var orchestrator = new EconomyProtectedOperationOrchestrator(
+        var orchestrator = Orchestrator(
             AuthenticatedActor(), resolver, issuer, capabilities, new CapturingTransaction());
         var intent = Intent() with { ProtectedSubjectId = subjectId };
 
@@ -71,7 +71,7 @@ public sealed class EconomyProtectedOperationOrchestratorTests
     {
         var reviewId = Guid.NewGuid();
         var transaction = new CapturingTransaction();
-        var orchestrator = new EconomyProtectedOperationOrchestrator(
+        var orchestrator = Orchestrator(
             AuthenticatedActor(),
             new FixedJurisdictionResolver(),
             new CapturingIssuer(new EconomyProtectedRiskDecision(
@@ -101,7 +101,7 @@ public sealed class EconomyProtectedOperationOrchestratorTests
     public async Task ExecuteAsync_RejectsAnAnonymousActorBeforeOpeningATransaction()
     {
         var transaction = new CapturingTransaction();
-        var orchestrator = new EconomyProtectedOperationOrchestrator(
+        var orchestrator = Orchestrator(
             new ActorContextAccessor(),
             new FixedJurisdictionResolver(),
             new CapturingIssuer(null!),
@@ -129,6 +129,19 @@ public sealed class EconomyProtectedOperationOrchestratorTests
         first.Should().Be(replay).And.HaveLength(64);
         changed.Should().NotBe(first);
     }
+
+    private static EconomyProtectedOperationOrchestrator Orchestrator(
+        IActorContextAccessor accessor,
+        IEconomyJurisdictionResolver resolver,
+        IEconomyProtectedOperationRiskDecisionIssuer issuer,
+        IEconomyCapabilityAuthorizationService capabilities,
+        IEconomyProtectedOperationTransaction transaction) => new(
+        accessor,
+        new EconomyTrustedProtectedOperationAuthorizer(
+            resolver,
+            issuer,
+            capabilities,
+            transaction));
 
     [Fact]
     public void ValidationRejectsEveryUnboundProtectedOperationShape()

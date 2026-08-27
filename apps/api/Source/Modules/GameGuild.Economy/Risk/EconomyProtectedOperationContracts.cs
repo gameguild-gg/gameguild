@@ -77,6 +77,16 @@ public interface IEconomyProtectedOperationOrchestrator
         CancellationToken cancellationToken);
 }
 
+public interface IEconomyTrustedProtectedOperationAuthorizer
+{
+    Task<TResult> ExecuteAsync<TResult>(
+        Guid tenantId,
+        Guid actorId,
+        EconomyProtectedOperationIntent intent,
+        Func<EconomyProtectedOperationAuthorization, CancellationToken, Task<TResult>> operation,
+        CancellationToken cancellationToken);
+}
+
 public sealed class EconomyProtectedOperationException : InvalidOperationException
 {
     public EconomyProtectedOperationException(

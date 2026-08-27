@@ -109,6 +109,38 @@ internal sealed class EconomyFundingClaimRow
     public long Version { get; set; }
 }
 
+internal sealed class EconomyTopUpIntentRow
+{
+    public Guid Id { get; set; }
+    public Guid PaymentId { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid ActorId { get; set; }
+    public Guid WalletId { get; set; }
+    public long HardCoinUnits { get; set; }
+    public long UsdMinorUnits { get; set; }
+    public string JurisdictionCode { get; set; } = string.Empty;
+    public long PolicyVersion { get; set; }
+    public string PolicyHash { get; set; } = string.Empty;
+    public string Provider { get; set; } = string.Empty;
+    public string IdempotencyKey { get; set; } = string.Empty;
+    public string RequestHash { get; set; } = string.Empty;
+    public string? ProviderEnvironment { get; set; }
+    public string? ProviderAccountId { get; set; }
+    public string? ProviderObjectId { get; set; }
+    public string? ProviderObjectType { get; set; }
+    public string? ProviderMonetaryLeg { get; set; }
+    public EconomyTopUpProviderStatus Status { get; set; }
+    public DateTimeOffset RequestedAt { get; set; }
+    public DateTimeOffset? ProviderBoundAt { get; set; }
+    public string? LastProviderEventId { get; set; }
+    public DateTimeOffset? LastProviderEventAt { get; set; }
+    public string? LastProviderEvidenceHash { get; set; }
+    public Guid? PostingGroupId { get; set; }
+    public string? FailureCode { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public long Version { get; set; }
+}
+
 internal sealed class EconomyProviderDisputeRow
 {
     public string ProviderDisputeReference { get; set; } = string.Empty;

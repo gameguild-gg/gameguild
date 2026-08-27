@@ -16,6 +16,7 @@
     <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
     <ProjectReference Include="..\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj" />
+    <ProjectReference Include="..\GameGuild.Commerce.Billing\GameGuild.Commerce.Billing.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="GameGuild.Economy.UnitTests" />

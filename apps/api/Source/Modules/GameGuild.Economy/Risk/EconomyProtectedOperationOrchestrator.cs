@@ -8,86 +8,24 @@ namespace GameGuild.Economy.Risk;
 
 public sealed class EconomyProtectedOperationOrchestrator(
     IActorContextAccessor actorContextAccessor,
-    IEconomyJurisdictionResolver jurisdictionResolver,
-    IEconomyProtectedOperationRiskDecisionIssuer riskDecisionIssuer,
-    IEconomyCapabilityAuthorizationService capabilityAuthorization,
-    IEconomyProtectedOperationTransaction transaction) : IEconomyProtectedOperationOrchestrator
+    IEconomyTrustedProtectedOperationAuthorizer trustedAuthorizer) : IEconomyProtectedOperationOrchestrator
 {
     public async Task<TResult> ExecuteAsync<TResult>(
         EconomyProtectedOperationIntent intent,
         Func<EconomyProtectedOperationAuthorization, CancellationToken, Task<TResult>> operation,
         CancellationToken cancellationToken)
     {
-        Validate(intent);
-        ArgumentNullException.ThrowIfNull(operation);
-        cancellationToken.ThrowIfCancellationRequested();
         var actor = actorContextAccessor.ActorContext;
         if (!actor.IsAuthenticated || actor.TenantId is not { } tenantId ||
             actor.SubjectIdAsGuid is not { } actorId)
             throw new UnauthorizedAccessException(
                 "A protected Economy operation requires an authenticated tenant actor.");
-        var subjectId = intent.ProtectedSubjectId ?? actorId;
-
-        var jurisdiction = await jurisdictionResolver.ResolveAsync(
+        return await trustedAuthorizer.ExecuteAsync(
             tenantId,
-            subjectId,
-            intent.ProviderJurisdictionCode,
-            intent.DestinationJurisdictionCode,
-            intent.RequestedAt,
+            actorId,
+            intent,
+            operation,
             cancellationToken).ConfigureAwait(false);
-        var fingerprint = Fingerprint(tenantId, actorId, intent);
-        var subjectReference = EconomySubjectReference.ForUser(tenantId, subjectId);
-        var execution = await transaction.ExecuteAsync(async token =>
-        {
-            var decision = await riskDecisionIssuer.IssueAsync(
-                new EconomyProtectedRiskDecisionRequest(
-                    tenantId,
-                    actorId,
-                    subjectReference,
-                    jurisdiction.JurisdictionCode,
-                    jurisdiction.EvidenceHash,
-                    fingerprint,
-                    intent),
-                token).ConfigureAwait(false);
-            if (decision.Outcome != RiskOutcome.Allow ||
-                decision.State != EconomyProtectedOperationState.Ready)
-                return ProtectedExecution<TResult>.Rejected(decision);
-            if (decision.Id == Guid.Empty)
-                throw new InvalidOperationException(
-                    "A ready protected operation must have a durable risk decision.");
-
-            var receipt = await capabilityAuthorization.AuthorizeAndConsumeAsync(
-                new EconomyCapabilityEvaluationContext(
-                    tenantId,
-                    actorId,
-                    subjectReference,
-                    jurisdiction.JurisdictionCode,
-                    intent.Capability,
-                    decision.Id,
-                    fingerprint,
-                    intent.ProviderReferenceHash.Trim(),
-                    intent.DestinationHash.Trim(),
-                    intent.SourceRoots.Select(HashRoot).ToArray(),
-                    intent.RequestedAt),
-                token).ConfigureAwait(false);
-            var authorization = new EconomyProtectedOperationAuthorization(
-                tenantId,
-                actorId,
-                jurisdiction.JurisdictionCode,
-                decision.Id,
-                fingerprint,
-                receipt);
-            return ProtectedExecution<TResult>.Succeeded(
-                await operation(authorization, token).ConfigureAwait(false),
-                decision);
-        }, cancellationToken).ConfigureAwait(false);
-
-        if (!execution.Success)
-            throw new EconomyProtectedOperationException(
-                execution.Decision.State,
-                execution.Decision.ReviewId,
-                execution.Decision.Diagnostics);
-        return execution.Result;
     }
 
     internal static string Fingerprint(
@@ -124,7 +62,7 @@ public sealed class EconomyProtectedOperationOrchestrator(
         return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
     }
 
-    private static string HashRoot(SourceStampId root) => Convert.ToHexStringLower(
+    internal static string HashRoot(SourceStampId root) => Convert.ToHexStringLower(
         SHA256.HashData(Encoding.UTF8.GetBytes(root.Value.ToString("N"))));
 
     internal static void Validate(EconomyProtectedOperationIntent intent)
@@ -145,16 +83,4 @@ public sealed class EconomyProtectedOperationOrchestrator(
         ArgumentException.ThrowIfNullOrWhiteSpace(intent.DestinationHash);
     }
 
-    private sealed record ProtectedExecution<TResult>(
-        bool Success,
-        TResult Result,
-        EconomyProtectedRiskDecision Decision)
-    {
-        public static ProtectedExecution<TResult> Succeeded(
-            TResult result,
-            EconomyProtectedRiskDecision decision) => new(true, result, decision);
-
-        public static ProtectedExecution<TResult> Rejected(
-            EconomyProtectedRiskDecision decision) => new(false, default!, decision);
-    }
 }
