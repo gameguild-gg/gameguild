@@ -261,7 +261,7 @@ export interface UpdateContentInput {
   jsonBody?: Record<string, unknown> | null;
   sortOrder?: number;
   isRequired?: boolean;
-  estimatedMinutes?: number;
+  estimatedMinutes?: number | null;
   estimatedMinutesSource?: "Auto" | "Manual";
   visibility?: string;
   lessonFormat?: string;

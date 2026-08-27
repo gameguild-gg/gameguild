@@ -279,11 +279,7 @@ export function ContentItemEditor({
         ...(isQuiz ? { jsonBody: jsonBodyToSave } : {}),
         visibility,
         isRequired,
-        // ponytail: null clears the manual pin server-side (Auto recomputes);
-        // UpdateContentInput lags the nullable wire type, hence the cast.
-        estimatedMinutes: (estimatedMinutes
-          ? Number(estimatedMinutes)
-          : null) as number | undefined,
+        estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
         estimatedMinutesSource: estimatedMinutes ? "Manual" : "Auto",
       });
 
