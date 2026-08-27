@@ -1,10 +1,15 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import test from 'node:test';
 
 import {
   buildDbmlHeader,
+  checkVerdict,
   collectTables,
+  compareDbml,
   envToDsn,
   normalizeName,
   parseArgs,
@@ -218,4 +223,102 @@ test('validateDbmlOutput rejects an __EFMigrationsHistory leak case-insensitivel
 
   assert.equal(result.ok, false);
   assert.match(result.reason, /__EFMigrationsHistory leaked/i);
+});
+
+test('compareDbml returns exactly { ok: true } for identical strings', () => {
+  assert.deepEqual(compareDbml('// header\nTable "users" {\n  id text\n}\n', '// header\nTable "users" {\n  id text\n}\n'), {
+    ok: true,
+  });
+});
+
+test('compareDbml reports the first divergence with 1-based line number and both line contents', () => {
+  const result = compareDbml('// header\nTable "users" {\n  id text\n}\n', '// header\nTable "orders" {\n  id text\n}\n');
+
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.firstDivergence, {
+    line: 2,
+    actual: 'Table "users" {',
+    expected: 'Table "orders" {',
+  });
+});
+
+test('compareDbml with multi-line divergence reports only the FIRST divergent line', () => {
+  const result = compareDbml('l1\nA1\nA2\nA3\nsame\n', 'l1\nB1\nB2\nsame\nsame\n');
+
+  assert.deepEqual(result.firstDivergence, { line: 2, actual: 'A1', expected: 'B1' });
+});
+
+test('compareDbml marks a line absent past one side end as null', () => {
+  const result = compareDbml('a\nb', 'a\nb\nc');
+
+  assert.deepEqual(result.firstDivergence, { line: 3, actual: null, expected: 'c' });
+});
+
+test('compareDbml detects an appended junk line across a utf8 file round-trip', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'gg-dbml-'));
+  try {
+    const regeneratedPath = path.join(dir, 'regenerated.dbml');
+    const committedPath = path.join(dir, 'committed.dbml');
+    const content = '// header\nTable "users" {\n  id text\n}\n';
+    writeFileSync(regeneratedPath, content, 'utf8');
+    writeFileSync(committedPath, `${content}// junk\n`, 'utf8');
+
+    const result = compareDbml(readFileSync(regeneratedPath, 'utf8'), readFileSync(committedPath, 'utf8'));
+
+    assert.equal(result.ok, false);
+    assert.deepEqual(result.firstDivergence, { line: 5, actual: '', expected: '// junk' });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('checkVerdict prioritizes the pending-changes failure over missing file and staleness', () => {
+  const verdict = checkVerdict({
+    hadPendingChanges: true,
+    committedExists: false,
+    comparison: { ok: false, firstDivergence: { line: 1, actual: 'a', expected: 'b' } },
+    tableCount: 320,
+  });
+
+  assert.equal(verdict.exitCode, 1);
+  assert.match(verdict.message, /pending changes without a migration/);
+});
+
+test('checkVerdict fails with the missing-file message when docs/schema.dbml is absent', () => {
+  const verdict = checkVerdict({
+    hadPendingChanges: false,
+    committedExists: false,
+    comparison: { ok: true },
+    tableCount: 320,
+  });
+
+  assert.equal(verdict.exitCode, 1);
+  assert.match(verdict.message, /docs\/schema\.dbml not found/);
+});
+
+test('checkVerdict fails with the stale message and carries the first divergence', () => {
+  const verdict = checkVerdict({
+    hadPendingChanges: false,
+    committedExists: true,
+    comparison: compareDbml('a\nx\n', 'a\ny\n'),
+    tableCount: 320,
+  });
+
+  assert.equal(verdict.exitCode, 1);
+  assert.match(verdict.message, /stale/);
+  assert.deepEqual(verdict.firstDivergence, { line: 2, actual: 'x', expected: 'y' });
+});
+
+test('checkVerdict approves a clean tree with the exact table-count OK line', () => {
+  const verdict = checkVerdict({
+    hadPendingChanges: false,
+    committedExists: true,
+    comparison: compareDbml('Table t {\n}\n', 'Table t {\n}\n'),
+    tableCount: 320,
+  });
+
+  assert.deepEqual(verdict, {
+    exitCode: 0,
+    message: 'OK: docs/schema.dbml matches the EF Core model (320 tables.)',
+  });
 });
