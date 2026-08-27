@@ -332,6 +332,7 @@ function mapContentDto(
     status: dto.visibility === "Public" ? "published" : "draft",
     visibility: dto.visibility ?? "Public",
     duration: dto.estimatedMinutes ?? null,
+    estimatedMinutesSource: (dto.estimatedMinutesSource as "Auto" | "Manual" | null) ?? null,
     metadata: {},
     gradingConfig,
     createdAt: dto.createdAt ?? new Date().toISOString(),
