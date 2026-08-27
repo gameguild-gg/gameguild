@@ -1,0 +1,109 @@
+name: DB Schema Drift
+
+# Guards the exact failure class that shipped 7 missing tables to prod: the EF
+# model can match its snapshot while no migration actually creates the tables.
+# The pipeline below migrates a throwaway Postgres from the committed
+# migrations, then runs `db:dbml:verify`, which regenerates the model DDL via
+# `dotnet ef dbcontext script` and introspects the migrated database — model !=
+# migrations-database exits non-zero and fails the build.
+on:
+  pull_request:
+    paths:
+      - 'apps/api/**'
+      - 'scripts/devops/generate-dbml.mjs'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/db-schema-drift.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/api/**'
+      - 'scripts/devops/generate-dbml.mjs'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/db-schema-drift.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  db-schema-drift-gate:
+    name: DB Schema Drift Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        # Same image as the local compose.yaml postgres service.
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: gameguild
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d gameguild"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 10s
+    env:
+      # The design-time factory (PostgresConnectionString) reads these env vars
+      # only — no API boot, no appsettings.
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: gameguild
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v7 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6 # v6.0.10
+        with:
+          version: 10.0.0
+
+      - uses: actions/setup-node@v7 # v7.0.0
+        with:
+          node-version: '22'
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('package.json', 'apps/**/package.json') }}
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-packages-${{ runner.os }}-${{ hashFiles('apps/api/**/*.csproj', 'apps/api/**/*.props', 'apps/api/**/*.targets', 'apps/api/**/NuGet.config') }}
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v6 # v6.0.0
+        with:
+          dotnet-version: '10.0.103'
+
+      - name: Install pnpm dependencies
+        # pnpm-lock.yaml is intentionally untracked in this repo (enforced by
+        # scripts/ci/install-and-audit-pnpm.sh), so --frozen-lockfile cannot be
+        # used — there is no lockfile to freeze against in a fresh checkout.
+        run: corepack pnpm install --no-lockfile --no-frozen-lockfile
+
+      - name: Restore dotnet local tools (dotnet-ef)
+        run: dotnet tool restore # .config/dotnet-tools.json pins dotnet-ef 10.0.9
+
+      - name: Apply EF migrations to the service database
+        run: >-
+          dotnet ef database update
+          --project apps/api/Source/GameGuild.API/GameGuild.API.csproj
+          --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj
+
+      - name: Verify EF model matches the migrations-produced database
+        # Regenerates the model DBML via dotnet ef dbcontext script,
+        # introspects the migrated service database via db2dbml, and diffs
+        # them. Any drift (missing tables, dangling tables/columns, pending
+        # model changes) exits 1 and turns the build red.
+        run: corepack pnpm db:dbml:verify
