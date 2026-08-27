@@ -318,6 +318,11 @@ export default function Ide({
     console.log(`${P} VFS sync complete (${textFiles.length} files)`);
   }, []);
 
+  const syncWorkspace = useCallback(
+    () => syncFilesToVfs(filesRef.current),
+    [syncFilesToVfs],
+  );
+
   const replaceFiles = useCallback(async (nextFiles: readonly WorkspaceFile[]) => {
     const next = Object.fromEntries(nextFiles.map((file) => [file.path, { ...file }])) as Record<string, WorkspaceFile>;
     const api = apiRef.current;
@@ -361,11 +366,12 @@ export default function Ide({
     const controller: IdeController = {
       api,
       getFiles: async () => Object.values(filesRef.current).map((file) => ({ ...file })),
+      syncWorkspace,
       replaceFiles,
       setFilesReadOnly,
     };
     setPublishedController(controller);
-  }, [replaceFiles, setFilesReadOnly]);
+  }, [replaceFiles, setFilesReadOnly, syncWorkspace]);
 
   useEffect(() => {
     if (!publishedController) return;

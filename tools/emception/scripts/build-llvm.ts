@@ -269,7 +269,8 @@ function buildClang() {
         'cc1gen_reproducer_main.cpp.o',
         'clang-driver.cpp.o',
     ];
-    shell.exec(`cmake --build "${driverSubdir}" --parallel ${CONCURRENCY} --target ${requiredObjs.join(' ')}`);
+    const driverTargets = requiredObjs.map(obj => `tools/clang/tools/driver/CMakeFiles/clang.dir/${obj}`);
+    shell.exec(`cmake --build "${wasmBuildDir}" --parallel ${CONCURRENCY} --target ${driverTargets.join(' ')}`);
 
     // Verify they all exist
     for (const obj of requiredObjs) {
@@ -366,7 +367,8 @@ function buildLLD() {
     const lldSubdir = path.join(wasmBuildDir, 'tools/lld/tools/lld');
     const lldObjDir = path.join(lldSubdir, 'CMakeFiles/lld.dir');
     const requiredObjs = ['lld.cpp.o', 'lld-driver.cpp.o'];
-    shell.exec(`cmake --build "${lldSubdir}" --parallel ${CONCURRENCY} --target ${requiredObjs.join(' ')}`);
+    const lldTargets = requiredObjs.map(obj => `tools/lld/tools/lld/CMakeFiles/lld.dir/${obj}`);
+    shell.exec(`cmake --build "${wasmBuildDir}" --parallel ${CONCURRENCY} --target ${lldTargets.join(' ')}`);
     for (const obj of requiredObjs) {
         if (!fs.existsSync(path.join(lldObjDir, obj))) {
             console.error(`ERROR: LLD driver object not found: ${obj}`);

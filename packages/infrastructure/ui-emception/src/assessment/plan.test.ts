@@ -1,6 +1,7 @@
 import {
   buildAssessmentExecutionPlan,
 } from './plan';
+import { normalizeAssessmentWorkspacePath } from './paths';
 import type { CodingAssessmentDefinition } from './types';
 
 const assignment: CodingAssessmentDefinition = {
@@ -72,6 +73,22 @@ const assignment: CodingAssessmentDefinition = {
 };
 
 describe('buildAssessmentExecutionPlan', () => {
+  it('normalizes legacy /user paths to the Toolchain workspace mount', () => {
+    const legacyAssignment: CodingAssessmentDefinition = {
+      ...assignment,
+      Data: {
+        Files: {
+          '/user/main.cpp': assignment.Data.Files['/home/user/solution.cpp']!,
+        },
+      },
+    };
+
+    expect(normalizeAssessmentWorkspacePath('/user/main.cpp')).toBe('/home/user/main.cpp');
+    expect(normalizeAssessmentWorkspacePath('/home/user/main.cpp')).toBe('/home/user/main.cpp');
+    expect(buildAssessmentExecutionPlan(legacyAssignment, 'public').plan.build?.sources)
+      .toEqual(['/home/user/main.cpp']);
+  });
+
   it('excludes private tests and exposes generated harnesses only in public scope', () => {
     const execution = buildAssessmentExecutionPlan(assignment, 'public');
 
@@ -83,7 +100,8 @@ describe('buildAssessmentExecutionPlan', () => {
     });
     expect(execution.overlay).toHaveLength(1);
     expect(execution.overlay[0]?.path).toMatch(/\/functional_0_test\.cpp$/);
-    expect(execution.overlay[0]?.content).toContain('TEST_CASE("0:public-addition")');
+    expect(execution.overlay[0]?.content).toContain('constexpr const char* testName = "0:public-addition"');
+    expect(execution.overlay[0]?.content).toContain('check(add(2, 3) == 5');
     expect(JSON.stringify(execution)).not.toContain('private-test-secret');
     expect(execution.plan.build?.sources).toEqual(['/home/user/solution.cpp']);
     expect(execution.plan.build?.sources).not.toContain('/home/user/private-fixture.cpp');

@@ -33,6 +33,7 @@ const mockController = {
       content: 'int add(int a, int b) { return a + b; }',
     },
   ]),
+  syncWorkspace: jest.fn(async () => {}),
   replaceFiles: jest.fn(),
   setFilesReadOnly: jest.fn(),
 };
@@ -164,6 +165,37 @@ describe('CodingAssessmentEditor', () => {
     const plan = mockRunTests.mock.calls[0]?.[0];
     expect(plan.cases).toHaveLength(1);
     expect(JSON.stringify(plan)).not.toContain('private-test-secret');
+  });
+
+  it('mounts legacy /user definition files at the Toolchain user mount', async () => {
+    render(
+      <CodingAssessmentEditor
+        mode="learner"
+        definition={{
+          ...definition,
+          Data: {
+            Files: {
+              '/user/main.cpp': {
+                Content: 'int main() { return 0; }',
+                Encoding: 'text',
+                Visibility: 'Public',
+                Modifiable: false,
+              },
+            },
+          },
+        }}
+      />,
+    );
+
+    await screen.findByTestId('vanilla-ide');
+    const props = mockIdeProps as {
+      workspaceConfig: { files: Record<string, { content: string }> };
+    };
+    expect(props.workspaceConfig.files['/home/user/main.cpp']?.content).toContain('return 0');
+    expect(props.workspaceConfig.files['/user/main.cpp']).toBeUndefined();
+    await waitFor(() =>
+      expect(mockController.setFilesReadOnly).toHaveBeenCalledWith(['/home/user/main.cpp'], true),
+    );
   });
 
   it('preserves a host workspace and draft key without exposing private definition files to learner mode', async () => {
