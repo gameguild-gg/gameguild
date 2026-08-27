@@ -62,6 +62,7 @@ const moduleItem = {
   slug: "week-01",
   description: null,
   status: "published",
+  visibility: "Public",
   duration: null,
   metadata: {},
   gradingConfig: null,
@@ -76,6 +77,7 @@ const secondModuleItem = {
   title: "Week 02",
   description: "Combat systems",
   status: "draft",
+  visibility: "Private",
 } satisfies ContentItem;
 
 const lessonItem = {
@@ -87,6 +89,7 @@ const lessonItem = {
   slug: "course-overview",
   description: null,
   status: "published",
+  visibility: "Public",
   duration: 20,
   metadata: {},
   gradingConfig: null,
@@ -103,6 +106,7 @@ const subLessonItem = {
   title: "Starter exercise",
   slug: "starter-exercise",
   status: "archived",
+  visibility: "Private",
   duration: 0,
 } satisfies ContentItem;
 
