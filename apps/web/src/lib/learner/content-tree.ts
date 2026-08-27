@@ -14,3 +14,19 @@ export function flattenUniqueContent(items: LearningCoursesProgramContent[]): Le
     for (const item of items) visit(item);
     return flattened.sort((left, right) => (left.sortOrder ?? 0) - (right.sortOrder ?? 0));
 }
+
+// Private content is author-only: hide the item and its entire subtree from learners.
+export function collectHiddenContentIds(
+    items: LearningCoursesProgramContent[],
+    hidden: Set<string> = new Set<string>(),
+    parentHidden = false,
+): Set<string> {
+    for (const item of items) {
+        const itemHidden = parentHidden || item.visibility === 'Private';
+        if (itemHidden && item.id) hidden.add(item.id);
+        if (item.children?.length) {
+            collectHiddenContentIds(item.children, hidden, itemHidden);
+        }
+    }
+    return hidden;
+}
