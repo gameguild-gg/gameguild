@@ -10,12 +10,18 @@ import {
   checkVerdict,
   collectTables,
   compareDbml,
+  computeDrift,
   envToDsn,
   normalizeName,
   parseArgs,
+  parseDbmlFile,
+  prepareDbmlForCore,
+  redactSecrets,
   stripByteOrderMark,
   stripNonDdlStatements,
+  usageText,
   validateDbmlOutput,
+  verifyDbVerdict,
 } from './generate-dbml.mjs';
 
 test('parseArgs defaults to generate mode when no flags are given', () => {
@@ -321,4 +327,238 @@ test('checkVerdict approves a clean tree with the exact table-count OK line', ()
     exitCode: 0,
     message: 'OK: docs/schema.dbml matches the EF Core model (320 tables.)',
   });
+});
+
+test('parseArgs recognizes --help', () => {
+  assert.deepEqual(parseArgs(['--help']), { mode: 'help' });
+});
+
+test('envToDsn accepts a model-derived schema list for live introspection', () => {
+  const dsn = envToDsn(
+    {
+      POSTGRES_USER: 'postgres',
+      POSTGRES_PASSWORD: 'postgres',
+      POSTGRES_HOST: 'localhost',
+      POSTGRES_PORT: '5432',
+      POSTGRES_DB: 'gameguild',
+    },
+    ['public', 'gameguild.authentication', 'assets'],
+  );
+
+  assert.equal(
+    dsn,
+    'postgresql://postgres:postgres@localhost:5432/gameguild?schemas=public,gameguild.authentication,assets',
+  );
+});
+
+test('computeDrift detects a table present only in the live database', () => {
+  const model = [{ name: 'users', columns: ['id'] }];
+  const live = [{ name: 'users', columns: ['id'] }, { name: 'orphan_things', columns: ['id'] }];
+
+  assert.deepEqual(computeDrift(model, live), {
+    danglingTables: ['orphan_things'],
+    danglingColumns: [],
+    unmigratedTables: [],
+  });
+});
+
+test('computeDrift detects a column present only in the live database', () => {
+  const model = [{ name: 'users', columns: ['id', 'email'] }];
+  const live = [{ name: 'users', columns: ['id', 'email', 'legacy_flag'] }];
+
+  assert.deepEqual(computeDrift(model, live), {
+    danglingTables: [],
+    danglingColumns: ['users.legacy_flag'],
+    unmigratedTables: [],
+  });
+});
+
+test('computeDrift ignores the allowlisted __efmigrationshistory table', () => {
+  const model = [{ name: 'users', columns: ['id'] }];
+  const live = [
+    { name: 'users', columns: ['id'] },
+    { name: '__efmigrationshistory', columns: ['migration_id', 'product_version'] },
+  ];
+
+  assert.deepEqual(computeDrift(model, live), {
+    danglingTables: [],
+    danglingColumns: [],
+    unmigratedTables: [],
+  });
+});
+
+test('computeDrift detects a table present only in the EF model (unmigrated)', () => {
+  const model = [{ name: 'users', columns: ['id'] }, { name: 'fresh_things', columns: ['id'] }];
+  const live = [{ name: 'users', columns: ['id'] }];
+
+  assert.deepEqual(computeDrift(model, live), {
+    danglingTables: [],
+    danglingColumns: [],
+    unmigratedTables: ['fresh_things'],
+  });
+});
+
+test('computeDrift on a clean self-comparison reports zero drift everywhere', () => {
+  const model = [
+    { name: 'users', columns: ['id', 'email'] },
+    { name: 'orders', columns: ['id', 'user_id'] },
+  ];
+
+  assert.deepEqual(computeDrift(model, model), {
+    danglingTables: [],
+    danglingColumns: [],
+    unmigratedTables: [],
+  });
+});
+
+test('computeDrift treats public.AspNetUsers / "AspNetUsers" / aspnetusers as one table after normalizeName', () => {
+  assert.equal(normalizeName('public.AspNetUsers'), normalizeName('"AspNetUsers"'));
+  assert.equal(normalizeName('"AspNetUsers"'), normalizeName('aspnetusers'));
+
+  const model = [
+    {
+      name: normalizeName('"public.AspNetUsers"'),
+      columns: [normalizeName('"Id"'), normalizeName('"Email"')],
+    },
+  ];
+  const live = [
+    { name: normalizeName('aspnetusers'), columns: [normalizeName('id'), normalizeName('email')] },
+  ];
+
+  assert.deepEqual(computeDrift(model, live), {
+    danglingTables: [],
+    danglingColumns: [],
+    unmigratedTables: [],
+  });
+});
+
+test('computeDrift sorts every drift class alphabetically for deterministic output', () => {
+  const model = [{ name: 'alpha', columns: ['a'] }];
+  const live = [
+    { name: 'zeta', columns: ['z'] },
+    { name: 'beta', columns: ['b'] },
+    { name: 'alpha', columns: ['a', 'zz_col', 'mm_col'] },
+  ];
+
+  const drift = computeDrift(model, live);
+
+  assert.deepEqual(drift.danglingTables, ['beta', 'zeta']);
+  assert.deepEqual(drift.danglingColumns, ['alpha.mm_col', 'alpha.zz_col']);
+});
+
+test('computeDrift plan fixture: orphan_things table plus users.legacy_flag column, exit contract 1', () => {
+  const model = [
+    { name: 'users', columns: ['id', 'email'] },
+    { name: 'orders', columns: ['id'] },
+  ];
+  const live = [
+    { name: 'users', columns: ['id', 'email', 'legacy_flag'] },
+    { name: 'orders', columns: ['id'] },
+    { name: 'orphan_things', columns: ['id'] },
+  ];
+
+  const drift = computeDrift(model, live);
+
+  assert.deepEqual(drift, {
+    danglingTables: ['orphan_things'],
+    danglingColumns: ['users.legacy_flag'],
+    unmigratedTables: [],
+  });
+  // A verify-db that always exited 0 would hide this drift — pin the contract.
+  assert.equal(verifyDbVerdict(drift).exitCode, 1);
+});
+
+test('verifyDbVerdict exits 1 on any drift class and 0 with the OK line when clean', () => {
+  const clean = { danglingTables: [], danglingColumns: [], unmigratedTables: [] };
+
+  assert.deepEqual(verifyDbVerdict(clean), {
+    exitCode: 0,
+    message: 'OK: live database matches the EF Core model.',
+  });
+  assert.equal(verifyDbVerdict({ ...clean, danglingTables: ['x'] }).exitCode, 1);
+  assert.equal(verifyDbVerdict({ ...clean, danglingColumns: ['t.c'] }).exitCode, 1);
+  assert.equal(verifyDbVerdict({ ...clean, unmigratedTables: ['y'] }).exitCode, 1);
+});
+
+test('redactSecrets scrubs the DSN and every password form from tool stderr', () => {
+  const dsn = 'postgresql://postgres:p%40ss@localhost:1/gameguild?schemas=public';
+  const stderr = `connect failed for ${dsn}\nretrying with password=p@ss at ${dsn}`;
+
+  const redacted = redactSecrets(stderr, [dsn, 'p%40ss', 'p@ss']);
+
+  assert.ok(!redacted.includes(dsn));
+  assert.ok(!redacted.includes('p@ss'));
+  assert.ok(!redacted.includes('p%40ss'));
+  assert.ok(redacted.includes('<redacted>'));
+});
+
+test('prepareDbmlForCore folds Ref optional markers and drops Checks blocks', () => {
+  const dbml = [
+    '// header',
+    'Table "users" {',
+    '  id text [pk]',
+    '  Checks {',
+    '    `"id" <> \'\'` [name: \'ck_users_id\']',
+    '  }',
+    '  Indexes {',
+    '    id [pk]',
+    '  }',
+    '}',
+    'Ref "FK_pages_pages_ParentPageId":"pages"."Id" ?<? "pages"."ParentPageId" [delete: restrict]',
+    'Ref "FK_a_b":"a"."Id" <? "b"."a_id"',
+  ].join('\n');
+
+  const prepared = prepareDbmlForCore(dbml);
+
+  assert.ok(!prepared.includes('?'));
+  assert.ok(!prepared.includes('Checks'));
+  assert.ok(!prepared.includes('ck_users_id'));
+  assert.ok(prepared.includes('Table "users" {'));
+  assert.ok(prepared.includes('id text [pk]'));
+  assert.ok(prepared.includes('Indexes {'));
+  assert.ok(prepared.includes('Ref "FK_pages_pages_ParentPageId":"pages"."Id" < "pages"."ParentPageId" [delete: restrict]'));
+  assert.ok(prepared.includes('Ref "FK_a_b":"a"."Id" < "b"."a_id"'));
+});
+
+test('prepareDbmlForCore leaves question marks in non-Ref lines alone', () => {
+  const dbml = "Table t {\n  note text [note: 'is this set? yes']\n}\n";
+
+  assert.equal(prepareDbmlForCore(dbml), dbml);
+});
+
+test('parseDbmlFile parses a table DBML and reports a labeled failure for garbage input', async () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'gg-dbml-'));
+  try {
+    const goodPath = path.join(dir, 'good.dbml');
+    writeFileSync(goodPath, 'Table users {\n  id text\n}\n', 'utf8');
+    const database = await parseDbmlFile(goodPath, 'model');
+    assert.ok(collectTables(database).some((table) => table.name === 'users'));
+
+    const badPath = path.join(dir, 'bad.dbml');
+    writeFileSync(badPath, 'Table users {\n', 'utf8');
+    await assert.rejects(parseDbmlFile(badPath, 'live-database'), (error) => {
+      assert.match(error.message, /^could not parse live-database DBML: /);
+      assert.ok(!error.message.includes('at ')); // no stack-trace leakage
+      return true;
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('usageText documents all three modes and the five POSTGRES_* variables', () => {
+  const usage = usageText();
+
+  for (const flag of ['--check', '--verify-db', '--help']) {
+    assert.ok(usage.includes(flag), `usage must mention ${flag}`);
+  }
+  for (const variable of [
+    'POSTGRES_HOST',
+    'POSTGRES_PORT',
+    'POSTGRES_DB',
+    'POSTGRES_USER',
+    'POSTGRES_PASSWORD',
+  ]) {
+    assert.ok(usage.includes(variable), `usage must mention ${variable}`);
+  }
 });
