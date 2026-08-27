@@ -127,6 +127,39 @@ export function validateDbmlOutput(dbml) {
   return { ok: true, tableCount };
 }
 
+// Zip-style line comparison (not an LCS diff): machine-generated DBML drifts
+// in whole regions, so paired lines locate divergences cheaply. `null` marks a
+// line that does not exist on that side (one string is a strict line-prefix
+// of the other).
+function divergentLines(actual, expected, limit) {
+  const actualLines = actual.split('\n');
+  const expectedLines = expected.split('\n');
+  const divergences = [];
+  const lineCount = Math.max(actualLines.length, expectedLines.length);
+  for (let index = 0; index < lineCount && divergences.length < limit; index += 1) {
+    if (actualLines[index] !== expectedLines[index]) {
+      divergences.push({
+        line: index + 1,
+        actual: actualLines[index] ?? null,
+        expected: expectedLines[index] ?? null,
+      });
+    }
+  }
+  return divergences;
+}
+
+// Byte equality on the whole string; when they differ, report the FIRST
+// divergent line (1-based) with both line contents. Generate is deterministic
+// (T3 double-run proof), so string equality is the staleness contract —
+// never timestamps.
+export function compareDbml(actual, expected) {
+  if (actual === expected) {
+    return { ok: true };
+  }
+  const [firstDivergence] = divergentLines(actual, expected, 1);
+  return { ok: false, firstDivergence };
+}
+
 const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const API_PROJECT = 'apps/api/Source/GameGuild.API/GameGuild.API.csproj';
 const MODEL_SQL_PATH = path.join(tmpdir(), 'gg-model.sql');
@@ -189,6 +222,7 @@ export function runGeneratePipeline(outPath) {
     throw new Error(`dotnet tool restore failed:\n${restore.stderr || restore.stdout}`);
   }
 
+  let hadPendingChanges = false;
   const pending = runDotnet([
     'ef',
     'migrations',
@@ -204,6 +238,7 @@ export function runGeneratePipeline(outPath) {
     // (generate never blocks on that). Any other non-zero exit is a build or
     // tool failure and must never be misreported as pending changes.
     if (/changes have been detected/i.test(output)) {
+      hadPendingChanges = true;
       console.warn(
         'WARN: EF model has pending changes without a migration; docs/schema.dbml reflects the working model (dbcontext script), not the committed migrations',
       );
@@ -256,11 +291,97 @@ export function runGeneratePipeline(outPath) {
   const destination = path.resolve(REPO_ROOT, outPath);
   writeFileSync(destination, `${buildDbmlHeader()}\n${conversion.dbml.replace(/\s+$/, '\n')}`);
   const enumCount = (conversion.dbml.match(/^Enum /gm) ?? []).length;
-  return { outPath: destination, tableCount: conversion.tableCount, enumCount };
+  return { outPath: destination, tableCount: conversion.tableCount, enumCount, hadPendingChanges };
 }
 
 // `node -e` leaves process.argv[1] undefined; pathToFileURL(undefined) would throw.
 const entryHref = process.argv[1] ? pathToFileURL(process.argv[1]).href : null;
+
+const DIVERGENCE_SUMMARY_LIMIT = 20;
+
+function displayDbmlLine(line) {
+  if (line === null) {
+    return '(no such line)';
+  }
+  return line === '' ? '(empty line)' : line;
+}
+
+function reportDivergences(regenerated, committed) {
+  const divergences = divergentLines(regenerated, committed, DIVERGENCE_SUMMARY_LIMIT);
+  const [first] = divergences;
+  console.error(`first divergence at line ${first.line}:`);
+  console.error(`  regenerated: ${displayDbmlLine(first.actual)}`);
+  console.error(`  committed:   ${displayDbmlLine(first.expected)}`);
+  if (divergences.length > 1) {
+    console.error(`divergent lines (zip comparison, first ${DIVERGENCE_SUMMARY_LIMIT} shown):`);
+    for (const divergence of divergences.slice(1)) {
+      console.error(
+        `  line ${divergence.line}: regenerated: ${displayDbmlLine(divergence.actual)} | committed: ${displayDbmlLine(divergence.expected)}`,
+      );
+    }
+  }
+}
+
+// Pure decision core for --check so the guard ORDER (pending changes before
+// missing file before staleness) stays unit-testable without dotnet.
+export function checkVerdict({ hadPendingChanges, committedExists, comparison, tableCount }) {
+  if (hadPendingChanges) {
+    return {
+      exitCode: 1,
+      message:
+        'FAIL: EF model has pending changes without a migration. Commit the migration, then regenerate: pnpm db:dbml',
+    };
+  }
+  if (!committedExists) {
+    return {
+      exitCode: 1,
+      message: 'FAIL: docs/schema.dbml not found — run pnpm db:dbml and commit it',
+    };
+  }
+  if (!comparison.ok) {
+    return {
+      exitCode: 1,
+      message: 'FAIL: docs/schema.dbml is stale. Regenerate: pnpm db:dbml',
+      firstDivergence: comparison.firstDivergence,
+    };
+  }
+  return {
+    exitCode: 0,
+    message: `OK: docs/schema.dbml matches the EF Core model (${tableCount} tables.)`,
+  };
+}
+
+// --check: staleness guard for CI. Regenerates ONLY into the tmpdir (never
+// auto-fixes, never writes docs/) and byte-compares against the committed file.
+function runCheckMode() {
+  let summary;
+  try {
+    summary = runGeneratePipeline(path.join(tmpdir(), 'gg-check.dbml'));
+  } catch (error) {
+    // Pipeline failures (build/tool) must never be misreported as pending changes.
+    console.error(`generate-dbml: ${error.message}`);
+    process.exit(1);
+  }
+
+  const regenerated = readFileSync(summary.outPath, 'utf8');
+  const committedPath = path.join(REPO_ROOT, 'docs/schema.dbml');
+  const committed = existsSync(committedPath) ? readFileSync(committedPath, 'utf8') : null;
+  const verdict = checkVerdict({
+    hadPendingChanges: summary.hadPendingChanges,
+    committedExists: committed !== null,
+    comparison: committed === null ? { ok: true } : compareDbml(regenerated, committed),
+    tableCount: summary.tableCount,
+  });
+
+  if (verdict.exitCode !== 0) {
+    if (verdict.firstDivergence !== undefined) {
+      reportDivergences(regenerated, committed);
+    }
+    console.error(verdict.message);
+    process.exit(1);
+  }
+  console.log(verdict.message);
+}
 
 if (entryHref !== null && import.meta.url === entryHref) {
   const { mode } = parseArgs(process.argv.slice(2));
@@ -274,6 +395,8 @@ if (entryHref !== null && import.meta.url === entryHref) {
       console.error(`generate-dbml: ${error.message}`);
       process.exit(1);
     }
+  } else if (mode === 'check') {
+    runCheckMode();
   } else {
     console.error(`generate-dbml: mode '${mode}' is not implemented yet`);
     console.error('usage: node scripts/devops/generate-dbml.mjs [--check | --verify-db]');
