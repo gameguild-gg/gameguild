@@ -31,5 +31,7 @@ public class UpdateProgramContentDto {
 
   public int? EstimatedMinutes { get; set; }
 
+  public EstimatedMinutesSource? EstimatedMinutesSource { get; set; }
+
   public Visibility? Visibility { get; set; }
 }

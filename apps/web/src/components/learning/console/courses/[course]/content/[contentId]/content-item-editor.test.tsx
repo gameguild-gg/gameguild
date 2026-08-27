@@ -22,6 +22,7 @@ const routerMocks = vi.hoisted(() => ({
   back: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
+  replace: vi.fn(),
 }));
 
 Object.defineProperties(HTMLElement.prototype, {
@@ -89,8 +90,10 @@ const item = {
   order: 1,
   type: "Questionnaire",
   title: "Intro quiz",
+  slug: "intro-quiz",
   description: "First knowledge check.",
   status: "published",
+  visibility: "Public",
   duration: 20,
   metadata: {},
   gradingConfig: null,
@@ -129,8 +132,10 @@ const lessonItemMarkdownEmpty = {
   order: 2,
   type: "Lesson",
   title: "Intro lesson",
+  slug: "intro-lesson",
   description: "Markdown-format lesson.",
   status: "published",
+  visibility: "Public",
   duration: 15,
   metadata: {},
   gradingConfig: null,
@@ -148,8 +153,10 @@ const lessonItemMarkdownBody = {
   order: 3,
   type: "Lesson",
   title: "Markdown lesson",
+  slug: "markdown-lesson",
   description: "Has a Markdown body.",
   status: "published",
+  visibility: "Public",
   duration: 15,
   metadata: {},
   gradingConfig: null,
@@ -169,8 +176,10 @@ const lessonItemLexical = {
   order: 4,
   type: "Lesson",
   title: "Lexical lesson",
+  slug: "lexical-lesson",
   description: "Has a Lexical body.",
   status: "published",
+  visibility: "Public",
   duration: 15,
   metadata: {},
   gradingConfig: null,
@@ -191,6 +200,33 @@ const lessonItemLexical = {
   updatedAt: "2026-01-02T00:00:00.000Z",
 } satisfies ContentItemDetail;
 
+// ── Task 10: reading-time estimation (auto hint / manual pin) ──
+
+// 400 words at 200 wpm → ~2 min auto estimate.
+const fourHundredWords = Array.from(
+  { length: 400 },
+  (_, i) => `word${i}`,
+).join(" ");
+
+const lessonItemMarkdownAutoHint = {
+  ...lessonItemMarkdownBody,
+  id: "lesson-auto",
+  title: "Auto estimate lesson",
+  slug: "auto-estimate-lesson",
+  content: fourHundredWords,
+  duration: null,
+  estimatedMinutesSource: null,
+} satisfies ContentItemDetail;
+
+const lessonItemManualDuration = {
+  ...lessonItemMarkdownBody,
+  id: "lesson-manual",
+  title: "Manual duration lesson",
+  slug: "manual-duration-lesson",
+  duration: 20,
+  estimatedMinutesSource: "Manual",
+} satisfies ContentItemDetail;
+
 // ── Assignment / Project: coding-assignment bridge ──
 
 const assignmentItem = {
@@ -199,8 +235,10 @@ const assignmentItem = {
   order: 5,
   type: "Assignment",
   title: "Hello world coding task",
+  slug: "hello-world-coding-task",
   description: "Echo stdin to stdout.",
   status: "published",
+  visibility: "Public",
   duration: 60,
   metadata: {},
   gradingConfig: null,
@@ -313,16 +351,164 @@ describe("ContentItemEditor", () => {
         courseId: "course-1",
         contentId: "content-1",
         title: "Updated quiz",
+        slug: "updated-quiz",
         description: "Updated description.",
         body: undefined,
         jsonBody: item.jsonBody,
         visibility: "Public",
         isRequired: true,
         estimatedMinutes: 35,
+        estimatedMinutesSource: "Manual",
       });
     });
-    expect(routerMocks.refresh).toHaveBeenCalled();
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/content/updated-quiz",
+    );
+    expect(routerMocks.refresh).not.toHaveBeenCalled();
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
+  });
+
+  it("slug follows the title while untouched, then detaches and normalizes once edited directly", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const titleInput = screen.getByLabelText(/^title$/i);
+    const slugInput = screen.getByLabelText(/url slug/i);
+    expect(slugInput).toHaveValue("intro-quiz");
+
+    await user.clear(titleInput);
+    await user.type(titleInput, "Advanced Quiz!!");
+    expect(slugInput).toHaveValue("advanced-quiz");
+
+    await user.clear(slugInput);
+    await user.type(slugInput, "My Custom SLUG!");
+    expect(slugInput).toHaveValue("my-custom-slug");
+
+    await user.clear(titleInput);
+    await user.type(titleInput, "Another Title");
+    expect(slugInput).toHaveValue("my-custom-slug");
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Another Title",
+          slug: "my-custom-slug",
+        }),
+      );
+    });
+  });
+
+  it("regenerates the slug from the title even when the stored slug does not mirror it", async () => {
+    const user = userEvent.setup();
+    const backfilled = { ...item, slug: "0d5ee1a2-9c4b-4d0e-8f7a-3b2c1d0e5f6a" };
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={backfilled}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const slugInput = screen.getByLabelText(/url slug/i);
+    expect(slugInput).toHaveValue("0d5ee1a2-9c4b-4d0e-8f7a-3b2c1d0e5f6a");
+
+    await user.clear(screen.getByLabelText(/^title$/i));
+    await user.type(screen.getByLabelText(/^title$/i), "New Title");
+    expect(slugInput).toHaveValue("new-title");
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "New Title",
+          slug: "new-title",
+        }),
+      );
+    });
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/content/new-title",
+    );
+  });
+
+  it("replaces the URL with the edited slug after saving", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.clear(screen.getByLabelText(/url slug/i));
+    await user.type(screen.getByLabelText(/url slug/i), "renamed-slug");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(routerMocks.replace).toHaveBeenCalledWith(
+        "/workspace/learning/courses/course-1/content/renamed-slug",
+      );
+    });
+    expect(routerMocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it("keeps a trailing dash while typing spaces and strips it on blur", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const slugInput = screen.getByLabelText(/url slug/i);
+
+    await user.clear(slugInput);
+    await user.type(slugInput, " ");
+    expect(slugInput).toHaveValue("");
+
+    await user.clear(slugInput);
+    await user.type(slugInput, "content ");
+    expect(slugInput).toHaveValue("content-");
+
+    await user.type(slugInput, " ");
+    expect(slugInput).toHaveValue("content-");
+
+    fireEvent.blur(slugInput);
+    expect(slugInput).toHaveValue("content");
+  });
+
+  it("derives the slug from the title on save when the slug field is cleared", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={item}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.clear(screen.getByLabelText(/url slug/i));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Intro quiz",
+          slug: "intro-quiz",
+        }),
+      );
+    });
   });
 
   it("saves quiz grading metadata inside structured jsonBody", async () => {
@@ -516,12 +702,14 @@ describe("ContentItemEditor", () => {
         courseId: "course-1",
         contentId: "lesson-2",
         title: "Markdown lesson",
+        slug: "markdown-lesson",
         description: "Has a Markdown body.",
         body: "# existing markdown",
         jsonBody: undefined,
         visibility: "Public",
         isRequired: true,
-        estimatedMinutes: 15,
+        estimatedMinutes: null,
+        estimatedMinutesSource: "Auto",
         lessonFormat: "Markdown",
       });
     });
@@ -551,12 +739,14 @@ describe("ContentItemEditor", () => {
         courseId: "course-1",
         contentId: "lesson-3",
         title: "Lexical lesson",
+        slug: "lexical-lesson",
         description: "Has a Lexical body.",
         body: undefined,
         jsonBody: lessonItemLexical.jsonBody,
         visibility: "Public",
         isRequired: true,
-        estimatedMinutes: 15,
+        estimatedMinutes: null,
+        estimatedMinutesSource: "Auto",
         lessonFormat: "Lexical",
       });
     });
@@ -921,5 +1111,130 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
     expect(createAssessment).not.toHaveBeenCalled();
     // Switch state unchanged — still ON because no mutation ran.
     expect(screen.getByRole("switch", { name: /^graded$/i })).toBeChecked();
+  });
+});
+
+// ── Task 10: reading-time estimation (auto hint / manual pin) ──
+
+describe("ContentItemEditor — Reading-time estimation (Task 10)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(updateContent).mockResolvedValue({ success: true, data: null });
+    vi.mocked(createAssessment).mockResolvedValue({
+      success: true,
+      data: { id: "new-asmnt" },
+    });
+    vi.mocked(deleteAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
+    vi.mocked(restoreAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
+    vi.mocked(updateAssessment).mockResolvedValue({
+      success: true,
+      data: null,
+    });
+  });
+
+  it("shows the live auto estimate as the duration placeholder for a Markdown lesson", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownAutoHint}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(screen.getByLabelText(/estimated minutes/i)).toHaveAttribute(
+      "placeholder",
+      "Auto (~2 min)",
+    );
+  });
+
+  it("pins a manual estimate when a number is typed before saving", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownAutoHint}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.type(screen.getByLabelText(/estimated minutes/i), "15");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estimatedMinutes: 15,
+          estimatedMinutesSource: "Manual",
+        }),
+      );
+    });
+  });
+
+  it("sends a null estimate with Auto source when the field is left empty", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemMarkdownAutoHint}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estimatedMinutes: null,
+          estimatedMinutesSource: "Auto",
+        }),
+      );
+    });
+  });
+
+  it("reverts to Auto with a null estimate when a hydrated Manual value is cleared", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemManualDuration}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const field = screen.getByLabelText(/estimated minutes/i);
+    expect(field).toHaveValue(20);
+    await user.clear(field);
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estimatedMinutes: null,
+          estimatedMinutesSource: "Auto",
+        }),
+      );
+    });
+  });
+
+  it("hydrates the duration field only for Manual items and hides the auto helper text", () => {
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemManualDuration}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(screen.getByLabelText(/estimated minutes/i)).toHaveValue(20);
+    expect(
+      screen.queryByText(/leave blank to keep auto/i),
+    ).not.toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@
 
 import { getToken } from "@/auth";
 import { getCourseRouteParam } from "@/lib/learning/course-route";
+import { normalizeSlug } from "@/lib/slugify";
 import type {
   AssessmentPresentationMode,
   AssessmentType,
@@ -136,6 +137,7 @@ export interface AddContentInput {
   parentId?: string;
   title: string;
   description?: string;
+  slug?: string;
   type: LearningCoursesProgramContentType;
   lessonFormat?: LessonContentFormat;
   sortOrder?: number;
@@ -144,7 +146,7 @@ export interface AddContentInput {
 export async function addContent(
   input: AddContentInput,
 ): Promise<ActionResult<{ id: string }>> {
-  const { courseId, parentId, title, type, description, lessonFormat, sortOrder } = input;
+  const { courseId, parentId, title, slug, type, description, lessonFormat, sortOrder } = input;
 
   if (!title || title.trim().length < 1) {
     return { success: false, error: "Title is required." };
@@ -167,6 +169,8 @@ export async function addContent(
       ...(parentId ? { parentId } : {}),
       ...(jsonBody ? { jsonBody } : {}),
       ...(type === 'Lesson' && lessonFormat ? { lessonFormat } : {}),
+      // Empty slug omitted -> backend derives it from the title (ToSlugCase).
+      ...(slug && normalizeSlug(slug) ? { slug: normalizeSlug(slug) } : {}),
     };
 
     const { content } = createCourseModules();
@@ -251,12 +255,14 @@ export interface UpdateContentInput {
   contentId: string;
   title?: string;
   description?: string;
+  slug?: string;
   type?: LearningCoursesProgramContentType;
   body?: string;
   jsonBody?: Record<string, unknown> | null;
   sortOrder?: number;
   isRequired?: boolean;
-  estimatedMinutes?: number;
+  estimatedMinutes?: number | null;
+  estimatedMinutesSource?: "Auto" | "Manual";
   visibility?: string;
   lessonFormat?: string;
 }
@@ -1220,6 +1226,7 @@ export interface CreateAssessmentInput {
   // (see queries/assessments.ts and learner activity page). submissionModalities e.g. "Code"; gradingMethods e.g. "AutoGraded,InstructorGraded".
   submissionModalities?: string;
   gradingMethods?: string;
+  slug?: string;
 }
 
 export async function createAssessment(
@@ -1255,6 +1262,7 @@ export async function createAssessment(
       contentId: rest.contentId ?? null,
       submissionModalities: rest.submissionModalities,
       gradingMethods: rest.gradingMethods,
+      slug: rest.slug ? normalizeSlug(rest.slug) : null,
     };
 
     const { assessments } = createCourseModules();
@@ -1430,6 +1438,7 @@ export interface UpdateAssessmentInput {
   groupSetId?: string | null;
   clearGroupSetId?: boolean;
   peerReviewsRequiredCount?: number;
+  slug?: string;
 }
 
 export async function updateAssessment(
@@ -1462,6 +1471,7 @@ export async function updateAssessment(
       groupSetId: fields.groupSetId ?? null,
       clearGroupSetId: fields.clearGroupSetId ?? false,
       peerReviewsRequiredCount: fields.peerReviewsRequiredCount ?? null,
+      slug: fields.slug ? normalizeSlug(fields.slug) : null,
     };
 
     const { assessments } = createCourseModules();

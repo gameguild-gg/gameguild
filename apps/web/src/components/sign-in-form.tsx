@@ -21,6 +21,7 @@ import {
   FieldLabel,
 } from "@game-guild/ui/components/field"
 import { Input } from "@game-guild/ui/components/input"
+import { PasswordInput } from "@/components/ui/password-input"
 
 export function SignInForm({
   className,
@@ -121,10 +122,9 @@ export function SignInForm({
                     Forgot your password?
                   </Link>
                 </div>
-                <Input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   autoComplete="current-password"
                   required
                   disabled={isLoading}

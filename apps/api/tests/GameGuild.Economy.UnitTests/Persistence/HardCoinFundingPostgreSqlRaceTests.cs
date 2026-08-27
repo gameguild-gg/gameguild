@@ -43,11 +43,16 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
         var outcomes = await Task.WhenAll(
             CaptureAsync(() => confirmationContext.SaveChangesAsync()),
             CaptureAsync(() => failureContext.SaveChangesAsync()));
+        var unexpectedFailures = outcomes
+            .Where(outcome => outcome is not null && !IsSerializedLoser(outcome))
+            .Select(outcome => DescribeException(outcome!))
+            .ToArray();
 
         outcomes.Count(outcome => outcome is null).Should().Be(1);
         outcomes.Count(IsSerializedLoser).Should().Be(
             1,
-            "the losing transaction must fail through either the version token or immutable event sequence");
+            "the database must roll back the losing transaction through optimistic concurrency, the immutable event sequence, or transaction serialization; unexpected failures: {0}",
+            string.Join(" | ", unexpectedFailures));
 
         await using var observer = CreateContext();
         var persisted = await observer.Set<EconomyFundingClaimRow>()
@@ -191,12 +196,35 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
         }
     }
 
-    private static bool IsSerializedLoser(Exception? exception) => exception switch
+    private static bool IsSerializedLoser(Exception? exception)
     {
-        DbUpdateConcurrencyException => true,
-        DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } } => true,
-        _ => false
-    };
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is DbUpdateConcurrencyException)
+                return true;
+
+            if (current is PostgresException postgresException && postgresException.SqlState is
+                    PostgresErrorCodes.UniqueViolation or
+                    PostgresErrorCodes.DeadlockDetected or
+                    PostgresErrorCodes.SerializationFailure)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static string DescribeException(Exception exception)
+    {
+        var descriptions = new List<string>();
+        for (Exception? current = exception; current is not null; current = current.InnerException)
+        {
+            descriptions.Add(current is PostgresException postgresException
+                ? $"{current.GetType().Name}(SqlState={postgresException.SqlState})"
+                : current.GetType().Name);
+        }
+
+        return string.Join(" -> ", descriptions);
+    }
 
     private async Task ResetSchemaAsync()
     {

@@ -344,7 +344,7 @@ assert_economy_manifest "$repository_root" "$manifest_path"
 
 gate_stage='preflight-postgres-isolation'
 mapfile -t nested_postgres_builders < <(
-  rg --path-separator // -l --glob '*.cs' 'new PostgreSqlBuilder' apps/api/tests \
+  grep -RIl --include='*.cs' 'new PostgreSqlBuilder' apps/api/tests \
     | grep -v '^apps/api/tests/GameGuild.TestSupport.Economy/' \
     || true
 )
@@ -588,7 +588,7 @@ if [[ "$gate_profile" == full ]]; then
   wait_for_whole_solution_batch
   while IFS= read -r project_log; do
     cat "$project_log" >> "$whole_solution_log"
-  done < <(find "$whole_solution_results" -type f -name 'dotnet-test.log' -print | LC_ALL=C sort)
+  done < <(find "$whole_solution_results" -mindepth 2 -type f -name 'dotnet-test.log' -print | LC_ALL=C sort)
   mapfile -t whole_solution_trx < <(find "$whole_solution_results" -type f -name '*.trx' -print | LC_ALL=C sort)
   assert_whole_solution_evidence "$repository_root" "$whole_solution_log" "${whole_solution_trx[@]}" >/dev/null
 fi

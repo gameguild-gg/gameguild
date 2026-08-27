@@ -51,7 +51,9 @@ public sealed class GetLearnerCourseWorkspaceQueryHandler(IApplicationDbContext 
 
         var content = await context.Set<ProgramContent>()
             .AsNoTracking()
-            .Where(item => item.ProgramId == request.CourseId && item.DeletedAt == null)
+            .Where(item => item.ProgramId == request.CourseId
+                && item.DeletedAt == null
+                && item.Visibility != GameGuild.Learning.Courses.Visibility.Private)
             .OrderBy(item => item.SortOrder)
             .ThenBy(item => item.CreatedAt)
             .ToArrayAsync(cancellationToken)

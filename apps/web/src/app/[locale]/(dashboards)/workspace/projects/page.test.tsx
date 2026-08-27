@@ -115,6 +115,47 @@ describe("member projects list page", () => {
     expect(
       screen.getByRole("menuitem", { name: /Alpha Team projects/i }),
     ).toHaveAttribute("href", "/workspace/projects?team=alpha-team");
+    expect(screen.getAllByRole("menuitem")).toHaveLength(2);
+  });
+
+  it("keeps All projects as the only scope when the member has no Teams", async () => {
+    const user = userEvent.setup();
+    mocks.getWorkspaceTeams.mockResolvedValue([]);
+
+    render(await ProjectsPage(pageProps()));
+
+    await user.click(
+      screen.getByRole("button", { name: /Current scope: All projects/i }),
+    );
+
+    expect(screen.getAllByRole("menuitem")).toHaveLength(1);
+    expect(
+      screen.getByRole("menuitem", { name: /All projects/i }),
+    ).toHaveAttribute("href", "/workspace/projects");
+    expect(mocks.getWorkspaceProjects).toHaveBeenCalledOnce();
+  });
+
+  it("offers an independent scope option for every Team membership", async () => {
+    const user = userEvent.setup();
+    mocks.getWorkspaceTeams.mockResolvedValue([
+      ...teams,
+      { id: "team-2", slug: "beta-team", name: "Beta Team" },
+      { id: "team-3", slug: "gamma-team", name: "Gamma Team" },
+    ]);
+
+    render(await ProjectsPage(pageProps()));
+
+    await user.click(
+      screen.getByRole("button", { name: /Current scope: All projects/i }),
+    );
+
+    expect(screen.getAllByRole("menuitem")).toHaveLength(4);
+    expect(
+      screen.getByRole("menuitem", { name: /Beta Team projects/i }),
+    ).toHaveAttribute("href", "/workspace/projects?team=beta-team");
+    expect(
+      screen.getByRole("menuitem", { name: /Gamma Team projects/i }),
+    ).toHaveAttribute("href", "/workspace/projects?team=gamma-team");
   });
 
   it("loads only the selected Team Projects when the Team scope is active", async () => {

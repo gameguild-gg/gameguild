@@ -261,7 +261,7 @@ async function run() {
     await page.goto(`${webBaseUrl}/sign-in`, { waitUntil: 'domcontentloaded' });
     await waitForClientHydration(page);
     await page.getByLabel('Email').fill(adminEmail);
-    await page.getByLabel('Password').fill(adminPassword);
+    await page.getByLabel('Password', { exact: true }).fill(adminPassword);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.waitForURL((url) => url.pathname.includes('/dashboard'), { timeout: 120_000 });
 

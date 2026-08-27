@@ -1,5 +1,7 @@
 {
-  "hash": "1139ab5a5e031c1632230b13652fdd6682aebff3194f801ec726ffd372b23f62",
+  "hash": "5e9b771974bbd0dd1ca892b0ccd057a04571ca42f04a5142683358608413d60e",
   "apiVersion": "4.3.0",
-  "source": "gameguild-openapi"
+  "source": "gameguild-openapi",
+  "generatedAt": "2026-08-27T02:17:47.748Z",
+  "generatedBy": "tolstenko"
 }

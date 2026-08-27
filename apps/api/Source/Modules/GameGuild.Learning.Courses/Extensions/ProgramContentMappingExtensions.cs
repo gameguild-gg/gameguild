@@ -37,6 +37,7 @@ public static class ProgramContentMappingExtensions
       SortOrder = content.SortOrder,
       IsRequired = content.IsRequired,
       EstimatedMinutes = content.EstimatedMinutes,
+      EstimatedMinutesSource = content.EstimatedMinutesSource,
       Visibility = content.Visibility,
       CreatedAt = content.CreatedAt,
       UpdatedAt = content.UpdatedAt,
@@ -98,12 +99,13 @@ public static class ProgramContentMappingExtensions
       Slug = string.IsNullOrWhiteSpace(dto.Slug) ? dto.Title.ToSlugCase() : dto.Slug,
       Description = dto.Description,
       Type = NormalizeProfessorFacingType(dto.Type),
-      Body = dto.Body,
+      Body = dto.Body ?? "{}",
       JsonBody = dto.JsonBody is null ? null : JsonSerializer.Serialize(dto.JsonBody),
       LessonFormat = dto.LessonFormat ?? LessonContentFormatInference.FromBody(dto.Body),
       SortOrder = dto.SortOrder,
       IsRequired = dto.IsRequired,
       EstimatedMinutes = dto.EstimatedMinutes,
+      EstimatedMinutesSource = dto.EstimatedMinutesSource ?? EstimatedMinutesSource.Auto,
       Visibility = dto.Visibility,
     };
 
@@ -145,7 +147,17 @@ public static class ProgramContentMappingExtensions
     }
     if (dto.SortOrder != null) content.SortOrder = dto.SortOrder.Value;
     if (dto.IsRequired != null) content.IsRequired = dto.IsRequired.Value;
-    if (dto.EstimatedMinutes != null) content.EstimatedMinutes = dto.EstimatedMinutes;
+    if (dto.EstimatedMinutes.HasValue)
+    {
+        content.EstimatedMinutes = dto.EstimatedMinutes.Value;
+        content.EstimatedMinutesSource = EstimatedMinutesSource.Manual;
+    }
+    else if (dto.EstimatedMinutesSource == EstimatedMinutesSource.Auto)
+    {
+        content.EstimatedMinutesSource = EstimatedMinutesSource.Auto;
+        // Value recomputed by RecalculateEstimatedReadingTime() inside NormalizeLearningContract below.
+    }
+    // else: leave both fields untouched.
     if (dto.Visibility != null) content.Visibility = dto.Visibility.Value;
     content.NormalizeLearningContract();
   }

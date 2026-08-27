@@ -11,6 +11,7 @@ function item(overrides: Partial<ContentItem>): ContentItem {
     title: 'Content',
     description: null,
     status: 'draft',
+    visibility: 'Private',
     duration: null,
     metadata: {},
     gradingConfig: null,

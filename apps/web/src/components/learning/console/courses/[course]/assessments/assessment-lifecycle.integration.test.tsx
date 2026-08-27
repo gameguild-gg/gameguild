@@ -228,6 +228,7 @@ const assignmentItem = {
   title: "Milestone 1 brief",
   description: "First assessment.",
   status: "published",
+  visibility: "Public",
   duration: 60,
   metadata: {},
   gradingConfig: null,

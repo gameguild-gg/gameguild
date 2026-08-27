@@ -59,8 +59,10 @@ const moduleItem = {
   order: 0,
   type: "Lesson",
   title: "Week 01",
+  slug: "week-01",
   description: null,
   status: "published",
+  visibility: "Public",
   duration: null,
   metadata: {},
   gradingConfig: null,
@@ -75,6 +77,7 @@ const secondModuleItem = {
   title: "Week 02",
   description: "Combat systems",
   status: "draft",
+  visibility: "Private",
 } satisfies ContentItem;
 
 const lessonItem = {
@@ -83,8 +86,10 @@ const lessonItem = {
   order: 0,
   type: "Lesson",
   title: "Course overview",
+  slug: "course-overview",
   description: null,
   status: "published",
+  visibility: "Public",
   duration: 20,
   metadata: {},
   gradingConfig: null,
@@ -99,7 +104,9 @@ const subLessonItem = {
   order: 0,
   type: "Code",
   title: "Starter exercise",
+  slug: "starter-exercise",
   status: "archived",
+  visibility: "Private",
   duration: 0,
 } satisfies ContentItem;
 
@@ -107,6 +114,7 @@ const secondLessonItem = {
   ...lessonItem,
   id: "lesson-2",
   title: "Setup environment",
+  slug: "setup-environment",
   order: 1,
 } satisfies ContentItem;
 
@@ -190,6 +198,7 @@ describe("ContentTree course management", () => {
       expect(addContent).toHaveBeenCalledWith({
         courseId: "course-1",
         title: "Week 02",
+        slug: "week-02",
         description: "Combat systems",
         type: "Module",
         sortOrder: 1,
@@ -273,6 +282,7 @@ describe("ContentTree course management", () => {
         courseId: "course-1",
         parentId: "module-created",
         title: "Define the playable promise",
+        slug: "define-the-playable-promise",
         type: "Lesson",
         lessonFormat: "Markdown",
         sortOrder: 0,
@@ -301,6 +311,7 @@ describe("ContentTree course management", () => {
         parentId: "module-1",
         title: "Playable promise",
         type: "Lesson",
+        slug: "playable-promise",
         lessonFormat: "Markdown",
         sortOrder: 1,
       });
@@ -330,10 +341,61 @@ describe("ContentTree course management", () => {
         parentId: "module-1",
         title: "Camera blocking walkthrough",
         type: "Lesson",
+        slug: "camera-blocking-walkthrough",
         lessonFormat: "Video",
         sortOrder: 1,
       });
     });
+  }, 15_000);
+
+  it("creates a lesson with a normalized custom slug that detaches from the title", async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole("button", { name: /add lesson/i }));
+    const dialog = screen.getByRole("dialog", { name: /add lesson/i });
+    await user.type(within(dialog).getByLabelText(/title/i), "Playable promise");
+    expect(within(dialog).getByLabelText(/url slug/i)).toHaveValue(
+      "playable-promise",
+    );
+
+    await user.clear(within(dialog).getByLabelText(/url slug/i));
+    await user.type(
+      within(dialog).getByLabelText(/url slug/i),
+      "My Custom SLUG!",
+    );
+    await user.type(within(dialog).getByLabelText(/title/i), " v2");
+    expect(within(dialog).getByLabelText(/url slug/i)).toHaveValue(
+      "my-custom-slug",
+    );
+
+    await user.click(
+      within(dialog).getByRole("button", { name: /^add lesson$/i }),
+    );
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Playable promise v2",
+          slug: "my-custom-slug",
+        }),
+      );
+    });
+  }, 15_000);
+
+  it("strips the slug trailing dash on blur in the add lesson dialog", async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole("button", { name: /add lesson/i }));
+    const dialog = screen.getByRole("dialog", { name: /add lesson/i });
+    const slugInput = within(dialog).getByLabelText(/url slug/i);
+
+    await user.type(slugInput, "my slug ");
+    expect(slugInput).toHaveValue("my-slug-");
+
+    fireEvent.blur(slugInput);
+    expect(slugInput).toHaveValue("my-slug");
   }, 15_000);
 
   it("hides the lesson format selector for non-lesson content types", async () => {
@@ -360,6 +422,7 @@ describe("ContentTree course management", () => {
         parentId: "module-1",
         title: "Entry quiz",
         type: "Questionnaire",
+        slug: "entry-quiz",
         sortOrder: 1,
       });
     });
@@ -390,7 +453,7 @@ describe("ContentTree course management", () => {
     await user.click(screen.getByRole("button", { name: /edit lesson/i }));
 
     expect(navigationMocks.push).toHaveBeenCalledWith(
-      "/en-US/workspace/learning/courses/course-1/content/lesson-1",
+      "/en-US/workspace/learning/courses/course-1/content/course-overview",
     );
   });
 
@@ -558,6 +621,7 @@ describe("ContentTree course management", () => {
         parentId: undefined,
         title: "Imported activity",
         type: "Lesson",
+        slug: "imported-activity",
         lessonFormat: "Markdown",
         sortOrder: 1,
       });
@@ -589,6 +653,7 @@ describe("ContentTree course management", () => {
         parentId: "module-1",
         title: "Part A",
         description: "Nested foundations",
+        slug: "part-a",
         type: "Module",
         sortOrder: 1,
       });
@@ -612,6 +677,7 @@ describe("ContentTree course management", () => {
         parentId: "lesson-1",
         title: "Nested reflection",
         type: "Lesson",
+        slug: "nested-reflection",
         lessonFormat: "Markdown",
         sortOrder: 1,
       });
@@ -807,6 +873,7 @@ describe("ContentTree course management", () => {
         courseId: "course-1",
         contentId: "module-1",
         title: "Week 01 revised",
+        slug: "week-01-revised",
         description: "",
       });
     });
@@ -837,6 +904,7 @@ describe("ContentTree course management", () => {
         courseId: "course-1",
         contentId: "module-1",
         title: "Week 01 updated",
+        slug: "week-01-updated",
         description: "Updated module scope",
       });
     });
@@ -909,7 +977,7 @@ describe("ContentTree course management", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /^edit$/i }));
     expect(navigationMocks.push).toHaveBeenCalledWith(
-      "/en-US/workspace/learning/courses/course-1/content/sublesson-1",
+      "/en-US/workspace/learning/courses/course-1/content/starter-exercise",
     );
 
     fireEvent.click(screen.getAllByRole("button", { name: /^delete$/i })[1]!);

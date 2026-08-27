@@ -146,13 +146,13 @@
     "@vitejs/plugin-react": "^6.0.5",
     "@xterm/xterm": "^6.0.0",
     "cli-progress": "^3.12.0",
-    "npm-run-all": "^4.1.5",
+    "npm-run-all": "4.1.5",
     "shelljs": "^0.10.0",
     "tar": "^7.5.22",
     "tsd": "^0.33.0",
     "tsup": "^8.4.0",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.3",
     "vite": "^8.2.1"
   }
 }

@@ -13983,6 +13983,9 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<int?>("EstimatedMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<int>("EstimatedMinutesSource")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsRequired")
                         .HasColumnType("boolean");
 

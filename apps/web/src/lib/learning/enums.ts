@@ -5,6 +5,7 @@ import type {
   ContentVisibility,
   LearningCoursesEnrollmentStatus,
   LearningCoursesProgramDifficulty,
+  LearningCoursesVisibility,
   ProgramCategory,
 } from '@game-guild/client';
 
@@ -12,6 +13,7 @@ export type {
   ContentVisibility,
   LearningCoursesEnrollmentStatus,
   LearningCoursesProgramDifficulty,
+  LearningCoursesVisibility,
   ProgramCategory,
 };
 
@@ -49,6 +51,15 @@ export const CONTENT_VISIBILITIES: readonly ContentVisibility[] = [
   'Internal',
   'Friends',
   'Protected',
+  'Public',
+] as const;
+
+// Course-content visibility uses the learning API enum, NOT program-level
+// ContentVisibility (Friends/Protected are invalid content values).
+export const CONTENT_ITEM_VISIBILITIES: readonly LearningCoursesVisibility[] = [
+  'Private',
+  'Internal',
+  'Restricted',
   'Public',
 ] as const;
 

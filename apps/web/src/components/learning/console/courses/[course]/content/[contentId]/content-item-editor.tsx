@@ -41,7 +41,7 @@ import {
 import { buttonVariants } from "@game-guild/ui/components/button";
 import { ArrowLeft, Clock, Eye, Loader2, Pencil, Save } from "lucide-react";
 import type { SerializedEditorState } from "lexical";
-import type { LearningCoursesLessonContentFormat } from "@game-guild/client";
+import type { LearningCoursesLessonContentFormat, LearningCoursesVisibility } from "@game-guild/client";
 import {
   readContentGradingDefinition,
   type ContentGradingDefinition,
@@ -55,8 +55,10 @@ import {
   updateAssessment,
   updateContent,
 } from "@/lib/learning/actions";
-import { CONTENT_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
+import { CONTENT_ITEM_VISIBILITIES, formatEnumLabel } from "@/lib/learning/enums";
 import { getLessonFormatLabel } from "@/lib/learning/lesson-formats";
+import { estimateReadingMinutes } from "@/lib/learning/reading-time";
+import { normalizeSlug, slugify } from "@/lib/slugify";
 import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-renderer";
 import { LessonContentEditor } from "./lesson-content-editor";
 import { LessonCodeEditor } from "./lesson-code-editor";
@@ -97,15 +99,21 @@ export function ContentItemEditor({
   const [isPending, startTransition] = useTransition();
 
   const [title, setTitle] = useState(item.title);
+  const [slug, setSlug] = useState(item.slug);
+  // Slug starts in auto mode regardless of the stored value (it may be a
+  // legacy backfill): title edits regenerate it until the slug is edited
+  // directly in this session, which detaches it.
+  const [autoSlug, setAutoSlug] = useState(true);
   const [description, setDescription] = useState(item.description ?? "");
-  const [visibility, setVisibility] = useState<string>(
-    item.status === "published" ? "Public" : "Private",
-  );
+  const [visibility, setVisibility] =
+    useState<LearningCoursesVisibility>(item.visibility);
   const [isRequired, setIsRequired] = useState<boolean>(
     (item.settings?.isRequired as boolean) ?? true,
   );
   const [estimatedMinutes, setEstimatedMinutes] = useState<string>(
-    item.duration != null ? String(item.duration) : "",
+    item.estimatedMinutesSource === "Manual" && item.duration != null
+      ? String(item.duration)
+      : "",
   );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -174,6 +182,28 @@ export function ContentItemEditor({
   const [selectedFormat, setSelectedFormat] =
     useState<LearningCoursesLessonContentFormat>(initialSelectedFormat);
 
+  // ponytail: refs mutate without re-render — the auto hint refreshes only on
+  // format change / preview toggle / save-refresh; that staleness is accepted for v1.
+  const autoHint = useMemo(() => {
+    if (!isLesson) return null;
+    switch (selectedFormat) {
+      case "Lexical":
+        return estimateReadingMinutes({
+          jsonBody: (editorStateRef.current ?? null) as Record<
+            string,
+            unknown
+          > | null,
+        });
+      case "Markdown":
+      case "RevealJs":
+        return estimateReadingMinutes({ body: codeBodyRef.current ?? null });
+      case "Video":
+        return null;
+      default:
+        return null;
+    }
+  }, [isLesson, selectedFormat, previewMode]);
+
   const handleEditorChange = useCallback((state: SerializedEditorState) => {
     editorStateRef.current = state;
   }, []);
@@ -186,6 +216,18 @@ export function ContentItemEditor({
   );
 
   const contentTypeLabel = formatContentTypeLabel(item.type);
+
+  function handleTitleChange(value: string) {
+    setTitle(value);
+    if (autoSlug) {
+      setSlug(slugify(value));
+    }
+  }
+
+  function handleSlugChange(value: string) {
+    setAutoSlug(false);
+    setSlug(slugify(value));
+  }
 
   function handleSave() {
     if (!title.trim()) {
@@ -225,6 +267,10 @@ export function ContentItemEditor({
         courseId,
         contentId: item.id,
         title: title.trim(),
+        // Backend keeps the stored slug when sent whitespace — derive locally
+        // so a cleared field can't silently revert to the old slug. Re-slugify
+        // to strip the trailing hyphen live typing can leave behind.
+        slug: normalizeSlug(slug) || normalizeSlug(title),
         description: description.trim() || undefined,
         body: bodyToSave,
         ...(isLesson
@@ -233,9 +279,8 @@ export function ContentItemEditor({
         ...(isQuiz ? { jsonBody: jsonBodyToSave } : {}),
         visibility,
         isRequired,
-        estimatedMinutes: estimatedMinutes
-          ? Number(estimatedMinutes)
-          : undefined,
+        estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : null,
+        estimatedMinutesSource: estimatedMinutes ? "Manual" : "Auto",
       });
 
       if (!result.success) {
@@ -254,7 +299,19 @@ export function ContentItemEditor({
       }
 
       setSaved(true);
-      router.refresh();
+
+      // The route param IS the slug — after a slug change the current URL is
+      // stale, so replace it instead of refreshing in place.
+      const savedSlug = normalizeSlug(slug) || normalizeSlug(title);
+      if (savedSlug && savedSlug !== item.slug) {
+        router.replace(
+          `${learningBase}/courses/${encodeURIComponent(courseId)}/content/${savedSlug}` as Parameters<
+            typeof router.push
+          >[0],
+        );
+      } else {
+        router.refresh();
+      }
     });
   }
 
@@ -495,9 +552,23 @@ export function ContentItemEditor({
                 <Input
                   id="title"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => handleTitleChange(e.target.value)}
                   placeholder="Content title"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="slug">URL Slug</Label>
+                <Input
+                  id="slug"
+                  value={slug}
+                  onChange={(e) => handleSlugChange(e.target.value)}
+                  onBlur={() => setSlug(normalizeSlug(slug))}
+                  placeholder="introduction-to-game-development"
+                />
+                <p className="text-muted-foreground text-xs">
+                  Auto-generated from title. Edit to customize.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -744,12 +815,17 @@ export function ContentItemEditor({
                 <Label htmlFor="visibility">
                   {contentTypeLabel} visibility
                 </Label>
-                <Select value={visibility} onValueChange={setVisibility}>
+                <Select
+                  value={visibility}
+                  onValueChange={(v) =>
+                    setVisibility(v as LearningCoursesVisibility)
+                  }
+                >
                   <SelectTrigger id="visibility">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CONTENT_VISIBILITIES.map((v) => (
+                    {CONTENT_ITEM_VISIBILITIES.map((v) => (
                       <SelectItem key={v} value={v}>
                         {formatEnumLabel(v)}
                       </SelectItem>
@@ -776,14 +852,33 @@ export function ContentItemEditor({
                   <Clock className="mr-1 inline h-3 w-3" />
                   Estimated minutes
                 </Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  min={0}
-                  value={estimatedMinutes}
-                  onChange={(e) => setEstimatedMinutes(e.target.value)}
-                  placeholder="e.g. 15"
-                />
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="duration"
+                    type="number"
+                    min={0}
+                    value={estimatedMinutes}
+                    onChange={(e) => setEstimatedMinutes(e.target.value)}
+                    placeholder={autoHint ? `Auto (~${autoHint} min)` : "Auto"}
+                  />
+                  {estimatedMinutes && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEstimatedMinutes("")}
+                      title="Reset to auto estimate"
+                    >
+                      Auto
+                    </Button>
+                  )}
+                </div>
+                {autoHint && !estimatedMinutes && (
+                  <p className="text-muted-foreground text-xs">
+                    Leave blank to keep auto (~{autoHint} min). Type a number to
+                    pin it manually.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
