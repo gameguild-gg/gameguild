@@ -4441,6 +4441,7 @@ Table "program_contents" {
   "SortOrder" integer [not null]
   "IsRequired" boolean [not null]
   "EstimatedMinutes" integer
+  "EstimatedMinutesSource" integer [not null]
   "Visibility" integer [not null]
   "Version" integer [not null]
   "CreatedAt" timestamp [not null]
