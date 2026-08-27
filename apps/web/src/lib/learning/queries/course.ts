@@ -330,6 +330,7 @@ function mapContentDto(
     title: dto.title ?? "",
     description: dto.description ?? null,
     status: dto.visibility === "Public" ? "published" : "draft",
+    visibility: dto.visibility ?? "Public",
     duration: dto.estimatedMinutes ?? null,
     metadata: {},
     gradingConfig,
