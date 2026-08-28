@@ -2,6 +2,7 @@ import { auth, getToken } from "@/auth";
 import { readContentGradingDefinition } from "@game-guild/grading";
 import {
   createServerClient,
+  hasRole,
   GeneratedApi,
   type ContentStatus,
   type ContentVisibility,
@@ -257,6 +258,8 @@ export const resolveCourseId = cache(
 
 /**
  * True when the current viewer manages the course (course creator).
+ * GUIDs are compared case-insensitively: the API and the auth session
+ * may emit the same id with different casing.
  */
 export async function canManageCourse(
   courseIdentifier: string,
@@ -267,7 +270,11 @@ export async function canManageCourse(
       auth(),
     ]);
 
-    return Boolean(course?.creatorId && course.creatorId === session?.user?.id);
+    return Boolean(
+      course?.creatorId &&
+        session?.user?.id &&
+        course.creatorId.toLowerCase() === session.user.id.toLowerCase(),
+    );
   } catch {
     return false;
   }
@@ -275,14 +282,15 @@ export async function canManageCourse(
 
 /**
  * True when the current viewer may edit the course: the instructor/course
- * owner (creator), or a viewer holding the `Program.{courseId}.Edit`
- * permission in the 3-layer DAC (platform role → tenant grants →
- * ProgramPermissions).
+ * owner (creator), a SystemAdmin, or a viewer holding the
+ * `Program.{courseId}.Edit` permission in the 3-layer DAC (platform role →
+ * tenant grants → ProgramPermissions).
  *
- * Mirrors the write-side gate: the authorization API resolves the composite
- * `Program.{courseId}.Edit` string exactly like ProgramCrudController's
- * [RequireResourcePermission] attribute, and the creator check mirrors
- * ProgramContentController's CanManageContent resolution.
+ * Mirrors the write-side gates exactly: AuthorizationBehavior and
+ * ProgramContentController both short-circuit for SystemAdmin before the
+ * DAC resolution, and treat the creator as manager; the has-permission
+ * endpoint only resolves the DAC layers, so the role and creator checks
+ * must run alongside it.
  */
 export async function canEditCourse(
   courseIdentifier: string,
@@ -294,6 +302,8 @@ export async function canEditCourse(
     ]);
 
     if (!session?.user?.id) return false;
+
+    if (hasRole(session, "SystemAdmin")) return true;
 
     if (session.tenantId) {
       const accessControl = new GeneratedApi.AccessControlResourcePermissionsModule(
