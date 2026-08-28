@@ -21,8 +21,14 @@ vi.mock("@/auth", () => ({
   getToken: mocks.getToken,
 }));
 
+vi.mock("@game-guild/grading", () => ({
+  readContentGradingDefinition: vi.fn(),
+}));
+
 vi.mock("@game-guild/client", () => ({
   createServerClient: mocks.createServerClient,
+  hasRole: (session: { user?: { roles?: string[] } }, role: string) =>
+    Boolean(session?.user?.roles?.includes(role)),
   GeneratedApi: {
     LearningCoursesProgramModule: class {
       getCoursesForGetCoursesById = mocks.getCoursesForGetCoursesById;
@@ -476,5 +482,34 @@ describe("course edit permission (canEditCourse)", () => {
 
     expect(mocks.getAuthorizationResourcesHasPermission).not.toHaveBeenCalled();
     expect(mocks.getCoursesForGetCoursesById).not.toHaveBeenCalled();
+  });
+
+  it("grants edit to SystemAdmin without DAC or creator lookups", async () => {
+    mocks.auth.mockResolvedValue({
+      user: { id: "user-1", roles: ["SystemAdmin"] },
+      tenantId: "tenant-1",
+    });
+
+    await expect(canEditCourse(courseId)).resolves.toBe(true);
+
+    expect(mocks.getAuthorizationResourcesHasPermission).not.toHaveBeenCalled();
+    expect(mocks.getCoursesForGetCoursesById).not.toHaveBeenCalled();
+  });
+
+  it("matches the instructor even when the GUID casing differs", async () => {
+    mocks.auth.mockResolvedValue({ user: { id: "USER-1" } });
+    mocks.getCoursesForGetCoursesById.mockResolvedValue({
+      ok: true,
+      data: {
+        id: courseId,
+        title: "Instructor Course",
+        slug: "instructor-course",
+        creatorId: "user-1",
+        status: "Published",
+        visibility: "Public",
+      },
+    });
+
+    await expect(canEditCourse(courseId)).resolves.toBe(true);
   });
 });
