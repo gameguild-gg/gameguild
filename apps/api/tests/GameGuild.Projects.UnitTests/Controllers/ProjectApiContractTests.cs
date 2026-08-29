@@ -32,15 +32,10 @@ public sealed class ProjectApiContractTests
                 FollowerCount = 5,
             },
         };
-        project.Versions.Add(new ProjectVersion
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            ProjectId = projectId,
-            VersionNumber = "1.2.0",
-            Status = "published",
-            CreatedById = userId,
-        });
+        var version = ProjectVersion.Create(projectId, "1.2.0", null, userId, tenantId);
+        version.MarkReadyForTesting();
+        version.Release();
+        project.Versions.Add(version);
         project.Collaborators.Add(new ProjectCollaborator
         {
             Id = Guid.NewGuid(),
