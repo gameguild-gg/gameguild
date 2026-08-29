@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -18,24 +18,18 @@ export class CommercePaymentsWalletsModule {
   /**
    * Get my wallet
    */
-  async getWallet(): Promise<
-    Result<Types.CommercePaymentsUserWallet, ApiError>
-  > {
-    const url = "/api/v1/wallet";
+  async getWallet(): Promise<Result<Types.CommercePaymentsUserWallet, ApiError>> {
+    const url = '/api/v1/wallet';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommercePaymentsUserWalletSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.CommercePaymentsUserWalletSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -45,20 +39,14 @@ export class CommercePaymentsWalletsModule {
   /**
    * Create my wallet
    */
-  async postWallet(
-    body: Types.CommercePaymentsCreateWalletInput,
-  ): Promise<Result<Types.CommercePaymentsUserWallet, ApiError>> {
-    const url = "/api/v1/wallet";
+  async postWallet(body: Types.CommercePaymentsCreateWalletInput): Promise<Result<Types.CommercePaymentsUserWallet, ApiError>> {
+    const url = '/api/v1/wallet';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommercePaymentsCreateWalletInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommercePaymentsCreateWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -66,11 +54,7 @@ export class CommercePaymentsWalletsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommercePaymentsUserWalletSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.CommercePaymentsUserWalletSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -80,20 +64,14 @@ export class CommercePaymentsWalletsModule {
   /**
    * Lock my wallet
    */
-  async postWalletLock(
-    body: Types.CommercePaymentsLockWalletInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/wallet:lock";
+  async postWalletLock(body: Types.CommercePaymentsLockWalletInput): Promise<Result<void, ApiError>> {
+    const url = '/api/v1/wallet:lock';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommercePaymentsLockWalletInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommercePaymentsLockWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -106,10 +84,10 @@ export class CommercePaymentsWalletsModule {
    * Unlock my wallet
    */
   async postWalletUnlock(): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/wallet:unlock";
+    const url = '/api/v1/wallet:unlock';
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -121,10 +99,10 @@ export class CommercePaymentsWalletsModule {
    * Get my wallet balance
    */
   async getWalletBalance(): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/wallet/balance";
+    const url = '/api/v1/wallet/balance';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -135,16 +113,11 @@ export class CommercePaymentsWalletsModule {
   /**
    * List all wallets
    */
-  async getWalletsForGetWallets(query?: {
-    page?: number;
-    pageSize?: number;
-    currency?: string;
-    isFrozen?: boolean;
-  }): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/wallets";
+  async getWalletsForGetWallets(query?: { page?: number; pageSize?: number; currency?: string; isFrozen?: boolean }): Promise<Result<void, ApiError>> {
+    const url = '/api/v1/wallets';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -156,13 +129,11 @@ export class CommercePaymentsWalletsModule {
   /**
    * Get wallet by ID
    */
-  async getWalletsForGetWalletsByWalletId(
-    walletId: string,
-  ): Promise<Result<void, ApiError>> {
+  async getWalletsForGetWalletsByWalletId(walletId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/wallets/${walletId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -177,7 +148,7 @@ export class CommercePaymentsWalletsModule {
     const url = `/api/v1/wallets/${walletId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -188,21 +159,14 @@ export class CommercePaymentsWalletsModule {
   /**
    * Update wallet settings
    */
-  async patchWallets(
-    walletId: string,
-    body: Types.CommercePaymentsModelsPatchWalletInput,
-  ): Promise<Result<void, ApiError>> {
+  async patchWallets(walletId: string, body: Types.CommercePaymentsModelsPatchWalletInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/wallets/${walletId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommercePaymentsModelsPatchWalletInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommercePaymentsModelsPatchWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PATCH",
+      method: 'PATCH',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -218,7 +182,7 @@ export class CommercePaymentsWalletsModule {
     const url = `/api/v1/wallets/${walletId}`;
 
     const result = await this.client.request({
-      method: "HEAD",
+      method: 'HEAD',
       path: url,
       requiresAuth: true,
     });
@@ -229,21 +193,14 @@ export class CommercePaymentsWalletsModule {
   /**
    * Freeze wallet
    */
-  async postWalletsFreeze(
-    walletId: string,
-    body: Types.CommercePaymentsModelsFreezeWalletInput,
-  ): Promise<Result<void, ApiError>> {
+  async postWalletsFreeze(walletId: string, body: Types.CommercePaymentsModelsFreezeWalletInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/wallets/${walletId}:freeze`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommercePaymentsModelsFreezeWalletInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommercePaymentsModelsFreezeWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -259,7 +216,7 @@ export class CommercePaymentsWalletsModule {
     const url = `/api/v1/wallets/${walletId}:unfreeze`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -270,14 +227,11 @@ export class CommercePaymentsWalletsModule {
   /**
    * Get wallet audit log
    */
-  async getWalletsAuditLog(
-    walletId: string,
-    query?: { page?: number; pageSize?: number },
-  ): Promise<Result<void, ApiError>> {
+  async getWalletsAuditLog(walletId: string, query?: { page?: number; pageSize?: number }): Promise<Result<void, ApiError>> {
     const url = `/api/v1/wallets/${walletId}/audit-log`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -287,8 +241,6 @@ export class CommercePaymentsWalletsModule {
   }
 }
 
-export function createCommercePaymentsWalletsModule(
-  client: ApiClient,
-): CommercePaymentsWalletsModule {
+export function createCommercePaymentsWalletsModule(client: ApiClient): CommercePaymentsWalletsModule {
   return new CommercePaymentsWalletsModule(client);
 }

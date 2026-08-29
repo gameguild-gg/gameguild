@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -18,24 +18,18 @@ export class UsersMetadataModule {
   /**
    * Get user metadata by user ID
    */
-  async getUsersMetadata(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserMetadataDto, ApiError>> {
+  async getUsersMetadata(userId: string): Promise<Result<Types.IdentityUsersUserMetadataDto, ApiError>> {
     const url = `/v1/users/${userId}/metadata`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserMetadataDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersUserMetadataDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -45,21 +39,14 @@ export class UsersMetadataModule {
   /**
    * Replace user metadata by user ID
    */
-  async putUsersMetadata(
-    userId: string,
-    body: Types.IdentityUsersReplaceUserMetadataInput,
-  ): Promise<Result<void, ApiError>> {
+  async putUsersMetadata(userId: string, body: Types.IdentityUsersReplaceUserMetadataInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/metadata`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersReplaceUserMetadataInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersReplaceUserMetadataInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -71,21 +58,14 @@ export class UsersMetadataModule {
   /**
    * Partially update user metadata by user ID
    */
-  async patchUsersMetadata(
-    userId: string,
-    body: Types.IdentityUsersUpdateUserMetadataInput,
-  ): Promise<Result<void, ApiError>> {
+  async patchUsersMetadata(userId: string, body: Types.IdentityUsersUpdateUserMetadataInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/metadata`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersUpdateUserMetadataInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserMetadataInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PATCH",
+      method: 'PATCH',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -95,8 +75,6 @@ export class UsersMetadataModule {
   }
 }
 
-export function createUsersMetadataModule(
-  client: ApiClient,
-): UsersMetadataModule {
+export function createUsersMetadataModule(client: ApiClient): UsersMetadataModule {
   return new UsersMetadataModule(client);
 }

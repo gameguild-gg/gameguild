@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -24,10 +24,10 @@ export class AssetsModule {
     skip?: number;
     take?: number;
   }): Promise<Result<void, ApiError>> {
-    const url = "/v1/assets";
+    const url = '/v1/assets';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -45,10 +45,10 @@ export class AssetsModule {
     parentResourceId?: string;
     folderId?: string;
   }): Promise<Result<void, ApiError>> {
-    const url = "/v1/assets";
+    const url = '/v1/assets';
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -59,14 +59,11 @@ export class AssetsModule {
 
   /**
    */
-  async getAssetsForGetAssetsById(
-    id: string,
-    query?: { includeContent?: boolean },
-  ): Promise<Result<void, ApiError>> {
+  async getAssetsForGetAssetsById(id: string, query?: { includeContent?: boolean }): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -81,7 +78,7 @@ export class AssetsModule {
     const url = `/v1/assets/${id}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -91,21 +88,14 @@ export class AssetsModule {
 
   /**
    */
-  async patchAssets(
-    id: string,
-    body: Types.AssetsControllersUpdateAssetInput,
-  ): Promise<Result<void, ApiError>> {
+  async patchAssets(id: string, body: Types.AssetsControllersUpdateAssetInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersUpdateAssetInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.AssetsControllersUpdateAssetInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PATCH",
+      method: 'PATCH',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -116,14 +106,11 @@ export class AssetsModule {
 
   /**
    */
-  async getSignedAssetExtractedText(
-    id: string,
-    query?: { token?: string },
-  ): Promise<Result<void, ApiError>> {
+  async getSignedAssetExtractedText(id: string, query?: { token?: string }): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}:extracted-text`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -136,19 +123,12 @@ export class AssetsModule {
    */
   async postAssetsGenerateAccessUrl(
     id: string,
-    query?: {
-      width?: number;
-      height?: number;
-      fit?: Types.AssetsImageFit;
-      format?: Types.AssetsImageFormat;
-      quality?: number;
-      direct?: boolean;
-    },
+    query?: { width?: number; height?: number; fit?: Types.AssetsImageFit; format?: Types.AssetsImageFormat; quality?: number; direct?: boolean },
   ): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}:generate-access-url`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -159,21 +139,14 @@ export class AssetsModule {
 
   /**
    */
-  async postAssetsReport(
-    id: string,
-    body: Types.AssetsControllersReportAssetInput,
-  ): Promise<Result<void, ApiError>> {
+  async postAssetsReport(id: string, body: Types.AssetsControllersReportAssetInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}:report`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersReportAssetInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.AssetsControllersReportAssetInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -184,14 +157,11 @@ export class AssetsModule {
 
   /**
    */
-  async getAssetsContent(
-    id: string,
-    query?: { token?: string; transform?: string },
-  ): Promise<Result<void, ApiError>> {
+  async getAssetsContent(id: string, query?: { token?: string; transform?: string }): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/${id}/content`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -202,26 +172,18 @@ export class AssetsModule {
 
   /**
    */
-  async getAssetExtractedText(
-    id: string,
-  ): Promise<
-    Result<Types.AssetsControllersAssetExtractedTextOutput, ApiError>
-  > {
+  async getAssetExtractedText(id: string): Promise<Result<Types.AssetsControllersAssetExtractedTextOutput, ApiError>> {
     const url = `/v1/assets/${id}/extracted-text`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsControllersAssetExtractedTextOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AssetsControllersAssetExtractedTextOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -232,16 +194,12 @@ export class AssetsModule {
    */
   async getAssetsPreview(
     id: string,
-    query?: {
-      includeExtractedText?: boolean;
-      thumbnailWidth?: number;
-      thumbnailHeight?: number;
-    },
+    query?: { includeExtractedText?: boolean; thumbnailWidth?: number; thumbnailHeight?: number },
   ): Promise<Result<Types.AssetsQueriesAssetPreviewOutput, ApiError>> {
     const url = `/v1/assets/${id}/preview`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -249,11 +207,7 @@ export class AssetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsQueriesAssetPreviewOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AssetsQueriesAssetPreviewOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -262,20 +216,14 @@ export class AssetsModule {
 
   /**
    */
-  async postAssetsBulkDelete(
-    body: Types.AssetsControllersBulkDeleteAssetsInput,
-  ): Promise<Result<Types.AssetsCommandsBulkDeleteAssetsOutput, ApiError>> {
-    const url = "/v1/assets/bulk-delete";
+  async postAssetsBulkDelete(body: Types.AssetsControllersBulkDeleteAssetsInput): Promise<Result<Types.AssetsCommandsBulkDeleteAssetsOutput, ApiError>> {
+    const url = '/v1/assets/bulk-delete';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersBulkDeleteAssetsInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.AssetsControllersBulkDeleteAssetsInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -283,11 +231,7 @@ export class AssetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsCommandsBulkDeleteAssetsOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AssetsCommandsBulkDeleteAssetsOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -296,20 +240,14 @@ export class AssetsModule {
 
   /**
    */
-  async postAssetsBulkDownload(
-    body: Types.AssetsControllersBulkAssetAccessUrlInput,
-  ): Promise<Result<Types.AssetsQueriesBulkAssetAccessUrlsOutput, ApiError>> {
-    const url = "/v1/assets/bulk-download";
+  async postAssetsBulkDownload(body: Types.AssetsControllersBulkAssetAccessUrlInput): Promise<Result<Types.AssetsQueriesBulkAssetAccessUrlsOutput, ApiError>> {
+    const url = '/v1/assets/bulk-download';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.AssetsControllersBulkAssetAccessUrlInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.AssetsControllersBulkAssetAccessUrlInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -317,11 +255,7 @@ export class AssetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsQueriesBulkAssetAccessUrlsOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AssetsQueriesBulkAssetAccessUrlsOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -336,10 +270,10 @@ export class AssetsModule {
     parentResourceId?: string;
     folderId?: string;
   }): Promise<Result<Types.AssetsCommandsBulkUploadAssetsOutput, ApiError>> {
-    const url = "/v1/assets/bulk-upload";
+    const url = '/v1/assets/bulk-upload';
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -347,11 +281,7 @@ export class AssetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsCommandsBulkUploadAssetsOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AssetsCommandsBulkUploadAssetsOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -365,10 +295,10 @@ export class AssetsModule {
     mimeType?: string;
     totalSize?: number;
   }): Promise<Result<Types.AssetsChunkedUploadSession, ApiError>> {
-    const url = "/v1/assets/chunked-uploads";
+    const url = '/v1/assets/chunked-uploads';
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -376,11 +306,7 @@ export class AssetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsChunkedUploadSessionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AssetsChunkedUploadSessionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -389,13 +315,11 @@ export class AssetsModule {
 
   /**
    */
-  async deleteAssetsChunkedUploads(
-    uploadId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteAssetsChunkedUploads(uploadId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/chunked-uploads/${uploadId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -407,18 +331,12 @@ export class AssetsModule {
    */
   async postAssetsChunkedUploadsComplete(
     uploadId: string,
-    query?: {
-      displayName?: string;
-      accessPolicy?: Types.AssetsAssetAccessPolicy;
-      parentResourceType?: string;
-      parentResourceId?: string;
-      folderId?: string;
-    },
+    query?: { displayName?: string; accessPolicy?: Types.AssetsAssetAccessPolicy; parentResourceType?: string; parentResourceId?: string; folderId?: string },
   ): Promise<Result<Types.AssetsAssetUploadResult, ApiError>> {
     const url = `/v1/assets/chunked-uploads/${uploadId}:complete`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -426,11 +344,7 @@ export class AssetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsAssetUploadResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AssetsAssetUploadResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -439,14 +353,11 @@ export class AssetsModule {
 
   /**
    */
-  async postAssetsChunkedUploadsParts(
-    uploadId: string,
-    query?: { chunkIndex?: number },
-  ): Promise<Result<void, ApiError>> {
+  async postAssetsChunkedUploadsParts(uploadId: string, query?: { chunkIndex?: number }): Promise<Result<void, ApiError>> {
     const url = `/v1/assets/chunked-uploads/${uploadId}/parts`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -465,10 +376,10 @@ export class AssetsModule {
     skip?: number;
     take?: number;
   }): Promise<Result<Types.AssetsQueriesAssetSearchOutput, ApiError>> {
-    const url = "/v1/assets/search";
+    const url = '/v1/assets/search';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -476,11 +387,7 @@ export class AssetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AssetsQueriesAssetSearchOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AssetsQueriesAssetSearchOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

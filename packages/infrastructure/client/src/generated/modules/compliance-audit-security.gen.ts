@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -32,13 +32,11 @@ export class ComplianceAuditSecurityModule {
     Take?: number;
     SortBy?: string;
     SortDirection?: string;
-  }): Promise<
-    Result<Types.ComplianceAuditUnifiedSecurityAuditOutput, ApiError>
-  > {
-    const url = "/v1/admin/security-audit";
+  }): Promise<Result<Types.ComplianceAuditUnifiedSecurityAuditOutput, ApiError>> {
+    const url = '/v1/admin/security-audit';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -46,11 +44,7 @@ export class ComplianceAuditSecurityModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceAuditUnifiedSecurityAuditOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ComplianceAuditUnifiedSecurityAuditOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -59,20 +53,14 @@ export class ComplianceAuditSecurityModule {
 
   /**
    */
-  async postAdminSecurityAuditExport(
-    body: Types.ComplianceAuditUnifiedSecurityAuditInput,
-  ): Promise<Result<Blob, ApiError>> {
-    const url = "/v1/admin/security-audit/:export";
+  async postAdminSecurityAuditExport(body: Types.ComplianceAuditUnifiedSecurityAuditInput): Promise<Result<Blob, ApiError>> {
+    const url = '/v1/admin/security-audit/:export';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.ComplianceAuditUnifiedSecurityAuditInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.ComplianceAuditUnifiedSecurityAuditInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -93,13 +81,11 @@ export class ComplianceAuditSecurityModule {
     EndDate?: string;
     Skip?: number;
     Take?: number;
-  }): Promise<
-    Result<Types.ComplianceAuditAuthenticationAuditOutput, ApiError>
-  > {
-    const url = "/v1/admin/security-audit/authentication";
+  }): Promise<Result<Types.ComplianceAuditAuthenticationAuditOutput, ApiError>> {
+    const url = '/v1/admin/security-audit/authentication';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -107,11 +93,7 @@ export class ComplianceAuditSecurityModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceAuditAuthenticationAuditOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ComplianceAuditAuthenticationAuditOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -125,10 +107,10 @@ export class ComplianceAuditSecurityModule {
     endDate?: string;
     tenantId?: string;
   }): Promise<Result<Types.ComplianceAuditSecurityAuditDashboard, ApiError>> {
-    const url = "/v1/admin/security-audit/dashboard";
+    const url = '/v1/admin/security-audit/dashboard';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -136,11 +118,7 @@ export class ComplianceAuditSecurityModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceAuditSecurityAuditDashboardSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ComplianceAuditSecurityAuditDashboardSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -161,10 +139,10 @@ export class ComplianceAuditSecurityModule {
     Skip?: number;
     Take?: number;
   }): Promise<Result<Types.ComplianceAuditPermissionAuditOutput, ApiError>> {
-    const url = "/v1/admin/security-audit/permissions";
+    const url = '/v1/admin/security-audit/permissions';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -172,11 +150,7 @@ export class ComplianceAuditSecurityModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceAuditPermissionAuditOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ComplianceAuditPermissionAuditOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -184,8 +158,6 @@ export class ComplianceAuditSecurityModule {
   }
 }
 
-export function createComplianceAuditSecurityModule(
-  client: ApiClient,
-): ComplianceAuditSecurityModule {
+export function createComplianceAuditSecurityModule(client: ApiClient): ComplianceAuditSecurityModule {
   return new ComplianceAuditSecurityModule(client);
 }

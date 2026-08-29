@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -31,10 +31,10 @@ export class ComplianceAuditModule {
     Skip?: number;
     Take?: number;
   }): Promise<Result<Types.ComplianceAuditAuditLogOutput, ApiError>> {
-    const url = "/v1/admin/audit-logs";
+    const url = '/v1/admin/audit-logs';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -42,11 +42,7 @@ export class ComplianceAuditModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceAuditAuditLogOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ComplianceAuditAuditLogOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -55,20 +51,14 @@ export class ComplianceAuditModule {
 
   /**
    */
-  async postAdminAuditLogsExport(
-    body: Types.ComplianceAuditAuditExportInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/admin/audit-logs/:export";
+  async postAdminAuditLogsExport(body: Types.ComplianceAuditAuditExportInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/admin/audit-logs/:export';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.ComplianceAuditAuditExportInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.ComplianceAuditAuditExportInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -79,14 +69,11 @@ export class ComplianceAuditModule {
 
   /**
    */
-  async getAdminAuditLogsStatistics(query?: {
-    StartDate?: string;
-    EndDate?: string;
-  }): Promise<Result<Types.ComplianceAuditAuditStatisticsOutput, ApiError>> {
-    const url = "/v1/admin/audit-logs/statistics";
+  async getAdminAuditLogsStatistics(query?: { StartDate?: string; EndDate?: string }): Promise<Result<Types.ComplianceAuditAuditStatisticsOutput, ApiError>> {
+    const url = '/v1/admin/audit-logs/statistics';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -94,11 +81,7 @@ export class ComplianceAuditModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceAuditAuditStatisticsOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ComplianceAuditAuditStatisticsOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -106,8 +89,6 @@ export class ComplianceAuditModule {
   }
 }
 
-export function createComplianceAuditModule(
-  client: ApiClient,
-): ComplianceAuditModule {
+export function createComplianceAuditModule(client: ApiClient): ComplianceAuditModule {
   return new ComplianceAuditModule(client);
 }

@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -18,40 +18,29 @@ export class AuthApiKeysModule {
   /**
    * List all API keys
    */
-  async getAuthApiKeys(): Promise<
-    Result<Array<Types.IdentityAuthenticationApiKey>, ApiError>
-  > {
-    const url = "/v1/auth/api-keys";
+  async getAuthApiKeys(): Promise<Result<Array<Types.IdentityAuthenticationApiKey>, ApiError>> {
+    const url = '/v1/auth/api-keys';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.IdentityAuthenticationApiKey>,
-      ApiError
-    >;
+    return result as Result<Array<Types.IdentityAuthenticationApiKey>, ApiError>;
   }
 
   /**
    * Create a new API key
    */
-  async postAuthApiKeys(
-    body: Types.IdentityAuthenticationCreateApiKeyCommand,
-  ): Promise<Result<Types.IdentityAuthenticationCreateApiKeyOutput, ApiError>> {
-    const url = "/v1/auth/api-keys";
+  async postAuthApiKeys(body: Types.IdentityAuthenticationCreateApiKeyCommand): Promise<Result<Types.IdentityAuthenticationCreateApiKeyOutput, ApiError>> {
+    const url = '/v1/auth/api-keys';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationCreateApiKeyCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationCreateApiKeyCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -59,11 +48,7 @@ export class AuthApiKeysModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationCreateApiKeyOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationCreateApiKeyOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -73,21 +58,14 @@ export class AuthApiKeysModule {
   /**
    * Revoke an API key
    */
-  async postAuthApiKeysRevoke(
-    keyId: string,
-    body: Types.IdentityAuthenticationRevokeApiKeyInput,
-  ): Promise<Result<void, ApiError>> {
+  async postAuthApiKeysRevoke(keyId: string, body: Types.IdentityAuthenticationRevokeApiKeyInput): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/api-keys/${keyId}:revoke`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationRevokeApiKeyInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationRevokeApiKeyInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,

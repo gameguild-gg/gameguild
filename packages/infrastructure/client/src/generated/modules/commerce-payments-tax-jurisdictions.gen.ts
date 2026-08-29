@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,13 +17,11 @@ export class CommercePaymentsTaxJurisdictionsModule {
 
   /**
    */
-  async getTaxJurisdictionsForGetTaxJurisdictions(): Promise<
-    Result<Array<Types.CommercePaymentsTaxRate>, ApiError>
-  > {
-    const url = "/api/v1/tax-jurisdictions";
+  async getTaxJurisdictionsForGetTaxJurisdictions(): Promise<Result<Array<Types.CommercePaymentsTaxRate>, ApiError>> {
+    const url = '/api/v1/tax-jurisdictions';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -36,20 +34,14 @@ export class CommercePaymentsTaxJurisdictionsModule {
    *
    * Creates a new tax jurisdiction with the provided information.
    */
-  async postTaxJurisdictions(
-    body: Types.CommercePaymentsCreateTaxJurisdictionInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/tax-jurisdictions";
+  async postTaxJurisdictions(body: Types.CommercePaymentsCreateTaxJurisdictionInput): Promise<Result<void, ApiError>> {
+    const url = '/api/v1/tax-jurisdictions';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommercePaymentsCreateTaxJurisdictionInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommercePaymentsCreateTaxJurisdictionInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -63,24 +55,18 @@ export class CommercePaymentsTaxJurisdictionsModule {
    *
    * Retrieves detailed information for a specific tax jurisdiction.
    */
-  async getTaxJurisdictionsForGetTaxJurisdictionsByJurisdictionId(
-    jurisdictionId: string,
-  ): Promise<Result<Types.CommercePaymentsTaxJurisdictionDto, ApiError>> {
+  async getTaxJurisdictionsForGetTaxJurisdictionsByJurisdictionId(jurisdictionId: string): Promise<Result<Types.CommercePaymentsTaxJurisdictionDto, ApiError>> {
     const url = `/api/v1/tax-jurisdictions/${jurisdictionId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommercePaymentsTaxJurisdictionDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.CommercePaymentsTaxJurisdictionDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -92,13 +78,11 @@ export class CommercePaymentsTaxJurisdictionsModule {
    *
    * Deletes a tax jurisdiction by ID.
    */
-  async deleteTaxJurisdictions(
-    jurisdictionId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteTaxJurisdictions(jurisdictionId: string): Promise<Result<void, ApiError>> {
     const url = `/api/v1/tax-jurisdictions/${jurisdictionId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -111,21 +95,14 @@ export class CommercePaymentsTaxJurisdictionsModule {
    *
    * Updates specific fields of a tax jurisdiction.
    */
-  async patchTaxJurisdictions(
-    jurisdictionId: string,
-    body: Types.CommercePaymentsPatchTaxJurisdictionInput,
-  ): Promise<Result<void, ApiError>> {
+  async patchTaxJurisdictions(jurisdictionId: string, body: Types.CommercePaymentsPatchTaxJurisdictionInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/tax-jurisdictions/${jurisdictionId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommercePaymentsPatchTaxJurisdictionInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommercePaymentsPatchTaxJurisdictionInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PATCH",
+      method: 'PATCH',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -135,8 +112,6 @@ export class CommercePaymentsTaxJurisdictionsModule {
   }
 }
 
-export function createCommercePaymentsTaxJurisdictionsModule(
-  client: ApiClient,
-): CommercePaymentsTaxJurisdictionsModule {
+export function createCommercePaymentsTaxJurisdictionsModule(client: ApiClient): CommercePaymentsTaxJurisdictionsModule {
   return new CommercePaymentsTaxJurisdictionsModule(client);
 }
