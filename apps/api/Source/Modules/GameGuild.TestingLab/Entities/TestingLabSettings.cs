@@ -1,10 +1,14 @@
 using GameGuild.Identity.Tenants;
+using GameGuild.Projects;
 
 
 namespace GameGuild.TestingLab;
 
 /// <summary> Represents the settings and configuration for the Testing Lab Can be global (TenantId = null) or tenant-specific (TenantId = specific value) </summary>
 public class TestingLabSettings : EntityBase, ITenantable {
+  /// <summary> Version eligibility and replacement policy for new project applications. </summary>
+  public VersionSubmissionPolicy VersionSubmissionPolicy { get; set; } = VersionSubmissionPolicy.ReadyMutableUntilReview;
+
   /// <summary> Name of the testing lab </summary>
   [Required]
   [MaxLength(255)]

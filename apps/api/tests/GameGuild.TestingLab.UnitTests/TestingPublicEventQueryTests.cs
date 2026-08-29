@@ -31,21 +31,21 @@ public sealed class TestingPublicEventQueryTests : IDisposable
     {
         var draft = AddEvent("Draft");
         var open = AddEvent("Open");
-        open.OpenApplications();
+        open.OpenConfiguredApplications();
         var closed = AddEvent("Closed");
-        closed.OpenApplications();
+        closed.OpenConfiguredApplications();
         closed.CloseApplications();
         var scheduled = AddEvent("Scheduled");
-        scheduled.OpenApplications();
+        scheduled.OpenConfiguredApplications();
         scheduled.CloseApplications();
         scheduled.Schedule();
         var active = AddEvent("Active");
-        active.OpenApplications();
+        active.OpenConfiguredApplications();
         active.CloseApplications();
         active.Schedule();
         active.Activate();
         var completed = AddEvent("Completed");
-        completed.OpenApplications();
+        completed.OpenConfiguredApplications();
         completed.CloseApplications();
         completed.Schedule();
         completed.Activate();
@@ -76,7 +76,7 @@ public sealed class TestingPublicEventQueryTests : IDisposable
     public async Task PublicDetail_ReportsCapacityWithoutExposingOnlineMeetingUrl()
     {
         var testingEvent = AddEvent("Public event");
-        testingEvent.OpenApplications();
+        testingEvent.OpenConfiguredApplications();
         var slot = TestingEventSlot.Create(
             testingEvent.Id,
             TestingEventMode.Online,
@@ -125,7 +125,7 @@ public sealed class TestingPublicEventQueryTests : IDisposable
     {
         AddActiveActor(_managerId, _tenantId);
         var visible = AddEvent("Visible event");
-        visible.OpenApplications();
+        visible.OpenConfiguredApplications();
         var otherTenant = TestingEvent.Create(
             "Other tenant event",
             TestingEventMode.Online,
@@ -137,7 +137,7 @@ public sealed class TestingPublicEventQueryTests : IDisposable
             true,
             TestingEventApprovalMode.ManagerOnly,
             Guid.NewGuid());
-        otherTenant.OpenApplications();
+        otherTenant.OpenConfiguredApplications();
         _context.Add(otherTenant);
         await _context.SaveChangesAsync();
         _actorAccessor.SetActorContext(

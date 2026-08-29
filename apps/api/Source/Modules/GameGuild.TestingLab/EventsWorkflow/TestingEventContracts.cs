@@ -44,7 +44,19 @@ public sealed record TestingEventProjection(
     int? RecurrenceInterval = null,
     IReadOnlyList<DayOfWeek>? RecurrenceDaysOfWeek = null,
     DateTime? RecurrenceEndsAt = null,
-    int? RecurrenceOccurrenceCount = null);
+    int? RecurrenceOccurrenceCount = null,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    TestingEventConfigurationProjection? Configuration = null);
+
+public sealed record TestingEventConfigurationProjection(
+    Guid? SourceTemplateId,
+    Guid? SourceTemplateRevisionId,
+    string GeneralRules,
+    string CandidateInstructions,
+    string TesterInstructions,
+    QuestionnaireSchema ProjectApplicationSchema,
+    QuestionnaireSchema TesterRegistrationSchema,
+    DateTime? FrozenAt);
 
 public sealed record TestingEventSlotProjection(
     Guid Id,
@@ -96,7 +108,9 @@ public sealed record PublicTestingEventProjection(
     DateTime EndsAt,
     bool RequiresFeedback,
     int ApplicationCount,
-    IReadOnlyList<PublicTestingEventSlotProjection> Slots);
+    IReadOnlyList<PublicTestingEventSlotProjection> Slots,
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    TestingEventConfigurationProjection? Configuration = null);
 
 public sealed record CreateTestingEventCommand(
     string Name,
@@ -108,7 +122,16 @@ public sealed record CreateTestingEventCommand(
     DateTime StartsAt,
     DateTime EndsAt,
     bool RequiresFeedback,
-    TestingEventRecurrenceRequest? Recurrence = null) : ICommand<Result<TestingEventProjection>>;
+    TestingEventRecurrenceRequest? Recurrence = null,
+    Guid? TemplateRevisionId = null) : ICommand<Result<TestingEventProjection>>;
+
+public sealed record ConfigureTestingEventCommand(
+    Guid EventId,
+    string GeneralRules,
+    string CandidateInstructions,
+    string TesterInstructions,
+    QuestionnaireSchema ProjectApplicationSchema,
+    QuestionnaireSchema TesterRegistrationSchema) : ICommand<Result<TestingEventProjection>>;
 
 public sealed record UpdateTestingEventCommand(
     Guid EventId,
@@ -230,7 +253,15 @@ public sealed record CreateTestingEventRequest(
     DateTime StartsAt,
     DateTime EndsAt,
     bool RequiresFeedback,
-    TestingEventRecurrenceRequest? Recurrence = null);
+    TestingEventRecurrenceRequest? Recurrence = null,
+    Guid? TemplateRevisionId = null);
+
+public sealed record ConfigureTestingEventRequest(
+    string GeneralRules,
+    string CandidateInstructions,
+    string TesterInstructions,
+    QuestionnaireSchema ProjectApplicationSchema,
+    QuestionnaireSchema TesterRegistrationSchema);
 
 public sealed record UpdateTestingEventRequest(
     string Name,

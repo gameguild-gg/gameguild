@@ -177,14 +177,11 @@ public sealed class TestingRequestsControllerAuthorizationTests
             Title = "Arena Tactics",
             Slug = "arena-tactics"
         };
-        var version = new ProjectVersion
-        {
-            Id = versionId,
-            ProjectId = projectId,
-            Project = project,
-            VersionNumber = "1.0.0",
-            Status = "Published"
-        };
+        var version = ProjectVersion.Create(projectId, "1.0.0", null, Guid.NewGuid(), null);
+        version.Id = versionId;
+        version.Project = project;
+        version.MarkReadyForTesting();
+        version.Release();
         var testingRequest = new TestingRequest
         {
             Id = requestId,
@@ -762,14 +759,12 @@ public class TestingRequestOperationsServiceTests
         var actorTenantId = Guid.NewGuid();
         AddIdentity(context, actorId, actorTenantId);
         var foreignProject = CreateProject("Foreign version", Guid.NewGuid(), actorId);
-        var foreignVersion = new ProjectVersion
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = foreignProject.Id,
-            TenantId = foreignProject.TenantId,
-            VersionNumber = "1.0.0",
-            CreatedById = actorId
-        };
+        var foreignVersion = ProjectVersion.Create(
+            foreignProject.Id,
+            "1.0.0",
+            null,
+            actorId,
+            foreignProject.TenantId);
         context.AddRange(foreignProject, foreignVersion);
         await context.SaveChangesAsync();
         var (_, service) = CreateRequestService(context, actorId, actorTenantId);
@@ -852,14 +847,12 @@ public class TestingRequestOperationsServiceTests
         var actorTenantId = Guid.NewGuid();
         AddIdentity(context, actorId, actorTenantId);
         var foreignProject = CreateProject("Command foreign version", Guid.NewGuid(), actorId);
-        var foreignVersion = new ProjectVersion
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = foreignProject.Id,
-            TenantId = foreignProject.TenantId,
-            VersionNumber = "1.0.0",
-            CreatedById = actorId
-        };
+        var foreignVersion = ProjectVersion.Create(
+            foreignProject.Id,
+            "1.0.0",
+            null,
+            actorId,
+            foreignProject.TenantId);
         context.AddRange(foreignProject, foreignVersion);
         await context.SaveChangesAsync();
         var mediator = new Mock<IMediator>();
@@ -1079,13 +1072,13 @@ public class TestingRequestOperationsServiceTests
             TenantId = tenantId,
             CreatedById = userId
         };
-        var staleVersion = new ProjectVersion
-        {
-            ProjectId = project.Id,
-            TenantId = Guid.NewGuid(),
-            VersionNumber = "0.2.0",
-            Status = "testing"
-        };
+        var staleVersion = ProjectVersion.Create(
+            project.Id,
+            "0.2.0",
+            null,
+            userId,
+            Guid.NewGuid());
+        staleVersion.MarkReadyForTesting();
         context.Set<Project>().Add(project);
         context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
         {
@@ -1216,15 +1209,9 @@ public class TestingRequestOperationsServiceTests
         string title)
     {
         var project = CreateProject(title, tenantId, actorId);
-        var version = new ProjectVersion
-        {
-            Id = Guid.NewGuid(),
-            Project = project,
-            ProjectId = project.Id,
-            TenantId = tenantId,
-            VersionNumber = "1.0.0",
-            CreatedById = actorId
-        };
+        var version = ProjectVersion.Create(project.Id, "1.0.0", null, actorId, tenantId);
+        version.Project = project;
+        version.MarkReadyForTesting();
         context.Set<Project>().Add(project);
         context.Set<ProjectVersion>().Add(version);
         context.Set<ProjectCollaborator>().Add(new ProjectCollaborator
