@@ -13,6 +13,8 @@ public sealed class TestingFeedbackObligation : EntityBase
 
     public Guid? FeedbackId { get; private set; }
 
+    public Guid? QuestionnaireRevisionId { get; private set; }
+
     public TestingFeedbackObligationStatus Status { get; private set; } = TestingFeedbackObligationStatus.Pending;
 
     public DateTime? FulfilledAt { get; private set; }
@@ -26,7 +28,8 @@ public sealed class TestingFeedbackObligation : EntityBase
         Guid slotId,
         Guid applicationId,
         Guid testerUserId,
-        Guid? tenantId)
+        Guid? tenantId,
+        Guid? questionnaireRevisionId = null)
     {
         if (eventId == Guid.Empty || slotId == Guid.Empty || applicationId == Guid.Empty || testerUserId == Guid.Empty)
             throw new ArgumentException("Event, slot, application, and tester are required.");
@@ -38,6 +41,7 @@ public sealed class TestingFeedbackObligation : EntityBase
             ApplicationId = applicationId,
             TesterUserId = testerUserId,
             TenantId = tenantId,
+            QuestionnaireRevisionId = questionnaireRevisionId,
         };
     }
 

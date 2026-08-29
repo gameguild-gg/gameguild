@@ -44,9 +44,9 @@ public sealed class TestingEventParticipationTests : IDisposable
         var handler = CreateHandler();
 
         SetActor(_testerOneId);
-        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var registered = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_testerTwoId);
-        var waitlisted = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var waitlisted = await handler.Handle(RegistrationCommand(slot.Id), default);
 
         registered.IsSuccess.Should().BeTrue();
         registered.Value.Status.Should().Be(TestingSlotRegistrationStatus.Registered);
@@ -68,7 +68,7 @@ public sealed class TestingEventParticipationTests : IDisposable
         foreach (var testerId in new[] { _testerOneId, _testerTwoId, _testerThreeId })
         {
             SetActor(testerId);
-            var result = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+            var result = await handler.Handle(RegistrationCommand(slot.Id), default);
             result.IsSuccess.Should().BeTrue();
             result.Value.Status.Should().Be(TestingSlotRegistrationStatus.Registered);
         }
@@ -86,11 +86,11 @@ public sealed class TestingEventParticipationTests : IDisposable
         var handler = CreateHandler();
 
         SetActor(_testerOneId);
-        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var registered = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_testerTwoId);
-        var firstWaitlisted = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var firstWaitlisted = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_testerThreeId);
-        var secondWaitlisted = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var secondWaitlisted = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_testerOneId);
         var cancelled = await handler.Handle(new CancelTestingEventSlotRegistrationCommand(registered.Value.Id), default);
 
@@ -108,7 +108,7 @@ public sealed class TestingEventParticipationTests : IDisposable
         await _context.SaveChangesAsync();
         var handler = CreateHandler();
         SetActor(_testerOneId);
-        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var registered = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_managerId);
 
         var noShow = await handler.Handle(new MarkTestingEventNoShowCommand(registered.Value.Id), default);
@@ -130,7 +130,7 @@ public sealed class TestingEventParticipationTests : IDisposable
         await _context.SaveChangesAsync();
         var handler = CreateHandler();
         SetActor(_testerOneId);
-        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var registered = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_managerId);
         await handler.Handle(new CheckInTestingEventRegistrationCommand(registered.Value.Id), default);
         await handler.Handle(new AssignTestingProjectToTesterCommand(registered.Value.Id, application.Id), default);
@@ -224,7 +224,7 @@ public sealed class TestingEventParticipationTests : IDisposable
         await _context.SaveChangesAsync();
         var handler = CreateHandler();
         SetActor(_testerOneId);
-        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var registered = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_managerId);
         await handler.Handle(new CheckInTestingEventRegistrationCommand(registered.Value.Id), default);
 
@@ -252,7 +252,7 @@ public sealed class TestingEventParticipationTests : IDisposable
         await _context.SaveChangesAsync();
         var handler = CreateHandler();
         SetActor(_testerOneId);
-        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var registered = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_managerId);
         await handler.Handle(new CheckInTestingEventRegistrationCommand(registered.Value.Id), default);
 
@@ -325,7 +325,7 @@ public sealed class TestingEventParticipationTests : IDisposable
         await _context.SaveChangesAsync();
         var handler = CreateHandler();
         SetActor(_testerOneId);
-        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var registered = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_managerId);
         await handler.Handle(new CheckInTestingEventRegistrationCommand(registered.Value.Id), default);
         var assigned = await handler.Handle(
@@ -363,7 +363,7 @@ public sealed class TestingEventParticipationTests : IDisposable
         await _context.SaveChangesAsync();
         var handler = CreateHandler();
         SetActor(_testerOneId);
-        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var registered = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_managerId);
         await handler.Handle(new CheckInTestingEventRegistrationCommand(registered.Value.Id), default);
         var assigned = await handler.Handle(
@@ -431,9 +431,9 @@ public sealed class TestingEventParticipationTests : IDisposable
         var handler = CreateHandler();
 
         SetActor(_testerOneId);
-        var original = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var original = await handler.Handle(RegistrationCommand(slot.Id), default);
         await handler.Handle(new CancelTestingEventSlotRegistrationCommand(original.Value.Id), default);
-        var replacement = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var replacement = await handler.Handle(RegistrationCommand(slot.Id), default);
 
         SetActor(_managerId);
         await handler.Handle(new CheckInTestingEventRegistrationCommand(replacement.Value.Id), default);
@@ -466,7 +466,7 @@ public sealed class TestingEventParticipationTests : IDisposable
         await _context.SaveChangesAsync();
         var handler = CreateHandler();
         SetActor(_testerOneId);
-        var registered = await handler.Handle(new RegisterTestingEventSlotCommand(slot.Id, null), default);
+        var registered = await handler.Handle(RegistrationCommand(slot.Id), default);
         SetActor(_managerId);
         await handler.Handle(new CheckInTestingEventRegistrationCommand(registered.Value.Id), default);
 
@@ -495,7 +495,7 @@ public sealed class TestingEventParticipationTests : IDisposable
             requiresFeedback,
             TestingEventApprovalMode.ManagerOnly,
             _tenantId);
-        testingEvent.OpenApplications();
+        testingEvent.OpenConfiguredApplications();
         testingEvent.CloseApplications();
         var slot = TestingEventSlot.Create(
             testingEvent.Id,
@@ -537,6 +537,12 @@ public sealed class TestingEventParticipationTests : IDisposable
         _context.AddRange(project, application);
         return application;
     }
+
+    private static RegisterTestingEventSlotCommand RegistrationCommand(Guid slotId) => new(
+        slotId,
+        null,
+        new QuestionnaireResponse([]),
+        true);
 
     private void AddActor(Guid userId, string role)
     {

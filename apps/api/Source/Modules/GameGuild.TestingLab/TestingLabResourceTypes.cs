@@ -35,12 +35,14 @@ public static class TestingLabResourceTypes
 
     public const string Settings = "TestingLabSettings";
 
+    public const string Template = "TestingEventTemplate";
+
     /// <summary>
     ///     All TestingLab resource types for validation.
     /// </summary>
     public static readonly IReadOnlyList<string> All = new[]
     {
-        Session, Location, Feedback, Request, Participant, Event, Application, Analytics, Settings
+        Session, Location, Feedback, Request, Participant, Event, Application, Analytics, Settings, Template
     };
 
     /// <summary>

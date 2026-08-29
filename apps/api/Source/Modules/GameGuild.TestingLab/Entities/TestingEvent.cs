@@ -46,6 +46,32 @@ public sealed class TestingEvent : EntityBase
 
     public bool RequiresFeedback { get; private set; }
 
+    public Guid? SourceTemplateId { get; private set; }
+    public Guid? SourceTemplateRevisionId { get; private set; }
+
+    [MaxLength(20000)]
+    public string? GeneralRules { get; private set; }
+
+    [MaxLength(20000)]
+    public string? CandidateInstructions { get; private set; }
+
+    [MaxLength(20000)]
+    public string? TesterInstructions { get; private set; }
+
+    public string? ProjectApplicationSchemaJson { get; private set; }
+    public string? TesterRegistrationSchemaJson { get; private set; }
+    public DateTime? ConfigurationFrozenAt { get; private set; }
+
+    [NotMapped]
+    public QuestionnaireSchema? ProjectApplicationSchema => string.IsNullOrWhiteSpace(ProjectApplicationSchemaJson)
+        ? null
+        : QuestionnaireSchema.FromJson(ProjectApplicationSchemaJson);
+
+    [NotMapped]
+    public QuestionnaireSchema? TesterRegistrationSchema => string.IsNullOrWhiteSpace(TesterRegistrationSchemaJson)
+        ? null
+        : QuestionnaireSchema.FromJson(TesterRegistrationSchemaJson);
+
     public TestingLearningCompletionRequirement LearningCompletionRequirement { get; private set; }
 
     public Guid? CourseId { get; private set; }
@@ -157,8 +183,64 @@ public sealed class TestingEvent : EntityBase
     public void OpenApplications()
     {
         if (Status != TestingEventStatus.Draft) throw new InvalidOperationException("Only draft events can open applications.");
+        EnsureConfigurationCanFreeze();
+        ConfigurationFrozenAt = SystemClock.UtcNow;
         Status = TestingEventStatus.ApplicationsOpen;
         Touch();
+    }
+
+    public void Configure(
+        string generalRules,
+        string candidateInstructions,
+        string testerInstructions,
+        QuestionnaireSchema projectApplicationSchema,
+        QuestionnaireSchema testerRegistrationSchema)
+    {
+        EnsureDraftConfiguration();
+        TestingEventTemplateRevision.EnsureContent(generalRules, candidateInstructions, testerInstructions);
+        GeneralRules = generalRules.Trim();
+        CandidateInstructions = candidateInstructions.Trim();
+        TesterInstructions = testerInstructions.Trim();
+        ProjectApplicationSchemaJson = projectApplicationSchema.ToJson();
+        TesterRegistrationSchemaJson = testerRegistrationSchema.ToJson();
+        Touch();
+    }
+
+    public void ConfigureFromTemplate(TestingEventTemplateRevision revision)
+    {
+        ArgumentNullException.ThrowIfNull(revision);
+        EnsureDraftConfiguration();
+        if (TenantId != revision.TenantId)
+            throw new InvalidOperationException("Template revision must belong to the event tenant.");
+        SourceTemplateId = revision.TemplateId;
+        SourceTemplateRevisionId = revision.Id;
+        Mode = revision.DefaultMode;
+        ApprovalMode = revision.DefaultApprovalMode;
+        RequiresFeedback = revision.DefaultRequiresFeedback;
+        Configure(
+            revision.GeneralRules,
+            revision.CandidateInstructions,
+            revision.TesterInstructions,
+            revision.ProjectApplicationSchema,
+            revision.TesterRegistrationSchema);
+    }
+
+    private void EnsureDraftConfiguration()
+    {
+        if (Status != TestingEventStatus.Draft || ConfigurationFrozenAt.HasValue)
+            throw new InvalidOperationException("Event configuration can only be edited while the event is a draft.");
+    }
+
+    private void EnsureConfigurationCanFreeze()
+    {
+        if (string.IsNullOrWhiteSpace(GeneralRules) ||
+            string.IsNullOrWhiteSpace(CandidateInstructions) ||
+            string.IsNullOrWhiteSpace(TesterInstructions))
+            throw new InvalidOperationException("General rules and candidate/tester instructions are required.");
+        if (string.IsNullOrWhiteSpace(ProjectApplicationSchemaJson) || string.IsNullOrWhiteSpace(TesterRegistrationSchemaJson))
+            throw new InvalidOperationException("Valid project application and tester registration schemas are required.");
+        QuestionnaireSchema.FromJson(ProjectApplicationSchemaJson);
+        QuestionnaireSchema.FromJson(TesterRegistrationSchemaJson);
     }
 
     public void CloseApplications()

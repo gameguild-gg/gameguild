@@ -54,6 +54,86 @@ public sealed class TestingEventHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateEvent_FromTemplateCopiesSelectedRevisionAndDefaults()
+    {
+        var projectSchema = BasicSchema("Project");
+        var testerSchema = BasicSchema("Tester");
+        var template = TestingEventTemplate.Create(
+            _tenantId,
+            "Playtest template",
+            "Rules",
+            "Candidate instructions",
+            "Tester instructions",
+            projectSchema,
+            testerSchema,
+            TestingEventMode.Hybrid,
+            TestingEventApprovalMode.Committee,
+            false,
+            _managerId);
+        _context.Add(template);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateEventHandler().Handle(new CreateTestingEventCommand(
+            "Templated event",
+            null,
+            TestingEventMode.Online,
+            TestingEventApprovalMode.ManagerOnly,
+            SystemClock.UtcNow.AddDays(-1),
+            SystemClock.UtcNow.AddDays(1),
+            SystemClock.UtcNow.AddDays(2),
+            SystemClock.UtcNow.AddDays(3),
+            true,
+            TemplateRevisionId: template.CurrentRevision.Id), default);
+
+        result.IsSuccess.Should().BeTrue();
+        var testingEvent = await _context.Set<TestingEvent>().SingleAsync();
+        testingEvent.SourceTemplateId.Should().Be(template.Id);
+        testingEvent.SourceTemplateRevisionId.Should().Be(template.CurrentRevision.Id);
+        testingEvent.Mode.Should().Be(TestingEventMode.Hybrid);
+        testingEvent.ApprovalMode.Should().Be(TestingEventApprovalMode.Committee);
+        testingEvent.RequiresFeedback.Should().BeFalse();
+        testingEvent.GeneralRules.Should().Be("Rules");
+    }
+
+    [Fact]
+    public async Task EventConfiguration_IsRequiredForOpeningAndCannotChangeAfterFreeze()
+    {
+        var created = await CreateEventHandler().Handle(new CreateTestingEventCommand(
+            "Configurable event",
+            null,
+            TestingEventMode.Online,
+            TestingEventApprovalMode.ManagerOnly,
+            SystemClock.UtcNow.AddDays(-1),
+            SystemClock.UtcNow.AddDays(1),
+            SystemClock.UtcNow.AddDays(2),
+            SystemClock.UtcNow.AddDays(3),
+            true), default);
+        var handler = CreateEventHandler();
+
+        var rejectedOpen = await handler.Handle(new OpenTestingEventApplicationsCommand(created.Value.Id), default);
+        var configured = await handler.Handle(new ConfigureTestingEventCommand(
+            created.Value.Id,
+            "Rules",
+            "Candidate instructions",
+            "Tester instructions",
+            BasicSchema("Project"),
+            BasicSchema("Tester")), default);
+        var opened = await handler.Handle(new OpenTestingEventApplicationsCommand(created.Value.Id), default);
+        var rejectedEdit = await handler.Handle(new ConfigureTestingEventCommand(
+            created.Value.Id,
+            "Changed rules",
+            "Candidate instructions",
+            "Tester instructions",
+            BasicSchema("Project"),
+            BasicSchema("Tester")), default);
+
+        rejectedOpen.IsFailure.Should().BeTrue();
+        configured.IsSuccess.Should().BeTrue();
+        opened.IsSuccess.Should().BeTrue();
+        rejectedEdit.IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task CreateEvent_OmitsNullRecurrenceFrequencyFromJsonContract()
     {
         var result = await CreateEventHandler().Handle(new CreateTestingEventCommand(
@@ -115,13 +195,198 @@ public sealed class TestingEventHandlerTests : IDisposable
         await _context.SaveChangesAsync();
 
         var result = await CreateApplicationHandler().Handle(
-            new SubmitTestingProjectApplicationCommand(testingEvent.Id, project.Id, projectVersion.Id, "Evening"),
+            CompleteApplication(testingEvent.Id, project.Id, projectVersion.Id, "Evening"),
             default);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Status.Should().Be(TestingApplicationStatus.Pending);
         result.Value.AssignedSlotId.Should().BeNull();
         slot.MaxProjects.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ApplicationWizard_CreatesSavesAndSubmitsPrivateDraft()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var project = AddProject(_managerId);
+        var version = AddProjectVersion(project, _managerId);
+        await _context.SaveChangesAsync();
+        var handler = CreateApplicationHandler();
+
+        var created = await handler.Handle(
+            new CreateTestingProjectApplicationDraftCommand(testingEvent.Id, project.Id), default);
+        var saved = await handler.Handle(new SaveTestingProjectApplicationDraftCommand(
+            created.Value.Id,
+            version.Id,
+            ValidBrief(),
+            new QuestionnaireSchema("Developer feedback", [
+                new QuestionnaireQuestion("fun", "What was fun?", QuestionnaireQuestionType.FreeText, true)
+            ]),
+            new QuestionnaireResponse([]),
+            true,
+            "Evening",
+            []), default);
+        var submitted = await handler.Handle(
+            new SubmitTestingProjectApplicationDraftCommand(created.Value.Id), default);
+
+        created.Value.Status.Should().Be(TestingApplicationStatus.Draft);
+        saved.Value.Status.Should().Be(TestingApplicationStatus.Draft);
+        saved.Value.CurrentQuestionnaireRevisionId.Should().NotBeNull();
+        submitted.Value.Status.Should().Be(TestingApplicationStatus.Pending);
+        (await handler.Handle(new GetTestingEventApplicationsQuery(testingEvent.Id), default))
+            .Value.Should().ContainSingle(application => application.Id == created.Value.Id);
+    }
+
+    [Fact]
+    public async Task ApplicationWizard_SavesPartialDraftWithoutMakingItSubmittable()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var project = AddProject(_managerId);
+        var version = AddProjectVersion(project, _managerId);
+        await _context.SaveChangesAsync();
+        var handler = CreateApplicationHandler();
+        var created = await handler.Handle(
+            new CreateTestingProjectApplicationDraftCommand(testingEvent.Id, project.Id), default);
+
+        var saved = await handler.Handle(new SaveTestingProjectApplicationDraftCommand(
+            created.Value.Id,
+            version.Id,
+            null,
+            null,
+            null,
+            null,
+            "Evening",
+            []), default);
+        var submitted = await handler.Handle(
+            new SubmitTestingProjectApplicationDraftCommand(created.Value.Id), default);
+
+        saved.IsSuccess.Should().BeTrue();
+        saved.Value.Status.Should().Be(TestingApplicationStatus.Draft);
+        saved.Value.ProjectVersionId.Should().Be(version.Id);
+        saved.Value.Brief.Should().BeNull();
+        saved.Value.CurrentQuestionnaireRevisionId.Should().BeNull();
+        submitted.IsFailure.Should().BeTrue();
+        (await _context.Set<TestingProjectApplication>().SingleAsync()).Status.Should().Be(TestingApplicationStatus.Draft);
+    }
+
+    [Fact]
+    public async Task ApplicationWizard_ReturnsValidationWhenBriefIsMissingButQuestionnaireExists()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var project = AddProject(_managerId);
+        var version = AddProjectVersion(project, _managerId);
+        await _context.SaveChangesAsync();
+        var handler = CreateApplicationHandler();
+        var created = await handler.Handle(
+            new CreateTestingProjectApplicationDraftCommand(testingEvent.Id, project.Id), default);
+        await handler.Handle(new SaveTestingProjectApplicationDraftCommand(
+            created.Value.Id,
+            version.Id,
+            null,
+            new QuestionnaireSchema("Developer feedback", [
+                new QuestionnaireQuestion("fun", "What was fun?", QuestionnaireQuestionType.FreeText, true)
+            ]),
+            new QuestionnaireResponse([]),
+            true,
+            null,
+            []), default);
+
+        var submitted = await handler.Handle(
+            new SubmitTestingProjectApplicationDraftCommand(created.Value.Id), default);
+
+        submitted.IsFailure.Should().BeTrue();
+        submitted.Error.Type.Should().Be(ErrorType.Validation);
+        (await _context.Set<TestingProjectApplication>().SingleAsync()).Status.Should().Be(TestingApplicationStatus.Draft);
+    }
+
+    [Fact]
+    public async Task ApplicationWizard_RequiresDeveloperQuestionWhenEventRequiresFeedback()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var project = AddProject(_managerId);
+        var version = AddProjectVersion(project, _managerId);
+        await _context.SaveChangesAsync();
+        var handler = CreateApplicationHandler();
+        var created = await handler.Handle(
+            new CreateTestingProjectApplicationDraftCommand(testingEvent.Id, project.Id), default);
+        await handler.Handle(new SaveTestingProjectApplicationDraftCommand(
+            created.Value.Id,
+            version.Id,
+            ValidBrief(),
+            new QuestionnaireSchema("Empty", []),
+            new QuestionnaireResponse([]),
+            true,
+            null,
+            []), default);
+
+        var submitted = await handler.Handle(
+            new SubmitTestingProjectApplicationDraftCommand(created.Value.Id), default);
+
+        submitted.IsFailure.Should().BeTrue();
+        (await _context.Set<TestingProjectApplication>().SingleAsync()).Status.Should().Be(TestingApplicationStatus.Draft);
+    }
+
+    [Fact]
+    public async Task SubmitApplication_RejectsDraftVersionUnderDefaultPolicy()
+    {
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var project = AddProject(_managerId);
+        var draftVersion = AddProjectVersion(project, _managerId, ProjectVersionStatus.Draft);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateApplicationHandler().Handle(
+            new SubmitTestingProjectApplicationCommand(testingEvent.Id, project.Id, draftVersion.Id, null),
+            default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+    }
+
+    [Fact]
+    public async Task SubmitApplication_ReleasedImmutablePolicyRequiresReleasedVersion()
+    {
+        _context.Add(new TestingLabSettings
+        {
+            TenantId = _tenantId,
+            VersionSubmissionPolicy = VersionSubmissionPolicy.ReleasedImmutable
+        });
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var project = AddProject(_managerId);
+        var readyVersion = AddProjectVersion(project, _managerId);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateApplicationHandler().Handle(
+            new SubmitTestingProjectApplicationCommand(testingEvent.Id, project.Id, readyVersion.Id, null),
+            default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Validation);
+    }
+
+    [Fact]
+    public async Task UpdateApplication_ReleasedImmutableSnapshotPreventsVersionReplacement()
+    {
+        _context.Add(new TestingLabSettings
+        {
+            TenantId = _tenantId,
+            VersionSubmissionPolicy = VersionSubmissionPolicy.ReleasedImmutable
+        });
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.ManagerOnly);
+        var project = AddProject(_managerId);
+        var submittedVersion = AddProjectVersion(project, _managerId, ProjectVersionStatus.Released, "1.0.0");
+        var replacementVersion = AddProjectVersion(project, _managerId, ProjectVersionStatus.Released, "1.0.1");
+        await _context.SaveChangesAsync();
+        var handler = CreateApplicationHandler();
+        var submitted = await handler.Handle(
+            CompleteApplication(testingEvent.Id, project.Id, submittedVersion.Id, null),
+            default);
+
+        var result = await handler.Handle(
+            new UpdateTestingProjectApplicationCommand(submitted.Value.Id, replacementVersion.Id, null),
+            default);
+
+        result.IsFailure.Should().BeTrue();
+        (await _context.Set<TestingProjectApplication>().SingleAsync()).ProjectVersionId.Should().Be(submittedVersion.Id);
     }
 
     [Fact]
@@ -199,6 +464,39 @@ public sealed class TestingEventHandlerTests : IDisposable
         beforeMajority.IsFailure.Should().BeTrue();
         beforeMajority.Error.Type.Should().Be(ErrorType.Validation);
         afterMajority.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ApplicationAccess_SeparatesCommitteeVotingFromManagerDecisions()
+    {
+        var reviewerId = Guid.NewGuid();
+        AddActor(reviewerId, TenantRole.Member);
+        var testingEvent = AddOpenEvent(TestingEventApprovalMode.Committee);
+        var project = AddProject(_managerId);
+        var application = TestingProjectApplication.Submit(testingEvent.Id, project.Id, null, _managerId, null, _tenantId);
+        application.BeginReview();
+        _context.AddRange(
+            TestingCommitteeMember.Create(testingEvent.Id, reviewerId, false, _tenantId),
+            application);
+        await _context.SaveChangesAsync();
+
+        var handler = CreateApplicationHandler();
+
+        SetActor(reviewerId);
+        var reviewerAccess = await handler.Handle(new GetTestingEventApplicationAccessQuery(testingEvent.Id), default);
+        var reviewerEvent = await CreateEventHandler().Handle(new GetTestingEventQuery(testingEvent.Id), default);
+
+        SetActor(_managerId);
+        var managerAccess = await handler.Handle(new GetTestingEventApplicationAccessQuery(testingEvent.Id), default);
+
+        reviewerAccess.IsSuccess.Should().BeTrue();
+        reviewerAccess.Value.CanViewApplications.Should().BeTrue();
+        reviewerAccess.Value.CanManageApplications.Should().BeFalse();
+        reviewerAccess.Value.CanVote.Should().BeTrue();
+        reviewerEvent.IsSuccess.Should().BeTrue();
+        managerAccess.IsSuccess.Should().BeTrue();
+        managerAccess.Value.CanManageApplications.Should().BeTrue();
+        managerAccess.Value.CanVote.Should().BeFalse();
     }
 
     [Fact]
@@ -696,7 +994,7 @@ public sealed class TestingEventHandlerTests : IDisposable
             true,
             approvalMode,
             _tenantId);
-        testingEvent.OpenApplications();
+        testingEvent.OpenConfiguredApplications();
         _context.Add(testingEvent);
         return testingEvent;
     }
@@ -740,20 +1038,51 @@ public sealed class TestingEventHandlerTests : IDisposable
         return project;
     }
 
-    private ProjectVersion AddProjectVersion(Project project, Guid createdById)
+    private ProjectVersion AddProjectVersion(
+        Project project,
+        Guid createdById,
+        ProjectVersionStatus status = ProjectVersionStatus.ReadyForTesting,
+        string versionNumber = "1.0.0")
     {
-        var version = new ProjectVersion
-        {
-            TenantId = _tenantId,
-            ProjectId = project.Id,
-            Project = project,
-            VersionNumber = "1.0.0",
-            Status = "ready",
-            CreatedById = createdById
-        };
+        var version = ProjectVersion.Create(project.Id, versionNumber, null, createdById, _tenantId);
+        version.Project = project;
+        if (status is ProjectVersionStatus.ReadyForTesting or ProjectVersionStatus.Released or ProjectVersionStatus.Archived)
+            version.MarkReadyForTesting();
+        if (status is ProjectVersionStatus.Released or ProjectVersionStatus.Archived)
+            version.Release();
+        if (status == ProjectVersionStatus.Archived)
+            version.Archive();
         _context.Add(version);
         return version;
     }
+
+    private static QuestionnaireSchema BasicSchema(string title) => new(
+        title,
+        [new QuestionnaireQuestion("notes", "Notes", QuestionnaireQuestionType.FreeText, false)]);
+
+    private static TestingProjectBrief ValidBrief() => new(
+        "Find usability blockers",
+        "Download and sign in",
+        ["Complete the tutorial"],
+        "Keyboard and mouse",
+        "Matchmaking may be slow");
+
+    private static SubmitTestingProjectApplicationCommand CompleteApplication(
+        Guid eventId,
+        Guid projectId,
+        Guid projectVersionId,
+        string? preferredAvailability) => new(
+        eventId,
+        projectId,
+        projectVersionId,
+        preferredAvailability,
+        [],
+        ValidBrief(),
+        new QuestionnaireSchema("Developer feedback", [
+            new QuestionnaireQuestion("experience", "How was the experience?", QuestionnaireQuestionType.FreeText, true)
+        ]),
+        new QuestionnaireResponse([]),
+        true);
 
     private void AddActor(Guid userId, string role)
     {
@@ -791,6 +1120,10 @@ public sealed class TestingEventHandlerTests : IDisposable
         public DbSet<TestingEvent> TestingEvents => Set<TestingEvent>();
         public DbSet<TestingEventSlot> TestingEventSlots => Set<TestingEventSlot>();
         public DbSet<TestingProjectApplication> TestingProjectApplications => Set<TestingProjectApplication>();
+        public DbSet<TestingLabSettings> TestingLabSettings => Set<TestingLabSettings>();
+        public DbSet<TestingEventTemplate> TestingEventTemplates => Set<TestingEventTemplate>();
+        public DbSet<TestingEventTemplateRevision> TestingEventTemplateRevisions => Set<TestingEventTemplateRevision>();
+        public DbSet<TestingQuestionnaireRevision> TestingQuestionnaireRevisions => Set<TestingQuestionnaireRevision>();
         public DbSet<TestingCommitteeMember> TestingCommitteeMembers => Set<TestingCommitteeMember>();
         public DbSet<TestingApplicationVote> TestingApplicationVotes => Set<TestingApplicationVote>();
         public DbSet<TestingSession> TestingSessions => Set<TestingSession>();
