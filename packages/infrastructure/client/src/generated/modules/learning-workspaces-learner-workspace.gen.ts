@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,24 +17,18 @@ export class LearningWorkspacesLearnerWorkspaceModule {
 
   /**
    */
-  async getLearningCoursesWorkspace(
-    courseId: string,
-  ): Promise<Result<Types.LearningWorkspacesLearnerCourseWorkspace, ApiError>> {
+  async getLearningCoursesWorkspace(courseId: string): Promise<Result<Types.LearningWorkspacesLearnerCourseWorkspace, ApiError>> {
     const url = `/v1/learning/courses/${courseId}/workspace`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningWorkspacesLearnerCourseWorkspaceSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningWorkspacesLearnerCourseWorkspaceSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -43,24 +37,18 @@ export class LearningWorkspacesLearnerWorkspaceModule {
 
   /**
    */
-  async getLearningMeDashboard(): Promise<
-    Result<Types.LearningWorkspacesLearnerDashboard, ApiError>
-  > {
-    const url = "/v1/learning/me/dashboard";
+  async getLearningMeDashboard(): Promise<Result<Types.LearningWorkspacesLearnerDashboard, ApiError>> {
+    const url = '/v1/learning/me/dashboard';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningWorkspacesLearnerDashboardSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningWorkspacesLearnerDashboardSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -69,30 +57,20 @@ export class LearningWorkspacesLearnerWorkspaceModule {
 
   /**
    */
-  async getLearningMeSearch(query?: {
-    q?: string;
-    take?: number;
-  }): Promise<
-    Result<Array<Types.LearningWorkspacesLearnerSearchResult>, ApiError>
-  > {
-    const url = "/v1/learning/me/search";
+  async getLearningMeSearch(query?: { q?: string; take?: number }): Promise<Result<Array<Types.LearningWorkspacesLearnerSearchResult>, ApiError>> {
+    const url = '/v1/learning/me/search';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningWorkspacesLearnerSearchResult>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningWorkspacesLearnerSearchResult>, ApiError>;
   }
 }
 
-export function createLearningWorkspacesLearnerWorkspaceModule(
-  client: ApiClient,
-): LearningWorkspacesLearnerWorkspaceModule {
+export function createLearningWorkspacesLearnerWorkspaceModule(client: ApiClient): LearningWorkspacesLearnerWorkspaceModule {
   return new LearningWorkspacesLearnerWorkspaceModule(client);
 }

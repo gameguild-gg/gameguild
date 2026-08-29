@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -21,13 +21,11 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
     status?: Types.CommerceProductsSupportTicketStatus;
     skip?: number;
     take?: number;
-  }): Promise<
-    Result<Types.PagedResultOfCommerceProductsSupportTicket, ApiError>
-  > {
-    const url = "/v1/support/tickets/mine";
+  }): Promise<Result<Types.PagedResultOfCommerceProductsSupportTicket, ApiError>> {
+    const url = '/v1/support/tickets/mine';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -35,11 +33,7 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.PagedResultOfCommerceProductsSupportTicketSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.PagedResultOfCommerceProductsSupportTicketSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -48,20 +42,14 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
 
   /**
    */
-  async postSupportTicketsMine(
-    body: Types.CommerceProductsCreateMySupportTicketInput,
-  ): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
-    const url = "/v1/support/tickets/mine";
+  async postSupportTicketsMine(body: Types.CommerceProductsCreateMySupportTicketInput): Promise<Result<Types.CommerceProductsSupportTicket, ApiError>> {
+    const url = '/v1/support/tickets/mine';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommerceProductsCreateMySupportTicketInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommerceProductsCreateMySupportTicketInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -69,11 +57,7 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommerceProductsSupportTicketSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.CommerceProductsSupportTicketSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -89,14 +73,10 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
     const url = `/v1/support/tickets/mine/${ticketId}/messages`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommerceProductsAddMySupportTicketMessageInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommerceProductsAddMySupportTicketMessageInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -104,11 +84,7 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommerceProductsSupportTicketSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.CommerceProductsSupportTicketSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -116,8 +92,6 @@ export class CommerceProductsSupportTicketsSelfServiceModule {
   }
 }
 
-export function createCommerceProductsSupportTicketsSelfServiceModule(
-  client: ApiClient,
-): CommerceProductsSupportTicketsSelfServiceModule {
+export function createCommerceProductsSupportTicketsSelfServiceModule(client: ApiClient): CommerceProductsSupportTicketsSelfServiceModule {
   return new CommerceProductsSupportTicketsSelfServiceModule(client);
 }

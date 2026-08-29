@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,23 +17,16 @@ export class LearningAssessmentsGroupSetsModule {
 
   /**
    */
-  async getCoursesGroupSets(
-    courseId: string,
-  ): Promise<
-    Result<Array<Types.LearningAssessmentsGroupSetSummary>, ApiError>
-  > {
+  async getCoursesGroupSets(courseId: string): Promise<Result<Array<Types.LearningAssessmentsGroupSetSummary>, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningAssessmentsGroupSetSummary>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningAssessmentsGroupSetSummary>, ApiError>;
   }
 
   /**
@@ -45,14 +38,10 @@ export class LearningAssessmentsGroupSetsModule {
     const url = `/v1/courses/${courseId}/group-sets`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningAssessmentsCreateGroupSetInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningAssessmentsCreateGroupSetInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -60,11 +49,7 @@ export class LearningAssessmentsGroupSetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsGroupSetSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningAssessmentsGroupSetSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -73,22 +58,16 @@ export class LearningAssessmentsGroupSetsModule {
 
   /**
    */
-  async getCoursesGroupSetsGroups(
-    courseId: string,
-    setId: string,
-  ): Promise<Result<Array<Types.LearningAssessmentsGroupDetail>, ApiError>> {
+  async getCoursesGroupSetsGroups(courseId: string, setId: string): Promise<Result<Array<Types.LearningAssessmentsGroupDetail>, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets/${setId}/groups`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningAssessmentsGroupDetail>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningAssessmentsGroupDetail>, ApiError>;
   }
 
   /**
@@ -101,14 +80,10 @@ export class LearningAssessmentsGroupSetsModule {
     const url = `/v1/courses/${courseId}/group-sets/${setId}/groups`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningAssessmentsCreateGroupInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningAssessmentsCreateGroupInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -116,11 +91,7 @@ export class LearningAssessmentsGroupSetsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsGroupSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningAssessmentsGroupSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -129,25 +100,18 @@ export class LearningAssessmentsGroupSetsModule {
 
   /**
    */
-  async postCoursesGroupSetsGroupsJoin(
-    courseId: string,
-    groupId: string,
-  ): Promise<Result<Types.LearningAssessmentsGroupMembership, ApiError>> {
+  async postCoursesGroupSetsGroupsJoin(courseId: string, groupId: string): Promise<Result<Types.LearningAssessmentsGroupMembership, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/join`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsGroupMembershipSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningAssessmentsGroupMembershipSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -164,18 +128,14 @@ export class LearningAssessmentsGroupSetsModule {
     const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/members/${userId}`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsGroupMembershipSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningAssessmentsGroupMembershipSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -184,15 +144,11 @@ export class LearningAssessmentsGroupSetsModule {
 
   /**
    */
-  async deleteCoursesGroupSetsGroupsMembers(
-    courseId: string,
-    groupId: string,
-    userId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteCoursesGroupSetsGroupsMembers(courseId: string, groupId: string, userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/members/${userId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -202,14 +158,11 @@ export class LearningAssessmentsGroupSetsModule {
 
   /**
    */
-  async deleteCoursesGroupSetsGroupsMembership(
-    courseId: string,
-    groupId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteCoursesGroupSetsGroupsMembership(courseId: string, groupId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${courseId}/group-sets/groups/${groupId}/membership`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -218,8 +171,6 @@ export class LearningAssessmentsGroupSetsModule {
   }
 }
 
-export function createLearningAssessmentsGroupSetsModule(
-  client: ApiClient,
-): LearningAssessmentsGroupSetsModule {
+export function createLearningAssessmentsGroupSetsModule(client: ApiClient): LearningAssessmentsGroupSetsModule {
   return new LearningAssessmentsGroupSetsModule(client);
 }

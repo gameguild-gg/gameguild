@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,14 +17,11 @@ export class AccessControlTenantPermissionsModule {
 
   /**
    */
-  async getAuthorizationTenantsHasPermission(
-    tenantId: string,
-    query?: { permission?: string; userId?: string },
-  ): Promise<Result<boolean, ApiError>> {
+  async getAuthorizationTenantsHasPermission(tenantId: string, query?: { permission?: string; userId?: string }): Promise<Result<boolean, ApiError>> {
     const url = `/api/v1/authorization/tenants/${tenantId}/has-permission`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -38,13 +35,11 @@ export class AccessControlTenantPermissionsModule {
   async getAuthorizationTenantsPermissions(
     tenantId: string,
     query?: { userId?: string; includeEffective?: boolean },
-  ): Promise<
-    Result<Types.IdentityAuthorizationGetTenantPermissionsOutput, ApiError>
-  > {
+  ): Promise<Result<Types.IdentityAuthorizationGetTenantPermissionsOutput, ApiError>> {
     const url = `/api/v1/authorization/tenants/${tenantId}/permissions`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -52,11 +47,7 @@ export class AccessControlTenantPermissionsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationGetTenantPermissionsOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthorizationGetTenantPermissionsOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -65,20 +56,14 @@ export class AccessControlTenantPermissionsModule {
 
   /**
    */
-  async postAuthorizationTenantsDefaults(
-    body: Types.IdentityAuthorizationSetTenantDefaultPermissionsCommand,
-  ): Promise<Result<boolean, ApiError>> {
-    const url = "/api/v1/authorization/tenants/defaults";
+  async postAuthorizationTenantsDefaults(body: Types.IdentityAuthorizationSetTenantDefaultPermissionsCommand): Promise<Result<boolean, ApiError>> {
+    const url = '/api/v1/authorization/tenants/defaults';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationSetTenantDefaultPermissionsCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationSetTenantDefaultPermissionsCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -89,20 +74,14 @@ export class AccessControlTenantPermissionsModule {
 
   /**
    */
-  async postAuthorizationTenantsDeny(
-    body: Types.IdentityAuthorizationDenyTenantPermissionCommand,
-  ): Promise<Result<string, ApiError>> {
-    const url = "/api/v1/authorization/tenants/deny";
+  async postAuthorizationTenantsDeny(body: Types.IdentityAuthorizationDenyTenantPermissionCommand): Promise<Result<string, ApiError>> {
+    const url = '/api/v1/authorization/tenants/deny';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationDenyTenantPermissionCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationDenyTenantPermissionCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -113,20 +92,14 @@ export class AccessControlTenantPermissionsModule {
 
   /**
    */
-  async postAuthorizationTenantsDenyRemove(
-    body: Types.IdentityAuthorizationRemoveDenyPermissionsCommand,
-  ): Promise<Result<boolean, ApiError>> {
-    const url = "/api/v1/authorization/tenants/deny/remove";
+  async postAuthorizationTenantsDenyRemove(body: Types.IdentityAuthorizationRemoveDenyPermissionsCommand): Promise<Result<boolean, ApiError>> {
+    const url = '/api/v1/authorization/tenants/deny/remove';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationRemoveDenyPermissionsCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationRemoveDenyPermissionsCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -137,20 +110,14 @@ export class AccessControlTenantPermissionsModule {
 
   /**
    */
-  async postAuthorizationTenantsGlobalDefaults(
-    body: Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommand,
-  ): Promise<Result<boolean, ApiError>> {
-    const url = "/api/v1/authorization/tenants/global/defaults";
+  async postAuthorizationTenantsGlobalDefaults(body: Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommand): Promise<Result<boolean, ApiError>> {
+    const url = '/api/v1/authorization/tenants/global/defaults';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationSetGlobalDefaultPermissionsCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -161,20 +128,14 @@ export class AccessControlTenantPermissionsModule {
 
   /**
    */
-  async postAuthorizationTenantsGrant(
-    body: Types.IdentityAuthorizationGrantTenantPermissionCommand,
-  ): Promise<Result<string, ApiError>> {
-    const url = "/api/v1/authorization/tenants/grant";
+  async postAuthorizationTenantsGrant(body: Types.IdentityAuthorizationGrantTenantPermissionCommand): Promise<Result<string, ApiError>> {
+    const url = '/api/v1/authorization/tenants/grant';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationGrantTenantPermissionCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationGrantTenantPermissionCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -185,20 +146,14 @@ export class AccessControlTenantPermissionsModule {
 
   /**
    */
-  async postAuthorizationTenantsRevoke(
-    body: Types.IdentityAuthorizationRevokeTenantPermissionCommand,
-  ): Promise<Result<boolean, ApiError>> {
-    const url = "/api/v1/authorization/tenants/revoke";
+  async postAuthorizationTenantsRevoke(body: Types.IdentityAuthorizationRevokeTenantPermissionCommand): Promise<Result<boolean, ApiError>> {
+    const url = '/api/v1/authorization/tenants/revoke';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationRevokeTenantPermissionCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationRevokeTenantPermissionCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -208,8 +163,6 @@ export class AccessControlTenantPermissionsModule {
   }
 }
 
-export function createAccessControlTenantPermissionsModule(
-  client: ApiClient,
-): AccessControlTenantPermissionsModule {
+export function createAccessControlTenantPermissionsModule(client: ApiClient): AccessControlTenantPermissionsModule {
   return new AccessControlTenantPermissionsModule(client);
 }

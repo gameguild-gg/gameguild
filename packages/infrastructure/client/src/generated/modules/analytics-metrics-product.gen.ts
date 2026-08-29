@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -22,10 +22,10 @@ export class AnalyticsMetricsProductModule {
     endUtc?: string;
     tenantId?: string;
   }): Promise<Result<Types.AnalyticsProductMetricsOutput, ApiError>> {
-    const url = "/api/metrics/product";
+    const url = '/api/metrics/product';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -33,11 +33,7 @@ export class AnalyticsMetricsProductModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AnalyticsProductMetricsOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AnalyticsProductMetricsOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -52,10 +48,10 @@ export class AnalyticsMetricsProductModule {
     tenantId?: string;
     format?: Types.AnalyticsProductMetricsExportFormat;
   }): Promise<Result<Blob, ApiError>> {
-    const url = "/api/metrics/product/export";
+    const url = '/api/metrics/product/export';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -65,8 +61,6 @@ export class AnalyticsMetricsProductModule {
   }
 }
 
-export function createAnalyticsMetricsProductModule(
-  client: ApiClient,
-): AnalyticsMetricsProductModule {
+export function createAnalyticsMetricsProductModule(client: ApiClient): AnalyticsMetricsProductModule {
   return new AnalyticsMetricsProductModule(client);
 }
