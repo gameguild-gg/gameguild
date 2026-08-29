@@ -1,0 +1,1034 @@
+{
+  "next.config.ts": {
+    "@typescript-eslint/no-require-imports": {
+      "count": 1
+    }
+  },
+  "scripts/learning-student-browser-e2e.mjs": {
+    "@next/next/no-assign-module-variable": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/forbidden.tsx": {
+    "react/no-unescaped-entities": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/not-found.tsx": {
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/app/[locale]/(dashboards)/console/learning/courses/[course]/students/page.tsx": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/forbidden.tsx": {
+    "react/no-unescaped-entities": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/not-found.tsx": {
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/app/[locale]/(dashboards)/workspace/learning/courses/[course]/students/page.tsx": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/grading-panel.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/speedgrader-viewers.test.tsx": {
+    "@typescript-eslint/no-require-imports": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/submission-viewer.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/learn/courses/[slug]/activities/[activityId]/page.tsx": {
+    "react/no-unescaped-entities": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/learn/reviews/[reviewId]/review-workspace.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/app/[locale]/learn/reviews/reviews-client.tsx": {
+    "react/no-unescaped-entities": {
+      "count": 1
+    }
+  },
+  "src/app/api/static-viewer/file/[...path]/route.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/app/api/static-viewer/folder/[folderName]/route.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/embed/block-embed-view.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/engines/blocks/block-editor-modal.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 15
+    }
+  },
+  "src/components/block-content-editor/engines/editor-field.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/engines/editor-provider.tsx": {
+    "react-hooks/immutability": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/engines/editor-toolbar.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/engines/static-viewer-sections.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 4
+    }
+  },
+  "src/components/block-content-editor/engines/static-viewer.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/engines/viewer-field.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/engines/viewer-toolbar.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/file-system/collection-browser.tsx": {
+    "react-hooks/immutability": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/file-system/save-collection-dialog.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/focus-editor-config.tsx": {
+    "react-hooks/rules-of-hooks": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/language-selector.tsx": {
+    "react-hooks/refs": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/monaco-file-system.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 9
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/lua-runner.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/python-runner.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wasm-loader.ts": {
+    "@next/next/no-assign-module-variable": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/crypto.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/date.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/document.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/dom.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/js.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 8
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/math.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/number.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/object.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/performance.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/reflect.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/string.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/builtin/window.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-function-type": {
+      "count": 3
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/gameguild/test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    },
+    "@typescript-eslint/no-unsafe-function-type": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/index.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/legacy/assemblyscript.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/legacy/env.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/legacy/go.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/legacy/wasi.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-env-bindings/types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/runners/wat-runner.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 9
+    },
+    "@typescript-eslint/no-unsafe-function-type": {
+      "count": 4
+    }
+  },
+  "src/components/block-content-editor/extras/code-studio/types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/compressor/compression-settings-dialog.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/dialogs/duplicate-name-dialog.tsx": {
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/dialogs/project-history-dialog.tsx": {
+    "react-hooks/immutability": {
+      "count": 1
+    },
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/editor/create-project-dialog.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    },
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/editor/import-project-dialog.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 10
+    },
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/editor/info-dialog.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    },
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/editor/save-as-dialog.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/html/html-utils.ts": {
+    "@typescript-eslint/no-require-imports": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/manager-page/card/asset-card.tsx": {
+    "react-hooks/static-components": {
+      "count": 3
+    }
+  },
+  "src/components/block-content-editor/extras/manager-page/filters/filter-mime-types.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/manager-page/filters/filters.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "src/components/block-content-editor/extras/markdown/markdown-components.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "src/components/block-content-editor/extras/markdown/markdown-editor.tsx": {
+    "react-hooks/immutability": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/markdown/markdown-renderer.tsx": {
+    "react-hooks/refs": {
+      "count": 4
+    }
+  },
+  "src/components/block-content-editor/extras/media/audio-options.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/media/image-options.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/media/unified-media-editor.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/media/video-options.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/preview/preview-renderer.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/preview/preview-table-of-contents.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/preview/project-sidebar-list-improved.tsx": {
+    "react-hooks/immutability": {
+      "count": 2
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/preview/project-sidebar-list.tsx": {
+    "react-hooks/immutability": {
+      "count": 2
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/preview/serialized-content-renderer.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "src/components/block-content-editor/extras/project/select-project-dialog.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/rich-text/inline-rich-text-editor.tsx": {
+    "react-hooks/refs": {
+      "count": 4
+    }
+  },
+  "src/components/block-content-editor/extras/rich-text/rich-text-preview-renderer.tsx": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/c/c-language-service.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/c/c-type-checker.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/code-editor.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    },
+    "react-hooks/refs": {
+      "count": 18
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/components/source-code-dialogs.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/components/source-code-editor-edit.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 12
+    },
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/components/source-code-editor-view.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 12
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/cpp/cpp-completion-provider.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/cpp/cpp-language-service.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/cpp/cpp-syntax-highlighter.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/cpp/cpp-type-checker.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/dialogs/language-settings-dialog.tsx": {
+    "react-hooks/refs": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/dialogs/new-file-dialog.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/dialogs/rename-file-dialog.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/lua/lua-language-service.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/lua/lua-type-checker.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/python/python-language-service.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/python/python-type-checker.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/source-code-renderer.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/terminal.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 11
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 5
+    },
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/test-input-fields.tsx": {
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/utils.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/xml/xml-completion-provider.tsx": {
+    "no-var": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/xml/xml-language-service.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/yaml/yaml-completion-provider.tsx": {
+    "no-var": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/source-code/yaml/yaml-language-service.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/extras/use-mobile.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/executors/compiled-language-executor.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/executors/javascript-executor.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/executors/typescript-executor.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 11
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/test-runners/types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/test-runners/utils.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/use-code-execution.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/use-google-drive-auth.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 6
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/use-mobile.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/use-project-dialog.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 3
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/use-source-code-editor.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 4
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/use-toast.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/useProjectDbInit.ts": {
+    "react-hooks/refs": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/useProjectLists.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/useProjectSizes.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/hooks/editor/useProjectState.ts": {
+    "react-hooks/refs": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/hooks/useAssetManager.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/hooks/useCollectionManager.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/hooks/useDarkMode.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/hooks/useProjectHistory.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/lib/api/editor/api-client.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/lib/client-only-lazy.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/lib/monaco/base-monaco-editor.tsx": {
+    "react-hooks/refs": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/lib/monaco/use-monaco-theme-binding.ts": {
+    "react-hooks/refs": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/lib/shiki/highlighter.ts": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/lib/storage/editor/enhanced-storage-adapter.ts": {
+    "prefer-const": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/lib/sync/editor/google-drive-sync.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/lib/sync/editor/sync-queue.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/nodes/custom-list-node.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-audio.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-gallery.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-heading.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 9
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-link.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-list-item.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-list.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "react-hooks/purity": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-paragraph.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-project.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-quiz.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-quote.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-source.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 7
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-text.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 9
+    },
+    "react-hooks/purity": {
+      "count": 9
+    }
+  },
+  "src/components/block-content-editor/plugins/preview-components/preview-vega-lite.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/block-content-editor/services/editor/google-drive-service.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 9
+    }
+  },
+  "src/components/block-content-editor/top-menu.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/block-content-editor/utils/editor/google-drive-security.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/console/dashboard-command-palette.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/courses/common/ui/course-card.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "src/components/courses/course-content-sidebar.tsx": {
+    "react-hooks/static-components": {
+      "count": 1
+    }
+  },
+  "src/components/courses/course-create-drawer.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/courses/course-editor/sections/content-structure-section.tsx": {
+    "@next/next/no-assign-module-variable": {
+      "count": 1
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    }
+  },
+  "src/components/courses/course-list-wrapper.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/courses/course-location-selector.tsx": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/courses/editor/context/course-editor-provider.tsx": {
+    "@next/next/no-assign-module-variable": {
+      "count": 1
+    }
+  },
+  "src/components/courses/editor/index.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 2
+    }
+  },
+  "src/components/courses/editor/types.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/components/courses/learning/course-content-viewer.tsx": {
+    "@next/next/no-assign-module-variable": {
+      "count": 3
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 3
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/courses/learning/progress-tracker.tsx": {
+    "react-hooks/immutability": {
+      "count": 1
+    },
+    "react/no-unescaped-entities": {
+      "count": 1
+    }
+  },
+  "src/components/courses/sidebar-context.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/feed/infinite-post-feed.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/learning/console/courses/[course]/assessments/[assessmentId]/submissions/[submissionId]/grade/grade-client.test.tsx": {
+    "@typescript-eslint/no-require-imports": {
+      "count": 1
+    }
+  },
+  "src/components/learning/console/courses/[course]/assessments/assessments-list.test.tsx": {
+    "prefer-const": {
+      "count": 1
+    }
+  },
+  "src/components/learning/console/courses/[course]/assessments/assessments-list.tsx": {
+    "react/no-unescaped-entities": {
+      "count": 2
+    }
+  },
+  "src/components/learning/console/courses/[course]/classes/[classId]/schedule/cohort-schedule-workspace.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/learning/console/courses/[course]/content/content-tree-model.test.ts": {
+    "@next/next/no-assign-module-variable": {
+      "count": 1
+    }
+  },
+  "src/components/learning/console/courses/[course]/content/content-tree.tsx": {
+    "@next/next/no-assign-module-variable": {
+      "count": 1
+    },
+    "@typescript-eslint/no-unsafe-function-type": {
+      "count": 2
+    }
+  },
+  "src/components/learning/console/courses/[course]/course-nav.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/learning/console/courses/[course]/overview/course-lifecycle-actions.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/learning/console/courses/[course]/students/student-table.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/learning/learning-shell.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 2
+    }
+  },
+  "src/components/settings/localization-form.tsx": {
+    "react-hooks/use-memo": {
+      "count": 1
+    }
+  },
+  "src/components/testing-lab/testing-lab-session-registration.tsx": {
+    "@next/next/no-html-link-for-pages": {
+      "count": 46
+    }
+  },
+  "src/components/ui/carousel.tsx": {
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/components/ui/sidebar.tsx": {
+    "react-hooks/purity": {
+      "count": 1
+    }
+  },
+  "src/components/use-google-identity-service.ts": {
+    "react-hooks/refs": {
+      "count": 1
+    },
+    "react-hooks/set-state-in-effect": {
+      "count": 1
+    }
+  },
+  "src/data/courses/databases/13-timeseries-search/index.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "src/data/courses/mock-data.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 5
+    }
+  },
+  "src/lib/__tests__/api-client-integration.test.ts": {
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/lib/__tests__/api-client.integration.test.ts": {
+    "@next/next/no-assign-module-variable": {
+      "count": 2
+    },
+    "@typescript-eslint/no-explicit-any": {
+      "count": 1
+    }
+  },
+  "src/lib/api/generated.ts": {
+    "@typescript-eslint/no-duplicate-enum-values": {
+      "count": 20
+    }
+  },
+  "src/lib/learning/actions-peer-review.ts": {
+    "@next/next/no-assign-module-variable": {
+      "count": 4
+    }
+  },
+  "src/lib/learning/queries/assessments.ts": {
+    "@next/next/no-assign-module-variable": {
+      "count": 3
+    }
+  },
+  "src/store/StoreProvider.tsx": {
+    "react-hooks/refs": {
+      "count": 2
+    }
+  },
+  "static-cache-guard.cjs": {
+    "@typescript-eslint/no-require-imports": {
+      "count": 4
+    }
+  }
+}

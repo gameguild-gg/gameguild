@@ -152,6 +152,7 @@
     "wasmoon": "^1.16.0"
   },
   "devDependencies": {
+    "@eslint/compat": "^2.1.0",
     "@excalidraw/mermaid-to-excalidraw": "2.2.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^7.0.0",
