@@ -155,14 +155,10 @@ export function ContentItemEditor({
     () => item.jsonBody as SerializedEditorState | null,
     [item.jsonBody],
   );
-  const editorStateRef = useRef<SerializedEditorState | null>(
-    initialLexicalState,
-  );
-  // ── Per-format body refs (Lesson only) ──
-  // ponytail: simple string refs; one source of truth per format, swapped on format change.
-  const codeBodyRef = useRef<string>(item.content ?? "");
-  const videoUrlRef = useRef<string>(item.content ?? "");
-  const externalLinkRef = useRef<string>(item.content ?? "");
+  const [editorState, setEditorState] =
+    useState<SerializedEditorState | null>(initialLexicalState);
+  const [codeBody, setCodeBody] = useState(item.content ?? "");
+  const [videoUrl, setVideoUrl] = useState(item.content ?? "");
   const initialQuizContent = useMemo(
     () => (isQuiz ? (item.jsonBody ?? undefined) : undefined),
     [isQuiz, item.jsonBody],
@@ -179,33 +175,31 @@ export function ContentItemEditor({
     if (item.jsonBody) return "Lexical";
     return "Markdown";
   }, [isLesson, item.lessonFormat, item.jsonBody]);
-  const [selectedFormat, setSelectedFormat] =
+  const [selectedFormat] =
     useState<LearningCoursesLessonContentFormat>(initialSelectedFormat);
 
-  // ponytail: refs mutate without re-render — the auto hint refreshes only on
-  // format change / preview toggle / save-refresh; that staleness is accepted for v1.
   const autoHint = useMemo(() => {
     if (!isLesson) return null;
     switch (selectedFormat) {
       case "Lexical":
         return estimateReadingMinutes({
-          jsonBody: (editorStateRef.current ?? null) as Record<
+          jsonBody: (editorState ?? null) as Record<
             string,
             unknown
           > | null,
         });
       case "Markdown":
       case "RevealJs":
-        return estimateReadingMinutes({ body: codeBodyRef.current ?? null });
+        return estimateReadingMinutes({ body: codeBody || null });
       case "Video":
         return null;
       default:
         return null;
     }
-  }, [isLesson, selectedFormat, previewMode]);
+  }, [codeBody, editorState, isLesson, selectedFormat]);
 
   const handleEditorChange = useCallback((state: SerializedEditorState) => {
-    editorStateRef.current = state;
+    setEditorState(state);
   }, []);
 
   const handleQuizContentChange = useCallback(
@@ -244,15 +238,15 @@ export function ContentItemEditor({
     if (isLesson) {
       switch (selectedFormat) {
         case "Lexical":
-          jsonBodyToSave = (editorStateRef.current ?? undefined) as
+          jsonBodyToSave = (editorState ?? undefined) as
             Record<string, unknown> | undefined;
           break;
         case "Markdown":
         case "RevealJs":
-          bodyToSave = codeBodyRef.current || undefined;
+          bodyToSave = codeBody || undefined;
           break;
         case "Video":
-          bodyToSave = videoUrlRef.current || undefined;
+          bodyToSave = videoUrl || undefined;
           break;
       }
     } else if (isQuiz) {
@@ -486,17 +480,15 @@ export function ContentItemEditor({
     (c) => c.kind === "doctest" || c.kind === "clang-query",
   ).length;
 
-  // ponytail: IIFE mirrors handleLessonChangeFormat/handleSave body logic.
-  // Refs mutate live; preview re-reads on every render — no state needed.
   const previewContent: unknown = (() => {
     switch (selectedFormat) {
       case "Lexical":
-        return editorStateRef.current;
+        return editorState;
       case "Markdown":
       case "RevealJs":
-        return codeBodyRef.current;
+        return codeBody;
       case "Video":
-        return videoUrlRef.current;
+        return videoUrl;
       default:
         return "";
     }
@@ -665,38 +657,38 @@ export function ContentItemEditor({
               {isLesson && selectedFormat === "Markdown" && !previewMode && (
                 <LessonCodeEditor
                   key={item.id}
-                  initialValue={codeBodyRef.current}
+                  initialValue={codeBody}
                   language="markdown"
                   placeholder="Write lesson content in Markdown."
-                  onChange={(v) => (codeBodyRef.current = v)}
+                  onChange={setCodeBody}
                 />
               )}
 
               {isLesson && selectedFormat === "Html" && !previewMode && (
                 <LessonCodeEditor
                   key={item.id}
-                  initialValue={codeBodyRef.current}
+                  initialValue={codeBody}
                   language="html"
                   placeholder="Write lesson content in HTML."
-                  onChange={(v) => (codeBodyRef.current = v)}
+                  onChange={setCodeBody}
                 />
               )}
 
               {isLesson && selectedFormat === "RevealJs" && !previewMode && (
                 <LessonCodeEditor
                   key={item.id}
-                  initialValue={codeBodyRef.current}
+                  initialValue={codeBody}
                   language="markdown"
                   placeholder="Author slides in Markdown — separate slides with --- on its own line."
-                  onChange={(v) => (codeBodyRef.current = v)}
+                  onChange={setCodeBody}
                 />
               )}
 
               {isLesson && selectedFormat === "Video" && !previewMode && (
                 <LessonVideoEditor
                   key={item.id}
-                  initialValue={videoUrlRef.current}
-                  onChange={(v) => (videoUrlRef.current = v)}
+                  initialValue={videoUrl}
+                  onChange={setVideoUrl}
                 />
               )}
 
