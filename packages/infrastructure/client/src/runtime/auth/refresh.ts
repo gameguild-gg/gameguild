@@ -46,7 +46,7 @@ export class TokenRefreshManager {
   constructor(
     private provider: TokenProvider,
     private baseUrl: string,
-    config: Partial<TokenRefreshConfig> = {}
+    config: Partial<TokenRefreshConfig> = {},
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }

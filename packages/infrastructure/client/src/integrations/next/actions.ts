@@ -7,7 +7,7 @@
  * They read/write cookies directly via next/headers and can trigger redirects.
  */
 
-import type { ResolvedAuthConfig, Session, JWTPayload, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types.js';
+import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types.js';
 import { decodeJWT } from '../../runtime/auth/jwt.js';
 import { SessionStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies.js';
 import { createJWTPayload, processSession, encodeSession, refreshAccessToken, toSession } from '../../runtime/auth/session.js';
@@ -151,7 +151,7 @@ export function createAuthFunction(config: ResolvedAuthConfig) {
  * Create the signIn server action.
  */
 export function createSignInAction(config: ResolvedAuthConfig) {
-  const { sessionStore, writeCookieToAdapter } = createCookieHelpers(config);
+  const { sessionStore } = createCookieHelpers(config);
 
   return async function signIn(
     provider: string = 'credentials',

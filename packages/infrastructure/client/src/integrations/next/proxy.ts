@@ -24,7 +24,6 @@
  */
 
 import type { Session, ResolvedAuthConfig } from '../../runtime/auth/types.js';
-import { decodeJWT } from '../../runtime/auth/jwt.js';
 import { processSession } from '../../runtime/auth/session.js';
 import { SessionStore, resolveCookieOptions } from '../../runtime/auth/cookies.js';
 import { parseCookieHeader } from './handlers.js';
@@ -44,18 +43,14 @@ export function createProxy(config: ResolvedAuthConfig) {
   const sessionStore = new SessionStore(cookieOptions);
 
   return function withAuth(
-    handler?: (
-      request: Request & { auth: Session | null }
-    ) => Promise<Response | void> | Response | void
+    handler?: (request: Request & { auth: Session | null }) => Promise<Response | void> | Response | void,
   ): (request: Request) => Promise<Response> {
     return async (request: Request): Promise<Response> => {
       // Parse cookies using the shared helper
       const cookieHeader = request.headers.get('cookie') || '';
       const cookieMap = parseCookieHeader(cookieHeader);
 
-      const encryptedToken = sessionStore.read(
-        (name) => cookieMap.get(name)
-      );
+      const encryptedToken = sessionStore.read((name) => cookieMap.get(name));
 
       let session: Session | null = null;
 
