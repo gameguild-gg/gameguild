@@ -120,26 +120,26 @@ export function TestingLabHowItWorks() {
                 Submit Your Project
               </h3>
               <p className="text-lg text-slate-300 mb-6 leading-relaxed drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                Get rewarded for your contributions with credits, certificates,
-                early access to games, and community recognition.
+                Prepare an eligible version, add test instructions and a
+                feedback questionnaire, then apply while applications are open.
               </p>
               <div className="space-y-3 text-left">
                 <div className="flex items-center gap-3 text-slate-400">
                   <div className="w-2 h-2 bg-green-400 rounded-full shadow-lg"></div>
                   <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                    Connect an existing project
+                    Create a ReadyForTesting version
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-slate-400">
+                  <div className="w-2 h-2 bg-green-400 rounded-full shadow-lg"></div>
+                  <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                    Add a test brief and questionnaire
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-slate-400">
                   <div className="w-2 h-2 bg-green-400 rounded-full shadow-lg"></div>
                   <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                     Apply to an open event
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <div className="w-2 h-2 bg-green-400 rounded-full shadow-lg"></div>
-                  <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                    Receive a review decision
                   </span>
                 </div>
               </div>
