@@ -79,6 +79,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@game-guild/eslint-config": "workspace:*",
+    "@game-guild/prettier-config": "workspace:*",
     "@game-guild/typescript-config": "workspace:*",
     "@tanstack/react-query": "^5.90.20",
     "@testing-library/jest-dom": "^7.0.0",
@@ -87,6 +89,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.10",
+    "eslint": "^10.8.1",
     "handlebars": "^4.7.8",
     "happy-dom": "^20.6.1",
     "next": "16.3.1",
@@ -118,6 +121,7 @@
   "bugs": {
     "url": "https://github.com/game-guild/game-guild/issues"
   },
+  "prettier": "@game-guild/prettier-config",
   "engines": {
     "node": ">=18.0.0"
   }
