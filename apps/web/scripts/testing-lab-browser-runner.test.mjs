@@ -31,18 +31,31 @@ test('isolates the browser journey in a disposable PostgreSQL database', async (
   assert.match(runner, /POSTGRES_DB=\$\{POSTGRES_DATABASE\}/);
   assert.match(runner, /POSTGRES_USER=\$\{POSTGRES_USER\}/);
   assert.match(runner, /POSTGRES_PASSWORD=\$\{POSTGRES_PASSWORD\}/);
-  assert.match(runner, /next dev --webpack/);
+  assert.match(runner, /next dev --turbopack/);
   assert.match(runner, /pnpm --filter @game-guild\/client build/);
   assert.match(runner, /TESTING_LAB_E2E_SKIP_CLIENT_BUILD/);
   assert.match(runner, /TESTING_LAB_E2E_LOCK_DIR/);
   assert.match(runner, /mkdir "\$\{LOCK_DIR\}"/);
   assert.match(runner, /rmdir "\$\{LOCK_DIR\}"/);
   assert.match(runner, /NEXT_BUILD_DIR="\$\{WEB_DIR\}\/\.next"/);
+  assert.match(runner, /NEXT_STANDALONE_ROOT=/);
+  assert.match(runner, /stage_standalone_assets\(\)/);
+  assert.match(runner, /cp -R "\$\{NEXT_BUILD_DIR\}\/static"/);
+  assert.match(runner, /cp -R "\$\{WEB_DIR\}\/public\/\."/);
   assert.match(runner, /rm -rf -- "\$\{NEXT_BUILD_DIR\}"/);
-  assert.match(runner, /taskkill\.exe \/\/PID/);
-  assert.match(runner, /ps -W/);
+  assert.match(runner, /MSYS_NO_PATHCONV=1 taskkill\.exe \/PID/);
+  assert.match(runner, /ps -W -p/);
   assert.match(runner, /win_pid/);
+  assert.match(runner, /stop_port_listener\(\)/);
+  assert.match(
+    runner,
+    /if \[\[ "\$\(uname -s\)" != MINGW\* && "\$\(uname -s\)" != CYGWIN\* \]\]; then\s+stop_process "\$\{WEB_PID\}"\s+stop_process "\$\{API_PID\}"/,
+  );
+  assert.match(runner, /netstat\.exe -ano -p tcp \| tr -d '\\r'/);
+  assert.match(runner, /stop_port_listener "\$\{WEB_PORT\}"/);
+  assert.match(runner, /stop_port_listener "\$\{API_PORT\}"/);
   assert.match(runner, /GAMEGUILD_DISABLE_WEBPACK_CACHE=1/);
+  assert.match(runner, /AUTH_COOKIE_SECURE=false/);
   assert.match(runner, /assert_port_available "\$\{POSTGRES_PORT\}"/);
   assert.match(runner, /assert_port_available "\$\{API_PORT\}"/);
   assert.match(runner, /assert_port_available "\$\{WEB_PORT\}"/);
@@ -73,7 +86,7 @@ test('allows cold SSR route compilation without aborting browser navigation', as
     journey,
     /await page\.reload\(\{ waitUntil: 'domcontentloaded' \}\);\s+await waitForClientHydration\(page\);\s+await assertNoErrorSurface/,
   );
-  assert.match(journey, /fetch\(\`\$\{webBaseUrl\}\/en-US\/testing-lab\`/);
+  assert.match(journey, /warmSsr\('\/en-US\/testing-lab', 'Testing Lab SSR'\)/);
   assert.ok(
     journey.indexOf('const fixture = await bootstrap();') <
       journey.indexOf('await warmTestingLabSsr();'),
@@ -92,10 +105,10 @@ test('waits for hydration before every client-side Testing Lab mutation', async 
     'utf8',
   );
   const scenarios = [
-    ["'authenticated public Testing Lab event'", 'await waitForClientHydration(page);', "page.getByLabel('Existing project')"],
+    ["'project-owner public Testing Lab event'", 'await waitForClientHydration(ownerPage);', "ownerPage.getByLabel('Eligible project version')"],
     ["'Testing Lab manager applications'", 'await waitForClientHydration(page);', "page.getByRole('button', { name: 'Review'"],
     ["'committee review applications'", 'await waitForClientHydration(reviewerPage);', "reviewerPage.getByRole('button', { name: 'Vote'"],
-    ["'scheduled public Testing Lab event'", 'await waitForClientHydration(page);', "page.getByRole('button', { name: 'Reserve tester seat'"],
+    ["'scheduled public Testing Lab event'", 'await waitForClientHydration(testerPage);', "testerPage.getByRole('button', { name: 'Reserve tester seat'"],
   ];
 
   for (const [visitMarker, hydrationMarker, actionMarker] of scenarios) {
@@ -132,7 +145,7 @@ test('covers the complete Testing Lab operational browser matrix', async () => {
     "page.getByRole('button', { name: 'Manage access', exact: true })",
     "page.getByRole('button', { name: 'Start event', exact: true })",
     "page.getByRole('button', { name: 'Assign tested project', exact: true })",
-    "page.getByRole('button', { name: 'Submit required feedback', exact: true })",
+    "testerPage.getByRole('button', { name: 'Submit required feedback', exact: true })",
     "page.getByRole('button', { name: 'Cancel event', exact: true })",
   ]) {
     assert.ok(journey.includes(expectedInteraction), `missing interaction: ${expectedInteraction}`);
@@ -153,4 +166,25 @@ test('waits for hydration after SSR reloads before editing locations and roles',
     const hydrationIndex = journey.indexOf('await waitForClientHydration(page);', reloadIndex);
     assert.ok(reloadIndex >= 0 && hydrationIndex > reloadIndex && hydrationIndex < editIndex);
   }
+});
+
+test('waits for the canonical workspace redirect after browser sign-in', async () => {
+  const journey = await readFile(
+    new URL('./testing-lab-browser-e2e.mjs', import.meta.url),
+    'utf8',
+  );
+
+  const signInStart = journey.indexOf('async function signIn(');
+  const dashboardIndex = journey.indexOf('waitForURL(/\\/dashboard/', signInStart);
+  const workspaceIndex = journey.indexOf(
+    'url.pathname.endsWith("/workspace")',
+    dashboardIndex,
+  );
+
+  assert.ok(signInStart >= 0);
+  assert.ok(dashboardIndex > signInStart);
+  assert.ok(
+    workspaceIndex > dashboardIndex,
+    'the canonical workspace redirect must settle before the next journey navigation',
+  );
 });
