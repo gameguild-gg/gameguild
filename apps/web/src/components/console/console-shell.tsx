@@ -36,6 +36,12 @@ export function ConsoleShell({
 
   return (
     <div className="flex h-svh min-w-0 flex-1 overflow-hidden">
+      <a
+        href="#dashboard-main"
+        className="sr-only fixed left-4 top-4 z-50 rounded-md bg-background px-4 py-2 text-sm font-medium shadow-lg focus:not-sr-only"
+      >
+        Skip to main content
+      </a>
       <SidebarProvider>
         <DashboardSidebar navigation={navigation} contexts={contexts} />
         <SidebarInset className="min-w-0 overflow-hidden">
@@ -49,7 +55,11 @@ export function ConsoleShell({
             <DashboardHeader notifications={notifications} user={user} />
 
             {/* Page Content */}
-            <div className={cn('min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-muted/30 p-4 transition-all duration-300 sm:p-6')}>
+            <div
+              id="dashboard-main"
+              tabIndex={-1}
+              className={cn('min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-muted/30 p-4 transition-all duration-300 sm:p-6')}
+            >
               {children}
             </div>
           </div>

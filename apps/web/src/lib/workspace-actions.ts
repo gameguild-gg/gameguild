@@ -42,7 +42,12 @@ function projectTaskPriority(data: FormData): string {
 
 export async function createTeamForm(data: FormData): Promise<void> {
   const name = text(data, 'name');
-  const slug = text(data, 'slug').toLowerCase();
+  const slug = (text(data, 'slug') || name)
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
   if (!name || !slug) return;
   const result = await request<{ id: string; slug: string }>('POST', '/v1/teams', {
     name,

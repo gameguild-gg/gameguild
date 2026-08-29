@@ -132,7 +132,7 @@ export const dashboardNavigationData: DashboardNavGroup[] = [
     ],
   },
   {
-    label: 'Community Management',
+    label: 'Community administration',
     items: [
       {
         title: 'Overview',
