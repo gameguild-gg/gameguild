@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
-import { Calendar, Clock, Gamepad2, MapPin, Search, Users } from "lucide-react";
+import { Calendar, Clock, Gamepad2, MapPin, Users } from "lucide-react";
 import type {
   TestingEventStatus,
   TestingEventViewModel,
@@ -24,7 +24,6 @@ function formatDate(value?: string) {
     timeZone: "UTC",
   }).format(date);
 }
-
 function formatTime(value?: string) {
   if (!value) return "Time pending";
   const date = new Date(value);
@@ -36,7 +35,6 @@ function formatTime(value?: string) {
   }).format(date);
   return `${formatted} UTC`;
 }
-
 function formatDuration(startsAt?: string, endsAt?: string) {
   if (!startsAt || !endsAt) return "TBD";
   const duration = new Date(endsAt).valueOf() - new Date(startsAt).valueOf();
@@ -64,7 +62,9 @@ function statusClasses(status: TestingEventStatus) {
 
 function eventHref(eventId: string, projectId?: string) {
   const path = `/testing-lab/events/${eventId}`;
-  return projectId ? `${path}?projectId=${encodeURIComponent(projectId)}` : path;
+  return projectId
+    ? `${path}?projectId=${encodeURIComponent(projectId)}`
+    : path;
 }
 
 function EventMeta({ session }: { session: TestingEventViewModel }) {
@@ -263,50 +263,6 @@ export function TestingEventsTable({
           ))}
         </tbody>
       </table>
-    </div>
-  );
-}
-
-export function TestingEventsEmptyState({
-  filtered,
-  hasEvents,
-  clearFilters,
-}: {
-  filtered: boolean;
-  hasEvents: boolean;
-  clearFilters: () => void;
-}) {
-  if (filtered && hasEvents) {
-    return (
-      <div className="mx-auto max-w-2xl rounded-2xl border border-slate-600/40 bg-slate-900/50 p-12 text-center">
-        <Search className="mx-auto size-8 text-blue-400" />
-        <h2 className="mt-5 text-2xl font-semibold text-white">
-          No events match your filters
-        </h2>
-        <p className="mt-3 text-slate-400">
-          Adjust your search or filters to see other testing events.
-        </p>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-6"
-          onClick={clearFilters}
-        >
-          Clear filters
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mx-auto max-w-2xl rounded-lg border border-slate-700 bg-gradient-to-br from-slate-900/60 to-slate-800/50 p-12 text-center">
-      <h2 className="text-2xl font-semibold text-white">No events available</h2>
-      <p className="mt-3 text-slate-400">
-        Check back soon for new community testing events.
-      </p>
-      <Button asChild variant="outline" className="mt-6">
-        <Link href="/testing-lab">Back to Testing Lab</Link>
-      </Button>
     </div>
   );
 }

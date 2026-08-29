@@ -3,10 +3,10 @@ import { formatTestingEventStatus } from '@/lib/testing-lab/format';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { TestingLabAccessIssues, TestingLabEmptyState } from '@/components/testing-lab/testing-lab-state';
 import { Link } from '@/i18n/navigation';
-import { getArchivedTestingEventsDirectory, getTestingEventsDirectory } from '@/lib/testing-lab/events-queries';
+import { getArchivedTestingEventsDirectory, getTestingEventTemplates, getTestingEventsDirectory } from '@/lib/testing-lab/events-queries';
 import type { TestingLabTestingEventStatus } from '@game-guild/client';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { Button, buttonVariants } from '@game-guild/ui/components/button';
 import { Input } from '@game-guild/ui/components/input';
 import { CalendarDays, ChevronRight, FlaskConical, Layers3 } from 'lucide-react';
 
@@ -44,6 +44,7 @@ export default async function TestingEventsPage({
   const directory = archived
     ? await getArchivedTestingEventsDirectory({ skip: 0, take: 100 })
     : await getTestingEventsDirectory({ status: selectedStatus, skip: 0, take: 100 });
+  const templates = archived ? { templates: [], accessIssues: [] } : await getTestingEventTemplates();
   const searchTerm = query.q?.trim().toLocaleLowerCase() ?? '';
   const filteredEvents = directory.events.filter((event) =>
     searchTerm
@@ -62,23 +63,28 @@ export default async function TestingEventsPage({
         icon={CalendarDays}
         title="Testing events"
         description="Open application windows, review existing community projects, reserve capacity after approval, and operate each tester slot."
-        actions={<CreateTestingEventDialog />}
+        actions={<CreateTestingEventDialog templates={templates.templates} />}
       />
-      <TestingLabAccessIssues issues={directory.accessIssues} />
+      <TestingLabAccessIssues issues={[...directory.accessIssues, ...templates.accessIssues]} />
       <nav aria-label="Filter testing events" className="flex flex-wrap gap-2">
         {statuses.map((status) => {
           const active = !archived && (status.value === selectedStatus || (!status.value && !selectedStatus));
           return (
-            <Button key={status.label} asChild size="sm" variant={active ? 'default' : 'outline'}>
-              <Link href={status.value ? `/console/community/testing-lab/events?status=${status.value}` : '/console/community/testing-lab/events'}>
-                {status.label}
-              </Link>
-            </Button>
+            <Link
+              key={status.label}
+              className={buttonVariants({ size: 'sm', variant: active ? 'default' : 'outline' })}
+              href={status.value ? `/console/community/testing-lab/events?status=${status.value}` : '/console/community/testing-lab/events'}
+            >
+              {status.label}
+            </Link>
           );
         })}
-        <Button asChild size="sm" variant={archived ? 'default' : 'outline'}>
-          <Link href="/console/community/testing-lab/events?archived=true">Archived</Link>
-        </Button>
+        <Link
+          className={buttonVariants({ size: 'sm', variant: archived ? 'default' : 'outline' })}
+          href="/console/community/testing-lab/events?archived=true"
+        >
+          Archived
+        </Link>
       </nav>
       <form method="get" className="flex max-w-2xl flex-col gap-2 sm:flex-row">
         {selectedStatus ? <input type="hidden" name="status" value={selectedStatus} /> : null}
@@ -96,7 +102,7 @@ export default async function TestingEventsPage({
         <TestingLabEmptyState
           title={searchTerm ? 'No matching events' : archived ? 'No archived events' : 'No testing events'}
           description={searchTerm ? 'Adjust the search or status filter.' : archived ? 'Completed and cancelled events can be archived from their management workspace.' : 'Create an event to collect project applications and organize independent online or campus test slots.'}
-          action={archived ? undefined : <CreateTestingEventDialog />}
+          action={archived ? undefined : <CreateTestingEventDialog templates={templates.templates} />}
         />
       ) : (
         <section className="divide-y rounded-md border" aria-label="Testing event directory">

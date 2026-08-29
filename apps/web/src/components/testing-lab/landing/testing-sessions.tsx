@@ -12,10 +12,10 @@ import {
 import { LayoutGrid, List, Search, Table2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { TestingEventViewModel } from "./testing-events-presentation";
+import { TestingEventsEmptyState } from "./testing-events-empty-state";
 import {
   TestingEventCard,
   TestingEventRow,
-  TestingEventsEmptyState,
   TestingEventsTable,
 } from "./testing-event-views";
 type ViewMode = "cards" | "row" | "table";
@@ -128,7 +128,7 @@ export function TestingEventsBrowser({
           </div>
         ) : null}
 
-        <section
+        {presentedEvents.length > 0 ? <section
           aria-label="Event filters"
           className="mb-8 rounded-xl border border-slate-700/70 bg-slate-900/50 p-4 backdrop-blur-sm"
         >
@@ -223,7 +223,7 @@ export function TestingEventsBrowser({
               </Button>
             ) : null}
           </div>
-        </section>
+        </section> : null}
 
         {filteredEvents.length === 0 ? (
           <TestingEventsEmptyState
