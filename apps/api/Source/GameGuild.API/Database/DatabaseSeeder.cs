@@ -296,19 +296,14 @@ public static class DatabaseSeeder
             return version.IsDeleted ? null : version;
         }
 
-        version = new ProjectVersion
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = project.Id,
-            VersionNumber = seed.VersionNumber,
-            CreatedById = adminUser.Id
-        };
+        version = ProjectVersion.Create(
+            project.Id,
+            seed.VersionNumber,
+            $"{seed.Title} seeded build for moderated playtesting and launch readiness.",
+            adminUser.Id,
+            project.TenantId);
+        version.MarkReadyForTesting();
         dbContext.Set<ProjectVersion>().Add(version);
-
-        version.ReleaseNotes = $"{seed.Title} seeded build for moderated playtesting and launch readiness.";
-        version.Status = "testing";
-        version.CreatedById = adminUser.Id;
-        version.Touch();
 
         await dbContext.SaveChangesAsync().ConfigureAwait(false);
         return version;
