@@ -48,9 +48,9 @@ export interface GoogleProviderOptions {
  * Unlike a standard OAuth provider, this one takes the Google ID token
  * and sends it to the .NET backend for validation + token issuance.
  */
-export function GoogleProvider(
-  options: GoogleProviderOptions,
-): OAuthProviderConfig & { exchangeToken: (idToken: string, apiUrl: string, tenantId?: string) => Promise<ProviderResult> } {
+export function GoogleProvider(options: GoogleProviderOptions): OAuthProviderConfig & {
+  exchangeToken: (idToken: string, apiUrl: string, tenantId?: string) => Promise<ProviderResult>;
+} {
   const { tokenExchangePath = '/v1/auth/google:sign-in' } = options;
 
   return {

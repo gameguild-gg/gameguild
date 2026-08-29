@@ -8,7 +8,7 @@
  * JWT encryption, cookies, and callbacks.
  */
 
-import type { JWTPayload, Session, SessionUser, ProviderResult, ResolvedAuthConfig } from './types.js';
+import type { JWTPayload, Session, ProviderResult, ResolvedAuthConfig } from './types.js';
 import { encodeJWT, decodeJWT } from './jwt.js';
 import { TokenRefreshError } from './errors.js';
 import { resolveAuthPermissions, resolveAuthRoles } from './claims.js';
