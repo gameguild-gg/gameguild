@@ -21,7 +21,7 @@
     "test:browser:learning-support": "node --test scripts/learning-browser-e2e-support.test.mjs",
     "test:browser:community-admin": "node scripts/community-admin-browser-e2e.mjs",
     "test:browser:user-settings": "node scripts/user-settings-browser-e2e.mjs",
-    "test:browser:testing-lab": "bash scripts/testing-lab-browser-e2e.sh",
+    "test:browser:testing-lab": "node scripts/run-testing-lab-browser-e2e.mjs",
     "test:browser:testing-lab:existing": "node scripts/testing-lab-browser-e2e.mjs",
     "test:browser:coding-cycle": "node scripts/coding-cycle-browser-e2e.mjs",
     "test:watch": "vitest",
