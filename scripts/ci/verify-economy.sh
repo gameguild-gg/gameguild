@@ -679,7 +679,9 @@ if [[ "$gate_profile" == full ]]; then
 {
   gate_stage='openapi-client'
   publish_directory="$artifact_root/publish/api"
-  run dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-build --no-restore --nologo --output "$publish_directory"
+  # Some API project references are intentionally not solution members. Build
+  # during publish so their output is always materialized before packaging.
+  run dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --output "$publish_directory"
   api_port="$(get_ephemeral_port)"
   export ASPNETCORE_ENVIRONMENT=Development
   export ASPNETCORE_URLS="http://127.0.0.1:$api_port"
