@@ -207,6 +207,13 @@ test_economy_gate_builds_release_targets_before_packaging() {
   ! grep -Fq 'warning_projects=' "$gate"
 }
 
+test_openapi_gate_uses_semantic_generated_client_diff() {
+  local verifier="$ci_dir/verify-openapi-client.sh"
+
+  grep -Fq 'pnpm --filter @game-guild/client generate:diff' "$verifier" || return 1
+  ! grep -Fq 'git diff --exit-code -- packages/infrastructure/client/src/generated' "$verifier"
+}
+
 test_economy_gate_rejects_nested_postgres_testcontainers() {
   local gate="$ci_dir/verify-economy.sh"
 
@@ -732,6 +739,7 @@ run_test 'Economy gate supports fast PR and full release profiles' test_economy_
 run_test 'Economy gate batches whole-solution tests' test_economy_gate_batches_whole_solution_tests
 run_test 'Economy unit tests bound parallelism without global serialization' test_economy_unit_tests_bound_parallelism_without_global_serialization
 run_test 'Economy gate builds release targets before packaging' test_economy_gate_builds_release_targets_before_packaging
+run_test 'OpenAPI gate ignores generator provenance only' test_openapi_gate_uses_semantic_generated_client_diff
 run_test 'Economy gate rejects nested PostgreSQL Testcontainers' test_economy_gate_rejects_nested_postgres_testcontainers
 run_test 'Economy gate isolates global roles from application databases' test_economy_gate_isolates_global_economy_roles_from_application_databases
 run_test 'full gate isolates API migration tests from the Economy template' test_full_gate_isolates_api_migration_tests_from_the_economy_template
