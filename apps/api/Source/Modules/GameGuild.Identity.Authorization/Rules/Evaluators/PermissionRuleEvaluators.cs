@@ -39,8 +39,7 @@ public sealed class RequireAllPermissionsRuleEvaluator : IRuleEvaluator
 
         if (requiredPermissions.Count == 0)
         {
-            // No permissions required - pass
-            return RuleEvaluationResult.Success();
+            return RuleEvaluationResult.Fail("At least one permission is required");
         }
 
         // Extract user ID from claims using centralized helper
@@ -115,8 +114,7 @@ public sealed class RequireAnyPermissionRuleEvaluator : IRuleEvaluator
 
         if (allowedPermissions.Count == 0)
         {
-            // No permissions specified - pass
-            return RuleEvaluationResult.Success();
+            return RuleEvaluationResult.Fail("At least one permission is required");
         }
 
         // Extract user ID from claims using centralized helper

@@ -21,8 +21,13 @@ public sealed class DatabasePolicyDefinitionStore(IPolicyDefinitionRepository re
     {
         Guid? tenantGuid = string.IsNullOrEmpty(tenantId) ? null : Guid.TryParse(tenantId, out var g) ? g : null;
         
+        if (!string.IsNullOrEmpty(tenantId) && !tenantGuid.HasValue)
+            return null;
+
         var entity = await repository.GetByNameAsync(policyName, tenantGuid, cancellationToken).ConfigureAwait(false);
-        
+        if (tenantGuid.HasValue && entity?.TenantId != tenantGuid)
+            return null;
+
         return entity == null ? null : MapToDefinition(entity);
     }
 
@@ -58,61 +63,76 @@ public sealed class DatabasePolicyDefinitionStore(IPolicyDefinitionRepository re
     /// </summary>
     private static PolicyDefinition MapToDefinition(PolicyDefinitionEntity entity)
     {
+        var authenticationSchemes = DeserializeList(entity.AuthenticationSchemesJson);
+        var requiredPermissions = DeserializeList(entity.RequiredPermissionsJson);
+        var requiredRoles = DeserializeList(entity.RequiredRolesJson);
+        var rules = DeserializeRules(entity.RulesJson);
+
         return new PolicyDefinition
         {
             PolicyName = entity.PolicyName,
             RequireAuthentication = entity.RequireAuthentication,
-            AuthenticationSchemes = DeserializeList(entity.AuthenticationSchemesJson),
-            RequiredPermissions = DeserializeList(entity.RequiredPermissionsJson),
-            RequiredRoles = DeserializeList(entity.RequiredRolesJson),
+            AuthenticationSchemes = authenticationSchemes.Values,
+            RequiredPermissions = requiredPermissions.Values,
+            RequiredRoles = requiredRoles.Values,
             RequireAccessControlListAccess = entity.RequireAccessControlListAccess,
             ResourceType = entity.ResourceType,
             MinimumAccessLevel = entity.MinimumAccessLevel,
             IsTenantScoped = entity.IsTenantScoped,
             Version = entity.PolicyVersion,
             UseRuleBasedEvaluation = entity.UseRuleBasedEvaluation,
-            Rules = DeserializeRules(entity.RulesJson)
+            Rules = rules.Values,
+            IsConfigurationValid = authenticationSchemes.IsValid &&
+                                   requiredPermissions.IsValid &&
+                                   requiredRoles.IsValid &&
+                                   rules.IsValid
         };
     }
 
-    private static IReadOnlyList<string> DeserializeList(string? json)
+    private static (IReadOnlyList<string> Values, bool IsValid) DeserializeList(string? json)
     {
         if (string.IsNullOrEmpty(json) || json == "[]")
-            return [];
+            return ([], true);
 
         try
         {
-            return JsonSerializer.Deserialize<List<string>>(json, JsonOptions) ?? [];
+            var values = JsonSerializer.Deserialize<List<string>>(json, JsonOptions);
+            return values is null ? ([], false) : (values, true);
         }
         catch
         {
-            return [];
+            return ([], false);
         }
     }
 
-    private static IReadOnlyList<PolicyRule>? DeserializeRules(string? json)
+    private static (IReadOnlyList<PolicyRule>? Values, bool IsValid) DeserializeRules(string? json)
     {
         if (string.IsNullOrEmpty(json))
-            return null;
+            return (null, true);
 
         try
         {
             var rules = JsonSerializer.Deserialize<List<RuleDto>>(json, JsonOptions);
-            return rules?.Select(r => new PolicyRule
-            {
-                Type = r.Type ?? string.Empty,
-                Description = r.Description,
-                Params = r.Params?.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => (object)kvp.Value),
-                Enabled = r.Enabled
-            }).ToList();
+            return rules is null
+                ? (null, false)
+                : (rules.Select(MapRule).ToList(), true);
         }
         catch
         {
-            return null;
+            return (null, false);
         }
     }
+
+    private static PolicyRule MapRule(RuleDto rule) => new()
+    {
+        Type = rule.Type ?? string.Empty,
+        Description = rule.Description,
+        Params = rule.Params?.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (object)kvp.Value),
+        Rules = rule.Rules?.Select(MapRule).ToList(),
+        Enabled = rule.Enabled
+    };
 
     /// <summary>
     ///     DTO for deserializing rules from JSON.
@@ -124,6 +144,7 @@ public sealed class DatabasePolicyDefinitionStore(IPolicyDefinitionRepository re
         public string? Type { get; set; }
         public string? Description { get; set; }
         public Dictionary<string, JsonElement>? Params { get; set; }
+        public List<RuleDto>? Rules { get; set; }
         public bool Enabled { get; set; } = true;
     }
     // ReSharper restore CollectionNeverUpdated.Local

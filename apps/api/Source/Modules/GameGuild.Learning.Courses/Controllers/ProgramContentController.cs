@@ -1,7 +1,5 @@
 using Asp.Versioning;
 using GameGuild.Identity.Authorization;
-using GameGuild.Identity.Authorization.Utilities;
-using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -16,8 +14,7 @@ public class ProgramContentController(
   IProgramContentService contentService,
   IProgramCrudService programService,
   ICodingAssignmentContentService codingAssignmentService,
-  IActorContextAccessor actorContextAccessor,
-  IPermissionQueryService permissionQueryService) : BaseApiController
+  IAuthorizationService authorizationService) : BaseApiController
 {
   /// <summary> Get all content for a course with optional filtering (resource-level Read permission required on parent Program) </summary>
   /// <remarks>
@@ -76,7 +73,7 @@ public class ProgramContentController(
 
     var currentUserId = GetCurrentUserId();
     if (currentUserId == null) return Unauthorized();
-    if (!await HasStudentAccessAsync(programId, currentUserId.Value).ConfigureAwait(false)) return Forbid();
+    if (!await AuthorizeCourseContentAsync(programId, Policies.CourseContentLearner).ConfigureAwait(false)) return Forbid();
 
     var interaction = await programService.SubmitUserContentAsync(programId, currentUserId.Value, id, submitDto.SubmissionData).ConfigureAwait(false);
 
@@ -264,7 +261,7 @@ public class ProgramContentController(
   {
     var currentUserId = GetCurrentUserId();
     if (currentUserId == null) return Unauthorized();
-    if (!await HasStudentAccessAsync(programId, currentUserId.Value).ConfigureAwait(false)) return Forbid();
+    if (!await AuthorizeCourseContentAsync(programId, Policies.CourseContentLearner).ConfigureAwait(false)) return Forbid();
 
     var content = await codingAssignmentService.GetPublicAsync(programId, id, currentUserId.Value).ConfigureAwait(false);
     if (content == null) return NotFound();
@@ -278,7 +275,7 @@ public class ProgramContentController(
   {
     var currentUserId = GetCurrentUserId();
     if (currentUserId == null) return Unauthorized();
-    if (!await HasProgramManagementAccessAsync(programId, currentUserId.Value).ConfigureAwait(false)) return Forbid();
+    if (!await AuthorizeCourseContentAsync(programId, Policies.CourseContentManage).ConfigureAwait(false)) return Forbid();
 
     var content = await codingAssignmentService.GetFullAsync(programId, id).ConfigureAwait(false);
     if (content == null) return NotFound();
@@ -297,7 +294,7 @@ public class ProgramContentController(
 
     var currentUserId = GetCurrentUserId();
     if (currentUserId == null) return Unauthorized();
-    if (!await HasProgramManagementAccessAsync(programId, currentUserId.Value).ConfigureAwait(false)) return Forbid();
+    if (!await AuthorizeCourseContentAsync(programId, Policies.CourseContentManage).ConfigureAwait(false)) return Forbid();
 
     var result = await codingAssignmentService.UpsertAsync(programId, id, body, currentUserId.Value).ConfigureAwait(false);
     if (!result.IsSuccess)
@@ -318,68 +315,34 @@ public class ProgramContentController(
       return ContentAccessResolution.None;
     }
 
-    var actor = actorContextAccessor.ActorContext;
-
-    if (actor.IsSystemAdmin)
+    var viewAll = await authorizationService
+      .AuthorizeAsync(User, program, Policies.CourseContentViewAll)
+      .ConfigureAwait(false);
+    if (viewAll.Succeeded)
     {
       return new ContentAccessResolution(true, true, true);
     }
 
-    var currentUserId = GetCurrentUserId();
-    if (currentUserId.HasValue)
+    var learner = await authorizationService
+      .AuthorizeAsync(User, program, Policies.CourseContentLearner)
+      .ConfigureAwait(false);
+    if (learner.Succeeded)
     {
-      if (program.CreatorId == currentUserId.Value
-          || await HasProgramManagementAccessAsync(programId, currentUserId.Value).ConfigureAwait(false))
-      {
-        return new ContentAccessResolution(true, true, true);
-      }
-
-      if (await HasStudentAccessAsync(programId, currentUserId.Value).ConfigureAwait(false))
-      {
-        return new ContentAccessResolution(false, true, true);
-      }
+      return new ContentAccessResolution(false, true, true);
     }
 
-    var canViewPublicOutline = program.Status == ContentStatus.Published
-        && program.Visibility == ContentVisibility.Public;
+    var publicOutline = await authorizationService
+      .AuthorizeAsync(User, program, Policies.CourseContentPublicOutline)
+      .ConfigureAwait(false);
 
-    return new ContentAccessResolution(false, false, canViewPublicOutline);
+    return new ContentAccessResolution(false, false, publicOutline.Succeeded);
   }
 
-  private async Task<bool> HasStudentAccessAsync(Guid programId, Guid userId)
+  private async Task<bool> AuthorizeCourseContentAsync(Guid programId, string policy)
   {
-    var progress = await programService.GetUserProgressDtoAsync(programId, userId).ConfigureAwait(false);
-    return progress != null;
-  }
-
-  private async Task<bool> HasProgramManagementAccessAsync(Guid programId, Guid userId)
-  {
-    if (actorContextAccessor.ActorContext.IsSystemAdmin)
-    {
-      return true;
-    }
-
-    var tenantId = ClaimsExtractor.GetTenantIdAsGuid(User) ?? actorContextAccessor.ActorContext.TenantId;
-
-    return await HasProgramPermissionAsync(userId, tenantId, programId, PermissionType.Read).ConfigureAwait(false)
-      || await HasProgramPermissionAsync(userId, tenantId, programId, PermissionType.Edit).ConfigureAwait(false)
-      || await HasProgramPermissionAsync(userId, tenantId, programId, PermissionType.Create).ConfigureAwait(false)
-      || await HasProgramPermissionAsync(userId, tenantId, programId, PermissionType.Delete).ConfigureAwait(false);
-  }
-
-  private async Task<bool> HasProgramPermissionAsync(Guid userId, Guid? tenantId, Guid programId, PermissionType permission)
-  {
-    if (!tenantId.HasValue)
-    {
-      return false;
-    }
-
-    var permissionName = $"{nameof(Program)}.{programId}.{permission}";
-
-    return await permissionQueryService.HasTenantPermissionAsync(
-      userId,
-      tenantId,
-      permissionName).ConfigureAwait(false);
+    var program = new Program { Id = programId };
+    var result = await authorizationService.AuthorizeAsync(User, program, policy).ConfigureAwait(false);
+    return result.Succeeded;
   }
 
   private static List<ProgramContentDto> ResolveProjectedContent(List<ProgramContentDto> content, ContentAccessResolution access)

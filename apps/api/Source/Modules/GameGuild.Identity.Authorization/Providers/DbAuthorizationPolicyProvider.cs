@@ -1,6 +1,4 @@
-using System.Security.Claims;
 using GameGuild.Configuration.PresentationLayer.Authorization;
-using GameGuild.Identity.Authorization.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -46,13 +44,9 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
     /// <inheritdoc />
     public async Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {
-        // Check built-in policies first
         var builtInPolicy = _authzOptions.GetPolicy(policyName);
-        if (builtInPolicy is not null)
+        if (!Policies.IsValid(policyName) && builtInPolicy is not null)
             return builtInPolicy;
-
-        if (string.Equals(policyName, Policies.TenantAdmin, StringComparison.Ordinal))
-            return TryBuildStaticFallbackPolicy(policyName);
 
         // Resolve tenant context and scoped services within a scope
         string tenantId;
@@ -87,19 +81,13 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
 
             if (baseDefinition is null)
             {
-                var fallbackPolicy = TryBuildStaticFallbackPolicy(policyName);
-                if (fallbackPolicy is not null)
-                {
-                    _policyCache.Set(policyName, tenantId, version, fallbackPolicy);
-                    _logger.LogWarning(
-                        "Policy '{PolicyName}' not found in the policy store. Using static registered-policy fallback for tenant '{TenantId}'.",
-                        policyName,
-                        tenantId);
-                    return fallbackPolicy;
-                }
-
-                _logger.LogDebug("Policy '{PolicyName}' not found", policyName);
-                return null;
+                var denyPolicy = CreateFailClosedPolicy();
+                _policyCache.Set(policyName, tenantId, version, denyPolicy);
+                _logger.LogError(
+                    "Registered policy '{PolicyName}' is missing from the policy store for tenant '{TenantId}'. Denying access.",
+                    policyName,
+                    tenantId);
+                return denyPolicy;
             }
 
             tenantDefinition = !string.Equals(tenantId, _tenancyOptions.DefaultTenantId, StringComparison.Ordinal)
@@ -132,143 +120,8 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
         return Task.FromResult(_authzOptions.FallbackPolicy);
     }
 
-    private static AuthorizationPolicy? TryBuildStaticFallbackPolicy(string policyName)
-    {
-        if (!Policies.IsValid(policyName))
-            return null;
-
-        if (string.Equals(policyName, Policies.Anonymous, StringComparison.Ordinal))
-            return new AuthorizationPolicyBuilder().RequireAssertion(_ => true).Build();
-
-        var builder = new AuthorizationPolicyBuilder().RequireAuthenticatedUser();
-
-        if (RequiresTenantMatch(policyName))
-            builder.AddRequirements(new TenantMatchRequirement());
-
-        var requiredPermission = MapPolicyToPermission(policyName);
-        if (requiredPermission is not null)
-        {
-            builder.RequireAssertion(context =>
-                HasAdminRole(context.User) ||
-                HasPermission(context.User, requiredPermission));
-        }
-        else if (string.Equals(policyName, Policies.SystemAdmin, StringComparison.Ordinal))
-        {
-            builder.RequireAssertion(context => HasRole(context.User, "SystemAdmin"));
-        }
-        else if (string.Equals(policyName, Policies.Admin, StringComparison.Ordinal))
-        {
-            builder.RequireAssertion(context => HasAdminRole(context.User));
-        }
-        else if (string.Equals(policyName, Policies.SecureAdmin, StringComparison.Ordinal))
-        {
-            builder.RequireAssertion(context =>
-                HasAdminRole(context.User) &&
-                (ClaimsExtractor.IsMfaVerified(context.User) || HasAuthenticationMethod(context.User, "mfa")));
-        }
-        else if (string.Equals(policyName, Policies.TenantAdmin, StringComparison.Ordinal))
-        {
-            builder.RequireAssertion(context =>
-                HasAdminRole(context.User) ||
-                HasRole(context.User, "Owner") ||
-                HasRole(context.User, "TenantAdmin") ||
-                HasPermission(context.User, "tenant:admin"));
-        }
-
-        return builder.Build();
-    }
-
-    private static bool RequiresTenantMatch(string policyName)
-    {
-        if (string.Equals(policyName, Policies.TenantMember, StringComparison.Ordinal) ||
-            string.Equals(policyName, Policies.TenantAdmin, StringComparison.Ordinal) ||
-            string.Equals(policyName, Policies.SecureAdmin, StringComparison.Ordinal))
-            return true;
-
-        return policyName.Contains('.', StringComparison.Ordinal) &&
-               !string.Equals(policyName, Policies.Admin, StringComparison.Ordinal);
-    }
-
-    private static string? MapPolicyToPermission(string policyName) => policyName switch
-    {
-        Policies.UsersRead => "users:read",
-        Policies.UsersCreate => "users:create",
-        Policies.UsersUpdate => "users:update",
-        Policies.UsersDelete => "users:delete",
-        Policies.UsersAdmin => "users:admin",
-        Policies.UsersPurge => "users:purge",
-        Policies.UsersReadSelf => "users:read:self",
-        Policies.UsersEditSelf => "users:edit:self",
-        Policies.UsersDeleteSelf => "users:delete:self",
-        Policies.EmployeesRead => "users:read",
-        Policies.EmployeesCreate => "users:create",
-        Policies.EmployeesUpdate => "users:update",
-        Policies.EmployeesDelete => "users:delete",
-        _ => null
-    };
-
-    private static bool HasAdminRole(ClaimsPrincipal user) =>
-        HasRole(user, "Admin") ||
-        HasRole(user, "SystemAdmin") ||
-        HasRole(user, "TenantAdmin") ||
-        HasRole(user, "Owner");
-
-    private static bool HasRole(ClaimsPrincipal user, string role) =>
-        ClaimsExtractor.GetRoles(user).Contains(role);
-
-    private static bool HasPermission(ClaimsPrincipal user, string requiredPermission)
-    {
-        foreach (var permission in GetPermissionValues(user))
-        {
-            if (PermissionMatches(permission, requiredPermission))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static bool PermissionMatches(string permission, string requiredPermission)
-    {
-        if (string.Equals(permission, requiredPermission, StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(permission, "admin", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(permission, "admin:*", StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        var separatorIndex = permission.IndexOf(':', StringComparison.Ordinal);
-        if (separatorIndex <= 0 || !permission.EndsWith(":*", StringComparison.Ordinal))
-            return false;
-
-        var permissionScope = permission[..separatorIndex];
-        if (!requiredPermission.StartsWith(permissionScope + ":", StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        return true;
-    }
-
-    private static bool HasAuthenticationMethod(ClaimsPrincipal user, string method)
-    {
-        var amr = ClaimsExtractor.GetAmr(user);
-        if (string.IsNullOrWhiteSpace(amr))
-            return false;
-
-        return SplitClaimValues(amr).Contains(method, StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static IEnumerable<string> GetPermissionValues(ClaimsPrincipal user)
-    {
-        foreach (var permission in ClaimsExtractor.GetPermissions(user))
-            yield return permission;
-
-        foreach (var claim in user.Claims)
-        {
-            if (claim.Type is "scope" or "scp" or "http://schemas.gameguild.com/identity/claims/permission")
-            {
-                foreach (var permission in SplitClaimValues(claim.Value))
-                    yield return permission;
-            }
-        }
-    }
-
-    private static IEnumerable<string> SplitClaimValues(string value) =>
-        value.Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    private static AuthorizationPolicy CreateFailClosedPolicy() =>
+        new AuthorizationPolicyBuilder()
+            .RequireAssertion(_ => false)
+            .Build();
 }

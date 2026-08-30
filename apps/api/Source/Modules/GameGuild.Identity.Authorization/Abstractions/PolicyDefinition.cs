@@ -57,7 +57,6 @@ public sealed class PolicyDefinition
 
     /// <summary>
     ///     Gets or sets the rules that make up this policy.
-    ///     When set, this takes precedence over individual permission/role requirements.
     /// </summary>
     public IReadOnlyList<PolicyRule>? Rules { get; init; }
 
@@ -65,6 +64,8 @@ public sealed class PolicyDefinition
     ///     Gets or sets whether to use the new rule-based evaluation.
     /// </summary>
     public bool UseRuleBasedEvaluation { get; init; }
+
+    public bool IsConfigurationValid { get; init; } = true;
 }
 
 /// <summary>
@@ -86,6 +87,8 @@ public sealed record PolicyRule
     ///     Parameters for the rule evaluation.
     /// </summary>
     public IReadOnlyDictionary<string, object>? Params { get; init; }
+
+    public IReadOnlyList<PolicyRule>? Rules { get; init; }
 
     /// <summary>
     ///     Whether this rule is enabled.

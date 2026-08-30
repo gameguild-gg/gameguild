@@ -43,6 +43,7 @@ public sealed class DefaultPolicyMerger : IPolicyMerger
             IsTenantScoped = true,
             Version = Math.Max(basePolicy.Version, tenantOverride.Version),
             UseRuleBasedEvaluation = tenantOverride.UseRuleBasedEvaluation | basePolicy.UseRuleBasedEvaluation,
+            IsConfigurationValid = basePolicy.IsConfigurationValid && tenantOverride.IsConfigurationValid,
             Rules = MergeRules(basePolicy.Rules, tenantOverride.Rules)
         };
     }
@@ -54,15 +55,22 @@ public sealed class DefaultPolicyMerger : IPolicyMerger
         IReadOnlyList<PolicyRule>? baseRules,
         IReadOnlyList<PolicyRule>? tenantRules)
     {
-        if (tenantRules is { Count: > 0 })
-            return tenantRules; // Tenant override takes precedence
-        return baseRules;
+        if (baseRules is null or { Count: 0 })
+            return tenantRules;
+        if (tenantRules is null or { Count: 0 })
+            return baseRules;
+        return baseRules.Concat(tenantRules).ToList();
     }
 
     /// <inheritdoc />
     public AuthorizationPolicy Build(PolicyDefinition definition)
     {
         var builder = new AuthorizationPolicyBuilder();
+
+        if (!definition.IsConfigurationValid)
+        {
+            builder.RequireAssertion(_ => false);
+        }
 
         if (definition.RequireAuthentication)
         {
@@ -74,33 +82,56 @@ public sealed class DefaultPolicyMerger : IPolicyMerger
             builder.AddAuthenticationSchemes(definition.AuthenticationSchemes.ToArray());
         }
 
-        // All policies must use rule-based evaluation
-        if (ShouldUseRuleBasedEvaluation(definition))
+        if (definition.UseRuleBasedEvaluation)
         {
-            var ruleset = new PolicyRuleset
+            if (definition.Rules is { Count: > 0 })
             {
-                Name = definition.PolicyName,
-                Description = null,
-                RequireAuthentication = definition.RequireAuthentication,
-                Rules = ConvertToRuleDefinitions(definition.Rules),
-                Version = definition.Version,
-                IsActive = true
-            };
+                var ruleset = new PolicyRuleset
+                {
+                    Name = definition.PolicyName,
+                    Description = null,
+                    RequireAuthentication = definition.RequireAuthentication,
+                    Rules = ConvertToRuleDefinitions(definition.Rules),
+                    Version = definition.Version,
+                    IsActive = true
+                };
 
-            builder.AddRequirements(new RulesetRequirement(definition.PolicyName, ruleset));
+                builder.AddRequirements(new RulesetRequirement(definition.PolicyName, ruleset));
+            }
+            else
+            {
+                builder.RequireAssertion(_ => false);
+            }
         }
-        else if (definition.RequiredRoles.Count > 0)
+
+        if (definition.RequiredRoles.Count > 0)
         {
-            // Fallback for simple role-based policies without rules
             builder.RequireRole(definition.RequiredRoles.ToArray());
         }
-        else if (definition.RequiredPermissions.Count > 0)
+
+        foreach (var permission in definition.RequiredPermissions)
         {
-            // Fallback for simple permission-based policies without rules
-            foreach (var permission in definition.RequiredPermissions)
+            builder.AddRequirements(new PermissionRequirement(permission));
+        }
+
+        if (definition.RequireAccessControlListAccess)
+        {
+            if (Enum.TryParse<AccessLevel>(definition.MinimumAccessLevel, true, out var minimumAccessLevel))
             {
-                builder.AddRequirements(new PermissionRequirement(permission));
+                builder.AddRequirements(new ResourceAccessRequirement(
+                    requireAccessControlListAccess: true,
+                    minimumAccessLevel: minimumAccessLevel,
+                    resourceType: definition.ResourceType));
             }
+            else
+            {
+                builder.RequireAssertion(_ => false);
+            }
+        }
+
+        if (builder.Requirements.Count == 0)
+        {
+            builder.RequireAssertion(_ => definition.PolicyName == Policies.Anonymous);
         }
 
         return builder.Build();
@@ -115,17 +146,6 @@ public sealed class DefaultPolicyMerger : IPolicyMerger
         if (baseList.Count == 0)
             return overrideList;
         return baseList.Concat(overrideList).Distinct().ToList();
-    }
-
-    private static bool ShouldUseRuleBasedEvaluation(PolicyDefinition definition)
-    {
-        if (!definition.UseRuleBasedEvaluation)
-            return false;
-
-        if (definition.Rules is null)
-            return false;
-
-        return definition.Rules.Count > 0;
     }
 
     /// <summary>
@@ -145,6 +165,7 @@ public sealed class DefaultPolicyMerger : IPolicyMerger
                 Type = policyRule.Type,
                 Description = policyRule.Description,
                 Params = ConvertParams(policyRule.Params),
+                Rules = ConvertToRuleDefinitions(policyRule.Rules),
                 Enabled = policyRule.Enabled
             };
 

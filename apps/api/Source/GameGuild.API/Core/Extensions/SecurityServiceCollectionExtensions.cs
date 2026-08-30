@@ -156,7 +156,6 @@ public static class SecurityServiceCollectionExtensions
         // ===== Rule-Based Authorization (DB-driven, tenant-configurable policies) =====
         services.AddRuleBasedAuthorization();
 
-        // ===== Core ASP.NET Authorization with Built-in Policies =====
         services.AddAuthorization(authzOptions =>
         {
             authzOptions.AddPolicy("RequireAdminRole", policy =>
@@ -165,59 +164,6 @@ public static class SecurityServiceCollectionExtensions
                 policy.RequireAssertion(context => IsUser(context.User)));
             authzOptions.AddPolicy("RequireTenantAccess", policy =>
                 policy.RequireAssertion(context => HasTenantClaim(context.User)));
-
-            // Authentication policies
-            authzOptions.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
-            authzOptions.AddPolicy("Anonymous", policy => policy.RequireAssertion(_ => true)); // Always allow
-
-            // Tenant policies (require authenticated user and tenant context)
-            authzOptions.AddPolicy("TenantMember", policy =>
-                policy.RequireAuthenticatedUser().RequireAssertion(context => HasTenantClaim(context.User)));
-            authzOptions.AddPolicy("SystemAdmin", policy => policy
-                .RequireAuthenticatedUser()
-                .RequireAssertion(context => HasRole(context.User, "SystemAdmin")));
-            authzOptions.AddPolicy("TenantAdmin", policy =>
-                policy.RequireAuthenticatedUser()
-                    .RequireAssertion(context => HasTenantClaim(context.User) && IsTenantAdministrator(context.User)));
-
-            authzOptions.AddPolicy("Admin", policy =>
-                policy.RequireAssertion(context => IsAdministrator(context.User)));
-            authzOptions.AddPolicy("SecureAdmin", policy => policy
-                .RequireAssertion(context => IsAdministrator(context.User))
-                .RequireClaim("mfa_verified", "true"));
-
-            // User management policies (require authenticated user)
-            authzOptions.AddPolicy("Users.Read", policy => policy.RequireAuthenticatedUser());
-            authzOptions.AddPolicy("Users.Create", policy =>
-                policy.RequireAssertion(context => IsTenantAdministrator(context.User)));
-            authzOptions.AddPolicy("Users.Update", policy =>
-                policy.RequireAssertion(context => IsTenantAdministrator(context.User)));
-            authzOptions.AddPolicy("Users.Delete", policy =>
-                policy.RequireAssertion(context => IsTenantAdministrator(context.User)));
-            authzOptions.AddPolicy("Users.Admin", policy =>
-                policy.RequireAssertion(context => IsTenantAdministrator(context.User)));
-            authzOptions.AddPolicy("Users.Purge", policy =>
-                policy.RequireAssertion(context => IsTenantAdministrator(context.User)));
-            authzOptions.AddPolicy("Users.ReadSelf", policy => policy.RequireAuthenticatedUser());
-            authzOptions.AddPolicy("Users.EditSelf", policy => policy.RequireAuthenticatedUser());
-            authzOptions.AddPolicy("Users.DeleteSelf", policy => policy.RequireAuthenticatedUser());
-
-            // Project policies (require authenticated user)
-            authzOptions.AddPolicy("Project.Read", policy => policy.RequireAuthenticatedUser());
-            authzOptions.AddPolicy("Project.Edit", policy => policy.RequireAuthenticatedUser());
-            authzOptions.AddPolicy("Project.Delete", policy => policy.RequireAuthenticatedUser());
-            authzOptions.AddPolicy("Project.Owner", policy => policy.RequireAuthenticatedUser());
-
-            // Content policies
-            authzOptions.AddPolicy("Content.Read", policy => policy.RequireAuthenticatedUser());
-            authzOptions.AddPolicy("Content.Edit", policy => policy.RequireAuthenticatedUser());
-
-            // Course policies
-            authzOptions.AddPolicy("Course.Read", policy => policy.RequireAuthenticatedUser());
-            authzOptions.AddPolicy("Course.Manage", policy => policy.RequireAuthenticatedUser());
-
-            // Document policies
-            authzOptions.AddPolicy("Document.Edit", policy => policy.RequireAuthenticatedUser());
         });
 
         return services;

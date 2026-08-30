@@ -20,6 +20,8 @@ public interface IScopedRuleEvaluatorFactory
     IEnumerable<string> GetRegisteredTypes();
 }
 
+public sealed record ScopedRuleEvaluatorRegistration(string RuleType, Type EvaluatorType);
+
 /// <summary>
 ///     Default implementation of scoped rule evaluator factory.
 ///     Resolves evaluators from the DI container dynamically.
@@ -27,12 +29,9 @@ public interface IScopedRuleEvaluatorFactory
 public sealed class ScopedRuleEvaluatorFactory : IScopedRuleEvaluatorFactory
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IReadOnlyDictionary<string, Type> _evaluatorTypes;
 
-    /// <summary>
-    ///     Mapping of rule types to their evaluator types.
-    ///     This is the single source of truth for scoped evaluator registration.
-    /// </summary>
-    private static readonly Dictionary<string, Type> EvaluatorTypes = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, Type> BuiltInEvaluatorTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         [RuleTypes.TenantMatch] = typeof(TenantMatchRuleEvaluator),
         [RuleTypes.RequireAllPermissions] = typeof(RequireAllPermissionsRuleEvaluator),
@@ -42,15 +41,32 @@ public sealed class ScopedRuleEvaluatorFactory : IScopedRuleEvaluatorFactory
         [RuleTypes.RequireIpAllowList] = typeof(RequireIpAllowListRuleEvaluator)
     };
 
-    public ScopedRuleEvaluatorFactory(IServiceProvider serviceProvider)
+    public ScopedRuleEvaluatorFactory(
+        IServiceProvider serviceProvider,
+        IEnumerable<ScopedRuleEvaluatorRegistration>? registrations = null)
     {
         _serviceProvider = serviceProvider;
+        var evaluatorTypes = new Dictionary<string, Type>(BuiltInEvaluatorTypes, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var registration in registrations ?? [])
+        {
+            if (evaluatorTypes.TryGetValue(registration.RuleType, out var existingType)
+                && existingType != registration.EvaluatorType)
+            {
+                throw new InvalidOperationException(
+                    $"Rule type '{registration.RuleType}' is already registered for '{existingType.FullName}'.");
+            }
+
+            evaluatorTypes[registration.RuleType] = registration.EvaluatorType;
+        }
+
+        _evaluatorTypes = evaluatorTypes;
     }
 
     /// <inheritdoc />
     public IRuleEvaluator? GetEvaluator(string ruleType)
     {
-        if (!EvaluatorTypes.TryGetValue(ruleType, out var evaluatorType))
+        if (!_evaluatorTypes.TryGetValue(ruleType, out var evaluatorType))
         {
             return null;
         }
@@ -59,11 +75,8 @@ public sealed class ScopedRuleEvaluatorFactory : IScopedRuleEvaluatorFactory
     }
 
     /// <inheritdoc />
-    public IEnumerable<string> GetRegisteredTypes() => EvaluatorTypes.Keys;
+    public IEnumerable<string> GetRegisteredTypes() => _evaluatorTypes.Keys;
 
-    /// <summary>
-    ///     Gets all evaluator type mappings for service registration.
-    /// </summary>
     public static IEnumerable<(string RuleType, Type EvaluatorType)> GetAllMappings() =>
-        EvaluatorTypes.Select(kvp => (kvp.Key, kvp.Value));
+        BuiltInEvaluatorTypes.Select(kvp => (kvp.Key, kvp.Value));
 }

@@ -25,6 +25,9 @@ public sealed class RuleDefinition
     [JsonPropertyName("params")]
     public Dictionary<string, JsonElement>? Params { get; init; }
 
+    [JsonPropertyName("rules")]
+    public IReadOnlyList<RuleDefinition>? Rules { get; init; }
+
     /// <summary>
     ///     Whether this rule is enabled (allows temporarily disabling rules).
     /// </summary>
@@ -64,6 +67,28 @@ public sealed class RuleDefinition
                 if (!parameters.HasParameter(param))
                 {
                     errors.Add($"Rule type '{Type}' requires parameter '{param}'");
+                }
+            }
+
+            if ((string.Equals(Type, RuleTypes.RequireAllPermissions, StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(Type, RuleTypes.RequireAnyPermission, StringComparison.OrdinalIgnoreCase))
+                && parameters.GetStringArray("permissions").Count == 0)
+            {
+                errors.Add($"Rule type '{Type}' requires at least one permission");
+            }
+
+            if (string.Equals(Type, RuleTypes.AnyOf, StringComparison.OrdinalIgnoreCase))
+            {
+                var enabledRules = Rules?.Where(rule => rule.Enabled).ToList() ?? [];
+                if (enabledRules.Count == 0)
+                {
+                    errors.Add($"Rule type '{Type}' requires at least one enabled child rule");
+                }
+
+                foreach (var childRule in enabledRules)
+                {
+                    var childValidation = childRule.Validate();
+                    errors.AddRange(childValidation.Errors.Select(error => $"AnyOf child: {error}"));
                 }
             }
         }

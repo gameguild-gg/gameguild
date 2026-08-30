@@ -10,13 +10,18 @@ public class SelfOrPermissionRuleEvaluatorTests
 {
     private readonly Mock<IAuthorizationPermissionService> _permissionServiceMock;
     private readonly Mock<IAuthorizationTenantContext> _tenantContextMock;
+    private readonly Mock<ITenantMembershipChecker> _tenantMembershipCheckerMock;
     private readonly SelfOrPermissionRuleEvaluator _evaluator;
 
     public SelfOrPermissionRuleEvaluatorTests()
     {
         _permissionServiceMock = new Mock<IAuthorizationPermissionService>();
         _tenantContextMock = new Mock<IAuthorizationTenantContext>();
-        _evaluator = new SelfOrPermissionRuleEvaluator(_permissionServiceMock.Object, _tenantContextMock.Object);
+        _tenantMembershipCheckerMock = new Mock<ITenantMembershipChecker>();
+        _evaluator = new SelfOrPermissionRuleEvaluator(
+            _permissionServiceMock.Object,
+            _tenantContextMock.Object,
+            _tenantMembershipCheckerMock.Object);
     }
 
     [Fact]
@@ -38,7 +43,7 @@ public class SelfOrPermissionRuleEvaluatorTests
     }
 
     [Fact]
-    public async Task EvaluateAsync_HasAnyPermission_ReturnsSuccess()
+    public async Task EvaluateAsync_TargetMemberAndHasAnyPermission_ReturnsSuccess()
     {
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
@@ -51,10 +56,14 @@ public class SelfOrPermissionRuleEvaluatorTests
         _tenantContextMock.Setup(x => x.TenantId).Returns(tenantId);
         _tenantContextMock.Setup(x => x.HasTenant).Returns(true);
         
+        var targetUserId = Guid.NewGuid();
+        _tenantMembershipCheckerMock
+            .Setup(x => x.IsUserMemberOfTenantAsync(targetUserId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _permissionServiceMock.Setup(x => x.HasPermissionAsync(userId, tenantId, "users:manage", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var context = new AuthorizationHandlerContext([], user, null);
+        var context = new AuthorizationHandlerContext([], user, new TestUserResource { UserId = targetUserId });
         var parameters = RuleParameters.FromJson("{\"anyPermission\":\"users:manage\"}");
 
         var result = await _evaluator.EvaluateAsync(context, parameters);

@@ -8,6 +8,8 @@ namespace GameGuild.Identity.Authorization;
 /// </summary>
 public sealed class PolicyDefinitionSeeder
 {
+    public const long CurrentPolicyVersion = 3;
+
     private readonly IPolicyDefinitionRepository _repository;
     private readonly ILogger<PolicyDefinitionSeeder> _logger;
 
@@ -32,9 +34,16 @@ public sealed class PolicyDefinitionSeeder
 
         var defaultPolicies = GetDefaultPolicies();
         var seededCount = 0;
+        var updatedCount = 0;
 
         foreach (var policy in defaultPolicies)
         {
+            policy.PolicyVersion = CurrentPolicyVersion;
+            if (policy.PolicyName is Policies.Authenticated or Policies.Anonymous)
+            {
+                policy.UseRuleBasedEvaluation = false;
+            }
+
             var existing = await _repository.GetByNameAsync(policy.PolicyName, null, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -44,16 +53,23 @@ public sealed class PolicyDefinitionSeeder
                 seededCount++;
                 _logger.LogDebug("Seeded policy: {PolicyName}", policy.PolicyName);
             }
-            else
+            else if (existing.PolicyVersion < CurrentPolicyVersion)
             {
-                _logger.LogTrace("Policy already exists: {PolicyName}", policy.PolicyName);
+                ApplyCanonicalDefinition(existing, policy);
+                await _repository.UpdateAsync(existing, cancellationToken).ConfigureAwait(false);
+                existing.PolicyVersion = CurrentPolicyVersion;
+                updatedCount++;
+                _logger.LogDebug("Updated policy: {PolicyName}", policy.PolicyName);
             }
         }
 
-        if (seededCount > 0)
+        if (seededCount + updatedCount > 0)
         {
             await _repository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Seeded {Count} new policy definitions", seededCount);
+            _logger.LogInformation(
+                "Seeded {SeededCount} and updated {UpdatedCount} policy definitions",
+                seededCount,
+                updatedCount);
         }
         else
         {
@@ -61,9 +77,26 @@ public sealed class PolicyDefinitionSeeder
         }
     }
 
+    private static void ApplyCanonicalDefinition(
+        PolicyDefinitionEntity existing,
+        PolicyDefinitionEntity canonical)
+    {
+        existing.Description = canonical.Description;
+        existing.RequireAuthentication = canonical.RequireAuthentication;
+        existing.AuthenticationSchemesJson = canonical.AuthenticationSchemesJson;
+        existing.RequiredPermissionsJson = canonical.RequiredPermissionsJson;
+        existing.RequiredRolesJson = canonical.RequiredRolesJson;
+        existing.RequireAccessControlListAccess = canonical.RequireAccessControlListAccess;
+        existing.ResourceType = canonical.ResourceType;
+        existing.MinimumAccessLevel = canonical.MinimumAccessLevel;
+        existing.IsTenantScoped = canonical.IsTenantScoped;
+        existing.IsActive = canonical.IsActive;
+        existing.RulesJson = canonical.RulesJson;
+        existing.UseRuleBasedEvaluation = canonical.UseRuleBasedEvaluation;
+    }
+
     /// <summary>
     ///     Gets the collection of default policies to seed.
-    ///     All policies use rule-based evaluation.
     /// </summary>
     private static IEnumerable<PolicyDefinitionEntity> GetDefaultPolicies()
     {
@@ -381,6 +414,104 @@ public sealed class PolicyDefinitionSeeder
             PolicyVersion = 1
         };
 
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.CourseContentPublicOutline,
+            Description = "Public outline access to published public course content",
+            RequireAuthentication = false,
+            ResourceType = "Course",
+            IsTenantScoped = false,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "CourseContentAccess",
+                    "Params": {
+                        "access": "PublicOutline"
+                    },
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.CourseContentLearner,
+            Description = "Enrolled learner access to course content",
+            RequireAuthentication = true,
+            ResourceType = "Course",
+            IsTenantScoped = false,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "CourseContentAccess",
+                    "Params": {
+                        "access": "Learner"
+                    },
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.CourseContentViewAll,
+            Description = "Full course-content visibility for creators and course managers",
+            RequireAuthentication = true,
+            ResourceType = "Course",
+            IsTenantScoped = false,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "CourseContentAccess",
+                    "Params": {
+                        "access": "Manage",
+                        "allowCreator": true
+                    },
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = Policies.CourseContentManage,
+            Description = "Course-content management through explicit course permissions",
+            RequireAuthentication = true,
+            ResourceType = "Course",
+            IsTenantScoped = false,
+            UseRuleBasedEvaluation = true,
+            RulesJson = """
+            [
+                {
+                    "Type": "CourseContentAccess",
+                    "Params": {
+                        "access": "Manage",
+                        "allowCreator": false
+                    },
+                    "Enabled": true
+                }
+            ]
+            """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
         // ========================
         // PERMISSION-BASED POLICIES (RBAC)
         // ========================
@@ -403,6 +534,18 @@ public sealed class PolicyDefinitionSeeder
                 }
             ]
             """,
+            IsActive = true,
+            PolicyVersion = 1
+        };
+
+        yield return new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = "SystemAdmin",
+            Description = "System administrator role with platform-wide access",
+            RequireAuthentication = true,
+            RequiredRolesJson = "[\"SystemAdmin\"]",
+            UseRuleBasedEvaluation = false,
             IsActive = true,
             PolicyVersion = 1
         };
