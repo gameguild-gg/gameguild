@@ -144,11 +144,14 @@ public sealed class PostgreSqlComplianceHoldStore : IComplianceHoldStore
         }
         if (releasedAt < row.ActivatedAt)
             throw new ArgumentException("Hold release cannot predate activation.", nameof(releasedAt));
+        var sequence = await _db.Set<EconomyComplianceHoldEventRow>()
+            .Where(item => item.HoldId == holdId)
+            .MaxAsync(item => item.Sequence, cancellationToken) + 1;
         row.ReleasedBy = actorId;
         row.ReleasedAt = releasedAt;
         _db.Set<EconomyComplianceHoldEventRow>().Add(new EconomyComplianceHoldEventRow
         {
-            Id = Guid.NewGuid(), HoldId = row.Id, Sequence = 2, Kind = "Released",
+            Id = Guid.NewGuid(), HoldId = row.Id, Sequence = sequence, Kind = "Released",
             ActorId = actorId, EvidenceHash = evidenceHash.Trim(), OccurredAt = releasedAt
         });
         await _db.SaveChangesAsync(cancellationToken);
