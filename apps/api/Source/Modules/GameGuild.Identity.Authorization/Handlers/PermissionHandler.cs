@@ -8,7 +8,6 @@ namespace GameGuild.Identity.Authorization;
 
 /// <summary>
 ///     Handles permission requirements using RBAC (Role-Based Access Control).
-///     Checks token claims first, then falls back to database lookup if needed.
 /// </summary>
 public sealed class PermissionHandler : AuthorizationHandler<PermissionRequirement>
 {
@@ -37,15 +36,6 @@ public sealed class PermissionHandler : AuthorizationHandler<PermissionRequireme
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        // Check claims-based permissions first (if allowed)
-        if (requirement.AllowClaimsBased && HasPermissionInClaims(context.User, requirement.Permission))
-        {
-            _logger.LogDebug("Permission '{Permission}' granted via token claims", requirement.Permission);
-            context.Succeed(requirement);
-            return;
-        }
-
-        // Fall back to database lookup
         if (!TryGetUserAndTenantIds(context.User, out var userId, out var tenantId))
         {
             _logger.LogWarning("Cannot determine user/tenant for permission check");
@@ -82,12 +72,6 @@ public sealed class PermissionHandler : AuthorizationHandler<PermissionRequireme
             context.Fail(new AuthorizationFailureReason(this, "Error checking permissions"));
             throw;
         }
-    }
-
-    private bool HasPermissionInClaims(ClaimsPrincipal user, string permission)
-    {
-        var permissionClaims = user.FindAll(_tokenOptions.PermissionClaimType);
-        return permissionClaims.Any(c => string.Equals(c.Value, permission, StringComparison.OrdinalIgnoreCase));
     }
 
     private bool TryGetUserAndTenantIds(ClaimsPrincipal user, out Guid userId, out Guid tenantId)

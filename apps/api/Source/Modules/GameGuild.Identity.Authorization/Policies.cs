@@ -68,6 +68,14 @@ public static class Policies
     /// <summary>Management access to courses</summary>
     public const string CourseManage = "Course.Manage";
 
+    public const string CourseContentPublicOutline = "Course.Content.PublicOutline";
+
+    public const string CourseContentLearner = "Course.Content.Learner";
+
+    public const string CourseContentViewAll = "Course.Content.ViewAll";
+
+    public const string CourseContentManage = "Course.Content.Manage";
+
     // ========================
     // DOCUMENT POLICIES
     // ========================
@@ -159,6 +167,7 @@ public static class Policies
         ContentRead, ContentEdit,
         // Course
         CourseRead, CourseManage,
+        CourseContentPublicOutline, CourseContentLearner, CourseContentViewAll, CourseContentManage,
         // Document
         DocumentEdit,
         // Admin

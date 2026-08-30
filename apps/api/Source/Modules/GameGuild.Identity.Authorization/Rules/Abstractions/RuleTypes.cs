@@ -46,6 +46,10 @@ public static class RuleTypes
     /// </summary>
     public const string RequireMfa = "RequireMfa";
 
+    public const string AnyOf = "AnyOf";
+
+    public const string CourseContentAccess = "CourseContentAccess";
+
     /// <summary>
     ///     All known rule types for validation.
     /// </summary>
@@ -58,7 +62,9 @@ public static class RuleTypes
         OwnerOrAcl,
         RequireIpAllowList,
         RequireTimeWindow,
-        RequireMfa
+        RequireMfa,
+        AnyOf,
+        CourseContentAccess
     };
 
     /// <summary>
@@ -85,6 +91,8 @@ public static class RuleTypes
         RequireIpAllowList => ["cidrs"],
         RequireTimeWindow => ["windows"],
         RequireMfa => [],
+        AnyOf => [],
+        CourseContentAccess => ["access"],
         _ => []
     };
 #pragma warning restore IDE0072
@@ -104,6 +112,8 @@ public static class RuleTypes
         RequireIpAllowList => "Requires IP to be in allowed ranges",
         RequireTimeWindow => "Restricts access to specific time windows",
         RequireMfa => "Requires MFA verification",
+        AnyOf => "Requires at least one child rule to pass",
+        CourseContentAccess => "Evaluates access to course content against the supplied course resource",
         _ => "Unknown rule type"
     };
 }

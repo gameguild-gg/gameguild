@@ -1,5 +1,7 @@
 
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace GameGuild.Identity.Authorization;
 
@@ -15,13 +17,16 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
 {
     private readonly IAuthorizationPermissionService _permissionService;
     private readonly IAuthorizationTenantContext _tenantContext;
+    private readonly ITenantMembershipChecker _tenantMembershipChecker;
 
     public SelfOrPermissionRuleEvaluator(
         IAuthorizationPermissionService permissionService,
-        IAuthorizationTenantContext tenantContext)
+        IAuthorizationTenantContext tenantContext,
+        ITenantMembershipChecker tenantMembershipChecker)
     {
         _permissionService = permissionService;
         _tenantContext = tenantContext;
+        _tenantMembershipChecker = tenantMembershipChecker;
     }
 
     public string RuleType => RuleTypes.SelfOrPermission;
@@ -39,8 +44,8 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
         }
 
         // Extract user ID and tenant ID using centralized helpers
-        var currentUserIdStr = Utilities.ClaimsExtractor.GetUserId(user);
-        if (!Guid.TryParse(currentUserIdStr, out var currentUserId))
+        var currentUserId = Utilities.ClaimsExtractor.GetUserIdAsGuid(user);
+        if (!currentUserId.HasValue || currentUserId.Value == Guid.Empty)
         {
             return RuleEvaluationResult.Fail("Could not determine current user ID");
         }
@@ -62,52 +67,22 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
 
         var selfPermission = parameters.GetString("selfPermission");
         var anyPermission = parameters.GetString("anyPermission");
-
-        // If user has the "any" permission, allow immediately
-        if (!string.IsNullOrEmpty(anyPermission))
-        {
-            var hasAnyPermission = await _permissionService.HasPermissionAsync(
-                currentUserId, tenantId, anyPermission, cancellationToken).ConfigureAwait(false);
-            if (hasAnyPermission)
-            {
-                return RuleEvaluationResult.Success();
-            }
-        }
-
-        // Try to get target user ID from resource
         var targetUserId = GetTargetUserIdFromResource(context.Resource, parameters);
 
-        if (string.IsNullOrEmpty(targetUserId))
+        if (!targetUserId.HasValue || targetUserId.Value == Guid.Empty)
         {
-            // No resource - if selfPermission is set, check if user has it
-            if (!string.IsNullOrEmpty(selfPermission))
-            {
-                var hasSelfPermission = await _permissionService.HasPermissionAsync(
-                    currentUserId, tenantId, selfPermission, cancellationToken).ConfigureAwait(false);
-                if (hasSelfPermission)
-                {
-                    return RuleEvaluationResult.Success();
-                }
-            }
-
-            return RuleEvaluationResult.Fail(
-                "Cannot determine target user and user lacks required permissions");
+            return RuleEvaluationResult.Fail("Cannot determine target user");
         }
 
-        // Check if acting on self
-        var isSelf = string.Equals(currentUserIdStr, targetUserId, StringComparison.OrdinalIgnoreCase);
-
-        if (isSelf)
+        if (currentUserId.Value == targetUserId.Value)
         {
-            // For self-action, check selfPermission if specified
             if (string.IsNullOrEmpty(selfPermission))
             {
-                // No self permission required - self-action is allowed
-                return RuleEvaluationResult.Success();
+                return RuleEvaluationResult.Fail("Self-action permission is not configured");
             }
 
             var hasSelfPermission = await _permissionService.HasPermissionAsync(
-                currentUserId, tenantId, selfPermission, cancellationToken).ConfigureAwait(false);
+                currentUserId.Value, tenantId, selfPermission, cancellationToken).ConfigureAwait(false);
             if (hasSelfPermission)
             {
                 return RuleEvaluationResult.Success();
@@ -117,40 +92,71 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
                 $"Self-action requires permission '{selfPermission}'");
         }
 
-        // Not self, and already checked anyPermission above
-        return RuleEvaluationResult.Fail(
-            $"Action on other users requires permission '{anyPermission}'");
+        var targetBelongsToTenant = await _tenantMembershipChecker.IsUserMemberOfTenantAsync(
+            targetUserId.Value,
+            tenantId,
+            cancellationToken).ConfigureAwait(false);
+        if (!targetBelongsToTenant)
+        {
+            return RuleEvaluationResult.Fail("Target user does not belong to the current tenant");
+        }
+
+        if (string.IsNullOrEmpty(anyPermission))
+        {
+            return RuleEvaluationResult.Fail("Permission for actions on other users is not configured");
+        }
+
+        var hasAnyPermission = await _permissionService.HasPermissionAsync(
+            currentUserId.Value, tenantId, anyPermission, cancellationToken).ConfigureAwait(false);
+
+        return hasAnyPermission
+            ? RuleEvaluationResult.Success()
+            : RuleEvaluationResult.Fail($"Action on other users requires permission '{anyPermission}'");
     }
 
-    private static string? GetTargetUserIdFromResource(object? resource, RuleParameters parameters)
+    private static Guid? GetTargetUserIdFromResource(object? resource, RuleParameters parameters)
     {
         if (resource is null)
             return null;
 
         var userIdPath = parameters.GetString("resourceUserIdPath") ?? "UserId";
 
-        // Try to get from IUserIdResource interface
         if (resource is IUserIdResource userIdResource)
         {
-            return userIdResource.UserId?.ToString();
+            return userIdResource.UserId;
         }
 
-        // Try reflection
+        if (resource is HttpContext httpContext)
+        {
+            return ParseGuid(GetRouteValue(httpContext.Request.RouteValues, userIdPath));
+        }
+
+        if (resource is AuthorizationFilterContext filterContext)
+        {
+            return ParseGuid(GetRouteValue(filterContext.RouteData.Values, userIdPath));
+        }
+
         var property = resource.GetType().GetProperty(userIdPath);
         if (property is not null)
         {
-            var value = property.GetValue(resource);
-            return value?.ToString();
+            return ParseGuid(property.GetValue(resource));
         }
 
-        // Try dictionary
         if (resource is IDictionary<string, object> dict && dict.TryGetValue(userIdPath, out var val))
         {
-            return val.ToString();
+            return ParseGuid(val);
         }
 
         return null;
     }
+
+    private static object? GetRouteValue(IEnumerable<KeyValuePair<string, object?>> routeValues, string key) =>
+        routeValues.FirstOrDefault(pair => string.Equals(pair.Key, key, StringComparison.OrdinalIgnoreCase)).Value;
+
+    private static Guid? ParseGuid(object? value) =>
+        value is Guid guid
+            ? guid
+            : Guid.TryParse(value?.ToString(), out var parsed) ? parsed : null;
 }
 
 /// <summary>

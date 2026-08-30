@@ -2,8 +2,8 @@ using System.Security.Claims;
 using FluentAssertions;
 using FluentValidation;
 using GameGuild.Identity.Authorization;
-using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning.Assessments;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -221,37 +221,27 @@ public sealed class CodingAssignmentEndpointsTests
     {
         programMock = new Mock<IProgramCrudService>();
         codingMock = new Mock<ICodingAssignmentContentService>();
-        var actorMock = new Mock<IActorContextAccessor>();
-        var permissionMock = new Mock<IPermissionQueryService>();
+        var authorizationMock = new Mock<IAuthorizationService>();
         var contentMock = new Mock<IProgramContentService>();
 
-        actorMock.Setup(a => a.ActorContext).Returns(new ActorContext
-        {
-            ActorKind = ActorKind.User,
-            IsAuthenticated = true,
-            TenantId = Guid.NewGuid(),
-            Roles = new HashSet<string>(),
-            Permissions = new HashSet<string>()
-        });
-
-        if (enrollProgress)
-        {
-            programMock.Setup(s => s.GetUserProgressDtoAsync(It.IsAny<Guid>(), It.IsAny<Guid>()))
-                .ReturnsAsync(new UserProgressDto(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 0m, null, DateTime.UtcNow, null, Enumerable.Empty<ContentProgressDto>()));
-        }
-
-        if (hasManagementAccess)
-        {
-            permissionMock.Setup(s => s.HasTenantPermissionAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<string>()))
-                .ReturnsAsync(true);
-        }
+        authorizationMock
+            .Setup(service => service.AuthorizeAsync(
+                It.IsAny<ClaimsPrincipal>(),
+                It.IsAny<object>(),
+                Policies.CourseContentLearner))
+            .ReturnsAsync(enrollProgress ? AuthorizationResult.Success() : AuthorizationResult.Failed());
+        authorizationMock
+            .Setup(service => service.AuthorizeAsync(
+                It.IsAny<ClaimsPrincipal>(),
+                It.IsAny<object>(),
+                Policies.CourseContentManage))
+            .ReturnsAsync(hasManagementAccess ? AuthorizationResult.Success() : AuthorizationResult.Failed());
 
         var controller = new ProgramContentController(
             contentMock.Object,
             programMock.Object,
             codingMock.Object,
-            actorMock.Object,
-            permissionMock.Object);
+            authorizationMock.Object);
 
         var userId = Guid.NewGuid();
         var identity = new ClaimsIdentity(new[]
