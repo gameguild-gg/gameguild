@@ -200,6 +200,7 @@ test_economy_gate_builds_release_targets_before_packaging() {
   ! grep -Fq 'dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj' "$gate" || return 1
   grep -Fq 'dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore' "$gate" || return 1
   ! grep -Fq 'dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-build' "$gate" || return 1
+  grep -A3 -F 'dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj' "$gate" | grep -Fq -- '-p:TreatWarningsAsErrors=true' || return 1
   grep -Fq 'provider_build_arguments=(--no-build --no-restore)' "$gate" || return 1
   grep -Fq 'dotnet_build_isolation=(-m:1 -p:UseSharedCompilation=false)' "$gate" || return 1
   grep -Fq -- '-p:TreatWarningsAsErrors=true' "$gate" || return 1
