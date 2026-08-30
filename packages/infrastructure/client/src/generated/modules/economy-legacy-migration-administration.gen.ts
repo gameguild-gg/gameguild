@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,22 +17,45 @@ export class EconomyLegacyMigrationAdministrationModule {
 
   /**
    */
-  async postAdminEconomyLegacyMigrationBatches(
-    body: Types.APIControllersCaptureLegacyEconomyMigrationInput,
-  ): Promise<
-    Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>
-  > {
-    const url = "/api/v1/admin/economy/legacy-migration/batches";
-
-    // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersCaptureLegacyEconomyMigrationInputSchema,
-      body,
-      "request",
-    );
+  async getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatches(query?: {
+    state?: Types.EconomyOperationsLegacyEconomyShadowState;
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummary, ApiError>> {
+    const url = '/api/v1/admin/economy/legacy-migration/batches';
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummarySchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postAdminEconomyLegacyMigrationBatches(
+    body: Types.APIControllersCaptureLegacyEconomyMigrationInput,
+  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
+    const url = '/api/v1/admin/economy/legacy-migration/batches';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.APIControllersCaptureLegacyEconomyMigrationInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -40,11 +63,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -53,26 +72,20 @@ export class EconomyLegacyMigrationAdministrationModule {
 
   /**
    */
-  async getAdminEconomyLegacyMigrationBatches(
+  async getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesByBatchId(
     batchId: string,
-  ): Promise<
-    Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>
-  > {
+  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -81,26 +94,18 @@ export class EconomyLegacyMigrationAdministrationModule {
 
   /**
    */
-  async postAdminEconomyLegacyMigrationBatchesReconcile(
-    batchId: string,
-  ): Promise<
-    Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>
-  > {
+  async postAdminEconomyLegacyMigrationBatchesReconcile(batchId: string): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}:reconcile`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -112,20 +117,14 @@ export class EconomyLegacyMigrationAdministrationModule {
   async postAdminEconomyLegacyMigrationBatchesCutoverApprove(
     batchId: string,
     body: Types.APIControllersApproveLegacyEconomyCutoverInput,
-  ): Promise<
-    Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>
-  > {
+  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/cutover:approve`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersApproveLegacyEconomyCutoverInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersApproveLegacyEconomyCutoverInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -133,11 +132,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -149,20 +144,14 @@ export class EconomyLegacyMigrationAdministrationModule {
   async postAdminEconomyLegacyMigrationBatchesCutoverPropose(
     batchId: string,
     body: Types.APIControllersProposeLegacyEconomyCutoverInput,
-  ): Promise<
-    Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>
-  > {
+  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/cutover:propose`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersProposeLegacyEconomyCutoverInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersProposeLegacyEconomyCutoverInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -170,11 +159,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -186,20 +171,14 @@ export class EconomyLegacyMigrationAdministrationModule {
   async postAdminEconomyLegacyMigrationBatchesCutoverRollback(
     batchId: string,
     body: Types.APIControllersRollbackLegacyEconomyCutoverInput,
-  ): Promise<
-    Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>
-  > {
+  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/cutover:rollback`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersRollbackLegacyEconomyCutoverInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersRollbackLegacyEconomyCutoverInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -207,11 +186,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -223,20 +198,14 @@ export class EconomyLegacyMigrationAdministrationModule {
   async postAdminEconomyLegacyMigrationBatchesWalletsBackfill(
     batchId: string,
     body: Types.APIControllersBackfillLegacyEconomyWalletInput,
-  ): Promise<
-    Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>
-  > {
+  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}/wallets:backfill`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersBackfillLegacyEconomyWalletInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersBackfillLegacyEconomyWalletInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -244,11 +213,7 @@ export class EconomyLegacyMigrationAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyOperationsLegacyEconomyShadowBatchViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -256,8 +221,6 @@ export class EconomyLegacyMigrationAdministrationModule {
   }
 }
 
-export function createEconomyLegacyMigrationAdministrationModule(
-  client: ApiClient,
-): EconomyLegacyMigrationAdministrationModule {
+export function createEconomyLegacyMigrationAdministrationModule(client: ApiClient): EconomyLegacyMigrationAdministrationModule {
   return new EconomyLegacyMigrationAdministrationModule(client);
 }

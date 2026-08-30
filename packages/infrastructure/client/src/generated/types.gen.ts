@@ -334,6 +334,12 @@ export interface APIControllersActivateEconomyKillSwitchInput {
   reason?: string | null;
 }
 
+export interface APIControllersAdRewardProtectedOperationFailureOutput {
+  diagnostics?: Array<string> | null;
+  reviewId?: string | null;
+  state?: EconomyRiskEconomyProtectedOperationState;
+}
+
 export interface APIControllersApplicationDetails {
   description?: string | null;
   informationalVersion?: string | null;
@@ -350,15 +356,16 @@ export interface APIControllersApplicationInfoOutput {
 }
 
 export interface APIControllersApproveEconomyPolicyInput {
-  reauthenticationHash?: string | null;
+  stepUpReceipt?: string | null;
 }
 
 export interface APIControllersApproveLegacyEconomyCutoverInput {
-  reauthenticationHash?: string | null;
+  stepUpReceipt?: string | null;
 }
 
 export interface APIControllersApproveTreasuryWithdrawalInput {
   expectedVersion?: number;
+  stepUpReceipt?: string | null;
 }
 
 export interface APIControllersAssignFinancialCrimeCaseInput {
@@ -388,26 +395,13 @@ export interface APIControllersCaptureLegacyEconomyMigrationInput {
 
 export interface APIControllersCompleteMyAdRewardSessionInput {
   idempotencyKey?: string | null;
-  jurisdictionCode?: string | null;
-  operationFingerprint?: string | null;
   playback?: EconomyAdRewardsAdPlaybackEvidence;
   providerProof?: EconomyAdRewardsProviderCompletionProof;
-  riskDecisionId?: string;
   token?: string | null;
 }
 
 export interface APIControllersCompleteMyBountyInput {
   idempotencyKey?: string | null;
-  jurisdictionCode?: string | null;
-  operationFingerprint?: string | null;
-  riskDecisionId?: string;
-}
-
-export interface APIControllersConfirmMyDeferredAdRewardInput {
-  idempotencyKey?: string | null;
-  jurisdictionCode?: string | null;
-  operationFingerprint?: string | null;
-  riskDecisionId?: string;
 }
 
 export interface APIControllersCreateMyBountyInput {
@@ -415,12 +409,9 @@ export interface APIControllersCreateMyBountyInput {
   currency?: EconomyContractsCurrencyCode;
   expiresAt?: string;
   idempotencyKey?: string | null;
-  jurisdictionCode?: string | null;
   minimumReputation?: number;
-  operationFingerprint?: string | null;
   requiresInstructorVerification?: boolean;
   requiresPrerequisite?: boolean;
-  riskDecisionId?: string;
 }
 
 export interface APIControllersCreateMyKycAccessTokenInput {
@@ -469,15 +460,12 @@ export interface APIControllersDependencyHealthOutput {
 
 export interface APIControllersDispatchPayoutExecutionInput {
   expectedVersion?: number;
-  jurisdictionCode?: string | null;
-  operationFingerprint?: string | null;
-  riskDecisionId?: string;
+  stepUpReceipt?: string | null;
 }
 
 export interface APIControllersDispatchTreasuryWithdrawalInput {
   expectedVersion?: number;
-  operationFingerprint?: string | null;
-  riskDecisionId?: string;
+  stepUpReceipt?: string | null;
 }
 
 export interface APIControllersEconomyKycStatus {
@@ -508,14 +496,25 @@ export interface APIControllersEconomyPayoutExecutionOperation {
   walletId?: string;
 }
 
-export interface APIControllersEconomyReauthenticationInput {
-  reauthenticationHash?: string | null;
-}
-
 export interface APIControllersEconomySelfServiceCapability {
   capability?: EconomyRiskEconomyValueMovementCapability;
   diagnostics?: Array<string> | null;
   state?: APISetupEconomyCapabilityReadinessState;
+}
+
+export interface APIControllersEconomyStepUpInput {
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersEconomyTopUpFailureOutput {
+  message?: string | null;
+  state?: string | null;
+}
+
+export interface APIControllersEconomyTransferProtectedOperationFailureOutput {
+  diagnostics?: Array<string> | null;
+  reviewId?: string | null;
+  state?: EconomyRiskEconomyProtectedOperationState;
 }
 
 export interface APIControllersHealthinessOutput {
@@ -552,6 +551,18 @@ export interface APIControllersLivenessOutput {
   version?: string | null;
 }
 
+export interface APIControllersMarketplaceProtectedOperationFailureOutput {
+  diagnostics?: Array<string> | null;
+  reviewId?: string | null;
+  state?: EconomyRiskEconomyProtectedOperationState;
+}
+
+export interface APIControllersPayoutProtectedOperationFailureOutput {
+  diagnostics?: Array<string> | null;
+  reviewId?: string | null;
+  state?: EconomyRiskEconomyProtectedOperationState;
+}
+
 export interface APIControllersProcessDetails {
   startTime?: string;
   uptime?: string;
@@ -584,17 +595,15 @@ export interface APIControllersProposeEconomyReserveInput {
 
 export interface APIControllersProposeLegacyEconomyCutoverInput {
   reason?: string | null;
-  reauthenticationHash?: string | null;
+  stepUpReceipt?: string | null;
 }
 
 export interface APIControllersProposeTreasuryWithdrawalInput {
   amountUnits?: number;
   destinationHash?: string | null;
   idempotencyKey?: string | null;
-  jurisdictionCode?: string | null;
-  operationFingerprint?: string | null;
   periodStart?: string;
-  riskDecisionId?: string;
+  stepUpReceipt?: string | null;
 }
 
 export interface APIControllersPublishEconomyAnchorInput {
@@ -617,22 +626,22 @@ export interface APIControllersRecordRegulatoryReferenceInput {
 
 export interface APIControllersRefundMarketplaceSettlementInput {
   idempotencyKey?: string | null;
-  jurisdictionCode?: string | null;
-  operationFingerprint?: string | null;
   quantity?: number;
   reasonCode?: string | null;
-  riskDecisionId?: string;
 }
 
 export interface APIControllersReserveApprovedPayoutExecutionInput {
-  jurisdictionCode?: string | null;
-  operationFingerprint?: string | null;
-  riskDecisionId?: string;
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersResolveEconomyRiskReviewInput {
+  decisionCode?: EconomyRiskRiskManualDecisionCode;
+  resolution?: string | null;
 }
 
 export interface APIControllersRollbackLegacyEconomyCutoverInput {
   reason?: string | null;
-  reauthenticationHash?: string | null;
+  stepUpReceipt?: string | null;
 }
 
 export interface APIControllersRuntimeDetails {
@@ -645,9 +654,6 @@ export interface APIControllersRuntimeDetails {
 export interface APIControllersSettleMyMarketplaceOrderInput {
   currencyChoice?: EconomyMarketplaceMarketplaceCurrencyChoice;
   idempotencyKey?: string | null;
-  jurisdictionCode?: string | null;
-  operationFingerprint?: string | null;
-  riskDecisionId?: string;
 }
 
 export interface APIControllersStartMyAdRewardSessionInput {
@@ -1298,9 +1304,6 @@ export interface CommerceOrdersCompleteOrderInput {
 export interface CommerceOrdersCompleteOrderMarketplaceSettlement {
   currencyChoice?: CommerceOrdersOrderMarketplaceCurrencyChoice;
   idempotencyKey?: string | null;
-  jurisdictionCode?: string | null;
-  operationFingerprint?: string | null;
-  riskDecisionId?: string;
 }
 
 export interface CommerceOrdersCreateOrderInput {
@@ -1371,8 +1374,7 @@ export interface CommerceOrdersOrderLineItem {
   unitPrice?: number;
 }
 
-export type CommerceOrdersOrderMarketplaceCurrencyChoice =
-  "Hard" | "Soft" | "FixedMix";
+export type CommerceOrdersOrderMarketplaceCurrencyChoice = 'Hard' | 'Soft' | 'FixedMix';
 
 export type CommerceOrdersOrderStatus =
   'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Refunded' | 'PartiallyRefunded' | 'Disputed' | 'Paid' | 'Fulfilled' | 'OnHold';
@@ -2925,11 +2927,9 @@ export interface ComplianceFinancialCrimeFinancialCrimeCaseEvent {
   sequence?: number;
 }
 
-export type ComplianceFinancialCrimeFinancialCrimeCaseState =
-  "Open" | "Assigned" | "NeedsReview" | "Closed";
+export type ComplianceFinancialCrimeFinancialCrimeCaseState = 'Open' | 'Assigned' | 'NeedsReview' | 'Closed';
 
-export type ComplianceFinancialCrimeFinancialCrimeOutcome =
-  "Approved" | "Rejected" | "NeedsReview" | "Unavailable";
+export type ComplianceFinancialCrimeFinancialCrimeOutcome = 'Approved' | 'Rejected' | 'NeedsReview' | 'Unavailable';
 
 export interface ComplianceFinancialCrimeFinancialCrimeRegulatoryReference {
   id?: string;
@@ -2948,19 +2948,13 @@ export interface ComplianceKYCKycAmlAccessToken {
 
 export interface ComplianceKYCKycAmlOnboarding {
   applicantId?: string | null;
+  jurisdictionCode?: string | null;
   state?: ComplianceKYCKycAmlState;
   subjectHash?: string | null;
   updatedAt?: string;
 }
 
-export type ComplianceKYCKycAmlState =
-  | "Created"
-  | "ApplicantPending"
-  | "InReview"
-  | "Approved"
-  | "Rejected"
-  | "NeedsReview"
-  | "Expired";
+export type ComplianceKYCKycAmlState = 'Created' | 'ApplicantPending' | 'InReview' | 'Approved' | 'Rejected' | 'NeedsReview' | 'Expired';
 
 export interface ComplianceKYCSumSubWebhookIngestionResult {
   evidenceId?: string | null;
@@ -3285,8 +3279,34 @@ export interface EconomyAdRewardsAdProviderReport {
   version?: number;
 }
 
-export type EconomyAdRewardsAdRewardCompletionState =
-  "Issued" | "PendingProviderReport" | "AccumulatedRemainder";
+export interface EconomyAdRewardsAdRewardCompletionOperationalStatus {
+  completedAt?: string;
+  jurisdictionCode?: string | null;
+  postingId?: string | null;
+  providerEventId?: string | null;
+  reserveVersion?: number | null;
+  rewardSoftUnits?: number;
+  state?: EconomyAdRewardsAdRewardCompletionState;
+}
+
+export type EconomyAdRewardsAdRewardCompletionState = 'Issued' | 'PendingProviderReport' | 'AccumulatedRemainder';
+
+export interface EconomyAdRewardsAdRewardMilestoneOperationalStatus {
+  id?: string;
+  evidenceHash?: string | null;
+  observedAt?: string;
+  percentage?: number;
+  sequence?: number;
+}
+
+export interface EconomyAdRewardsAdRewardPendingClaimOperationalStatus {
+  confirmedAt?: string | null;
+  deferredAt?: string;
+  providerReportId?: string | null;
+  sessionId?: string;
+  sourceStampId?: string;
+  tenantId?: string;
+}
 
 export interface EconomyAdRewardsAdRewardReconciliation {
   actualDeltaUsdNanos?: number;
@@ -3300,6 +3320,49 @@ export interface EconomyAdRewardsAdRewardReconciliation {
   reportId?: string | null;
   varianceUsdNanos?: number;
   version?: number;
+}
+
+export interface EconomyAdRewardsAdRewardReconciliationOperationalStatus {
+  id?: string;
+  actualRevenueUsdNanos?: number;
+  batchId?: string | null;
+  estimatedRevenueUsdNanos?: number;
+  historicalRewardSoftUnits?: number;
+  network?: string | null;
+  providerReportId?: string;
+  reconciledAt?: string;
+  reportId?: string | null;
+  tenantId?: string;
+  varianceUsdNanos?: number;
+  version?: number;
+}
+
+export interface EconomyAdRewardsAdRewardSessionEventOperationalStatus {
+  id?: string;
+  evidenceHash?: string | null;
+  occurredAt?: string;
+  sequence?: number;
+  state?: EconomyAdRewardsDurableAdRewardSessionState;
+}
+
+export interface EconomyAdRewardsAdRewardSessionOperationalDetails {
+  completion?: EconomyAdRewardsAdRewardCompletionOperationalStatus;
+  events?: Array<EconomyAdRewardsAdRewardSessionEventOperationalStatus> | null;
+  milestones?: Array<EconomyAdRewardsAdRewardMilestoneOperationalStatus> | null;
+  summary?: EconomyAdRewardsAdRewardSessionOperationalSummary;
+}
+
+export interface EconomyAdRewardsAdRewardSessionOperationalSummary {
+  id?: string;
+  creativeId?: string | null;
+  expiresAt?: string;
+  issuedAt?: string;
+  network?: string | null;
+  policyVersion?: number;
+  state?: EconomyAdRewardsDurableAdRewardSessionState;
+  tenantId?: string;
+  updatedAt?: string;
+  userId?: string;
 }
 
 export interface EconomyAdRewardsDurableAdProviderReportImportResult {
@@ -3370,14 +3433,7 @@ export interface EconomyAdRewardsDurableAdRewardSessionResult {
   token?: EconomyAdRewardsSignedAdRewardSession;
 }
 
-export type EconomyAdRewardsDurableAdRewardSessionState =
-  | "Issued"
-  | "Active"
-  | "ProofPending"
-  | "Verified"
-  | "Posted"
-  | "Deferred"
-  | "Rejected";
+export type EconomyAdRewardsDurableAdRewardSessionState = 'Issued' | 'Active' | 'ProofPending' | 'Verified' | 'Posted' | 'Deferred' | 'Rejected';
 
 export interface EconomyAdRewardsDurableAdRewardSessionStatus {
   creativeId?: string | null;
@@ -3415,8 +3471,7 @@ export interface EconomyBountiesBountyId {
   value?: string;
 }
 
-export type EconomyBountiesBountyStatus =
-  "Open" | "Expired" | "Claimed" | "Reclaimed";
+export type EconomyBountiesBountyStatus = 'Open' | 'Expired' | 'Claimed' | 'Reclaimed';
 
 export interface EconomyBountiesBountyTerminalOutputLot {
   amount?: EconomyContractsCoinAmount;
@@ -3461,9 +3516,13 @@ export interface EconomyBountiesPersistedBountyTerminalEvent {
 }
 
 export interface EconomyCommandsConvertMyHardToSoftInput {
-  feeHardCoinUnits?: number;
   idempotencyKey?: string | null;
   principalHardCoinUnits?: number;
+}
+
+export interface EconomyCommandsCreateMyHardCoinTopUpInput {
+  hardCoinUnits?: number;
+  idempotencyKey?: string | null;
 }
 
 export interface EconomyContractsCoinAmount {
@@ -3475,7 +3534,7 @@ export interface EconomyContractsCreditLotId {
   value?: string;
 }
 
-export type EconomyContractsCurrencyCode = "HardCoin" | "SoftCoin";
+export type EconomyContractsCurrencyCode = 'HardCoin' | 'SoftCoin';
 
 export interface EconomyContractsEconomyWalletSummary {
   availableHardToSpend?: number;
@@ -3524,46 +3583,38 @@ export interface EconomyContractsPostingId {
   value?: string;
 }
 
-export type EconomyContractsPostingStatus =
-  "Accepted" | "Rejected" | "Duplicate";
+export type EconomyContractsPostingStatus = 'Accepted' | 'Rejected' | 'Duplicate';
 
 export type EconomyContractsPostingTemplateKind =
-  | "ConfirmedTopUpMint"
-  | "ProviderReversalFull"
-  | "ProviderReversalPartial"
-  | "Spend"
-  | "HardToSoftConversion"
-  | "SystemBackedGrant"
-  | "Burn"
-  | "Escrow"
-  | "Reclaim"
-  | "Refund"
-  | "PayoutReservation"
-  | "PayoutSuccess"
-  | "PayoutFailure"
-  | "AdminWithdrawalReservation"
-  | "AdminWithdrawalSuccess"
-  | "AdminWithdrawalFailure"
-  | "HardToSoftConversionFee"
-  | "ProviderConvertedSoftReversal"
-  | "ProviderReversalDebt"
-  | "ProviderReversalLoss"
-  | "AdRewardIssuance"
-  | "BountyEscrow"
-  | "BountyClaim"
-  | "BountyReclaim"
-  | "MarketplaceSettlement"
-  | "MarketplaceRefund";
+  | 'ConfirmedTopUpMint'
+  | 'ProviderReversalFull'
+  | 'ProviderReversalPartial'
+  | 'Spend'
+  | 'HardToSoftConversion'
+  | 'SystemBackedGrant'
+  | 'Burn'
+  | 'Escrow'
+  | 'Reclaim'
+  | 'Refund'
+  | 'PayoutReservation'
+  | 'PayoutSuccess'
+  | 'PayoutFailure'
+  | 'AdminWithdrawalReservation'
+  | 'AdminWithdrawalSuccess'
+  | 'AdminWithdrawalFailure'
+  | 'HardToSoftConversionFee'
+  | 'ProviderConvertedSoftReversal'
+  | 'ProviderReversalDebt'
+  | 'ProviderReversalLoss'
+  | 'AdRewardIssuance'
+  | 'BountyEscrow'
+  | 'BountyClaim'
+  | 'BountyReclaim'
+  | 'MarketplaceSettlement'
+  | 'MarketplaceRefund';
 
 export type EconomyContractsProvenanceKind =
-  | "PurchasedHard"
-  | "EarnedHard"
-  | "ConvertedSoft"
-  | "AdRewardSoft"
-  | "SystemGrantSoft"
-  | "RefundRestoration"
-  | "EscrowReturn"
-  | "MarketplaceSoft";
+  'PurchasedHard' | 'EarnedHard' | 'ConvertedSoft' | 'AdRewardSoft' | 'SystemGrantSoft' | 'RefundRestoration' | 'EscrowReturn' | 'MarketplaceSoft';
 
 export interface EconomyContractsReserveVersion {
   value?: number;
@@ -3578,6 +3629,33 @@ export interface EconomyContractsWalletId {
 }
 
 export type EconomyContractsWalletLifecycleState = 'Active' | 'Frozen' | 'Closed' | 'UnderReview';
+
+export type EconomyFundingEconomyTopUpProviderStatus =
+  'Prepared' | 'RequiresAction' | 'Processing' | 'ProviderSucceeded' | 'Posted' | 'Failed' | 'Cancelled' | 'Ambiguous' | 'Held' | 'Reversed';
+
+export interface EconomyFundingEconomyTopUpStatus {
+  currency?: string | null;
+  hardCoinUnits?: number;
+  providerBoundAt?: string | null;
+  providerObjectId?: string | null;
+  requestedAt?: string;
+  status?: EconomyFundingEconomyTopUpProviderStatus;
+  topUpId?: string;
+  usdMinorUnits?: number;
+}
+
+export interface EconomyFundingSelfServiceHardCoinTopUpReceipt {
+  clientSecret?: string | null;
+  currency?: string | null;
+  hardCoinUnits?: number;
+  isDuplicate?: boolean;
+  paymentId?: string;
+  providerObjectId?: string | null;
+  publishableKey?: string | null;
+  status?: EconomyFundingEconomyTopUpProviderStatus;
+  topUpId?: string;
+  usdMinorUnits?: number;
+}
 
 export interface EconomyFundingSelfServiceHardToSoftConversionReceipt {
   feePostingId?: string | null;
@@ -3605,19 +3683,19 @@ export interface EconomyLedgerEconomyAnchorPublicationResult {
 }
 
 export type EconomyLedgerJournalIntegrityFailureCode =
-  | "None"
-  | "SequenceGap"
-  | "PreviousHashMismatch"
-  | "CanonicalPayloadMissing"
-  | "EntryHashMismatch"
-  | "PostingContractInvalid"
-  | "InvalidLineAmount"
-  | "CurrencyParityMismatch"
-  | "SourceStampInvalid"
-  | "AllocationInvalid"
-  | "LineageInvalid"
-  | "RootRangeInvalid"
-  | "CumulativeReversalInvalid";
+  | 'None'
+  | 'SequenceGap'
+  | 'PreviousHashMismatch'
+  | 'CanonicalPayloadMissing'
+  | 'EntryHashMismatch'
+  | 'PostingContractInvalid'
+  | 'InvalidLineAmount'
+  | 'CurrencyParityMismatch'
+  | 'SourceStampInvalid'
+  | 'AllocationInvalid'
+  | 'LineageInvalid'
+  | 'RootRangeInvalid'
+  | 'CumulativeReversalInvalid';
 
 export interface EconomyLedgerJournalIntegrityRunResult {
   fencingToken?: number;
@@ -3625,8 +3703,7 @@ export interface EconomyLedgerJournalIntegrityRunResult {
   verification?: EconomyLedgerJournalIntegrityVerificationResult;
 }
 
-export type EconomyLedgerJournalIntegrityRunStatus =
-  "Verified" | "Failed" | "LeaseUnavailable";
+export type EconomyLedgerJournalIntegrityRunStatus = 'Verified' | 'Failed' | 'LeaseUnavailable';
 
 export interface EconomyLedgerJournalIntegrityVerificationResult {
   currentHash?: string | null;
@@ -3675,11 +3752,30 @@ export interface EconomyMarketplaceDurableMarketplaceSettlementResult {
   status?: EconomyMarketplaceMarketplaceSettlementStatus;
 }
 
-export type EconomyMarketplaceMarketplaceCurrencyChoice =
-  "Hard" | "Soft" | "FixedMix";
+export type EconomyMarketplaceMarketplaceCurrencyChoice = 'Hard' | 'Soft' | 'FixedMix';
 
-export type EconomyMarketplaceMarketplaceEntitlementStatus =
-  "PendingGrant" | "Granted" | "Revoked";
+export type EconomyMarketplaceMarketplaceEntitlementStatus = 'PendingGrant' | 'Granted' | 'Revoked';
+
+export interface EconomyMarketplaceMarketplaceEventOperationalStatus {
+  id?: string;
+  evidenceHash?: string | null;
+  kind?: string | null;
+  occurredAt?: string;
+  sequence?: number;
+}
+
+export interface EconomyMarketplaceMarketplaceOutboxOperationalStatus {
+  id?: string;
+  attemptCount?: number;
+  hasLastError?: boolean;
+  leaseExpiresAt?: string | null;
+  messageType?: string | null;
+  occurredAt?: string;
+  payloadHash?: string | null;
+  publishedAt?: string | null;
+  settlementId?: string;
+  tenantId?: string;
+}
 
 export interface EconomyMarketplaceMarketplacePriceLegSnapshot {
   amount?: EconomyContractsCoinAmount;
@@ -3689,8 +3785,73 @@ export interface EconomyMarketplaceMarketplacePriceLegSnapshot {
   units?: number;
 }
 
-export type EconomyMarketplaceMarketplaceSettlementStatus =
-  "Settled" | "PartiallyRefunded" | "Refunded";
+export interface EconomyMarketplaceMarketplaceRefundOperationalStatus {
+  id?: string;
+  buyerId?: string;
+  entitlementRevoked?: boolean;
+  firstJournalSequence?: number;
+  isFullRefund?: boolean;
+  quantity?: number;
+  reasonCode?: string | null;
+  refundedAt?: string;
+  refundedQuantity?: number;
+  settlementId?: string;
+  tenantId?: string;
+}
+
+export interface EconomyMarketplaceMarketplaceSettlementLegOperationalStatus {
+  currency?: EconomyContractsCurrencyCode;
+  platformFeeUnits?: number;
+  refundedUnits?: number;
+  sellerUnits?: number;
+  units?: number;
+}
+
+export interface EconomyMarketplaceMarketplaceSettlementOperationalDetails {
+  events?: Array<EconomyMarketplaceMarketplaceEventOperationalStatus> | null;
+  legs?: Array<EconomyMarketplaceMarketplaceSettlementLegOperationalStatus> | null;
+  outbox?: Array<EconomyMarketplaceMarketplaceOutboxOperationalStatus> | null;
+  refunds?: Array<EconomyMarketplaceMarketplaceRefundOperationalStatus> | null;
+  summary?: EconomyMarketplaceMarketplaceSettlementOperationalSummary;
+}
+
+export interface EconomyMarketplaceMarketplaceSettlementOperationalSummary {
+  id?: string;
+  buyerId?: string;
+  currencyMode?: EconomyMarketplaceProductCurrencyMode;
+  entitlementId?: string;
+  entitlementStatus?: EconomyMarketplaceMarketplaceEntitlementStatus;
+  journalSequence?: number;
+  jurisdictionCode?: string | null;
+  orderId?: string;
+  orderLineItemId?: string;
+  policyVersion?: number;
+  productId?: string;
+  quantity?: number;
+  refundedQuantity?: number;
+  refundHoldUntil?: string;
+  reserveVersion?: number;
+  sellerId?: string;
+  settledAt?: string;
+  status?: EconomyMarketplaceMarketplaceSettlementStatus;
+  tenantId?: string;
+  updatedAt?: string;
+}
+
+export type EconomyMarketplaceMarketplaceSettlementStatus = 'Settled' | 'PartiallyRefunded' | 'Refunded';
+
+export type EconomyMarketplaceProductCurrencyMode = 'HardOnly' | 'SoftOnly' | 'Either' | 'FixedMix';
+
+export interface EconomyOperationsEconomyActiveReserveOperationalDetails {
+  allocations?: Array<EconomyOperationsEconomyReserveAssetAllocationOperationalStatus> | null;
+  head?: EconomyOperationsEconomyReserveOperationalStatus;
+  reconciliation?: EconomyOperationsEconomyCustodyReconciliationOperationalStatus;
+}
+
+export interface EconomyOperationsEconomyAnchorOperationalDetails {
+  dispatchSnapshotHash?: string | null;
+  summary?: EconomyOperationsEconomyAnchorOperationalStatus;
+}
 
 export interface EconomyOperationsEconomyAnchorOperationalStatus {
   id?: string;
@@ -3702,6 +3863,18 @@ export interface EconomyOperationsEconomyAnchorOperationalStatus {
   retainUntil?: string | null;
   signatureValid?: boolean;
   verifiedAt?: string | null;
+}
+
+export interface EconomyOperationsEconomyAnchorVerificationOperationalStatus {
+  id?: string;
+  eTag?: string | null;
+  keyId?: string | null;
+  objectHash?: string | null;
+  objectMatches?: boolean;
+  objectVersion?: string | null;
+  retainUntil?: string;
+  signatureValid?: boolean;
+  verifiedAt?: string;
 }
 
 export interface EconomyOperationsEconomyCapabilityConfigurationSnapshot {
@@ -3723,10 +3896,47 @@ export interface EconomyOperationsEconomyCapabilityPolicyOperationalStatus {
   version?: number;
 }
 
+export interface EconomyOperationsEconomyCustodyObservationOperationalStatus {
+  id?: string;
+  assetKey?: string | null;
+  eligibleUsdNanos?: number;
+  expiresAt?: string;
+  keyId?: string | null;
+  observedAt?: string;
+  payloadHash?: string | null;
+  provider?: string | null;
+  purpose?: EconomyReservesReserveBackingPurpose;
+  version?: number;
+}
+
+export interface EconomyOperationsEconomyCustodyReconciliationOperationalStatus {
+  id?: string;
+  eligibleAssetUsdNanos?: number;
+  evidenceHash?: string | null;
+  isReconciled?: boolean;
+  liabilityUsdNanos?: number;
+  reconciledAt?: string;
+  reconciledBy?: string;
+  varianceUsdNanos?: number;
+}
+
 export interface EconomyOperationsEconomyJournalHeadStatus {
   hash?: string | null;
   sequence?: number;
   updatedAt?: string;
+}
+
+export interface EconomyOperationsEconomyJournalVerificationRunDetails {
+  id?: string;
+  completedAt?: string;
+  currentHash?: string | null;
+  failureCode?: string | null;
+  fencingToken?: number;
+  fromSequence?: number;
+  isValid?: boolean;
+  previousHash?: string | null;
+  startedAt?: string;
+  toSequence?: number;
 }
 
 export interface EconomyOperationsEconomyJournalVerificationStatus {
@@ -3765,6 +3975,102 @@ export interface EconomyOperationsEconomyLedgerHealthSnapshot {
   latestVerification?: EconomyOperationsEconomyJournalVerificationStatus;
 }
 
+export interface EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatus {
+  items?: Array<EconomyAdRewardsAdRewardPendingClaimOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatus {
+  items?: Array<EconomyAdRewardsAdRewardReconciliationOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummary {
+  items?: Array<EconomyAdRewardsAdRewardSessionOperationalSummary> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatus {
+  items?: Array<EconomyMarketplaceMarketplaceOutboxOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatus {
+  items?: Array<EconomyMarketplaceMarketplaceRefundOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummary {
+  items?: Array<EconomyMarketplaceMarketplaceSettlementOperationalSummary> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetails {
+  items?: Array<EconomyOperationsEconomyAnchorOperationalDetails> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatus {
+  items?: Array<EconomyOperationsEconomyCapabilityPolicyOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatus {
+  items?: Array<EconomyOperationsEconomyCustodyObservationOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetails {
+  items?: Array<EconomyOperationsEconomyJournalVerificationRunDetails> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetails {
+  items?: Array<EconomyOperationsEconomyProjectionGenerationOperationalDetails> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatus {
+  items?: Array<EconomyOperationsEconomyReserveProposalOperationalStatus> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummary {
+  items?: Array<EconomyOperationsLegacyEconomyShadowBatchSummary> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyOperationsEconomyPolicyAuditEntry {
+  actorId?: string;
+  evidenceHash?: string | null;
+  kind?: string | null;
+  occurredAt?: string;
+}
+
+export interface EconomyOperationsEconomyPolicyOperationalDetails {
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  canonicalPayload?: string | null;
+  proposedAt?: string;
+  proposedBy?: string;
+  summary?: EconomyOperationsEconomyCapabilityPolicyOperationalStatus;
+}
+
+export interface EconomyOperationsEconomyProjectionApprovalAuditEntry {
+  id?: string;
+  actorId?: string;
+  approvedAt?: string;
+  evidenceHash?: string | null;
+}
+
+export interface EconomyOperationsEconomyProjectionGenerationOperationalDetails {
+  completedAt?: string | null;
+  fromSequence?: number;
+  isActive?: boolean;
+  startedAt?: string;
+  summary?: EconomyOperationsEconomyProjectionOperationalStatus;
+}
+
 export interface EconomyOperationsEconomyProjectionOperationalStatus {
   activatedAt?: string | null;
   approvedBy?: string | null;
@@ -3778,6 +4084,13 @@ export interface EconomyOperationsEconomyProjectionOperationalStatus {
   toSequence?: number;
 }
 
+export interface EconomyOperationsEconomyReserveAssetAllocationOperationalStatus {
+  id?: string;
+  assetKey?: string | null;
+  eligibleUsdNanos?: number;
+  purpose?: EconomyReservesReserveBackingPurpose;
+}
+
 export interface EconomyOperationsEconomyReserveOperationalStatus {
   authorizationEpoch?: number;
   coverage?: EconomyReservesReserveCoverageState;
@@ -3789,6 +4102,46 @@ export interface EconomyOperationsEconomyReserveOperationalStatus {
   policyVersion?: number;
   reconciledAt?: string | null;
   version?: number;
+}
+
+export interface EconomyOperationsEconomyReserveProposalOperationalStatus {
+  id?: string;
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  assetAllocations?: string | null;
+  authorizationEpoch?: number;
+  coverage?: EconomyReservesReserveCoverageState;
+  eligibleAssetUsdNanos?: number;
+  evidenceHash?: string | null;
+  expectedActiveVersion?: number | null;
+  expiresAt?: string;
+  liabilityUsdNanos?: number;
+  observationIds?: string | null;
+  observedAt?: string;
+  policyVersion?: number;
+  proposedAt?: string;
+  proposedBy?: string;
+  snapshotHash?: string | null;
+  status?: string | null;
+  version?: number;
+}
+
+export interface EconomyOperationsLegacyEconomyShadowBatchSummary {
+  id?: string;
+  backfilledHardUnits?: number;
+  capturedAt?: string;
+  expectedHardUnits?: number;
+  failureCode?: string | null;
+  financialLedgerEntryCount?: number;
+  jurisdictionCode?: string | null;
+  policyVersion?: number;
+  reconciledHardUnits?: number;
+  state?: EconomyOperationsLegacyEconomyShadowState;
+  tenantId?: string;
+  transactionCount?: number;
+  updatedAt?: string;
+  version?: number;
+  walletCount?: number;
 }
 
 export interface EconomyOperationsLegacyEconomyShadowBatchView {
@@ -3810,14 +4163,7 @@ export interface EconomyOperationsLegacyEconomyShadowBatchView {
 }
 
 export type EconomyOperationsLegacyEconomyShadowState =
-  | "Captured"
-  | "Backfilling"
-  | "Backfilled"
-  | "Reconciled"
-  | "CutoverProposed"
-  | "CutoverActive"
-  | "RolledBack"
-  | "Failed";
+  'Captured' | 'Backfilling' | 'Backfilled' | 'Reconciled' | 'CutoverProposed' | 'CutoverActive' | 'RolledBack' | 'Failed';
 
 export interface EconomyOperationsLegacyEconomyShadowWalletView {
   completedCreditsMinorUnits?: number;
@@ -3857,21 +4203,14 @@ export interface EconomyPayoutsConnectAccountSnapshot {
   version?: number;
 }
 
-export type EconomyPayoutsConnectAccountState =
-  "Pending" | "Restricted" | "Ready" | "Disabled";
+export type EconomyPayoutsConnectAccountState = 'Pending' | 'Restricted' | 'Ready' | 'Disabled';
 
 export interface EconomyPayoutsConnectOnboardingResult {
   account?: EconomyPayoutsConnectAccountSnapshot;
   onboardingUri?: string | null;
 }
 
-export type EconomyPayoutsPayoutOperationState =
-  | "Reserved"
-  | "Dispatching"
-  | "Ambiguous"
-  | "Succeeded"
-  | "Failed"
-  | "Cancelled";
+export type EconomyPayoutsPayoutOperationState = 'Reserved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
 
 export type EconomyPayoutsPayoutRequestState = 'Submitted' | 'Cancelled' | 'Approved' | 'Rejected' | 'AwaitingSecondApproval';
 
@@ -3980,7 +4319,7 @@ export interface EconomyReservesExternalReserveAsset {
   purpose?: EconomyReservesReserveBackingPurpose;
 }
 
-export type EconomyReservesReserveBackingPurpose = "HardCoin" | "SoftCoin";
+export type EconomyReservesReserveBackingPurpose = 'HardCoin' | 'SoftCoin';
 
 export interface EconomyReservesReserveBufferPosition {
   adEstimateVarianceBufferUsdNanos?: number;
@@ -3992,7 +4331,7 @@ export interface EconomyReservesReserveBufferPosition {
   softOperatingLiquidityBufferUsdNanos?: number;
 }
 
-export type EconomyReservesReserveCoverageState = "Covered" | "Shortfall";
+export type EconomyReservesReserveCoverageState = 'Covered' | 'Shortfall';
 
 export interface EconomyReservesReserveHead {
   assetAllocations?: Array<EconomyReservesExternalReserveAsset> | null;
@@ -4051,11 +4390,52 @@ export interface EconomyRiskCapabilityAuthorizationReceipt {
   tenantId?: string;
 }
 
-export type EconomyRiskComplianceEvidenceIngestionStatus =
-  "Published" | "Duplicate" | "Deferred" | "Rejected";
+export type EconomyRiskComplianceEvidenceIngestionStatus = 'Published' | 'Duplicate' | 'Deferred' | 'Rejected';
 
-export type EconomyRiskComplianceEvidenceResult =
-  "Approved" | "Rejected" | "NeedsReview" | "Unavailable";
+export type EconomyRiskComplianceEvidenceResult = 'Approved' | 'Rejected' | 'NeedsReview' | 'Unavailable';
+
+export interface EconomyRiskComplianceHold {
+  id?: string;
+  activatedAt?: string;
+  activatedBy?: string;
+  caseReferenceHash?: string | null;
+  evidenceHash?: string | null;
+  expiresAt?: string;
+  reasonCode?: string | null;
+  releasedAt?: string | null;
+  releasedBy?: string | null;
+  scope?: EconomyRiskComplianceHoldScope;
+}
+
+export interface EconomyRiskComplianceHoldAdministrationState {
+  hold?: EconomyRiskComplianceHold;
+  releaseApprovers?: Array<string> | null;
+  releasePolicyEvidenceHash?: string | null;
+  releaseProposedAt?: string | null;
+  releaseProposedBy?: string | null;
+  requiredReleaseApprovals?: number | null;
+}
+
+export interface EconomyRiskComplianceHoldEvent {
+  actorId?: string;
+  evidenceHash?: string | null;
+  holdId?: string;
+  kind?: string | null;
+  occurredAt?: string;
+  sequence?: number;
+}
+
+export interface EconomyRiskComplianceHoldPage {
+  items?: Array<EconomyRiskComplianceHoldAdministrationState> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyRiskComplianceHoldScope {
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  key?: string | null;
+  subjectHash?: string | null;
+  tenantId?: string;
+}
 
 export interface EconomyRiskEconomyCapabilityEvaluationResult {
   diagnostics?: Array<string> | null;
@@ -4085,24 +4465,23 @@ export interface EconomyRiskEconomyCapabilityPolicy {
   version?: number;
 }
 
-export type EconomyRiskEconomyCapabilityPolicyState =
-  "PendingApproval" | "Approved" | "Active" | "Expired";
+export type EconomyRiskEconomyCapabilityPolicyState = 'PendingApproval' | 'Approved' | 'Active' | 'Expired';
 
 export type EconomyRiskEconomyCapabilityReadinessStatus =
-  | "Disabled"
-  | "Ready"
-  | "InvalidPolicy"
-  | "JurisdictionBlocked"
-  | "ComplianceUnavailable"
-  | "ComplianceStale"
-  | "ReviewRequired"
-  | "LedgerUnhealthy"
-  | "ProjectionMismatch"
-  | "ReserveInsufficient"
-  | "CustodyUnreconciled"
-  | "AnchorInvalid"
-  | "ProviderNotReady"
-  | "KillSwitchActive";
+  | 'Disabled'
+  | 'Ready'
+  | 'InvalidPolicy'
+  | 'JurisdictionBlocked'
+  | 'ComplianceUnavailable'
+  | 'ComplianceStale'
+  | 'ReviewRequired'
+  | 'LedgerUnhealthy'
+  | 'ProjectionMismatch'
+  | 'ReserveInsufficient'
+  | 'CustodyUnreconciled'
+  | 'AnchorInvalid'
+  | 'ProviderNotReady'
+  | 'KillSwitchActive';
 
 export interface EconomyRiskEconomyKillSwitchScope {
   capability?: EconomyRiskEconomyValueMovementCapability;
@@ -4124,20 +4503,80 @@ export interface EconomyRiskEconomyKillSwitchState {
   scope?: EconomyRiskEconomyKillSwitchScope;
 }
 
+export type EconomyRiskEconomyProtectedOperationState =
+  'Ready' | 'ReviewRequired' | 'Hold' | 'Challenge' | 'Denied' | 'ComplianceUnavailable' | 'ComplianceStale' | 'InvalidPolicy' | 'ReserveInsufficient';
+
 export type EconomyRiskEconomyValueMovementCapability =
-  | "ConfirmHardCoinFunding"
-  | "ConvertHardToSoft"
-  | "ReverseProviderFunding"
-  | "Transfer"
-  | "IssueAdReward"
-  | "BountyEscrow"
-  | "BountyClaim"
-  | "MarketplaceSettlement"
-  | "PayoutExecution"
-  | "AdminWithdrawalExecution"
-  | "MarketplaceRefund"
-  | "BountyReclaim"
-  | "LegacyBalanceBackfill";
+  | 'ConfirmHardCoinFunding'
+  | 'ConvertHardToSoft'
+  | 'ReverseProviderFunding'
+  | 'Transfer'
+  | 'IssueAdReward'
+  | 'BountyEscrow'
+  | 'BountyClaim'
+  | 'MarketplaceSettlement'
+  | 'PayoutExecution'
+  | 'AdminWithdrawalExecution'
+  | 'MarketplaceRefund'
+  | 'BountyReclaim'
+  | 'LegacyBalanceBackfill';
+
+export type EconomyRiskRiskManualDecisionCode = 'EvidenceVerified' | 'RiskAccepted' | 'PolicyViolation' | 'FraudConfirmed';
+
+export interface EconomyRiskRiskReviewCase {
+  id?: string;
+  appealOf?: string | null;
+  approvers?: Array<string> | null;
+  decisionId?: string;
+  requiredApprovals?: number;
+  resolution?: string | null;
+  resolvedAt?: string | null;
+  resolvedBy?: string | null;
+  status?: EconomyRiskRiskReviewStatus;
+  submittedAt?: string;
+  submittedBy?: string;
+}
+
+export interface EconomyRiskRiskReviewEvent {
+  actorId?: string;
+  decisionCode?: EconomyRiskRiskManualDecisionCode;
+  evidenceHashes?: Array<string> | null;
+  kind?: EconomyRiskRiskReviewEventKind;
+  occurredAt?: string;
+  resolution?: string | null;
+  reviewId?: string;
+  sequence?: number;
+}
+
+export type EconomyRiskRiskReviewEventKind = 'Submitted' | 'ApprovalRecorded' | 'Approved' | 'Rejected' | 'AppealSubmitted';
+
+export interface EconomyRiskRiskReviewPage {
+  items?: Array<EconomyRiskRiskReviewCase> | null;
+  nextCursor?: string | null;
+}
+
+export type EconomyRiskRiskReviewStatus = 'Pending' | 'Approved' | 'Rejected';
+
+export interface EconomyTransfersSelfServiceEconomyTransferInput {
+  amountUnits?: number;
+  currency?: EconomyContractsCurrencyCode;
+  idempotencyKey?: string | null;
+  recipientUserId?: string;
+  transferType?: EconomyTransfersSelfServiceEconomyTransferType;
+}
+
+export interface EconomyTransfersSelfServiceEconomyTransferReceipt {
+  amountUnits?: number;
+  currency?: EconomyContractsCurrencyCode;
+  isDuplicate?: boolean;
+  journalHash?: string | null;
+  journalSequence?: number;
+  postingId?: string;
+  recipientUserId?: string;
+  transferType?: EconomyTransfersSelfServiceEconomyTransferType;
+}
+
+export type EconomyTransfersSelfServiceEconomyTransferType = 'Tip' | 'Gift' | 'CreatorSupport';
 
 export interface EconomyTreasuryAdminWithdrawalAuditEvent {
   actorId?: string | null;
@@ -4181,14 +4620,7 @@ export interface EconomyTreasuryAdminWithdrawalRun {
   version?: number;
 }
 
-export type EconomyTreasuryAdminWithdrawalRunState =
-  | "PendingApproval"
-  | "Approved"
-  | "Dispatching"
-  | "Ambiguous"
-  | "Succeeded"
-  | "Failed"
-  | "Cancelled";
+export type EconomyTreasuryAdminWithdrawalRunState = 'PendingApproval' | 'Approved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
 
 export interface Error {
   code?: string | null;
@@ -4592,6 +5024,12 @@ export interface IdentityAuthenticationCreateServiceAccountInput {
   tenantId?: string | null;
 }
 
+export interface IdentityAuthenticationCreateStepUpChallengeInput {
+  operationType?: string | null;
+  payloadHash?: string | null;
+  targetReference?: string | null;
+}
+
 export interface IdentityAuthenticationDeviceInfo {
   browser?: string | null;
   browserVersion?: string | null;
@@ -4977,6 +5415,16 @@ export interface IdentityAuthenticationSmsMfaSetupOutput {
   phoneNumberMasked: string | null;
 }
 
+export interface IdentityAuthenticationStepUpChallengeOutput {
+  challengeId?: string;
+  expiresAt?: string;
+}
+
+export interface IdentityAuthenticationStepUpReceiptOutput {
+  expiresAt?: string;
+  receipt?: string | null;
+}
+
 export interface IdentityAuthenticationTrustDeviceInput {
   deviceName?: string | null;
 }
@@ -5027,6 +5475,11 @@ export interface IdentityAuthenticationVerifyMfaInput {
   code: string;
   method?: IdentityAuthenticationMfaMethod;
   userId?: string;
+}
+
+export interface IdentityAuthenticationVerifyStepUpChallengeInput {
+  evidence?: string | null;
+  method?: IdentityAuthenticationMfaMethod;
 }
 
 export interface IdentityAuthenticationWeb3ChallengeInput {
@@ -8069,7 +8522,7 @@ export interface LearningCoursesEngagementMetrics {
 
 export type LearningCoursesEnrollmentStatus = 'Open' | 'Active' | 'Paused' | 'Cancelled' | 'Expired' | 'Completed' | 'Closed' | 'InviteOnly' | 'Waitlist';
 
-export type LearningCoursesEstimatedMinutesSource = "Auto" | "Manual";
+export type LearningCoursesEstimatedMinutesSource = 'Auto' | 'Manual';
 
 export interface LearningCoursesGraderSummary {
   id?: string;
@@ -12437,8 +12890,7 @@ export interface TrustSafetyTrustSafetyAppeal {
   version?: number;
 }
 
-export type TrustSafetyTrustSafetyAppealState =
-  "Submitted" | "Assigned" | "Upheld" | "Overturned";
+export type TrustSafetyTrustSafetyAppealState = 'Submitted' | 'Assigned' | 'Upheld' | 'Overturned';
 
 // Zod Schema Declarations (to handle circular references)
 export let AIAiChatInputSchema: z.ZodType<AIAiChatInput>;
@@ -12482,6 +12934,7 @@ export let AnalyticsUpdateDashboardInputSchema: z.ZodType<AnalyticsUpdateDashboa
 export let AnalyticsWidgetTypeSchema: z.ZodType<AnalyticsWidgetType>;
 export let APIAccessAccessCapabilitiesOutputSchema: z.ZodType<APIAccessAccessCapabilitiesOutput>;
 export let APIControllersActivateEconomyKillSwitchInputSchema: z.ZodType<APIControllersActivateEconomyKillSwitchInput>;
+export let APIControllersAdRewardProtectedOperationFailureOutputSchema: z.ZodType<APIControllersAdRewardProtectedOperationFailureOutput>;
 export let APIControllersApplicationDetailsSchema: z.ZodType<APIControllersApplicationDetails>;
 export let APIControllersApplicationInfoOutputSchema: z.ZodType<APIControllersApplicationInfoOutput>;
 export let APIControllersApproveEconomyPolicyInputSchema: z.ZodType<APIControllersApproveEconomyPolicyInput>;
@@ -12494,7 +12947,6 @@ export let APIControllersBuildDetailsSchema: z.ZodType<APIControllersBuildDetail
 export let APIControllersCaptureLegacyEconomyMigrationInputSchema: z.ZodType<APIControllersCaptureLegacyEconomyMigrationInput>;
 export let APIControllersCompleteMyAdRewardSessionInputSchema: z.ZodType<APIControllersCompleteMyAdRewardSessionInput>;
 export let APIControllersCompleteMyBountyInputSchema: z.ZodType<APIControllersCompleteMyBountyInput>;
-export let APIControllersConfirmMyDeferredAdRewardInputSchema: z.ZodType<APIControllersConfirmMyDeferredAdRewardInput>;
 export let APIControllersCreateMyBountyInputSchema: z.ZodType<APIControllersCreateMyBountyInput>;
 export let APIControllersCreateMyKycAccessTokenInputSchema: z.ZodType<APIControllersCreateMyKycAccessTokenInput>;
 export let APIControllersDecideFinancialCrimeCaseInputSchema: z.ZodType<APIControllersDecideFinancialCrimeCaseInput>;
@@ -12505,12 +12957,16 @@ export let APIControllersDispatchPayoutExecutionInputSchema: z.ZodType<APIContro
 export let APIControllersDispatchTreasuryWithdrawalInputSchema: z.ZodType<APIControllersDispatchTreasuryWithdrawalInput>;
 export let APIControllersEconomyKycStatusSchema: z.ZodType<APIControllersEconomyKycStatus>;
 export let APIControllersEconomyPayoutExecutionOperationSchema: z.ZodType<APIControllersEconomyPayoutExecutionOperation>;
-export let APIControllersEconomyReauthenticationInputSchema: z.ZodType<APIControllersEconomyReauthenticationInput>;
 export let APIControllersEconomySelfServiceCapabilitySchema: z.ZodType<APIControllersEconomySelfServiceCapability>;
+export let APIControllersEconomyStepUpInputSchema: z.ZodType<APIControllersEconomyStepUpInput>;
+export let APIControllersEconomyTopUpFailureOutputSchema: z.ZodType<APIControllersEconomyTopUpFailureOutput>;
+export let APIControllersEconomyTransferProtectedOperationFailureOutputSchema: z.ZodType<APIControllersEconomyTransferProtectedOperationFailureOutput>;
 export let APIControllersHealthinessOutputSchema: z.ZodType<APIControllersHealthinessOutput>;
 export let APIControllersHealthinessResponseItemSchema: z.ZodType<APIControllersHealthinessResponseItem>;
 export let APIControllersInspectEconomyCapabilityReadinessInputSchema: z.ZodType<APIControllersInspectEconomyCapabilityReadinessInput>;
 export let APIControllersLivenessOutputSchema: z.ZodType<APIControllersLivenessOutput>;
+export let APIControllersMarketplaceProtectedOperationFailureOutputSchema: z.ZodType<APIControllersMarketplaceProtectedOperationFailureOutput>;
+export let APIControllersPayoutProtectedOperationFailureOutputSchema: z.ZodType<APIControllersPayoutProtectedOperationFailureOutput>;
 export let APIControllersProcessDetailsSchema: z.ZodType<APIControllersProcessDetails>;
 export let APIControllersProposeEconomyPolicyInputSchema: z.ZodType<APIControllersProposeEconomyPolicyInput>;
 export let APIControllersProposeEconomyReserveInputSchema: z.ZodType<APIControllersProposeEconomyReserveInput>;
@@ -12521,6 +12977,7 @@ export let APIControllersReadinessOutputSchema: z.ZodType<APIControllersReadines
 export let APIControllersRecordRegulatoryReferenceInputSchema: z.ZodType<APIControllersRecordRegulatoryReferenceInput>;
 export let APIControllersRefundMarketplaceSettlementInputSchema: z.ZodType<APIControllersRefundMarketplaceSettlementInput>;
 export let APIControllersReserveApprovedPayoutExecutionInputSchema: z.ZodType<APIControllersReserveApprovedPayoutExecutionInput>;
+export let APIControllersResolveEconomyRiskReviewInputSchema: z.ZodType<APIControllersResolveEconomyRiskReviewInput>;
 export let APIControllersRollbackLegacyEconomyCutoverInputSchema: z.ZodType<APIControllersRollbackLegacyEconomyCutoverInput>;
 export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDetails>;
 export let APIControllersSettleMyMarketplaceOrderInputSchema: z.ZodType<APIControllersSettleMyMarketplaceOrderInput>;
@@ -12824,8 +13281,15 @@ export let CQRSIDomainEventSchema: z.ZodType<CQRSIDomainEvent>;
 export let CQRSModelsTenantIdSchema: z.ZodType<CQRSModelsTenantId>;
 export let EconomyAdRewardsAdPlaybackEvidenceSchema: z.ZodType<EconomyAdRewardsAdPlaybackEvidence>;
 export let EconomyAdRewardsAdProviderReportSchema: z.ZodType<EconomyAdRewardsAdProviderReport>;
+export let EconomyAdRewardsAdRewardCompletionOperationalStatusSchema: z.ZodType<EconomyAdRewardsAdRewardCompletionOperationalStatus>;
 export let EconomyAdRewardsAdRewardCompletionStateSchema: z.ZodType<EconomyAdRewardsAdRewardCompletionState>;
+export let EconomyAdRewardsAdRewardMilestoneOperationalStatusSchema: z.ZodType<EconomyAdRewardsAdRewardMilestoneOperationalStatus>;
+export let EconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema: z.ZodType<EconomyAdRewardsAdRewardPendingClaimOperationalStatus>;
 export let EconomyAdRewardsAdRewardReconciliationSchema: z.ZodType<EconomyAdRewardsAdRewardReconciliation>;
+export let EconomyAdRewardsAdRewardReconciliationOperationalStatusSchema: z.ZodType<EconomyAdRewardsAdRewardReconciliationOperationalStatus>;
+export let EconomyAdRewardsAdRewardSessionEventOperationalStatusSchema: z.ZodType<EconomyAdRewardsAdRewardSessionEventOperationalStatus>;
+export let EconomyAdRewardsAdRewardSessionOperationalDetailsSchema: z.ZodType<EconomyAdRewardsAdRewardSessionOperationalDetails>;
+export let EconomyAdRewardsAdRewardSessionOperationalSummarySchema: z.ZodType<EconomyAdRewardsAdRewardSessionOperationalSummary>;
 export let EconomyAdRewardsDurableAdProviderReportImportResultSchema: z.ZodType<EconomyAdRewardsDurableAdProviderReportImportResult>;
 export let EconomyAdRewardsDurableAdProviderReportStatusSchema: z.ZodType<EconomyAdRewardsDurableAdProviderReportStatus>;
 export let EconomyAdRewardsDurableAdRewardCompletionResultSchema: z.ZodType<EconomyAdRewardsDurableAdRewardCompletionResult>;
@@ -12843,6 +13307,7 @@ export let EconomyBountiesBountyTerminalOutputLotSchema: z.ZodType<EconomyBounti
 export let EconomyBountiesDurableBountyViewSchema: z.ZodType<EconomyBountiesDurableBountyView>;
 export let EconomyBountiesPersistedBountyTerminalEventSchema: z.ZodType<EconomyBountiesPersistedBountyTerminalEvent>;
 export let EconomyCommandsConvertMyHardToSoftInputSchema: z.ZodType<EconomyCommandsConvertMyHardToSoftInput>;
+export let EconomyCommandsCreateMyHardCoinTopUpInputSchema: z.ZodType<EconomyCommandsCreateMyHardCoinTopUpInput>;
 export let EconomyContractsCoinAmountSchema: z.ZodType<EconomyContractsCoinAmount>;
 export let EconomyContractsCreditLotIdSchema: z.ZodType<EconomyContractsCreditLotId>;
 export let EconomyContractsCurrencyCodeSchema: z.ZodType<EconomyContractsCurrencyCode>;
@@ -12859,6 +13324,9 @@ export let EconomyContractsReserveVersionSchema: z.ZodType<EconomyContractsReser
 export let EconomyContractsSourceStampIdSchema: z.ZodType<EconomyContractsSourceStampId>;
 export let EconomyContractsWalletIdSchema: z.ZodType<EconomyContractsWalletId>;
 export let EconomyContractsWalletLifecycleStateSchema: z.ZodType<EconomyContractsWalletLifecycleState>;
+export let EconomyFundingEconomyTopUpProviderStatusSchema: z.ZodType<EconomyFundingEconomyTopUpProviderStatus>;
+export let EconomyFundingEconomyTopUpStatusSchema: z.ZodType<EconomyFundingEconomyTopUpStatus>;
+export let EconomyFundingSelfServiceHardCoinTopUpReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardCoinTopUpReceipt>;
 export let EconomyFundingSelfServiceHardToSoftConversionReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardToSoftConversionReceipt>;
 export let EconomyLedgerAnchorVerificationRunResultSchema: z.ZodType<EconomyLedgerAnchorVerificationRunResult>;
 export let EconomyLedgerEconomyAnchorPublicationResultSchema: z.ZodType<EconomyLedgerEconomyAnchorPublicationResult>;
@@ -12871,17 +13339,50 @@ export let EconomyMarketplaceDurableMarketplaceRefundResultSchema: z.ZodType<Eco
 export let EconomyMarketplaceDurableMarketplaceSettlementResultSchema: z.ZodType<EconomyMarketplaceDurableMarketplaceSettlementResult>;
 export let EconomyMarketplaceMarketplaceCurrencyChoiceSchema: z.ZodType<EconomyMarketplaceMarketplaceCurrencyChoice>;
 export let EconomyMarketplaceMarketplaceEntitlementStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceEntitlementStatus>;
+export let EconomyMarketplaceMarketplaceEventOperationalStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceEventOperationalStatus>;
+export let EconomyMarketplaceMarketplaceOutboxOperationalStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceOutboxOperationalStatus>;
 export let EconomyMarketplaceMarketplacePriceLegSnapshotSchema: z.ZodType<EconomyMarketplaceMarketplacePriceLegSnapshot>;
+export let EconomyMarketplaceMarketplaceRefundOperationalStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceRefundOperationalStatus>;
+export let EconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceSettlementLegOperationalStatus>;
+export let EconomyMarketplaceMarketplaceSettlementOperationalDetailsSchema: z.ZodType<EconomyMarketplaceMarketplaceSettlementOperationalDetails>;
+export let EconomyMarketplaceMarketplaceSettlementOperationalSummarySchema: z.ZodType<EconomyMarketplaceMarketplaceSettlementOperationalSummary>;
 export let EconomyMarketplaceMarketplaceSettlementStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceSettlementStatus>;
+export let EconomyMarketplaceProductCurrencyModeSchema: z.ZodType<EconomyMarketplaceProductCurrencyMode>;
+export let EconomyOperationsEconomyActiveReserveOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyActiveReserveOperationalDetails>;
+export let EconomyOperationsEconomyAnchorOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyAnchorOperationalDetails>;
 export let EconomyOperationsEconomyAnchorOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyAnchorOperationalStatus>;
+export let EconomyOperationsEconomyAnchorVerificationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyAnchorVerificationOperationalStatus>;
 export let EconomyOperationsEconomyCapabilityConfigurationSnapshotSchema: z.ZodType<EconomyOperationsEconomyCapabilityConfigurationSnapshot>;
 export let EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyCapabilityPolicyOperationalStatus>;
+export let EconomyOperationsEconomyCustodyObservationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyCustodyObservationOperationalStatus>;
+export let EconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyCustodyReconciliationOperationalStatus>;
 export let EconomyOperationsEconomyJournalHeadStatusSchema: z.ZodType<EconomyOperationsEconomyJournalHeadStatus>;
+export let EconomyOperationsEconomyJournalVerificationRunDetailsSchema: z.ZodType<EconomyOperationsEconomyJournalVerificationRunDetails>;
 export let EconomyOperationsEconomyJournalVerificationStatusSchema: z.ZodType<EconomyOperationsEconomyJournalVerificationStatus>;
 export let EconomyOperationsEconomyKillSwitchOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyKillSwitchOperationalStatus>;
 export let EconomyOperationsEconomyLedgerHealthSnapshotSchema: z.ZodType<EconomyOperationsEconomyLedgerHealthSnapshot>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatus>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatus>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummarySchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummary>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatus>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatus>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummary>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetails>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatus>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatus>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetailsSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetails>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetails>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatus>;
+export let EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummarySchema: z.ZodType<EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummary>;
+export let EconomyOperationsEconomyPolicyAuditEntrySchema: z.ZodType<EconomyOperationsEconomyPolicyAuditEntry>;
+export let EconomyOperationsEconomyPolicyOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyPolicyOperationalDetails>;
+export let EconomyOperationsEconomyProjectionApprovalAuditEntrySchema: z.ZodType<EconomyOperationsEconomyProjectionApprovalAuditEntry>;
+export let EconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema: z.ZodType<EconomyOperationsEconomyProjectionGenerationOperationalDetails>;
 export let EconomyOperationsEconomyProjectionOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyProjectionOperationalStatus>;
+export let EconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyReserveAssetAllocationOperationalStatus>;
 export let EconomyOperationsEconomyReserveOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyReserveOperationalStatus>;
+export let EconomyOperationsEconomyReserveProposalOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyReserveProposalOperationalStatus>;
+export let EconomyOperationsLegacyEconomyShadowBatchSummarySchema: z.ZodType<EconomyOperationsLegacyEconomyShadowBatchSummary>;
 export let EconomyOperationsLegacyEconomyShadowBatchViewSchema: z.ZodType<EconomyOperationsLegacyEconomyShadowBatchView>;
 export let EconomyOperationsLegacyEconomyShadowStateSchema: z.ZodType<EconomyOperationsLegacyEconomyShadowState>;
 export let EconomyOperationsLegacyEconomyShadowWalletViewSchema: z.ZodType<EconomyOperationsLegacyEconomyShadowWalletView>;
@@ -12911,13 +13412,28 @@ export let EconomyReservesReserveServiceObservationSchema: z.ZodType<EconomyRese
 export let EconomyRiskCapabilityAuthorizationReceiptSchema: z.ZodType<EconomyRiskCapabilityAuthorizationReceipt>;
 export let EconomyRiskComplianceEvidenceIngestionStatusSchema: z.ZodType<EconomyRiskComplianceEvidenceIngestionStatus>;
 export let EconomyRiskComplianceEvidenceResultSchema: z.ZodType<EconomyRiskComplianceEvidenceResult>;
+export let EconomyRiskComplianceHoldSchema: z.ZodType<EconomyRiskComplianceHold>;
+export let EconomyRiskComplianceHoldAdministrationStateSchema: z.ZodType<EconomyRiskComplianceHoldAdministrationState>;
+export let EconomyRiskComplianceHoldEventSchema: z.ZodType<EconomyRiskComplianceHoldEvent>;
+export let EconomyRiskComplianceHoldPageSchema: z.ZodType<EconomyRiskComplianceHoldPage>;
+export let EconomyRiskComplianceHoldScopeSchema: z.ZodType<EconomyRiskComplianceHoldScope>;
 export let EconomyRiskEconomyCapabilityEvaluationResultSchema: z.ZodType<EconomyRiskEconomyCapabilityEvaluationResult>;
 export let EconomyRiskEconomyCapabilityPolicySchema: z.ZodType<EconomyRiskEconomyCapabilityPolicy>;
 export let EconomyRiskEconomyCapabilityPolicyStateSchema: z.ZodType<EconomyRiskEconomyCapabilityPolicyState>;
 export let EconomyRiskEconomyCapabilityReadinessStatusSchema: z.ZodType<EconomyRiskEconomyCapabilityReadinessStatus>;
 export let EconomyRiskEconomyKillSwitchScopeSchema: z.ZodType<EconomyRiskEconomyKillSwitchScope>;
 export let EconomyRiskEconomyKillSwitchStateSchema: z.ZodType<EconomyRiskEconomyKillSwitchState>;
+export let EconomyRiskEconomyProtectedOperationStateSchema: z.ZodType<EconomyRiskEconomyProtectedOperationState>;
 export let EconomyRiskEconomyValueMovementCapabilitySchema: z.ZodType<EconomyRiskEconomyValueMovementCapability>;
+export let EconomyRiskRiskManualDecisionCodeSchema: z.ZodType<EconomyRiskRiskManualDecisionCode>;
+export let EconomyRiskRiskReviewCaseSchema: z.ZodType<EconomyRiskRiskReviewCase>;
+export let EconomyRiskRiskReviewEventSchema: z.ZodType<EconomyRiskRiskReviewEvent>;
+export let EconomyRiskRiskReviewEventKindSchema: z.ZodType<EconomyRiskRiskReviewEventKind>;
+export let EconomyRiskRiskReviewPageSchema: z.ZodType<EconomyRiskRiskReviewPage>;
+export let EconomyRiskRiskReviewStatusSchema: z.ZodType<EconomyRiskRiskReviewStatus>;
+export let EconomyTransfersSelfServiceEconomyTransferInputSchema: z.ZodType<EconomyTransfersSelfServiceEconomyTransferInput>;
+export let EconomyTransfersSelfServiceEconomyTransferReceiptSchema: z.ZodType<EconomyTransfersSelfServiceEconomyTransferReceipt>;
+export let EconomyTransfersSelfServiceEconomyTransferTypeSchema: z.ZodType<EconomyTransfersSelfServiceEconomyTransferType>;
 export let EconomyTreasuryAdminWithdrawalAuditEventSchema: z.ZodType<EconomyTreasuryAdminWithdrawalAuditEvent>;
 export let EconomyTreasuryAdminWithdrawalAuditViewSchema: z.ZodType<EconomyTreasuryAdminWithdrawalAuditView>;
 export let EconomyTreasuryAdminWithdrawalRunSchema: z.ZodType<EconomyTreasuryAdminWithdrawalRun>;
@@ -12971,6 +13487,7 @@ export let IdentityAuthenticationCreateApiKeyCommandSchema: z.ZodType<IdentityAu
 export let IdentityAuthenticationCreateApiKeyOutputSchema: z.ZodType<IdentityAuthenticationCreateApiKeyOutput>;
 export let IdentityAuthenticationCreateRoleInputSchema: z.ZodType<IdentityAuthenticationCreateRoleInput>;
 export let IdentityAuthenticationCreateServiceAccountInputSchema: z.ZodType<IdentityAuthenticationCreateServiceAccountInput>;
+export let IdentityAuthenticationCreateStepUpChallengeInputSchema: z.ZodType<IdentityAuthenticationCreateStepUpChallengeInput>;
 export let IdentityAuthenticationDeviceInfoSchema: z.ZodType<IdentityAuthenticationDeviceInfo>;
 export let IdentityAuthenticationDisableMfaInputSchema: z.ZodType<IdentityAuthenticationDisableMfaInput>;
 export let IdentityAuthenticationDiscordAuthorizeInputSchema: z.ZodType<IdentityAuthenticationDiscordAuthorizeInput>;
@@ -13025,6 +13542,8 @@ export let IdentityAuthenticationSessionTerminationOutputSchema: z.ZodType<Ident
 export let IdentityAuthenticationSignInOutputSchema: z.ZodType<IdentityAuthenticationSignInOutput>;
 export let IdentityAuthenticationSmsMfaSetupInputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupInput>;
 export let IdentityAuthenticationSmsMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupOutput>;
+export let IdentityAuthenticationStepUpChallengeOutputSchema: z.ZodType<IdentityAuthenticationStepUpChallengeOutput>;
+export let IdentityAuthenticationStepUpReceiptOutputSchema: z.ZodType<IdentityAuthenticationStepUpReceiptOutput>;
 export let IdentityAuthenticationTrustDeviceInputSchema: z.ZodType<IdentityAuthenticationTrustDeviceInput>;
 export let IdentityAuthenticationTrustedDeviceOutputSchema: z.ZodType<IdentityAuthenticationTrustedDeviceOutput>;
 export let IdentityAuthenticationUpdateCredentialNameInputSchema: z.ZodType<IdentityAuthenticationUpdateCredentialNameInput>;
@@ -13033,6 +13552,7 @@ export let IdentityAuthenticationUpdateScopesInputSchema: z.ZodType<IdentityAuth
 export let IdentityAuthenticationUserSchema: z.ZodType<IdentityAuthenticationUser>;
 export let IdentityAuthenticationVerifyEmailInputSchema: z.ZodType<IdentityAuthenticationVerifyEmailInput>;
 export let IdentityAuthenticationVerifyMfaInputSchema: z.ZodType<IdentityAuthenticationVerifyMfaInput>;
+export let IdentityAuthenticationVerifyStepUpChallengeInputSchema: z.ZodType<IdentityAuthenticationVerifyStepUpChallengeInput>;
 export let IdentityAuthenticationWeb3ChallengeInputSchema: z.ZodType<IdentityAuthenticationWeb3ChallengeInput>;
 export let IdentityAuthenticationWeb3ChallengeOutputSchema: z.ZodType<IdentityAuthenticationWeb3ChallengeOutput>;
 export let IdentityAuthenticationWeb3VerifyInputSchema: z.ZodType<IdentityAuthenticationWeb3VerifyInput>;
@@ -14201,10 +14721,15 @@ APIAccessAccessCapabilitiesOutputSchema = z.object({
 /** Zod schema for APIControllersActivateEconomyKillSwitchInput */
 APIControllersActivateEconomyKillSwitchInputSchema = z.object({
   id: z.string().uuid().optional(),
-  capability: z
-    .lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema)
-    .optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersAdRewardProtectedOperationFailureOutput */
+APIControllersAdRewardProtectedOperationFailureOutputSchema = z.object({
+  diagnostics: z.array(z.string()).nullable().optional(),
+  reviewId: z.string().uuid().nullable().optional(),
+  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
 /** Zod schema for APIControllersApplicationDetails */
@@ -14226,17 +14751,18 @@ APIControllersApplicationInfoOutputSchema = z.object({
 
 /** Zod schema for APIControllersApproveEconomyPolicyInput */
 APIControllersApproveEconomyPolicyInputSchema = z.object({
-  reauthenticationHash: z.string().nullable().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersApproveLegacyEconomyCutoverInput */
 APIControllersApproveLegacyEconomyCutoverInputSchema = z.object({
-  reauthenticationHash: z.string().nullable().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersApproveTreasuryWithdrawalInput */
 APIControllersApproveTreasuryWithdrawalInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersAssignFinancialCrimeCaseInput */
@@ -14272,30 +14798,14 @@ APIControllersCaptureLegacyEconomyMigrationInputSchema = z.object({
 /** Zod schema for APIControllersCompleteMyAdRewardSessionInput */
 APIControllersCompleteMyAdRewardSessionInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  operationFingerprint: z.string().nullable().optional(),
   playback: z.lazy(() => EconomyAdRewardsAdPlaybackEvidenceSchema).optional(),
-  providerProof: z
-    .lazy(() => EconomyAdRewardsProviderCompletionProofSchema)
-    .optional(),
-  riskDecisionId: z.string().uuid().optional(),
+  providerProof: z.lazy(() => EconomyAdRewardsProviderCompletionProofSchema).optional(),
   token: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersCompleteMyBountyInput */
 APIControllersCompleteMyBountyInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  operationFingerprint: z.string().nullable().optional(),
-  riskDecisionId: z.string().uuid().optional(),
-});
-
-/** Zod schema for APIControllersConfirmMyDeferredAdRewardInput */
-APIControllersConfirmMyDeferredAdRewardInputSchema = z.object({
-  idempotencyKey: z.string().nullable().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  operationFingerprint: z.string().nullable().optional(),
-  riskDecisionId: z.string().uuid().optional(),
 });
 
 /** Zod schema for APIControllersCreateMyBountyInput */
@@ -14304,12 +14814,9 @@ APIControllersCreateMyBountyInputSchema = z.object({
   currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
   expiresAt: z.string().datetime().optional(),
   idempotencyKey: z.string().nullable().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
   minimumReputation: z.number().int().optional(),
-  operationFingerprint: z.string().nullable().optional(),
   requiresInstructorVerification: z.boolean().optional(),
   requiresPrerequisite: z.boolean().optional(),
-  riskDecisionId: z.string().uuid().optional(),
 });
 
 /** Zod schema for APIControllersCreateMyKycAccessTokenInput */
@@ -14323,9 +14830,7 @@ APIControllersDecideFinancialCrimeCaseInputSchema = z.object({
   evidenceHash: z.string().nullable().optional(),
   expectedCaseVersion: z.number().int().optional(),
   expiresAt: z.string().datetime().optional(),
-  outcome: z
-    .lazy(() => ComplianceFinancialCrimeFinancialCrimeOutcomeSchema)
-    .optional(),
+  outcome: z.lazy(() => ComplianceFinancialCrimeFinancialCrimeOutcomeSchema).optional(),
   policyVersion: z.number().int().optional(),
   rawObjectReference: z.string().nullable().optional(),
   reasonCode: z.string().nullable().optional(),
@@ -14369,16 +14874,13 @@ APIControllersDependencyHealthOutputSchema = z.object({
 /** Zod schema for APIControllersDispatchPayoutExecutionInput */
 APIControllersDispatchPayoutExecutionInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  operationFingerprint: z.string().nullable().optional(),
-  riskDecisionId: z.string().uuid().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersDispatchTreasuryWithdrawalInput */
 APIControllersDispatchTreasuryWithdrawalInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
-  operationFingerprint: z.string().nullable().optional(),
-  riskDecisionId: z.string().uuid().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersEconomyKycStatus */
@@ -14411,16 +14913,29 @@ APIControllersEconomyPayoutExecutionOperationSchema = z.object({
   walletId: z.string().uuid().optional(),
 });
 
-/** Zod schema for APIControllersEconomyReauthenticationInput */
-APIControllersEconomyReauthenticationInputSchema = z.object({
-  reauthenticationHash: z.string().nullable().optional(),
-});
-
 /** Zod schema for APIControllersEconomySelfServiceCapability */
 APIControllersEconomySelfServiceCapabilitySchema = z.object({
   capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   diagnostics: z.array(z.string()).nullable().optional(),
   state: z.lazy(() => APISetupEconomyCapabilityReadinessStateSchema).optional(),
+});
+
+/** Zod schema for APIControllersEconomyStepUpInput */
+APIControllersEconomyStepUpInputSchema = z.object({
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersEconomyTopUpFailureOutput */
+APIControllersEconomyTopUpFailureOutputSchema = z.object({
+  message: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersEconomyTransferProtectedOperationFailureOutput */
+APIControllersEconomyTransferProtectedOperationFailureOutputSchema = z.object({
+  diagnostics: z.array(z.string()).nullable().optional(),
+  reviewId: z.string().uuid().nullable().optional(),
+  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
 /** Zod schema for APIControllersHealthinessOutput */
@@ -14448,9 +14963,7 @@ APIControllersHealthinessResponseItemSchema = z.object({
 
 /** Zod schema for APIControllersInspectEconomyCapabilityReadinessInput */
 APIControllersInspectEconomyCapabilityReadinessInputSchema = z.object({
-  capability: z
-    .lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema)
-    .optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   destinationHash: z.string().nullable().optional(),
   jurisdictionCode: z.string().nullable().optional(),
   operationFingerprint: z.string().nullable().optional(),
@@ -14469,6 +14982,20 @@ APIControllersLivenessOutputSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
+/** Zod schema for APIControllersMarketplaceProtectedOperationFailureOutput */
+APIControllersMarketplaceProtectedOperationFailureOutputSchema = z.object({
+  diagnostics: z.array(z.string()).nullable().optional(),
+  reviewId: z.string().uuid().nullable().optional(),
+  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
+});
+
+/** Zod schema for APIControllersPayoutProtectedOperationFailureOutput */
+APIControllersPayoutProtectedOperationFailureOutputSchema = z.object({
+  diagnostics: z.array(z.string()).nullable().optional(),
+  reviewId: z.string().uuid().nullable().optional(),
+  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
+});
+
 /** Zod schema for APIControllersProcessDetails */
 APIControllersProcessDetailsSchema = z.object({
   startTime: z.string().datetime().optional(),
@@ -14478,9 +15005,7 @@ APIControllersProcessDetailsSchema = z.object({
 /** Zod schema for APIControllersProposeEconomyPolicyInput */
 APIControllersProposeEconomyPolicyInputSchema = z.object({
   id: z.string().uuid().optional(),
-  capability: z
-    .lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema)
-    .optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   effectiveAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().optional(),
   jurisdictionCode: z.string().nullable().optional(),
@@ -14510,7 +15035,7 @@ APIControllersProposeEconomyReserveInputSchema = z.object({
 /** Zod schema for APIControllersProposeLegacyEconomyCutoverInput */
 APIControllersProposeLegacyEconomyCutoverInputSchema = z.object({
   reason: z.string().nullable().optional(),
-  reauthenticationHash: z.string().nullable().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersProposeTreasuryWithdrawalInput */
@@ -14518,10 +15043,8 @@ APIControllersProposeTreasuryWithdrawalInputSchema = z.object({
   amountUnits: z.number().int().optional(),
   destinationHash: z.string().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  operationFingerprint: z.string().nullable().optional(),
   periodStart: z.string().date().optional(),
-  riskDecisionId: z.string().uuid().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersPublishEconomyAnchorInput */
@@ -14548,24 +15071,25 @@ APIControllersRecordRegulatoryReferenceInputSchema = z.object({
 /** Zod schema for APIControllersRefundMarketplaceSettlementInput */
 APIControllersRefundMarketplaceSettlementInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  operationFingerprint: z.string().nullable().optional(),
   quantity: z.number().int().optional(),
   reasonCode: z.string().nullable().optional(),
-  riskDecisionId: z.string().uuid().optional(),
 });
 
 /** Zod schema for APIControllersReserveApprovedPayoutExecutionInput */
 APIControllersReserveApprovedPayoutExecutionInputSchema = z.object({
-  jurisdictionCode: z.string().nullable().optional(),
-  operationFingerprint: z.string().nullable().optional(),
-  riskDecisionId: z.string().uuid().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersResolveEconomyRiskReviewInput */
+APIControllersResolveEconomyRiskReviewInputSchema = z.object({
+  decisionCode: z.lazy(() => EconomyRiskRiskManualDecisionCodeSchema).optional(),
+  resolution: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersRollbackLegacyEconomyCutoverInput */
 APIControllersRollbackLegacyEconomyCutoverInputSchema = z.object({
   reason: z.string().nullable().optional(),
-  reauthenticationHash: z.string().nullable().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersRuntimeDetails */
@@ -14578,13 +15102,8 @@ APIControllersRuntimeDetailsSchema = z.object({
 
 /** Zod schema for APIControllersSettleMyMarketplaceOrderInput */
 APIControllersSettleMyMarketplaceOrderInputSchema = z.object({
-  currencyChoice: z
-    .lazy(() => EconomyMarketplaceMarketplaceCurrencyChoiceSchema)
-    .optional(),
+  currencyChoice: z.lazy(() => EconomyMarketplaceMarketplaceCurrencyChoiceSchema).optional(),
   idempotencyKey: z.string().nullable().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  operationFingerprint: z.string().nullable().optional(),
-  riskDecisionId: z.string().uuid().optional(),
 });
 
 /** Zod schema for APIControllersStartMyAdRewardSessionInput */
@@ -15383,9 +15902,7 @@ CommerceOrdersCaptureOrderInputSchema = z.object({
 
 /** Zod schema for CommerceOrdersCompleteOrderInput */
 CommerceOrdersCompleteOrderInputSchema = z.object({
-  marketplaceSettlement: z
-    .lazy(() => CommerceOrdersCompleteOrderMarketplaceSettlementSchema)
-    .optional(),
+  marketplaceSettlement: z.lazy(() => CommerceOrdersCompleteOrderMarketplaceSettlementSchema).optional(),
   paymentId: z.string().uuid().nullable().optional(),
   paymentMethod: z.string().nullable().optional(),
   paymentProviderReference: z.string().nullable().optional(),
@@ -15393,13 +15910,8 @@ CommerceOrdersCompleteOrderInputSchema = z.object({
 
 /** Zod schema for CommerceOrdersCompleteOrderMarketplaceSettlement */
 CommerceOrdersCompleteOrderMarketplaceSettlementSchema = z.object({
-  currencyChoice: z
-    .lazy(() => CommerceOrdersOrderMarketplaceCurrencyChoiceSchema)
-    .optional(),
+  currencyChoice: z.lazy(() => CommerceOrdersOrderMarketplaceCurrencyChoiceSchema).optional(),
   idempotencyKey: z.string().nullable().optional(),
-  jurisdictionCode: z.string().nullable().optional(),
-  operationFingerprint: z.string().nullable().optional(),
-  riskDecisionId: z.string().uuid().optional(),
 });
 
 /** Zod schema for CommerceOrdersCreateOrderInput */
@@ -15481,11 +15993,7 @@ CommerceOrdersOrderLineItemSchema = z.object({
 });
 
 /** Zod schema for CommerceOrdersOrderMarketplaceCurrencyChoice */
-CommerceOrdersOrderMarketplaceCurrencyChoiceSchema = z.enum([
-  "Hard",
-  "Soft",
-  "FixedMix",
-]);
+CommerceOrdersOrderMarketplaceCurrencyChoiceSchema = z.enum(['Hard', 'Soft', 'FixedMix']);
 
 /** Zod schema for CommerceOrdersOrderStatus */
 CommerceOrdersOrderStatusSchema = z.enum([
@@ -17293,9 +17801,7 @@ ComplianceFinancialCrimeFinancialCrimeCaseSchema = z.object({
   holdId: z.string().uuid().optional(),
   openedAt: z.string().datetime().optional(),
   reasonCode: z.string().nullable().optional(),
-  state: z
-    .lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseStateSchema)
-    .optional(),
+  state: z.lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseStateSchema).optional(),
   subjectHash: z.string().nullable().optional(),
   tenantId: z.string().uuid().optional(),
   updatedAt: z.string().datetime().optional(),
@@ -17310,9 +17816,7 @@ ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema = z.object({
   evidenceHash: z.string().nullable().optional(),
   expiresAt: z.string().datetime().optional(),
   issuedAt: z.string().datetime().optional(),
-  outcome: z
-    .lazy(() => ComplianceFinancialCrimeFinancialCrimeOutcomeSchema)
-    .optional(),
+  outcome: z.lazy(() => ComplianceFinancialCrimeFinancialCrimeOutcomeSchema).optional(),
   policyVersion: z.number().int().optional(),
   rawObjectReference: z.string().nullable().optional(),
   reasonCode: z.string().nullable().optional(),
@@ -17323,13 +17827,9 @@ ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema = z.object({
 
 /** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseDetails */
 ComplianceFinancialCrimeFinancialCrimeCaseDetailsSchema = z.object({
-  case: z
-    .lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseSchema)
-    .optional(),
+  case: z.lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseSchema).optional(),
   decisions: z
-    .array(
-      z.lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema),
-    )
+    .array(z.lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema))
     .nullable()
     .optional(),
   events: z
@@ -17337,11 +17837,7 @@ ComplianceFinancialCrimeFinancialCrimeCaseDetailsSchema = z.object({
     .nullable()
     .optional(),
   regulatoryReferences: z
-    .array(
-      z.lazy(
-        () => ComplianceFinancialCrimeFinancialCrimeRegulatoryReferenceSchema,
-      ),
-    )
+    .array(z.lazy(() => ComplianceFinancialCrimeFinancialCrimeRegulatoryReferenceSchema))
     .nullable()
     .optional(),
 });
@@ -17359,20 +17855,10 @@ ComplianceFinancialCrimeFinancialCrimeCaseEventSchema = z.object({
 });
 
 /** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseState */
-ComplianceFinancialCrimeFinancialCrimeCaseStateSchema = z.enum([
-  "Open",
-  "Assigned",
-  "NeedsReview",
-  "Closed",
-]);
+ComplianceFinancialCrimeFinancialCrimeCaseStateSchema = z.enum(['Open', 'Assigned', 'NeedsReview', 'Closed']);
 
 /** Zod schema for ComplianceFinancialCrimeFinancialCrimeOutcome */
-ComplianceFinancialCrimeFinancialCrimeOutcomeSchema = z.enum([
-  "Approved",
-  "Rejected",
-  "NeedsReview",
-  "Unavailable",
-]);
+ComplianceFinancialCrimeFinancialCrimeOutcomeSchema = z.enum(['Approved', 'Rejected', 'NeedsReview', 'Unavailable']);
 
 /** Zod schema for ComplianceFinancialCrimeFinancialCrimeRegulatoryReference */
 ComplianceFinancialCrimeFinancialCrimeRegulatoryReferenceSchema = z.object({
@@ -17394,30 +17880,21 @@ ComplianceKYCKycAmlAccessTokenSchema = z.object({
 /** Zod schema for ComplianceKYCKycAmlOnboarding */
 ComplianceKYCKycAmlOnboardingSchema = z.object({
   applicantId: z.string().nullable().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
   state: z.lazy(() => ComplianceKYCKycAmlStateSchema).optional(),
   subjectHash: z.string().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for ComplianceKYCKycAmlState */
-ComplianceKYCKycAmlStateSchema = z.enum([
-  "Created",
-  "ApplicantPending",
-  "InReview",
-  "Approved",
-  "Rejected",
-  "NeedsReview",
-  "Expired",
-]);
+ComplianceKYCKycAmlStateSchema = z.enum(['Created', 'ApplicantPending', 'InReview', 'Approved', 'Rejected', 'NeedsReview', 'Expired']);
 
 /** Zod schema for ComplianceKYCSumSubWebhookIngestionResult */
 ComplianceKYCSumSubWebhookIngestionResultSchema = z.object({
   evidenceId: z.string().uuid().nullable().optional(),
   providerEventId: z.string().nullable().optional(),
   state: z.lazy(() => ComplianceKYCKycAmlStateSchema).optional(),
-  status: z
-    .lazy(() => EconomyRiskComplianceEvidenceIngestionStatusSchema)
-    .optional(),
+  status: z.lazy(() => EconomyRiskComplianceEvidenceIngestionStatusSchema).optional(),
 });
 
 /** Zod schema for ContentPagesContentResource */
@@ -17764,12 +18241,38 @@ EconomyAdRewardsAdProviderReportSchema = z.object({
   version: z.number().int().optional(),
 });
 
+/** Zod schema for EconomyAdRewardsAdRewardCompletionOperationalStatus */
+EconomyAdRewardsAdRewardCompletionOperationalStatusSchema = z.object({
+  completedAt: z.string().datetime().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  postingId: z.string().uuid().nullable().optional(),
+  providerEventId: z.string().nullable().optional(),
+  reserveVersion: z.number().int().nullable().optional(),
+  rewardSoftUnits: z.number().int().optional(),
+  state: z.lazy(() => EconomyAdRewardsAdRewardCompletionStateSchema).optional(),
+});
+
 /** Zod schema for EconomyAdRewardsAdRewardCompletionState */
-EconomyAdRewardsAdRewardCompletionStateSchema = z.enum([
-  "Issued",
-  "PendingProviderReport",
-  "AccumulatedRemainder",
-]);
+EconomyAdRewardsAdRewardCompletionStateSchema = z.enum(['Issued', 'PendingProviderReport', 'AccumulatedRemainder']);
+
+/** Zod schema for EconomyAdRewardsAdRewardMilestoneOperationalStatus */
+EconomyAdRewardsAdRewardMilestoneOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  observedAt: z.string().datetime().optional(),
+  percentage: z.number().int().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyAdRewardsAdRewardPendingClaimOperationalStatus */
+EconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema = z.object({
+  confirmedAt: z.string().datetime().nullable().optional(),
+  deferredAt: z.string().datetime().optional(),
+  providerReportId: z.string().uuid().nullable().optional(),
+  sessionId: z.string().uuid().optional(),
+  sourceStampId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+});
 
 /** Zod schema for EconomyAdRewardsAdRewardReconciliation */
 EconomyAdRewardsAdRewardReconciliationSchema = z.object({
@@ -17786,13 +18289,64 @@ EconomyAdRewardsAdRewardReconciliationSchema = z.object({
   version: z.number().int().optional(),
 });
 
+/** Zod schema for EconomyAdRewardsAdRewardReconciliationOperationalStatus */
+EconomyAdRewardsAdRewardReconciliationOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  actualRevenueUsdNanos: z.number().int().optional(),
+  batchId: z.string().nullable().optional(),
+  estimatedRevenueUsdNanos: z.number().int().optional(),
+  historicalRewardSoftUnits: z.number().int().optional(),
+  network: z.string().nullable().optional(),
+  providerReportId: z.string().uuid().optional(),
+  reconciledAt: z.string().datetime().optional(),
+  reportId: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  varianceUsdNanos: z.number().int().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyAdRewardsAdRewardSessionEventOperationalStatus */
+EconomyAdRewardsAdRewardSessionEventOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  sequence: z.number().int().optional(),
+  state: z.lazy(() => EconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
+});
+
+/** Zod schema for EconomyAdRewardsAdRewardSessionOperationalDetails */
+EconomyAdRewardsAdRewardSessionOperationalDetailsSchema = z.object({
+  completion: z.lazy(() => EconomyAdRewardsAdRewardCompletionOperationalStatusSchema).optional(),
+  events: z
+    .array(z.lazy(() => EconomyAdRewardsAdRewardSessionEventOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  milestones: z
+    .array(z.lazy(() => EconomyAdRewardsAdRewardMilestoneOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  summary: z.lazy(() => EconomyAdRewardsAdRewardSessionOperationalSummarySchema).optional(),
+});
+
+/** Zod schema for EconomyAdRewardsAdRewardSessionOperationalSummary */
+EconomyAdRewardsAdRewardSessionOperationalSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  creativeId: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  issuedAt: z.string().datetime().optional(),
+  network: z.string().nullable().optional(),
+  policyVersion: z.number().int().optional(),
+  state: z.lazy(() => EconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAt: z.string().datetime().optional(),
+  userId: z.string().uuid().optional(),
+});
+
 /** Zod schema for EconomyAdRewardsDurableAdProviderReportImportResult */
 EconomyAdRewardsDurableAdProviderReportImportResultSchema = z.object({
   isDuplicate: z.boolean().optional(),
   providerReportId: z.string().uuid().optional(),
-  reconciliation: z
-    .lazy(() => EconomyAdRewardsAdRewardReconciliationSchema)
-    .optional(),
+  reconciliation: z.lazy(() => EconomyAdRewardsAdRewardReconciliationSchema).optional(),
   verifiedPendingSessions: z.array(z.string().uuid()).nullable().optional(),
 });
 
@@ -17809,9 +18363,7 @@ EconomyAdRewardsDurableAdProviderReportStatusSchema = z.object({
   processingError: z.string().nullable().optional(),
   providerReportId: z.string().uuid().optional(),
   receivedAt: z.string().datetime().optional(),
-  reconciliation: z
-    .lazy(() => EconomyAdRewardsDurableAdRewardReconciliationStatusSchema)
-    .optional(),
+  reconciliation: z.lazy(() => EconomyAdRewardsDurableAdRewardReconciliationStatusSchema).optional(),
   reportId: z.string().nullable().optional(),
   signatureVerified: z.boolean().optional(),
   version: z.number().int().optional(),
@@ -17859,23 +18411,13 @@ EconomyAdRewardsDurableAdRewardSessionClaimsSchema = z.object({
 
 /** Zod schema for EconomyAdRewardsDurableAdRewardSessionResult */
 EconomyAdRewardsDurableAdRewardSessionResultSchema = z.object({
-  claims: z
-    .lazy(() => EconomyAdRewardsDurableAdRewardSessionClaimsSchema)
-    .optional(),
+  claims: z.lazy(() => EconomyAdRewardsDurableAdRewardSessionClaimsSchema).optional(),
   isDuplicate: z.boolean().optional(),
   token: z.lazy(() => EconomyAdRewardsSignedAdRewardSessionSchema).optional(),
 });
 
 /** Zod schema for EconomyAdRewardsDurableAdRewardSessionState */
-EconomyAdRewardsDurableAdRewardSessionStateSchema = z.enum([
-  "Issued",
-  "Active",
-  "ProofPending",
-  "Verified",
-  "Posted",
-  "Deferred",
-  "Rejected",
-]);
+EconomyAdRewardsDurableAdRewardSessionStateSchema = z.enum(['Issued', 'Active', 'ProofPending', 'Verified', 'Posted', 'Deferred', 'Rejected']);
 
 /** Zod schema for EconomyAdRewardsDurableAdRewardSessionStatus */
 EconomyAdRewardsDurableAdRewardSessionStatusSchema = z.object({
@@ -17886,9 +18428,7 @@ EconomyAdRewardsDurableAdRewardSessionStatusSchema = z.object({
   postingId: z.string().uuid().nullable().optional(),
   rewardSoftUnits: z.number().int().optional(),
   sessionId: z.string().uuid().optional(),
-  state: z
-    .lazy(() => EconomyAdRewardsDurableAdRewardSessionStateSchema)
-    .optional(),
+  state: z.lazy(() => EconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
@@ -17921,12 +18461,7 @@ EconomyBountiesBountyIdSchema = z.object({
 });
 
 /** Zod schema for EconomyBountiesBountyStatus */
-EconomyBountiesBountyStatusSchema = z.enum([
-  "Open",
-  "Expired",
-  "Claimed",
-  "Reclaimed",
-]);
+EconomyBountiesBountyStatusSchema = z.enum(['Open', 'Expired', 'Claimed', 'Reclaimed']);
 
 /** Zod schema for EconomyBountiesBountyTerminalOutputLot */
 EconomyBountiesBountyTerminalOutputLotSchema = z.object({
@@ -17936,9 +18471,7 @@ EconomyBountiesBountyTerminalOutputLotSchema = z.object({
   lotId: z.lazy(() => EconomyContractsCreditLotIdSchema).optional(),
   originalMaturesAt: z.string().datetime().optional(),
   provenance: z.lazy(() => EconomyContractsProvenanceKindSchema).optional(),
-  rootSourceStampId: z
-    .lazy(() => EconomyContractsSourceStampIdSchema)
-    .optional(),
+  rootSourceStampId: z.lazy(() => EconomyContractsSourceStampIdSchema).optional(),
   walletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
 });
 
@@ -17946,17 +18479,13 @@ EconomyBountiesBountyTerminalOutputLotSchema = z.object({
 EconomyBountiesDurableBountyViewSchema = z.object({
   id: z.lazy(() => EconomyBountiesBountyIdSchema).optional(),
   amount: z.lazy(() => EconomyContractsCoinAmountSchema).optional(),
-  eligibility: z
-    .lazy(() => EconomyBountiesBountyEligibilityRequirementsSchema)
-    .optional(),
+  eligibility: z.lazy(() => EconomyBountiesBountyEligibilityRequirementsSchema).optional(),
   expiresAt: z.string().datetime().optional(),
   postedAt: z.string().datetime().optional(),
   posterId: z.string().uuid().optional(),
   reclaimFeePpm: z.number().int().optional(),
   status: z.lazy(() => EconomyBountiesBountyStatusSchema).optional(),
-  terminalEvent: z
-    .lazy(() => EconomyBountiesPersistedBountyTerminalEventSchema)
-    .optional(),
+  terminalEvent: z.lazy(() => EconomyBountiesPersistedBountyTerminalEventSchema).optional(),
   version: z.number().int().optional(),
 });
 
@@ -17975,9 +18504,7 @@ EconomyBountiesPersistedBountyTerminalEventSchema = z.object({
     .nullable()
     .optional(),
   proceedsLotId: z.lazy(() => EconomyContractsCreditLotIdSchema).optional(),
-  proceedsSourceStampId: z
-    .lazy(() => EconomyContractsSourceStampIdSchema)
-    .optional(),
+  proceedsSourceStampId: z.lazy(() => EconomyContractsSourceStampIdSchema).optional(),
   returnedUnits: z.number().int().optional(),
   riskDecisionId: z.string().uuid().nullable().optional(),
   status: z.lazy(() => EconomyBountiesBountyStatusSchema).optional(),
@@ -17986,9 +18513,14 @@ EconomyBountiesPersistedBountyTerminalEventSchema = z.object({
 
 /** Zod schema for EconomyCommandsConvertMyHardToSoftInput */
 EconomyCommandsConvertMyHardToSoftInputSchema = z.object({
-  feeHardCoinUnits: z.number().int().optional(),
   idempotencyKey: z.string().nullable().optional(),
   principalHardCoinUnits: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyCommandsCreateMyHardCoinTopUpInput */
+EconomyCommandsCreateMyHardCoinTopUpInputSchema = z.object({
+  hardCoinUnits: z.number().int().optional(),
+  idempotencyKey: z.string().nullable().optional(),
 });
 
 /** Zod schema for EconomyContractsCoinAmount */
@@ -18063,44 +18595,44 @@ EconomyContractsPostingStatusSchema = z.enum(['Accepted', 'Rejected', 'Duplicate
 
 /** Zod schema for EconomyContractsPostingTemplateKind */
 EconomyContractsPostingTemplateKindSchema = z.enum([
-  "ConfirmedTopUpMint",
-  "ProviderReversalFull",
-  "ProviderReversalPartial",
-  "Spend",
-  "HardToSoftConversion",
-  "SystemBackedGrant",
-  "Burn",
-  "Escrow",
-  "Reclaim",
-  "Refund",
-  "PayoutReservation",
-  "PayoutSuccess",
-  "PayoutFailure",
-  "AdminWithdrawalReservation",
-  "AdminWithdrawalSuccess",
-  "AdminWithdrawalFailure",
-  "HardToSoftConversionFee",
-  "ProviderConvertedSoftReversal",
-  "ProviderReversalDebt",
-  "ProviderReversalLoss",
-  "AdRewardIssuance",
-  "BountyEscrow",
-  "BountyClaim",
-  "BountyReclaim",
-  "MarketplaceSettlement",
-  "MarketplaceRefund",
+  'ConfirmedTopUpMint',
+  'ProviderReversalFull',
+  'ProviderReversalPartial',
+  'Spend',
+  'HardToSoftConversion',
+  'SystemBackedGrant',
+  'Burn',
+  'Escrow',
+  'Reclaim',
+  'Refund',
+  'PayoutReservation',
+  'PayoutSuccess',
+  'PayoutFailure',
+  'AdminWithdrawalReservation',
+  'AdminWithdrawalSuccess',
+  'AdminWithdrawalFailure',
+  'HardToSoftConversionFee',
+  'ProviderConvertedSoftReversal',
+  'ProviderReversalDebt',
+  'ProviderReversalLoss',
+  'AdRewardIssuance',
+  'BountyEscrow',
+  'BountyClaim',
+  'BountyReclaim',
+  'MarketplaceSettlement',
+  'MarketplaceRefund',
 ]);
 
 /** Zod schema for EconomyContractsProvenanceKind */
 EconomyContractsProvenanceKindSchema = z.enum([
-  "PurchasedHard",
-  "EarnedHard",
-  "ConvertedSoft",
-  "AdRewardSoft",
-  "SystemGrantSoft",
-  "RefundRestoration",
-  "EscrowReturn",
-  "MarketplaceSoft",
+  'PurchasedHard',
+  'EarnedHard',
+  'ConvertedSoft',
+  'AdRewardSoft',
+  'SystemGrantSoft',
+  'RefundRestoration',
+  'EscrowReturn',
+  'MarketplaceSoft',
 ]);
 
 /** Zod schema for EconomyContractsReserveVersion */
@@ -18120,6 +18652,46 @@ EconomyContractsWalletIdSchema = z.object({
 
 /** Zod schema for EconomyContractsWalletLifecycleState */
 EconomyContractsWalletLifecycleStateSchema = z.enum(['Active', 'Frozen', 'Closed', 'UnderReview']);
+
+/** Zod schema for EconomyFundingEconomyTopUpProviderStatus */
+EconomyFundingEconomyTopUpProviderStatusSchema = z.enum([
+  'Prepared',
+  'RequiresAction',
+  'Processing',
+  'ProviderSucceeded',
+  'Posted',
+  'Failed',
+  'Cancelled',
+  'Ambiguous',
+  'Held',
+  'Reversed',
+]);
+
+/** Zod schema for EconomyFundingEconomyTopUpStatus */
+EconomyFundingEconomyTopUpStatusSchema = z.object({
+  currency: z.string().nullable().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  providerBoundAt: z.string().datetime().nullable().optional(),
+  providerObjectId: z.string().nullable().optional(),
+  requestedAt: z.string().datetime().optional(),
+  status: z.lazy(() => EconomyFundingEconomyTopUpProviderStatusSchema).optional(),
+  topUpId: z.string().uuid().optional(),
+  usdMinorUnits: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyFundingSelfServiceHardCoinTopUpReceipt */
+EconomyFundingSelfServiceHardCoinTopUpReceiptSchema = z.object({
+  clientSecret: z.string().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  isDuplicate: z.boolean().optional(),
+  paymentId: z.string().uuid().optional(),
+  providerObjectId: z.string().nullable().optional(),
+  publishableKey: z.string().nullable().optional(),
+  status: z.lazy(() => EconomyFundingEconomyTopUpProviderStatusSchema).optional(),
+  topUpId: z.string().uuid().optional(),
+  usdMinorUnits: z.number().int().optional(),
+});
 
 /** Zod schema for EconomyFundingSelfServiceHardToSoftConversionReceipt */
 EconomyFundingSelfServiceHardToSoftConversionReceiptSchema = z.object({
@@ -18151,43 +18723,35 @@ EconomyLedgerEconomyAnchorPublicationResultSchema = z.object({
 
 /** Zod schema for EconomyLedgerJournalIntegrityFailureCode */
 EconomyLedgerJournalIntegrityFailureCodeSchema = z.enum([
-  "None",
-  "SequenceGap",
-  "PreviousHashMismatch",
-  "CanonicalPayloadMissing",
-  "EntryHashMismatch",
-  "PostingContractInvalid",
-  "InvalidLineAmount",
-  "CurrencyParityMismatch",
-  "SourceStampInvalid",
-  "AllocationInvalid",
-  "LineageInvalid",
-  "RootRangeInvalid",
-  "CumulativeReversalInvalid",
+  'None',
+  'SequenceGap',
+  'PreviousHashMismatch',
+  'CanonicalPayloadMissing',
+  'EntryHashMismatch',
+  'PostingContractInvalid',
+  'InvalidLineAmount',
+  'CurrencyParityMismatch',
+  'SourceStampInvalid',
+  'AllocationInvalid',
+  'LineageInvalid',
+  'RootRangeInvalid',
+  'CumulativeReversalInvalid',
 ]);
 
 /** Zod schema for EconomyLedgerJournalIntegrityRunResult */
 EconomyLedgerJournalIntegrityRunResultSchema = z.object({
   fencingToken: z.number().int().optional(),
   status: z.lazy(() => EconomyLedgerJournalIntegrityRunStatusSchema).optional(),
-  verification: z
-    .lazy(() => EconomyLedgerJournalIntegrityVerificationResultSchema)
-    .optional(),
+  verification: z.lazy(() => EconomyLedgerJournalIntegrityVerificationResultSchema).optional(),
 });
 
 /** Zod schema for EconomyLedgerJournalIntegrityRunStatus */
-EconomyLedgerJournalIntegrityRunStatusSchema = z.enum([
-  "Verified",
-  "Failed",
-  "LeaseUnavailable",
-]);
+EconomyLedgerJournalIntegrityRunStatusSchema = z.enum(['Verified', 'Failed', 'LeaseUnavailable']);
 
 /** Zod schema for EconomyLedgerJournalIntegrityVerificationResult */
 EconomyLedgerJournalIntegrityVerificationResultSchema = z.object({
   currentHash: z.string().nullable().optional(),
-  failureCode: z
-    .lazy(() => EconomyLedgerJournalIntegrityFailureCodeSchema)
-    .optional(),
+  failureCode: z.lazy(() => EconomyLedgerJournalIntegrityFailureCodeSchema).optional(),
   fromSequence: z.number().int().optional(),
   isValid: z.boolean().optional(),
   toSequence: z.number().int().optional(),
@@ -18208,9 +18772,7 @@ EconomyMarketplaceDurableMarketplaceRefundResultSchema = z.object({
     .array(z.lazy(() => EconomyMarketplaceDurableMarketplaceRefundDebtSchema))
     .nullable()
     .optional(),
-  entitlementStatus: z
-    .lazy(() => EconomyMarketplaceMarketplaceEntitlementStatusSchema)
-    .optional(),
+  entitlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
   isDuplicate: z.boolean().optional(),
   journalHash: z.string().nullable().optional(),
   journalSequence: z.number().int().optional(),
@@ -18223,17 +18785,13 @@ EconomyMarketplaceDurableMarketplaceRefundResultSchema = z.object({
   refundedAt: z.string().datetime().optional(),
   refundId: z.string().uuid().optional(),
   settlementId: z.string().uuid().optional(),
-  settlementStatus: z
-    .lazy(() => EconomyMarketplaceMarketplaceSettlementStatusSchema)
-    .optional(),
+  settlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
 });
 
 /** Zod schema for EconomyMarketplaceDurableMarketplaceSettlementResult */
 EconomyMarketplaceDurableMarketplaceSettlementResultSchema = z.object({
   buyerId: z.string().uuid().optional(),
-  entitlementStatus: z
-    .lazy(() => EconomyMarketplaceMarketplaceEntitlementStatusSchema)
-    .optional(),
+  entitlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
   isDuplicate: z.boolean().optional(),
   journalHash: z.string().nullable().optional(),
   journalSequence: z.number().int().optional(),
@@ -18247,24 +18805,37 @@ EconomyMarketplaceDurableMarketplaceSettlementResultSchema = z.object({
   sellerId: z.string().uuid().optional(),
   settledAt: z.string().datetime().optional(),
   settlementId: z.string().uuid().optional(),
-  status: z
-    .lazy(() => EconomyMarketplaceMarketplaceSettlementStatusSchema)
-    .optional(),
+  status: z.lazy(() => EconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
 });
 
 /** Zod schema for EconomyMarketplaceMarketplaceCurrencyChoice */
-EconomyMarketplaceMarketplaceCurrencyChoiceSchema = z.enum([
-  "Hard",
-  "Soft",
-  "FixedMix",
-]);
+EconomyMarketplaceMarketplaceCurrencyChoiceSchema = z.enum(['Hard', 'Soft', 'FixedMix']);
 
 /** Zod schema for EconomyMarketplaceMarketplaceEntitlementStatus */
-EconomyMarketplaceMarketplaceEntitlementStatusSchema = z.enum([
-  "PendingGrant",
-  "Granted",
-  "Revoked",
-]);
+EconomyMarketplaceMarketplaceEntitlementStatusSchema = z.enum(['PendingGrant', 'Granted', 'Revoked']);
+
+/** Zod schema for EconomyMarketplaceMarketplaceEventOperationalStatus */
+EconomyMarketplaceMarketplaceEventOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  kind: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyMarketplaceMarketplaceOutboxOperationalStatus */
+EconomyMarketplaceMarketplaceOutboxOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  attemptCount: z.number().int().optional(),
+  hasLastError: z.boolean().optional(),
+  leaseExpiresAt: z.string().datetime().nullable().optional(),
+  messageType: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  payloadHash: z.string().nullable().optional(),
+  publishedAt: z.string().datetime().nullable().optional(),
+  settlementId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+});
 
 /** Zod schema for EconomyMarketplaceMarketplacePriceLegSnapshot */
 EconomyMarketplaceMarketplacePriceLegSnapshotSchema = z.object({
@@ -18275,12 +18846,96 @@ EconomyMarketplaceMarketplacePriceLegSnapshotSchema = z.object({
   units: z.number().int().optional(),
 });
 
+/** Zod schema for EconomyMarketplaceMarketplaceRefundOperationalStatus */
+EconomyMarketplaceMarketplaceRefundOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  buyerId: z.string().uuid().optional(),
+  entitlementRevoked: z.boolean().optional(),
+  firstJournalSequence: z.number().int().optional(),
+  isFullRefund: z.boolean().optional(),
+  quantity: z.number().int().optional(),
+  reasonCode: z.string().nullable().optional(),
+  refundedAt: z.string().datetime().optional(),
+  refundedQuantity: z.number().int().optional(),
+  settlementId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for EconomyMarketplaceMarketplaceSettlementLegOperationalStatus */
+EconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema = z.object({
+  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  platformFeeUnits: z.number().int().optional(),
+  refundedUnits: z.number().int().optional(),
+  sellerUnits: z.number().int().optional(),
+  units: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyMarketplaceMarketplaceSettlementOperationalDetails */
+EconomyMarketplaceMarketplaceSettlementOperationalDetailsSchema = z.object({
+  events: z
+    .array(z.lazy(() => EconomyMarketplaceMarketplaceEventOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  legs: z
+    .array(z.lazy(() => EconomyMarketplaceMarketplaceSettlementLegOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  outbox: z
+    .array(z.lazy(() => EconomyMarketplaceMarketplaceOutboxOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  refunds: z
+    .array(z.lazy(() => EconomyMarketplaceMarketplaceRefundOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  summary: z.lazy(() => EconomyMarketplaceMarketplaceSettlementOperationalSummarySchema).optional(),
+});
+
+/** Zod schema for EconomyMarketplaceMarketplaceSettlementOperationalSummary */
+EconomyMarketplaceMarketplaceSettlementOperationalSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  buyerId: z.string().uuid().optional(),
+  currencyMode: z.lazy(() => EconomyMarketplaceProductCurrencyModeSchema).optional(),
+  entitlementId: z.string().uuid().optional(),
+  entitlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
+  journalSequence: z.number().int().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  orderId: z.string().uuid().optional(),
+  orderLineItemId: z.string().uuid().optional(),
+  policyVersion: z.number().int().optional(),
+  productId: z.string().uuid().optional(),
+  quantity: z.number().int().optional(),
+  refundedQuantity: z.number().int().optional(),
+  refundHoldUntil: z.string().datetime().optional(),
+  reserveVersion: z.number().int().optional(),
+  sellerId: z.string().uuid().optional(),
+  settledAt: z.string().datetime().optional(),
+  status: z.lazy(() => EconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
 /** Zod schema for EconomyMarketplaceMarketplaceSettlementStatus */
-EconomyMarketplaceMarketplaceSettlementStatusSchema = z.enum([
-  "Settled",
-  "PartiallyRefunded",
-  "Refunded",
-]);
+EconomyMarketplaceMarketplaceSettlementStatusSchema = z.enum(['Settled', 'PartiallyRefunded', 'Refunded']);
+
+/** Zod schema for EconomyMarketplaceProductCurrencyMode */
+EconomyMarketplaceProductCurrencyModeSchema = z.enum(['HardOnly', 'SoftOnly', 'Either', 'FixedMix']);
+
+/** Zod schema for EconomyOperationsEconomyActiveReserveOperationalDetails */
+EconomyOperationsEconomyActiveReserveOperationalDetailsSchema = z.object({
+  allocations: z
+    .array(z.lazy(() => EconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  head: z.lazy(() => EconomyOperationsEconomyReserveOperationalStatusSchema).optional(),
+  reconciliation: z.lazy(() => EconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema).optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyAnchorOperationalDetails */
+EconomyOperationsEconomyAnchorOperationalDetailsSchema = z.object({
+  dispatchSnapshotHash: z.string().nullable().optional(),
+  summary: z.lazy(() => EconomyOperationsEconomyAnchorOperationalStatusSchema).optional(),
+});
 
 /** Zod schema for EconomyOperationsEconomyAnchorOperationalStatus */
 EconomyOperationsEconomyAnchorOperationalStatusSchema = z.object({
@@ -18295,20 +18950,27 @@ EconomyOperationsEconomyAnchorOperationalStatusSchema = z.object({
   verifiedAt: z.string().datetime().nullable().optional(),
 });
 
+/** Zod schema for EconomyOperationsEconomyAnchorVerificationOperationalStatus */
+EconomyOperationsEconomyAnchorVerificationOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  eTag: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  objectHash: z.string().nullable().optional(),
+  objectMatches: z.boolean().optional(),
+  objectVersion: z.string().nullable().optional(),
+  retainUntil: z.string().datetime().optional(),
+  signatureValid: z.boolean().optional(),
+  verifiedAt: z.string().datetime().optional(),
+});
+
 /** Zod schema for EconomyOperationsEconomyCapabilityConfigurationSnapshot */
 EconomyOperationsEconomyCapabilityConfigurationSnapshotSchema = z.object({
   killSwitches: z
-    .array(
-      z.lazy(() => EconomyOperationsEconomyKillSwitchOperationalStatusSchema),
-    )
+    .array(z.lazy(() => EconomyOperationsEconomyKillSwitchOperationalStatusSchema))
     .nullable()
     .optional(),
   policies: z
-    .array(
-      z.lazy(
-        () => EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema,
-      ),
-    )
+    .array(z.lazy(() => EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema))
     .nullable()
     .optional(),
 });
@@ -18316,9 +18978,7 @@ EconomyOperationsEconomyCapabilityConfigurationSnapshotSchema = z.object({
 /** Zod schema for EconomyOperationsEconomyCapabilityPolicyOperationalStatus */
 EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema = z.object({
   id: z.string().uuid().optional(),
-  capability: z
-    .lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema)
-    .optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   effectiveAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().optional(),
   jurisdictionCode: z.string().nullable().optional(),
@@ -18330,11 +18990,51 @@ EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema = z.object({
   version: z.number().int().optional(),
 });
 
+/** Zod schema for EconomyOperationsEconomyCustodyObservationOperationalStatus */
+EconomyOperationsEconomyCustodyObservationOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  assetKey: z.string().nullable().optional(),
+  eligibleUsdNanos: z.number().int().optional(),
+  expiresAt: z.string().datetime().optional(),
+  keyId: z.string().nullable().optional(),
+  observedAt: z.string().datetime().optional(),
+  payloadHash: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  purpose: z.lazy(() => EconomyReservesReserveBackingPurposeSchema).optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyCustodyReconciliationOperationalStatus */
+EconomyOperationsEconomyCustodyReconciliationOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  eligibleAssetUsdNanos: z.number().int().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  isReconciled: z.boolean().optional(),
+  liabilityUsdNanos: z.number().int().optional(),
+  reconciledAt: z.string().datetime().optional(),
+  reconciledBy: z.string().uuid().optional(),
+  varianceUsdNanos: z.number().int().optional(),
+});
+
 /** Zod schema for EconomyOperationsEconomyJournalHeadStatus */
 EconomyOperationsEconomyJournalHeadStatusSchema = z.object({
   hash: z.string().nullable().optional(),
   sequence: z.number().int().optional(),
   updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyJournalVerificationRunDetails */
+EconomyOperationsEconomyJournalVerificationRunDetailsSchema = z.object({
+  id: z.string().uuid().optional(),
+  completedAt: z.string().datetime().optional(),
+  currentHash: z.string().nullable().optional(),
+  failureCode: z.string().nullable().optional(),
+  fencingToken: z.number().int().optional(),
+  fromSequence: z.number().int().optional(),
+  isValid: z.boolean().optional(),
+  previousHash: z.string().nullable().optional(),
+  startedAt: z.string().datetime().optional(),
+  toSequence: z.number().int().optional(),
 });
 
 /** Zod schema for EconomyOperationsEconomyJournalVerificationStatus */
@@ -18364,26 +19064,168 @@ EconomyOperationsEconomyKillSwitchOperationalStatusSchema = z.object({
 
 /** Zod schema for EconomyOperationsEconomyLedgerHealthSnapshot */
 EconomyOperationsEconomyLedgerHealthSnapshotSchema = z.object({
-  activeProjection: z
-    .lazy(() => EconomyOperationsEconomyProjectionOperationalStatusSchema)
-    .optional(),
-  activeReserve: z
-    .lazy(() => EconomyOperationsEconomyReserveOperationalStatusSchema)
-    .optional(),
+  activeProjection: z.lazy(() => EconomyOperationsEconomyProjectionOperationalStatusSchema).optional(),
+  activeReserve: z.lazy(() => EconomyOperationsEconomyReserveOperationalStatusSchema).optional(),
   diagnostics: z.array(z.string()).nullable().optional(),
-  head: z
-    .lazy(() => EconomyOperationsEconomyJournalHeadStatusSchema)
-    .optional(),
+  head: z.lazy(() => EconomyOperationsEconomyJournalHeadStatusSchema).optional(),
   isAnchorHealthy: z.boolean().optional(),
   isJournalHealthy: z.boolean().optional(),
   isProjectionHealthy: z.boolean().optional(),
   isReserveHealthy: z.boolean().optional(),
-  latestAnchor: z
-    .lazy(() => EconomyOperationsEconomyAnchorOperationalStatusSchema)
+  latestAnchor: z.lazy(() => EconomyOperationsEconomyAnchorOperationalStatusSchema).optional(),
+  latestVerification: z.lazy(() => EconomyOperationsEconomyJournalVerificationStatusSchema).optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatus */
+EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema))
+    .nullable()
     .optional(),
-  latestVerification: z
-    .lazy(() => EconomyOperationsEconomyJournalVerificationStatusSchema)
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatus */
+EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyAdRewardsAdRewardReconciliationOperationalStatusSchema))
+    .nullable()
     .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummary */
+EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummarySchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyAdRewardsAdRewardSessionOperationalSummarySchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatus */
+EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyMarketplaceMarketplaceOutboxOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatus */
+EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyMarketplaceMarketplaceRefundOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummary */
+EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyMarketplaceMarketplaceSettlementOperationalSummarySchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetails */
+EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetailsSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyOperationsEconomyAnchorOperationalDetailsSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatus */
+EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatus */
+EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyOperationsEconomyCustodyObservationOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetails */
+EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetailsSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyOperationsEconomyJournalVerificationRunDetailsSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetails */
+EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatus */
+EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatusSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyOperationsEconomyReserveProposalOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummary */
+EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummarySchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyOperationsLegacyEconomyShadowBatchSummarySchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyPolicyAuditEntry */
+EconomyOperationsEconomyPolicyAuditEntrySchema = z.object({
+  actorId: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  kind: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyPolicyOperationalDetails */
+EconomyOperationsEconomyPolicyOperationalDetailsSchema = z.object({
+  approvedAt: z.string().datetime().nullable().optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  canonicalPayload: z.string().nullable().optional(),
+  proposedAt: z.string().datetime().optional(),
+  proposedBy: z.string().uuid().optional(),
+  summary: z.lazy(() => EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema).optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyProjectionApprovalAuditEntry */
+EconomyOperationsEconomyProjectionApprovalAuditEntrySchema = z.object({
+  id: z.string().uuid().optional(),
+  actorId: z.string().uuid().optional(),
+  approvedAt: z.string().datetime().optional(),
+  evidenceHash: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyProjectionGenerationOperationalDetails */
+EconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema = z.object({
+  completedAt: z.string().datetime().nullable().optional(),
+  fromSequence: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  startedAt: z.string().datetime().optional(),
+  summary: z.lazy(() => EconomyOperationsEconomyProjectionOperationalStatusSchema).optional(),
 });
 
 /** Zod schema for EconomyOperationsEconomyProjectionOperationalStatus */
@@ -18400,6 +19242,14 @@ EconomyOperationsEconomyProjectionOperationalStatusSchema = z.object({
   toSequence: z.number().int().optional(),
 });
 
+/** Zod schema for EconomyOperationsEconomyReserveAssetAllocationOperationalStatus */
+EconomyOperationsEconomyReserveAssetAllocationOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  assetKey: z.string().nullable().optional(),
+  eligibleUsdNanos: z.number().int().optional(),
+  purpose: z.lazy(() => EconomyReservesReserveBackingPurposeSchema).optional(),
+});
+
 /** Zod schema for EconomyOperationsEconomyReserveOperationalStatus */
 EconomyOperationsEconomyReserveOperationalStatusSchema = z.object({
   authorizationEpoch: z.number().int().optional(),
@@ -18414,6 +19264,48 @@ EconomyOperationsEconomyReserveOperationalStatusSchema = z.object({
   version: z.number().int().optional(),
 });
 
+/** Zod schema for EconomyOperationsEconomyReserveProposalOperationalStatus */
+EconomyOperationsEconomyReserveProposalOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  approvedAt: z.string().datetime().nullable().optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  assetAllocations: z.string().nullable().optional(),
+  authorizationEpoch: z.number().int().optional(),
+  coverage: z.lazy(() => EconomyReservesReserveCoverageStateSchema).optional(),
+  eligibleAssetUsdNanos: z.number().int().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expectedActiveVersion: z.number().int().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  liabilityUsdNanos: z.number().int().optional(),
+  observationIds: z.string().nullable().optional(),
+  observedAt: z.string().datetime().optional(),
+  policyVersion: z.number().int().optional(),
+  proposedAt: z.string().datetime().optional(),
+  proposedBy: z.string().uuid().optional(),
+  snapshotHash: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyOperationsLegacyEconomyShadowBatchSummary */
+EconomyOperationsLegacyEconomyShadowBatchSummarySchema = z.object({
+  id: z.string().uuid().optional(),
+  backfilledHardUnits: z.number().int().optional(),
+  capturedAt: z.string().datetime().optional(),
+  expectedHardUnits: z.number().int().optional(),
+  failureCode: z.string().nullable().optional(),
+  financialLedgerEntryCount: z.number().int().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  policyVersion: z.number().int().optional(),
+  reconciledHardUnits: z.number().int().optional(),
+  state: z.lazy(() => EconomyOperationsLegacyEconomyShadowStateSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  transactionCount: z.number().int().optional(),
+  updatedAt: z.string().datetime().optional(),
+  version: z.number().int().optional(),
+  walletCount: z.number().int().optional(),
+});
+
 /** Zod schema for EconomyOperationsLegacyEconomyShadowBatchView */
 EconomyOperationsLegacyEconomyShadowBatchViewSchema = z.object({
   id: z.string().uuid().optional(),
@@ -18424,9 +19316,7 @@ EconomyOperationsLegacyEconomyShadowBatchViewSchema = z.object({
   financialLedgerSnapshotHash: z.string().nullable().optional(),
   policyVersion: z.number().int().optional(),
   reconciledHardUnits: z.number().int().optional(),
-  state: z
-    .lazy(() => EconomyOperationsLegacyEconomyShadowStateSchema)
-    .optional(),
+  state: z.lazy(() => EconomyOperationsLegacyEconomyShadowStateSchema).optional(),
   tenantId: z.string().uuid().optional(),
   transactionCount: z.number().int().optional(),
   transactionSnapshotHash: z.string().nullable().optional(),
@@ -18440,14 +19330,14 @@ EconomyOperationsLegacyEconomyShadowBatchViewSchema = z.object({
 
 /** Zod schema for EconomyOperationsLegacyEconomyShadowState */
 EconomyOperationsLegacyEconomyShadowStateSchema = z.enum([
-  "Captured",
-  "Backfilling",
-  "Backfilled",
-  "Reconciled",
-  "CutoverProposed",
-  "CutoverActive",
-  "RolledBack",
-  "Failed",
+  'Captured',
+  'Backfilling',
+  'Backfilled',
+  'Reconciled',
+  'CutoverProposed',
+  'CutoverActive',
+  'RolledBack',
+  'Failed',
 ]);
 
 /** Zod schema for EconomyOperationsLegacyEconomyShadowWalletView */
@@ -18493,12 +19383,7 @@ EconomyPayoutsConnectAccountSnapshotSchema = z.object({
 });
 
 /** Zod schema for EconomyPayoutsConnectAccountState */
-EconomyPayoutsConnectAccountStateSchema = z.enum([
-  "Pending",
-  "Restricted",
-  "Ready",
-  "Disabled",
-]);
+EconomyPayoutsConnectAccountStateSchema = z.enum(['Pending', 'Restricted', 'Ready', 'Disabled']);
 
 /** Zod schema for EconomyPayoutsConnectOnboardingResult */
 EconomyPayoutsConnectOnboardingResultSchema = z.object({
@@ -18628,7 +19513,7 @@ EconomyReservesExternalReserveAssetSchema = z.object({
 });
 
 /** Zod schema for EconomyReservesReserveBackingPurpose */
-EconomyReservesReserveBackingPurposeSchema = z.enum(["HardCoin", "SoftCoin"]);
+EconomyReservesReserveBackingPurposeSchema = z.enum(['HardCoin', 'SoftCoin']);
 
 /** Zod schema for EconomyReservesReserveBufferPosition */
 EconomyReservesReserveBufferPositionSchema = z.object({
@@ -18642,7 +19527,7 @@ EconomyReservesReserveBufferPositionSchema = z.object({
 });
 
 /** Zod schema for EconomyReservesReserveCoverageState */
-EconomyReservesReserveCoverageStateSchema = z.enum(["Covered", "Shortfall"]);
+EconomyReservesReserveCoverageStateSchema = z.enum(['Covered', 'Shortfall']);
 
 /** Zod schema for EconomyReservesReserveHead */
 EconomyReservesReserveHeadSchema = z.object({
@@ -18657,9 +19542,7 @@ EconomyReservesReserveHeadSchema = z.object({
   hardBackingUsdNanos: z.number().int().optional(),
   observedAt: z.string().datetime().optional(),
   policyVersion: z.lazy(() => EconomyContractsPolicyVersionSchema).optional(),
-  requirements: z
-    .lazy(() => EconomyReservesReserveRequirementSnapshotSchema)
-    .optional(),
+  requirements: z.lazy(() => EconomyReservesReserveRequirementSnapshotSchema).optional(),
   softBackingUsdNanos: z.number().int().optional(),
   version: z.lazy(() => EconomyContractsReserveVersionSchema).optional(),
 });
@@ -18690,9 +19573,7 @@ EconomyReservesReserveServiceObservationSchema = z.object({
 EconomyRiskCapabilityAuthorizationReceiptSchema = z.object({
   id: z.string().uuid().optional(),
   actorId: z.string().uuid().optional(),
-  capability: z
-    .lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema)
-    .optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   destinationHash: z.string().nullable().optional(),
   evidenceHashes: z.array(z.string()).nullable().optional(),
   expiresAt: z.string().datetime().optional(),
@@ -18713,31 +19594,68 @@ EconomyRiskCapabilityAuthorizationReceiptSchema = z.object({
 });
 
 /** Zod schema for EconomyRiskComplianceEvidenceIngestionStatus */
-EconomyRiskComplianceEvidenceIngestionStatusSchema = z.enum([
-  "Published",
-  "Duplicate",
-  "Deferred",
-  "Rejected",
-]);
+EconomyRiskComplianceEvidenceIngestionStatusSchema = z.enum(['Published', 'Duplicate', 'Deferred', 'Rejected']);
 
 /** Zod schema for EconomyRiskComplianceEvidenceResult */
-EconomyRiskComplianceEvidenceResultSchema = z.enum([
-  "Approved",
-  "Rejected",
-  "NeedsReview",
-  "Unavailable",
-]);
+EconomyRiskComplianceEvidenceResultSchema = z.enum(['Approved', 'Rejected', 'NeedsReview', 'Unavailable']);
+
+/** Zod schema for EconomyRiskComplianceHold */
+EconomyRiskComplianceHoldSchema = z.object({
+  id: z.string().uuid().optional(),
+  activatedAt: z.string().datetime().optional(),
+  activatedBy: z.string().uuid().optional(),
+  caseReferenceHash: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  reasonCode: z.string().nullable().optional(),
+  releasedAt: z.string().datetime().nullable().optional(),
+  releasedBy: z.string().uuid().nullable().optional(),
+  scope: z.lazy(() => EconomyRiskComplianceHoldScopeSchema).optional(),
+});
+
+/** Zod schema for EconomyRiskComplianceHoldAdministrationState */
+EconomyRiskComplianceHoldAdministrationStateSchema = z.object({
+  hold: z.lazy(() => EconomyRiskComplianceHoldSchema).optional(),
+  releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
+  releasePolicyEvidenceHash: z.string().nullable().optional(),
+  releaseProposedAt: z.string().datetime().nullable().optional(),
+  releaseProposedBy: z.string().uuid().nullable().optional(),
+  requiredReleaseApprovals: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for EconomyRiskComplianceHoldEvent */
+EconomyRiskComplianceHoldEventSchema = z.object({
+  actorId: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  holdId: z.string().uuid().optional(),
+  kind: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyRiskComplianceHoldPage */
+EconomyRiskComplianceHoldPageSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyRiskComplianceHoldAdministrationStateSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyRiskComplianceHoldScope */
+EconomyRiskComplianceHoldScopeSchema = z.object({
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  key: z.string().nullable().optional(),
+  subjectHash: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+});
 
 /** Zod schema for EconomyRiskEconomyCapabilityEvaluationResult */
 EconomyRiskEconomyCapabilityEvaluationResultSchema = z.object({
   diagnostics: z.array(z.string()).nullable().optional(),
   isReady: z.boolean().optional(),
-  receipt: z
-    .lazy(() => EconomyRiskCapabilityAuthorizationReceiptSchema)
-    .optional(),
-  state: z
-    .lazy(() => EconomyRiskEconomyCapabilityReadinessStatusSchema)
-    .optional(),
+  receipt: z.lazy(() => EconomyRiskCapabilityAuthorizationReceiptSchema).optional(),
+  state: z.lazy(() => EconomyRiskEconomyCapabilityReadinessStatusSchema).optional(),
 });
 
 /** Zod schema for EconomyRiskEconomyCapabilityPolicy */
@@ -18746,9 +19664,7 @@ EconomyRiskEconomyCapabilityPolicySchema = z.object({
   approvedAt: z.string().datetime().nullable().optional(),
   approvedBy: z.string().uuid().nullable().optional(),
   canonicalPayload: z.string().nullable().optional(),
-  capability: z
-    .lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema)
-    .optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   effectiveAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().optional(),
   jurisdictionCode: z.string().nullable().optional(),
@@ -18765,36 +19681,29 @@ EconomyRiskEconomyCapabilityPolicySchema = z.object({
 });
 
 /** Zod schema for EconomyRiskEconomyCapabilityPolicyState */
-EconomyRiskEconomyCapabilityPolicyStateSchema = z.enum([
-  "PendingApproval",
-  "Approved",
-  "Active",
-  "Expired",
-]);
+EconomyRiskEconomyCapabilityPolicyStateSchema = z.enum(['PendingApproval', 'Approved', 'Active', 'Expired']);
 
 /** Zod schema for EconomyRiskEconomyCapabilityReadinessStatus */
 EconomyRiskEconomyCapabilityReadinessStatusSchema = z.enum([
-  "Disabled",
-  "Ready",
-  "InvalidPolicy",
-  "JurisdictionBlocked",
-  "ComplianceUnavailable",
-  "ComplianceStale",
-  "ReviewRequired",
-  "LedgerUnhealthy",
-  "ProjectionMismatch",
-  "ReserveInsufficient",
-  "CustodyUnreconciled",
-  "AnchorInvalid",
-  "ProviderNotReady",
-  "KillSwitchActive",
+  'Disabled',
+  'Ready',
+  'InvalidPolicy',
+  'JurisdictionBlocked',
+  'ComplianceUnavailable',
+  'ComplianceStale',
+  'ReviewRequired',
+  'LedgerUnhealthy',
+  'ProjectionMismatch',
+  'ReserveInsufficient',
+  'CustodyUnreconciled',
+  'AnchorInvalid',
+  'ProviderNotReady',
+  'KillSwitchActive',
 ]);
 
 /** Zod schema for EconomyRiskEconomyKillSwitchScope */
 EconomyRiskEconomyKillSwitchScopeSchema = z.object({
-  capability: z
-    .lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema)
-    .optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   scopeKey: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
 });
@@ -18814,22 +19723,104 @@ EconomyRiskEconomyKillSwitchStateSchema = z.object({
   scope: z.lazy(() => EconomyRiskEconomyKillSwitchScopeSchema).optional(),
 });
 
+/** Zod schema for EconomyRiskEconomyProtectedOperationState */
+EconomyRiskEconomyProtectedOperationStateSchema = z.enum([
+  'Ready',
+  'ReviewRequired',
+  'Hold',
+  'Challenge',
+  'Denied',
+  'ComplianceUnavailable',
+  'ComplianceStale',
+  'InvalidPolicy',
+  'ReserveInsufficient',
+]);
+
 /** Zod schema for EconomyRiskEconomyValueMovementCapability */
 EconomyRiskEconomyValueMovementCapabilitySchema = z.enum([
-  "ConfirmHardCoinFunding",
-  "ConvertHardToSoft",
-  "ReverseProviderFunding",
-  "Transfer",
-  "IssueAdReward",
-  "BountyEscrow",
-  "BountyClaim",
-  "MarketplaceSettlement",
-  "PayoutExecution",
-  "AdminWithdrawalExecution",
-  "MarketplaceRefund",
-  "BountyReclaim",
-  "LegacyBalanceBackfill",
+  'ConfirmHardCoinFunding',
+  'ConvertHardToSoft',
+  'ReverseProviderFunding',
+  'Transfer',
+  'IssueAdReward',
+  'BountyEscrow',
+  'BountyClaim',
+  'MarketplaceSettlement',
+  'PayoutExecution',
+  'AdminWithdrawalExecution',
+  'MarketplaceRefund',
+  'BountyReclaim',
+  'LegacyBalanceBackfill',
 ]);
+
+/** Zod schema for EconomyRiskRiskManualDecisionCode */
+EconomyRiskRiskManualDecisionCodeSchema = z.enum(['EvidenceVerified', 'RiskAccepted', 'PolicyViolation', 'FraudConfirmed']);
+
+/** Zod schema for EconomyRiskRiskReviewCase */
+EconomyRiskRiskReviewCaseSchema = z.object({
+  id: z.string().uuid().optional(),
+  appealOf: z.string().uuid().nullable().optional(),
+  approvers: z.array(z.string().uuid()).nullable().optional(),
+  decisionId: z.string().uuid().optional(),
+  requiredApprovals: z.number().int().optional(),
+  resolution: z.string().nullable().optional(),
+  resolvedAt: z.string().datetime().nullable().optional(),
+  resolvedBy: z.string().uuid().nullable().optional(),
+  status: z.lazy(() => EconomyRiskRiskReviewStatusSchema).optional(),
+  submittedAt: z.string().datetime().optional(),
+  submittedBy: z.string().uuid().optional(),
+});
+
+/** Zod schema for EconomyRiskRiskReviewEvent */
+EconomyRiskRiskReviewEventSchema = z.object({
+  actorId: z.string().uuid().optional(),
+  decisionCode: z.lazy(() => EconomyRiskRiskManualDecisionCodeSchema).optional(),
+  evidenceHashes: z.array(z.string()).nullable().optional(),
+  kind: z.lazy(() => EconomyRiskRiskReviewEventKindSchema).optional(),
+  occurredAt: z.string().datetime().optional(),
+  resolution: z.string().nullable().optional(),
+  reviewId: z.string().uuid().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyRiskRiskReviewEventKind */
+EconomyRiskRiskReviewEventKindSchema = z.enum(['Submitted', 'ApprovalRecorded', 'Approved', 'Rejected', 'AppealSubmitted']);
+
+/** Zod schema for EconomyRiskRiskReviewPage */
+EconomyRiskRiskReviewPageSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyRiskRiskReviewCaseSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyRiskRiskReviewStatus */
+EconomyRiskRiskReviewStatusSchema = z.enum(['Pending', 'Approved', 'Rejected']);
+
+/** Zod schema for EconomyTransfersSelfServiceEconomyTransferInput */
+EconomyTransfersSelfServiceEconomyTransferInputSchema = z.object({
+  amountUnits: z.number().int().optional(),
+  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  recipientUserId: z.string().uuid().optional(),
+  transferType: z.lazy(() => EconomyTransfersSelfServiceEconomyTransferTypeSchema).optional(),
+});
+
+/** Zod schema for EconomyTransfersSelfServiceEconomyTransferReceipt */
+EconomyTransfersSelfServiceEconomyTransferReceiptSchema = z.object({
+  amountUnits: z.number().int().optional(),
+  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  isDuplicate: z.boolean().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  postingId: z.string().uuid().optional(),
+  recipientUserId: z.string().uuid().optional(),
+  transferType: z.lazy(() => EconomyTransfersSelfServiceEconomyTransferTypeSchema).optional(),
+});
+
+/** Zod schema for EconomyTransfersSelfServiceEconomyTransferType */
+EconomyTransfersSelfServiceEconomyTransferTypeSchema = z.enum(['Tip', 'Gift', 'CreatorSupport']);
 
 /** Zod schema for EconomyTreasuryAdminWithdrawalAuditEvent */
 EconomyTreasuryAdminWithdrawalAuditEventSchema = z.object({
@@ -18880,15 +19871,7 @@ EconomyTreasuryAdminWithdrawalRunSchema = z.object({
 });
 
 /** Zod schema for EconomyTreasuryAdminWithdrawalRunState */
-EconomyTreasuryAdminWithdrawalRunStateSchema = z.enum([
-  "PendingApproval",
-  "Approved",
-  "Dispatching",
-  "Ambiguous",
-  "Succeeded",
-  "Failed",
-  "Cancelled",
-]);
+EconomyTreasuryAdminWithdrawalRunStateSchema = z.enum(['PendingApproval', 'Approved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
 
 /** Zod schema for Error */
 ErrorSchema = z.object({
@@ -19365,6 +20348,13 @@ IdentityAuthenticationCreateServiceAccountInputSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationCreateStepUpChallengeInput */
+IdentityAuthenticationCreateStepUpChallengeInputSchema = z.object({
+  operationType: z.string().nullable().optional(),
+  payloadHash: z.string().nullable().optional(),
+  targetReference: z.string().nullable().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationDeviceInfo */
 IdentityAuthenticationDeviceInfoSchema = z.object({
   browser: z.string().nullable().optional(),
@@ -19810,6 +20800,18 @@ IdentityAuthenticationSmsMfaSetupOutputSchema = z.object({
   phoneNumberMasked: z.string().nullable(),
 });
 
+/** Zod schema for IdentityAuthenticationStepUpChallengeOutput */
+IdentityAuthenticationStepUpChallengeOutputSchema = z.object({
+  challengeId: z.string().uuid().optional(),
+  expiresAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationStepUpReceiptOutput */
+IdentityAuthenticationStepUpReceiptOutputSchema = z.object({
+  expiresAt: z.string().datetime().optional(),
+  receipt: z.string().nullable().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationTrustDeviceInput */
 IdentityAuthenticationTrustDeviceInputSchema = z.object({
   deviceName: z.string().nullable().optional(),
@@ -19868,6 +20870,12 @@ IdentityAuthenticationVerifyMfaInputSchema = z.object({
   code: z.string().min(1),
   method: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
   userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationVerifyStepUpChallengeInput */
+IdentityAuthenticationVerifyStepUpChallengeInputSchema = z.object({
+  evidence: z.string().nullable().optional(),
+  method: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
 });
 
 /** Zod schema for IdentityAuthenticationWeb3ChallengeInput */
@@ -23453,9 +24461,7 @@ LearningCoursesCreateProgramContentSchema = z.object({
   body: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
-  estimatedMinutesSource: z
-    .lazy(() => LearningCoursesEstimatedMinutesSourceSchema)
-    .optional(),
+  estimatedMinutesSource: z.lazy(() => LearningCoursesEstimatedMinutesSourceSchema).optional(),
   isRequired: z.boolean().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
@@ -23484,7 +24490,7 @@ LearningCoursesEngagementMetricsSchema = z.object({
 LearningCoursesEnrollmentStatusSchema = z.enum(['Open', 'Active', 'Paused', 'Cancelled', 'Expired', 'Completed', 'Closed', 'InviteOnly', 'Waitlist']);
 
 /** Zod schema for LearningCoursesEstimatedMinutesSource */
-LearningCoursesEstimatedMinutesSourceSchema = z.enum(["Auto", "Manual"]);
+LearningCoursesEstimatedMinutesSourceSchema = z.enum(['Auto', 'Manual']);
 
 /** Zod schema for LearningCoursesGraderSummary */
 LearningCoursesGraderSummarySchema = z.object({
@@ -23633,9 +24639,7 @@ LearningCoursesProgramContentSchema = z.object({
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
-  estimatedMinutesSource: z
-    .lazy(() => LearningCoursesEstimatedMinutesSourceSchema)
-    .optional(),
+  estimatedMinutesSource: z.lazy(() => LearningCoursesEstimatedMinutesSourceSchema).optional(),
   isRequired: z.boolean().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
@@ -23860,9 +24864,7 @@ LearningCoursesUpdateProgramContentSchema = z.object({
   body: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
-  estimatedMinutesSource: z
-    .lazy(() => LearningCoursesEstimatedMinutesSourceSchema)
-    .optional(),
+  estimatedMinutesSource: z.lazy(() => LearningCoursesEstimatedMinutesSourceSchema).optional(),
   isRequired: z.boolean().nullable().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
   lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
@@ -28722,9 +29724,4 @@ TrustSafetyTrustSafetyAppealSchema = z.object({
 });
 
 /** Zod schema for TrustSafetyTrustSafetyAppealState */
-TrustSafetyTrustSafetyAppealStateSchema = z.enum([
-  "Submitted",
-  "Assigned",
-  "Upheld",
-  "Overturned",
-]);
+TrustSafetyTrustSafetyAppealStateSchema = z.enum(['Submitted', 'Assigned', 'Upheld', 'Overturned']);

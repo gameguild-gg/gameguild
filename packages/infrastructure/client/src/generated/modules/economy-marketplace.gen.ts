@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,20 +20,14 @@ export class EconomyMarketplaceModule {
   async postEconomyMarketplaceOrdersSettle(
     orderId: string,
     body: Types.APIControllersSettleMyMarketplaceOrderInput,
-  ): Promise<
-    Result<Types.EconomyMarketplaceDurableMarketplaceSettlementResult, ApiError>
-  > {
+  ): Promise<Result<Types.EconomyMarketplaceDurableMarketplaceSettlementResult, ApiError>> {
     const url = `/api/v1/economy/marketplace/orders/${orderId}:settle`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersSettleMyMarketplaceOrderInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersSettleMyMarketplaceOrderInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -41,11 +35,7 @@ export class EconomyMarketplaceModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyMarketplaceDurableMarketplaceSettlementResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyMarketplaceDurableMarketplaceSettlementResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -57,20 +47,14 @@ export class EconomyMarketplaceModule {
   async postEconomyMarketplaceSettlementsRefund(
     settlementId: string,
     body: Types.APIControllersRefundMarketplaceSettlementInput,
-  ): Promise<
-    Result<Types.EconomyMarketplaceDurableMarketplaceRefundResult, ApiError>
-  > {
+  ): Promise<Result<Types.EconomyMarketplaceDurableMarketplaceRefundResult, ApiError>> {
     const url = `/api/v1/economy/marketplace/settlements/${settlementId}:refund`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersRefundMarketplaceSettlementInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersRefundMarketplaceSettlementInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -78,11 +62,7 @@ export class EconomyMarketplaceModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyMarketplaceDurableMarketplaceRefundResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyMarketplaceDurableMarketplaceRefundResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -90,8 +70,6 @@ export class EconomyMarketplaceModule {
   }
 }
 
-export function createEconomyMarketplaceModule(
-  client: ApiClient,
-): EconomyMarketplaceModule {
+export function createEconomyMarketplaceModule(client: ApiClient): EconomyMarketplaceModule {
   return new EconomyMarketplaceModule(client);
 }
