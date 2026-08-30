@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,46 +20,35 @@ export class EconomyComplianceAdministrationModule {
   async getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCases(query?: {
     state?: Types.ComplianceFinancialCrimeFinancialCrimeCaseState;
     take?: number;
-  }): Promise<
-    Result<Array<Types.ComplianceFinancialCrimeFinancialCrimeCase>, ApiError>
-  > {
-    const url = "/api/v1/admin/economy/compliance/financial-crime/cases";
+  }): Promise<Result<Array<Types.ComplianceFinancialCrimeFinancialCrimeCase>, ApiError>> {
+    const url = '/api/v1/admin/economy/compliance/financial-crime/cases';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.ComplianceFinancialCrimeFinancialCrimeCase>,
-      ApiError
-    >;
+    return result as Result<Array<Types.ComplianceFinancialCrimeFinancialCrimeCase>, ApiError>;
   }
 
   /**
    */
   async getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesByCaseId(
     caseId: string,
-  ): Promise<
-    Result<Types.ComplianceFinancialCrimeFinancialCrimeCaseDetails, ApiError>
-  > {
+  ): Promise<Result<Types.ComplianceFinancialCrimeFinancialCrimeCaseDetails, ApiError>> {
     const url = `/api/v1/admin/economy/compliance/financial-crime/cases/${caseId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceFinancialCrimeFinancialCrimeCaseDetailsSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ComplianceFinancialCrimeFinancialCrimeCaseDetailsSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -71,20 +60,14 @@ export class EconomyComplianceAdministrationModule {
   async postAdminEconomyComplianceFinancialCrimeCasesAssignment(
     caseId: string,
     body: Types.APIControllersAssignFinancialCrimeCaseInput,
-  ): Promise<
-    Result<Types.ComplianceFinancialCrimeFinancialCrimeCase, ApiError>
-  > {
+  ): Promise<Result<Types.ComplianceFinancialCrimeFinancialCrimeCase, ApiError>> {
     const url = `/api/v1/admin/economy/compliance/financial-crime/cases/${caseId}/assignment`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersAssignFinancialCrimeCaseInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersAssignFinancialCrimeCaseInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -92,11 +75,7 @@ export class EconomyComplianceAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceFinancialCrimeFinancialCrimeCaseSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ComplianceFinancialCrimeFinancialCrimeCaseSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -108,20 +87,14 @@ export class EconomyComplianceAdministrationModule {
   async postAdminEconomyComplianceFinancialCrimeCasesDecisions(
     caseId: string,
     body: Types.APIControllersDecideFinancialCrimeCaseInput,
-  ): Promise<
-    Result<Types.ComplianceFinancialCrimeFinancialCrimeCaseDecision, ApiError>
-  > {
+  ): Promise<Result<Types.ComplianceFinancialCrimeFinancialCrimeCaseDecision, ApiError>> {
     const url = `/api/v1/admin/economy/compliance/financial-crime/cases/${caseId}/decisions`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersDecideFinancialCrimeCaseInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersDecideFinancialCrimeCaseInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -129,11 +102,7 @@ export class EconomyComplianceAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -149,14 +118,10 @@ export class EconomyComplianceAdministrationModule {
     const url = `/api/v1/admin/economy/compliance/financial-crime/cases/${caseId}/regulatory-references`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersRecordRegulatoryReferenceInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersRecordRegulatoryReferenceInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -171,19 +136,16 @@ export class EconomyComplianceAdministrationModule {
     state?: Types.TrustSafetyTrustSafetyAppealState;
     take?: number;
   }): Promise<Result<Array<Types.TrustSafetyTrustSafetyAppeal>, ApiError>> {
-    const url = "/api/v1/admin/economy/compliance/trust-safety/appeals";
+    const url = '/api/v1/admin/economy/compliance/trust-safety/appeals';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.TrustSafetyTrustSafetyAppeal>,
-      ApiError
-    >;
+    return result as Result<Array<Types.TrustSafetyTrustSafetyAppeal>, ApiError>;
   }
 
   /**
@@ -195,14 +157,10 @@ export class EconomyComplianceAdministrationModule {
     const url = `/api/v1/admin/economy/compliance/trust-safety/appeals/${appealId}/assignment`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersAssignTrustSafetyAppealInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersAssignTrustSafetyAppealInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -210,11 +168,7 @@ export class EconomyComplianceAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TrustSafetyTrustSafetyAppealSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TrustSafetyTrustSafetyAppealSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -230,14 +184,10 @@ export class EconomyComplianceAdministrationModule {
     const url = `/api/v1/admin/economy/compliance/trust-safety/appeals/${appealId}/decisions`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersDecideTrustSafetyAppealInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersDecideTrustSafetyAppealInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -245,11 +195,7 @@ export class EconomyComplianceAdministrationModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TrustSafetyTrustSafetyAppealSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TrustSafetyTrustSafetyAppealSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -257,8 +203,6 @@ export class EconomyComplianceAdministrationModule {
   }
 }
 
-export function createEconomyComplianceAdministrationModule(
-  client: ApiClient,
-): EconomyComplianceAdministrationModule {
+export function createEconomyComplianceAdministrationModule(client: ApiClient): EconomyComplianceAdministrationModule {
   return new EconomyComplianceAdministrationModule(client);
 }
