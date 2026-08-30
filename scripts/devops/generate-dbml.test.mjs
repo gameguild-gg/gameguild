@@ -17,12 +17,38 @@ import {
   parseDbmlFile,
   prepareDbmlForCore,
   redactSecrets,
+  resolveCorepackProcess,
   stripByteOrderMark,
   stripNonDdlStatements,
   usageText,
   validateDbmlOutput,
   verifyDbVerdict,
 } from './generate-dbml.mjs';
+
+test('resolveCorepackProcess uses the shell-free Corepack entry point on Windows', () => {
+  const invocation = resolveCorepackProcess(['pnpm', 'exec', 'db2dbml'], {
+    platform: 'win32',
+    nodePath: 'C:\\Program Files\\nodejs\\node.exe',
+    fileExists: () => true,
+  });
+
+  assert.deepEqual(invocation, {
+    command: 'C:\\Program Files\\nodejs\\node.exe',
+    args: [
+      'C:\\Program Files\\nodejs\\node_modules\\corepack\\dist\\corepack.js',
+      'pnpm',
+      'exec',
+      'db2dbml',
+    ],
+  });
+});
+
+test('resolveCorepackProcess keeps the native Corepack executable on Unix', () => {
+  assert.deepEqual(resolveCorepackProcess(['pnpm', '--version'], { platform: 'linux' }), {
+    command: 'corepack',
+    args: ['pnpm', '--version'],
+  });
+});
 
 test('parseArgs defaults to generate mode when no flags are given', () => {
   assert.deepEqual(parseArgs([]), { mode: 'generate' });
@@ -378,6 +404,23 @@ test('computeDrift ignores the allowlisted __efmigrationshistory table', () => {
   const live = [
     { name: 'users', columns: ['id'] },
     { name: '__efmigrationshistory', columns: ['migration_id', 'product_version'] },
+  ];
+
+  assert.deepEqual(computeDrift(model, live), {
+    danglingTables: [],
+    danglingColumns: [],
+    unmigratedTables: [],
+  });
+});
+
+test('computeDrift ignores the allowlisted project version migration review table', () => {
+  const model = [{ name: 'project_versions', columns: ['id', 'status'] }];
+  const live = [
+    { name: 'project_versions', columns: ['id', 'status'] },
+    {
+      name: 'project_version_status_migration_review',
+      columns: ['projectversionid', 'originalstatus', 'recordedat'],
+    },
   ];
 
   assert.deepEqual(computeDrift(model, live), {
