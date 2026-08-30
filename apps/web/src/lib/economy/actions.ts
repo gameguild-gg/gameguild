@@ -83,7 +83,6 @@ export async function convertHardToSoftAction(
 
   const result = await economy.postEconomyConversionsHardToSoft({
     principalHardCoinUnits,
-    feeHardCoinUnits: 0,
     idempotencyKey: idempotencyKey.trim(),
   });
   if (!result.ok) return failure(result.error.message || 'The conversion is currently unavailable.');
