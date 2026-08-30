@@ -13,10 +13,7 @@ COPY tools/emception/scripts ./tools/emception/scripts
 COPY tools/emception/packages ./tools/emception/packages
 COPY tools/emception/public/coi-serviceworker.js ./tools/emception/public/coi-serviceworker.js
 
-RUN pnpm install --frozen-lockfile --prefer-offline
-
-# Build emception workspace packages (ship TS source; dist/ required by apps/web build)
-RUN pnpm --dir tools/emception run build:packages
+RUN pnpm --filter @game-guild/web... install --frozen-lockfile --prefer-offline
 
 RUN TOOLCHAIN_VERSION="$(node -p 'require("./tools/emception/packages/toolchain/package.json").version')" && \
     mkdir -p /repo/tools/emception/artifacts/toolchain/release/cdn /tmp/emception-extract && \
