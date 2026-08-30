@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import Link from 'next/link';
 import { describe, expect, it } from 'vitest';
 
 import { Button } from '@game-guild/ui/components/button';
@@ -40,7 +41,7 @@ describe('Base UI compatibility wrappers', () => {
     render(
       <HoverCard openDelay={0}>
         <HoverCardTrigger asChild>
-          <a href="/events/one">Campus playtest</a>
+          <Link href="/events/one">Campus playtest</Link>
         </HoverCardTrigger>
         <HoverCardContent>Operational details</HoverCardContent>
       </HoverCard>,

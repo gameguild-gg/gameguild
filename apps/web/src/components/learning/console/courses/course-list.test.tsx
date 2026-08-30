@@ -21,11 +21,12 @@ beforeAll(() => {
 });
 
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ href, children, locale: _locale, prefetch: _prefetch, ...props }: { href: string; children: React.ReactNode; locale?: string; prefetch?: boolean }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
+  Link: (props: { href: string; children: React.ReactNode; locale?: string; prefetch?: boolean }) => {
+    const { href, children, ...anchorProps } = props;
+    delete anchorProps.locale;
+    delete anchorProps.prefetch;
+    return <a href={href} {...anchorProps}>{children}</a>;
+  },
 }));
 
 vi.mock('@/lib/learning/course-route', () => ({

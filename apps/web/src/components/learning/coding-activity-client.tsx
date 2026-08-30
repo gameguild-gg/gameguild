@@ -165,7 +165,7 @@ export function CodingActivityClient({
 
   return (
     <>
-      <Script src="/coi-serviceworker.js" strategy="beforeInteractive" />
+      <Script src="/coi-serviceworker.js" strategy="afterInteractive" />
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="h-[70vh] min-h-[500px]">
           {Editor ? (

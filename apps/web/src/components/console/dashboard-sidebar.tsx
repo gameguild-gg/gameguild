@@ -47,6 +47,7 @@ import {
 import * as React from 'react';
 import type { DashboardContextSummary } from '@/lib/dashboard-contexts';
 import { GraduationCap } from 'lucide-react';
+import { ContextSwitcher } from './team-switcher';
 import { TenantSwitcher, type Tenant } from './tenant-switcher';
 
 // Types for navigation structure
@@ -614,6 +615,7 @@ export function DashboardSidebar({
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TenantSwitcher tenants={consoleTenants} />
+        <ContextSwitcher contexts={contexts} />
       </SidebarHeader>
       <SidebarContent className="gap-0">
         <NavGroups groups={navigation} />
