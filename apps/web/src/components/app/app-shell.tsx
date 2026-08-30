@@ -1,4 +1,4 @@
-import { auth, getToken } from '@/auth';
+import { getSession, getToken } from '@/auth';
 import { createServerClient } from '@game-guild/client';
 import { Link } from '@/i18n/navigation';
 import { FlaskConical, Gamepad2, GraduationCap, Heart, MessageCircle, Rocket, Users } from 'lucide-react';
@@ -98,7 +98,7 @@ function getInitials(value: string) {
 
 async function getHeaderUser(): Promise<PublicWebsiteUser | null> {
   try {
-    const session = await auth();
+    const session = await getSession();
     const user = session?.user;
     if (!user?.email && !user?.name) return null;
 

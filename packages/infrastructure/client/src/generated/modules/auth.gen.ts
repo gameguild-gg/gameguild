@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -22,20 +22,14 @@ export class AuthModule {
    */
   async postAuthDiscordSignInAuthorize(
     body: Types.IdentityAuthenticationDiscordAuthorizeInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationDiscordSignInOutput, ApiError>
-  > {
-    const url = "/v1/auth/discord:sign-in-authorize";
+  ): Promise<Result<Types.IdentityAuthenticationDiscordSignInOutput, ApiError>> {
+    const url = '/v1/auth/discord:sign-in-authorize';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationDiscordAuthorizeInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordAuthorizeInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -43,11 +37,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationDiscordSignInOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationDiscordSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -62,17 +52,13 @@ export class AuthModule {
   async postAuthDiscordSignInCallback(
     body: Types.IdentityAuthenticationDiscordCallbackInput,
   ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = "/v1/auth/discord:sign-in-callback";
+    const url = '/v1/auth/discord:sign-in-callback';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationDiscordCallbackInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordCallbackInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -80,11 +66,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSignInOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -98,20 +80,14 @@ export class AuthModule {
    */
   async postAuthEmailSendVerification(
     body: Types.IdentityAuthenticationSendEmailVerificationInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationEmailVerificationOutput, ApiError>
-  > {
-    const url = "/v1/auth/email:send-verification";
+  ): Promise<Result<Types.IdentityAuthenticationEmailVerificationOutput, ApiError>> {
+    const url = '/v1/auth/email:send-verification';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationSendEmailVerificationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationSendEmailVerificationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -119,11 +95,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationEmailVerificationOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationEmailVerificationOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -137,20 +109,14 @@ export class AuthModule {
    */
   async postAuthEmailVerify(
     body: Types.IdentityAuthenticationVerifyEmailInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationEmailVerificationResult, ApiError>
-  > {
-    const url = "/v1/auth/email:verify";
+  ): Promise<Result<Types.IdentityAuthenticationEmailVerificationResult, ApiError>> {
+    const url = '/v1/auth/email:verify';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationVerifyEmailInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationVerifyEmailInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -158,11 +124,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationEmailVerificationResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationEmailVerificationResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -175,10 +137,10 @@ export class AuthModule {
    * HEAD request per Google REST guidance: safe, metadata-only response with no body. Linked providers and their linked-at timestamps are conveyed in the X-Linked-Providers response header as comma-separated 'provider=iso8601-timestamp' pairs, newest first. The header is omitted when no providers are linked.
    */
   async headAuthExternalLogins(): Promise<Result<void, ApiError>> {
-    const url = "/v1/auth/external-logins";
+    const url = '/v1/auth/external-logins';
 
     const result = await this.client.request({
-      method: "HEAD",
+      method: 'HEAD',
       path: url,
       requiresAuth: true,
     });
@@ -191,13 +153,11 @@ export class AuthModule {
    *
    * Removes the external login link for the given provider. Refused with 400 when it is the user's last sign-in method and no password is set.
    */
-  async deleteAuthExternalLogins(
-    provider: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteAuthExternalLogins(provider: string): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/external-logins/${provider}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -212,20 +172,14 @@ export class AuthModule {
    */
   async postAuthExternalLoginsDiscordLinkAuthorize(
     body: Types.IdentityAuthenticationDiscordLinkAuthorizeInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationDiscordLinkAuthorizeOutput, ApiError>
-  > {
-    const url = "/v1/auth/external-logins/discord:link-authorize";
+  ): Promise<Result<Types.IdentityAuthenticationDiscordLinkAuthorizeOutput, ApiError>> {
+    const url = '/v1/auth/external-logins/discord:link-authorize';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationDiscordLinkAuthorizeInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordLinkAuthorizeInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -233,11 +187,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationDiscordLinkAuthorizeOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationDiscordLinkAuthorizeOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -249,20 +199,14 @@ export class AuthModule {
    *
    * Exchanges the Discord authorization code for the user profile and links the Discord identity to the authenticated user. Idempotent when already linked to the same user.
    */
-  async postAuthExternalLoginsDiscordLinkCallback(
-    body: Types.IdentityAuthenticationDiscordLinkCallbackInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/auth/external-logins/discord:link-callback";
+  async postAuthExternalLoginsDiscordLinkCallback(body: Types.IdentityAuthenticationDiscordLinkCallbackInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/auth/external-logins/discord:link-callback';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationDiscordLinkCallbackInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordLinkCallbackInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -276,20 +220,14 @@ export class AuthModule {
    *
    * Verifies a Google ID token and links the Google identity to the authenticated user. Idempotent when already linked to the same user.
    */
-  async postAuthExternalLoginsGoogle(
-    body: Types.IdentityAuthenticationLinkGoogleAccountInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/auth/external-logins/google";
+  async postAuthExternalLoginsGoogle(body: Types.IdentityAuthenticationLinkGoogleAccountInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/auth/external-logins/google';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationLinkGoogleAccountInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationLinkGoogleAccountInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -303,15 +241,11 @@ export class AuthModule {
    *
    * Initiates GitHub OAuth authentication flow and returns the authorization URL.
    */
-  async getAuthGithubAuthorize(query?: {
-    redirectUri?: string;
-  }): Promise<
-    Result<Types.IdentityAuthenticationGitHubSignInOutput, ApiError>
-  > {
-    const url = "/v1/auth/github:authorize";
+  async getAuthGithubAuthorize(query?: { redirectUri?: string }): Promise<Result<Types.IdentityAuthenticationGitHubSignInOutput, ApiError>> {
+    const url = '/v1/auth/github:authorize';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -319,11 +253,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationGitHubSignInOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationGitHubSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -335,14 +265,11 @@ export class AuthModule {
    *
    * Handles the GitHub OAuth callback, exchanging the authorization code for tokens.
    */
-  async getAuthGithubCallback(query?: {
-    code?: string;
-    state?: string;
-  }): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = "/v1/auth/github:callback";
+  async getAuthGithubCallback(query?: { code?: string; state?: string }): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/github:callback';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -350,11 +277,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSignInOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -366,20 +289,14 @@ export class AuthModule {
    *
    * Authenticates a user using a Google ID Token (for NextAuth.js integration), returning access and refresh tokens. Account-linking counterpart: POST /v1/auth/external-logins/google.
    */
-  async postAuthGoogleSignIn(
-    body: Types.IdentityAuthenticationGoogleIdTokenInput,
-  ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = "/v1/auth/google:sign-in";
+  async postAuthGoogleSignIn(body: Types.IdentityAuthenticationGoogleIdTokenInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/google:sign-in';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationGoogleIdTokenInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationGoogleIdTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -387,11 +304,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSignInOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -403,20 +316,14 @@ export class AuthModule {
    *
    * Consumes a short-lived one-time magic-link token and returns access and refresh tokens.
    */
-  async postAuthMagicLinkConsume(
-    body: Types.IdentityAuthenticationConsumeMagicLinkInput,
-  ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = "/v1/auth/magic-link:consume";
+  async postAuthMagicLinkConsume(body: Types.IdentityAuthenticationConsumeMagicLinkInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/magic-link:consume';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationConsumeMagicLinkInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationConsumeMagicLinkInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -424,11 +331,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSignInOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -442,20 +345,14 @@ export class AuthModule {
    */
   async postAuthMagicLinkRequest(
     body: Types.IdentityAuthenticationRequestMagicLinkInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationMagicLinkRequestResult, ApiError>
-  > {
-    const url = "/v1/auth/magic-link:request";
+  ): Promise<Result<Types.IdentityAuthenticationMagicLinkRequestResult, ApiError>> {
+    const url = '/v1/auth/magic-link:request';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationRequestMagicLinkInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationRequestMagicLinkInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -463,11 +360,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationMagicLinkRequestResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationMagicLinkRequestResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -481,20 +374,14 @@ export class AuthModule {
    */
   async postAuthPasswordChange(
     body: Types.IdentityAuthenticationPasswordChangeInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationPasswordChangeResult, ApiError>
-  > {
-    const url = "/v1/auth/password:change";
+  ): Promise<Result<Types.IdentityAuthenticationPasswordChangeResult, ApiError>> {
+    const url = '/v1/auth/password:change';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationPasswordChangeInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationPasswordChangeInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -502,11 +389,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationPasswordChangeResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationPasswordChangeResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -520,20 +403,14 @@ export class AuthModule {
    */
   async postAuthPasswordReset(
     body: Types.IdentityAuthenticationCompletePasswordResetInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationPasswordResetResult, ApiError>
-  > {
-    const url = "/v1/auth/password:reset";
+  ): Promise<Result<Types.IdentityAuthenticationPasswordResetResult, ApiError>> {
+    const url = '/v1/auth/password:reset';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationCompletePasswordResetInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationCompletePasswordResetInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -541,11 +418,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationPasswordResetResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationPasswordResetResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -559,20 +432,14 @@ export class AuthModule {
    */
   async postAuthPasswordResetRequest(
     body: Types.IdentityAuthenticationRequestPasswordResetInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationPasswordResetRequestResult, ApiError>
-  > {
-    const url = "/v1/auth/password:reset-request";
+  ): Promise<Result<Types.IdentityAuthenticationPasswordResetRequestResult, ApiError>> {
+    const url = '/v1/auth/password:reset-request';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationRequestPasswordResetInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationRequestPasswordResetInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -580,11 +447,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationPasswordResetRequestResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationPasswordResetRequestResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -596,20 +459,14 @@ export class AuthModule {
    *
    * Authenticates a user with email and password credentials, returning access and refresh tokens.
    */
-  async postAuthSignIn(
-    body: Types.IdentityAuthenticationLocalSignInInput,
-  ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = "/v1/auth/sign-in";
+  async postAuthSignIn(body: Types.IdentityAuthenticationLocalSignInInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/sign-in';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationLocalSignInInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationLocalSignInInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -617,11 +474,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSignInOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -633,20 +486,14 @@ export class AuthModule {
    *
    * Creates a new user account with email and password credentials, returning authentication tokens on success.
    */
-  async postAuthSignUp(
-    body: Types.IdentityAuthenticationLocalSignUpInput,
-  ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = "/v1/auth/sign-up";
+  async postAuthSignUp(body: Types.IdentityAuthenticationLocalSignUpInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/sign-up';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationLocalSignUpInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationLocalSignUpInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -654,11 +501,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSignInOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -670,20 +513,14 @@ export class AuthModule {
    *
    * Exchanges a valid refresh token for a new access token and refresh token pair.
    */
-  async postAuthTokensRefresh(
-    body: Types.IdentityAuthenticationRefreshTokenInput,
-  ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = "/v1/auth/tokens:refresh";
+  async postAuthTokensRefresh(body: Types.IdentityAuthenticationRefreshTokenInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/tokens:refresh';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationRefreshTokenInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationRefreshTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -691,11 +528,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSignInOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -707,20 +540,14 @@ export class AuthModule {
    *
    * Invalidates a refresh token, preventing it from being used to obtain new access tokens.
    */
-  async postAuthTokensRevoke(
-    body: Types.IdentityAuthenticationRevokeRefreshTokenInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/auth/tokens:revoke";
+  async postAuthTokensRevoke(body: Types.IdentityAuthenticationRevokeRefreshTokenInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/auth/tokens:revoke';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationRevokeRefreshTokenInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationRevokeRefreshTokenInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -734,20 +561,14 @@ export class AuthModule {
    *
    * Verifies a Web3 wallet signature against a previously issued challenge and returns authentication tokens.
    */
-  async postAuthWeb3Verify(
-    body: Types.IdentityAuthenticationWeb3VerifyInput,
-  ): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
-    const url = "/v1/auth/web3:verify";
+  async postAuthWeb3Verify(body: Types.IdentityAuthenticationWeb3VerifyInput): Promise<Result<Types.IdentityAuthenticationSignInOutput, ApiError>> {
+    const url = '/v1/auth/web3:verify';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationWeb3VerifyInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationWeb3VerifyInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -755,11 +576,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSignInOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationSignInOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -773,20 +590,14 @@ export class AuthModule {
    */
   async postAuthWeb3Challenge(
     body: Types.IdentityAuthenticationWeb3ChallengeInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationWeb3ChallengeOutput, ApiError>
-  > {
-    const url = "/v1/auth/web3/challenge";
+  ): Promise<Result<Types.IdentityAuthenticationWeb3ChallengeOutput, ApiError>> {
+    const url = '/v1/auth/web3/challenge';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationWeb3ChallengeInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationWeb3ChallengeInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -794,11 +605,7 @@ export class AuthModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationWeb3ChallengeOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationWeb3ChallengeOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

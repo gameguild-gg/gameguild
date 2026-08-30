@@ -27,7 +27,7 @@
  */
 
 import { useContext, useEffect } from 'react';
-import { SessionContext, type SessionContextValue } from './session-provider.js';
+import { SessionContext } from './session-provider.js';
 import type { UseSessionReturn } from '../../runtime/auth/types.js';
 
 /**
@@ -54,16 +54,11 @@ export interface UseSessionOptions {
  * @returns Session data, status, and update function
  * @throws Error if used outside of <SessionProvider>
  */
-export function useSession(
-  options?: UseSessionOptions
-): UseSessionReturn {
+export function useSession(options?: UseSessionOptions): UseSessionReturn {
   const context = useContext(SessionContext);
 
   if (context === undefined) {
-    throw new Error(
-      'useSession must be used within a <SessionProvider>. ' +
-        'Wrap your app with <SessionProvider> in your root layout.'
-    );
+    throw new Error('useSession must be used within a <SessionProvider>. ' + 'Wrap your app with <SessionProvider> in your root layout.');
   }
 
   const { required = false, onUnauthenticated } = options ?? {};
@@ -74,7 +69,7 @@ export function useSession(
     if (context.status === 'loading') return;
     /* v8 ignore start */
     if (context.status === 'unauthenticated') {
-    /* v8 ignore stop */
+      /* v8 ignore stop */
       if (onUnauthenticated) {
         onUnauthenticated();
       } else {

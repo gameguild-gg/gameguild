@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,21 +20,16 @@ export class AuthTrustedDevicesModule {
    *
    * Retrieves a list of devices that have been marked as trusted for the current user.
    */
-  async getAuthTrustedDevices(): Promise<
-    Result<Array<Types.IdentityAuthenticationTrustedDeviceOutput>, ApiError>
-  > {
-    const url = "/v1/auth/trusted-devices";
+  async getAuthTrustedDevices(): Promise<Result<Array<Types.IdentityAuthenticationTrustedDeviceOutput>, ApiError>> {
+    const url = '/v1/auth/trusted-devices';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.IdentityAuthenticationTrustedDeviceOutput>,
-      ApiError
-    >;
+    return result as Result<Array<Types.IdentityAuthenticationTrustedDeviceOutput>, ApiError>;
   }
 
   /**
@@ -44,20 +39,14 @@ export class AuthTrustedDevicesModule {
    */
   async postAuthTrustedDevices(
     body: Types.IdentityAuthenticationTrustDeviceInput,
-  ): Promise<
-    Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>
-  > {
-    const url = "/v1/auth/trusted-devices";
+  ): Promise<Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>> {
+    const url = '/v1/auth/trusted-devices';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthenticationTrustDeviceInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthenticationTrustDeviceInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -65,11 +54,7 @@ export class AuthTrustedDevicesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSessionSuccessOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationSessionSuccessOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -81,26 +66,18 @@ export class AuthTrustedDevicesModule {
    *
    * Removes a device from the trusted devices list.
    */
-  async deleteAuthTrustedDevices(
-    deviceId: string,
-  ): Promise<
-    Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>
-  > {
+  async deleteAuthTrustedDevices(deviceId: string): Promise<Result<Types.IdentityAuthenticationSessionSuccessOutput, ApiError>> {
     const url = `/v1/auth/trusted-devices/${deviceId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthenticationSessionSuccessOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthenticationSessionSuccessOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -108,8 +85,6 @@ export class AuthTrustedDevicesModule {
   }
 }
 
-export function createAuthTrustedDevicesModule(
-  client: ApiClient,
-): AuthTrustedDevicesModule {
+export function createAuthTrustedDevicesModule(client: ApiClient): AuthTrustedDevicesModule {
   return new AuthTrustedDevicesModule(client);
 }

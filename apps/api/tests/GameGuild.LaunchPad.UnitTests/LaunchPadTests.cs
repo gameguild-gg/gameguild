@@ -22,6 +22,93 @@ namespace GameGuild.LaunchPad.UnitTests;
 public sealed class LaunchPadTests
 {
     [Fact]
+    public async Task SubmitApplication_DefaultPolicyRejectsReadyAndAcceptsReleasedVersion()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var project = new Project
+        {
+            TenantId = tenantId,
+            Title = "Launch candidate",
+            Slug = $"launch-candidate-{Guid.NewGuid():N}",
+            CreatedById = actorId
+        };
+        var readyVersion = ProjectVersion.Create(project.Id, "1.0.0-rc", null, actorId, tenantId);
+        readyVersion.Project = project;
+        readyVersion.MarkReadyForTesting();
+        var releasedVersion = ProjectVersion.Create(project.Id, "1.0.0", null, actorId, tenantId);
+        releasedVersion.Project = project;
+        releasedVersion.MarkReadyForTesting();
+        releasedVersion.Release();
+        var launchEvent = LaunchPadEvent.Create(
+            tenantId,
+            "Launch Day",
+            DateTime.UtcNow.AddDays(2),
+            DateTime.UtcNow.AddDays(3));
+        launchEvent.OpenApplications();
+        context.AddRange(project, readyVersion, releasedVersion, launchEvent);
+        await context.SaveChangesAsync();
+        var requestContext = new Mock<IRequestContextAccessor>();
+        requestContext.SetupGet(accessor => accessor.CurrentTenantId).Returns(tenantId);
+        var authorization = new Mock<ILaunchPadAuthorizationService>();
+        authorization.Setup(service => service.CanParticipateAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        authorization.Setup(service => service.CanSubmitProjectAsync(project.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var controller = new LaunchPadEventsController(
+            context,
+            requestContext.Object,
+            ActorAccessor(actorId, tenantId).Object,
+            authorization.Object,
+            new Mock<IAssetScopedAccessService>().Object);
+
+        var rejected = await controller.SubmitApplication(
+            launchEvent.Id,
+            new SubmitLaunchPadApplicationRequest(project.Id, readyVersion.Id, null),
+            default);
+        var accepted = await controller.SubmitApplication(
+            launchEvent.Id,
+            new SubmitLaunchPadApplicationRequest(project.Id, releasedVersion.Id, null),
+            default);
+
+        rejected.Result.Should().BeOfType<UnprocessableEntityObjectResult>();
+        accepted.Result.Should().BeOfType<CreatedResult>();
+        (await context.Set<LaunchPadApplication>().SingleAsync()).SubmissionVersionPolicy
+            .Should().Be(VersionSubmissionPolicy.ReleasedImmutable);
+    }
+
+    [Fact]
+    public async Task LaunchPadSettings_DefaultAndUpdateAreTenantScoped()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var requestContext = new Mock<IRequestContextAccessor>();
+        requestContext.SetupGet(accessor => accessor.CurrentTenantId).Returns(tenantId);
+        var authorization = new Mock<ILaunchPadAuthorizationService>();
+        authorization.Setup(service => service.CanParticipateAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        authorization.Setup(service => service.CanManageSettingsAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        var controller = new LaunchPadSettingsController(context, requestContext.Object, authorization.Object);
+
+        var defaults = await controller.GetSettings(default);
+        var updated = await controller.UpdateSettings(
+            new UpdateLaunchPadSettingsRequest(VersionSubmissionPolicy.ReadyMutableUntilReview),
+            default);
+
+        defaults.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeEquivalentTo(new
+            {
+                TenantId = tenantId,
+                VersionSubmissionPolicy = VersionSubmissionPolicy.ReleasedImmutable
+            });
+        updated.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().BeEquivalentTo(new
+            {
+                TenantId = tenantId,
+                VersionSubmissionPolicy = VersionSubmissionPolicy.ReadyMutableUntilReview
+            });
+        (await context.Set<LaunchPadSettings>().SingleAsync()).TenantId.Should().Be(tenantId);
+    }
+
+    [Fact]
     public async Task CancellingReservedRegistration_ShouldPromoteOldestWaitlistedRegistration()
     {
         await using var context = CreateContext();

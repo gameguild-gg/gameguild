@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Projects;
 
 namespace GameGuild.TestingLab;
 
@@ -22,14 +23,41 @@ public sealed record TestingProjectApplicationProjection(
     string? DecisionRationale,
     DateTime? DecidedAt,
     IReadOnlyList<TestingApplicationVoteProjection> Votes,
-    IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null);
+    IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null,
+    VersionSubmissionPolicy SubmissionVersionPolicy = VersionSubmissionPolicy.ReadyMutableUntilReview,
+    TestingProjectBrief? Brief = null,
+    QuestionnaireResponse? EventApplicationResponse = null,
+    DateTime? RulesAcceptedAt = null,
+    Guid? CurrentQuestionnaireRevisionId = null,
+    QuestionnaireSchema? FeedbackQuestionnaire = null);
+
+public sealed record CreateTestingProjectApplicationDraftCommand(Guid EventId, Guid ProjectId)
+    : ICommand<Result<TestingProjectApplicationProjection>>;
+
+public sealed record SaveTestingProjectApplicationDraftCommand(
+    Guid ApplicationId,
+    Guid? ProjectVersionId,
+    TestingProjectBrief? Brief,
+    QuestionnaireSchema? FeedbackQuestionnaire,
+    QuestionnaireResponse? EventApplicationResponse,
+    bool? AcceptedRules,
+    string? PreferredAvailability,
+    IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null)
+    : ICommand<Result<TestingProjectApplicationProjection>>;
+
+public sealed record SubmitTestingProjectApplicationDraftCommand(Guid ApplicationId)
+    : ICommand<Result<TestingProjectApplicationProjection>>;
 
 public sealed record SubmitTestingProjectApplicationCommand(
     Guid EventId,
     Guid ProjectId,
     Guid ProjectVersionId,
     string? PreferredAvailability,
-    IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null) : ICommand<Result<TestingProjectApplicationProjection>>;
+    IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null,
+    TestingProjectBrief? Brief = null,
+    QuestionnaireSchema? FeedbackQuestionnaire = null,
+    QuestionnaireResponse? EventApplicationResponse = null,
+    bool AcceptedRules = false) : ICommand<Result<TestingProjectApplicationProjection>>;
 
 public sealed record UpdateTestingProjectApplicationCommand(
     Guid ApplicationId,
@@ -71,6 +99,14 @@ public sealed record GetTestingEventApplicationsQuery(
     int Skip = 0,
     int Take = 50) : IQuery<Result<IReadOnlyList<TestingProjectApplicationProjection>>>;
 
+public sealed record TestingEventApplicationAccessProjection(
+    bool CanViewApplications,
+    bool CanManageApplications,
+    bool CanVote);
+
+public sealed record GetTestingEventApplicationAccessQuery(Guid EventId)
+    : IQuery<Result<TestingEventApplicationAccessProjection>>;
+
 public sealed record GetMyTestingProjectApplicationsQuery(Guid? EventId = null)
     : IQuery<Result<IReadOnlyList<TestingProjectApplicationProjection>>>;
 
@@ -95,9 +131,11 @@ public sealed record TestingApplicationReviewPackageProjection(
     Guid ProjectId,
     Guid ProjectVersionId,
     string VersionNumber,
-    string VersionStatus,
+    ProjectVersionStatus VersionStatus,
     string? ReleaseNotes,
-    IReadOnlyList<TestingApplicationReviewAssetProjection> Assets);
+    IReadOnlyList<TestingApplicationReviewAssetProjection> Assets,
+    TestingProjectBrief? Brief,
+    QuestionnaireSchema? FeedbackQuestionnaire);
 
 public sealed record GetTestingApplicationReviewPackageQuery(Guid ApplicationId)
     : IQuery<Result<TestingApplicationReviewPackageProjection>>;
@@ -105,6 +143,21 @@ public sealed record GetTestingApplicationReviewPackageQuery(Guid ApplicationId)
 public sealed record SubmitTestingProjectApplicationRequest(
     Guid ProjectId,
     Guid ProjectVersionId,
+    string? PreferredAvailability,
+    IReadOnlyList<Guid>? SubmittedAssetReferenceIds,
+    TestingProjectBrief Brief,
+    QuestionnaireSchema FeedbackQuestionnaire,
+    QuestionnaireResponse EventApplicationResponse,
+    bool AcceptedRules);
+
+public sealed record CreateTestingProjectApplicationDraftRequest(Guid ProjectId);
+
+public sealed record SaveTestingProjectApplicationDraftRequest(
+    Guid? ProjectVersionId,
+    TestingProjectBrief? Brief,
+    QuestionnaireSchema? FeedbackQuestionnaire,
+    QuestionnaireResponse? EventApplicationResponse,
+    bool? AcceptedRules,
     string? PreferredAvailability,
     IReadOnlyList<Guid>? SubmittedAssetReferenceIds = null);
 

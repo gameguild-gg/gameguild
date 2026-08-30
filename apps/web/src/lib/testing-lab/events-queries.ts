@@ -1,4 +1,4 @@
-import { auth, getToken } from '@/auth';
+import { getRequestAuthContext } from "@/auth";
 import {
   createServerClient,
   GeneratedApi,
@@ -8,6 +8,7 @@ import {
   type TestingLabTestingApplicationTesterEligibilityProjection,
   type TestingLabTestingEventCommitteeMemberProjection,
   type TestingLabTestingEventFeedbackReviewProjection,
+  type TestingLabTestingEventApplicationAccessProjection,
   type TestingLabTestingEventProjection,
   type TestingLabTestingEventSlotProjection,
   type TestingLabTestingEventStatus,
@@ -15,8 +16,9 @@ import {
   type TestingLabTestingProjectApplicationProjection,
   type TestingLabTestingSlotRegistrationProjection,
   type TestingLabTestingSlotRegistrationStatus,
-} from '@game-guild/client';
-import { cache } from 'react';
+  type TestingLabTestingEventTemplateProjection,
+} from "@game-guild/client";
+import { cache } from "react";
 
 export interface TestingEventsDirectory {
   events: TestingLabTestingEventProjection[];
@@ -37,8 +39,12 @@ export interface TestingEventManagerData {
   event: TestingLabTestingEventProjection | null;
   slots: TestingLabTestingEventSlotProjection[];
   applications: TestingLabTestingProjectApplicationProjection[];
+  applicationAccess: TestingLabTestingEventApplicationAccessProjection | null;
   committee: TestingLabTestingEventCommitteeMemberProjection[];
-  registrationsBySlot: Record<string, TestingLabTestingSlotRegistrationProjection[]>;
+  registrationsBySlot: Record<
+    string,
+    TestingLabTestingSlotRegistrationProjection[]
+  >;
   accessIssues: string[];
 }
 
@@ -78,28 +84,59 @@ export interface TestingEventManagerOptions {
   applicationStatus?: TestingLabTestingApplicationStatus;
 }
 
-function createModules() {
-  const client = createServerClient({
-    baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-    auth: { getAccessToken: () => getToken() },
-    tenant: { getTenantId: async () => (await auth().catch(() => null))?.tenantId ?? null },
+function createClient(requestAuth = getRequestAuthContext()) {
+  return createServerClient({
+    baseUrl:
+      process.env.API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:8080",
+    auth: { getAccessToken: async () => (await requestAuth).token },
+    tenant: { getTenantId: async () => (await requestAuth).tenantId },
   });
+}
+
+function createModules(requestAuth = getRequestAuthContext()) {
+  const client = createClient(requestAuth);
 
   return {
     events: new GeneratedApi.TestingLabTestingEventsModule(client),
-    participation: new GeneratedApi.TestingLabTestingEventParticipationModule(client),
+    participation: new GeneratedApi.TestingLabTestingEventParticipationModule(
+      client,
+    ),
+  };
+}
+
+function createTemplateModule(requestAuth = getRequestAuthContext()) {
+  const client = createClient(requestAuth);
+  return new GeneratedApi.TestingLabTestingEventTemplatesModule(client);
+}
+
+export async function getTestingEventTemplates(
+  includeArchived = false,
+): Promise<{
+  templates: TestingLabTestingEventTemplateProjection[];
+  accessIssues: string[];
+}> {
+  const result = await read(
+    createTemplateModule().getVTestingTemplates("1", { includeArchived }),
+    "Event templates",
+  );
+  return {
+    templates: result.data ?? [],
+    accessIssues: result.issue ? [result.issue] : [],
   };
 }
 
 function getOperationFailureMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
 
-  if (typeof error === 'object' && error !== null && 'message' in error) {
+  if (typeof error === "object" && error !== null && "message" in error) {
     const { message } = error;
-    if (typeof message === 'string' && message.trim().length > 0) return message;
+    if (typeof message === "string" && message.trim().length > 0)
+      return message;
   }
 
-  return 'Unknown error';
+  return "Unknown error";
 }
 
 async function read<T>(operation: Promise<Result<T, ApiError>>, label: string) {
@@ -108,7 +145,7 @@ async function read<T>(operation: Promise<Result<T, ApiError>>, label: string) {
     if (result.ok) return { data: result.data, issue: null };
     return {
       data: null,
-      issue: `${label} returned ${result.error.status ?? 'an error'}: ${result.error.message}`,
+      issue: `${label} returned ${result.error.status ?? "an error"}: ${result.error.message}`,
     };
   } catch (error) {
     return {
@@ -128,7 +165,7 @@ export async function getTestingEventsDirectory(
       skip: Math.max(0, options.skip ?? 0),
       take: Math.min(100, Math.max(1, options.take ?? 50)),
     }),
-    'Events',
+    "Events",
   );
 
   return {
@@ -138,14 +175,14 @@ export async function getTestingEventsDirectory(
 }
 
 export async function getArchivedTestingEventsDirectory(
-  options: Pick<TestingEventsDirectoryOptions, 'skip' | 'take'> = {},
+  options: Pick<TestingEventsDirectoryOptions, "skip" | "take"> = {},
 ): Promise<TestingEventsDirectory> {
   const result = await read(
     createModules().events.getTestingEventsArchived({
       skip: Math.max(0, options.skip ?? 0),
       take: Math.min(100, Math.max(1, options.take ?? 50)),
     }),
-    'Archived events',
+    "Archived events",
   );
   return {
     events: result.data ?? [],
@@ -159,22 +196,26 @@ export async function getTestingApplicationsDirectory(
   const api = createModules();
   const eventsResult = await read(
     api.events.getTestingEventsForGetTestingEvents({ skip: 0, take: 100 }),
-    'Events',
+    "Events",
   );
   const events = eventsResult.data ?? [];
   const applicationResults = await Promise.all(
     events
-      .filter((event): event is TestingLabTestingEventProjection & { id: string } =>
-        Boolean(event.id) && event.applicationCount !== 0,
+      .filter(
+        (event): event is TestingLabTestingEventProjection & { id: string } =>
+          Boolean(event.id) && event.applicationCount !== 0,
       )
       .map(async (event) => ({
         event,
         result: await read(
-          api.events.getTestingEventsApplicationsForGetTestingEventsByEventIdApplications(event.id, {
-            status: options.status,
-            skip: 0,
-            take: 100,
-          }),
+          api.events.getTestingEventsApplicationsForGetTestingEventsByEventIdApplications(
+            event.id,
+            {
+              status: options.status,
+              skip: 0,
+              take: 100,
+            },
+          ),
           `Applications for ${event.name ?? event.id}`,
         ),
       })),
@@ -201,7 +242,7 @@ export async function getTestingParticipantDirectory(
       skip: Math.max(0, options.skip ?? 0),
       take: Math.min(100, Math.max(1, options.take ?? 25)),
     }),
-    'Participants',
+    "Participants",
   );
 
   return {
@@ -215,37 +256,72 @@ export async function getTestingEventManagerData(
   options: TestingEventManagerOptions = {},
 ): Promise<TestingEventManagerData> {
   const api = createModules();
-  const [eventResult, slotsResult, applicationsResult, committeeResult] = await Promise.all([
-    read(api.events.getTestingEventsForGetTestingEventsByEventId(eventId), 'Event'),
-    read(api.events.getTestingEventsSlots(eventId), 'Slots'),
-    read(
-      api.events.getTestingEventsApplicationsForGetTestingEventsByEventIdApplications(eventId, {
-        status: options.applicationStatus,
-        skip: 0,
-        take: 100,
-      }),
-      'Applications',
-    ),
-    read(api.events.getTestingEventsCommittee(eventId), 'Committee'),
-  ]);
+  const [eventResult, applicationsResult, applicationAccessResult] =
+    await Promise.all([
+      read(
+        api.events.getTestingEventsForGetTestingEventsByEventId(eventId),
+        "Event",
+      ),
+      read(
+        api.events.getTestingEventsApplicationsForGetTestingEventsByEventIdApplications(
+          eventId,
+          {
+            status: options.applicationStatus,
+            skip: 0,
+            take: 100,
+          },
+        ),
+        "Applications",
+      ),
+      read(
+        api.events.getTestingEventsApplicationsAccess(eventId),
+        "Application access",
+      ),
+    ]);
 
+  const canManageApplications =
+    applicationAccessResult.data?.canManageApplications === true;
+  const [slotsResult, committeeResult] = canManageApplications
+    ? await Promise.all([
+        read(api.events.getTestingEventsSlots(eventId), "Slots"),
+        read(api.events.getTestingEventsCommittee(eventId), "Committee"),
+      ])
+    : [
+        { data: [], issue: undefined },
+        { data: [], issue: undefined },
+      ];
   const slots = slotsResult.data ?? [];
-  const registrationEntries = await Promise.all(
-    slots
-      .filter((slot): slot is TestingLabTestingEventSlotProjection & { id: string } => Boolean(slot.id))
-      .map(async (slot) => {
-        const result = await read(
-          api.participation.getTestingEventsSlotsRegistrations(slot.id),
-          `Registrations for slot ${slot.id}`,
-        );
-        return [slot.id, result] as const;
-      }),
-  );
+  const registrationEntries = canManageApplications
+    ? await Promise.all(
+        slots
+          .filter(
+            (
+              slot,
+            ): slot is TestingLabTestingEventSlotProjection & { id: string } =>
+              Boolean(slot.id),
+          )
+          .map(async (slot) => {
+            const result = await read(
+              api.participation.getTestingEventsSlotsRegistrations(slot.id),
+              `Registrations for slot ${slot.id}`,
+            );
+            return [slot.id, result] as const;
+          }),
+      )
+    : [];
 
-  const registrationsBySlot: Record<string, TestingLabTestingSlotRegistrationProjection[]> = {};
-  const accessIssues = [eventResult.issue, slotsResult.issue, applicationsResult.issue, committeeResult.issue].filter(
-    (issue): issue is string => Boolean(issue),
-  );
+  const registrationsBySlot: Record<
+    string,
+    TestingLabTestingSlotRegistrationProjection[]
+  > = {};
+  const accessIssues = [
+    eventResult.issue,
+    applicationsResult.issue,
+    applicationAccessResult.issue,
+    ...(canManageApplications
+      ? [slotsResult.issue, committeeResult.issue]
+      : []),
+  ].filter((issue): issue is string => Boolean(issue));
 
   registrationEntries.forEach(([slotId, result]) => {
     registrationsBySlot[slotId] = result.data ?? [];
@@ -256,34 +332,44 @@ export async function getTestingEventManagerData(
     event: eventResult.data ?? null,
     slots,
     applications: applicationsResult.data ?? [],
+    applicationAccess: applicationAccessResult.data ?? null,
     committee: committeeResult.data ?? [],
     registrationsBySlot,
     accessIssues,
   };
 }
 
-export const getTestingEventFeedbackReview = cache(async (eventId: string): Promise<TestingEventFeedbackReviewData> => {
-  const result = await read(createModules().participation.getTestingEventsFeedback(eventId), 'Event feedback');
+export const getTestingEventFeedbackReview = cache(
+  async (eventId: string): Promise<TestingEventFeedbackReviewData> => {
+    const result = await read(
+      createModules().participation.getTestingEventsFeedback(eventId),
+      "Event feedback",
+    );
 
-  return {
-    feedback: result.data ?? [],
-    accessIssues: result.issue ? [result.issue] : [],
-  };
-});
+    return {
+      feedback: result.data ?? [],
+      accessIssues: result.issue ? [result.issue] : [],
+    };
+  },
+);
 
 export async function getTestingApplicationTesterEligibility(
   eventId: string,
   testerUserIds: string[],
 ): Promise<TestingApplicationTesterEligibilityData> {
   const api = createModules();
-  const normalizedTesterIds = [...new Set(testerUserIds.filter(Boolean))].slice(0, 100);
-  if (normalizedTesterIds.length === 0) return { eligibility: [], accessIssues: [] };
+  const normalizedTesterIds = [...new Set(testerUserIds.filter(Boolean))].slice(
+    0,
+    100,
+  );
+  if (normalizedTesterIds.length === 0)
+    return { eligibility: [], accessIssues: [] };
 
   const result = await read(
     api.events.getTestingEventsApplicationsTesterEligibility(eventId, {
       testerUserIds: normalizedTesterIds,
     }),
-    'Tester eligibility',
+    "Tester eligibility",
   );
 
   return {
@@ -292,9 +378,11 @@ export async function getTestingApplicationTesterEligibility(
   };
 }
 
-export const getTestingEventWorkspaceData = cache((eventId: string) => getTestingEventManagerData(eventId));
+export async function getTestingEventWorkspaceData(eventId: string) {
+  return getTestingEventManagerData(eventId);
+}
 
 export {
   getPublicTestingEventExperience,
   getPublicTestingEventsDirectory,
-} from './events-public-queries';
+} from "./events-public-queries";

@@ -21,7 +21,7 @@
     "test:browser:learning-support": "node --test scripts/learning-browser-e2e-support.test.mjs",
     "test:browser:community-admin": "node scripts/community-admin-browser-e2e.mjs",
     "test:browser:user-settings": "node scripts/user-settings-browser-e2e.mjs",
-    "test:browser:testing-lab": "bash scripts/testing-lab-browser-e2e.sh",
+    "test:browser:testing-lab": "node scripts/run-testing-lab-browser-e2e.mjs",
     "test:browser:testing-lab:existing": "node scripts/testing-lab-browser-e2e.mjs",
     "test:browser:coding-cycle": "node scripts/coding-cycle-browser-e2e.mjs",
     "test:watch": "vitest",
@@ -152,6 +152,7 @@
     "wasmoon": "^1.16.0"
   },
   "devDependencies": {
+    "@eslint/compat": "^2.1.0",
     "@excalidraw/mermaid-to-excalidraw": "2.2.2",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^7.0.0",
@@ -165,7 +166,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "^4.1.10",
     "babel-plugin-react-compiler": "1.0.0",
-    "eslint": "^10.8.1",
+    "eslint": "^9.39.2",
     "eslint-config-next": "16.3.1",
     "jsdom": "30.0.1",
     "playwright": "1.62.1",

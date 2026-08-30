@@ -1,6 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -64,6 +63,14 @@ function pageProps(team?: string | string[]) {
   return { searchParams: Promise.resolve(team ? { team } : {}) };
 }
 
+async function openScopeMenu() {
+  fireEvent.mouseDown(
+    screen.getByRole("button", { name: /Current scope: All projects/i }),
+    { button: 0 },
+  );
+  await screen.findByRole("menu");
+}
+
 describe("member projects list page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -99,15 +106,17 @@ describe("member projects list page", () => {
     render(await ProjectsPage(pageProps()));
 
     expect(screen.getByText("No Projects yet")).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("link", { name: "Create Project" }),
+    ).toHaveLength(1);
+    expect(screen.getByText(/personal project or a Team project/i)).toBeInTheDocument();
+    expect(screen.getByText(/version before it can enter Testing Lab/i)).toBeInTheDocument();
   });
 
   it("offers all Projects and each Team as URL-backed scope options", async () => {
-    const user = userEvent.setup();
     render(await ProjectsPage(pageProps()));
 
-    await user.click(
-      screen.getByRole("button", { name: /Current scope: All projects/i }),
-    );
+    await openScopeMenu();
 
     expect(
       screen.getByRole("menuitem", { name: /All projects/i }),
@@ -119,14 +128,11 @@ describe("member projects list page", () => {
   });
 
   it("keeps All projects as the only scope when the member has no Teams", async () => {
-    const user = userEvent.setup();
     mocks.getWorkspaceTeams.mockResolvedValue([]);
 
     render(await ProjectsPage(pageProps()));
 
-    await user.click(
-      screen.getByRole("button", { name: /Current scope: All projects/i }),
-    );
+    await openScopeMenu();
 
     expect(screen.getAllByRole("menuitem")).toHaveLength(1);
     expect(
@@ -136,7 +142,6 @@ describe("member projects list page", () => {
   });
 
   it("offers an independent scope option for every Team membership", async () => {
-    const user = userEvent.setup();
     mocks.getWorkspaceTeams.mockResolvedValue([
       ...teams,
       { id: "team-2", slug: "beta-team", name: "Beta Team" },
@@ -145,9 +150,7 @@ describe("member projects list page", () => {
 
     render(await ProjectsPage(pageProps()));
 
-    await user.click(
-      screen.getByRole("button", { name: /Current scope: All projects/i }),
-    );
+    await openScopeMenu();
 
     expect(screen.getAllByRole("menuitem")).toHaveLength(4);
     expect(

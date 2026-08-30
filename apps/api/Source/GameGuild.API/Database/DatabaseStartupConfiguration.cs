@@ -85,6 +85,22 @@ public static class DatabaseStartupConfiguration
         return PostgresConnectionString.Normalize(connectionString);
     }
 
+    /// <summary>
+    /// Resolves whether a failed migration run must abort startup. Environments without runtime
+    /// fallback (everything except Development/Test) always fail closed: an explicit
+    /// <c>Database:FailStartupOnMigrationFailure=false</c> override is IGNORED so the API can never
+    /// open its listener on a database whose migrations failed or rolled back.
+    /// FailStartupOnSeedFailure/FailStartupOnGrantFailure intentionally keep the honor-the-override
+    /// behavior for now (out of scope for this guard).
+    /// </summary>
+    internal static bool ResolveFailStartupOnMigrationFailure(IConfiguration configuration, string environmentName)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        return !AllowsRuntimeFallback(environmentName) ||
+            configuration.GetValue<bool?>("Database:FailStartupOnMigrationFailure") == true;
+    }
+
     internal static bool AllowsRuntimeFallback(string environmentName) =>
         string.Equals(environmentName, Environments.Development, StringComparison.OrdinalIgnoreCase) ||
         IsTestEnvironment(environmentName);

@@ -31,7 +31,7 @@
  * ```
  */
 
-import { useCallback, useState, useRef, useContext } from 'react';
+import { useCallback, useState, useRef, useContext, useEffect } from 'react';
 import { SessionContext } from './session-provider.js';
 
 /**
@@ -90,7 +90,10 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
   const [error, setError] = useState<Error | null>(null);
   const csrfTokenRef = useRef<string | null>(null);
   const basePathRef = useRef(basePath);
-  basePathRef.current = basePath;
+
+  useEffect(() => {
+    basePathRef.current = basePath;
+  }, [basePath]);
 
   // Access session context for updating state after auth actions
   const sessionContext = useContext(SessionContext);

@@ -11,6 +11,8 @@ import { Button } from '@game-guild/ui/components/button';
 import { AlertCircle, CalendarDays, CheckCircle2, Loader2, MapPin, UsersRound } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
+import type { TestingLabQuestionnaireOutput, TestingLabQuestionnaireSchema } from '@game-guild/client';
+import { QuestionnaireFieldset } from './questionnaire-fieldset';
 
 interface PublicSlot {
   id?: string | null;
@@ -50,14 +52,23 @@ export function TestingSlotRegistration({
   isAuthenticated,
   slot,
   registration,
+  registrationSchema,
+  generalRules,
+  testerInstructions,
 }: {
   eventId: string;
   isAuthenticated: boolean;
   slot: PublicSlot;
   registration?: CurrentRegistration;
+  registrationSchema?: TestingLabQuestionnaireSchema | null;
+  generalRules?: string | null;
+  testerInstructions?: string | null;
 }) {
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TestingEventActionResult<unknown> | null>(null);
+  const [responses, setResponses] = useState<TestingLabQuestionnaireOutput>({ answers: [] });
+  const [questionnaireComplete, setQuestionnaireComplete] = useState((registrationSchema?.questions?.length ?? 0) === 0);
+  const [acceptedRules, setAcceptedRules] = useState(false);
   const isFull = (slot.availableTesterCount ?? 0) <= 0;
   const location = [slot.campusName, slot.roomName].filter(Boolean).join(' · ');
 
@@ -65,6 +76,8 @@ export function TestingSlotRegistration({
     const formData = new FormData();
     formData.set('eventId', eventId);
     formData.set('slotId', slot.id ?? '');
+    formData.set('registrationResponseJson', JSON.stringify(responses));
+    formData.set('acceptedRules', String(acceptedRules));
     startTransition(async () => {
       const next = await registerForTestingEventSlot(formData);
       setResult(next);
@@ -131,10 +144,27 @@ export function TestingSlotRegistration({
           ) : null}
         </div>
       ) : (
-        <Button type="button" className="w-full" disabled={pending || !slot.id} onClick={register}>
-          {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-          {isFull ? 'Join waitlist' : 'Reserve tester seat'}
-        </Button>
+        <div className="space-y-4 border-t pt-4">
+          {testerInstructions ? <Alert><AlertDescription>{testerInstructions}</AlertDescription></Alert> : null}
+          <QuestionnaireFieldset
+            schema={registrationSchema}
+            value={responses}
+            onChange={(value) => { setResponses(value); setQuestionnaireComplete(false); }}
+            onComplete={() => setQuestionnaireComplete(true)}
+            submitLabel="Confirm registration answers"
+          />
+          <div className="max-h-40 overflow-y-auto rounded-md border p-3 text-sm leading-6 whitespace-pre-wrap">
+            {generalRules || 'Event rules are unavailable.'}
+          </div>
+          <label className="flex items-start gap-3 text-sm">
+            <input className="mt-1 size-4" type="checkbox" checked={acceptedRules} onChange={(event) => setAcceptedRules(event.currentTarget.checked)} />
+            <span>I accept the frozen rules for this event.</span>
+          </label>
+          <Button type="button" className="w-full" disabled={pending || !slot.id || !questionnaireComplete || !acceptedRules} onClick={register}>
+            {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+            {isFull ? 'Join waitlist' : 'Reserve tester seat'}
+          </Button>
+        </div>
       )}
 
       {result ? (

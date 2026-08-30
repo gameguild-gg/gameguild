@@ -4,7 +4,7 @@ FROM node:20-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
 WORKDIR /repo
 
-COPY pnpm-workspace.yaml package.json .npmrc* ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc* ./
 COPY apps/web/package.json ./apps/web/
 COPY packages ./packages
 COPY tools/emception/package.json ./tools/emception/
@@ -13,15 +13,12 @@ COPY tools/emception/scripts ./tools/emception/scripts
 COPY tools/emception/packages ./tools/emception/packages
 COPY tools/emception/public/coi-serviceworker.js ./tools/emception/public/coi-serviceworker.js
 
-RUN pnpm install --no-frozen-lockfile --prefer-offline
+RUN pnpm --filter @game-guild/web... install --frozen-lockfile --prefer-offline
 
-# Build emception workspace packages (ship TS source; dist/ required by apps/web build)
-RUN pnpm --dir tools/emception run build:packages
-
-RUN TOOLCHAIN_VERSION="$(node -p \"require('./tools/emception/packages/toolchain/package.json').version\")" && \
+RUN TOOLCHAIN_VERSION="$(node -p 'require("./tools/emception/packages/toolchain/package.json").version')" && \
     mkdir -p /repo/tools/emception/artifacts/toolchain/release/cdn /tmp/emception-extract && \
     cd /tmp/emception-extract && \
-    npm pack "@gameguild/emception-toolchain@${TOOLCHAIN_VERSION}" && \
+    npm pack "emception@${TOOLCHAIN_VERSION}" && \
     tar xzf *.tgz && \
     cp -r /tmp/emception-extract/package/cdn/. /repo/tools/emception/artifacts/toolchain/release/cdn/ && \
     rm -rf /tmp/emception-extract
@@ -52,7 +49,6 @@ ENV AUTH_COOKIE_DOMAIN=${AUTH_COOKIE_DOMAIN}
 COPY . .
 
 RUN if [ -z "$AUTH_SECRET" ]; then echo "AUTH_SECRET build arg is required" >&2; exit 1; fi \
-    && pnpm --filter @game-guild/client build \
     && pnpm --filter @game-guild/web build
 
 FROM node:20-alpine AS runner

@@ -53,22 +53,11 @@ export interface DiscordProviderOptions {
 /**
  * Create a Discord OAuth provider that bridges to the .NET backend.
  */
-export function DiscordProvider(
-  options: DiscordProviderOptions
-): OAuthProviderConfig & {
+export function DiscordProvider(options: DiscordProviderOptions): OAuthProviderConfig & {
   getAuthorizeUrl: (apiUrl: string, redirectUri?: string) => Promise<string>;
-  handleCallback: (
-    apiUrl: string,
-    code: string,
-    state?: string,
-    redirectUri?: string,
-    tenantId?: string
-  ) => Promise<ProviderResult>;
+  handleCallback: (apiUrl: string, code: string, state?: string, redirectUri?: string, tenantId?: string) => Promise<ProviderResult>;
 } {
-  const {
-    authorizePath = '/v1/auth/discord:sign-in-authorize',
-    callbackPath = '/v1/auth/discord:sign-in-callback',
-  } = options;
+  const { authorizePath = '/v1/auth/discord:sign-in-authorize', callbackPath = '/v1/auth/discord:sign-in-callback' } = options;
 
   return {
     id: 'discord',
@@ -89,27 +78,18 @@ export function DiscordProvider(
      * Get the Discord authorization URL from the .NET backend.
      * The backend manages the OAuth state parameter (embedded in the authUrl).
      */
-    getAuthorizeUrl: async (
-      apiUrl: string,
-      redirectUri?: string
-    ): Promise<string> => {
+    getAuthorizeUrl: async (apiUrl: string, redirectUri?: string): Promise<string> => {
       const effectiveApiUrl = options.apiUrl || apiUrl;
 
-      const response = await fetch(
-        `${effectiveApiUrl}${authorizePath}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ redirectUri }),
-        }
-      );
+      const response = await fetch(`${effectiveApiUrl}${authorizePath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ redirectUri }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new OAuthError(
-          (errorData as Record<string, unknown>).message as string ||
-            'Failed to get Discord authorization URL'
-        );
+        throw new OAuthError(((errorData as Record<string, unknown>).message as string) || 'Failed to get Discord authorization URL');
       }
 
       const data = (await response.json()) as Record<string, unknown>;
@@ -119,34 +99,22 @@ export function DiscordProvider(
     /**
      * Complete the Discord OAuth flow by sending the authorization code to the backend.
      */
-    handleCallback: async (
-      apiUrl: string,
-      code: string,
-      state?: string,
-      redirectUri?: string,
-      tenantId?: string
-    ): Promise<ProviderResult> => {
+    handleCallback: async (apiUrl: string, code: string, state?: string, redirectUri?: string, tenantId?: string): Promise<ProviderResult> => {
       const effectiveApiUrl = options.apiUrl || apiUrl;
 
       const body: Record<string, unknown> = { code, state };
       if (redirectUri) body.redirectUri = redirectUri;
       if (tenantId) body.tenantId = tenantId;
 
-      const response = await fetch(
-        `${effectiveApiUrl}${callbackPath}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        }
-      );
+      const response = await fetch(`${effectiveApiUrl}${callbackPath}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new OAuthError(
-          (errorData as Record<string, unknown>).message as string ||
-            'Discord sign-in failed'
-        );
+        throw new OAuthError(((errorData as Record<string, unknown>).message as string) || 'Discord sign-in failed');
       }
 
       const data = (await response.json()) as Record<string, unknown>;
@@ -155,8 +123,7 @@ export function DiscordProvider(
       const user: SessionUser = {
         /* v8 ignore start */
         id: (data.userId as string) || (backendUser?.id as string) || '',
-        email:
-          (data.email as string) || (backendUser?.email as string) || '',
+        email: (data.email as string) || (backendUser?.email as string) || '',
         name: (backendUser?.displayName as string) || null,
         image: (backendUser?.profilePictureUrl as string) || null,
         /* v8 ignore stop */
@@ -174,9 +141,7 @@ export function DiscordProvider(
         user,
         sessionId: data.sessionId as string | undefined,
         tenantId: data.tenantId as string | undefined,
-        availableTenants: data.availableTenants as
-          | Array<{ id: string; name: string }>
-          | undefined,
+        availableTenants: data.availableTenants as Array<{ id: string; name: string }> | undefined,
       };
     },
   };

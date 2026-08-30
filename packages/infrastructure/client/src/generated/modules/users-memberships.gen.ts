@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,14 +20,11 @@ export class UsersMembershipsModule {
    *
    * Returns all tenants the user belongs to, with role and membership status. Similar to Discord's 'My Servers' view.
    */
-  async getUsersMemberships(
-    userId: string,
-    query?: { includeInactive?: boolean },
-  ): Promise<Result<Types.IdentityTenantsGetUserMembershipsOutput, ApiError>> {
+  async getUsersMemberships(userId: string, query?: { includeInactive?: boolean }): Promise<Result<Types.IdentityTenantsGetUserMembershipsOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -35,11 +32,7 @@ export class UsersMembershipsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsGetUserMembershipsOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityTenantsGetUserMembershipsOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -58,14 +51,10 @@ export class UsersMembershipsModule {
     const url = `/v1/users/${userId}/memberships`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityTenantsAddUserMembershipInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityTenantsAddUserMembershipInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -73,11 +62,7 @@ export class UsersMembershipsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsAddTenantMemberOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityTenantsAddTenantMemberOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -91,7 +76,7 @@ export class UsersMembershipsModule {
     const url = `/v1/users/${userId}/memberships`;
 
     const result = await this.client.request({
-      method: "HEAD",
+      method: 'HEAD',
       path: url,
       requiresAuth: true,
     });
@@ -102,24 +87,18 @@ export class UsersMembershipsModule {
   /**
    * Get count of user's active tenant memberships
    */
-  async getUsersMembershipsCount(
-    userId: string,
-  ): Promise<Result<Types.IdentityTenantsMembershipCountOutput, ApiError>> {
+  async getUsersMembershipsCount(userId: string): Promise<Result<Types.IdentityTenantsMembershipCountOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships:count`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsMembershipCountOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityTenantsMembershipCountOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -131,27 +110,18 @@ export class UsersMembershipsModule {
    *
    * Restores access to the specified tenant membership.
    */
-  async postUsersMembershipsActivate(
-    userId: string,
-    tenantId: string,
-  ): Promise<
-    Result<Types.IdentityTenantsSetTenantMembershipStatusOutput, ApiError>
-  > {
+  async postUsersMembershipsActivate(userId: string, tenantId: string): Promise<Result<Types.IdentityTenantsSetTenantMembershipStatusOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}:activate`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsSetTenantMembershipStatusOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityTenantsSetTenantMembershipStatusOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -167,20 +137,14 @@ export class UsersMembershipsModule {
     userId: string,
     tenantId: string,
     body: Types.IdentityTenantsSetTenantMembershipStatusInput,
-  ): Promise<
-    Result<Types.IdentityTenantsSetTenantMembershipStatusOutput, ApiError>
-  > {
+  ): Promise<Result<Types.IdentityTenantsSetTenantMembershipStatusOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}:deactivate`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityTenantsSetTenantMembershipStatusInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityTenantsSetTenantMembershipStatusInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -188,11 +152,7 @@ export class UsersMembershipsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsSetTenantMembershipStatusOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityTenantsSetTenantMembershipStatusOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -206,20 +166,14 @@ export class UsersMembershipsModule {
     userId: string,
     tenantId: string,
     body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
-  ): Promise<
-    Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>
-  > {
+  ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}/invite:accept`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityTenantsUpdateUserMembershipInviteInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -227,11 +181,7 @@ export class UsersMembershipsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsUpdateTenantMemberInviteOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityTenantsUpdateTenantMemberInviteOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -245,20 +195,14 @@ export class UsersMembershipsModule {
     userId: string,
     tenantId: string,
     body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
-  ): Promise<
-    Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>
-  > {
+  ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}/invite:cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityTenantsUpdateUserMembershipInviteInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -266,11 +210,7 @@ export class UsersMembershipsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsUpdateTenantMemberInviteOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityTenantsUpdateTenantMemberInviteOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -284,20 +224,14 @@ export class UsersMembershipsModule {
     userId: string,
     tenantId: string,
     body: Types.IdentityTenantsUpdateUserMembershipInviteInput,
-  ): Promise<
-    Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>
-  > {
+  ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberInviteOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}/invite:resend`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityTenantsUpdateUserMembershipInviteInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipInviteInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -305,11 +239,7 @@ export class UsersMembershipsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsUpdateTenantMemberInviteOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityTenantsUpdateTenantMemberInviteOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -325,20 +255,14 @@ export class UsersMembershipsModule {
     userId: string,
     tenantId: string,
     body: Types.IdentityTenantsUpdateUserMembershipRoleInput,
-  ): Promise<
-    Result<Types.IdentityTenantsUpdateTenantMemberRoleOutput, ApiError>
-  > {
+  ): Promise<Result<Types.IdentityTenantsUpdateTenantMemberRoleOutput, ApiError>> {
     const url = `/v1/users/${userId}/memberships/${tenantId}/role`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityTenantsUpdateUserMembershipRoleInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityTenantsUpdateUserMembershipRoleInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PATCH",
+      method: 'PATCH',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -346,11 +270,7 @@ export class UsersMembershipsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityTenantsUpdateTenantMemberRoleOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityTenantsUpdateTenantMemberRoleOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -358,8 +278,6 @@ export class UsersMembershipsModule {
   }
 }
 
-export function createUsersMembershipsModule(
-  client: ApiClient,
-): UsersMembershipsModule {
+export function createUsersMembershipsModule(client: ApiClient): UsersMembershipsModule {
   return new UsersMembershipsModule(client);
 }

@@ -9,6 +9,11 @@ import type { TestingLabPublicTestingEventSlotProjection } from '@game-guild/cli
 import { ArrowLeft, CalendarDays, ClipboardCheck, FlaskConical, MessageSquareText } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
+// The public event body includes account-specific applications, registrations,
+// and feedback obligations. Never reuse an anonymous render for an authenticated
+// visitor, even when the public event projection itself is cacheable.
+export const dynamic = 'force-dynamic';
+
 function formatDateTime(value?: string | null) {
   if (!value) return 'Not scheduled';
   const date = new Date(value);
@@ -130,6 +135,9 @@ export default async function PublicTestingEventDetailPage({
                     isAuthenticated={experience.isAuthenticated}
                     slot={slot}
                     registration={experience.registrations.find((registration) => registration.slotId === slot.id)}
+                    registrationSchema={event.configuration?.testerRegistrationSchema}
+                    generalRules={event.configuration?.generalRules}
+                    testerInstructions={event.configuration?.testerInstructions}
                   />
                 ))}
               </div>
@@ -172,6 +180,10 @@ export default async function PublicTestingEventDetailPage({
                 acceptsApplications={acceptsApplications}
                 projectVersions={projectVersions}
                 initialProjectId={projectId}
+                applicationSchema={event.configuration?.projectApplicationSchema}
+                generalRules={event.configuration?.generalRules}
+                candidateInstructions={event.configuration?.candidateInstructions}
+                requiresFeedback={event.requiresFeedback ?? false}
                 applications={experience.applications.flatMap((application) => application.id ? [{
                   id: application.id,
                   projectId: application.projectId,
@@ -179,6 +191,11 @@ export default async function PublicTestingEventDetailPage({
                   preferredAvailability: application.preferredAvailability,
                   status: application.status,
                   decisionRationale: application.decisionRationale,
+                  brief: application.brief,
+                  eventApplicationResponse: application.eventApplicationResponse,
+                  feedbackQuestionnaire: application.feedbackQuestionnaire,
+                  rulesAcceptedAt: application.rulesAcceptedAt,
+                  submittedAssetReferenceIds: application.submittedAssetReferenceIds,
                 }] : [])}
               />
             </div>

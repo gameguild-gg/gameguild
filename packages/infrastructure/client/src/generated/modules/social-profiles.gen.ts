@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -24,14 +24,10 @@ export class SocialProfilesModule {
     const url = `/api/social/profiles/${profileId}/portfolio`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialProfilesAddProfilePortfolioItemBodySchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.SocialProfilesAddProfilePortfolioItemBodySchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -39,11 +35,7 @@ export class SocialProfilesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialProfilesProfilePortfolioItemSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.SocialProfilesProfilePortfolioItemSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -59,14 +51,10 @@ export class SocialProfilesModule {
     const url = `/api/social/profiles/${profileId}/skills`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialProfilesAddProfileSkillBodySchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.SocialProfilesAddProfileSkillBodySchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -74,11 +62,7 @@ export class SocialProfilesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialProfilesProfileSkillSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.SocialProfilesProfileSkillSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -87,24 +71,18 @@ export class SocialProfilesModule {
 
   /**
    */
-  async getApiSocialProfiles(
-    handle: string,
-  ): Promise<Result<Types.SocialProfilesSocialProfile, ApiError>> {
+  async getApiSocialProfiles(handle: string): Promise<Result<Types.SocialProfilesSocialProfile, ApiError>> {
     const url = `/api/social/profiles/@${handle}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialProfilesSocialProfileSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.SocialProfilesSocialProfileSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -120,14 +98,10 @@ export class SocialProfilesModule {
     const url = `/api/social/profiles/portfolio/${itemId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialProfilesUpdateProfilePortfolioItemBodySchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.SocialProfilesUpdateProfilePortfolioItemBodySchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -135,11 +109,7 @@ export class SocialProfilesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialProfilesProfilePortfolioItemSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.SocialProfilesProfilePortfolioItemSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -148,13 +118,11 @@ export class SocialProfilesModule {
 
   /**
    */
-  async deleteApiSocialProfilesPortfolio(
-    itemId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteApiSocialProfilesPortfolio(itemId: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/profiles/portfolio/${itemId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -164,14 +132,11 @@ export class SocialProfilesModule {
 
   /**
    */
-  async getApiSocialProfilesSearch(query?: {
-    query?: string;
-    take?: number;
-  }): Promise<Result<Array<Types.SocialProfilesSocialProfile>, ApiError>> {
-    const url = "/api/social/profiles/search";
+  async getApiSocialProfilesSearch(query?: { query?: string; take?: number }): Promise<Result<Array<Types.SocialProfilesSocialProfile>, ApiError>> {
+    const url = '/api/social/profiles/search';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -182,13 +147,11 @@ export class SocialProfilesModule {
 
   /**
    */
-  async deleteApiSocialProfilesSkills(
-    skillId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteApiSocialProfilesSkills(skillId: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/profiles/skills/${skillId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -198,24 +161,18 @@ export class SocialProfilesModule {
 
   /**
    */
-  async getApiSocialProfilesUsers(
-    userId: string,
-  ): Promise<Result<Types.SocialProfilesSocialProfile, ApiError>> {
+  async getApiSocialProfilesUsers(userId: string): Promise<Result<Types.SocialProfilesSocialProfile, ApiError>> {
     const url = `/api/social/profiles/users/${userId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialProfilesSocialProfileSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.SocialProfilesSocialProfileSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -231,14 +188,10 @@ export class SocialProfilesModule {
     const url = `/api/social/profiles/users/${userId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialProfilesUpdateSocialProfileBodySchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.SocialProfilesUpdateSocialProfileBodySchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -246,11 +199,7 @@ export class SocialProfilesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialProfilesSocialProfileSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.SocialProfilesSocialProfileSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -266,14 +215,10 @@ export class SocialProfilesModule {
     const url = `/api/social/profiles/users/${userId}/privacy`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialProfilesUpdateProfilePrivacyBodySchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.SocialProfilesUpdateProfilePrivacyBodySchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -281,11 +226,7 @@ export class SocialProfilesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialProfilesSocialProfileSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.SocialProfilesSocialProfileSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -301,14 +242,10 @@ export class SocialProfilesModule {
     const url = `/api/social/profiles/users/${userId}/stats`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialProfilesUpdateProfileStatsBodySchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.SocialProfilesUpdateProfileStatsBodySchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -316,11 +253,7 @@ export class SocialProfilesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialProfilesSocialProfileSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.SocialProfilesSocialProfileSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -328,8 +261,6 @@ export class SocialProfilesModule {
   }
 }
 
-export function createSocialProfilesModule(
-  client: ApiClient,
-): SocialProfilesModule {
+export function createSocialProfilesModule(client: ApiClient): SocialProfilesModule {
   return new SocialProfilesModule(client);
 }

@@ -169,18 +169,40 @@ export function compareDbml(actual, expected) {
   return { ok: false, firstDivergence };
 }
 
-const VERIFY_ALLOWLIST = ['__efmigrationshistory'];
+// Live tables that are intentionally outside the EF model — not drift:
+// __EFMigrationsHistory is created by EF at migrate time, never part of the
+// model; project_version_status_migration_review preserves unknown legacy
+// version states for manual follow-up, and the economy_* tables below are the
+// persistence layer of registered
+// raw-SQL gateways (PostgreSqlFifoTransferGateway, PostgreSqlFifoFragmentReservationGateway,
+// PostgreSqlProviderReversalGateway, PostgreSqlHardToSoftConversionGateway,
+// PostgreSqlPayoutRequestStore), written and read exclusively through
+// economy_private SQL functions. The EF model cannot see them by design, so
+// drift verification allowlists them rather than reporting false positives.
+// Names are normalized (lowercase), matching computeDrift's input contract.
+const KNOWN_NON_EF_TABLES = [
+  '__efmigrationshistory',
+  'project_version_status_migration_review',
+  'economy_fifo_transfer_operations',
+  'economy_fragment_reservations',
+  'economy_hard_to_soft_conversion_operations',
+  'economy_payout_requests',
+  'economy_payout_request_review_audit_events',
+  'economy_provider_reversal_operations',
+  'economy_provider_reversal_fragments',
+];
 
 // Pure drift classifier for --verify-db. Inputs are pre-normalized table
-// descriptors ({ name, columns }); __EFMigrationsHistory (created by EF at
-// migrate time, never part of the model) is allowlisted HERE so no caller can
-// forget it. All output arrays are sorted for deterministic reporting.
+// descriptors ({ name, columns }); known non-EF tables (created outside the
+// model: EF's own history table, raw-SQL gateway persistence above) are
+// allowlisted HERE so no caller can forget them. All output arrays are sorted
+// for deterministic reporting.
 export function computeDrift(modelTables, liveTables) {
   const modelByName = new Map(modelTables.map((table) => [table.name, table]));
   const liveByName = new Map(liveTables.map((table) => [table.name, table]));
 
   const danglingTables = [...liveByName.keys()]
-    .filter((name) => !modelByName.has(name) && !VERIFY_ALLOWLIST.includes(name))
+    .filter((name) => !modelByName.has(name) && !KNOWN_NON_EF_TABLES.includes(name))
     .sort();
 
   const unmigratedTables = [...modelByName.keys()]
@@ -275,6 +297,24 @@ const MODEL_DBML_PATH = path.join(tmpdir(), 'gg-model.dbml');
 const LIVE_DBML_PATH = path.join(tmpdir(), 'gg-live.dbml');
 const SPAWN_OPTS = { encoding: 'utf8', cwd: REPO_ROOT, maxBuffer: 16 * 1024 * 1024 };
 
+export function resolveCorepackProcess(
+  args,
+  { platform = process.platform, nodePath = process.execPath, fileExists = existsSync } = {},
+) {
+  if (platform !== 'win32') {
+    return { command: 'corepack', args };
+  }
+
+  // Node cannot spawn .cmd shims without a shell on Windows. Invoking the
+  // Corepack entry point through the current Node executable avoids shell
+  // interpolation of database credentials embedded in db2dbml's DSN.
+  const corepackEntry = path.join(path.dirname(nodePath), 'node_modules', 'corepack', 'dist', 'corepack.js');
+  if (!fileExists(corepackEntry)) {
+    throw new Error(`corepack entry point not found next to Node: ${corepackEntry}`);
+  }
+  return { command: nodePath, args: [corepackEntry, ...args] };
+}
+
 function runDotnet(args) {
   const result = spawnSync('dotnet', args, SPAWN_OPTS);
   if (result.error?.code === 'ENOENT') {
@@ -287,11 +327,16 @@ function runDotnet(args) {
 }
 
 function runSql2dbml(sqlPath) {
-  const result = spawnSync(
-    'corepack',
-    ['pnpm', 'exec', 'sql2dbml', sqlPath, '--postgres', '-o', MODEL_DBML_PATH],
-    SPAWN_OPTS,
-  );
+  const corepack = resolveCorepackProcess([
+    'pnpm',
+    'exec',
+    'sql2dbml',
+    sqlPath,
+    '--postgres',
+    '-o',
+    MODEL_DBML_PATH,
+  ]);
+  const result = spawnSync(corepack.command, corepack.args, SPAWN_OPTS);
   // sql2dbml drops a dbml-error.log into its cwd on every run (empty on
   // success) — remove it so generate runs never litter the repo root.
   rmSync(path.join(REPO_ROOT, 'dbml-error.log'), { force: true });
@@ -565,11 +610,16 @@ function collectSchemaNames(database) {
 function runDb2Dbml(dsn) {
   // @dbml/cli 10.x takes the database type as a SEPARATE leading argument;
   // a bare DSN is misread as the type ("Unsupported database type: unknown").
-  const result = spawnSync(
-    'corepack',
-    ['pnpm', 'exec', 'db2dbml', 'postgres', dsn, '-o', LIVE_DBML_PATH],
-    SPAWN_OPTS,
-  );
+  const corepack = resolveCorepackProcess([
+    'pnpm',
+    'exec',
+    'db2dbml',
+    'postgres',
+    dsn,
+    '-o',
+    LIVE_DBML_PATH,
+  ]);
+  const result = spawnSync(corepack.command, corepack.args, SPAWN_OPTS);
   // db2dbml drops a dbml-error.log into its cwd on every run (empty on
   // success) — same litter as runSql2dbml.
   rmSync(path.join(REPO_ROOT, 'dbml-error.log'), { force: true });

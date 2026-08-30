@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,24 +17,18 @@ export class LearningAssessmentsRubricsModule {
 
   /**
    */
-  async getAssessmentsRubric(
-    assessmentId: string,
-  ): Promise<Result<Types.LearningAssessmentsRubric, ApiError>> {
+  async getAssessmentsRubric(assessmentId: string): Promise<Result<Types.LearningAssessmentsRubric, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/rubric`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsRubricSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningAssessmentsRubricSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -43,21 +37,14 @@ export class LearningAssessmentsRubricsModule {
 
   /**
    */
-  async putAssessmentsRubric(
-    assessmentId: string,
-    body: Types.LearningAssessmentsSaveRubricInput,
-  ): Promise<Result<Types.LearningAssessmentsRubric, ApiError>> {
+  async putAssessmentsRubric(assessmentId: string, body: Types.LearningAssessmentsSaveRubricInput): Promise<Result<Types.LearningAssessmentsRubric, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/rubric`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningAssessmentsSaveRubricInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningAssessmentsSaveRubricInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -65,11 +52,7 @@ export class LearningAssessmentsRubricsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsRubricSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningAssessmentsRubricSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -78,13 +61,11 @@ export class LearningAssessmentsRubricsModule {
 
   /**
    */
-  async deleteAssessmentsRubric(
-    assessmentId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteAssessmentsRubric(assessmentId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/rubric`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -93,8 +74,6 @@ export class LearningAssessmentsRubricsModule {
   }
 }
 
-export function createLearningAssessmentsRubricsModule(
-  client: ApiClient,
-): LearningAssessmentsRubricsModule {
+export function createLearningAssessmentsRubricsModule(client: ApiClient): LearningAssessmentsRubricsModule {
   return new LearningAssessmentsRubricsModule(client);
 }

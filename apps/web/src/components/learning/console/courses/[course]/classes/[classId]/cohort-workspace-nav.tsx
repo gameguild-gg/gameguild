@@ -92,7 +92,7 @@ export function CohortWorkspaceNav({ courseRoute, courseTitle, cohort, cohorts, 
                 <DropdownMenuItem
                   key={item.id}
                   disabled={item.id === cohort.id}
-                  onSelect={() => router.push(`${learningBase}/courses/${courseRoute}/classes/${item.id}/schedule`)}
+                  onClick={() => router.push(`${learningBase}/courses/${courseRoute}/classes/${item.id}/schedule`)}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{item.name}</span>

@@ -170,7 +170,7 @@ async function executeRequest<T>(transportConfig: TransportConfig, requestConfig
       if (contentType?.includes('application/json')) {
         try {
           data = await response.json();
-        } catch (parseError) {
+        } catch {
           // Invalid JSON response - return error instead of throwing
           const text = await response.text().catch(() => '');
           const truncated = text.length > 100 ? `${text.slice(0, 100)}...` : text;

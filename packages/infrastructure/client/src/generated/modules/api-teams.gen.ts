@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -25,10 +25,10 @@ export class ApiTeamsModule {
     skip?: number;
     take?: number;
   }): Promise<Result<Array<Types.APITeamsTeam>, ApiError>> {
-    const url = "/v1/teams";
+    const url = '/v1/teams';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -39,20 +39,14 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeams(
-    body: Types.APITeamsCreateTeamInput,
-  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
-    const url = "/v1/teams";
+  async postTeams(body: Types.APITeamsCreateTeamInput): Promise<Result<Types.APITeamsTeam, ApiError>> {
+    const url = '/v1/teams';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APITeamsCreateTeamInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APITeamsCreateTeamInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -60,11 +54,7 @@ export class ApiTeamsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.APITeamsTeamSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -73,24 +63,18 @@ export class ApiTeamsModule {
 
   /**
    */
-  async getTeamsForGetTeamsByTeamId(
-    teamId: string,
-  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
+  async getTeamsForGetTeamsByTeamId(teamId: string): Promise<Result<Types.APITeamsTeam, ApiError>> {
     const url = `/v1/teams/${teamId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.APITeamsTeamSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -99,21 +83,14 @@ export class ApiTeamsModule {
 
   /**
    */
-  async putTeams(
-    teamId: string,
-    body: Types.APITeamsUpdateTeamInput,
-  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
+  async putTeams(teamId: string, body: Types.APITeamsUpdateTeamInput): Promise<Result<Types.APITeamsTeam, ApiError>> {
     const url = `/v1/teams/${teamId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APITeamsUpdateTeamInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APITeamsUpdateTeamInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -121,11 +98,7 @@ export class ApiTeamsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.APITeamsTeamSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -138,7 +111,7 @@ export class ApiTeamsModule {
     const url = `/v1/teams/${teamId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -148,24 +121,18 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeamsRestore(
-    teamId: string,
-  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
+  async postTeamsRestore(teamId: string): Promise<Result<Types.APITeamsTeam, ApiError>> {
     const url = `/v1/teams/${teamId}:restore`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.APITeamsTeamSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -174,13 +141,11 @@ export class ApiTeamsModule {
 
   /**
    */
-  async getTeamsInvitations(
-    teamId: string,
-  ): Promise<Result<Array<Types.APITeamsTeamInvitation>, ApiError>> {
+  async getTeamsInvitations(teamId: string): Promise<Result<Array<Types.APITeamsTeamInvitation>, ApiError>> {
     const url = `/v1/teams/${teamId}/invitations`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -190,21 +155,14 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeamsInvitations(
-    teamId: string,
-    body: Types.APITeamsCreateTeamInvitationInput,
-  ): Promise<Result<Types.APITeamsTeamInvitationCreated, ApiError>> {
+  async postTeamsInvitations(teamId: string, body: Types.APITeamsCreateTeamInvitationInput): Promise<Result<Types.APITeamsTeamInvitationCreated, ApiError>> {
     const url = `/v1/teams/${teamId}/invitations`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APITeamsCreateTeamInvitationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APITeamsCreateTeamInvitationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -212,11 +170,7 @@ export class ApiTeamsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamInvitationCreatedSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.APITeamsTeamInvitationCreatedSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -225,14 +179,11 @@ export class ApiTeamsModule {
 
   /**
    */
-  async deleteTeamsInvitations(
-    teamId: string,
-    invitationId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteTeamsInvitations(teamId: string, invitationId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/teams/${teamId}/invitations/${invitationId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -242,21 +193,14 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeamsMembers(
-    teamId: string,
-    body: Types.APITeamsAddTeamMemberInput,
-  ): Promise<Result<Types.APITeamsTeamMember, ApiError>> {
+  async postTeamsMembers(teamId: string, body: Types.APITeamsAddTeamMemberInput): Promise<Result<Types.APITeamsTeamMember, ApiError>> {
     const url = `/v1/teams/${teamId}/members`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APITeamsAddTeamMemberInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APITeamsAddTeamMemberInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -264,11 +208,7 @@ export class ApiTeamsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamMemberSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.APITeamsTeamMemberSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -277,22 +217,14 @@ export class ApiTeamsModule {
 
   /**
    */
-  async putTeamsMembers(
-    teamId: string,
-    userId: string,
-    body: Types.APITeamsChangeTeamMemberInput,
-  ): Promise<Result<Types.APITeamsTeamMember, ApiError>> {
+  async putTeamsMembers(teamId: string, userId: string, body: Types.APITeamsChangeTeamMemberInput): Promise<Result<Types.APITeamsTeamMember, ApiError>> {
     const url = `/v1/teams/${teamId}/members/${userId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APITeamsChangeTeamMemberInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APITeamsChangeTeamMemberInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -300,11 +232,7 @@ export class ApiTeamsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamMemberSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.APITeamsTeamMemberSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -313,14 +241,11 @@ export class ApiTeamsModule {
 
   /**
    */
-  async deleteTeamsMembers(
-    teamId: string,
-    userId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteTeamsMembers(teamId: string, userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/teams/${teamId}/members/${userId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -330,24 +255,18 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeamsInvitationsAcceptForPostTeamsInvitationsByInvitationIdAccept(
-    invitationId: string,
-  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
+  async postTeamsInvitationsAcceptForPostTeamsInvitationsByInvitationIdAccept(invitationId: string): Promise<Result<Types.APITeamsTeam, ApiError>> {
     const url = `/v1/teams/invitations/${invitationId}:accept`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.APITeamsTeamSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -356,20 +275,14 @@ export class ApiTeamsModule {
 
   /**
    */
-  async postTeamsInvitationsAcceptForPostTeamsInvitationsAccept(
-    body: Types.APITeamsAcceptTeamInvitationInput,
-  ): Promise<Result<Types.APITeamsTeam, ApiError>> {
-    const url = "/v1/teams/invitations/accept";
+  async postTeamsInvitationsAcceptForPostTeamsInvitationsAccept(body: Types.APITeamsAcceptTeamInvitationInput): Promise<Result<Types.APITeamsTeam, ApiError>> {
+    const url = '/v1/teams/invitations/accept';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APITeamsAcceptTeamInvitationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APITeamsAcceptTeamInvitationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -377,11 +290,7 @@ export class ApiTeamsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.APITeamsTeamSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.APITeamsTeamSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -396,10 +305,10 @@ export class ApiTeamsModule {
     skip?: number;
     take?: number;
   }): Promise<Result<Array<Types.APITeamsTeam>, ApiError>> {
-    const url = "/v1/teams/mine";
+    const url = '/v1/teams/mine';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -410,13 +319,11 @@ export class ApiTeamsModule {
 
   /**
    */
-  async getTeamsMyInvitations(): Promise<
-    Result<Array<Types.APITeamsMyTeamInvitation>, ApiError>
-  > {
-    const url = "/v1/teams/my-invitations";
+  async getTeamsMyInvitations(): Promise<Result<Array<Types.APITeamsMyTeamInvitation>, ApiError>> {
+    const url = '/v1/teams/my-invitations';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });

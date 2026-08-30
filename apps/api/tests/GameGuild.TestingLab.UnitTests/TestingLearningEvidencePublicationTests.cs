@@ -138,7 +138,7 @@ public sealed class TestingLearningEvidencePublicationTests : IDisposable
             false,
             TestingEventApprovalMode.ManagerOnly,
             _tenantId);
-        testingEvent.OpenApplications();
+        testingEvent.OpenConfiguredApplications();
         testingEvent.CloseApplications();
         var slot = TestingEventSlot.Create(
             testingEvent.Id,

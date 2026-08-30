@@ -243,7 +243,9 @@ describe("SpeedgraderShell", () => {
 
     await user.click(screen.getByRole("combobox", { name: /submission/i }));
     expect(
-      screen.getByRole("option", { name: "Ada Lovelace — attempt 3 of 3 — Submitted" }),
+      await screen.findByRole("option", {
+        name: "Ada Lovelace — attempt 3 of 3 — Submitted",
+      }),
     ).toBeInTheDocument();
   });
 

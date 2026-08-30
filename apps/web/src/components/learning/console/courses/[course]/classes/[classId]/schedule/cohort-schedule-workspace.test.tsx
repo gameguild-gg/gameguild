@@ -102,6 +102,6 @@ describe('CohortScheduleWorkspace', () => {
       render(<CohortScheduleWorkspace courseId="course-1" cohort={cohortFixture} initialSchedule={scheduleFixture} />);
     });
 
-    await waitFor(() => expect(screen.getByRole('tab', { name: 'Timeline' })).toHaveAttribute('data-state', 'active'));
+    await waitFor(() => expect(screen.getByRole('tab', { name: 'Timeline' })).toHaveAttribute('data-active'));
   });
 });
