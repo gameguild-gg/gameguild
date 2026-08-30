@@ -14,6 +14,7 @@ import shell from 'shelljs';
 import { fileURLToPath } from 'url';
 import { ensureBinaryenConcurrency, setupEmsdk } from './lib/emsdk.ts';
 import { enableBuildKeepalive } from './lib/keepalive.ts';
+import { buildCMakeObjectFiles } from './lib/cmake-object-targets.ts';
 import { loadToolchainStateSync, lockedTool, lockedVersion } from './toolchain/config.ts';
 import { ensureLockedSource } from './toolchain/sources.ts';
 
@@ -269,8 +270,13 @@ function buildClang() {
         'cc1gen_reproducer_main.cpp.o',
         'clang-driver.cpp.o',
     ];
-    const driverTargets = requiredObjs.map(obj => `tools/clang/tools/driver/CMakeFiles/clang.dir/${obj}`);
-    shell.exec(`cmake --build "${wasmBuildDir}" --parallel ${CONCURRENCY} --target ${driverTargets.join(' ')}`);
+    buildCMakeObjectFiles({
+        buildDirectory: wasmBuildDir,
+        concurrency: CONCURRENCY,
+        objectDirectory: 'CMakeFiles/clang.dir',
+        objectFiles: requiredObjs,
+        targetSubdirectory: driverSubdir,
+    });
 
     // Verify they all exist
     for (const obj of requiredObjs) {
@@ -367,8 +373,13 @@ function buildLLD() {
     const lldSubdir = path.join(wasmBuildDir, 'tools/lld/tools/lld');
     const lldObjDir = path.join(lldSubdir, 'CMakeFiles/lld.dir');
     const requiredObjs = ['lld.cpp.o', 'lld-driver.cpp.o'];
-    const lldTargets = requiredObjs.map(obj => `tools/lld/tools/lld/CMakeFiles/lld.dir/${obj}`);
-    shell.exec(`cmake --build "${wasmBuildDir}" --parallel ${CONCURRENCY} --target ${lldTargets.join(' ')}`);
+    buildCMakeObjectFiles({
+        buildDirectory: wasmBuildDir,
+        concurrency: CONCURRENCY,
+        objectDirectory: 'CMakeFiles/lld.dir',
+        objectFiles: requiredObjs,
+        targetSubdirectory: lldSubdir,
+    });
     for (const obj of requiredObjs) {
         if (!fs.existsSync(path.join(lldObjDir, obj))) {
             console.error(`ERROR: LLD driver object not found: ${obj}`);

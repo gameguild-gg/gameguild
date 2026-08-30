@@ -100,26 +100,57 @@ test('Binaryen optimization inherits the bounded Toolchain concurrency', async (
   assert.throws(() => ensureBinaryenConcurrency({}, 0), /positive integer/);
 });
 
-test('LLVM driver objects are built from the root CMake generator directory', async () => {
-  const root = path.resolve(import.meta.dirname, '..', '..');
-  const source = await readFile(path.join(root, 'scripts', 'build-llvm.ts'), 'utf8');
+test('LLVM driver objects use the configured Makefile from their generated subdirectory', async (context) => {
+  const { createCMakeObjectBuildPlan } = await import('../lib/cmake-object-targets.ts');
+  const root = await temporaryRoot(context);
+  const buildDirectory = path.join(root, 'build');
+  const targetSubdirectory = path.join(buildDirectory, 'tools', 'clang', 'tools', 'driver');
+  await mkdir(targetSubdirectory, { recursive: true });
+  await writeFile(
+    path.join(buildDirectory, 'CMakeCache.txt'),
+    'CMAKE_GENERATOR:INTERNAL=Unix Makefiles\nCMAKE_MAKE_PROGRAM:FILEPATH=/usr/bin/gmake\n',
+  );
 
-  assert.match(
-    source,
-    /const driverTargets = requiredObjs\.map\(obj => `tools\/clang\/tools\/driver\/CMakeFiles\/clang\.dir\/\$\{obj\}`\);/,
-  );
-  assert.match(
-    source,
-    /cmake --build "\$\{wasmBuildDir\}"[^\n]+--target \$\{driverTargets\.join\(' '\)\}/,
-  );
-  assert.match(
-    source,
-    /const lldTargets = requiredObjs\.map\(obj => `tools\/lld\/tools\/lld\/CMakeFiles\/lld\.dir\/\$\{obj\}`\);/,
-  );
-  assert.match(
-    source,
-    /cmake --build "\$\{wasmBuildDir\}"[^\n]+--target \$\{lldTargets\.join\(' '\)\}/,
-  );
+  assert.deepEqual(createCMakeObjectBuildPlan({
+    buildDirectory,
+    concurrency: 4,
+    objectDirectory: 'CMakeFiles/clang.dir',
+    objectFiles: ['driver.cpp.o', 'clang-driver.cpp.o'],
+    targetSubdirectory,
+  }), {
+    executable: '/usr/bin/gmake',
+    arguments: ['-C', targetSubdirectory, '-j', '4', 'driver.cpp.o', 'clang-driver.cpp.o'],
+    workingDirectory: buildDirectory,
+  });
+});
+
+test('LLVM driver objects retain root targets for non-Makefile CMake generators', async (context) => {
+  const { createCMakeObjectBuildPlan } = await import('../lib/cmake-object-targets.ts');
+  const root = await temporaryRoot(context);
+  const buildDirectory = path.join(root, 'build');
+  const targetSubdirectory = path.join(buildDirectory, 'tools', 'lld', 'tools', 'lld');
+  await mkdir(targetSubdirectory, { recursive: true });
+  await writeFile(path.join(buildDirectory, 'CMakeCache.txt'), 'CMAKE_GENERATOR:INTERNAL=Ninja\n');
+
+  assert.deepEqual(createCMakeObjectBuildPlan({
+    buildDirectory,
+    concurrency: 2,
+    objectDirectory: 'CMakeFiles/lld.dir',
+    objectFiles: ['lld.cpp.o', 'lld-driver.cpp.o'],
+    targetSubdirectory,
+  }), {
+    executable: 'cmake',
+    arguments: [
+      '--build',
+      buildDirectory,
+      '--parallel',
+      '2',
+      '--target',
+      'tools/lld/tools/lld/CMakeFiles/lld.dir/lld.cpp.o',
+      'tools/lld/tools/lld/CMakeFiles/lld.dir/lld-driver.cpp.o',
+    ],
+    workingDirectory: buildDirectory,
+  });
 });
 
 test('Emscripten sysroot copies exclude host Python bytecode caches', async (context) => {
