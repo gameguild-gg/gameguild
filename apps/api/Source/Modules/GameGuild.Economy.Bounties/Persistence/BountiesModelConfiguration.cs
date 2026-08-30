@@ -6,6 +6,7 @@ namespace GameGuild.Economy.Bounties.Persistence;
 internal sealed class BountyRow
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
     public Guid PosterId { get; set; }
     public Guid PosterWalletId { get; set; }
     public Guid EscrowWalletId { get; set; }
@@ -39,6 +40,7 @@ internal sealed class BountyEscrowFragmentRow
 internal sealed class BountyTerminalEventRow
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
     public Guid BountyId { get; set; }
     public BountyStatus Status { get; set; }
     public Guid ActorId { get; set; }
@@ -52,6 +54,15 @@ internal sealed class BountyTerminalEventRow
     public long FirstJournalSequence { get; set; }
     public string OutputLots { get; set; } = "[]";
     public DateTimeOffset OccurredAt { get; set; }
+}
+
+internal sealed class BountyExpirationEventRow
+{
+    public Guid Id { get; set; }
+    public Guid BountyId { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
+    public DateTimeOffset RecordedAt { get; set; }
+    public long BountyVersion { get; set; }
 }
 
 public sealed class BountiesModelConfiguration : IModelConfiguration
@@ -76,8 +87,8 @@ public sealed class BountiesModelConfiguration : IModelConfiguration
             builder.Property(row => row.IdempotencyKey).HasMaxLength(256);
             builder.Property(row => row.RequestHash).HasMaxLength(128);
             builder.HasIndex(row => row.IdempotencyKey).IsUnique();
-            builder.HasIndex(row => new { row.PosterId, row.Status, row.ExpiresAt });
-            builder.HasIndex(row => new { row.Status, row.ExpiresAt });
+            builder.HasIndex(row => new { row.TenantId, row.PosterId, row.Status, row.ExpiresAt });
+            builder.HasIndex(row => new { row.TenantId, row.Status, row.ExpiresAt });
         });
 
         modelBuilder.Entity<BountyEscrowFragmentRow>(builder =>
@@ -114,6 +125,25 @@ public sealed class BountiesModelConfiguration : IModelConfiguration
             builder.HasIndex(row => row.BountyId).IsUnique();
             builder.HasIndex(row => row.IdempotencyKey).IsUnique();
             builder.HasOne<BountyRow>().WithOne().HasForeignKey<BountyTerminalEventRow>(row => row.BountyId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<BountyExpirationEventRow>(builder =>
+        {
+            builder.ToTable("economy_bounty_expiration_events", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_bounty_expiration_events_version",
+                    "\"BountyVersion\" > 1");
+                table.HasCheckConstraint(
+                    "ck_economy_bounty_expiration_events_time",
+                    "\"RecordedAt\" >= \"ExpiresAt\"");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Id).ValueGeneratedNever();
+            builder.HasIndex(row => row.BountyId).IsUnique();
+            builder.HasIndex(row => new { row.RecordedAt, row.Id });
+            builder.HasOne<BountyRow>().WithOne().HasForeignKey<BountyExpirationEventRow>(row => row.BountyId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

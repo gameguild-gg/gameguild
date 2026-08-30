@@ -16,12 +16,82 @@ public class StripePaymentService(
     private readonly StripeGatewayOptions _options = InitializeOptions(options);
     private readonly PaymentIntentService _paymentIntentService = new();
     private readonly RefundService _refundService = new();
+    private readonly Func<PaymentIntentCreateOptions, RequestOptions, CancellationToken, Task<PaymentIntent>>
+        _createPaymentIntentAsync = static (createOptions, requestOptions, cancellationToken) =>
+            new PaymentIntentService().CreateAsync(createOptions, requestOptions, cancellationToken);
+
+    internal StripePaymentService(
+        IOptions<StripeGatewayOptions> options,
+        ILogger<StripePaymentService> logger,
+        Func<PaymentIntentCreateOptions, RequestOptions, CancellationToken, Task<PaymentIntent>> createPaymentIntentAsync)
+        : this(options, logger)
+    {
+        _createPaymentIntentAsync = createPaymentIntentAsync ?? throw new ArgumentNullException(nameof(createPaymentIntentAsync));
+    }
 
     private static StripeGatewayOptions InitializeOptions(IOptions<StripeGatewayOptions> options)
     {
         var stripeOptions = options.Value;
         StripePaymentGateway.EnsureApiKey(stripeOptions);
         return stripeOptions;
+    }
+
+    public async Task<GatewayPaymentIntentSetupResult> CreatePaymentIntentAsync(
+        GatewayPaymentIntentSetupRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.IdempotencyKey);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.Amount);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.Currency);
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.Description);
+        ArgumentNullException.ThrowIfNull(request.Metadata);
+        if (_options.UseSimulation)
+            throw new InvalidOperationException(
+                "Unconfirmed Stripe payment intents are unavailable in simulation mode.");
+
+        try
+        {
+            var paymentIntent = await _createPaymentIntentAsync(
+                new PaymentIntentCreateOptions
+                {
+                    Amount = StripeAmountConverter.ToStripeAmount(request.Amount, request.Currency),
+                    Currency = request.Currency.ToLowerInvariant(),
+                    Confirm = false,
+                    Description = request.Description,
+                    Metadata = new Dictionary<string, string>(request.Metadata, StringComparer.Ordinal),
+                    AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+                    {
+                        Enabled = true
+                    }
+                },
+                new RequestOptions
+                {
+                    IdempotencyKey = request.IdempotencyKey,
+                    StripeAccount = ResolveConnectedAccountId()
+                },
+                cancellationToken).ConfigureAwait(false);
+            var status = paymentIntent.Status is "requires_payment_method" or "requires_confirmation" or "requires_action"
+                ? PaymentStatus.RequiresAction
+                : StripeStatusMapper.MapPaymentStatus(paymentIntent.Status);
+            return new GatewayPaymentIntentSetupResult(
+                paymentIntent.Id,
+                status,
+                paymentIntent.ClientSecret,
+                CreateProviderMapping(paymentIntent.Id));
+        }
+        catch (StripeException exception)
+        {
+            var unknown = IsOutcomeUnknown(exception);
+            return new GatewayPaymentIntentSetupResult(
+                null,
+                unknown ? PaymentStatus.Processing : PaymentStatus.Failed,
+                null,
+                null,
+                unknown,
+                exception.StripeError?.Code ?? "stripe_error",
+                exception.StripeError?.Message ?? exception.Message);
+        }
     }
 
     /// <inheritdoc />

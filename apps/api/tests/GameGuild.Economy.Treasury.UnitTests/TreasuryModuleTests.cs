@@ -16,14 +16,14 @@ public sealed class TreasuryModuleTests
     }
 
     [Fact]
-    public void ModuleAndCompositionHookRemainDisabledAndRegisterOnlyDurablePersistence()
+    public void ModuleAndCompositionHookComposeDurableFailClosedRuntime()
     {
         var module = new TreasuryModule();
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().Build();
 
         module.Name.Should().Be("Economy.Treasury");
-        module.EnabledByDefault.Should().BeFalse();
+        module.EnabledByDefault.Should().BeTrue();
         module.ConfigureServices(services, configuration).Should().BeSameAs(services);
         services.AddTreasuryComposition(configuration).Should().BeSameAs(services);
         services.Should().Contain(descriptor =>
@@ -36,12 +36,25 @@ public sealed class TreasuryModuleTests
             descriptor.Lifetime == ServiceLifetime.Scoped);
         services.Should().Contain(descriptor =>
             descriptor.ServiceType == typeof(IAdminWithdrawalProviderEvidenceVerifier) &&
-            descriptor.ImplementationType == typeof(FailClosedAdminWithdrawalProviderEvidenceVerifier) &&
+            descriptor.ImplementationType == typeof(StripeAdminWithdrawalProviderEvidenceVerifier) &&
             descriptor.Lifetime == ServiceLifetime.Singleton);
         services.Should().Contain(descriptor =>
             descriptor.ServiceType == typeof(IDurableAdminWithdrawalWorkflow) &&
             descriptor.ImplementationType == typeof(PostgreSqlDurableAdminWithdrawalWorkflow) &&
-            descriptor.Lifetime == ServiceLifetime.Scoped);        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(AdminWithdrawalCoordinator));
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IDurableAdminWithdrawalApplicationService) &&
+            descriptor.ImplementationType == typeof(DurableAdminWithdrawalApplicationService) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IAdminWithdrawalFencingTokenAllocator) &&
+            descriptor.ImplementationType == typeof(PostgreSqlAdminWithdrawalFencingTokenAllocator) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IAdminWithdrawalDispatchOutboxWriter) &&
+            descriptor.ImplementationType == typeof(PostgreSqlAdminWithdrawalDispatchOutboxWriter) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(AdminWithdrawalCoordinator));
         services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(DbContext));
     }
 }

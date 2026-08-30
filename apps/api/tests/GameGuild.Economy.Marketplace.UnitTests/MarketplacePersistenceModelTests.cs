@@ -21,19 +21,24 @@ public sealed class MarketplacePersistenceModelTests
             "economy_marketplace_funding_fragments",
             "economy_marketplace_settlement_credits",
             "economy_marketplace_refunds",
-            "economy_marketplace_refund_legs");
+            "economy_marketplace_refund_legs",
+            "economy_marketplace_refund_debts",
+            "economy_marketplace_events",
+            "economy_marketplace_outbox");
 
         Entity(entities, "economy_marketplace_settlements").GetIndexes()
             .Should().Contain(index => index.IsUnique &&
-                index.Properties.Select(property => property.Name).SequenceEqual(new[] { "OrderId" }));
+                index.Properties.Select(property => property.Name).SequenceEqual(new[] { "TenantId", "OrderId" }));
         Entity(entities, "economy_marketplace_refunds").GetIndexes()
             .Should().Contain(index => index.IsUnique &&
-                index.Properties.Select(property => property.Name).SequenceEqual(new[] { "IdempotencyKey" }));
+                index.Properties.Select(property => property.Name).SequenceEqual(new[] { "TenantId", "IdempotencyKey" }));
         Entity(entities, "economy_marketplace_settlement_legs").GetCheckConstraints()
             .Should().Contain(constraint => constraint.Name == "ck_economy_marketplace_settlement_legs_conservation");
         Entity(entities, "economy_marketplace_refund_legs").GetIndexes()
-            .Should().Contain(index => index.IsUnique &&
+            .Should().Contain(index => !index.IsUnique &&
                 index.Properties.Select(property => property.Name).SequenceEqual(new[] { "SettlementId", "Currency" }));
+        Entity(entities, "economy_marketplace_refunds").GetCheckConstraints()
+            .Should().Contain(constraint => constraint.Name == "ck_economy_marketplace_refunds_quantity");
     }
 
     [Fact]
@@ -60,8 +65,10 @@ public sealed class MarketplacePersistenceModelTests
                         ? new DateTimeOffset(2026, 8, 2, 12, 0, 0, TimeSpan.Zero)
                         : type == typeof(long)
                             ? 1L
-                            : type == typeof(int)
-                                ? 1
+                        : type == typeof(int)
+                            ? 1
+                            : type == typeof(decimal)
+                                ? 1m
                                 : type == typeof(bool)
                                     ? true
                                     : Enum.ToObject(type, 1);

@@ -1,4 +1,6 @@
 using GameGuild.Economy.Integrations.AI;
+using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Transfers;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Economy.Persistence;
@@ -20,10 +22,15 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         ConfigureChain(modelBuilder);
         ConfigureReserves(modelBuilder);
         ConfigureRisk(modelBuilder);
+        ConfigureSelfServiceTransfers(modelBuilder);
+        ConfigureControlPlane(modelBuilder);
+        ConfigureLegacyShadowMigration(modelBuilder);
         ConfigureRegisteredPostingReceipt(modelBuilder);
         ConfigureHardToSoftConversionRiskDecisionReceipt(modelBuilder);
         ConfigureFifoFragmentReservationReceipt(modelBuilder);
+        ConfigureMarketplaceFifoReservationReceipt(modelBuilder);
         ConfigureProviderReversalReceipt(modelBuilder);
+        ConfigureEconomyWalletProvisioningReceipt(modelBuilder);
         modelBuilder.ApplyConfiguration(new AiProviderCostFactEntityConfiguration());
     }
 
@@ -385,15 +392,16 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                     "\"ReserveVersion\" > 0 AND \"ReserveAuthorizationEpoch\" > 0 AND \"RiskDecisionId\" IS NOT NULL");
                 table.HasCheckConstraint(
                     "ck_economy_posting_groups_template_state",
-                    "\"TemplateKind\" BETWEEN 1 AND 21 AND \"TemplateVersion\" = 1 AND \"Status\" = 1");
+                    "\"TemplateKind\" BETWEEN 1 AND 26 AND \"TemplateVersion\" = 1 AND \"Status\" = 1");
                 table.HasCheckConstraint(
                     "ck_economy_posting_groups_authority_template",
                     "(\"TemplateKind\" IN (1, 2, 3, 18, 19, 20) AND \"Authority\" = 1) OR " +
-                    "(\"TemplateKind\" IN (4, 5, 7, 8, 17) AND \"Authority\" = 2) OR " +
+                    "(\"TemplateKind\" IN (4, 5, 7, 8, 17, 22) AND \"Authority\" = 2) OR " +
                     "(\"TemplateKind\" IN (6, 21) AND \"Authority\" = 3) OR " +
-                    "(\"TemplateKind\" IN (9, 10) AND \"Authority\" = 4) OR " +
+                    "(\"TemplateKind\" IN (9, 10, 23, 24) AND \"Authority\" = 4) OR " +
                     "(\"TemplateKind\" IN (11, 12, 13) AND \"Authority\" = 5) OR " +
-                    "(\"TemplateKind\" IN (14, 15, 16) AND \"Authority\" = 6)");
+                    "(\"TemplateKind\" IN (14, 15, 16) AND \"Authority\" = 6) OR " +
+                    "(\"TemplateKind\" IN (25, 26) AND \"Authority\" = 7)");
                 table.HasCheckConstraint(
                     "ck_economy_posting_groups_source_requirement",
                     "\"TemplateKind\" NOT IN (1, 2, 3, 18, 19, 20) OR \"SourceStampId\" IS NOT NULL");
@@ -415,9 +423,14 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
 
         modelBuilder.Entity<EconomyJournalEntryRow>(builder =>
         {
-            builder.ToTable("economy_journal_entries");
+            builder.ToTable("economy_journal_entries", table =>
+                table.HasCheckConstraint(
+                    "ck_economy_journal_entries_hash_algorithm",
+                    "(\"HashAlgorithmVersion\" = 0 AND \"CanonicalPayloadHash\" IS NULL) OR " +
+                    "(\"HashAlgorithmVersion\" IN (1, 2) AND length(btrim(\"CanonicalPayloadHash\")) > 0)"));
             builder.HasKey(row => row.Id);
             builder.Property(row => row.PreviousHash).HasMaxLength(128);
+            builder.Property(row => row.CanonicalPayloadHash).HasMaxLength(128);
             builder.Property(row => row.Hash).HasMaxLength(128);
             builder.HasIndex(row => row.PostingGroupId)
                 .IsUnique()
@@ -822,6 +835,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.Property(row => row.SubjectHash).HasMaxLength(128);
             builder.HasIndex(row => new
             {
+                row.TenantId,
                 row.Dimension,
                 row.SubjectHash,
                 row.Operation,
@@ -835,8 +849,23 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         modelBuilder.Entity<EconomyRiskCounterReservationRow>(builder =>
         {
             builder.ToTable("economy_risk_counter_reservations", table =>
-                table.HasCheckConstraint("ck_economy_risk_counter_reservations_amount_positive", "\"AmountUnits\" > 0"));
+            {
+                table.HasCheckConstraint("ck_economy_risk_counter_reservations_amount_positive", "\"AmountUnits\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_risk_counter_reservations_lifetime",
+                    "\"ExpiresAt\" > \"ReservedAt\"");
+                table.HasCheckConstraint(
+                    "ck_economy_risk_counter_reservations_state",
+                    "(\"Status\" = 1 AND \"ConsumedAt\" IS NULL AND \"ReleasedAt\" IS NULL) OR " +
+                    "(\"Status\" = 2 AND \"ConsumedAt\" >= \"ReservedAt\" AND \"ReleasedAt\" IS NULL) OR " +
+                    "(\"Status\" = 3 AND \"ReleasedAt\" >= \"ReservedAt\" AND \"ConsumedAt\" IS NULL) OR " +
+                    "(\"Status\" = 4 AND \"ReleasedAt\" >= \"ExpiresAt\" AND \"ConsumedAt\" IS NULL)");
+            });
             builder.HasKey(row => row.Id);
+            builder.Property(row => row.InputFingerprint).HasMaxLength(128);
+            builder.HasIndex(row => new { row.ReservationGroupId, row.RiskCounterId })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_risk_counter_reservations_group_counter");
             builder.HasIndex(row => new { row.RiskDecisionId, row.RiskCounterId })
                 .IsUnique()
                 .HasDatabaseName("ux_economy_risk_counter_reservations_decision_counter");
@@ -861,9 +890,9 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.ValueHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.SubjectId, row.Kind })
+            builder.HasIndex(row => new { row.TenantId, row.SubjectId, row.Kind, row.Version })
                 .IsUnique()
-                .HasDatabaseName("ux_economy_protected_change_cooldowns_subject_kind");
+                .HasDatabaseName("ux_economy_protected_change_cooldowns_subject_kind_version");
         });
 
         modelBuilder.Entity<EconomyHoldRow>(builder =>
@@ -911,9 +940,9 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                     "(\"Status\" = 1 AND \"ResolvedAt\" IS NULL AND \"ResolvedBy\" IS NULL AND \"Resolution\" IS NULL) OR (\"Status\" IN (2, 3) AND \"ResolvedAt\" >= \"SubmittedAt\" AND \"ResolvedBy\" IS NOT NULL AND length(btrim(\"Resolution\")) > 0)");
             });
             builder.HasKey(row => row.Id);
-            builder.HasIndex(row => row.RiskDecisionId)
+            builder.HasIndex(row => new { row.TenantId, row.RiskDecisionId })
                 .IsUnique()
-                .HasDatabaseName("ux_economy_risk_review_cases_decision");
+                .HasDatabaseName("ux_economy_risk_review_cases_tenant_decision");
             builder.HasOne<EconomyRiskDecisionRow>()
                 .WithMany()
                 .HasForeignKey(row => row.RiskDecisionId)
@@ -955,7 +984,671 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .HasForeignKey(row => row.RiskDecisionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        modelBuilder.Entity<EconomyTopUpIntentRow>(builder =>
+        {
+            builder.ToTable("economy_top_up_intents", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_top_up_intents_amount_positive",
+                    "\"HardCoinUnits\" > 0 AND \"UsdMinorUnits\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_top_up_intents_provider_binding",
+                    "(\"Status\" = 1 AND \"ProviderEnvironment\" IS NULL AND \"ProviderAccountId\" IS NULL AND " +
+                    "\"ProviderObjectId\" IS NULL AND \"ProviderObjectType\" IS NULL AND " +
+                    "\"ProviderMonetaryLeg\" IS NULL AND \"ProviderBoundAt\" IS NULL) OR " +
+                    "(\"Status\" <> 1 AND \"ProviderEnvironment\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND " +
+                    "\"ProviderObjectId\" IS NOT NULL AND \"ProviderObjectType\" IS NOT NULL AND " +
+                    "\"ProviderMonetaryLeg\" IS NOT NULL AND \"ProviderBoundAt\" IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "ck_economy_top_up_intents_version_positive",
+                    "\"Version\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_top_up_intents_event_state",
+                    "(\"LastProviderEventId\" IS NULL AND \"LastProviderEventAt\" IS NULL AND " +
+                    "\"LastProviderEvidenceHash\" IS NULL) OR (\"LastProviderEventId\" IS NOT NULL AND " +
+                    "\"LastProviderEventAt\" IS NOT NULL AND \"LastProviderEvidenceHash\" IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "ck_economy_top_up_intents_posting_state",
+                    "(\"Status\" = 5 AND \"PostingGroupId\" IS NOT NULL) OR " +
+                    "(\"Status\" <> 5 AND \"PostingGroupId\" IS NULL)");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.JurisdictionCode).HasMaxLength(16);
+            builder.Property(row => row.PolicyHash).HasMaxLength(128);
+            builder.Property(row => row.Provider).HasMaxLength(64);
+            builder.Property(row => row.IdempotencyKey).HasMaxLength(128);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.ProviderEnvironment).HasMaxLength(32);
+            builder.Property(row => row.ProviderAccountId).HasMaxLength(255);
+            builder.Property(row => row.ProviderObjectId).HasMaxLength(255);
+            builder.Property(row => row.ProviderObjectType).HasMaxLength(100);
+            builder.Property(row => row.ProviderMonetaryLeg).HasMaxLength(100);
+            builder.Property(row => row.LastProviderEventId).HasMaxLength(255);
+            builder.Property(row => row.LastProviderEvidenceHash).HasMaxLength(128);
+            builder.Property(row => row.FailureCode).HasMaxLength(100);
+            builder.Property(row => row.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            builder.Property(row => row.Version).IsConcurrencyToken();
+            builder.HasIndex(row => new { row.TenantId, row.ActorId, row.IdempotencyKey })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_top_up_intents_actor_key");
+            builder.HasIndex(row => row.PaymentId)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_top_up_intents_payment");
+            builder.HasIndex(row => new
+                {
+                    row.Provider,
+                    row.ProviderEnvironment,
+                    row.ProviderAccountId,
+                    row.ProviderObjectId,
+                    row.ProviderObjectType,
+                    row.ProviderMonetaryLeg
+                })
+                .IsUnique()
+                .HasFilter("\"ProviderObjectId\" IS NOT NULL")
+                .HasDatabaseName("ux_economy_top_up_intents_provider_object");
+            builder.HasOne<EconomyWalletRow>()
+                .WithMany()
+                .HasForeignKey(row => row.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyPostingGroupRow>()
+                .WithMany()
+                .HasForeignKey(row => row.PostingGroupId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
+
+    private static void ConfigureSelfServiceTransfers(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EconomySelfServiceTransferIntentRow>(builder =>
+        {
+            builder.ToTable("economy_self_service_transfer_intents", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_self_service_transfer_intents_amount_positive",
+                    "\"AmountUnits\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_self_service_transfer_intents_type_valid",
+                    "\"TransferType\" IN (1, 2, 3)");
+                table.HasCheckConstraint(
+                    "ck_economy_self_service_transfer_intents_currency_provenance",
+                    "(\"Currency\" = 1 AND \"Provenance\" = 1) OR " +
+                    "(\"Currency\" = 2 AND \"Provenance\" = 3)");
+                table.HasCheckConstraint(
+                    "ck_economy_self_service_transfer_intents_parties_distinct",
+                    "\"ActorId\" <> \"RecipientUserId\"");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.IdempotencyKey).HasMaxLength(128);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.ProviderReferenceHash).HasMaxLength(128);
+            builder.Property(row => row.DestinationHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.TenantId, row.ActorId, row.IdempotencyKey })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_self_service_transfer_intents_actor_key");
+            builder.HasIndex(row => new { row.TenantId, row.RecipientUserId, row.RequestedAt })
+                .HasDatabaseName("ix_economy_self_service_transfer_intents_recipient_time");
+        });
+    }
+
+    private static void ConfigureEconomyWalletProvisioningReceipt(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EconomyWalletProvisioningReceiptRow>(builder =>
+        {
+            builder.HasNoKey();
+            builder.ToView(null);
+            builder.Property(row => row.WalletId).HasColumnName("wallet_id");
+            builder.Property(row => row.Created).HasColumnName("created");
+        });
+    }
+
+    private static void ConfigureLegacyShadowMigration(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EconomyLegacyShadowBatchRow>(builder =>
+        {
+            builder.ToTable("economy_legacy_shadow_batches", table =>
+            {
+                table.HasCheckConstraint("ck_economy_legacy_shadow_batches_counts",
+                    "\"WalletCount\" >= 0 AND \"TransactionCount\" >= 0 AND \"FinancialLedgerEntryCount\" >= 0");
+                table.HasCheckConstraint("ck_economy_legacy_shadow_batches_units",
+                    "\"ExpectedHardUnits\" >= 0 AND \"BackfilledHardUnits\" >= 0 AND \"ReconciledHardUnits\" >= 0");
+                table.HasCheckConstraint("ck_economy_legacy_shadow_batches_state", "\"State\" BETWEEN 1 AND 8");
+                table.HasCheckConstraint("ck_economy_legacy_shadow_batches_version", "\"Version\" > 0");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.JurisdictionCode).HasMaxLength(16);
+            builder.Property(row => row.WalletSnapshotHash).HasMaxLength(128);
+            builder.Property(row => row.TransactionSnapshotHash).HasMaxLength(128);
+            builder.Property(row => row.FinancialLedgerSnapshotHash).HasMaxLength(128);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.FailureCode).HasMaxLength(128);
+            builder.Property(row => row.Version).IsConcurrencyToken();
+            builder.HasIndex(row => new { row.TenantId, row.State });
+            builder.HasIndex(row => row.RequestHash).IsUnique();
+        });
+
+        modelBuilder.Entity<EconomyLegacyShadowWalletRow>(builder =>
+        {
+            builder.ToTable("economy_legacy_shadow_wallets", table =>
+            {
+                table.HasCheckConstraint("ck_economy_legacy_shadow_wallets_units",
+                    "\"LegacyBalanceMinorUnits\" >= 0 AND \"CompletedCreditsMinorUnits\" >= 0 AND \"CompletedDebitsMinorUnits\" >= 0");
+                table.HasCheckConstraint("ck_economy_legacy_shadow_wallets_transactions", "\"TransactionCount\" >= 0");
+                table.HasCheckConstraint("ck_economy_legacy_shadow_wallets_state", "\"State\" BETWEEN 1 AND 5");
+                table.HasCheckConstraint("ck_economy_legacy_shadow_wallets_version", "\"Version\" > 0");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.SnapshotHash).HasMaxLength(128);
+            builder.Property(row => row.JournalHash).HasMaxLength(128);
+            builder.Property(row => row.ReconciliationHash).HasMaxLength(128);
+            builder.Property(row => row.FailureCode).HasMaxLength(128);
+            builder.Property(row => row.Version).IsConcurrencyToken();
+            builder.HasIndex(row => new { row.BatchId, row.LegacyWalletId }).IsUnique();
+            builder.HasIndex(row => row.SourceStampId).IsUnique();
+            builder.HasIndex(row => row.PostingId).IsUnique();
+            builder.HasIndex(row => row.CreditLotId).IsUnique();
+            builder.HasOne<EconomyLegacyShadowBatchRow>().WithMany().HasForeignKey(row => row.BatchId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyWalletRow>().WithMany().HasForeignKey(row => row.EconomyWalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyLegacyCutoverRow>(builder =>
+        {
+            builder.ToTable("economy_legacy_cutovers", table =>
+            {
+                table.HasCheckConstraint("ck_economy_legacy_cutovers_state", "\"State\" BETWEEN 1 AND 4");
+                table.HasCheckConstraint("ck_economy_legacy_cutovers_epoch", "\"Epoch\" > 0 AND \"Version\" > 0");
+            });
+            builder.HasKey(row => row.TenantId);
+            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
+            builder.Property(row => row.Reason).HasMaxLength(500);
+            builder.Property(row => row.Version).IsConcurrencyToken();
+            builder.HasIndex(row => row.BatchId).IsUnique();
+            builder.HasOne<EconomyLegacyShadowBatchRow>().WithOne().HasForeignKey<EconomyLegacyCutoverRow>(row => row.BatchId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyLegacyCutoverAuditRow>(builder =>
+        {
+            builder.ToTable("economy_legacy_cutover_audit", table =>
+            {
+                table.HasCheckConstraint("ck_economy_legacy_cutover_audit_sequence", "\"Sequence\" > 0");
+                table.HasCheckConstraint("ck_economy_legacy_cutover_audit_state", "\"State\" BETWEEN 1 AND 4");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Reason).HasMaxLength(500);
+            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.TenantId, row.Sequence }).IsUnique();
+            builder.HasOne<EconomyLegacyCutoverRow>().WithMany().HasForeignKey(row => row.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private static void ConfigureControlPlane(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EconomyCapabilityPolicyRow>(builder =>
+        {
+            builder.ToTable("economy_capability_policies", table =>
+            {
+                table.HasCheckConstraint("ck_economy_capability_policies_version", "\"Version\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_capability_policies_dual_control",
+                    "(\"ApprovedBy\" IS NULL AND \"ApprovedAt\" IS NULL AND NOT \"IsActive\") OR " +
+                    "(\"ApprovedBy\" IS NOT NULL AND \"ApprovedBy\" <> \"ProposedBy\" AND \"ApprovedAt\" >= \"ProposedAt\")");
+                table.HasCheckConstraint(
+                    "ck_economy_capability_policies_window",
+                    "\"ExpiresAt\" > \"EffectiveAt\" AND (\"ApprovedAt\" IS NULL OR \"EffectiveAt\" >= \"ApprovedAt\")");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.ScopeKey).HasMaxLength(256);
+            builder.Property(row => row.JurisdictionCode).HasMaxLength(16);
+            builder.Property(row => row.CanonicalPayload).HasColumnType("jsonb");
+            builder.Property(row => row.PayloadHash).HasMaxLength(128);
+            builder.Property(row => row.KeyId).HasMaxLength(256);
+            builder.Property(row => row.Signature).HasMaxLength(2048);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.HasIndex(row => row.RequestHash)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_capability_policies_request_hash");
+            builder.HasIndex(row => new { row.ScopeKey, row.Version })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_capability_policies_scope_version");
+            builder.HasIndex(row => row.ScopeKey)
+                .IsUnique()
+                .HasFilter("\"IsActive\"")
+                .HasDatabaseName("ux_economy_capability_policies_active_scope");
+        });
+
+        modelBuilder.Entity<EconomyCapabilityPolicyApprovalRow>(builder =>
+        {
+            builder.ToTable("economy_capability_policy_approvals");
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.PolicyId, row.ActorId })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_capability_policy_approvals_policy_actor");
+            builder.HasOne<EconomyCapabilityPolicyRow>()
+                .WithMany()
+                .HasForeignKey(row => row.PolicyId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyCapabilityReceiptRow>(builder =>
+        {
+            builder.ToTable("economy_capability_receipts", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_capability_receipts_versions",
+                    "\"PolicyVersion\" > 0 AND \"ReserveVersion\" > 0 AND \"KillSwitchEpoch\" >= 0");
+                table.HasCheckConstraint(
+                    "ck_economy_capability_receipts_lifetime",
+                    "\"ExpiresAt\" > \"IssuedAt\"");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.SubjectReference).HasMaxLength(256);
+            builder.Property(row => row.JurisdictionCode).HasMaxLength(16);
+            builder.Property(row => row.OperationFingerprint).HasMaxLength(128);
+            builder.Property(row => row.ProviderHash).HasMaxLength(128);
+            builder.Property(row => row.DestinationHash).HasMaxLength(128);
+            builder.Property(row => row.SourceRootHashes).HasColumnType("jsonb");
+            builder.Property(row => row.EvidenceHashes).HasColumnType("jsonb");
+            builder.Property(row => row.ReceiptHash).HasMaxLength(128);
+            builder.Property(row => row.KeyId).HasMaxLength(256);
+            builder.Property(row => row.Signature).HasMaxLength(2048);
+            builder.HasIndex(row => row.ReceiptHash)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_capability_receipts_hash");
+            builder.HasIndex(row => new { row.TenantId, row.OperationFingerprint })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_capability_receipts_tenant_operation");
+            builder.HasOne<EconomyRiskDecisionRow>()
+                .WithMany()
+                .HasForeignKey(row => row.RiskDecisionId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyCapabilityReceiptConsumptionRow>(builder =>
+        {
+            builder.ToTable("economy_capability_receipt_consumptions");
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.OperationFingerprint).HasMaxLength(128);
+            builder.HasIndex(row => row.ReceiptId)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_capability_receipt_consumptions_receipt");
+            builder.HasOne<EconomyCapabilityReceiptRow>()
+                .WithMany()
+                .HasForeignKey(row => row.ReceiptId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyKillSwitchRow>(builder =>
+        {
+            builder.ToTable("economy_kill_switches", table =>
+            {
+                table.HasCheckConstraint("ck_economy_kill_switches_epoch", "\"Epoch\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_kill_switches_state",
+                    "(\"IsActive\" AND \"ReleasedAt\" IS NULL) OR (NOT \"IsActive\" AND \"ReleasedAt\" >= \"ActivatedAt\")");
+                table.HasCheckConstraint(
+                    "ck_economy_kill_switches_release_proposal",
+                    "(\"ReleaseProposedBy\" IS NULL AND \"ReleaseProposedAt\" IS NULL AND \"ReleaseProposalReauthenticationHash\" IS NULL) OR " +
+                    "(\"ReleaseProposedBy\" IS NOT NULL AND \"ReleaseProposedAt\" >= \"ActivatedAt\" AND length(btrim(\"ReleaseProposalReauthenticationHash\")) > 0)");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.ScopeKey).HasMaxLength(256);
+            builder.Property(row => row.Reason).HasMaxLength(1000);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.ReleaseProposalReauthenticationHash).HasMaxLength(128);
+            builder.HasIndex(row => row.RequestHash)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_kill_switches_request_hash");
+            builder.HasIndex(row => new { row.ScopeKey, row.Epoch })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_kill_switches_scope_epoch");
+            builder.HasIndex(row => row.ScopeKey)
+                .IsUnique()
+                .HasFilter("\"IsActive\"")
+                .HasDatabaseName("ux_economy_kill_switches_active_scope");
+        });
+
+        modelBuilder.Entity<EconomyKillSwitchReleaseApprovalRow>(builder =>
+        {
+            builder.ToTable("economy_kill_switch_release_approvals");
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.KillSwitchId, row.ActorId })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_kill_switch_release_approvals_switch_actor");
+            builder.HasOne<EconomyKillSwitchRow>()
+                .WithMany()
+                .HasForeignKey(row => row.KillSwitchId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyEntityGraphNodeRow>(builder =>
+        {
+            builder.ToTable("economy_entity_graph_nodes", table =>
+                table.HasCheckConstraint("ck_economy_entity_graph_nodes_version", "\"Version\" > 0"));
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.IdentityHash).HasMaxLength(128);
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.TenantId, row.Type, row.IdentityHash, row.Version })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_entity_graph_nodes_identity_version");
+        });
+
+        modelBuilder.Entity<EconomyEntityGraphEdgeRow>(builder =>
+        {
+            builder.ToTable("economy_entity_graph_edges", table =>
+            {
+                table.HasCheckConstraint("ck_economy_entity_graph_edges_version", "\"Version\" > 0");
+                table.HasCheckConstraint("ck_economy_entity_graph_edges_distinct_nodes", "\"LeftNodeId\" <> \"RightNodeId\"");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Relationship).HasMaxLength(100);
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.TenantId, row.LeftNodeId, row.RightNodeId, row.Version })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_entity_graph_edges_pair_version");
+            builder.HasOne<EconomyEntityGraphNodeRow>()
+                .WithMany()
+                .HasForeignKey(row => row.LeftNodeId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyEntityGraphNodeRow>()
+                .WithMany()
+                .HasForeignKey(row => row.RightNodeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyComplianceEvidenceRow>(builder =>
+        {
+            builder.ToTable("economy_compliance_evidence", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_compliance_evidence_versions",
+                    "\"Version\" > 0 AND \"PolicyVersion\" > 0 AND length(btrim(\"EvidenceKind\")) > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_compliance_evidence_lifetime",
+                    "\"ExpiresAt\" > \"IssuedAt\" AND \"ReceivedAt\" >= \"IssuedAt\"");
+                table.HasCheckConstraint(
+                    "ck_economy_compliance_evidence_jurisdiction",
+                    "\"JurisdictionCode\" IS NULL OR \"JurisdictionCode\" ~ '^[A-Z]{3}$'");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Provider).HasMaxLength(100);
+            builder.Property(row => row.Environment).HasMaxLength(50);
+            builder.Property(row => row.ProviderEventId).HasMaxLength(256);
+            builder.Property(row => row.SubjectHash).HasMaxLength(128);
+            builder.Property(row => row.EvidenceKind).HasMaxLength(100);
+            builder.Property(row => row.JurisdictionCode).HasMaxLength(3).IsFixedLength();
+            builder.Property(row => row.Result).HasMaxLength(100);
+            builder.Property(row => row.PayloadHash).HasMaxLength(128);
+            builder.Property(row => row.RawObjectReference).HasMaxLength(1000);
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.Provider, row.Environment, row.ProviderEventId })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_compliance_evidence_provider_event");
+            builder.HasIndex(row => new { row.TenantId, row.SubjectHash, row.EvidenceKind, row.Version })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_compliance_evidence_subject_version");
+        });
+
+        modelBuilder.Entity<EconomyComplianceInboxRow>(builder =>
+        {
+            builder.ToTable("economy_compliance_inbox");
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Provider).HasMaxLength(100);
+            builder.Property(row => row.Environment).HasMaxLength(50);
+            builder.Property(row => row.ProviderEventId).HasMaxLength(256);
+            builder.Property(row => row.PayloadHash).HasMaxLength(128);
+            builder.Property(row => row.RawObjectReference).HasMaxLength(1000);
+            builder.Property(row => row.ProcessingError).HasMaxLength(2000);
+            builder.HasIndex(row => new { row.Provider, row.Environment, row.ProviderEventId })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_compliance_inbox_provider_event");
+        });
+
+        modelBuilder.Entity<EconomyComplianceOutboxRow>(builder =>
+        {
+            builder.ToTable("economy_compliance_outbox");
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Type).HasMaxLength(100);
+            builder.Property(row => row.Payload).HasColumnType("jsonb");
+            builder.Property(row => row.PayloadHash).HasMaxLength(128);
+            builder.HasIndex(row => row.EvidenceId)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_compliance_outbox_evidence");
+            builder.HasOne<EconomyComplianceEvidenceRow>()
+                .WithMany()
+                .HasForeignKey(row => row.EvidenceId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyComplianceHoldRow>(builder =>
+        {
+            builder.ToTable("economy_compliance_holds", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_compliance_holds_lifetime",
+                    "\"ExpiresAt\" > \"ActivatedAt\"");
+                table.HasCheckConstraint(
+                    "ck_economy_compliance_holds_release",
+                    "(\"ReleasedAt\" IS NULL AND \"ReleasedBy\" IS NULL) OR " +
+                    "(\"ReleasedAt\" >= \"ActivatedAt\" AND \"ReleasedBy\" IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "ck_economy_compliance_holds_release_proposal",
+                    "(\"ReleaseProposedAt\" IS NULL AND \"ReleaseProposedBy\" IS NULL AND " +
+                    "\"RequiredReleaseApprovals\" IS NULL AND \"ReleasePolicyEvidenceHash\" IS NULL) OR " +
+                    "(\"ReleaseProposedAt\" >= \"ActivatedAt\" AND \"ReleaseProposedBy\" IS NOT NULL AND " +
+                    "\"RequiredReleaseApprovals\" BETWEEN 1 AND 2 AND " +
+                    "length(btrim(\"ReleasePolicyEvidenceHash\")) > 0)");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.ScopeKey).HasMaxLength(512);
+            builder.Property(row => row.SubjectHash).HasMaxLength(128);
+            builder.Property(row => row.CaseReferenceHash).HasMaxLength(128);
+            builder.Property(row => row.ReasonCode).HasMaxLength(100);
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.Property(row => row.IdempotencyKeyHash).HasMaxLength(128);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.ReleasePolicyEvidenceHash).HasMaxLength(128);
+            builder.HasIndex(row => row.IdempotencyKeyHash).IsUnique()
+                .HasDatabaseName("ux_economy_compliance_holds_idempotency");
+            builder.HasIndex(row => new { row.ScopeKey, row.ReleasedAt, row.ExpiresAt })
+                .HasDatabaseName("ix_economy_compliance_holds_active_scope");
+            builder.HasIndex(row => new { row.TenantId, row.SubjectHash, row.ExpiresAt });
+        });
+
+        modelBuilder.Entity<EconomyComplianceHoldEventRow>(builder =>
+        {
+            builder.ToTable("economy_compliance_hold_events", table =>
+                table.HasCheckConstraint(
+                    "ck_economy_compliance_hold_events_sequence",
+                    "\"Sequence\" > 0"));
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Kind).HasMaxLength(50);
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.HoldId, row.Sequence }).IsUnique();
+            builder.HasIndex(row => new { row.HoldId, row.Kind, row.ActorId }).IsUnique();
+            builder.HasOne<EconomyComplianceHoldRow>().WithMany().HasForeignKey(row => row.HoldId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyCustodyObservationRow>(builder =>
+        {
+            builder.ToTable("economy_custody_observations", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_custody_observations_values",
+                    "\"Version\" > 0 AND \"EligibleUsdNanos\" >= 0");
+                table.HasCheckConstraint(
+                    "ck_economy_custody_observations_lifetime",
+                    "\"ExpiresAt\" > \"ObservedAt\"");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Provider).HasMaxLength(100);
+            builder.Property(row => row.AssetKey).HasMaxLength(256);
+            builder.Property(row => row.PayloadHash).HasMaxLength(128);
+            builder.Property(row => row.KeyId).HasMaxLength(256);
+            builder.Property(row => row.Signature).HasMaxLength(2048);
+            builder.HasIndex(row => new { row.Provider, row.AssetKey, row.Version })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_custody_observations_provider_asset_version");
+        });
+
+        modelBuilder.Entity<EconomyCustodyReconciliationRow>(builder =>
+        {
+            builder.ToTable("economy_custody_reconciliations", table =>
+                table.HasCheckConstraint(
+                    "ck_economy_custody_reconciliations_values",
+                    "\"ReserveVersion\" > 0 AND \"LiabilityUsdNanos\" >= 0 AND \"EligibleAssetUsdNanos\" >= 0"));
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.ObservationIds).HasColumnType("jsonb");
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.HasIndex(row => row.ReserveVersion)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_custody_reconciliations_reserve");
+        });
+
+        modelBuilder.Entity<EconomyReserveProposalRow>(builder =>
+        {
+            builder.ToTable("economy_reserve_proposals", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_reserve_proposals_values",
+                    "\"Version\" > 0 AND \"PolicyVersion\" > 0 AND \"AuthorizationEpoch\" > 0 AND " +
+                    "\"LiabilityUsdNanos\" >= 0 AND \"EligibleAssetUsdNanos\" >= 0 AND " +
+                    "\"HardFaceValueUsdMinor\" >= 0 AND \"RequiredHardReserveUsdMinor\" >= 0 AND " +
+                    "\"SoftFaceValueUsdNanos\" >= 0 AND \"RequiredSoftReserveUsdNanos\" >= 0 AND " +
+                    "\"HardBackingUsdNanos\" >= 0 AND \"SoftBackingUsdNanos\" >= 0");
+                table.HasCheckConstraint(
+                    "ck_economy_reserve_proposals_dual_control",
+                    "\"ApprovedBy\" IS NULL OR \"ApprovedBy\" <> \"ProposedBy\"");
+                table.HasCheckConstraint(
+                    "ck_economy_reserve_proposals_window",
+                    "\"ExpiresAt\" > \"ObservedAt\" AND \"ProposedAt\" >= \"ObservedAt\"");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.SnapshotHash).HasMaxLength(128);
+            builder.Property(row => row.ObservationIds).HasColumnType("jsonb");
+            builder.Property(row => row.AssetAllocations).HasColumnType("jsonb");
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.ApprovalReauthenticationHash).HasMaxLength(128);
+            builder.Property(row => row.Status).HasMaxLength(50);
+            builder.HasIndex(row => row.Version)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_reserve_proposals_version");
+        });
+
+        modelBuilder.Entity<EconomyJournalVerificationCheckpointRow>(builder =>
+        {
+            builder.ToTable("economy_journal_verification_checkpoints", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_journal_verification_checkpoints_range",
+                    "\"FromSequence\" >= 0 AND \"ToSequence\" >= \"FromSequence\"");
+                table.HasCheckConstraint(
+                    "ck_economy_journal_verification_checkpoints_time",
+                    "\"CompletedAt\" >= \"StartedAt\"");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.PreviousHash).HasMaxLength(128);
+            builder.Property(row => row.CurrentHash).HasMaxLength(128);
+            builder.Property(row => row.FailureCode).HasMaxLength(100);
+            builder.HasIndex(row => new { row.ToSequence, row.CompletedAt })
+                .HasDatabaseName("ix_economy_journal_verification_checkpoints_sequence");
+        });
+
+        modelBuilder.Entity<EconomyProjectionGenerationRow>(builder =>
+        {
+            builder.ToTable("economy_projection_generations", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_projection_generations_range",
+                    "\"Generation\" > 0 AND \"FromSequence\" >= 0 AND \"ToSequence\" >= \"FromSequence\"");
+                table.HasCheckConstraint(
+                    "ck_economy_projection_generations_dual_control",
+                    "(\"ApprovedBy\" IS NULL OR \"ApprovedBy\" <> \"ProposedBy\") AND " +
+                    "(\"SecondApprovedBy\" IS NULL OR (\"SecondApprovedBy\" <> \"ProposedBy\" AND \"SecondApprovedBy\" <> \"ApprovedBy\"))");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.ProjectionHash).HasMaxLength(128);
+            builder.Property(row => row.JournalHash).HasMaxLength(128);
+            builder.Property(row => row.State).HasMaxLength(50);
+            builder.HasIndex(row => row.Generation).IsUnique();
+            builder.HasIndex(row => row.IsActive)
+                .IsUnique()
+                .HasFilter("\"IsActive\"")
+                .HasDatabaseName("ux_economy_projection_generations_active");
+        });
+
+        modelBuilder.Entity<EconomyWalletProjectionGenerationRow>(builder =>
+        {
+            builder.ToTable("economy_wallet_projection_generations", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_wallet_projection_generations_amounts",
+                    "\"Generation\" > 0 AND \"PendingHard\" >= 0 AND \"PendingSoft\" >= 0 AND " +
+                    "\"PurchasedHard\" >= 0 AND \"EarnedHard\" >= 0 AND \"RestrictedHard\" >= 0 AND " +
+                    "\"Soft\" >= 0 AND \"ImmatureEarnedHard\" >= 0 AND \"HeldHard\" >= 0 AND " +
+                    "\"HeldSoft\" >= 0 AND \"AvailableHardToSpend\" >= 0 AND " +
+                    "\"AvailableSoftToSpend\" >= 0 AND \"WithdrawableHard\" >= 0");
+            });
+            builder.HasKey(row => new { row.Generation, row.WalletId });
+            builder.Property(row => row.ProjectionHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.Generation, row.MatchesLive });
+            builder.HasOne<EconomyProjectionGenerationRow>()
+                .WithMany().HasForeignKey(row => row.Generation).HasPrincipalKey(row => row.Generation)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyWalletRow>()
+                .WithMany().HasForeignKey(row => row.WalletId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyProjectionGenerationApprovalRow>(builder =>
+        {
+            builder.ToTable("economy_projection_generation_approvals");
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.Generation, row.ActorId }).IsUnique();
+            builder.HasOne<EconomyProjectionGenerationRow>()
+                .WithMany().HasForeignKey(row => row.Generation).HasPrincipalKey(row => row.Generation)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyAnchorVerificationRow>(builder =>
+        {
+            builder.ToTable("economy_anchor_verifications");
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.KeyId).HasMaxLength(256);
+            builder.Property(row => row.ObjectVersion).HasMaxLength(256);
+            builder.Property(row => row.ETag).HasMaxLength(256);
+            builder.Property(row => row.ObjectHash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.ExternalAnchorId, row.VerifiedAt });
+            builder.HasOne<EconomyExternalAnchorRow>()
+                .WithMany()
+                .HasForeignKey(row => row.ExternalAnchorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EconomyWorkerLeaseRow>(builder =>
+        {
+            builder.ToTable("economy_worker_leases", table =>
+            {
+                table.HasCheckConstraint("ck_economy_worker_leases_fencing", "\"FencingToken\" > 0");
+                table.HasCheckConstraint("ck_economy_worker_leases_lifetime", "\"ExpiresAt\" > \"AcquiredAt\"");
+            });
+            builder.HasKey(row => row.Name);
+            builder.Property(row => row.Name).HasMaxLength(100);
+            builder.Property(row => row.Owner).HasMaxLength(256);
+            builder.HasIndex(row => row.Name)
+                .IsUnique()
+                .HasDatabaseName("ux_economy_worker_leases_name");
+        });
+    }
+
     private static void ConfigureFifoFragmentReservationReceipt(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<FifoFragmentReservationReceiptRow>(builder =>
@@ -968,6 +1661,23 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.Property(row => row.ReversalEpoch).HasColumnName("reversal_epoch");
             builder.Property(row => row.StartInclusive).HasColumnName("start_inclusive");
             builder.Property(row => row.EndExclusive).HasColumnName("end_exclusive");
+            builder.Property(row => row.AmountUnits).HasColumnName("amount_units");
+        });
+    }
+
+    private static void ConfigureMarketplaceFifoReservationReceipt(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<MarketplaceFifoReservationReceiptRow>(builder =>
+        {
+            builder.HasNoKey();
+            builder.ToView(null);
+            builder.Property(row => row.ReservationId).HasColumnName("reservation_id");
+            builder.Property(row => row.ParentLotId).HasColumnName("parent_lot_id");
+            builder.Property(row => row.RootSourceStampId).HasColumnName("root_source_stamp_id");
+            builder.Property(row => row.ReversalEpoch).HasColumnName("reversal_epoch");
+            builder.Property(row => row.StartInclusive).HasColumnName("start_inclusive");
+            builder.Property(row => row.EndExclusive).HasColumnName("end_exclusive");
+            builder.Property(row => row.Currency).HasColumnName("currency");
             builder.Property(row => row.AmountUnits).HasColumnName("amount_units");
         });
     }

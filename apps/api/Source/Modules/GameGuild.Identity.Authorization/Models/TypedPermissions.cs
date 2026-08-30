@@ -615,3 +615,47 @@ public sealed class WalletsPermission : Permission
 
     public static readonly WalletsPermission Admin = new(Keys.Admin, "Administer wallets across the platform");
 }
+
+/// <summary>Segregated permissions for Economy control-plane and operational duties.</summary>
+public sealed class EconomyPermission : Permission
+{
+    private EconomyPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
+    {
+    }
+
+    public static class Keys
+    {
+        public const string ReadOperations = "economy:read:operations";
+        public const string ReviewPayouts = "economy:review:payouts";
+        public const string OperatePayouts = "economy:operate:payouts";
+        public const string OperateCompliance = "economy:operate:compliance";
+        public const string ManagePolicies = "economy:manage:policies";
+        public const string ManageReserves = "economy:manage:reserves";
+        public const string OperateLedger = "economy:operate:ledger";
+        public const string ManageKillSwitches = "economy:manage:kill-switches";
+        public const string OperateAdRewards = "economy:operate:ad-rewards";
+        public const string OperateMarketplace = "economy:operate:marketplace";
+        public const string OperateBounties = "economy:operate:bounties";
+        public const string OperateTreasury = "economy:operate:treasury";
+        public const string ManageLegacyMigration = "economy:manage:legacy-migration";
+    }
+
+    public static readonly EconomyPermission ReadOperations = new(Keys.ReadOperations, "Read Economy operational state");
+    public static readonly EconomyPermission ReviewPayouts = new(Keys.ReviewPayouts, "Review tenant payout requests");
+    public static readonly EconomyPermission OperatePayouts = new(Keys.OperatePayouts, "Reserve, dispatch, and reconcile approved tenant payouts");
+    public static readonly EconomyPermission OperateCompliance = new(Keys.OperateCompliance, "Operate Economy compliance cases and evidence");
+    public static readonly EconomyPermission ManagePolicies = new(Keys.ManagePolicies, "Propose and approve Economy policies");
+    public static readonly EconomyPermission ManageReserves = new(Keys.ManageReserves, "Manage Economy reserves and custody observations");
+    public static readonly EconomyPermission OperateLedger = new(Keys.OperateLedger, "Operate Economy journal, projections and anchors");
+    public static readonly EconomyPermission ManageKillSwitches = new(Keys.ManageKillSwitches, "Activate and release Economy kill switches");
+    public static readonly EconomyPermission OperateAdRewards = new(Keys.OperateAdRewards, "Operate AdRewards reports and reconciliation");
+    public static readonly EconomyPermission OperateMarketplace = new(Keys.OperateMarketplace, "Operate Marketplace settlements and refunds");
+    public static readonly EconomyPermission OperateBounties = new(Keys.OperateBounties, "Operate Bounty expiration and conflicts");
+    public static readonly EconomyPermission OperateTreasury = new(Keys.OperateTreasury, "Operate Treasury withdrawals and reconciliation");
+    public static readonly EconomyPermission ManageLegacyMigration = new(Keys.ManageLegacyMigration, "Manage tenant-scoped Economy legacy migration and cutover");
+}

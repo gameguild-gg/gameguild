@@ -8,7 +8,7 @@ namespace GameGuild.Economy.Payouts.Commands;
 
 public sealed record ReviewPayoutRequestRequest(string Reason);
 
-[AuthorizeRequest(WalletsPermission.Keys.Admin)]
+[AuthorizeRequest(EconomyPermission.Keys.ReviewPayouts)]
 public sealed record ReviewPayoutRequestCommand(
     Guid RequestId,
     PayoutRequestState Outcome,
@@ -61,9 +61,9 @@ public sealed class ReviewPayoutRequestCommandHandler(
     {
         var actor = actorContextAccessor.ActorContext;
         return actor.IsAuthenticated && actor.SubjectIdAsGuid is { } actorId && actor.TenantId is { } tenantId &&
-               actor.HasPermission(WalletsPermission.Keys.Admin)
+               actor.HasPermission(EconomyPermission.Keys.ReviewPayouts)
             ? new PayoutReviewActor(actorId, tenantId)
-            : throw new UnauthorizedAccessException("A tenant wallet administrator is required to review payout requests.");
+            : throw new UnauthorizedAccessException("The Economy payout-review permission is required.");
     }
 
     private sealed record PayoutReviewActor(Guid ActorId, Guid TenantId);

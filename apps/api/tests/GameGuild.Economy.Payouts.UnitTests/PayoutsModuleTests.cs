@@ -7,7 +7,7 @@ namespace GameGuild.Economy.Payouts.UnitTests;
 public sealed class PayoutsModuleTests
 {
     [Fact]
-    public void ModuleEnablesReadOnlyPayoutStatusWithoutWriteWorkflows()
+    public void ModuleAlwaysComposesDurableWorkflowsWhileValueAuthorizationRemainsFailClosed()
     {
         var module = new PayoutsModule();
         var services = new ServiceCollection();
@@ -25,27 +25,6 @@ public sealed class PayoutsModuleTests
             descriptor.ServiceType == typeof(IPayoutRequestStore) &&
             descriptor.ImplementationType == typeof(PostgreSqlPayoutRequestStore) &&
             descriptor.Lifetime == ServiceLifetime.Scoped);
-        services.Should().NotContain(descriptor =>
-            descriptor.ServiceType == typeof(IDurablePayoutReservationWorkflow));
-        services.Should().NotContain(descriptor =>
-            descriptor.ServiceType == typeof(IDurablePayoutSettlementWorkflow));
-        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(PayoutCoordinator));
-        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(DbContext));
-    }
-
-    [Fact]
-    public void WriteWorkflowsRequireExplicitConfiguration()
-    {
-        var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Modules:Economy.Payouts:WriteWorkflowEnabled"] = "true"
-            })
-            .Build();
-
-        new PayoutsModule().ConfigureServices(services, configuration);
-
         services.Should().Contain(descriptor =>
             descriptor.ServiceType == typeof(IDurablePayoutReservationWorkflow) &&
             descriptor.ImplementationType == typeof(PostgreSqlDurablePayoutReservationWorkflow) &&
@@ -54,5 +33,23 @@ public sealed class PayoutsModuleTests
             descriptor.ServiceType == typeof(IDurablePayoutSettlementWorkflow) &&
             descriptor.ImplementationType == typeof(PostgreSqlDurablePayoutSettlementWorkflow) &&
             descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IPayoutFencingTokenAllocator) &&
+            descriptor.ImplementationType == typeof(PostgreSqlPayoutFencingTokenAllocator) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IPayoutAuthorizationEvidenceWriter) &&
+            descriptor.ImplementationType == typeof(PostgreSqlPayoutAuthorizationEvidenceWriter) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().Contain(descriptor =>
+            descriptor.ServiceType == typeof(IDurablePayoutApplicationService) &&
+            descriptor.ImplementationType == typeof(DurablePayoutApplicationService) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IConnectPayoutProvider));
+        services.Should().Contain(descriptor => descriptor.ServiceType == typeof(IStripeConnectWebhookNormalizer));
+        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(PayoutCoordinator));
+        services.Should().NotContain(descriptor => descriptor.ImplementationType == typeof(InMemoryPayoutOperationStore));
+        services.Should().NotContain(descriptor => descriptor.ServiceType == typeof(DbContext));
     }
+
 }

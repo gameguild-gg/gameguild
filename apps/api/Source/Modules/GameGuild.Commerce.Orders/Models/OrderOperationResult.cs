@@ -10,11 +10,18 @@ public sealed record OrderOperationResult(
     OrderChargeState? PaymentState = null,
     Guid? PaymentId = null,
     string? ClientActionToken = null,
-    string? PaymentMessage = null)
+    string? PaymentMessage = null,
+    Guid? MarketplaceSettlementId = null)
 {
     /// <summary>Create from an order entity</summary>
     public static OrderOperationResult FromOrder(Order order, bool wasDuplicate = false)
         => new(order, wasDuplicate);
+
+    public static OrderOperationResult FromMarketplaceSettlement(
+        Order order,
+        Guid settlementId,
+        bool wasDuplicate) =>
+        new(order, wasDuplicate, MarketplaceSettlementId: settlementId);
 
     public static OrderOperationResult FromPendingPayment(Order order, OrderChargeResult chargeResult) =>
         new(

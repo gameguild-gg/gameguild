@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GameGuild.Economy.Payouts;
 
@@ -12,14 +13,22 @@ public sealed class PayoutsModule : ModuleBase
     {
         services.AddScoped<IPayoutOperationStore, PostgreSqlPayoutOperationStore>();
         services.AddScoped<IPayoutRequestStore, PostgreSqlPayoutRequestStore>();
+        services.AddScoped<IPayoutFencingTokenAllocator, PostgreSqlPayoutFencingTokenAllocator>();
+        services.AddOptions<StripeConnectPayoutOptions>()
+            .Bind(configuration.GetSection(StripeConnectPayoutOptions.SectionName));
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddHttpClient<IConnectPayoutProvider, StripeConnectPayoutProvider>();
+        services.AddHttpClient<IStripeConnectWebhookNormalizer, StripeConnectPayoutProvider>();
+        services.AddSingleton<IPayoutProviderEvidenceVerifier, StripePayoutProviderEvidenceVerifier>();
+        services.AddScoped<IPayoutAuthorizationEvidenceWriter, PostgreSqlPayoutAuthorizationEvidenceWriter>();
+        services.AddScoped<IPayoutDispatchOutboxWriter, PostgreSqlPayoutDispatchOutboxWriter>();
+        services.AddScoped<IPayoutDispatchOutboxProcessor, PostgreSqlPayoutDispatchOutboxProcessor>();
 
-        // Read-only payout status is safe without a payout provider. Write workflows remain
-        // opt-in because they require provider evidence verification and execution gates.
-        if (configuration.GetValue<bool>("Modules:Economy.Payouts:WriteWorkflowEnabled"))
-        {
-            services.AddScoped<IDurablePayoutReservationWorkflow, PostgreSqlDurablePayoutReservationWorkflow>();
-            services.AddScoped<IDurablePayoutSettlementWorkflow, PostgreSqlDurablePayoutSettlementWorkflow>();
-        }
+        // Composition is unconditional. Signed policies, provider readiness and capability
+        // receipts decide whether value may move; missing configuration stays fail-closed.
+        services.AddScoped<IDurablePayoutReservationWorkflow, PostgreSqlDurablePayoutReservationWorkflow>();
+        services.AddScoped<IDurablePayoutSettlementWorkflow, PostgreSqlDurablePayoutSettlementWorkflow>();
+        services.AddScoped<IDurablePayoutApplicationService, DurablePayoutApplicationService>();
 
         return services;
     }

@@ -24,6 +24,7 @@ public enum AdminWithdrawalProviderOutcome
 
 public sealed record AdminWithdrawalReservationRequest(
     Guid RunId,
+    Guid TenantId,
     IdempotencyKey IdempotencyKey,
     Guid RequestedBy,
     WalletId PlatformFeeWalletId,
@@ -37,6 +38,7 @@ public sealed record AdminWithdrawalReservationRequest(
 
 public sealed record AdminWithdrawalDispatchCommand(
     Guid RunId,
+    Guid TenantId,
     long ExpectedVersion,
     long FencingToken,
     long ExecutionEpoch,
@@ -49,6 +51,7 @@ public sealed record AdminWithdrawalDispatchCommand(
 
 public sealed record AdminWithdrawalProviderReceipt(
     Guid RunId,
+    Guid TenantId,
     AdminWithdrawalProviderOutcome Outcome,
     string ProviderTransferId,
     long FencingToken,
@@ -63,6 +66,7 @@ public sealed record AdminWithdrawalProviderReceipt(
 public sealed record AdminWithdrawalProviderEvent(
     string EventId,
     Guid RunId,
+    Guid TenantId,
     AdminWithdrawalProviderOutcome Outcome,
     string ProviderTransferId,
     long FencingToken,
@@ -76,6 +80,7 @@ public sealed record AdminWithdrawalProviderEvent(
 
 public sealed record AdminWithdrawalRun(
     Guid Id,
+    Guid TenantId,
     IdempotencyKey IdempotencyKey,
     string RequestHash,
     DateOnly PeriodStart,
@@ -104,6 +109,7 @@ public interface IAdminWithdrawalProvider
         CancellationToken cancellationToken = default);
 
     ValueTask<AdminWithdrawalProviderEvent> ReconcileAsync(
+        Guid tenantId,
         Guid runId,
         string idempotencyKey,
         string? providerTransferId,

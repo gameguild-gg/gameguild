@@ -19,8 +19,10 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
                 "PostgreSQL payout request persistence requires the application's relational DbContext.");
     }
 
-    public PayoutRequest? FindReplay(Guid payeeId, string idempotencyKey, string requestHash)
+    public PayoutRequest? FindReplay(Guid tenantId, Guid payeeId, string idempotencyKey, string requestHash)
     {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
         if (payeeId == Guid.Empty)
         {
             throw new ArgumentException("Payee ID is required.", nameof(payeeId));
@@ -30,7 +32,8 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
         ArgumentException.ThrowIfNullOrWhiteSpace(requestHash);
 
         var row = Read(
-            "SELECT * FROM economy_private.read_payout_request_by_idempotency_v1({0}, {1})",
+            "SELECT * FROM economy_private.read_payout_request_by_idempotency_v3({0}, {1}, {2})",
+            tenantId,
             payeeId,
             idempotencyKey.Trim()).SingleOrDefault();
         if (row is null)
@@ -50,9 +53,12 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
     public void Add(PayoutRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
+        if (request.TenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(request));
         Execute($"""
-            SELECT economy_private.create_payout_request_v2(
+            SELECT economy_private.create_payout_request_v3(
                 {request.Id},
+                {request.TenantId},
                 {request.IdempotencyKey.Value},
                 {request.RequestHash},
                 {request.PayeeId},
@@ -65,8 +71,10 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
             """);
     }
 
-    public PayoutRequest GetForPayee(Guid requestId, Guid payeeId)
+    public PayoutRequest GetForPayee(Guid tenantId, Guid requestId, Guid payeeId)
     {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
         if (requestId == Guid.Empty)
         {
             throw new ArgumentException("Payout request ID is required.", nameof(requestId));
@@ -78,7 +86,8 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
         }
 
         var row = Read(
-            "SELECT * FROM economy_private.read_payout_request_by_id_for_payee_v1({0}, {1})",
+            "SELECT * FROM economy_private.read_payout_request_by_id_for_payee_v3({0}, {1}, {2})",
+            tenantId,
             requestId,
             payeeId).SingleOrDefault();
         return row is null
@@ -106,8 +115,10 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
             : ToContract(row);
     }
 
-    public IReadOnlyList<PayoutRequest> ListForPayee(Guid payeeId, int take)
+    public IReadOnlyList<PayoutRequest> ListForPayee(Guid tenantId, Guid payeeId, int take)
     {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
         if (payeeId == Guid.Empty)
         {
             throw new ArgumentException("Payee ID is required.", nameof(payeeId));
@@ -119,7 +130,8 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
         }
 
         return Read(
-                "SELECT * FROM economy_private.read_payout_requests_by_payee_v1({0}, {1})",
+                "SELECT * FROM economy_private.read_payout_requests_by_payee_v3({0}, {1}, {2})",
+                tenantId,
                 payeeId,
                 take)
             .OrderByDescending(row => row.CreatedAt)
@@ -187,7 +199,8 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
         }
 
         Execute($"""
-            SELECT economy_private.transition_payout_request_v1(
+            SELECT economy_private.transition_payout_request_v3(
+                {request.TenantId},
                 {request.Id},
                 {request.PayeeId},
                 {expectedVersion},
@@ -295,12 +308,14 @@ public sealed class PostgreSqlPayoutRequestStore : IPayoutRequestStore
         row.Version,
         row.CreatedAt,
         row.UpdatedAt,
-        row.FirstApprovalActorId);
+        row.FirstApprovalActorId,
+        row.TenantId);
 }
 
 public sealed class PayoutRequestRow
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
     public string IdempotencyKey { get; set; } = string.Empty;
     public string RequestHash { get; set; } = string.Empty;
     public Guid PayeeId { get; set; }

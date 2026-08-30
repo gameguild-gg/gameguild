@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -19,7 +20,10 @@ public class KycServiceTests
     {
         _repositoryMock = new Mock<IKycRepository>();
         _logger = NullLogger<KycService>.Instance;
-        _sut = new KycService(_repositoryMock.Object, _logger);
+        _sut = new KycService(
+            _repositoryMock.Object,
+            _logger,
+            Options.Create(new KycPolicyOptions { ApprovedEvidenceLifetime = TimeSpan.FromDays(30) }));
     }
 
     #region SubmitVerificationAsync
@@ -105,7 +109,7 @@ public class KycServiceTests
         result.Value.CompletedAt.Should().NotBeNull();
         result.Value.CompletedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
         result.Value.ExpiresAt.Should().NotBeNull();
-        result.Value.ExpiresAt!.Value.Should().BeCloseTo(DateTime.UtcNow.AddYears(1), TimeSpan.FromSeconds(5));
+        result.Value.ExpiresAt!.Value.Should().BeCloseTo(DateTime.UtcNow.AddDays(30), TimeSpan.FromSeconds(5));
 
         _repositoryMock.Verify(r => r.UpdateAsync(verification, It.IsAny<CancellationToken>()), Times.Once);
     }

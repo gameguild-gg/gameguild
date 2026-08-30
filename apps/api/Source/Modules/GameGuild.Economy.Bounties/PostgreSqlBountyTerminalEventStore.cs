@@ -11,6 +11,7 @@ namespace GameGuild.Economy.Bounties;
 /// </summary>
 public sealed record PersistedBountyTerminalEvent(
     Guid Id,
+    Guid TenantId,
     BountyId BountyId,
     BountyStatus Status,
     Guid ActorId,
@@ -41,9 +42,9 @@ public sealed record BountyTerminalOutputLot(
 
 public interface IBountyTerminalEventStore
 {
-    PersistedBountyTerminalEvent? FindByBounty(BountyId bountyId);
+    PersistedBountyTerminalEvent? FindByBounty(Guid tenantId, BountyId bountyId);
 
-    PersistedBountyTerminalEvent? FindByIdempotency(IdempotencyKey idempotencyKey);
+    PersistedBountyTerminalEvent? FindByIdempotency(Guid tenantId, IdempotencyKey idempotencyKey);
 }
 
 /// <summary>
@@ -63,25 +64,38 @@ public sealed class PostgreSqlBountyTerminalEventStore : IBountyTerminalEventSto
                 "PostgreSQL bounty terminal persistence requires the application's relational DbContext.");
     }
 
-    public PersistedBountyTerminalEvent? FindByBounty(BountyId bountyId) =>
-        Read("""
-            SELECT * FROM economy_private.read_bounty_terminal_by_bounty_v1({0})
-            """, bountyId.Value).SingleOrDefault() is { } row
+    public PersistedBountyTerminalEvent? FindByBounty(Guid tenantId, BountyId bountyId)
+    {
+        ValidateTenant(tenantId);
+        return Read("""
+            SELECT * FROM economy_private.read_bounty_terminal_by_bounty_v2({0}, {1})
+            """, tenantId, bountyId.Value).SingleOrDefault() is { } row
             ? ToContract(row)
             : null;
+    }
 
-    public PersistedBountyTerminalEvent? FindByIdempotency(IdempotencyKey idempotencyKey) =>
-        Read("""
-            SELECT * FROM economy_private.read_bounty_terminal_by_idempotency_v1({0})
-            """, idempotencyKey.Value).SingleOrDefault() is { } row
+    public PersistedBountyTerminalEvent? FindByIdempotency(Guid tenantId, IdempotencyKey idempotencyKey)
+    {
+        ValidateTenant(tenantId);
+        return Read("""
+            SELECT * FROM economy_private.read_bounty_terminal_by_idempotency_v2({0}, {1})
+            """, tenantId, idempotencyKey.Value).SingleOrDefault() is { } row
             ? ToContract(row)
             : null;
+    }
 
     private IQueryable<BountyTerminalEventRow> Read(string sql, params object[] parameters) =>
         _db.Set<BountyTerminalEventRow>().FromSqlRaw(sql, parameters).AsNoTracking();
 
+    private static void ValidateTenant(Guid tenantId)
+    {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("A non-quarantine tenant ID is required.", nameof(tenantId));
+    }
+
     private static PersistedBountyTerminalEvent ToContract(BountyTerminalEventRow row) => new(
         row.Id,
+        row.TenantId,
         new BountyId(row.BountyId),
         row.Status,
         row.ActorId,

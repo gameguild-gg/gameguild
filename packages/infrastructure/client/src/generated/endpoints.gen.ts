@@ -2865,6 +2865,446 @@ export const postApiTestingLabSettingsResetEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAdminEconomyAdRewardsReportsInput {
+  query?: {
+    network?: string;
+    limit?: number;
+  };
+}
+export type GetAdminEconomyAdRewardsReportsOutput =
+  Array<Types.EconomyAdRewardsDurableAdProviderReportStatus>;
+export const getAdminEconomyAdRewardsReportsEndpoint = {
+  operationId: "getAdminEconomyAdRewardsReports" as const,
+  method: "GET" as const,
+  path: "/api/v1/admin/economy/ad-rewards/reports" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyAdRewardsReportsInput {
+  body?: Types.EconomyAdRewardsAdProviderReport;
+}
+export type PostAdminEconomyAdRewardsReportsOutput =
+  Types.EconomyAdRewardsDurableAdProviderReportImportResult;
+export const postAdminEconomyAdRewardsReportsEndpoint = {
+  operationId: "postAdminEconomyAdRewardsReports" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/ad-rewards/reports" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetAdminEconomyBountiesExpiredInput = void;
+export type GetAdminEconomyBountiesExpiredOutput =
+  Array<Types.EconomyBountiesDurableBountyView>;
+export const getAdminEconomyBountiesExpiredEndpoint = {
+  operationId: "getAdminEconomyBountiesExpired" as const,
+  method: "GET" as const,
+  path: "/api/v1/admin/economy/bounties/expired" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyCapabilitiesConfigurationInput {
+  query?: {
+    includeInactiveKillSwitches?: boolean;
+    limit?: number;
+  };
+}
+export type GetAdminEconomyCapabilitiesConfigurationOutput =
+  Types.EconomyOperationsEconomyCapabilityConfigurationSnapshot;
+export const getAdminEconomyCapabilitiesConfigurationEndpoint = {
+  operationId: "getAdminEconomyCapabilitiesConfiguration" as const,
+  method: "GET" as const,
+  path: "/api/v1/admin/economy/capabilities/configuration" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyCapabilitiesReadinessInput {
+  body?: Types.APIControllersInspectEconomyCapabilityReadinessInput;
+}
+export type PostAdminEconomyCapabilitiesReadinessOutput =
+  Types.EconomyRiskEconomyCapabilityEvaluationResult;
+export const postAdminEconomyCapabilitiesReadinessEndpoint = {
+  operationId: "postAdminEconomyCapabilitiesReadiness" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/capabilities/readiness" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesInput {
+  query?: {
+    state?: Types.ComplianceFinancialCrimeFinancialCrimeCaseState;
+    take?: number;
+  };
+}
+export type GetAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesOutput =
+  Array<Types.ComplianceFinancialCrimeFinancialCrimeCase>;
+export const getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesEndpoint =
+  {
+    operationId:
+      "getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCases" as const,
+    method: "GET" as const,
+    path: "/api/v1/admin/economy/compliance/financial-crime/cases" as const,
+    tags: ["EconomyComplianceAdministration"] as const,
+    requiresAuth: true,
+  } as const;
+
+export interface GetAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesByCaseIdInput {
+  caseId: string;
+}
+export type GetAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesByCaseIdOutput =
+  Types.ComplianceFinancialCrimeFinancialCrimeCaseDetails;
+export const getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesByCaseIdEndpoint =
+  {
+    operationId:
+      "getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesByCaseId" as const,
+    method: "GET" as const,
+    path: "/api/v1/admin/economy/compliance/financial-crime/cases/{caseId}" as const,
+    tags: ["EconomyComplianceAdministration"] as const,
+    requiresAuth: true,
+  } as const;
+
+export interface PostAdminEconomyComplianceFinancialCrimeCasesAssignmentInput {
+  caseId: string;
+  body?: Types.APIControllersAssignFinancialCrimeCaseInput;
+}
+export type PostAdminEconomyComplianceFinancialCrimeCasesAssignmentOutput =
+  Types.ComplianceFinancialCrimeFinancialCrimeCase;
+export const postAdminEconomyComplianceFinancialCrimeCasesAssignmentEndpoint = {
+  operationId:
+    "postAdminEconomyComplianceFinancialCrimeCasesAssignment" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/compliance/financial-crime/cases/{caseId}/assignment" as const,
+  tags: ["EconomyComplianceAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyComplianceFinancialCrimeCasesDecisionsInput {
+  caseId: string;
+  body?: Types.APIControllersDecideFinancialCrimeCaseInput;
+}
+export type PostAdminEconomyComplianceFinancialCrimeCasesDecisionsOutput =
+  Types.ComplianceFinancialCrimeFinancialCrimeCaseDecision;
+export const postAdminEconomyComplianceFinancialCrimeCasesDecisionsEndpoint = {
+  operationId:
+    "postAdminEconomyComplianceFinancialCrimeCasesDecisions" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/compliance/financial-crime/cases/{caseId}/decisions" as const,
+  tags: ["EconomyComplianceAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyComplianceFinancialCrimeCasesRegulatoryReferencesInput {
+  caseId: string;
+  body?: Types.APIControllersRecordRegulatoryReferenceInput;
+}
+export type PostAdminEconomyComplianceFinancialCrimeCasesRegulatoryReferencesOutput =
+  void;
+export const postAdminEconomyComplianceFinancialCrimeCasesRegulatoryReferencesEndpoint =
+  {
+    operationId:
+      "postAdminEconomyComplianceFinancialCrimeCasesRegulatoryReferences" as const,
+    method: "POST" as const,
+    path: "/api/v1/admin/economy/compliance/financial-crime/cases/{caseId}/regulatory-references" as const,
+    tags: ["EconomyComplianceAdministration"] as const,
+    requiresAuth: true,
+  } as const;
+
+export interface GetAdminEconomyComplianceTrustSafetyAppealsInput {
+  query?: {
+    state?: Types.TrustSafetyTrustSafetyAppealState;
+    take?: number;
+  };
+}
+export type GetAdminEconomyComplianceTrustSafetyAppealsOutput =
+  Array<Types.TrustSafetyTrustSafetyAppeal>;
+export const getAdminEconomyComplianceTrustSafetyAppealsEndpoint = {
+  operationId: "getAdminEconomyComplianceTrustSafetyAppeals" as const,
+  method: "GET" as const,
+  path: "/api/v1/admin/economy/compliance/trust-safety/appeals" as const,
+  tags: ["EconomyComplianceAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyComplianceTrustSafetyAppealsAssignmentInput {
+  appealId: string;
+  body?: Types.APIControllersAssignTrustSafetyAppealInput;
+}
+export type PostAdminEconomyComplianceTrustSafetyAppealsAssignmentOutput =
+  Types.TrustSafetyTrustSafetyAppeal;
+export const postAdminEconomyComplianceTrustSafetyAppealsAssignmentEndpoint = {
+  operationId:
+    "postAdminEconomyComplianceTrustSafetyAppealsAssignment" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/compliance/trust-safety/appeals/{appealId}/assignment" as const,
+  tags: ["EconomyComplianceAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyComplianceTrustSafetyAppealsDecisionsInput {
+  appealId: string;
+  body?: Types.APIControllersDecideTrustSafetyAppealInput;
+}
+export type PostAdminEconomyComplianceTrustSafetyAppealsDecisionsOutput =
+  Types.TrustSafetyTrustSafetyAppeal;
+export const postAdminEconomyComplianceTrustSafetyAppealsDecisionsEndpoint = {
+  operationId: "postAdminEconomyComplianceTrustSafetyAppealsDecisions" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/compliance/trust-safety/appeals/{appealId}/decisions" as const,
+  tags: ["EconomyComplianceAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyCustodyObservationsInput {
+  body?: Types.EconomyReservesCustodyObservationCommand;
+}
+export type PostAdminEconomyCustodyObservationsOutput =
+  Types.EconomyReservesDurableCustodyObservation;
+export const postAdminEconomyCustodyObservationsEndpoint = {
+  operationId: "postAdminEconomyCustodyObservations" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/custody/observations" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyKillSwitchesInput {
+  body?: Types.APIControllersActivateEconomyKillSwitchInput;
+}
+export type PostAdminEconomyKillSwitchesOutput =
+  Types.EconomyRiskEconomyKillSwitchState;
+export const postAdminEconomyKillSwitchesEndpoint = {
+  operationId: "postAdminEconomyKillSwitches" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/kill-switches" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyKillSwitchesReleaseInput {
+  killSwitchId: string;
+}
+export type PostAdminEconomyKillSwitchesReleaseOutput =
+  Types.EconomyRiskEconomyKillSwitchState;
+export const postAdminEconomyKillSwitchesReleaseEndpoint = {
+  operationId: "postAdminEconomyKillSwitchesRelease" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/kill-switches/{killSwitchId}/release" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyKillSwitchesReleaseApprovalsInput {
+  killSwitchId: string;
+  body?: Types.APIControllersEconomyReauthenticationInput;
+}
+export type PostAdminEconomyKillSwitchesReleaseApprovalsOutput =
+  Types.EconomyRiskEconomyKillSwitchState;
+export const postAdminEconomyKillSwitchesReleaseApprovalsEndpoint = {
+  operationId: "postAdminEconomyKillSwitchesReleaseApprovals" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/kill-switches/{killSwitchId}/release-approvals" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyKillSwitchesReleaseProposalsInput {
+  killSwitchId: string;
+  body?: Types.APIControllersEconomyReauthenticationInput;
+}
+export type PostAdminEconomyKillSwitchesReleaseProposalsOutput =
+  Types.EconomyRiskEconomyKillSwitchState;
+export const postAdminEconomyKillSwitchesReleaseProposalsEndpoint = {
+  operationId: "postAdminEconomyKillSwitchesReleaseProposals" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/kill-switches/{killSwitchId}/release-proposals" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyLedgerAnchorsInput {
+  body?: Types.APIControllersPublishEconomyAnchorInput;
+}
+export type PostAdminEconomyLedgerAnchorsOutput =
+  Types.EconomyLedgerEconomyAnchorPublicationResult;
+export const postAdminEconomyLedgerAnchorsEndpoint = {
+  operationId: "postAdminEconomyLedgerAnchors" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/ledger/anchors" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export type PostAdminEconomyLedgerAnchorsVerificationRunsInput = void;
+export type PostAdminEconomyLedgerAnchorsVerificationRunsOutput =
+  Types.EconomyLedgerAnchorVerificationRunResult;
+export const postAdminEconomyLedgerAnchorsVerificationRunsEndpoint = {
+  operationId: "postAdminEconomyLedgerAnchorsVerificationRuns" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/ledger/anchors/verification-runs" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetAdminEconomyLedgerHealthInput = void;
+export type GetAdminEconomyLedgerHealthOutput =
+  Types.EconomyOperationsEconomyLedgerHealthSnapshot;
+export const getAdminEconomyLedgerHealthEndpoint = {
+  operationId: "getAdminEconomyLedgerHealth" as const,
+  method: "GET" as const,
+  path: "/api/v1/admin/economy/ledger/health" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export type PostAdminEconomyLedgerProjectionGenerationsInput = void;
+export type PostAdminEconomyLedgerProjectionGenerationsOutput =
+  Types.EconomyProjectionsProjectionGenerationState;
+export const postAdminEconomyLedgerProjectionGenerationsEndpoint = {
+  operationId: "postAdminEconomyLedgerProjectionGenerations" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/ledger/projection-generations" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyLedgerProjectionGenerationsApprovalsInput {
+  generation: number;
+  body?: Types.APIControllersEconomyReauthenticationInput;
+}
+export type PostAdminEconomyLedgerProjectionGenerationsApprovalsOutput =
+  Types.EconomyProjectionsProjectionGenerationState;
+export const postAdminEconomyLedgerProjectionGenerationsApprovalsEndpoint = {
+  operationId: "postAdminEconomyLedgerProjectionGenerationsApprovals" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/ledger/projection-generations/{generation}/approvals" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export type PostAdminEconomyLedgerVerificationRunsInput = void;
+export type PostAdminEconomyLedgerVerificationRunsOutput =
+  Types.EconomyLedgerJournalIntegrityRunResult;
+export const postAdminEconomyLedgerVerificationRunsEndpoint = {
+  operationId: "postAdminEconomyLedgerVerificationRuns" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/ledger/verification-runs" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyLegacyMigrationBatchesInput {
+  body?: Types.APIControllersCaptureLegacyEconomyMigrationInput;
+}
+export type PostAdminEconomyLegacyMigrationBatchesOutput =
+  Types.EconomyOperationsLegacyEconomyShadowBatchView;
+export const postAdminEconomyLegacyMigrationBatchesEndpoint = {
+  operationId: "postAdminEconomyLegacyMigrationBatches" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/legacy-migration/batches" as const,
+  tags: ["EconomyLegacyMigrationAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyLegacyMigrationBatchesInput {
+  batchId: string;
+}
+export type GetAdminEconomyLegacyMigrationBatchesOutput =
+  Types.EconomyOperationsLegacyEconomyShadowBatchView;
+export const getAdminEconomyLegacyMigrationBatchesEndpoint = {
+  operationId: "getAdminEconomyLegacyMigrationBatches" as const,
+  method: "GET" as const,
+  path: "/api/v1/admin/economy/legacy-migration/batches/{batchId}" as const,
+  tags: ["EconomyLegacyMigrationAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyLegacyMigrationBatchesReconcileInput {
+  batchId: string;
+}
+export type PostAdminEconomyLegacyMigrationBatchesReconcileOutput =
+  Types.EconomyOperationsLegacyEconomyShadowBatchView;
+export const postAdminEconomyLegacyMigrationBatchesReconcileEndpoint = {
+  operationId: "postAdminEconomyLegacyMigrationBatchesReconcile" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/legacy-migration/batches/{batchId}:reconcile" as const,
+  tags: ["EconomyLegacyMigrationAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyLegacyMigrationBatchesCutoverApproveInput {
+  batchId: string;
+  body?: Types.APIControllersApproveLegacyEconomyCutoverInput;
+}
+export type PostAdminEconomyLegacyMigrationBatchesCutoverApproveOutput =
+  Types.EconomyOperationsLegacyEconomyShadowBatchView;
+export const postAdminEconomyLegacyMigrationBatchesCutoverApproveEndpoint = {
+  operationId: "postAdminEconomyLegacyMigrationBatchesCutoverApprove" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/legacy-migration/batches/{batchId}/cutover:approve" as const,
+  tags: ["EconomyLegacyMigrationAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyLegacyMigrationBatchesCutoverProposeInput {
+  batchId: string;
+  body?: Types.APIControllersProposeLegacyEconomyCutoverInput;
+}
+export type PostAdminEconomyLegacyMigrationBatchesCutoverProposeOutput =
+  Types.EconomyOperationsLegacyEconomyShadowBatchView;
+export const postAdminEconomyLegacyMigrationBatchesCutoverProposeEndpoint = {
+  operationId: "postAdminEconomyLegacyMigrationBatchesCutoverPropose" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/legacy-migration/batches/{batchId}/cutover:propose" as const,
+  tags: ["EconomyLegacyMigrationAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyLegacyMigrationBatchesCutoverRollbackInput {
+  batchId: string;
+  body?: Types.APIControllersRollbackLegacyEconomyCutoverInput;
+}
+export type PostAdminEconomyLegacyMigrationBatchesCutoverRollbackOutput =
+  Types.EconomyOperationsLegacyEconomyShadowBatchView;
+export const postAdminEconomyLegacyMigrationBatchesCutoverRollbackEndpoint = {
+  operationId: "postAdminEconomyLegacyMigrationBatchesCutoverRollback" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/legacy-migration/batches/{batchId}/cutover:rollback" as const,
+  tags: ["EconomyLegacyMigrationAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyLegacyMigrationBatchesWalletsBackfillInput {
+  batchId: string;
+  body?: Types.APIControllersBackfillLegacyEconomyWalletInput;
+}
+export type PostAdminEconomyLegacyMigrationBatchesWalletsBackfillOutput =
+  Types.EconomyOperationsLegacyEconomyShadowBatchView;
+export const postAdminEconomyLegacyMigrationBatchesWalletsBackfillEndpoint = {
+  operationId: "postAdminEconomyLegacyMigrationBatchesWalletsBackfill" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/legacy-migration/batches/{batchId}/wallets:backfill" as const,
+  tags: ["EconomyLegacyMigrationAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyMarketplaceSettlementsRefundInput {
+  settlementId: string;
+  body?: Types.APIControllersRefundMarketplaceSettlementInput;
+}
+export type PostAdminEconomyMarketplaceSettlementsRefundOutput =
+  Types.EconomyMarketplaceDurableMarketplaceRefundResult;
+export const postAdminEconomyMarketplaceSettlementsRefundEndpoint = {
+  operationId: "postAdminEconomyMarketplaceSettlementsRefund" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/marketplace/settlements/{settlementId}:refund" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * List payout requests awaiting administrative review
  */
@@ -2932,6 +3372,260 @@ export const postAdminEconomyPayoutRequestsRejectEndpoint = {
   method: "POST" as const,
   path: "/api/v1/admin/economy/payout-requests/{requestId}/reject" as const,
   tags: ["Economy"] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Reserve FIFO funds for a fully approved payout request
+ *
+ * Tenant and actor authority come exclusively from the authenticated actor context. Fresh MFA and the full capability control plane are required.
+ */
+export interface PostAdminEconomyPayoutRequestsReserveInput {
+  requestId: string;
+  body?: Types.APIControllersReserveApprovedPayoutExecutionInput;
+}
+export type PostAdminEconomyPayoutRequestsReserveOutput =
+  Types.APIControllersEconomyPayoutExecutionOperation;
+export const postAdminEconomyPayoutRequestsReserveEndpoint = {
+  operationId: "postAdminEconomyPayoutRequestsReserve" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/payout-requests/{requestId}/reserve" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * List tenant-scoped payout execution operations
+ */
+export interface GetAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsInput {
+  query?: {
+    take?: number;
+  };
+}
+export type GetAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsOutput =
+  Array<Types.APIControllersEconomyPayoutExecutionOperation>;
+export const getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsEndpoint =
+  {
+    operationId:
+      "getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperations" as const,
+    method: "GET" as const,
+    path: "/api/v1/admin/economy/payout-requests/operations" as const,
+    tags: ["EconomyAdministration"] as const,
+    requiresAuth: true,
+  } as const;
+
+/**
+ * Get a tenant-scoped payout execution operation
+ */
+export interface GetAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsByOperationIdInput {
+  operationId: string;
+}
+export type GetAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsByOperationIdOutput =
+  Types.APIControllersEconomyPayoutExecutionOperation;
+export const getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsByOperationIdEndpoint =
+  {
+    operationId:
+      "getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsByOperationId" as const,
+    method: "GET" as const,
+    path: "/api/v1/admin/economy/payout-requests/operations/{operationId}" as const,
+    tags: ["EconomyAdministration"] as const,
+    requiresAuth: true,
+  } as const;
+
+/**
+ * Atomically authorize and enqueue an approved payout dispatch
+ */
+export interface PostAdminEconomyPayoutRequestsOperationsDispatchInput {
+  operationId: string;
+  body?: Types.APIControllersDispatchPayoutExecutionInput;
+}
+export type PostAdminEconomyPayoutRequestsOperationsDispatchOutput =
+  Types.APIControllersEconomyPayoutExecutionOperation;
+export const postAdminEconomyPayoutRequestsOperationsDispatchEndpoint = {
+  operationId: "postAdminEconomyPayoutRequestsOperationsDispatch" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/payout-requests/operations/{operationId}/dispatch" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Reconcile an in-flight payout directly with its provider
+ */
+export interface PostAdminEconomyPayoutRequestsOperationsReconcileInput {
+  operationId: string;
+}
+export type PostAdminEconomyPayoutRequestsOperationsReconcileOutput =
+  Types.APIControllersEconomyPayoutExecutionOperation;
+export const postAdminEconomyPayoutRequestsOperationsReconcileEndpoint = {
+  operationId: "postAdminEconomyPayoutRequestsOperationsReconcile" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/payout-requests/operations/{operationId}/reconcile" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyPoliciesInput {
+  body?: Types.APIControllersProposeEconomyPolicyInput;
+}
+export type PostAdminEconomyPoliciesOutput =
+  Types.EconomyRiskEconomyCapabilityPolicy;
+export const postAdminEconomyPoliciesEndpoint = {
+  operationId: "postAdminEconomyPolicies" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/policies" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyPoliciesApproveInput {
+  policyId: string;
+  body?: Types.APIControllersApproveEconomyPolicyInput;
+}
+export type PostAdminEconomyPoliciesApproveOutput =
+  Types.EconomyRiskEconomyCapabilityPolicy;
+export const postAdminEconomyPoliciesApproveEndpoint = {
+  operationId: "postAdminEconomyPoliciesApprove" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/policies/{policyId}/approve" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetAdminEconomyReservesLiabilitiesInput = void;
+export type GetAdminEconomyReservesLiabilitiesOutput =
+  Types.EconomyReservesEconomyLiabilitySnapshot;
+export const getAdminEconomyReservesLiabilitiesEndpoint = {
+  operationId: "getAdminEconomyReservesLiabilities" as const,
+  method: "GET" as const,
+  path: "/api/v1/admin/economy/reserves/liabilities" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyReservesProposalsInput {
+  body?: Types.APIControllersProposeEconomyReserveInput;
+}
+export type PostAdminEconomyReservesProposalsOutput =
+  Types.EconomyReservesDurableReserveProposalState;
+export const postAdminEconomyReservesProposalsEndpoint = {
+  operationId: "postAdminEconomyReservesProposals" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/reserves/proposals" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyReservesProposalsApproveInput {
+  proposalId: string;
+  body?: Types.APIControllersEconomyReauthenticationInput;
+}
+export type PostAdminEconomyReservesProposalsApproveOutput =
+  Types.EconomyReservesReserveHead;
+export const postAdminEconomyReservesProposalsApproveEndpoint = {
+  operationId: "postAdminEconomyReservesProposalsApprove" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/reserves/proposals/{proposalId}/approve" as const,
+  tags: ["EconomyAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsInput {
+  query?: {
+    limit?: number;
+  };
+}
+export type GetAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsOutput =
+  Array<Types.EconomyTreasuryAdminWithdrawalRun>;
+export const getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsEndpoint =
+  {
+    operationId:
+      "getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawals" as const,
+    method: "GET" as const,
+    path: "/api/v1/admin/economy/treasury/withdrawals" as const,
+    tags: ["EconomyTreasuryAdministration"] as const,
+    requiresAuth: true,
+  } as const;
+
+export interface PostAdminEconomyTreasuryWithdrawalsInput {
+  body?: Types.APIControllersProposeTreasuryWithdrawalInput;
+}
+export type PostAdminEconomyTreasuryWithdrawalsOutput =
+  Types.EconomyTreasuryAdminWithdrawalRun;
+export const postAdminEconomyTreasuryWithdrawalsEndpoint = {
+  operationId: "postAdminEconomyTreasuryWithdrawals" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/treasury/withdrawals" as const,
+  tags: ["EconomyTreasuryAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsByRunIdInput {
+  runId: string;
+}
+export type GetAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsByRunIdOutput =
+  Types.EconomyTreasuryAdminWithdrawalRun;
+export const getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsByRunIdEndpoint =
+  {
+    operationId:
+      "getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsByRunId" as const,
+    method: "GET" as const,
+    path: "/api/v1/admin/economy/treasury/withdrawals/{runId}" as const,
+    tags: ["EconomyTreasuryAdministration"] as const,
+    requiresAuth: true,
+  } as const;
+
+export interface PostAdminEconomyTreasuryWithdrawalsApproveInput {
+  runId: string;
+  body?: Types.APIControllersApproveTreasuryWithdrawalInput;
+}
+export type PostAdminEconomyTreasuryWithdrawalsApproveOutput =
+  Types.EconomyTreasuryAdminWithdrawalRun;
+export const postAdminEconomyTreasuryWithdrawalsApproveEndpoint = {
+  operationId: "postAdminEconomyTreasuryWithdrawalsApprove" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/treasury/withdrawals/{runId}/approve" as const,
+  tags: ["EconomyTreasuryAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyTreasuryWithdrawalsAuditInput {
+  runId: string;
+}
+export type GetAdminEconomyTreasuryWithdrawalsAuditOutput =
+  Types.EconomyTreasuryAdminWithdrawalAuditView;
+export const getAdminEconomyTreasuryWithdrawalsAuditEndpoint = {
+  operationId: "getAdminEconomyTreasuryWithdrawalsAudit" as const,
+  method: "GET" as const,
+  path: "/api/v1/admin/economy/treasury/withdrawals/{runId}/audit" as const,
+  tags: ["EconomyTreasuryAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyTreasuryWithdrawalsDispatchInput {
+  runId: string;
+  body?: Types.APIControllersDispatchTreasuryWithdrawalInput;
+}
+export type PostAdminEconomyTreasuryWithdrawalsDispatchOutput =
+  Types.EconomyTreasuryAdminWithdrawalRun;
+export const postAdminEconomyTreasuryWithdrawalsDispatchEndpoint = {
+  operationId: "postAdminEconomyTreasuryWithdrawalsDispatch" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/treasury/withdrawals/{runId}/dispatch" as const,
+  tags: ["EconomyTreasuryAdministration"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostAdminEconomyTreasuryWithdrawalsReconcileInput {
+  runId: string;
+}
+export type PostAdminEconomyTreasuryWithdrawalsReconcileOutput =
+  Types.EconomyTreasuryAdminWithdrawalRun;
+export const postAdminEconomyTreasuryWithdrawalsReconcileEndpoint = {
+  operationId: "postAdminEconomyTreasuryWithdrawalsReconcile" as const,
+  method: "POST" as const,
+  path: "/api/v1/admin/economy/treasury/withdrawals/{runId}/reconcile" as const,
+  tags: ["EconomyTreasuryAdministration"] as const,
   requiresAuth: true,
 } as const;
 
@@ -3507,6 +4201,128 @@ export const postBillingWebhooksWebhookEventsRetryEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostEconomyAdRewardsSessionsInput {
+  body?: Types.APIControllersStartMyAdRewardSessionInput;
+}
+export type PostEconomyAdRewardsSessionsOutput =
+  Types.EconomyAdRewardsDurableAdRewardSessionResult;
+export const postEconomyAdRewardsSessionsEndpoint = {
+  operationId: "postEconomyAdRewardsSessions" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/ad-rewards/sessions" as const,
+  tags: ["EconomyAdRewards"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetEconomyAdRewardsSessionsInput {
+  sessionId: string;
+}
+export type GetEconomyAdRewardsSessionsOutput =
+  Types.EconomyAdRewardsDurableAdRewardSessionStatus;
+export const getEconomyAdRewardsSessionsEndpoint = {
+  operationId: "getEconomyAdRewardsSessions" as const,
+  method: "GET" as const,
+  path: "/api/v1/economy/ad-rewards/sessions/{sessionId}" as const,
+  tags: ["EconomyAdRewards"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostEconomyAdRewardsSessionsCompleteInput {
+  sessionId: string;
+  body?: Types.APIControllersCompleteMyAdRewardSessionInput;
+}
+export type PostEconomyAdRewardsSessionsCompleteOutput =
+  Types.EconomyAdRewardsDurableAdRewardCompletionResult;
+export const postEconomyAdRewardsSessionsCompleteEndpoint = {
+  operationId: "postEconomyAdRewardsSessionsComplete" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/ad-rewards/sessions/{sessionId}/complete" as const,
+  tags: ["EconomyAdRewards"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostEconomyAdRewardsSessionsConfirmDeferredInput {
+  sessionId: string;
+  body?: Types.APIControllersConfirmMyDeferredAdRewardInput;
+}
+export type PostEconomyAdRewardsSessionsConfirmDeferredOutput =
+  Types.EconomyAdRewardsDurableAdRewardCompletionResult;
+export const postEconomyAdRewardsSessionsConfirmDeferredEndpoint = {
+  operationId: "postEconomyAdRewardsSessionsConfirmDeferred" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/ad-rewards/sessions/{sessionId}/confirm-deferred" as const,
+  tags: ["EconomyAdRewards"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetEconomyBountiesForGetEconomyBountiesInput {
+  query?: {
+    status?: Types.EconomyBountiesBountyStatus;
+  };
+}
+export type GetEconomyBountiesForGetEconomyBountiesOutput =
+  Array<Types.EconomyBountiesDurableBountyView>;
+export const getEconomyBountiesForGetEconomyBountiesEndpoint = {
+  operationId: "getEconomyBountiesForGetEconomyBounties" as const,
+  method: "GET" as const,
+  path: "/api/v1/economy/bounties" as const,
+  tags: ["EconomyBounties"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostEconomyBountiesInput {
+  body?: Types.APIControllersCreateMyBountyInput;
+}
+export type PostEconomyBountiesOutput = Types.EconomyBountiesDurableBountyView;
+export const postEconomyBountiesEndpoint = {
+  operationId: "postEconomyBounties" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/bounties" as const,
+  tags: ["EconomyBounties"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetEconomyBountiesForGetEconomyBountiesByBountyIdInput {
+  bountyId: string;
+}
+export type GetEconomyBountiesForGetEconomyBountiesByBountyIdOutput =
+  Types.EconomyBountiesDurableBountyView;
+export const getEconomyBountiesForGetEconomyBountiesByBountyIdEndpoint = {
+  operationId: "getEconomyBountiesForGetEconomyBountiesByBountyId" as const,
+  method: "GET" as const,
+  path: "/api/v1/economy/bounties/{bountyId}" as const,
+  tags: ["EconomyBounties"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostEconomyBountiesClaimInput {
+  bountyId: string;
+  body?: Types.APIControllersCompleteMyBountyInput;
+}
+export type PostEconomyBountiesClaimOutput =
+  Types.EconomyBountiesDurableBountyView;
+export const postEconomyBountiesClaimEndpoint = {
+  operationId: "postEconomyBountiesClaim" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/bounties/{bountyId}:claim" as const,
+  tags: ["EconomyBounties"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostEconomyBountiesReclaimInput {
+  bountyId: string;
+  body?: Types.APIControllersCompleteMyBountyInput;
+}
+export type PostEconomyBountiesReclaimOutput =
+  Types.EconomyBountiesDurableBountyView;
+export const postEconomyBountiesReclaimEndpoint = {
+  operationId: "postEconomyBountiesReclaim" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/bounties/{bountyId}:reclaim" as const,
+  tags: ["EconomyBounties"] as const,
+  requiresAuth: true,
+} as const;
+
 /**
  * Get my Economy capability readiness
  */
@@ -3534,6 +4350,70 @@ export const postEconomyConversionsHardToSoftEndpoint = {
   method: "POST" as const,
   path: "/api/v1/economy/conversions/hard-to-soft" as const,
   tags: ["Economy"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostEconomyKycAccessTokenInput {
+  body?: Types.APIControllersCreateMyKycAccessTokenInput;
+}
+export type PostEconomyKycAccessTokenOutput =
+  Types.ComplianceKYCKycAmlAccessToken;
+export const postEconomyKycAccessTokenEndpoint = {
+  operationId: "postEconomyKycAccessToken" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/kyc/access-token" as const,
+  tags: ["EconomyKyc"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostEconomyKycOnboardingInput {
+  body?: Types.APIControllersStartMyKycInput;
+}
+export type PostEconomyKycOnboardingOutput =
+  Types.ComplianceKYCKycAmlOnboarding;
+export const postEconomyKycOnboardingEndpoint = {
+  operationId: "postEconomyKycOnboarding" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/kyc/onboarding" as const,
+  tags: ["EconomyKyc"] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetEconomyKycStatusInput = void;
+export type GetEconomyKycStatusOutput = Types.APIControllersEconomyKycStatus;
+export const getEconomyKycStatusEndpoint = {
+  operationId: "getEconomyKycStatus" as const,
+  method: "GET" as const,
+  path: "/api/v1/economy/kyc/status" as const,
+  tags: ["EconomyKyc"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostEconomyMarketplaceOrdersSettleInput {
+  orderId: string;
+  body?: Types.APIControllersSettleMyMarketplaceOrderInput;
+}
+export type PostEconomyMarketplaceOrdersSettleOutput =
+  Types.EconomyMarketplaceDurableMarketplaceSettlementResult;
+export const postEconomyMarketplaceOrdersSettleEndpoint = {
+  operationId: "postEconomyMarketplaceOrdersSettle" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/marketplace/orders/{orderId}:settle" as const,
+  tags: ["EconomyMarketplace"] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostEconomyMarketplaceSettlementsRefundInput {
+  settlementId: string;
+  body?: Types.APIControllersRefundMarketplaceSettlementInput;
+}
+export type PostEconomyMarketplaceSettlementsRefundOutput =
+  Types.EconomyMarketplaceDurableMarketplaceRefundResult;
+export const postEconomyMarketplaceSettlementsRefundEndpoint = {
+  operationId: "postEconomyMarketplaceSettlementsRefund" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/marketplace/settlements/{settlementId}:refund" as const,
+  tags: ["EconomyMarketplace"] as const,
   requiresAuth: true,
 } as const;
 
@@ -3619,6 +4499,34 @@ export const getEconomyPayoutsForGetEconomyPayoutsByOperationIdEndpoint = {
   operationId: "getEconomyPayoutsForGetEconomyPayoutsByOperationId" as const,
   method: "GET" as const,
   path: "/api/v1/economy/payouts/{operationId}" as const,
+  tags: ["Economy"] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Get my payout provider account readiness
+ */
+export type GetEconomyPayoutsAccountInput = void;
+export type GetEconomyPayoutsAccountOutput =
+  Types.EconomyPayoutsConnectAccountSnapshot;
+export const getEconomyPayoutsAccountEndpoint = {
+  operationId: "getEconomyPayoutsAccount" as const,
+  method: "GET" as const,
+  path: "/api/v1/economy/payouts/account" as const,
+  tags: ["Economy"] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Create or refresh my payout provider onboarding
+ */
+export type PostEconomyPayoutsOnboardingInput = void;
+export type PostEconomyPayoutsOnboardingOutput =
+  Types.EconomyPayoutsConnectOnboardingResult;
+export const postEconomyPayoutsOnboardingEndpoint = {
+  operationId: "postEconomyPayoutsOnboarding" as const,
+  method: "POST" as const,
+  path: "/api/v1/economy/payouts/onboarding" as const,
   tags: ["Economy"] as const,
   requiresAuth: true,
 } as const;
@@ -3744,6 +4652,28 @@ export const deleteEmailDeliverySuppressionsEndpoint = {
   method: "DELETE" as const,
   path: "/api/v1/email-delivery/suppressions/{email}" as const,
   tags: ["Notifications"] as const,
+  requiresAuth: true,
+} as const;
+
+export type PostIntegrationsEconomyStripeConnectWebhookInput = void;
+export type PostIntegrationsEconomyStripeConnectWebhookOutput =
+  Types.APIControllersEconomyPayoutExecutionOperation;
+export const postIntegrationsEconomyStripeConnectWebhookEndpoint = {
+  operationId: "postIntegrationsEconomyStripeConnectWebhook" as const,
+  method: "POST" as const,
+  path: "/api/v1/integrations/economy/stripe-connect/webhook" as const,
+  tags: ["EconomyIntegrations"] as const,
+  requiresAuth: true,
+} as const;
+
+export type PostIntegrationsEconomySumsubWebhookInput = void;
+export type PostIntegrationsEconomySumsubWebhookOutput =
+  Types.ComplianceKYCSumSubWebhookIngestionResult;
+export const postIntegrationsEconomySumsubWebhookEndpoint = {
+  operationId: "postIntegrationsEconomySumsubWebhook" as const,
+  method: "POST" as const,
+  path: "/api/v1/integrations/economy/sumsub/webhook" as const,
+  tags: ["EconomyIntegrations"] as const,
   requiresAuth: true,
 } as const;
 
@@ -19787,6 +20717,64 @@ export const endpoints = {
   patchApiTestingLabSettings: patchApiTestingLabSettingsEndpoint,
   getApiTestingLabSettingsExists: getApiTestingLabSettingsExistsEndpoint,
   postApiTestingLabSettingsReset: postApiTestingLabSettingsResetEndpoint,
+  getAdminEconomyAdRewardsReports: getAdminEconomyAdRewardsReportsEndpoint,
+  postAdminEconomyAdRewardsReports: postAdminEconomyAdRewardsReportsEndpoint,
+  getAdminEconomyBountiesExpired: getAdminEconomyBountiesExpiredEndpoint,
+  getAdminEconomyCapabilitiesConfiguration:
+    getAdminEconomyCapabilitiesConfigurationEndpoint,
+  postAdminEconomyCapabilitiesReadiness:
+    postAdminEconomyCapabilitiesReadinessEndpoint,
+  getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCases:
+    getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesEndpoint,
+  getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesByCaseId:
+    getAdminEconomyComplianceFinancialCrimeCasesForGetAdminEconomyComplianceFinancialCrimeCasesByCaseIdEndpoint,
+  postAdminEconomyComplianceFinancialCrimeCasesAssignment:
+    postAdminEconomyComplianceFinancialCrimeCasesAssignmentEndpoint,
+  postAdminEconomyComplianceFinancialCrimeCasesDecisions:
+    postAdminEconomyComplianceFinancialCrimeCasesDecisionsEndpoint,
+  postAdminEconomyComplianceFinancialCrimeCasesRegulatoryReferences:
+    postAdminEconomyComplianceFinancialCrimeCasesRegulatoryReferencesEndpoint,
+  getAdminEconomyComplianceTrustSafetyAppeals:
+    getAdminEconomyComplianceTrustSafetyAppealsEndpoint,
+  postAdminEconomyComplianceTrustSafetyAppealsAssignment:
+    postAdminEconomyComplianceTrustSafetyAppealsAssignmentEndpoint,
+  postAdminEconomyComplianceTrustSafetyAppealsDecisions:
+    postAdminEconomyComplianceTrustSafetyAppealsDecisionsEndpoint,
+  postAdminEconomyCustodyObservations:
+    postAdminEconomyCustodyObservationsEndpoint,
+  postAdminEconomyKillSwitches: postAdminEconomyKillSwitchesEndpoint,
+  postAdminEconomyKillSwitchesRelease:
+    postAdminEconomyKillSwitchesReleaseEndpoint,
+  postAdminEconomyKillSwitchesReleaseApprovals:
+    postAdminEconomyKillSwitchesReleaseApprovalsEndpoint,
+  postAdminEconomyKillSwitchesReleaseProposals:
+    postAdminEconomyKillSwitchesReleaseProposalsEndpoint,
+  postAdminEconomyLedgerAnchors: postAdminEconomyLedgerAnchorsEndpoint,
+  postAdminEconomyLedgerAnchorsVerificationRuns:
+    postAdminEconomyLedgerAnchorsVerificationRunsEndpoint,
+  getAdminEconomyLedgerHealth: getAdminEconomyLedgerHealthEndpoint,
+  postAdminEconomyLedgerProjectionGenerations:
+    postAdminEconomyLedgerProjectionGenerationsEndpoint,
+  postAdminEconomyLedgerProjectionGenerationsApprovals:
+    postAdminEconomyLedgerProjectionGenerationsApprovalsEndpoint,
+  postAdminEconomyLedgerVerificationRuns:
+    postAdminEconomyLedgerVerificationRunsEndpoint,
+  postAdminEconomyLegacyMigrationBatches:
+    postAdminEconomyLegacyMigrationBatchesEndpoint,
+  getAdminEconomyLegacyMigrationBatches:
+    getAdminEconomyLegacyMigrationBatchesEndpoint,
+  postAdminEconomyLegacyMigrationBatchesReconcile:
+    postAdminEconomyLegacyMigrationBatchesReconcileEndpoint,
+  postAdminEconomyLegacyMigrationBatchesCutoverApprove:
+    postAdminEconomyLegacyMigrationBatchesCutoverApproveEndpoint,
+  postAdminEconomyLegacyMigrationBatchesCutoverPropose:
+    postAdminEconomyLegacyMigrationBatchesCutoverProposeEndpoint,
+  postAdminEconomyLegacyMigrationBatchesCutoverRollback:
+    postAdminEconomyLegacyMigrationBatchesCutoverRollbackEndpoint,
+  postAdminEconomyLegacyMigrationBatchesWalletsBackfill:
+    postAdminEconomyLegacyMigrationBatchesWalletsBackfillEndpoint,
+  postAdminEconomyMarketplaceSettlementsRefund:
+    postAdminEconomyMarketplaceSettlementsRefundEndpoint,
   getAdminEconomyPayoutRequests: getAdminEconomyPayoutRequestsEndpoint,
   postAdminEconomyPayoutRequestsApprove:
     postAdminEconomyPayoutRequestsApproveEndpoint,
@@ -19794,6 +20782,37 @@ export const endpoints = {
     getAdminEconomyPayoutRequestsAuditEndpoint,
   postAdminEconomyPayoutRequestsReject:
     postAdminEconomyPayoutRequestsRejectEndpoint,
+  postAdminEconomyPayoutRequestsReserve:
+    postAdminEconomyPayoutRequestsReserveEndpoint,
+  getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperations:
+    getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsEndpoint,
+  getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsByOperationId:
+    getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsByOperationIdEndpoint,
+  postAdminEconomyPayoutRequestsOperationsDispatch:
+    postAdminEconomyPayoutRequestsOperationsDispatchEndpoint,
+  postAdminEconomyPayoutRequestsOperationsReconcile:
+    postAdminEconomyPayoutRequestsOperationsReconcileEndpoint,
+  postAdminEconomyPolicies: postAdminEconomyPoliciesEndpoint,
+  postAdminEconomyPoliciesApprove: postAdminEconomyPoliciesApproveEndpoint,
+  getAdminEconomyReservesLiabilities:
+    getAdminEconomyReservesLiabilitiesEndpoint,
+  postAdminEconomyReservesProposals: postAdminEconomyReservesProposalsEndpoint,
+  postAdminEconomyReservesProposalsApprove:
+    postAdminEconomyReservesProposalsApproveEndpoint,
+  getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawals:
+    getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsEndpoint,
+  postAdminEconomyTreasuryWithdrawals:
+    postAdminEconomyTreasuryWithdrawalsEndpoint,
+  getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsByRunId:
+    getAdminEconomyTreasuryWithdrawalsForGetAdminEconomyTreasuryWithdrawalsByRunIdEndpoint,
+  postAdminEconomyTreasuryWithdrawalsApprove:
+    postAdminEconomyTreasuryWithdrawalsApproveEndpoint,
+  getAdminEconomyTreasuryWithdrawalsAudit:
+    getAdminEconomyTreasuryWithdrawalsAuditEndpoint,
+  postAdminEconomyTreasuryWithdrawalsDispatch:
+    postAdminEconomyTreasuryWithdrawalsDispatchEndpoint,
+  postAdminEconomyTreasuryWithdrawalsReconcile:
+    postAdminEconomyTreasuryWithdrawalsReconcileEndpoint,
   getAuthorizationResourcesHasPermission:
     getAuthorizationResourcesHasPermissionEndpoint,
   getAuthorizationResourcesPermissions:
@@ -19845,8 +20864,28 @@ export const endpoints = {
   getBillingWebhooksWebhookEvents: getBillingWebhooksWebhookEventsEndpoint,
   postBillingWebhooksWebhookEventsRetry:
     postBillingWebhooksWebhookEventsRetryEndpoint,
+  postEconomyAdRewardsSessions: postEconomyAdRewardsSessionsEndpoint,
+  getEconomyAdRewardsSessions: getEconomyAdRewardsSessionsEndpoint,
+  postEconomyAdRewardsSessionsComplete:
+    postEconomyAdRewardsSessionsCompleteEndpoint,
+  postEconomyAdRewardsSessionsConfirmDeferred:
+    postEconomyAdRewardsSessionsConfirmDeferredEndpoint,
+  getEconomyBountiesForGetEconomyBounties:
+    getEconomyBountiesForGetEconomyBountiesEndpoint,
+  postEconomyBounties: postEconomyBountiesEndpoint,
+  getEconomyBountiesForGetEconomyBountiesByBountyId:
+    getEconomyBountiesForGetEconomyBountiesByBountyIdEndpoint,
+  postEconomyBountiesClaim: postEconomyBountiesClaimEndpoint,
+  postEconomyBountiesReclaim: postEconomyBountiesReclaimEndpoint,
   getEconomyCapabilities: getEconomyCapabilitiesEndpoint,
   postEconomyConversionsHardToSoft: postEconomyConversionsHardToSoftEndpoint,
+  postEconomyKycAccessToken: postEconomyKycAccessTokenEndpoint,
+  postEconomyKycOnboarding: postEconomyKycOnboardingEndpoint,
+  getEconomyKycStatus: getEconomyKycStatusEndpoint,
+  postEconomyMarketplaceOrdersSettle:
+    postEconomyMarketplaceOrdersSettleEndpoint,
+  postEconomyMarketplaceSettlementsRefund:
+    postEconomyMarketplaceSettlementsRefundEndpoint,
   getEconomyPayoutRequests: getEconomyPayoutRequestsEndpoint,
   postEconomyPayoutRequests: postEconomyPayoutRequestsEndpoint,
   postEconomyPayoutRequestsCancel: postEconomyPayoutRequestsCancelEndpoint,
@@ -19854,6 +20893,8 @@ export const endpoints = {
     getEconomyPayoutsForGetEconomyPayoutsEndpoint,
   getEconomyPayoutsForGetEconomyPayoutsByOperationId:
     getEconomyPayoutsForGetEconomyPayoutsByOperationIdEndpoint,
+  getEconomyPayoutsAccount: getEconomyPayoutsAccountEndpoint,
+  postEconomyPayoutsOnboarding: postEconomyPayoutsOnboardingEndpoint,
   getEconomyWallet: getEconomyWalletEndpoint,
   getEconomyWalletTransactions: getEconomyWalletTransactionsEndpoint,
   getEmailDeliveryDeadletters: getEmailDeliveryDeadlettersEndpoint,
@@ -19864,6 +20905,10 @@ export const endpoints = {
     getEmailDeliveryNotificationsTimelineEndpoint,
   getEmailDeliverySuppressions: getEmailDeliverySuppressionsEndpoint,
   deleteEmailDeliverySuppressions: deleteEmailDeliverySuppressionsEndpoint,
+  postIntegrationsEconomyStripeConnectWebhook:
+    postIntegrationsEconomyStripeConnectWebhookEndpoint,
+  postIntegrationsEconomySumsubWebhook:
+    postIntegrationsEconomySumsubWebhookEndpoint,
   postNotificationsEmailEvents: postNotificationsEmailEventsEndpoint,
   getNotificationsSubscriptions: getNotificationsSubscriptionsEndpoint,
   postNotificationsSubscriptionsResend:

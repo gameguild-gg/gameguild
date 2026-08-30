@@ -36,7 +36,8 @@ public sealed record PayoutRequest(
     long Version,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    Guid? FirstApprovalActorId = null)
+    Guid? FirstApprovalActorId = null,
+    Guid TenantId = default)
 {
     public PayoutRequest Cancel(DateTimeOffset occurredAt)
     {
@@ -124,15 +125,15 @@ public sealed record PayoutRequest(
 
 public interface IPayoutRequestStore
 {
-    PayoutRequest? FindReplay(Guid payeeId, string idempotencyKey, string requestHash);
+    PayoutRequest? FindReplay(Guid tenantId, Guid payeeId, string idempotencyKey, string requestHash);
 
     void Add(PayoutRequest request);
 
-    PayoutRequest GetForPayee(Guid requestId, Guid payeeId);
+    PayoutRequest GetForPayee(Guid tenantId, Guid requestId, Guid payeeId);
 
     PayoutRequest GetForReview(Guid requestId, Guid tenantId);
 
-    IReadOnlyList<PayoutRequest> ListForPayee(Guid payeeId, int take);
+    IReadOnlyList<PayoutRequest> ListForPayee(Guid tenantId, Guid payeeId, int take);
 
     IReadOnlyList<PayoutRequest> ListForReview(Guid tenantId, int take);
 

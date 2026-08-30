@@ -107,7 +107,7 @@ public sealed class PayoutRequestReviewQueryTests
             TenantId = tenantId,
             Roles = new HashSet<string>(),
             Permissions = hasAdministratorPermission
-                ? new HashSet<string> { WalletsPermission.Keys.Admin }
+                ? new HashSet<string> { EconomyPermission.Keys.ReviewPayouts }
                 : new HashSet<string>(),
             TypedAttributes = ActorAttributes.Empty,
             IsAuthenticated = isAuthenticated
@@ -133,19 +133,19 @@ public sealed class PayoutRequestReviewQueryTests
     {
         public Guid? LastTenantId { get; private set; }
 
-        public PayoutRequest? FindReplay(Guid payeeId, string idempotencyKey, string requestHash) =>
-            requests.SingleOrDefault(item => item.PayeeId == payeeId && item.IdempotencyKey.Value == idempotencyKey);
+        public PayoutRequest? FindReplay(Guid tenantId, Guid payeeId, string idempotencyKey, string requestHash) =>
+            requests.SingleOrDefault(item => item.TenantId == tenantId && item.PayeeId == payeeId && item.IdempotencyKey.Value == idempotencyKey);
 
         public void Add(PayoutRequest request) => throw new NotSupportedException();
 
-        public PayoutRequest GetForPayee(Guid requestId, Guid payeeId) =>
-            requests.Single(item => item.Id == requestId && item.PayeeId == payeeId);
+        public PayoutRequest GetForPayee(Guid tenantId, Guid requestId, Guid payeeId) =>
+            requests.Single(item => item.TenantId == tenantId && item.Id == requestId && item.PayeeId == payeeId);
 
         public PayoutRequest GetForReview(Guid requestId, Guid tenantId) =>
             requests.Single(item => item.Id == requestId);
 
-        public IReadOnlyList<PayoutRequest> ListForPayee(Guid payeeId, int take) => requests
-            .Where(item => item.PayeeId == payeeId)
+        public IReadOnlyList<PayoutRequest> ListForPayee(Guid tenantId, Guid payeeId, int take) => requests
+            .Where(item => item.TenantId == tenantId && item.PayeeId == payeeId)
             .Take(take)
             .ToArray();
 

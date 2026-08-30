@@ -261,6 +261,13 @@ public sealed class PostgreSqlGatewayValidationTests
                 valid.OperationId, PersistedFragmentReservationStatus.Reserved,
                 (PersistedFragmentReservationStatus)999, Now))
             .Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => gateway.Read(Guid.Empty, PersistedFragmentReservationStatus.Reserved))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => gateway.Read(valid.OperationId, (PersistedFragmentReservationStatus)999))
+            .Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => gateway.Read(
+                valid.OperationId, PersistedFragmentReservationStatus.Reserved))
+            .Should().Throw<InvalidOperationException>();
     }
 
     [Fact]
@@ -456,7 +463,11 @@ public sealed class PostgreSqlGatewayValidationTests
             typeof(PostgreSqlHardToSoftConversionGateway),
             typeof(PostgreSqlProviderReversalGateway),
             typeof(PostgreSqlFifoFragmentReservationGateway),
-            typeof(PostgreSqlFifoTransferGateway)
+            typeof(PostgreSqlFifoTransferGateway),
+            typeof(PostgreSqlAdRewardIssuanceGateway),
+            typeof(PostgreSqlMarketplaceLedgerGateway),
+            typeof(PostgreSqlEconomyWalletProvisioner),
+            typeof(PostgreSqlLegacyBalanceBackfillGateway)
         };
 
         foreach (var create in construct)
@@ -619,6 +630,54 @@ public sealed class PostgreSqlGatewayValidationTests
         reversal.IsDuplicate.Should().BeTrue();
     }
 
+    [Fact]
+    public void LegacyBackfillGatewayRejectsUnsafeRequestsAndTranslatesDatabaseFailures()
+    {
+        using var context = CreateContext();
+        var gateway = new PostgreSqlLegacyBalanceBackfillGateway(context);
+        var request = LegacyBackfillRequest();
+
+        FluentActions.Invoking(() => gateway.Post(null!)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => gateway.Post(request with { Authority = null! }))
+            .Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => gateway.Post(request with { CapabilityReceipt = null! }))
+            .Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => gateway.Post(request with { LegacyWalletId = Guid.Empty }))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => gateway.Post(request with { HardUnits = 0 }))
+            .Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => gateway.Post(request with { SnapshotHash = " " }))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => gateway.Post(request with { ProviderHash = " " }))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => gateway.Post(request with { DestinationHash = " " }))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => gateway.Post(request with { SourceRootHash = " " }))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => gateway.Post(request with
+            {
+                CapabilityReceipt = request.CapabilityReceipt with
+                {
+                    Capability = EconomyValueMovementCapability.PayoutExecution
+                }
+            }))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => gateway.Post(request))
+            .Should().Throw<RegisteredPostingRejectedException>()
+            .WithMessage("*legacy-balance writer rejected*");
+    }
+
+    [Fact]
+    public void LegacyBackfillGatewayRequiresRelationalContextAndClassifiesDatabaseFailures()
+    {
+        FluentActions.Invoking(() => new PostgreSqlLegacyBalanceBackfillGateway(null!))
+            .Should().Throw<ArgumentNullException>();
+        var proxy = DispatchProxy.Create<IApplicationDbContext, NonRelationalApplicationDbContextProxy>();
+        FluentActions.Invoking(() => new PostgreSqlLegacyBalanceBackfillGateway(proxy))
+            .Should().Throw<InvalidOperationException>();
+        AssertDatabaseFailureClassifier(typeof(PostgreSqlLegacyBalanceBackfillGateway));
+    }
+
     private static ApplicationDbContext CreateContext() => new(
         new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString("N"))
@@ -655,6 +714,33 @@ public sealed class PostgreSqlGatewayValidationTests
         Guid.NewGuid(),
         "durable-gateway-test",
         1);
+
+    private static LegacyBalanceBackfillPostingRequest LegacyBackfillRequest()
+    {
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var riskDecisionId = Guid.NewGuid();
+        var receipt = new CapabilityAuthorizationReceipt(
+            Guid.NewGuid(), tenantId, actorId, "legacy-wallet", "BR",
+            EconomyValueMovementCapability.LegacyBalanceBackfill, "legacy-backfill", 1, 1,
+            riskDecisionId, 0, "provider", "destination", ["source"], ["evidence"],
+            Now, Now.AddMinutes(5), "receipt", "key", "signature");
+        return new LegacyBalanceBackfillPostingRequest(
+            new RegisteredPostingAuthority(Guid.NewGuid(), actorId, tenantId, riskDecisionId, "legacy-backfill", 1),
+            receipt,
+            Guid.NewGuid(),
+            new WalletId(Guid.NewGuid()),
+            new SourceStampId(Guid.NewGuid()),
+            PostingId.New(),
+            CreditLotId.New(),
+            new IdempotencyKey($"legacy-{Guid.NewGuid():N}"),
+            1,
+            "snapshot",
+            "provider",
+            "destination",
+            "source",
+            Now);
+    }
 
     private static ConvertHardToSoftCommand Conversion(
         long feeUnits = 0,

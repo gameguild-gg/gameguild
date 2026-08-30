@@ -9,6 +9,7 @@ namespace GameGuild.Economy.Bounties.UnitTests;
 public sealed class BountyFactoryBoundaryTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 12, 12, 0, 0, TimeSpan.Zero);
+    private static readonly Guid TenantId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
     [Fact]
     public void ClaimFactoryRejectsEveryInvalidIdentityAndLifecycleBoundary()
@@ -217,7 +218,7 @@ public sealed class BountyFactoryBoundaryTests
         var withoutHash = new ScriptedRelationalInterceptor();
         withoutHash.EnqueueReader(BountyRows(id, null).Build());
         using (var context = new ScriptedBountiesContext(withoutHash))
-            FluentActions.Invoking(() => new PostgreSqlBountyEscrowStore(context).Get(id))
+            FluentActions.Invoking(() => new PostgreSqlBountyEscrowStore(context).Get(TenantId, id))
                 .Should().Throw<InvalidOperationException>();
 
         var withoutRanges = new ScriptedRelationalInterceptor();
@@ -226,7 +227,7 @@ public sealed class BountyFactoryBoundaryTests
             CreditLotId.New().Value, CreditLotId.New().Value, (int)CurrencyCode.HardCoin,
             (int)ProvenanceKind.PurchasedHard, 1L, 1000L, "null").Build());
         using (var context = new ScriptedBountiesContext(withoutRanges))
-            FluentActions.Invoking(() => new PostgreSqlBountyEscrowStore(context).Get(id))
+            FluentActions.Invoking(() => new PostgreSqlBountyEscrowStore(context).Get(TenantId, id))
                 .Should().Throw<InvalidOperationException>();
     }
 
@@ -271,7 +272,7 @@ public sealed class BountyFactoryBoundaryTests
     {
         var id = Guid.NewGuid();
         var terminal = new PersistedBountyTerminalEvent(
-            id, BountyId.New(), BountyStatus.Reclaimed, Guid.NewGuid(), WalletId.New(),
+            id, TenantId, BountyId.New(), BountyStatus.Reclaimed, Guid.NewGuid(), WalletId.New(),
             new IdempotencyKey("terminal"), null, null, null, 1, 0, 1, [], Now);
         terminal.Id.Should().Be(id);
     }
@@ -313,7 +314,7 @@ public sealed class BountyFactoryBoundaryTests
         IReadOnlyList<PersistedBountyEscrowFragment> fragments,
         Guid? poster = null,
         WalletId? posterWallet = null) => new(
-        id, poster ?? Guid.NewGuid(), posterWallet ?? WalletId.New(), WalletId.New(),
+        id, TenantId, poster ?? Guid.NewGuid(), posterWallet ?? WalletId.New(), WalletId.New(),
         new CoinAmount(currency, 10), BountyEligibilityRequirements.None, 0, BountyStatus.Open,
         new IdempotencyKey($"post-{id.Value:N}"), "hash", Now.AddDays(-2), Now.AddDays(-1), 1, fragments);
 
@@ -360,14 +361,14 @@ public sealed class BountyFactoryBoundaryTests
 
     private static TestDataTable BountyRows(BountyId id, string? requestHash) =>
         new TestDataTable(
-                ("Id", typeof(Guid)), ("PosterId", typeof(Guid)), ("PosterWalletId", typeof(Guid)),
+                ("Id", typeof(Guid)), ("TenantId", typeof(Guid)), ("PosterId", typeof(Guid)), ("PosterWalletId", typeof(Guid)),
                 ("EscrowWalletId", typeof(Guid)), ("Currency", typeof(int)), ("AmountUnits", typeof(long)),
                 ("ReclaimFeePpm", typeof(int)), ("RequiresPrerequisite", typeof(bool)),
                 ("MinimumReputation", typeof(int)), ("RequiresInstructorVerification", typeof(bool)),
                 ("Status", typeof(int)), ("IdempotencyKey", typeof(string)), ("RequestHash", typeof(string)),
                 ("PostedAt", typeof(DateTimeOffset)), ("ExpiresAt", typeof(DateTimeOffset)), ("Version", typeof(long)))
             .AddRow(
-                id.Value, Guid.NewGuid(), WalletId.New().Value, WalletId.New().Value,
+                id.Value, TenantId, Guid.NewGuid(), WalletId.New().Value, WalletId.New().Value,
                 (int)CurrencyCode.HardCoin, 1L, 0, false, 0, false, (int)BountyStatus.Open,
                 "post", requestHash, Now.AddDays(-2), Now.AddDays(-1), 1L);
 
