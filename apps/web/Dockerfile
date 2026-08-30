@@ -18,10 +18,10 @@ RUN pnpm install --no-frozen-lockfile --prefer-offline
 # Build emception workspace packages (ship TS source; dist/ required by apps/web build)
 RUN pnpm --dir tools/emception run build:packages
 
-RUN TOOLCHAIN_VERSION="$(node -p \"require('./tools/emception/packages/toolchain/package.json').version\")" && \
+RUN TOOLCHAIN_VERSION="$(node -p 'require("./tools/emception/packages/toolchain/package.json").version')" && \
     mkdir -p /repo/tools/emception/artifacts/toolchain/release/cdn /tmp/emception-extract && \
     cd /tmp/emception-extract && \
-    npm pack "@gameguild/emception-toolchain@${TOOLCHAIN_VERSION}" && \
+    npm pack "emception@${TOOLCHAIN_VERSION}" && \
     tar xzf *.tgz && \
     cp -r /tmp/emception-extract/package/cdn/. /repo/tools/emception/artifacts/toolchain/release/cdn/ && \
     rm -rf /tmp/emception-extract
