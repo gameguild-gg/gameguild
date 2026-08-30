@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,37 +20,28 @@ export class EconomyBountiesModule {
   async getEconomyBountiesForGetEconomyBounties(query?: {
     status?: Types.EconomyBountiesBountyStatus;
   }): Promise<Result<Array<Types.EconomyBountiesDurableBountyView>, ApiError>> {
-    const url = "/api/v1/economy/bounties";
+    const url = '/api/v1/economy/bounties';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.EconomyBountiesDurableBountyView>,
-      ApiError
-    >;
+    return result as Result<Array<Types.EconomyBountiesDurableBountyView>, ApiError>;
   }
 
   /**
    */
-  async postEconomyBounties(
-    body: Types.APIControllersCreateMyBountyInput,
-  ): Promise<Result<Types.EconomyBountiesDurableBountyView, ApiError>> {
-    const url = "/api/v1/economy/bounties";
+  async postEconomyBounties(body: Types.APIControllersCreateMyBountyInput): Promise<Result<Types.EconomyBountiesDurableBountyView, ApiError>> {
+    const url = '/api/v1/economy/bounties';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersCreateMyBountyInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersCreateMyBountyInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -58,11 +49,7 @@ export class EconomyBountiesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyBountiesDurableBountyViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyBountiesDurableBountyViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -71,24 +58,18 @@ export class EconomyBountiesModule {
 
   /**
    */
-  async getEconomyBountiesForGetEconomyBountiesByBountyId(
-    bountyId: string,
-  ): Promise<Result<Types.EconomyBountiesDurableBountyView, ApiError>> {
+  async getEconomyBountiesForGetEconomyBountiesByBountyId(bountyId: string): Promise<Result<Types.EconomyBountiesDurableBountyView, ApiError>> {
     const url = `/api/v1/economy/bounties/${bountyId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyBountiesDurableBountyViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyBountiesDurableBountyViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -104,14 +85,10 @@ export class EconomyBountiesModule {
     const url = `/api/v1/economy/bounties/${bountyId}:claim`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersCompleteMyBountyInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersCompleteMyBountyInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -119,11 +96,7 @@ export class EconomyBountiesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyBountiesDurableBountyViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyBountiesDurableBountyViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -139,14 +112,10 @@ export class EconomyBountiesModule {
     const url = `/api/v1/economy/bounties/${bountyId}:reclaim`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.APIControllersCompleteMyBountyInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.APIControllersCompleteMyBountyInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -154,11 +123,7 @@ export class EconomyBountiesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyBountiesDurableBountyViewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyBountiesDurableBountyViewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -166,8 +131,6 @@ export class EconomyBountiesModule {
   }
 }
 
-export function createEconomyBountiesModule(
-  client: ApiClient,
-): EconomyBountiesModule {
+export function createEconomyBountiesModule(client: ApiClient): EconomyBountiesModule {
   return new EconomyBountiesModule(client);
 }
