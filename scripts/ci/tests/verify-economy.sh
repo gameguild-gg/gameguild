@@ -197,7 +197,7 @@ test_economy_gate_rejects_nested_postgres_testcontainers() {
 
   grep -Fq "gate_stage='preflight-postgres-isolation'" "$gate" || return 1
   grep -Fq 'ECONOMY_POSTGRES_CONNECTION' "$gate" || return 1
-  grep -Fq "rg --path-separator // -l --glob '*.cs' 'new PostgreSqlBuilder' apps/api/tests" "$gate" || return 1
+  grep -Fq "grep -RIl --include='*.cs' 'new PostgreSqlBuilder' apps/api/tests" "$gate" || return 1
   grep -Fq 'GameGuild.TestSupport.Economy/' "$gate"
 }
 
