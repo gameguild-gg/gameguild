@@ -255,6 +255,7 @@ test_economy_gate_migrates_one_template_and_clones_isolated_test_databases() {
 
   grep -Fq "gate_stage='postgres-economy-template'" "$gate" || return 1
   grep -Fq "economy_template_database='economy_tests_template'" "$gate" || return 1
+  grep -Fq 'run dotnet tool restore' "$gate" || return 1
   grep -Fq 'dotnet ef database update' "$gate" || return 1
   grep -Fq 'export ECONOMY_POSTGRES_TEMPLATE_DATABASE="$economy_template_database"' "$gate" || return 1
   grep -Fq 'ECONOMY_POSTGRES_TEMPLATE_DATABASE' "$database_support" || return 1
