@@ -6,11 +6,17 @@ import { describe, expect, it, vi } from 'vitest';
 import { CourseCard, CourseTableActions } from './course-card';
 
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ children, href, locale, prefetch: _prefetch, ...rest }: { children: ReactNode; href: string; locale?: string; prefetch?: boolean }) => (
-    <a href={href} data-locale={locale} {...rest}>
-      {children}
-    </a>
-  ),
+  Link: (props: { children: ReactNode; href: string; locale?: string; prefetch?: boolean }) => {
+    const { children, href, ...anchorProps } = props;
+    const locale = anchorProps.locale;
+    delete anchorProps.locale;
+    delete anchorProps.prefetch;
+    return (
+      <a href={href} data-locale={locale} {...anchorProps}>
+        {children}
+      </a>
+    );
+  },
 }));
 
 const course = {
@@ -31,7 +37,7 @@ describe('CourseCard actions', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /open combat design foundations actions/i }));
 
-    const menu = screen.getByRole('menu');
+    const menu = await screen.findByRole('menu');
     const editLink = within(menu).getByRole('menuitem', { name: /edit course/i });
     const previewLink = within(menu).getByRole('menuitem', { name: /^preview$/i });
 
@@ -46,7 +52,7 @@ describe('CourseCard actions', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /open combat design foundations actions/i }));
 
-    const menu = screen.getByRole('menu');
+    const menu = await screen.findByRole('menu');
     const editLink = within(menu).getByRole('menuitem', { name: /^edit$/i });
     const previewLink = within(menu).getByRole('menuitem', { name: /^preview$/i });
 

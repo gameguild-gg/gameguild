@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -22,37 +22,28 @@ export class TestingLabTestingEventsModule {
     skip?: number;
     take?: number;
   }): Promise<Result<Array<Types.TestingLabTestingEventProjection>, ApiError>> {
-    const url = "/v1/testing/events";
+    const url = '/v1/testing/events';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.TestingLabTestingEventProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.TestingLabTestingEventProjection>, ApiError>;
   }
 
   /**
    */
-  async postTestingEvents(
-    body: Types.TestingLabCreateTestingEventInput,
-  ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
-    const url = "/v1/testing/events";
+  async postTestingEvents(body: Types.TestingLabCreateTestingEventInput): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+    const url = '/v1/testing/events';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabCreateTestingEventInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabCreateTestingEventInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -60,11 +51,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -73,24 +60,18 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async getTestingEventsForGetTestingEventsByEventId(
-    eventId: string,
-  ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+  async getTestingEventsForGetTestingEventsByEventId(eventId: string): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -99,21 +80,14 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async putTestingEvents(
-    eventId: string,
-    body: Types.TestingLabUpdateTestingEventInput,
-  ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+  async putTestingEvents(eventId: string, body: Types.TestingLabUpdateTestingEventInput): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabUpdateTestingEventInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabUpdateTestingEventInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -121,11 +95,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -134,13 +104,11 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async deleteTestingEvents(
-    eventId: string,
-  ): Promise<Result<boolean, ApiError>> {
+  async deleteTestingEvents(eventId: string): Promise<Result<boolean, ApiError>> {
     const url = `/v1/testing/events/${eventId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -150,24 +118,18 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async postTestingEventsActivate(
-    eventId: string,
-  ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+  async postTestingEventsActivate(eventId: string): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}:activate`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -176,13 +138,11 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async postTestingEventsArchive(
-    eventId: string,
-  ): Promise<Result<boolean, ApiError>> {
+  async postTestingEventsArchive(eventId: string): Promise<Result<boolean, ApiError>> {
     const url = `/v1/testing/events/${eventId}:archive`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -199,14 +159,10 @@ export class TestingLabTestingEventsModule {
     const url = `/v1/testing/events/${eventId}:cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabCancelTestingEventInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabCancelTestingEventInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -214,11 +170,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -227,24 +179,18 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async postTestingEventsCloseApplications(
-    eventId: string,
-  ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+  async postTestingEventsCloseApplications(eventId: string): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}:close-applications`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -253,24 +199,18 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async postTestingEventsComplete(
-    eventId: string,
-  ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+  async postTestingEventsComplete(eventId: string): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}:complete`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -279,24 +219,18 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async postTestingEventsOpenApplications(
-    eventId: string,
-  ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+  async postTestingEventsOpenApplications(eventId: string): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}:open-applications`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -305,13 +239,11 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async postTestingEventsRestore(
-    eventId: string,
-  ): Promise<Result<boolean, ApiError>> {
+  async postTestingEventsRestore(eventId: string): Promise<Result<boolean, ApiError>> {
     const url = `/v1/testing/events/${eventId}:restore`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -321,24 +253,18 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async postTestingEventsSchedule(
-    eventId: string,
-  ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+  async postTestingEventsSchedule(eventId: string): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}:schedule`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -349,27 +275,18 @@ export class TestingLabTestingEventsModule {
    */
   async getTestingEventsApplicationsForGetTestingEventsByEventIdApplications(
     eventId: string,
-    query?: {
-      status?: Types.TestingLabTestingApplicationStatus;
-      skip?: number;
-      take?: number;
-    },
-  ): Promise<
-    Result<Array<Types.TestingLabTestingProjectApplicationProjection>, ApiError>
-  > {
+    query?: { status?: Types.TestingLabTestingApplicationStatus; skip?: number; take?: number },
+  ): Promise<Result<Array<Types.TestingLabTestingProjectApplicationProjection>, ApiError>> {
     const url = `/v1/testing/events/${eventId}/applications`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.TestingLabTestingProjectApplicationProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.TestingLabTestingProjectApplicationProjection>, ApiError>;
   }
 
   /**
@@ -377,20 +294,14 @@ export class TestingLabTestingEventsModule {
   async postTestingEventsApplications(
     eventId: string,
     body: Types.TestingLabSubmitTestingProjectApplicationInput,
-  ): Promise<
-    Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>
-  > {
+  ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}/applications`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabSubmitTestingProjectApplicationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabSubmitTestingProjectApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -398,11 +309,54 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingProjectApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getTestingEventsApplicationsAccess(eventId: string): Promise<Result<Types.TestingLabTestingEventApplicationAccessProjection, ApiError>> {
+    const url = `/v1/testing/events/${eventId}/applications/access`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.TestingLabTestingEventApplicationAccessProjectionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postTestingEventsApplicationsDrafts(
+    eventId: string,
+    body: Types.TestingLabCreateTestingProjectApplicationDraftInput,
+  ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
+    const url = `/v1/testing/events/${eventId}/applications/drafts`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.TestingLabCreateTestingProjectApplicationDraftInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -414,49 +368,31 @@ export class TestingLabTestingEventsModule {
   async getTestingEventsApplicationsTesterEligibility(
     eventId: string,
     query?: { testerUserIds?: Array<string> },
-  ): Promise<
-    Result<
-      Array<Types.TestingLabTestingApplicationTesterEligibilityProjection>,
-      ApiError
-    >
-  > {
+  ): Promise<Result<Array<Types.TestingLabTestingApplicationTesterEligibilityProjection>, ApiError>> {
     const url = `/v1/testing/events/${eventId}/applications/tester-eligibility`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.TestingLabTestingApplicationTesterEligibilityProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.TestingLabTestingApplicationTesterEligibilityProjection>, ApiError>;
   }
 
   /**
    */
-  async getTestingEventsCommittee(
-    eventId: string,
-  ): Promise<
-    Result<
-      Array<Types.TestingLabTestingEventCommitteeMemberProjection>,
-      ApiError
-    >
-  > {
+  async getTestingEventsCommittee(eventId: string): Promise<Result<Array<Types.TestingLabTestingEventCommitteeMemberProjection>, ApiError>> {
     const url = `/v1/testing/events/${eventId}/committee`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.TestingLabTestingEventCommitteeMemberProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.TestingLabTestingEventCommitteeMemberProjection>, ApiError>;
   }
 
   /**
@@ -464,20 +400,14 @@ export class TestingLabTestingEventsModule {
   async postTestingEventsCommittee(
     eventId: string,
     body: Types.TestingLabAddTestingEventCommitteeMemberInput,
-  ): Promise<
-    Result<Types.TestingLabTestingEventCommitteeMemberProjection, ApiError>
-  > {
+  ): Promise<Result<Types.TestingLabTestingEventCommitteeMemberProjection, ApiError>> {
     const url = `/v1/testing/events/${eventId}/committee`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabAddTestingEventCommitteeMemberInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabAddTestingEventCommitteeMemberInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -485,11 +415,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventCommitteeMemberProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventCommitteeMemberProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -498,19 +424,43 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async deleteTestingEventsCommittee(
-    eventId: string,
-    userId: string,
-  ): Promise<Result<boolean, ApiError>> {
+  async deleteTestingEventsCommittee(eventId: string, userId: string): Promise<Result<boolean, ApiError>> {
     const url = `/v1/testing/events/${eventId}/committee/${userId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
 
     return result as Result<boolean, ApiError>;
+  }
+
+  /**
+   */
+  async putTestingEventsConfiguration(
+    eventId: string,
+    body: Types.TestingLabConfigureTestingEventInput,
+  ): Promise<Result<Types.TestingLabTestingEventProjection, ApiError>> {
+    const url = `/v1/testing/events/${eventId}/configuration`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.TestingLabConfigureTestingEventInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
   }
 
   /**
@@ -522,14 +472,10 @@ export class TestingLabTestingEventsModule {
     const url = `/v1/testing/events/${eventId}/learning`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabConfigureTestingEventLearningInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabConfigureTestingEventLearningInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -537,11 +483,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -550,23 +492,16 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async getTestingEventsSlots(
-    eventId: string,
-  ): Promise<
-    Result<Array<Types.TestingLabTestingEventSlotProjection>, ApiError>
-  > {
+  async getTestingEventsSlots(eventId: string): Promise<Result<Array<Types.TestingLabTestingEventSlotProjection>, ApiError>> {
     const url = `/v1/testing/events/${eventId}/slots`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.TestingLabTestingEventSlotProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.TestingLabTestingEventSlotProjection>, ApiError>;
   }
 
   /**
@@ -578,14 +513,10 @@ export class TestingLabTestingEventsModule {
     const url = `/v1/testing/events/${eventId}/slots`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabUpsertTestingEventSlotInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabUpsertTestingEventSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -593,11 +524,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventSlotProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventSlotProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -614,14 +541,10 @@ export class TestingLabTestingEventsModule {
     const url = `/v1/testing/events/${eventId}/slots/${slotId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabUpsertTestingEventSlotInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabUpsertTestingEventSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -629,11 +552,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingEventSlotProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingEventSlotProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -642,14 +561,11 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async deleteTestingEventsSlots(
-    eventId: string,
-    slotId: string,
-  ): Promise<Result<boolean, ApiError>> {
+  async deleteTestingEventsSlots(eventId: string, slotId: string): Promise<Result<boolean, ApiError>> {
     const url = `/v1/testing/events/${eventId}/slots/${slotId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -661,24 +577,18 @@ export class TestingLabTestingEventsModule {
    */
   async getTestingEventsApplicationsForGetTestingEventsApplicationsByApplicationId(
     applicationId: string,
-  ): Promise<
-    Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>
-  > {
+  ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingProjectApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -690,20 +600,14 @@ export class TestingLabTestingEventsModule {
   async putTestingEventsApplications(
     applicationId: string,
     body: Types.TestingLabUpdateTestingProjectApplicationInput,
-  ): Promise<
-    Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>
-  > {
+  ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabUpdateTestingProjectApplicationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabUpdateTestingProjectApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -711,11 +615,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingProjectApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -727,20 +627,14 @@ export class TestingLabTestingEventsModule {
   async postTestingEventsApplicationsApprove(
     applicationId: string,
     body: Types.TestingLabDecideTestingProjectApplicationInput,
-  ): Promise<
-    Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>
-  > {
+  ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}:approve`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabDecideTestingProjectApplicationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabDecideTestingProjectApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -748,11 +642,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingProjectApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -764,20 +654,14 @@ export class TestingLabTestingEventsModule {
   async postTestingEventsApplicationsReject(
     applicationId: string,
     body: Types.TestingLabDecideTestingProjectApplicationInput,
-  ): Promise<
-    Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>
-  > {
+  ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}:reject`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabDecideTestingProjectApplicationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabDecideTestingProjectApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -785,11 +669,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingProjectApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -798,26 +678,38 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async postTestingEventsApplicationsReview(
-    applicationId: string,
-  ): Promise<
-    Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>
-  > {
+  async postTestingEventsApplicationsReview(applicationId: string): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}:review`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingProjectApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postTestingEventsApplicationsSubmit(applicationId: string): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
+    const url = `/v1/testing/events/applications/${applicationId}:submit`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -829,20 +721,14 @@ export class TestingLabTestingEventsModule {
   async postTestingEventsApplicationsWaitlist(
     applicationId: string,
     body: Types.TestingLabDecideTestingProjectApplicationInput,
-  ): Promise<
-    Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>
-  > {
+  ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}:waitlist`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabDecideTestingProjectApplicationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabDecideTestingProjectApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -850,11 +736,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingProjectApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -863,26 +745,18 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async postTestingEventsApplicationsWithdraw(
-    applicationId: string,
-  ): Promise<
-    Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>
-  > {
+  async postTestingEventsApplicationsWithdraw(applicationId: string): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}:withdraw`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingProjectApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -891,26 +765,45 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async getTestingEventsApplicationsReviewPackage(
+  async putTestingEventsApplicationsDraft(
     applicationId: string,
-  ): Promise<
-    Result<Types.TestingLabTestingApplicationReviewPackageProjection, ApiError>
-  > {
+    body: Types.TestingLabSaveTestingProjectApplicationDraftInput,
+  ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
+    const url = `/v1/testing/events/applications/${applicationId}/draft`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.TestingLabSaveTestingProjectApplicationDraftInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getTestingEventsApplicationsReviewPackage(applicationId: string): Promise<Result<Types.TestingLabTestingApplicationReviewPackageProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}/review-package`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingApplicationReviewPackageProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingApplicationReviewPackageProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -922,20 +815,14 @@ export class TestingLabTestingEventsModule {
   async putTestingEventsApplicationsSlot(
     applicationId: string,
     body: Types.TestingLabAssignTestingProjectApplicationSlotInput,
-  ): Promise<
-    Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>
-  > {
+  ): Promise<Result<Types.TestingLabTestingProjectApplicationProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}/slot`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabAssignTestingProjectApplicationSlotInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabAssignTestingProjectApplicationSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -943,11 +830,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingProjectApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingProjectApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -959,20 +842,14 @@ export class TestingLabTestingEventsModule {
   async postTestingEventsApplicationsVotes(
     applicationId: string,
     body: Types.TestingLabCastTestingApplicationVoteInput,
-  ): Promise<
-    Result<Types.TestingLabTestingApplicationVoteProjection, ApiError>
-  > {
+  ): Promise<Result<Types.TestingLabTestingApplicationVoteProjection, ApiError>> {
     const url = `/v1/testing/events/applications/${applicationId}/votes`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabCastTestingApplicationVoteInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabCastTestingApplicationVoteInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -980,11 +857,7 @@ export class TestingLabTestingEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingApplicationVoteProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingApplicationVoteProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -993,45 +866,32 @@ export class TestingLabTestingEventsModule {
 
   /**
    */
-  async getTestingEventsApplicationsMe(query?: {
-    eventId?: string;
-  }): Promise<
-    Result<Array<Types.TestingLabTestingProjectApplicationProjection>, ApiError>
-  > {
-    const url = "/v1/testing/events/applications/me";
+  async getTestingEventsApplicationsMe(query?: { eventId?: string }): Promise<Result<Array<Types.TestingLabTestingProjectApplicationProjection>, ApiError>> {
+    const url = '/v1/testing/events/applications/me';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.TestingLabTestingProjectApplicationProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.TestingLabTestingProjectApplicationProjection>, ApiError>;
   }
 
   /**
    */
-  async getTestingEventsArchived(query?: {
-    skip?: number;
-    take?: number;
-  }): Promise<Result<Array<Types.TestingLabTestingEventProjection>, ApiError>> {
-    const url = "/v1/testing/events/archived";
+  async getTestingEventsArchived(query?: { skip?: number; take?: number }): Promise<Result<Array<Types.TestingLabTestingEventProjection>, ApiError>> {
+    const url = '/v1/testing/events/archived';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.TestingLabTestingEventProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.TestingLabTestingEventProjection>, ApiError>;
   }
 
   /**
@@ -1039,44 +899,33 @@ export class TestingLabTestingEventsModule {
   async getTestingEventsPublicForGetTestingEventsPublic(query?: {
     skip?: number;
     take?: number;
-  }): Promise<
-    Result<Array<Types.TestingLabPublicTestingEventProjection>, ApiError>
-  > {
-    const url = "/v1/testing/events/public";
+  }): Promise<Result<Array<Types.TestingLabPublicTestingEventProjection>, ApiError>> {
+    const url = '/v1/testing/events/public';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.TestingLabPublicTestingEventProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.TestingLabPublicTestingEventProjection>, ApiError>;
   }
 
   /**
    */
-  async getTestingEventsPublicForGetTestingEventsPublicByEventId(
-    eventId: string,
-  ): Promise<Result<Types.TestingLabPublicTestingEventProjection, ApiError>> {
+  async getTestingEventsPublicForGetTestingEventsPublicByEventId(eventId: string): Promise<Result<Types.TestingLabPublicTestingEventProjection, ApiError>> {
     const url = `/v1/testing/events/public/${eventId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabPublicTestingEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabPublicTestingEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -1084,8 +933,6 @@ export class TestingLabTestingEventsModule {
   }
 }
 
-export function createTestingLabTestingEventsModule(
-  client: ApiClient,
-): TestingLabTestingEventsModule {
+export function createTestingLabTestingEventsModule(client: ApiClient): TestingLabTestingEventsModule {
   return new TestingLabTestingEventsModule(client);
 }

@@ -11,9 +11,9 @@ import {
 } from "./dashboard-sidebar";
 
 describe("dashboard management navigation", () => {
-  it("places Testing Lab and Launch Pad under Community Management", () => {
+  it("places Testing Lab and Launch Pad under an explicit administration scope", () => {
     const community = dashboardNavigationData.find(
-      (group) => group.label === "Community Management",
+      (group) => group.label === "Community administration",
     );
     const testingLab = community?.items.find(
       (item) => item.title === "Testing Lab",
@@ -102,7 +102,7 @@ describe("dashboard management navigation", () => {
       "TestingLab.ManageEvents",
     ]);
     const community = navigation.find(
-      (group) => group.label === "Community Management",
+      (group) => group.label === "Community administration",
     );
 
     expect(community?.items.map((item) => item.title)).toEqual([

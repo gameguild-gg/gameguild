@@ -116,14 +116,7 @@ export interface ServerError extends ApiError {
  * Union of all specific error types
  */
 export type SpecificApiError =
-  | ValidationError
-  | AuthenticationError
-  | AuthorizationError
-  | NotFoundError
-  | ConflictError
-  | RateLimitError
-  | NetworkError
-  | ServerError;
+  ValidationError | AuthenticationError | AuthorizationError | NotFoundError | ConflictError | RateLimitError | NetworkError | ServerError;
 
 /**
  * Required permission structure

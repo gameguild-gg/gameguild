@@ -15,7 +15,7 @@
  *   GET  /api/auth/callback/:provider — OAuth callback
  */
 
-import type { ResolvedAuthConfig, Session, JWTPayload, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types.js';
+import type { ResolvedAuthConfig, Session, ProviderResult, CredentialsProviderConfig } from '../../runtime/auth/types.js';
 import { SessionStore, CsrfStore, resolveCookieOptions, type CookieSerializeOptions } from '../../runtime/auth/cookies.js';
 import { createJWTPayload, processSession, encodeSession, toSession } from '../../runtime/auth/session.js';
 import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf.js';
@@ -37,7 +37,11 @@ import {
  * Internal cookie setter that collects Set-Cookie headers
  */
 interface ResponseCookies {
-  cookies: Array<{ name: string; value: string; options: CookieSerializeOptions }>;
+  cookies: Array<{
+    name: string;
+    value: string;
+    options: CookieSerializeOptions;
+  }>;
   set(name: string, value: string, options: CookieSerializeOptions): void;
 }
 
@@ -480,7 +484,10 @@ export function createHandlers(config: ResolvedAuthConfig) {
     const encryptedToken = sessionStore.read((name) => cookies.get(name));
     if (encryptedToken) {
       try {
-        const token = await decodeJWT({ token: encryptedToken, secret: config.secret });
+        const token = await decodeJWT({
+          token: encryptedToken,
+          secret: config.secret,
+        });
         if (token?.refreshToken) {
           await fetch(`${config.apiUrl}/v1/auth/tokens:revoke`, {
             method: 'POST',
@@ -509,7 +516,10 @@ export function createHandlers(config: ResolvedAuthConfig) {
       return buildResponse({}, 200, responseCookies);
     }
 
-    let token = await decodeJWT({ token: encryptedToken, secret: config.secret });
+    let token = await decodeJWT({
+      token: encryptedToken,
+      secret: config.secret,
+    });
 
     if (!token) {
       return buildResponse({}, 200, responseCookies);
@@ -533,11 +543,7 @@ export function createHandlers(config: ResolvedAuthConfig) {
     /* v8 ignore stop */
   }
 
-  async function handleOAuthSignInRedirect(
-    request: Request,
-    providerId: string,
-    responseCookies: ResponseCookies,
-  ): Promise<Response> {
+  async function handleOAuthSignInRedirect(request: Request, providerId: string, responseCookies: ResponseCookies): Promise<Response> {
     const provider = config.providers.find((candidate) => candidate.id === providerId);
     if (!provider) throw new ProviderNotFoundError(providerId);
 

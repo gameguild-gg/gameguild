@@ -242,11 +242,14 @@ public sealed class LaunchPadEventsController(
             return Unauthorized();
         if (!await authorization.CanSubmitProjectAsync(request.ProjectId, cancellationToken).ConfigureAwait(false)) return NotFound();
 
-        var versionValid = await context.Set<ProjectVersion>().AsNoTracking()
-            .AnyAsync(version => version.Id == request.ProjectVersionId && version.ProjectId == request.ProjectId &&
+        var version = await context.Set<ProjectVersion>().AsNoTracking()
+            .FirstOrDefaultAsync(version => version.Id == request.ProjectVersionId && version.ProjectId == request.ProjectId &&
                                  version.Project.TenantId == launchEvent.TenantId && version.DeletedAt == null,
                 cancellationToken).ConfigureAwait(false);
-        if (!versionValid) return UnprocessableEntity(new { code = "LaunchPad.ProjectVersionMismatch" });
+        if (version == null) return UnprocessableEntity(new { code = "LaunchPad.ProjectVersionMismatch" });
+        var submissionPolicy = await GetVersionSubmissionPolicyAsync(launchEvent.TenantId.Value, cancellationToken).ConfigureAwait(false);
+        if (!ProjectVersionEligibility.IsEligible(version.Status, submissionPolicy))
+            return UnprocessableEntity(new { code = "LaunchPad.ProjectVersionIneligible" });
         var submittedAssetIds = request.SubmittedAssetReferenceIds?
             .Where(id => id != Guid.Empty).Distinct().Take(100).ToArray() ?? [];
         if (submittedAssetIds.Length > 0)
@@ -266,7 +269,7 @@ public sealed class LaunchPadEventsController(
         if (duplicate) return Conflict(new { code = "LaunchPad.ApplicationExists" });
 
         var application = LaunchPadApplication.Submit(launchEvent.TenantId.Value, eventId, request.ProjectId,
-            request.ProjectVersionId, actorId.Value, request.Pitch, submittedAssetIds);
+            request.ProjectVersionId, actorId.Value, request.Pitch, submittedAssetIds, submissionPolicy);
         context.Set<LaunchPadApplication>().Add(application);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Created(string.Empty, LaunchPadApplicationProjection.FromEntity(application));
@@ -304,11 +307,20 @@ public sealed class LaunchPadEventsController(
         if (!await authorization.CanSubmitProjectAsync(application.ProjectId, cancellationToken).ConfigureAwait(false)) return NotFound();
         if (application.LaunchPadEvent.Status != LaunchPadEventStatus.ApplicationsOpen)
             return Conflict(new { code = "LaunchPad.ApplicationsClosed" });
-        var versionValid = await context.Set<ProjectVersion>().AsNoTracking().AnyAsync(version =>
+        var replacingVersion = request.ProjectVersionId != application.ProjectVersionId;
+        if (replacingVersion && !ProjectVersionEligibility.CanReplaceAfterSubmission(application.SubmissionVersionPolicy))
+            return Conflict(new { code = "LaunchPad.ProjectVersionImmutable" });
+        var version = await context.Set<ProjectVersion>().AsNoTracking().FirstOrDefaultAsync(version =>
             version.Id == request.ProjectVersionId && version.ProjectId == application.ProjectId &&
             version.Project.TenantId == application.TenantId && version.DeletedAt == null,
             cancellationToken).ConfigureAwait(false);
-        if (!versionValid) return UnprocessableEntity(new { code = "LaunchPad.ProjectVersionMismatch" });
+        if (version == null) return UnprocessableEntity(new { code = "LaunchPad.ProjectVersionMismatch" });
+        if (replacingVersion)
+        {
+            var currentPolicy = await GetVersionSubmissionPolicyAsync(application.TenantId!.Value, cancellationToken).ConfigureAwait(false);
+            if (!ProjectVersionEligibility.IsEligible(version.Status, currentPolicy))
+                return UnprocessableEntity(new { code = "LaunchPad.ProjectVersionIneligible" });
+        }
         var assetIds = request.SubmittedAssetReferenceIds?.Where(id => id != Guid.Empty).Distinct().Take(100).ToArray() ?? [];
         var validAssets = await context.Set<AssetReference>().AsNoTracking().CountAsync(reference =>
             assetIds.Contains(reference.Id) && reference.TenantId == application.TenantId &&
@@ -549,6 +561,16 @@ public sealed class LaunchPadEventsController(
 
     private Guid? CurrentTenantId() => requestContext.CurrentTenantId ?? actors.ActorContext.TenantId;
 
+    private async Task<VersionSubmissionPolicy> GetVersionSubmissionPolicyAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken) =>
+        await context.Set<LaunchPadSettings>().AsNoTracking()
+            .Where(settings => settings.TenantId == tenantId && settings.DeletedAt == null)
+            .Select(settings => (VersionSubmissionPolicy?)settings.VersionSubmissionPolicy)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false)
+        ?? VersionSubmissionPolicy.ReleasedImmutable;
+
     private async Task<LaunchPadEvent?> FindEventAsync(Guid id, CancellationToken cancellationToken)
     {
         var tenantId = CurrentTenantId();
@@ -615,11 +637,12 @@ public sealed record LaunchPadSlotProjection(Guid Id, Guid EventId, string Name,
 
 public sealed record LaunchPadApplicationProjection(Guid Id, Guid EventId, Guid ProjectId, Guid ProjectVersionId,
     Guid SubmittedByUserId, LaunchPadApplicationStatus Status, string? Pitch, DateTime SubmittedAt,
-    IReadOnlyList<Guid> SubmittedAssetReferenceIds)
+    IReadOnlyList<Guid> SubmittedAssetReferenceIds,
+    VersionSubmissionPolicy SubmissionVersionPolicy)
 {
     public static LaunchPadApplicationProjection FromEntity(LaunchPadApplication entity) => new(entity.Id, entity.LaunchPadEventId,
         entity.ProjectId, entity.ProjectVersionId, entity.SubmittedByUserId, entity.Status, entity.Pitch, entity.SubmittedAt,
-        entity.SubmittedAssetReferenceIds);
+        entity.SubmittedAssetReferenceIds, entity.SubmissionVersionPolicy);
 }
 
 public sealed record LaunchPadRegistrationProjection(Guid Id, Guid SlotId, Guid UserId, LaunchPadParticipantStatus Status,

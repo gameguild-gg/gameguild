@@ -50,8 +50,8 @@ export function TestimonialsManager({ courseId, testimonials }: { courseId: stri
               <div className="flex flex-wrap gap-2">{testimonial.approved ? <Badge variant="secondary">Approved for storefront</Badge> : <Badge variant="outline">Pending moderation</Badge>}{testimonial.featured ? <Badge>Featured</Badge> : null}</div>
             </div>
             <div className="flex flex-wrap gap-6 border-t pt-3">
-              <div className="flex items-center gap-2"><Switch id={`approve-${testimonial.id}`} aria-label={`Approve review ${testimonial.title}`} disabled={isPending} checked={testimonial.approved} onCheckedChange={(checked) => updateReview(testimonial.id, checked, checked ? testimonial.featured : false)} /><Label htmlFor={`approve-${testimonial.id}`}>Approved</Label></div>
-              <div className="flex items-center gap-2"><Switch id={`feature-${testimonial.id}`} aria-label={`Feature review ${testimonial.title}`} disabled={isPending || !testimonial.approved} checked={testimonial.featured} onCheckedChange={(checked) => updateReview(testimonial.id, testimonial.approved, checked)} /><Label htmlFor={`feature-${testimonial.id}`}>Featured</Label></div>
+              <div className="flex items-center gap-2"><Switch id={`approve-${testimonial.id}`} disabled={isPending} checked={testimonial.approved} onCheckedChange={(checked) => updateReview(testimonial.id, checked, checked ? testimonial.featured : false)} /><Label htmlFor={`approve-${testimonial.id}`} aria-label={`Approve review ${testimonial.title}`}>Approved</Label></div>
+              <div className="flex items-center gap-2"><Switch id={`feature-${testimonial.id}`} disabled={isPending || !testimonial.approved} checked={testimonial.featured} onCheckedChange={(checked) => updateReview(testimonial.id, testimonial.approved, checked)} /><Label htmlFor={`feature-${testimonial.id}`} aria-label={`Feature review ${testimonial.title}`}>Featured</Label></div>
             </div>
           </article>
         ))}

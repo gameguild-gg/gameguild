@@ -168,6 +168,7 @@ public sealed class LaunchPadApplication : EntityBase<Guid>
     public DateTime SubmittedAt { get; private set; }
     public DateTime? ReviewedAt { get; private set; }
     public LaunchPadApplicationStatus Status { get; private set; } = LaunchPadApplicationStatus.Submitted;
+    public VersionSubmissionPolicy SubmissionVersionPolicy { get; private set; } = VersionSubmissionPolicy.ReleasedImmutable;
 
     [MaxLength(2000)]
     public string? Pitch { get; private set; }
@@ -189,7 +190,8 @@ public sealed class LaunchPadApplication : EntityBase<Guid>
         Guid projectVersionId,
         Guid submittedByUserId,
         string? pitch,
-        IReadOnlyCollection<Guid>? submittedAssetReferenceIds = null)
+        IReadOnlyCollection<Guid>? submittedAssetReferenceIds = null,
+        VersionSubmissionPolicy submissionVersionPolicy = VersionSubmissionPolicy.ReleasedImmutable)
     {
         if (new[] { tenantId, launchPadEventId, projectId, projectVersionId, submittedByUserId }.Any(id => id == Guid.Empty))
             throw new ArgumentException("Tenant, event, project, version and submitter are required.");
@@ -200,7 +202,8 @@ public sealed class LaunchPadApplication : EntityBase<Guid>
             SubmittedByUserId = submittedByUserId, SubmittedAt = SystemClock.UtcNow,
             Pitch = pitch?.Trim(),
             SubmittedAssetReferenceIdsJson = SerializeAssetIds(submittedAssetReferenceIds),
-            Status = LaunchPadApplicationStatus.Submitted
+            Status = LaunchPadApplicationStatus.Submitted,
+            SubmissionVersionPolicy = submissionVersionPolicy
         };
     }
 
@@ -214,6 +217,9 @@ public sealed class LaunchPadApplication : EntityBase<Guid>
     {
         if (Status != LaunchPadApplicationStatus.Submitted)
             throw new InvalidOperationException("The application can no longer be edited.");
+        if (projectVersionId != ProjectVersionId &&
+            !ProjectVersionEligibility.CanReplaceAfterSubmission(SubmissionVersionPolicy))
+            throw new InvalidOperationException("The submitted project version is immutable under this application's policy.");
         ProjectVersionId = projectVersionId;
         Pitch = pitch?.Trim();
         if (submittedAssetReferenceIds != null)

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { TestingLabTestingEventProjection } from '@game-guild/client';
 import { forwardRef, type ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -90,9 +91,10 @@ describe('TestingLabCalendar', () => {
   });
 
   it('shows operational event details on hover without opening the event page', async () => {
+    const user = userEvent.setup();
     render(<TestingLabCalendar events={events} eventAnalytics={eventAnalytics} initialDate={new Date(2030, 7, 10)} />);
 
-    fireEvent.pointerEnter(screen.getByRole('link', { name: /Campus playtest/i }));
+    await user.hover(screen.getByRole('link', { name: /Campus playtest/i }));
 
     expect(await screen.findByText('Hands-on lab for the new combat build.')).toBeInTheDocument();
     expect(screen.getByText('7 tester spots available')).toBeInTheDocument();

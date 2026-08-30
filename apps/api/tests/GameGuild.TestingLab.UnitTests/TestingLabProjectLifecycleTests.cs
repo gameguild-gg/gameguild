@@ -62,8 +62,8 @@ public sealed class TestingLabProjectLifecycleTests
                 .Options);
         var project = NewProject("request-deleted");
         var remainingProject = NewProject("request-remaining");
-        var projectVersion = new ProjectVersion { Id = Guid.NewGuid(), ProjectId = project.Id, VersionNumber = "1.0" };
-        var remainingVersion = new ProjectVersion { Id = Guid.NewGuid(), ProjectId = remainingProject.Id, VersionNumber = "1.0" };
+        var projectVersion = ProjectVersion.Create(project.Id, "1.0", null, Guid.NewGuid(), null);
+        var remainingVersion = ProjectVersion.Create(remainingProject.Id, "1.0", null, Guid.NewGuid(), null);
         var activeRequest = NewRequest(projectVersion.Id);
         var alreadyDeletedRequest = NewRequest(projectVersion.Id);
         alreadyDeletedRequest.DeletedAt = DateTime.UtcNow.AddDays(-1);
@@ -102,12 +102,7 @@ public sealed class TestingLabProjectLifecycleTests
                 .Options);
         var project = NewProject("hard-deleted");
         var remainingProject = NewProject("hard-delete-remaining");
-        var projectVersion = new ProjectVersion
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = project.Id,
-            VersionNumber = "1.0"
-        };
+        var projectVersion = ProjectVersion.Create(project.Id, "1.0", null, Guid.NewGuid(), null);
         var request = NewRequest(projectVersion.Id);
         var session = new TestingSession { RegisteredProjectCount = 99 };
         var activeTarget = NewLink(session.Id, project.Id);

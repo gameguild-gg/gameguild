@@ -13,6 +13,7 @@ public sealed class TestingEventHandlers(
     ITestingLabPermissionService? testingLabPermissionService = null,
     GameGuild.CQRS.IMediator? mediator = null)
     : ICommandHandler<CreateTestingEventCommand, Result<TestingEventProjection>>,
+    ICommandHandler<ConfigureTestingEventCommand, Result<TestingEventProjection>>,
     ICommandHandler<UpdateTestingEventCommand, Result<TestingEventProjection>>,
     ICommandHandler<DeleteTestingEventCommand, Result<bool>>,
     ICommandHandler<ArchiveTestingEventCommand, Result<bool>>,
@@ -46,6 +47,21 @@ public sealed class TestingEventHandlers(
 
         try
         {
+            TestingEventTemplateRevision? templateRevision = null;
+            if (request.TemplateRevisionId.HasValue)
+            {
+                templateRevision = await context.Set<TestingEventTemplateRevision>()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(revision =>
+                        revision.Id == request.TemplateRevisionId.Value &&
+                        revision.TenantId == actor.TenantId &&
+                        revision.DeletedAt == null,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+                if (templateRevision == null)
+                    return Result.Failure<TestingEventProjection>(
+                        Error.NotFound("TestingLab.TemplateRevisionNotFound", "Testing event template revision not found."));
+            }
             var occurrenceStarts = TestingEventRecurrenceSchedule.Expand(request.StartsAt, request.Recurrence);
             Guid? recurrenceSeriesId = request.Recurrence == null ? null : Guid.NewGuid();
             var recurrenceDaysOfWeek = request.Recurrence?.DaysOfWeek is { Count: > 0 } days
@@ -55,7 +71,7 @@ public sealed class TestingEventHandlers(
                 .Select((occurrenceStart, index) =>
                 {
                     var offset = occurrenceStart - request.StartsAt;
-                    return TestingEvent.Create(
+                    var testingEvent = TestingEvent.Create(
                         request.Name,
                         request.Mode,
                         actor.UserId,
@@ -74,6 +90,8 @@ public sealed class TestingEventHandlers(
                         recurrenceDaysOfWeek,
                         request.Recurrence?.EndsAt,
                         request.Recurrence?.OccurrenceCount);
+                    if (templateRevision != null) testingEvent.ConfigureFromTemplate(templateRevision);
+                    return testingEvent;
                 })
                 .ToArray();
             foreach (var testingEvent in testingEvents)
@@ -96,6 +114,29 @@ public sealed class TestingEventHandlers(
             return Result.Success(ToProjection(testingEvents[0]));
         }
         catch (ArgumentException exception)
+        {
+            return Result.Failure<TestingEventProjection>(Validation(exception.Message));
+        }
+    }
+
+    public async Task<Result<TestingEventProjection>> Handle(
+        ConfigureTestingEventCommand request,
+        CancellationToken cancellationToken)
+    {
+        var authorization = await GetManagedEventAsync(request.EventId, cancellationToken).ConfigureAwait(false);
+        if (authorization.Error != null) return Result.Failure<TestingEventProjection>(authorization.Error);
+        try
+        {
+            authorization.Event!.Configure(
+                request.GeneralRules,
+                request.CandidateInstructions,
+                request.TesterInstructions,
+                request.ProjectApplicationSchema,
+                request.TesterRegistrationSchema);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return Result.Success(ToProjection(authorization.Event));
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
         {
             return Result.Failure<TestingEventProjection>(Validation(exception.Message));
         }
@@ -345,19 +386,40 @@ public sealed class TestingEventHandlers(
             actor,
             TestingLabActions.Read,
             TestingLabResourceTypes.Event).ConfigureAwait(false);
-        var projection = await context.Set<TestingEvent>()
+        var canReadApplications = await HasTestingLabPermissionAsync(
+            actor,
+            TestingLabActions.Read,
+            TestingLabResourceTypes.Application).ConfigureAwait(false);
+        var canManageApplications = await HasTestingLabPermissionAsync(
+            actor,
+            TestingLabActions.Approve,
+            TestingLabResourceTypes.Application).ConfigureAwait(false) ||
+            await HasTestingLabPermissionAsync(
+                actor,
+                TestingLabActions.Manage,
+                TestingLabResourceTypes.Application).ConfigureAwait(false);
+        var testingEvent = await context.Set<TestingEvent>()
             .AsNoTracking()
+            .Include(candidate => candidate.Slots)
+            .Include(candidate => candidate.Applications)
             .Where(testingEvent =>
                 testingEvent.Id == request.EventId &&
                 testingEvent.TenantId == actor.TenantId &&
-                testingEvent.DeletedAt == null &&
-                (canReadAllEvents || testingEvent.ManagerUserId == actor.UserId))
-            .Select(EventProjection)
+                testingEvent.DeletedAt == null)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
-        return projection == null
-            ? Result.Failure<TestingEventProjection>(Error.NotFound("TestingLab.EventNotFound", "Testing event not found."))
-            : Result.Success(projection);
+        if (testingEvent == null)
+            return Result.Failure<TestingEventProjection>(Error.NotFound("TestingLab.EventNotFound", "Testing event not found."));
+        var isCommitteeMember = await context.Set<TestingCommitteeMember>().AnyAsync(member =>
+            member.EventId == testingEvent.Id &&
+            member.UserId == actor.UserId &&
+            member.IsActive &&
+            member.DeletedAt == null,
+            cancellationToken).ConfigureAwait(false);
+        return canReadAllEvents || canReadApplications || canManageApplications ||
+            testingEvent.ManagerUserId == actor.UserId || isCommitteeMember
+            ? Result.Success(ToProjection(testingEvent))
+            : Result.Failure<TestingEventProjection>(Error.NotFound("TestingLab.EventNotFound", "Testing event not found."));
     }
 
     public async Task<Result<IReadOnlyList<TestingEventProjection>>> Handle(GetTestingEventsQuery request, CancellationToken cancellationToken)
@@ -537,7 +599,8 @@ public sealed class TestingEventHandlers(
                     slot.RoomName,
                     approvedProjectCounts.GetValueOrDefault(slot.Id),
                     registeredTesterCounts.GetValueOrDefault(slot.Id)))
-                .ToList()))
+                .ToList(),
+            ToConfigurationProjection(testingEvent)))
             .ToList();
     }
 
@@ -827,7 +890,8 @@ public sealed class TestingEventHandlers(
         testingEvent.RecurrenceInterval,
         ParseRecurrenceDaysOfWeek(testingEvent.RecurrenceDaysOfWeek),
         testingEvent.RecurrenceEndsAt,
-        testingEvent.RecurrenceOccurrenceCount);
+        testingEvent.RecurrenceOccurrenceCount,
+        ToConfigurationProjection(testingEvent));
 
     private static readonly Expression<Func<TestingEvent, TestingEventProjection>> EventProjection = testingEvent => new(
         testingEvent.Id,
@@ -855,7 +919,22 @@ public sealed class TestingEventHandlers(
         testingEvent.RecurrenceInterval,
         ParseRecurrenceDaysOfWeek(testingEvent.RecurrenceDaysOfWeek),
         testingEvent.RecurrenceEndsAt,
-        testingEvent.RecurrenceOccurrenceCount);
+        testingEvent.RecurrenceOccurrenceCount,
+        null);
+
+    private static TestingEventConfigurationProjection? ToConfigurationProjection(TestingEvent testingEvent)
+    {
+        if (testingEvent.ProjectApplicationSchema == null || testingEvent.TesterRegistrationSchema == null) return null;
+        return new TestingEventConfigurationProjection(
+            testingEvent.SourceTemplateId,
+            testingEvent.SourceTemplateRevisionId,
+            testingEvent.GeneralRules!,
+            testingEvent.CandidateInstructions!,
+            testingEvent.TesterInstructions!,
+            testingEvent.ProjectApplicationSchema,
+            testingEvent.TesterRegistrationSchema,
+            testingEvent.ConfigurationFrozenAt);
+    }
     private static IReadOnlyList<DayOfWeek>? ParseRecurrenceDaysOfWeek(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;

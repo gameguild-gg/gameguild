@@ -37,7 +37,7 @@ export default async function MyProjectsPage({
     : "No Projects yet";
   const emptyDescription = selectedTeam
     ? `${selectedTeam.name} is not connected to any Projects yet.`
-    : "Create a Project in a Team where you have authority.";
+    : "Create a personal project or a Team project. Every Project needs a version before it can enter Testing Lab.";
 
   return (
     <div className="space-y-6">
@@ -50,12 +50,14 @@ export default async function MyProjectsPage({
             Team relationship.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/workspace/projects/new">
-            <Plus className="size-4" />
-            Create Project
-          </Link>
-        </Button>
+        {projects.length > 0 ? (
+          <Button asChild>
+            <Link href="/workspace/projects/new">
+              <Plus className="size-4" />
+              Create Project
+            </Link>
+          </Button>
+        ) : null}
       </header>
 
       <header className="flex flex-wrap items-center justify-between gap-3 border-y py-4">

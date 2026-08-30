@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -21,13 +21,11 @@ export class TestingLabTestingAnalyticsModule {
     fromDate?: string;
     toDate?: string;
     includeComparison?: boolean;
-  }): Promise<
-    Result<Types.TestingLabTestingLabAnalyticsReportProjection, ApiError>
-  > {
-    const url = "/v1/testing/analytics";
+  }): Promise<Result<Types.TestingLabTestingLabAnalyticsReportProjection, ApiError>> {
+    const url = '/v1/testing/analytics';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -35,11 +33,7 @@ export class TestingLabTestingAnalyticsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingLabAnalyticsReportProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingLabAnalyticsReportProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -48,14 +42,11 @@ export class TestingLabTestingAnalyticsModule {
 
   /**
    */
-  async getTestingAnalyticsExport(query?: {
-    fromDate?: string;
-    toDate?: string;
-  }): Promise<Result<Blob, ApiError>> {
-    const url = "/v1/testing/analytics/export";
+  async getTestingAnalyticsExport(query?: { fromDate?: string; toDate?: string }): Promise<Result<Blob, ApiError>> {
+    const url = '/v1/testing/analytics/export';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -65,8 +56,6 @@ export class TestingLabTestingAnalyticsModule {
   }
 }
 
-export function createTestingLabTestingAnalyticsModule(
-  client: ApiClient,
-): TestingLabTestingAnalyticsModule {
+export function createTestingLabTestingAnalyticsModule(client: ApiClient): TestingLabTestingAnalyticsModule {
   return new TestingLabTestingAnalyticsModule(client);
 }

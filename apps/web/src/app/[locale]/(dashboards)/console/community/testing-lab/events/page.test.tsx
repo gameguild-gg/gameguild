@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getArchivedTestingEventsDirectory: vi.fn(),
   getTestingEventsDirectory: vi.fn(),
+  getTestingEventTemplates: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -15,6 +16,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/lib/testing-lab/events-queries', () => ({
   getArchivedTestingEventsDirectory: mocks.getArchivedTestingEventsDirectory,
   getTestingEventsDirectory: mocks.getTestingEventsDirectory,
+  getTestingEventTemplates: mocks.getTestingEventTemplates,
 }));
 
 vi.mock('@/i18n/navigation', () => ({
@@ -46,11 +48,16 @@ describe('Testing Events page', () => {
         },
       ],
     });
+    mocks.getTestingEventTemplates.mockResolvedValue({ templates: [], accessIssues: [] });
 
     render(await TestingEventsPage({ searchParams: Promise.resolve({ status: 'ApplicationsOpen' }) }));
 
     expect(screen.getByRole('heading', { name: 'Testing events' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /new event/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Active' })).toHaveAttribute(
+      'href',
+      '/console/community/testing-lab/events?status=Active',
+    );
     expect(screen.getByText('August campus playtest')).toBeInTheDocument();
     expect(screen.getByText('Applications Open')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /manage event/i })).toHaveAttribute(

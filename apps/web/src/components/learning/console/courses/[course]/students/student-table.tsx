@@ -413,12 +413,12 @@ export function StudentTable({ courseId, students }: { courseId: string; student
                                   View profile
                                 </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => setProgressStudent(student)}>
+                              <DropdownMenuItem onClick={() => setProgressStudent(student)}>
                                 <TrendingUp className="mr-2 size-4" />
                                 View progress
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive" onSelect={() => requestRemoval([student])}>
+                              <DropdownMenuItem className="text-destructive" onClick={() => requestRemoval([student])}>
                                 <UserMinus className="mr-2 size-4" />
                                 Remove from Course
                               </DropdownMenuItem>

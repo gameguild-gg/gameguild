@@ -5,7 +5,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 // Guard logic lives in the script itself (node runs it directly, so it must be
 // plain ESM); vitest can import .mjs via a relative path regardless of its
 // `src/**` include pattern (include only governs test discovery).
-import { manifestsMatch, SOURCE_CANONICAL, syncEmceptionCdn } from '../../../scripts/sync-emception-cdn.mjs';
+import {
+  ensureCanonicalRelease,
+  manifestsMatch,
+  SOURCE_CANONICAL,
+  syncEmceptionCdn,
+} from '../../../scripts/sync-emception-cdn.mjs';
 
 const tempDirs: string[] = [];
 
@@ -94,6 +99,22 @@ describe('syncEmceptionCdn', () => {
     expect(logs.join('\n')).toContain('up to date');
   });
 
+  it('re-copies when a target asset is missing despite a matching manifest', async () => {
+    const root = await makeTree();
+    const src = path.join(root, 'cdn');
+    const tgt = path.join(root, 'public', 'emception');
+    await fs.mkdir(src);
+    await fs.writeFile(path.join(src, 'manifest.json'), canonicalManifest());
+    await fs.writeFile(path.join(src, 'bundle.tar.br'), 'bytes');
+    await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} });
+    await fs.rm(path.join(tgt, 'bundle.tar.br'));
+
+    const result = await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} });
+
+    expect(result).toEqual({ action: 'synced', source: src });
+    await expect(fs.readFile(path.join(tgt, 'bundle.tar.br'), 'utf8')).resolves.toBe('bytes');
+  });
+
   it('diverged target manifest triggers a re-copy', async () => {
     const root = await makeTree();
     const src = path.join(root, 'cdn');
@@ -135,5 +156,68 @@ describe('syncEmceptionCdn', () => {
     await expect(syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} }))
       .rejects.toThrow(/schemaVersion 2/);
     await expect(fs.readFile(path.join(tgt, 'manifest.json'), 'utf8')).resolves.toBe(canonicalManifest());
+  });
+});
+
+describe('ensureCanonicalRelease', () => {
+  it('hydrates a missing canonical release from the pinned package version', async () => {
+    const root = await makeTree();
+    const src = path.join(root, 'canonical', 'cdn');
+    const packageJson = path.join(root, 'toolchain-package.json');
+    await fs.writeFile(packageJson, JSON.stringify({ version: '4.3.0' }));
+
+    const result = await ensureCanonicalRelease({
+      srcDir: src,
+      versionPackagePath: packageJson,
+      log: () => {},
+      hydrate: async ({ srcDir, version }) => {
+        await fs.mkdir(srcDir, { recursive: true });
+        await fs.writeFile(
+          path.join(srcDir, 'manifest.json'),
+          JSON.stringify({ schemaVersion: 2, artifactVersion: version }),
+        );
+      },
+    });
+
+    expect(result).toEqual({ action: 'hydrated', source: src, version: '4.3.0', schemaVersion: 2 });
+  });
+
+  it('rejects a hydrated release whose manifest does not match the pinned version', async () => {
+    const root = await makeTree();
+    const src = path.join(root, 'canonical', 'cdn');
+    const packageJson = path.join(root, 'toolchain-package.json');
+    await fs.writeFile(packageJson, JSON.stringify({ version: '4.3.0' }));
+
+    await expect(ensureCanonicalRelease({
+      srcDir: src,
+      versionPackagePath: packageJson,
+      log: () => {},
+      hydrate: async ({ srcDir }) => {
+        await fs.mkdir(srcDir, { recursive: true });
+        await fs.writeFile(
+          path.join(srcDir, 'manifest.json'),
+          JSON.stringify({ schemaVersion: 2, artifactVersion: '4.2.0' }),
+        );
+      },
+    })).rejects.toThrow(/does not match 4\.3\.0/);
+  });
+
+  it('accepts the pinned package legacy manifest as an explicit compatibility fallback', async () => {
+    const root = await makeTree();
+    const src = path.join(root, 'canonical', 'cdn');
+    const packageJson = path.join(root, 'toolchain-package.json');
+    await fs.writeFile(packageJson, JSON.stringify({ version: '4.3.0' }));
+
+    const result = await ensureCanonicalRelease({
+      srcDir: src,
+      versionPackagePath: packageJson,
+      log: () => {},
+      hydrate: async ({ srcDir }) => {
+        await fs.mkdir(srcDir, { recursive: true });
+        await fs.writeFile(path.join(srcDir, 'manifest.json'), JSON.stringify({ version: 1 }));
+      },
+    });
+
+    expect(result).toEqual({ action: 'hydrated', source: src, version: '4.3.0', schemaVersion: 1 });
   });
 });

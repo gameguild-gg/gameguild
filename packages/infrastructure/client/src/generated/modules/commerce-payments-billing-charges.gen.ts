@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -28,19 +28,16 @@ export class CommercePaymentsBillingChargesModule {
     page?: number;
     pageSize?: number;
   }): Promise<Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>> {
-    const url = "/api/v1/billing/charges";
+    const url = '/api/v1/billing/charges';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.CommercePaymentsPaymentResult>,
-      ApiError
-    >;
+    return result as Result<Array<Types.CommercePaymentsPaymentResult>, ApiError>;
   }
 
   /**
@@ -51,17 +48,13 @@ export class CommercePaymentsBillingChargesModule {
   async postBillingCharges(
     body: Types.CommercePaymentsBillingChargesControllerCreateBillingChargeInput,
   ): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
-    const url = "/api/v1/billing/charges";
+    const url = '/api/v1/billing/charges';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -69,11 +62,7 @@ export class CommercePaymentsBillingChargesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommercePaymentsPaymentResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.CommercePaymentsPaymentResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -83,24 +72,18 @@ export class CommercePaymentsBillingChargesModule {
   /**
    * Get billing charge
    */
-  async getBillingChargeById(
-    chargeId: string,
-  ): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
+  async getBillingChargeById(chargeId: string): Promise<Result<Types.CommercePaymentsPaymentResult, ApiError>> {
     const url = `/api/v1/billing/charges/${chargeId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommercePaymentsPaymentResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.CommercePaymentsPaymentResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -113,20 +96,14 @@ export class CommercePaymentsBillingChargesModule {
   async postBillingChargesCancel(
     chargeId: string,
     body: Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInput,
-  ): Promise<
-    Result<Types.CommercePaymentsPaymentCancellationResult, ApiError>
-  > {
+  ): Promise<Result<Types.CommercePaymentsPaymentCancellationResult, ApiError>> {
     const url = `/api/v1/billing/charges/${chargeId}:cancel`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -134,11 +111,7 @@ export class CommercePaymentsBillingChargesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommercePaymentsPaymentCancellationResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.CommercePaymentsPaymentCancellationResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -155,14 +128,10 @@ export class CommercePaymentsBillingChargesModule {
     const url = `/api/v1/billing/charges/${chargeId}:refund`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -170,11 +139,7 @@ export class CommercePaymentsBillingChargesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommercePaymentsProcessRefundResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.CommercePaymentsProcessRefundResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -184,24 +149,18 @@ export class CommercePaymentsBillingChargesModule {
   /**
    * Retry billing charge
    */
-  async postBillingChargesRetry(
-    chargeId: string,
-  ): Promise<Result<Types.CommercePaymentsPaymentRetryResult, ApiError>> {
+  async postBillingChargesRetry(chargeId: string): Promise<Result<Types.CommercePaymentsPaymentRetryResult, ApiError>> {
     const url = `/api/v1/billing/charges/${chargeId}:retry`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.CommercePaymentsPaymentRetryResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.CommercePaymentsPaymentRetryResultSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -209,8 +168,6 @@ export class CommercePaymentsBillingChargesModule {
   }
 }
 
-export function createCommercePaymentsBillingChargesModule(
-  client: ApiClient,
-): CommercePaymentsBillingChargesModule {
+export function createCommercePaymentsBillingChargesModule(client: ApiClient): CommercePaymentsBillingChargesModule {
   return new CommercePaymentsBillingChargesModule(client);
 }

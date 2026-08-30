@@ -5,6 +5,7 @@ using GameGuild.Identity.Context.Actors;
 using GameGuild.TestingLab;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.API.Access;
 
@@ -17,7 +18,8 @@ public sealed record AccessCapabilitiesResponse(IReadOnlyList<string> Capabiliti
 public sealed class AccessCapabilitiesController(
     IActorContextAccessor actorContextAccessor,
     ITestingLabPermissionService testingLabPermissionService,
-    ITenantMembershipChecker tenantMembershipChecker) : ControllerBase
+    ITenantMembershipChecker tenantMembershipChecker,
+    IApplicationDbContext context) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<AccessCapabilitiesResponse>(StatusCodes.Status200OK)]
@@ -34,9 +36,18 @@ public sealed class AccessCapabilitiesController(
         var testingPermissions = await testingLabPermissionService
             .GetUserPermissionsAsync(userId, tenantId)
             .ConfigureAwait(false);
-        var capabilities = DashboardCapabilityResolver.Resolve(actor, testingPermissions)
-            .Order(StringComparer.Ordinal)
-            .ToArray();
-        return Ok(new AccessCapabilitiesResponse(capabilities));
+        var capabilities = new HashSet<string>(
+            DashboardCapabilityResolver.Resolve(actor, testingPermissions),
+            StringComparer.Ordinal);
+        var isActiveCommitteeReviewer = await context.Set<TestingCommitteeMember>().AnyAsync(member =>
+            member.UserId == userId &&
+            member.TenantId == tenantId &&
+            member.IsActive &&
+            member.DeletedAt == null,
+            cancellationToken).ConfigureAwait(false);
+        if (isActiveCommitteeReviewer)
+            capabilities.Add(DashboardCapabilities.TestingLabReviewApplications);
+        return Ok(new AccessCapabilitiesResponse(
+            capabilities.Order(StringComparer.Ordinal).ToArray()));
     }
 }

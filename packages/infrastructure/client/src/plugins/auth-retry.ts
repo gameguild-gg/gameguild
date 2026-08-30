@@ -79,9 +79,7 @@ export function createAuthRetryPlugin(config: AuthRetryConfig): {
   return {
     wrapTransport(transport: Transport): Transport {
       return {
-        async request<T>(
-          requestConfig: RequestConfig
-        ): Promise<Result<ApiResponse<T>, ApiError>> {
+        async request<T>(requestConfig: RequestConfig): Promise<Result<ApiResponse<T>, ApiError>> {
           let attempt = 0;
 
           while (attempt <= maxRetries) {

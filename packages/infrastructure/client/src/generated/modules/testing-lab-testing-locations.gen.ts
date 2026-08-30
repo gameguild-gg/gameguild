@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -22,10 +22,10 @@ export class TestingLabTestingLocationsModule {
     take?: number;
     includeArchived?: boolean;
   }): Promise<Result<Array<Types.TestingLabTestingLocation>, ApiError>> {
-    const url = "/v1/testing/locations";
+    const url = '/v1/testing/locations';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -36,20 +36,14 @@ export class TestingLabTestingLocationsModule {
 
   /**
    */
-  async postTestingLocations(
-    body: Types.TestingLabCreateTestingLocation,
-  ): Promise<Result<Types.TestingLabTestingLocation, ApiError>> {
-    const url = "/v1/testing/locations";
+  async postTestingLocations(body: Types.TestingLabCreateTestingLocation): Promise<Result<Types.TestingLabTestingLocation, ApiError>> {
+    const url = '/v1/testing/locations';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabCreateTestingLocationSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabCreateTestingLocationSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -57,11 +51,7 @@ export class TestingLabTestingLocationsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingLocationSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingLocationSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -70,24 +60,18 @@ export class TestingLabTestingLocationsModule {
 
   /**
    */
-  async getTestingLocationsForGetTestingLocationsById(
-    id: string,
-  ): Promise<Result<Types.TestingLabTestingLocation, ApiError>> {
+  async getTestingLocationsForGetTestingLocationsById(id: string): Promise<Result<Types.TestingLabTestingLocation, ApiError>> {
     const url = `/v1/testing/locations/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingLocationSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingLocationSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -96,21 +80,14 @@ export class TestingLabTestingLocationsModule {
 
   /**
    */
-  async putTestingLocations(
-    id: string,
-    body: Types.TestingLabUpdateTestingLocation,
-  ): Promise<Result<Types.TestingLabTestingLocation, ApiError>> {
+  async putTestingLocations(id: string, body: Types.TestingLabUpdateTestingLocation): Promise<Result<Types.TestingLabTestingLocation, ApiError>> {
     const url = `/v1/testing/locations/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.TestingLabUpdateTestingLocationSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.TestingLabUpdateTestingLocationSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -118,11 +95,7 @@ export class TestingLabTestingLocationsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.TestingLabTestingLocationSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.TestingLabTestingLocationSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -135,7 +108,7 @@ export class TestingLabTestingLocationsModule {
     const url = `/v1/testing/locations/${id}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -145,13 +118,11 @@ export class TestingLabTestingLocationsModule {
 
   /**
    */
-  async postTestingLocationsRestore(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
+  async postTestingLocationsRestore(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/testing/locations/${id}/restore`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -160,8 +131,6 @@ export class TestingLabTestingLocationsModule {
   }
 }
 
-export function createTestingLabTestingLocationsModule(
-  client: ApiClient,
-): TestingLabTestingLocationsModule {
+export function createTestingLabTestingLocationsModule(client: ApiClient): TestingLabTestingLocationsModule {
   return new TestingLabTestingLocationsModule(client);
 }

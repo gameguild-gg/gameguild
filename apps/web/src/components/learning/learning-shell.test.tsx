@@ -135,7 +135,7 @@ describe("LearningShell", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Open account menu" }));
-    expect(screen.getByText("ada@example.com")).toBeInTheDocument();
+    expect(await screen.findByText("ada@example.com")).toBeInTheDocument();
     await user.click(screen.getByRole("menuitem", { name: "Sign out" }));
 
     await waitFor(() =>

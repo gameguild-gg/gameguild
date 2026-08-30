@@ -14,6 +14,7 @@ vi.mock('react', () => ({
     return [state, setState];
   }),
   useCallback: vi.fn((fn: any) => fn),
+  useEffect: vi.fn((effect: () => void) => effect()),
   useRef: vi.fn((initial: any) => ({ current: initial })),
   useContext: vi.fn(() => null),
 }));

@@ -52,7 +52,7 @@ describe('CohortWorkspaceNav', () => {
     );
 
     await user.click(screen.getByRole('button', { name: 'Switch class' }));
-    await user.click(screen.getByRole('menuitem', { name: /2026.2 - Morning/ }));
+    await user.click(await screen.findByRole('menuitem', { name: /2026.2 - Morning/ }));
 
     expect(push).toHaveBeenCalledWith('/workspace/learning/courses/advanced-game-ai-by-gameguild/classes/morning/schedule');
   });

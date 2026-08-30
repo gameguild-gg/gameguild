@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -22,22 +22,17 @@ export class LearningExperienceLearningPathsLearningPathModule {
     difficulty?: Types.LearningExperienceLearningPathsLearningPathDifficulty;
     skip?: number;
     take?: number;
-  }): Promise<
-    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
-  > {
-    const url = "/v1/learning-paths";
+  }): Promise<Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>> {
+    const url = '/v1/learning-paths';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPath>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>;
   }
 
   /**
@@ -45,20 +40,14 @@ export class LearningExperienceLearningPathsLearningPathModule {
   async postLearningPaths(
     body: Types.LearningExperienceLearningPathsCreateLearningPath,
     query?: { creatorId?: string; tenantId?: string },
-  ): Promise<
-    Result<Types.LearningExperienceLearningPathsLearningPath, ApiError>
-  > {
-    const url = "/v1/learning-paths";
+  ): Promise<Result<Types.LearningExperienceLearningPathsLearningPath, ApiError>> {
+    const url = '/v1/learning-paths';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningExperienceLearningPathsCreateLearningPathSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningExperienceLearningPathsCreateLearningPathSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       body: validatedBody,
@@ -67,11 +56,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -80,26 +65,18 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
-  async getLearningPathsForGetLearningPathsById(
-    id: string,
-  ): Promise<
-    Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>
-  > {
+  async getLearningPathsForGetLearningPathsById(id: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>> {
     const url = `/v1/learning-paths/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathDetailSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathDetailSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -111,20 +88,14 @@ export class LearningExperienceLearningPathsLearningPathModule {
   async putLearningPaths(
     id: string,
     body: Types.LearningExperienceLearningPathsUpdateLearningPath,
-  ): Promise<
-    Result<Types.LearningExperienceLearningPathsLearningPath, ApiError>
-  > {
+  ): Promise<Result<Types.LearningExperienceLearningPathsLearningPath, ApiError>> {
     const url = `/v1/learning-paths/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningExperienceLearningPathsUpdateLearningPathSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningExperienceLearningPathsUpdateLearningPathSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -132,11 +103,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -149,7 +116,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
     const url = `/v1/learning-paths/${id}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -159,14 +126,11 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
-  async postLearningPathsAbandon(
-    id: string,
-    query?: { userId?: string },
-  ): Promise<Result<void, ApiError>> {
+  async postLearningPathsAbandon(id: string, query?: { userId?: string }): Promise<Result<void, ApiError>> {
     const url = `/v1/learning-paths/${id}/abandon`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -180,16 +144,11 @@ export class LearningExperienceLearningPathsLearningPathModule {
   async postLearningPathsComplete(
     id: string,
     query?: { userId?: string },
-  ): Promise<
-    Result<
-      Types.LearningExperienceLearningPathsLearningPathEnrollment,
-      ApiError
-    >
-  > {
+  ): Promise<Result<Types.LearningExperienceLearningPathsLearningPathEnrollment, ApiError>> {
     const url = `/v1/learning-paths/${id}/complete`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -197,11 +156,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathEnrollmentSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathEnrollmentSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -213,20 +168,14 @@ export class LearningExperienceLearningPathsLearningPathModule {
   async postLearningPathsCourses(
     id: string,
     body: Types.LearningExperienceLearningPathsAddCourseToPath,
-  ): Promise<
-    Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>
-  > {
+  ): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>> {
     const url = `/v1/learning-paths/${id}/courses`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningExperienceLearningPathsAddCourseToPathSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningExperienceLearningPathsAddCourseToPathSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -234,11 +183,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathDetailSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathDetailSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -247,14 +192,11 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
-  async deleteLearningPathsCourses(
-    id: string,
-    courseId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteLearningPathsCourses(id: string, courseId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/learning-paths/${id}/courses/${courseId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -267,20 +209,14 @@ export class LearningExperienceLearningPathsLearningPathModule {
   async putLearningPathsCoursesOrder(
     id: string,
     body: Types.LearningExperienceLearningPathsReorderCourses,
-  ): Promise<
-    Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>
-  > {
+  ): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>> {
     const url = `/v1/learning-paths/${id}/courses/order`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningExperienceLearningPathsReorderCoursesSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningExperienceLearningPathsReorderCoursesSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -288,11 +224,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathDetailSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathDetailSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -304,16 +236,11 @@ export class LearningExperienceLearningPathsLearningPathModule {
   async postLearningPathsEnroll(
     id: string,
     query?: { userId?: string },
-  ): Promise<
-    Result<
-      Types.LearningExperienceLearningPathsLearningPathEnrollment,
-      ApiError
-    >
-  > {
+  ): Promise<Result<Types.LearningExperienceLearningPathsLearningPathEnrollment, ApiError>> {
     const url = `/v1/learning-paths/${id}/enroll`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -321,11 +248,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathEnrollmentSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathEnrollmentSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -334,30 +257,18 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
-  async getLearningPathsEnrollment(
-    id: string,
-    userId: string,
-  ): Promise<
-    Result<
-      Types.LearningExperienceLearningPathsLearningPathEnrollment,
-      ApiError
-    >
-  > {
+  async getLearningPathsEnrollment(id: string, userId: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPathEnrollment, ApiError>> {
     const url = `/v1/learning-paths/${id}/enrollment/${userId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathEnrollmentSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathEnrollmentSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -366,14 +277,11 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
-  async getLearningPathsEnrollmentCheck(
-    id: string,
-    userId: string,
-  ): Promise<Result<boolean, ApiError>> {
+  async getLearningPathsEnrollmentCheck(id: string, userId: string): Promise<Result<boolean, ApiError>> {
     const url = `/v1/learning-paths/${id}/enrollment/${userId}/check`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -385,30 +293,18 @@ export class LearningExperienceLearningPathsLearningPathModule {
    */
   async getLearningPathsEnrollments(
     id: string,
-    query?: {
-      status?: Types.LearningExperienceLearningPathsLearningPathEnrollmentStatus;
-      skip?: number;
-      take?: number;
-    },
-  ): Promise<
-    Result<
-      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
-      ApiError
-    >
-  > {
+    query?: { status?: Types.LearningExperienceLearningPathsLearningPathEnrollmentStatus; skip?: number; take?: number },
+  ): Promise<Result<Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>, ApiError>> {
     const url = `/v1/learning-paths/${id}/enrollments`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>, ApiError>;
   }
 
   /**
@@ -417,23 +313,14 @@ export class LearningExperienceLearningPathsLearningPathModule {
     id: string,
     body: Types.LearningExperienceLearningPathsUpdatePathProgress,
     query?: { userId?: string },
-  ): Promise<
-    Result<
-      Types.LearningExperienceLearningPathsLearningPathEnrollment,
-      ApiError
-    >
-  > {
+  ): Promise<Result<Types.LearningExperienceLearningPathsLearningPathEnrollment, ApiError>> {
     const url = `/v1/learning-paths/${id}/progress`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningExperienceLearningPathsUpdatePathProgressSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningExperienceLearningPathsUpdatePathProgressSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       params: query,
       body: validatedBody,
@@ -442,11 +329,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathEnrollmentSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathEnrollmentSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -455,26 +338,18 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
-  async postLearningPathsPublish(
-    id: string,
-  ): Promise<
-    Result<Types.LearningExperienceLearningPathsLearningPath, ApiError>
-  > {
+  async postLearningPathsPublish(id: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPath, ApiError>> {
     const url = `/v1/learning-paths/${id}/publish`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -483,29 +358,18 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
-  async getLearningPathsStatistics(
-    id: string,
-  ): Promise<
-    Result<
-      Types.LearningExperienceLearningPathsLearningPathStatistics,
-      ApiError
-    >
-  > {
+  async getLearningPathsStatistics(id: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPathStatistics, ApiError>> {
     const url = `/v1/learning-paths/${id}/statistics`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathStatisticsSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathStatisticsSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -514,14 +378,11 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
-  async postLearningPathsUnenroll(
-    id: string,
-    query?: { userId?: string },
-  ): Promise<Result<void, ApiError>> {
+  async postLearningPathsUnenroll(id: string, query?: { userId?: string }): Promise<Result<void, ApiError>> {
     const url = `/v1/learning-paths/${id}/unenroll`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -532,26 +393,18 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
   /**
    */
-  async postLearningPathsUnpublish(
-    id: string,
-  ): Promise<
-    Result<Types.LearningExperienceLearningPathsLearningPath, ApiError>
-  > {
+  async postLearningPathsUnpublish(id: string): Promise<Result<Types.LearningExperienceLearningPathsLearningPath, ApiError>> {
     const url = `/v1/learning-paths/${id}/unpublish`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -563,22 +416,17 @@ export class LearningExperienceLearningPathsLearningPathModule {
   async getLearningPathsCreator(
     creatorId: string,
     query?: { includeUnpublished?: boolean; skip?: number; take?: number },
-  ): Promise<
-    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
-  > {
+  ): Promise<Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>> {
     const url = `/v1/learning-paths/creator/${creatorId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPath>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>;
   }
 
   /**
@@ -586,22 +434,17 @@ export class LearningExperienceLearningPathsLearningPathModule {
   async getLearningPathsFeatured(query?: {
     tenantId?: string;
     take?: number;
-  }): Promise<
-    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
-  > {
-    const url = "/v1/learning-paths/featured";
+  }): Promise<Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>> {
+    const url = '/v1/learning-paths/featured';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPath>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>;
   }
 
   /**
@@ -610,22 +453,17 @@ export class LearningExperienceLearningPathsLearningPathModule {
     tenantId?: string;
     daysBack?: number;
     take?: number;
-  }): Promise<
-    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
-  > {
-    const url = "/v1/learning-paths/popular";
+  }): Promise<Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>> {
+    const url = '/v1/learning-paths/popular';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPath>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>;
   }
 
   /**
@@ -636,36 +474,26 @@ export class LearningExperienceLearningPathsLearningPathModule {
     difficulty?: Types.LearningExperienceLearningPathsLearningPathDifficulty;
     skip?: number;
     take?: number;
-  }): Promise<
-    Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>
-  > {
-    const url = "/v1/learning-paths/search";
+  }): Promise<Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>> {
+    const url = '/v1/learning-paths/search';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPath>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningExperienceLearningPathsLearningPath>, ApiError>;
   }
 
   /**
    */
-  async getLearningPathsSlug(
-    slug: string,
-    query?: { tenantId?: string },
-  ): Promise<
-    Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>
-  > {
+  async getLearningPathsSlug(slug: string, query?: { tenantId?: string }): Promise<Result<Types.LearningExperienceLearningPathsLearningPathDetail, ApiError>> {
     const url = `/v1/learning-paths/slug/${slug}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -673,11 +501,7 @@ export class LearningExperienceLearningPathsLearningPathModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningExperienceLearningPathsLearningPathDetailSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningExperienceLearningPathsLearningPathDetailSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -689,60 +513,38 @@ export class LearningExperienceLearningPathsLearningPathModule {
   async getLearningPathsUserCompleted(
     userId: string,
     query?: { skip?: number; take?: number },
-  ): Promise<
-    Result<
-      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
-      ApiError
-    >
-  > {
+  ): Promise<Result<Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>, ApiError>> {
     const url = `/v1/learning-paths/user/${userId}/completed`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>, ApiError>;
   }
 
   /**
    */
   async getLearningPathsUserEnrollments(
     userId: string,
-    query?: {
-      status?: Types.LearningExperienceLearningPathsLearningPathEnrollmentStatus;
-      skip?: number;
-      take?: number;
-    },
-  ): Promise<
-    Result<
-      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
-      ApiError
-    >
-  > {
+    query?: { status?: Types.LearningExperienceLearningPathsLearningPathEnrollmentStatus; skip?: number; take?: number },
+  ): Promise<Result<Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>, ApiError>> {
     const url = `/v1/learning-paths/user/${userId}/enrollments`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningExperienceLearningPathsLearningPathEnrollment>, ApiError>;
   }
 }
 
-export function createLearningExperienceLearningPathsLearningPathModule(
-  client: ApiClient,
-): LearningExperienceLearningPathsLearningPathModule {
+export function createLearningExperienceLearningPathsLearningPathModule(client: ApiClient): LearningExperienceLearningPathsLearningPathModule {
   return new LearningExperienceLearningPathsLearningPathModule(client);
 }

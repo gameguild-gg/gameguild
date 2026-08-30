@@ -1,11 +1,14 @@
 import { defineConfig } from 'vite'
-import { resolve } from 'path'
+import { dirname, resolve } from 'path'
 import { copyFileSync, mkdirSync, existsSync } from 'fs'
+import { fileURLToPath } from 'url'
+
+const packageRoot = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: resolve(packageRoot, 'src/index.ts'),
       name: 'DotnetWeb',
       formats: ['umd', 'es'],
       fileName: (format) => `dotnet-web.${format}.js`,
@@ -13,6 +16,9 @@ export default defineConfig({
     rollupOptions: {
       // Bundle everything, no externals
       external: [],
+      output: {
+        exports: 'named',
+      },
     },
     target: 'esnext',
     minify: false,
@@ -35,8 +41,12 @@ export default defineConfig({
   plugins: [{
     name: 'copy-dotnet-runtime',
     buildStart() {
-      const srcDir = resolve(__dirname, 'src/runtime')
-      const managedDir = resolve(__dirname, 'public/managed')
+      const srcDir = resolve(packageRoot, 'src/runtime')
+      const managedDir = resolve(packageRoot, 'public/managed')
+
+      // The lightweight package build is valid without the optional runtime.
+      // `pnpm setup` creates this directory before requesting a runtime bundle.
+      if (!existsSync(managedDir)) return
       
       if (!existsSync(srcDir)) {
         mkdirSync(srcDir, { recursive: true })
@@ -58,7 +68,7 @@ export default defineConfig({
           copyFileSync(srcFile, destFile)
           console.log(`✓ Copied ${file} to src/runtime/`)
         } else {
-          console.warn(`⚠ File not found: ${file}`)
+          throw new Error(`Incomplete .NET runtime: ${file} is missing from public/managed`)
         }
       }
     }

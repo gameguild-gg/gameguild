@@ -20,17 +20,20 @@ public sealed class TestingEventParticipationControllerTests
                 cancellation.Token))
             .ReturnsAsync(Result.Success(projection));
         var controller = new TestingEventParticipationController(mediator.Object);
+        var questionnaireResponse = new QuestionnaireResponse([]);
 
         var result = await controller.Register(
             slotId,
-            new RegisterTestingEventSlotRequest("Morning session"),
+            new RegisterTestingEventSlotRequest("Morning session", questionnaireResponse, true),
             cancellation.Token);
 
         result.Result.Should().BeOfType<OkObjectResult>().Which.Value.Should().Be(projection);
         mediator.Verify(candidate => candidate.Send(
             It.Is<RegisterTestingEventSlotCommand>(command =>
                 command.SlotId == slotId &&
-                command.Notes == "Morning session"),
+                command.Notes == "Morning session" &&
+                command.RegistrationResponse == questionnaireResponse &&
+                command.AcceptedRules),
             cancellation.Token), Times.Once);
     }
 
@@ -83,7 +86,7 @@ public sealed class TestingEventParticipationControllerTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
-            request.FeedbackData,
+            request.FeedbackData!,
             request.OverallRating,
             request.WouldRecommend,
             request.AdditionalNotes,

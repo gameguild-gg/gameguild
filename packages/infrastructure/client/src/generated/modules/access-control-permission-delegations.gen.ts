@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -19,20 +19,14 @@ export class AccessControlPermissionDelegationsModule {
    */
   async postPermissionDelegations(
     body: Types.IdentityAuthorizationCommandsDelegatePermissionsCommand,
-  ): Promise<
-    Result<Types.IdentityAuthorizationPermissionDelegation, ApiError>
-  > {
-    const url = "/v1/permission-delegations";
+  ): Promise<Result<Types.IdentityAuthorizationPermissionDelegation, ApiError>> {
+    const url = '/v1/permission-delegations';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationCommandsDelegatePermissionsCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationCommandsDelegatePermissionsCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -40,11 +34,7 @@ export class AccessControlPermissionDelegationsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationPermissionDelegationSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthorizationPermissionDelegationSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -54,10 +44,10 @@ export class AccessControlPermissionDelegationsModule {
   /**
    */
   async postPermissionDelegationsCleanup(): Promise<Result<number, ApiError>> {
-    const url = "/v1/permission-delegations/:cleanup";
+    const url = '/v1/permission-delegations/:cleanup';
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -67,26 +57,18 @@ export class AccessControlPermissionDelegationsModule {
 
   /**
    */
-  async getPermissionDelegations(
-    id: string,
-  ): Promise<
-    Result<Types.IdentityAuthorizationPermissionDelegation, ApiError>
-  > {
+  async getPermissionDelegations(id: string): Promise<Result<Types.IdentityAuthorizationPermissionDelegation, ApiError>> {
     const url = `/v1/permission-delegations/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationPermissionDelegationSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthorizationPermissionDelegationSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -95,13 +77,11 @@ export class AccessControlPermissionDelegationsModule {
 
   /**
    */
-  async deletePermissionDelegations(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
+  async deletePermissionDelegations(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/permission-delegations/${id}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -117,10 +97,10 @@ export class AccessControlPermissionDelegationsModule {
     tenantId?: string;
     resourceId?: string;
   }): Promise<Result<boolean, ApiError>> {
-    const url = "/v1/permission-delegations/check";
+    const url = '/v1/permission-delegations/check';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -134,22 +114,17 @@ export class AccessControlPermissionDelegationsModule {
   async getPermissionDelegationsDelegate(
     delegateUserId: string,
     query?: { tenantId?: string },
-  ): Promise<
-    Result<Array<Types.IdentityAuthorizationPermissionDelegation>, ApiError>
-  > {
+  ): Promise<Result<Array<Types.IdentityAuthorizationPermissionDelegation>, ApiError>> {
     const url = `/v1/permission-delegations/delegate/${delegateUserId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.IdentityAuthorizationPermissionDelegation>,
-      ApiError
-    >;
+    return result as Result<Array<Types.IdentityAuthorizationPermissionDelegation>, ApiError>;
   }
 
   /**
@@ -157,27 +132,20 @@ export class AccessControlPermissionDelegationsModule {
   async getPermissionDelegationsDelegator(
     delegatorUserId: string,
     query?: { tenantId?: string },
-  ): Promise<
-    Result<Array<Types.IdentityAuthorizationPermissionDelegation>, ApiError>
-  > {
+  ): Promise<Result<Array<Types.IdentityAuthorizationPermissionDelegation>, ApiError>> {
     const url = `/v1/permission-delegations/delegator/${delegatorUserId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.IdentityAuthorizationPermissionDelegation>,
-      ApiError
-    >;
+    return result as Result<Array<Types.IdentityAuthorizationPermissionDelegation>, ApiError>;
   }
 }
 
-export function createAccessControlPermissionDelegationsModule(
-  client: ApiClient,
-): AccessControlPermissionDelegationsModule {
+export function createAccessControlPermissionDelegationsModule(client: ApiClient): AccessControlPermissionDelegationsModule {
   return new AccessControlPermissionDelegationsModule(client);
 }
