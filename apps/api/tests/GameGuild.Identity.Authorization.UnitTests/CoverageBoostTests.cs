@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using GameGuild.Identity.Authorization.Utilities;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -732,7 +733,7 @@ public class DefaultPolicyMergerTests
     }
 
     [Fact]
-    public void Build_WithEmptyRules_ShouldFallbackToRoles()
+    public void Build_WithEmptyRules_ShouldFailClosedAndRetainRoles()
     {
         var definition = new PolicyDefinition
         {
@@ -744,8 +745,9 @@ public class DefaultPolicyMergerTests
 
         var policy = _merger.Build(definition);
         policy.Should().NotBeNull();
-        // Should use role requirement, not ruleset
         policy.Requirements.Should().NotContainItemsAssignableTo<RulesetRequirement>();
+        policy.Requirements.Should().ContainItemsAssignableTo<RolesAuthorizationRequirement>();
+        policy.Requirements.Should().ContainItemsAssignableTo<AssertionRequirement>();
     }
 
     [Fact]
@@ -763,7 +765,7 @@ public class DefaultPolicyMergerTests
     }
 
     [Fact]
-    public void Merge_TenantRulesTakePrecedence()
+    public void Merge_TenantRulesAreCumulativeWithBaseRules()
     {
         var basePolicy = new PolicyDefinition
         {
@@ -785,8 +787,8 @@ public class DefaultPolicyMergerTests
         };
 
         var result = _merger.Merge(basePolicy, tenantOverride);
-        result.Rules.Should().HaveCount(1);
-        result.Rules![0].Type.Should().Be("tenant-rule");
+        result.Rules.Should().HaveCount(2);
+        result.Rules!.Select(rule => rule.Type).Should().Equal("base-rule", "tenant-rule");
     }
 }
 

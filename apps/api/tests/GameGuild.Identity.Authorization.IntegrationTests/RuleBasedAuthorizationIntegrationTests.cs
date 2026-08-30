@@ -153,7 +153,7 @@ public class RuleBasedAuthorizationIntegrationTests : IClassFixture<WebApplicati
     }
 
     [Fact]
-    public async Task SimpleRuleBasedPolicy_Works_WithAuthenticationOnly()
+    public async Task RuleBasedPolicy_WithNoRules_Denies()
     {
         // Arrange
         var policyName = "SimpleRuleBasedPolicy";
@@ -163,7 +163,6 @@ public class RuleBasedAuthorizationIntegrationTests : IClassFixture<WebApplicati
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
 
-        // Create simple rule-based policy with no rules (authentication only)
         var policy = new PolicyDefinitionEntity
         {
             Id = Guid.NewGuid(),
@@ -191,7 +190,7 @@ public class RuleBasedAuthorizationIntegrationTests : IClassFixture<WebApplicati
         var result = await authService.AuthorizeAsync(user, policyName);
 
         // Assert
-        result.Succeeded.Should().BeTrue("rule-based policies with authentication only should work");
+        result.Succeeded.Should().BeFalse("an enabled rule-based policy cannot have an empty ruleset");
     }
 
     [Fact]
@@ -318,7 +317,7 @@ public class RuleBasedAuthorizationIntegrationTests : IClassFixture<WebApplicati
     }
 
     [Fact]
-    public async Task DisabledRule_IsSkipped()
+    public async Task PolicyWithOnlyDisabledRules_Denies()
     {
         // Arrange
         var policyName = "DisabledRulePolicy";
@@ -352,7 +351,6 @@ public class RuleBasedAuthorizationIntegrationTests : IClassFixture<WebApplicati
 
         var authService = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
 
-        // User is authenticated but doesn't have MFA (disabled rule should be ignored)
         var claims = new List<Claim>
         {
             new(ClaimNames.UserId, userId.ToString()),
@@ -365,6 +363,56 @@ public class RuleBasedAuthorizationIntegrationTests : IClassFixture<WebApplicati
         var result = await authService.AuthorizeAsync(user, policyName);
 
         // Assert
-        result.Succeeded.Should().BeTrue("disabled rules should be skipped");
+        result.Succeeded.Should().BeFalse("a policy without an enabled rule must fail closed");
+    }
+
+    [Fact]
+    public async Task AnyOf_AuthorizesWhenOneChildRulePasses()
+    {
+        var policyName = "AnyOfPolicy";
+        var userId = Guid.NewGuid();
+
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+        dbContext.Set<PolicyDefinitionEntity>().Add(new PolicyDefinitionEntity
+        {
+            Id = Guid.NewGuid(),
+            PolicyName = policyName,
+            UseRuleBasedEvaluation = true,
+            RulesJson = $$"""
+            [
+                {
+                    "Type": "{{RuleTypes.AnyOf}}",
+                    "Enabled": true,
+                    "Rules": [
+                        {
+                            "Type": "{{RuleTypes.RequireMfa}}",
+                            "Enabled": true,
+                            "Params": { "requireRecent": true }
+                        },
+                        {
+                            "Type": "{{RuleTypes.RequireMfa}}",
+                            "Enabled": true,
+                            "Params": {}
+                        }
+                    ]
+                }
+            ]
+            """,
+            IsActive = true,
+            RequireAuthentication = true
+        });
+        await dbContext.SaveChangesAsync();
+
+        var authService = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim(ClaimNames.UserId, userId.ToString()),
+            new Claim(ClaimNames.Amr, "mfa")
+        ], "test"));
+
+        var result = await authService.AuthorizeAsync(user, policyName);
+
+        result.Succeeded.Should().BeTrue();
     }
 }

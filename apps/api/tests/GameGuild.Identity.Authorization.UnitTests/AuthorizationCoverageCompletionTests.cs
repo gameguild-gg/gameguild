@@ -187,91 +187,19 @@ public sealed class AuthorizationCoverageCompletionTests
     }
 
     [Fact]
-    public void DbAuthorizationPolicyProvider_StaticFallbackHelpers_Cover_All_Permission_And_Claim_Branches()
+    public void DbAuthorizationPolicyProvider_HasNoStaticDomainFallbackHelpers()
     {
-        InvokePrivateStatic<AuthorizationPolicy?>(typeof(DbAuthorizationPolicyProvider), "TryBuildStaticFallbackPolicy", "NotARealPolicy")
-            .Should()
-            .BeNull();
+        var privateStaticMethods = typeof(DbAuthorizationPolicyProvider)
+            .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
+            .Select(method => method.Name);
 
-        var anonymous = InvokePrivateStatic<AuthorizationPolicy?>(typeof(DbAuthorizationPolicyProvider), "TryBuildStaticFallbackPolicy", Policies.Anonymous);
-        anonymous.Should().NotBeNull();
-        anonymous!.Requirements.Should().NotBeEmpty();
-
-        foreach (var policyName in new[]
+        privateStaticMethods.Should().NotContain(new[]
         {
-            Policies.UsersRead,
-            Policies.UsersCreate,
-            Policies.UsersUpdate,
-            Policies.UsersDelete,
-            Policies.UsersAdmin,
-            Policies.UsersPurge,
-            Policies.UsersReadSelf,
-            Policies.UsersEditSelf,
-            Policies.UsersDeleteSelf,
-            Policies.EmployeesRead,
-            Policies.EmployeesCreate,
-            Policies.EmployeesUpdate,
-            Policies.EmployeesDelete,
-            Policies.Admin,
-            Policies.SecureAdmin,
-            Policies.TenantAdmin,
-            Policies.TenantMember
-        })
-        {
-            InvokePrivateStatic<AuthorizationPolicy?>(typeof(DbAuthorizationPolicyProvider), "TryBuildStaticFallbackPolicy", policyName)
-                .Should()
-                .NotBeNull(policyName);
-        }
-
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "RequiresTenantMatch", Policies.TenantMember).Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "RequiresTenantMatch", Policies.TenantAdmin).Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "RequiresTenantMatch", Policies.SecureAdmin).Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "RequiresTenantMatch", Policies.Admin).Should().BeFalse();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "RequiresTenantMatch", Policies.UsersRead).Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "RequiresTenantMatch", "PlainPolicy").Should().BeFalse();
-
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.UsersRead).Should().Be("users:read");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.UsersCreate).Should().Be("users:create");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.UsersUpdate).Should().Be("users:update");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.UsersDelete).Should().Be("users:delete");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.UsersAdmin).Should().Be("users:admin");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.UsersPurge).Should().Be("users:purge");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.UsersReadSelf).Should().Be("users:read:self");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.UsersEditSelf).Should().Be("users:edit:self");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.UsersDeleteSelf).Should().Be("users:delete:self");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.EmployeesRead).Should().Be("users:read");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.EmployeesCreate).Should().Be("users:create");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.EmployeesUpdate).Should().Be("users:update");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", Policies.EmployeesDelete).Should().Be("users:delete");
-        InvokePrivateStatic<string?>(typeof(DbAuthorizationPolicyProvider), "MapPolicyToPermission", "none").Should().BeNull();
-
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasAdminRole", Principal(new Claim(ClaimTypes.Role, "Admin"))).Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasAdminRole", Principal(new Claim("roles", "SystemAdmin"))).Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasAdminRole", Principal(new Claim("role", "TenantAdmin"))).Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasAdminRole", Principal(new Claim("role", "User"))).Should().BeFalse();
-
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasRole", Principal(new Claim("roles", "TenantAdmin")), "TenantAdmin").Should().BeTrue();
-
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasPermission", Principal(new Claim("permission", "users:read")), "users:read").Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasPermission", Principal(new Claim("permissions", "admin")), "users:delete").Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasPermission", Principal(new Claim("scope", "users:*")), "users:update").Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasPermission", Principal(new Claim("scp", "users:read,users:create;users:update")), "users:create").Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasPermission", Principal(new Claim("http://schemas.gameguild.com/identity/claims/permission", "users:delete")), "users:delete").Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasPermission", Principal(new Claim("permission", "billing:*")), "users:read").Should().BeFalse();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasPermission", Principal(new Claim("permission", "bad*")), "users:read").Should().BeFalse();
-
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "PermissionMatches", "admin:*", "anything:read").Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "PermissionMatches", "users:*", "users:read").Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "PermissionMatches", "users:*", "billing:read").Should().BeFalse();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "PermissionMatches", "users", "users:read").Should().BeFalse();
-
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasAuthenticationMethod", Principal(new Claim("amr", "pwd mfa")), "mfa").Should().BeTrue();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasAuthenticationMethod", Principal(new Claim("amr", "pwd")), "mfa").Should().BeFalse();
-        InvokePrivateStatic<bool>(typeof(DbAuthorizationPolicyProvider), "HasAuthenticationMethod", Principal(), "mfa").Should().BeFalse();
-
-        InvokePrivateStatic<IEnumerable<string>>(typeof(DbAuthorizationPolicyProvider), "SplitClaimValues", "a b,c;d")
-            .Should()
-            .Equal("a", "b", "c", "d");
+            "TryBuildStaticFallbackPolicy",
+            "MapPolicyToPermission",
+            "HasPermission",
+            "PermissionMatches"
+        });
     }
 
     [Fact]
@@ -1428,15 +1356,15 @@ public sealed class AuthorizationCoverageCompletionTests
         (await mfa.EvaluateAsync(CreateAuthorizationContextWithClaims(new Claim("amr", "mfa"), new Claim("mfa_time", DateTime.UtcNow.ToString("O"))), RuleParameters.FromJson("""{"requireRecent":true}""")))
             .IsSuccess.Should().BeTrue();
 
-        InvokePrivateStatic<string?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", null, new RuleParameters())
+        InvokePrivateStatic<Guid?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", null, new RuleParameters())
             .Should().BeNull();
-        InvokePrivateStatic<string?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new TestUserIdResource(Guid.NewGuid()), new RuleParameters())
+        InvokePrivateStatic<Guid?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new TestUserIdResource(Guid.NewGuid()), new RuleParameters())
             .Should().NotBeNull();
-        InvokePrivateStatic<string?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new { UserId = Guid.NewGuid() }, new RuleParameters())
+        InvokePrivateStatic<Guid?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new { UserId = Guid.NewGuid() }, new RuleParameters())
             .Should().NotBeNull();
-        InvokePrivateStatic<string?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new Dictionary<string, object> { ["UserId"] = Guid.NewGuid() }, new RuleParameters())
+        InvokePrivateStatic<Guid?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new Dictionary<string, object> { ["UserId"] = Guid.NewGuid() }, new RuleParameters())
             .Should().NotBeNull();
-        InvokePrivateStatic<string?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new object(), new RuleParameters())
+        InvokePrivateStatic<Guid?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new object(), new RuleParameters())
             .Should().BeNull();
     }
 
@@ -1885,8 +1813,8 @@ public sealed class AuthorizationCoverageCompletionTests
             .AuthenticationSchemes.Should().Equal("ApiKey");
         merger.Build(new PolicyDefinition { PolicyName = "roles", RequiredRoles = ["Admin"] }).Requirements.Should().NotBeEmpty();
         merger.Build(new PolicyDefinition { PolicyName = "permissions", RequiredPermissions = ["read"] }).Requirements.Should().Contain(r => r is PermissionRequirement);
-        FluentActions.Invoking(() => merger.Build(new PolicyDefinition { PolicyName = "empty", RequireAuthentication = false }))
-            .Should().Throw<InvalidOperationException>();
+        merger.Build(new PolicyDefinition { PolicyName = "empty", RequireAuthentication = false })
+            .Requirements.Should().NotBeEmpty();
 
         var attributes = InvokePrivateStatic<Dictionary<string, string>>(
             typeof(ActorContextMiddleware),
@@ -1900,13 +1828,26 @@ public sealed class AuthorizationCoverageCompletionTests
         attributes.Should().Contain("tenant_setting:theme", "dark");
         attributes.Should().ContainKey("tenant_id");
 
-        InvokePrivateStatic<IReadOnlyList<string>>(typeof(DatabasePolicyDefinitionStore), "DeserializeList", "not-json")
-            .Should().BeEmpty();
-        InvokePrivateStatic<IReadOnlyList<PolicyRule>?>(typeof(DatabasePolicyDefinitionStore), "DeserializeRules", "not-json")
-            .Should().BeNull();
-        InvokePrivateStatic<IReadOnlyList<PolicyRule>?>(typeof(DatabasePolicyDefinitionStore), "DeserializeRules", """
+        var invalidListResult = InvokePrivateStatic<(IReadOnlyList<string> Values, bool IsValid)>(
+            typeof(DatabasePolicyDefinitionStore),
+            "DeserializeList",
+            "not-json");
+        invalidListResult.Values.Should().BeEmpty();
+        invalidListResult.IsValid.Should().BeFalse();
+        var invalidRulesResult = InvokePrivateStatic<(IReadOnlyList<PolicyRule>? Values, bool IsValid)>(
+            typeof(DatabasePolicyDefinitionStore),
+            "DeserializeRules",
+            "not-json");
+        invalidRulesResult.Values.Should().BeNull();
+        invalidRulesResult.IsValid.Should().BeFalse();
+        var validRulesResult = InvokePrivateStatic<(IReadOnlyList<PolicyRule>? Values, bool IsValid)>(
+            typeof(DatabasePolicyDefinitionStore),
+            "DeserializeRules",
+            """
         [{"type":null,"description":"d","params":{"x":1},"enabled":false}]
-        """)!.Single().Type.Should().BeEmpty();
+        """);
+        validRulesResult.IsValid.Should().BeTrue();
+        validRulesResult.Values!.Single().Type.Should().BeEmpty();
 
         InvokePrivateStatic<bool>(typeof(EnvironmentHandler), "TryParseIpRange", "not-ip/24", null, 0).Should().BeFalse();
         InvokePrivateStatic<bool>(typeof(EnvironmentHandler), "TryParseIpRange", "10.0.0.0/nope", null, 0).Should().BeFalse();
@@ -2142,7 +2083,12 @@ public sealed class AuthorizationCoverageCompletionTests
             Mock.Of<IPolicyDefinitionRepository>(),
             new MemoryCache(new MemoryCacheOptions()),
             NullLogger<RulesetProvider>.Instance);
-        InvokePrivate<List<string>>(rulesetProvider, "ParseJsonArray", (object?)null).Should().BeEmpty();
+        var parseResult = InvokePrivate<(List<string> Values, bool IsValid)>(
+            rulesetProvider,
+            "ParseJsonArray",
+            (object?)null);
+        parseResult.Values.Should().BeEmpty();
+        parseResult.IsValid.Should().BeTrue();
 
         var ownEventService = new CacheInvalidationService(
             new MemoryCache(new MemoryCacheOptions()),
@@ -2264,10 +2210,18 @@ public sealed class AuthorizationCoverageCompletionTests
         ((ClaimsIdentity)namedPrincipal.Identity!).AddClaim(new Claim(ClaimTypes.Name, "identity-name"));
         ClaimsExtractor.IsAuthenticated(namedPrincipal).Should().BeTrue();
 
-        InvokePrivateStatic<IReadOnlyList<string>>(typeof(DatabasePolicyDefinitionStore), "DeserializeList", "null")
-            .Should().BeEmpty();
-        InvokePrivateStatic<IReadOnlyList<PolicyRule>?>(typeof(DatabasePolicyDefinitionStore), "DeserializeRules", "null")
-            .Should().BeNull();
+        var listResult = InvokePrivateStatic<(IReadOnlyList<string> Values, bool IsValid)>(
+            typeof(DatabasePolicyDefinitionStore),
+            "DeserializeList",
+            "null");
+        listResult.Values.Should().BeEmpty();
+        listResult.IsValid.Should().BeFalse();
+        var rulesResult = InvokePrivateStatic<(IReadOnlyList<PolicyRule>? Values, bool IsValid)>(
+            typeof(DatabasePolicyDefinitionStore),
+            "DeserializeRules",
+            "null");
+        rulesResult.Values.Should().BeNull();
+        rulesResult.IsValid.Should().BeFalse();
 
         var fallbackTenantId = Guid.NewGuid();
         var fallbackHttpTenantContext = new DefaultHttpContext();
@@ -2343,11 +2297,24 @@ public sealed class AuthorizationCoverageCompletionTests
 
         InvokePrivate<bool>(conditional, "EvaluateTimeConditions", """{"StartTime":"","EndTime":"23:59"}""").Should().BeTrue();
         InvokePrivate<bool>(conditional, "EvaluateTimeConditions", """{"StartTime":"00:00","EndTime":"00:01"}""").Should().BeFalse();
-        InvokePrivate<List<string>>(rulesetProvider, "ParseJsonArray", "null").Should().BeEmpty();
-        InvokePrivateStatic<IReadOnlyList<string>>(typeof(DatabasePolicyDefinitionStore), "DeserializeList", "")
-            .Should().BeEmpty();
-        InvokePrivateStatic<IReadOnlyList<string>>(typeof(DatabasePolicyDefinitionStore), "DeserializeList", "[]")
-            .Should().BeEmpty();
+        var nullParseResult = InvokePrivate<(List<string> Values, bool IsValid)>(
+            rulesetProvider,
+            "ParseJsonArray",
+            "null");
+        nullParseResult.Values.Should().BeEmpty();
+        nullParseResult.IsValid.Should().BeFalse();
+        var emptyListResult = InvokePrivateStatic<(IReadOnlyList<string> Values, bool IsValid)>(
+            typeof(DatabasePolicyDefinitionStore),
+            "DeserializeList",
+            "");
+        emptyListResult.Values.Should().BeEmpty();
+        emptyListResult.IsValid.Should().BeTrue();
+        var emptyArrayResult = InvokePrivateStatic<(IReadOnlyList<string> Values, bool IsValid)>(
+            typeof(DatabasePolicyDefinitionStore),
+            "DeserializeList",
+            "[]");
+        emptyArrayResult.Values.Should().BeEmpty();
+        emptyArrayResult.IsValid.Should().BeTrue();
 
         InvokePrivateStatic<string>(typeof(PolicyEvaluationLogger), "GetUserId", Principal(new Claim("sub", "sub-id")))
             .Should().Be("sub-id");
@@ -2356,9 +2323,9 @@ public sealed class AuthorizationCoverageCompletionTests
         InvokePrivateStatic<string>(typeof(PolicyEvaluationLogger), "GetUserId", new ClaimsPrincipal(namedIdentity))
             .Should().Be("display-name");
 
-        InvokePrivateStatic<string?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new TestUserIdResource(null), new RuleParameters())
+        InvokePrivateStatic<Guid?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new TestUserIdResource(null), new RuleParameters())
             .Should().BeNull();
-        InvokePrivateStatic<string?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new { UserId = (Guid?)null }, new RuleParameters())
+        InvokePrivateStatic<Guid?>(typeof(SelfOrPermissionRuleEvaluator), "GetTargetUserIdFromResource", new { UserId = (Guid?)null }, new RuleParameters())
             .Should().BeNull();
 
         InvokePrivateStatic<AclSubject>(typeof(OwnerOrAclRuleEvaluator), "BuildAclSubject", new ClaimsPrincipal())

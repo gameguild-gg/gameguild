@@ -65,65 +65,19 @@ public sealed class RulesetAuthorizationHandler : AuthorizationHandler<RulesetRe
         // Evaluate each rule in order
         var enabledRules = ruleset.Rules.Where(r => r.Enabled).ToList();
 
+        if (enabledRules.Count == 0)
+        {
+            context.Fail(new AuthorizationFailureReason(this, $"Policy '{policyName}' has no enabled rules"));
+            return;
+        }
+
         foreach (var rule in enabledRules)
         {
-            // Validate rule before evaluating
-            var validation = rule.Validate();
-            if (!validation.IsValid)
+            var result = await EvaluateRuleAsync(context, rule, policyName).ConfigureAwait(false);
+            if (!result.IsSuccess || result.IsSkipped)
             {
-                _logger.LogError(
-                    "Invalid rule configuration in policy {PolicyName}: {Errors}",
-                    policyName, string.Join("; ", validation.Errors));
                 context.Fail(new AuthorizationFailureReason(
-                    this, $"Invalid rule configuration: {string.Join("; ", validation.Errors)}"));
-                return;
-            }
-
-            var evaluator = ResolveEvaluator(rule.Type);
-            if (evaluator is null)
-            {
-                _logger.LogError(
-                    "No evaluator found for rule type: {RuleType} in policy {PolicyName}",
-                    rule.Type, policyName);
-                context.Fail(new AuthorizationFailureReason(
-                    this, $"Unknown rule type: {rule.Type}"));
-                return;
-            }
-
-            var parameters = RuleParameters.FromDictionary(rule.Params);
-
-            try
-            {
-                var result = await evaluator.EvaluateAsync(context, parameters).ConfigureAwait(false);
-
-                if (!result.IsSuccess && !result.IsSkipped)
-                {
-                    _logger.LogDebug(
-                        "Rule {RuleType} failed for policy {PolicyName}: {Reason}",
-                        rule.Type, policyName, result.FailureReason);
-                    context.Fail(new AuthorizationFailureReason(
-                        this, result.FailureReason ?? $"Rule '{rule.Type}' failed"));
-                    return;
-                }
-
-                if (result.IsSkipped)
-                {
-                    _logger.LogDebug(
-                        "Rule {RuleType} skipped for policy {PolicyName}: {Reason}",
-                        rule.Type, policyName, result.FailureReason);
-                    // Continue to next rule
-                }
-
-                // Success - continue to next rule
-                _logger.LogDebug("Rule {RuleType} passed for policy {PolicyName}", rule.Type, policyName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex,
-                    "Error evaluating rule {RuleType} for policy {PolicyName}",
-                    rule.Type, policyName);
-                context.Fail(new AuthorizationFailureReason(
-                    this, $"Error evaluating rule '{rule.Type}'"));
+                    this, result.FailureReason ?? $"Rule '{rule.Type}' failed"));
                 return;
             }
         }
@@ -131,6 +85,67 @@ public sealed class RulesetAuthorizationHandler : AuthorizationHandler<RulesetRe
         // All rules passed
         _logger.LogDebug("All rules passed for policy {PolicyName}", policyName);
         context.Succeed(requirement);
+    }
+
+    private async Task<RuleEvaluationResult> EvaluateRuleAsync(
+        AuthorizationHandlerContext context,
+        RuleDefinition rule,
+        string policyName)
+    {
+        var validation = rule.Validate();
+        if (!validation.IsValid)
+        {
+            var reason = $"Invalid rule configuration: {string.Join("; ", validation.Errors)}";
+            _logger.LogError("{Reason} in policy {PolicyName}", reason, policyName);
+            return RuleEvaluationResult.Fail(reason);
+        }
+
+        if (string.Equals(rule.Type, RuleTypes.AnyOf, StringComparison.OrdinalIgnoreCase))
+        {
+            var failureReasons = new List<string>();
+            foreach (var childRule in rule.Rules!.Where(child => child.Enabled))
+            {
+                var childResult = await EvaluateRuleAsync(context, childRule, policyName).ConfigureAwait(false);
+                if (childResult.IsSuccess && !childResult.IsSkipped)
+                    return RuleEvaluationResult.Success();
+
+                if (!string.IsNullOrWhiteSpace(childResult.FailureReason))
+                    failureReasons.Add(childResult.FailureReason);
+            }
+
+            return RuleEvaluationResult.Fail(
+                failureReasons.Count == 0
+                    ? "No AnyOf child rule passed"
+                    : $"No AnyOf child rule passed: {string.Join("; ", failureReasons)}");
+        }
+
+        var evaluator = ResolveEvaluator(rule.Type);
+        if (evaluator is null)
+        {
+            _logger.LogError(
+                "No evaluator found for rule type: {RuleType} in policy {PolicyName}",
+                rule.Type, policyName);
+            return RuleEvaluationResult.Fail($"Unknown rule type: {rule.Type}");
+        }
+
+        try
+        {
+            var result = await evaluator.EvaluateAsync(
+                context,
+                RuleParameters.FromDictionary(rule.Params)).ConfigureAwait(false);
+
+            if (result.IsSkipped)
+                return RuleEvaluationResult.Fail(result.FailureReason ?? $"Rule '{rule.Type}' was skipped");
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error evaluating rule {RuleType} for policy {PolicyName}",
+                rule.Type, policyName);
+            return RuleEvaluationResult.Fail($"Error evaluating rule '{rule.Type}'");
+        }
     }
 
     private IRuleEvaluator? ResolveEvaluator(string ruleType)

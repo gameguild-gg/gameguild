@@ -89,15 +89,12 @@ public class PolicyDefinitionEntity : EntityBase
 
     /// <summary>
     ///     Gets or sets the rules that make up this policy (JSON array).
-    ///     When set, this takes precedence over individual permission/role requirements.
-    ///     Each rule has a Type, Description, Params, and Enabled flag.
     /// </summary>
     [MaxLength(8000)]
     public string? RulesJson { get; set; }
 
     /// <summary>
     ///     Gets or sets whether to use the new rule-based evaluation.
-    ///     When true, RulesJson is used; when false, legacy fields are used.
     /// </summary>
     public bool UseRuleBasedEvaluation { get; set; }
 }
