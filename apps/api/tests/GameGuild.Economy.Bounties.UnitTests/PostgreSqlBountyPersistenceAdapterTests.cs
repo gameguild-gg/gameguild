@@ -9,6 +9,7 @@ namespace GameGuild.Economy.Bounties.UnitTests;
 public sealed class PostgreSqlBountyPersistenceAdapterTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 11, 15, 0, 0, TimeSpan.Zero);
+    private static readonly Guid TenantId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
     [Fact]
     public void EscrowStoreReadsACompleteBountyAndBothFragmentShapes()
@@ -35,7 +36,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
             .Build());
         using var context = new ScriptedBountiesContext(interceptor);
 
-        var result = new PostgreSqlBountyEscrowStore(context).Get(bountyId);
+        var result = new PostgreSqlBountyEscrowStore(context).Get(TenantId, bountyId);
 
         result.Id.Should().Be(bountyId);
         result.PosterId.Should().Be(posterId);
@@ -59,8 +60,8 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
         result.Fragments[0].SelectedRanges.Should().ContainSingle().Which.Should().Be(
             new RootTraceRange(root, 0, 7000, 2));
         result.Fragments[1].EscrowLotId.Should().BeNull();
-        interceptor.Commands.Should().Contain(command => command.Contains("read_bounty_escrow_by_id_v1"));
-        interceptor.Commands.Should().Contain(command => command.Contains("read_bounty_escrow_fragments_v3"));
+        interceptor.Commands.Should().Contain(command => command.Contains("read_bounty_escrow_by_id_v2"));
+        interceptor.Commands.Should().Contain(command => command.Contains("read_bounty_escrow_fragments_v4"));
     }
 
     [Fact]
@@ -77,13 +78,13 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
         using var context = new ScriptedBountiesContext(interceptor);
         var store = new PostgreSqlBountyEscrowStore(context);
 
-        FluentActions.Invoking(() => store.Get(bountyId)).Should().Throw<KeyNotFoundException>();
-        store.FindPostReplay(new IdempotencyKey("missing"), "request-hash").Should().BeNull();
-        FluentActions.Invoking(() => store.FindPostReplay(new IdempotencyKey("post-key"), "request-hash"))
+        FluentActions.Invoking(() => store.Get(TenantId, bountyId)).Should().Throw<KeyNotFoundException>();
+        store.FindPostReplay(TenantId, new IdempotencyKey("missing"), "request-hash").Should().BeNull();
+        FluentActions.Invoking(() => store.FindPostReplay(TenantId, new IdempotencyKey("post-key"), "request-hash"))
             .Should().Throw<BountyIdempotencyConflictException>();
-        FluentActions.Invoking(() => store.FindPostReplay(new IdempotencyKey("post-key"), "request-hash"))
+        FluentActions.Invoking(() => store.FindPostReplay(TenantId, new IdempotencyKey("post-key"), "request-hash"))
             .Should().Throw<BountyIdempotencyConflictException>();
-        store.FindPostReplay(new IdempotencyKey("post-key"), " request-hash ")
+        store.FindPostReplay(TenantId, new IdempotencyKey("post-key"), " request-hash ")
             .Should().NotBeNull().And.Match<PersistedBountyEscrow>(item => item.Id == bountyId);
     }
 
@@ -92,7 +93,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
     {
         var position = CreatePosition();
         var command = new CreateBountyEscrowPersistenceCommand(
-            position, new IdempotencyKey("post-key"), " request-hash ", PostingId.New());
+            position, TenantId, new IdempotencyKey("post-key"), " request-hash ", PostingId.New());
         var success = new ScriptedRelationalInterceptor();
         success.EnqueueNonQuery();
         success.EnqueueReader(BountyRows(
@@ -101,7 +102,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
         using (var context = new ScriptedBountiesContext(success))
         {
             new PostgreSqlBountyEscrowStore(context).Create(command).Id.Should().Be(position.Id);
-            success.Commands.Should().Contain(item => item.Contains("create_bounty_escrow_v3"));
+            success.Commands.Should().Contain(item => item.Contains("create_bounty_escrow_v4"));
         }
 
         AssertCreateFailure(command, new InvalidOperationException("database"), typeof(BountyIdempotencyConflictException));
@@ -118,25 +119,27 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
         var store = new PostgreSqlBountyEscrowStore(context);
         var position = CreatePosition();
 
-        FluentActions.Invoking(() => store.FindPostReplay(new IdempotencyKey("key"), " "))
+        FluentActions.Invoking(() => store.Get(Guid.Empty, BountyId.New()))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.FindPostReplay(TenantId, new IdempotencyKey("key"), " "))
             .Should().Throw<ArgumentException>();
         FluentActions.Invoking(() => store.Create(null!)).Should().Throw<ArgumentNullException>();
         FluentActions.Invoking(() => store.Create(new CreateBountyEscrowPersistenceCommand(
-                null!, new IdempotencyKey("key"), "hash", PostingId.New())))
+                null!, TenantId, new IdempotencyKey("key"), "hash", PostingId.New())))
             .Should().Throw<ArgumentNullException>();
         FluentActions.Invoking(() => store.Create(new CreateBountyEscrowPersistenceCommand(
-                position, new IdempotencyKey("key"), " ", PostingId.New())))
+                position, TenantId, new IdempotencyKey("key"), " ", PostingId.New())))
             .Should().Throw<ArgumentException>();
 
         typeof(BountyEscrowPosition).GetProperty(nameof(BountyEscrowPosition.Status))!
             .SetValue(position, BountyStatus.Claimed);
         FluentActions.Invoking(() => store.Create(new CreateBountyEscrowPersistenceCommand(
-                position, new IdempotencyKey("key"), "hash", PostingId.New())))
+                position, TenantId, new IdempotencyKey("key"), "hash", PostingId.New())))
             .Should().Throw<BountyTerminalConflictException>();
 
         var emptyId = CreatePosition(useEmptyId: true);
         FluentActions.Invoking(() => store.Create(new CreateBountyEscrowPersistenceCommand(
-                emptyId, new IdempotencyKey("key"), "hash", PostingId.New())))
+                emptyId, TenantId, new IdempotencyKey("key"), "hash", PostingId.New())))
             .Should().Throw<ArgumentException>();
     }
 
@@ -215,17 +218,17 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
         interceptor.EnqueueReader(TerminalRows().Build());
         interceptor.EnqueueReader(TerminalRows().Build());
         interceptor.EnqueueReader(TerminalRows().AddRow(
-            Guid.NewGuid(), bountyId.Value, (int)BountyStatus.Reclaimed, actorId, walletId.Value,
+            Guid.NewGuid(), TenantId, bountyId.Value, (int)BountyStatus.Reclaimed, actorId, walletId.Value,
             "reclaim-key", null, null, null, 9L, 1L, 40L, "[]", Now).Build());
         interceptor.EnqueueReader(TerminalRows().AddRow(
-            Guid.NewGuid(), bountyId.Value, (int)BountyStatus.Claimed, actorId, walletId.Value,
+            Guid.NewGuid(), TenantId, bountyId.Value, (int)BountyStatus.Claimed, actorId, walletId.Value,
             "claim-key", risk, source.Value, lot.Value, 0L, 0L, 41L, outputJson, Now).Build());
         using var context = new ScriptedBountiesContext(interceptor);
         var store = new PostgreSqlBountyTerminalEventStore(context);
 
-        store.FindByBounty(bountyId).Should().BeNull();
-        store.FindByIdempotency(new IdempotencyKey("missing")).Should().BeNull();
-        var reclaimed = store.FindByBounty(bountyId)!;
+        store.FindByBounty(TenantId, bountyId).Should().BeNull();
+        store.FindByIdempotency(TenantId, new IdempotencyKey("missing")).Should().BeNull();
+        var reclaimed = store.FindByBounty(TenantId, bountyId)!;
         reclaimed.BountyId.Should().Be(bountyId);
         reclaimed.Status.Should().Be(BountyStatus.Reclaimed);
         reclaimed.ActorId.Should().Be(actorId);
@@ -240,7 +243,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
         reclaimed.OutputLots.Should().BeEmpty();
         reclaimed.OccurredAt.Should().Be(Now);
 
-        var claimed = store.FindByIdempotency(new IdempotencyKey("claim-key"))!;
+        var claimed = store.FindByIdempotency(TenantId, new IdempotencyKey("claim-key"))!;
         claimed.RiskDecisionId.Should().Be(risk);
         claimed.ProceedsSourceStampId.Should().Be(source);
         claimed.ProceedsLotId.Should().Be(lot);
@@ -265,10 +268,13 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
 
         var interceptor = new ScriptedRelationalInterceptor();
         interceptor.EnqueueReader(TerminalRows().AddRow(
-            Guid.NewGuid(), BountyId.New().Value, (int)BountyStatus.Reclaimed, Guid.NewGuid(), WalletId.New().Value,
+            Guid.NewGuid(), TenantId, BountyId.New().Value, (int)BountyStatus.Reclaimed, Guid.NewGuid(), WalletId.New().Value,
             "key", null, null, null, 1L, 0L, 1L, "null", Now).Build());
         using var context = new ScriptedBountiesContext(interceptor);
-        FluentActions.Invoking(() => new PostgreSqlBountyTerminalEventStore(context).FindByBounty(BountyId.New()))
+        FluentActions.Invoking(() => new PostgreSqlBountyTerminalEventStore(context)
+                .FindByBounty(Guid.Empty, BountyId.New()))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => new PostgreSqlBountyTerminalEventStore(context).FindByBounty(TenantId, BountyId.New()))
             .Should().Throw<InvalidOperationException>();
     }
 
@@ -289,6 +295,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
 
         AssertClaimValidation(null!, typeof(ArgumentNullException));
         AssertClaimValidation(command with { ClaimantId = Guid.Empty }, typeof(ArgumentException));
+        AssertClaimValidation(command with { TenantId = Guid.Empty }, typeof(ArgumentException));
         AssertClaimValidation(command with { RiskDecisionId = Guid.Empty }, typeof(ArgumentException));
         AssertClaimValidation(command with { EvidenceHash = " " }, typeof(ArgumentException));
         AssertClaimValidation(command with { EvidenceHash = new string('x', 129) }, typeof(ArgumentException));
@@ -311,6 +318,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
 
         AssertReclaimValidation(null!, typeof(ArgumentNullException));
         AssertReclaimValidation(command with { PosterId = Guid.Empty }, typeof(ArgumentException));
+        AssertReclaimValidation(command with { TenantId = Guid.Empty }, typeof(ArgumentException));
         AssertReclaimValidation(command with { RiskDecisionId = Guid.Empty }, typeof(ArgumentException));
     }
 
@@ -353,7 +361,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
         if (expected is null)
         {
             action.Should().NotThrow();
-            interceptor.Commands.Should().ContainSingle(item => item.Contains("complete_bounty_claim_v1"));
+            interceptor.Commands.Should().ContainSingle(item => item.Contains("complete_bounty_claim_v2"));
         }
         else action.Should().Throw<Exception>().Which.Should().BeOfType(expected);
     }
@@ -379,7 +387,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
         if (expected is null)
         {
             action.Should().NotThrow();
-            interceptor.Commands.Should().ContainSingle(item => item.Contains("complete_bounty_reclaim_v1"));
+            interceptor.Commands.Should().ContainSingle(item => item.Contains("complete_bounty_reclaim_v2"));
         }
         else action.Should().Throw<Exception>().Which.Should().BeOfType(expected);
     }
@@ -393,11 +401,11 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
     }
 
     private static BountyClaimTerminalWriteCommand ClaimWriteCommand() => new(
-        BountyId.New(), Guid.NewGuid(), WalletId.New(), new IdempotencyKey("claim-key"), PostingId.New(),
+        TenantId, BountyId.New(), Guid.NewGuid(), WalletId.New(), new IdempotencyKey("claim-key"), PostingId.New(),
         Guid.NewGuid(), " evidence ", Now);
 
     private static BountyReclaimTerminalWriteCommand ReclaimWriteCommand() => new(
-        BountyId.New(), Guid.NewGuid(), WalletId.New(), new IdempotencyKey("reclaim-key"), PostingId.New(),
+        TenantId, BountyId.New(), Guid.NewGuid(), WalletId.New(), new IdempotencyKey("reclaim-key"), PostingId.New(),
         Guid.NewGuid(), Now);
 
     private static BountyEscrowPosition CreatePosition(bool useEmptyId = false)
@@ -423,7 +431,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
         string? requestHash = "request-hash")
     {
         var table = new TestDataTable(
-            ("Id", typeof(Guid)), ("PosterId", typeof(Guid)), ("PosterWalletId", typeof(Guid)),
+            ("Id", typeof(Guid)), ("TenantId", typeof(Guid)), ("PosterId", typeof(Guid)), ("PosterWalletId", typeof(Guid)),
             ("EscrowWalletId", typeof(Guid)), ("Currency", typeof(int)), ("AmountUnits", typeof(long)),
             ("ReclaimFeePpm", typeof(int)), ("RequiresPrerequisite", typeof(bool)),
             ("MinimumReputation", typeof(int)), ("RequiresInstructorVerification", typeof(bool)),
@@ -431,7 +439,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
             ("PostedAt", typeof(DateTimeOffset)), ("ExpiresAt", typeof(DateTimeOffset)), ("Version", typeof(long)));
         if (id is not null)
             table.AddRow(
-                id.Value.Value, posterId ?? Guid.NewGuid(), (posterWalletId ?? WalletId.New()).Value,
+                id.Value.Value, TenantId, posterId ?? Guid.NewGuid(), (posterWalletId ?? WalletId.New()).Value,
                 (escrowWalletId ?? WalletId.New()).Value, (int)CurrencyCode.HardCoin, 10L, 100_000,
                 true, 12, true, (int)BountyStatus.Open, "post-key", requestHash,
                 Now, Now.AddDays(2), 3L);
@@ -450,7 +458,7 @@ public sealed class PostgreSqlBountyPersistenceAdapterTests
         ("AmountUnits", typeof(long)), ("RootRanges", typeof(string)));
 
     private static TestDataTable TerminalRows() => new(
-        ("Id", typeof(Guid)), ("BountyId", typeof(Guid)), ("Status", typeof(int)),
+        ("Id", typeof(Guid)), ("TenantId", typeof(Guid)), ("BountyId", typeof(Guid)), ("Status", typeof(int)),
         ("ActorId", typeof(Guid)), ("DestinationWalletId", typeof(Guid)),
         ("IdempotencyKey", typeof(string)), ("RiskDecisionId", typeof(Guid)),
         ("ProceedsSourceStampId", typeof(Guid)), ("ProceedsLotId", typeof(Guid)),

@@ -124,6 +124,35 @@ public sealed class DurableBountyEscrowPostWorkflowTests
         context.Transactions.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task Post_RejectsUnscopedAuthorityAndReplayBoundToAnotherBounty()
+    {
+        var unscoped = CreateRequest(7);
+        SetTenant(unscoped.Authority, Guid.Empty);
+        var workflow = new PostgreSqlDurableBountyEscrowPostWorkflow(
+            new RecordingContext(), new RecordingLotReader([]),
+            new RecordingReservations(CreateLot(7)), new RecordingStore(), new RecordingPostings());
+
+        await FluentActions.Invoking(() => workflow.PostAsync(unscoped))
+            .Should().ThrowAsync<ArgumentException>();
+
+        var request = CreateRequest(7);
+        var replay = CreatePersisted(request) with { Id = BountyId.New() };
+        var replayWorkflow = new PostgreSqlDurableBountyEscrowPostWorkflow(
+            new RecordingContext(), new RecordingLotReader([]),
+            new RecordingReservations(CreateLot(7)), new RecordingStore(replay), new RecordingPostings());
+        await FluentActions.Invoking(() => replayWorkflow.PostAsync(request))
+            .Should().ThrowAsync<BountyIdempotencyConflictException>();
+
+        var foreignReplay = CreatePersisted(request) with { TenantId = Guid.NewGuid() };
+        var foreignReplayWorkflow = new PostgreSqlDurableBountyEscrowPostWorkflow(
+            new RecordingContext(), new RecordingLotReader([]),
+            new RecordingReservations(CreateLot(7)), new RecordingStore(foreignReplay, ignoreTenant: true),
+            new RecordingPostings());
+        await FluentActions.Invoking(() => foreignReplayWorkflow.PostAsync(request))
+            .Should().ThrowAsync<BountyIdempotencyConflictException>();
+    }
+
     private static DurableBountyEscrowPostRequest CreateRequest(long units)
     {
         var posterId = Guid.NewGuid();
@@ -147,6 +176,12 @@ public sealed class DurableBountyEscrowPostWorkflowTests
     private static RegisteredPostingAuthority Authority(Guid actorId) => new(
         Guid.NewGuid(), actorId, Guid.NewGuid(), Guid.NewGuid(), "bounty-post", 1);
 
+    private static void SetTenant(RegisteredPostingAuthority authority, Guid tenantId) =>
+        typeof(RegisteredPostingAuthority)
+            .GetField("<TenantId>k__BackingField", System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic)!
+            .SetValue(authority, tenantId);
+
     private static CreditLot CreateLot(long units)
     {
         var root = SourceStampId.New();
@@ -165,6 +200,7 @@ public sealed class DurableBountyEscrowPostWorkflowTests
 
     private static PersistedBountyEscrow CreatePersisted(DurableBountyEscrowPostRequest request) => new(
         request.Id,
+        request.Authority.TenantId,
         request.PosterId,
         request.PosterWalletId,
         request.EscrowWalletId,
@@ -254,11 +290,12 @@ public sealed class DurableBountyEscrowPostWorkflowTests
         }
     }
 
-    private sealed class RecordingStore(PersistedBountyEscrow? replay = null) : IBountyEscrowStore
+    private sealed class RecordingStore(PersistedBountyEscrow? replay = null, bool ignoreTenant = false) : IBountyEscrowStore
     {
         public List<CreateBountyEscrowPersistenceCommand> CreateCommands { get; } = [];
-        public PersistedBountyEscrow Get(BountyId bountyId) => throw new NotSupportedException();
-        public PersistedBountyEscrow? FindPostReplay(IdempotencyKey idempotencyKey, string requestHash) => replay;
+        public PersistedBountyEscrow Get(Guid tenantId, BountyId bountyId) => throw new NotSupportedException();
+        public PersistedBountyEscrow? FindPostReplay(Guid tenantId, IdempotencyKey idempotencyKey, string requestHash) =>
+            replay is not null && (ignoreTenant || replay.TenantId == tenantId) ? replay : null;
         public PersistedBountyEscrow Create(CreateBountyEscrowPersistenceCommand command)
         {
             CreateCommands.Add(command);
@@ -274,7 +311,9 @@ public sealed class DurableBountyEscrowPostWorkflowTests
                 command.Position.ExpiresAt,
                 command.IdempotencyKey,
                 command.RequestHash,
-                Authority(command.Position.PosterId),
+                new RegisteredPostingAuthority(
+                    Guid.NewGuid(), command.Position.PosterId, command.TenantId,
+                    Guid.NewGuid(), "bounty-post", 1),
                 new ReserveVersion(3),
                 new PolicyVersion(4)));
         }

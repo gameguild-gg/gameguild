@@ -341,6 +341,60 @@ export class EconomyModule {
   }
 
   /**
+   * Get my payout provider account readiness
+   */
+  async getEconomyPayoutsAccount(): Promise<
+    Result<Types.EconomyPayoutsConnectAccountSnapshot, ApiError>
+  > {
+    const url = "/api/v1/economy/payouts/account";
+
+    const result = await this.client.request({
+      method: "GET",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyPayoutsConnectAccountSnapshotSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Create or refresh my payout provider onboarding
+   */
+  async postEconomyPayoutsOnboarding(): Promise<
+    Result<Types.EconomyPayoutsConnectOnboardingResult, ApiError>
+  > {
+    const url = "/api/v1/economy/payouts/onboarding";
+
+    const result = await this.client.request({
+      method: "POST",
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyPayoutsConnectOnboardingResultSchema,
+        result.data,
+        "response",
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
    * Get my Economy wallet
    */
   async getEconomyWallet(): Promise<

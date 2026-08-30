@@ -145,6 +145,16 @@ test_economy_gate_rejects_stage_skips() {
   ! grep -Fq -- '--skip-browser' "$gate"
 }
 
+test_economy_coverage_ignores_only_compiler_generated_members() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq \
+    'DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByAttribute=CompilerGenerated,GeneratedCodeAttribute' \
+    "$gate" || return 1
+  grep -Fq 'DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=$include' "$gate" || return 1
+  ! grep -Fq 'SkipAutoProps' "$gate"
+}
+
 test_economy_gate_bounds_hung_tests_and_records_timings() {
   local gate="$ci_dir/verify-economy.sh"
 
@@ -187,7 +197,10 @@ test_economy_gate_builds_release_targets_strictly_once() {
   local gate="$ci_dir/verify-economy.sh"
 
   grep -Fq 'dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal' "$gate" || return 1
-  grep -Fq 'dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --verbosity minimal' "$gate" || return 1
+  ! grep -Fq 'dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj' "$gate" || return 1
+  grep -Fq 'dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-build --no-restore' "$gate" || return 1
+  grep -Fq 'provider_build_arguments=(--no-build --no-restore)' "$gate" || return 1
+  grep -Fq 'dotnet_build_isolation=(-m:1 -p:UseSharedCompilation=false)' "$gate" || return 1
   grep -Fq -- '-p:TreatWarningsAsErrors=true' "$gate" || return 1
   ! grep -Fq 'warning_projects=' "$gate"
 }
@@ -197,7 +210,7 @@ test_economy_gate_rejects_nested_postgres_testcontainers() {
 
   grep -Fq "gate_stage='preflight-postgres-isolation'" "$gate" || return 1
   grep -Fq 'ECONOMY_POSTGRES_CONNECTION' "$gate" || return 1
-  grep -Fq "rg --path-separator // -l --glob '*.cs' 'new PostgreSqlBuilder' apps/api/tests" "$gate" || return 1
+  grep -Fq "grep -RIl --include='*.cs' 'new PostgreSqlBuilder' apps/api/tests" "$gate" || return 1
   grep -Fq 'GameGuild.TestSupport.Economy/' "$gate"
 }
 
@@ -211,6 +224,42 @@ test_economy_gate_isolates_global_economy_roles_from_application_databases() {
   grep -Fq 'export ECONOMY_POSTGRES_CONNECTION="$economy_connection_string"' "$gate" || return 1
   grep -Fq 'export ConnectionStrings__DefaultConnection="$connection_string"' "$gate" || return 1
   grep -Fq 'docker rm --force "$economy_postgres_container"' "$gate"
+}
+
+test_full_gate_isolates_api_migration_tests_from_the_economy_template() {
+  local gate="$ci_dir/verify-economy.sh"
+  local runner
+  runner="$(sed -n '/run_whole_solution_test_project()/,/wait_for_whole_solution_batch()/p' "$gate")"
+
+  grep -Fq 'whole_solution_postgres_container="gameguild-economy-ci-whole-solution-' "$gate" || return 1
+  grep -Fq "gate_stage='postgres-whole-solution-migrations'" "$gate" || return 1
+  grep -Fq -- '--env POSTGRES_DB=whole_solution_tests' "$gate" || return 1
+  grep -Fq 'docker rm --force "$whole_solution_postgres_container"' "$gate" || return 1
+  grep -Fq "[[ \"\$test_name\" == 'GameGuild.API.UnitTests' ]]" <<< "$runner" || return 1
+  grep -Fq 'ECONOMY_POSTGRES_CONNECTION="$whole_solution_connection_string"' <<< "$runner" || return 1
+  grep -Fq 'ECONOMY_POSTGRES_TEMPLATE_DATABASE=' <<< "$runner" || return 1
+  ! grep -Fq -- '--settings' <<< "$runner" || return 1
+  ! grep -Fq 'xunit-postgres-serial.runsettings' "$gate"
+}
+
+test_economy_gate_uses_memory_backed_disposable_postgres() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq -- '--tmpfs /var/lib/postgresql/data:rw' "$gate" || return 1
+  ! grep -Fq -- '--volume' <<< "$(sed -n '/postgres-economy-tests/,/economy_postgres_probe()/p' "$gate")"
+}
+
+test_economy_gate_migrates_one_template_and_clones_isolated_test_databases() {
+  local gate="$ci_dir/verify-economy.sh"
+  local database_support="$repository_root/apps/api/tests/GameGuild.TestSupport.Economy/EconomyPostgreSqlTestDatabase.cs"
+
+  grep -Fq "gate_stage='postgres-economy-template'" "$gate" || return 1
+  grep -Fq "economy_template_database='economy_tests_template'" "$gate" || return 1
+  grep -Fq 'dotnet ef database update' "$gate" || return 1
+  grep -Fq 'export ECONOMY_POSTGRES_TEMPLATE_DATABASE="$economy_template_database"' "$gate" || return 1
+  grep -Fq 'ECONOMY_POSTGRES_TEMPLATE_DATABASE' "$database_support" || return 1
+  grep -Fq 'WITH TEMPLATE' "$database_support" || return 1
+  grep -Fq 'true,' "$database_support"
 }
 
 test_auto_changeset_bumps_entire_lockstep_workspace() {
@@ -392,6 +441,14 @@ test_manifest_rejects_undeclared_project() {
   local root="$fixture_root/manifest-invalid"
   mkdir -p "$root/apps/api/Source/Modules/GameGuild.Economy"
   printf '<Project />\n' > "$root/apps/api/Source/Modules/GameGuild.Economy/GameGuild.Economy.csproj"
+  printf '{"schemaVersion":1,"projects":[]}\n' > "$root/manifest.json"
+  assert_throws 'not declared' assert_economy_manifest "$root" "$root/manifest.json"
+}
+
+test_manifest_rejects_undeclared_compliance_project() {
+  local root="$fixture_root/manifest-compliance-invalid"
+  mkdir -p "$root/apps/api/Source/Modules/GameGuild.Compliance.KYC"
+  printf '<Project />\n' > "$root/apps/api/Source/Modules/GameGuild.Compliance.KYC/GameGuild.Compliance.KYC.csproj"
   printf '{"schemaVersion":1,"projects":[]}\n' > "$root/manifest.json"
   assert_throws 'not declared' assert_economy_manifest "$root" "$root/manifest.json"
 }
@@ -578,6 +635,12 @@ test_whole_solution_isolates_vstest_processes() {
   grep -Fq 'Whole-solution test project produced no TRX:' "$gate" || return 1
   ! grep -Fq 'dotnet test apps/api/GameGuild.sln' "$gate"
 }
+
+test_whole_solution_log_aggregation_excludes_aggregate_output() {
+  local gate="$ci_dir/verify-economy.sh"
+
+  grep -Fq 'find "$whole_solution_results" -mindepth 2 -type f -name '\''dotnet-test.log'\''' "$gate"
+}
 test_whole_solution_recovers_scaffold_identity_from_trx() {
   local root="$fixture_root/whole-solution-trx-fallback"
   local project='apps/api/tests/GameGuild.Localization.IntegrationTests/GameGuild.Localization.IntegrationTests.csproj'
@@ -668,6 +731,9 @@ run_test 'Economy unit tests bound parallelism without global serialization' tes
 run_test 'Economy gate builds strict release targets once' test_economy_gate_builds_release_targets_strictly_once
 run_test 'Economy gate rejects nested PostgreSQL Testcontainers' test_economy_gate_rejects_nested_postgres_testcontainers
 run_test 'Economy gate isolates global roles from application databases' test_economy_gate_isolates_global_economy_roles_from_application_databases
+run_test 'full gate isolates API migration tests from the Economy template' test_full_gate_isolates_api_migration_tests_from_the_economy_template
+run_test 'Economy gate uses memory-backed disposable PostgreSQL' test_economy_gate_uses_memory_backed_disposable_postgres
+run_test 'Economy gate clones one migrated PostgreSQL template' test_economy_gate_migrates_one_template_and_clones_isolated_test_databases
 run_test 'Emception versioning is scoped to its fixed group' test_auto_changeset_bumps_entire_lockstep_workspace
 run_test 'Changesets config isolates the Emception release group' test_changesets_config_matches_lockstep_workspace
 run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
@@ -684,8 +750,10 @@ run_test 'whole-solution tests provision isolated Garage storage' test_whole_sol
 run_test 'Windows Testcontainers cleanup is scoped to the Economy gate' test_windows_testcontainers_cleanup_is_gate_scoped
 run_test 'Windows Economy gate disables reusable MSBuild workers' test_windows_gate_disables_reusable_msbuild_workers
 run_test 'manifest rejects undeclared Economy projects' test_manifest_rejects_undeclared_project
+run_test 'manifest rejects undeclared Economy compliance projects' test_manifest_rejects_undeclared_compliance_project
 run_test 'manifest accepts declared Economy projects and tests' test_manifest_accepts_declared_projects
 run_test 'manifest requires 100 percent branch coverage' test_manifest_requires_full_branch_coverage
+run_test 'Economy coverage excludes compiler-generated members without skipping source properties' test_economy_coverage_ignores_only_compiler_generated_members
 run_test 'manifest prunes build outputs before project discovery' test_manifest_prunes_build_outputs
 run_test 'manifest records normalize Windows line endings' test_manifest_record_fields_normalize_windows_line_endings
 run_test 'coverage records preserve empty prefixes and branch threshold' test_coverage_record_fields_preserve_empty_prefixes
@@ -697,6 +765,7 @@ run_test 'whole-solution evidence allows only named source-empty scaffolds' test
 run_test 'whole-solution scaffold scan prunes build outputs' test_whole_solution_scaffold_scan_prunes_build_outputs
 run_test 'pnpm invocation uses the standard command on every host' test_pnpm_invocation_uses_standard_command_on_every_host
 run_test 'whole-solution tests isolate VSTest processes' test_whole_solution_isolates_vstest_processes
+run_test 'whole-solution log aggregation excludes its own output' test_whole_solution_log_aggregation_excludes_aggregate_output
 run_test 'whole-solution evidence recovers scaffold identity from TRX metadata' test_whole_solution_recovers_scaffold_identity_from_trx
 run_test 'Cobertura enforces line, branch, and method coverage' test_cobertura_requires_full_method_coverage
 run_test 'Cobertura requires 100 percent branch coverage' test_cobertura_requires_full_branch_coverage

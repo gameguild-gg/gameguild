@@ -35,6 +35,8 @@ public static class PostingTemplateCatalog
         RegisterVariable(PostingTemplateKind.BountyEscrow, PostingAuthority.WalletOwner, 2),
         Register(PostingTemplateKind.BountyClaim, PostingAuthority.EscrowCoordinator, 2),
         RegisterVariable(PostingTemplateKind.BountyReclaim, PostingAuthority.EscrowCoordinator, 2),
+        RegisterVariable(PostingTemplateKind.MarketplaceSettlement, PostingAuthority.MarketplaceCoordinator, 3),
+        RegisterVariable(PostingTemplateKind.MarketplaceRefund, PostingAuthority.MarketplaceCoordinator, 2),
         Register(PostingTemplateKind.Reclaim, PostingAuthority.EscrowCoordinator, 2),
         Register(PostingTemplateKind.Refund, PostingAuthority.EscrowCoordinator, 2),
         Register(PostingTemplateKind.PayoutReservation, PostingAuthority.PayoutCoordinator, 2),

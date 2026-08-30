@@ -165,5 +165,6 @@ public sealed class PayoutCoverageClosureTests
         new PolicyVersion(1),
         Guid.NewGuid(),
         Time,
-        Time);
+        Time,
+        fixture.TenantId);
 }

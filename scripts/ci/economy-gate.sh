@@ -53,9 +53,15 @@ declared_tests = {
 def discover_projects(relative_directory):
     projects = set()
     base_directory = root / relative_directory
+    scope_prefixes = (
+        "GameGuild.Economy",
+        "GameGuild.Compliance.KYC",
+        "GameGuild.Compliance.FinancialCrime",
+        "GameGuild.TrustSafety",
+    )
     for current, directories, filenames in os.walk(base_directory):
         if pathlib.Path(current) == base_directory:
-            directories[:] = [directory for directory in directories if directory.startswith("GameGuild.Economy")]
+            directories[:] = [directory for directory in directories if directory.startswith(scope_prefixes)]
         else:
             directories[:] = [directory for directory in directories if directory not in {"bin", "obj"}]
         for filename in filenames:

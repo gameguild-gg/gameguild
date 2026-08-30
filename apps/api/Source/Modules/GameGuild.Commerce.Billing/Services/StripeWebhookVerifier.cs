@@ -95,6 +95,7 @@ public sealed class StripeWebhookVerifier(IOptions<BillingConfiguration> options
             {
                 EventId = stripeEvent.Id,
                 EventType = stripeEvent.Type,
+                OccurredAt = stripeEvent.Created,
                 IsLiveMode = stripeEvent.Livemode,
                 ProviderEnvironment = stripeEvent.Livemode ? "live" : "test",
                 ProviderAccountId = ResolveProviderObjectAccountId(),

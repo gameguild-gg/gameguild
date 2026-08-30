@@ -8,6 +8,7 @@ namespace GameGuild.Economy.Bounties.UnitTests;
 
 public sealed class PostgreSqlBountyEscrowStoreTests
 {
+    private static readonly Guid TenantId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     [Fact]
     public void StoreRejectsInvalidConstructionAndUnboundCommands()
     {
@@ -22,12 +23,13 @@ public sealed class PostgreSqlBountyEscrowStoreTests
                 .Options);
         var store = new PostgreSqlBountyEscrowStore(context);
 
-        FluentActions.Invoking(() => store.FindPostReplay(new IdempotencyKey("bounty-post"), ""))
+        FluentActions.Invoking(() => store.FindPostReplay(TenantId, new IdempotencyKey("bounty-post"), ""))
             .Should().Throw<ArgumentException>();
         FluentActions.Invoking(() => store.Create(null!))
             .Should().Throw<ArgumentNullException>();
         FluentActions.Invoking(() => store.Create(new CreateBountyEscrowPersistenceCommand(
                 null!,
+                TenantId,
                 new IdempotencyKey("bounty-post"),
                 "request-hash",
                 PostingId.New())))

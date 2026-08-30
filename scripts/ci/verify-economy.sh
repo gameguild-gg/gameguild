@@ -194,6 +194,8 @@ api_pid=''
 web_pid=''
 postgres_container=''
 economy_postgres_container=''
+whole_solution_postgres_container=''
+whole_solution_connection_string=''
 garage_container=''
 testcontainers_baseline=''
 testcontainers_reaper_disabled=false
@@ -235,6 +237,9 @@ cleanup() {
   fi
   if [[ -n "$economy_postgres_container" ]]; then
     docker rm --force "$economy_postgres_container" >/dev/null 2>&1 || true
+  fi
+  if [[ -n "$whole_solution_postgres_container" ]]; then
+    docker rm --force "$whole_solution_postgres_container" >/dev/null 2>&1 || true
   fi
   if [[ -n "$garage_container" ]]; then
     docker rm --force "$garage_container" >/dev/null 2>&1 || true
@@ -314,6 +319,7 @@ native_path() {
 
 cd "$repository_root"
 declare -a pnpm_command=(pnpm)
+declare -a dotnet_build_isolation=()
 if [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
   # The shared MSBuild server and reusable worker nodes can retain stale compiler
   # state on Windows hosts. These are deliberately host-only gate settings; they
@@ -321,6 +327,7 @@ if [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
   export DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER=1
   export MSBUILDDISABLENODEREUSE=1
   export TESTCONTAINERS_RYUK_DISABLED=true
+  dotnet_build_isolation=(-m:1 -p:UseSharedCompilation=false)
   testcontainers_reaper_disabled=true
   testcontainers_baseline="$(docker ps -aq --filter label=org.testcontainers=true)"
 fi
@@ -416,6 +423,7 @@ run docker run --detach --rm --name "$economy_postgres_container" \
   --env POSTGRES_DB=economy_tests \
   --env POSTGRES_USER=postgres \
   --env POSTGRES_PASSWORD=postgres \
+  --tmpfs /var/lib/postgresql/data:rw \
   --publish 127.0.0.1::5432 \
   postgres:17-alpine >/dev/null
 
@@ -435,12 +443,40 @@ export ConnectionStrings__MigrationConnection="$connection_string"
 export Database__FailStartupOnMigrationFailure=true
 export SeedData__ImportSnapshotCourses=false
 
+if [[ "$gate_profile" == full ]]; then
+  gate_stage='postgres-whole-solution-migrations'
+  whole_solution_postgres_container="gameguild-economy-ci-whole-solution-$$-$RANDOM"
+  run docker run --detach --rm --name "$whole_solution_postgres_container" \
+    --env POSTGRES_DB=whole_solution_tests \
+    --env POSTGRES_USER=postgres \
+    --env POSTGRES_PASSWORD=postgres \
+    --tmpfs /var/lib/postgresql/data:rw \
+    --publish 127.0.0.1::5432 \
+    postgres:17-alpine >/dev/null
+
+  whole_solution_postgres_probe() {
+    docker exec "$whole_solution_postgres_container" psql --username postgres --dbname whole_solution_tests \
+      --tuples-only --command 'SELECT 1;' >/dev/null 2>&1
+  }
+  wait_for_consecutive_successes whole_solution_postgres_probe 2 90 1
+
+  whole_solution_postgres_mapping="$(docker port "$whole_solution_postgres_container" '5432/tcp')"
+  [[ "$whole_solution_postgres_mapping" =~ :([0-9]+)$ ]] || \
+    economy_gate_error "Could not resolve whole-solution PostgreSQL port from '$whole_solution_postgres_mapping'"
+  whole_solution_postgres_port="${BASH_REMATCH[1]}"
+  whole_solution_connection_string="Host=127.0.0.1;Port=$whole_solution_postgres_port;Database=whole_solution_tests;Username=postgres;Password=postgres;Include Error Detail=true"
+fi
+
 probe_sql='SELECT 1;'
 [[ "${ECONOMY_CI_PROBE_POSTGRES_FAILURE:-0}" != '1' ]] || probe_sql='SELECT 1 / 0;'
 run docker exec "$postgres_container" psql --username postgres --dbname economy_ci --set ON_ERROR_STOP=1 --command "$probe_sql"
 run docker exec "$economy_postgres_container" psql --username postgres --dbname economy_tests --set ON_ERROR_STOP=1 --command "$probe_sql"
 printf 'app_database=economy_ci\napp_port=%s\neconomy_test_database=economy_tests\neconomy_test_port=%s\n' \
   "$postgres_port" "$economy_postgres_port" > "$artifact_root/postgres/connection.txt"
+if [[ -n "$whole_solution_connection_string" ]]; then
+  printf 'whole_solution_test_database=whole_solution_tests\nwhole_solution_test_port=%s\n' \
+    "$whole_solution_postgres_port" >> "$artifact_root/postgres/connection.txt"
+fi
 
 {
   garage_container='gameguild-economy-ci-garage-'$$-$RANDOM
@@ -480,16 +516,32 @@ gate_stage='build'
 run dotnet restore apps/api/GameGuild.sln --nologo
 if [[ "$gate_profile" == full ]]; then
   run dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal \
-    -p:TreatWarningsAsErrors=true
-  run dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --verbosity minimal \
+    "${dotnet_build_isolation[@]}" \
     -p:TreatWarningsAsErrors=true
 else
   for record in "${economy_coverage_records[@]}"; do
     IFS=$'\t' read -r test_project _ _ _ <<< "$record"
     run dotnet build "$test_project" -c Release --no-restore --nologo --verbosity minimal \
+      "${dotnet_build_isolation[@]}" \
       -p:TreatWarningsAsErrors=true
   done
 fi
+
+gate_stage='postgres-economy-template'
+economy_template_database='economy_tests_template'
+economy_template_connection="Host=127.0.0.1;Port=$economy_postgres_port;Database=$economy_template_database;Username=postgres;Password=postgres;Include Error Detail=true"
+run docker exec "$economy_postgres_container" createdb --username postgres "$economy_template_database"
+run dotnet ef database update \
+  --project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+  --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj \
+  --context ApplicationDbContext \
+  --configuration Release \
+  --no-build \
+  --connection "$economy_template_connection"
+run docker exec "$economy_postgres_container" psql --username postgres --dbname postgres \
+  --set ON_ERROR_STOP=1 --command "ALTER DATABASE \"$economy_template_database\" IS_TEMPLATE true;"
+export ECONOMY_POSTGRES_TEMPLATE_DATABASE="$economy_template_database"
+printf 'economy_template_database=%s\n' "$economy_template_database" >> "$artifact_root/postgres/connection.txt"
 
 test_hang_arguments=(
   --blame-hang-timeout "$test_hang_timeout"
@@ -514,7 +566,8 @@ for record in "${economy_coverage_records[@]}"; do
     --results-directory "$results" \
     --collect 'XPlat Code Coverage' -- \
     'DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura' \
-    "DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=$include"
+    "DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include=$include" \
+    'DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByAttribute=CompilerGenerated,GeneratedCodeAttribute'
   assert_trx_evidence "$results/$test_name.trx" >/dev/null
   coverage_report="$(find "$results" -type f -name 'coverage.cobertura.xml' -print -quit)"
   [[ -n "$coverage_report" ]] || economy_gate_error "Coverage report was not produced for $test_project"
@@ -534,12 +587,23 @@ fi
 run_whole_solution_test_project() {
   local test_project="$1" whole_solution_results="$2"
   local test_name results project_log
+  local -a test_environment=()
 
   test_name="$(basename "${test_project%.csproj}")"
   results="$whole_solution_results/$test_name"
   project_log="$results/dotnet-test.log"
   mkdir -p "$results"
+  if [[ "$test_name" == 'GameGuild.API.UnitTests' ]]; then
+    [[ -n "$whole_solution_connection_string" ]] || \
+      economy_gate_error 'The API migration tests require their isolated whole-solution PostgreSQL server'
+    test_environment=(
+      env
+      ECONOMY_POSTGRES_CONNECTION="$whole_solution_connection_string"
+      ECONOMY_POSTGRES_TEMPLATE_DATABASE=
+    )
+  fi
   run_logged "$project_log" timeout --kill-after=30s "$test_hang_timeout" \
+    "${test_environment[@]}" \
     dotnet test "$test_project" -c Release --no-build --nologo --verbosity minimal -m:1 "${test_hang_arguments[@]}" \
     --logger "trx;LogFileName=$test_name.trx" \
     --results-directory "$results"
@@ -600,7 +664,9 @@ fi
     name="$(basename "${project%.csproj}")"
     results="$artifact_root/trx/provider/$name"
     mkdir -p "$results"
-    run_test_with_timeout dotnet test "$project" -c Release --no-restore --nologo "${test_hang_arguments[@]}" \
+    provider_build_arguments=(--no-restore)
+    [[ "$gate_profile" != full ]] || provider_build_arguments=(--no-build --no-restore)
+    run_test_with_timeout dotnet test "$project" -c Release "${provider_build_arguments[@]}" --nologo "${test_hang_arguments[@]}" \
       --filter "$filter" \
       --logger "trx;LogFileName=$name.trx" \
       --results-directory "$results"
@@ -612,7 +678,7 @@ if [[ "$gate_profile" == full ]]; then
 {
   gate_stage='openapi-client'
   publish_directory="$artifact_root/publish/api"
-  run dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --output "$publish_directory"
+  run dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-build --no-restore --nologo --output "$publish_directory"
   api_port="$(get_ephemeral_port)"
   export ASPNETCORE_ENVIRONMENT=Development
   export ASPNETCORE_URLS="http://127.0.0.1:$api_port"

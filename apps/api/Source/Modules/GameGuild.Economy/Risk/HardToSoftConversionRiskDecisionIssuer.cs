@@ -3,18 +3,8 @@ using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
 using GameGuild.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace GameGuild.Economy.Risk;
-
-public sealed class SelfServiceHardToSoftRiskDecisionOptions
-{
-    public const string SectionName = "Modules:Economy.Risk:HardToSoft";
-
-    public long MaxHardCoinUnitsPerDay { get; set; }
-
-    public int DecisionLifetimeSeconds { get; set; } = 300;
-}
 
 public sealed record HardToSoftConversionRiskDecisionRequest(
     Guid ActorId,
@@ -24,6 +14,11 @@ public sealed record HardToSoftConversionRiskDecisionRequest(
     IdempotencyKey IdempotencyKey,
     long FeeHardCoinUnits,
     long TotalHardCoinUnits,
+    long MaximumHardCoinUnitsPerDay,
+    int DecisionLifetimeSeconds,
+    string JurisdictionCode,
+    long PolicyVersion,
+    string PolicyHash,
     IReadOnlyList<ExternalRiskEvidence> ExternalEvidence,
     DateTimeOffset RequestedAt);
 
@@ -43,9 +38,8 @@ public interface IHardToSoftConversionRiskDecisionIssuer
 /// The writer selects and reserves exact FIFO fragments, persists the risk counter
 /// reservation, and records the independent evidence as one atomic operation.
 /// </summary>
-public sealed class PostgreSqlHardToSoftConversionRiskDecisionIssuer(
-    IApplicationDbContext context,
-    IOptions<SelfServiceHardToSoftRiskDecisionOptions> options) : IHardToSoftConversionRiskDecisionIssuer
+public sealed class PostgreSqlHardToSoftConversionRiskDecisionIssuer(IApplicationDbContext context)
+    : IHardToSoftConversionRiskDecisionIssuer
 {
     public async Task<HardToSoftConversionRiskDecision> IssueAsync(
         HardToSoftConversionRiskDecisionRequest request,
@@ -57,20 +51,22 @@ public sealed class PostgreSqlHardToSoftConversionRiskDecisionIssuer(
             throw new ArgumentException("The actor, tenant, and reservation operation are required.", nameof(request));
         ArgumentOutOfRangeException.ThrowIfNegative(request.FeeHardCoinUnits);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(request.TotalHardCoinUnits);
-
-        var configuration = options.Value;
-        if (configuration.MaxHardCoinUnitsPerDay <= 0)
+        if (request.MaximumHardCoinUnitsPerDay <= 0)
             throw new EconomySelfServiceCommandRejectedException(
-                "HardCoin conversion requires a positive server-side daily risk limit before rollout.");
-        if (configuration.DecisionLifetimeSeconds is < 30 or > 900)
+                "HardCoin conversion requires a positive signed daily risk limit before rollout.");
+        if (request.DecisionLifetimeSeconds is < 30 or > 900)
             throw new EconomySelfServiceCommandRejectedException(
                 "HardCoin conversion decision lifetime must be between 30 and 900 seconds.");
-        if (request.TotalHardCoinUnits > configuration.MaxHardCoinUnitsPerDay)
+        if (request.TotalHardCoinUnits > request.MaximumHardCoinUnitsPerDay)
             throw new EconomySelfServiceCommandRejectedException(
-                "The requested conversion exceeds the configured daily HardCoin risk limit.");
+                "The requested conversion exceeds the signed daily HardCoin risk limit.");
+        var jurisdiction = EconomyJurisdictionCode.Require(request.JurisdictionCode, nameof(request));
+        if (request.PolicyVersion <= 0)
+            throw new ArgumentOutOfRangeException(nameof(request), "The signed policy version must be positive.");
+        ArgumentException.ThrowIfNullOrWhiteSpace(request.PolicyHash);
 
         var evidence = ExternalRiskEvidenceValidator.RequireFreshAllow(request.ExternalEvidence, request.RequestedAt);
-        var evidencePayload = JsonSerializer.Serialize(evidence.Select(item => new
+        var evidenceItems = evidence.Select(item => (object)new
         {
             source = (int)item.Source,
             version = item.Version,
@@ -79,7 +75,20 @@ public sealed class PostgreSqlHardToSoftConversionRiskDecisionIssuer(
             outcome = (int)item.Outcome,
             evidenceHash = item.EvidenceHash,
             isAuditable = item.IsAuditable
-        }));
+        }).ToList();
+        evidenceItems.Add(new
+        {
+            source = 0,
+            version = request.PolicyVersion,
+            issuedAt = request.RequestedAt,
+            expiresAt = request.RequestedAt.AddSeconds(request.DecisionLifetimeSeconds),
+            outcome = (int)ExternalRiskOutcome.Allow,
+            evidenceHash = request.PolicyHash.Trim(),
+            isAuditable = true,
+            kind = "signed-capability-policy",
+            jurisdictionCode = jurisdiction
+        });
+        var evidencePayload = JsonSerializer.Serialize(evidenceItems);
 
         var receipt = await context.Set<HardToSoftConversionRiskDecisionReceiptRow>()
             .FromSqlInterpolated($"""
@@ -92,10 +101,10 @@ public sealed class PostgreSqlHardToSoftConversionRiskDecisionIssuer(
                     {request.IdempotencyKey.Value},
                     {request.FeeHardCoinUnits},
                     {request.TotalHardCoinUnits},
-                    {configuration.MaxHardCoinUnitsPerDay},
+                    {request.MaximumHardCoinUnitsPerDay},
                     {evidencePayload},
                     {request.RequestedAt},
-                    {request.RequestedAt.AddSeconds(configuration.DecisionLifetimeSeconds)})
+                    {request.RequestedAt.AddSeconds(request.DecisionLifetimeSeconds)})
                 """)
             .AsNoTracking()
             .SingleAsync(cancellationToken)

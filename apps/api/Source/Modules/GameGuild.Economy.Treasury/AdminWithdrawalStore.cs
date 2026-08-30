@@ -13,6 +13,51 @@ public interface IAdminWithdrawalStore
     AdminWithdrawalRun Update(AdminWithdrawalRun run, long expectedVersion);
     Guid? FindProviderEvent(string eventId, string eventHash);
     void RecordProviderEvent(string eventId, string eventHash, AdminWithdrawalRun run, long expectedVersion);
+
+    IReadOnlyList<AdminWithdrawalRun> List(Guid tenantId, int limit = 100) =>
+        throw new NotSupportedException("This administrative-withdrawal store does not support listing.");
+
+    AdminWithdrawalRun? FindReplay(Guid tenantId, string key, string requestHash)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        var run = FindReplay(key, requestHash);
+        return run?.TenantId == tenantId ? run : null;
+    }
+
+    AdminWithdrawalRun? FindPeriod(Guid tenantId, DateOnly periodStart)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        var run = FindPeriod(periodStart);
+        return run?.TenantId == tenantId ? run : null;
+    }
+
+    AdminWithdrawalRun Get(Guid tenantId, Guid runId)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        var run = Get(runId);
+        return run.TenantId == tenantId
+            ? run
+            : throw new KeyNotFoundException("Admin withdrawal run was not found in the tenant.");
+    }
+
+    Guid? FindProviderEvent(Guid tenantId, string eventId, string eventHash)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        var runId = FindProviderEvent(eventId, eventHash);
+        return runId.HasValue && Get(runId.Value).TenantId == tenantId ? runId : null;
+    }
+
+    void RecordProviderEvent(
+        Guid tenantId,
+        string eventId,
+        string eventHash,
+        AdminWithdrawalRun run,
+        long expectedVersion)
+    {
+        if (tenantId == Guid.Empty || run.TenantId != tenantId)
+            throw new ArgumentException("The run must belong to the actor tenant.", nameof(tenantId));
+        RecordProviderEvent(eventId, eventHash, run, expectedVersion);
+    }
 }
 
 public interface IAdminWithdrawalAuditTrail
@@ -26,6 +71,30 @@ public interface IAdminWithdrawalAuditTrail
 
     IReadOnlyList<AdminWithdrawalAuditEvent> Events(Guid runId);
     bool Verify(Guid runId);
+
+    AdminWithdrawalAuditEvent Append(
+        Guid tenantId,
+        Guid runId,
+        string kind,
+        Guid? actorId,
+        string evidence,
+        DateTimeOffset occurredAt)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        return Append(runId, kind, actorId, evidence, occurredAt);
+    }
+
+    IReadOnlyList<AdminWithdrawalAuditEvent> Events(Guid tenantId, Guid runId)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        return Events(runId);
+    }
+
+    bool Verify(Guid tenantId, Guid runId)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        return Verify(runId);
+    }
 }
 
 public sealed class InMemoryAdminWithdrawalStore : IAdminWithdrawalStore
@@ -130,6 +199,16 @@ public sealed class InMemoryAdminWithdrawalStore : IAdminWithdrawalStore
             _runs[run.Id] = run;
             _providerEvents.Add(eventId.Trim(), (eventHash, run.Id));
         }
+    }
+
+    public IReadOnlyList<AdminWithdrawalRun> List(Guid tenantId, int limit = 100)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        if (limit is <= 0 or > 500) throw new ArgumentOutOfRangeException(nameof(limit));
+        lock (_gate)
+            return _runs.Values.Where(run => run.TenantId == tenantId)
+                .OrderByDescending(run => run.CreatedAt).ThenBy(run => run.Id)
+                .Take(limit).ToArray();
     }
 
     private AdminWithdrawalRun GetUnderLock(Guid runId) =>

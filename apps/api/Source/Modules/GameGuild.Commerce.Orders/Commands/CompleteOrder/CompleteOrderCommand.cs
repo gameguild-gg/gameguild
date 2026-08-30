@@ -9,4 +9,5 @@ public sealed record CompleteOrderCommand(
     Guid OrderId,
     Guid? PaymentId = null,
     string? PaymentProviderReference = null,
-    string? PaymentMethod = null) : ICommand<Result<OrderOperationResult>>;
+    string? PaymentMethod = null,
+    CompleteOrderMarketplaceSettlement? MarketplaceSettlement = null) : ICommand<Result<OrderOperationResult>>;

@@ -134,6 +134,7 @@ public sealed class BountyReclaimPostingFactoryTests
         int feePpm,
         IReadOnlyList<PersistedBountyEscrowFragment> fragments) => new(
         bountyId,
+        Guid.NewGuid(),
         posterId,
         posterWalletId,
         WalletId.New(),

@@ -28,19 +28,23 @@ public sealed class PostgreSqlPayoutOperationStoreTests
         var operation = Operation();
         await context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO public.economy_wallets ("Id", "OwnerId", "TenantId", "State", "CreatedAt")
-            VALUES ({operation.WalletId.Value}, {operation.ActorId}, {Guid.NewGuid()}, 1, {Time});
+            VALUES ({operation.WalletId.Value}, {operation.PayeeId}, {operation.TenantId}, 1, {Time});
             """);
 
         store.Add(operation);
         store.Get(operation.Id).Should().BeEquivalentTo(operation);
-        store.ListForPayee(operation.PayeeId, 10).Should().ContainSingle().Which.Should().BeEquivalentTo(operation);
+        store.GetForTenant(operation.TenantId, operation.Id).Should().BeEquivalentTo(operation);
+        FluentActions.Invoking(() => store.GetForTenant(Guid.NewGuid(), operation.Id))
+            .Should().Throw<KeyNotFoundException>();
+        store.ListForTenant(operation.TenantId, 10).Should().ContainSingle().Which.Should().BeEquivalentTo(operation);
+        store.ListForPayee(operation.TenantId, operation.PayeeId, 10).Should().ContainSingle().Which.Should().BeEquivalentTo(operation);
         FluentActions.Invoking(() => store.Get(Guid.NewGuid()))
             .Should().Throw<KeyNotFoundException>();
-        store.FindReplay(operation.IdempotencyKey.Value, operation.RequestHash)
+        store.FindReplay(operation.TenantId, operation.IdempotencyKey.Value, operation.RequestHash)
             .Should().BeEquivalentTo(operation);
-        store.FindReplay("missing", operation.RequestHash).Should().BeNull();
+        store.FindReplay(operation.TenantId, "missing", operation.RequestHash).Should().BeNull();
 
-        FluentActions.Invoking(() => store.FindReplay(operation.IdempotencyKey.Value, "mutated"))
+        FluentActions.Invoking(() => store.FindReplay(operation.TenantId, operation.IdempotencyKey.Value, "mutated"))
             .Should().Throw<PayoutReplayConflictException>();
         FluentActions.Invoking(() => store.Add(operation))
             .Should().Throw<PayoutReplayConflictException>();
@@ -92,12 +96,20 @@ public sealed class PostgreSqlPayoutOperationStoreTests
         var operation = Operation();
 
         FluentActions.Invoking(() => store.Get(Guid.Empty)).Should().Throw<ArgumentException>();
-        FluentActions.Invoking(() => store.ListForPayee(Guid.Empty, 10)).Should().Throw<ArgumentException>();
-        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), 0)).Should().Throw<ArgumentOutOfRangeException>();
-        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), 101)).Should().Throw<ArgumentOutOfRangeException>();
-        FluentActions.Invoking(() => store.FindReplay("", "hash")).Should().Throw<ArgumentException>();
-        FluentActions.Invoking(() => store.FindReplay("key", "")).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.GetForTenant(Guid.Empty, Guid.NewGuid())).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.GetForTenant(Guid.NewGuid(), Guid.Empty)).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.ListForTenant(Guid.Empty, 10)).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.ListForTenant(Guid.NewGuid(), 0)).Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => store.ListForPayee(Guid.Empty, Guid.NewGuid(), 10)).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), Guid.Empty, 10)).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), Guid.NewGuid(), 0)).Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => store.ListForPayee(Guid.NewGuid(), Guid.NewGuid(), 101)).Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => store.FindReplay(Guid.Empty, "key", "hash")).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.FindReplay(Guid.NewGuid(), "", "hash")).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.FindReplay(Guid.NewGuid(), "key", "")).Should().Throw<ArgumentException>();
         FluentActions.Invoking(() => store.Add(null!)).Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => store.Add(operation with { TenantId = Guid.Empty }))
+            .Should().Throw<ArgumentException>();
         FluentActions.Invoking(() => store.Update(null!, 1)).Should().Throw<ArgumentNullException>();
         FluentActions.Invoking(() => store.FindProviderEvent("", "hash")).Should().Throw<ArgumentException>();
         FluentActions.Invoking(() => store.FindProviderEvent("event", "")).Should().Throw<ArgumentException>();
@@ -132,7 +144,8 @@ public sealed class PostgreSqlPayoutOperationStoreTests
         new PolicyVersion(1),
         Guid.NewGuid(),
         Time,
-        Time);
+        Time,
+        Guid.NewGuid());
 
     private sealed class NonRelationalContext : IApplicationDbContext
     {

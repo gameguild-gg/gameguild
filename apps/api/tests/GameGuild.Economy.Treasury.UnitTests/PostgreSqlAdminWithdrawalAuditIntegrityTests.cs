@@ -23,14 +23,14 @@ public sealed class PostgreSqlAdminWithdrawalAuditIntegrityTests
         async Task<AdminWithdrawalRun> AddRunAsync(int month)
         {
             var run = new AdminWithdrawalRun(
-                Guid.NewGuid(), new IdempotencyKey($"audit-{month}"), "request",
+                Guid.NewGuid(), Guid.NewGuid(), new IdempotencyKey($"audit-{month}"), "request",
                 new DateOnly(2026, month, 1), Guid.NewGuid(), null, WalletId.New(),
                 new CoinAmount(CurrencyCode.HardCoin, 1), "asset", "destination",
                 AdminWithdrawalRunState.PendingApproval, 1, 1, 1, new ReserveVersion(1), 1,
                 new PolicyVersion(1), null, null, now, now);
             await context.Database.ExecuteSqlInterpolatedAsync($"""
                 INSERT INTO public.economy_wallets ("Id", "OwnerId", "TenantId", "State", "CreatedAt")
-                VALUES ({run.PlatformFeeWalletId.Value}, {run.RequestedBy}, {Guid.NewGuid()}, 1, {now});
+                VALUES ({run.PlatformFeeWalletId.Value}, {run.RequestedBy}, {run.TenantId}, 1, {now});
                 """);
             store.Add(run);
             return run;
@@ -39,8 +39,9 @@ public sealed class PostgreSqlAdminWithdrawalAuditIntegrityTests
         async Task InsertAsync(Guid runId, long sequence, string previousHash, string hash) =>
             await context.Database.ExecuteSqlInterpolatedAsync($"""
                 INSERT INTO public.economy_admin_withdrawal_audit_events
-                    ("RunId", "Sequence", "Kind", "ActorId", "Evidence", "OccurredAt", "PreviousHash", "Hash")
-                VALUES ({runId}, {sequence}, {"integrity"}, {null}, {"evidence"}, {now}, {previousHash}, {hash});
+                    ("TenantId", "RunId", "Sequence", "Kind", "ActorId", "Evidence", "OccurredAt", "PreviousHash", "Hash")
+                SELECT "TenantId", {runId}, {sequence}, {"integrity"}, {null}, {"evidence"}, {now}, {previousHash}, {hash}
+                FROM public.economy_admin_withdrawal_runs WHERE "Id" = {runId};
                 """);
 
         var valid = await AddRunAsync(8);
@@ -71,7 +72,8 @@ public sealed class PostgreSqlAdminWithdrawalAuditIntegrityTests
                 LIMIT 1
             $function$;
             """);
-        audit.Verify(valid.Id).Should().BeFalse();
+        audit.Verify(valid.Id).Should().BeTrue(
+            "tenant-scoped audit verification no longer trusts the legacy global reader function");
     }
 
 }

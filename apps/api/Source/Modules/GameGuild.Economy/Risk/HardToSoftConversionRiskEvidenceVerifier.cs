@@ -1,6 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
-
 namespace GameGuild.Economy.Risk;
 
 /// <summary>
@@ -31,12 +28,12 @@ public sealed class HardToSoftConversionRiskEvidenceVerifier(
 
         cancellationToken.ThrowIfCancellationRequested();
         var observedAt = DateTimeOffset.UtcNow;
-        var subjectReference = CreateOpaqueSubjectReference(actorId, tenantId);
+        var subjectReference = EconomySubjectReference.ForUser(tenantId, actorId);
         var financialCrimeEvidence = await financialCrime
-            .ReadAsync(subjectReference, observedAt, cancellationToken)
+            .ReadAsync(tenantId, subjectReference, observedAt, cancellationToken)
             .ConfigureAwait(false);
         var trustSafetyEvidence = await trustSafety
-            .ReadAsync(subjectReference, observedAt, cancellationToken)
+            .ReadAsync(tenantId, subjectReference, observedAt, cancellationToken)
             .ConfigureAwait(false);
 
         return ExternalRiskEvidenceValidator.RequireFreshAllow(
@@ -44,12 +41,4 @@ public sealed class HardToSoftConversionRiskEvidenceVerifier(
             observedAt);
     }
 
-    internal static string CreateOpaqueSubjectReference(Guid actorId, Guid tenantId)
-    {
-        if (actorId == Guid.Empty || tenantId == Guid.Empty)
-            throw new ArgumentException("Both actor and tenant are required for an opaque subject reference.");
-
-        var canonical = $"economy:hard-to-soft:{actorId:N}:{tenantId:N}";
-        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(canonical)));
-    }
 }
