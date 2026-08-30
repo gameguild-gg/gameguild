@@ -57,20 +57,14 @@ export function stateCookieOptions(maxAge: number = STATE_COOKIE_MAX_AGE): Cooki
  * must start with '/' and must not start with '//' (protocol-relative).
  * Anything else (absolute URLs, malformed values) falls back.
  */
-export function resolveAllowedRedirect(
-  value: string | null | undefined,
-  fallback: string
-): string {
+export function resolveAllowedRedirect(value: string | null | undefined, fallback: string): string {
   return value && value.startsWith('/') && !value.startsWith('//') ? value : fallback;
 }
 
 /**
  * Sign a state payload: base64url(payload) + '.' + hex HMAC-SHA256.
  */
-export async function signStatePayload(
-  payload: OAuthStatePayload,
-  secret: string
-): Promise<string> {
+export async function signStatePayload(payload: OAuthStatePayload, secret: string): Promise<string> {
   const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
   return `${encoded}.${await hmacHex(encoded, secret)}`;
 }
@@ -81,10 +75,7 @@ export async function signStatePayload(
  * undecodable JSON, expired). Flow and state matching are the caller's
  * policy so the future link flow can reuse this.
  */
-export async function verifyStateCookie(
-  value: string | undefined,
-  secret: string
-): Promise<OAuthStatePayload | null> {
+export async function verifyStateCookie(value: string | undefined, secret: string): Promise<OAuthStatePayload | null> {
   if (!value) return null;
 
   const dot = value.lastIndexOf('.');
@@ -98,9 +89,7 @@ export async function verifyStateCookie(
   if (!constantTimeEqual(mac, await hmacHex(encoded, secret))) return null;
 
   try {
-    const payload = JSON.parse(
-      Buffer.from(encoded, 'base64url').toString('utf8')
-    ) as OAuthStatePayload;
+    const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8')) as OAuthStatePayload;
     if (typeof payload.exp !== 'number' || payload.exp <= Date.now()) return null;
     return payload;
   } catch {
@@ -125,13 +114,7 @@ export function constantTimeEqual(a: string, b: string): boolean {
 
 async function hmacHex(payload: string, secret: string): Promise<string> {
   const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
+  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
   return Buffer.from(signature).toString('hex');
 }

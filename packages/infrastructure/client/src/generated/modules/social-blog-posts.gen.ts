@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -24,10 +24,10 @@ export class SocialBlogPostsModule {
     skip?: number;
     take?: number;
   }): Promise<Result<Array<Types.SocialBlogBlogPost>, ApiError>> {
-    const url = "/api/social/blog";
+    const url = '/api/social/blog';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -38,20 +38,14 @@ export class SocialBlogPostsModule {
 
   /**
    */
-  async postApiSocialBlog(
-    body: Types.SocialBlogCreateBlogPostInput,
-  ): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
-    const url = "/api/social/blog";
+  async postApiSocialBlog(body: Types.SocialBlogCreateBlogPostInput): Promise<Result<Types.SocialBlogBlogPost, ApiError>> {
+    const url = '/api/social/blog';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialBlogCreateBlogPostInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.SocialBlogCreateBlogPostInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -59,11 +53,7 @@ export class SocialBlogPostsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.SocialBlogBlogPostSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.SocialBlogBlogPostSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -72,13 +62,11 @@ export class SocialBlogPostsModule {
 
   /**
    */
-  async getApiSocialBlogForGetApiSocialBlogById(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
+  async getApiSocialBlogForGetApiSocialBlogById(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -88,14 +76,11 @@ export class SocialBlogPostsModule {
 
   /**
    */
-  async postApiSocialBlogFeature(
-    id: string,
-    query?: { featured?: boolean },
-  ): Promise<Result<void, ApiError>> {
+  async postApiSocialBlogFeature(id: string, query?: { featured?: boolean }): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/${id}/feature`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -110,7 +95,7 @@ export class SocialBlogPostsModule {
     const url = `/api/social/blog/${id}/publish`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -120,13 +105,11 @@ export class SocialBlogPostsModule {
 
   /**
    */
-  async postApiSocialBlogUnpublish(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
+  async postApiSocialBlogUnpublish(id: string): Promise<Result<void, ApiError>> {
     const url = `/api/social/blog/${id}/unpublish`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -140,7 +123,7 @@ export class SocialBlogPostsModule {
     const url = `/api/social/blog/${id}/views`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -149,8 +132,6 @@ export class SocialBlogPostsModule {
   }
 }
 
-export function createSocialBlogPostsModule(
-  client: ApiClient,
-): SocialBlogPostsModule {
+export function createSocialBlogPostsModule(client: ApiClient): SocialBlogPostsModule {
   return new SocialBlogPostsModule(client);
 }

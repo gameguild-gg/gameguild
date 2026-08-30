@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,24 +17,18 @@ export class ContentPagesOpenGraphModule {
 
   /**
    */
-  async getOg(
-    slug: string,
-  ): Promise<Result<Types.ContentPagesOpenGraphMetadata, ApiError>> {
+  async getOg(slug: string): Promise<Result<Types.ContentPagesOpenGraphMetadata, ApiError>> {
     const url = `/v1/og/${slug}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ContentPagesOpenGraphMetadataSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ContentPagesOpenGraphMetadataSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -42,8 +36,6 @@ export class ContentPagesOpenGraphModule {
   }
 }
 
-export function createContentPagesOpenGraphModule(
-  client: ApiClient,
-): ContentPagesOpenGraphModule {
+export function createContentPagesOpenGraphModule(client: ApiClient): ContentPagesOpenGraphModule {
   return new ContentPagesOpenGraphModule(client);
 }

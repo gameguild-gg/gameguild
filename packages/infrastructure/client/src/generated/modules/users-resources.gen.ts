@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,21 +20,14 @@ export class UsersResourcesModule {
    *
    * Records a new resource usage entry for the specified user.
    */
-  async postUsersResourcesRecord(
-    userId: string,
-    body: Types.ResourcesRecordUserResourceUsageInput,
-  ): Promise<Result<void, ApiError>> {
+  async postUsersResourcesRecord(userId: string, body: Types.ResourcesRecordUserResourceUsageInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/resources:record`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.ResourcesRecordUserResourceUsageInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.ResourcesRecordUserResourceUsageInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -48,21 +41,14 @@ export class UsersResourcesModule {
    *
    * Records a new resource usage entry after verifying it doesn't exceed configured quotas. Returns 429 if quota would be exceeded.
    */
-  async postUsersResourcesRecordWithQuotaCheck(
-    userId: string,
-    body: Types.ResourcesRecordUserResourceUsageInput,
-  ): Promise<Result<void, ApiError>> {
+  async postUsersResourcesRecordWithQuotaCheck(userId: string, body: Types.ResourcesRecordUserResourceUsageInput): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/resources:record-with-quota-check`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.ResourcesRecordUserResourceUsageInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.ResourcesRecordUserResourceUsageInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -76,14 +62,11 @@ export class UsersResourcesModule {
    *
    * Resets the resource usage counters for a specific user and resource type to zero.
    */
-  async postUsersResourcesReset(
-    userId: string,
-    query?: { usageType?: Types.ResourcesResourceUsageType },
-  ): Promise<Result<void, ApiError>> {
+  async postUsersResourcesReset(userId: string, query?: { usageType?: Types.ResourcesResourceUsageType }): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}/resources:reset`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -140,7 +123,7 @@ export class UsersResourcesModule {
     const url = `/v1/users/${userId}/resources/limits`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -190,16 +173,12 @@ export class UsersResourcesModule {
    */
   async getUsersResourcesUsageRecords(
     userId: string,
-    query?: {
-      usageType?: Types.ResourcesResourceUsageType;
-      startDate?: string;
-      endDate?: string;
-    },
+    query?: { usageType?: Types.ResourcesResourceUsageType; startDate?: string; endDate?: string },
   ): Promise<Result<Array<Types.ResourcesUsageRecord>, ApiError>> {
     const url = `/v1/users/${userId}/resources/usage-records`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -255,7 +234,7 @@ export class UsersResourcesModule {
     const url = `/v1/users/${userId}/resources/usage-summary`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -298,8 +277,6 @@ export class UsersResourcesModule {
   }
 }
 
-export function createUsersResourcesModule(
-  client: ApiClient,
-): UsersResourcesModule {
+export function createUsersResourcesModule(client: ApiClient): UsersResourcesModule {
   return new UsersResourcesModule(client);
 }

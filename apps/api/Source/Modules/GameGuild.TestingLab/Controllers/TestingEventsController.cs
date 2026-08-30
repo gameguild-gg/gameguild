@@ -47,7 +47,6 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             cancellationToken).ConfigureAwait(false));
 
     [HttpGet("{eventId:guid}")]
-    [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Event, "eventId")]
     public async Task<ActionResult<TestingEventProjection>> GetEvent(Guid eventId, CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingEventQuery(eventId), cancellationToken).ConfigureAwait(false));
 
@@ -67,11 +66,26 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             request.StartsAt,
             request.EndsAt,
             request.RequiresFeedback,
-            request.Recurrence), cancellationToken).ConfigureAwait(false);
+            request.Recurrence,
+            request.TemplateRevisionId), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetEvent), new { eventId = result.Value.Id }, result.Value)
             : ToActionResult(result);
     }
+
+    [HttpPut("{eventId:guid}/configuration")]
+    [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
+    public async Task<ActionResult<TestingEventProjection>> ConfigureEvent(
+        Guid eventId,
+        ConfigureTestingEventRequest request,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(new ConfigureTestingEventCommand(
+            eventId,
+            request.GeneralRules,
+            request.CandidateInstructions,
+            request.TesterInstructions,
+            request.ProjectApplicationSchema,
+            request.TesterRegistrationSchema), cancellationToken).ConfigureAwait(false));
 
     [HttpPut("{eventId:guid}")]
     [RequireTestingLabPermission(TestingLabActions.Edit, TestingLabResourceTypes.Event, "eventId")]
@@ -265,11 +279,52 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
             request.ProjectId,
             request.ProjectVersionId,
             request.PreferredAvailability,
-            request.SubmittedAssetReferenceIds), cancellationToken).ConfigureAwait(false);
+            request.SubmittedAssetReferenceIds,
+            request.Brief,
+            request.FeedbackQuestionnaire,
+            request.EventApplicationResponse,
+            request.AcceptedRules), cancellationToken).ConfigureAwait(false);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetApplication), new { applicationId = result.Value.Id }, result.Value)
             : ToActionResult(result);
     }
+
+    [HttpPost("{eventId:guid}/applications/drafts")]
+    public async Task<ActionResult<TestingProjectApplicationProjection>> CreateApplicationDraft(
+        Guid eventId,
+        CreateTestingProjectApplicationDraftRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(
+            new CreateTestingProjectApplicationDraftCommand(eventId, request.ProjectId),
+            cancellationToken).ConfigureAwait(false);
+        return result.IsSuccess
+            ? CreatedAtAction(nameof(GetApplication), new { applicationId = result.Value.Id }, result.Value)
+            : ToActionResult(result);
+    }
+
+    [HttpPut("applications/{applicationId:guid}/draft")]
+    public async Task<ActionResult<TestingProjectApplicationProjection>> SaveApplicationDraft(
+        Guid applicationId,
+        SaveTestingProjectApplicationDraftRequest request,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(new SaveTestingProjectApplicationDraftCommand(
+            applicationId,
+            request.ProjectVersionId,
+            request.Brief,
+            request.FeedbackQuestionnaire,
+            request.EventApplicationResponse,
+            request.AcceptedRules,
+            request.PreferredAvailability,
+            request.SubmittedAssetReferenceIds), cancellationToken).ConfigureAwait(false));
+
+    [HttpPost("applications/{applicationId:guid}:submit")]
+    public async Task<ActionResult<TestingProjectApplicationProjection>> SubmitApplicationDraft(
+        Guid applicationId,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new SubmitTestingProjectApplicationDraftCommand(applicationId),
+            cancellationToken).ConfigureAwait(false));
 
     [HttpGet("{eventId:guid}/applications")]
     public async Task<ActionResult<IReadOnlyList<TestingProjectApplicationProjection>>> GetApplications(
@@ -279,6 +334,14 @@ public sealed class TestingEventsController(IMediator mediator) : BaseApiControl
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(new GetTestingEventApplicationsQuery(eventId, status, skip, take), cancellationToken).ConfigureAwait(false));
+
+    [HttpGet("{eventId:guid}/applications/access")]
+    public async Task<ActionResult<TestingEventApplicationAccessProjection>> GetApplicationAccess(
+        Guid eventId,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetTestingEventApplicationAccessQuery(eventId),
+            cancellationToken).ConfigureAwait(false));
 
     [HttpGet("{eventId:guid}/applications/tester-eligibility")]
     [RequireTestingLabPermission(TestingLabActions.Read, TestingLabResourceTypes.Event, "eventId")]

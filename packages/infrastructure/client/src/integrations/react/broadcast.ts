@@ -13,9 +13,7 @@ const CHANNEL_NAME = 'gg-auth-sync';
 /**
  * Auth broadcast message types
  */
-export type AuthBroadcastMessage =
-  | { type: 'session-update'; timestamp: number }
-  | { type: 'sign-out'; timestamp: number };
+export type AuthBroadcastMessage = { type: 'session-update'; timestamp: number } | { type: 'sign-out'; timestamp: number };
 
 /**
  * Create a broadcast channel for cross-tab session synchronization.
@@ -23,9 +21,7 @@ export type AuthBroadcastMessage =
  * @param onMessage - Callback when a message is received from another tab
  * @returns Object with send() and close() methods
  */
-export function createAuthBroadcast(
-  onMessage: (message: AuthBroadcastMessage) => void
-): {
+export function createAuthBroadcast(onMessage: (message: AuthBroadcastMessage) => void): {
   send: (message: AuthBroadcastMessage) => void;
   close: () => void;
 } {

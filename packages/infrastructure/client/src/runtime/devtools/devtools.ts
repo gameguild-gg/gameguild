@@ -1,6 +1,6 @@
 /**
  * DevTools Integration
- * 
+ *
  * Development mode logging and debugging utilities
  */
 
@@ -97,15 +97,16 @@ export class DevTools {
   private requestTimes = new Map<string, number>();
 
   constructor(config: DevToolsConfig = {}) {
-    const enabled = config.enabled ?? (typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : /* v8 ignore start */ false /* v8 ignore stop */);
-    
+    const enabled =
+      config.enabled ?? (typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : /* v8 ignore start */ false); /* v8 ignore stop */
+
     if (!enabled) {
       // Use silent logger if disabled
       this.logger = new ConsoleLogger('silent');
     } else {
       this.logger = config.logger || new ConsoleLogger(config.logLevel);
     }
-    
+
     this.collapsed = config.collapsed ?? true;
   }
 
@@ -121,17 +122,17 @@ export class DevTools {
 
     const emoji = this.getMethodEmoji(method);
     this.logger.group(`${emoji} ${method} ${path}`, this.collapsed);
-    
+
     this.logger.info('Request ID:', requestId);
-    
+
     if (config.params && Object.keys(config.params).length > 0) {
       this.logger.debug('Query:', config.params);
     }
-    
+
     if (config.headers && Object.keys(config.headers).length > 0) {
       this.logger.debug('Headers:', this.sanitizeHeaders(config.headers));
     }
-    
+
     if (config.body) {
       this.logger.debug('Body:', config.body);
     }
@@ -140,11 +141,7 @@ export class DevTools {
   /**
    * Log request completion
    */
-  logRequestComplete<T>(
-    config: RequestConfig,
-    result: Result<T, ApiError>,
-    duration?: number
-  ): void {
+  logRequestComplete<T>(config: RequestConfig, result: Result<T, ApiError>, duration?: number): void {
     const requestId = config.requestId || 'unknown';
     const startTime = this.requestTimes.get(requestId);
     const actualDuration = duration ?? (startTime ? Date.now() - startTime : 0);

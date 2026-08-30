@@ -71,7 +71,7 @@ describe('ScheduleBuilderSheet', () => {
 
     expect(await screen.findByText('A meeting overlaps a holiday.')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Apply schedule' })).toBeDisabled();
-    await user.click(screen.getByLabelText('I reviewed the advisory conflicts'));
+    await user.click(screen.getByRole('checkbox', { name: 'I reviewed the advisory conflicts' }));
     expect(screen.getByRole('button', { name: 'Apply schedule' })).toBeEnabled();
   });
 

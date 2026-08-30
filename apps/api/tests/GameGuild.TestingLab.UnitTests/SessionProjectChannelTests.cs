@@ -435,13 +435,13 @@ public sealed class SessionProjectChannelTests : IDisposable
 
     private ProjectVersion AddVersion(Guid projectId, Guid tenantId)
     {
-        var version = new ProjectVersion
-        {
-            ProjectId = projectId,
-            TenantId = tenantId,
-            VersionNumber = Guid.NewGuid().ToString(),
-            Status = "testing"
-        };
+        var version = ProjectVersion.Create(
+            projectId,
+            Guid.NewGuid().ToString(),
+            null,
+            Guid.NewGuid(),
+            tenantId);
+        version.MarkReadyForTesting();
         _context.Set<ProjectVersion>().Add(version);
         return version;
     }

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Projects;
 using Xunit;
 
 namespace GameGuild.LaunchPad.UnitTests;
@@ -116,7 +117,14 @@ public sealed class LaunchPadEventDomainTests
         slot.Update("Mentors", LaunchPadParticipantRole.Mentor, 3, launchEvent.StartsAt, launchEvent.StartsAt.AddHours(2));
         slot.Role.Should().Be(LaunchPadParticipantRole.Mentor);
 
-        var application = LaunchPadApplication.Submit(tenantId, launchEvent.Id, Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Pitch");
+        var application = LaunchPadApplication.Submit(
+            tenantId,
+            launchEvent.Id,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Pitch",
+            submissionVersionPolicy: VersionSubmissionPolicy.ReadyMutableUntilReview);
         var replacementVersionId = Guid.NewGuid();
         var assetId = Guid.NewGuid();
         application.Update(replacementVersionId, "Updated pitch", [assetId]);
@@ -132,7 +140,8 @@ public sealed class LaunchPadEventDomainTests
     {
         var assetId = Guid.NewGuid();
         var application = LaunchPadApplication.Submit(
-            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Pitch", [assetId]);
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "Pitch", [assetId],
+            VersionSubmissionPolicy.ReadyMutableUntilReview);
 
         application.Update(Guid.NewGuid(), "Revised pitch");
 

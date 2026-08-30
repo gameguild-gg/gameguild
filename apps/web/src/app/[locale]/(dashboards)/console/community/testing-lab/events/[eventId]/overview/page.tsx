@@ -1,4 +1,5 @@
 import { TestingEventCommittee } from '@/components/testing-lab/testing-event-management';
+import { TestingEventConfigurationEditor } from '@/components/testing-lab/testing-event-configuration-editor';
 import { TestingLabPageHeader } from '@/components/testing-lab/testing-lab-page-header';
 import { Link } from '@/i18n/navigation';
 import { getMembers } from '@/lib/community/queries/members';
@@ -127,6 +128,12 @@ export default async function TestingEventOverviewPage({
           />
         </article>
       </section>
+
+      <TestingEventConfigurationEditor
+        eventId={eventId}
+        status={event.status}
+        configuration={event.configuration}
+      />
 
       <section className="rounded-md border p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

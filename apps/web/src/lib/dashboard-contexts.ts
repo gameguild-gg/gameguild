@@ -1,4 +1,4 @@
-import { getToken } from '@/auth';
+import { getRequestAuthContext } from '@/auth';
 import { createServerClient } from '@game-guild/client';
 
 export type DashboardContextType = 'Workspace' | 'Team' | 'Project' | 'Operations';
@@ -52,13 +52,15 @@ export function hasAnyDashboardCapability(
 }
 
 export async function getDashboardContexts(): Promise<DashboardContexts> {
+  const requestAuth = await getRequestAuthContext();
   const apiUrl =
     process.env.API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
     'http://localhost:8080';
   const client = createServerClient({
     baseUrl: apiUrl,
-    auth: { getAccessToken: () => getToken() },
+    auth: { getAccessToken: async () => requestAuth.token },
+    tenant: { getTenantId: async () => requestAuth.tenantId },
   });
 
   try {

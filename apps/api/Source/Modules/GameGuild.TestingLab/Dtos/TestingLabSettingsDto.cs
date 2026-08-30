@@ -1,7 +1,11 @@
+using GameGuild.Projects;
+
 namespace GameGuild.TestingLab;
 
 /// <summary> Data Transfer Object for creating TestingLabSettings </summary>
 public class CreateTestingLabSettingsDto {
+  public VersionSubmissionPolicy VersionSubmissionPolicy { get; set; } = VersionSubmissionPolicy.ReadyMutableUntilReview;
+
   /// <summary> Name of the testing lab </summary>
   [Required]
   [MaxLength(255)]
@@ -41,6 +45,8 @@ public class CreateTestingLabSettingsDto {
 
 /// <summary> Data Transfer Object for updating TestingLabSettings </summary>
 public class UpdateTestingLabSettingsDto {
+  public VersionSubmissionPolicy? VersionSubmissionPolicy { get; set; }
+
   /// <summary> Name of the testing lab </summary>
   [MaxLength(255)]
   public string? LabName { get; set; }
@@ -76,6 +82,8 @@ public class UpdateTestingLabSettingsDto {
 
 /// <summary> Data Transfer Object for TestingLabSettings responses </summary>
 public class TestingLabSettingsDto {
+  public VersionSubmissionPolicy VersionSubmissionPolicy { get; set; }
+
   /// <summary> Unique identifier for the settings </summary>
   public Guid Id { get; set; }
 

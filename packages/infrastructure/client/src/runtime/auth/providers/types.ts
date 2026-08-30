@@ -5,11 +5,4 @@
  * Re-exports from main types for convenience.
  */
 
-export type {
-  Provider,
-  ProviderConfig,
-  ProviderType,
-  ProviderResult,
-  CredentialsProviderConfig,
-  OAuthProviderConfig,
-} from '../types.js';
+export type { Provider, ProviderConfig, ProviderType, ProviderResult, CredentialsProviderConfig, OAuthProviderConfig } from '../types.js';

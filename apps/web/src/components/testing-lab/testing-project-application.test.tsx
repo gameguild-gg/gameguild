@@ -2,8 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/testing-lab/events-actions', () => ({
-  submitTestingProjectApplication: vi.fn(),
-  updateTestingProjectApplication: vi.fn(),
+  saveTestingProjectApplicationDraft: vi.fn(),
   withdrawTestingProjectApplication: vi.fn(),
 }));
 
@@ -29,13 +28,13 @@ describe('TestingProjectApplication', () => {
         eventId="event-1"
         isAuthenticated
         acceptsApplications
-        projectVersions={[{ id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'published' }]}
+        projectVersions={[{ id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'ReadyForTesting' }]}
       />,
     );
 
-    expect(screen.getByRole('option', { name: 'Asterion · 1.0.0 (published)' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /submit project application/i })).toBeInTheDocument();
-    expect(screen.getByText(/capacity is reserved only after approval/i)).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Asterion · 1.0.0 (ReadyForTesting)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save and continue/i })).toBeInTheDocument();
+    expect(screen.getByText(/draft versions cannot enter testing lab/i)).toBeInTheDocument();
   });
 
   it('preselects the Project carried from its Distribution workspace', () => {
@@ -46,8 +45,8 @@ describe('TestingProjectApplication', () => {
         acceptsApplications
         initialProjectId="project-2"
         projectVersions={[
-          { id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'published' },
-          { id: 'version-2', projectId: 'project-2', projectTitle: 'Wayfinder', versionNumber: '2.0.0', status: 'testing' },
+          { id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'Released' },
+          { id: 'version-2', projectId: 'project-2', projectTitle: 'Wayfinder', versionNumber: '2.0.0', status: 'ReadyForTesting' },
         ]}
       />,
     );
@@ -75,8 +74,8 @@ describe('TestingProjectApplication', () => {
         isAuthenticated
         acceptsApplications
         projectVersions={[
-          { id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'published' },
-          { id: 'version-2', projectId: 'project-2', projectTitle: 'Wayfinder', versionNumber: '2.0.0', status: 'testing' },
+          { id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'Released' },
+          { id: 'version-2', projectId: 'project-2', projectTitle: 'Wayfinder', versionNumber: '2.0.0', status: 'ReadyForTesting' },
         ]}
         application={{
           id: 'application-1',
@@ -88,7 +87,7 @@ describe('TestingProjectApplication', () => {
 
     expect(screen.getByText('Rejected')).toBeInTheDocument();
     expect(screen.getByText('The build is not playable yet.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /submit another project application/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Asterion · 1.0.0/ })).toBeInTheDocument();
   });
 
   it('allows an authorized Project member to update an active application', () => {
@@ -97,11 +96,36 @@ describe('TestingProjectApplication', () => {
         eventId="event-1"
         isAuthenticated
         acceptsApplications
-        projectVersions={[{ id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'published' }]}
-        application={{ id: 'application-1', status: 'Pending' }}
+        projectVersions={[{ id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'ReadyForTesting' }]}
+        application={{ id: 'application-1', projectId: 'project-1', projectVersionId: 'version-1', status: 'Pending' }}
       />,
     );
 
-    expect(screen.getByRole('button', { name: /update application/i })).toBeInTheDocument();
+    expect(screen.getByText('Pending')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save and continue/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /withdraw application/i })).toBeInTheDocument();
+  });
+
+  it('keeps the mounted wizard available when a server action refresh omits private route data', () => {
+    const { rerender } = render(
+      <TestingProjectApplication
+        eventId="event-1"
+        isAuthenticated
+        acceptsApplications
+        projectVersions={[{ id: 'version-1', projectId: 'project-1', projectTitle: 'Asterion', versionNumber: '1.0.0', status: 'ReadyForTesting' }]}
+      />,
+    );
+
+    rerender(
+      <TestingProjectApplication
+        eventId="event-1"
+        isAuthenticated={false}
+        acceptsApplications
+        projectVersions={[]}
+      />,
+    );
+
+    expect(screen.getByRole('option', { name: 'Asterion · 1.0.0 (ReadyForTesting)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save and continue/i })).toBeInTheDocument();
   });
 });

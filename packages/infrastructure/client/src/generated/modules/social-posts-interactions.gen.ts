@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -21,7 +21,7 @@ export class SocialPostsInteractionsModule {
     const url = `/api/v1/posts/${postId}/follow`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -31,21 +31,14 @@ export class SocialPostsInteractionsModule {
 
   /**
    */
-  async postPostsFollow(
-    postId: string,
-    body: Types.SocialPostsControllersFollowPostInput,
-  ): Promise<Result<void, ApiError>> {
+  async postPostsFollow(postId: string, body: Types.SocialPostsControllersFollowPostInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/follow`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.SocialPostsControllersFollowPostInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.SocialPostsControllersFollowPostInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -60,7 +53,7 @@ export class SocialPostsInteractionsModule {
     const url = `/api/v1/posts/${postId}/follow`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -70,14 +63,11 @@ export class SocialPostsInteractionsModule {
 
   /**
    */
-  async postPostsLike(
-    postId: string,
-    query?: { reactionType?: string },
-  ): Promise<Result<void, ApiError>> {
+  async postPostsLike(postId: string, query?: { reactionType?: string }): Promise<Result<void, ApiError>> {
     const url = `/api/v1/posts/${postId}/like`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       params: query,
       requiresAuth: true,
@@ -92,7 +82,7 @@ export class SocialPostsInteractionsModule {
     const url = `/api/v1/posts/${postId}/pin`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -106,7 +96,7 @@ export class SocialPostsInteractionsModule {
     const url = `/api/v1/posts/${postId}/share`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -120,7 +110,7 @@ export class SocialPostsInteractionsModule {
     const url = `/api/v1/posts/${postId}/statistics`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -134,7 +124,7 @@ export class SocialPostsInteractionsModule {
     const url = `/api/v1/posts/${postId}/view`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -143,8 +133,6 @@ export class SocialPostsInteractionsModule {
   }
 }
 
-export function createSocialPostsInteractionsModule(
-  client: ApiClient,
-): SocialPostsInteractionsModule {
+export function createSocialPostsInteractionsModule(client: ApiClient): SocialPostsInteractionsModule {
   return new SocialPostsInteractionsModule(client);
 }

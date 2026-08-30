@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,36 +20,27 @@ export class TenantsAiModule {
    *
    * Retrieves recent AI conversation history for a specific tenant.
    */
-  async getTenantsAiHistory(
-    tenantId: string,
-    query?: { take?: number },
-  ): Promise<Result<Array<Types.AIAiConversationHistoryEntry>, ApiError>> {
+  async getTenantsAiHistory(tenantId: string, query?: { take?: number }): Promise<Result<Array<Types.AIAiConversationHistoryEntry>, ApiError>> {
     const url = `/v1/tenants/${tenantId}/ai/history`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.AIAiConversationHistoryEntry>,
-      ApiError
-    >;
+    return result as Result<Array<Types.AIAiConversationHistoryEntry>, ApiError>;
   }
 
   /**
    * Export tenant AI history
    */
-  async getTenantsAiHistoryExport(
-    tenantId: string,
-    query?: { format?: string; take?: number },
-  ): Promise<Result<void, ApiError>> {
+  async getTenantsAiHistoryExport(tenantId: string, query?: { format?: string; take?: number }): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/ai/history/export`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -61,24 +52,18 @@ export class TenantsAiModule {
   /**
    * Get tenant AI quotas
    */
-  async getTenantsAiQuotas(
-    tenantId: string,
-  ): Promise<Result<Types.AIAiQuotaStatusOutput, ApiError>> {
+  async getTenantsAiQuotas(tenantId: string): Promise<Result<Types.AIAiQuotaStatusOutput, ApiError>> {
     const url = `/v1/tenants/${tenantId}/ai/quotas`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AIAiQuotaStatusOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AIAiQuotaStatusOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

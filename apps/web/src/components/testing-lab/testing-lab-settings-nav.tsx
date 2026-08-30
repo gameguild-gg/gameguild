@@ -2,13 +2,18 @@
 
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@game-guild/ui/lib/utils";
-import { MapPin, Settings, ShieldCheck } from "lucide-react";
+import { Files, MapPin, Settings, ShieldCheck } from "lucide-react";
 
 const sections = [
   {
     label: "General",
     href: "/console/community/testing-lab/settings/general",
     icon: Settings,
+  },
+  {
+    label: "Templates",
+    href: "/console/community/testing-lab/settings/templates",
+    icon: Files,
   },
   {
     label: "Locations",
@@ -28,7 +33,7 @@ export function TestingLabSettingsNav() {
   return (
     <nav
       aria-label="Testing Lab settings"
-      className="grid grid-cols-3 gap-1 lg:sticky lg:top-20 lg:grid-cols-1"
+      className="grid grid-cols-2 gap-1 sm:grid-cols-4 lg:sticky lg:top-20 lg:grid-cols-1"
     >
       {sections.map((section) => {
         const Icon = section.icon;
