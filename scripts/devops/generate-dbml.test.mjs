@@ -387,6 +387,41 @@ test('computeDrift ignores the allowlisted __efmigrationshistory table', () => {
   });
 });
 
+test('computeDrift ignores the allowlisted raw-SQL economy gateway tables', () => {
+  const model = [{ name: 'users', columns: ['id'] }];
+  const live = [
+    { name: 'users', columns: ['id'] },
+    { name: 'economy_fifo_transfer_operations', columns: ['id'] },
+    { name: 'economy_fragment_reservations', columns: ['id'] },
+    { name: 'economy_hard_to_soft_conversion_operations', columns: ['id'] },
+    { name: 'economy_payout_requests', columns: ['id'] },
+    { name: 'economy_payout_request_review_audit_events', columns: ['id'] },
+    { name: 'economy_provider_reversal_operations', columns: ['id'] },
+    { name: 'economy_provider_reversal_fragments', columns: ['id'] },
+  ];
+
+  assert.deepEqual(computeDrift(model, live), {
+    danglingTables: [],
+    danglingColumns: [],
+    unmigratedTables: [],
+  });
+});
+
+test('computeDrift still reports unknown live tables despite the allowlist', () => {
+  const model = [{ name: 'users', columns: ['id'] }];
+  const live = [
+    { name: 'users', columns: ['id'] },
+    { name: 'economy_wallet_debts_legacy', columns: ['id'] },
+    { name: 'economy_totally_new_gateway_table', columns: ['id'] },
+  ];
+
+  assert.deepEqual(computeDrift(model, live), {
+    danglingTables: ['economy_totally_new_gateway_table', 'economy_wallet_debts_legacy'],
+    danglingColumns: [],
+    unmigratedTables: [],
+  });
+});
+
 test('computeDrift detects a table present only in the EF model (unmigrated)', () => {
   const model = [{ name: 'users', columns: ['id'] }, { name: 'fresh_things', columns: ['id'] }];
   const live = [{ name: 'users', columns: ['id'] }];

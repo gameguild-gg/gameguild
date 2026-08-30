@@ -169,18 +169,37 @@ export function compareDbml(actual, expected) {
   return { ok: false, firstDivergence };
 }
 
-const VERIFY_ALLOWLIST = ['__efmigrationshistory'];
+// Live tables that are intentionally outside the EF model — not drift:
+// __EFMigrationsHistory is created by EF at migrate time, never part of the
+// model; the economy_* tables below are the persistence layer of registered
+// raw-SQL gateways (PostgreSqlFifoTransferGateway, PostgreSqlFifoFragmentReservationGateway,
+// PostgreSqlProviderReversalGateway, PostgreSqlHardToSoftConversionGateway,
+// PostgreSqlPayoutRequestStore), written and read exclusively through
+// economy_private SQL functions. The EF model cannot see them by design, so
+// drift verification allowlists them rather than reporting false positives.
+// Names are normalized (lowercase), matching computeDrift's input contract.
+const KNOWN_NON_EF_TABLES = [
+  '__efmigrationshistory',
+  'economy_fifo_transfer_operations',
+  'economy_fragment_reservations',
+  'economy_hard_to_soft_conversion_operations',
+  'economy_payout_requests',
+  'economy_payout_request_review_audit_events',
+  'economy_provider_reversal_operations',
+  'economy_provider_reversal_fragments',
+];
 
 // Pure drift classifier for --verify-db. Inputs are pre-normalized table
-// descriptors ({ name, columns }); __EFMigrationsHistory (created by EF at
-// migrate time, never part of the model) is allowlisted HERE so no caller can
-// forget it. All output arrays are sorted for deterministic reporting.
+// descriptors ({ name, columns }); known non-EF tables (created outside the
+// model: EF's own history table, raw-SQL gateway persistence above) are
+// allowlisted HERE so no caller can forget them. All output arrays are sorted
+// for deterministic reporting.
 export function computeDrift(modelTables, liveTables) {
   const modelByName = new Map(modelTables.map((table) => [table.name, table]));
   const liveByName = new Map(liveTables.map((table) => [table.name, table]));
 
   const danglingTables = [...liveByName.keys()]
-    .filter((name) => !modelByName.has(name) && !VERIFY_ALLOWLIST.includes(name))
+    .filter((name) => !modelByName.has(name) && !KNOWN_NON_EF_TABLES.includes(name))
     .sort();
 
   const unmigratedTables = [...modelByName.keys()]
