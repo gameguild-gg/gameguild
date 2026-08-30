@@ -88,6 +88,8 @@ public sealed class EconomyCoreModule : ModuleBase
             provider.GetRequiredService<PostgreSqlComplianceEvidenceStore>());
         services.AddScoped<IEconomyJurisdictionResolver, EconomyJurisdictionResolver>();
         services.AddScoped<IComplianceHoldStore, PostgreSqlComplianceHoldStore>();
+        services.AddScoped<IComplianceHoldReleasePolicyResolver, PostgreSqlComplianceHoldReleasePolicyResolver>();
+        services.AddScoped<IComplianceHoldAdministrationStore, PostgreSqlComplianceHoldAdministrationStore>();
         services.AddScoped<IJournalIntegrityVerifier, JournalIntegrityVerifier>();
         services.AddScoped<IJournalIntegrityService, PostgreSqlJournalIntegrityService>();
         services.AddScoped<IEntityRiskGraphStore, PostgreSqlEntityRiskGraphStore>();

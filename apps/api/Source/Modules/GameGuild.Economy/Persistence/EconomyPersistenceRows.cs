@@ -763,6 +763,10 @@ internal sealed class EconomyComplianceHoldRow
     public Guid ActivatedBy { get; set; }
     public DateTimeOffset ActivatedAt { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
+    public Guid? ReleaseProposedBy { get; set; }
+    public DateTimeOffset? ReleaseProposedAt { get; set; }
+    public int? RequiredReleaseApprovals { get; set; }
+    public string? ReleasePolicyEvidenceHash { get; set; }
     public Guid? ReleasedBy { get; set; }
     public DateTimeOffset? ReleasedAt { get; set; }
 }

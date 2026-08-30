@@ -1437,6 +1437,13 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                     "ck_economy_compliance_holds_release",
                     "(\"ReleasedAt\" IS NULL AND \"ReleasedBy\" IS NULL) OR " +
                     "(\"ReleasedAt\" >= \"ActivatedAt\" AND \"ReleasedBy\" IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "ck_economy_compliance_holds_release_proposal",
+                    "(\"ReleaseProposedAt\" IS NULL AND \"ReleaseProposedBy\" IS NULL AND " +
+                    "\"RequiredReleaseApprovals\" IS NULL AND \"ReleasePolicyEvidenceHash\" IS NULL) OR " +
+                    "(\"ReleaseProposedAt\" >= \"ActivatedAt\" AND \"ReleaseProposedBy\" IS NOT NULL AND " +
+                    "\"RequiredReleaseApprovals\" BETWEEN 1 AND 2 AND " +
+                    "length(btrim(\"ReleasePolicyEvidenceHash\")) > 0)");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.ScopeKey).HasMaxLength(512);
@@ -1446,6 +1453,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.Property(row => row.EvidenceHash).HasMaxLength(128);
             builder.Property(row => row.IdempotencyKeyHash).HasMaxLength(128);
             builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.ReleasePolicyEvidenceHash).HasMaxLength(128);
             builder.HasIndex(row => row.IdempotencyKeyHash).IsUnique()
                 .HasDatabaseName("ux_economy_compliance_holds_idempotency");
             builder.HasIndex(row => new { row.ScopeKey, row.ReleasedAt, row.ExpiresAt })
@@ -1463,6 +1471,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.Property(row => row.Kind).HasMaxLength(50);
             builder.Property(row => row.EvidenceHash).HasMaxLength(128);
             builder.HasIndex(row => new { row.HoldId, row.Sequence }).IsUnique();
+            builder.HasIndex(row => new { row.HoldId, row.Kind, row.ActorId }).IsUnique();
             builder.HasOne<EconomyComplianceHoldRow>().WithMany().HasForeignKey(row => row.HoldId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
