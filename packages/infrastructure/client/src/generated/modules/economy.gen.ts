@@ -252,24 +252,18 @@ export class EconomyModule {
   /**
    * Get my payout provider account readiness
    */
-  async getEconomyPayoutsAccount(): Promise<
-    Result<Types.EconomyPayoutsConnectAccountSnapshot, ApiError>
-  > {
-    const url = "/api/v1/economy/payouts/account";
+  async getEconomyPayoutsAccount(): Promise<Result<Types.EconomyPayoutsConnectAccountSnapshot, ApiError>> {
+    const url = '/api/v1/economy/payouts/account';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyPayoutsConnectAccountSnapshotSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyPayoutsConnectAccountSnapshotSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -279,24 +273,113 @@ export class EconomyModule {
   /**
    * Create or refresh my payout provider onboarding
    */
-  async postEconomyPayoutsOnboarding(): Promise<
-    Result<Types.EconomyPayoutsConnectOnboardingResult, ApiError>
-  > {
-    const url = "/api/v1/economy/payouts/onboarding";
+  async postEconomyPayoutsOnboarding(): Promise<Result<Types.EconomyPayoutsConnectOnboardingResult, ApiError>> {
+    const url = '/api/v1/economy/payouts/onboarding';
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.EconomyPayoutsConnectOnboardingResultSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.EconomyPayoutsConnectOnboardingResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * List my HardCoin top-ups
+   */
+  async getEconomyTopUpsForGetEconomyTopUps(query?: { take?: number }): Promise<Result<Array<Types.EconomyFundingEconomyTopUpStatus>, ApiError>> {
+    const url = '/api/v1/economy/top-ups';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.EconomyFundingEconomyTopUpStatus>, ApiError>;
+  }
+
+  /**
+   * Create my HardCoin top-up payment intent
+   *
+   * The server derives tenant, wallet, jurisdiction, signed quote, amount, provider binding, and idempotency authority.
+   */
+  async postEconomyTopUps(
+    body: Types.EconomyCommandsCreateMyHardCoinTopUpInput,
+  ): Promise<Result<Types.EconomyFundingSelfServiceHardCoinTopUpReceipt, ApiError>> {
+    const url = '/api/v1/economy/top-ups';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.EconomyCommandsCreateMyHardCoinTopUpInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyFundingSelfServiceHardCoinTopUpReceiptSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Get one of my HardCoin top-ups
+   */
+  async getEconomyTopUpsForGetEconomyTopUpsByTopUpId(topUpId: string): Promise<Result<Types.EconomyFundingEconomyTopUpStatus, ApiError>> {
+    const url = `/api/v1/economy/top-ups/${topUpId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyFundingEconomyTopUpStatusSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Send a typed Economy transfer to another user in my tenant
+   *
+   * The server resolves wallets, jurisdiction, policy, reserve, risk, and posting authority. The request contains business intent only.
+   */
+  async postEconomyTransfers(
+    body: Types.EconomyTransfersSelfServiceEconomyTransferInput,
+  ): Promise<Result<Types.EconomyTransfersSelfServiceEconomyTransferReceipt, ApiError>> {
+    const url = '/api/v1/economy/transfers';
+
+    // Validate request body
+    const validatedBody = safeParse(Types.EconomyTransfersSelfServiceEconomyTransferInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyTransfersSelfServiceEconomyTransferReceiptSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
