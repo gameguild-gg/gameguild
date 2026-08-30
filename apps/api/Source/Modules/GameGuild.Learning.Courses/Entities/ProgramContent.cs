@@ -326,27 +326,18 @@ public class ProgramContent : EntityBase
     /// <summary>
     /// Checks if content is accessible by a specific user
     /// </summary>
-    public bool IsAccessibleBy(Guid userId)
-    {
-        if (Visibility == Visibility.Public)
-            return true;
-
-        if (Visibility != Visibility.Internal || Program?.ProgramUsers == null)
-            return false;
-
-        return Program.ProgramUsers.Any(pu => pu.UserId == userId && pu.IsActive == true);
-    }
+    public bool IsAccessibleBy(Guid userId) =>
+        Visibility == Visibility.Public ||
+        Visibility == Visibility.Internal &&
+        Program?.ProgramUsers?.Any(programUser => programUser.UserId == userId && programUser.IsActive == true) == true;
 
     /// <summary>
     /// Calculates completion percentage for a user
     /// </summary>
     public decimal GetCompletionPercentage(Guid userId)
     {
-        if (ContentInteractions == null)
-            return 0m;
-
-        var interactions = ContentInteractions.Where(ci => ci.UserId == userId).ToList();
-        if (interactions.Count == 0)
+        var interactions = ContentInteractions?.Where(ci => ci.UserId == userId).ToList();
+        if (interactions?.Any() != true)
             return 0m;
 
         if (Children is { Count: > 0 })
