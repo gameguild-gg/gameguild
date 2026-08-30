@@ -110,7 +110,7 @@ describe('StudentTable', () => {
     expect(screen.getByRole('button', { name: /^remove$/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Actions for Ada Learner' }));
-    expect(screen.getByText('View profile')).toBeInTheDocument();
+    expect(await screen.findByText('View profile')).toBeInTheDocument();
     expect(screen.getByText('View progress')).toBeInTheDocument();
     expect(screen.getByText('Remove from Course')).toBeInTheDocument();
   });
@@ -225,7 +225,7 @@ describe('StudentTable', () => {
     render(<StudentTable courseId="course-1" students={students} total={students.length} />);
 
     await user.click(screen.getAllByRole('button', { name: 'Actions for Ada Learner' })[0]);
-    expect(screen.getByRole('menuitem', { name: 'View profile' })).toHaveAttribute(
+    expect(await screen.findByRole('menuitem', { name: 'View profile' })).toHaveAttribute(
       'href',
       '/console/community/members/users/user-1',
     );
