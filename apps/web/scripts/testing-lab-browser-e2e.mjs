@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
@@ -41,7 +42,7 @@ let activePage;
 let activePageLabel = "initial browser session";
 
 function unique() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${Date.now()}-${randomUUID().slice(0, 8)}`;
 }
 
 async function apiRequest(pathname, init = {}, accessToken, tenantId) {
