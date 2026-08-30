@@ -105,7 +105,11 @@ public sealed class EconomyCoreModule : ModuleBase
         services.AddScoped<IEconomyReserveCustodyControlPlane, PostgreSqlReserveCustodyControlPlane>();
         services.AddScoped<IEconomyProjectionGenerationService, PostgreSqlProjectionGenerationService>();
         services.AddScoped<IEconomyOperationsReader, PostgreSqlEconomyOperationsReader>();
+        services.AddScoped<IEconomyPolicyQueryReader, PostgreSqlEconomyPolicyQueryReader>();
+        services.AddScoped<IEconomyReserveQueryReader, PostgreSqlEconomyReserveQueryReader>();
+        services.AddScoped<IEconomyLedgerQueryReader, PostgreSqlEconomyLedgerQueryReader>();
         services.AddScoped<ILegacyEconomyShadowMigration, PostgreSqlLegacyEconomyShadowMigration>();
+        services.AddScoped<ILegacyEconomyQueryReader, PostgreSqlLegacyEconomyQueryReader>();
         services.AddOptions<EconomyKmsOptions>().Bind(configuration.GetSection(EconomyKmsOptions.SectionName));
         if (configuration.GetValue<bool>($"{EconomyKmsOptions.SectionName}:Enabled"))
         {

@@ -30,10 +30,27 @@ public sealed record RollbackLegacyEconomyCutoverRequest(string Reason, string S
 [Authorize]
 public sealed class EconomyLegacyMigrationAdministrationController(
     ILegacyEconomyShadowMigration migration,
+    ILegacyEconomyQueryReader queries,
     IEconomyStepUpExecutor stepUp,
     IActorContextAccessor actorContextAccessor,
     TimeProvider timeProvider) : BaseApiController
 {
+    [HttpGet]
+    [ProducesResponseType(
+        typeof(EconomyOperationalPage<LegacyEconomyShadowBatchSummary>),
+        StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> List(
+        [FromQuery] LegacyEconomyShadowState? state = null,
+        [FromQuery] int limit = 50,
+        [FromQuery] string? cursor = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryActor(out var tenantId, out _)) return Forbid();
+        return Ok(await queries.ListAsync(
+            tenantId, state, limit, cursor, cancellationToken).ConfigureAwait(false));
+    }
+
     [HttpGet("{batchId:guid}")]
     [ProducesResponseType(typeof(LegacyEconomyShadowBatchView), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

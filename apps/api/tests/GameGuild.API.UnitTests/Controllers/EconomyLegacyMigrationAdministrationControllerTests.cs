@@ -36,6 +36,23 @@ public sealed class EconomyLegacyMigrationAdministrationControllerTests
     }
 
     [Fact]
+    public async Task ListUsesActorTenantAndForwardsOnlyOperationalFilters()
+    {
+        var tenantId = Guid.NewGuid();
+        var migration = new Mock<ILegacyEconomyShadowMigration>(MockBehavior.Strict);
+        var queries = new Mock<ILegacyEconomyQueryReader>(MockBehavior.Strict);
+        queries.Setup(reader => reader.ListAsync(
+                tenantId, LegacyEconomyShadowState.Reconciled, 25, "cursor", default))
+            .ReturnsAsync(new EconomyOperationalPage<LegacyEconomyShadowBatchSummary>([], null));
+        var controller = CreateController(migration.Object, tenantId: tenantId, queries: queries.Object);
+
+        var result = await controller.List(LegacyEconomyShadowState.Reconciled, 25, "cursor", default);
+
+        result.Should().BeOfType<OkObjectResult>();
+        queries.VerifyAll();
+    }
+
+    [Fact]
     public async Task GetUsesActorTenantAndReturnsNotFoundWithoutLeakingAnotherTenant()
     {
         var tenantId = Guid.NewGuid();
@@ -156,7 +173,8 @@ public sealed class EconomyLegacyMigrationAdministrationControllerTests
         bool authorized = true,
         Guid? tenantId = null,
         Guid? actorId = null,
-        TestEconomyStepUpExecutor? stepUp = null)
+        TestEconomyStepUpExecutor? stepUp = null,
+        ILegacyEconomyQueryReader? queries = null)
     {
         var actorContext = new Mock<IActorContextAccessor>();
         actorContext.SetupGet(accessor => accessor.ActorContext).Returns(new ActorContext
@@ -172,7 +190,11 @@ public sealed class EconomyLegacyMigrationAdministrationControllerTests
             IsAuthenticated = true
         });
         return new EconomyLegacyMigrationAdministrationController(
-            migration, stepUp ?? new TestEconomyStepUpExecutor(), actorContext.Object, new FixedTimeProvider());
+            migration,
+            queries ?? Mock.Of<ILegacyEconomyQueryReader>(),
+            stepUp ?? new TestEconomyStepUpExecutor(),
+            actorContext.Object,
+            new FixedTimeProvider());
     }
 
     private static LegacyEconomyShadowBatchView View(Guid batchId, Guid tenantId) => new(

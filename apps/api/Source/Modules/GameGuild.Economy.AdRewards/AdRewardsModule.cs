@@ -22,6 +22,7 @@ public sealed class AdRewardsModule : ModuleBase
         services.AddScoped<IDurableAdRewardCompletionService, DurableAdRewardCompletionService>();
         services.AddScoped<IDurableAdRewardReportService, DurableAdRewardReportService>();
         services.AddScoped<IDurableAdRewardReportReader, PostgreSqlDurableAdRewardReportReader>();
+        services.AddScoped<IAdRewardOperationalQueryReader, PostgreSqlAdRewardOperationalQueryReader>();
         services.AddScoped<IDurableDeferredAdRewardService, DurableDeferredAdRewardService>();
         return services;
     }
