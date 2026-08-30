@@ -98,7 +98,7 @@ export function DashboardUserMenu({ user }: { user: DashboardUser }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={disabled}
-          onSelect={(event) => {
+          onClick={(event) => {
             event.preventDefault();
             void handleSignOut();
           }}
