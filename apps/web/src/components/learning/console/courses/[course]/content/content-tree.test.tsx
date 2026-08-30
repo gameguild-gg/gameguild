@@ -269,7 +269,7 @@ describe("ContentTree course management", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: /add lesson/i }));
-    dialog = screen.getByRole("dialog", { name: /add lesson/i });
+    dialog = await screen.findByRole("dialog", { name: /add lesson/i });
     fireEvent.change(within(dialog).getByLabelText(/title/i), {
       target: { value: "Define the playable promise" },
     });

@@ -294,7 +294,7 @@ describe("AssessmentEditor policy sections", () => {
     expect(
       screen.getByText("Rubric locked after grading started"),
     ).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: /grade by rubric/i })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: /grade by rubric/i })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByRole("button", { name: /save rubric/i })).toBeDisabled();
     expect(screen.getByLabelText(/criterion 1 description/i)).toBeDisabled();
   });

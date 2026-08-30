@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -276,7 +276,7 @@ describe("CodingDefinitionEditor", () => {
       target: { value: "XYZ" },
     });
     await user.click(screen.getByTestId("standard-visibility-1"));
-    await user.click(screen.getByRole("option", { name: "Private" }));
+    await user.click(within(await screen.findByRole("listbox")).getByRole("option", { name: "Private" }));
 
     await user.click(screen.getByTestId("save-button"));
 

@@ -87,7 +87,7 @@ describe('CourseList', () => {
 
     await user.clear(screen.getByPlaceholderText(/search courses/i));
     await user.click(screen.getByRole('combobox', { name: /course status filter/i }));
-    await user.click(screen.getByRole('option', { name: /archived/i }));
+    await user.click(await screen.findByRole('option', { name: /archived/i }));
 
     expect(screen.getByText('Technical Art')).toBeInTheDocument();
     expect(screen.queryByText('Boss AI')).not.toBeInTheDocument();
@@ -110,7 +110,7 @@ describe('CourseList', () => {
     expect(within(resortedRows[0]).getByText('Boss AI')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /open boss ai actions/i }));
-    expect(screen.getByRole('menuitem', { name: /^edit$/i })).toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: /^edit$/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /preview/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /manage lifecycle/i })).toBeInTheDocument();
   });
