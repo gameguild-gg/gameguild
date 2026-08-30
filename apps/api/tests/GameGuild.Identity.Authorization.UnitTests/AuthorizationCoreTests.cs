@@ -20,16 +20,18 @@ public class AuthorizationCoreTests
         RuleTypes.RequireMfa.Should().NotBeNullOrWhiteSpace();
         RuleTypes.RequireTimeWindow.Should().NotBeNullOrWhiteSpace();
         RuleTypes.RequireIpAllowList.Should().NotBeNullOrWhiteSpace();
+        RuleTypes.AnyOf.Should().NotBeNullOrWhiteSpace();
+        RuleTypes.CourseContentAccess.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
-    public void RuleTypes_AllSet_Contains8Types()
+    public void RuleTypes_AllSet_Contains10Types()
     {
         // Act
         var allTypes = RuleTypes.All;
 
         // Assert
-        allTypes.Should().HaveCount(8);
+        allTypes.Should().HaveCount(10);
     }
 
     [Theory]
@@ -41,6 +43,8 @@ public class AuthorizationCoreTests
     [InlineData("RequireMfa")]
     [InlineData("RequireTimeWindow")]
     [InlineData("RequireIpAllowList")]
+    [InlineData("AnyOf")]
+    [InlineData("CourseContentAccess")]
     public void RuleTypes_IsValid_WithValidType_ReturnsTrue(string ruleType)
     {
         // Act
@@ -92,6 +96,14 @@ public class AuthorizationCoreTests
 
         // Assert - lowercase "permissions"
         parameters.Should().Contain("permissions");
+    }
+
+    [Fact]
+    public void RuleTypes_GetRequiredParameters_ForCourseContentAccess_ContainsAccess()
+    {
+        var parameters = RuleTypes.GetRequiredParameters(RuleTypes.CourseContentAccess);
+
+        parameters.Should().Contain("access");
     }
 
     [Fact]

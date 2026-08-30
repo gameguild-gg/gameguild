@@ -1160,16 +1160,24 @@ public class PermissionHandlerTests
     }
 
     [Fact]
-    public async Task HandleRequirementAsync_ClaimsBasedPermission_ShouldSucceed()
+    public async Task HandleRequirementAsync_ClaimsBasedPermission_StillRequiresDatabaseGrant()
     {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        _tenantContextMock.Setup(tc => tc.HasTenant).Returns(true);
+        _tenantContextMock.Setup(tc => tc.TenantId).Returns(tenantId);
+        _permissionServiceMock.Setup(ps => ps.HasPermissionAsync(
+            userId, tenantId, "courses.read", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
         var handler = CreateHandler();
-        var user = CreateUser(permissions: new[] { "courses.read" });
+        var user = CreateUser(userId, tenantId, new[] { "courses.read" });
         var requirement = new PermissionRequirement("courses.read", allowClaimsBased: true);
         var context = CreateAuthContext(user, requirement);
 
         await handler.HandleAsync(context);
 
-        context.HasSucceeded.Should().BeTrue();
+        context.HasSucceeded.Should().BeFalse();
+        context.HasFailed.Should().BeTrue();
     }
 
     [Fact]

@@ -47,6 +47,39 @@ public class DatabasePolicyDefinitionStoreTests
         policy.UseRuleBasedEvaluation.Should().BeTrue();
         policy.Rules.Should().HaveCount(1);
         policy.Rules![0].Type.Should().Be("TenantMatch");
+        policy.IsConfigurationValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetPolicyAsync_InvalidJsonMarksDefinitionInvalid()
+    {
+        var repo = new Mock<IPolicyDefinitionRepository>();
+        repo.Setup(r => r.GetByNameAsync("Invalid", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PolicyDefinitionEntity
+            {
+                PolicyName = "Invalid",
+                RequiredPermissionsJson = "not-json"
+            });
+        var store = new DatabasePolicyDefinitionStore(repo.Object);
+
+        var policy = await store.GetPolicyAsync("Invalid", null, CancellationToken.None);
+
+        policy.Should().NotBeNull();
+        policy!.IsConfigurationValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetPolicyAsync_TenantLookupDoesNotReturnGlobalFallbackAsOverride()
+    {
+        var tenantId = Guid.NewGuid();
+        var repo = new Mock<IPolicyDefinitionRepository>();
+        repo.Setup(r => r.GetByNameAsync("Test", tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PolicyDefinitionEntity { PolicyName = "Test", TenantId = null });
+        var store = new DatabasePolicyDefinitionStore(repo.Object);
+
+        var policy = await store.GetPolicyAsync("Test", tenantId.ToString(), CancellationToken.None);
+
+        policy.Should().BeNull();
     }
 
     [Fact]

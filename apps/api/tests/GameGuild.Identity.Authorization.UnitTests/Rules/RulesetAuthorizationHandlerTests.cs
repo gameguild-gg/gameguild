@@ -165,7 +165,7 @@ public class RulesetAuthorizationHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_SkippedRule_StillSucceeds()
+    public async Task HandleAsync_SkippedRequiredRule_FailsClosed()
     {
         var ruleset = CreateRuleset(RuleTypes.RequireMfa);
         var requirement = new RulesetRequirement("Skip", ruleset);
@@ -177,8 +177,56 @@ public class RulesetAuthorizationHandlerTests
 
         await handler.HandleAsync(context);
 
+        context.HasSucceeded.Should().BeFalse();
+        context.HasFailed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HandleAsync_EmptyRuleset_FailsClosed()
+    {
+        var ruleset = new PolicyRuleset
+        {
+            Name = "Empty",
+            RequireAuthentication = true,
+            Rules = []
+        };
+        var requirement = new RulesetRequirement("Empty", ruleset);
+        var handler = CreateHandler();
+        var context = CreateContext(requirement, authenticated: true);
+
+        await handler.HandleAsync(context);
+
+        context.HasSucceeded.Should().BeFalse();
+        context.HasFailed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HandleAsync_AnyOf_SucceedsWhenOneChildRulePasses()
+    {
+        var first = new StubEvaluator(RuleTypes.RequireMfa, RuleEvaluationResult.Fail("no MFA"));
+        var second = new StubEvaluator(RuleTypes.TenantMatch, RuleEvaluationResult.Success());
+        var registry = new Mock<IRuleEvaluatorRegistry>();
+        registry.Setup(candidate => candidate.GetEvaluator(RuleTypes.RequireMfa)).Returns(first);
+        registry.Setup(candidate => candidate.GetEvaluator(RuleTypes.TenantMatch)).Returns(second);
+        var anyOf = new RuleDefinition
+        {
+            Type = RuleTypes.AnyOf,
+            Rules =
+            [
+                new RuleDefinition { Type = RuleTypes.RequireMfa },
+                new RuleDefinition { Type = RuleTypes.TenantMatch }
+            ]
+        };
+        var ruleset = new PolicyRuleset { Name = "AnyOf", Rules = [anyOf] };
+        var requirement = new RulesetRequirement("AnyOf", ruleset);
+        var handler = CreateHandler(registry: registry.Object);
+        var context = CreateContext(requirement, authenticated: true);
+
+        await handler.HandleAsync(context);
+
         context.HasSucceeded.Should().BeTrue();
-        context.HasFailed.Should().BeFalse();
+        first.Called.Should().BeTrue();
+        second.Called.Should().BeTrue();
     }
 
     private static AuthorizationHandlerContext CreateContext(

@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -105,5 +106,36 @@ public class ScopedRuleEvaluatorFactoryTests
         evaluator3.Should().NotBeNull();
         
         evaluator1.Should().BeOfType<TenantMatchRuleEvaluator>();
+    }
+
+    [Fact]
+    public void GetEvaluator_WithModuleRegistration_ResolvesExternalEvaluator()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<ExternalRuleEvaluator>(_ => new ExternalRuleEvaluator());
+        var serviceProvider = services.BuildServiceProvider();
+        var registrations = new[]
+        {
+            new ScopedRuleEvaluatorRegistration("External", typeof(ExternalRuleEvaluator))
+        };
+        var factory = new ScopedRuleEvaluatorFactory(serviceProvider, registrations);
+
+        var evaluator = factory.GetEvaluator("external");
+
+        evaluator.Should().BeOfType<ExternalRuleEvaluator>();
+        factory.GetRegisteredTypes().Should().Contain("External");
+    }
+
+    private sealed class ExternalRuleEvaluator : IRuleEvaluator
+    {
+        public string RuleType => "External";
+
+        public Task<RuleEvaluationResult> EvaluateAsync(
+            AuthorizationHandlerContext context,
+            RuleParameters parameters,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(RuleEvaluationResult.Success());
+        }
     }
 }

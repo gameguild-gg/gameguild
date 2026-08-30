@@ -19,9 +19,18 @@ namespace GameGuild.API.UnitTests.Security;
 public sealed class TenantAdminPolicyTests
 {
     [Fact]
-    public async Task DynamicProvider_ReturnsCanonicalTenantAdminPolicy_BeforeDatabaseOverrides()
+    public async Task DynamicProvider_MissingTenantAdminPolicy_Denies()
     {
         var services = new ServiceCollection();
+        var versionStore = new Mock<ITenantSecurityVersionStore>();
+        versionStore.Setup(store => store.GetVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+        var policyStore = new Mock<IPolicyDefinitionStore>();
+        policyStore.Setup(store => store.GetPolicyAsync(
+                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PolicyDefinition?)null);
+        services.AddSingleton(versionStore.Object);
+        services.AddSingleton(policyStore.Object);
         await using var providerRoot = services.BuildServiceProvider();
         var provider = new DbAuthorizationPolicyProvider(
             Options.Create(new RuntimeAuthorizationOptions()),
@@ -34,15 +43,20 @@ public sealed class TenantAdminPolicyTests
         var policy = await provider.GetPolicyAsync(Policies.TenantAdmin);
 
         policy.Should().NotBeNull();
-        policy!.Requirements.Should().Contain(requirement => requirement is TenantMatchRequirement);
-        policy.Requirements.Should().Contain(requirement => requirement is AssertionRequirement);
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim(ClaimTypes.Role, "TenantAdmin")], "test"));
+        var context = new AuthorizationHandlerContext(policy!.Requirements, principal, resource: null);
+        foreach (var handler in policy.Requirements.OfType<IAuthorizationHandler>())
+            await handler.HandleAsync(context);
+
+        context.HasSucceeded.Should().BeFalse();
     }
 
     [Theory]
     [InlineData("Admin")]
     [InlineData("SystemAdmin")]
     [InlineData("TenantAdmin")]
-    public async Task SetupAuthorization_AdministrativeRoleWithJwtTenantClaimHasTenantAdminAccess(string role)
+    public void SetupAuthorization_DoesNotRegisterTenantAdminStatically(string role)
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().Build();
@@ -52,27 +66,12 @@ public sealed class TenantAdminPolicyTests
         var options = provider.GetRequiredService<IOptions<RuntimeAuthorizationOptions>>().Value;
         var policy = options.GetPolicy("TenantAdmin");
 
-        policy.Should().NotBeNull();
-        var principal = new ClaimsPrincipal(
-            new ClaimsIdentity(
-                [
-                    new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
-                    new Claim(ClaimTypes.Role, role),
-                    new Claim("tenant_id", Guid.NewGuid().ToString())
-                ],
-                "test"));
-        var context = new AuthorizationHandlerContext(policy!.Requirements, principal, resource: null);
-
-        foreach (var handler in policy.Requirements.OfType<IAuthorizationHandler>())
-        {
-            await handler.HandleAsync(context);
-        }
-
-        context.HasSucceeded.Should().BeTrue();
+        role.Should().NotBeNullOrWhiteSpace();
+        policy.Should().BeNull();
     }
 
     [Fact]
-    public async Task SetupAuthorization_ProductOwnerWithJwtTenantClaimDoesNotHaveTenantAdminAccess()
+    public void SetupAuthorization_ProductOwnerCannotUseAStaticTenantAdminPolicy()
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().Build();
@@ -82,22 +81,6 @@ public sealed class TenantAdminPolicyTests
         var options = provider.GetRequiredService<IOptions<RuntimeAuthorizationOptions>>().Value;
         var policy = options.GetPolicy(Policies.TenantAdmin);
 
-        policy.Should().NotBeNull();
-        var principal = new ClaimsPrincipal(
-            new ClaimsIdentity(
-                [
-                    new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
-                    new Claim(ClaimTypes.Role, "Owner"),
-                    new Claim("tenant_id", Guid.NewGuid().ToString())
-                ],
-                "test"));
-        var context = new AuthorizationHandlerContext(policy!.Requirements, principal, resource: null);
-
-        foreach (var handler in policy.Requirements.OfType<IAuthorizationHandler>())
-        {
-            await handler.HandleAsync(context);
-        }
-
-        context.HasSucceeded.Should().BeFalse();
+        policy.Should().BeNull();
     }
 }
