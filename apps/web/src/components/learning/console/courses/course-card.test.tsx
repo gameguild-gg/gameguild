@@ -31,7 +31,7 @@ describe('CourseCard actions', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /open combat design foundations actions/i }));
 
-    const menu = screen.getByRole('menu');
+    const menu = await screen.findByRole('menu');
     const editLink = within(menu).getByRole('menuitem', { name: /edit course/i });
     const previewLink = within(menu).getByRole('menuitem', { name: /^preview$/i });
 
@@ -46,7 +46,7 @@ describe('CourseCard actions', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /open combat design foundations actions/i }));
 
-    const menu = screen.getByRole('menu');
+    const menu = await screen.findByRole('menu');
     const editLink = within(menu).getByRole('menuitem', { name: /^edit$/i });
     const previewLink = within(menu).getByRole('menuitem', { name: /^preview$/i });
 
