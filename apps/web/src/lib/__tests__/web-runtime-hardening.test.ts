@@ -40,6 +40,15 @@ describe('web runtime hardening', () => {
     expect(readRepoFile('apps/web/Dockerfile')).toContain('NODE_OPTIONS=--max-old-space-size=4096');
   });
 
+  it('uses POSIX-safe quoting when resolving the emception toolchain version', () => {
+    const dockerfile = readRepoFile('apps/web/Dockerfile');
+
+    expect(dockerfile).toContain(
+      `node -p 'require("./tools/emception/packages/toolchain/package.json").version'`,
+    );
+    expect(dockerfile).not.toContain(`node -p \\"require('./tools/emception/packages/toolchain/package.json').version\\"`);
+  });
+
   it('uses lightweight container readiness and keeps the web health endpoint available', () => {
     const compose = readRepoFile('compose.coolify.yaml');
 

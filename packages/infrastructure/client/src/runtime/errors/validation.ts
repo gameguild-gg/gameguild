@@ -24,9 +24,7 @@ export function transformZodError(error: ZodError, context?: 'request' | 'respon
     name: 'ApiError',
     code: 'VALIDATION_ERROR',
     status: 400,
-    message: context === 'request'
-      ? 'Request validation failed'
-      : 'Response validation failed',
+    message: context === 'request' ? 'Request validation failed' : 'Response validation failed',
     metadata: {
       errors,
       context: context || 'unknown',
@@ -119,7 +117,7 @@ function formatIssueMessage(issue: ZodIssue): string {
     case 'custom':
       /* v8 ignore start */
       return issue.message || `${field || 'Value'} is invalid`;
-      /* v8 ignore stop */
+    /* v8 ignore stop */
 
     default:
       return issue.message;
@@ -136,11 +134,7 @@ export function isZodError(error: unknown): error is ZodError {
 /**
  * Safely parse with error transformation
  */
-export function safeParse<T>(
-  schema: { parse: (data: unknown) => T },
-  data: unknown,
-  context?: 'request' | 'response'
-): T {
+export function safeParse<T>(schema: { parse: (data: unknown) => T }, data: unknown, context?: 'request' | 'response'): T {
   try {
     return schema.parse(data);
   } catch (error) {

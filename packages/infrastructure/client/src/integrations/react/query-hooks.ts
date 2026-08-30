@@ -1,17 +1,10 @@
 /**
  * React Query Integration
- * 
+ *
  * React Query hooks for API client with optimistic updates support
  */
 
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  type UseQueryOptions,
-  type UseMutationOptions,
-  type QueryKey,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, type UseQueryOptions, type UseMutationOptions, type QueryKey } from '@tanstack/react-query';
 import type { ApiClient } from '../../runtime/client.js';
 import type { Result } from '../../runtime/result/types.js';
 import type { ApiError } from '../../runtime/errors/types.js';
@@ -41,11 +34,17 @@ export interface OptimisticUpdateConfig<TData, TVariables> {
   refetchKeys?: QueryKey[];
 }
 
+interface OptimisticMutationContext {
+  previousData: Array<{ key: QueryKey; data: unknown }>;
+}
+
 /**
  * Extended mutation options with optimistic updates
  */
-export interface ExtendedMutationOptions<TData, TVariables>
-  extends Omit<UseMutationOptions<TData, ApiError, TVariables>, 'mutationFn'> {
+export interface ExtendedMutationOptions<TData, TVariables> extends Omit<
+  UseMutationOptions<TData, ApiError, TVariables, OptimisticMutationContext | undefined>,
+  'mutationFn'
+> {
   /**
    * Optimistic update configuration
    */
@@ -67,12 +66,9 @@ function unwrapResult<T>(result: Result<T, ApiError>): T {
  */
 export function createQueryHook<TData, TParams extends unknown[]>(
   queryKeyFactory: (...params: TParams) => QueryKey,
-  queryFn: (...params: TParams) => Promise<Result<TData, ApiError>>
+  queryFn: (...params: TParams) => Promise<Result<TData, ApiError>>,
 ) {
-  return function useApiQuery(
-    params: TParams,
-    options?: Omit<UseQueryOptions<TData, ApiError>, 'queryKey' | 'queryFn'>
-  ) {
+  return function useApiQuery(params: TParams, options?: Omit<UseQueryOptions<TData, ApiError>, 'queryKey' | 'queryFn'>) {
     return useQuery<TData, ApiError>({
       queryKey: queryKeyFactory(...params),
       queryFn: async () => unwrapResult(await queryFn(...params)),
@@ -84,14 +80,12 @@ export function createQueryHook<TData, TParams extends unknown[]>(
 /**
  * Create mutation hook factory with optimistic updates
  */
-export function createMutationHook<TData, TVariables>(
-  mutationFn: (variables: TVariables) => Promise<Result<TData, ApiError>>
-) {
+export function createMutationHook<TData, TVariables>(mutationFn: (variables: TVariables) => Promise<Result<TData, ApiError>>) {
   return function useApiMutation(options?: ExtendedMutationOptions<TData, TVariables>) {
     const queryClient = useQueryClient();
     const { optimistic, ...mutationOptions } = options || {};
 
-    return useMutation<TData, ApiError, TVariables>({
+    return useMutation<TData, ApiError, TVariables, OptimisticMutationContext | undefined>({
       mutationFn: async (variables) => unwrapResult(await mutationFn(variables)),
 
       onMutate: async (variables: TVariables, mutationContext) => {
@@ -103,9 +97,7 @@ export function createMutationHook<TData, TVariables>(
 
         // Cancel outgoing refetches
         const invalidateKeys = optimistic.invalidateKeys || [];
-        await Promise.all(
-          invalidateKeys.map((key) => queryClient.cancelQueries({ queryKey: key }))
-        );
+        await Promise.all(invalidateKeys.map((key) => queryClient.cancelQueries({ queryKey: key })));
 
         // Snapshot previous values
         const previousData = invalidateKeys.map((key: QueryKey) => ({
@@ -125,12 +117,12 @@ export function createMutationHook<TData, TVariables>(
         return { previousData };
       },
 
-      onError: (error: ApiError, variables: TVariables, onMutateResult: any, mutationContext) => {
+      onError: (error, variables, onMutateResult, mutationContext) => {
         // Rollback on error if configured
         /* v8 ignore start */
         if (optimistic?.rollbackOnError !== false && onMutateResult?.previousData) {
-        /* v8 ignore stop */
-          onMutateResult.previousData.forEach(({ key, data }: { key: QueryKey; data: any }) => {
+          /* v8 ignore stop */
+          onMutateResult.previousData.forEach(({ key, data }) => {
             queryClient.setQueryData(key, data);
           });
         }
@@ -138,23 +130,15 @@ export function createMutationHook<TData, TVariables>(
         options?.onError?.(error, variables, onMutateResult, mutationContext);
       },
 
-      onSuccess: async (data: TData, variables: TVariables, onMutateResult: any, mutationContext) => {
+      onSuccess: async (data, variables, onMutateResult, mutationContext) => {
         // Invalidate queries
         if (optimistic?.invalidateKeys) {
-          await Promise.all(
-            optimistic.invalidateKeys.map((key) =>
-              queryClient.invalidateQueries({ queryKey: key })
-            )
-          );
+          await Promise.all(optimistic.invalidateKeys.map((key) => queryClient.invalidateQueries({ queryKey: key })));
         }
 
         // Refetch queries
         if (optimistic?.refetchKeys) {
-          await Promise.all(
-            optimistic.refetchKeys.map((key) =>
-              queryClient.refetchQueries({ queryKey: key })
-            )
-          );
+          await Promise.all(optimistic.refetchKeys.map((key) => queryClient.refetchQueries({ queryKey: key })));
         }
 
         await options?.onSuccess?.(data, variables, onMutateResult, mutationContext);
@@ -176,11 +160,7 @@ export interface ModuleHooks {
 /**
  * Generate query key from endpoint info
  */
-export function generateQueryKey(
-  module: string,
-  operation: string,
-  params?: Record<string, unknown>
-): QueryKey {
+export function generateQueryKey(module: string, operation: string, params?: Record<string, unknown>): QueryKey {
   const key: unknown[] = [module, operation];
   if (params && Object.keys(params).length > 0) {
     key.push(params);

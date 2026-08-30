@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -29,10 +29,10 @@ export class UsersModule {
     limit?: number;
     sort?: string;
   }): Promise<Result<Types.PagedResultOfIdentityUsersUser, ApiError>> {
-    const url = "/v1/users";
+    const url = '/v1/users';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -40,11 +40,7 @@ export class UsersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.PagedResultOfIdentityUsersUserSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.PagedResultOfIdentityUsersUserSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -56,20 +52,14 @@ export class UsersModule {
    *
    * Creates a new user account with the provided information.
    */
-  async postUsers(
-    body: Types.IdentityUsersCreateUserInput,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
-    const url = "/v1/users";
+  async postUsers(body: Types.IdentityUsersCreateUserInput): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+    const url = '/v1/users';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersCreateUserInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersCreateUserInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -77,11 +67,7 @@ export class UsersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersUserDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -96,17 +82,13 @@ export class UsersModule {
   async postUsersActivateForPostUsersActivate(
     body: Types.IdentityUsersBulkActivateUsersInput,
   ): Promise<Result<Types.IdentityUsersBulkActivateUsersOutput, ApiError>> {
-    const url = "/v1/users:activate";
+    const url = '/v1/users:activate';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkActivateUsersInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersBulkActivateUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -114,11 +96,7 @@ export class UsersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkActivateUsersOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersBulkActivateUsersOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -130,20 +108,14 @@ export class UsersModule {
    *
    * Creates multiple user accounts at once.
    */
-  async postUsersCreate(
-    body: Types.IdentityUsersBulkCreateUsersInput,
-  ): Promise<Result<Types.IdentityUsersBulkCreateUsersOutput, ApiError>> {
-    const url = "/v1/users:create";
+  async postUsersCreate(body: Types.IdentityUsersBulkCreateUsersInput): Promise<Result<Types.IdentityUsersBulkCreateUsersOutput, ApiError>> {
+    const url = '/v1/users:create';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkCreateUsersInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersBulkCreateUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -151,11 +123,7 @@ export class UsersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkCreateUsersOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersBulkCreateUsersOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -170,17 +138,13 @@ export class UsersModule {
   async postUsersDeactivateForPostUsersDeactivate(
     body: Types.IdentityUsersBulkDeactivateUsersInput,
   ): Promise<Result<Types.IdentityUsersBulkDeactivateUsersOutput, ApiError>> {
-    const url = "/v1/users:deactivate";
+    const url = '/v1/users:deactivate';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkDeactivateUsersInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersBulkDeactivateUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -188,11 +152,7 @@ export class UsersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkDeactivateUsersOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersBulkDeactivateUsersOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -204,20 +164,14 @@ export class UsersModule {
    *
    * Soft deletes multiple users at once.
    */
-  async postUsersDelete(
-    body: Types.IdentityUsersBulkDeleteUsersInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/users:delete";
+  async postUsersDelete(body: Types.IdentityUsersBulkDeleteUsersInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/users:delete';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkDeleteUsersInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersBulkDeleteUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -231,20 +185,14 @@ export class UsersModule {
    *
    * Permanently deletes multiple users. Admin operation requiring proper authorization.
    */
-  async postUsersPurgeForPostUsersPurge(
-    body: Types.IdentityUsersBulkPurgeUsersInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/users:purge";
+  async postUsersPurgeForPostUsersPurge(body: Types.IdentityUsersBulkPurgeUsersInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/users:purge';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkPurgeUsersInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersBulkPurgeUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -258,20 +206,14 @@ export class UsersModule {
    *
    * Updates multiple users with complete data.
    */
-  async postUsersReplace(
-    body: Types.IdentityUsersBulkUpdateUsersInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/users:replace";
+  async postUsersReplace(body: Types.IdentityUsersBulkUpdateUsersInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/users:replace';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkUpdateUsersInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersBulkUpdateUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -288,17 +230,13 @@ export class UsersModule {
   async postUsersSuspendForPostUsersSuspend(
     body: Types.IdentityUsersBulkSuspendUsersInput,
   ): Promise<Result<Types.IdentityUsersBulkSuspendUsersOutput, ApiError>> {
-    const url = "/v1/users:suspend";
+    const url = '/v1/users:suspend';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkSuspendUsersInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersBulkSuspendUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -306,11 +244,7 @@ export class UsersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkSuspendUsersOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersBulkSuspendUsersOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -325,17 +259,13 @@ export class UsersModule {
   async postUsersUndeleteForPostUsersUndelete(
     body: Types.IdentityUsersBulkRestoreUsersInput,
   ): Promise<Result<Types.IdentityUsersBulkRestoreUsersOutput, ApiError>> {
-    const url = "/v1/users:undelete";
+    const url = '/v1/users:undelete';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkRestoreUsersInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersBulkRestoreUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -343,11 +273,7 @@ export class UsersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkRestoreUsersOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersBulkRestoreUsersOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -362,17 +288,13 @@ export class UsersModule {
   async postUsersUnsuspendForPostUsersUnsuspend(
     body: Types.IdentityUsersBulkUnsuspendUsersInput,
   ): Promise<Result<Types.IdentityUsersBulkUnsuspendUsersOutput, ApiError>> {
-    const url = "/v1/users:unsuspend";
+    const url = '/v1/users:unsuspend';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkUnsuspendUsersInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersBulkUnsuspendUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -380,11 +302,7 @@ export class UsersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersBulkUnsuspendUsersOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersBulkUnsuspendUsersOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -396,20 +314,14 @@ export class UsersModule {
    *
    * Updates multiple users with partial data.
    */
-  async postUsersUpdate(
-    body: Types.IdentityUsersBulkUpdateUsersInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/users:update";
+  async postUsersUpdate(body: Types.IdentityUsersBulkUpdateUsersInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/users:update';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersBulkUpdateUsersInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersBulkUpdateUsersInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -423,24 +335,18 @@ export class UsersModule {
    *
    * Retrieves detailed information for a specific user by their unique identifier.
    */
-  async getUsersForGetUsersByUserId(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async getUsersForGetUsersByUserId(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersUserDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -452,21 +358,14 @@ export class UsersModule {
    *
    * Fully updates a user by ID with complete user data.
    */
-  async putUsers(
-    userId: string,
-    body: Types.IdentityUsersCreateUserInput,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async putUsers(userId: string, body: Types.IdentityUsersCreateUserInput): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersCreateUserInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersCreateUserInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -474,11 +373,7 @@ export class UsersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersUserDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -494,7 +389,7 @@ export class UsersModule {
     const url = `/v1/users/${userId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -507,21 +402,14 @@ export class UsersModule {
    *
    * Updates specific fields of a user by ID.
    */
-  async patchUsers(
-    userId: string,
-    body: Types.IdentityUsersUpdateUserInput,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async patchUsers(userId: string, body: Types.IdentityUsersUpdateUserInput): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityUsersUpdateUserInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityUsersUpdateUserInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PATCH",
+      method: 'PATCH',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -529,11 +417,7 @@ export class UsersModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersUserDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -549,7 +433,7 @@ export class UsersModule {
     const url = `/v1/users/${userId}`;
 
     const result = await this.client.request({
-      method: "HEAD",
+      method: 'HEAD',
       path: url,
       requiresAuth: true,
     });
@@ -562,24 +446,18 @@ export class UsersModule {
    *
    * Activates a user account by ID.
    */
-  async postUsersActivateForPostUsersByUserIdActivate(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsersActivateForPostUsersByUserIdActivate(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}:activate`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersUserDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -591,24 +469,18 @@ export class UsersModule {
    *
    * Deactivates a user account by ID.
    */
-  async postUsersDeactivateForPostUsersByUserIdDeactivate(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsersDeactivateForPostUsersByUserIdDeactivate(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}:deactivate`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersUserDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -620,13 +492,11 @@ export class UsersModule {
    *
    * Permanently deletes a user by ID (irreversible).
    */
-  async postUsersPurgeForPostUsersByUserIdPurge(
-    userId: string,
-  ): Promise<Result<void, ApiError>> {
+  async postUsersPurgeForPostUsersByUserIdPurge(userId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/users/${userId}:purge`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -639,24 +509,18 @@ export class UsersModule {
    *
    * Suspends a user account by ID.
    */
-  async postUsersSuspendForPostUsersByUserIdSuspend(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsersSuspendForPostUsersByUserIdSuspend(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}:suspend`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersUserDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -668,24 +532,18 @@ export class UsersModule {
    *
    * Restores a soft-deleted user by ID.
    */
-  async postUsersUndeleteForPostUsersByUserIdUndelete(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsersUndeleteForPostUsersByUserIdUndelete(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}:undelete`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersUserDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -697,24 +555,18 @@ export class UsersModule {
    *
    * Unsuspends a user account by ID.
    */
-  async postUsersUnsuspendForPostUsersByUserIdUnsuspend(
-    userId: string,
-  ): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
+  async postUsersUnsuspendForPostUsersByUserIdUnsuspend(userId: string): Promise<Result<Types.IdentityUsersUserDto, ApiError>> {
     const url = `/v1/users/${userId}:unsuspend`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityUsersUserDtoSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityUsersUserDtoSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

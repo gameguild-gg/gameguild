@@ -109,11 +109,10 @@ async function hmacHex(payload: string, secret: string): Promise<string> {
 }
 
 /**
- * Locale-aware path for the account settings page. The default locale
- * (en-US) is unprefixed under next-intl's `localePrefix: 'as-needed'`.
+ * Locale-aware path for the account settings page. All locales use explicit
+ * prefixes so the Next 16 proxy never loops while resolving the default.
  */
 export function settingsAccountPath(locale: string | undefined): string {
-  return locale && locale !== 'en-US'
-    ? `/${locale}/workspace/settings/account`
-    : '/workspace/settings/account';
+  const resolvedLocale = locale === 'pt-BR' ? locale : 'en-US';
+  return `/${resolvedLocale}/workspace/settings/account`;
 }

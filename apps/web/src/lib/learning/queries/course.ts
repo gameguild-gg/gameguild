@@ -2,6 +2,7 @@ import { auth, getToken } from "@/auth";
 import { readContentGradingDefinition } from "@game-guild/grading";
 import {
   createServerClient,
+  hasRole,
   GeneratedApi,
   type ContentStatus,
   type ContentVisibility,
@@ -45,7 +46,7 @@ export type {
   LearningCoursesProgramContentType,
 };
 
-function getApiClient() {
+function getApiClient(tenantId?: string) {
   const apiUrl =
     process.env.API_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
@@ -53,6 +54,8 @@ function getApiClient() {
   return createServerClient({
     baseUrl: apiUrl,
     auth: { getAccessToken: () => getToken() },
+    // Sends X-Tenant-Id so the authorization API can resolve the actor tenant.
+    ...(tenantId ? { tenant: { getTenantId: async () => tenantId } } : {}),
   });
 }
 
@@ -255,6 +258,8 @@ export const resolveCourseId = cache(
 
 /**
  * True when the current viewer manages the course (course creator).
+ * GUIDs are compared case-insensitively: the API and the auth session
+ * may emit the same id with different casing.
  */
 export async function canManageCourse(
   courseIdentifier: string,
@@ -265,7 +270,54 @@ export async function canManageCourse(
       auth(),
     ]);
 
-    return Boolean(course?.creatorId && course.creatorId === session?.user?.id);
+    return Boolean(
+      course?.creatorId &&
+        session?.user?.id &&
+        course.creatorId.toLowerCase() === session.user.id.toLowerCase(),
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * True when the current viewer may edit the course: the instructor/course
+ * owner (creator), a SystemAdmin, or a viewer holding the
+ * `Program.{courseId}.Edit` permission in the 3-layer DAC (platform role →
+ * tenant grants → ProgramPermissions).
+ *
+ * Mirrors the write-side gates exactly: AuthorizationBehavior and
+ * ProgramContentController both short-circuit for SystemAdmin before the
+ * DAC resolution, and treat the creator as manager; the has-permission
+ * endpoint only resolves the DAC layers, so the role and creator checks
+ * must run alongside it.
+ */
+export async function canEditCourse(
+  courseIdentifier: string,
+): Promise<boolean> {
+  try {
+    const [session, courseId] = await Promise.all([
+      auth(),
+      resolveCourseId(courseIdentifier),
+    ]);
+
+    if (!session?.user?.id) return false;
+
+    if (hasRole(session, "SystemAdmin")) return true;
+
+    if (session.tenantId) {
+      const accessControl = new GeneratedApi.AccessControlResourcePermissionsModule(
+        getApiClient(session.tenantId),
+      );
+      const result = await accessControl.getAuthorizationResourcesHasPermission(
+        "Program",
+        courseId,
+        { tenantId: session.tenantId, permission: "Edit" },
+      );
+      if (result.ok && result.data.hasPermission) return true;
+    }
+
+    return canManageCourse(courseIdentifier);
   } catch {
     return false;
   }

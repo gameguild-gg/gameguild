@@ -9,13 +9,13 @@
  */
 
 // Re-export all types
-export * from "./types.gen.js";
+export * from './types.gen.js';
 
 // Re-export error types
-export * from "./errors.gen.js";
+export * from './errors.gen.js';
 
 // Re-export endpoint definitions
-export * from "./endpoints.gen.js";
+export * from './endpoints.gen.js';
 
 // Re-export module-grouped endpoints
 export * from "./modules/analytics-dashboards.gen.js";
@@ -117,6 +117,7 @@ export * from "./modules/features-flags.gen.js";
 export * from "./modules/access-control-jit-elevations.gen.js";
 export * from "./modules/launch-pad.gen.js";
 export * from "./modules/launch-pad-events.gen.js";
+export * from "./modules/launch-pad-settings.gen.js";
 export * from "./modules/learning-experience-learning-paths-learning-path.gen.js";
 export * from "./modules/learning-workspaces-learner-workspace.gen.js";
 export * from "./modules/content-marketing-leads.gen.js";
@@ -152,6 +153,7 @@ export * from "./modules/tenants-resources-metadata.gen.js";
 export * from "./modules/tenants-resources-settings.gen.js";
 export * from "./modules/tenants-settings.gen.js";
 export * from "./modules/testing-lab-testing-analytics.gen.js";
+export * from "./modules/testing-lab-testing-event-templates.gen.js";
 export * from "./modules/testing-lab-testing-sessions.gen.js";
 export * from "./modules/testing-lab-testing-participants.gen.js";
 export * from "./modules/testing-lab-testing-requests.gen.js";

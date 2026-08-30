@@ -37,11 +37,7 @@ const DEFAULT_RETRY_CONFIG: Required<RetryConfig> = {
 /**
  * Calculate delay for retry attempt
  */
-function calculateDelay(
-  attempt: number,
-  config: Required<RetryConfig>,
-  retryAfter?: number
-): number {
+function calculateDelay(attempt: number, config: Required<RetryConfig>, retryAfter?: number): number {
   // Respect Retry-After header if provided
   if (retryAfter && retryAfter > 0) {
     return Math.min(retryAfter * 1000, config.maxDelay);
@@ -61,15 +57,7 @@ function calculateDelay(
  * Sleep utility
  */
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Retry state tracked per request
- */
-interface RetryState {
-  attempt: number;
-  originalConfig: RequestConfig;
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**

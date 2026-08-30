@@ -5,13 +5,7 @@
  * config with all defaults applied.
  */
 
-import type {
-  GameGuildAuthConfig,
-  ResolvedAuthConfig,
-  AuthCallbacks,
-  Session,
-  JWTPayload,
-} from '../../runtime/auth/types.js';
+import type { GameGuildAuthConfig, ResolvedAuthConfig, AuthCallbacks } from '../../runtime/auth/types.js';
 import { MissingSecretError, ConfigError } from '../../runtime/auth/errors.js';
 
 /** Default max age: 30 days */
@@ -43,9 +37,7 @@ const defaultCallbacks: Required<AuthCallbacks> = {
 /**
  * Resolve a user config into a fully-qualified config with defaults.
  */
-export function resolveConfig(
-  config: GameGuildAuthConfig
-): ResolvedAuthConfig {
+export function resolveConfig(config: GameGuildAuthConfig): ResolvedAuthConfig {
   // Resolve secret
   const secret =
     config.secret ||
@@ -65,18 +57,11 @@ export function resolveConfig(
     '';
 
   if (!apiUrl) {
-    throw new ConfigError(
-      'Missing API URL. Set apiUrl in GameGuildAuth config or API_URL environment variable.'
-    );
+    throw new ConfigError('Missing API URL. Set apiUrl in GameGuildAuth config or API_URL environment variable.');
   }
 
   // Determine if secure (HTTPS)
-  const isSecure =
-    config.cookies?.secure ??
-    (typeof process !== 'undefined'
-      ? process.env?.NEXTAUTH_URL?.startsWith('https')
-      : false) ??
-    false;
+  const isSecure = config.cookies?.secure ?? (typeof process !== 'undefined' ? process.env?.NEXTAUTH_URL?.startsWith('https') : false) ?? false;
 
   // Merge callbacks
   const callbacks: Required<AuthCallbacks> = {

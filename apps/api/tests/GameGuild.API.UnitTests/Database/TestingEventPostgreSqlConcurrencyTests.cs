@@ -17,6 +17,8 @@ namespace GameGuild.API.UnitTests.Database;
 [Collection(PostgreSqlTestCollection.Name)]
 public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
 {
+    private static readonly QuestionnaireSchema EmptySchema = new("Concurrency fixture", []);
+
     private EconomyPostgreSqlTestDatabase _container = null!;
 
     private DbContextOptions<ApplicationDbContext> _options = null!;
@@ -54,7 +56,7 @@ public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
             true,
             TestingEventApprovalMode.ManagerOnly,
             tenantId);
-        testingEvent.OpenApplications();
+        OpenConfiguredApplications(testingEvent);
         var slot = TestingEventSlot.Create(
             testingEvent.Id,
             TestingEventMode.Online,
@@ -113,7 +115,7 @@ public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
             true,
             TestingEventApprovalMode.ManagerOnly,
             tenantId);
-        testingEvent.OpenApplications();
+        OpenConfiguredApplications(testingEvent);
         testingEvent.CloseApplications();
         var slot = TestingEventSlot.Create(
             testingEvent.Id,
@@ -158,6 +160,17 @@ public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
     }
     public async Task DisposeAsync() => await _container.DisposeAsync();
 
+    private static void OpenConfiguredApplications(TestingEvent testingEvent)
+    {
+        testingEvent.Configure(
+            "Concurrency fixture rules",
+            "Concurrency fixture candidate instructions",
+            "Concurrency fixture tester instructions",
+            EmptySchema,
+            EmptySchema);
+        testingEvent.OpenApplications();
+    }
+
     private async Task<Result<TestingProjectApplicationProjection>> ApproveAsync(
         Guid applicationId,
         Guid slotId,
@@ -183,7 +196,13 @@ public sealed class TestingEventPostgreSqlConcurrencyTests : IAsyncLifetime
                 actorAccessor,
                 NullLogger<TestingParticipationHandlers>.Instance,
                 new ProjectLifecycleLock(context))
-            .Handle(new RegisterTestingEventSlotCommand(slotId, null), default);
+            .Handle(
+                new RegisterTestingEventSlotCommand(
+                    slotId,
+                    null,
+                    new QuestionnaireResponse([]),
+                    true),
+                default);
     }
     private async Task SeedAsync(params object[] entities)
     {

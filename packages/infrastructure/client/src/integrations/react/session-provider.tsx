@@ -28,20 +28,8 @@
  * ```
  */
 
-import {
-  createContext,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
-import type {
-  Session,
-  SessionStatus,
-  SessionProviderProps,
-} from '../../runtime/auth/types.js';
+import { createContext, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import type { Session, SessionStatus, SessionProviderProps } from '../../runtime/auth/types.js';
 import { createAuthBroadcast, type AuthBroadcastMessage } from './broadcast.js';
 
 // ─── Context Types ───────────────────────────────────────────────
@@ -54,9 +42,7 @@ export interface SessionContextValue {
 
 // ─── Context ─────────────────────────────────────────────────────
 
-export const SessionContext = createContext<SessionContextValue | undefined>(
-  undefined
-);
+export const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 
 // ─── Provider Component ──────────────────────────────────────────
 
@@ -80,110 +66,105 @@ export function SessionProvider({
   refetchInterval = 0,
   refetchOnWindowFocus = true,
   refetchWhenOffline = false,
-}: Omit<SessionProviderProps, 'children'> & { children: ReactNode }): ReactNode {
+}: Omit<SessionProviderProps, 'children'> & {
+  children: ReactNode;
+}): ReactNode {
   const [session, setSession] = useState<Session | null>(initialSession ?? null);
-  const [status, setStatus] = useState<SessionStatus>(
-    initialSession ? 'authenticated' : 'loading'
-  );
+  const [status, setStatus] = useState<SessionStatus>(initialSession ? 'authenticated' : 'loading');
   const [isOnline, setIsOnline] = useState(
     /* v8 ignore start -- navigator always defined in happy-dom */
-    typeof navigator !== 'undefined' ? navigator.onLine : true
+    typeof navigator !== 'undefined' ? navigator.onLine : true,
     /* v8 ignore stop */
   );
 
-  const broadcastRef = useRef<ReturnType<typeof createAuthBroadcast> | null>(
-    null
-  );
+  const broadcastRef = useRef<ReturnType<typeof createAuthBroadcast> | null>(null);
   const basePathRef = useRef(basePath);
-  basePathRef.current = basePath;
+
+  useEffect(() => {
+    basePathRef.current = basePath;
+  }, [basePath]);
 
   // ─── Fetch Session ───────────────────────────────────────────
 
-  const fetchSession = useCallback(
-    async (notify = true): Promise<Session | null> => {
-      try {
-        const response = await fetch(`${basePathRef.current}/session`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+  const fetchSession = useCallback(async (notify = true): Promise<Session | null> => {
+    try {
+      const response = await fetch(`${basePathRef.current}/session`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-        if (!response.ok) {
-          setSession(null);
-          setStatus('unauthenticated');
-          return null;
-        }
-
-        const data = await response.json();
-
-        // Empty object = no session
-        if (!data || !data.user) {
-          setSession(null);
-          setStatus('unauthenticated');
-          return null;
-        }
-
-        setSession(data as Session);
-        setStatus('authenticated');
-
-        // Notify other tabs
-        /* v8 ignore start -- fetchSession always called with notify=false */
-        if (notify) {
-          broadcastRef.current?.send({
-            type: 'session-update',
-            timestamp: Date.now(),
-          });
-        }
-        /* v8 ignore stop */
-
-        return data as Session;
-      } catch {
+      if (!response.ok) {
         setSession(null);
         setStatus('unauthenticated');
         return null;
       }
-    },
-    []
-  );
 
-  // ─── Update Session ──────────────────────────────────────────
+      const data = await response.json();
 
-  const updateSession = useCallback(
-    async (data?: Partial<Session>): Promise<Session | null> => {
-      try {
-        const response = await fetch(`${basePathRef.current}/session`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data ?? {}),
-        });
+      // Empty object = no session
+      if (!data || !data.user) {
+        setSession(null);
+        setStatus('unauthenticated');
+        return null;
+      }
 
-        if (!response.ok) return null;
+      setSession(data as Session);
+      setStatus('authenticated');
 
-        const updated = await response.json();
-
-        if (!updated || !updated.user) {
-          setSession(null);
-          setStatus('unauthenticated');
-          return null;
-        }
-
-        setSession(updated as Session);
-        setStatus('authenticated');
-
+      // Notify other tabs
+      /* v8 ignore start -- fetchSession always called with notify=false */
+      if (notify) {
         broadcastRef.current?.send({
           type: 'session-update',
           timestamp: Date.now(),
         });
+      }
+      /* v8 ignore stop */
 
-        return updated as Session;
-      } catch {
+      return data as Session;
+    } catch {
+      setSession(null);
+      setStatus('unauthenticated');
+      return null;
+    }
+  }, []);
+
+  // ─── Update Session ──────────────────────────────────────────
+
+  const updateSession = useCallback(async (data?: Partial<Session>): Promise<Session | null> => {
+    try {
+      const response = await fetch(`${basePathRef.current}/session`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data ?? {}),
+      });
+
+      if (!response.ok) return null;
+
+      const updated = await response.json();
+
+      if (!updated || !updated.user) {
+        setSession(null);
+        setStatus('unauthenticated');
         return null;
       }
-    },
-    []
-  );
+
+      setSession(updated as Session);
+      setStatus('authenticated');
+
+      broadcastRef.current?.send({
+        type: 'session-update',
+        timestamp: Date.now(),
+      });
+
+      return updated as Session;
+    } catch {
+      return null;
+    }
+  }, []);
 
   // ─── Initial Fetch ───────────────────────────────────────────
 
@@ -193,7 +174,8 @@ export function SessionProvider({
       return;
     }
 
-    fetchSession(false);
+    const timeout = window.setTimeout(() => void fetchSession(false), 0);
+    return () => window.clearTimeout(timeout);
   }, [fetchSession, initialSession]);
 
   // ─── Periodic Refetch ────────────────────────────────────────
@@ -220,7 +202,7 @@ export function SessionProvider({
     const handleVisibilityChange = () => {
       /* v8 ignore start */
       if (document.visibilityState === 'visible') {
-      /* v8 ignore stop */
+        /* v8 ignore stop */
         fetchSession(false);
       }
     };
@@ -254,19 +236,17 @@ export function SessionProvider({
   // ─── Cross-Tab Sync ──────────────────────────────────────────
 
   useEffect(() => {
-    const broadcast = createAuthBroadcast(
-      (message: AuthBroadcastMessage) => {
-        /* v8 ignore start */
-        if (message.type === 'sign-out') {
-          setSession(null);
-          setStatus('unauthenticated');
-        } else if (message.type === 'session-update') {
-          // Re-fetch session from server to get the latest state
-          fetchSession(false);
-        }
-        /* v8 ignore stop */
+    const broadcast = createAuthBroadcast((message: AuthBroadcastMessage) => {
+      /* v8 ignore start */
+      if (message.type === 'sign-out') {
+        setSession(null);
+        setStatus('unauthenticated');
+      } else if (message.type === 'session-update') {
+        // Re-fetch session from server to get the latest state
+        fetchSession(false);
       }
-    );
+      /* v8 ignore stop */
+    });
 
     broadcastRef.current = broadcast;
 
@@ -284,10 +264,8 @@ export function SessionProvider({
       status,
       update: updateSession,
     }),
-    [session, status, updateSession]
+    [session, status, updateSession],
   );
 
-  return (
-    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
-  );
+  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

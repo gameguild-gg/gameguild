@@ -25,6 +25,7 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
         RequireApproval = true,
         EnableNotifications = true,
         MaxSimultaneousSessions = 10,
+        VersionSubmissionPolicy = GameGuild.Projects.VersionSubmissionPolicy.ReadyMutableUntilReview,
       };
 
       _dbContext.Set<TestingLabSettings>().Add(settings);
@@ -63,6 +64,7 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
     settings.EnableNotifications = dto.EnableNotifications;
     settings.MaxSimultaneousSessions = dto.MaxSimultaneousSessions;
     settings.ReminderDaysBefore = dto.ReminderDaysBefore;
+    settings.VersionSubmissionPolicy = dto.VersionSubmissionPolicy;
 
     await _dbContext.SaveChangesAsync().ConfigureAwait(false);
 
@@ -92,6 +94,8 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
 
     if (dto.MaxSimultaneousSessions.HasValue) settings.MaxSimultaneousSessions = dto.MaxSimultaneousSessions.Value;
 
+    if (dto.VersionSubmissionPolicy.HasValue) settings.VersionSubmissionPolicy = dto.VersionSubmissionPolicy.Value;
+
     await _dbContext.SaveChangesAsync().ConfigureAwait(false);
 
     return settings;
@@ -111,6 +115,7 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
       settings.RequireApproval = true;
       settings.EnableNotifications = true;
       settings.MaxSimultaneousSessions = 10;
+      settings.VersionSubmissionPolicy = GameGuild.Projects.VersionSubmissionPolicy.ReadyMutableUntilReview;
 
       await _dbContext.SaveChangesAsync().ConfigureAwait(false);
 
@@ -139,6 +144,7 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
       EnableNotifications = settings.EnableNotifications,
       ReminderDaysBefore = settings.ReminderDaysBefore,
       MaxSimultaneousSessions = settings.MaxSimultaneousSessions,
+      VersionSubmissionPolicy = settings.VersionSubmissionPolicy,
       TenantId = settings.Tenant?.Id,
       CreatedAt = settings.CreatedAt,
       UpdatedAt = settings.UpdatedAt,

@@ -106,6 +106,13 @@ describe("Public Testing Lab events directory", () => {
     expect(
       screen.getByRole("heading", { name: "No events available" }),
     ).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Search events...")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Switch to cards view" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Prepare a project" }),
+    ).toHaveAttribute("href", "/workspace/projects");
     expect(
       screen.getByRole("link", { name: "Back to Testing Lab" }),
     ).toHaveAttribute("href", "/testing-lab");

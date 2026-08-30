@@ -65,6 +65,7 @@ public sealed class LaunchPadModelConfiguration : IModelConfiguration
             builder.HasKey(entity => entity.Id);
             builder.Property(entity => entity.Pitch).HasMaxLength(2000);
             builder.Property(entity => entity.SubmittedAssetReferenceIdsJson).HasMaxLength(10000);
+            builder.Property(entity => entity.SubmissionVersionPolicy).HasConversion<string>().HasMaxLength(40);
             builder.HasIndex(entity => new { entity.LaunchPadEventId, entity.ProjectId }).IsUnique();
             builder.HasOne(entity => entity.LaunchPadEvent).WithMany(entity => entity.Applications)
                 .HasForeignKey(entity => entity.LaunchPadEventId).OnDelete(DeleteBehavior.Cascade);
@@ -74,6 +75,14 @@ public sealed class LaunchPadModelConfiguration : IModelConfiguration
                 .HasForeignKey(entity => entity.ProjectVersionId).OnDelete(DeleteBehavior.Restrict);
             builder.HasOne(entity => entity.SubmittedByUser).WithMany()
                 .HasForeignKey(entity => entity.SubmittedByUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<LaunchPadSettings>(builder =>
+        {
+            builder.ToTable("launch_pad_settings");
+            builder.HasKey(entity => entity.Id);
+            builder.Property(entity => entity.VersionSubmissionPolicy).HasConversion<string>().HasMaxLength(40);
+            builder.HasIndex(entity => entity.TenantId).IsUnique();
         });
 
         modelBuilder.Entity<LaunchPadParticipantSlot>(builder =>

@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -19,20 +19,14 @@ export class AccessControlAccessReviewsModule {
    */
   async postAccessReviewsCampaigns(
     body: Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand,
-  ): Promise<
-    Result<Types.IdentityAuthorizationAccessReviewCampaign, ApiError>
-  > {
-    const url = "/v1/access-reviews/campaigns";
+  ): Promise<Result<Types.IdentityAuthorizationAccessReviewCampaign, ApiError>> {
+    const url = '/v1/access-reviews/campaigns';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationCommandsCreateAccessReviewCampaignCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -40,11 +34,7 @@ export class AccessControlAccessReviewsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationAccessReviewCampaignSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthorizationAccessReviewCampaignSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -53,13 +43,11 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async postAccessReviewsCampaignsProcessExpired(): Promise<
-    Result<number, ApiError>
-  > {
-    const url = "/v1/access-reviews/campaigns:process-expired";
+  async postAccessReviewsCampaignsProcessExpired(): Promise<Result<number, ApiError>> {
+    const url = '/v1/access-reviews/campaigns:process-expired';
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -69,26 +57,18 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async getAccessReviewsCampaigns(
-    id: string,
-  ): Promise<
-    Result<Types.IdentityAuthorizationAccessReviewCampaign, ApiError>
-  > {
+  async getAccessReviewsCampaigns(id: string): Promise<Result<Types.IdentityAuthorizationAccessReviewCampaign, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationAccessReviewCampaignSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthorizationAccessReviewCampaignSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -97,13 +77,11 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async postAccessReviewsCampaignsCancel(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
+  async postAccessReviewsCampaignsCancel(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}:cancel`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -113,21 +91,14 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async postAccessReviewsCampaignsComplete(
-    id: string,
-    body: Types.IdentityAuthorizationControllersCompleteCampaignInput,
-  ): Promise<Result<void, ApiError>> {
+  async postAccessReviewsCampaignsComplete(id: string, body: Types.IdentityAuthorizationControllersCompleteCampaignInput): Promise<Result<void, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}:complete`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationControllersCompleteCampaignInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationControllersCompleteCampaignInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -138,13 +109,11 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async postAccessReviewsCampaignsSendReminders(
-    id: string,
-  ): Promise<Result<number, ApiError>> {
+  async postAccessReviewsCampaignsSendReminders(id: string): Promise<Result<number, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}:send-reminders`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -154,13 +123,11 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async postAccessReviewsCampaignsStart(
-    id: string,
-  ): Promise<Result<void, ApiError>> {
+  async postAccessReviewsCampaignsStart(id: string): Promise<Result<void, ApiError>> {
     const url = `/v1/access-reviews/campaigns/${id}:start`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -170,24 +137,17 @@ export class AccessControlAccessReviewsModule {
 
   /**
    */
-  async getAccessReviewsCampaignsActive(query?: {
-    tenantId?: string;
-  }): Promise<
-    Result<Array<Types.IdentityAuthorizationAccessReviewCampaign>, ApiError>
-  > {
-    const url = "/v1/access-reviews/campaigns/active";
+  async getAccessReviewsCampaignsActive(query?: { tenantId?: string }): Promise<Result<Array<Types.IdentityAuthorizationAccessReviewCampaign>, ApiError>> {
+    const url = '/v1/access-reviews/campaigns/active';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.IdentityAuthorizationAccessReviewCampaign>,
-      ApiError
-    >;
+    return result as Result<Array<Types.IdentityAuthorizationAccessReviewCampaign>, ApiError>;
   }
 
   /**
@@ -199,14 +159,10 @@ export class AccessControlAccessReviewsModule {
     const url = `/v1/access-reviews/items/${id}:approve`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationControllersApproveItemInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationControllersApproveItemInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -214,11 +170,7 @@ export class AccessControlAccessReviewsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationAccessReviewItemSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthorizationAccessReviewItemSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -234,14 +186,10 @@ export class AccessControlAccessReviewsModule {
     const url = `/v1/access-reviews/items/${id}:revoke`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationControllersRevokeItemInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationControllersRevokeItemInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -249,11 +197,7 @@ export class AccessControlAccessReviewsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationAccessReviewItemSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthorizationAccessReviewItemSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -265,27 +209,20 @@ export class AccessControlAccessReviewsModule {
   async getAccessReviewsItemsPending(query?: {
     reviewerId?: string;
     tenantId?: string;
-  }): Promise<
-    Result<Array<Types.IdentityAuthorizationAccessReviewItem>, ApiError>
-  > {
-    const url = "/v1/access-reviews/items/pending";
+  }): Promise<Result<Array<Types.IdentityAuthorizationAccessReviewItem>, ApiError>> {
+    const url = '/v1/access-reviews/items/pending';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.IdentityAuthorizationAccessReviewItem>,
-      ApiError
-    >;
+    return result as Result<Array<Types.IdentityAuthorizationAccessReviewItem>, ApiError>;
   }
 }
 
-export function createAccessControlAccessReviewsModule(
-  client: ApiClient,
-): AccessControlAccessReviewsModule {
+export function createAccessControlAccessReviewsModule(client: ApiClient): AccessControlAccessReviewsModule {
   return new AccessControlAccessReviewsModule(client);
 }

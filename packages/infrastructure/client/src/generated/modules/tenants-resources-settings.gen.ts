@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -27,7 +27,7 @@ export class TenantsResourcesSettingsModule {
     const url = `/v1/tenants/${tenantId}/resources/settings`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -48,18 +48,14 @@ export class TenantsResourcesSettingsModule {
     const url = `/v1/tenants/${tenantId}/resources/settings/${key}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ResourcesResourceSettingsSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ResourcesResourceSettingsSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -79,14 +75,10 @@ export class TenantsResourcesSettingsModule {
     const url = `/v1/tenants/${tenantId}/resources/settings/${key}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.ResourcesSetResourceSettingsInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.ResourcesSetResourceSettingsInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -94,11 +86,7 @@ export class TenantsResourcesSettingsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ResourcesResourceSettingsSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ResourcesResourceSettingsSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -110,14 +98,11 @@ export class TenantsResourcesSettingsModule {
    *
    * Removes a resource setting for a tenant.
    */
-  async deleteTenantsResourcesSettings(
-    tenantId: string,
-    key: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteTenantsResourcesSettings(tenantId: string, key: string): Promise<Result<void, ApiError>> {
     const url = `/v1/tenants/${tenantId}/resources/settings/${key}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -138,7 +123,7 @@ export class TenantsResourcesSettingsModule {
     const url = `/v1/tenants/${tenantId}/resources/settings/${key}/effective`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -146,11 +131,7 @@ export class TenantsResourcesSettingsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.ResourcesEffectiveSettingOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.ResourcesEffectiveSettingOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -158,8 +139,6 @@ export class TenantsResourcesSettingsModule {
   }
 }
 
-export function createTenantsResourcesSettingsModule(
-  client: ApiClient,
-): TenantsResourcesSettingsModule {
+export function createTenantsResourcesSettingsModule(client: ApiClient): TenantsResourcesSettingsModule {
   return new TenantsResourcesSettingsModule(client);
 }

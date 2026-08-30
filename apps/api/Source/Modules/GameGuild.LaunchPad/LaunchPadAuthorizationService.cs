@@ -20,6 +20,7 @@ public interface ILaunchPadAuthorizationService
     Task<bool> CanReviewApplicationsAsync(Guid tenantId, CancellationToken cancellationToken = default);
     Task<bool> CanManageParticipantsAsync(Guid tenantId, CancellationToken cancellationToken = default);
     Task<bool> CanViewAnalyticsAsync(Guid tenantId, CancellationToken cancellationToken = default);
+    Task<bool> CanManageSettingsAsync(Guid tenantId, CancellationToken cancellationToken = default);
     Task<bool> CanParticipateAsync(Guid tenantId, CancellationToken cancellationToken = default);
     Task<bool> CanSubmitProjectAsync(Guid projectId, CancellationToken cancellationToken = default);
 }
@@ -39,6 +40,9 @@ public sealed class LaunchPadAuthorizationService(
 
     public Task<bool> CanViewAnalyticsAsync(Guid tenantId, CancellationToken cancellationToken = default) => HasAdministrativeCapabilityAsync(
         tenantId, cancellationToken, LaunchPadCapabilities.ViewAnalytics, "launchpad:analytics:read");
+
+    public Task<bool> CanManageSettingsAsync(Guid tenantId, CancellationToken cancellationToken = default) => HasAdministrativeCapabilityAsync(
+        tenantId, cancellationToken, LaunchPadCapabilities.ManageSettings, "launchpad:settings:manage");
 
     public async Task<bool> CanParticipateAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {

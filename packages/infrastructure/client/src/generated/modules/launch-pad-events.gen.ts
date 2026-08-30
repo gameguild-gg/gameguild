@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,20 +17,14 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async postLaunchPadEvents(
-    body: Types.LaunchPadCreateLaunchPadEventInput,
-  ): Promise<Result<Types.LaunchPadLaunchPadEventProjection, ApiError>> {
-    const url = "/v1/launch-pad/events";
+  async postLaunchPadEvents(body: Types.LaunchPadCreateLaunchPadEventInput): Promise<Result<Types.LaunchPadLaunchPadEventProjection, ApiError>> {
+    const url = '/v1/launch-pad/events';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LaunchPadCreateLaunchPadEventInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LaunchPadCreateLaunchPadEventInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -38,11 +32,7 @@ export class LaunchPadEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -58,14 +48,10 @@ export class LaunchPadEventsModule {
     const url = `/v1/launch-pad/events/${eventId}/applications`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LaunchPadSubmitLaunchPadApplicationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LaunchPadSubmitLaunchPadApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -73,11 +59,7 @@ export class LaunchPadEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -86,44 +68,30 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async getLaunchPadEventsApplicationsManagement(
-    eventId: string,
-  ): Promise<
-    Result<Array<Types.LaunchPadLaunchPadApplicationProjection>, ApiError>
-  > {
+  async getLaunchPadEventsApplicationsManagement(eventId: string): Promise<Result<Array<Types.LaunchPadLaunchPadApplicationProjection>, ApiError>> {
     const url = `/v1/launch-pad/events/${eventId}/applications/management`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LaunchPadLaunchPadApplicationProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LaunchPadLaunchPadApplicationProjection>, ApiError>;
   }
 
   /**
    */
-  async getLaunchPadEventsRegistrationsManagement(
-    eventId: string,
-  ): Promise<
-    Result<Array<Types.LaunchPadLaunchPadRegistrationProjection>, ApiError>
-  > {
+  async getLaunchPadEventsRegistrationsManagement(eventId: string): Promise<Result<Array<Types.LaunchPadLaunchPadRegistrationProjection>, ApiError>> {
     const url = `/v1/launch-pad/events/${eventId}/registrations/management`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LaunchPadLaunchPadRegistrationProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LaunchPadLaunchPadRegistrationProjection>, ApiError>;
   }
 
   /**
@@ -135,14 +103,10 @@ export class LaunchPadEventsModule {
     const url = `/v1/launch-pad/events/${eventId}/slots`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LaunchPadCreateLaunchPadSlotInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LaunchPadCreateLaunchPadSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -150,11 +114,7 @@ export class LaunchPadEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadSlotProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadSlotProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -163,21 +123,14 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async putLaunchPadEvents(
-    id: string,
-    body: Types.LaunchPadUpdateLaunchPadEventInput,
-  ): Promise<Result<Types.LaunchPadLaunchPadEventProjection, ApiError>> {
+  async putLaunchPadEvents(id: string, body: Types.LaunchPadUpdateLaunchPadEventInput): Promise<Result<Types.LaunchPadLaunchPadEventProjection, ApiError>> {
     const url = `/v1/launch-pad/events/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LaunchPadUpdateLaunchPadEventInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LaunchPadUpdateLaunchPadEventInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -185,11 +138,7 @@ export class LaunchPadEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -205,14 +154,10 @@ export class LaunchPadEventsModule {
     const url = `/v1/launch-pad/events/${id}:transition`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LaunchPadTransitionLaunchPadEventInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LaunchPadTransitionLaunchPadEventInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -220,11 +165,7 @@ export class LaunchPadEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadEventProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadEventProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -233,24 +174,18 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async getLaunchPadEventsManagementForGetLaunchPadEventsByIdManagement(
-    id: string,
-  ): Promise<Result<Types.LaunchPadLaunchPadEventDetailProjection, ApiError>> {
+  async getLaunchPadEventsManagementForGetLaunchPadEventsByIdManagement(id: string): Promise<Result<Types.LaunchPadLaunchPadEventDetailProjection, ApiError>> {
     const url = `/v1/launch-pad/events/${id}/management`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadEventDetailProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadEventDetailProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -259,24 +194,18 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async getLaunchPadEventsAnalytics(): Promise<
-    Result<Types.LaunchPadLaunchPadAnalyticsProjection, ApiError>
-  > {
-    const url = "/v1/launch-pad/events/analytics";
+  async getLaunchPadEventsAnalytics(): Promise<Result<Types.LaunchPadLaunchPadAnalyticsProjection, ApiError>> {
+    const url = '/v1/launch-pad/events/analytics';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadAnalyticsProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadAnalyticsProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -292,14 +221,10 @@ export class LaunchPadEventsModule {
     const url = `/v1/launch-pad/events/applications/${applicationId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LaunchPadUpdateLaunchPadApplicationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LaunchPadUpdateLaunchPadApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -307,11 +232,7 @@ export class LaunchPadEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -327,14 +248,10 @@ export class LaunchPadEventsModule {
     const url = `/v1/launch-pad/events/applications/${applicationId}:review`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LaunchPadReviewLaunchPadApplicationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LaunchPadReviewLaunchPadApplicationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -342,11 +259,7 @@ export class LaunchPadEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -355,24 +268,18 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async postLaunchPadEventsApplicationsWithdraw(
-    applicationId: string,
-  ): Promise<Result<Types.LaunchPadLaunchPadApplicationProjection, ApiError>> {
+  async postLaunchPadEventsApplicationsWithdraw(applicationId: string): Promise<Result<Types.LaunchPadLaunchPadApplicationProjection, ApiError>> {
     const url = `/v1/launch-pad/events/applications/${applicationId}:withdraw`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadApplicationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadApplicationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -381,81 +288,60 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async getLaunchPadEventsApplicationsMe(): Promise<
-    Result<Array<Types.LaunchPadLaunchPadApplicationProjection>, ApiError>
-  > {
-    const url = "/v1/launch-pad/events/applications/me";
+  async getLaunchPadEventsApplicationsMe(): Promise<Result<Array<Types.LaunchPadLaunchPadApplicationProjection>, ApiError>> {
+    const url = '/v1/launch-pad/events/applications/me';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LaunchPadLaunchPadApplicationProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LaunchPadLaunchPadApplicationProjection>, ApiError>;
   }
 
   /**
    */
-  async getLaunchPadEventsManagementForGetLaunchPadEventsManagement(): Promise<
-    Result<Array<Types.LaunchPadLaunchPadEventProjection>, ApiError>
-  > {
-    const url = "/v1/launch-pad/events/management";
+  async getLaunchPadEventsManagementForGetLaunchPadEventsManagement(): Promise<Result<Array<Types.LaunchPadLaunchPadEventProjection>, ApiError>> {
+    const url = '/v1/launch-pad/events/management';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LaunchPadLaunchPadEventProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LaunchPadLaunchPadEventProjection>, ApiError>;
   }
 
   /**
    */
-  async getLaunchPadEventsPublicForGetLaunchPadEventsPublic(): Promise<
-    Result<Array<Types.LaunchPadLaunchPadEventProjection>, ApiError>
-  > {
-    const url = "/v1/launch-pad/events/public";
+  async getLaunchPadEventsPublicForGetLaunchPadEventsPublic(): Promise<Result<Array<Types.LaunchPadLaunchPadEventProjection>, ApiError>> {
+    const url = '/v1/launch-pad/events/public';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LaunchPadLaunchPadEventProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LaunchPadLaunchPadEventProjection>, ApiError>;
   }
 
   /**
    */
-  async getLaunchPadEventsPublicForGetLaunchPadEventsPublicById(
-    id: string,
-  ): Promise<Result<Types.LaunchPadLaunchPadEventDetailProjection, ApiError>> {
+  async getLaunchPadEventsPublicForGetLaunchPadEventsPublicById(id: string): Promise<Result<Types.LaunchPadLaunchPadEventDetailProjection, ApiError>> {
     const url = `/v1/launch-pad/events/public/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadEventDetailProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadEventDetailProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -464,24 +350,18 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async postLaunchPadEventsRegistrationsCancel(
-    registrationId: string,
-  ): Promise<Result<Types.LaunchPadLaunchPadRegistrationProjection, ApiError>> {
+  async postLaunchPadEventsRegistrationsCancel(registrationId: string): Promise<Result<Types.LaunchPadLaunchPadRegistrationProjection, ApiError>> {
     const url = `/v1/launch-pad/events/registrations/${registrationId}:cancel`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadRegistrationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadRegistrationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -497,14 +377,10 @@ export class LaunchPadEventsModule {
     const url = `/v1/launch-pad/events/registrations/${registrationId}:transition`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LaunchPadTransitionLaunchPadRegistrationInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LaunchPadTransitionLaunchPadRegistrationInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -512,11 +388,7 @@ export class LaunchPadEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadRegistrationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadRegistrationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -525,21 +397,16 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async getLaunchPadEventsRegistrationsMe(): Promise<
-    Result<Array<Types.LaunchPadLaunchPadRegistrationProjection>, ApiError>
-  > {
-    const url = "/v1/launch-pad/events/registrations/me";
+  async getLaunchPadEventsRegistrationsMe(): Promise<Result<Array<Types.LaunchPadLaunchPadRegistrationProjection>, ApiError>> {
+    const url = '/v1/launch-pad/events/registrations/me';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LaunchPadLaunchPadRegistrationProjection>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LaunchPadLaunchPadRegistrationProjection>, ApiError>;
   }
 
   /**
@@ -551,14 +418,10 @@ export class LaunchPadEventsModule {
     const url = `/v1/launch-pad/events/slots/${slotId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LaunchPadCreateLaunchPadSlotInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LaunchPadCreateLaunchPadSlotInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -566,11 +429,7 @@ export class LaunchPadEventsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadSlotProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadSlotProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -579,13 +438,11 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async deleteLaunchPadEventsSlots(
-    slotId: string,
-  ): Promise<Result<void, ApiError>> {
+  async deleteLaunchPadEventsSlots(slotId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/launch-pad/events/slots/${slotId}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -595,24 +452,18 @@ export class LaunchPadEventsModule {
 
   /**
    */
-  async postLaunchPadEventsSlotsRegistrations(
-    slotId: string,
-  ): Promise<Result<Types.LaunchPadLaunchPadRegistrationProjection, ApiError>> {
+  async postLaunchPadEventsSlotsRegistrations(slotId: string): Promise<Result<Types.LaunchPadLaunchPadRegistrationProjection, ApiError>> {
     const url = `/v1/launch-pad/events/slots/${slotId}/registrations`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPadRegistrationProjectionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPadRegistrationProjectionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -620,8 +471,6 @@ export class LaunchPadEventsModule {
   }
 }
 
-export function createLaunchPadEventsModule(
-  client: ApiClient,
-): LaunchPadEventsModule {
+export function createLaunchPadEventsModule(client: ApiClient): LaunchPadEventsModule {
   return new LaunchPadEventsModule(client);
 }

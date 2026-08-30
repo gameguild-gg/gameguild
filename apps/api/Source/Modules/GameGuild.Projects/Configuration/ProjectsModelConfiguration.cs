@@ -71,6 +71,7 @@ public sealed class ProjectsModelConfiguration : IModelConfiguration
             builder.ToTable("project_versions");
             builder.HasKey(version => version.Id);
             builder.Property(version => version.VersionNumber).IsRequired().HasMaxLength(50);
+            builder.Property(version => version.Status).HasConversion<string>().IsRequired().HasMaxLength(40);
             builder.HasOne(version => version.Project)
                 .WithMany(project => project.Versions)
                 .HasForeignKey(version => version.ProjectId)

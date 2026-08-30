@@ -25,10 +25,7 @@ import type { Session, SessionUser } from './types.js';
 /**
  * Check if a session's user has a specific role.
  */
-export function hasRole(
-  session: Session | SessionUser | null | undefined,
-  role: string
-): boolean {
+export function hasRole(session: Session | SessionUser | null | undefined, role: string): boolean {
   const user = resolveUser(session);
   if (!user?.roles) return false;
   return user.roles.includes(role);
@@ -37,10 +34,7 @@ export function hasRole(
 /**
  * Check if a session's user has ALL of the specified roles.
  */
-export function hasAllRoles(
-  session: Session | SessionUser | null | undefined,
-  roles: string[]
-): boolean {
+export function hasAllRoles(session: Session | SessionUser | null | undefined, roles: string[]): boolean {
   const user = resolveUser(session);
   if (!user?.roles) return false;
   return roles.every((r) => user.roles!.includes(r));
@@ -49,10 +43,7 @@ export function hasAllRoles(
 /**
  * Check if a session's user has at least ONE of the specified roles.
  */
-export function hasAnyRole(
-  session: Session | SessionUser | null | undefined,
-  roles: string[]
-): boolean {
+export function hasAnyRole(session: Session | SessionUser | null | undefined, roles: string[]): boolean {
   const user = resolveUser(session);
   if (!user?.roles) return false;
   return roles.some((r) => user.roles!.includes(r));
@@ -63,10 +54,7 @@ export function hasAnyRole(
 /**
  * Check if a session's user has a specific permission.
  */
-export function hasPermission(
-  session: Session | SessionUser | null | undefined,
-  permission: string
-): boolean {
+export function hasPermission(session: Session | SessionUser | null | undefined, permission: string): boolean {
   const user = resolveUser(session);
   if (!user?.permissions) return false;
   return user.permissions.includes(permission);
@@ -75,10 +63,7 @@ export function hasPermission(
 /**
  * Check if a session's user has ALL of the specified permissions.
  */
-export function hasAllPermissions(
-  session: Session | SessionUser | null | undefined,
-  permissions: string[]
-): boolean {
+export function hasAllPermissions(session: Session | SessionUser | null | undefined, permissions: string[]): boolean {
   const user = resolveUser(session);
   if (!user?.permissions) return false;
   return permissions.every((p) => user.permissions!.includes(p));
@@ -87,10 +72,7 @@ export function hasAllPermissions(
 /**
  * Check if a session's user has at least ONE of the specified permissions.
  */
-export function hasAnyPermission(
-  session: Session | SessionUser | null | undefined,
-  permissions: string[]
-): boolean {
+export function hasAnyPermission(session: Session | SessionUser | null | undefined, permissions: string[]): boolean {
   const user = resolveUser(session);
   if (!user?.permissions) return false;
   return permissions.some((p) => user.permissions!.includes(p));
@@ -109,19 +91,13 @@ export function hasAnyPermission(
  * can(session, 'delete', 'project')  // checks 'project:delete'
  * ```
  */
-export function can(
-  session: Session | SessionUser | null | undefined,
-  action: string,
-  resource: string
-): boolean {
+export function can(session: Session | SessionUser | null | undefined, action: string, resource: string): boolean {
   return hasPermission(session, `${resource}:${action}`);
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────
 
-function resolveUser(
-  input: Session | SessionUser | null | undefined
-): SessionUser | null {
+function resolveUser(input: Session | SessionUser | null | undefined): SessionUser | null {
   if (!input) return null;
   // If it has a `user` property, it's a Session
   if ('user' in input && 'expires' in input) {

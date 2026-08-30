@@ -49,20 +49,10 @@
  * ```
  */
 
-import type {
-  GameGuildAuthConfig,
-  AuthInstance,
-  Session,
-} from '../../runtime/auth/types.js';
+import type { GameGuildAuthConfig, AuthInstance } from '../../runtime/auth/types.js';
 import { resolveConfig } from './config.js';
 import { createHandlers } from './handlers.js';
-import {
-  createAuthFunction,
-  createSignInAction,
-  createSignUpAction,
-  createSignOutAction,
-  createUpdateAction,
-} from './actions.js';
+import { createAuthFunction, createSignInAction, createSignUpAction, createSignOutAction, createUpdateAction } from './actions.js';
 
 /**
  * Initialize the GameGuild authentication system.

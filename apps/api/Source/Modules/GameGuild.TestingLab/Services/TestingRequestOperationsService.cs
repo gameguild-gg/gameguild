@@ -281,16 +281,13 @@ public class TestingRequestOperationsService(
 
         if (projectVersion == null)
         {
-            projectVersion = new GameGuild.Projects.ProjectVersion
-            {
-                Id = Guid.NewGuid(),
-                ProjectId = projectId,
-                VersionNumber = requestDto.VersionNumber,
-                ReleaseNotes = requestDto.Description,
-                Status = "testing",
-                CreatedById = userId,
-                TenantId = existingProject.TenantId,
-            };
+            projectVersion = GameGuild.Projects.ProjectVersion.Create(
+                projectId,
+                requestDto.VersionNumber,
+                requestDto.Description,
+                userId,
+                existingProject.TenantId);
+            projectVersion.MarkReadyForTesting();
 
             context.Set<GameGuild.Projects.ProjectVersion>().Add(projectVersion);
         }

@@ -150,7 +150,6 @@ export function ImportProjectDialog({
       const reader = entry.createReader()
       const allEntries: any[] = []
       // readEntries returns batches; loop until empty
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const batch: any[] = await new Promise((resolve, reject) => reader.readEntries(resolve, reject))
         if (!batch.length) break

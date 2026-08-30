@@ -92,9 +92,9 @@ describe('Discord link callback route', () => {
 
     expect(mocks.postAuthExternalLoginsDiscordLinkCallback).not.toHaveBeenCalled();
     expect(response.status).toBe(302);
-    // Tampered cookie → payload unreadable → locale unknown → unprefixed path.
+    // Tampered cookie → payload unreadable → locale unknown → default locale.
     expect(response.headers.get('location')).toBe(
-      'http://localhost/workspace/settings/account?error=state_mismatch',
+      'http://localhost/en-US/workspace/settings/account?error=state_mismatch',
     );
     expect(mocks.cookieStore.delete).toHaveBeenCalledWith(LINK_STATE_COOKIE_NAME);
   });

@@ -16,7 +16,11 @@ public sealed class TestingEventParticipationController(IMediator mediator) : Ba
         RegisterTestingEventSlotRequest request,
         CancellationToken cancellationToken = default)
         => ToActionResult(await mediator.Send(
-            new RegisterTestingEventSlotCommand(slotId, request.Notes),
+            new RegisterTestingEventSlotCommand(
+                slotId,
+                request.Notes,
+                request.RegistrationResponse,
+                request.AcceptedRules),
             cancellationToken).ConfigureAwait(false));
 
     [HttpDelete("registrations/{registrationId:guid}")]
@@ -121,6 +125,16 @@ public sealed class TestingEventParticipationController(IMediator mediator) : Ba
                 request.FeedbackData,
                 request.OverallRating,
                 request.WouldRecommend,
-                request.AdditionalNotes),
+                request.AdditionalNotes,
+                request.QuestionnaireRevisionId,
+                request.Responses),
+            cancellationToken).ConfigureAwait(false));
+
+    [HttpGet("feedback/me")]
+    public async Task<ActionResult<IReadOnlyList<TestingEventFeedbackProjection>>> GetMyFeedback(
+        [FromQuery] Guid? eventId = null,
+        CancellationToken cancellationToken = default)
+        => ToActionResult(await mediator.Send(
+            new GetMyTestingEventFeedbackQuery(eventId),
             cancellationToken).ConfigureAwait(false));
 }

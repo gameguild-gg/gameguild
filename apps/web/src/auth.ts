@@ -58,46 +58,61 @@ const result = GameGuildAuth({
 export const { handlers, auth, signIn, signOut, signUp, update } = result;
 export const authConfig = result.config;
 
-/**
- * Get the raw access token from the session cookie.
- *
- * Wrapped in React.cache to deduplicate calls within the same request.
- * This is critical because createServerClient calls getAccessToken() twice
- * per request (requiresAuth guard + auth interceptor), and token refresh
- * with rotation would revoke the refresh token on the first call, causing
- * the second call to fail.
- */
-export const getToken = cache(async (): Promise<string | null> => {
+async function readCurrentSession() {
   const cookieStore = await cookies();
   const cookieOptions = resolveCookieOptions(
     authConfig.cookies,
     authConfig.cookies.secure,
   );
   const sessionStore = new SessionStore(cookieOptions);
-
   const encrypted = sessionStore.read((name) => cookieStore.get(name)?.value);
+
   if (!encrypted) {
-    return null;
+    return { session: null, token: null };
   }
 
-  const { token, updated } = await processSession(encrypted, authConfig);
+  const { session, token, updated } = await processSession(
+    encrypted,
+    authConfig,
+  );
 
-  // Persist refreshed token back to cookie so subsequent requests
-  // use the new refresh token (backend does rotation).
   if (updated && token) {
     try {
       const newEncrypted = await encodeSession(token, authConfig);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sessionStore.write(
-        newEncrypted,
-        (name: string, value: string, opts: any) => {
-          cookieStore.set(name, value, opts);
-        },
+      sessionStore.write(newEncrypted, (name, value, options) =>
+        cookieStore.set(name, value, options),
       );
     } catch {
-      // Cookie may be read-only in some contexts (e.g. middleware)
+      // Server Components can read a valid refreshed session even when the
+      // response context cannot persist its rotated cookie.
     }
   }
 
-  return token?.accessToken ?? null;
+  return { session, token };
+}
+
+// Server Components must read Next's request-bound cookie store directly.
+// The shared auth helper uses a dynamic next/headers import that is unavailable
+// in the standalone RSC runtime, while the proxy continues to use auth().
+/**
+ * Resolves the complete authentication state once for the active request.
+ *
+ * Keeping the session, token, and tenant together prevents parallel API
+ * clients from observing different rotations of the same session cookie.
+ */
+export const getRequestAuthContext = cache(async () => {
+  const { session, token } = await readCurrentSession();
+  return {
+    session,
+    token: token?.accessToken ?? null,
+    tenantId: session?.tenantId ?? null,
+  };
 });
+
+export async function getSession() {
+  return (await getRequestAuthContext()).session;
+}
+
+export async function getToken(): Promise<string | null> {
+  return (await getRequestAuthContext()).token;
+}

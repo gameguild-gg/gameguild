@@ -15,6 +15,7 @@ import {
   type TestingLabTestingLabPermissions,
   type TestingLabTestingRequestStatus,
   type TestingLabUserTestingLabPermissions,
+  type ProjectsVersionSubmissionPolicy,
 } from '@game-guild/client';
 import { revalidatePath } from 'next/cache';
 
@@ -482,6 +483,7 @@ export async function updateTestingLabSettings(formData: FormData): Promise<Test
       requireApproval: checked(formData, 'requireApproval'),
       enableNotifications: checked(formData, 'enableNotifications'),
       reminderDaysBefore: optionalText(formData, 'reminderDaysBefore'),
+      versionSubmissionPolicy: (text(formData, 'versionSubmissionPolicy') || 'ReadyMutableUntilReview') as ProjectsVersionSubmissionPolicy,
     }),
     'Testing Lab settings updated.',
     `${DASHBOARD_PATH}/settings`,

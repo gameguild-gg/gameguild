@@ -109,7 +109,6 @@ public class ProjectsControllerTests
         var created = await controller.CreateProjectVersion(project.Id, new CreateProjectVersionRequest
         {
             VersionNumber = "1.0.0",
-            Status = "ready",
             ReleaseNotes = "First testable build"
         });
         var listed = await controller.GetProjectVersions(project.Id);
@@ -118,6 +117,7 @@ public class ProjectsControllerTests
         var version = await _context.Set<ProjectVersion>().SingleAsync();
         version.TenantId.Should().Be(tenantId);
         version.CreatedById.Should().Be(_actorId);
+        version.Status.Should().Be(ProjectVersionStatus.Draft);
         listed.Result.Should().BeOfType<OkObjectResult>()
             .Which.Value.Should().BeAssignableTo<IReadOnlyList<ProjectVersionApiResponse>>()
             .Which.Should().ContainSingle(item => item.VersionNumber == "1.0.0");
@@ -141,15 +141,14 @@ public class ProjectsControllerTests
             CreatedById = _actorId
         };
         _context.Projects.Add(archivedProject);
-        _context.Set<ProjectVersion>().Add(new ProjectVersion
-        {
-            Id = Guid.NewGuid(),
-            TenantId = archivedProject.TenantId,
-            ProjectId = archivedProject.Id,
-            Project = archivedProject,
-            VersionNumber = "1.0.0",
-            CreatedById = _actorId
-        });
+        var archivedVersion = ProjectVersion.Create(
+            archivedProject.Id,
+            "1.0.0",
+            null,
+            _actorId,
+            archivedProject.TenantId);
+        archivedVersion.Project = archivedProject;
+        _context.Set<ProjectVersion>().Add(archivedVersion);
         await _context.SaveChangesAsync();
 
         var result = await CreateController().GetAccessibleProjectVersions();
@@ -157,6 +156,68 @@ public class ProjectsControllerTests
         result.Result.Should().BeOfType<OkObjectResult>()
             .Which.Value.Should().BeAssignableTo<IReadOnlyList<ProjectVersionOptionProjection>>()
             .Which.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ProjectVersionLifecycle_Should_UpdateDraftThenTransitionWithoutAllowingMutation()
+    {
+        var project = new Project
+        {
+            TenantId = Guid.NewGuid(),
+            Title = "Lifecycle project",
+            Slug = "lifecycle-project",
+            CreatedById = _actorId
+        };
+        _context.Projects.Add(project);
+        await _context.SaveChangesAsync();
+        var controller = CreateController();
+        await controller.CreateProjectVersion(project.Id, new CreateProjectVersionRequest
+        {
+            VersionNumber = "0.9.0",
+            ReleaseNotes = "Draft"
+        });
+        var version = await _context.Set<ProjectVersion>().SingleAsync();
+
+        var updated = await controller.UpdateProjectVersion(project.Id, version.Id, new UpdateProjectVersionRequest(
+            "1.0.0",
+            "Candidate"));
+        var ready = await controller.MarkProjectVersionReady(project.Id, version.Id);
+        var rejectedUpdate = await controller.UpdateProjectVersion(project.Id, version.Id, new UpdateProjectVersionRequest(
+            "1.0.1",
+            "Mutation"));
+        var released = await controller.ReleaseProjectVersion(project.Id, version.Id);
+        var archived = await controller.ArchiveProjectVersion(project.Id, version.Id);
+
+        updated.Result.Should().BeOfType<OkObjectResult>();
+        ready.Result.Should().BeOfType<OkObjectResult>();
+        rejectedUpdate.Result.Should().BeOfType<ConflictObjectResult>();
+        released.Result.Should().BeOfType<OkObjectResult>();
+        archived.Result.Should().BeOfType<OkObjectResult>();
+        version.VersionNumber.Should().Be("1.0.0");
+        version.Status.Should().Be(ProjectVersionStatus.Archived);
+    }
+
+    [Fact]
+    public async Task CreateProjectVersion_ShouldRejectNonDraftInitialStatus()
+    {
+        var project = new Project
+        {
+            TenantId = Guid.NewGuid(),
+            Title = "Protected lifecycle",
+            Slug = "protected-lifecycle",
+            CreatedById = _actorId
+        };
+        _context.Projects.Add(project);
+        await _context.SaveChangesAsync();
+
+        var result = await CreateController().CreateProjectVersion(project.Id, new CreateProjectVersionRequest
+        {
+            VersionNumber = "1.0.0",
+            Status = ProjectVersionStatus.ReadyForTesting
+        });
+
+        result.Result.Should().BeOfType<UnprocessableEntityObjectResult>();
+        _context.Set<ProjectVersion>().Should().BeEmpty();
     }
 
     [Fact]

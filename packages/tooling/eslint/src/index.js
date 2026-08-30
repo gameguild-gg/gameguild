@@ -1,3 +1,4 @@
+import { fixupConfigRules } from '@eslint/compat';
 import globals from 'globals';
 import eslint from '@eslint/js';
 import typescriptEslint from 'typescript-eslint';
@@ -68,4 +69,4 @@ const config = [
     },
 ];
 
-export default config.flat();
+export default fixupConfigRules(config.flat());

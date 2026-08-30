@@ -33,6 +33,7 @@ import {
   createProjectAllocationForm,
   createProjectMilestoneForm,
   createProjectTaskForm,
+  createTeamForm,
   createTeamInvitationForm,
   transitionProjectForm,
 } from './workspace-actions';
@@ -67,6 +68,24 @@ describe('workspace form date serialization', () => {
       },
       requiresAuth: true,
     });
+  });
+
+  it('derives a stable Team slug when JavaScript does not provide one', async () => {
+    mocks.request.mockResolvedValue({
+      ok: true,
+      data: { id: 'team-1', slug: 'space-cadets' },
+    });
+    const formData = new FormData();
+    formData.set('name', '  Space Cadets  ');
+    formData.set('visibility', 'Private');
+
+    await createTeamForm(formData);
+
+    expect(mocks.request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({ slug: 'space-cadets' }),
+      }),
+    );
   });
 
   it('normalizes optional task and milestone dates before calling the API', async () => {

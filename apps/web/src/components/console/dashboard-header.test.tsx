@@ -86,7 +86,7 @@ describe('DashboardHeader', () => {
 
     await user.click(menuTrigger);
 
-    expect(screen.getByText('ada@gameguild.gg')).toBeInTheDocument();
+    expect(await screen.findByText('ada@gameguild.gg')).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /my workspace/i })).toHaveAttribute(
       'href',
       '/workspace',
