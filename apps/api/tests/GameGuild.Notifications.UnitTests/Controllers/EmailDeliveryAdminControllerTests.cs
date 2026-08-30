@@ -43,10 +43,10 @@ public class EmailDeliveryAdminControllerTests
     }
 
     [Fact]
-    public async Task Admin_Policy_Should_Deny_Anonymous_And_Plain_Users_And_Allow_Admin_Roles()
+    public async Task Admin_Policy_Should_Deny_All_Users_When_The_Stored_Definition_Is_Missing()
     {
-        // Real DbAuthorizationPolicyProvider static-fallback path (store returns no DB policy)
-        // evaluated through the real ASP.NET Core authorization service.
+        // A missing registered policy is a configuration failure. The real provider must
+        // fail closed rather than silently restoring the removed static role fallback.
         var policyProvider = CreatePolicyProvider();
         using var serviceProvider = BuildAuthorizationServiceProvider(policyProvider);
         var authorizationService = serviceProvider.GetRequiredService<IAuthorizationService>();
@@ -58,8 +58,8 @@ public class EmailDeliveryAdminControllerTests
 
         (await authorizationService.AuthorizeAsync(anonymous, null, Policies.Admin)).Succeeded.Should().BeFalse();
         (await authorizationService.AuthorizeAsync(plainUser, null, Policies.Admin)).Succeeded.Should().BeFalse();
-        (await authorizationService.AuthorizeAsync(admin, null, Policies.Admin)).Succeeded.Should().BeTrue();
-        (await authorizationService.AuthorizeAsync(systemAdmin, null, Policies.Admin)).Succeeded.Should().BeTrue();
+        (await authorizationService.AuthorizeAsync(admin, null, Policies.Admin)).Succeeded.Should().BeFalse();
+        (await authorizationService.AuthorizeAsync(systemAdmin, null, Policies.Admin)).Succeeded.Should().BeFalse();
     }
 
     // ── Event feed ───────────────────────────────────────────────────────
