@@ -681,7 +681,9 @@ if [[ "$gate_profile" == full ]]; then
   publish_directory="$artifact_root/publish/api"
   # Some API project references are intentionally not solution members. Build
   # during publish so their output is always materialized before packaging.
-  run dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --output "$publish_directory"
+  run dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore --nologo --output "$publish_directory" \
+    "${dotnet_build_isolation[@]}" \
+    -p:TreatWarningsAsErrors=true
   api_port="$(get_ephemeral_port)"
   export ASPNETCORE_ENVIRONMENT=Development
   export ASPNETCORE_URLS="http://127.0.0.1:$api_port"
