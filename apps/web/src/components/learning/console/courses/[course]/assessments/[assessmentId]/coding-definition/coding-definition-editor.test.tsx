@@ -128,12 +128,13 @@ vi.mock("@game-guild/emception-ui", async () => {
       workspaceConfig: props.workspaceConfig,
       allowCreateFiles: props.definition?.Environment?.AllowStudentCreateFiles,
     };
+    const { onReady } = props;
     React.useEffect(() => {
-      props.onReady?.({
+      onReady?.({
         getFiles: ideMock.getFiles,
         replaceFiles: ideMock.replaceFiles,
       });
-    }, [props.onReady]);
+    }, [onReady]);
     return React.createElement(
       "div",
       { "data-testid": "mock-assessment-editor" },
