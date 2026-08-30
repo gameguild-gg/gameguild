@@ -29,6 +29,13 @@ test('Emception CI is Linux-only, lockfile-driven, receipt-aware, and Changesets
     true,
     'package clean/build must finish before the canonical CDN is staged',
   );
+  assert.match(workflow, /pnpm --filter @game-guild\/client run build/);
+  assert.equal(
+    workflow.indexOf('- name: Build generated API client')
+      < workflow.indexOf('- name: Run instructor and learner coding assessment cycle'),
+    true,
+    'the generated API client must exist before the coding-cycle runner imports it',
+  );
 
   const ignore = await readFile(path.join(repoRoot, '.gitignore'), 'utf8');
   const rootPackage = JSON.parse(await readFile(path.join(repoRoot, 'package.json'), 'utf8'));
