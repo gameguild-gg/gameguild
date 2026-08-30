@@ -514,6 +514,7 @@ fi
 
 gate_stage='build'
 run dotnet restore apps/api/GameGuild.sln --nologo
+run dotnet tool restore
 if [[ "$gate_profile" == full ]]; then
   run dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal \
     "${dotnet_build_isolation[@]}" \
