@@ -22,4 +22,4 @@ fi
 cd "$repository_root"
 
 pnpm --filter @game-guild/client generate -- --openapi "$openapi_artifact" --force
-git diff --exit-code -- packages/infrastructure/client/src/generated
+pnpm --filter @game-guild/client generate:diff
