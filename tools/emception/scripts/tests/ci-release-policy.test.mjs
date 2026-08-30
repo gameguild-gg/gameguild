@@ -3,16 +3,15 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { test } from 'node:test';
 
-test('Emception CI is Linux-only, lockfile-free, receipt-aware, and Changesets-based', async () => {
+test('Emception CI is Linux-only, lockfile-driven, receipt-aware, and Changesets-based', async () => {
   const repoRoot = path.resolve(import.meta.dirname, '..', '..', '..', '..');
   const workflow = await readFile(path.join(repoRoot, '.github', 'workflows', 'emception.yml'), 'utf8');
   const runners = [...workflow.matchAll(/^\s*runs-on:\s*(.+)$/gm)].map((match) => match[1].trim());
 
   assert.equal(runners.length > 0, true);
   assert.deepEqual([...new Set(runners)], ['ubuntu-latest']);
-  const installs = workflow.match(/pnpm install --no-lockfile --no-frozen-lockfile --ignore-scripts/g) ?? [];
-  assert.equal(installs.length, 2);
-  assert.doesNotMatch(workflow, /pnpm install --frozen-lockfile|cache: pnpm|continue-on-error/);
+  assert.match(workflow, /pnpm install --frozen-lockfile --ignore-scripts/);
+  assert.doesNotMatch(workflow, /--no-lockfile|continue-on-error/);
   assert.doesNotMatch(workflow, /tools\/emception\/(?:userland|build|sysroot|tools\/emsdk)/);
   assert.match(workflow, /\.cache\/toolchain\/downloads/);
   assert.match(workflow, /artifacts\/toolchain\/receipts/);
