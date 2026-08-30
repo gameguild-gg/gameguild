@@ -47,6 +47,7 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, createWriteStream, rmSync } from "node:fs";
 import { resolve } from "node:path";
@@ -436,7 +437,7 @@ function pipeLog(proc, file) {
 // ---------------------------------------------------------------------------
 
 function unique() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${Date.now()}-${randomUUID().slice(0, 8)}`;
 }
 
 function formatApiError(error) {
