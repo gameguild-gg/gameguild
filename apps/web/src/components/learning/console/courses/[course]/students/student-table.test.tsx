@@ -91,7 +91,7 @@ describe('StudentTable', () => {
 
     await user.clear(screen.getByPlaceholderText(/search by name or email/i));
     await user.click(screen.getByRole('combobox'));
-    await user.click(screen.getByRole('option', { name: /inactive/i }));
+    await user.click(await screen.findByRole('option', { name: /inactive/i }));
 
     expect(screen.getByText('Alan Inactive')).toBeInTheDocument();
     expect(screen.queryByText('Ada Learner')).not.toBeInTheDocument();
