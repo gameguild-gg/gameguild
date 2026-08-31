@@ -2,10 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => {
   const api = vi.fn(async () => ({ ok: true, data: { id: 'result' } }));
-  const module = () => new Proxy({}, { get: (_target, property) => (...args: unknown[]) => api(String(property), args) });
+  const moduleProxy = () => new Proxy({}, { get: (_target, property) => (...args: unknown[]) => api(String(property), args) });
   return {
     api,
-    modules: { admin: module(), authStepUp: module(), compliance: module(), holds: module(), legacy: module(), risk: module(), treasury: module() },
+    modules: {
+      admin: moduleProxy(),
+      authStepUp: moduleProxy(),
+      compliance: moduleProxy(),
+      holds: moduleProxy(),
+      legacy: moduleProxy(),
+      risk: moduleProxy(),
+      treasury: moduleProxy(),
+    },
     requireSurface: vi.fn(async () => ({})),
     revalidatePath: vi.fn(),
   };

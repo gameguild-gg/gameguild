@@ -1550,11 +1550,6 @@
       "count": 2
     }
   },
-  "src/components/testing-lab/testing-lab-session-registration.tsx": {
-    "@next/next/no-html-link-for-pages": {
-      "count": 46
-    }
-  },
   "src/components/ui/carousel.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
