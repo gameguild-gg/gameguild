@@ -145,6 +145,31 @@ test_economy_gate_rejects_stage_skips() {
   ! grep -Fq -- '--skip-browser' "$gate"
 }
 
+test_economy_gate_requires_full_web_coverage() {
+  local gate="$ci_dir/verify-economy.sh"
+  local package_manifest="$repository_root/apps/web/package.json"
+  local coverage_config="$repository_root/apps/web/vitest.economy.config.mts"
+
+  grep -Fq '"test:economy:coverage": "vitest run -c vitest.economy.config.mts --coverage"' "$package_manifest" || return 1
+  [[ -f "$coverage_config" ]] || return 1
+  grep -Fq 'lines: 100' "$coverage_config" || return 1
+  grep -Fq 'branches: 100' "$coverage_config" || return 1
+  grep -Fq 'functions: 100' "$coverage_config" || return 1
+  grep -Fq 'statements: 100' "$coverage_config" || return 1
+  grep -Fq 'ECONOMY_WEB_COVERAGE_DIR' "$gate" || return 1
+  grep -Fq 'test:economy:coverage' "$gate"
+}
+
+test_economy_gate_runs_economy_browser_surface() {
+  local gate="$ci_dir/verify-economy.sh"
+  local package_manifest="$repository_root/apps/web/package.json"
+
+  grep -Fq '"test:browser:economy": "node scripts/economy-browser-e2e.mjs"' "$package_manifest" || return 1
+  [[ -f "$repository_root/apps/web/scripts/economy-browser-e2e.mjs" ]] || return 1
+  grep -Fq 'economy-browser.json' "$gate" || return 1
+  grep -Fq 'test:browser:economy' "$gate"
+}
+
 test_economy_coverage_ignores_only_compiler_generated_members() {
   local gate="$ci_dir/verify-economy.sh"
 
@@ -200,7 +225,7 @@ test_economy_gate_builds_release_targets_strictly_once() {
   ! grep -Fq 'dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj' "$gate" || return 1
   grep -Fq 'dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-build --no-restore' "$gate" || return 1
   grep -Fq 'provider_build_arguments=(--no-build --no-restore)' "$gate" || return 1
-  grep -Fq 'dotnet_build_isolation=(-m:1 -p:UseSharedCompilation=false)' "$gate" || return 1
+  grep -Fq 'dotnet_build_isolation=(-m:4 -p:UseSharedCompilation=false)' "$gate" || return 1
   grep -Fq -- '-p:TreatWarningsAsErrors=true' "$gate" || return 1
   ! grep -Fq 'warning_projects=' "$gate"
 }
@@ -210,7 +235,7 @@ test_economy_gate_rejects_nested_postgres_testcontainers() {
 
   grep -Fq "gate_stage='preflight-postgres-isolation'" "$gate" || return 1
   grep -Fq 'ECONOMY_POSTGRES_CONNECTION' "$gate" || return 1
-  grep -Fq "grep -RIl --include='*.cs' 'new PostgreSqlBuilder' apps/api/tests" "$gate" || return 1
+  grep -Fq "grep -RIl --include='*.cs' --exclude-dir=bin --exclude-dir=obj 'new PostgreSqlBuilder' apps/api/tests" "$gate" || return 1
   grep -Fq 'GameGuild.TestSupport.Economy/' "$gate"
 }
 
@@ -238,6 +263,9 @@ test_full_gate_isolates_api_migration_tests_from_the_economy_template() {
   grep -Fq "[[ \"\$test_name\" == 'GameGuild.API.UnitTests' ]]" <<< "$runner" || return 1
   grep -Fq 'ECONOMY_POSTGRES_CONNECTION="$whole_solution_connection_string"' <<< "$runner" || return 1
   grep -Fq 'ECONOMY_POSTGRES_TEMPLATE_DATABASE=' <<< "$runner" || return 1
+  grep -Fq 'project_timeout="$api_test_timeout"' <<< "$runner" || return 1
+  grep -Fq 'timeout --kill-after=30s "$project_timeout"' <<< "$runner" || return 1
+  grep -Fq 'api_test_timeout="${ECONOMY_API_TEST_TIMEOUT:-12m}"' "$gate" || return 1
   ! grep -Fq -- '--settings' <<< "$runner" || return 1
   ! grep -Fq 'xunit-postgres-serial.runsettings' "$gate"
 }
@@ -348,8 +376,20 @@ test_emception_ci_validates_develop_pull_requests() {
 }
 
 test_web_vitest_uses_direct_exec_for_json_evidence() {
-  grep -Fq 'run env -u API_URL "${pnpm_command[@]}" --filter @game-guild/web exec vitest run --reporter=json' "$ci_dir/verify-economy.sh" || return 1
+  grep -Fq 'run env -u API_URL "${pnpm_command[@]}" --filter @game-guild/web exec vitest run --maxWorkers=4 --reporter=json' "$ci_dir/verify-economy.sh" || return 1
   ! grep -q 'pnpm --filter @game-guild/web run test --' "$ci_dir/verify-economy.sh"
+}
+
+test_economy_frontend_build_reuses_the_validated_client() {
+  local gate="$ci_dir/verify-economy.sh"
+  local web_package="$repository_root/apps/web/package.json"
+
+  grep -Fq '"build:emception-runtime-dependencies"' "$web_package" || return 1
+  grep -Fq -- '--filter @game-guild/client build' "$gate" || return 1
+  grep -Fq -- '--filter @game-guild/web run build:emception-runtime-dependencies' "$gate" || return 1
+  grep -Fq -- '--filter @game-guild/web run sync:emception' "$gate" || return 1
+  grep -Fq 'GAMEGUILD_DISABLE_WEBPACK_CACHE=1 run "${pnpm_command[@]}" --filter @game-guild/web exec next build --webpack' "$gate" || return 1
+  ! grep -Fq -- '--filter @game-guild/web build' "$gate"
 }
 
 test_web_server_uses_direct_node_process_for_cleanup() {
@@ -724,6 +764,8 @@ run_test 'workflow caches gate dependencies' test_workflow_caches_gate_dependenc
 run_test 'Economy preflight is independent and records its summary' test_economy_preflight_has_no_repository_policy_side_effect
 run_test 'Economy preflight avoids the pnpm install lock' test_economy_preflight_avoids_the_pnpm_install_lock
 run_test 'Economy gate rejects stage skips' test_economy_gate_rejects_stage_skips
+run_test 'Economy gate requires 100 percent web coverage' test_economy_gate_requires_full_web_coverage
+run_test 'Economy gate runs the Economy browser surface' test_economy_gate_runs_economy_browser_surface
 run_test 'Economy gate bounds hung tests and records timings' test_economy_gate_bounds_hung_tests_and_records_timings
 run_test 'Economy gate supports fast PR and full release profiles' test_economy_gate_supports_fast_pr_and_full_release_profiles
 run_test 'Economy gate batches whole-solution tests' test_economy_gate_batches_whole_solution_tests
@@ -739,6 +781,7 @@ run_test 'Changesets config isolates the Emception release group' test_changeset
 run_test 'Emception emits a gate result for every main push' test_emception_emits_a_gate_result_for_every_main_push
 run_test 'Emception CI validates Toolchain-consuming changes on develop' test_emception_ci_validates_develop_pull_requests
 run_test 'web Vitest uses direct exec for JSON evidence' test_web_vitest_uses_direct_exec_for_json_evidence
+run_test 'Economy frontend build reuses its validated client' test_economy_frontend_build_reuses_the_validated_client
 run_test 'web server uses a directly managed Node process' test_web_server_uses_direct_node_process_for_cleanup
 run_test 'standalone web server uses an origin-safe bind address' test_standalone_web_server_uses_origin_safe_bind_address
 run_test 'browser server uses the published API instance' test_browser_server_uses_published_api
