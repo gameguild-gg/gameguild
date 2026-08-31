@@ -143,7 +143,9 @@ export function CodingActivityClient({
     if (submitting) return;
     setSubmitting(true);
     try {
-      await sessionRef.current?.run('public');
+      // Submission serializes the current editor state without recompiling it.
+      // Public tests have their own explicit action; repeating a full browser
+      // toolchain run here can keep the form in "Submitting" for over a minute.
       // The assessment session returns only editable public changes plus
       // permitted student-created text files.
       const modified = (await sessionRef.current?.getSubmissionDelta()) ?? [];
