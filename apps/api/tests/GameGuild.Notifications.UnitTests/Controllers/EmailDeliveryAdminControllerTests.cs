@@ -45,8 +45,6 @@ public class EmailDeliveryAdminControllerTests
     [Fact]
     public async Task Admin_Policy_Should_Deny_Anonymous_And_Plain_Users_And_Allow_Admin_Roles()
     {
-        // Real DbAuthorizationPolicyProvider static-fallback path (store returns no DB policy)
-        // evaluated through the real ASP.NET Core authorization service.
         var policyProvider = CreatePolicyProvider();
         using var serviceProvider = BuildAuthorizationServiceProvider(policyProvider);
         var authorizationService = serviceProvider.GetRequiredService<IAuthorizationService>();
@@ -369,8 +367,12 @@ public class EmailDeliveryAdminControllerTests
             .ReturnsAsync(0L);
 
         var policyStore = new Mock<IPolicyDefinitionStore>();
-        policyStore.Setup(p => p.GetPolicyAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((PolicyDefinition?)null);
+        policyStore.Setup(p => p.GetPolicyAsync(Policies.Admin, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PolicyDefinition
+            {
+                PolicyName = Policies.Admin,
+                RequiredRoles = ["Admin", "SystemAdmin"]
+            });
 
         var serviceProvider = new Mock<System.IServiceProvider>();
         serviceProvider.Setup(sp => sp.GetService(typeof(ITenantSecurityVersionStore))).Returns(versionStore.Object);
@@ -388,7 +390,7 @@ public class EmailDeliveryAdminControllerTests
         return new DbAuthorizationPolicyProvider(
             Options.Create(new AuthorizationOptions()),
             policyCache.Object,
-            Mock.Of<IPolicyMerger>(),
+            new DefaultPolicyMerger(),
             scopeFactory.Object,
             Options.Create(new TenancyOptions()),
             NullLogger<DbAuthorizationPolicyProvider>.Instance);

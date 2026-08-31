@@ -1,4 +1,5 @@
 using GameGuild.API.Authorization;
+using GameGuild.API.Controllers;
 using GameGuild.API.Database;
 using GameGuild.API.HealthChecks;
 using GameGuild.API.HostedServices;
@@ -12,6 +13,7 @@ using GameGuild.Economy.Marketplace;
 using GameGuild.Economy.Payouts;
 using GameGuild.Economy.Treasury;
 using GameGuild.GameJams;
+using GameGuild.Identity.Authorization;
 using GameGuild.LaunchPad;
 using GameGuild.Learning.Assessments;
 using GameGuild.Learning.Certificates;
@@ -93,6 +95,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddEconomyCapabilityComposition(builder.Configuration);
         builder.Services.AddEconomyCoreComposition(builder.Configuration);
         builder.Services.AddScoped<IEconomyStepUpExecutor, EconomyStepUpExecutor>();
+        builder.Services.AddScoped<IAdRewardRequestRiskContextResolver, AdRewardRequestRiskContextResolver>();
         builder.Services.AddAdRewardsComposition(builder.Configuration);
         builder.Services.AddBountiesComposition(builder.Configuration);
         builder.Services.AddMarketplaceComposition(builder.Configuration);
@@ -145,8 +148,13 @@ internal sealed class ApiProductComposition : IApiProductComposition
         options.SchemaFilter<LegacyProgramContentTypeSchemaFilter>();
     }
 
-    public Task SeedAsync(IServiceProvider services, CancellationToken cancellationToken)
-        => DatabaseSeeder.SeedAsync(services);
+    public async Task SeedAsync(IServiceProvider services, CancellationToken cancellationToken)
+    {
+        await DatabaseSeeder.SeedAsync(services).ConfigureAwait(false);
+        await services.GetRequiredService<PolicyDefinitionSeeder>()
+            .SeedAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
 
     public async Task<bool> InitializeAsync(
         WebApplication app,
