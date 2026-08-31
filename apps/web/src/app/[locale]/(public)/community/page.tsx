@@ -1,15 +1,25 @@
 import { Link } from '@/i18n/navigation';
 import {
-  communityGroups,
-  publicActivities,
-  publicMembers,
-  publicPlaytests,
-  publicProjects,
-} from '@/lib/community/public-community';
+  getPublicActivities,
+  getPublicCommunityGroups,
+  getPublicMemberSpotlights,
+  getPublicPlaytests,
+} from '@/lib/community/public-community-queries';
+import { getPublishedProjects } from '@/lib/projects/public-projects';
 import { ArrowRight, CalendarDays, MessageSquare, Sparkles, Users } from 'lucide-react';
 import React from 'react';
 
 export default async function CommunityPage(): Promise<React.JSX.Element> {
+  const [publishedProjects, memberSpotlights, playtests, activities, groups] = await Promise.all([
+    getPublishedProjects(),
+    getPublicMemberSpotlights(),
+    getPublicPlaytests(),
+    getPublicActivities(),
+    getPublicCommunityGroups(),
+  ]);
+  const creatorCount = new Set(publishedProjects.map((project) => project.creator.trim().toLowerCase()).filter(Boolean))
+    .size;
+
   return (
     <main className="bg-slate-950 text-white">
       <section className="border-b border-white/10 bg-[radial-gradient(circle_at_12%_0%,rgba(14,165,233,0.16),transparent_34%),radial-gradient(circle_at_88%_12%,rgba(168,85,247,0.14),transparent_30%),linear-gradient(180deg,#111827,#020617)]">
@@ -40,17 +50,17 @@ export default async function CommunityPage(): Promise<React.JSX.Element> {
           <div className="grid gap-4 md:grid-cols-2">
             <article className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
               <Users className="mb-5 size-6 text-sky-200" aria-hidden="true" />
-              <p className="text-3xl font-semibold">{publicMembers.length}</p>
-              <p className="mt-1 text-sm text-slate-400">Highlighted members</p>
+              <p className="text-3xl font-semibold">{creatorCount}</p>
+              <p className="mt-1 text-sm text-slate-400">Project creators</p>
             </article>
             <article className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
               <Sparkles className="mb-5 size-6 text-violet-200" aria-hidden="true" />
-              <p className="text-3xl font-semibold">{publicProjects.length}</p>
-              <p className="mt-1 text-sm text-slate-400">Featured projects</p>
+              <p className="text-3xl font-semibold">{publishedProjects.length}</p>
+              <p className="mt-1 text-sm text-slate-400">Published projects</p>
             </article>
             <article className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 md:col-span-2">
               <CalendarDays className="mb-5 size-6 text-emerald-200" aria-hidden="true" />
-              <p className="text-3xl font-semibold">{publicPlaytests.length}</p>
+              <p className="text-3xl font-semibold">{playtests.length}</p>
               <p className="mt-1 text-sm text-slate-400">Upcoming critique and playtest sessions</p>
             </article>
           </div>
@@ -66,28 +76,38 @@ export default async function CommunityPage(): Promise<React.JSX.Element> {
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          {publicMembers.map((member) => (
-            <article key={member.handle} className="rounded-3xl border border-white/10 bg-slate-900/70 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{member.handle}</p>
-              <h3 className="mt-3 text-xl font-semibold text-white">{member.name}</h3>
-              <p className="mt-1 text-sm text-slate-400">
-                {member.role} - {member.focus}
-              </p>
-              <p className="mt-4 text-sm leading-6 text-slate-300">{member.contribution}</p>
-            </article>
-          ))}
+          {memberSpotlights.length === 0 ? (
+            <p className="text-sm leading-6 text-slate-400">Member spotlights will appear here as projects are published.</p>
+          ) : (
+            memberSpotlights.map((member) => (
+              <article key={member.handle} className="rounded-3xl border border-white/10 bg-slate-900/70 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">{member.handle}</p>
+                <h3 className="mt-3 text-xl font-semibold text-white">{member.name}</h3>
+                <p className="mt-1 text-sm text-slate-400">
+                  {member.role} - {member.focus}
+                </p>
+                <p className="mt-4 text-sm leading-6 text-slate-300">{member.contribution}</p>
+              </article>
+            ))
+          )}
         </div>
       </section>
 
       <section className="border-y border-white/10 bg-white/[0.03]">
         <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-14 sm:px-6 lg:grid-cols-3 lg:px-8">
-          {communityGroups.map((group) => (
-            <article key={group.name} className="rounded-3xl border border-white/10 bg-slate-900/70 p-6">
-              <h2 className="text-xl font-semibold text-white">{group.name}</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-400">{group.description}</p>
-              <p className="mt-5 text-sm font-semibold text-sky-200">{group.members}</p>
-            </article>
-          ))}
+          {groups.length === 0 ? (
+            <p className="text-sm leading-6 text-slate-400">Project communities will appear here as projects are published.</p>
+          ) : (
+            groups.map((group) => (
+              <article key={group.name} className="rounded-3xl border border-white/10 bg-slate-900/70 p-6">
+                <h2 className="text-xl font-semibold text-white">{group.name}</h2>
+                <p className="mt-3 text-sm leading-6 text-slate-400">{group.description}</p>
+                <p className="mt-5 text-sm font-semibold text-sky-200">
+                  {group.projectCount} {group.projectCount === 1 ? 'project' : 'projects'}
+                </p>
+              </article>
+            ))
+          )}
         </div>
       </section>
 
@@ -103,7 +123,10 @@ export default async function CommunityPage(): Promise<React.JSX.Element> {
           </p>
         </div>
         <div className="space-y-3">
-          {publicActivities.map((activity) => (
+          {activities.length === 0 ? (
+            <p className="text-sm leading-6 text-slate-400">Community activity will appear here as projects are updated.</p>
+          ) : (
+            activities.map((activity) => (
             <Link
               key={`${activity.actor}-${activity.target}`}
               href={activity.href}
@@ -114,7 +137,8 @@ export default async function CommunityPage(): Promise<React.JSX.Element> {
                 <span className="font-semibold text-sky-200">{activity.target}</span>
               </p>
             </Link>
-          ))}
+            ))
+          )}
         </div>
       </section>
     </main>

@@ -3,7 +3,12 @@ import { publicWebsiteHighlights } from '@/components/app/app-shell';
 import { FeedShell } from '@/components/feed/feed-shell';
 import { isFeedTab } from '@/components/feed/feed-tabs';
 import { Link } from '@/i18n/navigation';
-import { publicActivities, publicMembers, publicPlaytests, publicProjects } from '@/lib/community/public-community';
+import {
+  getPublicActivities,
+  getPublicMemberSpotlights,
+  getPublicPlaytests,
+} from '@/lib/community/public-community-queries';
+import { getPublishedProjects } from '@/lib/projects/public-projects';
 import { ArrowRight, CalendarDays, MessageSquare, Sparkles, Users } from 'lucide-react';
 import React from 'react';
 
@@ -14,6 +19,13 @@ export default async function Page({ params, searchParams }: PageProps<'/[locale
     const rawTab = typeof query?.tab === 'string' ? query.tab : undefined;
     return <FeedShell tab={isFeedTab(rawTab) ? rawTab : 'foryou'} />;
   }
+
+  const [latestProjects, memberSpotlights, playtests, activities] = await Promise.all([
+    getPublishedProjects().then((projects) => projects.slice(0, 3)),
+    getPublicMemberSpotlights(),
+    getPublicPlaytests(),
+    getPublicActivities(),
+  ]);
 
   return (
     <main className="bg-slate-950 text-white">
@@ -113,10 +125,10 @@ export default async function Page({ params, searchParams }: PageProps<'/[locale
       <section className="bg-slate-950">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
           <div className="max-w-xl space-y-4">
-            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Featured community projects</h2>
+            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Latest projects</h2>
             <p className="text-base leading-7 text-slate-400">
-              GameGuild is built around visible work. Browse student projects, join playtests, and see how course
-              outcomes become public portfolio evidence.
+              GameGuild is built around visible work. Browse recently updated student projects, join playtests, and see
+              how course outcomes become public portfolio evidence.
             </p>
             <Link
               href="/projects"
@@ -128,7 +140,10 @@ export default async function Page({ params, searchParams }: PageProps<'/[locale
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
-            {publicProjects.map((project) => (
+            {latestProjects.length === 0 ? (
+              <p className="text-sm text-slate-400">Community projects will appear here soon.</p>
+            ) : (
+              latestProjects.map((project) => (
               <Link
                 key={project.slug}
                 href={`/projects/${project.slug}`}
@@ -147,7 +162,8 @@ export default async function Page({ params, searchParams }: PageProps<'/[locale
                   </span>
                 </div>
               </Link>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -160,12 +176,16 @@ export default async function Page({ params, searchParams }: PageProps<'/[locale
               <h2 className="text-xl font-semibold text-white">Active members</h2>
             </div>
             <div className="space-y-4">
-              {publicMembers.map((member) => (
+              {memberSpotlights.length === 0 ? (
+                <p className="text-sm leading-6 text-slate-400">Member spotlights will appear here as projects are published.</p>
+              ) : (
+                memberSpotlights.map((member) => (
                 <div key={member.handle} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                   <p className="font-semibold text-white">{member.name}</p>
                   <p className="text-sm text-slate-400">{member.role} - {member.focus}</p>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -175,12 +195,16 @@ export default async function Page({ params, searchParams }: PageProps<'/[locale
               <h2 className="text-xl font-semibold text-white">Upcoming playtests</h2>
             </div>
             <div className="space-y-4">
-              {publicPlaytests.map((playtest) => (
-                <Link key={playtest.title} href={playtest.href} className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20">
-                  <p className="font-semibold text-white">{playtest.title}</p>
-                  <p className="text-sm text-slate-400">{playtest.date} - {playtest.seats}</p>
-                </Link>
-              ))}
+              {playtests.length === 0 ? (
+                <p className="text-sm leading-6 text-slate-400">Playtest sessions will appear here once scheduled.</p>
+              ) : (
+                playtests.map((playtest) => (
+                  <Link key={playtest.href} href={playtest.href} className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20">
+                    <p className="font-semibold text-white">{playtest.title}</p>
+                    <p className="text-sm text-slate-400">{playtest.date} - {playtest.seats}</p>
+                  </Link>
+                ))
+              )}
             </div>
           </div>
 
@@ -190,14 +214,18 @@ export default async function Page({ params, searchParams }: PageProps<'/[locale
               <h2 className="text-xl font-semibold text-white">Community activity</h2>
             </div>
             <div className="space-y-4">
-              {publicActivities.map((activity) => (
-                <Link key={`${activity.actor}-${activity.target}`} href={activity.href} className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20">
-                  <p className="text-sm leading-6 text-slate-300">
-                    <span className="font-semibold text-white">{activity.actor}</span> {activity.action}{' '}
-                    <span className="font-semibold text-sky-200">{activity.target}</span>
-                  </p>
-                </Link>
-              ))}
+              {activities.length === 0 ? (
+                <p className="text-sm leading-6 text-slate-400">Community activity will appear here as projects are updated.</p>
+              ) : (
+                activities.map((activity) => (
+                  <Link key={`${activity.actor}-${activity.target}`} href={activity.href} className="block rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:border-white/20">
+                    <p className="text-sm leading-6 text-slate-300">
+                      <span className="font-semibold text-white">{activity.actor}</span> {activity.action}{' '}
+                      <span className="font-semibold text-sky-200">{activity.target}</span>
+                    </p>
+                  </Link>
+                ))
+              )}
             </div>
           </div>
         </div>

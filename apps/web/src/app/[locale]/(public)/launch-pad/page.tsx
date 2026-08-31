@@ -1,5 +1,5 @@
 import { Link } from '@/i18n/navigation';
-import { publicProjects } from '@/lib/community/public-community';
+import { getPublishedProjects } from '@/lib/projects/public-projects';
 import { ArrowRight, CalendarCheck2, CheckCircle2, ClipboardList, Rocket, Store, Target } from 'lucide-react';
 import Image from 'next/image';
 import React from 'react';
@@ -25,8 +25,9 @@ const launchSteps = [
 const launchSignals = ['Store page clarity', 'Trailer and screenshots', 'Known issues', 'Support plan', 'Launch metrics'];
 
 export default async function LaunchPadPublicPage(): Promise<React.JSX.Element> {
-  const launchProject = publicProjects.find((project) => project.status === 'Showcase ready') ?? publicProjects[0];
-  const preparingProjects = publicProjects.filter((project) => project.slug !== launchProject.slug);
+  const publishedProjects = await getPublishedProjects();
+  const [launchProject, ...remainingProjects] = publishedProjects;
+  const preparingProjects = remainingProjects.slice(0, 4);
 
   return (
     <main className="bg-slate-950 text-white">
@@ -59,33 +60,39 @@ export default async function LaunchPadPublicPage(): Promise<React.JSX.Element> 
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/70 shadow-2xl shadow-sky-950/30">
-            <div className="relative h-72 overflow-hidden">
-              <Image
-                src={launchProject.previewImage}
-                alt={`${launchProject.title} launch candidate preview`}
-                fill
-                className="object-cover opacity-90"
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                priority
-              />
-              <div className={`absolute inset-0 bg-gradient-to-t ${launchProject.accent}`} />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">Launch candidate</p>
-                <h2 className="mt-2 text-3xl font-semibold text-white">{launchProject.title}</h2>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">{launchProject.summary}</p>
+          {launchProject ? (
+            <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-900/70 shadow-2xl shadow-sky-950/30">
+              <div className="relative h-72 overflow-hidden">
+                <Image
+                  src={launchProject.previewImage}
+                  alt={`${launchProject.title} launch candidate preview`}
+                  fill
+                  className="object-cover opacity-90"
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                  priority
+                />
+                <div className={`absolute inset-0 bg-gradient-to-t ${launchProject.accent}`} />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-200">Launch candidate</p>
+                  <h2 className="mt-2 text-3xl font-semibold text-white">{launchProject.title}</h2>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">{launchProject.summary}</p>
+                </div>
+              </div>
+              <div className="grid gap-3 p-5 sm:grid-cols-3">
+                {launchProject.metrics.map((metric) => (
+                  <div key={metric.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                    <p className="text-2xl font-semibold text-white">{metric.value}</p>
+                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">{metric.label}</p>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="grid gap-3 p-5 sm:grid-cols-3">
-              {launchProject.metrics.map((metric) => (
-                <div key={metric.label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                  <p className="text-2xl font-semibold text-white">{metric.value}</p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">{metric.label}</p>
-                </div>
-              ))}
+          ) : (
+            <div className="flex items-center rounded-[2rem] border border-white/10 bg-slate-900/70 p-10 text-sm leading-6 text-slate-400">
+              Launch candidates will appear here once community projects are published.
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -148,8 +155,11 @@ export default async function LaunchPadPublicPage(): Promise<React.JSX.Element> 
             <ArrowRight className="ml-2 size-4" aria-hidden="true" />
           </Link>
         </div>
-        <div className="grid gap-5 lg:grid-cols-2">
-          {preparingProjects.map((project) => (
+        {preparingProjects.length === 0 ? (
+          <p className="text-sm leading-6 text-slate-400">Projects preparing for launch will appear here.</p>
+        ) : (
+          <div className="grid gap-5 lg:grid-cols-2">
+            {preparingProjects.map((project) => (
             <Link
               key={project.slug}
               href={`/projects/${project.slug}`}
@@ -175,8 +185,9 @@ export default async function LaunchPadPublicPage(): Promise<React.JSX.Element> 
                 </div>
               </div>
             </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="border-t border-white/10 bg-slate-900/60">
