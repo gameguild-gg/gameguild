@@ -36,6 +36,9 @@ import {
   createTeamForm,
   createTeamInvitationForm,
   transitionProjectForm,
+  transitionProjectVersionForm,
+  updateProjectDeliverableUrlForm,
+  updateProjectForm,
 } from './workspace-actions';
 
 describe('workspace form date serialization', () => {
@@ -199,6 +202,62 @@ describe('workspace form date serialization', () => {
     expect(mocks.request).toHaveBeenCalledWith({
       method: 'POST',
       path: '/v1/projects/project-1:restore',
+      requiresAuth: true,
+    });
+  });
+
+  it('updates Project visibility in place without creating a duplicate', async () => {
+    const formData = new FormData();
+    formData.set('projectId', 'project-1');
+    formData.set('title', 'Neon Racer');
+    formData.set('visibility', 'Public');
+    formData.set('returnPath', '/workspace/projects/neon-racer/settings');
+
+    await updateProjectForm(formData);
+
+    expect(mocks.request).toHaveBeenCalledTimes(1);
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: 'PUT',
+      path: '/v1/projects/project-1',
+      body: {
+        title: 'Neon Racer',
+        description: null,
+        shortDescription: null,
+        visibility: 'Public',
+      },
+      requiresAuth: true,
+    });
+    expect(mocks.request).not.toHaveBeenCalledWith(expect.objectContaining({ method: 'POST' }));
+  });
+
+  it('stores an external Project deliverable URL', async () => {
+    const formData = new FormData();
+    formData.set('projectId', 'project-1');
+    formData.set('downloadUrl', 'https://drive.google.com/file/d/build-1/view');
+    formData.set('returnPath', '/workspace/projects/neon-racer/files');
+
+    await updateProjectDeliverableUrlForm(formData);
+
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: 'PUT',
+      path: '/v1/projects/project-1',
+      body: { downloadUrl: 'https://drive.google.com/file/d/build-1/view' },
+      requiresAuth: true,
+    });
+  });
+
+  it('moves a Project version from Draft to Ready for testing', async () => {
+    const formData = new FormData();
+    formData.set('projectId', 'project-1');
+    formData.set('versionId', 'version-1');
+    formData.set('versionAction', 'ready');
+    formData.set('returnPath', '/workspace/projects/neon-racer/versions-builds');
+
+    await transitionProjectVersionForm(formData);
+
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/v1/projects/project-1/versions/version-1:ready',
       requiresAuth: true,
     });
   });

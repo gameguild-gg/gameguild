@@ -83,6 +83,15 @@ export async function createProjectVersionForm(data: FormData): Promise<void> {
   revalidatePath(text(data, 'returnPath'));
 }
 
+export async function transitionProjectVersionForm(data: FormData): Promise<void> {
+  const projectId = text(data, 'projectId');
+  const versionId = text(data, 'versionId');
+  const action = text(data, 'versionAction');
+  if (!projectId || !versionId || !['ready', 'release', 'archive'].includes(action)) return;
+  await request('POST', `/v1/projects/${projectId}/versions/${versionId}:${action}`);
+  revalidatePath(text(data, 'returnPath'));
+}
+
 export async function updateTeamForm(data: FormData): Promise<void> {
   const teamId = text(data, 'teamId');
   const name = text(data, 'name');
@@ -165,6 +174,18 @@ export async function updateProjectForm(data: FormData): Promise<void> {
     shortDescription: text(data, 'shortDescription') || null,
     visibility: text(data, 'visibility') || null,
   });
+  revalidatePath(text(data, 'returnPath'));
+}
+
+export async function updateProjectDeliverableUrlForm(data: FormData): Promise<void> {
+  const projectId = text(data, 'projectId');
+  const downloadUrl = text(data, 'downloadUrl');
+  if (!projectId) return;
+  if (downloadUrl) {
+    const parsed = new URL(downloadUrl);
+    if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Project deliverable URL must use HTTP or HTTPS.');
+  }
+  await request('PUT', `/v1/projects/${projectId}`, { downloadUrl });
   revalidatePath(text(data, 'returnPath'));
 }
 
