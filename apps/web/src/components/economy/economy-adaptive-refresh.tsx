@@ -12,17 +12,17 @@ export function getEconomyPollingInterval(pathname: string) {
   return fastSurfaces.test(pathname) ? 15_000 : 30_000;
 }
 export function EconomyAdaptiveRefresh({ children }: { children: ReactNode }) {
-  const t = useTranslations('economy.refresh');
   const pathname = usePathname() ?? '';
+  return <EconomyAdaptiveRefreshForPath key={pathname} pathname={pathname}>{children}</EconomyAdaptiveRefreshForPath>;
+}
+
+function EconomyAdaptiveRefreshForPath({ children, pathname }: { children: ReactNode; pathname: string }) {
+  const t = useTranslations('economy.refresh');
   const router = useRouter();
   const [dirty, setDirty] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [offline, setOffline] = useState(false);
   const failures = useRef(0);
-
-  useEffect(() => {
-    setDirty(false);
-  }, [pathname]);
 
   useEffect(() => {
     const visibility = () => setHidden(document.visibilityState === 'hidden');

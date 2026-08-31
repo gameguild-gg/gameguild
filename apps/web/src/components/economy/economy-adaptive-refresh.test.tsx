@@ -55,6 +55,17 @@ describe('EconomyAdaptiveRefresh', () => {
     expect(screen.getByText('active')).toBeInTheDocument();
   });
 
+  it('resets dirty state after navigation', () => {
+    const { rerender } = render(<EconomyAdaptiveRefresh><input aria-label="field" /></EconomyAdaptiveRefresh>);
+    fireEvent.input(screen.getByLabelText('field'), { target: { value: 'edited' } });
+    expect(screen.getByText('paused')).toBeInTheDocument();
+
+    mocks.pathname = '/workspace/economy/orders';
+    rerender(<EconomyAdaptiveRefresh><input aria-label="field" /></EconomyAdaptiveRefresh>);
+
+    expect(screen.getByText('active')).toBeInTheDocument();
+  });
+
   it('pauses in a hidden tab and backs off while offline', () => {
     const { rerender } = render(<EconomyAdaptiveRefresh><p>content</p></EconomyAdaptiveRefresh>);
     Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
