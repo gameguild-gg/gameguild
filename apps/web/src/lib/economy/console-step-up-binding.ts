@@ -8,7 +8,6 @@ export interface EconomyStepUpBinding {
   payloadHash: string;
   targetReference: string;
 }
-
 function required(values: ActionValues, key: string): string {
   const value = String(values[key] ?? '').trim();
   if (!value) throw new Error(`${key} is required.`);
@@ -120,4 +119,3 @@ export function buildEconomyStepUpBinding(action: EconomyConsoleAction, values: 
 
   return { operationType, targetReference, payloadHash: hashFields('economy-step-up-payload-v1', payloadValues) };
 }
-

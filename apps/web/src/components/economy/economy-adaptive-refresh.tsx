@@ -11,7 +11,6 @@ const fastSurfaces = /\/(payouts?|payout-reviews|payout-operations|risk-reviews|
 export function getEconomyPollingInterval(pathname: string) {
   return fastSurfaces.test(pathname) ? 15_000 : 30_000;
 }
-
 export function EconomyAdaptiveRefresh({ children }: { children: ReactNode }) {
   const t = useTranslations('economy.refresh');
   const pathname = usePathname() ?? '';
@@ -75,4 +74,3 @@ export function EconomyAdaptiveRefresh({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
