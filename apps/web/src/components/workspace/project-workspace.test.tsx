@@ -62,6 +62,7 @@ vi.mock('@/lib/workspace-actions', () => ({
   setProjectTaskChecklistForm: vi.fn(),
   transferProjectOwnerTeamForm: vi.fn(),
   transitionProjectForm: vi.fn(),
+  transitionProjectVersionForm: vi.fn(),
   updateProjectForm: vi.fn(),
 }));
 vi.mock('@/components/workspaces/context-workspace-nav', () => ({
@@ -121,6 +122,7 @@ describe('project workspace page (member surface)', () => {
 
     expect(screen.getByTestId('workspace-nav')).toHaveAttribute('data-base', '/workspace/projects/neon-racer');
     expect(screen.getByRole('heading', { name: 'Neon Racer' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Publish project' })).toBeInTheDocument();
   });
 
   it('links testing lab and launch pad from the distribution section', async () => {
@@ -133,6 +135,7 @@ describe('project workspace page (member surface)', () => {
       '/testing-lab/events?projectId=project-1',
       '/launch-pad/events?projectId=project-1',
     ]);
+    expect(screen.getAllByText('Version required')).toHaveLength(2);
   });
 
   it('renders versions list on the versions-builds section', async () => {
@@ -140,6 +143,7 @@ describe('project workspace page (member surface)', () => {
 
     expect(screen.getByText('0.1.0')).toBeInTheDocument();
     expect(screen.getByText('First build')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Mark ready for testing' })).toBeInTheDocument();
   });
 
   it('returns not-found when the project does not exist', async () => {
