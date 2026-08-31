@@ -114,7 +114,7 @@ export default async function Page({}: PageProps<'/[locale]/legal/academic-hones
         <h2 className="text-xl font-semibold">Late submissions</h2>
         <div className="space-y-3 text-sm text-muted-foreground">
           <p>
-            If you submit an assignment late, you will receive a flat 20% deduction on your grade.
+            If you submit an assignment late, you will receive a 1% deduction per day on your grade up to 25%.
           </p>
           <p>
             If you have accommodations, send a message on every submission stating that, and the instructor will try to accommodate you.
