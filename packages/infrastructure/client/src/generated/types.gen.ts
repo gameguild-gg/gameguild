@@ -11617,6 +11617,7 @@ export interface TestingLabCreateTestingEventInput {
   applicationsCloseAt?: string;
   applicationsOpenAt?: string;
   approvalMode?: TestingLabTestingEventApprovalMode;
+  configuration?: TestingLabConfigureTestingEventInput;
   description?: string | null;
   endsAt?: string;
   mode?: TestingLabTestingEventMode;
@@ -28298,6 +28299,7 @@ TestingLabCreateTestingEventInputSchema = z.object({
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
   approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  configuration: z.lazy(() => TestingLabConfigureTestingEventInputSchema).optional(),
   description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
   mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
