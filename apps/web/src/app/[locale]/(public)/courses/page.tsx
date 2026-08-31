@@ -2,11 +2,9 @@ import { CourseHighlightCarousel } from '@/components/courses/course-highlight-c
 import { PublicCourseCatalog } from '@/components/courses/public-course-catalog';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
-import { publicPlaytests, publicProjects } from '@/lib/community/public-community';
+import { publicPlaytests } from '@/lib/community/public-community';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
-import { PUBLIC_PROGRAM_PACKAGES } from '@/lib/courses/public-programs';
 import { ArrowRight, FlaskConical, Layers3 } from 'lucide-react';
-import Image from 'next/image';
 
 export default async function CoursesPage() {
   const catalog = await getPublicCourseCatalog();
@@ -68,45 +66,6 @@ export default async function CoursesPage() {
         </div>
       </section>
 
-      <section className="bg-[#070a12] py-16">
-        <div className="container mx-auto flex flex-col gap-8 px-4">
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-            <div className="max-w-2xl">
-              <h2 className="text-4xl font-semibold tracking-tight">Course packages</h2>
-              <p className="mt-4 text-base leading-7 text-slate-400">
-                Programs are built as composable packages, so students understand what to take first, what they will produce, and how the work connects to a portfolio.
-              </p>
-            </div>
-            <Button asChild variant="outline" className="w-fit border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-              <Link href="/courses">
-                Browse all programs
-                <ArrowRight />
-              </Link>
-            </Button>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-            {PUBLIC_PROGRAM_PACKAGES.map((program) => (
-              <Link
-                key={program.slug}
-                href={`/programs/${program.slug}`}
-                className="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] transition hover:-translate-y-1 hover:border-white/20"
-              >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <Image src={program.image} alt={program.title} fill loading="eager" className="object-cover transition duration-500 group-hover:scale-105" sizes="(min-width: 1280px) 20vw, (min-width: 768px) 50vw, 100vw" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#070a12] via-[#070a12]/40 to-transparent" />
-                </div>
-                <div className="flex flex-col gap-3 p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{program.duration}</p>
-                  <h3 className="text-xl font-semibold tracking-tight">{program.shortTitle}</h3>
-                  <p className="line-clamp-3 text-sm leading-6 text-slate-400">{program.summary}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section id="catalog" className="scroll-mt-16 bg-[#070a12]">
         <PublicCourseCatalog initialCourses={courses} />
       </section>
@@ -135,17 +94,6 @@ export default async function CoursesPage() {
                 {publicPlaytests[0]?.title ?? 'Playtest sessions'} gives students a structured next step after lessons,
                 assignments, and prototype milestones.
               </p>
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-6">
-              <h3 className="text-xl font-semibold">Featured project outcomes</h3>
-              <div className="mt-5 space-y-3">
-                {publicProjects.slice(0, 3).map((project) => (
-                  <Link key={project.slug} href={`/projects/${project.slug}`} className="group flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-300 transition hover:border-white/20 hover:text-white">
-                    <span>{project.title}</span>
-                    <ArrowRight className="opacity-60 transition group-hover:translate-x-1 group-hover:opacity-100" />
-                  </Link>
-                ))}
-              </div>
             </div>
           </div>
         </div>
