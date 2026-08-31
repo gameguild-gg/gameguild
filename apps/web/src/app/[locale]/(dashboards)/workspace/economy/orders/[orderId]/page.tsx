@@ -1,6 +1,5 @@
 import { EconomyPageHeader, EconomyWorkspace, formatEconomyDate } from '@/components/economy/economy-ui';
 import { getMyMarketplaceOrder } from '@/lib/marketplace/queries';
-import { Badge } from '@game-guild/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@game-guild/ui/components/card';
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';

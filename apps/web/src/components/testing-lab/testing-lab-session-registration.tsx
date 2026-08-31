@@ -10,6 +10,7 @@ import {
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Button } from '@game-guild/ui/components/button';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 
 type RegistrationState = 'idle' | 'registered' | 'waitlisted';
@@ -51,7 +52,7 @@ export function TestingLabSessionRegistration({
   if (!isAuthenticated) {
     return (
       <Button asChild className="w-full">
-        <a href="/sign-in?callbackUrl=%2Ftesting-lab">Sign in to join this session</a>
+        <Link href="/sign-in?callbackUrl=%2Ftesting-lab">Sign in to join this session</Link>
       </Button>
     );
   }

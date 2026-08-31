@@ -49,6 +49,14 @@ public sealed class RequireAllPermissionsRuleEvaluator : IRuleEvaluator
             return RuleEvaluationResult.Fail("Could not determine user ID from claims");
         }
 
+        // System administrators have platform-wide permission authority. Keep the
+        // remaining policy rules (for example MFA and tenant matching) intact,
+        // while avoiding a tenant permission lookup that cannot represent this role.
+        if (Utilities.ClaimsExtractor.GetRoles(user).Contains(Policies.SystemAdmin))
+        {
+            return RuleEvaluationResult.Success();
+        }
+
         // Extract tenant ID from context (now Guid?) or claims
         Guid tenantId;
         if (_tenantContext.HasTenant && _tenantContext.TenantId.HasValue && _tenantContext.TenantId.Value != Guid.Empty)
@@ -122,6 +130,14 @@ public sealed class RequireAnyPermissionRuleEvaluator : IRuleEvaluator
         if (!userId.HasValue)
         {
             return RuleEvaluationResult.Fail("Could not determine user ID from claims");
+        }
+
+        // System administrators have platform-wide permission authority. Keep the
+        // remaining policy rules (for example MFA and tenant matching) intact,
+        // while avoiding a tenant permission lookup that cannot represent this role.
+        if (Utilities.ClaimsExtractor.GetRoles(user).Contains(Policies.SystemAdmin))
+        {
+            return RuleEvaluationResult.Success();
         }
 
         // Extract tenant ID from context (now Guid?) or claims
