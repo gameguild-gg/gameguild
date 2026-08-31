@@ -363,6 +363,33 @@ function eventInput(formData: FormData): {
       error: "Recurrence end must not precede the event start.",
     };
 
+  const templateRevisionId = optionalText(formData, "templateRevisionId");
+  const configuration = templateRevisionId
+    ? undefined
+    : {
+        generalRules: text(formData, "generalRules"),
+        candidateInstructions: text(formData, "candidateInstructions"),
+        testerInstructions: text(formData, "testerInstructions"),
+        projectApplicationSchema: {
+          title: "Project application",
+          questions: [],
+        },
+        testerRegistrationSchema: {
+          title: "Tester registration",
+          questions: [],
+        },
+      };
+  if (
+    configuration &&
+    (!configuration.generalRules ||
+      !configuration.candidateInstructions ||
+      !configuration.testerInstructions)
+  )
+    return {
+      data: null,
+      error: "Choose a template or enter rules and instructions for the event.",
+    };
+
   return {
     data: {
       name: text(formData, "name"),
@@ -375,7 +402,8 @@ function eventInput(formData: FormData): {
       startsAt,
       endsAt,
       requiresFeedback: checked(formData, "requiresFeedback"),
-      templateRevisionId: optionalText(formData, "templateRevisionId"),
+      templateRevisionId,
+      configuration,
       recurrence: recurrence.data ?? undefined,
     },
     error: null,

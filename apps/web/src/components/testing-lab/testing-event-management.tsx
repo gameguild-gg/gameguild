@@ -617,6 +617,7 @@ export function CreateTestingEventDialog({
   const [pending, startTransition] = useTransition();
   const [result, setResult] =
     useState<TestingEventActionResult<unknown> | null>(null);
+  const [templateRevisionId, setTemplateRevisionId] = useState("");
   const [schedule, setSchedule] = useState<TestingEventSchedule>(() =>
     createTestingEventSchedule(new Date(), initialDate),
   );
@@ -629,6 +630,7 @@ export function CreateTestingEventDialog({
   function resetDraft() {
     formRef.current?.reset();
     setSchedule(createTestingEventSchedule(new Date(), initialDate));
+    setTemplateRevisionId("");
     setDirty(false);
     setResult(null);
   }
@@ -709,6 +711,10 @@ export function CreateTestingEventDialog({
                 <select
                   id="event-template"
                   name="templateRevisionId"
+                  value={templateRevisionId}
+                  onChange={(event) =>
+                    setTemplateRevisionId(event.target.value)
+                  }
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                 >
                   <option value="">Blank event</option>
@@ -731,6 +737,53 @@ export function CreateTestingEventDialog({
                   template revisions never change this event.
                 </p>
               </div>
+              {!templateRevisionId ? (
+                <fieldset className="space-y-4 rounded-md border p-4">
+                  <legend className="px-1 text-sm font-medium">
+                    Rules and instructions
+                  </legend>
+                  <p className="text-sm text-muted-foreground">
+                    These fields are required for a blank event and can still be
+                    edited while it remains a draft.
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-event-general-rules">
+                      General rules
+                    </Label>
+                    <Textarea
+                      id="new-event-general-rules"
+                      name="generalRules"
+                      rows={4}
+                      required
+                      placeholder="Participation, conduct, confidentiality, and completion rules."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-event-candidate-instructions">
+                      Candidate instructions
+                    </Label>
+                    <Textarea
+                      id="new-event-candidate-instructions"
+                      name="candidateInstructions"
+                      rows={4}
+                      required
+                      placeholder="What project teams must prepare before applying."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-event-tester-instructions">
+                      Tester instructions
+                    </Label>
+                    <Textarea
+                      id="new-event-tester-instructions"
+                      name="testerInstructions"
+                      rows={4}
+                      required
+                      placeholder="What assigned testers must do during and after the session."
+                    />
+                  </div>
+                </fieldset>
+              ) : null}
               <EventFields
                 schedule={schedule}
                 onScheduleChange={changeSchedule}
@@ -1046,6 +1099,14 @@ export function TestingEventLifecycleActions({
     Active: ["complete", "Complete event", CheckCircle2],
   };
   const next = nextByStatus[event.status ?? "Draft"];
+  const configuration = event.configuration;
+  const draftConfigurationReady = Boolean(
+    configuration?.generalRules?.trim() &&
+    configuration.candidateInstructions?.trim() &&
+    configuration.testerInstructions?.trim() &&
+    configuration.projectApplicationSchema &&
+    configuration.testerRegistrationSchema,
+  );
 
   function run(transition: string) {
     if (!event.id) return;
@@ -1059,7 +1120,16 @@ export function TestingEventLifecycleActions({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {next && NextIcon ? (
+        {event.status === "Draft" && !draftConfigurationReady && event.id ? (
+          <Button asChild size="sm">
+            <a
+              href={`/console/community/testing-lab/events/${event.id}/overview#event-configuration-heading`}
+            >
+              <Pencil className="mr-2 size-4" />
+              Complete setup
+            </a>
+          </Button>
+        ) : next && NextIcon ? (
           <Button size="sm" disabled={pending} onClick={() => run(next[0])}>
             <NextIcon className="mr-2 size-4" />
             {next[1]}

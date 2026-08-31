@@ -71,6 +71,9 @@ import {
 
 function form(values: Record<string, string>) {
   const data = new FormData();
+  data.set("generalRules", "Respect the code of conduct.");
+  data.set("candidateInstructions", "Provide a playable build.");
+  data.set("testerInstructions", "Complete the assigned tasks.");
   Object.entries(values).forEach(([key, value]) => data.set(key, value));
   return data;
 }
@@ -113,6 +116,19 @@ describe("Testing Lab event actions", () => {
         approvalMode: "Committee",
         requiresFeedback: true,
         startsAt: "2026-08-08T18:00:00.000Z",
+        configuration: {
+          generalRules: "Respect the code of conduct.",
+          candidateInstructions: "Provide a playable build.",
+          testerInstructions: "Complete the assigned tasks.",
+          projectApplicationSchema: {
+            title: "Project application",
+            questions: [],
+          },
+          testerRegistrationSchema: {
+            title: "Tester registration",
+            questions: [],
+          },
+        },
       }),
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
