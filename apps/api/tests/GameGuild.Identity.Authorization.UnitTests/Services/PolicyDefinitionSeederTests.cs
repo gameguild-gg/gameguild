@@ -42,6 +42,8 @@ public class PolicyDefinitionSeederTests
             .RulesJson.Should().Contain("\"allowCreator\": true");
         added.Single(policy => policy.PolicyName == Policies.CourseContentManage)
             .RulesJson.Should().Contain("\"allowCreator\": false");
+        added.Single(policy => policy.PolicyName == Policies.UsersReadSelf)
+            .RulesJson.Should().Contain("\"allowNoTenant\": true");
         repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 

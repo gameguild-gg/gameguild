@@ -78,6 +78,23 @@ public class JwtTokenServiceTests
     }
 
     [Fact]
+    public async Task GenerateAccessTokenAsync_RolesUseApiRoleClaimContract()
+    {
+        var token = await _service.GenerateAccessTokenAsync(
+            Guid.NewGuid(),
+            "admin@example.com",
+            ["SystemAdmin"],
+            Guid.NewGuid(),
+            1,
+            CancellationToken.None);
+
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+        var role = jwt.Claims.Single(claim => claim.Value == "SystemAdmin");
+
+        role.Type.Should().Be("role");
+    }
+
+    [Fact]
     public async Task GenerateAccessTokenAsync_WithAuthenticationTime_ShouldPreserveAuthenticationTime()
     {
         var authenticatedAt = DateTimeOffset.UtcNow.AddMinutes(-12);

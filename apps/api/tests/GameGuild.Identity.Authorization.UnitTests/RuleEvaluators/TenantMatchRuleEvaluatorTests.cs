@@ -118,6 +118,27 @@ public class TenantMatchRuleEvaluatorTests
     }
 
     [Fact]
+    public async Task EvaluateAsync_SystemAdministratorCrossTenant_ReturnsSuccess()
+    {
+        var userTenantId = Guid.NewGuid();
+        var requestTenantId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new(ClaimNames.TenantId, userTenantId.ToString()),
+            new(ClaimTypes.Role, Policies.SystemAdmin)
+        };
+        var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+        var context = new AuthorizationHandlerContext([], user, null);
+        var parameters = RuleParameters.FromJson("{}");
+
+        _mockTenantContext.Setup(x => x.TenantId).Returns(requestTenantId);
+
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task EvaluateAsync_TenantMatch_ReturnsSuccess()
     {
         // Arrange

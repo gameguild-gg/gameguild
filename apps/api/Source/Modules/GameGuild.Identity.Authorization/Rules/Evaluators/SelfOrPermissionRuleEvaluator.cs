@@ -50,6 +50,15 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
             return RuleEvaluationResult.Fail("Could not determine current user ID");
         }
 
+        // Platform administrators are the canonical "manage any user" actors. Their
+        // authority is role-based rather than stored as a tenant permission, so a
+        // tenant permission lookup would incorrectly reject them before the
+        // controller can apply its resource-level scope.
+        if (Utilities.ClaimsExtractor.GetRoles(user).Contains(Policies.SystemAdmin))
+        {
+            return RuleEvaluationResult.Success();
+        }
+
         // Extract tenant ID from context (now Guid?) or claims
         Guid tenantId;
         if (_tenantContext.HasTenant && _tenantContext.TenantId.HasValue && _tenantContext.TenantId.Value != Guid.Empty)
