@@ -675,6 +675,9 @@ importers:
       tailwindcss:
         specifier: ^4
         version: 4.3.3
+      tar:
+        specifier: ^7.5.22
+        version: 7.5.22
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -1726,6 +1729,9 @@ importers:
       '@types/pako':
         specifier: ^2.0.4
         version: 2.0.4
+      tsx:
+        specifier: ^4.23.12
+        version: 4.23.12
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
