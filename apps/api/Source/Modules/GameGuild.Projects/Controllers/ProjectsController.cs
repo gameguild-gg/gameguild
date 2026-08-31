@@ -713,7 +713,7 @@ public class ProjectsController : BaseApiController {
     _context.Set<ProjectCollaborator>().Add(collaborator);
     await _context.SaveChangesAsync().ConfigureAwait(false);
 
-    _logger.LogInformation("User {AdminId} added collaborator {UserId} to project {ProjectId} with role {Role}", userId, request.UserId, id, collaborator.Role);
+    _logger.LogInformation("User {AdminId} added collaborator {UserId} to project {ProjectId}", userId, request.UserId, id);
 
     return CreatedAtAction(nameof(GetProjectCollaborators), new { id }, new CollaboratorDto {
       Id = collaborator.Id,
@@ -815,7 +815,7 @@ public class ProjectsController : BaseApiController {
 
     await _context.SaveChangesAsync().ConfigureAwait(false);
 
-    _logger.LogInformation("User {AdminId} shared project {ProjectId} with user {TargetUserId} as {Role}", userId, id, request.UserId, request.Role ?? "Viewer");
+    _logger.LogInformation("User {AdminId} shared project {ProjectId} with user {TargetUserId}", userId, id, request.UserId);
 
     return Ok(new { Message = "Project shared", ProjectId = id, UserId = request.UserId, Role = request.Role ?? "Viewer" });
   }
