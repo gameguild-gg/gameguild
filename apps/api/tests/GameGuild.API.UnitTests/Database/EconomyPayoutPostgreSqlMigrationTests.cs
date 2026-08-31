@@ -15,6 +15,7 @@ public sealed class EconomyPayoutPostgreSqlMigrationTests
     private static readonly Guid PayeeId = Guid.Parse("96000000-0000-0000-0000-000000000003");
     private static readonly Guid OperationId = Guid.Parse("96000000-0000-0000-0000-000000000004");
     private static readonly Guid RiskDecisionId = Guid.Parse("96000000-0000-0000-0000-000000000005");
+    private static readonly Guid TenantId = Guid.Parse("96000000-0000-0000-0000-000000000006");
     private static readonly DateTimeOffset CreatedAt = new(2026, 8, 9, 18, 0, 0, TimeSpan.Zero);
 
     [DockerFact]
@@ -33,7 +34,7 @@ public sealed class EconomyPayoutPostgreSqlMigrationTests
         await SeedWalletAsync(connection);
 
         (await ScalarAsync<string?>(connection,
-            "SELECT to_regprocedure('economy_private.create_payout_operation_v1(uuid,text,text,uuid,uuid,uuid,bigint,text,text,text,text,text,text,integer,bigint,bigint,bigint,bigint,bigint,bigint,uuid,timestamptz,timestamptz)')::text;"))
+            "SELECT to_regprocedure('economy_private.create_payout_operation_v2(uuid,uuid,text,text,uuid,uuid,uuid,bigint,text,text,text,text,text,text,integer,bigint,bigint,bigint,bigint,bigint,bigint,uuid,timestamptz,timestamptz)')::text;"))
             .Should().NotBeNull();
 
         var directInsert = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsRoleAsync(
@@ -43,8 +44,8 @@ public sealed class EconomyPayoutPostgreSqlMigrationTests
         directInsert.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
 
         await ExecuteAsRoleAsync(connection, "gameguild_economy_writer", $"""
-            SELECT economy_private.create_payout_operation_v1(
-                '{OperationId}', 'payout:1', 'request-hash', '{ActorId}', '{PayeeId}', '{WalletId}', 750,
+            SELECT economy_private.create_payout_operation_v2(
+                '{OperationId}', '{TenantId}', 'payout:1', 'request-hash', '{ActorId}', '{PayeeId}', '{WalletId}', 750,
                 'acct_1', 'destination-hash', 'binding-hash', 'eligibility-hash', NULL, NULL, 1, 1, 1, 1,
                 1, 1, 1, '{RiskDecisionId}', '{CreatedAt:O}', '{CreatedAt:O}');
             """);
@@ -61,7 +62,7 @@ public sealed class EconomyPayoutPostgreSqlMigrationTests
             """);
 
         (await ScalarAsync<int>(connection, $"""
-            SELECT "State" FROM economy_private.read_payout_operation_by_id_v1('{OperationId}');
+            SELECT "State" FROM economy_private.read_payout_operation_for_tenant_v2('{TenantId}', '{OperationId}');
             """)).Should().Be(4);
         (await ScalarAsync<string>(connection, $"""
             SELECT "EventHash" FROM economy_private.read_payout_provider_event_v1('provider-event-1');
@@ -104,7 +105,7 @@ public sealed class EconomyPayoutPostgreSqlMigrationTests
 
     private static Task SeedWalletAsync(NpgsqlConnection connection) => ExecuteAsync(connection, $"""
         INSERT INTO public.economy_wallets ("Id", "OwnerId", "TenantId", "State", "CreatedAt")
-        VALUES ('{WalletId}', '{ActorId}', '96000000-0000-0000-0000-000000000006', 1, '{CreatedAt:O}');
+        VALUES ('{WalletId}', '{PayeeId}', '{TenantId}', 1, '{CreatedAt:O}');
         """);
 
     private static async Task ExecuteAsRoleAsync(NpgsqlConnection connection, string role, string sql)

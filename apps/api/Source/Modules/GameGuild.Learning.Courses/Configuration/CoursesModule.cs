@@ -1,4 +1,5 @@
 using FluentValidation;
+using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,6 +28,10 @@ public static class CoursesModule
         services.AddScoped<IProgramContentScheduleGuard, NullProgramContentScheduleGuard>();
         services.AddScoped<IProgramContentLifecycleGuard, NullProgramContentLifecycleGuard>();
         services.AddScoped<IProgramContentService, ProgramContentService>();
+        services.AddScoped<CourseContentAccessRuleEvaluator>();
+        services.AddSingleton(new ScopedRuleEvaluatorRegistration(
+            RuleTypes.CourseContentAccess,
+            typeof(CourseContentAccessRuleEvaluator)));
 
         // User / enrollment services
         services.AddScoped<IProgramEnrollmentService, ProgramEnrollmentService>();

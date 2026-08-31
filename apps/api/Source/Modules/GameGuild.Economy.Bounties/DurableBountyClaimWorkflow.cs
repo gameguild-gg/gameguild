@@ -1,5 +1,7 @@
+using System.Data;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Economy.Bounties;
@@ -10,6 +12,7 @@ namespace GameGuild.Economy.Bounties;
 /// the escrow lots or terminal state.
 /// </summary>
 public sealed record BountyClaimTerminalWriteCommand(
+    Guid TenantId,
     BountyId BountyId,
     Guid ClaimantId,
     WalletId ClaimantWalletId,
@@ -47,7 +50,8 @@ public sealed class PostgreSqlBountyTerminalClaimWriter : IBountyTerminalClaimWr
         try
         {
             _db.Database.ExecuteSqlInterpolated($"""
-                SELECT economy_private.complete_bounty_claim_v1(
+                SELECT economy_private.complete_bounty_claim_v2(
+                    {command.TenantId},
                     {command.BountyId.Value},
                     {command.ClaimantId},
                     {command.ClaimantWalletId.Value},
@@ -69,6 +73,8 @@ public sealed class PostgreSqlBountyTerminalClaimWriter : IBountyTerminalClaimWr
     {
         if (command.ClaimantId == Guid.Empty)
             throw new ArgumentException("Claimant ID is required.", nameof(command));
+        if (command.TenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(command));
         if (command.RiskDecisionId == Guid.Empty)
             throw new ArgumentException("Claim risk decision is required.", nameof(command));
         ArgumentException.ThrowIfNullOrWhiteSpace(command.EvidenceHash);
@@ -93,6 +99,7 @@ public interface IDurableBountyClaimWorkflow
 /// the accepted BountyReclaim posting before it restores lots or records a terminal outcome.
 /// </summary>
 public sealed record BountyReclaimTerminalWriteCommand(
+    Guid TenantId,
     BountyId BountyId,
     Guid PosterId,
     WalletId PosterWalletId,
@@ -122,13 +129,16 @@ public sealed class PostgreSqlBountyTerminalReclaimWriter : IBountyTerminalRecla
         ArgumentNullException.ThrowIfNull(command);
         if (command.PosterId == Guid.Empty)
             throw new ArgumentException("Poster ID is required.", nameof(command));
+        if (command.TenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(command));
         if (command.RiskDecisionId == Guid.Empty)
             throw new ArgumentException("Reclaim risk decision is required.", nameof(command));
 
         try
         {
             _db.Database.ExecuteSqlInterpolated($"""
-                SELECT economy_private.complete_bounty_reclaim_v1(
+                SELECT economy_private.complete_bounty_reclaim_v2(
+                    {command.TenantId},
                     {command.BountyId.Value},
                     {command.PosterId},
                     {command.PosterWalletId.Value},
@@ -161,39 +171,70 @@ public interface IDurableBountyReclaimWorkflow
 /// Couples an accepted BountyReclaim posting to the only specialized terminal reclaim writer.
 /// The application layer never updates a bounty, lot, lineage or terminal event directly.
 /// </summary>
-public sealed class PostgreSqlDurableBountyReclaimWorkflow(
-    IApplicationDbContext dbContext,
-    IBountyEscrowStore escrows,
-    IBountyTerminalEventStore terminals,
-    IRegisteredPostingGateway postings,
-    IBountyTerminalReclaimWriter terminalWriter) : IDurableBountyReclaimWorkflow
+public sealed class PostgreSqlDurableBountyReclaimWorkflow : IDurableBountyReclaimWorkflow
 {
+    private readonly IApplicationDbContext _dbContext;
+    private readonly IBountyEscrowStore _escrows;
+    private readonly IBountyTerminalEventStore _terminals;
+    private readonly IRegisteredPostingGateway _postings;
+    private readonly IBountyTerminalReclaimWriter _terminalWriter;
+    private readonly IBountyExpirationTransition _expiration;
+
+    public PostgreSqlDurableBountyReclaimWorkflow(
+        IApplicationDbContext dbContext,
+        IBountyEscrowStore escrows,
+        IBountyTerminalEventStore terminals,
+        IRegisteredPostingGateway postings,
+        IBountyTerminalReclaimWriter terminalWriter)
+        : this(dbContext, escrows, terminals, postings, terminalWriter,
+            LegacyOpenBountyExpirationTransition.Instance)
+    {
+    }
+
+    public PostgreSqlDurableBountyReclaimWorkflow(
+        IApplicationDbContext dbContext,
+        IBountyEscrowStore escrows,
+        IBountyTerminalEventStore terminals,
+        IRegisteredPostingGateway postings,
+        IBountyTerminalReclaimWriter terminalWriter,
+        IBountyExpirationTransition expiration)
+    {
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _escrows = escrows ?? throw new ArgumentNullException(nameof(escrows));
+        _terminals = terminals ?? throw new ArgumentNullException(nameof(terminals));
+        _postings = postings ?? throw new ArgumentNullException(nameof(postings));
+        _terminalWriter = terminalWriter ?? throw new ArgumentNullException(nameof(terminalWriter));
+        _expiration = expiration ?? throw new ArgumentNullException(nameof(expiration));
+    }
+
     public async Task<PersistedBountyTerminalEvent> ReclaimAsync(
         DurableBountyReclaimRequest request,
         CancellationToken cancellationToken = default)
     {
         ValidateRequest(request);
-        var replay = terminals.FindByIdempotency(request.IdempotencyKey);
+        var replay = _terminals.FindByIdempotency(request.Authority.TenantId, request.IdempotencyKey);
         if (replay is not null)
             return EnsureReplayMatches(replay, request);
 
-        var initialEscrow = escrows.Get(request.BountyId);
+        var initialEscrow = _escrows.Get(request.Authority.TenantId, request.BountyId);
         EnsureReclaimable(initialEscrow, request);
-
-        await using var transaction = await dbContext.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await PostgreSqlTransactionExecutor.ExecuteAsync(
+            _dbContext, IsolationLevel.ReadCommitted, async _ =>
         {
-            replay = terminals.FindByIdempotency(request.IdempotencyKey);
+            replay = _terminals.FindByIdempotency(request.Authority.TenantId, request.IdempotencyKey);
             if (replay is not null)
-            {
-                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 return EnsureReplayMatches(replay, request);
-            }
 
-            var escrow = escrows.Get(request.BountyId);
+            if (initialEscrow.Status == BountyStatus.Expired &&
+                !await _expiration.PrepareForReclaimAsync(
+                    request.BountyId, request.ReclaimedAt, cancellationToken).ConfigureAwait(false))
+                throw new BountyTerminalConflictException("The expired bounty could not be locked for reclaim.");
+
+            var escrow = _escrows.Get(request.Authority.TenantId, request.BountyId);
             EnsureReclaimable(escrow, request);
-            var receipt = postings.Post(BountyReclaimPostingFactory.Create(escrow, request));
-            terminalWriter.Complete(new BountyReclaimTerminalWriteCommand(
+            var receipt = _postings.Post(BountyReclaimPostingFactory.Create(escrow, request));
+            _terminalWriter.Complete(new BountyReclaimTerminalWriteCommand(
+                request.Authority.TenantId,
                 request.BountyId,
                 request.PosterId,
                 request.PosterWalletId,
@@ -201,24 +242,19 @@ public sealed class PostgreSqlDurableBountyReclaimWorkflow(
                 receipt.PostingId,
                 request.Authority.RiskDecisionId,
                 request.ReclaimedAt));
-            var completed = terminals.FindByIdempotency(request.IdempotencyKey)
+            var completed = _terminals.FindByIdempotency(request.Authority.TenantId, request.IdempotencyKey)
                 ?? throw new RegisteredPostingRejectedException(
                     "The durable bounty reclaim writer did not persist terminal evidence.");
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             return EnsureReplayMatches(completed, request);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
-            throw;
-        }
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     private static PersistedBountyTerminalEvent EnsureReplayMatches(
         PersistedBountyTerminalEvent replay,
         DurableBountyReclaimRequest request)
     {
-        if (replay.BountyId != request.BountyId || replay.Status != BountyStatus.Reclaimed ||
+        if (replay.TenantId != request.Authority.TenantId ||
+            replay.BountyId != request.BountyId || replay.Status != BountyStatus.Reclaimed ||
             replay.ActorId != request.PosterId || replay.DestinationWalletId != request.PosterWalletId ||
             replay.RiskDecisionId != request.Authority.RiskDecisionId)
             throw new BountyIdempotencyConflictException(
@@ -228,7 +264,9 @@ public sealed class PostgreSqlDurableBountyReclaimWorkflow(
 
     private static void EnsureReclaimable(PersistedBountyEscrow escrow, DurableBountyReclaimRequest request)
     {
-        if (escrow.Status != BountyStatus.Open)
+        if (escrow.TenantId != request.Authority.TenantId)
+            throw new BountyOwnershipException("The bounty does not belong to the actor tenant.");
+        if (escrow.Status is not (BountyStatus.Open or BountyStatus.Expired))
             throw new BountyTerminalConflictException("The bounty already has a terminal outcome.");
         if (request.ReclaimedAt < escrow.ExpiresAt)
             throw new BountyNotExpiredException("The bounty cannot be reclaimed before expiry.");
@@ -245,6 +283,8 @@ public sealed class PostgreSqlDurableBountyReclaimWorkflow(
             throw new ArgumentException("Poster ID is required.", nameof(request));
         if (request.Authority.ActorId != request.PosterId)
             throw new ArgumentException("The bounty reclaim authority must be the poster.", nameof(request));
+        if (request.Authority.TenantId == Guid.Empty)
+            throw new ArgumentException("The bounty reclaim authority must be tenant scoped.", nameof(request));
     }
 }
 
@@ -264,27 +304,24 @@ public sealed class PostgreSqlDurableBountyClaimWorkflow(
         CancellationToken cancellationToken = default)
     {
         ValidateRequest(request);
-        var replay = terminals.FindByIdempotency(request.IdempotencyKey);
+        var replay = terminals.FindByIdempotency(request.Authority.TenantId, request.IdempotencyKey);
         if (replay is not null)
             return EnsureReplayMatches(replay, request);
 
-        var initialEscrow = escrows.Get(request.BountyId);
+        var initialEscrow = escrows.Get(request.Authority.TenantId, request.BountyId);
         EnsureClaimable(initialEscrow, request);
-
-        await using var transaction = await dbContext.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await PostgreSqlTransactionExecutor.ExecuteAsync(
+            dbContext, IsolationLevel.ReadCommitted, async _ =>
         {
-            replay = terminals.FindByIdempotency(request.IdempotencyKey);
+            replay = terminals.FindByIdempotency(request.Authority.TenantId, request.IdempotencyKey);
             if (replay is not null)
-            {
-                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                 return EnsureReplayMatches(replay, request);
-            }
 
-            var escrow = escrows.Get(request.BountyId);
+            var escrow = escrows.Get(request.Authority.TenantId, request.BountyId);
             EnsureClaimable(escrow, request);
             var receipt = postings.Post(BountyClaimPostingFactory.Create(escrow, request));
             terminalWriter.Complete(new BountyClaimTerminalWriteCommand(
+                request.Authority.TenantId,
                 request.BountyId,
                 request.ClaimantId,
                 request.ClaimantWalletId,
@@ -293,24 +330,20 @@ public sealed class PostgreSqlDurableBountyClaimWorkflow(
                 request.Authority.RiskDecisionId,
                 request.EvidenceHash,
                 request.ClaimedAt));
-            var completed = terminals.FindByIdempotency(request.IdempotencyKey)
+            var completed = terminals.FindByIdempotency(request.Authority.TenantId, request.IdempotencyKey)
                 ?? throw new RegisteredPostingRejectedException(
                     "The durable bounty claim writer did not persist terminal evidence.");
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            await Task.CompletedTask;
             return EnsureReplayMatches(completed, request);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
-            throw;
-        }
+        }, cancellationToken).ConfigureAwait(false);
     }
 
     private static PersistedBountyTerminalEvent EnsureReplayMatches(
         PersistedBountyTerminalEvent replay,
         DurableBountyClaimRequest request)
     {
-        if (replay.BountyId != request.BountyId || replay.Status != BountyStatus.Claimed ||
+        if (replay.TenantId != request.Authority.TenantId ||
+            replay.BountyId != request.BountyId || replay.Status != BountyStatus.Claimed ||
             replay.ActorId != request.ClaimantId || replay.DestinationWalletId != request.ClaimantWalletId ||
             replay.RiskDecisionId != request.Authority.RiskDecisionId)
             throw new BountyIdempotencyConflictException(
@@ -320,6 +353,8 @@ public sealed class PostgreSqlDurableBountyClaimWorkflow(
 
     private static void EnsureClaimable(PersistedBountyEscrow escrow, DurableBountyClaimRequest request)
     {
+        if (escrow.TenantId != request.Authority.TenantId)
+            throw new BountyClaimIneligibleException("The bounty does not belong to the actor tenant.");
         if (escrow.Status != BountyStatus.Open)
             throw new BountyTerminalConflictException("The bounty already has a terminal outcome.");
         if (request.ClaimedAt >= escrow.ExpiresAt)
@@ -338,6 +373,8 @@ public sealed class PostgreSqlDurableBountyClaimWorkflow(
             throw new ArgumentException("Claimant ID is required.", nameof(request));
         if (request.Authority.ActorId != request.ClaimantId)
             throw new ArgumentException("The bounty claim authority must be the claimant.", nameof(request));
+        if (request.Authority.TenantId == Guid.Empty)
+            throw new ArgumentException("The bounty claim authority must be tenant scoped.", nameof(request));
         ArgumentException.ThrowIfNullOrWhiteSpace(request.EvidenceHash);
         if (request.EvidenceHash.Trim().Length > 128)
             throw new ArgumentException("Claim evidence hashes cannot exceed 128 characters.", nameof(request));

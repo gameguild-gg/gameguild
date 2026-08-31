@@ -198,18 +198,80 @@ public class ProjectsController : BaseApiController {
         version.ProjectId == id && version.VersionNumber == normalizedVersion && version.DeletedAt == null).ConfigureAwait(false))
       return Conflict(new { code = "Projects.VersionExists" });
     if (_actorContextAccessor.ActorContext.SubjectIdAsGuid is not { } actorId) return Unauthorized();
-    var version = new ProjectVersion {
-      Id = Guid.NewGuid(),
-      TenantId = project.TenantId,
-      ProjectId = id,
-      VersionNumber = normalizedVersion,
-      Status = string.IsNullOrWhiteSpace(request.Status) ? "draft" : request.Status.Trim(),
-      ReleaseNotes = string.IsNullOrWhiteSpace(request.ReleaseNotes) ? null : request.ReleaseNotes.Trim(),
-      CreatedById = actorId,
-    };
+    if (request.Status is not null and not ProjectVersionStatus.Draft)
+      return UnprocessableEntity(new { code = "Projects.VersionMustStartAsDraft" });
+    var version = ProjectVersion.Create(
+      id,
+      normalizedVersion,
+      request.ReleaseNotes,
+      actorId,
+      project.TenantId);
     _context.Set<ProjectVersion>().Add(version);
     await _context.SaveChangesAsync().ConfigureAwait(false);
     return CreatedAtAction(nameof(GetProjectVersions), new { id }, ProjectVersionApiResponse.FromEntity(version));
+  }
+
+  [HttpPut("{id:guid}/versions/{versionId:guid}")]
+  public async Task<ActionResult<ProjectVersionApiResponse>> UpdateProjectVersion(
+    Guid id,
+    Guid versionId,
+    [FromBody] UpdateProjectVersionRequest request) {
+    if (!await _authorizationService.HasPermissionAsync(id, PermissionType.Edit).ConfigureAwait(false)) return NotFound();
+    if (string.IsNullOrWhiteSpace(request.VersionNumber))
+      return UnprocessableEntity(new { code = "Projects.VersionNumberRequired" });
+    var version = await _context.Set<ProjectVersion>()
+      .SingleOrDefaultAsync(candidate => candidate.Id == versionId && candidate.ProjectId == id && candidate.DeletedAt == null)
+      .ConfigureAwait(false);
+    if (version == null) return NotFound();
+    var normalizedVersion = request.VersionNumber.Trim();
+    if (await _context.Set<ProjectVersion>().AnyAsync(candidate =>
+        candidate.Id != versionId &&
+        candidate.ProjectId == id &&
+        candidate.VersionNumber == normalizedVersion &&
+        candidate.DeletedAt == null).ConfigureAwait(false))
+      return Conflict(new { code = "Projects.VersionExists" });
+
+    try {
+      version.UpdateDraft(normalizedVersion, request.ReleaseNotes);
+      await _context.SaveChangesAsync().ConfigureAwait(false);
+      return Ok(ProjectVersionApiResponse.FromEntity(version));
+    }
+    catch (InvalidOperationException) {
+      return Conflict(new { code = "Projects.VersionImmutable" });
+    }
+  }
+
+  [HttpPost("{id:guid}/versions/{versionId:guid}:ready")]
+  public async Task<ActionResult<ProjectVersionApiResponse>> MarkProjectVersionReady(Guid id, Guid versionId) =>
+    await TransitionProjectVersion(id, versionId, PermissionType.Edit, static version => version.MarkReadyForTesting()).ConfigureAwait(false);
+
+  [HttpPost("{id:guid}/versions/{versionId:guid}:release")]
+  public async Task<ActionResult<ProjectVersionApiResponse>> ReleaseProjectVersion(Guid id, Guid versionId) =>
+    await TransitionProjectVersion(id, versionId, PermissionType.Publish, static version => version.Release()).ConfigureAwait(false);
+
+  [HttpPost("{id:guid}/versions/{versionId:guid}:archive")]
+  public async Task<ActionResult<ProjectVersionApiResponse>> ArchiveProjectVersion(Guid id, Guid versionId) =>
+    await TransitionProjectVersion(id, versionId, PermissionType.Archive, static version => version.Archive()).ConfigureAwait(false);
+
+  private async Task<ActionResult<ProjectVersionApiResponse>> TransitionProjectVersion(
+    Guid projectId,
+    Guid versionId,
+    PermissionType permission,
+    Action<ProjectVersion> transition) {
+    if (!await _authorizationService.HasPermissionAsync(projectId, permission).ConfigureAwait(false)) return NotFound();
+    var version = await _context.Set<ProjectVersion>()
+      .SingleOrDefaultAsync(candidate => candidate.Id == versionId && candidate.ProjectId == projectId && candidate.DeletedAt == null)
+      .ConfigureAwait(false);
+    if (version == null) return NotFound();
+
+    try {
+      transition(version);
+      await _context.SaveChangesAsync().ConfigureAwait(false);
+      return Ok(ProjectVersionApiResponse.FromEntity(version));
+    }
+    catch (InvalidOperationException) {
+      return Conflict(new { code = "Projects.InvalidVersionTransition" });
+    }
   }
 
   /// <summary> Get project by slug </summary>
@@ -651,7 +713,7 @@ public class ProjectsController : BaseApiController {
     _context.Set<ProjectCollaborator>().Add(collaborator);
     await _context.SaveChangesAsync().ConfigureAwait(false);
 
-    _logger.LogInformation("User {AdminId} added collaborator {UserId} to project {ProjectId} with role {Role}", userId, request.UserId, id, collaborator.Role);
+    _logger.LogInformation("User {AdminId} added collaborator {UserId} to project {ProjectId}", userId, request.UserId, id);
 
     return CreatedAtAction(nameof(GetProjectCollaborators), new { id }, new CollaboratorDto {
       Id = collaborator.Id,
@@ -753,7 +815,7 @@ public class ProjectsController : BaseApiController {
 
     await _context.SaveChangesAsync().ConfigureAwait(false);
 
-    _logger.LogInformation("User {AdminId} shared project {ProjectId} with user {TargetUserId} as {Role}", userId, id, request.UserId, request.Role ?? "Viewer");
+    _logger.LogInformation("User {AdminId} shared project {ProjectId} with user {TargetUserId}", userId, id, request.UserId);
 
     return Ok(new { Message = "Project shared", ProjectId = id, UserId = request.UserId, Role = request.Role ?? "Viewer" });
   }
@@ -887,16 +949,20 @@ public sealed record CreateProjectRequest {
 
 public sealed class CreateProjectVersionRequest {
   [Required, MaxLength(50)] public string VersionNumber { get; set; } = string.Empty;
-  [MaxLength(50)] public string? Status { get; set; }
+  public ProjectVersionStatus? Status { get; set; }
   [MaxLength(10000)] public string? ReleaseNotes { get; set; }
 }
+
+public sealed record UpdateProjectVersionRequest(
+  [property: Required, MaxLength(50)] string VersionNumber,
+  [property: MaxLength(10000)] string? ReleaseNotes);
 
 public sealed record ProjectVersionOptionProjection(
   Guid Id,
   Guid ProjectId,
   string ProjectTitle,
   string VersionNumber,
-  string Status,
+  ProjectVersionStatus Status,
   DateTime UpdatedAt);
 
 public sealed record UpdateProjectRequest {

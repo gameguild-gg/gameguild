@@ -1,8 +1,8 @@
 using System.Security.Claims;
 using FluentAssertions;
 using GameGuild.Identity.Authorization;
-using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning.Courses;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -86,33 +86,32 @@ public sealed class ProgramContentVisibilityTests
         };
 
         programMock.Setup(s => s.GetProgramByIdAsync(programId)).ReturnsAsync(program);
-        programMock
-            .Setup(s => s.GetUserProgressDtoAsync(programId, It.IsAny<Guid>()))
-            .ReturnsAsync(enrolled
-                ? new UserProgressDto(Guid.NewGuid(), programId, userId!.Value, 0m, null, DateTime.UtcNow, null, Enumerable.Empty<ContentProgressDto>())
-                : null);
+        var authorizationMock = new Mock<IAuthorizationService>();
+        authorizationMock
+            .Setup(service => service.AuthorizeAsync(
+                It.IsAny<ClaimsPrincipal>(),
+                It.IsAny<object>(),
+                It.IsAny<string>()))
+            .ReturnsAsync((ClaimsPrincipal _, object resource, string policy) =>
+            {
+                var course = (Program)resource;
+                var authorized = policy switch
+                {
+                    Policies.CourseContentViewAll => manager || userId.HasValue && course.CreatorId == userId,
+                    Policies.CourseContentLearner => enrolled,
+                    Policies.CourseContentPublicOutline => course.Status == ContentStatus.Published
+                                                           && course.Visibility == ContentVisibility.Public,
+                    _ => false
+                };
 
-        var permissionMock = new Mock<IPermissionQueryService>();
-        permissionMock
-            .Setup(s => s.HasTenantPermissionAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<string>()))
-            .ReturnsAsync(manager);
-
-        var actorMock = new Mock<GameGuild.Identity.Context.Actors.IActorContextAccessor>();
-        actorMock.Setup(a => a.ActorContext).Returns(new ActorContext
-        {
-            ActorKind = ActorKind.User,
-            IsAuthenticated = userId.HasValue,
-            TenantId = Guid.NewGuid(),
-            Roles = new HashSet<string>(),
-            Permissions = new HashSet<string>(),
-        });
+                return authorized ? AuthorizationResult.Success() : AuthorizationResult.Failed();
+            });
 
         var controller = new ProgramContentController(
             contentMock.Object,
             programMock.Object,
             new Mock<ICodingAssignmentContentService>().Object,
-            actorMock.Object,
-            permissionMock.Object);
+            authorizationMock.Object);
 
         if (userId.HasValue)
         {

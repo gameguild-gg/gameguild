@@ -28,6 +28,36 @@ test('facade.compileAndRun returns a ToolResult-shaped value', async () => {
   assert.equal(typeof result.timedOut, 'boolean');
 });
 
+test('facade.runTests compiles persisted plan sources without replacing them with main.cpp', async () => {
+  const writes = [];
+  const runs = [];
+  const api = wrapWorkerClient(makeStubClient({
+    writeFile: async (path, content) => { writes.push({ path, content }); },
+    run: async (cmd, argv) => {
+      runs.push({ cmd, argv });
+      return { exitCode: 0, stdout: '5\n', stderr: '', durationMs: 1, timedOut: false };
+    },
+  }));
+
+  const report = await api.runTests({
+    build: {
+      toolchain: ToolchainPreset.CPP,
+      sources: ['/user/main.cpp', '/home/user/functional_0_test.cpp'],
+    },
+    cases: [{ kind: 'stdio', expectedStdout: '5\n' }],
+  });
+
+  assert.equal(report.passed, 1);
+  assert.deepEqual(writes, [], 'existing workspace files must not be overwritten');
+  assert.deepEqual(
+    runs.filter(({ cmd }) => cmd === 'clang').map(({ argv }) => argv.at(-1)),
+    ['/user/main.cpp', '/home/user/functional_0_test.cpp'],
+  );
+  const link = runs.find(({ cmd }) => cmd === 'wasm-ld');
+  assert.ok(link, 'links all compiled source objects');
+  assert.equal(link.argv.filter((value) => /^\/tmp\/emception-build-\d+\.o$/.test(value)).length, 2);
+});
+
 test('facade.runTests resolves a TestReport-shaped value', async () => {
   const api = wrapWorkerClient(makeStubClient());
   const report = await api.runTests({

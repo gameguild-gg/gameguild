@@ -31,7 +31,10 @@ public enum EconomyValueMovementCapability
     BountyClaim = 7,
     MarketplaceSettlement = 8,
     PayoutExecution = 9,
-    AdminWithdrawalExecution = 10
+    AdminWithdrawalExecution = 10,
+    MarketplaceRefund = 11,
+    BountyReclaim = 12,
+    LegacyBalanceBackfill = 13
 }
 
 public interface IEconomyValueMovementDecisionGate

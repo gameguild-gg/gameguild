@@ -13,10 +13,12 @@ public sealed class InMemoryPayoutOperationStoreTests
         var store = new InMemoryPayoutOperationStore();
         var operation = Operation();
 
-        store.FindReplay(operation.IdempotencyKey.Value, operation.RequestHash).Should().BeNull();
+        store.FindReplay(operation.TenantId, operation.IdempotencyKey.Value, operation.RequestHash).Should().BeNull();
         store.Add(operation);
         store.Get(operation.Id).Should().BeSameAs(operation);
-        store.FindReplay(operation.IdempotencyKey.Value, operation.RequestHash).Should().BeSameAs(operation);
+        store.GetForTenant(operation.TenantId, operation.Id).Should().BeSameAs(operation);
+        store.ListForTenant(operation.TenantId, 10).Should().ContainSingle().Which.Should().BeSameAs(operation);
+        store.FindReplay(operation.TenantId, operation.IdempotencyKey.Value, operation.RequestHash).Should().BeSameAs(operation);
         store.Operations.Should().ContainSingle();
 
         var dispatching = operation.Transition(PayoutOperationState.Dispatching, Time.AddMinutes(1));
@@ -33,9 +35,12 @@ public sealed class InMemoryPayoutOperationStoreTests
 
         FluentActions.Invoking(() => store.Get(Guid.NewGuid())).Should().Throw<KeyNotFoundException>();
         FluentActions.Invoking(() => store.Add(operation)).Should().Throw<PayoutReplayConflictException>();
-        FluentActions.Invoking(() => store.Add(Operation() with { IdempotencyKey = operation.IdempotencyKey }))
+        FluentActions.Invoking(() => store.Add(Operation() with
+            { TenantId = operation.TenantId, IdempotencyKey = operation.IdempotencyKey }))
             .Should().Throw<PayoutReplayConflictException>();
-        FluentActions.Invoking(() => store.FindReplay(operation.IdempotencyKey.Value, "mutated"))
+        FluentActions.Invoking(() => store.Add(operation with { Id = Guid.NewGuid(), TenantId = Guid.Empty }))
+            .Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.FindReplay(operation.TenantId, operation.IdempotencyKey.Value, "mutated"))
             .Should().Throw<PayoutReplayConflictException>();
         FluentActions.Invoking(() => store.Update(operation with { Version = 3 }, 2))
             .Should().Throw<PayoutStaleCommandException>();
@@ -45,8 +50,13 @@ public sealed class InMemoryPayoutOperationStoreTests
             .Should().Throw<KeyNotFoundException>();
         FluentActions.Invoking(() => store.Add(null!)).Should().Throw<ArgumentNullException>();
         FluentActions.Invoking(() => store.Update(null!, 1)).Should().Throw<ArgumentNullException>();
-        FluentActions.Invoking(() => store.FindReplay("", "hash")).Should().Throw<ArgumentException>();
-        FluentActions.Invoking(() => store.FindReplay("key", "")).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.FindReplay(Guid.Empty, "key", "hash")).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.FindReplay(Guid.NewGuid(), "", "hash")).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.FindReplay(Guid.NewGuid(), "key", "")).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.GetForTenant(Guid.Empty, operation.Id)).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.GetForTenant(Guid.NewGuid(), operation.Id)).Should().Throw<KeyNotFoundException>();
+        FluentActions.Invoking(() => store.ListForTenant(Guid.Empty, 10)).Should().Throw<ArgumentException>();
+        FluentActions.Invoking(() => store.ListForTenant(operation.TenantId, 0)).Should().Throw<ArgumentOutOfRangeException>();
     }
 
     [Fact]
@@ -95,5 +105,6 @@ public sealed class InMemoryPayoutOperationStoreTests
     private static PayoutOperation Operation(PayoutOperationState state = PayoutOperationState.Reserved) => new(
         Guid.NewGuid(), new IdempotencyKey(Guid.NewGuid().ToString("N")), "request", Guid.NewGuid(), Guid.NewGuid(),
         WalletId.New(), new CoinAmount(CurrencyCode.HardCoin, 10), "acct", "destination", "binding", "eligibility",
-        null, null, state, 1, 1, 1, new ReserveVersion(1), 1, new PolicyVersion(1), Guid.NewGuid(), Time, Time);
+        null, null, state, 1, 1, 1, new ReserveVersion(1), 1, new PolicyVersion(1), Guid.NewGuid(), Time, Time,
+        Guid.NewGuid());
 }

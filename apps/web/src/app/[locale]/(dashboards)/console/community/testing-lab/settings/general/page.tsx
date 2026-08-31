@@ -165,6 +165,19 @@ export default async function TestingLabSettingsPage() {
             </p>
           </div>
           <div className="divide-y rounded-md border">
+            <div className="space-y-2 p-4">
+              <Label htmlFor="version-submission-policy">Eligible project versions</Label>
+              <select
+                id="version-submission-policy"
+                name="versionSubmissionPolicy"
+                defaultValue={settings?.versionSubmissionPolicy ?? "ReadyMutableUntilReview"}
+                className="flex h-9 w-full max-w-xl rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="ReadyMutableUntilReview">Ready for Testing or Released; replace while Pending</option>
+                <option value="ReleasedImmutable">Released only; immutable after first submission</option>
+              </select>
+              <p className="text-xs text-muted-foreground">Changes apply to new submissions and future replacements. Approved applications keep their recorded policy.</p>
+            </div>
             {operatingControls.map((control) => {
               const Icon = control.icon;
               return (

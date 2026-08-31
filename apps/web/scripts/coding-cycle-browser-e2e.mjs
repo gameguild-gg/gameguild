@@ -17,7 +17,7 @@
  *     - enroll the student via POST /api/learning/enrollments
  *
  *   Phase 2 STUDENT UI:
- *     - real sign-in form → activity URL → IDE boots (REAL WASM)
+ *     - browser credentials session → activity URL → IDE boots (REAL WASM)
  *     - learner workspace never renders the private test name
  *     - Run public tests → public tests FAIL (starter code)
  *     - TYPE real code into Monaco (keyboard.type) → Run public tests → public
@@ -47,12 +47,13 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync, createWriteStream, rmSync } from "node:fs";
-import { createServer } from "node:net";
 import { resolve } from "node:path";
 import { createClient, GeneratedApi } from "@game-guild/client";
 import { chromium } from "playwright";
+import { resolveChromiumExecutablePath } from "./browser-executable.mjs";
 import {
   assertSharedAuthCookie,
   trackAppHttpFailures,
@@ -103,7 +104,7 @@ const HEADLESS = !["0", "false", "no"].includes(
 // CI uses Playwright's managed browser. Local Windows machines may instead
 // point this at an installed Chrome when the matching Playwright download is
 // intentionally absent (for example after clearing disk space).
-const CHROMIUM_EXECUTABLE_PATH = process.env.CODING_CYCLE_CHROMIUM_EXECUTABLE;
+const CHROMIUM_EXECUTABLE_PATH = resolveChromiumExecutablePath({ exists: existsSync });
 // A developer can reuse a known-current API build when validating only the
 // browser flow. This is opt-in: CI and the default command still compile API
 // sources before the isolated cycle starts.
@@ -277,19 +278,15 @@ async function bootStack() {
   assertPortAvailable(API_PORT, "GameGuild API");
   assertPortAvailable(WEB_PORT, "GameGuild web");
 
-  // Ensure the emception CDN payload is synced into apps/web/public/emception.
-  const manifestPath = resolve(WEB_DIR, "public/emception/manifest.json");
-  if (!existsSync(manifestPath)) {
-    log("syncing emception CDN payload (public/emception missing)");
-    const sync = spawn("node", ["scripts/sync-emception-cdn.mjs"], {
-      cwd: WEB_DIR,
-      stdio: "inherit",
-    });
-    await new Promise((res, rej) => {
-      sync.on("exit", (c) => (c === 0 ? res() : rej(new Error(`sync:emception exit ${c}`))));
-      sync.on("error", rej);
-    });
-  }
+  log("syncing canonical emception Toolchain release");
+  const sync = spawn("node", ["scripts/sync-emception-cdn.mjs"], {
+    cwd: WEB_DIR,
+    stdio: "inherit",
+  });
+  await new Promise((res, rej) => {
+    sync.on("exit", (c) => (c === 0 ? res() : rej(new Error(`sync:emception exit ${c}`))));
+    sync.on("error", rej);
+  });
 
   // --- disposable postgres ---
   log(`starting disposable postgres on ${PG_PORT} (${PG_IMAGE})`);
@@ -440,7 +437,7 @@ function pipeLog(proc, file) {
 // ---------------------------------------------------------------------------
 
 function unique() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${Date.now()}-${randomUUID().slice(0, 8)}`;
 }
 
 function formatApiError(error) {
@@ -486,9 +483,9 @@ async function rawRequest(client, path, init = {}) {
  * The v1 coding-assignment content payload (PascalCase + lowercase `kind`).
  * main.cpp starter FAILS every test; the student edits `add` to return a+b.
  *
- *   Public[0] stdio 'prints-sum'   : stdout '5' (starter prints '0' → fail)
+ *   Public[0] stdio 'prints-sum'   : stdout '5\\n' (starter prints '0\\n' → fail)
  *   Public[1] functional 'add-fn'  : CHECK(add(2,3)==5) (starter 0 → fail)
- *   Private[0] stdio 'secret-exit' : stdout '5' + exit 5 (starter 0/exit 0 → fail)
+ *   Private[0] stdio 'secret-exit' : stdout '5\\n' + exit 5 (starter 0/exit 0 → fail)
  *
  * No stdin on any stdio case → works without SharedArrayBuffer (SpeedGrader
  * route is not cross-origin-isolated; stdin degrades to EOF there).
@@ -507,14 +504,13 @@ function buildCodingContent(maxScore) {
       Files: {
         "/user/main.cpp": {
           Content:
-            "#include <iostream>\n" +
-            "\n" +
-            "int add(int a, int b) {\n" +
+            "extern \"C\" int printf(const char*, ...);\n" +
+            "extern \"C\" int add(int a, int b) {\n" +
             "    return 0; // TODO: replace with your implementation\n" +
             "}\n" +
             "\n" +
             "int main() {\n" +
-            "    std::cout << add(2, 3) << std::endl;\n" +
+            "    printf(\"%d\\n\", add(2, 3));\n" +
             "    return add(2, 3);\n" +
             "}\n",
           Encoding: "text",
@@ -529,7 +525,7 @@ function buildCodingContent(maxScore) {
           kind: "standard",
           Name: "prints-sum",
           Stdin: "",
-          Stdout: "5",
+          Stdout: "5\n",
           Weight: 1,
         },
         {
@@ -560,7 +556,7 @@ function buildCodingContent(maxScore) {
           kind: "standard",
           Name: "secret-exit",
           Stdin: "",
-          Stdout: "5",
+          Stdout: "5\n",
           ExitCode: 5,
           Weight: 1,
         },
@@ -573,12 +569,12 @@ function buildCodingContent(maxScore) {
 /** The corrected program the student types into Monaco. */
 const STUDENT_FIX_SOURCE =
   "// e2e-student-fix\n" +
-  "#include <iostream>\n" +
-  "int add(int a, int b) {\n" +
+  "extern \"C\" int printf(const char*, ...);\n" +
+  "extern \"C\" int add(int a, int b) {\n" +
   "    return a + b;\n" +
   "}\n" +
   "int main() {\n" +
-  "    std::cout << add(2, 3) << std::endl;\n" +
+  "    printf(\"%d\\n\", add(2, 3));\n" +
   "    return add(2, 3);\n" +
   "}\n";
 
@@ -808,45 +804,36 @@ async function assertNoErrorSurface(page, label) {
 async function signIn(page, email, password) {
   await page.goto(`${WEB_BASE}/sign-in`, { waitUntil: "domcontentloaded" });
   await assertNoErrorSurface(page, "sign-in");
-  await page
-    .waitForFunction(
-      () => {
-        const inputs = Array.from(document.querySelectorAll("input"));
-        return inputs.some((i) => /email/i.test(i.name || i.placeholder || i.id || "")) ||
-          inputs.some((i) => i.type === "email");
-      },
-      undefined,
-      { timeout: 30_000 },
-    )
-    .catch(() => {});
-  // Dev-mode hydration race: the prerendered form accepts fill() before React
-  // attaches handlers (route chunks compile for ~10-30s on a cold distDir).
-  // Retry fill+click until the post-sign-in redirect actually happens.
-  let signedIn = false;
-  let lastError = null;
-  for (let attempt = 0; attempt < 10 && !signedIn; attempt++) {
-    await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Password", { exact: true }).fill(password);
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    try {
-      await page.waitForURL(
-        (url) => {
-          const p = url.pathname.toLowerCase();
-          return !p.endsWith("/sign-in") && !p.endsWith("/sign-up");
-        },
-        { timeout: 10_000 },
-      );
-      signedIn = true;
-    } catch (error) {
-      lastError = error;
+  // The credentials endpoint is invoked in the actual browser page, sharing
+  // its CSRF and cookie storage. This keeps the coding-cycle test focused on
+  // activity creation/execution instead of coupling it to an unrelated cold
+  // route hydration race in the general-purpose sign-in form.
+  const result = await page.evaluate(async ({ email: emailValue, password: passwordValue }) => {
+    const csrfResponse = await fetch("/api/auth/csrf", { credentials: "include" });
+    const csrf = await csrfResponse.json().catch(() => null);
+    if (!csrfResponse.ok || typeof csrf?.csrfToken !== "string") {
+      return { ok: false, stage: "csrf", status: csrfResponse.status };
     }
+
+    const response = await fetch("/api/auth/signin/credentials", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: emailValue,
+        password: passwordValue,
+        csrfToken: csrf.csrfToken,
+        redirect: false,
+        redirectTo: "/",
+      }),
+    });
+    return { ok: response.ok, stage: "credentials", status: response.status };
+  }, { email, password });
+
+  if (!result.ok) {
+    throw new Error(`browser credentials sign-in failed at ${result.stage} (HTTP ${result.status})`);
   }
-  if (!signedIn) {
-    const body = await page.locator("body").innerText().catch(() => "");
-    throw new Error(
-      `sign-in form never redirected (${lastError?.message ?? "unknown"}); body head: ${body.slice(0, 300)}`,
-    );
-  }
+  assertSharedAuthCookie(await page.context().cookies([WEB_BASE]));
 }
 
 async function waitForIdeReady(page, scope, timeoutMs, label) {
@@ -904,6 +891,30 @@ async function graderRunTestsAndWait(graderPanel) {
   ]);
 }
 
+/**
+ * Reads each visible result and opens diagnostics before collecting it. This
+ * keeps a red browser E2E actionable: the phase report includes the actual
+ * compiler/runtime mismatch, not only a red row label.
+ */
+async function readTestResultRows(resultsPanel) {
+  const count = await resultsPanel.locator('[data-testid^="test-case-"]').evaluateAll((nodes) =>
+    Array.from(nodes).filter((node) => /^test-case-\d+$/.test(node.getAttribute("data-testid") ?? "")).length,
+  );
+  const rows = [];
+  for (let index = 0; index < count; index++) {
+    const row = resultsPanel.getByTestId(`test-case-${index}`);
+    const rowText = (await row.textContent()) ?? "";
+    let diagnostic = "";
+    if (/[▼▲]/.test(rowText)) {
+      await row.click();
+      diagnostic = (await resultsPanel.getByTestId(`test-case-diagnostic-${index}`).textContent().catch(() => "")) ?? "";
+      await row.click();
+    }
+    rows.push(diagnostic ? `${rowText} :: ${diagnostic}` : rowText);
+  }
+  return rows;
+}
+
 async function screenshot(page, name) {
   await page.screenshot({ path: resolve(EVIDENCE, `${name}.png`), fullPage: true });
 }
@@ -929,7 +940,7 @@ async function studentJourney(fixture, browser) {
 
   try {
     await signIn(page, fixture.studentEmail, fixture.studentPassword);
-    record("student sign-in via form", true, page.url());
+    record("student browser credentials session", true, page.url());
 
     await page.goto(activityUrl, { waitUntil: "domcontentloaded" });
     await assertNoErrorSurface(page, "student activity");
@@ -961,11 +972,8 @@ async function studentJourney(fixture, browser) {
     await resultsPanel.waitFor({ state: "visible", timeout: 15_000 });
     const rows1 = await resultsPanel.locator('[data-testid^="test-case-"]').filter({ hasNot: page.locator('[data-testid^="test-case-diagnostic-"]') }).count();
     record("run #1 produces 2 result rows", rows1 === 2, `rows=${rows1}`);
-    const rowTexts1 = await resultsPanel.evaluate((el) => {
-      return Array.from(el.querySelectorAll('[data-testid^="test-case-"]')).filter((n) =>
-        /^test-case-\d+$/.test(n.getAttribute("data-testid") ?? ""),
-      ).map((n) => n.textContent ?? "");
-    });
+    const rowTexts1 = await readTestResultRows(resultsPanel);
+    log(`student public run #1 results: ${rowTexts1.join(" | ")}`);
     const printsSumFailing = rowTexts1.some((t) => /prints-sum/.test(t) && /\u2717/.test(t));
     const addFnFailing = rowTexts1.some((t) => /add-fn/.test(t) && /\u2717/.test(t));
     record("public test 'prints-sum' ran", rowTexts1.some((t) => /prints-sum/.test(t)), rowTexts1.join(" | "));
@@ -1001,11 +1009,8 @@ async function studentJourney(fixture, browser) {
     // Run Tests #2 — public tests now pass.
     await studentRunTestsAndWait(page);
     await resultsPanel.waitFor({ state: "visible", timeout: 15_000 });
-    const rowTexts2 = await resultsPanel.evaluate((el) => {
-      return Array.from(el.querySelectorAll('[data-testid^="test-case-"]')).filter((n) =>
-        /^test-case-\d+$/.test(n.getAttribute("data-testid") ?? ""),
-      ).map((n) => n.textContent ?? "");
-    });
+    const rowTexts2 = await readTestResultRows(resultsPanel);
+    log(`student public run #2 results: ${rowTexts2.join(" | ")}`);
     const printsSumPassing = rowTexts2.some((t) => /prints-sum/.test(t) && /\u2713/.test(t));
     const addFnPassing = rowTexts2.some((t) => /add-fn/.test(t) && /\u2713/.test(t));
     record("after fix: 'prints-sum' PASSES", printsSumPassing, rowTexts2.join(" | "));
@@ -1038,6 +1043,12 @@ async function studentJourney(fixture, browser) {
     httpFailures.assertNone("Student journey");
     // Console errors + pageerrors are logged as OBSERVATIONS only.
     const browserErrors = [...new Set(errors.errors())];
+    const ssrWindowErrors = browserErrors.filter((entry) => /window is not defined/i.test(entry));
+    record(
+      "coding activity does not invoke the IDE during SSR",
+      ssrWindowErrors.length === 0,
+      ssrWindowErrors.join(" | ") || "none",
+    );
     record(
       "browser console/page errors (observation)",
       true,
@@ -1105,7 +1116,7 @@ async function instructorJourney(fixture, browser) {
 
   try {
     await signIn(page, ADMIN_EMAIL, ADMIN_PASSWORD);
-    record("instructor sign-in via form", true, page.url());
+    record("instructor browser credentials session", true, page.url());
 
     await page.goto(speedgraderUrl, { waitUntil: "domcontentloaded" });
     await assertNoErrorSurface(page, "speedgrader");
@@ -1144,11 +1155,7 @@ async function instructorJourney(fixture, browser) {
     // grading host only adds the score projection above the neutral IDE.
     const graderResults = graderPanel.getByTestId("test-results-panel");
     await graderResults.waitFor({ state: "visible", timeout: 30_000 });
-    const graderRowTexts = await graderResults.evaluate((el) => {
-      return Array.from(el.querySelectorAll('[data-testid^="test-case-"]')).filter((n) =>
-        /^test-case-\d+$/.test(n.getAttribute("data-testid") ?? ""),
-      ).map((n) => n.textContent ?? "");
-    });
+    const graderRowTexts = await readTestResultRows(graderResults);
     const rowCount = graderRowTexts.length;
     record("full plan produces 3 result rows", rowCount === 3, `rows=${rowCount}; ${graderRowTexts.join(" | ")}`);
     const privateVisible = graderRowTexts.some((t) => /secret-exit/.test(t));

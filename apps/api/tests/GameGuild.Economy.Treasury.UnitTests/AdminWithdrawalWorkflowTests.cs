@@ -194,9 +194,10 @@ public sealed partial class AdminWithdrawalWorkflowTests
         internal WalletId PlatformFeeWalletId { get; } = WalletId.New();
         internal Guid RequestedBy { get; } = Guid.NewGuid();
         internal Guid ApprovedBy { get; } = Guid.NewGuid();
+        internal Guid TenantId { get; } = Guid.NewGuid();
 
         internal AdminWithdrawalReservationRequest Request() => new(
-            Guid.NewGuid(), new IdempotencyKey("withdraw-2026-08"), RequestedBy,
+            Guid.NewGuid(), TenantId, new IdempotencyKey("withdraw-2026-08"), RequestedBy,
             PlatformFeeWalletId, new DateOnly(2026, 8, 1), new PolicyVersion(1),
             new ReserveVersion(1), 1, AssetKey, "company-bank", Now);
 
@@ -260,12 +261,13 @@ public sealed partial class AdminWithdrawalWorkflowTests
             if (TimeoutOnDispatch) throw new TimeoutException("provider timeout");
             if (ReceiptFactory is not null) return ValueTask.FromResult(ReceiptFactory(command));
             return ValueTask.FromResult(new AdminWithdrawalProviderReceipt(
-                command.RunId, DispatchOutcome, "transfer-1", command.FencingToken,
+                command.RunId, command.TenantId, DispatchOutcome, "transfer-1", command.FencingToken,
                 command.ExecutionEpoch, command.Amount, command.SourceAssetKey,
                 command.DestinationHash, "receipt", "signature", command.RequestedAt));
         }
 
         public ValueTask<AdminWithdrawalProviderEvent> ReconcileAsync(
+            Guid tenantId,
             Guid runId,
             string idempotencyKey,
             string? providerTransferId,
@@ -275,7 +277,7 @@ public sealed partial class AdminWithdrawalWorkflowTests
             if (EventFactory is not null)
                 return ValueTask.FromResult(EventFactory(runId, idempotencyKey, providerTransferId));
             return ValueTask.FromResult(new AdminWithdrawalProviderEvent(
-                "event-1", runId, ReconcileOutcome, providerTransferId ?? "transfer-1",
+                "event-1", runId, tenantId, ReconcileOutcome, providerTransferId ?? "transfer-1",
                 1, 1, new CoinAmount(CurrencyCode.HardCoin, 50),
                 "stripe:platform:cash", "company-bank", "event", "signature", Now.AddMinutes(1)));
         }

@@ -86,6 +86,26 @@ public sealed class AdRewardRationalAccumulator
         lock (_gate) return _remainders.GetValueOrDefault(walletId);
     }
 
+    public static AdRewardQuote Calculate(
+        WalletId walletId,
+        IdempotencyKey idempotencyKey,
+        AdNetworkPolicy policy,
+        long impressionCount,
+        Int128 previousRemainder)
+    {
+        ArgumentNullException.ThrowIfNull(policy);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(impressionCount);
+        if (previousRemainder < 0 || previousRemainder >= CanonicalDenominator)
+            throw new ArgumentOutOfRangeException(nameof(previousRemainder));
+        return BuildQuote(
+            walletId,
+            idempotencyKey,
+            policy,
+            impressionCount,
+            previousRemainder,
+            Fingerprint(walletId, policy, impressionCount));
+    }
+
     private static string Fingerprint(WalletId walletId, AdNetworkPolicy policy, long impressionCount)
     {
         var canonical = string.Join('|',

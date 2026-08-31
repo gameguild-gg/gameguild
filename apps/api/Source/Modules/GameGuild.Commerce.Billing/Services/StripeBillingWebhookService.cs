@@ -14,6 +14,7 @@ public class StripeBillingWebhookService : BillingWebhookService
     private readonly ILogger<StripeBillingWebhookService> _logger;
     private readonly IStripeWebhookVerifier _webhookVerifier;
     private readonly IStripeProviderObjectBindingValidator _providerObjectBindingValidator;
+    private readonly IReadOnlyList<IStripeVerifiedEventConsumer> _verifiedEventConsumers;
     private readonly ISubscriptionQueryService _subscriptionQueryService;
     private readonly WebhookSettings _webhookSettings;
 
@@ -26,12 +27,14 @@ public class StripeBillingWebhookService : BillingWebhookService
         ISubscriptionQueryService queryService,
         ISubscriptionBillingService billingService,
         ISubscriptionExternalIdService externalIdService,
-        IOptions<BillingConfiguration>? configuration = null)
+        IOptions<BillingConfiguration>? configuration = null,
+        IEnumerable<IStripeVerifiedEventConsumer>? verifiedEventConsumers = null)
         : base(logger, lifecycleService, queryService, billingService, externalIdService)
     {
         _webhookRepository = webhookRepository;
         _webhookVerifier = webhookVerifier;
         _providerObjectBindingValidator = providerObjectBindingValidator;
+        _verifiedEventConsumers = verifiedEventConsumers?.ToArray() ?? [];
         _subscriptionQueryService = queryService;
         _logger = logger;
         _webhookSettings = configuration?.Value.Webhook ?? new WebhookSettings();
@@ -205,6 +208,14 @@ public class StripeBillingWebhookService : BillingWebhookService
     /// </summary>
     private async Task RouteStripeEventAsync(VerifiedStripeWebhookEvent verifiedEvent, CancellationToken cancellationToken)
     {
+        foreach (var consumer in _verifiedEventConsumers)
+        {
+            if (await consumer.TryConsumeAsync(verifiedEvent, cancellationToken).ConfigureAwait(false))
+            {
+                return;
+            }
+        }
+
         var webhookPayload = ParseStripePayload(verifiedEvent.EventType, verifiedEvent.VerifiedPayload);
 
         switch (verifiedEvent.EventType)

@@ -27,11 +27,11 @@
     "@xterm/xterm": "^6.0.0",
     "react": ">=18",
     "react-dom": ">=18",
-    "react-resizable-panels": "^3.0.6"
+    "react-resizable-panels": "^4.12.2"
   },
   "devDependencies": {
     "@babel/preset-env": "7",
-    "@babel/preset-react": "8",
+    "@babel/preset-react": "7",
     "@babel/preset-typescript": "7",
     "@game-guild/jest-config": "workspace:^",
     "@game-guild/ui": "workspace:*",

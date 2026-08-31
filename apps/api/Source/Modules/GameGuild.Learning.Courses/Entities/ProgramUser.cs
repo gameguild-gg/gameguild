@@ -132,17 +132,11 @@ public class ProgramUser : EntityBase
     /// <summary>
     /// Average grade across all activities
     /// </summary>
-    public decimal? AverageGrade
-    {
-        get
-        {
-            if (ReceivedGrades == null)
-                return null;
-
-            var grades = ReceivedGrades.Where(g => g.Points.HasValue).Select(g => g.Points!.Value).ToList();
-            return grades.Count > 0 ? grades.Average() : null;
-        }
-    }
+    public decimal? AverageGrade => ReceivedGrades?
+        .Where(grade => grade.Points.HasValue)
+        .Select(grade => (decimal?)grade.Points!.Value)
+        .DefaultIfEmpty()
+        .Average();
 
     // Domain Methods
     /// <summary>

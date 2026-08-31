@@ -100,9 +100,7 @@ export function createServerClient(config: ServerClientConfig): ApiClient {
     interceptors,
   });
 
-  async function requestWithResponse<T>(
-    requestConfig: RequestConfig
-  ): Promise<Result<ApiResponse<T>, ApiError>> {
+  async function requestWithResponse<T>(requestConfig: RequestConfig): Promise<Result<ApiResponse<T>, ApiError>> {
     // Reset token cache for each request
     cachedTokenPromise = null;
 

@@ -102,7 +102,7 @@ export function match<T, E, R>(
   handlers: {
     ok: (data: T) => R;
     err: (error: E) => R;
-  }
+  },
 ): R {
   if (result.ok) {
     return handlers.ok(result.data);
@@ -113,10 +113,7 @@ export function match<T, E, R>(
 /**
  * Convert a Promise to a Result
  */
-export async function fromPromise<T, E = Error>(
-  promise: Promise<T>,
-  errorMapper?: (error: unknown) => E
-): Promise<Result<T, E>> {
+export async function fromPromise<T, E = Error>(promise: Promise<T>, errorMapper?: (error: unknown) => E): Promise<Result<T, E>> {
   try {
     const data = await promise;
     return ok(data);

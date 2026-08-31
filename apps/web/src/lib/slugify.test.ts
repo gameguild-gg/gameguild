@@ -52,4 +52,3 @@ describe("normalizeSlug", () => {
     expect(normalizeSlug("")).toBe("");
   });
 });
-

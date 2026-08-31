@@ -17,6 +17,7 @@ public sealed record VerifiedStripeWebhookEvent
     public required string VerifiedPayload { get; init; }
     public required string RetainedPayload { get; init; }
     public required string PayloadSha256 { get; init; }
+    public DateTimeOffset OccurredAt { get; init; }
     public bool IsLiveMode { get; init; }
     public Guid? TenantId { get; init; }
     public string? ExternalSubscriptionId { get; init; }
@@ -29,4 +30,11 @@ public sealed record VerifiedStripeWebhookEvent
 public interface IStripeWebhookVerifier
 {
     VerifiedStripeWebhookEvent Verify(string payload, string signature);
+}
+
+public interface IStripeVerifiedEventConsumer
+{
+    ValueTask<bool> TryConsumeAsync(
+        VerifiedStripeWebhookEvent verifiedEvent,
+        CancellationToken cancellationToken);
 }

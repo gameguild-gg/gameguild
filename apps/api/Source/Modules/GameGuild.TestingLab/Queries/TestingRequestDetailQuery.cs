@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Tenants;
+using GameGuild.Projects;
 
 namespace GameGuild.TestingLab;
 
@@ -16,7 +17,7 @@ public sealed record TestingRequestProjectVersionProjection(
     Guid Id,
     Guid ProjectId,
     string VersionNumber,
-    string Status,
+    ProjectVersionStatus Status,
     TestingRequestProjectProjection? Project);
 
 public sealed record TestingRequestDetailProjection(

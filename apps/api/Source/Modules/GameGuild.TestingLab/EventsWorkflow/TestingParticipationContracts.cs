@@ -15,7 +15,10 @@ public sealed record TestingSlotRegistrationProjection(
     DateTime? CheckedInAt,
     DateTime? CheckedOutAt,
     DateTime? CompletedAt,
-    int PendingFeedbackCount);
+    int PendingFeedbackCount,
+    QuestionnaireResponse? RegistrationResponse = null,
+    DateTime? RulesAcceptedAt = null,
+    DateTime? EventConfigurationFrozenAt = null);
 
 public sealed record TestingFeedbackObligationProjection(
     Guid Id,
@@ -25,7 +28,8 @@ public sealed record TestingFeedbackObligationProjection(
     Guid TesterUserId,
     Guid? FeedbackId,
     TestingFeedbackObligationStatus Status,
-    DateTime? FulfilledAt);
+    DateTime? FulfilledAt,
+    Guid? QuestionnaireRevisionId = null);
 
 public sealed record TestingEventFeedbackProjection(
     Guid Id,
@@ -36,7 +40,9 @@ public sealed record TestingEventFeedbackProjection(
     int? OverallRating,
     bool? WouldRecommend,
     string? AdditionalNotes,
-    DateTime SubmittedAt);
+    DateTime SubmittedAt,
+    Guid? QuestionnaireRevisionId = null,
+    QuestionnaireResponse? Responses = null);
 
 public sealed record TestingEventFeedbackReviewProjection(
     Guid ObligationId,
@@ -80,7 +86,11 @@ public sealed record TestingParticipantDirectoryProjection(
     int AttendedCount,
     int CompletedCount,
     int NoShowCount);
-public sealed record RegisterTestingEventSlotCommand(Guid SlotId, string? Notes)
+public sealed record RegisterTestingEventSlotCommand(
+    Guid SlotId,
+    string? Notes,
+    QuestionnaireResponse? RegistrationResponse = null,
+    bool AcceptedRules = false)
     : ICommand<Result<TestingSlotRegistrationProjection>>;
 
 public sealed record CancelTestingEventSlotRegistrationCommand(Guid RegistrationId)
@@ -100,10 +110,12 @@ public sealed record AssignTestingProjectToTesterCommand(Guid RegistrationId, Gu
 
 public sealed record SubmitTestingEventFeedbackCommand(
     Guid ObligationId,
-    string FeedbackData,
+    string? FeedbackData,
     int? OverallRating,
     bool? WouldRecommend,
-    string? AdditionalNotes) : ICommand<Result<TestingEventFeedbackProjection>>;
+    string? AdditionalNotes,
+    Guid? QuestionnaireRevisionId = null,
+    QuestionnaireResponse? Responses = null) : ICommand<Result<TestingEventFeedbackProjection>>;
 
 public sealed record CompleteTestingEventParticipationCommand(Guid RegistrationId)
     : ICommand<Result<TestingSlotRegistrationProjection>>;
@@ -114,6 +126,9 @@ public sealed record GetTestingEventSlotRegistrationsQuery(
 
 public sealed record GetMyTestingFeedbackObligationsQuery(Guid? EventId = null)
     : IQuery<Result<IReadOnlyList<TestingFeedbackObligationProjection>>>;
+
+public sealed record GetMyTestingEventFeedbackQuery(Guid? EventId = null)
+    : IQuery<Result<IReadOnlyList<TestingEventFeedbackProjection>>>;
 
 public sealed record GetTestingEventFeedbackQuery(Guid EventId)
     : IQuery<Result<IReadOnlyList<TestingEventFeedbackReviewProjection>>>;
@@ -126,12 +141,17 @@ public sealed record GetTestingParticipantDirectoryQuery(
 public sealed record GetMyTestingSlotRegistrationsQuery(Guid? EventId = null)
     : IQuery<Result<IReadOnlyList<TestingSlotRegistrationProjection>>>;
 
-public sealed record RegisterTestingEventSlotRequest(string? Notes);
+public sealed record RegisterTestingEventSlotRequest(
+    string? Notes,
+    QuestionnaireResponse RegistrationResponse,
+    bool AcceptedRules);
 
 public sealed record AssignTestingProjectToTesterRequest(Guid ApplicationId);
 
 public sealed record SubmitTestingEventFeedbackRequest(
-    string FeedbackData,
+    string? FeedbackData,
     int? OverallRating,
     bool? WouldRecommend,
-    string? AdditionalNotes);
+    string? AdditionalNotes,
+    Guid? QuestionnaireRevisionId = null,
+    QuestionnaireResponse? Responses = null);

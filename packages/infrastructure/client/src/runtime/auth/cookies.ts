@@ -37,10 +37,7 @@ export interface ResolvedCookieOptions {
  * @param isSecure - Whether the deployment is HTTPS
  * @returns Fully resolved cookie options
  */
-export function resolveCookieOptions(
-  config?: CookieConfig,
-  isSecure?: boolean
-): ResolvedCookieOptions {
+export function resolveCookieOptions(config?: CookieConfig, isSecure?: boolean): ResolvedCookieOptions {
   const secure = config?.secure ?? isSecure ?? false;
 
   return {
@@ -79,10 +76,7 @@ export class SessionStore {
 
   constructor(options: ResolvedCookieOptions) {
     this.options = options;
-    this.cookieName = getCookieName(
-      `${options.name}.session-token`,
-      options.secure
-    );
+    this.cookieName = getCookieName(`${options.name}.session-token`, options.secure);
   }
 
   /**
@@ -131,14 +125,7 @@ export class SessionStore {
    * @param value - The encrypted JWT to store
    * @param setCookie - Function to set a cookie (name, value, options)
    */
-  write(
-    value: string,
-    setCookie: (
-      name: string,
-      value: string,
-      options: CookieSerializeOptions
-    ) => void
-  ): void {
+  write(value: string, setCookie: (name: string, value: string, options: CookieSerializeOptions) => void): void {
     const cookieOptions = this.serializeOptions();
 
     if (value.length <= MAX_COOKIE_SIZE) {
@@ -152,8 +139,7 @@ export class SessionStore {
       const chunks = this.chunk(value);
 
       chunks.forEach((chunk, index) => {
-        const name =
-          index === 0 ? this.cookieName : `${this.cookieName}.${index}`;
+        const name = index === 0 ? this.cookieName : `${this.cookieName}.${index}`;
         setCookie(name, chunk, cookieOptions);
       });
 
@@ -167,13 +153,7 @@ export class SessionStore {
    *
    * @param setCookie - Function to set a cookie (for deletion via maxAge=0)
    */
-  delete(
-    setCookie: (
-      name: string,
-      value: string,
-      options: CookieSerializeOptions
-    ) => void
-  ): void {
+  delete(setCookie: (name: string, value: string, options: CookieSerializeOptions) => void): void {
     const deleteOptions: CookieSerializeOptions = {
       ...this.serializeOptions(),
       maxAge: 0,
@@ -197,14 +177,7 @@ export class SessionStore {
   /**
    * Clear chunk cookies starting from a given index.
    */
-  private clearChunks(
-    setCookie: (
-      name: string,
-      value: string,
-      options: CookieSerializeOptions
-    ) => void,
-    startIndex: number
-  ): void {
+  private clearChunks(setCookie: (name: string, value: string, options: CookieSerializeOptions) => void, startIndex: number): void {
     const deleteOptions: CookieSerializeOptions = {
       ...this.serializeOptions(),
       maxAge: 0,
@@ -241,10 +214,7 @@ export interface CookieSerializeOptions {
  * Convert resolved options to the standard serialization format.
  * Shared by all cookie stores to avoid duplication.
  */
-function toSerializeOptions(
-  options: ResolvedCookieOptions,
-  overrides?: Partial<CookieSerializeOptions>
-): CookieSerializeOptions {
+function toSerializeOptions(options: ResolvedCookieOptions, overrides?: Partial<CookieSerializeOptions>): CookieSerializeOptions {
   return {
     httpOnly: options.httpOnly,
     secure: options.secure,
@@ -268,11 +238,7 @@ class SimpleCookieStore {
   protected readonly options: ResolvedCookieOptions;
   private readonly httpOnlyOverride?: boolean;
 
-  constructor(
-    options: ResolvedCookieOptions,
-    suffix: string,
-    httpOnlyOverride?: boolean
-  ) {
+  constructor(options: ResolvedCookieOptions, suffix: string, httpOnlyOverride?: boolean) {
     this.options = options;
     this.cookieName = getCookieName(`${options.name}.${suffix}`, options.secure);
     this.httpOnlyOverride = httpOnlyOverride;
@@ -286,23 +252,19 @@ class SimpleCookieStore {
     return getCookie(this.cookieName) ?? null;
   }
 
-  write(
-    value: string,
-    setCookie: (name: string, value: string, options: CookieSerializeOptions) => void
-  ): void {
+  write(value: string, setCookie: (name: string, value: string, options: CookieSerializeOptions) => void): void {
     setCookie(this.cookieName, value, this.getSerializeOptions());
   }
 
-  delete(
-    setCookie: (name: string, value: string, options: CookieSerializeOptions) => void
-  ): void {
-    setCookie(this.cookieName, '', { ...this.getSerializeOptions(), maxAge: 0 });
+  delete(setCookie: (name: string, value: string, options: CookieSerializeOptions) => void): void {
+    setCookie(this.cookieName, '', {
+      ...this.getSerializeOptions(),
+      maxAge: 0,
+    });
   }
 
   private getSerializeOptions(): CookieSerializeOptions {
-    return toSerializeOptions(this.options, 
-      this.httpOnlyOverride !== undefined ? { httpOnly: this.httpOnlyOverride } : undefined
-    );
+    return toSerializeOptions(this.options, this.httpOnlyOverride !== undefined ? { httpOnly: this.httpOnlyOverride } : undefined);
   }
 }
 

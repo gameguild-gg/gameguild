@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,24 +17,18 @@ export class LearningAssessmentsPeerReviewsModule {
 
   /**
    */
-  async postAssessmentsPeerReviewsClaim(
-    assessmentId: string,
-  ): Promise<Result<Types.LearningAssessmentsPeerReviewClaim, ApiError>> {
+  async postAssessmentsPeerReviewsClaim(assessmentId: string): Promise<Result<Types.LearningAssessmentsPeerReviewClaim, ApiError>> {
     const url = `/v1/assessments/${assessmentId}/peer-reviews/claim`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsPeerReviewClaimSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningAssessmentsPeerReviewClaimSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -43,26 +37,18 @@ export class LearningAssessmentsPeerReviewsModule {
 
   /**
    */
-  async getAssessmentsPeerReviews(
-    reviewId: string,
-  ): Promise<
-    Result<Types.LearningAssessmentsAnonymousReviewSubmission, ApiError>
-  > {
+  async getAssessmentsPeerReviews(reviewId: string): Promise<Result<Types.LearningAssessmentsAnonymousReviewSubmission, ApiError>> {
     const url = `/v1/assessments/peer-reviews/${reviewId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningAssessmentsAnonymousReviewSubmissionSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningAssessmentsAnonymousReviewSubmissionSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -71,21 +57,14 @@ export class LearningAssessmentsPeerReviewsModule {
 
   /**
    */
-  async postAssessmentsPeerReviewsSubmit(
-    reviewId: string,
-    body: Types.LearningAssessmentsPeerReviewSubmitInput,
-  ): Promise<Result<void, ApiError>> {
+  async postAssessmentsPeerReviewsSubmit(reviewId: string, body: Types.LearningAssessmentsPeerReviewSubmitInput): Promise<Result<void, ApiError>> {
     const url = `/v1/assessments/peer-reviews/${reviewId}/submit`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningAssessmentsPeerReviewSubmitInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningAssessmentsPeerReviewSubmitInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -96,49 +75,33 @@ export class LearningAssessmentsPeerReviewsModule {
 
   /**
    */
-  async getAssessmentsSubmissionsPeerReviews(
-    submissionId: string,
-  ): Promise<
-    Result<Array<Types.LearningAssessmentsInstructorPeerReview>, ApiError>
-  > {
+  async getAssessmentsSubmissionsPeerReviews(submissionId: string): Promise<Result<Array<Types.LearningAssessmentsInstructorPeerReview>, ApiError>> {
     const url = `/v1/assessments/submissions/${submissionId}/peer-reviews`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningAssessmentsInstructorPeerReview>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningAssessmentsInstructorPeerReview>, ApiError>;
   }
 
   /**
    */
-  async getAssessmentsSubmissionsReceivedPeerReviews(
-    submissionId: string,
-  ): Promise<
-    Result<Array<Types.LearningAssessmentsReceivedPeerReview>, ApiError>
-  > {
+  async getAssessmentsSubmissionsReceivedPeerReviews(submissionId: string): Promise<Result<Array<Types.LearningAssessmentsReceivedPeerReview>, ApiError>> {
     const url = `/v1/assessments/submissions/${submissionId}/received-peer-reviews`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningAssessmentsReceivedPeerReview>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningAssessmentsReceivedPeerReview>, ApiError>;
   }
 }
 
-export function createLearningAssessmentsPeerReviewsModule(
-  client: ApiClient,
-): LearningAssessmentsPeerReviewsModule {
+export function createLearningAssessmentsPeerReviewsModule(client: ApiClient): LearningAssessmentsPeerReviewsModule {
   return new LearningAssessmentsPeerReviewsModule(client);
 }

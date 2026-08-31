@@ -30,6 +30,21 @@
       "productionProject": "apps/api/Source/Modules/GameGuild.Economy.Treasury/GameGuild.Economy.Treasury.csproj",
       "testProjects": ["apps/api/tests/GameGuild.Economy.Treasury.UnitTests/GameGuild.Economy.Treasury.UnitTests.csproj"],
       "coverageAssemblies": ["GameGuild.Economy.Treasury"]
+    },
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.Compliance.KYC/GameGuild.Compliance.KYC.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.Compliance.KYC.UnitTests/GameGuild.Compliance.KYC.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.Compliance.KYC"]
+    },
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.Compliance.FinancialCrime/GameGuild.Compliance.FinancialCrime.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.Compliance.FinancialCrime.UnitTests/GameGuild.Compliance.FinancialCrime.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.Compliance.FinancialCrime"]
+    },
+    {
+      "productionProject": "apps/api/Source/Modules/GameGuild.TrustSafety/GameGuild.TrustSafety.csproj",
+      "testProjects": ["apps/api/tests/GameGuild.TrustSafety.UnitTests/GameGuild.TrustSafety.UnitTests.csproj"],
+      "coverageAssemblies": ["GameGuild.TrustSafety"]
     }
   ],
   "providerContractProjects": [

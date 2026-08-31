@@ -7,7 +7,7 @@
  * API Version: 4.3.0
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { z } from "zod";
+import { z } from 'zod';
 
 export interface AIAiChatInput {
   maxTokens?: number | null;
@@ -69,8 +69,7 @@ export interface AIAiGeneratedContentInput {
   tone?: string | null;
 }
 
-export type AIAiGeneratedContentKind =
-  "Email" | "Report" | "ListingDescription";
+export type AIAiGeneratedContentKind = 'Email' | 'Report' | 'ListingDescription';
 
 export interface AIAiGenerateInput {
   maxTokens?: number | null;
@@ -263,7 +262,7 @@ export interface AnalyticsProductCatalogMetrics {
   totalProducts?: number;
 }
 
-export type AnalyticsProductMetricsExportFormat = "Csv" | "Json";
+export type AnalyticsProductMetricsExportFormat = 'Csv' | 'Json';
 
 export interface AnalyticsProductMetricsOutput {
   capacity?: AnalyticsProductCapacityMetrics;
@@ -286,8 +285,7 @@ export interface AnalyticsProductMetricThreshold {
   warningAt?: number;
 }
 
-export type AnalyticsProductMetricThresholdStatus =
-  "Healthy" | "Warning" | "Critical";
+export type AnalyticsProductMetricThresholdStatus = 'Healthy' | 'Warning' | 'Critical';
 
 export interface AnalyticsProductRevenueMetrics {
   annualRecurringRevenue?: number;
@@ -307,7 +305,7 @@ export interface AnalyticsProductSubscriptionMetrics {
   trialSubscribers?: number;
 }
 
-export type AnalyticsTimeSeriesGranularity = "Hour" | "Day" | "Week" | "Month";
+export type AnalyticsTimeSeriesGranularity = 'Hour' | 'Day' | 'Week' | 'Month';
 
 export interface AnalyticsTrackAnalyticsEventCommand {
   eventName?: string | null;
@@ -324,11 +322,22 @@ export interface AnalyticsUpdateDashboardInput {
   widgets?: Array<AnalyticsDashboardWidgetInput> | null;
 }
 
-export type AnalyticsWidgetType =
-  "Counter" | "Chart" | "Table" | "Gauge" | "TimeSeries" | "Funnel";
+export type AnalyticsWidgetType = 'Counter' | 'Chart' | 'Table' | 'Gauge' | 'TimeSeries' | 'Funnel';
 
 export interface APIAccessAccessCapabilitiesOutput {
   capabilities?: Array<string> | null;
+}
+
+export interface APIControllersActivateEconomyKillSwitchInput {
+  id?: string;
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  reason?: string | null;
+}
+
+export interface APIControllersAdRewardProtectedOperationFailureOutput {
+  diagnostics?: Array<string> | null;
+  reviewId?: string | null;
+  state?: EconomyRiskEconomyProtectedOperationState;
 }
 
 export interface APIControllersApplicationDetails {
@@ -346,10 +355,86 @@ export interface APIControllersApplicationInfoOutput {
   timestamp?: string;
 }
 
+export interface APIControllersApproveEconomyPolicyInput {
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersApproveLegacyEconomyCutoverInput {
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersApproveTreasuryWithdrawalInput {
+  expectedVersion?: number;
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersAssignFinancialCrimeCaseInput {
+  expectedVersion?: number;
+}
+
+export interface APIControllersAssignTrustSafetyAppealInput {
+  expectedVersion?: number;
+}
+
+export interface APIControllersBackfillLegacyEconomyWalletInput {
+  legacyWalletId?: string;
+  operationFingerprint?: string | null;
+  riskDecisionId?: string;
+}
+
 export interface APIControllersBuildDetails {
   configuration?: string | null;
   framework?: string | null;
   timestamp?: string | null;
+}
+
+export interface APIControllersCaptureLegacyEconomyMigrationInput {
+  batchId?: string;
+  jurisdictionCode?: string | null;
+}
+
+export interface APIControllersCompleteMyAdRewardSessionInput {
+  idempotencyKey?: string | null;
+  playback?: EconomyAdRewardsAdPlaybackEvidence;
+  providerProof?: EconomyAdRewardsProviderCompletionProof;
+  token?: string | null;
+}
+
+export interface APIControllersCompleteMyBountyInput {
+  idempotencyKey?: string | null;
+}
+
+export interface APIControllersCreateMyBountyInput {
+  amountUnits?: number;
+  currency?: EconomyContractsCurrencyCode;
+  expiresAt?: string;
+  idempotencyKey?: string | null;
+  minimumReputation?: number;
+  requiresInstructorVerification?: boolean;
+  requiresPrerequisite?: boolean;
+}
+
+export interface APIControllersCreateMyKycAccessTokenInput {
+  lifetimeSeconds?: number;
+}
+
+export interface APIControllersDecideFinancialCrimeCaseInput {
+  id?: string;
+  evidenceHash?: string | null;
+  expectedCaseVersion?: number;
+  expiresAt?: string;
+  outcome?: ComplianceFinancialCrimeFinancialCrimeOutcome;
+  policyVersion?: number;
+  rawObjectReference?: string | null;
+  reasonCode?: string | null;
+  version?: number;
+}
+
+export interface APIControllersDecideTrustSafetyAppealInput {
+  evidenceHash?: string | null;
+  expectedVersion?: number;
+  overturn?: boolean;
+  reasonCode?: string | null;
 }
 
 export interface APIControllersDependencyHealthItem {
@@ -373,10 +458,63 @@ export interface APIControllersDependencyHealthOutput {
   unhealthyCount?: number;
 }
 
+export interface APIControllersDispatchPayoutExecutionInput {
+  expectedVersion?: number;
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersDispatchTreasuryWithdrawalInput {
+  expectedVersion?: number;
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersEconomyKycStatus {
+  expiresAt?: string | null;
+  hasEvidence?: boolean;
+  isCurrent?: boolean;
+  issuedAt?: string | null;
+  result?: EconomyRiskComplianceEvidenceResult;
+  version?: number | null;
+}
+
+export interface APIControllersEconomyPayoutExecutionOperation {
+  id?: string;
+  createdAt?: string;
+  destinationHash?: string | null;
+  fencingToken?: number;
+  hardCoinUnits?: number;
+  killSwitchEpoch?: number;
+  payeeId?: string;
+  policyVersion?: number;
+  providerPayoutId?: string | null;
+  reserveAuthorizationEpoch?: number;
+  reserveVersion?: number;
+  riskDecisionId?: string;
+  state?: EconomyPayoutsPayoutOperationState;
+  updatedAt?: string;
+  version?: number;
+  walletId?: string;
+}
+
 export interface APIControllersEconomySelfServiceCapability {
   capability?: EconomyRiskEconomyValueMovementCapability;
   diagnostics?: Array<string> | null;
   state?: APISetupEconomyCapabilityReadinessState;
+}
+
+export interface APIControllersEconomyStepUpInput {
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersEconomyTopUpFailureOutput {
+  message?: string | null;
+  state?: string | null;
+}
+
+export interface APIControllersEconomyTransferProtectedOperationFailureOutput {
+  diagnostics?: Array<string> | null;
+  reviewId?: string | null;
+  state?: EconomyRiskEconomyProtectedOperationState;
 }
 
 export interface APIControllersHealthinessOutput {
@@ -394,6 +532,17 @@ export interface APIControllersHealthinessResponseItem {
   status?: string | null;
 }
 
+export interface APIControllersInspectEconomyCapabilityReadinessInput {
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  destinationHash?: string | null;
+  jurisdictionCode?: string | null;
+  operationFingerprint?: string | null;
+  providerHash?: string | null;
+  riskDecisionId?: string;
+  sourceRootHashes?: Array<string> | null;
+  subjectReference?: string | null;
+}
+
 export interface APIControllersLivenessOutput {
   alive?: boolean;
   status?: string | null;
@@ -402,9 +551,63 @@ export interface APIControllersLivenessOutput {
   version?: string | null;
 }
 
+export interface APIControllersMarketplaceProtectedOperationFailureOutput {
+  diagnostics?: Array<string> | null;
+  reviewId?: string | null;
+  state?: EconomyRiskEconomyProtectedOperationState;
+}
+
+export interface APIControllersPayoutProtectedOperationFailureOutput {
+  diagnostics?: Array<string> | null;
+  reviewId?: string | null;
+  state?: EconomyRiskEconomyProtectedOperationState;
+}
+
 export interface APIControllersProcessDetails {
   startTime?: string;
   uptime?: string;
+}
+
+export interface APIControllersProposeEconomyPolicyInput {
+  id?: string;
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  effectiveAt?: string;
+  expiresAt?: string;
+  jurisdictionCode?: string | null;
+  payload?: Record<string, unknown>;
+  providerReady?: boolean;
+  version?: number;
+}
+
+export interface APIControllersProposeEconomyReserveInput {
+  id?: string;
+  authorizationEpoch?: number;
+  buffers?: EconomyReservesReserveBufferPosition;
+  custodyObservationIds?: Array<string> | null;
+  expectedActiveVersion?: number | null;
+  expiresAt?: string;
+  irreversibleInFlightProviderCostUsdNanos?: number;
+  observedAt?: string;
+  policyVersion?: number;
+  services?: Array<EconomyReservesReserveServiceObservation> | null;
+  version?: number;
+}
+
+export interface APIControllersProposeLegacyEconomyCutoverInput {
+  reason?: string | null;
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersProposeTreasuryWithdrawalInput {
+  amountUnits?: number;
+  destinationHash?: string | null;
+  idempotencyKey?: string | null;
+  periodStart?: string;
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersPublishEconomyAnchorInput {
+  dispatchSnapshotHash?: string | null;
 }
 
 export interface APIControllersReadinessOutput {
@@ -415,11 +618,56 @@ export interface APIControllersReadinessOutput {
   timestamp?: string;
 }
 
+export interface APIControllersRecordRegulatoryReferenceInput {
+  jurisdictionCode?: string | null;
+  kind?: string | null;
+  referenceHash?: string | null;
+}
+
+export interface APIControllersRefundMarketplaceSettlementInput {
+  idempotencyKey?: string | null;
+  quantity?: number;
+  reasonCode?: string | null;
+}
+
+export interface APIControllersReserveApprovedPayoutExecutionInput {
+  stepUpReceipt?: string | null;
+}
+
+export interface APIControllersResolveEconomyRiskReviewInput {
+  decisionCode?: EconomyRiskRiskManualDecisionCode;
+  resolution?: string | null;
+}
+
+export interface APIControllersRollbackLegacyEconomyCutoverInput {
+  reason?: string | null;
+  stepUpReceipt?: string | null;
+}
+
 export interface APIControllersRuntimeDetails {
   dotNetVersion?: string | null;
   osArchitecture?: string | null;
   osDescription?: string | null;
   processArchitecture?: string | null;
+}
+
+export interface APIControllersSettleMyMarketplaceOrderInput {
+  currencyChoice?: EconomyMarketplaceMarketplaceCurrencyChoice;
+  idempotencyKey?: string | null;
+}
+
+export interface APIControllersStartMyAdRewardSessionInput {
+  asnRiskHash?: string | null;
+  creativeId?: string | null;
+  deviceRiskHash?: string | null;
+  idempotencyKey?: string | null;
+  ipRiskHash?: string | null;
+  network?: string | null;
+  requiredDurationSeconds?: number;
+}
+
+export interface APIControllersStartMyKycInput {
+  idempotencyKey?: string | null;
 }
 
 export interface APIProjectsAddProjectTeamInput {
@@ -671,8 +919,7 @@ export interface APIProjectWorkUpdateProjectWorkTaskInput {
   title?: string | null;
 }
 
-export type APISetupEconomyCapabilityReadinessState =
-  "Disabled" | "Ready" | "ProviderNotReady" | "InvalidConfiguration";
+export type APISetupEconomyCapabilityReadinessState = 'Disabled' | 'Ready' | 'ProviderNotReady' | 'InvalidConfiguration';
 
 export interface APITeamsAcceptTeamInvitationInput {
   token?: string | null;
@@ -769,15 +1016,7 @@ export interface APITeamsUpdateTeamInput {
 }
 
 export type AssetsAssetAccessPolicy =
-  | "Private"
-  | "SignedUrl"
-  | "TenantPublic"
-  | "Public"
-  | "PaidContent"
-  | "OwnerOnly"
-  | "Authenticated"
-  | "Unlisted"
-  | "Inherited";
+  'Private' | 'SignedUrl' | 'TenantPublic' | 'Public' | 'PaidContent' | 'OwnerOnly' | 'Authenticated' | 'Unlisted' | 'Inherited';
 
 export interface AssetsAssetAccessUrl {
   expiresAt?: string;
@@ -786,11 +1025,9 @@ export interface AssetsAssetAccessUrl {
   url?: string | null;
 }
 
-export type AssetsAssetFolderRestrictionMode =
-  "None" | "SelectedTeams" | "TeamAuthorities" | "AllocatedProjectMembers";
+export type AssetsAssetFolderRestrictionMode = 'None' | 'SelectedTeams' | 'TeamAuthorities' | 'AllocatedProjectMembers';
 
-export type AssetsAssetKind =
-  "Image" | "Video" | "Audio" | "Document" | "Archive" | "Other";
+export type AssetsAssetKind = 'Image' | 'Video' | 'Audio' | 'Document' | 'Archive' | 'Other';
 
 export interface AssetsAssetUploadResult {
   assetContentId?: string | null;
@@ -906,20 +1143,11 @@ export interface AssetsControllersUpdateVirusScanInput {
   status?: AssetsVirusScanStatus;
 }
 
-export type AssetsImageFit =
-  "Contain" | "Cover" | "Fill" | "Inside" | "Outside";
+export type AssetsImageFit = 'Contain' | 'Cover' | 'Fill' | 'Inside' | 'Outside';
 
-export type AssetsImageFormat =
-  "Original" | "Jpeg" | "Png" | "Webp" | "Avif" | "Gif";
+export type AssetsImageFormat = 'Original' | 'Jpeg' | 'Png' | 'Webp' | 'Avif' | 'Gif';
 
-export type AssetsModerationStatus =
-  | "Pending"
-  | "Processing"
-  | "Approved"
-  | "Rejected"
-  | "NeedsReview"
-  | "ApprovedWithWarning"
-  | "Blocked";
+export type AssetsModerationStatus = 'Pending' | 'Processing' | 'Approved' | 'Rejected' | 'NeedsReview' | 'ApprovedWithWarning' | 'Blocked';
 
 export interface AssetsQueriesAssetPreviewOutput {
   assetContentId?: string;
@@ -1011,38 +1239,18 @@ export interface AssetsQueriesBulkAssetAccessUrlsOutput {
   totalRequested?: number;
 }
 
-export type AssetsReportReason =
-  | "Inappropriate"
-  | "Copyright"
-  | "Spam"
-  | "Violence"
-  | "Harassment"
-  | "Misinformation"
-  | "Other";
+export type AssetsReportReason = 'Inappropriate' | 'Copyright' | 'Spam' | 'Violence' | 'Harassment' | 'Misinformation' | 'Other';
 
-export type AssetsReviewDecision =
-  | "NoAction"
-  | "ContentRemoved"
-  | "ContentHidden"
-  | "UserWarned"
-  | "UserSuspended"
-  | "BlockContent";
+export type AssetsReviewDecision = 'NoAction' | 'ContentRemoved' | 'ContentHidden' | 'UserWarned' | 'UserSuspended' | 'BlockContent';
 
 export interface AssetsSecurityAccessUrlInput {
   directStorage?: boolean;
   transform?: string | null;
 }
 
-export type AssetsVirusScanStatus =
-  "Pending" | "Scanning" | "Clean" | "Infected" | "ScanFailed";
+export type AssetsVirusScanStatus = 'Pending' | 'Scanning' | 'Clean' | 'Infected' | 'ScanFailed';
 
-export type BillingCycle =
-  | "Weekly"
-  | "Monthly"
-  | "Quarterly"
-  | "SemiAnnually"
-  | "Annually"
-  | "Biannually";
+export type BillingCycle = 'Weekly' | 'Monthly' | 'Quarterly' | 'SemiAnnually' | 'Annually' | 'Biannually';
 
 export interface BulkOperationError {
   errorCode?: string | null;
@@ -1070,15 +1278,9 @@ export interface CommerceBillingInvoicePaymentRetryResult {
   retryScheduledAt?: string | null;
 }
 
-export type CommerceBillingInvoiceStatus =
-  "Draft" | "Open" | "Paid" | "Void" | "PastDue" | "Uncollectible";
+export type CommerceBillingInvoiceStatus = 'Draft' | 'Open' | 'Paid' | 'Void' | 'PastDue' | 'Uncollectible';
 
-export type CommerceOrderChargeState =
-  | "Succeeded"
-  | "Failed"
-  | "Processing"
-  | "RequiresAction"
-  | "RequiresReconciliation";
+export type CommerceOrderChargeState = 'Succeeded' | 'Failed' | 'Processing' | 'RequiresAction' | 'RequiresReconciliation';
 
 export interface CommerceOrdersAddOrderItemInput {
   productId?: string;
@@ -1093,9 +1295,15 @@ export interface CommerceOrdersCaptureOrderInput {
 }
 
 export interface CommerceOrdersCompleteOrderInput {
+  marketplaceSettlement?: CommerceOrdersCompleteOrderMarketplaceSettlement;
   paymentId?: string | null;
   paymentMethod?: string | null;
   paymentProviderReference?: string | null;
+}
+
+export interface CommerceOrdersCompleteOrderMarketplaceSettlement {
+  currencyChoice?: CommerceOrdersOrderMarketplaceCurrencyChoice;
+  idempotencyKey?: string | null;
 }
 
 export interface CommerceOrdersCreateOrderInput {
@@ -1166,18 +1374,10 @@ export interface CommerceOrdersOrderLineItem {
   unitPrice?: number;
 }
 
+export type CommerceOrdersOrderMarketplaceCurrencyChoice = 'Hard' | 'Soft' | 'FixedMix';
+
 export type CommerceOrdersOrderStatus =
-  | "Pending"
-  | "Processing"
-  | "Completed"
-  | "Failed"
-  | "Cancelled"
-  | "Refunded"
-  | "PartiallyRefunded"
-  | "Disputed"
-  | "Paid"
-  | "Fulfilled"
-  | "OnHold";
+  'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Refunded' | 'PartiallyRefunded' | 'Disputed' | 'Paid' | 'Fulfilled' | 'OnHold';
 
 export interface CommercePaymentsBillingChargesControllerCancelBillingChargeInput {
   canceledBy?: string | null;
@@ -1231,7 +1431,7 @@ export interface CommercePaymentsCreateWalletInput {
   currency?: string | null;
 }
 
-export type CommercePaymentsCustomerType = "B2C" | "B2B";
+export type CommercePaymentsCustomerType = 'B2C' | 'B2B';
 
 export interface CommercePaymentsLockWalletInput {
   reason: string | null;
@@ -1333,15 +1533,7 @@ export interface CommercePaymentsPaymentsControllerRefundInput {
   reason?: string | null;
 }
 
-export type CommercePaymentsPaymentStatus =
-  | "Pending"
-  | "Processing"
-  | "Succeeded"
-  | "Failed"
-  | "Cancelled"
-  | "RequiresAction"
-  | "Refunded"
-  | "Disputed";
+export type CommercePaymentsPaymentStatus = 'Pending' | 'Processing' | 'Succeeded' | 'Failed' | 'Cancelled' | 'RequiresAction' | 'Refunded' | 'Disputed';
 
 export interface CommercePaymentsProcessRefundResult {
   currency: string | null;
@@ -1427,8 +1619,7 @@ export interface CommercePaymentsTaxJurisdictionDto {
   taxType?: string | null;
 }
 
-export type CommercePaymentsTaxJurisdictionType =
-  "Country" | "State" | "Province" | "Region" | "City" | "County" | "District";
+export type CommercePaymentsTaxJurisdictionType = 'Country' | 'State' | 'Province' | 'Region' | 'City' | 'County' | 'District';
 
 export interface CommercePaymentsTaxRate {
   id?: string;
@@ -1497,28 +1688,11 @@ export interface CommercePaymentsTaxRuleDto {
   rate?: number;
 }
 
-export type CommercePaymentsTaxRuleType =
-  | "Standard"
-  | "Reduced"
-  | "ZeroRated"
-  | "Exempt"
-  | "ReverseCharge"
-  | "WithholdingTax"
-  | "Compound"
-  | "Custom";
+export type CommercePaymentsTaxRuleType = 'Standard' | 'Reduced' | 'ZeroRated' | 'Exempt' | 'ReverseCharge' | 'WithholdingTax' | 'Compound' | 'Custom';
 
-export type CommercePaymentsTaxType =
-  | "VAT"
-  | "GST"
-  | "SalesTax"
-  | "ServiceTax"
-  | "WithholdingTax"
-  | "ExciseTax"
-  | "CustomsDuty"
-  | "Other";
+export type CommercePaymentsTaxType = 'VAT' | 'GST' | 'SalesTax' | 'ServiceTax' | 'WithholdingTax' | 'ExciseTax' | 'CustomsDuty' | 'Other';
 
-export type CommercePaymentsTransactionStatus =
-  "Pending" | "Processing" | "Completed" | "Failed" | "Cancelled" | "Reversed";
+export type CommercePaymentsTransactionStatus = 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Reversed';
 
 export interface CommercePaymentsUserWallet {
   id?: string;
@@ -1576,14 +1750,7 @@ export interface CommercePaymentsWalletTransaction {
   walletId: string;
 }
 
-export type CommercePaymentsWalletTransactionType =
-  | "Credit"
-  | "Debit"
-  | "TransferIn"
-  | "TransferOut"
-  | "Refund"
-  | "Fee"
-  | "Adjustment";
+export type CommercePaymentsWalletTransactionType = 'Credit' | 'Debit' | 'TransferIn' | 'TransferOut' | 'Refund' | 'Fee' | 'Adjustment';
 
 export interface CommerceProductsAddMySupportTicketMessageInput {
   body?: string | null;
@@ -1779,16 +1946,7 @@ export interface CommerceProductsProduct {
   updatedAt?: string;
 }
 
-export type CommerceProductsProductAcquisitionType =
-  | "Purchase"
-  | "Subscription"
-  | "Grant"
-  | "PromoCode"
-  | "Bundle"
-  | "Trial"
-  | "Referral"
-  | "Free"
-  | "Gift";
+export type CommerceProductsProductAcquisitionType = 'Purchase' | 'Subscription' | 'Grant' | 'PromoCode' | 'Bundle' | 'Trial' | 'Referral' | 'Free' | 'Gift';
 
 export interface CommerceProductsProductPricing {
   id?: string;
@@ -1805,20 +1963,20 @@ export interface CommerceProductsProductPricing {
 }
 
 export type CommerceProductsProductType =
-  | "Program"
-  | "Course"
-  | "Bundle"
-  | "Subscription"
-  | "Workshop"
-  | "Mentorship"
-  | "Ebook"
-  | "ResourcePack"
-  | "Community"
-  | "Certification"
-  | "Physical"
-  | "Service"
-  | "LearningPathway"
-  | "Other";
+  | 'Program'
+  | 'Course'
+  | 'Bundle'
+  | 'Subscription'
+  | 'Workshop'
+  | 'Mentorship'
+  | 'Ebook'
+  | 'ResourcePack'
+  | 'Community'
+  | 'Certification'
+  | 'Physical'
+  | 'Service'
+  | 'LearningPathway'
+  | 'Other';
 
 export interface CommerceProductsPromoCode {
   id?: string;
@@ -1851,12 +2009,7 @@ export interface CommerceProductsPromoCodeApplicationResult {
   totalDiscount?: number;
 }
 
-export type CommerceProductsPromoCodeType =
-  | "PercentageOff"
-  | "FixedAmountOff"
-  | "FreeTrial"
-  | "BuyOneGetOne"
-  | "FreeShipping";
+export type CommerceProductsPromoCodeType = 'PercentageOff' | 'FixedAmountOff' | 'FreeTrial' | 'BuyOneGetOne' | 'FreeShipping';
 
 export interface CommerceProductsPromoCodeUsage {
   averageDiscountPerUse?: number;
@@ -1935,14 +2088,11 @@ export interface CommerceProductsSupportTicketMessage {
   ticketId?: string;
 }
 
-export type CommerceProductsSupportTicketMessageAuthorType =
-  "Customer" | "Agent" | "System";
+export type CommerceProductsSupportTicketMessageAuthorType = 'Customer' | 'Agent' | 'System';
 
-export type CommerceProductsSupportTicketPriority =
-  "Low" | "Normal" | "High" | "Urgent";
+export type CommerceProductsSupportTicketPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
 
-export type CommerceProductsSupportTicketStatus =
-  "Open" | "InProgress" | "Resolved" | "Closed" | "Cancelled";
+export type CommerceProductsSupportTicketStatus = 'Open' | 'InProgress' | 'Resolved' | 'Closed' | 'Cancelled';
 
 export interface CommerceProductsUpdateProductInput {
   affiliateCommissionPercentage?: number | null;
@@ -2012,14 +2162,7 @@ export interface CommerceSubscriptionsBillingSubscriptionsControllerCreateBillin
 }
 
 export type CommerceSubscriptionsCancellationReason =
-  | "UserRequested"
-  | "PaymentFailed"
-  | "PlanDiscontinued"
-  | "PolicyViolation"
-  | "Downgrade"
-  | "TrialEnded"
-  | "Custom"
-  | "ExternalRequest";
+  'UserRequested' | 'PaymentFailed' | 'PlanDiscontinued' | 'PolicyViolation' | 'Downgrade' | 'TrialEnded' | 'Custom' | 'ExternalRequest';
 
 export interface CommerceSubscriptionsClientModulesOutput {
   clientId?: string;
@@ -2297,14 +2440,7 @@ export interface CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInpu
   planId?: string;
 }
 
-export type CommerceSubscriptionsSubscriptionStatus =
-  | "PendingActivation"
-  | "Active"
-  | "Trialing"
-  | "PastDue"
-  | "Suspended"
-  | "Cancelled"
-  | "Expired";
+export type CommerceSubscriptionsSubscriptionStatus = 'PendingActivation' | 'Active' | 'Trialing' | 'PastDue' | 'Suspended' | 'Cancelled' | 'Expired';
 
 export interface CommerceSubscriptionsSubscriptionUpgradeResult {
   creditApplied?: Money;
@@ -2327,17 +2463,7 @@ export interface CommerceSubscriptionsSubscriptionUsage {
 }
 
 export type ComplianceAuditAuditCategory =
-  | "General"
-  | "Authentication"
-  | "Authorization"
-  | "Permission"
-  | "User"
-  | "Admin"
-  | "Security"
-  | "Data"
-  | "System"
-  | "Tenant"
-  | "Privacy";
+  'General' | 'Authentication' | 'Authorization' | 'Permission' | 'User' | 'Admin' | 'Security' | 'Data' | 'System' | 'Tenant' | 'Privacy';
 
 export interface ComplianceAuditAuditExportInput {
   actionType?: string | null;
@@ -2378,8 +2504,7 @@ export interface ComplianceAuditAuditLogOutput {
   totalCount?: number;
 }
 
-export type ComplianceAuditAuditRiskLevel =
-  "Low" | "Medium" | "High" | "Critical";
+export type ComplianceAuditAuditRiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface ComplianceAuditAuditStatisticsOutput {
   authenticationEvents?: number;
@@ -2480,8 +2605,7 @@ export interface ComplianceAuditSecurityAuditDashboard {
   uniqueUsersAuthenticated?: number;
 }
 
-export type ComplianceAuditSecurityAuditSourceType =
-  "Authentication" | "Permission" | "General" | "All";
+export type ComplianceAuditSecurityAuditSourceType = 'Authentication' | 'Permission' | 'General' | 'All';
 
 export interface ComplianceAuditTopIpActivity {
   eventCount?: number;
@@ -2537,12 +2661,7 @@ export interface ComplianceAuditUnifiedSecurityAuditInput {
 export interface ComplianceAuditUnifiedSecurityAuditOutput {
   entries?: Array<ComplianceAuditUnifiedSecurityAuditEntry> | null;
   skip?: number;
-  sourceBreakdown?: {
-    All?: number;
-    Authentication?: number;
-    General?: number;
-    Permission?: number;
-  } | null;
+  sourceBreakdown?: { All?: number; Authentication?: number; General?: number; Permission?: number } | null;
   take?: number;
   totalCount?: number;
 }
@@ -2556,8 +2675,7 @@ export interface ComplianceConsentConsentPolicy {
   policyType?: ComplianceConsentPolicyType;
 }
 
-export type ComplianceConsentContentType =
-  "PlainText" | "Html" | "Markdown" | "Url";
+export type ComplianceConsentContentType = 'PlainText' | 'Html' | 'Markdown' | 'Url';
 
 export interface ComplianceConsentCreateConsentPolicyCommand {
   description?: string | null;
@@ -2576,16 +2694,9 @@ export interface ComplianceConsentDataSubjectInput {
   userId?: string;
 }
 
-export type ComplianceConsentDataSubjectRequestStatus =
-  "Pending" | "InProgress" | "Completed" | "Rejected" | "Expired";
+export type ComplianceConsentDataSubjectRequestStatus = 'Pending' | 'InProgress' | 'Completed' | 'Rejected' | 'Expired';
 
-export type ComplianceConsentDataSubjectRequestType =
-  | "Access"
-  | "Erasure"
-  | "Portability"
-  | "Rectification"
-  | "Restriction"
-  | "Objection";
+export type ComplianceConsentDataSubjectRequestType = 'Access' | 'Erasure' | 'Portability' | 'Rectification' | 'Restriction' | 'Objection';
 
 export interface ComplianceConsentGrantConsentCommand {
   consentMethod?: string | null;
@@ -2596,13 +2707,7 @@ export interface ComplianceConsentGrantConsentCommand {
 }
 
 export type ComplianceConsentPolicyType =
-  | "PrivacyPolicy"
-  | "TermsOfService"
-  | "CookiePolicy"
-  | "DataProcessingAgreement"
-  | "MarketingConsent"
-  | "ThirdPartySharing"
-  | "Custom";
+  'PrivacyPolicy' | 'TermsOfService' | 'CookiePolicy' | 'DataProcessingAgreement' | 'MarketingConsent' | 'ThirdPartySharing' | 'Custom';
 
 export interface ComplianceConsentPolicyVersion {
   id?: string;
@@ -2652,14 +2757,7 @@ export interface ComplianceFERPACompleteFerpaInspectionRequestBody {
 }
 
 export type ComplianceFERPAEducationRecordKind =
-  | "CourseEnrollment"
-  | "AssessmentSubmission"
-  | "Grade"
-  | "Certificate"
-  | "Attendance"
-  | "Communication"
-  | "SupportCase"
-  | "Custom";
+  'CourseEnrollment' | 'AssessmentSubmission' | 'Grade' | 'Certificate' | 'Attendance' | 'Communication' | 'SupportCase' | 'Custom';
 
 export interface ComplianceFERPAFerpaDirectoryInformationPolicy {
   id?: string;
@@ -2671,15 +2769,15 @@ export interface ComplianceFERPAFerpaDirectoryInformationPolicy {
 }
 
 export type ComplianceFERPAFerpaDisclosureBasis =
-  | "StudentConsent"
-  | "GuardianConsent"
-  | "SchoolOfficial"
-  | "FinancialAid"
-  | "HealthOrSafetyEmergency"
-  | "AuditOrEvaluation"
-  | "CourtOrder"
-  | "DirectoryInformation"
-  | "Other";
+  | 'StudentConsent'
+  | 'GuardianConsent'
+  | 'SchoolOfficial'
+  | 'FinancialAid'
+  | 'HealthOrSafetyEmergency'
+  | 'AuditOrEvaluation'
+  | 'CourtOrder'
+  | 'DirectoryInformation'
+  | 'Other';
 
 export interface ComplianceFERPAFerpaDisclosureConsent {
   id?: string;
@@ -2729,14 +2827,9 @@ export interface ComplianceFERPAFerpaInspectionInput {
   studentUserId?: string;
 }
 
-export type ComplianceFERPAFerpaRecordProtectionLevel =
-  | "DirectoryInformation"
-  | "EducationRecord"
-  | "SensitiveEducationRecord"
-  | "Restricted";
+export type ComplianceFERPAFerpaRecordProtectionLevel = 'DirectoryInformation' | 'EducationRecord' | 'SensitiveEducationRecord' | 'Restricted';
 
-export type ComplianceFERPAFerpaRequestStatus =
-  "Pending" | "InReview" | "Completed" | "Denied" | "Expired";
+export type ComplianceFERPAFerpaRequestStatus = 'Pending' | 'InReview' | 'Completed' | 'Denied' | 'Expired';
 
 export interface ComplianceFERPAGrantFerpaDisclosureConsentCommand {
   effectiveFrom?: string;
@@ -2786,6 +2879,90 @@ export interface ComplianceFERPAUpsertDirectoryInformationPolicyCommand {
   tenantId?: string | null;
 }
 
+export interface ComplianceFinancialCrimeFinancialCrimeCase {
+  id?: string;
+  assignedTo?: string | null;
+  closedAt?: string | null;
+  holdId?: string;
+  openedAt?: string;
+  reasonCode?: string | null;
+  state?: ComplianceFinancialCrimeFinancialCrimeCaseState;
+  subjectHash?: string | null;
+  tenantId?: string;
+  updatedAt?: string;
+  version?: number;
+}
+
+export interface ComplianceFinancialCrimeFinancialCrimeCaseDecision {
+  id?: string;
+  caseId?: string;
+  decidedBy?: string;
+  evidenceHash?: string | null;
+  expiresAt?: string;
+  issuedAt?: string;
+  outcome?: ComplianceFinancialCrimeFinancialCrimeOutcome;
+  policyVersion?: number;
+  rawObjectReference?: string | null;
+  reasonCode?: string | null;
+  subjectHash?: string | null;
+  tenantId?: string;
+  version?: number;
+}
+
+export interface ComplianceFinancialCrimeFinancialCrimeCaseDetails {
+  case?: ComplianceFinancialCrimeFinancialCrimeCase;
+  decisions?: Array<ComplianceFinancialCrimeFinancialCrimeCaseDecision> | null;
+  events?: Array<ComplianceFinancialCrimeFinancialCrimeCaseEvent> | null;
+  regulatoryReferences?: Array<ComplianceFinancialCrimeFinancialCrimeRegulatoryReference> | null;
+}
+
+export interface ComplianceFinancialCrimeFinancialCrimeCaseEvent {
+  id?: string;
+  actorId?: string | null;
+  caseId?: string;
+  evidenceHash?: string | null;
+  kind?: string | null;
+  occurredAt?: string;
+  reasonCode?: string | null;
+  sequence?: number;
+}
+
+export type ComplianceFinancialCrimeFinancialCrimeCaseState = 'Open' | 'Assigned' | 'NeedsReview' | 'Closed';
+
+export type ComplianceFinancialCrimeFinancialCrimeOutcome = 'Approved' | 'Rejected' | 'NeedsReview' | 'Unavailable';
+
+export interface ComplianceFinancialCrimeFinancialCrimeRegulatoryReference {
+  id?: string;
+  caseId?: string;
+  jurisdictionCode?: string | null;
+  kind?: string | null;
+  recordedAt?: string;
+  recordedBy?: string;
+  referenceHash?: string | null;
+}
+
+export interface ComplianceKYCKycAmlAccessToken {
+  externalUserId?: string | null;
+  token?: string | null;
+}
+
+export interface ComplianceKYCKycAmlOnboarding {
+  applicantId?: string | null;
+  jurisdictionCode?: string | null;
+  state?: ComplianceKYCKycAmlState;
+  subjectHash?: string | null;
+  updatedAt?: string;
+}
+
+export type ComplianceKYCKycAmlState = 'Created' | 'ApplicantPending' | 'InReview' | 'Approved' | 'Rejected' | 'NeedsReview' | 'Expired';
+
+export interface ComplianceKYCSumSubWebhookIngestionResult {
+  evidenceId?: string | null;
+  providerEventId?: string | null;
+  state?: ComplianceKYCKycAmlState;
+  status?: EconomyRiskComplianceEvidenceIngestionStatus;
+}
+
 export interface ContentPagesContentResource {
   id?: string;
   authorId?: string | null;
@@ -2820,18 +2997,9 @@ export interface ContentPagesContentResource {
   viewCount?: number;
 }
 
-export type ContentPagesContentResourceStatus =
-  "Draft" | "InReview" | "Published" | "Archived";
+export type ContentPagesContentResourceStatus = 'Draft' | 'InReview' | 'Published' | 'Archived';
 
-export type ContentPagesContentResourceType =
-  | "Article"
-  | "Tutorial"
-  | "Documentation"
-  | "Video"
-  | "Download"
-  | "ExternalLink"
-  | "Course"
-  | "Custom";
+export type ContentPagesContentResourceType = 'Article' | 'Tutorial' | 'Documentation' | 'Video' | 'Download' | 'ExternalLink' | 'Course' | 'Custom';
 
 export interface ContentPagesCreateContentResource {
   body?: string | null;
@@ -2984,27 +3152,26 @@ export interface ContentPagesPageSection {
   updatedAt?: string | null;
 }
 
-export type ContentPagesPageStatus = "Draft" | "Published" | "Archived";
+export type ContentPagesPageStatus = 'Draft' | 'Published' | 'Archived';
 
-export type ContentPagesPageType =
-  "Landing" | "Legal" | "ResourceIndex" | "Resource" | "Custom";
+export type ContentPagesPageType = 'Landing' | 'Legal' | 'ResourceIndex' | 'Resource' | 'Custom';
 
 export type ContentPagesSectionType =
-  | "Hero"
-  | "Features"
-  | "Testimonials"
-  | "Pricing"
-  | "CallToAction"
-  | "Faq"
-  | "RichText"
-  | "Gallery"
-  | "Stats"
-  | "Team"
-  | "LogoCloud"
-  | "Newsletter"
-  | "Contact"
-  | "ResourceCards"
-  | "Custom";
+  | 'Hero'
+  | 'Features'
+  | 'Testimonials'
+  | 'Pricing'
+  | 'CallToAction'
+  | 'Faq'
+  | 'RichText'
+  | 'Gallery'
+  | 'Stats'
+  | 'Team'
+  | 'LogoCloud'
+  | 'Newsletter'
+  | 'Contact'
+  | 'ResourceCards'
+  | 'Custom';
 
 export interface ContentPagesSitemapEntry {
   locale?: string | null;
@@ -3075,11 +3242,9 @@ export interface ContentPagesUpdatePageSection {
   subheading?: string | null;
 }
 
-export type ContentStatus =
-  "Draft" | "Review" | "Published" | "Archived" | "Deleted";
+export type ContentStatus = 'Draft' | 'Review' | 'Published' | 'Archived' | 'Deleted';
 
-export type ContentVisibility =
-  "Private" | "Internal" | "Friends" | "Protected" | "Public";
+export type ContentVisibility = 'Private' | 'Internal' | 'Friends' | 'Protected' | 'Public';
 
 export interface CQRSIDomainEvent {
   eventId?: string;
@@ -3091,13 +3256,215 @@ export interface CQRSModelsTenantId {
   value?: string;
 }
 
+export interface EconomyAdRewardsAdPlaybackEvidence {
+  completedAt?: string;
+  focusLoss?: string;
+  milestones?: Array<number> | null;
+  playbackDuration?: string;
+  startedAt?: string;
+  visibleDuration?: string;
+}
+
+export interface EconomyAdRewardsAdProviderReport {
+  actualRevenueUsdNanos?: number;
+  batchId?: string | null;
+  evidenceHash?: string | null;
+  importedAt?: string;
+  network?: string | null;
+  periodEnd?: string;
+  periodStart?: string;
+  reportId?: string | null;
+  signature?: string | null;
+  verifiedSessionIds?: Array<string> | null;
+  version?: number;
+}
+
+export type EconomyAdRewardsAdRewardCompletionState = 'Issued' | 'PendingProviderReport' | 'AccumulatedRemainder';
+
+export interface EconomyAdRewardsAdRewardReconciliation {
+  actualDeltaUsdNanos?: number;
+  actualRevenueUsdNanos?: number;
+  batchId?: string | null;
+  estimatedRevenueUsdNanos?: number;
+  historicalRewardSoftUnits?: number;
+  network?: string | null;
+  previousActualRevenueUsdNanos?: number;
+  reconciledAt?: string;
+  reportId?: string | null;
+  varianceUsdNanos?: number;
+  version?: number;
+}
+
+export interface EconomyAdRewardsDurableAdProviderReportImportResult {
+  isDuplicate?: boolean;
+  providerReportId?: string;
+  reconciliation?: EconomyAdRewardsAdRewardReconciliation;
+  verifiedPendingSessions?: Array<string> | null;
+}
+
+export interface EconomyAdRewardsDurableAdProviderReportStatus {
+  actualRevenueUsdNanos?: number;
+  batchId?: string | null;
+  evidenceHash?: string | null;
+  network?: string | null;
+  payloadHash?: string | null;
+  periodEnd?: string;
+  periodStart?: string;
+  processedAt?: string | null;
+  processingError?: string | null;
+  providerReportId?: string;
+  receivedAt?: string;
+  reconciliation?: EconomyAdRewardsDurableAdRewardReconciliationStatus;
+  reportId?: string | null;
+  signatureVerified?: boolean;
+  version?: number;
+}
+
+export interface EconomyAdRewardsDurableAdRewardCompletionResult {
+  completedAt?: string;
+  isDuplicate?: boolean;
+  outputLotId?: EconomyContractsCreditLotId;
+  postingId?: EconomyContractsPostingId;
+  rewardSoftUnits?: number;
+  sessionId?: string;
+  state?: EconomyAdRewardsAdRewardCompletionState;
+}
+
+export interface EconomyAdRewardsDurableAdRewardReconciliationStatus {
+  actualDeltaUsdNanos?: number;
+  actualRevenueUsdNanos?: number;
+  estimatedRevenueUsdNanos?: number;
+  historicalRewardSoftUnits?: number;
+  previousActualRevenueUsdNanos?: number;
+  reconciledAt?: string;
+  varianceUsdNanos?: number;
+}
+
+export interface EconomyAdRewardsDurableAdRewardSessionClaims {
+  asnRiskHash?: string | null;
+  creativeId?: string | null;
+  deviceRiskHash?: string | null;
+  expiresAt?: string;
+  ipRiskHash?: string | null;
+  issuedAt?: string;
+  network?: string | null;
+  nonce?: string | null;
+  policyVersion?: EconomyContractsPolicyVersion;
+  requiredDuration?: string;
+  sessionId?: string;
+  tenantId?: string;
+  userId?: string;
+  walletId?: EconomyContractsWalletId;
+}
+
+export interface EconomyAdRewardsDurableAdRewardSessionResult {
+  claims?: EconomyAdRewardsDurableAdRewardSessionClaims;
+  isDuplicate?: boolean;
+  token?: EconomyAdRewardsSignedAdRewardSession;
+}
+
+export type EconomyAdRewardsDurableAdRewardSessionState = 'Issued' | 'Active' | 'ProofPending' | 'Verified' | 'Posted' | 'Deferred' | 'Rejected';
+
+export interface EconomyAdRewardsDurableAdRewardSessionStatus {
+  creativeId?: string | null;
+  expiresAt?: string;
+  issuedAt?: string;
+  network?: string | null;
+  postingId?: string | null;
+  rewardSoftUnits?: number;
+  sessionId?: string;
+  state?: EconomyAdRewardsDurableAdRewardSessionState;
+  updatedAt?: string;
+}
+
+export interface EconomyAdRewardsProviderCompletionProof {
+  completedAt?: string;
+  creativeId?: string | null;
+  evidenceHash?: string | null;
+  network?: string | null;
+  providerEventId?: string | null;
+  sessionId?: string;
+  signature?: string | null;
+}
+
+export interface EconomyAdRewardsSignedAdRewardSession {
+  value?: string | null;
+}
+
+export interface EconomyBountiesBountyEligibilityRequirements {
+  minimumReputation?: number;
+  requiresInstructorVerification?: boolean;
+  requiresPrerequisite?: boolean;
+}
+
+export interface EconomyBountiesBountyId {
+  value?: string;
+}
+
+export type EconomyBountiesBountyStatus = 'Open' | 'Expired' | 'Claimed' | 'Reclaimed';
+
+export interface EconomyBountiesBountyTerminalOutputLot {
+  amount?: EconomyContractsCoinAmount;
+  cashOutEligible?: boolean;
+  confirmedAt?: string;
+  lotId?: EconomyContractsCreditLotId;
+  originalMaturesAt?: string;
+  provenance?: EconomyContractsProvenanceKind;
+  rootSourceStampId?: EconomyContractsSourceStampId;
+  walletId?: EconomyContractsWalletId;
+}
+
+export interface EconomyBountiesDurableBountyView {
+  id?: EconomyBountiesBountyId;
+  amount?: EconomyContractsCoinAmount;
+  eligibility?: EconomyBountiesBountyEligibilityRequirements;
+  expiresAt?: string;
+  postedAt?: string;
+  posterId?: string;
+  reclaimFeePpm?: number;
+  status?: EconomyBountiesBountyStatus;
+  terminalEvent?: EconomyBountiesPersistedBountyTerminalEvent;
+  version?: number;
+}
+
+export interface EconomyBountiesPersistedBountyTerminalEvent {
+  id?: string;
+  actorId?: string;
+  bountyId?: EconomyBountiesBountyId;
+  destinationWalletId?: EconomyContractsWalletId;
+  feeUnits?: number;
+  firstJournalSequence?: number;
+  idempotencyKey?: EconomyContractsIdempotencyKey;
+  occurredAt?: string;
+  outputLots?: Array<EconomyBountiesBountyTerminalOutputLot> | null;
+  proceedsLotId?: EconomyContractsCreditLotId;
+  proceedsSourceStampId?: EconomyContractsSourceStampId;
+  returnedUnits?: number;
+  riskDecisionId?: string | null;
+  status?: EconomyBountiesBountyStatus;
+  tenantId?: string;
+}
+
 export interface EconomyCommandsConvertMyHardToSoftInput {
-  feeHardCoinUnits?: number;
   idempotencyKey?: string | null;
   principalHardCoinUnits?: number;
 }
 
-export type EconomyContractsCurrencyCode = "HardCoin" | "SoftCoin";
+export interface EconomyCommandsCreateMyHardCoinTopUpInput {
+  hardCoinUnits?: number;
+  idempotencyKey?: string | null;
+}
+
+export interface EconomyContractsCoinAmount {
+  currency?: EconomyContractsCurrencyCode;
+  units?: number;
+}
+
+export interface EconomyContractsCreditLotId {
+  value?: string;
+}
+
+export type EconomyContractsCurrencyCode = 'HardCoin' | 'SoftCoin';
 
 export interface EconomyContractsEconomyWalletSummary {
   availableHardToSpend?: number;
@@ -3132,48 +3499,93 @@ export interface EconomyContractsEconomyWalletTransaction {
   templateKind?: EconomyContractsPostingTemplateKind;
 }
 
-export type EconomyContractsEntrySide = "Debit" | "Credit";
+export type EconomyContractsEntrySide = 'Debit' | 'Credit';
 
-export type EconomyContractsPostingStatus =
-  "Accepted" | "Rejected" | "Duplicate";
+export interface EconomyContractsIdempotencyKey {
+  value?: string | null;
+}
+
+export interface EconomyContractsPolicyVersion {
+  value?: number;
+}
+
+export interface EconomyContractsPostingId {
+  value?: string;
+}
+
+export type EconomyContractsPostingStatus = 'Accepted' | 'Rejected' | 'Duplicate';
 
 export type EconomyContractsPostingTemplateKind =
-  | "ConfirmedTopUpMint"
-  | "ProviderReversalFull"
-  | "ProviderReversalPartial"
-  | "Spend"
-  | "HardToSoftConversion"
-  | "SystemBackedGrant"
-  | "Burn"
-  | "Escrow"
-  | "Reclaim"
-  | "Refund"
-  | "PayoutReservation"
-  | "PayoutSuccess"
-  | "PayoutFailure"
-  | "AdminWithdrawalReservation"
-  | "AdminWithdrawalSuccess"
-  | "AdminWithdrawalFailure"
-  | "HardToSoftConversionFee"
-  | "ProviderConvertedSoftReversal"
-  | "ProviderReversalDebt"
-  | "ProviderReversalLoss"
-  | "AdRewardIssuance"
-  | "BountyEscrow"
-  | "BountyClaim"
-  | "BountyReclaim";
+  | 'ConfirmedTopUpMint'
+  | 'ProviderReversalFull'
+  | 'ProviderReversalPartial'
+  | 'Spend'
+  | 'HardToSoftConversion'
+  | 'SystemBackedGrant'
+  | 'Burn'
+  | 'Escrow'
+  | 'Reclaim'
+  | 'Refund'
+  | 'PayoutReservation'
+  | 'PayoutSuccess'
+  | 'PayoutFailure'
+  | 'AdminWithdrawalReservation'
+  | 'AdminWithdrawalSuccess'
+  | 'AdminWithdrawalFailure'
+  | 'HardToSoftConversionFee'
+  | 'ProviderConvertedSoftReversal'
+  | 'ProviderReversalDebt'
+  | 'ProviderReversalLoss'
+  | 'AdRewardIssuance'
+  | 'BountyEscrow'
+  | 'BountyClaim'
+  | 'BountyReclaim'
+  | 'MarketplaceSettlement'
+  | 'MarketplaceRefund';
 
 export type EconomyContractsProvenanceKind =
-  | "PurchasedHard"
-  | "EarnedHard"
-  | "ConvertedSoft"
-  | "AdRewardSoft"
-  | "SystemGrantSoft"
-  | "RefundRestoration"
-  | "EscrowReturn";
+  'PurchasedHard' | 'EarnedHard' | 'ConvertedSoft' | 'AdRewardSoft' | 'SystemGrantSoft' | 'RefundRestoration' | 'EscrowReturn' | 'MarketplaceSoft';
 
-export type EconomyContractsWalletLifecycleState =
-  "Active" | "Frozen" | "Closed" | "UnderReview";
+export interface EconomyContractsReserveVersion {
+  value?: number;
+}
+
+export interface EconomyContractsSourceStampId {
+  value?: string;
+}
+
+export interface EconomyContractsWalletId {
+  value?: string;
+}
+
+export type EconomyContractsWalletLifecycleState = 'Active' | 'Frozen' | 'Closed' | 'UnderReview';
+
+export type EconomyFundingEconomyTopUpProviderStatus =
+  'Prepared' | 'RequiresAction' | 'Processing' | 'ProviderSucceeded' | 'Posted' | 'Failed' | 'Cancelled' | 'Ambiguous' | 'Held' | 'Reversed';
+
+export interface EconomyFundingEconomyTopUpStatus {
+  currency?: string | null;
+  hardCoinUnits?: number;
+  providerBoundAt?: string | null;
+  providerObjectId?: string | null;
+  requestedAt?: string;
+  status?: EconomyFundingEconomyTopUpProviderStatus;
+  topUpId?: string;
+  usdMinorUnits?: number;
+}
+
+export interface EconomyFundingSelfServiceHardCoinTopUpReceipt {
+  clientSecret?: string | null;
+  currency?: string | null;
+  hardCoinUnits?: number;
+  isDuplicate?: boolean;
+  paymentId?: string;
+  providerObjectId?: string | null;
+  publishableKey?: string | null;
+  status?: EconomyFundingEconomyTopUpProviderStatus;
+  topUpId?: string;
+  usdMinorUnits?: number;
+}
 
 export interface EconomyFundingSelfServiceHardToSoftConversionReceipt {
   feePostingId?: string | null;
@@ -3181,6 +3593,243 @@ export interface EconomyFundingSelfServiceHardToSoftConversionReceipt {
   journalHash?: string | null;
   journalSequence?: number;
   principalPostingId?: string;
+}
+
+export interface EconomyLedgerAnchorVerificationRunResult {
+  failed?: number;
+  verified?: number;
+}
+
+export interface EconomyLedgerEconomyAnchorPublicationResult {
+  anchorId?: string;
+  eTag?: string | null;
+  journalHash?: string | null;
+  journalSequence?: number;
+  keyId?: string | null;
+  objectHash?: string | null;
+  objectKey?: string | null;
+  objectVersion?: string | null;
+  retainUntil?: string;
+}
+
+export type EconomyLedgerJournalIntegrityFailureCode =
+  | 'None'
+  | 'SequenceGap'
+  | 'PreviousHashMismatch'
+  | 'CanonicalPayloadMissing'
+  | 'EntryHashMismatch'
+  | 'PostingContractInvalid'
+  | 'InvalidLineAmount'
+  | 'CurrencyParityMismatch'
+  | 'SourceStampInvalid'
+  | 'AllocationInvalid'
+  | 'LineageInvalid'
+  | 'RootRangeInvalid'
+  | 'CumulativeReversalInvalid';
+
+export interface EconomyLedgerJournalIntegrityRunResult {
+  fencingToken?: number;
+  status?: EconomyLedgerJournalIntegrityRunStatus;
+  verification?: EconomyLedgerJournalIntegrityVerificationResult;
+}
+
+export type EconomyLedgerJournalIntegrityRunStatus = 'Verified' | 'Failed' | 'LeaseUnavailable';
+
+export interface EconomyLedgerJournalIntegrityVerificationResult {
+  currentHash?: string | null;
+  failureCode?: EconomyLedgerJournalIntegrityFailureCode;
+  fromSequence?: number;
+  isValid?: boolean;
+  toSequence?: number;
+}
+
+export interface EconomyMarketplaceDurableMarketplaceRefundDebt {
+  currency?: EconomyContractsCurrencyCode;
+  evidenceHash?: string | null;
+  responsibleWalletId?: EconomyContractsWalletId;
+  units?: number;
+}
+
+export interface EconomyMarketplaceDurableMarketplaceRefundResult {
+  cumulativeRefundedQuantity?: number;
+  debts?: Array<EconomyMarketplaceDurableMarketplaceRefundDebt> | null;
+  entitlementStatus?: EconomyMarketplaceMarketplaceEntitlementStatus;
+  isDuplicate?: boolean;
+  journalHash?: string | null;
+  journalSequence?: number;
+  legs?: Array<EconomyContractsCoinAmount> | null;
+  postingId?: EconomyContractsPostingId;
+  quantity?: number;
+  refundedAt?: string;
+  refundId?: string;
+  settlementId?: string;
+  settlementStatus?: EconomyMarketplaceMarketplaceSettlementStatus;
+}
+
+export interface EconomyMarketplaceDurableMarketplaceSettlementResult {
+  buyerId?: string;
+  entitlementStatus?: EconomyMarketplaceMarketplaceEntitlementStatus;
+  isDuplicate?: boolean;
+  journalHash?: string | null;
+  journalSequence?: number;
+  legs?: Array<EconomyMarketplaceMarketplacePriceLegSnapshot> | null;
+  orderId?: string;
+  postingId?: EconomyContractsPostingId;
+  productId?: string;
+  sellerId?: string;
+  settledAt?: string;
+  settlementId?: string;
+  status?: EconomyMarketplaceMarketplaceSettlementStatus;
+}
+
+export type EconomyMarketplaceMarketplaceCurrencyChoice = 'Hard' | 'Soft' | 'FixedMix';
+
+export type EconomyMarketplaceMarketplaceEntitlementStatus = 'PendingGrant' | 'Granted' | 'Revoked';
+
+export interface EconomyMarketplaceMarketplacePriceLegSnapshot {
+  amount?: EconomyContractsCoinAmount;
+  currency?: EconomyContractsCurrencyCode;
+  platformFeeUnits?: number;
+  sellerUnits?: number;
+  units?: number;
+}
+
+export type EconomyMarketplaceMarketplaceSettlementStatus = 'Settled' | 'PartiallyRefunded' | 'Refunded';
+
+export interface EconomyOperationsEconomyAnchorOperationalStatus {
+  id?: string;
+  anchoredAt?: string;
+  journalHash?: string | null;
+  journalSequence?: number;
+  objectMatches?: boolean;
+  provider?: string | null;
+  retainUntil?: string | null;
+  signatureValid?: boolean;
+  verifiedAt?: string | null;
+}
+
+export interface EconomyOperationsEconomyCapabilityConfigurationSnapshot {
+  killSwitches?: Array<EconomyOperationsEconomyKillSwitchOperationalStatus> | null;
+  policies?: Array<EconomyOperationsEconomyCapabilityPolicyOperationalStatus> | null;
+}
+
+export interface EconomyOperationsEconomyCapabilityPolicyOperationalStatus {
+  id?: string;
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  effectiveAt?: string;
+  expiresAt?: string;
+  jurisdictionCode?: string | null;
+  keyId?: string | null;
+  payloadHash?: string | null;
+  providerReady?: boolean;
+  state?: EconomyRiskEconomyCapabilityPolicyState;
+  tenantId?: string | null;
+  version?: number;
+}
+
+export interface EconomyOperationsEconomyJournalHeadStatus {
+  hash?: string | null;
+  sequence?: number;
+  updatedAt?: string;
+}
+
+export interface EconomyOperationsEconomyJournalVerificationStatus {
+  completedAt?: string;
+  currentHash?: string | null;
+  failureCode?: string | null;
+  fencingToken?: number;
+  fromSequence?: number;
+  isValid?: boolean;
+  toSequence?: number;
+}
+
+export interface EconomyOperationsEconomyKillSwitchOperationalStatus {
+  id?: string;
+  activatedAt?: string;
+  activatedBy?: string;
+  epoch?: number;
+  isActive?: boolean;
+  reason?: string | null;
+  releaseApprovers?: Array<string> | null;
+  releasedAt?: string | null;
+  releaseProposedBy?: string | null;
+  scope?: EconomyRiskEconomyKillSwitchScope;
+}
+
+export interface EconomyOperationsEconomyLedgerHealthSnapshot {
+  activeProjection?: EconomyOperationsEconomyProjectionOperationalStatus;
+  activeReserve?: EconomyOperationsEconomyReserveOperationalStatus;
+  diagnostics?: Array<string> | null;
+  head?: EconomyOperationsEconomyJournalHeadStatus;
+  isAnchorHealthy?: boolean;
+  isJournalHealthy?: boolean;
+  isProjectionHealthy?: boolean;
+  isReserveHealthy?: boolean;
+  latestAnchor?: EconomyOperationsEconomyAnchorOperationalStatus;
+  latestVerification?: EconomyOperationsEconomyJournalVerificationStatus;
+}
+
+export interface EconomyOperationsEconomyProjectionOperationalStatus {
+  activatedAt?: string | null;
+  approvedBy?: string | null;
+  generation?: number;
+  journalHash?: string | null;
+  mismatchCount?: number;
+  projectionHash?: string | null;
+  proposedBy?: string;
+  secondApprovedBy?: string | null;
+  state?: string | null;
+  toSequence?: number;
+}
+
+export interface EconomyOperationsEconomyReserveOperationalStatus {
+  authorizationEpoch?: number;
+  coverage?: EconomyReservesReserveCoverageState;
+  custodyReconciled?: boolean;
+  custodyVarianceUsdNanos?: number | null;
+  evidenceHash?: string | null;
+  expiresAt?: string;
+  observedAt?: string;
+  policyVersion?: number;
+  reconciledAt?: string | null;
+  version?: number;
+}
+
+export interface EconomyOperationsLegacyEconomyShadowBatchView {
+  id?: string;
+  backfilledHardUnits?: number;
+  expectedHardUnits?: number;
+  failureCode?: string | null;
+  financialLedgerEntryCount?: number;
+  financialLedgerSnapshotHash?: string | null;
+  policyVersion?: number;
+  reconciledHardUnits?: number;
+  state?: EconomyOperationsLegacyEconomyShadowState;
+  tenantId?: string;
+  transactionCount?: number;
+  transactionSnapshotHash?: string | null;
+  walletCount?: number;
+  wallets?: Array<EconomyOperationsLegacyEconomyShadowWalletView> | null;
+  walletSnapshotHash?: string | null;
+}
+
+export type EconomyOperationsLegacyEconomyShadowState =
+  'Captured' | 'Backfilling' | 'Backfilled' | 'Reconciled' | 'CutoverProposed' | 'CutoverActive' | 'RolledBack' | 'Failed';
+
+export interface EconomyOperationsLegacyEconomyShadowWalletView {
+  completedCreditsMinorUnits?: number;
+  completedDebitsMinorUnits?: number;
+  creditLotId?: string;
+  economyWalletId?: string | null;
+  failureCode?: string | null;
+  journalSequence?: number | null;
+  legacyBalanceMinorUnits?: number;
+  legacyWalletId?: string;
+  ownerId?: string;
+  postingId?: string;
+  sourceStampId?: string;
+  state?: string | null;
+  transactionCount?: number;
 }
 
 export interface EconomyPayoutsCommandsCreateMyPayoutRequestInput {
@@ -3192,20 +3841,29 @@ export interface EconomyPayoutsCommandsReviewPayoutRequestInput {
   reason?: string | null;
 }
 
-export type EconomyPayoutsPayoutOperationState =
-  | "Reserved"
-  | "Dispatching"
-  | "Ambiguous"
-  | "Succeeded"
-  | "Failed"
-  | "Cancelled";
+export interface EconomyPayoutsConnectAccountSnapshot {
+  chargesEnabled?: boolean;
+  destinationHash?: string | null;
+  evidenceHash?: string | null;
+  expiresAt?: string;
+  observedAt?: string;
+  payeeId?: string;
+  payoutsEnabled?: boolean;
+  providerAccountId?: string | null;
+  state?: EconomyPayoutsConnectAccountState;
+  version?: number;
+}
 
-export type EconomyPayoutsPayoutRequestState =
-  | "Submitted"
-  | "Cancelled"
-  | "Approved"
-  | "Rejected"
-  | "AwaitingSecondApproval";
+export type EconomyPayoutsConnectAccountState = 'Pending' | 'Restricted' | 'Ready' | 'Disabled';
+
+export interface EconomyPayoutsConnectOnboardingResult {
+  account?: EconomyPayoutsConnectAccountSnapshot;
+  onboardingUri?: string | null;
+}
+
+export type EconomyPayoutsPayoutOperationState = 'Reserved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
+
+export type EconomyPayoutsPayoutRequestState = 'Submitted' | 'Cancelled' | 'Approved' | 'Rejected' | 'AwaitingSecondApproval';
 
 export interface EconomyPayoutsQueriesEconomyPayoutInput {
   id?: string;
@@ -3242,17 +3900,378 @@ export interface EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit {
   reason?: string | null;
 }
 
+export interface EconomyProjectionsProjectionGenerationState {
+  approvedBy?: Array<string> | null;
+  generation?: number;
+  isActive?: boolean;
+  journalHash?: string | null;
+  mismatchCount?: number;
+  projectionHash?: string | null;
+  proposedBy?: string;
+  state?: string | null;
+  toSequence?: number;
+}
+
+export interface EconomyReservesCustodyObservationCommand {
+  id?: string;
+  assetKey?: string | null;
+  eligibleUsdNanos?: number;
+  expiresAt?: string;
+  keyId?: string | null;
+  observedAt?: string;
+  payloadHash?: string | null;
+  provider?: string | null;
+  purpose?: EconomyReservesReserveBackingPurpose;
+  signature?: string | null;
+  version?: number;
+}
+
+export interface EconomyReservesDurableCustodyObservation {
+  id?: string;
+  assetKey?: string | null;
+  eligibleUsdNanos?: number;
+  expiresAt?: string;
+  keyId?: string | null;
+  observedAt?: string;
+  payloadHash?: string | null;
+  provider?: string | null;
+  purpose?: EconomyReservesReserveBackingPurpose;
+  signature?: string | null;
+  version?: number;
+}
+
+export interface EconomyReservesDurableReserveProposalState {
+  id?: string;
+  approvedBy?: string | null;
+  authorizationEpoch?: number;
+  coverage?: EconomyReservesReserveCoverageState;
+  eligibleAssetUsdNanos?: number;
+  expiresAt?: string;
+  liabilityUsdNanos?: number;
+  observedAt?: string;
+  policyVersion?: number;
+  proposedBy?: string;
+  snapshotHash?: string | null;
+  status?: string | null;
+  version?: number;
+}
+
+export interface EconomyReservesEconomyLiabilitySnapshot {
+  journalHash?: string | null;
+  journalSequence?: number;
+  liabilityUsdNanos?: number;
+  outstandingHardUnits?: number;
+  outstandingSoftUnits?: number;
+}
+
+export interface EconomyReservesExternalReserveAsset {
+  assetKey?: string | null;
+  eligibleUsdNanos?: number;
+  purpose?: EconomyReservesReserveBackingPurpose;
+}
+
+export type EconomyReservesReserveBackingPurpose = 'HardCoin' | 'SoftCoin';
+
+export interface EconomyReservesReserveBufferPosition {
+  adEstimateVarianceBufferUsdNanos?: number;
+  chargebackRefundBufferUsdMinor?: number;
+  fraudLossBudgetUsdNanos?: number;
+  hardOperatingLiquidityBufferUsdMinor?: number;
+  payoutSettlementBufferUsdMinor?: number;
+  providerFxBufferUsdNanos?: number;
+  softOperatingLiquidityBufferUsdNanos?: number;
+}
+
+export type EconomyReservesReserveCoverageState = 'Covered' | 'Shortfall';
+
+export interface EconomyReservesReserveHead {
+  assetAllocations?: Array<EconomyReservesExternalReserveAsset> | null;
+  authorizationEpoch?: number;
+  coverage?: EconomyReservesReserveCoverageState;
+  evidenceHash?: string | null;
+  expiresAt?: string;
+  hardBackingUsdNanos?: number;
+  observedAt?: string;
+  policyVersion?: EconomyContractsPolicyVersion;
+  requirements?: EconomyReservesReserveRequirementSnapshot;
+  softBackingUsdNanos?: number;
+  version?: EconomyContractsReserveVersion;
+}
+
+export interface EconomyReservesReserveRequirementSnapshot {
+  hardFaceValueUsdMinor?: number;
+  requiredHardReserveUsdMinor?: number;
+  requiredSoftReserveUsdNanos?: number;
+  softFaceValueUsdNanos?: number;
+  stressedExpectedRedemptionCostUsdNanos?: number;
+}
+
+export interface EconomyReservesReserveServiceObservation {
+  currentProviderCostUsdNanos?: number;
+  currentServicePriceSoftUnits?: number;
+  enabled?: boolean;
+  expiresAt?: string;
+  observedAt?: string;
+  providerFxStressCostUsdNanos?: number;
+  reservedSoftUnits?: number;
+  serviceCode?: string | null;
+  trailingHighPercentileCostUsdNanos?: number;
+}
+
+export interface EconomyRiskCapabilityAuthorizationReceipt {
+  id?: string;
+  actorId?: string;
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  destinationHash?: string | null;
+  evidenceHashes?: Array<string> | null;
+  expiresAt?: string;
+  issuedAt?: string;
+  jurisdictionCode?: string | null;
+  keyId?: string | null;
+  killSwitchEpoch?: number;
+  operationFingerprint?: string | null;
+  policyVersion?: number;
+  providerHash?: string | null;
+  receiptHash?: string | null;
+  reserveVersion?: number;
+  riskDecisionId?: string;
+  signature?: string | null;
+  sourceRootHashes?: Array<string> | null;
+  subjectReference?: string | null;
+  tenantId?: string;
+}
+
+export type EconomyRiskComplianceEvidenceIngestionStatus = 'Published' | 'Duplicate' | 'Deferred' | 'Rejected';
+
+export type EconomyRiskComplianceEvidenceResult = 'Approved' | 'Rejected' | 'NeedsReview' | 'Unavailable';
+
+export interface EconomyRiskComplianceHold {
+  id?: string;
+  activatedAt?: string;
+  activatedBy?: string;
+  caseReferenceHash?: string | null;
+  evidenceHash?: string | null;
+  expiresAt?: string;
+  reasonCode?: string | null;
+  releasedAt?: string | null;
+  releasedBy?: string | null;
+  scope?: EconomyRiskComplianceHoldScope;
+}
+
+export interface EconomyRiskComplianceHoldAdministrationState {
+  hold?: EconomyRiskComplianceHold;
+  releaseApprovers?: Array<string> | null;
+  releasePolicyEvidenceHash?: string | null;
+  releaseProposedAt?: string | null;
+  releaseProposedBy?: string | null;
+  requiredReleaseApprovals?: number | null;
+}
+
+export interface EconomyRiskComplianceHoldEvent {
+  actorId?: string;
+  evidenceHash?: string | null;
+  holdId?: string;
+  kind?: string | null;
+  occurredAt?: string;
+  sequence?: number;
+}
+
+export interface EconomyRiskComplianceHoldPage {
+  items?: Array<EconomyRiskComplianceHoldAdministrationState> | null;
+  nextCursor?: string | null;
+}
+
+export interface EconomyRiskComplianceHoldScope {
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  key?: string | null;
+  subjectHash?: string | null;
+  tenantId?: string;
+}
+
+export interface EconomyRiskEconomyCapabilityEvaluationResult {
+  diagnostics?: Array<string> | null;
+  isReady?: boolean;
+  receipt?: EconomyRiskCapabilityAuthorizationReceipt;
+  state?: EconomyRiskEconomyCapabilityReadinessStatus;
+}
+
+export interface EconomyRiskEconomyCapabilityPolicy {
+  id?: string;
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  canonicalPayload?: string | null;
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  effectiveAt?: string;
+  expiresAt?: string;
+  jurisdictionCode?: string | null;
+  keyId?: string | null;
+  payloadHash?: string | null;
+  proposedAt?: string;
+  proposedBy?: string;
+  providerReady?: boolean;
+  scopeKey?: string | null;
+  signature?: string | null;
+  state?: EconomyRiskEconomyCapabilityPolicyState;
+  tenantId?: string | null;
+  version?: number;
+}
+
+export type EconomyRiskEconomyCapabilityPolicyState = 'PendingApproval' | 'Approved' | 'Active' | 'Expired';
+
+export type EconomyRiskEconomyCapabilityReadinessStatus =
+  | 'Disabled'
+  | 'Ready'
+  | 'InvalidPolicy'
+  | 'JurisdictionBlocked'
+  | 'ComplianceUnavailable'
+  | 'ComplianceStale'
+  | 'ReviewRequired'
+  | 'LedgerUnhealthy'
+  | 'ProjectionMismatch'
+  | 'ReserveInsufficient'
+  | 'CustodyUnreconciled'
+  | 'AnchorInvalid'
+  | 'ProviderNotReady'
+  | 'KillSwitchActive';
+
+export interface EconomyRiskEconomyKillSwitchScope {
+  capability?: EconomyRiskEconomyValueMovementCapability;
+  scopeKey?: string | null;
+  tenantId?: string | null;
+}
+
+export interface EconomyRiskEconomyKillSwitchState {
+  id?: string;
+  activatedAt?: string;
+  activatedBy?: string;
+  epoch?: number;
+  isActive?: boolean;
+  reason?: string | null;
+  releaseApprovers?: Array<string> | null;
+  releasedAt?: string | null;
+  releaseProposedAt?: string | null;
+  releaseProposedBy?: string | null;
+  scope?: EconomyRiskEconomyKillSwitchScope;
+}
+
+export type EconomyRiskEconomyProtectedOperationState =
+  'Ready' | 'ReviewRequired' | 'Hold' | 'Challenge' | 'Denied' | 'ComplianceUnavailable' | 'ComplianceStale' | 'InvalidPolicy' | 'ReserveInsufficient';
+
 export type EconomyRiskEconomyValueMovementCapability =
-  | "ConfirmHardCoinFunding"
-  | "ConvertHardToSoft"
-  | "ReverseProviderFunding"
-  | "Transfer"
-  | "IssueAdReward"
-  | "BountyEscrow"
-  | "BountyClaim"
-  | "MarketplaceSettlement"
-  | "PayoutExecution"
-  | "AdminWithdrawalExecution";
+  | 'ConfirmHardCoinFunding'
+  | 'ConvertHardToSoft'
+  | 'ReverseProviderFunding'
+  | 'Transfer'
+  | 'IssueAdReward'
+  | 'BountyEscrow'
+  | 'BountyClaim'
+  | 'MarketplaceSettlement'
+  | 'PayoutExecution'
+  | 'AdminWithdrawalExecution'
+  | 'MarketplaceRefund'
+  | 'BountyReclaim'
+  | 'LegacyBalanceBackfill';
+
+export type EconomyRiskRiskManualDecisionCode = 'EvidenceVerified' | 'RiskAccepted' | 'PolicyViolation' | 'FraudConfirmed';
+
+export interface EconomyRiskRiskReviewCase {
+  id?: string;
+  appealOf?: string | null;
+  approvers?: Array<string> | null;
+  decisionId?: string;
+  requiredApprovals?: number;
+  resolution?: string | null;
+  resolvedAt?: string | null;
+  resolvedBy?: string | null;
+  status?: EconomyRiskRiskReviewStatus;
+  submittedAt?: string;
+  submittedBy?: string;
+}
+
+export interface EconomyRiskRiskReviewEvent {
+  actorId?: string;
+  decisionCode?: EconomyRiskRiskManualDecisionCode;
+  evidenceHashes?: Array<string> | null;
+  kind?: EconomyRiskRiskReviewEventKind;
+  occurredAt?: string;
+  resolution?: string | null;
+  reviewId?: string;
+  sequence?: number;
+}
+
+export type EconomyRiskRiskReviewEventKind = 'Submitted' | 'ApprovalRecorded' | 'Approved' | 'Rejected' | 'AppealSubmitted';
+
+export interface EconomyRiskRiskReviewPage {
+  items?: Array<EconomyRiskRiskReviewCase> | null;
+  nextCursor?: string | null;
+}
+
+export type EconomyRiskRiskReviewStatus = 'Pending' | 'Approved' | 'Rejected';
+
+export interface EconomyTransfersSelfServiceEconomyTransferInput {
+  amountUnits?: number;
+  currency?: EconomyContractsCurrencyCode;
+  idempotencyKey?: string | null;
+  recipientUserId?: string;
+  transferType?: EconomyTransfersSelfServiceEconomyTransferType;
+}
+
+export interface EconomyTransfersSelfServiceEconomyTransferReceipt {
+  amountUnits?: number;
+  currency?: EconomyContractsCurrencyCode;
+  isDuplicate?: boolean;
+  journalHash?: string | null;
+  journalSequence?: number;
+  postingId?: string;
+  recipientUserId?: string;
+  transferType?: EconomyTransfersSelfServiceEconomyTransferType;
+}
+
+export type EconomyTransfersSelfServiceEconomyTransferType = 'Tip' | 'Gift' | 'CreatorSupport';
+
+export interface EconomyTreasuryAdminWithdrawalAuditEvent {
+  actorId?: string | null;
+  evidence?: string | null;
+  hash?: string | null;
+  kind?: string | null;
+  occurredAt?: string;
+  previousHash?: string | null;
+  runId?: string;
+  sequence?: number;
+}
+
+export interface EconomyTreasuryAdminWithdrawalAuditView {
+  events?: Array<EconomyTreasuryAdminWithdrawalAuditEvent> | null;
+  integrityValid?: boolean;
+  runId?: string;
+}
+
+export interface EconomyTreasuryAdminWithdrawalRun {
+  id?: string;
+  amount?: EconomyContractsCoinAmount;
+  approvedBy?: string | null;
+  createdAt?: string;
+  destinationHash?: string | null;
+  dispatchSnapshotHash?: string | null;
+  executionEpoch?: number;
+  fencingToken?: number;
+  idempotencyKey?: EconomyContractsIdempotencyKey;
+  periodStart?: string;
+  platformFeeWalletId?: EconomyContractsWalletId;
+  policyVersion?: EconomyContractsPolicyVersion;
+  providerTransferId?: string | null;
+  requestedBy?: string;
+  requestHash?: string | null;
+  reserveAuthorizationEpoch?: number;
+  reserveVersion?: EconomyContractsReserveVersion;
+  sourceAssetKey?: string | null;
+  state?: EconomyTreasuryAdminWithdrawalRunState;
+  tenantId?: string;
+  updatedAt?: string;
+  version?: number;
+}
+
+export type EconomyTreasuryAdminWithdrawalRunState = 'PendingApproval' | 'Approved' | 'Dispatching' | 'Ambiguous' | 'Succeeded' | 'Failed' | 'Cancelled';
 
 export interface Error {
   code?: string | null;
@@ -3260,15 +4279,7 @@ export interface Error {
   type?: ErrorType;
 }
 
-export type ErrorType =
-  | "Failure"
-  | "Validation"
-  | "Problem"
-  | "NotFound"
-  | "Conflict"
-  | "Unauthorized"
-  | "Forbidden"
-  | "None";
+export type ErrorType = 'Failure' | 'Validation' | 'Problem' | 'NotFound' | 'Conflict' | 'Unauthorized' | 'Forbidden' | 'None';
 
 export interface FeaturesBulkEvaluationInput {
   context?: FeaturesFeatureContext;
@@ -3352,8 +4363,7 @@ export interface FeaturesFeatureFlagTarget {
   updatedAt?: string | null;
 }
 
-export type FeaturesFeatureFlagType =
-  "Toggle" | "Numeric" | "String" | "Percentage" | "UserSegment";
+export type FeaturesFeatureFlagType = 'Toggle' | 'Numeric' | 'String' | 'Percentage' | 'UserSegment';
 
 export interface FeaturesSetCapabilityOverrideInput {
   capability?: string | null;
@@ -3526,8 +4536,7 @@ export interface GameJamsJamScoreDto {
   submissionId?: string;
 }
 
-export type GameJamsJamStatus =
-  "Upcoming" | "Active" | "Voting" | "Completed" | "Cancelled";
+export type GameJamsJamStatus = 'Upcoming' | 'Active' | 'Voting' | 'Completed' | 'Cancelled';
 
 export interface GameJamsJamSubmission {
   id?: string;
@@ -3664,6 +4673,12 @@ export interface IdentityAuthenticationCreateServiceAccountInput {
   name?: string | null;
   scopes?: string | null;
   tenantId?: string | null;
+}
+
+export interface IdentityAuthenticationCreateStepUpChallengeInput {
+  operationType?: string | null;
+  payloadHash?: string | null;
+  targetReference?: string | null;
 }
 
 export interface IdentityAuthenticationDeviceInfo {
@@ -3813,8 +4828,7 @@ export interface IdentityAuthenticationMfaErrorOutput {
   error: string | null;
 }
 
-export type IdentityAuthenticationMfaMethod =
-  "Totp" | "BackupCode" | "Sms" | "Email" | "WebAuthn";
+export type IdentityAuthenticationMfaMethod = 'Totp' | 'BackupCode' | 'Sms' | 'Email' | 'WebAuthn';
 
 export interface IdentityAuthenticationMfaMethodInfo {
   description: string | null;
@@ -3916,8 +4930,7 @@ export interface IdentityAuthenticationRevokeRefreshTokenInput {
   token: string;
 }
 
-export type IdentityAuthenticationRiskLevel =
-  "Low" | "Medium" | "High" | "Critical";
+export type IdentityAuthenticationRiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface IdentityAuthenticationRotateKeyInput {
   reason?: string | null;
@@ -4053,6 +5066,16 @@ export interface IdentityAuthenticationSmsMfaSetupOutput {
   phoneNumberMasked: string | null;
 }
 
+export interface IdentityAuthenticationStepUpChallengeOutput {
+  challengeId?: string;
+  expiresAt?: string;
+}
+
+export interface IdentityAuthenticationStepUpReceiptOutput {
+  expiresAt?: string;
+  receipt?: string | null;
+}
+
 export interface IdentityAuthenticationTrustDeviceInput {
   deviceName?: string | null;
 }
@@ -4105,6 +5128,11 @@ export interface IdentityAuthenticationVerifyMfaInput {
   userId?: string;
 }
 
+export interface IdentityAuthenticationVerifyStepUpChallengeInput {
+  evidence?: string | null;
+  method?: IdentityAuthenticationMfaMethod;
+}
+
 export interface IdentityAuthenticationWeb3ChallengeInput {
   chainId?: string | null;
   walletAddress: string;
@@ -4147,8 +5175,7 @@ export interface IdentityAuthenticationWebAuthnAuthenticationResult {
   userId?: string | null;
 }
 
-export type IdentityAuthenticationWebAuthnAuthenticatorType =
-  "Platform" | "CrossPlatform";
+export type IdentityAuthenticationWebAuthnAuthenticatorType = 'Platform' | 'CrossPlatform';
 
 export interface IdentityAuthenticationWebAuthnCredentialInfo {
   id?: string;
@@ -4220,8 +5247,7 @@ export interface IdentityAuthorizationAccessReviewCampaign {
   updatedAt?: string | null;
 }
 
-export type IdentityAuthorizationAccessReviewDecision =
-  "None" | "Approve" | "Revoke" | "ModifyAndApprove";
+export type IdentityAuthorizationAccessReviewDecision = 'None' | 'Approve' | 'Revoke' | 'ModifyAndApprove';
 
 export interface IdentityAuthorizationAccessReviewItem {
   id?: string;
@@ -4243,30 +5269,15 @@ export interface IdentityAuthorizationAccessReviewItem {
   updatedAt?: string | null;
 }
 
-export type IdentityAuthorizationAccessReviewItemStatus =
-  "None" | "Pending" | "Reviewed" | "Approved" | "Revoked" | "Expired";
+export type IdentityAuthorizationAccessReviewItemStatus = 'None' | 'Pending' | 'Reviewed' | 'Approved' | 'Revoked' | 'Expired';
 
 export type IdentityAuthorizationAccessReviewScope =
-  | "None"
-  | "AllUsers"
-  | "Department"
-  | "Team"
-  | "Role"
-  | "Resource"
-  | "HighPrivilege"
-  | "External"
-  | "Custom";
+  'None' | 'AllUsers' | 'Department' | 'Team' | 'Role' | 'Resource' | 'HighPrivilege' | 'External' | 'Custom';
 
-export type IdentityAuthorizationAccessReviewStatus =
-  "None" | "Draft" | "Active" | "InProgress" | "Completed" | "Expired";
+export type IdentityAuthorizationAccessReviewStatus = 'None' | 'Draft' | 'Active' | 'InProgress' | 'Completed' | 'Expired';
 
 export type IdentityAuthorizationAccessReviewType =
-  | "None"
-  | "PermissionReview"
-  | "RoleReview"
-  | "ResourceAccessReview"
-  | "UserAccessReview"
-  | "ComplianceAttestation";
+  'None' | 'PermissionReview' | 'RoleReview' | 'ResourceAccessReview' | 'UserAccessReview' | 'ComplianceAttestation';
 
 export interface IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand {
   createdBy?: string;
@@ -4400,8 +5411,7 @@ export interface IdentityAuthorizationDelegatedAdminScope {
   updatedAt?: string | null;
 }
 
-export type IdentityAuthorizationDelegatedAdminScopeType =
-  "None" | "Department" | "Team" | "Role" | "Resource" | "Custom";
+export type IdentityAuthorizationDelegatedAdminScopeType = 'None' | 'Department' | 'Team' | 'Role' | 'Resource' | 'Custom';
 
 export interface IdentityAuthorizationDenyTenantPermissionCommand {
   deniedBy: string;
@@ -4427,8 +5437,7 @@ export interface IdentityAuthorizationEffectivePermissionsOutput {
   userId: string;
 }
 
-export type IdentityAuthorizationElevationRequestStatus =
-  "None" | "Pending" | "Approved" | "Denied" | "Active" | "Expired" | "Revoked";
+export type IdentityAuthorizationElevationRequestStatus = 'None' | 'Pending' | 'Approved' | 'Denied' | 'Active' | 'Expired' | 'Revoked';
 
 export interface IdentityAuthorizationGetPendingResourceInvitationsOutput {
   invitations: Array<IdentityAuthorizationResourceInvitation> | null;
@@ -4473,8 +5482,7 @@ export interface IdentityAuthorizationHasPermissionOutput {
   userId: string;
 }
 
-export type IdentityAuthorizationImpactSeverity =
-  "Low" | "Medium" | "High" | "Critical";
+export type IdentityAuthorizationImpactSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface IdentityAuthorizationInvitationActionResult {
   errorMessage?: string | null;
@@ -4556,108 +5564,108 @@ export interface IdentityAuthorizationPermissionTrend {
 }
 
 export type IdentityAuthorizationPermissionType =
-  | "Read"
-  | "Comment"
-  | "Reply"
-  | "Vote"
-  | "Share"
-  | "Report"
-  | "Follow"
-  | "Bookmark"
-  | "React"
-  | "Subscribe"
-  | "Mention"
-  | "Tag"
-  | "Categorize"
-  | "Collection"
-  | "Series"
-  | "CrossReference"
-  | "Translate"
-  | "Version"
-  | "Template"
-  | "Create"
-  | "Draft"
-  | "Submit"
-  | "Withdraw"
-  | "Archive"
-  | "Restore"
-  | "Delete"
-  | "HardDelete"
-  | "Backup"
-  | "Migrate"
-  | "Clone"
-  | "Edit"
-  | "Proofread"
-  | "FactCheck"
-  | "StyleGuide"
-  | "Plagiarism"
-  | "Seo"
-  | "Accessibility"
-  | "Legal"
-  | "Brand"
-  | "Guidelines"
-  | "Approve"
-  | "Reject"
-  | "RequestRevision"
-  | "Escalate"
-  | "Override"
-  | "Delegate"
-  | "FastTrack"
-  | "BatchApprove"
-  | "ConditionalApprove"
-  | "RequireReview"
-  | "Publish"
-  | "Unpublish"
-  | "Schedule"
-  | "SetPublishDate"
-  | "Visibility"
-  | "Feature"
-  | "Pin"
-  | "Sticky"
-  | "Highlight"
-  | "Promote"
-  | "Moderate"
-  | "Hide"
-  | "Flag"
-  | "Warn"
-  | "Suspend"
-  | "Ban"
-  | "Quarantine"
-  | "Review"
-  | "Investigate"
-  | "EscalateModeration"
-  | "Invite"
-  | "Assign"
-  | "Collaborate"
-  | "CoAuthor"
-  | "Contribute"
-  | "Suggest"
-  | "Track"
-  | "Merge"
-  | "Resolve"
-  | "Coordinate"
-  | "Score"
-  | "Rate"
-  | "Benchmark"
-  | "Metrics"
-  | "Analytics"
-  | "Performance"
-  | "Feedback"
-  | "Audit"
-  | "Standards"
-  | "Improvement"
-  | "Monetize"
-  | "Pricing"
-  | "Paywall"
-  | "Manage"
-  | "Admin"
-  | "Execute"
-  | "Export"
-  | "Import"
-  | "SystemAdmin"
-  | "TenantAdmin"
-  | "UserManagement"
-  | "Configure";
+  | 'Read'
+  | 'Comment'
+  | 'Reply'
+  | 'Vote'
+  | 'Share'
+  | 'Report'
+  | 'Follow'
+  | 'Bookmark'
+  | 'React'
+  | 'Subscribe'
+  | 'Mention'
+  | 'Tag'
+  | 'Categorize'
+  | 'Collection'
+  | 'Series'
+  | 'CrossReference'
+  | 'Translate'
+  | 'Version'
+  | 'Template'
+  | 'Create'
+  | 'Draft'
+  | 'Submit'
+  | 'Withdraw'
+  | 'Archive'
+  | 'Restore'
+  | 'Delete'
+  | 'HardDelete'
+  | 'Backup'
+  | 'Migrate'
+  | 'Clone'
+  | 'Edit'
+  | 'Proofread'
+  | 'FactCheck'
+  | 'StyleGuide'
+  | 'Plagiarism'
+  | 'Seo'
+  | 'Accessibility'
+  | 'Legal'
+  | 'Brand'
+  | 'Guidelines'
+  | 'Approve'
+  | 'Reject'
+  | 'RequestRevision'
+  | 'Escalate'
+  | 'Override'
+  | 'Delegate'
+  | 'FastTrack'
+  | 'BatchApprove'
+  | 'ConditionalApprove'
+  | 'RequireReview'
+  | 'Publish'
+  | 'Unpublish'
+  | 'Schedule'
+  | 'SetPublishDate'
+  | 'Visibility'
+  | 'Feature'
+  | 'Pin'
+  | 'Sticky'
+  | 'Highlight'
+  | 'Promote'
+  | 'Moderate'
+  | 'Hide'
+  | 'Flag'
+  | 'Warn'
+  | 'Suspend'
+  | 'Ban'
+  | 'Quarantine'
+  | 'Review'
+  | 'Investigate'
+  | 'EscalateModeration'
+  | 'Invite'
+  | 'Assign'
+  | 'Collaborate'
+  | 'CoAuthor'
+  | 'Contribute'
+  | 'Suggest'
+  | 'Track'
+  | 'Merge'
+  | 'Resolve'
+  | 'Coordinate'
+  | 'Score'
+  | 'Rate'
+  | 'Benchmark'
+  | 'Metrics'
+  | 'Analytics'
+  | 'Performance'
+  | 'Feedback'
+  | 'Audit'
+  | 'Standards'
+  | 'Improvement'
+  | 'Monetize'
+  | 'Pricing'
+  | 'Paywall'
+  | 'Manage'
+  | 'Admin'
+  | 'Execute'
+  | 'Export'
+  | 'Import'
+  | 'SystemAdmin'
+  | 'TenantAdmin'
+  | 'UserManagement'
+  | 'Configure';
 
 export interface IdentityAuthorizationPermissionUpdateResult {
   errorMessage?: string | null;
@@ -4767,13 +5775,7 @@ export interface IdentityAuthorizationShareResult {
 }
 
 export type IdentityAuthorizationSoDResolutionAction =
-  | "None"
-  | "RevokePermission"
-  | "RevokeRole"
-  | "GrantException"
-  | "ImplementCompensatingControl"
-  | "TransferOwnership"
-  | "NoAction";
+  'None' | 'RevokePermission' | 'RevokeRole' | 'GrantException' | 'ImplementCompensatingControl' | 'TransferOwnership' | 'NoAction';
 
 export interface IdentityAuthorizationSoDRule {
   id?: string;
@@ -4799,15 +5801,9 @@ export interface IdentityAuthorizationSoDRule {
 }
 
 export type IdentityAuthorizationSoDRuleType =
-  | "None"
-  | "PermissionConflict"
-  | "RoleConflict"
-  | "ResourceConflict"
-  | "BusinessProcessConflict"
-  | "FunctionalConflict";
+  'None' | 'PermissionConflict' | 'RoleConflict' | 'ResourceConflict' | 'BusinessProcessConflict' | 'FunctionalConflict';
 
-export type IdentityAuthorizationSoDSeverity =
-  "None" | "Low" | "Medium" | "High" | "Critical";
+export type IdentityAuthorizationSoDSeverity = 'None' | 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface IdentityAuthorizationSoDViolation {
   id?: string;
@@ -4832,14 +5828,7 @@ export interface IdentityAuthorizationSoDViolation {
   violationDetails?: string | null;
 }
 
-export type IdentityAuthorizationSoDViolationStatus =
-  | "None"
-  | "Active"
-  | "Acknowledged"
-  | "Mitigated"
-  | "Resolved"
-  | "Excepted"
-  | "FalsePositive";
+export type IdentityAuthorizationSoDViolationStatus = 'None' | 'Active' | 'Acknowledged' | 'Mitigated' | 'Resolved' | 'Excepted' | 'FalsePositive';
 
 export interface IdentityAuthorizationUpdateUserPermissionsCommand {
   expiresAt?: string | null;
@@ -5544,14 +6533,11 @@ export interface IdentityUsersNotificationFilterCriteria {
   types?: Array<string> | null;
 }
 
-export type IdentityUsersNotificationPriority =
-  "Low" | "Normal" | "High" | "Urgent" | "Critical";
+export type IdentityUsersNotificationPriority = 'Low' | 'Normal' | 'High' | 'Urgent' | 'Critical';
 
-export type IdentityUsersProfileVisibility =
-  "Private" | "FriendsOnly" | "Public";
+export type IdentityUsersProfileVisibility = 'Private' | 'FriendsOnly' | 'Public';
 
-export type IdentityUsersPurgeStrategy =
-  "Immediate" | "Scheduled" | "GracePeriod";
+export type IdentityUsersPurgeStrategy = 'Immediate' | 'Scheduled' | 'GracePeriod';
 
 export interface IdentityUsersReplaceUserAccessibilityPreferencesInput {
   accessibilityPreferences?: Record<string, Record<string, unknown>> | null;
@@ -5994,6 +6980,7 @@ export interface LaunchPadLaunchPadApplication {
   reviewedAt?: string | null;
   reviewedByUserId?: string | null;
   status?: LaunchPadLaunchPadApplicationStatus;
+  submissionVersionPolicy?: ProjectsVersionSubmissionPolicy;
   submittedAssetReferenceIds?: Array<string> | null;
   submittedAssetReferenceIdsJson?: string | null;
   submittedAt?: string;
@@ -6011,19 +6998,13 @@ export interface LaunchPadLaunchPadApplicationProjection {
   projectId?: string;
   projectVersionId?: string;
   status?: LaunchPadLaunchPadApplicationStatus;
+  submissionVersionPolicy?: ProjectsVersionSubmissionPolicy;
   submittedAssetReferenceIds?: Array<string> | null;
   submittedAt?: string;
   submittedByUserId?: string;
 }
 
-export type LaunchPadLaunchPadApplicationStatus =
-  | "Draft"
-  | "Submitted"
-  | "UnderReview"
-  | "Waitlisted"
-  | "Approved"
-  | "Rejected"
-  | "Withdrawn";
+export type LaunchPadLaunchPadApplicationStatus = 'Draft' | 'Submitted' | 'UnderReview' | 'Waitlisted' | 'Approved' | 'Rejected' | 'Withdrawn';
 
 export interface LaunchPadLaunchPadEvent {
   id?: string;
@@ -6064,14 +7045,7 @@ export interface LaunchPadLaunchPadEventProjection {
 }
 
 export type LaunchPadLaunchPadEventStatus =
-  | "Draft"
-  | "ApplicationsOpen"
-  | "ApplicationsClosed"
-  | "Scheduled"
-  | "Active"
-  | "Completed"
-  | "Cancelled"
-  | "Archived";
+  'Draft' | 'ApplicationsOpen' | 'ApplicationsClosed' | 'Scheduled' | 'Active' | 'Completed' | 'Cancelled' | 'Archived';
 
 export interface LaunchPadLaunchPadParticipantRegistration {
   id?: string;
@@ -6094,8 +7068,7 @@ export interface LaunchPadLaunchPadParticipantRegistration {
   version?: number;
 }
 
-export type LaunchPadLaunchPadParticipantRole =
-  "Participant" | "Mentor" | "Audience" | "Presenter";
+export type LaunchPadLaunchPadParticipantRole = 'Participant' | 'Mentor' | 'Audience' | 'Presenter';
 
 export interface LaunchPadLaunchPadParticipantSlot {
   id?: string;
@@ -6120,14 +7093,7 @@ export interface LaunchPadLaunchPadParticipantSlot {
   version?: number;
 }
 
-export type LaunchPadLaunchPadParticipantStatus =
-  | "Registered"
-  | "Waitlisted"
-  | "CheckedIn"
-  | "Attended"
-  | "Completed"
-  | "Cancelled"
-  | "NoShow";
+export type LaunchPadLaunchPadParticipantStatus = 'Registered' | 'Waitlisted' | 'CheckedIn' | 'Attended' | 'Completed' | 'Cancelled' | 'NoShow';
 
 export interface LaunchPadLaunchPadRegistrationProjection {
   id?: string;
@@ -6137,6 +7103,13 @@ export interface LaunchPadLaunchPadRegistrationProjection {
   slotId?: string;
   status?: LaunchPadLaunchPadParticipantStatus;
   userId?: string;
+}
+
+export interface LaunchPadLaunchPadSettingsProjection {
+  id?: string;
+  tenantId?: string;
+  updatedAt?: string;
+  versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
 export interface LaunchPadLaunchPadSlotProjection {
@@ -6179,8 +7152,7 @@ export interface LaunchPadLaunchPlan {
   version?: number;
 }
 
-export type LaunchPadLaunchPlanStatus =
-  "Draft" | "Preparing" | "Ready" | "Launched" | "Paused";
+export type LaunchPadLaunchPlanStatus = 'Draft' | 'Preparing' | 'Ready' | 'Launched' | 'Paused';
 
 export interface LaunchPadReviewLaunchPadApplicationInput {
   launchPlanName?: string | null;
@@ -6215,6 +7187,10 @@ export interface LaunchPadUpdateLaunchPadEventInput {
   endsAt?: string;
   name?: string | null;
   startsAt?: string;
+}
+
+export interface LaunchPadUpdateLaunchPadSettingsInput {
+  versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
 export interface LearningAssessmentsAnonymousReviewAssessment {
@@ -6304,8 +7280,7 @@ export interface LearningAssessmentsAssessmentGroupAnalytics {
   weightPercent?: number | null;
 }
 
-export type LearningAssessmentsAssessmentPresentationMode =
-  "SingleStep" | "Continuous";
+export type LearningAssessmentsAssessmentPresentationMode = 'SingleStep' | 'Continuous';
 
 export interface LearningAssessmentsAssessmentScoreBucket {
   count?: number;
@@ -6340,8 +7315,7 @@ export interface LearningAssessmentsAssessmentSubmission {
 }
 
 /** Legacy value Exam is normalized on read and is not valid for new assessments. */
-export type LearningAssessmentsAssessmentType =
-  "Quiz" | "Assignment" | "Project" | "PeerReview" | "SelfAssessment";
+export type LearningAssessmentsAssessmentType = 'Quiz' | 'Assignment' | 'Project' | 'PeerReview' | 'SelfAssessment';
 
 export interface LearningAssessmentsAssignAssessmentGroupInput {
   assessmentGroupId?: string | null;
@@ -6554,7 +7528,7 @@ export interface LearningAssessmentsPeerReviewClaim {
   reviewId?: string;
 }
 
-export type LearningAssessmentsPeerReviewStatus = "Assigned" | "Submitted";
+export type LearningAssessmentsPeerReviewStatus = 'Assigned' | 'Submitted';
 
 export interface LearningAssessmentsPeerReviewSubmitInput {
   feedback?: string | null;
@@ -6601,8 +7575,7 @@ export interface LearningAssessmentsStartSubmissionInput {
 /** A comma-separated combination of the declared flag names. */
 export type LearningAssessmentsSubmissionModality = string;
 
-export type LearningAssessmentsSubmissionStatus =
-  "InProgress" | "Submitted" | "Graded" | "Returned" | "Late";
+export type LearningAssessmentsSubmissionStatus = 'InProgress' | 'Submitted' | 'Graded' | 'Returned' | 'Late';
 
 export interface LearningAssessmentsSubmitAssessmentInput {
   codePayload?: string | null;
@@ -6678,8 +7651,7 @@ export interface LearningCertificatesCertificate {
   userId?: string;
 }
 
-export type LearningCertificatesCertificateStatus =
-  "Active" | "Expired" | "Revoked";
+export type LearningCertificatesCertificateStatus = 'Active' | 'Expired' | 'Revoked';
 
 export interface LearningCertificatesCertificateTemplate {
   id?: string;
@@ -6799,11 +7771,9 @@ export interface LearningCohortsCohortCalendarEntry {
   type?: LearningCohortsCohortScheduleItemType;
 }
 
-export type LearningCohortsCohortPacingMode =
-  "OneModulePerWeek" | "OneLessonPerMeeting" | "FixedLessonsPerWeek" | "Manual";
+export type LearningCohortsCohortPacingMode = 'OneModulePerWeek' | 'OneLessonPerMeeting' | 'FixedLessonsPerWeek' | 'Manual';
 
-export type LearningCohortsCohortReleasePolicy =
-  "Weekly" | "BeforeMeeting" | "Manual" | "Immediately";
+export type LearningCohortsCohortReleasePolicy = 'Weekly' | 'BeforeMeeting' | 'Manual' | 'Immediately';
 
 export interface LearningCohortsCohortSchedule {
   id?: string;
@@ -6847,11 +7817,9 @@ export interface LearningCohortsCohortScheduleItem {
   visibilityOverride?: LearningCohortsCohortVisibilityOverride;
 }
 
-export type LearningCohortsCohortScheduleItemStatus =
-  "Draft" | "Scheduled" | "Published" | "Completed" | "Cancelled";
+export type LearningCohortsCohortScheduleItemStatus = 'Draft' | 'Scheduled' | 'Published' | 'Completed' | 'Cancelled';
 
-export type LearningCohortsCohortScheduleItemType =
-  "ContentRelease" | "LiveSession" | "AssessmentWindow" | "Milestone";
+export type LearningCohortsCohortScheduleItemType = 'ContentRelease' | 'LiveSession' | 'AssessmentWindow' | 'Milestone';
 
 export interface LearningCohortsCohortSchedulePreview {
   calculatedEndDate?: string;
@@ -6884,11 +7852,9 @@ export interface LearningCohortsCohortScheduleSummary {
   version?: number;
 }
 
-export type LearningCohortsCohortStatus =
-  "Scheduled" | "Active" | "Completed" | "Cancelled";
+export type LearningCohortsCohortStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
 
-export type LearningCohortsCohortVisibilityOverride =
-  "Inherited" | "Hidden" | "Visible";
+export type LearningCohortsCohortVisibilityOverride = 'Inherited' | 'Hidden' | 'Visible';
 
 export interface LearningCohortsCourseCohortCalendar {
   courseId?: string;
@@ -6921,9 +7887,9 @@ export interface LearningCohortsPreviewCohortScheduleInput {
   unitsPerPeriod?: number;
 }
 
-export type LearningCohortsScheduleConflictSeverity = "Advisory" | "Blocking";
+export type LearningCohortsScheduleConflictSeverity = 'Advisory' | 'Blocking';
 
-export type LearningCohortsScheduleShiftScope = "Single" | "Following";
+export type LearningCohortsScheduleShiftScope = 'Single' | 'Following';
 
 export interface LearningCohortsShiftCohortScheduleInput {
   days?: number;
@@ -7085,15 +8051,7 @@ export interface LearningCoursesContentInteractionEvent {
 }
 
 export type LearningCoursesContentInteractionEventType =
-  | "Opened"
-  | "Heartbeat"
-  | "Progressed"
-  | "Paused"
-  | "Resumed"
-  | "Seeked"
-  | "Completed"
-  | "QuizPresented"
-  | "QuizAnswered";
+  'Opened' | 'Heartbeat' | 'Progressed' | 'Paused' | 'Resumed' | 'Seeked' | 'Completed' | 'QuizPresented' | 'QuizAnswered';
 
 export interface LearningCoursesContentInteractionSummary {
   id?: string;
@@ -7129,12 +8087,7 @@ export interface LearningCoursesContentStats {
     Reflection?: number;
     Survey?: number;
   } | null;
-  contentByVisibility?: {
-    Internal?: number;
-    Private?: number;
-    Public?: number;
-    Restricted?: number;
-  } | null;
+  contentByVisibility?: { Internal?: number; Private?: number; Public?: number; Restricted?: number } | null;
   nestedContent?: number;
   optionalContent?: number;
   programId?: string;
@@ -7218,18 +8171,9 @@ export interface LearningCoursesEngagementMetrics {
   weeklyActiveUsers?: number;
 }
 
-export type LearningCoursesEnrollmentStatus =
-  | "Open"
-  | "Active"
-  | "Paused"
-  | "Cancelled"
-  | "Expired"
-  | "Completed"
-  | "Closed"
-  | "InviteOnly"
-  | "Waitlist";
+export type LearningCoursesEnrollmentStatus = 'Open' | 'Active' | 'Paused' | 'Cancelled' | 'Expired' | 'Completed' | 'Closed' | 'InviteOnly' | 'Waitlist';
 
-export type LearningCoursesEstimatedMinutesSource = "Auto" | "Manual";
+export type LearningCoursesEstimatedMinutesSource = 'Auto' | 'Manual';
 
 export interface LearningCoursesGraderSummary {
   id?: string;
@@ -7253,8 +8197,7 @@ export interface LearningCoursesGradingConfig {
   maxScore?: number;
 }
 
-export type LearningCoursesLessonContentFormat =
-  "Markdown" | "Lexical" | "RevealJs" | "Video" | "Html" | "ExternalLink";
+export type LearningCoursesLessonContentFormat = 'Markdown' | 'Lexical' | 'RevealJs' | 'Video' | 'Html' | 'ExternalLink';
 
 export interface LearningCoursesMonetization {
   currency?: string | null;
@@ -7299,8 +8242,7 @@ export interface LearningCoursesPrerequisiteStatus {
   type?: LearningCoursesPrerequisiteType;
 }
 
-export type LearningCoursesPrerequisiteType =
-  "Required" | "Recommended" | "Corequisite";
+export type LearningCoursesPrerequisiteType = 'Required' | 'Recommended' | 'Corequisite';
 
 export interface LearningCoursesPricing {
   currency?: string | null;
@@ -7378,18 +8320,9 @@ export interface LearningCoursesProgramContent {
 
 /** Legacy values Page and Challenge are normalized on read and are not valid for new content. */
 export type LearningCoursesProgramContentType =
-  | "Lesson"
-  | "Assignment"
-  | "Questionnaire"
-  | "Discussion"
-  | "Code"
-  | "Reflection"
-  | "Survey"
-  | "Project"
-  | "Module";
+  'Lesson' | 'Assignment' | 'Questionnaire' | 'Discussion' | 'Code' | 'Reflection' | 'Survey' | 'Project' | 'Module';
 
-export type LearningCoursesProgramDifficulty =
-  "Beginner" | "Intermediate" | "Advanced" | "Expert";
+export type LearningCoursesProgramDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
 export interface LearningCoursesProgramUserSummary {
   id?: string;
@@ -7397,8 +8330,7 @@ export interface LearningCoursesProgramUserSummary {
   userEmail?: string | null;
 }
 
-export type LearningCoursesProgressStatus =
-  "NotStarted" | "InProgress" | "Completed" | "Submitted";
+export type LearningCoursesProgressStatus = 'NotStarted' | 'InProgress' | 'Completed' | 'Submitted';
 
 export interface LearningCoursesRecordContentInteractionEventInput {
   durationSeconds?: number | null;
@@ -7600,8 +8532,7 @@ export interface LearningCoursesUserProgress {
   userId?: string;
 }
 
-export type LearningCoursesVisibility =
-  "Public" | "Internal" | "Private" | "Restricted";
+export type LearningCoursesVisibility = 'Public' | 'Internal' | 'Private' | 'Restricted';
 
 export interface LearningCoursesWorkspaceData {
   files?: Record<string, LearningCoursesBundleFileMeta> | null;
@@ -7620,8 +8551,7 @@ export interface LearningEnrollmentsEnrollment {
   userId?: string;
 }
 
-export type LearningEnrollmentsEnrollmentStatus =
-  "Active" | "Paused" | "Completed" | "Dropped" | "Expired";
+export type LearningEnrollmentsEnrollmentStatus = 'Active' | 'Paused' | 'Completed' | 'Dropped' | 'Expired';
 
 export interface LearningEnrollmentsEnrollUserInput {
   cohortId?: string | null;
@@ -7633,8 +8563,7 @@ export interface LearningEnrollmentsUpdateEnrollmentProgressInput {
   progress?: number;
 }
 
-export type LearningExperienceDiscoveryCollectionType =
-  "Curated" | "Category" | "Skill" | "Career" | "Trending" | "NewReleases";
+export type LearningExperienceDiscoveryCollectionType = 'Curated' | 'Category' | 'Skill' | 'Career' | 'Trending' | 'NewReleases';
 
 export interface LearningExperienceDiscoveryCourseCollection {
   id?: string;
@@ -7693,13 +8622,7 @@ export interface LearningExperienceDiscoveryFeaturedContent {
 }
 
 export type LearningExperienceDiscoveryFeaturedContentType =
-  | "HeroBanner"
-  | "CategoryHighlight"
-  | "NewRelease"
-  | "TopRated"
-  | "TrendingNow"
-  | "StaffPick"
-  | "SeasonalPromotion";
+  'HeroBanner' | 'CategoryHighlight' | 'NewRelease' | 'TopRated' | 'TrendingNow' | 'StaffPick' | 'SeasonalPromotion';
 
 export interface LearningExperienceDiscoveryPopularSearchResult {
   clickThroughRate?: number;
@@ -7811,8 +8734,7 @@ export interface LearningExperienceLearningPathsLearningPathDetail {
   updatedAt?: string;
 }
 
-export type LearningExperienceLearningPathsLearningPathDifficulty =
-  "Beginner" | "Intermediate" | "Advanced" | "Expert";
+export type LearningExperienceLearningPathsLearningPathDifficulty = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
 export interface LearningExperienceLearningPathsLearningPathEnrollment {
   id?: string;
@@ -7828,8 +8750,7 @@ export interface LearningExperienceLearningPathsLearningPathEnrollment {
   userId?: string;
 }
 
-export type LearningExperienceLearningPathsLearningPathEnrollmentStatus =
-  "InProgress" | "Completed" | "Abandoned";
+export type LearningExperienceLearningPathsLearningPathEnrollmentStatus = 'InProgress' | 'Completed' | 'Abandoned';
 
 export interface LearningExperienceLearningPathsLearningPathStatistics {
   activeEnrollments?: number;
@@ -7912,14 +8833,7 @@ export interface LearningExperienceRecommendationsRecommendationStatistics {
 }
 
 export type LearningExperienceRecommendationsRecommendationType =
-  | "PersonalizedAI"
-  | "PopularInCategory"
-  | "TrendingNow"
-  | "BasedOnHistory"
-  | "SimilarToCompleted"
-  | "NextInPath"
-  | "InstructorFollowed"
-  | "PeerRecommended";
+  'PersonalizedAI' | 'PopularInCategory' | 'TrendingNow' | 'BasedOnHistory' | 'SimilarToCompleted' | 'NextInPath' | 'InstructorFollowed' | 'PeerRecommended';
 
 export interface LearningExperienceRecommendationsSimilarCourse {
   category?: string | null;
@@ -7962,16 +8876,16 @@ export interface LearningExperienceSocialControllersUpdateReviewModerationInput 
 }
 
 export type LearningExperienceSocialFeedItemType =
-  | "NewCourse"
-  | "PopularCourse"
-  | "TrendingDiscussion"
-  | "FeaturedReview"
-  | "LearningPathSuggestion"
-  | "CourseUpdate"
-  | "InstructorActivity"
-  | "PeerActivity"
-  | "AchievementUnlocked"
-  | "SkillMilestone";
+  | 'NewCourse'
+  | 'PopularCourse'
+  | 'TrendingDiscussion'
+  | 'FeaturedReview'
+  | 'LearningPathSuggestion'
+  | 'CourseUpdate'
+  | 'InstructorActivity'
+  | 'PeerActivity'
+  | 'AchievementUnlocked'
+  | 'SkillMilestone';
 
 export interface LearningExperienceSocialServicesCourseDiscussion {
   id?: string;
@@ -8418,14 +9332,7 @@ export interface MonitoringSLASloCompliance {
   violationCount?: number;
 }
 
-export type MonitoringSLASloStatus =
-  | "Active"
-  | "Breached"
-  | "AtRisk"
-  | "Disabled"
-  | "Violated"
-  | "Warning"
-  | "Inactive";
+export type MonitoringSLASloStatus = 'Active' | 'Breached' | 'AtRisk' | 'Disabled' | 'Violated' | 'Warning' | 'Inactive';
 
 export interface MonitoringSLASloViolation {
   id?: string;
@@ -8461,8 +9368,7 @@ export interface MonitoringSLAUpdateSloCommand {
   timeWindowDays?: number;
 }
 
-export type MonitoringSLAViolationSeverity =
-  "Low" | "Medium" | "High" | "Critical";
+export type MonitoringSLAViolationSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface MvcProblemDetails {
   detail?: string | null;
@@ -8612,26 +9518,17 @@ export interface NotificationsControllersUpdatePreferencesInput {
   socialEnabled?: boolean | null;
 }
 
-export type NotificationsNotificationChannel =
-  "InApp" | "Email" | "Push" | "Sms" | "Slack" | "Discord" | "Webhook";
+export type NotificationsNotificationChannel = 'InApp' | 'Email' | 'Push' | 'Sms' | 'Slack' | 'Discord' | 'Webhook';
 
-export type ObjectsAttestationConveyancePreference =
-  "None" | "Indirect" | "Direct" | "Enterprise";
+export type ObjectsAttestationConveyancePreference = 'None' | 'Indirect' | 'Direct' | 'Enterprise';
 
-export type ObjectsAttestationStatementFormatIdentifier =
-  | "Packed"
-  | "Tpm"
-  | "AndroidKey"
-  | "AndroidSafetyNet"
-  | "FidoU2f"
-  | "Apple"
-  | "None";
+export type ObjectsAttestationStatementFormatIdentifier = 'Packed' | 'Tpm' | 'AndroidKey' | 'AndroidSafetyNet' | 'FidoU2f' | 'Apple' | 'None';
 
 export interface ObjectsAuthenticationExtensionsClientInputs {
   credentialProtectionPolicy?: ObjectsCredentialProtectionPolicy;
   credProps?: boolean | null;
   enforceCredentialProtectionPolicy?: boolean | null;
-  "example.extension.bool"?: boolean | null;
+  'example.extension.bool'?: boolean | null;
   exts?: boolean | null;
   largeBlob?: ObjectsAuthenticationExtensionsLargeBlobInputs;
   prf?: ObjectsAuthenticationExtensionsPRFInputs;
@@ -8654,31 +9551,15 @@ export interface ObjectsAuthenticationExtensionsPRFValues {
   second?: string | null;
 }
 
-export type ObjectsAuthenticatorAttachment = "Platform" | "CrossPlatform";
+export type ObjectsAuthenticatorAttachment = 'Platform' | 'CrossPlatform';
 
-export type ObjectsAuthenticatorTransport =
-  "Usb" | "Nfc" | "Ble" | "SmartCard" | "Hybrid" | "Internal";
+export type ObjectsAuthenticatorTransport = 'Usb' | 'Nfc' | 'Ble' | 'SmartCard' | 'Hybrid' | 'Internal';
 
-export type ObjectsCOSEAlgorithm =
-  | "RS1"
-  | "RS512"
-  | "RS384"
-  | "RS256"
-  | "ES256K"
-  | "PS512"
-  | "PS384"
-  | "PS256"
-  | "ES512"
-  | "ES384"
-  | "EdDSA"
-  | "ES256";
+export type ObjectsCOSEAlgorithm = 'RS1' | 'RS512' | 'RS384' | 'RS256' | 'ES256K' | 'PS512' | 'PS384' | 'PS256' | 'ES512' | 'ES384' | 'EdDSA' | 'ES256';
 
-export type ObjectsCredentialProtectionPolicy =
-  | "UserVerificationOptional"
-  | "UserVerificationOptionalWithCredentialIdList"
-  | "UserVerificationRequired";
+export type ObjectsCredentialProtectionPolicy = 'UserVerificationOptional' | 'UserVerificationOptionalWithCredentialIdList' | 'UserVerificationRequired';
 
-export type ObjectsLargeBlobSupport = "Required" | "Preferred";
+export type ObjectsLargeBlobSupport = 'Required' | 'Preferred';
 
 export interface ObjectsPublicKeyCredentialDescriptor {
   id?: string | null;
@@ -8686,16 +9567,13 @@ export interface ObjectsPublicKeyCredentialDescriptor {
   type?: ObjectsPublicKeyCredentialType;
 }
 
-export type ObjectsPublicKeyCredentialHint =
-  "SecurityKey" | "ClientDevice" | "Hybrid";
+export type ObjectsPublicKeyCredentialHint = 'SecurityKey' | 'ClientDevice' | 'Hybrid';
 
-export type ObjectsPublicKeyCredentialType = "PublicKey" | "Invalid";
+export type ObjectsPublicKeyCredentialType = 'PublicKey' | 'Invalid';
 
-export type ObjectsResidentKeyRequirement =
-  "Required" | "Preferred" | "Discouraged";
+export type ObjectsResidentKeyRequirement = 'Required' | 'Preferred' | 'Discouraged';
 
-export type ObjectsUserVerificationRequirement =
-  "Required" | "Preferred" | "Discouraged";
+export type ObjectsUserVerificationRequirement = 'Required' | 'Preferred' | 'Discouraged';
 
 export interface PagedResultOfCommerceProductsProduct {
   hasNextPage?: boolean;
@@ -8854,25 +9732,25 @@ export interface PagedResultOfNotificationsControllersEmailSuppression {
 }
 
 export type ProgramCategory =
-  | "General"
-  | "Programming"
-  | "DataScience"
-  | "WebDevelopment"
-  | "MobileDevelopment"
-  | "GameDevelopment"
-  | "AI"
-  | "Cybersecurity"
-  | "DevOps"
-  | "Database"
-  | "Business"
-  | "Design"
-  | "Marketing"
-  | "ProjectManagement"
-  | "PersonalDevelopment"
-  | "CreativeArts"
-  | "Science"
-  | "Language"
-  | "Other";
+  | 'General'
+  | 'Programming'
+  | 'DataScience'
+  | 'WebDevelopment'
+  | 'MobileDevelopment'
+  | 'GameDevelopment'
+  | 'AI'
+  | 'Cybersecurity'
+  | 'DevOps'
+  | 'Database'
+  | 'Business'
+  | 'Design'
+  | 'Marketing'
+  | 'ProjectManagement'
+  | 'PersonalDevelopment'
+  | 'CreativeArts'
+  | 'Science'
+  | 'Language'
+  | 'Other';
 
 export interface ProjectsAddCollaboratorInput {
   email?: string | null;
@@ -8916,20 +9794,11 @@ export interface ProjectsCreateProjectInput {
 
 export interface ProjectsCreateProjectVersionInput {
   releaseNotes?: string | null;
-  status?: string | null;
+  status?: ProjectsProjectVersionStatus;
   versionNumber: string;
 }
 
-export type ProjectsDevelopmentStatus =
-  | "Planning"
-  | "InDevelopment"
-  | "Alpha"
-  | "Beta"
-  | "Released"
-  | "Completed"
-  | "OnHold"
-  | "Cancelled"
-  | "Archived";
+export type ProjectsDevelopmentStatus = 'Planning' | 'InDevelopment' | 'Alpha' | 'Beta' | 'Released' | 'Completed' | 'OnHold' | 'Cancelled' | 'Archived';
 
 export interface ProjectsEffectivePermission {
   expiresAt?: string | null;
@@ -9181,8 +10050,7 @@ export interface ProjectsProjectInvitation {
   token?: string | null;
 }
 
-export type ProjectsProjectInvitationStatus =
-  "Pending" | "Accepted" | "Declined" | "Revoked" | "Expired";
+export type ProjectsProjectInvitationStatus = 'Pending' | 'Accepted' | 'Declined' | 'Revoked' | 'Expired';
 
 export interface ProjectsProjectJamSubmission {
   id?: string;
@@ -9389,8 +10257,7 @@ export interface ProjectsProjectTeamAgreement {
   version?: number;
 }
 
-export type ProjectsProjectTeamAgreementStatus =
-  "Proposed" | "CounterProposed" | "Accepted" | "Cancelled" | "Completed";
+export type ProjectsProjectTeamAgreementStatus = 'Proposed' | 'CounterProposed' | 'Accepted' | 'Cancelled' | 'Completed';
 
 export interface ProjectsProjectTeamApiOutput {
   id?: string;
@@ -9407,22 +10274,11 @@ export interface ProjectsProjectTeamApiOutput {
   teamId?: string;
 }
 
-export type ProjectsProjectTeamParticipationMode =
-  "AllMembers" | "SelectedMembers";
+export type ProjectsProjectTeamParticipationMode = 'AllMembers' | 'SelectedMembers';
 
-export type ProjectsProjectTeamRole =
-  "Owner" | "CoOwner" | "Contributor" | "Guest";
+export type ProjectsProjectTeamRole = 'Owner' | 'CoOwner' | 'Contributor' | 'Guest';
 
-export type ProjectsProjectType =
-  | "Game"
-  | "Tool"
-  | "Art"
-  | "Music"
-  | "Educational"
-  | "Plugin"
-  | "Template"
-  | "Library"
-  | "Other";
+export type ProjectsProjectType = 'Game' | 'Tool' | 'Art' | 'Music' | 'Educational' | 'Plugin' | 'Template' | 'Library' | 'Other';
 
 export interface ProjectsProjectUserApiOutput {
   id?: string;
@@ -9442,7 +10298,7 @@ export interface ProjectsProjectVersion {
   isNew?: boolean;
   projectId?: string;
   releaseNotes?: string | null;
-  status: string;
+  status: ProjectsProjectVersionStatus;
   tenantId?: string | null;
   updatedAt: string;
   version?: number;
@@ -9456,7 +10312,7 @@ export interface ProjectsProjectVersionApiOutput {
   downloadCount?: number;
   projectId?: string;
   releaseNotes?: string | null;
-  status?: string | null;
+  status?: ProjectsProjectVersionStatus;
   updatedAt?: string;
   versionNumber?: string | null;
 }
@@ -9465,10 +10321,12 @@ export interface ProjectsProjectVersionOptionProjection {
   id?: string;
   projectId?: string;
   projectTitle?: string | null;
-  status?: string | null;
+  status?: ProjectsProjectVersionStatus;
   updatedAt?: string;
   versionNumber?: string | null;
 }
+
+export type ProjectsProjectVersionStatus = 'Draft' | 'ReadyForTesting' | 'Released' | 'Archived';
 
 export interface ProjectsShareProjectInput {
   permissions?: string | null;
@@ -9518,14 +10376,18 @@ export interface ProjectsUpdateProjectInput {
   websiteUrl?: string | null;
 }
 
-export type ProjectWorkProjectWorkColumnKind =
-  "Backlog" | "Ready" | "InProgress" | "InReview" | "Done" | "Custom";
+export interface ProjectsUpdateProjectVersionInput {
+  releaseNotes?: string | null;
+  versionNumber: string;
+}
 
-export type ProjectWorkProjectWorkTaskPriority =
-  "Low" | "Normal" | "High" | "Urgent";
+export type ProjectsVersionSubmissionPolicy = 'ReadyMutableUntilReview' | 'ReleasedImmutable';
 
-export type ProjectWorkProjectWorkTaskStatus =
-  "Backlog" | "Ready" | "InProgress" | "InReview" | "Done" | "Cancelled";
+export type ProjectWorkProjectWorkColumnKind = 'Backlog' | 'Ready' | 'InProgress' | 'InReview' | 'Done' | 'Custom';
+
+export type ProjectWorkProjectWorkTaskPriority = 'Low' | 'Normal' | 'High' | 'Urgent';
+
+export type ProjectWorkProjectWorkTaskStatus = 'Backlog' | 'Ready' | 'InProgress' | 'InReview' | 'Done' | 'Cancelled';
 
 export interface ResourcesArchiveResourceUsageRecordsInput {
   olderThan?: string;
@@ -9566,8 +10428,7 @@ export interface ResourcesContentsBulkGeneratedContractsOutput {
   totalRequested?: number;
 }
 
-export type ResourcesContentsContentReviewDecision =
-  "Pending" | "Approve" | "RequestChanges" | "Reject";
+export type ResourcesContentsContentReviewDecision = 'Pending' | 'Approve' | 'RequestChanges' | 'Reject';
 
 export interface ResourcesContentsContentVersion {
   id?: string;
@@ -9616,14 +10477,7 @@ export interface ResourcesContentsContentVersionReview {
   suggestions?: string | null;
 }
 
-export type ResourcesContentsContentVersionStatus =
-  | "Draft"
-  | "PendingReview"
-  | "Approved"
-  | "Rejected"
-  | "Scheduled"
-  | "Published"
-  | "Archived";
+export type ResourcesContentsContentVersionStatus = 'Draft' | 'PendingReview' | 'Approved' | 'Rejected' | 'Scheduled' | 'Published' | 'Archived';
 
 export interface ResourcesContentsCreateDraftInput {
   body?: string | null;
@@ -9765,8 +10619,7 @@ export interface ResourcesResourceQuotaOutput {
   usagePercentage?: number;
 }
 
-export type ResourcesResourceQuotaPeriod =
-  "Daily" | "Weekly" | "Monthly" | "Quarterly" | "Yearly" | "Unlimited";
+export type ResourcesResourceQuotaPeriod = 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Yearly' | 'Unlimited';
 
 export interface ResourcesResourceSettings {
   id?: string;
@@ -9795,36 +10648,36 @@ export interface ResourcesResourceSettings {
 }
 
 export type ResourcesResourceUsageType =
-  | "Users"
-  | "Projects"
-  | "Storage"
-  | "ApiCalls"
-  | "Programs"
-  | "Courses"
-  | "FeatureFlags"
-  | "SubscriptionPlans"
-  | "Products"
-  | "TestingSessions"
-  | "Roles"
-  | "Tenants"
-  | "Subscriptions"
-  | "SLOs"
-  | "AccessReviewCampaigns"
-  | "SoDRules"
-  | "AbacPolicies"
-  | "ConditionalPolicies"
-  | "Wallets"
-  | "Disputes"
-  | "PromoCodes"
-  | "Orders"
-  | "AuditEntries"
-  | "Assets"
-  | "AssetStorage"
-  | "AssetDownloads"
-  | "AssetTransformations"
-  | "AiRequests"
-  | "AiTokens"
-  | "Teams";
+  | 'Users'
+  | 'Projects'
+  | 'Storage'
+  | 'ApiCalls'
+  | 'Programs'
+  | 'Courses'
+  | 'FeatureFlags'
+  | 'SubscriptionPlans'
+  | 'Products'
+  | 'TestingSessions'
+  | 'Roles'
+  | 'Tenants'
+  | 'Subscriptions'
+  | 'SLOs'
+  | 'AccessReviewCampaigns'
+  | 'SoDRules'
+  | 'AbacPolicies'
+  | 'ConditionalPolicies'
+  | 'Wallets'
+  | 'Disputes'
+  | 'PromoCodes'
+  | 'Orders'
+  | 'AuditEntries'
+  | 'Assets'
+  | 'AssetStorage'
+  | 'AssetDownloads'
+  | 'AssetTransformations'
+  | 'AiRequests'
+  | 'AiTokens'
+  | 'Teams';
 
 export interface ResourcesSetQuotaInput {
   hardLimit?: number | null;
@@ -9861,7 +10714,7 @@ export interface ResourcesToggleResourceQuotaInput {
   isActive?: boolean;
 }
 
-export type ResourcesTrendGranularity = "Daily" | "Weekly" | "Monthly";
+export type ResourcesTrendGranularity = 'Daily' | 'Weekly' | 'Monthly';
 
 export interface ResourcesUsageRecord {
   id?: string;
@@ -9924,7 +10777,7 @@ export interface SocialBlogBlogPost {
   viewsCount?: number;
 }
 
-export type SocialBlogBlogPostStatus = "Draft" | "Published" | "Archived";
+export type SocialBlogBlogPostStatus = 'Draft' | 'Published' | 'Archived';
 
 export interface SocialBlogCreateBlogPostInput {
   authorId?: string;
@@ -9944,13 +10797,7 @@ export interface SocialFeedAddFeedItemInput {
   userId?: string;
 }
 
-export type SocialFeedFeedContentType =
-  | "Post"
-  | "BlogPost"
-  | "CourseReview"
-  | "ProjectUpdate"
-  | "Achievement"
-  | "CourseCompletion";
+export type SocialFeedFeedContentType = 'Post' | 'BlogPost' | 'CourseReview' | 'ProjectUpdate' | 'Achievement' | 'CourseCompletion';
 
 export interface SocialFeedFeedItem {
   id?: string;
@@ -9966,14 +10813,7 @@ export interface SocialFeedFeedItem {
   userId?: string;
 }
 
-export type SocialFeedFeedItemReason =
-  | "Following"
-  | "Trending"
-  | "Recommended"
-  | "Mentioned"
-  | "Replied"
-  | "Liked"
-  | "InNetwork";
+export type SocialFeedFeedItemReason = 'Following' | 'Trending' | 'Recommended' | 'Mentioned' | 'Replied' | 'Liked' | 'InNetwork';
 
 export interface SocialGroupsApproveSocialGroupMemberInput {
   approvedByUserId?: string;
@@ -10026,24 +10866,15 @@ export interface SocialGroupsSocialGroupMember {
   userId?: string;
 }
 
-export type SocialGroupsSocialGroupMemberRole =
-  "Owner" | "Admin" | "Moderator" | "Member";
+export type SocialGroupsSocialGroupMemberRole = 'Owner' | 'Admin' | 'Moderator' | 'Member';
 
-export type SocialGroupsSocialGroupMembershipStatus =
-  "Pending" | "Active" | "Rejected" | "Removed";
+export type SocialGroupsSocialGroupMembershipStatus = 'Pending' | 'Active' | 'Rejected' | 'Removed';
 
-export type SocialGroupsSocialGroupStatus = "Active" | "Archived" | "Suspended";
+export type SocialGroupsSocialGroupStatus = 'Active' | 'Archived' | 'Suspended';
 
-export type SocialGroupsSocialGroupType =
-  | "StudyGroup"
-  | "ProjectTeam"
-  | "InterestCommunity"
-  | "CourseCohort"
-  | "Institution"
-  | "GameJamTeam";
+export type SocialGroupsSocialGroupType = 'StudyGroup' | 'ProjectTeam' | 'InterestCommunity' | 'CourseCohort' | 'Institution' | 'GameJamTeam';
 
-export type SocialGroupsSocialGroupVisibility =
-  "Public" | "Private" | "InviteOnly";
+export type SocialGroupsSocialGroupVisibility = 'Public' | 'Private' | 'InviteOnly';
 
 export interface SocialGroupsUpdateSocialGroupInput {
   description?: string | null;
@@ -10082,10 +10913,9 @@ export interface SocialPostsControllersUpdatePostInput {
   content?: string | null;
 }
 
-export type SocialPostsMediaType = "Image" | "Video" | "Audio" | "Document";
+export type SocialPostsMediaType = 'Image' | 'Video' | 'Audio' | 'Document';
 
-export type SocialPostsPostVisibility =
-  "Public" | "Followers" | "Private" | "Unlisted";
+export type SocialPostsPostVisibility = 'Public' | 'Followers' | 'Private' | 'Unlisted';
 
 export interface SocialProfilesAddProfilePortfolioItemBody {
   description?: string | null;
@@ -10103,8 +10933,7 @@ export interface SocialProfilesAddProfileSkillBody {
   proficiency?: SocialProfilesProfileSkillProficiency;
 }
 
-export type SocialProfilesProfileAvailabilityStatus =
-  "NotSet" | "OpenToWork" | "OpenToCollaborate" | "Busy" | "Hidden";
+export type SocialProfilesProfileAvailabilityStatus = 'NotSet' | 'OpenToWork' | 'OpenToCollaborate' | 'Busy' | 'Hidden';
 
 export interface SocialProfilesProfilePortfolioItem {
   id?: string;
@@ -10126,11 +10955,9 @@ export interface SocialProfilesProfileSkill {
   profileId?: string;
 }
 
-export type SocialProfilesProfileSkillProficiency =
-  "Beginner" | "Intermediate" | "Advanced" | "Expert";
+export type SocialProfilesProfileSkillProficiency = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
 
-export type SocialProfilesProfileVisibility =
-  "Private" | "Connections" | "Public";
+export type SocialProfilesProfileVisibility = 'Private' | 'Connections' | 'Public';
 
 export interface SocialProfilesSocialProfile {
   id?: string;
@@ -10207,11 +11034,9 @@ export interface SocialReactionsReaction {
   userId?: string;
 }
 
-export type SocialReactionsReactionTargetType =
-  "Post" | "Comment" | "BlogPost" | "CourseReview" | "Discussion" | "Reply";
+export type SocialReactionsReactionTargetType = 'Post' | 'Comment' | 'BlogPost' | 'CourseReview' | 'Discussion' | 'Reply';
 
-export type SocialReactionsReactionType =
-  "Like" | "Love" | "Insightful" | "Celebrate" | "Support" | "Curious";
+export type SocialReactionsReactionType = 'Like' | 'Love' | 'Insightful' | 'Celebrate' | 'Support' | 'Curious';
 
 export interface SocialReactionsRemoveReactionInput {
   targetId?: string;
@@ -10227,27 +11052,13 @@ export interface SocialReactionsSetReactionInput {
 }
 
 export interface SocialReactionsTargetReactionSummary {
-  counts?: {
-    Celebrate?: number;
-    Curious?: number;
-    Insightful?: number;
-    Like?: number;
-    Love?: number;
-    Support?: number;
-  } | null;
+  counts?: { Celebrate?: number; Curious?: number; Insightful?: number; Like?: number; Love?: number; Support?: number } | null;
   targetId?: string;
   targetType?: SocialReactionsReactionTargetType;
   total?: number;
 }
 
-export type SystemDayOfWeek =
-  | "Sunday"
-  | "Monday"
-  | "Tuesday"
-  | "Wednesday"
-  | "Thursday"
-  | "Friday"
-  | "Saturday";
+export type SystemDayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 
 export interface TeamsTeam {
   id?: string;
@@ -10317,12 +11128,11 @@ export interface TeamsTeamMember {
   version?: number;
 }
 
-export type TeamsTeamMemberAuthority =
-  "Viewer" | "Member" | "Manager" | "Owner";
+export type TeamsTeamMemberAuthority = 'Viewer' | 'Member' | 'Manager' | 'Owner';
 
-export type TeamsTeamStatus = "Active" | "Archived";
+export type TeamsTeamStatus = 'Active' | 'Archived';
 
-export type TeamsTeamVisibility = "Private" | "Tenant" | "Public";
+export type TeamsTeamVisibility = 'Private' | 'Tenant' | 'Public';
 
 export interface TenantInfo {
   id?: string;
@@ -10350,8 +11160,7 @@ export interface TestingLabAssignTestingProjectToTesterInput {
   applicationId?: string;
 }
 
-export type TestingLabAttendanceStatus =
-  "Registered" | "Present" | "Completed" | "NoShow";
+export type TestingLabAttendanceStatus = 'Registered' | 'Present' | 'Completed' | 'NoShow';
 
 export interface TestingLabCancelTestingEventInput {
   reason?: string | null;
@@ -10360,6 +11169,14 @@ export interface TestingLabCancelTestingEventInput {
 export interface TestingLabCastTestingApplicationVoteInput {
   comments?: string | null;
   decision?: TestingLabTestingApplicationVoteDecision;
+}
+
+export interface TestingLabConfigureTestingEventInput {
+  candidateInstructions?: string | null;
+  generalRules?: string | null;
+  projectApplicationSchema?: TestingLabQuestionnaireSchema;
+  testerInstructions?: string | null;
+  testerRegistrationSchema?: TestingLabQuestionnaireSchema;
 }
 
 export interface TestingLabConfigureTestingEventLearningInput {
@@ -10396,6 +11213,7 @@ export interface TestingLabCreateTestingEventInput {
   recurrence?: TestingLabTestingEventRecurrenceInput;
   requiresFeedback?: boolean;
   startsAt?: string;
+  templateRevisionId?: string | null;
 }
 
 export interface TestingLabCreateTestingInput {
@@ -10430,6 +11248,7 @@ export interface TestingLabCreateTestingLabSettings {
   reminderDaysBefore?: string | null;
   requireApproval?: boolean;
   timezone: string;
+  versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
 export interface TestingLabCreateTestingLocation {
@@ -10450,6 +11269,10 @@ export interface TestingLabCreateTestingLocation {
   virtualUrl?: string | null;
 }
 
+export interface TestingLabCreateTestingProjectApplicationDraftInput {
+  projectId?: string;
+}
+
 export interface TestingLabCreateTestingSession {
   endTime: string;
   locationId: string;
@@ -10468,8 +11291,7 @@ export interface TestingLabDecideTestingProjectApplicationInput {
   slotId?: string | null;
 }
 
-export type TestingLabFeedbackFormType =
-  "General" | "BugReport" | "Usability" | "Performance" | "Accessibility";
+export type TestingLabFeedbackFormType = 'General' | 'BugReport' | 'Usability' | 'Performance' | 'Accessibility';
 
 export interface TestingLabFeedbackInput {
   additionalNotes?: string | null;
@@ -10479,7 +11301,7 @@ export interface TestingLabFeedbackInput {
   testingContext?: TestingLabTestingContext;
 }
 
-export type TestingLabFeedbackQuality = "Low" | "Medium" | "High";
+export type TestingLabFeedbackQuality = 'Low' | 'Medium' | 'High';
 
 export interface TestingLabFeedbackQualityRating {
   id?: string;
@@ -10508,7 +11330,7 @@ export interface TestingLabGrantResourcePermissionInput {
   tenantId?: string | null;
 }
 
-export type TestingLabInstructionType = "Text" | "Url" | "File";
+export type TestingLabInstructionType = 'Text' | 'Url' | 'File';
 
 export interface TestingLabLinkSessionProjectInput {
   notes?: string | null;
@@ -10516,10 +11338,9 @@ export interface TestingLabLinkSessionProjectInput {
   projectVersionId?: string | null;
 }
 
-export type TestingLabLocationStatus = "Active" | "Maintenance" | "Inactive";
+export type TestingLabLocationStatus = 'Active' | 'Maintenance' | 'Inactive';
 
-export type TestingLabParticipationStatus =
-  "Registered" | "Active" | "Completed" | "Withdrawn" | "Suspended";
+export type TestingLabParticipationStatus = 'Registered' | 'Active' | 'Completed' | 'Withdrawn' | 'Suspended';
 
 export interface TestingLabPublicTestingEventProjection {
   id?: string;
@@ -10527,6 +11348,7 @@ export interface TestingLabPublicTestingEventProjection {
   applicationsCloseAt?: string;
   applicationsOpenAt?: string;
   approvalMode?: TestingLabTestingEventApprovalMode;
+  configuration?: TestingLabTestingEventConfigurationProjection;
   description?: string | null;
   endsAt?: string;
   mode?: TestingLabTestingEventMode;
@@ -10553,21 +11375,71 @@ export interface TestingLabPublicTestingEventSlotProjection {
   startsAt?: string;
 }
 
+export interface TestingLabQuestionnaireAnswer {
+  questionId?: string | null;
+  selectedOptionIds?: Array<string> | null;
+  textValue?: string | null;
+}
+
+export interface TestingLabQuestionnaireCondition {
+  operator?: TestingLabQuestionnaireConditionOperator;
+  questionId?: string | null;
+  value?: string | null;
+}
+
+export type TestingLabQuestionnaireConditionOperator = 'Equals' | 'NotEquals' | 'Includes';
+
+export interface TestingLabQuestionnaireOption {
+  id?: string | null;
+  label?: string | null;
+}
+
+export interface TestingLabQuestionnaireOutput {
+  answers?: Array<TestingLabQuestionnaireAnswer> | null;
+}
+
+export interface TestingLabQuestionnaireQuestion {
+  id?: string | null;
+  condition?: TestingLabQuestionnaireCondition;
+  options?: Array<TestingLabQuestionnaireOption> | null;
+  prompt?: string | null;
+  required?: boolean;
+  type?: TestingLabQuestionnaireQuestionType;
+}
+
+export type TestingLabQuestionnaireQuestionType = 'FreeText' | 'SingleChoice' | 'MultipleChoice';
+
+export interface TestingLabQuestionnaireSchema {
+  questions?: Array<TestingLabQuestionnaireQuestion> | null;
+  title?: string | null;
+}
+
 export interface TestingLabRateFeedbackQuality {
   quality?: TestingLabFeedbackQuality;
 }
 
 export interface TestingLabRegisterTestingEventSlotInput {
+  acceptedRules?: boolean;
   notes?: string | null;
+  registrationResponse?: TestingLabQuestionnaireOutput;
 }
 
-export type TestingLabRegistrationStatus =
-  "Registered" | "Confirmed" | "Cancelled" | "Attended" | "NoShow";
+export type TestingLabRegistrationStatus = 'Registered' | 'Confirmed' | 'Cancelled' | 'Attended' | 'NoShow';
 
-export type TestingLabRegistrationType = "ProjectMember" | "Tester";
+export type TestingLabRegistrationType = 'ProjectMember' | 'Tester';
 
 export interface TestingLabReportFeedback {
   reason?: string | null;
+}
+
+export interface TestingLabSaveTestingProjectApplicationDraftInput {
+  acceptedRules?: boolean | null;
+  brief?: TestingLabTestingProjectBrief;
+  eventApplicationResponse?: TestingLabQuestionnaireOutput;
+  feedbackQuestionnaire?: TestingLabQuestionnaireSchema;
+  preferredAvailability?: string | null;
+  projectVersionId?: string | null;
+  submittedAssetReferenceIds?: Array<string> | null;
 }
 
 export interface TestingLabSessionProjectProjection {
@@ -10614,8 +11486,7 @@ export interface TestingLabSessionRegistrationInput {
   registrationType?: TestingLabRegistrationType;
 }
 
-export type TestingLabSessionStatus =
-  "Scheduled" | "Active" | "Completed" | "Cancelled";
+export type TestingLabSessionStatus = 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
 
 export interface TestingLabSessionWaitlist {
   id?: string;
@@ -10650,10 +11521,16 @@ export interface TestingLabSubmitTestingEventFeedbackInput {
   additionalNotes?: string | null;
   feedbackData?: string | null;
   overallRating?: number | null;
+  questionnaireRevisionId?: string | null;
+  responses?: TestingLabQuestionnaireOutput;
   wouldRecommend?: boolean | null;
 }
 
 export interface TestingLabSubmitTestingProjectApplicationInput {
+  acceptedRules?: boolean;
+  brief?: TestingLabTestingProjectBrief;
+  eventApplicationResponse?: TestingLabQuestionnaireOutput;
+  feedbackQuestionnaire?: TestingLabQuestionnaireSchema;
   preferredAvailability?: string | null;
   projectId?: string;
   projectVersionId?: string;
@@ -10671,20 +11548,16 @@ export interface TestingLabTestingApplicationReviewAssetProjection {
 export interface TestingLabTestingApplicationReviewPackageProjection {
   applicationId?: string;
   assets?: Array<TestingLabTestingApplicationReviewAssetProjection> | null;
+  brief?: TestingLabTestingProjectBrief;
+  feedbackQuestionnaire?: TestingLabQuestionnaireSchema;
   projectId?: string;
   projectVersionId?: string;
   releaseNotes?: string | null;
   versionNumber?: string | null;
-  versionStatus?: string | null;
+  versionStatus?: ProjectsProjectVersionStatus;
 }
 
-export type TestingLabTestingApplicationStatus =
-  | "Pending"
-  | "UnderReview"
-  | "Approved"
-  | "Rejected"
-  | "Waitlisted"
-  | "Withdrawn";
+export type TestingLabTestingApplicationStatus = 'Draft' | 'Pending' | 'UnderReview' | 'Approved' | 'Rejected' | 'Waitlisted' | 'Withdrawn';
 
 export interface TestingLabTestingApplicationTesterEligibilityProjection {
   eligibleApplicationIds?: Array<string> | null;
@@ -10710,8 +11583,7 @@ export interface TestingLabTestingApplicationVote {
   version?: number;
 }
 
-export type TestingLabTestingApplicationVoteDecision =
-  "Approve" | "Reject" | "Abstain";
+export type TestingLabTestingApplicationVoteDecision = 'Approve' | 'Reject' | 'Abstain';
 
 export interface TestingLabTestingApplicationVoteProjection {
   id?: string;
@@ -10740,7 +11612,7 @@ export interface TestingLabTestingCommitteeMember {
   version?: number;
 }
 
-export type TestingLabTestingContext = "Online" | "InPerson";
+export type TestingLabTestingContext = 'Online' | 'InPerson';
 
 export interface TestingLabTestingEvent {
   id?: string;
@@ -10750,14 +11622,17 @@ export interface TestingLabTestingEvent {
   approvalMode?: TestingLabTestingEventApprovalMode;
   cancellationReason?: string | null;
   cancelledAt?: string | null;
+  candidateInstructions?: string | null;
   cohortId?: string | null;
   committeeMembers?: Array<TestingLabTestingCommitteeMember> | null;
+  configurationFrozenAt?: string | null;
   courseId?: string | null;
   createdAt: string;
   deletedAt?: string | null;
   description?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   endsAt?: string;
+  generalRules?: string | null;
   isDeleted?: boolean;
   isGlobal?: boolean;
   isNew?: boolean;
@@ -10767,6 +11642,8 @@ export interface TestingLabTestingEvent {
   managerUserId?: string;
   mode?: TestingLabTestingEventMode;
   name: string;
+  projectApplicationSchema?: TestingLabQuestionnaireSchema;
+  projectApplicationSchemaJson?: string | null;
   recurrenceDaysOfWeek?: string | null;
   recurrenceEndsAt?: string | null;
   recurrenceFrequency?: TestingLabTestingEventRecurrenceFrequency;
@@ -10778,14 +11655,25 @@ export interface TestingLabTestingEvent {
   requiresFeedback?: boolean;
   sentReminderDays?: string | null;
   slots?: Array<TestingLabTestingEventSlot> | null;
+  sourceTemplateId?: string | null;
+  sourceTemplateRevisionId?: string | null;
   startsAt?: string;
   status?: TestingLabTestingEventStatus;
   tenantId?: string | null;
+  testerInstructions?: string | null;
+  testerRegistrationSchema?: TestingLabQuestionnaireSchema;
+  testerRegistrationSchemaJson?: string | null;
   updatedAt: string;
   version?: number;
 }
 
-export type TestingLabTestingEventApprovalMode = "ManagerOnly" | "Committee";
+export interface TestingLabTestingEventApplicationAccessProjection {
+  canManageApplications?: boolean;
+  canViewApplications?: boolean;
+  canVote?: boolean;
+}
+
+export type TestingLabTestingEventApprovalMode = 'ManagerOnly' | 'Committee';
 
 export interface TestingLabTestingEventCommitteeMemberProjection {
   id?: string;
@@ -10797,6 +11685,17 @@ export interface TestingLabTestingEventCommitteeMemberProjection {
   userName?: string | null;
 }
 
+export interface TestingLabTestingEventConfigurationProjection {
+  candidateInstructions?: string | null;
+  frozenAt?: string | null;
+  generalRules?: string | null;
+  projectApplicationSchema?: TestingLabQuestionnaireSchema;
+  sourceTemplateId?: string | null;
+  sourceTemplateRevisionId?: string | null;
+  testerInstructions?: string | null;
+  testerRegistrationSchema?: TestingLabQuestionnaireSchema;
+}
+
 export interface TestingLabTestingEventFeedbackProjection {
   id?: string;
   additionalNotes?: string | null;
@@ -10804,6 +11703,8 @@ export interface TestingLabTestingEventFeedbackProjection {
   eventId?: string;
   feedbackData?: string | null;
   overallRating?: number | null;
+  questionnaireRevisionId?: string | null;
+  responses?: TestingLabQuestionnaireOutput;
   submittedAt?: string;
   testerUserId?: string;
   wouldRecommend?: boolean | null;
@@ -10820,7 +11721,7 @@ export interface TestingLabTestingEventFeedbackReviewProjection {
   testerUserId?: string;
 }
 
-export type TestingLabTestingEventMode = "Online" | "InPerson" | "Hybrid";
+export type TestingLabTestingEventMode = 'Online' | 'InPerson' | 'Hybrid';
 
 export interface TestingLabTestingEventProjection {
   id?: string;
@@ -10829,6 +11730,7 @@ export interface TestingLabTestingEventProjection {
   applicationsOpenAt?: string;
   approvalMode?: TestingLabTestingEventApprovalMode;
   cohortId?: string | null;
+  configuration?: TestingLabTestingEventConfigurationProjection;
   courseId?: string | null;
   description?: string | null;
   endsAt?: string;
@@ -10851,8 +11753,7 @@ export interface TestingLabTestingEventProjection {
   tenantId?: string | null;
 }
 
-export type TestingLabTestingEventRecurrenceFrequency =
-  "Daily" | "Weekly" | "Monthly";
+export type TestingLabTestingEventRecurrenceFrequency = 'Daily' | 'Weekly' | 'Monthly';
 
 export interface TestingLabTestingEventRecurrenceInput {
   daysOfWeek?: Array<SystemDayOfWeek> | null;
@@ -10905,14 +11806,33 @@ export interface TestingLabTestingEventSlotProjection {
   startsAt?: string;
 }
 
-export type TestingLabTestingEventStatus =
-  | "Draft"
-  | "ApplicationsOpen"
-  | "ApplicationsClosed"
-  | "Scheduled"
-  | "Active"
-  | "Completed"
-  | "Cancelled";
+export type TestingLabTestingEventStatus = 'Draft' | 'ApplicationsOpen' | 'ApplicationsClosed' | 'Scheduled' | 'Active' | 'Completed' | 'Cancelled';
+
+export interface TestingLabTestingEventTemplateProjection {
+  id?: string;
+  currentRevision?: TestingLabTestingEventTemplateRevisionProjection;
+  currentRevisionNumber?: number;
+  description?: string | null;
+  isArchived?: boolean;
+  name?: string | null;
+  tenantId?: string;
+}
+
+export interface TestingLabTestingEventTemplateRevisionProjection {
+  id?: string;
+  candidateInstructions?: string | null;
+  createdAt?: string;
+  createdByUserId?: string;
+  defaultApprovalMode?: TestingLabTestingEventApprovalMode;
+  defaultMode?: TestingLabTestingEventMode;
+  defaultRequiresFeedback?: boolean;
+  generalRules?: string | null;
+  projectApplicationSchema?: TestingLabQuestionnaireSchema;
+  revisionNumber?: number;
+  templateId?: string;
+  testerInstructions?: string | null;
+  testerRegistrationSchema?: TestingLabQuestionnaireSchema;
+}
 
 export interface TestingLabTestingFeedback {
   id?: string;
@@ -10937,6 +11857,7 @@ export interface TestingLabTestingFeedback {
   overallRating?: number | null;
   qualityRating?: TestingLabFeedbackQuality;
   qualityRatings?: Array<TestingLabFeedbackQualityRating> | null;
+  questionnaireRevisionId?: string | null;
   reportedAt?: string | null;
   reportedBy?: IdentityUsersUser;
   reportedById?: string | null;
@@ -10944,6 +11865,8 @@ export interface TestingLabTestingFeedback {
   reportReason?: string | null;
   session?: TestingLabTestingSession;
   sessionId?: string | null;
+  structuredResponses?: TestingLabQuestionnaireOutput;
+  structuredResponsesJson?: string | null;
   tenantId?: string | null;
   testingContext: TestingLabTestingContext;
   testingRequest?: TestingLabTestingInput;
@@ -11024,15 +11947,15 @@ export interface TestingLabTestingFeedbackObligationProjection {
   eventId?: string;
   feedbackId?: string | null;
   fulfilledAt?: string | null;
+  questionnaireRevisionId?: string | null;
   slotId?: string;
   status?: TestingLabTestingFeedbackObligationStatus;
   testerUserId?: string;
 }
 
-export type TestingLabTestingFeedbackObligationStatus =
-  "Pending" | "Fulfilled" | "Waived";
+export type TestingLabTestingFeedbackObligationStatus = 'Pending' | 'Fulfilled' | 'Waived';
 
-export type TestingLabTestingFeedbackSource = "Request" | "Event";
+export type TestingLabTestingFeedbackSource = 'Request' | 'Event';
 
 export interface TestingLabTestingInput {
   id?: string;
@@ -11191,6 +12114,7 @@ export interface TestingLabTestingLabSettings {
   tenantId?: string | null;
   timezone?: string | null;
   updatedAt?: string;
+  versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
 /** A comma-separated combination of the declared flag names. */
@@ -11230,7 +12154,7 @@ export interface TestingLabTestingLocation {
   virtualUrl?: string | null;
 }
 
-export type TestingLabTestingMode = "Online" | "InPerson" | "Hybrid";
+export type TestingLabTestingMode = 'Online' | 'InPerson' | 'Hybrid';
 
 export interface TestingLabTestingParticipant {
   id?: string;
@@ -11305,13 +12229,16 @@ export interface TestingLabTestingParticipantMutationProjection {
   userId?: string;
 }
 
-export type TestingLabTestingPriority = "Low" | "Medium" | "High" | "Critical";
+export type TestingLabTestingPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export interface TestingLabTestingProjectApplication {
   id?: string;
   assignedSlot?: TestingLabTestingEventSlot;
   assignedSlotId?: string | null;
+  brief?: TestingLabTestingProjectBrief;
+  briefJson?: string | null;
   createdAt: string;
+  currentQuestionnaireRevisionId?: string | null;
   decidedAt?: string | null;
   decidedBy?: IdentityUsersUser;
   decidedByUserId?: string | null;
@@ -11319,6 +12246,8 @@ export interface TestingLabTestingProjectApplication {
   deletedAt?: string | null;
   domainEvents?: Array<CQRSIDomainEvent> | null;
   event?: TestingLabTestingEvent;
+  eventApplicationResponse?: TestingLabQuestionnaireOutput;
+  eventApplicationResponseJson?: string | null;
   eventId?: string;
   isDeleted?: boolean;
   isGlobal?: boolean;
@@ -11328,7 +12257,10 @@ export interface TestingLabTestingProjectApplication {
   projectId?: string;
   projectVersion?: ProjectsProjectVersion;
   projectVersionId?: string | null;
+  questionnaireRevisions?: Array<TestingLabTestingQuestionnaireRevision> | null;
+  rulesAcceptedAt?: string | null;
   status?: TestingLabTestingApplicationStatus;
+  submissionVersionPolicy?: ProjectsVersionSubmissionPolicy;
   submittedAssetReferenceIds?: Array<string> | null;
   submittedAssetReferenceIdsJson?: string | null;
   submittedBy?: IdentityUsersUser;
@@ -11342,17 +12274,50 @@ export interface TestingLabTestingProjectApplication {
 export interface TestingLabTestingProjectApplicationProjection {
   id?: string;
   assignedSlotId?: string | null;
+  brief?: TestingLabTestingProjectBrief;
+  currentQuestionnaireRevisionId?: string | null;
   decidedAt?: string | null;
   decidedByUserId?: string | null;
   decisionRationale?: string | null;
+  eventApplicationResponse?: TestingLabQuestionnaireOutput;
   eventId?: string;
+  feedbackQuestionnaire?: TestingLabQuestionnaireSchema;
   preferredAvailability?: string | null;
   projectId?: string;
   projectVersionId?: string | null;
+  rulesAcceptedAt?: string | null;
   status?: TestingLabTestingApplicationStatus;
+  submissionVersionPolicy?: ProjectsVersionSubmissionPolicy;
   submittedAssetReferenceIds?: Array<string> | null;
   submittedByUserId?: string;
   votes?: Array<TestingLabTestingApplicationVoteProjection> | null;
+}
+
+export interface TestingLabTestingProjectBrief {
+  controls?: string | null;
+  installationAndAccess?: string | null;
+  knownLimitations?: string | null;
+  links?: Array<string> | null;
+  testObjective?: string | null;
+  testTasks?: Array<string> | null;
+}
+
+export interface TestingLabTestingQuestionnaireRevision {
+  id?: string;
+  applicationId?: string;
+  createdAt: string;
+  createdByUserId?: string;
+  deletedAt?: string | null;
+  domainEvents?: Array<CQRSIDomainEvent> | null;
+  isDeleted?: boolean;
+  isGlobal?: boolean;
+  isNew?: boolean;
+  revisionNumber?: number;
+  schema?: TestingLabQuestionnaireSchema;
+  schemaJson: string;
+  tenantId?: string | null;
+  updatedAt: string;
+  version?: number;
 }
 
 export interface TestingLabTestingRequestDetailProjection {
@@ -11382,18 +12347,11 @@ export interface TestingLabTestingRequestProjectVersionProjection {
   id?: string;
   project?: TestingLabTestingRequestProjectProjection;
   projectId?: string;
-  status?: string | null;
+  status?: ProjectsProjectVersionStatus;
   versionNumber?: string | null;
 }
 
-export type TestingLabTestingRequestStatus =
-  | "Draft"
-  | "Open"
-  | "Active"
-  | "InProgress"
-  | "Paused"
-  | "Completed"
-  | "Cancelled";
+export type TestingLabTestingRequestStatus = 'Draft' | 'Open' | 'Active' | 'InProgress' | 'Paused' | 'Completed' | 'Cancelled';
 
 export interface TestingLabTestingSession {
   id?: string;
@@ -11441,25 +12399,21 @@ export interface TestingLabTestingSlotRegistrationProjection {
   checkedInAt?: string | null;
   checkedOutAt?: string | null;
   completedAt?: string | null;
+  eventConfigurationFrozenAt?: string | null;
   eventId?: string;
   notes?: string | null;
   pendingFeedbackCount?: number;
   promotedAt?: string | null;
   registeredAt?: string;
+  registrationResponse?: TestingLabQuestionnaireOutput;
+  rulesAcceptedAt?: string | null;
   slotId?: string;
   status?: TestingLabTestingSlotRegistrationStatus;
   userId?: string;
   waitlistPosition?: number | null;
 }
 
-export type TestingLabTestingSlotRegistrationStatus =
-  | "Registered"
-  | "Waitlisted"
-  | "CheckedIn"
-  | "Attended"
-  | "Completed"
-  | "Cancelled"
-  | "NoShow";
+export type TestingLabTestingSlotRegistrationStatus = 'Registered' | 'Waitlisted' | 'CheckedIn' | 'Attended' | 'Completed' | 'Cancelled' | 'NoShow';
 
 export interface TestingLabUpdateAttendance {
   attendanceStatus?: TestingLabAttendanceStatus;
@@ -11510,6 +12464,7 @@ export interface TestingLabUpdateTestingLabSettings {
   reminderDaysBefore?: string | null;
   requireApproval?: boolean | null;
   timezone?: string | null;
+  versionSubmissionPolicy?: ProjectsVersionSubmissionPolicy;
 }
 
 export interface TestingLabUpdateTestingLocation {
@@ -11548,6 +12503,19 @@ export interface TestingLabUpsertTestingEventSlotInput {
   startsAt?: string;
 }
 
+export interface TestingLabUpsertTestingEventTemplateInput {
+  candidateInstructions?: string | null;
+  defaultApprovalMode?: TestingLabTestingEventApprovalMode;
+  defaultMode?: TestingLabTestingEventMode;
+  defaultRequiresFeedback?: boolean;
+  description?: string | null;
+  generalRules?: string | null;
+  name?: string | null;
+  projectApplicationSchema?: TestingLabQuestionnaireSchema;
+  testerInstructions?: string | null;
+  testerRegistrationSchema?: TestingLabQuestionnaireSchema;
+}
+
 export interface TestingLabUserTestingLabPermissions {
   assignedRoles?: Array<string> | null;
   permissions?: TestingLabTestingLabPermissions;
@@ -11555,6 +12523,25 @@ export interface TestingLabUserTestingLabPermissions {
   tenantId?: string | null;
   userId?: string;
 }
+
+export interface TrustSafetyTrustSafetyAppeal {
+  id?: string;
+  assignedTo?: string | null;
+  decidedAt?: string | null;
+  decidedBy?: string | null;
+  decisionEvidenceHash?: string | null;
+  reasonCode?: string | null;
+  restrictionReferenceHash?: string | null;
+  state?: TrustSafetyTrustSafetyAppealState;
+  subjectHash?: string | null;
+  submissionEvidenceHash?: string | null;
+  submittedAt?: string;
+  submittedBy?: string;
+  tenantId?: string;
+  version?: number;
+}
+
+export type TrustSafetyTrustSafetyAppealState = 'Submitted' | 'Assigned' | 'Upheld' | 'Overturned';
 
 // Zod Schema Declarations (to handle circular references)
 export let AIAiChatInputSchema: z.ZodType<AIAiChatInput>;
@@ -11597,18 +12584,56 @@ export let AnalyticsTrackAnalyticsEventCommandSchema: z.ZodType<AnalyticsTrackAn
 export let AnalyticsUpdateDashboardInputSchema: z.ZodType<AnalyticsUpdateDashboardInput>;
 export let AnalyticsWidgetTypeSchema: z.ZodType<AnalyticsWidgetType>;
 export let APIAccessAccessCapabilitiesOutputSchema: z.ZodType<APIAccessAccessCapabilitiesOutput>;
+export let APIControllersActivateEconomyKillSwitchInputSchema: z.ZodType<APIControllersActivateEconomyKillSwitchInput>;
+export let APIControllersAdRewardProtectedOperationFailureOutputSchema: z.ZodType<APIControllersAdRewardProtectedOperationFailureOutput>;
 export let APIControllersApplicationDetailsSchema: z.ZodType<APIControllersApplicationDetails>;
 export let APIControllersApplicationInfoOutputSchema: z.ZodType<APIControllersApplicationInfoOutput>;
+export let APIControllersApproveEconomyPolicyInputSchema: z.ZodType<APIControllersApproveEconomyPolicyInput>;
+export let APIControllersApproveLegacyEconomyCutoverInputSchema: z.ZodType<APIControllersApproveLegacyEconomyCutoverInput>;
+export let APIControllersApproveTreasuryWithdrawalInputSchema: z.ZodType<APIControllersApproveTreasuryWithdrawalInput>;
+export let APIControllersAssignFinancialCrimeCaseInputSchema: z.ZodType<APIControllersAssignFinancialCrimeCaseInput>;
+export let APIControllersAssignTrustSafetyAppealInputSchema: z.ZodType<APIControllersAssignTrustSafetyAppealInput>;
+export let APIControllersBackfillLegacyEconomyWalletInputSchema: z.ZodType<APIControllersBackfillLegacyEconomyWalletInput>;
 export let APIControllersBuildDetailsSchema: z.ZodType<APIControllersBuildDetails>;
+export let APIControllersCaptureLegacyEconomyMigrationInputSchema: z.ZodType<APIControllersCaptureLegacyEconomyMigrationInput>;
+export let APIControllersCompleteMyAdRewardSessionInputSchema: z.ZodType<APIControllersCompleteMyAdRewardSessionInput>;
+export let APIControllersCompleteMyBountyInputSchema: z.ZodType<APIControllersCompleteMyBountyInput>;
+export let APIControllersCreateMyBountyInputSchema: z.ZodType<APIControllersCreateMyBountyInput>;
+export let APIControllersCreateMyKycAccessTokenInputSchema: z.ZodType<APIControllersCreateMyKycAccessTokenInput>;
+export let APIControllersDecideFinancialCrimeCaseInputSchema: z.ZodType<APIControllersDecideFinancialCrimeCaseInput>;
+export let APIControllersDecideTrustSafetyAppealInputSchema: z.ZodType<APIControllersDecideTrustSafetyAppealInput>;
 export let APIControllersDependencyHealthItemSchema: z.ZodType<APIControllersDependencyHealthItem>;
 export let APIControllersDependencyHealthOutputSchema: z.ZodType<APIControllersDependencyHealthOutput>;
+export let APIControllersDispatchPayoutExecutionInputSchema: z.ZodType<APIControllersDispatchPayoutExecutionInput>;
+export let APIControllersDispatchTreasuryWithdrawalInputSchema: z.ZodType<APIControllersDispatchTreasuryWithdrawalInput>;
+export let APIControllersEconomyKycStatusSchema: z.ZodType<APIControllersEconomyKycStatus>;
+export let APIControllersEconomyPayoutExecutionOperationSchema: z.ZodType<APIControllersEconomyPayoutExecutionOperation>;
 export let APIControllersEconomySelfServiceCapabilitySchema: z.ZodType<APIControllersEconomySelfServiceCapability>;
+export let APIControllersEconomyStepUpInputSchema: z.ZodType<APIControllersEconomyStepUpInput>;
+export let APIControllersEconomyTopUpFailureOutputSchema: z.ZodType<APIControllersEconomyTopUpFailureOutput>;
+export let APIControllersEconomyTransferProtectedOperationFailureOutputSchema: z.ZodType<APIControllersEconomyTransferProtectedOperationFailureOutput>;
 export let APIControllersHealthinessOutputSchema: z.ZodType<APIControllersHealthinessOutput>;
 export let APIControllersHealthinessResponseItemSchema: z.ZodType<APIControllersHealthinessResponseItem>;
+export let APIControllersInspectEconomyCapabilityReadinessInputSchema: z.ZodType<APIControllersInspectEconomyCapabilityReadinessInput>;
 export let APIControllersLivenessOutputSchema: z.ZodType<APIControllersLivenessOutput>;
+export let APIControllersMarketplaceProtectedOperationFailureOutputSchema: z.ZodType<APIControllersMarketplaceProtectedOperationFailureOutput>;
+export let APIControllersPayoutProtectedOperationFailureOutputSchema: z.ZodType<APIControllersPayoutProtectedOperationFailureOutput>;
 export let APIControllersProcessDetailsSchema: z.ZodType<APIControllersProcessDetails>;
+export let APIControllersProposeEconomyPolicyInputSchema: z.ZodType<APIControllersProposeEconomyPolicyInput>;
+export let APIControllersProposeEconomyReserveInputSchema: z.ZodType<APIControllersProposeEconomyReserveInput>;
+export let APIControllersProposeLegacyEconomyCutoverInputSchema: z.ZodType<APIControllersProposeLegacyEconomyCutoverInput>;
+export let APIControllersProposeTreasuryWithdrawalInputSchema: z.ZodType<APIControllersProposeTreasuryWithdrawalInput>;
+export let APIControllersPublishEconomyAnchorInputSchema: z.ZodType<APIControllersPublishEconomyAnchorInput>;
 export let APIControllersReadinessOutputSchema: z.ZodType<APIControllersReadinessOutput>;
+export let APIControllersRecordRegulatoryReferenceInputSchema: z.ZodType<APIControllersRecordRegulatoryReferenceInput>;
+export let APIControllersRefundMarketplaceSettlementInputSchema: z.ZodType<APIControllersRefundMarketplaceSettlementInput>;
+export let APIControllersReserveApprovedPayoutExecutionInputSchema: z.ZodType<APIControllersReserveApprovedPayoutExecutionInput>;
+export let APIControllersResolveEconomyRiskReviewInputSchema: z.ZodType<APIControllersResolveEconomyRiskReviewInput>;
+export let APIControllersRollbackLegacyEconomyCutoverInputSchema: z.ZodType<APIControllersRollbackLegacyEconomyCutoverInput>;
 export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDetails>;
+export let APIControllersSettleMyMarketplaceOrderInputSchema: z.ZodType<APIControllersSettleMyMarketplaceOrderInput>;
+export let APIControllersStartMyAdRewardSessionInputSchema: z.ZodType<APIControllersStartMyAdRewardSessionInput>;
+export let APIControllersStartMyKycInputSchema: z.ZodType<APIControllersStartMyKycInput>;
 export let APIProjectsAddProjectTeamInputSchema: z.ZodType<APIProjectsAddProjectTeamInput>;
 export let APIProjectsCounterProjectTeamAgreementInputSchema: z.ZodType<APIProjectsCounterProjectTeamAgreementInput>;
 export let APIProjectsCreateProjectAllocationInputSchema: z.ZodType<APIProjectsCreateProjectAllocationInput>;
@@ -11701,10 +12726,12 @@ export let CommerceOrderChargeStateSchema: z.ZodType<CommerceOrderChargeState>;
 export let CommerceOrdersAddOrderItemInputSchema: z.ZodType<CommerceOrdersAddOrderItemInput>;
 export let CommerceOrdersCaptureOrderInputSchema: z.ZodType<CommerceOrdersCaptureOrderInput>;
 export let CommerceOrdersCompleteOrderInputSchema: z.ZodType<CommerceOrdersCompleteOrderInput>;
+export let CommerceOrdersCompleteOrderMarketplaceSettlementSchema: z.ZodType<CommerceOrdersCompleteOrderMarketplaceSettlement>;
 export let CommerceOrdersCreateOrderInputSchema: z.ZodType<CommerceOrdersCreateOrderInput>;
 export let CommerceOrdersOrderSchema: z.ZodType<CommerceOrdersOrder>;
 export let CommerceOrdersOrderCaptureSchema: z.ZodType<CommerceOrdersOrderCapture>;
 export let CommerceOrdersOrderLineItemSchema: z.ZodType<CommerceOrdersOrderLineItem>;
+export let CommerceOrdersOrderMarketplaceCurrencyChoiceSchema: z.ZodType<CommerceOrdersOrderMarketplaceCurrencyChoice>;
 export let CommerceOrdersOrderStatusSchema: z.ZodType<CommerceOrdersOrderStatus>;
 export let CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCancelBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCreateBillingChargeInput>;
@@ -11870,6 +12897,17 @@ export let ComplianceFERPARecordFerpaDisclosureCommandSchema: z.ZodType<Complian
 export let ComplianceFERPARegisterEducationRecordCommandSchema: z.ZodType<ComplianceFERPARegisterEducationRecordCommand>;
 export let ComplianceFERPASubmitFerpaInspectionRequestCommandSchema: z.ZodType<ComplianceFERPASubmitFerpaInspectionRequestCommand>;
 export let ComplianceFERPAUpsertDirectoryInformationPolicyCommandSchema: z.ZodType<ComplianceFERPAUpsertDirectoryInformationPolicyCommand>;
+export let ComplianceFinancialCrimeFinancialCrimeCaseSchema: z.ZodType<ComplianceFinancialCrimeFinancialCrimeCase>;
+export let ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema: z.ZodType<ComplianceFinancialCrimeFinancialCrimeCaseDecision>;
+export let ComplianceFinancialCrimeFinancialCrimeCaseDetailsSchema: z.ZodType<ComplianceFinancialCrimeFinancialCrimeCaseDetails>;
+export let ComplianceFinancialCrimeFinancialCrimeCaseEventSchema: z.ZodType<ComplianceFinancialCrimeFinancialCrimeCaseEvent>;
+export let ComplianceFinancialCrimeFinancialCrimeCaseStateSchema: z.ZodType<ComplianceFinancialCrimeFinancialCrimeCaseState>;
+export let ComplianceFinancialCrimeFinancialCrimeOutcomeSchema: z.ZodType<ComplianceFinancialCrimeFinancialCrimeOutcome>;
+export let ComplianceFinancialCrimeFinancialCrimeRegulatoryReferenceSchema: z.ZodType<ComplianceFinancialCrimeFinancialCrimeRegulatoryReference>;
+export let ComplianceKYCKycAmlAccessTokenSchema: z.ZodType<ComplianceKYCKycAmlAccessToken>;
+export let ComplianceKYCKycAmlOnboardingSchema: z.ZodType<ComplianceKYCKycAmlOnboarding>;
+export let ComplianceKYCKycAmlStateSchema: z.ZodType<ComplianceKYCKycAmlState>;
+export let ComplianceKYCSumSubWebhookIngestionResultSchema: z.ZodType<ComplianceKYCSumSubWebhookIngestionResult>;
 export let ContentPagesContentResourceSchema: z.ZodType<ContentPagesContentResource>;
 export let ContentPagesContentResourceStatusSchema: z.ZodType<ContentPagesContentResourceStatus>;
 export let ContentPagesContentResourceTypeSchema: z.ZodType<ContentPagesContentResourceType>;
@@ -11892,25 +12930,125 @@ export let ContentStatusSchema: z.ZodType<ContentStatus>;
 export let ContentVisibilitySchema: z.ZodType<ContentVisibility>;
 export let CQRSIDomainEventSchema: z.ZodType<CQRSIDomainEvent>;
 export let CQRSModelsTenantIdSchema: z.ZodType<CQRSModelsTenantId>;
+export let EconomyAdRewardsAdPlaybackEvidenceSchema: z.ZodType<EconomyAdRewardsAdPlaybackEvidence>;
+export let EconomyAdRewardsAdProviderReportSchema: z.ZodType<EconomyAdRewardsAdProviderReport>;
+export let EconomyAdRewardsAdRewardCompletionStateSchema: z.ZodType<EconomyAdRewardsAdRewardCompletionState>;
+export let EconomyAdRewardsAdRewardReconciliationSchema: z.ZodType<EconomyAdRewardsAdRewardReconciliation>;
+export let EconomyAdRewardsDurableAdProviderReportImportResultSchema: z.ZodType<EconomyAdRewardsDurableAdProviderReportImportResult>;
+export let EconomyAdRewardsDurableAdProviderReportStatusSchema: z.ZodType<EconomyAdRewardsDurableAdProviderReportStatus>;
+export let EconomyAdRewardsDurableAdRewardCompletionResultSchema: z.ZodType<EconomyAdRewardsDurableAdRewardCompletionResult>;
+export let EconomyAdRewardsDurableAdRewardReconciliationStatusSchema: z.ZodType<EconomyAdRewardsDurableAdRewardReconciliationStatus>;
+export let EconomyAdRewardsDurableAdRewardSessionClaimsSchema: z.ZodType<EconomyAdRewardsDurableAdRewardSessionClaims>;
+export let EconomyAdRewardsDurableAdRewardSessionResultSchema: z.ZodType<EconomyAdRewardsDurableAdRewardSessionResult>;
+export let EconomyAdRewardsDurableAdRewardSessionStateSchema: z.ZodType<EconomyAdRewardsDurableAdRewardSessionState>;
+export let EconomyAdRewardsDurableAdRewardSessionStatusSchema: z.ZodType<EconomyAdRewardsDurableAdRewardSessionStatus>;
+export let EconomyAdRewardsProviderCompletionProofSchema: z.ZodType<EconomyAdRewardsProviderCompletionProof>;
+export let EconomyAdRewardsSignedAdRewardSessionSchema: z.ZodType<EconomyAdRewardsSignedAdRewardSession>;
+export let EconomyBountiesBountyEligibilityRequirementsSchema: z.ZodType<EconomyBountiesBountyEligibilityRequirements>;
+export let EconomyBountiesBountyIdSchema: z.ZodType<EconomyBountiesBountyId>;
+export let EconomyBountiesBountyStatusSchema: z.ZodType<EconomyBountiesBountyStatus>;
+export let EconomyBountiesBountyTerminalOutputLotSchema: z.ZodType<EconomyBountiesBountyTerminalOutputLot>;
+export let EconomyBountiesDurableBountyViewSchema: z.ZodType<EconomyBountiesDurableBountyView>;
+export let EconomyBountiesPersistedBountyTerminalEventSchema: z.ZodType<EconomyBountiesPersistedBountyTerminalEvent>;
 export let EconomyCommandsConvertMyHardToSoftInputSchema: z.ZodType<EconomyCommandsConvertMyHardToSoftInput>;
+export let EconomyCommandsCreateMyHardCoinTopUpInputSchema: z.ZodType<EconomyCommandsCreateMyHardCoinTopUpInput>;
+export let EconomyContractsCoinAmountSchema: z.ZodType<EconomyContractsCoinAmount>;
+export let EconomyContractsCreditLotIdSchema: z.ZodType<EconomyContractsCreditLotId>;
 export let EconomyContractsCurrencyCodeSchema: z.ZodType<EconomyContractsCurrencyCode>;
 export let EconomyContractsEconomyWalletSummarySchema: z.ZodType<EconomyContractsEconomyWalletSummary>;
 export let EconomyContractsEconomyWalletTransactionSchema: z.ZodType<EconomyContractsEconomyWalletTransaction>;
 export let EconomyContractsEntrySideSchema: z.ZodType<EconomyContractsEntrySide>;
+export let EconomyContractsIdempotencyKeySchema: z.ZodType<EconomyContractsIdempotencyKey>;
+export let EconomyContractsPolicyVersionSchema: z.ZodType<EconomyContractsPolicyVersion>;
+export let EconomyContractsPostingIdSchema: z.ZodType<EconomyContractsPostingId>;
 export let EconomyContractsPostingStatusSchema: z.ZodType<EconomyContractsPostingStatus>;
 export let EconomyContractsPostingTemplateKindSchema: z.ZodType<EconomyContractsPostingTemplateKind>;
 export let EconomyContractsProvenanceKindSchema: z.ZodType<EconomyContractsProvenanceKind>;
+export let EconomyContractsReserveVersionSchema: z.ZodType<EconomyContractsReserveVersion>;
+export let EconomyContractsSourceStampIdSchema: z.ZodType<EconomyContractsSourceStampId>;
+export let EconomyContractsWalletIdSchema: z.ZodType<EconomyContractsWalletId>;
 export let EconomyContractsWalletLifecycleStateSchema: z.ZodType<EconomyContractsWalletLifecycleState>;
+export let EconomyFundingEconomyTopUpProviderStatusSchema: z.ZodType<EconomyFundingEconomyTopUpProviderStatus>;
+export let EconomyFundingEconomyTopUpStatusSchema: z.ZodType<EconomyFundingEconomyTopUpStatus>;
+export let EconomyFundingSelfServiceHardCoinTopUpReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardCoinTopUpReceipt>;
 export let EconomyFundingSelfServiceHardToSoftConversionReceiptSchema: z.ZodType<EconomyFundingSelfServiceHardToSoftConversionReceipt>;
+export let EconomyLedgerAnchorVerificationRunResultSchema: z.ZodType<EconomyLedgerAnchorVerificationRunResult>;
+export let EconomyLedgerEconomyAnchorPublicationResultSchema: z.ZodType<EconomyLedgerEconomyAnchorPublicationResult>;
+export let EconomyLedgerJournalIntegrityFailureCodeSchema: z.ZodType<EconomyLedgerJournalIntegrityFailureCode>;
+export let EconomyLedgerJournalIntegrityRunResultSchema: z.ZodType<EconomyLedgerJournalIntegrityRunResult>;
+export let EconomyLedgerJournalIntegrityRunStatusSchema: z.ZodType<EconomyLedgerJournalIntegrityRunStatus>;
+export let EconomyLedgerJournalIntegrityVerificationResultSchema: z.ZodType<EconomyLedgerJournalIntegrityVerificationResult>;
+export let EconomyMarketplaceDurableMarketplaceRefundDebtSchema: z.ZodType<EconomyMarketplaceDurableMarketplaceRefundDebt>;
+export let EconomyMarketplaceDurableMarketplaceRefundResultSchema: z.ZodType<EconomyMarketplaceDurableMarketplaceRefundResult>;
+export let EconomyMarketplaceDurableMarketplaceSettlementResultSchema: z.ZodType<EconomyMarketplaceDurableMarketplaceSettlementResult>;
+export let EconomyMarketplaceMarketplaceCurrencyChoiceSchema: z.ZodType<EconomyMarketplaceMarketplaceCurrencyChoice>;
+export let EconomyMarketplaceMarketplaceEntitlementStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceEntitlementStatus>;
+export let EconomyMarketplaceMarketplacePriceLegSnapshotSchema: z.ZodType<EconomyMarketplaceMarketplacePriceLegSnapshot>;
+export let EconomyMarketplaceMarketplaceSettlementStatusSchema: z.ZodType<EconomyMarketplaceMarketplaceSettlementStatus>;
+export let EconomyOperationsEconomyAnchorOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyAnchorOperationalStatus>;
+export let EconomyOperationsEconomyCapabilityConfigurationSnapshotSchema: z.ZodType<EconomyOperationsEconomyCapabilityConfigurationSnapshot>;
+export let EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyCapabilityPolicyOperationalStatus>;
+export let EconomyOperationsEconomyJournalHeadStatusSchema: z.ZodType<EconomyOperationsEconomyJournalHeadStatus>;
+export let EconomyOperationsEconomyJournalVerificationStatusSchema: z.ZodType<EconomyOperationsEconomyJournalVerificationStatus>;
+export let EconomyOperationsEconomyKillSwitchOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyKillSwitchOperationalStatus>;
+export let EconomyOperationsEconomyLedgerHealthSnapshotSchema: z.ZodType<EconomyOperationsEconomyLedgerHealthSnapshot>;
+export let EconomyOperationsEconomyProjectionOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyProjectionOperationalStatus>;
+export let EconomyOperationsEconomyReserveOperationalStatusSchema: z.ZodType<EconomyOperationsEconomyReserveOperationalStatus>;
+export let EconomyOperationsLegacyEconomyShadowBatchViewSchema: z.ZodType<EconomyOperationsLegacyEconomyShadowBatchView>;
+export let EconomyOperationsLegacyEconomyShadowStateSchema: z.ZodType<EconomyOperationsLegacyEconomyShadowState>;
+export let EconomyOperationsLegacyEconomyShadowWalletViewSchema: z.ZodType<EconomyOperationsLegacyEconomyShadowWalletView>;
 export let EconomyPayoutsCommandsCreateMyPayoutRequestInputSchema: z.ZodType<EconomyPayoutsCommandsCreateMyPayoutRequestInput>;
 export let EconomyPayoutsCommandsReviewPayoutRequestInputSchema: z.ZodType<EconomyPayoutsCommandsReviewPayoutRequestInput>;
+export let EconomyPayoutsConnectAccountSnapshotSchema: z.ZodType<EconomyPayoutsConnectAccountSnapshot>;
+export let EconomyPayoutsConnectAccountStateSchema: z.ZodType<EconomyPayoutsConnectAccountState>;
+export let EconomyPayoutsConnectOnboardingResultSchema: z.ZodType<EconomyPayoutsConnectOnboardingResult>;
 export let EconomyPayoutsPayoutOperationStateSchema: z.ZodType<EconomyPayoutsPayoutOperationState>;
 export let EconomyPayoutsPayoutRequestStateSchema: z.ZodType<EconomyPayoutsPayoutRequestState>;
 export let EconomyPayoutsQueriesEconomyPayoutInputSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutInput>;
 export let EconomyPayoutsQueriesEconomyPayoutOperationSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutOperation>;
 export let EconomyPayoutsQueriesEconomyPayoutRequestReviewSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutRequestReview>;
 export let EconomyPayoutsQueriesEconomyPayoutRequestReviewAuditSchema: z.ZodType<EconomyPayoutsQueriesEconomyPayoutRequestReviewAudit>;
+export let EconomyProjectionsProjectionGenerationStateSchema: z.ZodType<EconomyProjectionsProjectionGenerationState>;
+export let EconomyReservesCustodyObservationCommandSchema: z.ZodType<EconomyReservesCustodyObservationCommand>;
+export let EconomyReservesDurableCustodyObservationSchema: z.ZodType<EconomyReservesDurableCustodyObservation>;
+export let EconomyReservesDurableReserveProposalStateSchema: z.ZodType<EconomyReservesDurableReserveProposalState>;
+export let EconomyReservesEconomyLiabilitySnapshotSchema: z.ZodType<EconomyReservesEconomyLiabilitySnapshot>;
+export let EconomyReservesExternalReserveAssetSchema: z.ZodType<EconomyReservesExternalReserveAsset>;
+export let EconomyReservesReserveBackingPurposeSchema: z.ZodType<EconomyReservesReserveBackingPurpose>;
+export let EconomyReservesReserveBufferPositionSchema: z.ZodType<EconomyReservesReserveBufferPosition>;
+export let EconomyReservesReserveCoverageStateSchema: z.ZodType<EconomyReservesReserveCoverageState>;
+export let EconomyReservesReserveHeadSchema: z.ZodType<EconomyReservesReserveHead>;
+export let EconomyReservesReserveRequirementSnapshotSchema: z.ZodType<EconomyReservesReserveRequirementSnapshot>;
+export let EconomyReservesReserveServiceObservationSchema: z.ZodType<EconomyReservesReserveServiceObservation>;
+export let EconomyRiskCapabilityAuthorizationReceiptSchema: z.ZodType<EconomyRiskCapabilityAuthorizationReceipt>;
+export let EconomyRiskComplianceEvidenceIngestionStatusSchema: z.ZodType<EconomyRiskComplianceEvidenceIngestionStatus>;
+export let EconomyRiskComplianceEvidenceResultSchema: z.ZodType<EconomyRiskComplianceEvidenceResult>;
+export let EconomyRiskComplianceHoldSchema: z.ZodType<EconomyRiskComplianceHold>;
+export let EconomyRiskComplianceHoldAdministrationStateSchema: z.ZodType<EconomyRiskComplianceHoldAdministrationState>;
+export let EconomyRiskComplianceHoldEventSchema: z.ZodType<EconomyRiskComplianceHoldEvent>;
+export let EconomyRiskComplianceHoldPageSchema: z.ZodType<EconomyRiskComplianceHoldPage>;
+export let EconomyRiskComplianceHoldScopeSchema: z.ZodType<EconomyRiskComplianceHoldScope>;
+export let EconomyRiskEconomyCapabilityEvaluationResultSchema: z.ZodType<EconomyRiskEconomyCapabilityEvaluationResult>;
+export let EconomyRiskEconomyCapabilityPolicySchema: z.ZodType<EconomyRiskEconomyCapabilityPolicy>;
+export let EconomyRiskEconomyCapabilityPolicyStateSchema: z.ZodType<EconomyRiskEconomyCapabilityPolicyState>;
+export let EconomyRiskEconomyCapabilityReadinessStatusSchema: z.ZodType<EconomyRiskEconomyCapabilityReadinessStatus>;
+export let EconomyRiskEconomyKillSwitchScopeSchema: z.ZodType<EconomyRiskEconomyKillSwitchScope>;
+export let EconomyRiskEconomyKillSwitchStateSchema: z.ZodType<EconomyRiskEconomyKillSwitchState>;
+export let EconomyRiskEconomyProtectedOperationStateSchema: z.ZodType<EconomyRiskEconomyProtectedOperationState>;
 export let EconomyRiskEconomyValueMovementCapabilitySchema: z.ZodType<EconomyRiskEconomyValueMovementCapability>;
+export let EconomyRiskRiskManualDecisionCodeSchema: z.ZodType<EconomyRiskRiskManualDecisionCode>;
+export let EconomyRiskRiskReviewCaseSchema: z.ZodType<EconomyRiskRiskReviewCase>;
+export let EconomyRiskRiskReviewEventSchema: z.ZodType<EconomyRiskRiskReviewEvent>;
+export let EconomyRiskRiskReviewEventKindSchema: z.ZodType<EconomyRiskRiskReviewEventKind>;
+export let EconomyRiskRiskReviewPageSchema: z.ZodType<EconomyRiskRiskReviewPage>;
+export let EconomyRiskRiskReviewStatusSchema: z.ZodType<EconomyRiskRiskReviewStatus>;
+export let EconomyTransfersSelfServiceEconomyTransferInputSchema: z.ZodType<EconomyTransfersSelfServiceEconomyTransferInput>;
+export let EconomyTransfersSelfServiceEconomyTransferReceiptSchema: z.ZodType<EconomyTransfersSelfServiceEconomyTransferReceipt>;
+export let EconomyTransfersSelfServiceEconomyTransferTypeSchema: z.ZodType<EconomyTransfersSelfServiceEconomyTransferType>;
+export let EconomyTreasuryAdminWithdrawalAuditEventSchema: z.ZodType<EconomyTreasuryAdminWithdrawalAuditEvent>;
+export let EconomyTreasuryAdminWithdrawalAuditViewSchema: z.ZodType<EconomyTreasuryAdminWithdrawalAuditView>;
+export let EconomyTreasuryAdminWithdrawalRunSchema: z.ZodType<EconomyTreasuryAdminWithdrawalRun>;
+export let EconomyTreasuryAdminWithdrawalRunStateSchema: z.ZodType<EconomyTreasuryAdminWithdrawalRunState>;
 export let ErrorSchema: z.ZodType<Error>;
 export let ErrorTypeSchema: z.ZodType<ErrorType>;
 export let FeaturesBulkEvaluationInputSchema: z.ZodType<FeaturesBulkEvaluationInput>;
@@ -11960,6 +13098,7 @@ export let IdentityAuthenticationCreateApiKeyCommandSchema: z.ZodType<IdentityAu
 export let IdentityAuthenticationCreateApiKeyOutputSchema: z.ZodType<IdentityAuthenticationCreateApiKeyOutput>;
 export let IdentityAuthenticationCreateRoleInputSchema: z.ZodType<IdentityAuthenticationCreateRoleInput>;
 export let IdentityAuthenticationCreateServiceAccountInputSchema: z.ZodType<IdentityAuthenticationCreateServiceAccountInput>;
+export let IdentityAuthenticationCreateStepUpChallengeInputSchema: z.ZodType<IdentityAuthenticationCreateStepUpChallengeInput>;
 export let IdentityAuthenticationDeviceInfoSchema: z.ZodType<IdentityAuthenticationDeviceInfo>;
 export let IdentityAuthenticationDisableMfaInputSchema: z.ZodType<IdentityAuthenticationDisableMfaInput>;
 export let IdentityAuthenticationDiscordAuthorizeInputSchema: z.ZodType<IdentityAuthenticationDiscordAuthorizeInput>;
@@ -12014,6 +13153,8 @@ export let IdentityAuthenticationSessionTerminationOutputSchema: z.ZodType<Ident
 export let IdentityAuthenticationSignInOutputSchema: z.ZodType<IdentityAuthenticationSignInOutput>;
 export let IdentityAuthenticationSmsMfaSetupInputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupInput>;
 export let IdentityAuthenticationSmsMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupOutput>;
+export let IdentityAuthenticationStepUpChallengeOutputSchema: z.ZodType<IdentityAuthenticationStepUpChallengeOutput>;
+export let IdentityAuthenticationStepUpReceiptOutputSchema: z.ZodType<IdentityAuthenticationStepUpReceiptOutput>;
 export let IdentityAuthenticationTrustDeviceInputSchema: z.ZodType<IdentityAuthenticationTrustDeviceInput>;
 export let IdentityAuthenticationTrustedDeviceOutputSchema: z.ZodType<IdentityAuthenticationTrustedDeviceOutput>;
 export let IdentityAuthenticationUpdateCredentialNameInputSchema: z.ZodType<IdentityAuthenticationUpdateCredentialNameInput>;
@@ -12022,6 +13163,7 @@ export let IdentityAuthenticationUpdateScopesInputSchema: z.ZodType<IdentityAuth
 export let IdentityAuthenticationUserSchema: z.ZodType<IdentityAuthenticationUser>;
 export let IdentityAuthenticationVerifyEmailInputSchema: z.ZodType<IdentityAuthenticationVerifyEmailInput>;
 export let IdentityAuthenticationVerifyMfaInputSchema: z.ZodType<IdentityAuthenticationVerifyMfaInput>;
+export let IdentityAuthenticationVerifyStepUpChallengeInputSchema: z.ZodType<IdentityAuthenticationVerifyStepUpChallengeInput>;
 export let IdentityAuthenticationWeb3ChallengeInputSchema: z.ZodType<IdentityAuthenticationWeb3ChallengeInput>;
 export let IdentityAuthenticationWeb3ChallengeOutputSchema: z.ZodType<IdentityAuthenticationWeb3ChallengeOutput>;
 export let IdentityAuthenticationWeb3VerifyInputSchema: z.ZodType<IdentityAuthenticationWeb3VerifyInput>;
@@ -12236,6 +13378,7 @@ export let LaunchPadLaunchPadParticipantRoleSchema: z.ZodType<LaunchPadLaunchPad
 export let LaunchPadLaunchPadParticipantSlotSchema: z.ZodType<LaunchPadLaunchPadParticipantSlot>;
 export let LaunchPadLaunchPadParticipantStatusSchema: z.ZodType<LaunchPadLaunchPadParticipantStatus>;
 export let LaunchPadLaunchPadRegistrationProjectionSchema: z.ZodType<LaunchPadLaunchPadRegistrationProjection>;
+export let LaunchPadLaunchPadSettingsProjectionSchema: z.ZodType<LaunchPadLaunchPadSettingsProjection>;
 export let LaunchPadLaunchPadSlotProjectionSchema: z.ZodType<LaunchPadLaunchPadSlotProjection>;
 export let LaunchPadLaunchPlanSchema: z.ZodType<LaunchPadLaunchPlan>;
 export let LaunchPadLaunchPlanStatusSchema: z.ZodType<LaunchPadLaunchPlanStatus>;
@@ -12245,6 +13388,7 @@ export let LaunchPadTransitionLaunchPadEventInputSchema: z.ZodType<LaunchPadTran
 export let LaunchPadTransitionLaunchPadRegistrationInputSchema: z.ZodType<LaunchPadTransitionLaunchPadRegistrationInput>;
 export let LaunchPadUpdateLaunchPadApplicationInputSchema: z.ZodType<LaunchPadUpdateLaunchPadApplicationInput>;
 export let LaunchPadUpdateLaunchPadEventInputSchema: z.ZodType<LaunchPadUpdateLaunchPadEventInput>;
+export let LaunchPadUpdateLaunchPadSettingsInputSchema: z.ZodType<LaunchPadUpdateLaunchPadSettingsInput>;
 export let LearningAssessmentsAnonymousReviewAssessmentSchema: z.ZodType<LearningAssessmentsAnonymousReviewAssessment>;
 export let LearningAssessmentsAnonymousReviewRubricSchema: z.ZodType<LearningAssessmentsAnonymousReviewRubric>;
 export let LearningAssessmentsAnonymousReviewSubmissionSchema: z.ZodType<LearningAssessmentsAnonymousReviewSubmission>;
@@ -12578,12 +13722,15 @@ export let ProjectsProjectUserApiOutputSchema: z.ZodType<ProjectsProjectUserApiO
 export let ProjectsProjectVersionSchema: z.ZodType<ProjectsProjectVersion>;
 export let ProjectsProjectVersionApiOutputSchema: z.ZodType<ProjectsProjectVersionApiOutput>;
 export let ProjectsProjectVersionOptionProjectionSchema: z.ZodType<ProjectsProjectVersionOptionProjection>;
+export let ProjectsProjectVersionStatusSchema: z.ZodType<ProjectsProjectVersionStatus>;
 export let ProjectsShareProjectInputSchema: z.ZodType<ProjectsShareProjectInput>;
 export let ProjectsShareProjectWithRoleInputSchema: z.ZodType<ProjectsShareProjectWithRoleInput>;
 export let ProjectsShareResultSchema: z.ZodType<ProjectsShareResult>;
 export let ProjectsUpdateCollaboratorInputSchema: z.ZodType<ProjectsUpdateCollaboratorInput>;
 export let ProjectsUpdateProjectCollaboratorInputSchema: z.ZodType<ProjectsUpdateProjectCollaboratorInput>;
 export let ProjectsUpdateProjectInputSchema: z.ZodType<ProjectsUpdateProjectInput>;
+export let ProjectsUpdateProjectVersionInputSchema: z.ZodType<ProjectsUpdateProjectVersionInput>;
+export let ProjectsVersionSubmissionPolicySchema: z.ZodType<ProjectsVersionSubmissionPolicy>;
 export let ProjectWorkProjectWorkColumnKindSchema: z.ZodType<ProjectWorkProjectWorkColumnKind>;
 export let ProjectWorkProjectWorkTaskPrioritySchema: z.ZodType<ProjectWorkProjectWorkTaskPriority>;
 export let ProjectWorkProjectWorkTaskStatusSchema: z.ZodType<ProjectWorkProjectWorkTaskStatus>;
@@ -12683,6 +13830,7 @@ export let TestingLabAssignTestingProjectToTesterInputSchema: z.ZodType<TestingL
 export let TestingLabAttendanceStatusSchema: z.ZodType<TestingLabAttendanceStatus>;
 export let TestingLabCancelTestingEventInputSchema: z.ZodType<TestingLabCancelTestingEventInput>;
 export let TestingLabCastTestingApplicationVoteInputSchema: z.ZodType<TestingLabCastTestingApplicationVoteInput>;
+export let TestingLabConfigureTestingEventInputSchema: z.ZodType<TestingLabConfigureTestingEventInput>;
 export let TestingLabConfigureTestingEventLearningInputSchema: z.ZodType<TestingLabConfigureTestingEventLearningInput>;
 export let TestingLabCreateSimpleTestingInputSchema: z.ZodType<TestingLabCreateSimpleTestingInput>;
 export let TestingLabCreateTestingEventInputSchema: z.ZodType<TestingLabCreateTestingEventInput>;
@@ -12690,6 +13838,7 @@ export let TestingLabCreateTestingInputSchema: z.ZodType<TestingLabCreateTesting
 export let TestingLabCreateTestingLabRoleInputSchema: z.ZodType<TestingLabCreateTestingLabRoleInput>;
 export let TestingLabCreateTestingLabSettingsSchema: z.ZodType<TestingLabCreateTestingLabSettings>;
 export let TestingLabCreateTestingLocationSchema: z.ZodType<TestingLabCreateTestingLocation>;
+export let TestingLabCreateTestingProjectApplicationDraftInputSchema: z.ZodType<TestingLabCreateTestingProjectApplicationDraftInput>;
 export let TestingLabCreateTestingSessionSchema: z.ZodType<TestingLabCreateTestingSession>;
 export let TestingLabDecideTestingProjectApplicationInputSchema: z.ZodType<TestingLabDecideTestingProjectApplicationInput>;
 export let TestingLabFeedbackFormTypeSchema: z.ZodType<TestingLabFeedbackFormType>;
@@ -12703,11 +13852,20 @@ export let TestingLabLocationStatusSchema: z.ZodType<TestingLabLocationStatus>;
 export let TestingLabParticipationStatusSchema: z.ZodType<TestingLabParticipationStatus>;
 export let TestingLabPublicTestingEventProjectionSchema: z.ZodType<TestingLabPublicTestingEventProjection>;
 export let TestingLabPublicTestingEventSlotProjectionSchema: z.ZodType<TestingLabPublicTestingEventSlotProjection>;
+export let TestingLabQuestionnaireAnswerSchema: z.ZodType<TestingLabQuestionnaireAnswer>;
+export let TestingLabQuestionnaireConditionSchema: z.ZodType<TestingLabQuestionnaireCondition>;
+export let TestingLabQuestionnaireConditionOperatorSchema: z.ZodType<TestingLabQuestionnaireConditionOperator>;
+export let TestingLabQuestionnaireOptionSchema: z.ZodType<TestingLabQuestionnaireOption>;
+export let TestingLabQuestionnaireOutputSchema: z.ZodType<TestingLabQuestionnaireOutput>;
+export let TestingLabQuestionnaireQuestionSchema: z.ZodType<TestingLabQuestionnaireQuestion>;
+export let TestingLabQuestionnaireQuestionTypeSchema: z.ZodType<TestingLabQuestionnaireQuestionType>;
+export let TestingLabQuestionnaireSchemaSchema: z.ZodType<TestingLabQuestionnaireSchema>;
 export let TestingLabRateFeedbackQualitySchema: z.ZodType<TestingLabRateFeedbackQuality>;
 export let TestingLabRegisterTestingEventSlotInputSchema: z.ZodType<TestingLabRegisterTestingEventSlotInput>;
 export let TestingLabRegistrationStatusSchema: z.ZodType<TestingLabRegistrationStatus>;
 export let TestingLabRegistrationTypeSchema: z.ZodType<TestingLabRegistrationType>;
 export let TestingLabReportFeedbackSchema: z.ZodType<TestingLabReportFeedback>;
+export let TestingLabSaveTestingProjectApplicationDraftInputSchema: z.ZodType<TestingLabSaveTestingProjectApplicationDraftInput>;
 export let TestingLabSessionProjectProjectionSchema: z.ZodType<TestingLabSessionProjectProjection>;
 export let TestingLabSessionRegistrationSchema: z.ZodType<TestingLabSessionRegistration>;
 export let TestingLabSessionRegistrationInputSchema: z.ZodType<TestingLabSessionRegistrationInput>;
@@ -12726,8 +13884,10 @@ export let TestingLabTestingApplicationVoteProjectionSchema: z.ZodType<TestingLa
 export let TestingLabTestingCommitteeMemberSchema: z.ZodType<TestingLabTestingCommitteeMember>;
 export let TestingLabTestingContextSchema: z.ZodType<TestingLabTestingContext>;
 export let TestingLabTestingEventSchema: z.ZodType<TestingLabTestingEvent>;
+export let TestingLabTestingEventApplicationAccessProjectionSchema: z.ZodType<TestingLabTestingEventApplicationAccessProjection>;
 export let TestingLabTestingEventApprovalModeSchema: z.ZodType<TestingLabTestingEventApprovalMode>;
 export let TestingLabTestingEventCommitteeMemberProjectionSchema: z.ZodType<TestingLabTestingEventCommitteeMemberProjection>;
+export let TestingLabTestingEventConfigurationProjectionSchema: z.ZodType<TestingLabTestingEventConfigurationProjection>;
 export let TestingLabTestingEventFeedbackProjectionSchema: z.ZodType<TestingLabTestingEventFeedbackProjection>;
 export let TestingLabTestingEventFeedbackReviewProjectionSchema: z.ZodType<TestingLabTestingEventFeedbackReviewProjection>;
 export let TestingLabTestingEventModeSchema: z.ZodType<TestingLabTestingEventMode>;
@@ -12737,6 +13897,8 @@ export let TestingLabTestingEventRecurrenceInputSchema: z.ZodType<TestingLabTest
 export let TestingLabTestingEventSlotSchema: z.ZodType<TestingLabTestingEventSlot>;
 export let TestingLabTestingEventSlotProjectionSchema: z.ZodType<TestingLabTestingEventSlotProjection>;
 export let TestingLabTestingEventStatusSchema: z.ZodType<TestingLabTestingEventStatus>;
+export let TestingLabTestingEventTemplateProjectionSchema: z.ZodType<TestingLabTestingEventTemplateProjection>;
+export let TestingLabTestingEventTemplateRevisionProjectionSchema: z.ZodType<TestingLabTestingEventTemplateRevisionProjection>;
 export let TestingLabTestingFeedbackSchema: z.ZodType<TestingLabTestingFeedback>;
 export let TestingLabTestingFeedbackDirectoryItemSchema: z.ZodType<TestingLabTestingFeedbackDirectoryItem>;
 export let TestingLabTestingFeedbackDirectoryPageSchema: z.ZodType<TestingLabTestingFeedbackDirectoryPage>;
@@ -12764,6 +13926,8 @@ export let TestingLabTestingParticipantMutationProjectionSchema: z.ZodType<Testi
 export let TestingLabTestingPrioritySchema: z.ZodType<TestingLabTestingPriority>;
 export let TestingLabTestingProjectApplicationSchema: z.ZodType<TestingLabTestingProjectApplication>;
 export let TestingLabTestingProjectApplicationProjectionSchema: z.ZodType<TestingLabTestingProjectApplicationProjection>;
+export let TestingLabTestingProjectBriefSchema: z.ZodType<TestingLabTestingProjectBrief>;
+export let TestingLabTestingQuestionnaireRevisionSchema: z.ZodType<TestingLabTestingQuestionnaireRevision>;
 export let TestingLabTestingRequestDetailProjectionSchema: z.ZodType<TestingLabTestingRequestDetailProjection>;
 export let TestingLabTestingRequestProjectProjectionSchema: z.ZodType<TestingLabTestingRequestProjectProjection>;
 export let TestingLabTestingRequestProjectVersionProjectionSchema: z.ZodType<TestingLabTestingRequestProjectVersionProjection>;
@@ -12779,7 +13943,10 @@ export let TestingLabUpdateTestingLabSettingsSchema: z.ZodType<TestingLabUpdateT
 export let TestingLabUpdateTestingLocationSchema: z.ZodType<TestingLabUpdateTestingLocation>;
 export let TestingLabUpdateTestingProjectApplicationInputSchema: z.ZodType<TestingLabUpdateTestingProjectApplicationInput>;
 export let TestingLabUpsertTestingEventSlotInputSchema: z.ZodType<TestingLabUpsertTestingEventSlotInput>;
+export let TestingLabUpsertTestingEventTemplateInputSchema: z.ZodType<TestingLabUpsertTestingEventTemplateInput>;
 export let TestingLabUserTestingLabPermissionsSchema: z.ZodType<TestingLabUserTestingLabPermissions>;
+export let TrustSafetyTrustSafetyAppealSchema: z.ZodType<TrustSafetyTrustSafetyAppeal>;
+export let TrustSafetyTrustSafetyAppealStateSchema: z.ZodType<TrustSafetyTrustSafetyAppealState>;
 
 // Zod Schema Definitions
 /** Zod schema for AIAiChatInput */
@@ -12852,11 +14019,7 @@ AIAiGeneratedContentInputSchema = z.object({
 });
 
 /** Zod schema for AIAiGeneratedContentKind */
-AIAiGeneratedContentKindSchema = z.enum([
-  "Email",
-  "Report",
-  "ListingDescription",
-]);
+AIAiGeneratedContentKindSchema = z.enum(['Email', 'Report', 'ListingDescription']);
 
 /** Zod schema for AIAiGenerateInput */
 AIAiGenerateInputSchema = z.object({
@@ -13084,7 +14247,7 @@ AnalyticsProductCatalogMetricsSchema = z.object({
 });
 
 /** Zod schema for AnalyticsProductMetricsExportFormat */
-AnalyticsProductMetricsExportFormatSchema = z.enum(["Csv", "Json"]);
+AnalyticsProductMetricsExportFormatSchema = z.enum(['Csv', 'Json']);
 
 /** Zod schema for AnalyticsProductMetricsOutput */
 AnalyticsProductMetricsOutputSchema = z.object({
@@ -13094,9 +14257,7 @@ AnalyticsProductMetricsOutputSchema = z.object({
   generatedAtUtc: z.string().datetime().optional(),
   revenue: z.lazy(() => AnalyticsProductRevenueMetricsSchema).optional(),
   startUtc: z.string().datetime().optional(),
-  subscriptions: z
-    .lazy(() => AnalyticsProductSubscriptionMetricsSchema)
-    .optional(),
+  subscriptions: z.lazy(() => AnalyticsProductSubscriptionMetricsSchema).optional(),
   tenantId: z.string().uuid().nullable().optional(),
   thresholds: z
     .array(z.lazy(() => AnalyticsProductMetricThresholdSchema))
@@ -13115,11 +14276,7 @@ AnalyticsProductMetricThresholdSchema = z.object({
 });
 
 /** Zod schema for AnalyticsProductMetricThresholdStatus */
-AnalyticsProductMetricThresholdStatusSchema = z.enum([
-  "Healthy",
-  "Warning",
-  "Critical",
-]);
+AnalyticsProductMetricThresholdStatusSchema = z.enum(['Healthy', 'Warning', 'Critical']);
 
 /** Zod schema for AnalyticsProductRevenueMetrics */
 AnalyticsProductRevenueMetricsSchema = z.object({
@@ -13142,7 +14299,7 @@ AnalyticsProductSubscriptionMetricsSchema = z.object({
 });
 
 /** Zod schema for AnalyticsTimeSeriesGranularity */
-AnalyticsTimeSeriesGranularitySchema = z.enum(["Hour", "Day", "Week", "Month"]);
+AnalyticsTimeSeriesGranularitySchema = z.enum(['Hour', 'Day', 'Week', 'Month']);
 
 /** Zod schema for AnalyticsTrackAnalyticsEventCommand */
 AnalyticsTrackAnalyticsEventCommandSchema = z.object({
@@ -13165,18 +14322,25 @@ AnalyticsUpdateDashboardInputSchema = z.object({
 });
 
 /** Zod schema for AnalyticsWidgetType */
-AnalyticsWidgetTypeSchema = z.enum([
-  "Counter",
-  "Chart",
-  "Table",
-  "Gauge",
-  "TimeSeries",
-  "Funnel",
-]);
+AnalyticsWidgetTypeSchema = z.enum(['Counter', 'Chart', 'Table', 'Gauge', 'TimeSeries', 'Funnel']);
 
 /** Zod schema for APIAccessAccessCapabilitiesOutput */
 APIAccessAccessCapabilitiesOutputSchema = z.object({
   capabilities: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for APIControllersActivateEconomyKillSwitchInput */
+APIControllersActivateEconomyKillSwitchInputSchema = z.object({
+  id: z.string().uuid().optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersAdRewardProtectedOperationFailureOutput */
+APIControllersAdRewardProtectedOperationFailureOutputSchema = z.object({
+  diagnostics: z.array(z.string()).nullable().optional(),
+  reviewId: z.string().uuid().nullable().optional(),
+  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
 /** Zod schema for APIControllersApplicationDetails */
@@ -13196,11 +14360,100 @@ APIControllersApplicationInfoOutputSchema = z.object({
   timestamp: z.string().datetime().optional(),
 });
 
+/** Zod schema for APIControllersApproveEconomyPolicyInput */
+APIControllersApproveEconomyPolicyInputSchema = z.object({
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersApproveLegacyEconomyCutoverInput */
+APIControllersApproveLegacyEconomyCutoverInputSchema = z.object({
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersApproveTreasuryWithdrawalInput */
+APIControllersApproveTreasuryWithdrawalInputSchema = z.object({
+  expectedVersion: z.number().int().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersAssignFinancialCrimeCaseInput */
+APIControllersAssignFinancialCrimeCaseInputSchema = z.object({
+  expectedVersion: z.number().int().optional(),
+});
+
+/** Zod schema for APIControllersAssignTrustSafetyAppealInput */
+APIControllersAssignTrustSafetyAppealInputSchema = z.object({
+  expectedVersion: z.number().int().optional(),
+});
+
+/** Zod schema for APIControllersBackfillLegacyEconomyWalletInput */
+APIControllersBackfillLegacyEconomyWalletInputSchema = z.object({
+  legacyWalletId: z.string().uuid().optional(),
+  operationFingerprint: z.string().nullable().optional(),
+  riskDecisionId: z.string().uuid().optional(),
+});
+
 /** Zod schema for APIControllersBuildDetails */
 APIControllersBuildDetailsSchema = z.object({
   configuration: z.string().nullable().optional(),
   framework: z.string().nullable().optional(),
   timestamp: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for APIControllersCaptureLegacyEconomyMigrationInput */
+APIControllersCaptureLegacyEconomyMigrationInputSchema = z.object({
+  batchId: z.string().uuid().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersCompleteMyAdRewardSessionInput */
+APIControllersCompleteMyAdRewardSessionInputSchema = z.object({
+  idempotencyKey: z.string().nullable().optional(),
+  playback: z.lazy(() => EconomyAdRewardsAdPlaybackEvidenceSchema).optional(),
+  providerProof: z.lazy(() => EconomyAdRewardsProviderCompletionProofSchema).optional(),
+  token: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersCompleteMyBountyInput */
+APIControllersCompleteMyBountyInputSchema = z.object({
+  idempotencyKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersCreateMyBountyInput */
+APIControllersCreateMyBountyInputSchema = z.object({
+  amountUnits: z.number().int().optional(),
+  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  expiresAt: z.string().datetime().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  minimumReputation: z.number().int().optional(),
+  requiresInstructorVerification: z.boolean().optional(),
+  requiresPrerequisite: z.boolean().optional(),
+});
+
+/** Zod schema for APIControllersCreateMyKycAccessTokenInput */
+APIControllersCreateMyKycAccessTokenInputSchema = z.object({
+  lifetimeSeconds: z.number().int().optional(),
+});
+
+/** Zod schema for APIControllersDecideFinancialCrimeCaseInput */
+APIControllersDecideFinancialCrimeCaseInputSchema = z.object({
+  id: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expectedCaseVersion: z.number().int().optional(),
+  expiresAt: z.string().datetime().optional(),
+  outcome: z.lazy(() => ComplianceFinancialCrimeFinancialCrimeOutcomeSchema).optional(),
+  policyVersion: z.number().int().optional(),
+  rawObjectReference: z.string().nullable().optional(),
+  reasonCode: z.string().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for APIControllersDecideTrustSafetyAppealInput */
+APIControllersDecideTrustSafetyAppealInputSchema = z.object({
+  evidenceHash: z.string().nullable().optional(),
+  expectedVersion: z.number().int().optional(),
+  overturn: z.boolean().optional(),
+  reasonCode: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersDependencyHealthItem */
@@ -13229,13 +14482,71 @@ APIControllersDependencyHealthOutputSchema = z.object({
   unhealthyCount: z.number().int().optional(),
 });
 
+/** Zod schema for APIControllersDispatchPayoutExecutionInput */
+APIControllersDispatchPayoutExecutionInputSchema = z.object({
+  expectedVersion: z.number().int().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersDispatchTreasuryWithdrawalInput */
+APIControllersDispatchTreasuryWithdrawalInputSchema = z.object({
+  expectedVersion: z.number().int().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersEconomyKycStatus */
+APIControllersEconomyKycStatusSchema = z.object({
+  expiresAt: z.string().datetime().nullable().optional(),
+  hasEvidence: z.boolean().optional(),
+  isCurrent: z.boolean().optional(),
+  issuedAt: z.string().datetime().nullable().optional(),
+  result: z.lazy(() => EconomyRiskComplianceEvidenceResultSchema).optional(),
+  version: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for APIControllersEconomyPayoutExecutionOperation */
+APIControllersEconomyPayoutExecutionOperationSchema = z.object({
+  id: z.string().uuid().optional(),
+  createdAt: z.string().datetime().optional(),
+  destinationHash: z.string().nullable().optional(),
+  fencingToken: z.number().int().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  killSwitchEpoch: z.number().int().optional(),
+  payeeId: z.string().uuid().optional(),
+  policyVersion: z.number().int().optional(),
+  providerPayoutId: z.string().nullable().optional(),
+  reserveAuthorizationEpoch: z.number().int().optional(),
+  reserveVersion: z.number().int().optional(),
+  riskDecisionId: z.string().uuid().optional(),
+  state: z.lazy(() => EconomyPayoutsPayoutOperationStateSchema).optional(),
+  updatedAt: z.string().datetime().optional(),
+  version: z.number().int().optional(),
+  walletId: z.string().uuid().optional(),
+});
+
 /** Zod schema for APIControllersEconomySelfServiceCapability */
 APIControllersEconomySelfServiceCapabilitySchema = z.object({
-  capability: z
-    .lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema)
-    .optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
   diagnostics: z.array(z.string()).nullable().optional(),
   state: z.lazy(() => APISetupEconomyCapabilityReadinessStateSchema).optional(),
+});
+
+/** Zod schema for APIControllersEconomyStepUpInput */
+APIControllersEconomyStepUpInputSchema = z.object({
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersEconomyTopUpFailureOutput */
+APIControllersEconomyTopUpFailureOutputSchema = z.object({
+  message: z.string().nullable().optional(),
+  state: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersEconomyTransferProtectedOperationFailureOutput */
+APIControllersEconomyTransferProtectedOperationFailureOutputSchema = z.object({
+  diagnostics: z.array(z.string()).nullable().optional(),
+  reviewId: z.string().uuid().nullable().optional(),
+  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
 });
 
 /** Zod schema for APIControllersHealthinessOutput */
@@ -13255,13 +14566,22 @@ APIControllersHealthinessOutputSchema = z.object({
 
 /** Zod schema for APIControllersHealthinessResponseItem */
 APIControllersHealthinessResponseItemSchema = z.object({
-  data: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  data: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   description: z.string().nullable().optional(),
   duration: z.string().optional(),
   status: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersInspectEconomyCapabilityReadinessInput */
+APIControllersInspectEconomyCapabilityReadinessInputSchema = z.object({
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  destinationHash: z.string().nullable().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  operationFingerprint: z.string().nullable().optional(),
+  providerHash: z.string().nullable().optional(),
+  riskDecisionId: z.string().uuid().optional(),
+  sourceRootHashes: z.array(z.string()).nullable().optional(),
+  subjectReference: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersLivenessOutput */
@@ -13273,10 +14593,74 @@ APIControllersLivenessOutputSchema = z.object({
   version: z.string().nullable().optional(),
 });
 
+/** Zod schema for APIControllersMarketplaceProtectedOperationFailureOutput */
+APIControllersMarketplaceProtectedOperationFailureOutputSchema = z.object({
+  diagnostics: z.array(z.string()).nullable().optional(),
+  reviewId: z.string().uuid().nullable().optional(),
+  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
+});
+
+/** Zod schema for APIControllersPayoutProtectedOperationFailureOutput */
+APIControllersPayoutProtectedOperationFailureOutputSchema = z.object({
+  diagnostics: z.array(z.string()).nullable().optional(),
+  reviewId: z.string().uuid().nullable().optional(),
+  state: z.lazy(() => EconomyRiskEconomyProtectedOperationStateSchema).optional(),
+});
+
 /** Zod schema for APIControllersProcessDetails */
 APIControllersProcessDetailsSchema = z.object({
   startTime: z.string().datetime().optional(),
   uptime: z.string().optional(),
+});
+
+/** Zod schema for APIControllersProposeEconomyPolicyInput */
+APIControllersProposeEconomyPolicyInputSchema = z.object({
+  id: z.string().uuid().optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  effectiveAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  payload: z.record(z.string(), z.unknown()).optional(),
+  providerReady: z.boolean().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for APIControllersProposeEconomyReserveInput */
+APIControllersProposeEconomyReserveInputSchema = z.object({
+  id: z.string().uuid().optional(),
+  authorizationEpoch: z.number().int().optional(),
+  buffers: z.lazy(() => EconomyReservesReserveBufferPositionSchema).optional(),
+  custodyObservationIds: z.array(z.string().uuid()).nullable().optional(),
+  expectedActiveVersion: z.number().int().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  irreversibleInFlightProviderCostUsdNanos: z.number().int().optional(),
+  observedAt: z.string().datetime().optional(),
+  policyVersion: z.number().int().optional(),
+  services: z
+    .array(z.lazy(() => EconomyReservesReserveServiceObservationSchema))
+    .nullable()
+    .optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for APIControllersProposeLegacyEconomyCutoverInput */
+APIControllersProposeLegacyEconomyCutoverInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersProposeTreasuryWithdrawalInput */
+APIControllersProposeTreasuryWithdrawalInputSchema = z.object({
+  amountUnits: z.number().int().optional(),
+  destinationHash: z.string().nullable().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  periodStart: z.string().date().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersPublishEconomyAnchorInput */
+APIControllersPublishEconomyAnchorInputSchema = z.object({
+  dispatchSnapshotHash: z.string().nullable().optional(),
 });
 
 /** Zod schema for APIControllersReadinessOutput */
@@ -13288,6 +14672,37 @@ APIControllersReadinessOutputSchema = z.object({
   timestamp: z.string().datetime().optional(),
 });
 
+/** Zod schema for APIControllersRecordRegulatoryReferenceInput */
+APIControllersRecordRegulatoryReferenceInputSchema = z.object({
+  jurisdictionCode: z.string().nullable().optional(),
+  kind: z.string().nullable().optional(),
+  referenceHash: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersRefundMarketplaceSettlementInput */
+APIControllersRefundMarketplaceSettlementInputSchema = z.object({
+  idempotencyKey: z.string().nullable().optional(),
+  quantity: z.number().int().optional(),
+  reasonCode: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersReserveApprovedPayoutExecutionInput */
+APIControllersReserveApprovedPayoutExecutionInputSchema = z.object({
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersResolveEconomyRiskReviewInput */
+APIControllersResolveEconomyRiskReviewInputSchema = z.object({
+  decisionCode: z.lazy(() => EconomyRiskRiskManualDecisionCodeSchema).optional(),
+  resolution: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersRollbackLegacyEconomyCutoverInput */
+APIControllersRollbackLegacyEconomyCutoverInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
 /** Zod schema for APIControllersRuntimeDetails */
 APIControllersRuntimeDetailsSchema = z.object({
   dotNetVersion: z.string().nullable().optional(),
@@ -13296,13 +14711,33 @@ APIControllersRuntimeDetailsSchema = z.object({
   processArchitecture: z.string().nullable().optional(),
 });
 
+/** Zod schema for APIControllersSettleMyMarketplaceOrderInput */
+APIControllersSettleMyMarketplaceOrderInputSchema = z.object({
+  currencyChoice: z.lazy(() => EconomyMarketplaceMarketplaceCurrencyChoiceSchema).optional(),
+  idempotencyKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersStartMyAdRewardSessionInput */
+APIControllersStartMyAdRewardSessionInputSchema = z.object({
+  asnRiskHash: z.string().nullable().optional(),
+  creativeId: z.string().nullable().optional(),
+  deviceRiskHash: z.string().nullable().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  ipRiskHash: z.string().nullable().optional(),
+  network: z.string().nullable().optional(),
+  requiredDurationSeconds: z.number().optional(),
+});
+
+/** Zod schema for APIControllersStartMyKycInput */
+APIControllersStartMyKycInputSchema = z.object({
+  idempotencyKey: z.string().nullable().optional(),
+});
+
 /** Zod schema for APIProjectsAddProjectTeamInput */
 APIProjectsAddProjectTeamInputSchema = z.object({
   contributionPercentage: z.number().optional(),
   notes: z.string().nullable().optional(),
-  participationMode: z
-    .lazy(() => ProjectsProjectTeamParticipationModeSchema)
-    .optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
   permissions: z
     .array(z.lazy(() => IdentityAuthorizationPermissionTypeSchema))
     .nullable()
@@ -13389,9 +14824,7 @@ APIProjectsProjectTeamOwnershipSchema = z.object({
   assignedAt: z.string().datetime().optional(),
   endedAt: z.string().datetime().nullable().optional(),
   isActive: z.boolean().optional(),
-  participationMode: z
-    .lazy(() => ProjectsProjectTeamParticipationModeSchema)
-    .optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
   permissions: z.array(z.string()).nullable().optional(),
   role: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
   teamId: z.string().uuid().optional(),
@@ -13417,9 +14850,7 @@ APIProjectsUpdateProjectAllocationInputSchema = z.object({
 APIProjectsUpdateProjectTeamInputSchema = z.object({
   contributionPercentage: z.number().optional(),
   notes: z.string().nullable().optional(),
-  participationMode: z
-    .lazy(() => ProjectsProjectTeamParticipationModeSchema)
-    .optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
   permissions: z
     .array(z.lazy(() => IdentityAuthorizationPermissionTypeSchema))
     .nullable()
@@ -13618,12 +15049,7 @@ APIProjectWorkUpdateProjectWorkTaskInputSchema = z.object({
 });
 
 /** Zod schema for APISetupEconomyCapabilityReadinessState */
-APISetupEconomyCapabilityReadinessStateSchema = z.enum([
-  "Disabled",
-  "Ready",
-  "ProviderNotReady",
-  "InvalidConfiguration",
-]);
+APISetupEconomyCapabilityReadinessStateSchema = z.enum(['Disabled', 'Ready', 'ProviderNotReady', 'InvalidConfiguration']);
 
 /** Zod schema for APITeamsAcceptTeamInvitationInput */
 APITeamsAcceptTeamInvitationInputSchema = z.object({
@@ -13717,9 +15143,7 @@ APITeamsTeamMemberSchema = z.object({
 /** Zod schema for APITeamsTeamProjectSummary */
 APITeamsTeamProjectSummarySchema = z.object({
   id: z.string().uuid().optional(),
-  participationMode: z
-    .lazy(() => ProjectsProjectTeamParticipationModeSchema)
-    .optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
   slug: z.string().nullable().optional(),
   status: z.lazy(() => ContentStatusSchema).optional(),
   teamRole: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
@@ -13738,15 +15162,15 @@ APITeamsUpdateTeamInputSchema = z.object({
 
 /** Zod schema for AssetsAssetAccessPolicy */
 AssetsAssetAccessPolicySchema = z.enum([
-  "Private",
-  "SignedUrl",
-  "TenantPublic",
-  "Public",
-  "PaidContent",
-  "OwnerOnly",
-  "Authenticated",
-  "Unlisted",
-  "Inherited",
+  'Private',
+  'SignedUrl',
+  'TenantPublic',
+  'Public',
+  'PaidContent',
+  'OwnerOnly',
+  'Authenticated',
+  'Unlisted',
+  'Inherited',
 ]);
 
 /** Zod schema for AssetsAssetAccessUrl */
@@ -13758,22 +15182,10 @@ AssetsAssetAccessUrlSchema = z.object({
 });
 
 /** Zod schema for AssetsAssetFolderRestrictionMode */
-AssetsAssetFolderRestrictionModeSchema = z.enum([
-  "None",
-  "SelectedTeams",
-  "TeamAuthorities",
-  "AllocatedProjectMembers",
-]);
+AssetsAssetFolderRestrictionModeSchema = z.enum(['None', 'SelectedTeams', 'TeamAuthorities', 'AllocatedProjectMembers']);
 
 /** Zod schema for AssetsAssetKind */
-AssetsAssetKindSchema = z.enum([
-  "Image",
-  "Video",
-  "Audio",
-  "Document",
-  "Archive",
-  "Other",
-]);
+AssetsAssetKindSchema = z.enum(['Image', 'Video', 'Audio', 'Document', 'Archive', 'Other']);
 
 /** Zod schema for AssetsAssetUploadResult */
 AssetsAssetUploadResultSchema = z.object({
@@ -13914,34 +15326,13 @@ AssetsControllersUpdateVirusScanInputSchema = z.object({
 });
 
 /** Zod schema for AssetsImageFit */
-AssetsImageFitSchema = z.enum([
-  "Contain",
-  "Cover",
-  "Fill",
-  "Inside",
-  "Outside",
-]);
+AssetsImageFitSchema = z.enum(['Contain', 'Cover', 'Fill', 'Inside', 'Outside']);
 
 /** Zod schema for AssetsImageFormat */
-AssetsImageFormatSchema = z.enum([
-  "Original",
-  "Jpeg",
-  "Png",
-  "Webp",
-  "Avif",
-  "Gif",
-]);
+AssetsImageFormatSchema = z.enum(['Original', 'Jpeg', 'Png', 'Webp', 'Avif', 'Gif']);
 
 /** Zod schema for AssetsModerationStatus */
-AssetsModerationStatusSchema = z.enum([
-  "Pending",
-  "Processing",
-  "Approved",
-  "Rejected",
-  "NeedsReview",
-  "ApprovedWithWarning",
-  "Blocked",
-]);
+AssetsModerationStatusSchema = z.enum(['Pending', 'Processing', 'Approved', 'Rejected', 'NeedsReview', 'ApprovedWithWarning', 'Blocked']);
 
 /** Zod schema for AssetsQueriesAssetPreviewOutput */
 AssetsQueriesAssetPreviewOutputSchema = z.object({
@@ -14051,25 +15442,10 @@ AssetsQueriesBulkAssetAccessUrlsOutputSchema = z.object({
 });
 
 /** Zod schema for AssetsReportReason */
-AssetsReportReasonSchema = z.enum([
-  "Inappropriate",
-  "Copyright",
-  "Spam",
-  "Violence",
-  "Harassment",
-  "Misinformation",
-  "Other",
-]);
+AssetsReportReasonSchema = z.enum(['Inappropriate', 'Copyright', 'Spam', 'Violence', 'Harassment', 'Misinformation', 'Other']);
 
 /** Zod schema for AssetsReviewDecision */
-AssetsReviewDecisionSchema = z.enum([
-  "NoAction",
-  "ContentRemoved",
-  "ContentHidden",
-  "UserWarned",
-  "UserSuspended",
-  "BlockContent",
-]);
+AssetsReviewDecisionSchema = z.enum(['NoAction', 'ContentRemoved', 'ContentHidden', 'UserWarned', 'UserSuspended', 'BlockContent']);
 
 /** Zod schema for AssetsSecurityAccessUrlInput */
 AssetsSecurityAccessUrlInputSchema = z.object({
@@ -14078,23 +15454,10 @@ AssetsSecurityAccessUrlInputSchema = z.object({
 });
 
 /** Zod schema for AssetsVirusScanStatus */
-AssetsVirusScanStatusSchema = z.enum([
-  "Pending",
-  "Scanning",
-  "Clean",
-  "Infected",
-  "ScanFailed",
-]);
+AssetsVirusScanStatusSchema = z.enum(['Pending', 'Scanning', 'Clean', 'Infected', 'ScanFailed']);
 
 /** Zod schema for BillingCycle */
-BillingCycleSchema = z.enum([
-  "Weekly",
-  "Monthly",
-  "Quarterly",
-  "SemiAnnually",
-  "Annually",
-  "Biannually",
-]);
+BillingCycleSchema = z.enum(['Weekly', 'Monthly', 'Quarterly', 'SemiAnnually', 'Annually', 'Biannually']);
 
 /** Zod schema for BulkOperationError */
 BulkOperationErrorSchema = z.object({
@@ -14129,23 +15492,10 @@ CommerceBillingInvoicePaymentRetryResultSchema = z.object({
 });
 
 /** Zod schema for CommerceBillingInvoiceStatus */
-CommerceBillingInvoiceStatusSchema = z.enum([
-  "Draft",
-  "Open",
-  "Paid",
-  "Void",
-  "PastDue",
-  "Uncollectible",
-]);
+CommerceBillingInvoiceStatusSchema = z.enum(['Draft', 'Open', 'Paid', 'Void', 'PastDue', 'Uncollectible']);
 
 /** Zod schema for CommerceOrderChargeState */
-CommerceOrderChargeStateSchema = z.enum([
-  "Succeeded",
-  "Failed",
-  "Processing",
-  "RequiresAction",
-  "RequiresReconciliation",
-]);
+CommerceOrderChargeStateSchema = z.enum(['Succeeded', 'Failed', 'Processing', 'RequiresAction', 'RequiresReconciliation']);
 
 /** Zod schema for CommerceOrdersAddOrderItemInput */
 CommerceOrdersAddOrderItemInputSchema = z.object({
@@ -14163,9 +15513,16 @@ CommerceOrdersCaptureOrderInputSchema = z.object({
 
 /** Zod schema for CommerceOrdersCompleteOrderInput */
 CommerceOrdersCompleteOrderInputSchema = z.object({
+  marketplaceSettlement: z.lazy(() => CommerceOrdersCompleteOrderMarketplaceSettlementSchema).optional(),
   paymentId: z.string().uuid().nullable().optional(),
   paymentMethod: z.string().nullable().optional(),
   paymentProviderReference: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceOrdersCompleteOrderMarketplaceSettlement */
+CommerceOrdersCompleteOrderMarketplaceSettlementSchema = z.object({
+  currencyChoice: z.lazy(() => CommerceOrdersOrderMarketplaceCurrencyChoiceSchema).optional(),
+  idempotencyKey: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceOrdersCreateOrderInput */
@@ -14246,43 +15603,43 @@ CommerceOrdersOrderLineItemSchema = z.object({
   unitPrice: z.number().optional(),
 });
 
+/** Zod schema for CommerceOrdersOrderMarketplaceCurrencyChoice */
+CommerceOrdersOrderMarketplaceCurrencyChoiceSchema = z.enum(['Hard', 'Soft', 'FixedMix']);
+
 /** Zod schema for CommerceOrdersOrderStatus */
 CommerceOrdersOrderStatusSchema = z.enum([
-  "Pending",
-  "Processing",
-  "Completed",
-  "Failed",
-  "Cancelled",
-  "Refunded",
-  "PartiallyRefunded",
-  "Disputed",
-  "Paid",
-  "Fulfilled",
-  "OnHold",
+  'Pending',
+  'Processing',
+  'Completed',
+  'Failed',
+  'Cancelled',
+  'Refunded',
+  'PartiallyRefunded',
+  'Disputed',
+  'Paid',
+  'Fulfilled',
+  'OnHold',
 ]);
 
 /** Zod schema for CommercePaymentsBillingChargesControllerCancelBillingChargeInput */
-CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema =
-  z.object({
-    canceledBy: z.string().uuid().nullable().optional(),
-    cancellationReason: z.string().nullable().optional(),
-  });
+CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema = z.object({
+  canceledBy: z.string().uuid().nullable().optional(),
+  cancellationReason: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommercePaymentsBillingChargesControllerCreateBillingChargeInput */
-CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema =
-  z.object({
-    amount: z.number().optional(),
-    paymentMethodId: z.string().nullable().optional(),
-    subscriptionId: z.string().uuid().optional(),
-    tenantId: z.string().uuid().optional(),
-  });
+CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema = z.object({
+  amount: z.number().optional(),
+  paymentMethodId: z.string().nullable().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+});
 
 /** Zod schema for CommercePaymentsBillingChargesControllerRefundBillingChargeInput */
-CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema =
-  z.object({
-    amount: z.number().nullable().optional(),
-    reason: z.string().nullable().optional(),
-  });
+CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema = z.object({
+  amount: z.number().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommercePaymentsCalculateTaxInput */
 CommercePaymentsCalculateTaxInputSchema = z.object({
@@ -14324,7 +15681,7 @@ CommercePaymentsCreateWalletInputSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsCustomerType */
-CommercePaymentsCustomerTypeSchema = z.enum(["B2C", "B2B"]);
+CommercePaymentsCustomerTypeSchema = z.enum(['B2C', 'B2B']);
 
 /** Zod schema for CommercePaymentsLockWalletInput */
 CommercePaymentsLockWalletInputSchema = z.object({
@@ -14404,12 +15761,11 @@ CommercePaymentsPaymentsControllerCancelPaymentInputSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInput */
-CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema =
-  z.object({
-    paymentMethodId: z.string().nullable().optional(),
-    subscriptionId: z.string().uuid().optional(),
-    tenantId: z.string().uuid().optional(),
-  });
+CommercePaymentsPaymentsControllerCompleteSubscriptionCheckoutInputSchema = z.object({
+  paymentMethodId: z.string().nullable().optional(),
+  subscriptionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+});
 
 /** Zod schema for CommercePaymentsPaymentsControllerCreateSetupIntentInput */
 CommercePaymentsPaymentsControllerCreateSetupIntentInputSchema = z.object({
@@ -14442,16 +15798,7 @@ CommercePaymentsPaymentsControllerRefundInputSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsPaymentStatus */
-CommercePaymentsPaymentStatusSchema = z.enum([
-  "Pending",
-  "Processing",
-  "Succeeded",
-  "Failed",
-  "Cancelled",
-  "RequiresAction",
-  "Refunded",
-  "Disputed",
-]);
+CommercePaymentsPaymentStatusSchema = z.enum(['Pending', 'Processing', 'Succeeded', 'Failed', 'Cancelled', 'RequiresAction', 'Refunded', 'Disputed']);
 
 /** Zod schema for CommercePaymentsProcessRefundResult */
 CommercePaymentsProcessRefundResultSchema = z.object({
@@ -14530,9 +15877,7 @@ CommercePaymentsTaxJurisdictionSchema = z.object({
   isNew: z.boolean().optional(),
   isReverseChargeApplicable: z.boolean().optional(),
   name: z.string().min(1).max(200),
-  parentJurisdiction: z
-    .lazy(() => CommercePaymentsTaxJurisdictionSchema)
-    .optional(),
+  parentJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
   parentJurisdictionId: z.string().uuid().nullable().optional(),
   taxRegistrationNumber: z.string().max(100).nullable().optional(),
   taxRules: z
@@ -14558,15 +15903,7 @@ CommercePaymentsTaxJurisdictionDtoSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsTaxJurisdictionType */
-CommercePaymentsTaxJurisdictionTypeSchema = z.enum([
-  "Country",
-  "State",
-  "Province",
-  "Region",
-  "City",
-  "County",
-  "District",
-]);
+CommercePaymentsTaxJurisdictionTypeSchema = z.enum(['Country', 'State', 'Province', 'Region', 'City', 'County', 'District']);
 
 /** Zod schema for CommercePaymentsTaxRate */
 CommercePaymentsTaxRateSchema = z.object({
@@ -14588,9 +15925,7 @@ CommercePaymentsTaxRateSchema = z.object({
   minimumTaxableAmount: z.number().nullable().optional(),
   productCategory: z.string().max(100).nullable().optional(),
   rate: z.number().optional(),
-  taxJurisdiction: z
-    .lazy(() => CommercePaymentsTaxJurisdictionSchema)
-    .optional(),
+  taxJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
   taxJurisdictionId: z.string().uuid(),
   taxType: z.lazy(() => CommercePaymentsTaxTypeSchema).optional(),
   tenantId: z.string().uuid().nullable().optional(),
@@ -14602,9 +15937,7 @@ CommercePaymentsTaxRateSchema = z.object({
 CommercePaymentsTaxRuleSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
-  customerTypeFilter: z
-    .lazy(() => CommercePaymentsCustomerTypeSchema)
-    .optional(),
+  customerTypeFilter: z.lazy(() => CommercePaymentsCustomerTypeSchema).optional(),
   defaultTaxRate: z.lazy(() => CommercePaymentsTaxRateSchema).optional(),
   defaultTaxRateId: z.string().uuid().nullable().optional(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -14628,9 +15961,7 @@ CommercePaymentsTaxRuleSchema = z.object({
   priority: z.number().int().optional(),
   productCategories: z.string().max(2000).nullable().optional(),
   ruleType: z.lazy(() => CommercePaymentsTaxRuleTypeSchema).optional(),
-  taxJurisdiction: z
-    .lazy(() => CommercePaymentsTaxJurisdictionSchema)
-    .optional(),
+  taxJurisdiction: z.lazy(() => CommercePaymentsTaxJurisdictionSchema).optional(),
   taxJurisdictionId: z.string().uuid(),
   tenantId: z.string().uuid().nullable().optional(),
   updatedAt: z.string().datetime(),
@@ -14651,38 +15982,13 @@ CommercePaymentsTaxRuleDtoSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsTaxRuleType */
-CommercePaymentsTaxRuleTypeSchema = z.enum([
-  "Standard",
-  "Reduced",
-  "ZeroRated",
-  "Exempt",
-  "ReverseCharge",
-  "WithholdingTax",
-  "Compound",
-  "Custom",
-]);
+CommercePaymentsTaxRuleTypeSchema = z.enum(['Standard', 'Reduced', 'ZeroRated', 'Exempt', 'ReverseCharge', 'WithholdingTax', 'Compound', 'Custom']);
 
 /** Zod schema for CommercePaymentsTaxType */
-CommercePaymentsTaxTypeSchema = z.enum([
-  "VAT",
-  "GST",
-  "SalesTax",
-  "ServiceTax",
-  "WithholdingTax",
-  "ExciseTax",
-  "CustomsDuty",
-  "Other",
-]);
+CommercePaymentsTaxTypeSchema = z.enum(['VAT', 'GST', 'SalesTax', 'ServiceTax', 'WithholdingTax', 'ExciseTax', 'CustomsDuty', 'Other']);
 
 /** Zod schema for CommercePaymentsTransactionStatus */
-CommercePaymentsTransactionStatusSchema = z.enum([
-  "Pending",
-  "Processing",
-  "Completed",
-  "Failed",
-  "Cancelled",
-  "Reversed",
-]);
+CommercePaymentsTransactionStatusSchema = z.enum(['Pending', 'Processing', 'Completed', 'Failed', 'Cancelled', 'Reversed']);
 
 /** Zod schema for CommercePaymentsUserWallet */
 CommercePaymentsUserWalletSchema = z.object({
@@ -14753,15 +16059,7 @@ CommercePaymentsWalletTransactionSchema = z.object({
 });
 
 /** Zod schema for CommercePaymentsWalletTransactionType */
-CommercePaymentsWalletTransactionTypeSchema = z.enum([
-  "Credit",
-  "Debit",
-  "TransferIn",
-  "TransferOut",
-  "Refund",
-  "Fee",
-  "Adjustment",
-]);
+CommercePaymentsWalletTransactionTypeSchema = z.enum(['Credit', 'Debit', 'TransferIn', 'TransferOut', 'Refund', 'Fee', 'Adjustment']);
 
 /** Zod schema for CommerceProductsAddMySupportTicketMessageInput */
 CommerceProductsAddMySupportTicketMessageInputSchema = z.object({
@@ -14772,9 +16070,7 @@ CommerceProductsAddMySupportTicketMessageInputSchema = z.object({
 CommerceProductsAddSupportTicketMessageInputSchema = z.object({
   authorEmail: z.string().nullable().optional(),
   authorName: z.string().nullable().optional(),
-  authorType: z
-    .lazy(() => CommerceProductsSupportTicketMessageAuthorTypeSchema)
-    .optional(),
+  authorType: z.lazy(() => CommerceProductsSupportTicketMessageAuthorTypeSchema).optional(),
   authorUserId: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
   isInternal: z.boolean().optional(),
@@ -14843,9 +16139,7 @@ CommerceProductsCloseSupportTicketInputSchema = z.object({
 CommerceProductsCreateMySupportTicketInputSchema = z.object({
   body: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
-  priority: z
-    .lazy(() => CommerceProductsSupportTicketPrioritySchema)
-    .optional(),
+  priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
   subject: z.string().nullable().optional(),
 });
 
@@ -14891,9 +16185,7 @@ CommerceProductsCreateSupportTicketInputSchema = z.object({
   category: z.string().nullable().optional(),
   customerId: z.string().uuid().optional(),
   customerName: z.string().nullable().optional(),
-  priority: z
-    .lazy(() => CommerceProductsSupportTicketPrioritySchema)
-    .optional(),
+  priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
   reporterEmail: z.string().nullable().optional(),
   reporterName: z.string().nullable().optional(),
   reporterUserId: z.string().uuid().optional(),
@@ -14923,9 +16215,7 @@ CommerceProductsEntitlementInfoSchema = z.object({
 
 /** Zod schema for CommerceProductsGrantEntitlementInput */
 CommerceProductsGrantEntitlementInputSchema = z.object({
-  acquisitionType: z
-    .lazy(() => CommerceProductsProductAcquisitionTypeSchema)
-    .optional(),
+  acquisitionType: z.lazy(() => CommerceProductsProductAcquisitionTypeSchema).optional(),
   currency: z.string().nullable().optional(),
   expiresAt: z.string().datetime().nullable().optional(),
   pricePaid: z.number().optional(),
@@ -14991,17 +16281,7 @@ CommerceProductsProductSchema = z.object({
 });
 
 /** Zod schema for CommerceProductsProductAcquisitionType */
-CommerceProductsProductAcquisitionTypeSchema = z.enum([
-  "Purchase",
-  "Subscription",
-  "Grant",
-  "PromoCode",
-  "Bundle",
-  "Trial",
-  "Referral",
-  "Free",
-  "Gift",
-]);
+CommerceProductsProductAcquisitionTypeSchema = z.enum(['Purchase', 'Subscription', 'Grant', 'PromoCode', 'Bundle', 'Trial', 'Referral', 'Free', 'Gift']);
 
 /** Zod schema for CommerceProductsProductPricing */
 CommerceProductsProductPricingSchema = z.object({
@@ -15020,20 +16300,20 @@ CommerceProductsProductPricingSchema = z.object({
 
 /** Zod schema for CommerceProductsProductType */
 CommerceProductsProductTypeSchema = z.enum([
-  "Program",
-  "Course",
-  "Bundle",
-  "Subscription",
-  "Workshop",
-  "Mentorship",
-  "Ebook",
-  "ResourcePack",
-  "Community",
-  "Certification",
-  "Physical",
-  "Service",
-  "LearningPathway",
-  "Other",
+  'Program',
+  'Course',
+  'Bundle',
+  'Subscription',
+  'Workshop',
+  'Mentorship',
+  'Ebook',
+  'ResourcePack',
+  'Community',
+  'Certification',
+  'Physical',
+  'Service',
+  'LearningPathway',
+  'Other',
 ]);
 
 /** Zod schema for CommerceProductsPromoCode */
@@ -15076,13 +16356,7 @@ CommerceProductsPromoCodeApplicationResultSchema = z.object({
 });
 
 /** Zod schema for CommerceProductsPromoCodeType */
-CommerceProductsPromoCodeTypeSchema = z.enum([
-  "PercentageOff",
-  "FixedAmountOff",
-  "FreeTrial",
-  "BuyOneGetOne",
-  "FreeShipping",
-]);
+CommerceProductsPromoCodeTypeSchema = z.enum(['PercentageOff', 'FixedAmountOff', 'FreeTrial', 'BuyOneGetOne', 'FreeShipping']);
 
 /** Zod schema for CommerceProductsPromoCodeUsage */
 CommerceProductsPromoCodeUsageSchema = z.object({
@@ -15146,9 +16420,7 @@ CommerceProductsSupportTicketSchema = z.object({
     .nullable()
     .optional(),
   openedAt: z.string().datetime().optional(),
-  priority: z
-    .lazy(() => CommerceProductsSupportTicketPrioritySchema)
-    .optional(),
+  priority: z.lazy(() => CommerceProductsSupportTicketPrioritySchema).optional(),
   reporterEmail: z.string().nullable().optional(),
   reporterName: z.string().nullable().optional(),
   reporterUserId: z.string().uuid().optional(),
@@ -15165,9 +16437,7 @@ CommerceProductsSupportTicketMessageSchema = z.object({
   id: z.string().uuid().optional(),
   authorEmail: z.string().nullable().optional(),
   authorName: z.string().nullable().optional(),
-  authorType: z
-    .lazy(() => CommerceProductsSupportTicketMessageAuthorTypeSchema)
-    .optional(),
+  authorType: z.lazy(() => CommerceProductsSupportTicketMessageAuthorTypeSchema).optional(),
   authorUserId: z.string().uuid().optional(),
   body: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
@@ -15176,28 +16446,13 @@ CommerceProductsSupportTicketMessageSchema = z.object({
 });
 
 /** Zod schema for CommerceProductsSupportTicketMessageAuthorType */
-CommerceProductsSupportTicketMessageAuthorTypeSchema = z.enum([
-  "Customer",
-  "Agent",
-  "System",
-]);
+CommerceProductsSupportTicketMessageAuthorTypeSchema = z.enum(['Customer', 'Agent', 'System']);
 
 /** Zod schema for CommerceProductsSupportTicketPriority */
-CommerceProductsSupportTicketPrioritySchema = z.enum([
-  "Low",
-  "Normal",
-  "High",
-  "Urgent",
-]);
+CommerceProductsSupportTicketPrioritySchema = z.enum(['Low', 'Normal', 'High', 'Urgent']);
 
 /** Zod schema for CommerceProductsSupportTicketStatus */
-CommerceProductsSupportTicketStatusSchema = z.enum([
-  "Open",
-  "InProgress",
-  "Resolved",
-  "Closed",
-  "Cancelled",
-]);
+CommerceProductsSupportTicketStatusSchema = z.enum(['Open', 'InProgress', 'Resolved', 'Closed', 'Cancelled']);
 
 /** Zod schema for CommerceProductsUpdateProductInput */
 CommerceProductsUpdateProductInputSchema = z.object({
@@ -15254,47 +16509,41 @@ CommerceSubscriptionsBillingHistorySchema = z.object({
 });
 
 /** Zod schema for CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInput */
-CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInputSchema =
-  z.object({
-    effectiveDate: z.string().datetime().nullable().optional(),
-    note: z.string().nullable().optional(),
-    reason: z
-      .lazy(() => CommerceSubscriptionsCancellationReasonSchema)
-      .optional(),
-  });
+CommerceSubscriptionsBillingSubscriptionsControllerCancelBillingSubscriptionInputSchema = z.object({
+  effectiveDate: z.string().datetime().nullable().optional(),
+  note: z.string().nullable().optional(),
+  reason: z.lazy(() => CommerceSubscriptionsCancellationReasonSchema).optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInput */
-CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInputSchema =
-  z.object({
-    amount: z.number().optional(),
-    billingCycle: z.lazy(() => BillingCycleSchema).optional(),
-    createdByUserId: z.string().uuid().optional(),
-    fulfilledOrderId: z.string().uuid().nullable().optional(),
-    planId: z.string().uuid().optional(),
-    startDate: z.string().datetime().nullable().optional(),
-    tenantId: z.string().uuid().optional(),
-    trialDays: z.number().int().nullable().optional(),
-  });
+CommerceSubscriptionsBillingSubscriptionsControllerCreateBillingSubscriptionInputSchema = z.object({
+  amount: z.number().optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  createdByUserId: z.string().uuid().optional(),
+  fulfilledOrderId: z.string().uuid().nullable().optional(),
+  planId: z.string().uuid().optional(),
+  startDate: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  trialDays: z.number().int().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsCancellationReason */
 CommerceSubscriptionsCancellationReasonSchema = z.enum([
-  "UserRequested",
-  "PaymentFailed",
-  "PlanDiscontinued",
-  "PolicyViolation",
-  "Downgrade",
-  "TrialEnded",
-  "Custom",
-  "ExternalRequest",
+  'UserRequested',
+  'PaymentFailed',
+  'PlanDiscontinued',
+  'PolicyViolation',
+  'Downgrade',
+  'TrialEnded',
+  'Custom',
+  'ExternalRequest',
 ]);
 
 /** Zod schema for CommerceSubscriptionsClientModulesOutput */
 CommerceSubscriptionsClientModulesOutputSchema = z.object({
   clientId: z.string().uuid().optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
-  subscriptions: z
-    .lazy(() => PagedResultOfCommerceSubscriptionsSubscriptionSchema)
-    .optional(),
+  subscriptions: z.lazy(() => PagedResultOfCommerceSubscriptionsSubscriptionSchema).optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsCreateClientInput */
@@ -15302,10 +16551,7 @@ CommerceSubscriptionsCreateClientInputSchema = z.object({
   adminEmail: z.string().nullable().optional(),
   cnpj: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  fiscalData: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  fiscalData: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   name: z.string().nullable().optional(),
   slug: z.string().nullable().optional(),
   taxId: z.string().nullable().optional(),
@@ -15319,9 +16565,7 @@ CommerceSubscriptionsSubscriptionSchema = z.object({
   billingCycle: z.lazy(() => BillingCycleSchema).optional(),
   billingCycleCount: z.number().int().optional(),
   cancellationNote: z.string().max(1000).nullable().optional(),
-  cancellationReason: z
-    .lazy(() => CommerceSubscriptionsCancellationReasonSchema)
-    .optional(),
+  cancellationReason: z.lazy(() => CommerceSubscriptionsCancellationReasonSchema).optional(),
   cancelledAt: z.string().datetime().nullable().optional(),
   createdAt: z.string().datetime(),
   createdByUserId: z.string().uuid(),
@@ -15354,9 +16598,7 @@ CommerceSubscriptionsSubscriptionSchema = z.object({
   planId: z.string().uuid(),
   rowVersion: z.string().nullable().optional(),
   startDate: z.string().datetime().optional(),
-  status: z
-    .lazy(() => CommerceSubscriptionsSubscriptionStatusSchema)
-    .optional(),
+  status: z.lazy(() => CommerceSubscriptionsSubscriptionStatusSchema).optional(),
   tenantId: z.string().uuid().nullable().optional(),
   trialEndDate: z.string().datetime().nullable().optional(),
   updatedAt: z.string().datetime(),
@@ -15384,70 +16626,59 @@ CommerceSubscriptionsSubscriptionDowngradeResultSchema = z.object({
   effectiveDate: z.string().datetime().nullable().optional(),
   failureReason: z.string().nullable().optional(),
   success: z.boolean().optional(),
-  updatedSubscription: z
-    .lazy(() => CommerceSubscriptionsSubscriptionSchema)
-    .optional(),
+  updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInput */
-CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInputSchema =
-  z.object({
-    autoRenew: z.boolean().optional(),
-  });
+CommerceSubscriptionsSubscriptionLifecycleControllerAutoRenewInputSchema = z.object({
+  autoRenew: z.boolean().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerCancelInput */
-CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema =
-  z.object({
-    effectiveDate: z.string().datetime().nullable().optional(),
-    note: z.string().nullable().optional(),
-    reason: z.string().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionLifecycleControllerCancelInputSchema = z.object({
+  effectiveDate: z.string().datetime().nullable().optional(),
+  note: z.string().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInput */
-CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInputSchema =
-  z.object({
-    effectiveDate: z.string().datetime().nullable().optional(),
-    newPlanId: z.string().uuid().optional(),
-  });
+CommerceSubscriptionsSubscriptionLifecycleControllerDowngradeInputSchema = z.object({
+  effectiveDate: z.string().datetime().nullable().optional(),
+  newPlanId: z.string().uuid().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInput */
-CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInputSchema =
-  z.object({
-    convertToPaid: z.boolean().optional(),
-  });
+CommerceSubscriptionsSubscriptionLifecycleControllerEndTrialInputSchema = z.object({
+  convertToPaid: z.boolean().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInput */
-CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInputSchema =
-  z.object({
-    externalCustomerId: z.string().nullable().optional(),
-    externalSubscriptionId: z.string().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionLifecycleControllerExternalIdsInputSchema = z.object({
+  externalCustomerId: z.string().nullable().optional(),
+  externalSubscriptionId: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInput */
-CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInputSchema =
-  z.object({
-    pauseUntil: z.string().datetime().nullable().optional(),
-    reason: z.string().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionLifecycleControllerPauseSubscriptionInputSchema = z.object({
+  pauseUntil: z.string().datetime().nullable().optional(),
+  reason: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInput */
-CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInputSchema =
-  z.object({
-    trialDays: z.number().int().optional(),
-  });
+CommerceSubscriptionsSubscriptionLifecycleControllerStartTrialInputSchema = z.object({
+  trialDays: z.number().int().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInput */
-CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema =
-  z.object({
-    reason: z.string().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionLifecycleControllerSuspendInputSchema = z.object({
+  reason: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInput */
-CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema =
-  z.object({
-    effectiveDate: z.string().datetime().nullable().optional(),
-    newPlanId: z.string().uuid().optional(),
-  });
+CommerceSubscriptionsSubscriptionLifecycleControllerUpgradeInputSchema = z.object({
+  effectiveDate: z.string().datetime().nullable().optional(),
+  newPlanId: z.string().uuid().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionNotification */
 CommerceSubscriptionsSubscriptionNotificationSchema = z.object({
@@ -15464,10 +16695,9 @@ CommerceSubscriptionsSubscriptionNotificationSchema = z.object({
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInput */
-CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInputSchema =
-  z.object({
-    channel: z.lazy(() => NotificationsNotificationChannelSchema).optional(),
-  });
+CommerceSubscriptionsSubscriptionNotificationsControllerResendSubscriptionNotificationInputSchema = z.object({
+  channel: z.lazy(() => NotificationsNotificationChannelSchema).optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlan */
 CommerceSubscriptionsSubscriptionPlanSchema = z.object({
@@ -15510,145 +16740,123 @@ CommerceSubscriptionsSubscriptionPlanSchema = z.object({
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInput */
-CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInputSchema =
-  z.object({
-    newName: z.string().nullable().optional(),
-    newSlug: z.string().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlanOperationsControllerCloneSubscriptionPlanInputSchema = z.object({
+  newName: z.string().nullable().optional(),
+  newSlug: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInput */
-CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInputSchema =
-  z.object({
-    externalId: z.string().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlanOperationsControllerSetExternalIdInputSchema = z.object({
+  externalId: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInput */
-CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInputSchema =
-  z.object({
-    featured: z.boolean().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlanOperationsControllerSetFeaturedInputSchema = z.object({
+  featured: z.boolean().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInput */
-CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchema =
-  z.object({
-    description: z.string().nullable().optional(),
-    name: z.string().nullable().optional(),
-    planId: z.string().uuid().optional(),
-    sortOrder: z.number().int().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateDetailsInputSchema = z.object({
+  description: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  planId: z.string().uuid().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInput */
-CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSchema =
-  z.object({
-    features: z.string().nullable().optional(),
-    hasAdvancedAnalytics: z.boolean().nullable().optional(),
-    hasCustomBranding: z.boolean().nullable().optional(),
-    hasPrioritySupport: z.boolean().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateFeaturesInputSchema = z.object({
+  features: z.string().nullable().optional(),
+  hasAdvancedAnalytics: z.boolean().nullable().optional(),
+  hasCustomBranding: z.boolean().nullable().optional(),
+  hasPrioritySupport: z.boolean().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInput */
-CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInputSchema =
-  z.object({
-    maxApiCallsPerMonth: z.number().int().nullable().optional(),
-    maxStorageMb: z.number().int().nullable().optional(),
-    maxUsers: z.number().int().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdateLimitsInputSchema = z.object({
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxUsers: z.number().int().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInput */
-CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInputSchema =
-  z.object({
-    annualPriceInCents: z.number().int().nullable().optional(),
-    monthlyPriceInCents: z.number().int().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlanOperationsControllerUpdatePricingInputSchema = z.object({
+  annualPriceInCents: z.number().int().nullable().optional(),
+  monthlyPriceInCents: z.number().int().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInput */
-CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInputSchema =
-  z.object({
-    apiCalls: z.number().int().optional(),
-    storageMb: z.number().int().optional(),
-    users: z.number().int().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlanOperationsControllerValidateLimitsInputSchema = z.object({
+  apiCalls: z.number().int().optional(),
+  storageMb: z.number().int().optional(),
+  users: z.number().int().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInput */
-CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema =
-  z.object({
-    basePlanId: z.string().uuid().optional(),
-    comparePlanIds: z.array(z.string().uuid()).nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlansCrudControllerComparePlansInputSchema = z.object({
+  basePlanId: z.string().uuid().optional(),
+  comparePlanIds: z.array(z.string().uuid()).nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInput */
-CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema =
-  z.object({
-    currency: z.string().nullable().optional(),
-    description: z.string().nullable().optional(),
-    monthlyPriceInCents: z.number().int().optional(),
-    name: z.string().nullable().optional(),
-    slug: z.string().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlansCrudControllerCreatePlanInputSchema = z.object({
+  currency: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  monthlyPriceInCents: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInput */
-CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema =
-  z.object({
-    annualPriceInCents: z.number().int().nullable().optional(),
-    description: z.string().nullable().optional(),
-    features: z.string().nullable().optional(),
-    hasAdvancedAnalytics: z.boolean().nullable().optional(),
-    hasCustomBranding: z.boolean().nullable().optional(),
-    hasPrioritySupport: z.boolean().nullable().optional(),
-    maxApiCallsPerMonth: z.number().int().nullable().optional(),
-    maxStorageMb: z.number().int().nullable().optional(),
-    maxUsers: z.number().int().nullable().optional(),
-    monthlyPriceInCents: z.number().int().optional(),
-    name: z.string().nullable().optional(),
-    slug: z.string().nullable().optional(),
-    sortOrder: z.number().int().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionPlansCrudControllerPutSubscriptionPlanInputSchema = z.object({
+  annualPriceInCents: z.number().int().nullable().optional(),
+  description: z.string().nullable().optional(),
+  features: z.string().nullable().optional(),
+  hasAdvancedAnalytics: z.boolean().nullable().optional(),
+  hasCustomBranding: z.boolean().nullable().optional(),
+  hasPrioritySupport: z.boolean().nullable().optional(),
+  maxApiCallsPerMonth: z.number().int().nullable().optional(),
+  maxStorageMb: z.number().int().nullable().optional(),
+  maxUsers: z.number().int().nullable().optional(),
+  monthlyPriceInCents: z.number().int().optional(),
+  name: z.string().nullable().optional(),
+  slug: z.string().nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInput */
-CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema =
-  z.object({
-    amount: z.number().optional(),
-    billingCycle: z.lazy(() => BillingCycleSchema).optional(),
-    createdByUserId: z.string().uuid().optional(),
-    currency: z.string().nullable().optional(),
-    fulfilledOrderId: z.string().uuid().nullable().optional(),
-    planId: z.string().uuid().optional(),
-    startDate: z.string().datetime().nullable().optional(),
-    tenantId: z.string().uuid().optional(),
-    trialDays: z.number().int().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionsControllerCreateSubscriptionInputSchema = z.object({
+  amount: z.number().optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  createdByUserId: z.string().uuid().optional(),
+  currency: z.string().nullable().optional(),
+  fulfilledOrderId: z.string().uuid().nullable().optional(),
+  planId: z.string().uuid().optional(),
+  startDate: z.string().datetime().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  trialDays: z.number().int().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInput */
-CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema =
-  z.object({
-    autoRenew: z.boolean().nullable().optional(),
-    billingCycle: z.lazy(() => BillingCycleSchema).optional(),
-    externalCustomerId: z.string().nullable().optional(),
-    externalSubscriptionId: z.string().nullable().optional(),
-    metadata: z.string().nullable().optional(),
-  });
+CommerceSubscriptionsSubscriptionsControllerPatchSubscriptionInputSchema = z.object({
+  autoRenew: z.boolean().nullable().optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  externalCustomerId: z.string().nullable().optional(),
+  externalSubscriptionId: z.string().nullable().optional(),
+  metadata: z.string().nullable().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInput */
-CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema =
-  z.object({
-    amount: z.number().optional(),
-    autoRenew: z.boolean().optional(),
-    billingCycle: z.lazy(() => BillingCycleSchema).optional(),
-    externalCustomerId: z.string().nullable().optional(),
-    externalSubscriptionId: z.string().nullable().optional(),
-    planId: z.string().uuid().optional(),
-  });
+CommerceSubscriptionsSubscriptionsControllerPutSubscriptionInputSchema = z.object({
+  amount: z.number().optional(),
+  autoRenew: z.boolean().optional(),
+  billingCycle: z.lazy(() => BillingCycleSchema).optional(),
+  externalCustomerId: z.string().nullable().optional(),
+  externalSubscriptionId: z.string().nullable().optional(),
+  planId: z.string().uuid().optional(),
+});
 
 /** Zod schema for CommerceSubscriptionsSubscriptionStatus */
-CommerceSubscriptionsSubscriptionStatusSchema = z.enum([
-  "PendingActivation",
-  "Active",
-  "Trialing",
-  "PastDue",
-  "Suspended",
-  "Cancelled",
-  "Expired",
-]);
+CommerceSubscriptionsSubscriptionStatusSchema = z.enum(['PendingActivation', 'Active', 'Trialing', 'PastDue', 'Suspended', 'Cancelled', 'Expired']);
 
 /** Zod schema for CommerceSubscriptionsSubscriptionUpgradeResult */
 CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
@@ -15656,9 +16864,7 @@ CommerceSubscriptionsSubscriptionUpgradeResultSchema = z.object({
   failureReason: z.string().nullable().optional(),
   proratedAmount: z.lazy(() => MoneySchema).optional(),
   success: z.boolean().optional(),
-  updatedSubscription: z
-    .lazy(() => CommerceSubscriptionsSubscriptionSchema)
-    .optional(),
+  updatedSubscription: z.lazy(() => CommerceSubscriptionsSubscriptionSchema).optional(),
 });
 
 /** Zod schema for CommerceSubscriptionsSubscriptionUsage */
@@ -15676,17 +16882,17 @@ CommerceSubscriptionsSubscriptionUsageSchema = z.object({
 
 /** Zod schema for ComplianceAuditAuditCategory */
 ComplianceAuditAuditCategorySchema = z.enum([
-  "General",
-  "Authentication",
-  "Authorization",
-  "Permission",
-  "User",
-  "Admin",
-  "Security",
-  "Data",
-  "System",
-  "Tenant",
-  "Privacy",
+  'General',
+  'Authentication',
+  'Authorization',
+  'Permission',
+  'User',
+  'Admin',
+  'Security',
+  'Data',
+  'System',
+  'Tenant',
+  'Privacy',
 ]);
 
 /** Zod schema for ComplianceAuditAuditExportInput */
@@ -15735,12 +16941,7 @@ ComplianceAuditAuditLogOutputSchema = z.object({
 });
 
 /** Zod schema for ComplianceAuditAuditRiskLevel */
-ComplianceAuditAuditRiskLevelSchema = z.enum([
-  "Low",
-  "Medium",
-  "High",
-  "Critical",
-]);
+ComplianceAuditAuditRiskLevelSchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
 /** Zod schema for ComplianceAuditAuditStatisticsOutput */
 ComplianceAuditAuditStatisticsOutputSchema = z.object({
@@ -15868,12 +17069,7 @@ ComplianceAuditSecurityAuditDashboardSchema = z.object({
 });
 
 /** Zod schema for ComplianceAuditSecurityAuditSourceType */
-ComplianceAuditSecurityAuditSourceTypeSchema = z.enum([
-  "Authentication",
-  "Permission",
-  "General",
-  "All",
-]);
+ComplianceAuditSecurityAuditSourceTypeSchema = z.enum(['Authentication', 'Permission', 'General', 'All']);
 
 /** Zod schema for ComplianceAuditTopIpActivity */
 ComplianceAuditTopIpActivitySchema = z.object({
@@ -15903,9 +17099,7 @@ ComplianceAuditUnifiedSecurityAuditEntrySchema = z.object({
   resourceType: z.string().nullable().optional(),
   riskLevel: z.lazy(() => ComplianceAuditAuditRiskLevelSchema).optional(),
   sourceEntity: z.string().nullable().optional(),
-  sourceType: z
-    .lazy(() => ComplianceAuditSecurityAuditSourceTypeSchema)
-    .optional(),
+  sourceType: z.lazy(() => ComplianceAuditSecurityAuditSourceTypeSchema).optional(),
   success: z.boolean().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   timestamp: z.string().datetime().optional(),
@@ -15924,9 +17118,7 @@ ComplianceAuditUnifiedSecurityAuditInputSchema = z.object({
   skip: z.number().int().optional(),
   sortBy: z.string().nullable().optional(),
   sortDirection: z.string().nullable().optional(),
-  sourceType: z
-    .lazy(() => ComplianceAuditSecurityAuditSourceTypeSchema)
-    .optional(),
+  sourceType: z.lazy(() => ComplianceAuditSecurityAuditSourceTypeSchema).optional(),
   startDate: z.string().datetime().nullable().optional(),
   success: z.boolean().nullable().optional(),
   take: z.number().int().optional(),
@@ -15965,12 +17157,7 @@ ComplianceConsentConsentPolicySchema = z.object({
 });
 
 /** Zod schema for ComplianceConsentContentType */
-ComplianceConsentContentTypeSchema = z.enum([
-  "PlainText",
-  "Html",
-  "Markdown",
-  "Url",
-]);
+ComplianceConsentContentTypeSchema = z.enum(['PlainText', 'Html', 'Markdown', 'Url']);
 
 /** Zod schema for ComplianceConsentCreateConsentPolicyCommand */
 ComplianceConsentCreateConsentPolicyCommandSchema = z.object({
@@ -15986,33 +17173,16 @@ ComplianceConsentDataSubjectInputSchema = z.object({
   deadline: z.string().datetime().optional(),
   processedAt: z.string().datetime().nullable().optional(),
   processingNotes: z.string().nullable().optional(),
-  requestType: z
-    .lazy(() => ComplianceConsentDataSubjectRequestTypeSchema)
-    .optional(),
-  status: z
-    .lazy(() => ComplianceConsentDataSubjectRequestStatusSchema)
-    .optional(),
+  requestType: z.lazy(() => ComplianceConsentDataSubjectRequestTypeSchema).optional(),
+  status: z.lazy(() => ComplianceConsentDataSubjectRequestStatusSchema).optional(),
   userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for ComplianceConsentDataSubjectRequestStatus */
-ComplianceConsentDataSubjectRequestStatusSchema = z.enum([
-  "Pending",
-  "InProgress",
-  "Completed",
-  "Rejected",
-  "Expired",
-]);
+ComplianceConsentDataSubjectRequestStatusSchema = z.enum(['Pending', 'InProgress', 'Completed', 'Rejected', 'Expired']);
 
 /** Zod schema for ComplianceConsentDataSubjectRequestType */
-ComplianceConsentDataSubjectRequestTypeSchema = z.enum([
-  "Access",
-  "Erasure",
-  "Portability",
-  "Rectification",
-  "Restriction",
-  "Objection",
-]);
+ComplianceConsentDataSubjectRequestTypeSchema = z.enum(['Access', 'Erasure', 'Portability', 'Rectification', 'Restriction', 'Objection']);
 
 /** Zod schema for ComplianceConsentGrantConsentCommand */
 ComplianceConsentGrantConsentCommandSchema = z.object({
@@ -16025,13 +17195,13 @@ ComplianceConsentGrantConsentCommandSchema = z.object({
 
 /** Zod schema for ComplianceConsentPolicyType */
 ComplianceConsentPolicyTypeSchema = z.enum([
-  "PrivacyPolicy",
-  "TermsOfService",
-  "CookiePolicy",
-  "DataProcessingAgreement",
-  "MarketingConsent",
-  "ThirdPartySharing",
-  "Custom",
+  'PrivacyPolicy',
+  'TermsOfService',
+  'CookiePolicy',
+  'DataProcessingAgreement',
+  'MarketingConsent',
+  'ThirdPartySharing',
+  'Custom',
 ]);
 
 /** Zod schema for ComplianceConsentPolicyVersion */
@@ -16066,9 +17236,7 @@ ComplianceConsentRevokeConsentCommandSchema = z.object({
 /** Zod schema for ComplianceConsentSubmitDataSubjectRequestCommand */
 ComplianceConsentSubmitDataSubjectRequestCommandSchema = z.object({
   description: z.string().nullable().optional(),
-  requestType: z
-    .lazy(() => ComplianceConsentDataSubjectRequestTypeSchema)
-    .optional(),
+  requestType: z.lazy(() => ComplianceConsentDataSubjectRequestTypeSchema).optional(),
   userId: z.string().uuid().optional(),
 });
 
@@ -16092,14 +17260,14 @@ ComplianceFERPACompleteFerpaInspectionRequestBodySchema = z.object({
 
 /** Zod schema for ComplianceFERPAEducationRecordKind */
 ComplianceFERPAEducationRecordKindSchema = z.enum([
-  "CourseEnrollment",
-  "AssessmentSubmission",
-  "Grade",
-  "Certificate",
-  "Attendance",
-  "Communication",
-  "SupportCase",
-  "Custom",
+  'CourseEnrollment',
+  'AssessmentSubmission',
+  'Grade',
+  'Certificate',
+  'Attendance',
+  'Communication',
+  'SupportCase',
+  'Custom',
 ]);
 
 /** Zod schema for ComplianceFERPAFerpaDirectoryInformationPolicy */
@@ -16114,15 +17282,15 @@ ComplianceFERPAFerpaDirectoryInformationPolicySchema = z.object({
 
 /** Zod schema for ComplianceFERPAFerpaDisclosureBasis */
 ComplianceFERPAFerpaDisclosureBasisSchema = z.enum([
-  "StudentConsent",
-  "GuardianConsent",
-  "SchoolOfficial",
-  "FinancialAid",
-  "HealthOrSafetyEmergency",
-  "AuditOrEvaluation",
-  "CourtOrder",
-  "DirectoryInformation",
-  "Other",
+  'StudentConsent',
+  'GuardianConsent',
+  'SchoolOfficial',
+  'FinancialAid',
+  'HealthOrSafetyEmergency',
+  'AuditOrEvaluation',
+  'CourtOrder',
+  'DirectoryInformation',
+  'Other',
 ]);
 
 /** Zod schema for ComplianceFERPAFerpaDisclosureConsent */
@@ -16158,9 +17326,7 @@ ComplianceFERPAFerpaEducationRecordSchema = z.object({
   externalRecordId: z.string().nullable().optional(),
   isDirectoryInformation: z.boolean().optional(),
   metadataJson: z.string().nullable().optional(),
-  protectionLevel: z
-    .lazy(() => ComplianceFERPAFerpaRecordProtectionLevelSchema)
-    .optional(),
+  protectionLevel: z.lazy(() => ComplianceFERPAFerpaRecordProtectionLevelSchema).optional(),
   recordKind: z.lazy(() => ComplianceFERPAEducationRecordKindSchema).optional(),
   retentionUntil: z.string().datetime().nullable().optional(),
   studentUserId: z.string().uuid().optional(),
@@ -16180,21 +17346,10 @@ ComplianceFERPAFerpaInspectionInputSchema = z.object({
 });
 
 /** Zod schema for ComplianceFERPAFerpaRecordProtectionLevel */
-ComplianceFERPAFerpaRecordProtectionLevelSchema = z.enum([
-  "DirectoryInformation",
-  "EducationRecord",
-  "SensitiveEducationRecord",
-  "Restricted",
-]);
+ComplianceFERPAFerpaRecordProtectionLevelSchema = z.enum(['DirectoryInformation', 'EducationRecord', 'SensitiveEducationRecord', 'Restricted']);
 
 /** Zod schema for ComplianceFERPAFerpaRequestStatus */
-ComplianceFERPAFerpaRequestStatusSchema = z.enum([
-  "Pending",
-  "InReview",
-  "Completed",
-  "Denied",
-  "Expired",
-]);
+ComplianceFERPAFerpaRequestStatusSchema = z.enum(['Pending', 'InReview', 'Completed', 'Denied', 'Expired']);
 
 /** Zod schema for ComplianceFERPAGrantFerpaDisclosureConsentCommand */
 ComplianceFERPAGrantFerpaDisclosureConsentCommandSchema = z.object({
@@ -16224,9 +17379,7 @@ ComplianceFERPARegisterEducationRecordCommandSchema = z.object({
   externalRecordId: z.string().nullable().optional(),
   isDirectoryInformation: z.boolean().optional(),
   metadataJson: z.string().nullable().optional(),
-  protectionLevel: z
-    .lazy(() => ComplianceFERPAFerpaRecordProtectionLevelSchema)
-    .optional(),
+  protectionLevel: z.lazy(() => ComplianceFERPAFerpaRecordProtectionLevelSchema).optional(),
   recordKind: z.lazy(() => ComplianceFERPAEducationRecordKindSchema).optional(),
   retentionUntil: z.string().datetime().nullable().optional(),
   studentUserId: z.string().uuid().optional(),
@@ -16249,6 +17402,110 @@ ComplianceFERPAUpsertDirectoryInformationPolicyCommandSchema = z.object({
   noticeUrl: z.string().nullable().optional(),
   optOutEnabled: z.boolean().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCase */
+ComplianceFinancialCrimeFinancialCrimeCaseSchema = z.object({
+  id: z.string().uuid().optional(),
+  assignedTo: z.string().uuid().nullable().optional(),
+  closedAt: z.string().datetime().nullable().optional(),
+  holdId: z.string().uuid().optional(),
+  openedAt: z.string().datetime().optional(),
+  reasonCode: z.string().nullable().optional(),
+  state: z.lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseStateSchema).optional(),
+  subjectHash: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAt: z.string().datetime().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseDecision */
+ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema = z.object({
+  id: z.string().uuid().optional(),
+  caseId: z.string().uuid().optional(),
+  decidedBy: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  issuedAt: z.string().datetime().optional(),
+  outcome: z.lazy(() => ComplianceFinancialCrimeFinancialCrimeOutcomeSchema).optional(),
+  policyVersion: z.number().int().optional(),
+  rawObjectReference: z.string().nullable().optional(),
+  reasonCode: z.string().nullable().optional(),
+  subjectHash: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseDetails */
+ComplianceFinancialCrimeFinancialCrimeCaseDetailsSchema = z.object({
+  case: z.lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseSchema).optional(),
+  decisions: z
+    .array(z.lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseDecisionSchema))
+    .nullable()
+    .optional(),
+  events: z
+    .array(z.lazy(() => ComplianceFinancialCrimeFinancialCrimeCaseEventSchema))
+    .nullable()
+    .optional(),
+  regulatoryReferences: z
+    .array(z.lazy(() => ComplianceFinancialCrimeFinancialCrimeRegulatoryReferenceSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseEvent */
+ComplianceFinancialCrimeFinancialCrimeCaseEventSchema = z.object({
+  id: z.string().uuid().optional(),
+  actorId: z.string().uuid().nullable().optional(),
+  caseId: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  kind: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  reasonCode: z.string().nullable().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeCaseState */
+ComplianceFinancialCrimeFinancialCrimeCaseStateSchema = z.enum(['Open', 'Assigned', 'NeedsReview', 'Closed']);
+
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeOutcome */
+ComplianceFinancialCrimeFinancialCrimeOutcomeSchema = z.enum(['Approved', 'Rejected', 'NeedsReview', 'Unavailable']);
+
+/** Zod schema for ComplianceFinancialCrimeFinancialCrimeRegulatoryReference */
+ComplianceFinancialCrimeFinancialCrimeRegulatoryReferenceSchema = z.object({
+  id: z.string().uuid().optional(),
+  caseId: z.string().uuid().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  kind: z.string().nullable().optional(),
+  recordedAt: z.string().datetime().optional(),
+  recordedBy: z.string().uuid().optional(),
+  referenceHash: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceKYCKycAmlAccessToken */
+ComplianceKYCKycAmlAccessTokenSchema = z.object({
+  externalUserId: z.string().nullable().optional(),
+  token: z.string().nullable().optional(),
+});
+
+/** Zod schema for ComplianceKYCKycAmlOnboarding */
+ComplianceKYCKycAmlOnboardingSchema = z.object({
+  applicantId: z.string().nullable().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  state: z.lazy(() => ComplianceKYCKycAmlStateSchema).optional(),
+  subjectHash: z.string().nullable().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for ComplianceKYCKycAmlState */
+ComplianceKYCKycAmlStateSchema = z.enum(['Created', 'ApplicantPending', 'InReview', 'Approved', 'Rejected', 'NeedsReview', 'Expired']);
+
+/** Zod schema for ComplianceKYCSumSubWebhookIngestionResult */
+ComplianceKYCSumSubWebhookIngestionResultSchema = z.object({
+  evidenceId: z.string().uuid().nullable().optional(),
+  providerEventId: z.string().nullable().optional(),
+  state: z.lazy(() => ComplianceKYCKycAmlStateSchema).optional(),
+  status: z.lazy(() => EconomyRiskComplianceEvidenceIngestionStatusSchema).optional(),
 });
 
 /** Zod schema for ContentPagesContentResource */
@@ -16287,24 +17544,10 @@ ContentPagesContentResourceSchema = z.object({
 });
 
 /** Zod schema for ContentPagesContentResourceStatus */
-ContentPagesContentResourceStatusSchema = z.enum([
-  "Draft",
-  "InReview",
-  "Published",
-  "Archived",
-]);
+ContentPagesContentResourceStatusSchema = z.enum(['Draft', 'InReview', 'Published', 'Archived']);
 
 /** Zod schema for ContentPagesContentResourceType */
-ContentPagesContentResourceTypeSchema = z.enum([
-  "Article",
-  "Tutorial",
-  "Documentation",
-  "Video",
-  "Download",
-  "ExternalLink",
-  "Course",
-  "Custom",
-]);
+ContentPagesContentResourceTypeSchema = z.enum(['Article', 'Tutorial', 'Documentation', 'Video', 'Download', 'ExternalLink', 'Course', 'Custom']);
 
 /** Zod schema for ContentPagesCreateContentResource */
 ContentPagesCreateContentResourceSchema = z.object({
@@ -16469,34 +17712,28 @@ ContentPagesPageSectionSchema = z.object({
 });
 
 /** Zod schema for ContentPagesPageStatus */
-ContentPagesPageStatusSchema = z.enum(["Draft", "Published", "Archived"]);
+ContentPagesPageStatusSchema = z.enum(['Draft', 'Published', 'Archived']);
 
 /** Zod schema for ContentPagesPageType */
-ContentPagesPageTypeSchema = z.enum([
-  "Landing",
-  "Legal",
-  "ResourceIndex",
-  "Resource",
-  "Custom",
-]);
+ContentPagesPageTypeSchema = z.enum(['Landing', 'Legal', 'ResourceIndex', 'Resource', 'Custom']);
 
 /** Zod schema for ContentPagesSectionType */
 ContentPagesSectionTypeSchema = z.enum([
-  "Hero",
-  "Features",
-  "Testimonials",
-  "Pricing",
-  "CallToAction",
-  "Faq",
-  "RichText",
-  "Gallery",
-  "Stats",
-  "Team",
-  "LogoCloud",
-  "Newsletter",
-  "Contact",
-  "ResourceCards",
-  "Custom",
+  'Hero',
+  'Features',
+  'Testimonials',
+  'Pricing',
+  'CallToAction',
+  'Faq',
+  'RichText',
+  'Gallery',
+  'Stats',
+  'Team',
+  'LogoCloud',
+  'Newsletter',
+  'Contact',
+  'ResourceCards',
+  'Custom',
 ]);
 
 /** Zod schema for ContentPagesSitemapEntry */
@@ -16573,22 +17810,10 @@ ContentPagesUpdatePageSectionSchema = z.object({
 });
 
 /** Zod schema for ContentStatus */
-ContentStatusSchema = z.enum([
-  "Draft",
-  "Review",
-  "Published",
-  "Archived",
-  "Deleted",
-]);
+ContentStatusSchema = z.enum(['Draft', 'Review', 'Published', 'Archived', 'Deleted']);
 
 /** Zod schema for ContentVisibility */
-ContentVisibilitySchema = z.enum([
-  "Private",
-  "Internal",
-  "Friends",
-  "Protected",
-  "Public",
-]);
+ContentVisibilitySchema = z.enum(['Private', 'Internal', 'Friends', 'Protected', 'Public']);
 
 /** Zod schema for CQRSIDomainEvent */
 CQRSIDomainEventSchema = z.object({
@@ -16602,15 +17827,243 @@ CQRSModelsTenantIdSchema = z.object({
   value: z.string().uuid().optional(),
 });
 
+/** Zod schema for EconomyAdRewardsAdPlaybackEvidence */
+EconomyAdRewardsAdPlaybackEvidenceSchema = z.object({
+  completedAt: z.string().datetime().optional(),
+  focusLoss: z.string().optional(),
+  milestones: z.array(z.number().int()).nullable().optional(),
+  playbackDuration: z.string().optional(),
+  startedAt: z.string().datetime().optional(),
+  visibleDuration: z.string().optional(),
+});
+
+/** Zod schema for EconomyAdRewardsAdProviderReport */
+EconomyAdRewardsAdProviderReportSchema = z.object({
+  actualRevenueUsdNanos: z.number().int().optional(),
+  batchId: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  importedAt: z.string().datetime().optional(),
+  network: z.string().nullable().optional(),
+  periodEnd: z.string().datetime().optional(),
+  periodStart: z.string().datetime().optional(),
+  reportId: z.string().nullable().optional(),
+  signature: z.string().nullable().optional(),
+  verifiedSessionIds: z.array(z.string().uuid()).nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyAdRewardsAdRewardCompletionState */
+EconomyAdRewardsAdRewardCompletionStateSchema = z.enum(['Issued', 'PendingProviderReport', 'AccumulatedRemainder']);
+
+/** Zod schema for EconomyAdRewardsAdRewardReconciliation */
+EconomyAdRewardsAdRewardReconciliationSchema = z.object({
+  actualDeltaUsdNanos: z.number().int().optional(),
+  actualRevenueUsdNanos: z.number().int().optional(),
+  batchId: z.string().nullable().optional(),
+  estimatedRevenueUsdNanos: z.number().int().optional(),
+  historicalRewardSoftUnits: z.number().int().optional(),
+  network: z.string().nullable().optional(),
+  previousActualRevenueUsdNanos: z.number().int().optional(),
+  reconciledAt: z.string().datetime().optional(),
+  reportId: z.string().nullable().optional(),
+  varianceUsdNanos: z.number().int().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyAdRewardsDurableAdProviderReportImportResult */
+EconomyAdRewardsDurableAdProviderReportImportResultSchema = z.object({
+  isDuplicate: z.boolean().optional(),
+  providerReportId: z.string().uuid().optional(),
+  reconciliation: z.lazy(() => EconomyAdRewardsAdRewardReconciliationSchema).optional(),
+  verifiedPendingSessions: z.array(z.string().uuid()).nullable().optional(),
+});
+
+/** Zod schema for EconomyAdRewardsDurableAdProviderReportStatus */
+EconomyAdRewardsDurableAdProviderReportStatusSchema = z.object({
+  actualRevenueUsdNanos: z.number().int().optional(),
+  batchId: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  network: z.string().nullable().optional(),
+  payloadHash: z.string().nullable().optional(),
+  periodEnd: z.string().datetime().optional(),
+  periodStart: z.string().datetime().optional(),
+  processedAt: z.string().datetime().nullable().optional(),
+  processingError: z.string().nullable().optional(),
+  providerReportId: z.string().uuid().optional(),
+  receivedAt: z.string().datetime().optional(),
+  reconciliation: z.lazy(() => EconomyAdRewardsDurableAdRewardReconciliationStatusSchema).optional(),
+  reportId: z.string().nullable().optional(),
+  signatureVerified: z.boolean().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyAdRewardsDurableAdRewardCompletionResult */
+EconomyAdRewardsDurableAdRewardCompletionResultSchema = z.object({
+  completedAt: z.string().datetime().optional(),
+  isDuplicate: z.boolean().optional(),
+  outputLotId: z.lazy(() => EconomyContractsCreditLotIdSchema).optional(),
+  postingId: z.lazy(() => EconomyContractsPostingIdSchema).optional(),
+  rewardSoftUnits: z.number().int().optional(),
+  sessionId: z.string().uuid().optional(),
+  state: z.lazy(() => EconomyAdRewardsAdRewardCompletionStateSchema).optional(),
+});
+
+/** Zod schema for EconomyAdRewardsDurableAdRewardReconciliationStatus */
+EconomyAdRewardsDurableAdRewardReconciliationStatusSchema = z.object({
+  actualDeltaUsdNanos: z.number().int().optional(),
+  actualRevenueUsdNanos: z.number().int().optional(),
+  estimatedRevenueUsdNanos: z.number().int().optional(),
+  historicalRewardSoftUnits: z.number().int().optional(),
+  previousActualRevenueUsdNanos: z.number().int().optional(),
+  reconciledAt: z.string().datetime().optional(),
+  varianceUsdNanos: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyAdRewardsDurableAdRewardSessionClaims */
+EconomyAdRewardsDurableAdRewardSessionClaimsSchema = z.object({
+  asnRiskHash: z.string().nullable().optional(),
+  creativeId: z.string().nullable().optional(),
+  deviceRiskHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  ipRiskHash: z.string().nullable().optional(),
+  issuedAt: z.string().datetime().optional(),
+  network: z.string().nullable().optional(),
+  nonce: z.string().nullable().optional(),
+  policyVersion: z.lazy(() => EconomyContractsPolicyVersionSchema).optional(),
+  requiredDuration: z.string().optional(),
+  sessionId: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  walletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
+});
+
+/** Zod schema for EconomyAdRewardsDurableAdRewardSessionResult */
+EconomyAdRewardsDurableAdRewardSessionResultSchema = z.object({
+  claims: z.lazy(() => EconomyAdRewardsDurableAdRewardSessionClaimsSchema).optional(),
+  isDuplicate: z.boolean().optional(),
+  token: z.lazy(() => EconomyAdRewardsSignedAdRewardSessionSchema).optional(),
+});
+
+/** Zod schema for EconomyAdRewardsDurableAdRewardSessionState */
+EconomyAdRewardsDurableAdRewardSessionStateSchema = z.enum(['Issued', 'Active', 'ProofPending', 'Verified', 'Posted', 'Deferred', 'Rejected']);
+
+/** Zod schema for EconomyAdRewardsDurableAdRewardSessionStatus */
+EconomyAdRewardsDurableAdRewardSessionStatusSchema = z.object({
+  creativeId: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  issuedAt: z.string().datetime().optional(),
+  network: z.string().nullable().optional(),
+  postingId: z.string().uuid().nullable().optional(),
+  rewardSoftUnits: z.number().int().optional(),
+  sessionId: z.string().uuid().optional(),
+  state: z.lazy(() => EconomyAdRewardsDurableAdRewardSessionStateSchema).optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for EconomyAdRewardsProviderCompletionProof */
+EconomyAdRewardsProviderCompletionProofSchema = z.object({
+  completedAt: z.string().datetime().optional(),
+  creativeId: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  network: z.string().nullable().optional(),
+  providerEventId: z.string().nullable().optional(),
+  sessionId: z.string().uuid().optional(),
+  signature: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyAdRewardsSignedAdRewardSession */
+EconomyAdRewardsSignedAdRewardSessionSchema = z.object({
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyBountiesBountyEligibilityRequirements */
+EconomyBountiesBountyEligibilityRequirementsSchema = z.object({
+  minimumReputation: z.number().int().optional(),
+  requiresInstructorVerification: z.boolean().optional(),
+  requiresPrerequisite: z.boolean().optional(),
+});
+
+/** Zod schema for EconomyBountiesBountyId */
+EconomyBountiesBountyIdSchema = z.object({
+  value: z.string().uuid().optional(),
+});
+
+/** Zod schema for EconomyBountiesBountyStatus */
+EconomyBountiesBountyStatusSchema = z.enum(['Open', 'Expired', 'Claimed', 'Reclaimed']);
+
+/** Zod schema for EconomyBountiesBountyTerminalOutputLot */
+EconomyBountiesBountyTerminalOutputLotSchema = z.object({
+  amount: z.lazy(() => EconomyContractsCoinAmountSchema).optional(),
+  cashOutEligible: z.boolean().optional(),
+  confirmedAt: z.string().datetime().optional(),
+  lotId: z.lazy(() => EconomyContractsCreditLotIdSchema).optional(),
+  originalMaturesAt: z.string().datetime().optional(),
+  provenance: z.lazy(() => EconomyContractsProvenanceKindSchema).optional(),
+  rootSourceStampId: z.lazy(() => EconomyContractsSourceStampIdSchema).optional(),
+  walletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
+});
+
+/** Zod schema for EconomyBountiesDurableBountyView */
+EconomyBountiesDurableBountyViewSchema = z.object({
+  id: z.lazy(() => EconomyBountiesBountyIdSchema).optional(),
+  amount: z.lazy(() => EconomyContractsCoinAmountSchema).optional(),
+  eligibility: z.lazy(() => EconomyBountiesBountyEligibilityRequirementsSchema).optional(),
+  expiresAt: z.string().datetime().optional(),
+  postedAt: z.string().datetime().optional(),
+  posterId: z.string().uuid().optional(),
+  reclaimFeePpm: z.number().int().optional(),
+  status: z.lazy(() => EconomyBountiesBountyStatusSchema).optional(),
+  terminalEvent: z.lazy(() => EconomyBountiesPersistedBountyTerminalEventSchema).optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyBountiesPersistedBountyTerminalEvent */
+EconomyBountiesPersistedBountyTerminalEventSchema = z.object({
+  id: z.string().uuid().optional(),
+  actorId: z.string().uuid().optional(),
+  bountyId: z.lazy(() => EconomyBountiesBountyIdSchema).optional(),
+  destinationWalletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
+  feeUnits: z.number().int().optional(),
+  firstJournalSequence: z.number().int().optional(),
+  idempotencyKey: z.lazy(() => EconomyContractsIdempotencyKeySchema).optional(),
+  occurredAt: z.string().datetime().optional(),
+  outputLots: z
+    .array(z.lazy(() => EconomyBountiesBountyTerminalOutputLotSchema))
+    .nullable()
+    .optional(),
+  proceedsLotId: z.lazy(() => EconomyContractsCreditLotIdSchema).optional(),
+  proceedsSourceStampId: z.lazy(() => EconomyContractsSourceStampIdSchema).optional(),
+  returnedUnits: z.number().int().optional(),
+  riskDecisionId: z.string().uuid().nullable().optional(),
+  status: z.lazy(() => EconomyBountiesBountyStatusSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
 /** Zod schema for EconomyCommandsConvertMyHardToSoftInput */
 EconomyCommandsConvertMyHardToSoftInputSchema = z.object({
-  feeHardCoinUnits: z.number().int().optional(),
   idempotencyKey: z.string().nullable().optional(),
   principalHardCoinUnits: z.number().int().optional(),
 });
 
+/** Zod schema for EconomyCommandsCreateMyHardCoinTopUpInput */
+EconomyCommandsCreateMyHardCoinTopUpInputSchema = z.object({
+  hardCoinUnits: z.number().int().optional(),
+  idempotencyKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyContractsCoinAmount */
+EconomyContractsCoinAmountSchema = z.object({
+  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  units: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyContractsCreditLotId */
+EconomyContractsCreditLotIdSchema = z.object({
+  value: z.string().uuid().optional(),
+});
+
 /** Zod schema for EconomyContractsCurrencyCode */
-EconomyContractsCurrencyCodeSchema = z.enum(["HardCoin", "SoftCoin"]);
+EconomyContractsCurrencyCodeSchema = z.enum(['HardCoin', 'SoftCoin']);
 
 /** Zod schema for EconomyContractsEconomyWalletSummary */
 EconomyContractsEconomyWalletSummarySchema = z.object({
@@ -16644,67 +18097,129 @@ EconomyContractsEconomyWalletTransactionSchema = z.object({
   recordedAt: z.string().datetime().optional(),
   side: z.lazy(() => EconomyContractsEntrySideSchema).optional(),
   status: z.lazy(() => EconomyContractsPostingStatusSchema).optional(),
-  templateKind: z
-    .lazy(() => EconomyContractsPostingTemplateKindSchema)
-    .optional(),
+  templateKind: z.lazy(() => EconomyContractsPostingTemplateKindSchema).optional(),
 });
 
 /** Zod schema for EconomyContractsEntrySide */
-EconomyContractsEntrySideSchema = z.enum(["Debit", "Credit"]);
+EconomyContractsEntrySideSchema = z.enum(['Debit', 'Credit']);
+
+/** Zod schema for EconomyContractsIdempotencyKey */
+EconomyContractsIdempotencyKeySchema = z.object({
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyContractsPolicyVersion */
+EconomyContractsPolicyVersionSchema = z.object({
+  value: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyContractsPostingId */
+EconomyContractsPostingIdSchema = z.object({
+  value: z.string().uuid().optional(),
+});
 
 /** Zod schema for EconomyContractsPostingStatus */
-EconomyContractsPostingStatusSchema = z.enum([
-  "Accepted",
-  "Rejected",
-  "Duplicate",
-]);
+EconomyContractsPostingStatusSchema = z.enum(['Accepted', 'Rejected', 'Duplicate']);
 
 /** Zod schema for EconomyContractsPostingTemplateKind */
 EconomyContractsPostingTemplateKindSchema = z.enum([
-  "ConfirmedTopUpMint",
-  "ProviderReversalFull",
-  "ProviderReversalPartial",
-  "Spend",
-  "HardToSoftConversion",
-  "SystemBackedGrant",
-  "Burn",
-  "Escrow",
-  "Reclaim",
-  "Refund",
-  "PayoutReservation",
-  "PayoutSuccess",
-  "PayoutFailure",
-  "AdminWithdrawalReservation",
-  "AdminWithdrawalSuccess",
-  "AdminWithdrawalFailure",
-  "HardToSoftConversionFee",
-  "ProviderConvertedSoftReversal",
-  "ProviderReversalDebt",
-  "ProviderReversalLoss",
-  "AdRewardIssuance",
-  "BountyEscrow",
-  "BountyClaim",
-  "BountyReclaim",
+  'ConfirmedTopUpMint',
+  'ProviderReversalFull',
+  'ProviderReversalPartial',
+  'Spend',
+  'HardToSoftConversion',
+  'SystemBackedGrant',
+  'Burn',
+  'Escrow',
+  'Reclaim',
+  'Refund',
+  'PayoutReservation',
+  'PayoutSuccess',
+  'PayoutFailure',
+  'AdminWithdrawalReservation',
+  'AdminWithdrawalSuccess',
+  'AdminWithdrawalFailure',
+  'HardToSoftConversionFee',
+  'ProviderConvertedSoftReversal',
+  'ProviderReversalDebt',
+  'ProviderReversalLoss',
+  'AdRewardIssuance',
+  'BountyEscrow',
+  'BountyClaim',
+  'BountyReclaim',
+  'MarketplaceSettlement',
+  'MarketplaceRefund',
 ]);
 
 /** Zod schema for EconomyContractsProvenanceKind */
 EconomyContractsProvenanceKindSchema = z.enum([
-  "PurchasedHard",
-  "EarnedHard",
-  "ConvertedSoft",
-  "AdRewardSoft",
-  "SystemGrantSoft",
-  "RefundRestoration",
-  "EscrowReturn",
+  'PurchasedHard',
+  'EarnedHard',
+  'ConvertedSoft',
+  'AdRewardSoft',
+  'SystemGrantSoft',
+  'RefundRestoration',
+  'EscrowReturn',
+  'MarketplaceSoft',
 ]);
 
+/** Zod schema for EconomyContractsReserveVersion */
+EconomyContractsReserveVersionSchema = z.object({
+  value: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyContractsSourceStampId */
+EconomyContractsSourceStampIdSchema = z.object({
+  value: z.string().uuid().optional(),
+});
+
+/** Zod schema for EconomyContractsWalletId */
+EconomyContractsWalletIdSchema = z.object({
+  value: z.string().uuid().optional(),
+});
+
 /** Zod schema for EconomyContractsWalletLifecycleState */
-EconomyContractsWalletLifecycleStateSchema = z.enum([
-  "Active",
-  "Frozen",
-  "Closed",
-  "UnderReview",
+EconomyContractsWalletLifecycleStateSchema = z.enum(['Active', 'Frozen', 'Closed', 'UnderReview']);
+
+/** Zod schema for EconomyFundingEconomyTopUpProviderStatus */
+EconomyFundingEconomyTopUpProviderStatusSchema = z.enum([
+  'Prepared',
+  'RequiresAction',
+  'Processing',
+  'ProviderSucceeded',
+  'Posted',
+  'Failed',
+  'Cancelled',
+  'Ambiguous',
+  'Held',
+  'Reversed',
 ]);
+
+/** Zod schema for EconomyFundingEconomyTopUpStatus */
+EconomyFundingEconomyTopUpStatusSchema = z.object({
+  currency: z.string().nullable().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  providerBoundAt: z.string().datetime().nullable().optional(),
+  providerObjectId: z.string().nullable().optional(),
+  requestedAt: z.string().datetime().optional(),
+  status: z.lazy(() => EconomyFundingEconomyTopUpProviderStatusSchema).optional(),
+  topUpId: z.string().uuid().optional(),
+  usdMinorUnits: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyFundingSelfServiceHardCoinTopUpReceipt */
+EconomyFundingSelfServiceHardCoinTopUpReceiptSchema = z.object({
+  clientSecret: z.string().nullable().optional(),
+  currency: z.string().nullable().optional(),
+  hardCoinUnits: z.number().int().optional(),
+  isDuplicate: z.boolean().optional(),
+  paymentId: z.string().uuid().optional(),
+  providerObjectId: z.string().nullable().optional(),
+  publishableKey: z.string().nullable().optional(),
+  status: z.lazy(() => EconomyFundingEconomyTopUpProviderStatusSchema).optional(),
+  topUpId: z.string().uuid().optional(),
+  usdMinorUnits: z.number().int().optional(),
+});
 
 /** Zod schema for EconomyFundingSelfServiceHardToSoftConversionReceipt */
 EconomyFundingSelfServiceHardToSoftConversionReceiptSchema = z.object({
@@ -16713,6 +18228,295 @@ EconomyFundingSelfServiceHardToSoftConversionReceiptSchema = z.object({
   journalHash: z.string().nullable().optional(),
   journalSequence: z.number().int().optional(),
   principalPostingId: z.string().uuid().optional(),
+});
+
+/** Zod schema for EconomyLedgerAnchorVerificationRunResult */
+EconomyLedgerAnchorVerificationRunResultSchema = z.object({
+  failed: z.number().int().optional(),
+  verified: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyLedgerEconomyAnchorPublicationResult */
+EconomyLedgerEconomyAnchorPublicationResultSchema = z.object({
+  anchorId: z.string().uuid().optional(),
+  eTag: z.string().nullable().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  keyId: z.string().nullable().optional(),
+  objectHash: z.string().nullable().optional(),
+  objectKey: z.string().nullable().optional(),
+  objectVersion: z.string().nullable().optional(),
+  retainUntil: z.string().datetime().optional(),
+});
+
+/** Zod schema for EconomyLedgerJournalIntegrityFailureCode */
+EconomyLedgerJournalIntegrityFailureCodeSchema = z.enum([
+  'None',
+  'SequenceGap',
+  'PreviousHashMismatch',
+  'CanonicalPayloadMissing',
+  'EntryHashMismatch',
+  'PostingContractInvalid',
+  'InvalidLineAmount',
+  'CurrencyParityMismatch',
+  'SourceStampInvalid',
+  'AllocationInvalid',
+  'LineageInvalid',
+  'RootRangeInvalid',
+  'CumulativeReversalInvalid',
+]);
+
+/** Zod schema for EconomyLedgerJournalIntegrityRunResult */
+EconomyLedgerJournalIntegrityRunResultSchema = z.object({
+  fencingToken: z.number().int().optional(),
+  status: z.lazy(() => EconomyLedgerJournalIntegrityRunStatusSchema).optional(),
+  verification: z.lazy(() => EconomyLedgerJournalIntegrityVerificationResultSchema).optional(),
+});
+
+/** Zod schema for EconomyLedgerJournalIntegrityRunStatus */
+EconomyLedgerJournalIntegrityRunStatusSchema = z.enum(['Verified', 'Failed', 'LeaseUnavailable']);
+
+/** Zod schema for EconomyLedgerJournalIntegrityVerificationResult */
+EconomyLedgerJournalIntegrityVerificationResultSchema = z.object({
+  currentHash: z.string().nullable().optional(),
+  failureCode: z.lazy(() => EconomyLedgerJournalIntegrityFailureCodeSchema).optional(),
+  fromSequence: z.number().int().optional(),
+  isValid: z.boolean().optional(),
+  toSequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyMarketplaceDurableMarketplaceRefundDebt */
+EconomyMarketplaceDurableMarketplaceRefundDebtSchema = z.object({
+  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  evidenceHash: z.string().nullable().optional(),
+  responsibleWalletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
+  units: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyMarketplaceDurableMarketplaceRefundResult */
+EconomyMarketplaceDurableMarketplaceRefundResultSchema = z.object({
+  cumulativeRefundedQuantity: z.number().int().optional(),
+  debts: z
+    .array(z.lazy(() => EconomyMarketplaceDurableMarketplaceRefundDebtSchema))
+    .nullable()
+    .optional(),
+  entitlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
+  isDuplicate: z.boolean().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  legs: z
+    .array(z.lazy(() => EconomyContractsCoinAmountSchema))
+    .nullable()
+    .optional(),
+  postingId: z.lazy(() => EconomyContractsPostingIdSchema).optional(),
+  quantity: z.number().int().optional(),
+  refundedAt: z.string().datetime().optional(),
+  refundId: z.string().uuid().optional(),
+  settlementId: z.string().uuid().optional(),
+  settlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
+});
+
+/** Zod schema for EconomyMarketplaceDurableMarketplaceSettlementResult */
+EconomyMarketplaceDurableMarketplaceSettlementResultSchema = z.object({
+  buyerId: z.string().uuid().optional(),
+  entitlementStatus: z.lazy(() => EconomyMarketplaceMarketplaceEntitlementStatusSchema).optional(),
+  isDuplicate: z.boolean().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  legs: z
+    .array(z.lazy(() => EconomyMarketplaceMarketplacePriceLegSnapshotSchema))
+    .nullable()
+    .optional(),
+  orderId: z.string().uuid().optional(),
+  postingId: z.lazy(() => EconomyContractsPostingIdSchema).optional(),
+  productId: z.string().uuid().optional(),
+  sellerId: z.string().uuid().optional(),
+  settledAt: z.string().datetime().optional(),
+  settlementId: z.string().uuid().optional(),
+  status: z.lazy(() => EconomyMarketplaceMarketplaceSettlementStatusSchema).optional(),
+});
+
+/** Zod schema for EconomyMarketplaceMarketplaceCurrencyChoice */
+EconomyMarketplaceMarketplaceCurrencyChoiceSchema = z.enum(['Hard', 'Soft', 'FixedMix']);
+
+/** Zod schema for EconomyMarketplaceMarketplaceEntitlementStatus */
+EconomyMarketplaceMarketplaceEntitlementStatusSchema = z.enum(['PendingGrant', 'Granted', 'Revoked']);
+
+/** Zod schema for EconomyMarketplaceMarketplacePriceLegSnapshot */
+EconomyMarketplaceMarketplacePriceLegSnapshotSchema = z.object({
+  amount: z.lazy(() => EconomyContractsCoinAmountSchema).optional(),
+  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  platformFeeUnits: z.number().int().optional(),
+  sellerUnits: z.number().int().optional(),
+  units: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyMarketplaceMarketplaceSettlementStatus */
+EconomyMarketplaceMarketplaceSettlementStatusSchema = z.enum(['Settled', 'PartiallyRefunded', 'Refunded']);
+
+/** Zod schema for EconomyOperationsEconomyAnchorOperationalStatus */
+EconomyOperationsEconomyAnchorOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  anchoredAt: z.string().datetime().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  objectMatches: z.boolean().optional(),
+  provider: z.string().nullable().optional(),
+  retainUntil: z.string().datetime().nullable().optional(),
+  signatureValid: z.boolean().optional(),
+  verifiedAt: z.string().datetime().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyCapabilityConfigurationSnapshot */
+EconomyOperationsEconomyCapabilityConfigurationSnapshotSchema = z.object({
+  killSwitches: z
+    .array(z.lazy(() => EconomyOperationsEconomyKillSwitchOperationalStatusSchema))
+    .nullable()
+    .optional(),
+  policies: z
+    .array(z.lazy(() => EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyCapabilityPolicyOperationalStatus */
+EconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  effectiveAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  payloadHash: z.string().nullable().optional(),
+  providerReady: z.boolean().optional(),
+  state: z.lazy(() => EconomyRiskEconomyCapabilityPolicyStateSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyJournalHeadStatus */
+EconomyOperationsEconomyJournalHeadStatusSchema = z.object({
+  hash: z.string().nullable().optional(),
+  sequence: z.number().int().optional(),
+  updatedAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyJournalVerificationStatus */
+EconomyOperationsEconomyJournalVerificationStatusSchema = z.object({
+  completedAt: z.string().datetime().optional(),
+  currentHash: z.string().nullable().optional(),
+  failureCode: z.string().nullable().optional(),
+  fencingToken: z.number().int().optional(),
+  fromSequence: z.number().int().optional(),
+  isValid: z.boolean().optional(),
+  toSequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyKillSwitchOperationalStatus */
+EconomyOperationsEconomyKillSwitchOperationalStatusSchema = z.object({
+  id: z.string().uuid().optional(),
+  activatedAt: z.string().datetime().optional(),
+  activatedBy: z.string().uuid().optional(),
+  epoch: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().nullable().optional(),
+  releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
+  releasedAt: z.string().datetime().nullable().optional(),
+  releaseProposedBy: z.string().uuid().nullable().optional(),
+  scope: z.lazy(() => EconomyRiskEconomyKillSwitchScopeSchema).optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyLedgerHealthSnapshot */
+EconomyOperationsEconomyLedgerHealthSnapshotSchema = z.object({
+  activeProjection: z.lazy(() => EconomyOperationsEconomyProjectionOperationalStatusSchema).optional(),
+  activeReserve: z.lazy(() => EconomyOperationsEconomyReserveOperationalStatusSchema).optional(),
+  diagnostics: z.array(z.string()).nullable().optional(),
+  head: z.lazy(() => EconomyOperationsEconomyJournalHeadStatusSchema).optional(),
+  isAnchorHealthy: z.boolean().optional(),
+  isJournalHealthy: z.boolean().optional(),
+  isProjectionHealthy: z.boolean().optional(),
+  isReserveHealthy: z.boolean().optional(),
+  latestAnchor: z.lazy(() => EconomyOperationsEconomyAnchorOperationalStatusSchema).optional(),
+  latestVerification: z.lazy(() => EconomyOperationsEconomyJournalVerificationStatusSchema).optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyProjectionOperationalStatus */
+EconomyOperationsEconomyProjectionOperationalStatusSchema = z.object({
+  activatedAt: z.string().datetime().nullable().optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  generation: z.number().int().optional(),
+  journalHash: z.string().nullable().optional(),
+  mismatchCount: z.number().int().optional(),
+  projectionHash: z.string().nullable().optional(),
+  proposedBy: z.string().uuid().optional(),
+  secondApprovedBy: z.string().uuid().nullable().optional(),
+  state: z.string().nullable().optional(),
+  toSequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyOperationsEconomyReserveOperationalStatus */
+EconomyOperationsEconomyReserveOperationalStatusSchema = z.object({
+  authorizationEpoch: z.number().int().optional(),
+  coverage: z.lazy(() => EconomyReservesReserveCoverageStateSchema).optional(),
+  custodyReconciled: z.boolean().optional(),
+  custodyVarianceUsdNanos: z.number().int().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  observedAt: z.string().datetime().optional(),
+  policyVersion: z.number().int().optional(),
+  reconciledAt: z.string().datetime().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyOperationsLegacyEconomyShadowBatchView */
+EconomyOperationsLegacyEconomyShadowBatchViewSchema = z.object({
+  id: z.string().uuid().optional(),
+  backfilledHardUnits: z.number().int().optional(),
+  expectedHardUnits: z.number().int().optional(),
+  failureCode: z.string().nullable().optional(),
+  financialLedgerEntryCount: z.number().int().optional(),
+  financialLedgerSnapshotHash: z.string().nullable().optional(),
+  policyVersion: z.number().int().optional(),
+  reconciledHardUnits: z.number().int().optional(),
+  state: z.lazy(() => EconomyOperationsLegacyEconomyShadowStateSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  transactionCount: z.number().int().optional(),
+  transactionSnapshotHash: z.string().nullable().optional(),
+  walletCount: z.number().int().optional(),
+  wallets: z
+    .array(z.lazy(() => EconomyOperationsLegacyEconomyShadowWalletViewSchema))
+    .nullable()
+    .optional(),
+  walletSnapshotHash: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyOperationsLegacyEconomyShadowState */
+EconomyOperationsLegacyEconomyShadowStateSchema = z.enum([
+  'Captured',
+  'Backfilling',
+  'Backfilled',
+  'Reconciled',
+  'CutoverProposed',
+  'CutoverActive',
+  'RolledBack',
+  'Failed',
+]);
+
+/** Zod schema for EconomyOperationsLegacyEconomyShadowWalletView */
+EconomyOperationsLegacyEconomyShadowWalletViewSchema = z.object({
+  completedCreditsMinorUnits: z.number().int().optional(),
+  completedDebitsMinorUnits: z.number().int().optional(),
+  creditLotId: z.string().uuid().optional(),
+  economyWalletId: z.string().uuid().nullable().optional(),
+  failureCode: z.string().nullable().optional(),
+  journalSequence: z.number().int().nullable().optional(),
+  legacyBalanceMinorUnits: z.number().int().optional(),
+  legacyWalletId: z.string().uuid().optional(),
+  ownerId: z.string().uuid().optional(),
+  postingId: z.string().uuid().optional(),
+  sourceStampId: z.string().uuid().optional(),
+  state: z.string().nullable().optional(),
+  transactionCount: z.number().int().optional(),
 });
 
 /** Zod schema for EconomyPayoutsCommandsCreateMyPayoutRequestInput */
@@ -16726,24 +18530,34 @@ EconomyPayoutsCommandsReviewPayoutRequestInputSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
+/** Zod schema for EconomyPayoutsConnectAccountSnapshot */
+EconomyPayoutsConnectAccountSnapshotSchema = z.object({
+  chargesEnabled: z.boolean().optional(),
+  destinationHash: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  observedAt: z.string().datetime().optional(),
+  payeeId: z.string().uuid().optional(),
+  payoutsEnabled: z.boolean().optional(),
+  providerAccountId: z.string().nullable().optional(),
+  state: z.lazy(() => EconomyPayoutsConnectAccountStateSchema).optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyPayoutsConnectAccountState */
+EconomyPayoutsConnectAccountStateSchema = z.enum(['Pending', 'Restricted', 'Ready', 'Disabled']);
+
+/** Zod schema for EconomyPayoutsConnectOnboardingResult */
+EconomyPayoutsConnectOnboardingResultSchema = z.object({
+  account: z.lazy(() => EconomyPayoutsConnectAccountSnapshotSchema).optional(),
+  onboardingUri: z.string().url().nullable().optional(),
+});
+
 /** Zod schema for EconomyPayoutsPayoutOperationState */
-EconomyPayoutsPayoutOperationStateSchema = z.enum([
-  "Reserved",
-  "Dispatching",
-  "Ambiguous",
-  "Succeeded",
-  "Failed",
-  "Cancelled",
-]);
+EconomyPayoutsPayoutOperationStateSchema = z.enum(['Reserved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
 
 /** Zod schema for EconomyPayoutsPayoutRequestState */
-EconomyPayoutsPayoutRequestStateSchema = z.enum([
-  "Submitted",
-  "Cancelled",
-  "Approved",
-  "Rejected",
-  "AwaitingSecondApproval",
-]);
+EconomyPayoutsPayoutRequestStateSchema = z.enum(['Submitted', 'Cancelled', 'Approved', 'Rejected', 'AwaitingSecondApproval']);
 
 /** Zod schema for EconomyPayoutsQueriesEconomyPayoutInput */
 EconomyPayoutsQueriesEconomyPayoutInputSchema = z.object({
@@ -16784,19 +18598,442 @@ EconomyPayoutsQueriesEconomyPayoutRequestReviewAuditSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
+/** Zod schema for EconomyProjectionsProjectionGenerationState */
+EconomyProjectionsProjectionGenerationStateSchema = z.object({
+  approvedBy: z.array(z.string().uuid()).nullable().optional(),
+  generation: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  journalHash: z.string().nullable().optional(),
+  mismatchCount: z.number().int().optional(),
+  projectionHash: z.string().nullable().optional(),
+  proposedBy: z.string().uuid().optional(),
+  state: z.string().nullable().optional(),
+  toSequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyReservesCustodyObservationCommand */
+EconomyReservesCustodyObservationCommandSchema = z.object({
+  id: z.string().uuid().optional(),
+  assetKey: z.string().nullable().optional(),
+  eligibleUsdNanos: z.number().int().optional(),
+  expiresAt: z.string().datetime().optional(),
+  keyId: z.string().nullable().optional(),
+  observedAt: z.string().datetime().optional(),
+  payloadHash: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  purpose: z.lazy(() => EconomyReservesReserveBackingPurposeSchema).optional(),
+  signature: z.string().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyReservesDurableCustodyObservation */
+EconomyReservesDurableCustodyObservationSchema = z.object({
+  id: z.string().uuid().optional(),
+  assetKey: z.string().nullable().optional(),
+  eligibleUsdNanos: z.number().int().optional(),
+  expiresAt: z.string().datetime().optional(),
+  keyId: z.string().nullable().optional(),
+  observedAt: z.string().datetime().optional(),
+  payloadHash: z.string().nullable().optional(),
+  provider: z.string().nullable().optional(),
+  purpose: z.lazy(() => EconomyReservesReserveBackingPurposeSchema).optional(),
+  signature: z.string().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyReservesDurableReserveProposalState */
+EconomyReservesDurableReserveProposalStateSchema = z.object({
+  id: z.string().uuid().optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  authorizationEpoch: z.number().int().optional(),
+  coverage: z.lazy(() => EconomyReservesReserveCoverageStateSchema).optional(),
+  eligibleAssetUsdNanos: z.number().int().optional(),
+  expiresAt: z.string().datetime().optional(),
+  liabilityUsdNanos: z.number().int().optional(),
+  observedAt: z.string().datetime().optional(),
+  policyVersion: z.number().int().optional(),
+  proposedBy: z.string().uuid().optional(),
+  snapshotHash: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyReservesEconomyLiabilitySnapshot */
+EconomyReservesEconomyLiabilitySnapshotSchema = z.object({
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  liabilityUsdNanos: z.number().int().optional(),
+  outstandingHardUnits: z.number().int().optional(),
+  outstandingSoftUnits: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyReservesExternalReserveAsset */
+EconomyReservesExternalReserveAssetSchema = z.object({
+  assetKey: z.string().nullable().optional(),
+  eligibleUsdNanos: z.number().int().optional(),
+  purpose: z.lazy(() => EconomyReservesReserveBackingPurposeSchema).optional(),
+});
+
+/** Zod schema for EconomyReservesReserveBackingPurpose */
+EconomyReservesReserveBackingPurposeSchema = z.enum(['HardCoin', 'SoftCoin']);
+
+/** Zod schema for EconomyReservesReserveBufferPosition */
+EconomyReservesReserveBufferPositionSchema = z.object({
+  adEstimateVarianceBufferUsdNanos: z.number().int().optional(),
+  chargebackRefundBufferUsdMinor: z.number().int().optional(),
+  fraudLossBudgetUsdNanos: z.number().int().optional(),
+  hardOperatingLiquidityBufferUsdMinor: z.number().int().optional(),
+  payoutSettlementBufferUsdMinor: z.number().int().optional(),
+  providerFxBufferUsdNanos: z.number().int().optional(),
+  softOperatingLiquidityBufferUsdNanos: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyReservesReserveCoverageState */
+EconomyReservesReserveCoverageStateSchema = z.enum(['Covered', 'Shortfall']);
+
+/** Zod schema for EconomyReservesReserveHead */
+EconomyReservesReserveHeadSchema = z.object({
+  assetAllocations: z
+    .array(z.lazy(() => EconomyReservesExternalReserveAssetSchema))
+    .nullable()
+    .optional(),
+  authorizationEpoch: z.number().int().optional(),
+  coverage: z.lazy(() => EconomyReservesReserveCoverageStateSchema).optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  hardBackingUsdNanos: z.number().int().optional(),
+  observedAt: z.string().datetime().optional(),
+  policyVersion: z.lazy(() => EconomyContractsPolicyVersionSchema).optional(),
+  requirements: z.lazy(() => EconomyReservesReserveRequirementSnapshotSchema).optional(),
+  softBackingUsdNanos: z.number().int().optional(),
+  version: z.lazy(() => EconomyContractsReserveVersionSchema).optional(),
+});
+
+/** Zod schema for EconomyReservesReserveRequirementSnapshot */
+EconomyReservesReserveRequirementSnapshotSchema = z.object({
+  hardFaceValueUsdMinor: z.number().int().optional(),
+  requiredHardReserveUsdMinor: z.number().int().optional(),
+  requiredSoftReserveUsdNanos: z.number().int().optional(),
+  softFaceValueUsdNanos: z.number().int().optional(),
+  stressedExpectedRedemptionCostUsdNanos: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyReservesReserveServiceObservation */
+EconomyReservesReserveServiceObservationSchema = z.object({
+  currentProviderCostUsdNanos: z.number().int().optional(),
+  currentServicePriceSoftUnits: z.number().int().optional(),
+  enabled: z.boolean().optional(),
+  expiresAt: z.string().datetime().optional(),
+  observedAt: z.string().datetime().optional(),
+  providerFxStressCostUsdNanos: z.number().int().optional(),
+  reservedSoftUnits: z.number().int().optional(),
+  serviceCode: z.string().nullable().optional(),
+  trailingHighPercentileCostUsdNanos: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyRiskCapabilityAuthorizationReceipt */
+EconomyRiskCapabilityAuthorizationReceiptSchema = z.object({
+  id: z.string().uuid().optional(),
+  actorId: z.string().uuid().optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  destinationHash: z.string().nullable().optional(),
+  evidenceHashes: z.array(z.string()).nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  issuedAt: z.string().datetime().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  killSwitchEpoch: z.number().int().optional(),
+  operationFingerprint: z.string().nullable().optional(),
+  policyVersion: z.number().int().optional(),
+  providerHash: z.string().nullable().optional(),
+  receiptHash: z.string().nullable().optional(),
+  reserveVersion: z.number().int().optional(),
+  riskDecisionId: z.string().uuid().optional(),
+  signature: z.string().nullable().optional(),
+  sourceRootHashes: z.array(z.string()).nullable().optional(),
+  subjectReference: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for EconomyRiskComplianceEvidenceIngestionStatus */
+EconomyRiskComplianceEvidenceIngestionStatusSchema = z.enum(['Published', 'Duplicate', 'Deferred', 'Rejected']);
+
+/** Zod schema for EconomyRiskComplianceEvidenceResult */
+EconomyRiskComplianceEvidenceResultSchema = z.enum(['Approved', 'Rejected', 'NeedsReview', 'Unavailable']);
+
+/** Zod schema for EconomyRiskComplianceHold */
+EconomyRiskComplianceHoldSchema = z.object({
+  id: z.string().uuid().optional(),
+  activatedAt: z.string().datetime().optional(),
+  activatedBy: z.string().uuid().optional(),
+  caseReferenceHash: z.string().nullable().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  expiresAt: z.string().datetime().optional(),
+  reasonCode: z.string().nullable().optional(),
+  releasedAt: z.string().datetime().nullable().optional(),
+  releasedBy: z.string().uuid().nullable().optional(),
+  scope: z.lazy(() => EconomyRiskComplianceHoldScopeSchema).optional(),
+});
+
+/** Zod schema for EconomyRiskComplianceHoldAdministrationState */
+EconomyRiskComplianceHoldAdministrationStateSchema = z.object({
+  hold: z.lazy(() => EconomyRiskComplianceHoldSchema).optional(),
+  releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
+  releasePolicyEvidenceHash: z.string().nullable().optional(),
+  releaseProposedAt: z.string().datetime().nullable().optional(),
+  releaseProposedBy: z.string().uuid().nullable().optional(),
+  requiredReleaseApprovals: z.number().int().nullable().optional(),
+});
+
+/** Zod schema for EconomyRiskComplianceHoldEvent */
+EconomyRiskComplianceHoldEventSchema = z.object({
+  actorId: z.string().uuid().optional(),
+  evidenceHash: z.string().nullable().optional(),
+  holdId: z.string().uuid().optional(),
+  kind: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyRiskComplianceHoldPage */
+EconomyRiskComplianceHoldPageSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyRiskComplianceHoldAdministrationStateSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyRiskComplianceHoldScope */
+EconomyRiskComplianceHoldScopeSchema = z.object({
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  key: z.string().nullable().optional(),
+  subjectHash: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for EconomyRiskEconomyCapabilityEvaluationResult */
+EconomyRiskEconomyCapabilityEvaluationResultSchema = z.object({
+  diagnostics: z.array(z.string()).nullable().optional(),
+  isReady: z.boolean().optional(),
+  receipt: z.lazy(() => EconomyRiskCapabilityAuthorizationReceiptSchema).optional(),
+  state: z.lazy(() => EconomyRiskEconomyCapabilityReadinessStatusSchema).optional(),
+});
+
+/** Zod schema for EconomyRiskEconomyCapabilityPolicy */
+EconomyRiskEconomyCapabilityPolicySchema = z.object({
+  id: z.string().uuid().optional(),
+  approvedAt: z.string().datetime().nullable().optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  canonicalPayload: z.string().nullable().optional(),
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  effectiveAt: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().optional(),
+  jurisdictionCode: z.string().nullable().optional(),
+  keyId: z.string().nullable().optional(),
+  payloadHash: z.string().nullable().optional(),
+  proposedAt: z.string().datetime().optional(),
+  proposedBy: z.string().uuid().optional(),
+  providerReady: z.boolean().optional(),
+  scopeKey: z.string().nullable().optional(),
+  signature: z.string().nullable().optional(),
+  state: z.lazy(() => EconomyRiskEconomyCapabilityPolicyStateSchema).optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyRiskEconomyCapabilityPolicyState */
+EconomyRiskEconomyCapabilityPolicyStateSchema = z.enum(['PendingApproval', 'Approved', 'Active', 'Expired']);
+
+/** Zod schema for EconomyRiskEconomyCapabilityReadinessStatus */
+EconomyRiskEconomyCapabilityReadinessStatusSchema = z.enum([
+  'Disabled',
+  'Ready',
+  'InvalidPolicy',
+  'JurisdictionBlocked',
+  'ComplianceUnavailable',
+  'ComplianceStale',
+  'ReviewRequired',
+  'LedgerUnhealthy',
+  'ProjectionMismatch',
+  'ReserveInsufficient',
+  'CustodyUnreconciled',
+  'AnchorInvalid',
+  'ProviderNotReady',
+  'KillSwitchActive',
+]);
+
+/** Zod schema for EconomyRiskEconomyKillSwitchScope */
+EconomyRiskEconomyKillSwitchScopeSchema = z.object({
+  capability: z.lazy(() => EconomyRiskEconomyValueMovementCapabilitySchema).optional(),
+  scopeKey: z.string().nullable().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for EconomyRiskEconomyKillSwitchState */
+EconomyRiskEconomyKillSwitchStateSchema = z.object({
+  id: z.string().uuid().optional(),
+  activatedAt: z.string().datetime().optional(),
+  activatedBy: z.string().uuid().optional(),
+  epoch: z.number().int().optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().nullable().optional(),
+  releaseApprovers: z.array(z.string().uuid()).nullable().optional(),
+  releasedAt: z.string().datetime().nullable().optional(),
+  releaseProposedAt: z.string().datetime().nullable().optional(),
+  releaseProposedBy: z.string().uuid().nullable().optional(),
+  scope: z.lazy(() => EconomyRiskEconomyKillSwitchScopeSchema).optional(),
+});
+
+/** Zod schema for EconomyRiskEconomyProtectedOperationState */
+EconomyRiskEconomyProtectedOperationStateSchema = z.enum([
+  'Ready',
+  'ReviewRequired',
+  'Hold',
+  'Challenge',
+  'Denied',
+  'ComplianceUnavailable',
+  'ComplianceStale',
+  'InvalidPolicy',
+  'ReserveInsufficient',
+]);
+
 /** Zod schema for EconomyRiskEconomyValueMovementCapability */
 EconomyRiskEconomyValueMovementCapabilitySchema = z.enum([
-  "ConfirmHardCoinFunding",
-  "ConvertHardToSoft",
-  "ReverseProviderFunding",
-  "Transfer",
-  "IssueAdReward",
-  "BountyEscrow",
-  "BountyClaim",
-  "MarketplaceSettlement",
-  "PayoutExecution",
-  "AdminWithdrawalExecution",
+  'ConfirmHardCoinFunding',
+  'ConvertHardToSoft',
+  'ReverseProviderFunding',
+  'Transfer',
+  'IssueAdReward',
+  'BountyEscrow',
+  'BountyClaim',
+  'MarketplaceSettlement',
+  'PayoutExecution',
+  'AdminWithdrawalExecution',
+  'MarketplaceRefund',
+  'BountyReclaim',
+  'LegacyBalanceBackfill',
 ]);
+
+/** Zod schema for EconomyRiskRiskManualDecisionCode */
+EconomyRiskRiskManualDecisionCodeSchema = z.enum(['EvidenceVerified', 'RiskAccepted', 'PolicyViolation', 'FraudConfirmed']);
+
+/** Zod schema for EconomyRiskRiskReviewCase */
+EconomyRiskRiskReviewCaseSchema = z.object({
+  id: z.string().uuid().optional(),
+  appealOf: z.string().uuid().nullable().optional(),
+  approvers: z.array(z.string().uuid()).nullable().optional(),
+  decisionId: z.string().uuid().optional(),
+  requiredApprovals: z.number().int().optional(),
+  resolution: z.string().nullable().optional(),
+  resolvedAt: z.string().datetime().nullable().optional(),
+  resolvedBy: z.string().uuid().nullable().optional(),
+  status: z.lazy(() => EconomyRiskRiskReviewStatusSchema).optional(),
+  submittedAt: z.string().datetime().optional(),
+  submittedBy: z.string().uuid().optional(),
+});
+
+/** Zod schema for EconomyRiskRiskReviewEvent */
+EconomyRiskRiskReviewEventSchema = z.object({
+  actorId: z.string().uuid().optional(),
+  decisionCode: z.lazy(() => EconomyRiskRiskManualDecisionCodeSchema).optional(),
+  evidenceHashes: z.array(z.string()).nullable().optional(),
+  kind: z.lazy(() => EconomyRiskRiskReviewEventKindSchema).optional(),
+  occurredAt: z.string().datetime().optional(),
+  resolution: z.string().nullable().optional(),
+  reviewId: z.string().uuid().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyRiskRiskReviewEventKind */
+EconomyRiskRiskReviewEventKindSchema = z.enum(['Submitted', 'ApprovalRecorded', 'Approved', 'Rejected', 'AppealSubmitted']);
+
+/** Zod schema for EconomyRiskRiskReviewPage */
+EconomyRiskRiskReviewPageSchema = z.object({
+  items: z
+    .array(z.lazy(() => EconomyRiskRiskReviewCaseSchema))
+    .nullable()
+    .optional(),
+  nextCursor: z.string().nullable().optional(),
+});
+
+/** Zod schema for EconomyRiskRiskReviewStatus */
+EconomyRiskRiskReviewStatusSchema = z.enum(['Pending', 'Approved', 'Rejected']);
+
+/** Zod schema for EconomyTransfersSelfServiceEconomyTransferInput */
+EconomyTransfersSelfServiceEconomyTransferInputSchema = z.object({
+  amountUnits: z.number().int().optional(),
+  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  idempotencyKey: z.string().nullable().optional(),
+  recipientUserId: z.string().uuid().optional(),
+  transferType: z.lazy(() => EconomyTransfersSelfServiceEconomyTransferTypeSchema).optional(),
+});
+
+/** Zod schema for EconomyTransfersSelfServiceEconomyTransferReceipt */
+EconomyTransfersSelfServiceEconomyTransferReceiptSchema = z.object({
+  amountUnits: z.number().int().optional(),
+  currency: z.lazy(() => EconomyContractsCurrencyCodeSchema).optional(),
+  isDuplicate: z.boolean().optional(),
+  journalHash: z.string().nullable().optional(),
+  journalSequence: z.number().int().optional(),
+  postingId: z.string().uuid().optional(),
+  recipientUserId: z.string().uuid().optional(),
+  transferType: z.lazy(() => EconomyTransfersSelfServiceEconomyTransferTypeSchema).optional(),
+});
+
+/** Zod schema for EconomyTransfersSelfServiceEconomyTransferType */
+EconomyTransfersSelfServiceEconomyTransferTypeSchema = z.enum(['Tip', 'Gift', 'CreatorSupport']);
+
+/** Zod schema for EconomyTreasuryAdminWithdrawalAuditEvent */
+EconomyTreasuryAdminWithdrawalAuditEventSchema = z.object({
+  actorId: z.string().uuid().nullable().optional(),
+  evidence: z.string().nullable().optional(),
+  hash: z.string().nullable().optional(),
+  kind: z.string().nullable().optional(),
+  occurredAt: z.string().datetime().optional(),
+  previousHash: z.string().nullable().optional(),
+  runId: z.string().uuid().optional(),
+  sequence: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyTreasuryAdminWithdrawalAuditView */
+EconomyTreasuryAdminWithdrawalAuditViewSchema = z.object({
+  events: z
+    .array(z.lazy(() => EconomyTreasuryAdminWithdrawalAuditEventSchema))
+    .nullable()
+    .optional(),
+  integrityValid: z.boolean().optional(),
+  runId: z.string().uuid().optional(),
+});
+
+/** Zod schema for EconomyTreasuryAdminWithdrawalRun */
+EconomyTreasuryAdminWithdrawalRunSchema = z.object({
+  id: z.string().uuid().optional(),
+  amount: z.lazy(() => EconomyContractsCoinAmountSchema).optional(),
+  approvedBy: z.string().uuid().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  destinationHash: z.string().nullable().optional(),
+  dispatchSnapshotHash: z.string().nullable().optional(),
+  executionEpoch: z.number().int().optional(),
+  fencingToken: z.number().int().optional(),
+  idempotencyKey: z.lazy(() => EconomyContractsIdempotencyKeySchema).optional(),
+  periodStart: z.string().date().optional(),
+  platformFeeWalletId: z.lazy(() => EconomyContractsWalletIdSchema).optional(),
+  policyVersion: z.lazy(() => EconomyContractsPolicyVersionSchema).optional(),
+  providerTransferId: z.string().nullable().optional(),
+  requestedBy: z.string().uuid().optional(),
+  requestHash: z.string().nullable().optional(),
+  reserveAuthorizationEpoch: z.number().int().optional(),
+  reserveVersion: z.lazy(() => EconomyContractsReserveVersionSchema).optional(),
+  sourceAssetKey: z.string().nullable().optional(),
+  state: z.lazy(() => EconomyTreasuryAdminWithdrawalRunStateSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAt: z.string().datetime().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for EconomyTreasuryAdminWithdrawalRunState */
+EconomyTreasuryAdminWithdrawalRunStateSchema = z.enum(['PendingApproval', 'Approved', 'Dispatching', 'Ambiguous', 'Succeeded', 'Failed', 'Cancelled']);
 
 /** Zod schema for Error */
 ErrorSchema = z.object({
@@ -16806,16 +19043,7 @@ ErrorSchema = z.object({
 });
 
 /** Zod schema for ErrorType */
-ErrorTypeSchema = z.enum([
-  "Failure",
-  "Validation",
-  "Problem",
-  "NotFound",
-  "Conflict",
-  "Unauthorized",
-  "Forbidden",
-  "None",
-]);
+ErrorTypeSchema = z.enum(['Failure', 'Validation', 'Problem', 'NotFound', 'Conflict', 'Unauthorized', 'Forbidden', 'None']);
 
 /** Zod schema for FeaturesBulkEvaluationInput */
 FeaturesBulkEvaluationInputSchema = z.object({
@@ -16856,10 +19084,7 @@ FeaturesCreateFeatureInputSchema = z.object({
 /** Zod schema for FeaturesFeatureContext */
 FeaturesFeatureContextSchema = z.object({
   country: z.string().nullable().optional(),
-  customAttributes: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  customAttributes: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   environment: z.string().nullable().optional(),
   ipAddress: z.string().nullable().optional(),
   permissions: z.array(z.string()).nullable().optional(),
@@ -16914,13 +19139,7 @@ FeaturesFeatureFlagTargetSchema = z.object({
 });
 
 /** Zod schema for FeaturesFeatureFlagType */
-FeaturesFeatureFlagTypeSchema = z.enum([
-  "Toggle",
-  "Numeric",
-  "String",
-  "Percentage",
-  "UserSegment",
-]);
+FeaturesFeatureFlagTypeSchema = z.enum(['Toggle', 'Numeric', 'String', 'Percentage', 'UserSegment']);
 
 /** Zod schema for FeaturesSetCapabilityOverrideInput */
 FeaturesSetCapabilityOverrideInputSchema = z.object({
@@ -16957,59 +19176,43 @@ Fido2NetLibAssertionOptionsSchema = z.object({
     .nullable()
     .optional(),
   challenge: z.string().nullable().optional(),
-  extensions: z
-    .lazy(() => ObjectsAuthenticationExtensionsClientInputsSchema)
-    .optional(),
+  extensions: z.lazy(() => ObjectsAuthenticationExtensionsClientInputsSchema).optional(),
   hints: z
     .array(z.lazy(() => ObjectsPublicKeyCredentialHintSchema))
     .nullable()
     .optional(),
   rpId: z.string().nullable().optional(),
   timeout: z.number().int().optional(),
-  userVerification: z
-    .lazy(() => ObjectsUserVerificationRequirementSchema)
-    .optional(),
+  userVerification: z.lazy(() => ObjectsUserVerificationRequirementSchema).optional(),
 });
 
 /** Zod schema for Fido2NetLibAuthenticatorSelection */
 Fido2NetLibAuthenticatorSelectionSchema = z.object({
-  authenticatorAttachment: z
-    .lazy(() => ObjectsAuthenticatorAttachmentSchema)
-    .optional(),
+  authenticatorAttachment: z.lazy(() => ObjectsAuthenticatorAttachmentSchema).optional(),
   requireResidentKey: z.boolean().optional(),
   residentKey: z.lazy(() => ObjectsResidentKeyRequirementSchema).optional(),
-  userVerification: z
-    .lazy(() => ObjectsUserVerificationRequirementSchema)
-    .optional(),
+  userVerification: z.lazy(() => ObjectsUserVerificationRequirementSchema).optional(),
 });
 
 /** Zod schema for Fido2NetLibCredentialCreateOptions */
 Fido2NetLibCredentialCreateOptionsSchema = z.object({
-  attestation: z
-    .lazy(() => ObjectsAttestationConveyancePreferenceSchema)
-    .optional(),
+  attestation: z.lazy(() => ObjectsAttestationConveyancePreferenceSchema).optional(),
   attestationFormats: z
     .array(z.lazy(() => ObjectsAttestationStatementFormatIdentifierSchema))
     .nullable()
     .optional(),
-  authenticatorSelection: z
-    .lazy(() => Fido2NetLibAuthenticatorSelectionSchema)
-    .optional(),
+  authenticatorSelection: z.lazy(() => Fido2NetLibAuthenticatorSelectionSchema).optional(),
   challenge: z.string().nullable(),
   excludeCredentials: z
     .array(z.lazy(() => ObjectsPublicKeyCredentialDescriptorSchema))
     .nullable()
     .optional(),
-  extensions: z
-    .lazy(() => ObjectsAuthenticationExtensionsClientInputsSchema)
-    .optional(),
+  extensions: z.lazy(() => ObjectsAuthenticationExtensionsClientInputsSchema).optional(),
   hints: z
     .array(z.lazy(() => ObjectsPublicKeyCredentialHintSchema))
     .nullable()
     .optional(),
-  pubKeyCredParams: z
-    .array(z.lazy(() => Fido2NetLibPubKeyCredParamSchema))
-    .nullable(),
+  pubKeyCredParams: z.array(z.lazy(() => Fido2NetLibPubKeyCredParamSchema)).nullable(),
   rp: z.lazy(() => Fido2NetLibPublicKeyCredentialRpEntitySchema),
   timeout: z.number().int().optional(),
   user: z.lazy(() => Fido2NetLibFido2UserSchema),
@@ -17147,13 +19350,7 @@ GameJamsJamScoreDtoSchema = z.object({
 });
 
 /** Zod schema for GameJamsJamStatus */
-GameJamsJamStatusSchema = z.enum([
-  "Upcoming",
-  "Active",
-  "Voting",
-  "Completed",
-  "Cancelled",
-]);
+GameJamsJamStatusSchema = z.enum(['Upcoming', 'Active', 'Voting', 'Completed', 'Cancelled']);
 
 /** Zod schema for GameJamsJamSubmission */
 GameJamsJamSubmissionSchema = z.object({
@@ -17222,9 +19419,7 @@ IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema = z.object({
 IdentityAuthenticationBeginWebAuthnRegistrationInputSchema = z.object({
   displayName: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
-  preferredAuthenticatorType: z
-    .lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema)
-    .optional(),
+  preferredAuthenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
 });
 
 /** Zod schema for IdentityAuthenticationCleanupKeysInput */
@@ -17313,6 +19508,13 @@ IdentityAuthenticationCreateServiceAccountInputSchema = z.object({
   name: z.string().nullable().optional(),
   scopes: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationCreateStepUpChallengeInput */
+IdentityAuthenticationCreateStepUpChallengeInputSchema = z.object({
+  operationType: z.string().nullable().optional(),
+  payloadHash: z.string().nullable().optional(),
+  targetReference: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationDeviceInfo */
@@ -17484,13 +19686,7 @@ IdentityAuthenticationMfaErrorOutputSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthenticationMfaMethod */
-IdentityAuthenticationMfaMethodSchema = z.enum([
-  "Totp",
-  "BackupCode",
-  "Sms",
-  "Email",
-  "WebAuthn",
-]);
+IdentityAuthenticationMfaMethodSchema = z.enum(['Totp', 'BackupCode', 'Sms', 'Email', 'WebAuthn']);
 
 /** Zod schema for IdentityAuthenticationMfaMethodInfo */
 IdentityAuthenticationMfaMethodInfoSchema = z.object({
@@ -17505,9 +19701,7 @@ IdentityAuthenticationMfaMethodInfoSchema = z.object({
 /** Zod schema for IdentityAuthenticationMfaMethodsOutput */
 IdentityAuthenticationMfaMethodsOutputSchema = z.object({
   defaultMethod: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
-  methods: z
-    .array(z.lazy(() => IdentityAuthenticationMfaMethodInfoSchema))
-    .nullable(),
+  methods: z.array(z.lazy(() => IdentityAuthenticationMfaMethodInfoSchema)).nullable(),
 });
 
 /** Zod schema for IdentityAuthenticationMfaSetupOutput */
@@ -17612,12 +19806,7 @@ IdentityAuthenticationRevokeRefreshTokenInputSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthenticationRiskLevel */
-IdentityAuthenticationRiskLevelSchema = z.enum([
-  "Low",
-  "Medium",
-  "High",
-  "Critical",
-]);
+IdentityAuthenticationRiskLevelSchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
 /** Zod schema for IdentityAuthenticationRotateKeyInput */
 IdentityAuthenticationRotateKeyInputSchema = z.object({
@@ -17773,6 +19962,18 @@ IdentityAuthenticationSmsMfaSetupOutputSchema = z.object({
   phoneNumberMasked: z.string().nullable(),
 });
 
+/** Zod schema for IdentityAuthenticationStepUpChallengeOutput */
+IdentityAuthenticationStepUpChallengeOutputSchema = z.object({
+  challengeId: z.string().uuid().optional(),
+  expiresAt: z.string().datetime().optional(),
+});
+
+/** Zod schema for IdentityAuthenticationStepUpReceiptOutput */
+IdentityAuthenticationStepUpReceiptOutputSchema = z.object({
+  expiresAt: z.string().datetime().optional(),
+  receipt: z.string().nullable().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationTrustDeviceInput */
 IdentityAuthenticationTrustDeviceInputSchema = z.object({
   deviceName: z.string().nullable().optional(),
@@ -17833,6 +20034,12 @@ IdentityAuthenticationVerifyMfaInputSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationVerifyStepUpChallengeInput */
+IdentityAuthenticationVerifyStepUpChallengeInputSchema = z.object({
+  evidence: z.string().nullable().optional(),
+  method: z.lazy(() => IdentityAuthenticationMfaMethodSchema).optional(),
+});
+
 /** Zod schema for IdentityAuthenticationWeb3ChallengeInput */
 IdentityAuthenticationWeb3ChallengeInputSchema = z.object({
   chainId: z.string().nullable().optional(),
@@ -17881,17 +20088,12 @@ IdentityAuthenticationWebAuthnAuthenticationResultSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthenticationWebAuthnAuthenticatorType */
-IdentityAuthenticationWebAuthnAuthenticatorTypeSchema = z.enum([
-  "Platform",
-  "CrossPlatform",
-]);
+IdentityAuthenticationWebAuthnAuthenticatorTypeSchema = z.enum(['Platform', 'CrossPlatform']);
 
 /** Zod schema for IdentityAuthenticationWebAuthnCredentialInfo */
 IdentityAuthenticationWebAuthnCredentialInfoSchema = z.object({
   id: z.string().uuid().optional(),
-  authenticatorType: z
-    .lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema)
-    .optional(),
+  authenticatorType: z.lazy(() => IdentityAuthenticationWebAuthnAuthenticatorTypeSchema).optional(),
   backedUp: z.boolean().optional(),
   createdAt: z.string().datetime().optional(),
   friendlyName: z.string().nullable().optional(),
@@ -17956,40 +20158,27 @@ IdentityAuthorizationAccessReviewCampaignSchema = z.object({
   notificationTemplate: z.string().nullable().optional(),
   reminderFrequencyDays: z.number().int().optional(),
   reviewedItems: z.number().int().optional(),
-  reviewType: z
-    .lazy(() => IdentityAuthorizationAccessReviewTypeSchema)
-    .optional(),
+  reviewType: z.lazy(() => IdentityAuthorizationAccessReviewTypeSchema).optional(),
   revokedItems: z.number().int().optional(),
   scope: z.lazy(() => IdentityAuthorizationAccessReviewScopeSchema).optional(),
   scopeFilter: z.string().nullable().optional(),
   startDate: z.string().datetime().optional(),
-  status: z
-    .lazy(() => IdentityAuthorizationAccessReviewStatusSchema)
-    .optional(),
+  status: z.lazy(() => IdentityAuthorizationAccessReviewStatusSchema).optional(),
   tenantId: z.lazy(() => CQRSModelsTenantIdSchema).optional(),
   totalItems: z.number().int().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthorizationAccessReviewDecision */
-IdentityAuthorizationAccessReviewDecisionSchema = z.enum([
-  "None",
-  "Approve",
-  "Revoke",
-  "ModifyAndApprove",
-]);
+IdentityAuthorizationAccessReviewDecisionSchema = z.enum(['None', 'Approve', 'Revoke', 'ModifyAndApprove']);
 
 /** Zod schema for IdentityAuthorizationAccessReviewItem */
 IdentityAuthorizationAccessReviewItemSchema = z.object({
   id: z.string().uuid().optional(),
-  campaign: z
-    .lazy(() => IdentityAuthorizationAccessReviewCampaignSchema)
-    .optional(),
+  campaign: z.lazy(() => IdentityAuthorizationAccessReviewCampaignSchema).optional(),
   campaignId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
-  decision: z
-    .lazy(() => IdentityAuthorizationAccessReviewDecisionSchema)
-    .optional(),
+  decision: z.lazy(() => IdentityAuthorizationAccessReviewDecisionSchema).optional(),
   decisionReason: z.string().nullable().optional(),
   lastReminderSent: z.string().datetime().nullable().optional(),
   permissionDetails: z.string().nullable().optional(),
@@ -17999,70 +20188,40 @@ IdentityAuthorizationAccessReviewItemSchema = z.object({
   reviewedAt: z.string().datetime().nullable().optional(),
   reviewerId: z.string().uuid().optional(),
   reviewerNotes: z.string().nullable().optional(),
-  status: z
-    .lazy(() => IdentityAuthorizationAccessReviewItemStatusSchema)
-    .optional(),
+  status: z.lazy(() => IdentityAuthorizationAccessReviewItemStatusSchema).optional(),
   subjectUserId: z.string().uuid().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthorizationAccessReviewItemStatus */
-IdentityAuthorizationAccessReviewItemStatusSchema = z.enum([
-  "None",
-  "Pending",
-  "Reviewed",
-  "Approved",
-  "Revoked",
-  "Expired",
-]);
+IdentityAuthorizationAccessReviewItemStatusSchema = z.enum(['None', 'Pending', 'Reviewed', 'Approved', 'Revoked', 'Expired']);
 
 /** Zod schema for IdentityAuthorizationAccessReviewScope */
-IdentityAuthorizationAccessReviewScopeSchema = z.enum([
-  "None",
-  "AllUsers",
-  "Department",
-  "Team",
-  "Role",
-  "Resource",
-  "HighPrivilege",
-  "External",
-  "Custom",
-]);
+IdentityAuthorizationAccessReviewScopeSchema = z.enum(['None', 'AllUsers', 'Department', 'Team', 'Role', 'Resource', 'HighPrivilege', 'External', 'Custom']);
 
 /** Zod schema for IdentityAuthorizationAccessReviewStatus */
-IdentityAuthorizationAccessReviewStatusSchema = z.enum([
-  "None",
-  "Draft",
-  "Active",
-  "InProgress",
-  "Completed",
-  "Expired",
-]);
+IdentityAuthorizationAccessReviewStatusSchema = z.enum(['None', 'Draft', 'Active', 'InProgress', 'Completed', 'Expired']);
 
 /** Zod schema for IdentityAuthorizationAccessReviewType */
 IdentityAuthorizationAccessReviewTypeSchema = z.enum([
-  "None",
-  "PermissionReview",
-  "RoleReview",
-  "ResourceAccessReview",
-  "UserAccessReview",
-  "ComplianceAttestation",
+  'None',
+  'PermissionReview',
+  'RoleReview',
+  'ResourceAccessReview',
+  'UserAccessReview',
+  'ComplianceAttestation',
 ]);
 
 /** Zod schema for IdentityAuthorizationCommandsCreateAccessReviewCampaignCommand */
-IdentityAuthorizationCommandsCreateAccessReviewCampaignCommandSchema = z.object(
-  {
-    createdBy: z.string().uuid().optional(),
-    description: z.string().nullable().optional(),
-    endDate: z.string().datetime().optional(),
-    name: z.string().nullable().optional(),
-    reviewType: z
-      .lazy(() => IdentityAuthorizationAccessReviewTypeSchema)
-      .optional(),
-    startDate: z.string().datetime().optional(),
-    tenantId: z.string().uuid().nullable().optional(),
-  },
-);
+IdentityAuthorizationCommandsCreateAccessReviewCampaignCommandSchema = z.object({
+  createdBy: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  endDate: z.string().datetime().optional(),
+  name: z.string().nullable().optional(),
+  reviewType: z.lazy(() => IdentityAuthorizationAccessReviewTypeSchema).optional(),
+  startDate: z.string().datetime().optional(),
+  tenantId: z.string().uuid().nullable().optional(),
+});
 
 /** Zod schema for IdentityAuthorizationCommandsCreateSoDRuleCommand */
 IdentityAuthorizationCommandsCreateSoDRuleCommandSchema = z.object({
@@ -18142,9 +20301,7 @@ IdentityAuthorizationControllersGrantExceptionInputSchema = z.object({
 
 /** Zod schema for IdentityAuthorizationControllersResolveViolationInput */
 IdentityAuthorizationControllersResolveViolationInputSchema = z.object({
-  action: z
-    .lazy(() => IdentityAuthorizationSoDResolutionActionSchema)
-    .optional(),
+  action: z.lazy(() => IdentityAuthorizationSoDResolutionActionSchema).optional(),
   notes: z.string().nullable().optional(),
   resolvedBy: z.string().uuid().optional(),
 });
@@ -18197,23 +20354,14 @@ IdentityAuthorizationDelegatedAdminScopeSchema = z.object({
   grantablePermissions: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   name: z.string().nullable().optional(),
-  scopeType: z
-    .lazy(() => IdentityAuthorizationDelegatedAdminScopeTypeSchema)
-    .optional(),
+  scopeType: z.lazy(() => IdentityAuthorizationDelegatedAdminScopeTypeSchema).optional(),
   startsAt: z.string().datetime().optional(),
   tenantId: z.lazy(() => CQRSModelsTenantIdSchema).optional(),
   updatedAt: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthorizationDelegatedAdminScopeType */
-IdentityAuthorizationDelegatedAdminScopeTypeSchema = z.enum([
-  "None",
-  "Department",
-  "Team",
-  "Role",
-  "Resource",
-  "Custom",
-]);
+IdentityAuthorizationDelegatedAdminScopeTypeSchema = z.enum(['None', 'Department', 'Team', 'Role', 'Resource', 'Custom']);
 
 /** Zod schema for IdentityAuthorizationDenyTenantPermissionCommand */
 IdentityAuthorizationDenyTenantPermissionCommandSchema = z.object({
@@ -18236,30 +20384,18 @@ IdentityAuthorizationEffectivePermissionSchema = z.object({
 IdentityAuthorizationEffectivePermissionsOutputSchema = z.object({
   hasFullAccess: z.boolean().optional(),
   isOwner: z.boolean().optional(),
-  permissions: z
-    .array(z.lazy(() => IdentityAuthorizationEffectivePermissionSchema))
-    .nullable(),
+  permissions: z.array(z.lazy(() => IdentityAuthorizationEffectivePermissionSchema)).nullable(),
   resourceId: z.string().uuid(),
   resourceType: z.string().nullable(),
   userId: z.string().uuid(),
 });
 
 /** Zod schema for IdentityAuthorizationElevationRequestStatus */
-IdentityAuthorizationElevationRequestStatusSchema = z.enum([
-  "None",
-  "Pending",
-  "Approved",
-  "Denied",
-  "Active",
-  "Expired",
-  "Revoked",
-]);
+IdentityAuthorizationElevationRequestStatusSchema = z.enum(['None', 'Pending', 'Approved', 'Denied', 'Active', 'Expired', 'Revoked']);
 
 /** Zod schema for IdentityAuthorizationGetPendingResourceInvitationsOutput */
 IdentityAuthorizationGetPendingResourceInvitationsOutputSchema = z.object({
-  invitations: z
-    .array(z.lazy(() => IdentityAuthorizationResourceInvitationSchema))
-    .nullable(),
+  invitations: z.array(z.lazy(() => IdentityAuthorizationResourceInvitationSchema)).nullable(),
   totalCount: z.number().int().optional(),
 });
 
@@ -18274,9 +20410,7 @@ IdentityAuthorizationGetResourceUsersOutputSchema = z.object({
   resourceId: z.string().nullable(),
   resourceType: z.string().nullable(),
   totalCount: z.number().int().optional(),
-  users: z
-    .array(z.lazy(() => IdentityAuthorizationResourceUserSchema))
-    .nullable(),
+  users: z.array(z.lazy(() => IdentityAuthorizationResourceUserSchema)).nullable(),
 });
 
 /** Zod schema for IdentityAuthorizationGetTenantPermissionsOutput */
@@ -18309,12 +20443,7 @@ IdentityAuthorizationHasPermissionOutputSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthorizationImpactSeverity */
-IdentityAuthorizationImpactSeveritySchema = z.enum([
-  "Low",
-  "Medium",
-  "High",
-  "Critical",
-]);
+IdentityAuthorizationImpactSeveritySchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
 /** Zod schema for IdentityAuthorizationInvitationActionResult */
 IdentityAuthorizationInvitationActionResultSchema = z.object({
@@ -18346,9 +20475,7 @@ IdentityAuthorizationJitElevationInputSchema = z.object({
   revokedAt: z.string().datetime().nullable().optional(),
   revokedBy: z.string().uuid().nullable().optional(),
   startsAt: z.string().datetime().nullable().optional(),
-  status: z
-    .lazy(() => IdentityAuthorizationElevationRequestStatusSchema)
-    .optional(),
+  status: z.lazy(() => IdentityAuthorizationElevationRequestStatusSchema).optional(),
   tenantId: z.lazy(() => CQRSModelsTenantIdSchema).optional(),
   updatedAt: z.string().datetime().nullable().optional(),
 });
@@ -18414,108 +20541,108 @@ IdentityAuthorizationPermissionTrendSchema = z.object({
 
 /** Zod schema for IdentityAuthorizationPermissionType */
 IdentityAuthorizationPermissionTypeSchema = z.enum([
-  "Read",
-  "Comment",
-  "Reply",
-  "Vote",
-  "Share",
-  "Report",
-  "Follow",
-  "Bookmark",
-  "React",
-  "Subscribe",
-  "Mention",
-  "Tag",
-  "Categorize",
-  "Collection",
-  "Series",
-  "CrossReference",
-  "Translate",
-  "Version",
-  "Template",
-  "Create",
-  "Draft",
-  "Submit",
-  "Withdraw",
-  "Archive",
-  "Restore",
-  "Delete",
-  "HardDelete",
-  "Backup",
-  "Migrate",
-  "Clone",
-  "Edit",
-  "Proofread",
-  "FactCheck",
-  "StyleGuide",
-  "Plagiarism",
-  "Seo",
-  "Accessibility",
-  "Legal",
-  "Brand",
-  "Guidelines",
-  "Approve",
-  "Reject",
-  "RequestRevision",
-  "Escalate",
-  "Override",
-  "Delegate",
-  "FastTrack",
-  "BatchApprove",
-  "ConditionalApprove",
-  "RequireReview",
-  "Publish",
-  "Unpublish",
-  "Schedule",
-  "SetPublishDate",
-  "Visibility",
-  "Feature",
-  "Pin",
-  "Sticky",
-  "Highlight",
-  "Promote",
-  "Moderate",
-  "Hide",
-  "Flag",
-  "Warn",
-  "Suspend",
-  "Ban",
-  "Quarantine",
-  "Review",
-  "Investigate",
-  "EscalateModeration",
-  "Invite",
-  "Assign",
-  "Collaborate",
-  "CoAuthor",
-  "Contribute",
-  "Suggest",
-  "Track",
-  "Merge",
-  "Resolve",
-  "Coordinate",
-  "Score",
-  "Rate",
-  "Benchmark",
-  "Metrics",
-  "Analytics",
-  "Performance",
-  "Feedback",
-  "Audit",
-  "Standards",
-  "Improvement",
-  "Monetize",
-  "Pricing",
-  "Paywall",
-  "Manage",
-  "Admin",
-  "Execute",
-  "Export",
-  "Import",
-  "SystemAdmin",
-  "TenantAdmin",
-  "UserManagement",
-  "Configure",
+  'Read',
+  'Comment',
+  'Reply',
+  'Vote',
+  'Share',
+  'Report',
+  'Follow',
+  'Bookmark',
+  'React',
+  'Subscribe',
+  'Mention',
+  'Tag',
+  'Categorize',
+  'Collection',
+  'Series',
+  'CrossReference',
+  'Translate',
+  'Version',
+  'Template',
+  'Create',
+  'Draft',
+  'Submit',
+  'Withdraw',
+  'Archive',
+  'Restore',
+  'Delete',
+  'HardDelete',
+  'Backup',
+  'Migrate',
+  'Clone',
+  'Edit',
+  'Proofread',
+  'FactCheck',
+  'StyleGuide',
+  'Plagiarism',
+  'Seo',
+  'Accessibility',
+  'Legal',
+  'Brand',
+  'Guidelines',
+  'Approve',
+  'Reject',
+  'RequestRevision',
+  'Escalate',
+  'Override',
+  'Delegate',
+  'FastTrack',
+  'BatchApprove',
+  'ConditionalApprove',
+  'RequireReview',
+  'Publish',
+  'Unpublish',
+  'Schedule',
+  'SetPublishDate',
+  'Visibility',
+  'Feature',
+  'Pin',
+  'Sticky',
+  'Highlight',
+  'Promote',
+  'Moderate',
+  'Hide',
+  'Flag',
+  'Warn',
+  'Suspend',
+  'Ban',
+  'Quarantine',
+  'Review',
+  'Investigate',
+  'EscalateModeration',
+  'Invite',
+  'Assign',
+  'Collaborate',
+  'CoAuthor',
+  'Contribute',
+  'Suggest',
+  'Track',
+  'Merge',
+  'Resolve',
+  'Coordinate',
+  'Score',
+  'Rate',
+  'Benchmark',
+  'Metrics',
+  'Analytics',
+  'Performance',
+  'Feedback',
+  'Audit',
+  'Standards',
+  'Improvement',
+  'Monetize',
+  'Pricing',
+  'Paywall',
+  'Manage',
+  'Admin',
+  'Execute',
+  'Export',
+  'Import',
+  'SystemAdmin',
+  'TenantAdmin',
+  'UserManagement',
+  'Configure',
 ]);
 
 /** Zod schema for IdentityAuthorizationPermissionUpdateResult */
@@ -18639,13 +20766,13 @@ IdentityAuthorizationShareResultSchema = z.object({
 
 /** Zod schema for IdentityAuthorizationSoDResolutionAction */
 IdentityAuthorizationSoDResolutionActionSchema = z.enum([
-  "None",
-  "RevokePermission",
-  "RevokeRole",
-  "GrantException",
-  "ImplementCompensatingControl",
-  "TransferOwnership",
-  "NoAction",
+  'None',
+  'RevokePermission',
+  'RevokeRole',
+  'GrantException',
+  'ImplementCompensatingControl',
+  'TransferOwnership',
+  'NoAction',
 ]);
 
 /** Zod schema for IdentityAuthorizationSoDRule */
@@ -18677,22 +20804,16 @@ IdentityAuthorizationSoDRuleSchema = z.object({
 
 /** Zod schema for IdentityAuthorizationSoDRuleType */
 IdentityAuthorizationSoDRuleTypeSchema = z.enum([
-  "None",
-  "PermissionConflict",
-  "RoleConflict",
-  "ResourceConflict",
-  "BusinessProcessConflict",
-  "FunctionalConflict",
+  'None',
+  'PermissionConflict',
+  'RoleConflict',
+  'ResourceConflict',
+  'BusinessProcessConflict',
+  'FunctionalConflict',
 ]);
 
 /** Zod schema for IdentityAuthorizationSoDSeverity */
-IdentityAuthorizationSoDSeveritySchema = z.enum([
-  "None",
-  "Low",
-  "Medium",
-  "High",
-  "Critical",
-]);
+IdentityAuthorizationSoDSeveritySchema = z.enum(['None', 'Low', 'Medium', 'High', 'Critical']);
 
 /** Zod schema for IdentityAuthorizationSoDViolation */
 IdentityAuthorizationSoDViolationSchema = z.object({
@@ -18705,17 +20826,13 @@ IdentityAuthorizationSoDViolationSchema = z.object({
   detectedBy: z.string().uuid().nullable().optional(),
   exceptionJustification: z.string().nullable().optional(),
   isException: z.boolean().optional(),
-  resolutionAction: z
-    .lazy(() => IdentityAuthorizationSoDResolutionActionSchema)
-    .optional(),
+  resolutionAction: z.lazy(() => IdentityAuthorizationSoDResolutionActionSchema).optional(),
   resolutionNotes: z.string().nullable().optional(),
   resolvedAt: z.string().datetime().nullable().optional(),
   resolvedBy: z.string().uuid().nullable().optional(),
   rule: z.lazy(() => IdentityAuthorizationSoDRuleSchema).optional(),
   ruleId: z.string().uuid().optional(),
-  status: z
-    .lazy(() => IdentityAuthorizationSoDViolationStatusSchema)
-    .optional(),
+  status: z.lazy(() => IdentityAuthorizationSoDViolationStatusSchema).optional(),
   tenantId: z.lazy(() => CQRSModelsTenantIdSchema).optional(),
   updatedAt: z.string().datetime().nullable().optional(),
   userId: z.string().uuid().optional(),
@@ -18723,15 +20840,7 @@ IdentityAuthorizationSoDViolationSchema = z.object({
 });
 
 /** Zod schema for IdentityAuthorizationSoDViolationStatus */
-IdentityAuthorizationSoDViolationStatusSchema = z.enum([
-  "None",
-  "Active",
-  "Acknowledged",
-  "Mitigated",
-  "Resolved",
-  "Excepted",
-  "FalsePositive",
-]);
+IdentityAuthorizationSoDViolationStatusSchema = z.enum(['None', 'Active', 'Acknowledged', 'Mitigated', 'Resolved', 'Excepted', 'FalsePositive']);
 
 /** Zod schema for IdentityAuthorizationUpdateUserPermissionsCommand */
 IdentityAuthorizationUpdateUserPermissionsCommandSchema = z.object({
@@ -18866,41 +20975,22 @@ IdentityTenantsRecoverInputSchema = z.object({
 /** Zod schema for IdentityTenantsReplaceTenantMetadataInput */
 IdentityTenantsReplaceTenantMetadataInputSchema = z.object({
   adminNotes: z.string().nullable().optional(),
-  businessInfo: z
-    .lazy(() => IdentityTenantsUpdateTenantBusinessInfoInputSchema)
-    .optional(),
-  contactInfo: z
-    .lazy(() => IdentityTenantsUpdateTenantContactInfoInputSchema)
-    .optional(),
-  customFields: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  businessInfo: z.lazy(() => IdentityTenantsUpdateTenantBusinessInfoInputSchema).optional(),
+  contactInfo: z.lazy(() => IdentityTenantsUpdateTenantContactInfoInputSchema).optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsReplaceTenantSettingsInput */
 IdentityTenantsReplaceTenantSettingsInputSchema = z.object({
-  businessRules: z
-    .lazy(() => IdentityTenantsUpdateTenantBusinessRulesInputSchema)
-    .optional(),
+  businessRules: z.lazy(() => IdentityTenantsUpdateTenantBusinessRulesInputSchema).optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
-  integrationSettings: z
-    .lazy(() => IdentityTenantsUpdateTenantIntegrationSettingsInputSchema)
-    .optional(),
-  securitySettings: z
-    .lazy(() => IdentityTenantsUpdateTenantSecuritySettingsInputSchema)
-    .optional(),
-  systemConfiguration: z
-    .lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema)
-    .optional(),
-  systemLimits: z
-    .lazy(() => IdentityTenantsUpdateTenantSystemLimitsInputSchema)
-    .optional(),
-  userInterfaceSettings: z
-    .lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema)
-    .optional(),
+  integrationSettings: z.lazy(() => IdentityTenantsUpdateTenantIntegrationSettingsInputSchema).optional(),
+  securitySettings: z.lazy(() => IdentityTenantsUpdateTenantSecuritySettingsInputSchema).optional(),
+  systemConfiguration: z.lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema).optional(),
+  systemLimits: z.lazy(() => IdentityTenantsUpdateTenantSystemLimitsInputSchema).optional(),
+  userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
 });
 
 /** Zod schema for IdentityTenantsSetTenantMembershipStatusInput */
@@ -18957,9 +21047,7 @@ IdentityTenantsTenantSchema = z.object({
     .nullable()
     .optional(),
   tenantSettings: z.lazy(() => IdentityTenantsTenantSettingsSchema).optional(),
-  tenantStatistics: z
-    .lazy(() => IdentityTenantsTenantStatisticsSchema)
-    .optional(),
+  tenantStatistics: z.lazy(() => IdentityTenantsTenantStatisticsSchema).optional(),
   updatedAt: z.string().datetime(),
   usageTrackingRecords: z
     .array(z.lazy(() => IdentityTenantsUsageTrackingSchema))
@@ -18984,14 +21072,8 @@ IdentityTenantsTenantAuditLogEntrySchema = z.object({
   actorEmail: z.string().nullable().optional(),
   actorId: z.string().uuid().nullable().optional(),
   actorName: z.string().nullable().optional(),
-  afterValues: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  beforeValues: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  afterValues: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  beforeValues: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   correlationId: z.string().nullable().optional(),
   ipAddress: z.string().nullable().optional(),
   metadata: z.record(z.string(), z.string()).nullable().optional(),
@@ -19020,22 +21102,10 @@ IdentityTenantsTenantBusinessInfoSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenantBusinessRules */
 IdentityTenantsTenantBusinessRulesSchema = z.object({
-  approvalRules: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  notificationRules: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  validationRules: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  workflowRules: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  approvalRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  notificationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  validationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantContactInfo */
@@ -19082,18 +21152,9 @@ IdentityTenantsTenantDomainSchema = z.object({
 /** Zod schema for IdentityTenantsTenantIntegrationSettings */
 IdentityTenantsTenantIntegrationSettingsSchema = z.object({
   apiKeys: z.record(z.string(), z.string()).nullable().optional(),
-  externalServices: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  ssoConfiguration: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  webhookSettings: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  ssoConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  webhookSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantMember */
@@ -19131,15 +21192,10 @@ IdentityTenantsTenantMemberSchema = z.object({
 IdentityTenantsTenantMetadataSchema = z.object({
   id: z.string().uuid().optional(),
   adminNotes: z.string().nullable().optional(),
-  businessInfo: z
-    .lazy(() => IdentityTenantsTenantBusinessInfoSchema)
-    .optional(),
+  businessInfo: z.lazy(() => IdentityTenantsTenantBusinessInfoSchema).optional(),
   contactInfo: z.lazy(() => IdentityTenantsTenantContactInfoSchema).optional(),
   createdAt: z.string().datetime().optional(),
-  customFields: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
   updatedAt: z.string().datetime().optional(),
@@ -19149,10 +21205,7 @@ IdentityTenantsTenantMetadataSchema = z.object({
 IdentityTenantsTenantSecuritySettingsSchema = z.object({
   apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
   ipWhitelist: z.array(z.string()).nullable().optional(),
-  passwordPolicy: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  passwordPolicy: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   sessionTimeout: z.number().int().optional(),
   twoFactorRequired: z.boolean().optional(),
 });
@@ -19192,27 +21245,15 @@ IdentityTenantsTenantSettingsSchema = z.object({
 /** Zod schema for IdentityTenantsTenantSettingsDto */
 IdentityTenantsTenantSettingsDtoSchema = z.object({
   id: z.string().uuid().optional(),
-  businessRules: z
-    .lazy(() => IdentityTenantsTenantBusinessRulesSchema)
-    .optional(),
+  businessRules: z.lazy(() => IdentityTenantsTenantBusinessRulesSchema).optional(),
   createdAt: z.string().datetime().optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
-  integrationSettings: z
-    .lazy(() => IdentityTenantsTenantIntegrationSettingsSchema)
-    .optional(),
-  securitySettings: z
-    .lazy(() => IdentityTenantsTenantSecuritySettingsSchema)
-    .optional(),
-  systemConfiguration: z
-    .lazy(() => IdentityTenantsTenantSystemConfigurationSchema)
-    .optional(),
-  systemLimits: z
-    .lazy(() => IdentityTenantsTenantSystemLimitsSchema)
-    .optional(),
+  integrationSettings: z.lazy(() => IdentityTenantsTenantIntegrationSettingsSchema).optional(),
+  securitySettings: z.lazy(() => IdentityTenantsTenantSecuritySettingsSchema).optional(),
+  systemConfiguration: z.lazy(() => IdentityTenantsTenantSystemConfigurationSchema).optional(),
+  systemLimits: z.lazy(() => IdentityTenantsTenantSystemLimitsSchema).optional(),
   updatedAt: z.string().datetime().optional(),
-  userInterfaceSettings: z
-    .lazy(() => IdentityTenantsTenantUiSettingsSchema)
-    .optional(),
+  userInterfaceSettings: z.lazy(() => IdentityTenantsTenantUiSettingsSchema).optional(),
 });
 
 /** Zod schema for IdentityTenantsTenantStatistics */
@@ -19244,13 +21285,8 @@ IdentityTenantsTenantStatisticsSchema = z.object({
 
 /** Zod schema for IdentityTenantsTenantSystemConfiguration */
 IdentityTenantsTenantSystemConfigurationSchema = z.object({
-  currencySettings: z
-    .lazy(() => IdentityTenantsTenantCurrencySettingsSchema)
-    .optional(),
-  customConfiguration: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  currencySettings: z.lazy(() => IdentityTenantsTenantCurrencySettingsSchema).optional(),
+  customConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   dateFormat: z.string().nullable().optional(),
   locale: z.string().nullable().optional(),
   numberFormat: z.string().nullable().optional(),
@@ -19269,15 +21305,9 @@ IdentityTenantsTenantSystemLimitsSchema = z.object({
 /** Zod schema for IdentityTenantsTenantUiSettings */
 IdentityTenantsTenantUiSettingsSchema = z.object({
   branding: z.lazy(() => IdentityTenantsTenantBrandingSchema).optional(),
-  componentSettings: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  componentSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   customCss: z.string().nullable().optional(),
-  layout: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  layout: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   theme: z.string().nullable().optional(),
 });
 
@@ -19339,29 +21369,15 @@ IdentityTenantsUpdateTenantBusinessInfoInputSchema = z.object({
 
 /** Zod schema for IdentityTenantsUpdateTenantBusinessRulesInput */
 IdentityTenantsUpdateTenantBusinessRulesInputSchema = z.object({
-  approvalRules: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  notificationRules: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  validationRules: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  workflowRules: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  approvalRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  notificationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  validationRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  workflowRules: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantContactInfoInput */
 IdentityTenantsUpdateTenantContactInfoInputSchema = z.object({
-  address: z
-    .lazy(() => IdentityTenantsUpdateTenantAddressInputSchema)
-    .optional(),
+  address: z.lazy(() => IdentityTenantsUpdateTenantAddressInputSchema).optional(),
   organizationName: z.string().nullable().optional(),
   primaryContactEmail: z.string().nullable().optional(),
   primaryContactName: z.string().nullable().optional(),
@@ -19390,18 +21406,9 @@ IdentityTenantsUpdateTenantInputSchema = z.object({
 /** Zod schema for IdentityTenantsUpdateTenantIntegrationSettingsInput */
 IdentityTenantsUpdateTenantIntegrationSettingsInputSchema = z.object({
   apiKeys: z.record(z.string(), z.string()).nullable().optional(),
-  externalServices: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  ssoConfiguration: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
-  webhookSettings: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  externalServices: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  ssoConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
+  webhookSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantMemberInviteOutput */
@@ -19424,16 +21431,9 @@ IdentityTenantsUpdateTenantMemberRoleOutputSchema = z.object({
 /** Zod schema for IdentityTenantsUpdateTenantMetadataInput */
 IdentityTenantsUpdateTenantMetadataInputSchema = z.object({
   adminNotes: z.string().nullable().optional(),
-  businessInfo: z
-    .lazy(() => IdentityTenantsUpdateTenantBusinessInfoInputSchema)
-    .optional(),
-  contactInfo: z
-    .lazy(() => IdentityTenantsUpdateTenantContactInfoInputSchema)
-    .optional(),
-  customFields: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  businessInfo: z.lazy(() => IdentityTenantsUpdateTenantBusinessInfoInputSchema).optional(),
+  contactInfo: z.lazy(() => IdentityTenantsUpdateTenantContactInfoInputSchema).optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
 });
@@ -19442,46 +21442,26 @@ IdentityTenantsUpdateTenantMetadataInputSchema = z.object({
 IdentityTenantsUpdateTenantSecuritySettingsInputSchema = z.object({
   apiRateLimits: z.record(z.string(), z.number().int()).nullable().optional(),
   ipWhitelist: z.array(z.string()).nullable().optional(),
-  passwordPolicy: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  passwordPolicy: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   sessionTimeout: z.number().int().nullable().optional(),
   twoFactorRequired: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantSettingsInput */
 IdentityTenantsUpdateTenantSettingsInputSchema = z.object({
-  businessRules: z
-    .lazy(() => IdentityTenantsUpdateTenantBusinessRulesInputSchema)
-    .optional(),
+  businessRules: z.lazy(() => IdentityTenantsUpdateTenantBusinessRulesInputSchema).optional(),
   featureFlags: z.record(z.string(), z.boolean()).nullable().optional(),
-  integrationSettings: z
-    .lazy(() => IdentityTenantsUpdateTenantIntegrationSettingsInputSchema)
-    .optional(),
-  securitySettings: z
-    .lazy(() => IdentityTenantsUpdateTenantSecuritySettingsInputSchema)
-    .optional(),
-  systemConfiguration: z
-    .lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema)
-    .optional(),
-  systemLimits: z
-    .lazy(() => IdentityTenantsUpdateTenantSystemLimitsInputSchema)
-    .optional(),
-  userInterfaceSettings: z
-    .lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema)
-    .optional(),
+  integrationSettings: z.lazy(() => IdentityTenantsUpdateTenantIntegrationSettingsInputSchema).optional(),
+  securitySettings: z.lazy(() => IdentityTenantsUpdateTenantSecuritySettingsInputSchema).optional(),
+  systemConfiguration: z.lazy(() => IdentityTenantsUpdateTenantSystemConfigurationInputSchema).optional(),
+  systemLimits: z.lazy(() => IdentityTenantsUpdateTenantSystemLimitsInputSchema).optional(),
+  userInterfaceSettings: z.lazy(() => IdentityTenantsUpdateTenantUiSettingsInputSchema).optional(),
 });
 
 /** Zod schema for IdentityTenantsUpdateTenantSystemConfigurationInput */
 IdentityTenantsUpdateTenantSystemConfigurationInputSchema = z.object({
-  currencySettings: z
-    .lazy(() => IdentityTenantsUpdateTenantCurrencySettingsInputSchema)
-    .optional(),
-  customConfiguration: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  currencySettings: z.lazy(() => IdentityTenantsUpdateTenantCurrencySettingsInputSchema).optional(),
+  customConfiguration: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   dateFormat: z.string().nullable().optional(),
   locale: z.string().nullable().optional(),
   numberFormat: z.string().nullable().optional(),
@@ -19504,18 +21484,10 @@ IdentityTenantsUpdateTenantTagsInputSchema = z.object({
 
 /** Zod schema for IdentityTenantsUpdateTenantUiSettingsInput */
 IdentityTenantsUpdateTenantUiSettingsInputSchema = z.object({
-  branding: z
-    .lazy(() => IdentityTenantsUpdateTenantBrandingInputSchema)
-    .optional(),
-  componentSettings: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  branding: z.lazy(() => IdentityTenantsUpdateTenantBrandingInputSchema).optional(),
+  componentSettings: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   customCss: z.string().nullable().optional(),
-  layout: z
-    .record(z.string(), z.record(z.string(), z.unknown()).nullable())
-    .nullable()
-    .optional(),
+  layout: z.record(z.string(), z.record(z.string(), z.unknown()).nullable()).nullable().optional(),
   theme: z.string().nullable().optional(),
 });
 
@@ -19633,9 +21605,7 @@ IdentityUsersBulkDeleteUsersInputSchema = z.object({
 
 /** Zod schema for IdentityUsersBulkNotificationInput */
 IdentityUsersBulkNotificationInputSchema = z.object({
-  filterCriteria: z
-    .lazy(() => IdentityUsersNotificationFilterCriteriaSchema)
-    .optional(),
+  filterCriteria: z.lazy(() => IdentityUsersNotificationFilterCriteriaSchema).optional(),
   notificationIds: z.array(z.string().uuid()).nullable().optional(),
   operation: z.string().nullable().optional(),
 });
@@ -19731,88 +21701,47 @@ IdentityUsersNotificationFilterCriteriaSchema = z.object({
 });
 
 /** Zod schema for IdentityUsersNotificationPriority */
-IdentityUsersNotificationPrioritySchema = z.enum([
-  "Low",
-  "Normal",
-  "High",
-  "Urgent",
-  "Critical",
-]);
+IdentityUsersNotificationPrioritySchema = z.enum(['Low', 'Normal', 'High', 'Urgent', 'Critical']);
 
 /** Zod schema for IdentityUsersProfileVisibility */
-IdentityUsersProfileVisibilitySchema = z.enum([
-  "Private",
-  "FriendsOnly",
-  "Public",
-]);
+IdentityUsersProfileVisibilitySchema = z.enum(['Private', 'FriendsOnly', 'Public']);
 
 /** Zod schema for IdentityUsersPurgeStrategy */
-IdentityUsersPurgeStrategySchema = z.enum([
-  "Immediate",
-  "Scheduled",
-  "GracePeriod",
-]);
+IdentityUsersPurgeStrategySchema = z.enum(['Immediate', 'Scheduled', 'GracePeriod']);
 
 /** Zod schema for IdentityUsersReplaceUserAccessibilityPreferencesInput */
 IdentityUsersReplaceUserAccessibilityPreferencesInputSchema = z.object({
-  accessibilityPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersReplaceUserLocalizationPreferencesInput */
 IdentityUsersReplaceUserLocalizationPreferencesInputSchema = z.object({
-  localizationPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  localizationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersReplaceUserMetadataInput */
 IdentityUsersReplaceUserMetadataInputSchema = z.object({
-  customFields: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersReplaceUserNotificationPreferencesInput */
 IdentityUsersReplaceUserNotificationPreferencesInputSchema = z.object({
-  notificationPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersReplaceUserPreferencesInput */
 IdentityUsersReplaceUserPreferencesInputSchema = z.object({
-  accessibilityPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
-  generalPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
-  notificationPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
-  privacyPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersReplaceUserPrivacyPreferencesInput */
 IdentityUsersReplaceUserPrivacyPreferencesInputSchema = z.object({
-  privacyPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersReplaceUserProfileInput */
@@ -19832,10 +21761,7 @@ IdentityUsersReplaceUserProfileInputSchema = z.object({
 
 /** Zod schema for IdentityUsersUpdateUserAccessibilityPreferencesInput */
 IdentityUsersUpdateUserAccessibilityPreferencesInputSchema = z.object({
-  accessibilityPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUpdateUserInput */
@@ -19846,18 +21772,12 @@ IdentityUsersUpdateUserInputSchema = z.object({
 
 /** Zod schema for IdentityUsersUpdateUserLocalizationPreferencesInput */
 IdentityUsersUpdateUserLocalizationPreferencesInputSchema = z.object({
-  localizationPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  localizationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUpdateUserMetadataInput */
 IdentityUsersUpdateUserMetadataInputSchema = z.object({
-  customFields: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
   tagsToAdd: z.array(z.string()).nullable().optional(),
   tagsToRemove: z.array(z.string()).nullable().optional(),
@@ -19865,38 +21785,20 @@ IdentityUsersUpdateUserMetadataInputSchema = z.object({
 
 /** Zod schema for IdentityUsersUpdateUserNotificationPreferencesInput */
 IdentityUsersUpdateUserNotificationPreferencesInputSchema = z.object({
-  notificationPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUpdateUserPreferencesInput */
 IdentityUsersUpdateUserPreferencesInputSchema = z.object({
-  accessibilityPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
-  generalPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
-  notificationPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
-  privacyPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUpdateUserPrivacyPreferencesInput */
 IdentityUsersUpdateUserPrivacyPreferencesInputSchema = z.object({
-  privacyPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUpdateUserProfileInput */
@@ -19966,10 +21868,7 @@ IdentityUsersUserSchema = z.object({
 /** Zod schema for IdentityUsersUserAccessibilityPreferences */
 IdentityUsersUserAccessibilityPreferencesSchema = z.object({
   colorScheme: z.string().nullable().optional(),
-  customSettings: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   fontSize: z.number().int().optional(),
   highContrast: z.boolean().optional(),
   keyboardNavigation: z.boolean().optional(),
@@ -19993,16 +21892,10 @@ IdentityUsersUserDtoSchema = z.object({
 /** Zod schema for IdentityUsersUserLocalizationPreferences */
 IdentityUsersUserLocalizationPreferencesSchema = z.object({
   currency: z.string().nullable().optional(),
-  customSettings: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   dateFormat: z.string().nullable().optional(),
   language: z.string().nullable().optional(),
-  numberFormat: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  numberFormat: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   timeFormat: z.string().nullable().optional(),
   timezone: z.string().nullable().optional(),
 });
@@ -20034,10 +21927,7 @@ IdentityUsersUserMetadataSchema = z.object({
 IdentityUsersUserMetadataDtoSchema = z.object({
   id: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
-  customFields: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  customFields: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   externalReferences: z.record(z.string(), z.string()).nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
@@ -20104,10 +21994,7 @@ IdentityUsersUserNotificationDtoSchema = z.object({
   isArchived: z.boolean().optional(),
   isRead: z.boolean().optional(),
   message: z.string().nullable().optional(),
-  metadata: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  metadata: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   priority: z.string().nullable().optional(),
   readAt: z.string().datetime().nullable().optional(),
   title: z.string().nullable().optional(),
@@ -20119,18 +22006,12 @@ IdentityUsersUserNotificationDtoSchema = z.object({
 
 /** Zod schema for IdentityUsersUserNotificationPreferences */
 IdentityUsersUserNotificationPreferencesSchema = z.object({
-  categoryPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  categoryPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   emailEnabled: z.boolean().optional(),
   frequency: z.string().nullable().optional(),
   inAppEnabled: z.boolean().optional(),
   pushEnabled: z.boolean().optional(),
-  quietHours: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  quietHours: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   smsEnabled: z.boolean().optional(),
 });
 
@@ -20161,27 +22042,12 @@ IdentityUsersUserPreferencesSchema = z.object({
 /** Zod schema for IdentityUsersUserPreferencesDto */
 IdentityUsersUserPreferencesDtoSchema = z.object({
   id: z.string().uuid().optional(),
-  accessibilityPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  accessibilityPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   createdAt: z.string().datetime().optional(),
-  generalPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
-  localizationPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
-  notificationPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
-  privacyPreferences: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  generalPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  localizationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  notificationPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  privacyPreferences: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   updatedAt: z.string().datetime().nullable().optional(),
   userId: z.string().uuid().optional(),
   version: z.string().nullable().optional(),
@@ -20191,21 +22057,12 @@ IdentityUsersUserPreferencesDtoSchema = z.object({
 IdentityUsersUserPrivacyPreferencesSchema = z.object({
   activityTracking: z.boolean().optional(),
   analyticsCookies: z.boolean().optional(),
-  customSettings: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
-  dataCollection: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  customSettings: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
+  dataCollection: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   marketingEmails: z.boolean().optional(),
   personalizedContent: z.boolean().optional(),
   profileVisibility: z.string().nullable().optional(),
-  thirdPartySharing: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  thirdPartySharing: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
 });
 
 /** Zod schema for IdentityUsersUserProfile */
@@ -20270,9 +22127,7 @@ IdentityUsersUserStatusSchema = z.object({
 /** Zod schema for KeyValuePairStringAuthenticationExtensionsPRFValues */
 KeyValuePairStringAuthenticationExtensionsPRFValuesSchema = z.object({
   key: z.string().nullable().optional(),
-  value: z
-    .lazy(() => ObjectsAuthenticationExtensionsPRFValuesSchema)
-    .optional(),
+  value: z.lazy(() => ObjectsAuthenticationExtensionsPRFValuesSchema).optional(),
 });
 
 /** Zod schema for LaunchPadCreateLaunchPadEventInput */
@@ -20371,6 +22226,7 @@ LaunchPadLaunchPadApplicationSchema = z.object({
   reviewedAt: z.string().datetime().nullable().optional(),
   reviewedByUserId: z.string().uuid().nullable().optional(),
   status: z.lazy(() => LaunchPadLaunchPadApplicationStatusSchema).optional(),
+  submissionVersionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
   submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
   submittedAssetReferenceIdsJson: z.string().max(10000).nullable().optional(),
   submittedAt: z.string().datetime().optional(),
@@ -20389,21 +22245,14 @@ LaunchPadLaunchPadApplicationProjectionSchema = z.object({
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().optional(),
   status: z.lazy(() => LaunchPadLaunchPadApplicationStatusSchema).optional(),
+  submissionVersionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
   submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
   submittedAt: z.string().datetime().optional(),
   submittedByUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LaunchPadLaunchPadApplicationStatus */
-LaunchPadLaunchPadApplicationStatusSchema = z.enum([
-  "Draft",
-  "Submitted",
-  "UnderReview",
-  "Waitlisted",
-  "Approved",
-  "Rejected",
-  "Withdrawn",
-]);
+LaunchPadLaunchPadApplicationStatusSchema = z.enum(['Draft', 'Submitted', 'UnderReview', 'Waitlisted', 'Approved', 'Rejected', 'Withdrawn']);
 
 /** Zod schema for LaunchPadLaunchPadEvent */
 LaunchPadLaunchPadEventSchema = z.object({
@@ -20459,16 +22308,7 @@ LaunchPadLaunchPadEventProjectionSchema = z.object({
 });
 
 /** Zod schema for LaunchPadLaunchPadEventStatus */
-LaunchPadLaunchPadEventStatusSchema = z.enum([
-  "Draft",
-  "ApplicationsOpen",
-  "ApplicationsClosed",
-  "Scheduled",
-  "Active",
-  "Completed",
-  "Cancelled",
-  "Archived",
-]);
+LaunchPadLaunchPadEventStatusSchema = z.enum(['Draft', 'ApplicationsOpen', 'ApplicationsClosed', 'Scheduled', 'Active', 'Completed', 'Cancelled', 'Archived']);
 
 /** Zod schema for LaunchPadLaunchPadParticipantRegistration */
 LaunchPadLaunchPadParticipantRegistrationSchema = z.object({
@@ -20484,9 +22324,7 @@ LaunchPadLaunchPadParticipantRegistrationSchema = z.object({
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
-  launchPadParticipantSlot: z
-    .lazy(() => LaunchPadLaunchPadParticipantSlotSchema)
-    .optional(),
+  launchPadParticipantSlot: z.lazy(() => LaunchPadLaunchPadParticipantSlotSchema).optional(),
   launchPadParticipantSlotId: z.string().uuid().optional(),
   registeredAt: z.string().datetime().optional(),
   status: z.lazy(() => LaunchPadLaunchPadParticipantStatusSchema).optional(),
@@ -20498,12 +22336,7 @@ LaunchPadLaunchPadParticipantRegistrationSchema = z.object({
 });
 
 /** Zod schema for LaunchPadLaunchPadParticipantRole */
-LaunchPadLaunchPadParticipantRoleSchema = z.enum([
-  "Participant",
-  "Mentor",
-  "Audience",
-  "Presenter",
-]);
+LaunchPadLaunchPadParticipantRoleSchema = z.enum(['Participant', 'Mentor', 'Audience', 'Presenter']);
 
 /** Zod schema for LaunchPadLaunchPadParticipantSlot */
 LaunchPadLaunchPadParticipantSlotSchema = z.object({
@@ -20536,15 +22369,7 @@ LaunchPadLaunchPadParticipantSlotSchema = z.object({
 });
 
 /** Zod schema for LaunchPadLaunchPadParticipantStatus */
-LaunchPadLaunchPadParticipantStatusSchema = z.enum([
-  "Registered",
-  "Waitlisted",
-  "CheckedIn",
-  "Attended",
-  "Completed",
-  "Cancelled",
-  "NoShow",
-]);
+LaunchPadLaunchPadParticipantStatusSchema = z.enum(['Registered', 'Waitlisted', 'CheckedIn', 'Attended', 'Completed', 'Cancelled', 'NoShow']);
 
 /** Zod schema for LaunchPadLaunchPadRegistrationProjection */
 LaunchPadLaunchPadRegistrationProjectionSchema = z.object({
@@ -20555,6 +22380,14 @@ LaunchPadLaunchPadRegistrationProjectionSchema = z.object({
   slotId: z.string().uuid().optional(),
   status: z.lazy(() => LaunchPadLaunchPadParticipantStatusSchema).optional(),
   userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for LaunchPadLaunchPadSettingsProjection */
+LaunchPadLaunchPadSettingsProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  updatedAt: z.string().datetime().optional(),
+  versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
 /** Zod schema for LaunchPadLaunchPadSlotProjection */
@@ -20587,9 +22420,7 @@ LaunchPadLaunchPlanSchema = z.object({
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
   launchedAt: z.string().datetime().nullable().optional(),
-  launchPadApplication: z
-    .lazy(() => LaunchPadLaunchPadApplicationSchema)
-    .optional(),
+  launchPadApplication: z.lazy(() => LaunchPadLaunchPadApplicationSchema).optional(),
   launchPadApplicationId: z.string().uuid().nullable().optional(),
   launchPadEvent: z.lazy(() => LaunchPadLaunchPadEventSchema).optional(),
   launchPadEventId: z.string().uuid().nullable().optional(),
@@ -20608,13 +22439,7 @@ LaunchPadLaunchPlanSchema = z.object({
 });
 
 /** Zod schema for LaunchPadLaunchPlanStatus */
-LaunchPadLaunchPlanStatusSchema = z.enum([
-  "Draft",
-  "Preparing",
-  "Ready",
-  "Launched",
-  "Paused",
-]);
+LaunchPadLaunchPlanStatusSchema = z.enum(['Draft', 'Preparing', 'Ready', 'Launched', 'Paused']);
 
 /** Zod schema for LaunchPadReviewLaunchPadApplicationInput */
 LaunchPadReviewLaunchPadApplicationInputSchema = z.object({
@@ -20657,6 +22482,11 @@ LaunchPadUpdateLaunchPadEventInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
+/** Zod schema for LaunchPadUpdateLaunchPadSettingsInput */
+LaunchPadUpdateLaunchPadSettingsInputSchema = z.object({
+  versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
+});
+
 /** Zod schema for LearningAssessmentsAnonymousReviewAssessment */
 LearningAssessmentsAnonymousReviewAssessmentSchema = z.object({
   id: z.string().uuid().optional(),
@@ -20674,23 +22504,17 @@ LearningAssessmentsAnonymousReviewRubricSchema = z.object({
 
 /** Zod schema for LearningAssessmentsAnonymousReviewSubmission */
 LearningAssessmentsAnonymousReviewSubmissionSchema = z.object({
-  assessment: z
-    .lazy(() => LearningAssessmentsAnonymousReviewAssessmentSchema)
-    .optional(),
+  assessment: z.lazy(() => LearningAssessmentsAnonymousReviewAssessmentSchema).optional(),
   attemptNumber: z.number().int().optional(),
   codePayload: z.string().nullable().optional(),
   filePayload: z.string().nullable().optional(),
   mediaPayload: z.string().nullable().optional(),
   projectPayload: z.string().nullable().optional(),
   reviewId: z.string().uuid().optional(),
-  rubric: z
-    .lazy(() => LearningAssessmentsAnonymousReviewRubricSchema)
-    .optional(),
+  rubric: z.lazy(() => LearningAssessmentsAnonymousReviewRubricSchema).optional(),
   status: z.lazy(() => LearningAssessmentsPeerReviewStatusSchema).optional(),
   structuredAnswerPayload: z.string().nullable().optional(),
-  submissionStatus: z
-    .lazy(() => LearningAssessmentsSubmissionStatusSchema)
-    .optional(),
+  submissionStatus: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
   submittedAt: z.string().datetime().nullable().optional(),
   textPayload: z.string().nullable().optional(),
   urlPayload: z.string().nullable().optional(),
@@ -20710,9 +22534,7 @@ LearningAssessmentsAssessmentSchema = z.object({
   courseId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
-  gradingMethods: z
-    .lazy(() => LearningAssessmentsAssessmentGradingMethodSchema)
-    .optional(),
+  gradingMethods: z.lazy(() => LearningAssessmentsAssessmentGradingMethodSchema).optional(),
   groupSetId: z.string().uuid().nullable().optional(),
   isAvailable: z.boolean().optional(),
   isRequired: z.boolean().optional(),
@@ -20721,13 +22543,9 @@ LearningAssessmentsAssessmentSchema = z.object({
   maxScore: z.number().int().optional(),
   order: z.number().int().optional(),
   peerReviewsRequiredCount: z.number().int().optional(),
-  presentationMode: z
-    .lazy(() => LearningAssessmentsAssessmentPresentationModeSchema)
-    .optional(),
+  presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
   slug: z.string().nullable().optional(),
-  submissionModalities: z
-    .lazy(() => LearningAssessmentsSubmissionModalitySchema)
-    .optional(),
+  submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
   timeLimitMinutes: z.number().int().nullable().optional(),
   title: z.string().nullable().optional(),
   type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
@@ -20770,10 +22588,7 @@ LearningAssessmentsAssessmentGroupAnalyticsSchema = z.object({
 });
 
 /** Zod schema for LearningAssessmentsAssessmentPresentationMode */
-LearningAssessmentsAssessmentPresentationModeSchema = z.enum([
-  "SingleStep",
-  "Continuous",
-]);
+LearningAssessmentsAssessmentPresentationModeSchema = z.enum(['SingleStep', 'Continuous']);
 
 /** Zod schema for LearningAssessmentsAssessmentScoreBucket */
 LearningAssessmentsAssessmentScoreBucketSchema = z.object({
@@ -20803,22 +22618,14 @@ LearningAssessmentsAssessmentSubmissionSchema = z.object({
   status: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
   structuredAnswerPayload: z.string().nullable().optional(),
   submittedAt: z.string().datetime().nullable().optional(),
-  submittedModalities: z
-    .lazy(() => LearningAssessmentsSubmissionModalitySchema)
-    .optional(),
+  submittedModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
   textPayload: z.string().nullable().optional(),
   urlPayload: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningAssessmentsAssessmentType. Legacy value Exam is normalized on read and is not valid for new assessments. */
-LearningAssessmentsAssessmentTypeSchema = z.enum([
-  "Quiz",
-  "Assignment",
-  "Project",
-  "PeerReview",
-  "SelfAssessment",
-]);
+LearningAssessmentsAssessmentTypeSchema = z.enum(['Quiz', 'Assignment', 'Project', 'PeerReview', 'SelfAssessment']);
 
 /** Zod schema for LearningAssessmentsAssignAssessmentGroupInput */
 LearningAssessmentsAssignAssessmentGroupInputSchema = z.object({
@@ -20869,20 +22676,14 @@ LearningAssessmentsCreateAssessmentInputSchema = z.object({
   courseId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
-  gradingMethods: z
-    .lazy(() => LearningAssessmentsAssessmentGradingMethodSchema)
-    .optional(),
+  gradingMethods: z.lazy(() => LearningAssessmentsAssessmentGradingMethodSchema).optional(),
   isRequired: z.boolean().optional(),
   lateSubmissionDeadline: z.string().datetime().nullable().optional(),
   maxAttempts: z.number().int().nullable().optional(),
   maxScore: z.number().int().optional(),
-  presentationMode: z
-    .lazy(() => LearningAssessmentsAssessmentPresentationModeSchema)
-    .optional(),
+  presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
   slug: z.string().nullable().optional(),
-  submissionModalities: z
-    .lazy(() => LearningAssessmentsSubmissionModalitySchema)
-    .optional(),
+  submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
   timeLimitMinutes: z.number().int().nullable().optional(),
   title: z.string().nullable().optional(),
   type: z.lazy(() => LearningAssessmentsAssessmentTypeSchema).optional(),
@@ -20909,9 +22710,7 @@ LearningAssessmentsGradeSubmissionInputSchema = z.object({
 
 /** Zod schema for LearningAssessmentsGradingQueue */
 LearningAssessmentsGradingQueueSchema = z.object({
-  assessment: z
-    .lazy(() => LearningAssessmentsGradingQueueAssessmentSchema)
-    .optional(),
+  assessment: z.lazy(() => LearningAssessmentsGradingQueueAssessmentSchema).optional(),
   items: z
     .array(z.lazy(() => LearningAssessmentsGradingQueueItemSchema))
     .nullable()
@@ -21033,9 +22832,7 @@ LearningAssessmentsInteractiveVideoAssessmentCueSchema = z.object({
 
 /** Zod schema for LearningAssessmentsLearnerAssessmentAttempt */
 LearningAssessmentsLearnerAssessmentAttemptSchema = z.object({
-  submission: z
-    .lazy(() => LearningAssessmentsLearnerAssessmentSubmissionSchema)
-    .optional(),
+  submission: z.lazy(() => LearningAssessmentsLearnerAssessmentSubmissionSchema).optional(),
 });
 
 /** Zod schema for LearningAssessmentsLearnerAssessmentSubmission */
@@ -21057,9 +22854,7 @@ LearningAssessmentsLearnerAssessmentSubmissionSchema = z.object({
   status: z.lazy(() => LearningAssessmentsSubmissionStatusSchema).optional(),
   structuredAnswerPayload: z.string().nullable().optional(),
   submittedAt: z.string().datetime().nullable().optional(),
-  submittedModalities: z
-    .lazy(() => LearningAssessmentsSubmissionModalitySchema)
-    .optional(),
+  submittedModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
   textPayload: z.string().nullable().optional(),
   urlPayload: z.string().nullable().optional(),
 });
@@ -21084,7 +22879,7 @@ LearningAssessmentsPeerReviewClaimSchema = z.object({
 });
 
 /** Zod schema for LearningAssessmentsPeerReviewStatus */
-LearningAssessmentsPeerReviewStatusSchema = z.enum(["Assigned", "Submitted"]);
+LearningAssessmentsPeerReviewStatusSchema = z.enum(['Assigned', 'Submitted']);
 
 /** Zod schema for LearningAssessmentsPeerReviewSubmitInput */
 LearningAssessmentsPeerReviewSubmitInputSchema = z.object({
@@ -21145,13 +22940,7 @@ LearningAssessmentsStartSubmissionInputSchema = z.object({
 LearningAssessmentsSubmissionModalitySchema = z.string();
 
 /** Zod schema for LearningAssessmentsSubmissionStatus */
-LearningAssessmentsSubmissionStatusSchema = z.enum([
-  "InProgress",
-  "Submitted",
-  "Graded",
-  "Returned",
-  "Late",
-]);
+LearningAssessmentsSubmissionStatusSchema = z.enum(['InProgress', 'Submitted', 'Graded', 'Returned', 'Late']);
 
 /** Zod schema for LearningAssessmentsSubmitAssessmentInput */
 LearningAssessmentsSubmitAssessmentInputSchema = z.object({
@@ -21207,22 +22996,16 @@ LearningAssessmentsUpdateAssessmentInputSchema = z.object({
   contentId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
-  gradingMethods: z
-    .lazy(() => LearningAssessmentsAssessmentGradingMethodSchema)
-    .optional(),
+  gradingMethods: z.lazy(() => LearningAssessmentsAssessmentGradingMethodSchema).optional(),
   groupSetId: z.string().uuid().nullable().optional(),
   isRequired: z.boolean().nullable().optional(),
   lateSubmissionDeadline: z.string().datetime().nullable().optional(),
   maxAttempts: z.number().int().nullable().optional(),
   maxScore: z.number().int().nullable().optional(),
   peerReviewsRequiredCount: z.number().int().nullable().optional(),
-  presentationMode: z
-    .lazy(() => LearningAssessmentsAssessmentPresentationModeSchema)
-    .optional(),
+  presentationMode: z.lazy(() => LearningAssessmentsAssessmentPresentationModeSchema).optional(),
   slug: z.string().nullable().optional(),
-  submissionModalities: z
-    .lazy(() => LearningAssessmentsSubmissionModalitySchema)
-    .optional(),
+  submissionModalities: z.lazy(() => LearningAssessmentsSubmissionModalitySchema).optional(),
   timeLimitMinutes: z.number().int().nullable().optional(),
   title: z.string().nullable().optional(),
 });
@@ -21243,11 +23026,7 @@ LearningCertificatesCertificateSchema = z.object({
 });
 
 /** Zod schema for LearningCertificatesCertificateStatus */
-LearningCertificatesCertificateStatusSchema = z.enum([
-  "Active",
-  "Expired",
-  "Revoked",
-]);
+LearningCertificatesCertificateStatusSchema = z.enum(['Active', 'Expired', 'Revoked']);
 
 /** Zod schema for LearningCertificatesCertificateTemplate */
 LearningCertificatesCertificateTemplateSchema = z.object({
@@ -21323,9 +23102,7 @@ LearningCertificatesUpdateCertificateTemplateInputSchema = z.object({
 LearningCohortsApplyCohortScheduleInputSchema = z.object({
   confirmAdvisories: z.boolean().optional(),
   expectedVersion: z.number().int().optional(),
-  rules: z
-    .lazy(() => LearningCohortsPreviewCohortScheduleInputSchema)
-    .optional(),
+  rules: z.lazy(() => LearningCohortsPreviewCohortScheduleInputSchema).optional(),
 });
 
 /** Zod schema for LearningCohortsAvailableCohortContent */
@@ -21375,28 +23152,16 @@ LearningCohortsCohortCalendarEntrySchema = z.object({
   endsAt: z.string().datetime().nullable().optional(),
   itemId: z.string().uuid().optional(),
   startsAt: z.string().datetime().nullable().optional(),
-  status: z
-    .lazy(() => LearningCohortsCohortScheduleItemStatusSchema)
-    .optional(),
+  status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
   title: z.string().nullable().optional(),
   type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCohortsCohortPacingMode */
-LearningCohortsCohortPacingModeSchema = z.enum([
-  "OneModulePerWeek",
-  "OneLessonPerMeeting",
-  "FixedLessonsPerWeek",
-  "Manual",
-]);
+LearningCohortsCohortPacingModeSchema = z.enum(['OneModulePerWeek', 'OneLessonPerMeeting', 'FixedLessonsPerWeek', 'Manual']);
 
 /** Zod schema for LearningCohortsCohortReleasePolicy */
-LearningCohortsCohortReleasePolicySchema = z.enum([
-  "Weekly",
-  "BeforeMeeting",
-  "Manual",
-  "Immediately",
-]);
+LearningCohortsCohortReleasePolicySchema = z.enum(['Weekly', 'BeforeMeeting', 'Manual', 'Immediately']);
 
 /** Zod schema for LearningCohortsCohortSchedule */
 LearningCohortsCohortScheduleSchema = z.object({
@@ -21413,9 +23178,7 @@ LearningCohortsCohortScheduleSchema = z.object({
   meetingDurationMinutes: z.number().int().optional(),
   meetingStartTime: z.string().optional(),
   pacingMode: z.lazy(() => LearningCohortsCohortPacingModeSchema).optional(),
-  releasePolicy: z
-    .lazy(() => LearningCohortsCohortReleasePolicySchema)
-    .optional(),
+  releasePolicy: z.lazy(() => LearningCohortsCohortReleasePolicySchema).optional(),
   timezoneId: z.string().nullable().optional(),
   unitsPerPeriod: z.number().int().optional(),
   unscheduledContentIds: z.array(z.string().uuid()).nullable().optional(),
@@ -21428,9 +23191,7 @@ LearningCohortsCohortScheduleConflictSchema = z.object({
   code: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
   programContentId: z.string().uuid().nullable().optional(),
-  severity: z
-    .lazy(() => LearningCohortsScheduleConflictSeveritySchema)
-    .optional(),
+  severity: z.lazy(() => LearningCohortsScheduleConflictSeveritySchema).optional(),
 });
 
 /** Zod schema for LearningCohortsCohortScheduleItem */
@@ -21447,32 +23208,17 @@ LearningCohortsCohortScheduleItemSchema = z.object({
   programContentId: z.string().uuid().nullable().optional(),
   sortOrder: z.number().int().optional(),
   startsAt: z.string().datetime().nullable().optional(),
-  status: z
-    .lazy(() => LearningCohortsCohortScheduleItemStatusSchema)
-    .optional(),
+  status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
   title: z.string().nullable().optional(),
   type: z.lazy(() => LearningCohortsCohortScheduleItemTypeSchema).optional(),
-  visibilityOverride: z
-    .lazy(() => LearningCohortsCohortVisibilityOverrideSchema)
-    .optional(),
+  visibilityOverride: z.lazy(() => LearningCohortsCohortVisibilityOverrideSchema).optional(),
 });
 
 /** Zod schema for LearningCohortsCohortScheduleItemStatus */
-LearningCohortsCohortScheduleItemStatusSchema = z.enum([
-  "Draft",
-  "Scheduled",
-  "Published",
-  "Completed",
-  "Cancelled",
-]);
+LearningCohortsCohortScheduleItemStatusSchema = z.enum(['Draft', 'Scheduled', 'Published', 'Completed', 'Cancelled']);
 
 /** Zod schema for LearningCohortsCohortScheduleItemType */
-LearningCohortsCohortScheduleItemTypeSchema = z.enum([
-  "ContentRelease",
-  "LiveSession",
-  "AssessmentWindow",
-  "Milestone",
-]);
+LearningCohortsCohortScheduleItemTypeSchema = z.enum(['ContentRelease', 'LiveSession', 'AssessmentWindow', 'Milestone']);
 
 /** Zod schema for LearningCohortsCohortSchedulePreview */
 LearningCohortsCohortSchedulePreviewSchema = z.object({
@@ -21512,27 +23258,16 @@ LearningCohortsCohortScheduleSummarySchema = z.object({
     .optional(),
   meetingStartTime: z.string().optional(),
   pacingMode: z.lazy(() => LearningCohortsCohortPacingModeSchema).optional(),
-  releasePolicy: z
-    .lazy(() => LearningCohortsCohortReleasePolicySchema)
-    .optional(),
+  releasePolicy: z.lazy(() => LearningCohortsCohortReleasePolicySchema).optional(),
   timezoneId: z.string().nullable().optional(),
   version: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCohortsCohortStatus */
-LearningCohortsCohortStatusSchema = z.enum([
-  "Scheduled",
-  "Active",
-  "Completed",
-  "Cancelled",
-]);
+LearningCohortsCohortStatusSchema = z.enum(['Scheduled', 'Active', 'Completed', 'Cancelled']);
 
 /** Zod schema for LearningCohortsCohortVisibilityOverride */
-LearningCohortsCohortVisibilityOverrideSchema = z.enum([
-  "Inherited",
-  "Hidden",
-  "Visible",
-]);
+LearningCohortsCohortVisibilityOverrideSchema = z.enum(['Inherited', 'Hidden', 'Visible']);
 
 /** Zod schema for LearningCohortsCourseCohortCalendar */
 LearningCohortsCourseCohortCalendarSchema = z.object({
@@ -21568,22 +23303,17 @@ LearningCohortsPreviewCohortScheduleInputSchema = z.object({
   meetingDurationMinutes: z.number().int().optional(),
   meetingStartTime: z.string().optional(),
   pacingMode: z.lazy(() => LearningCohortsCohortPacingModeSchema).optional(),
-  releasePolicy: z
-    .lazy(() => LearningCohortsCohortReleasePolicySchema)
-    .optional(),
+  releasePolicy: z.lazy(() => LearningCohortsCohortReleasePolicySchema).optional(),
   skippedDates: z.array(z.string().date()).nullable().optional(),
   timezoneId: z.string().nullable().optional(),
   unitsPerPeriod: z.number().int().optional(),
 });
 
 /** Zod schema for LearningCohortsScheduleConflictSeverity */
-LearningCohortsScheduleConflictSeveritySchema = z.enum([
-  "Advisory",
-  "Blocking",
-]);
+LearningCohortsScheduleConflictSeveritySchema = z.enum(['Advisory', 'Blocking']);
 
 /** Zod schema for LearningCohortsScheduleShiftScope */
-LearningCohortsScheduleShiftScopeSchema = z.enum(["Single", "Following"]);
+LearningCohortsScheduleShiftScopeSchema = z.enum(['Single', 'Following']);
 
 /** Zod schema for LearningCohortsShiftCohortScheduleInput */
 LearningCohortsShiftCohortScheduleInputSchema = z.object({
@@ -21606,9 +23336,7 @@ LearningCohortsUpdateCohortInputSchema = z.object({
 /** Zod schema for LearningCohortsUpdateCohortScheduleInput */
 LearningCohortsUpdateCohortScheduleInputSchema = z.object({
   expectedVersion: z.number().int().optional(),
-  item: z
-    .lazy(() => LearningCohortsUpdateCohortScheduleItemInputSchema)
-    .optional(),
+  item: z.lazy(() => LearningCohortsUpdateCohortScheduleItemInputSchema).optional(),
 });
 
 /** Zod schema for LearningCohortsUpdateCohortScheduleItemInput */
@@ -21620,21 +23348,15 @@ LearningCohortsUpdateCohortScheduleItemInputSchema = z.object({
   location: z.string().nullable().optional(),
   meetingUrl: z.string().nullable().optional(),
   startsAt: z.string().datetime().nullable().optional(),
-  status: z
-    .lazy(() => LearningCohortsCohortScheduleItemStatusSchema)
-    .optional(),
+  status: z.lazy(() => LearningCohortsCohortScheduleItemStatusSchema).optional(),
   title: z.string().nullable().optional(),
-  visibilityOverride: z
-    .lazy(() => LearningCohortsCohortVisibilityOverrideSchema)
-    .optional(),
+  visibilityOverride: z.lazy(() => LearningCohortsCohortVisibilityOverrideSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesActivityGrade */
 LearningCoursesActivityGradeSchema = z.object({
   id: z.string().uuid().optional(),
-  contentInteraction: z
-    .lazy(() => LearningCoursesContentInteractionSummarySchema)
-    .optional(),
+  contentInteraction: z.lazy(() => LearningCoursesContentInteractionSummarySchema).optional(),
   contentInteractionId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
   feedback: z.string().nullable().optional(),
@@ -21722,10 +23444,7 @@ LearningCoursesCompletionRatesSchema = z.object({
     .array(z.lazy(() => LearningCoursesCompletionTrendSchema))
     .nullable()
     .optional(),
-  contentCompletionRates: z
-    .record(z.string(), z.number())
-    .nullable()
-    .optional(),
+  contentCompletionRates: z.record(z.string(), z.number()).nullable().optional(),
   overallCompletionRate: z.number().optional(),
   programId: z.string().uuid().optional(),
 });
@@ -21773,22 +23492,20 @@ LearningCoursesContentInteractionEventSchema = z.object({
   payload: z.string().nullable().optional(),
   positionSeconds: z.number().nullable().optional(),
   progressPercentage: z.number().nullable().optional(),
-  type: z
-    .lazy(() => LearningCoursesContentInteractionEventTypeSchema)
-    .optional(),
+  type: z.lazy(() => LearningCoursesContentInteractionEventTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesContentInteractionEventType */
 LearningCoursesContentInteractionEventTypeSchema = z.enum([
-  "Opened",
-  "Heartbeat",
-  "Progressed",
-  "Paused",
-  "Resumed",
-  "Seeked",
-  "Completed",
-  "QuizPresented",
-  "QuizAnswered",
+  'Opened',
+  'Heartbeat',
+  'Progressed',
+  'Paused',
+  'Resumed',
+  'Seeked',
+  'Completed',
+  'QuizPresented',
+  'QuizAnswered',
 ]);
 
 /** Zod schema for LearningCoursesContentInteractionSummary */
@@ -21902,20 +23619,14 @@ LearningCoursesCreateProgramSchema = z.object({
 
 /** Zod schema for LearningCoursesCreateProgramContent */
 LearningCoursesCreateProgramContentSchema = z.object({
-  activitySettings: z
-    .lazy(() => LearningCoursesActivitySettingsSchema)
-    .optional(),
+  activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
   body: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
-  estimatedMinutesSource: z
-    .lazy(() => LearningCoursesEstimatedMinutesSourceSchema)
-    .optional(),
+  estimatedMinutesSource: z.lazy(() => LearningCoursesEstimatedMinutesSourceSchema).optional(),
   isRequired: z.boolean().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
-  lessonFormat: z
-    .lazy(() => LearningCoursesLessonContentFormatSchema)
-    .optional(),
+  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
   parentId: z.string().uuid().nullable().optional(),
   programId: z.string().uuid(),
   slug: z.string().min(0).max(220).nullable().optional(),
@@ -21928,10 +23639,7 @@ LearningCoursesCreateProgramContentSchema = z.object({
 /** Zod schema for LearningCoursesEngagementMetrics */
 LearningCoursesEngagementMetricsSchema = z.object({
   averageSessionDuration: z.string().optional(),
-  contentEngagement: z
-    .record(z.string(), z.number().int())
-    .nullable()
-    .optional(),
+  contentEngagement: z.record(z.string(), z.number().int()).nullable().optional(),
   dailyActiveUsers: z.number().int().optional(),
   monthlyActiveUsers: z.number().int().optional(),
   programId: z.string().uuid().optional(),
@@ -21941,20 +23649,10 @@ LearningCoursesEngagementMetricsSchema = z.object({
 });
 
 /** Zod schema for LearningCoursesEnrollmentStatus */
-LearningCoursesEnrollmentStatusSchema = z.enum([
-  "Open",
-  "Active",
-  "Paused",
-  "Cancelled",
-  "Expired",
-  "Completed",
-  "Closed",
-  "InviteOnly",
-  "Waitlist",
-]);
+LearningCoursesEnrollmentStatusSchema = z.enum(['Open', 'Active', 'Paused', 'Cancelled', 'Expired', 'Completed', 'Closed', 'InviteOnly', 'Waitlist']);
 
 /** Zod schema for LearningCoursesEstimatedMinutesSource */
-LearningCoursesEstimatedMinutesSourceSchema = z.enum(["Auto", "Manual"]);
+LearningCoursesEstimatedMinutesSourceSchema = z.enum(['Auto', 'Manual']);
 
 /** Zod schema for LearningCoursesGraderSummary */
 LearningCoursesGraderSummarySchema = z.object({
@@ -21982,14 +23680,7 @@ LearningCoursesGradingConfigSchema = z.object({
 });
 
 /** Zod schema for LearningCoursesLessonContentFormat */
-LearningCoursesLessonContentFormatSchema = z.enum([
-  "Markdown",
-  "Lexical",
-  "RevealJs",
-  "Video",
-  "Html",
-  "ExternalLink",
-]);
+LearningCoursesLessonContentFormatSchema = z.enum(['Markdown', 'Lexical', 'RevealJs', 'Video', 'Html', 'ExternalLink']);
 
 /** Zod schema for LearningCoursesMonetization */
 LearningCoursesMonetizationSchema = z.object({
@@ -22043,11 +23734,7 @@ LearningCoursesPrerequisiteStatusSchema = z.object({
 });
 
 /** Zod schema for LearningCoursesPrerequisiteType */
-LearningCoursesPrerequisiteTypeSchema = z.enum([
-  "Required",
-  "Recommended",
-  "Corequisite",
-]);
+LearningCoursesPrerequisiteTypeSchema = z.enum(['Required', 'Recommended', 'Corequisite']);
 
 /** Zod schema for LearningCoursesPricing */
 LearningCoursesPricingSchema = z.object({
@@ -22069,9 +23756,7 @@ LearningCoursesProgramSchema = z.object({
   description: z.string().nullable().optional(),
   difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
   enrollmentDeadline: z.string().datetime().nullable().optional(),
-  enrollmentStatus: z
-    .lazy(() => LearningCoursesEnrollmentStatusSchema)
-    .optional(),
+  enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
   estimatedHours: z.number().int().nullable().optional(),
   isEnrollmentOpen: z.boolean().optional(),
   maxEnrollments: z.number().int().nullable().optional(),
@@ -22092,10 +23777,7 @@ LearningCoursesProgramSchema = z.object({
 /** Zod schema for LearningCoursesProgramAnalytics */
 LearningCoursesProgramAnalyticsSchema = z.object({
   activeUsers: z.number().int().optional(),
-  additionalMetrics: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  additionalMetrics: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   averageCompletionTime: z.string().optional(),
   completedUsers: z.number().int().optional(),
   completionRate: z.number().optional(),
@@ -22109,9 +23791,7 @@ LearningCoursesProgramAnalyticsSchema = z.object({
 /** Zod schema for LearningCoursesProgramContent */
 LearningCoursesProgramContentSchema = z.object({
   id: z.string().uuid().optional(),
-  activitySettings: z
-    .lazy(() => LearningCoursesActivitySettingsSchema)
-    .optional(),
+  activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
   body: z.string().nullable().optional(),
   children: z
     .array(z.lazy(() => LearningCoursesProgramContentSchema))
@@ -22121,14 +23801,10 @@ LearningCoursesProgramContentSchema = z.object({
   createdAt: z.string().datetime().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
-  estimatedMinutesSource: z
-    .lazy(() => LearningCoursesEstimatedMinutesSourceSchema)
-    .optional(),
+  estimatedMinutesSource: z.lazy(() => LearningCoursesEstimatedMinutesSourceSchema).optional(),
   isRequired: z.boolean().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
-  lessonFormat: z
-    .lazy(() => LearningCoursesLessonContentFormatSchema)
-    .optional(),
+  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
   parentId: z.string().uuid().nullable().optional(),
   parentTitle: z.string().nullable().optional(),
   programId: z.string().uuid().optional(),
@@ -22142,25 +23818,10 @@ LearningCoursesProgramContentSchema = z.object({
 });
 
 /** Zod schema for LearningCoursesProgramContentType. Legacy values Page and Challenge are normalized on read and are not valid for new content. */
-LearningCoursesProgramContentTypeSchema = z.enum([
-  "Lesson",
-  "Assignment",
-  "Questionnaire",
-  "Discussion",
-  "Code",
-  "Reflection",
-  "Survey",
-  "Project",
-  "Module",
-]);
+LearningCoursesProgramContentTypeSchema = z.enum(['Lesson', 'Assignment', 'Questionnaire', 'Discussion', 'Code', 'Reflection', 'Survey', 'Project', 'Module']);
 
 /** Zod schema for LearningCoursesProgramDifficulty */
-LearningCoursesProgramDifficultySchema = z.enum([
-  "Beginner",
-  "Intermediate",
-  "Advanced",
-  "Expert",
-]);
+LearningCoursesProgramDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
 
 /** Zod schema for LearningCoursesProgramUserSummary */
 LearningCoursesProgramUserSummarySchema = z.object({
@@ -22170,12 +23831,7 @@ LearningCoursesProgramUserSummarySchema = z.object({
 });
 
 /** Zod schema for LearningCoursesProgressStatus */
-LearningCoursesProgressStatusSchema = z.enum([
-  "NotStarted",
-  "InProgress",
-  "Completed",
-  "Submitted",
-]);
+LearningCoursesProgressStatusSchema = z.enum(['NotStarted', 'InProgress', 'Completed', 'Submitted']);
 
 /** Zod schema for LearningCoursesRecordContentInteractionEventInput */
 LearningCoursesRecordContentInteractionEventInputSchema = z.object({
@@ -22185,9 +23841,7 @@ LearningCoursesRecordContentInteractionEventInputSchema = z.object({
   payload: z.string().nullable().optional(),
   positionSeconds: z.number().nullable().optional(),
   progressPercentage: z.number().nullable().optional(),
-  type: z
-    .lazy(() => LearningCoursesContentInteractionEventTypeSchema)
-    .optional(),
+  type: z.lazy(() => LearningCoursesContentInteractionEventTypeSchema).optional(),
 });
 
 /** Zod schema for LearningCoursesReflectionResponseResult */
@@ -22294,10 +23948,7 @@ LearningCoursesSubmitUserContentSchema = z.object({
 
 /** Zod schema for LearningCoursesSurveyResponseResult */
 LearningCoursesSurveyResponseResultSchema = z.object({
-  answers: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  answers: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   respondentUserId: z.string().uuid().nullable().optional(),
   responseId: z.string().uuid().optional(),
   submittedAt: z.string().datetime().nullable().optional(),
@@ -22354,9 +24005,7 @@ LearningCoursesUpdateProgramSchema = z.object({
   description: z.string().nullable().optional(),
   difficulty: z.lazy(() => LearningCoursesProgramDifficultySchema).optional(),
   enrollmentDeadline: z.string().datetime().nullable().optional(),
-  enrollmentStatus: z
-    .lazy(() => LearningCoursesEnrollmentStatusSchema)
-    .optional(),
+  enrollmentStatus: z.lazy(() => LearningCoursesEnrollmentStatusSchema).optional(),
   estimatedHours: z.number().int().nullable().optional(),
   maxEnrollments: z.number().int().nullable().optional(),
   metadata: z.string().nullable().optional(),
@@ -22373,20 +24022,14 @@ LearningCoursesUpdateProgramSchema = z.object({
 /** Zod schema for LearningCoursesUpdateProgramContent */
 LearningCoursesUpdateProgramContentSchema = z.object({
   id: z.string().uuid(),
-  activitySettings: z
-    .lazy(() => LearningCoursesActivitySettingsSchema)
-    .optional(),
+  activitySettings: z.lazy(() => LearningCoursesActivitySettingsSchema).optional(),
   body: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   estimatedMinutes: z.number().int().nullable().optional(),
-  estimatedMinutesSource: z
-    .lazy(() => LearningCoursesEstimatedMinutesSourceSchema)
-    .optional(),
+  estimatedMinutesSource: z.lazy(() => LearningCoursesEstimatedMinutesSourceSchema).optional(),
   isRequired: z.boolean().nullable().optional(),
   jsonBody: z.record(z.string(), z.unknown()).nullable().optional(),
-  lessonFormat: z
-    .lazy(() => LearningCoursesLessonContentFormatSchema)
-    .optional(),
+  lessonFormat: z.lazy(() => LearningCoursesLessonContentFormatSchema).optional(),
   slug: z.string().min(0).max(220).nullable().optional(),
   sortOrder: z.number().int().nullable().optional(),
   title: z.string().min(0).max(255).nullable().optional(),
@@ -22396,10 +24039,7 @@ LearningCoursesUpdateProgramContentSchema = z.object({
 
 /** Zod schema for LearningCoursesUpdateProgress */
 LearningCoursesUpdateProgressSchema = z.object({
-  additionalData: z
-    .record(z.string(), z.record(z.string(), z.unknown()))
-    .nullable()
-    .optional(),
+  additionalData: z.record(z.string(), z.record(z.string(), z.unknown())).nullable().optional(),
   lastAccessedAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => LearningCoursesProgressStatusSchema).optional(),
 });
@@ -22434,12 +24074,7 @@ LearningCoursesUserProgressSchema = z.object({
 });
 
 /** Zod schema for LearningCoursesVisibility */
-LearningCoursesVisibilitySchema = z.enum([
-  "Public",
-  "Internal",
-  "Private",
-  "Restricted",
-]);
+LearningCoursesVisibilitySchema = z.enum(['Public', 'Internal', 'Private', 'Restricted']);
 
 /** Zod schema for LearningCoursesWorkspaceData */
 LearningCoursesWorkspaceDataSchema = z.object({
@@ -22467,13 +24102,7 @@ LearningEnrollmentsEnrollmentSchema = z.object({
 });
 
 /** Zod schema for LearningEnrollmentsEnrollmentStatus */
-LearningEnrollmentsEnrollmentStatusSchema = z.enum([
-  "Active",
-  "Paused",
-  "Completed",
-  "Dropped",
-  "Expired",
-]);
+LearningEnrollmentsEnrollmentStatusSchema = z.enum(['Active', 'Paused', 'Completed', 'Dropped', 'Expired']);
 
 /** Zod schema for LearningEnrollmentsEnrollUserInput */
 LearningEnrollmentsEnrollUserInputSchema = z.object({
@@ -22488,14 +24117,7 @@ LearningEnrollmentsUpdateEnrollmentProgressInputSchema = z.object({
 });
 
 /** Zod schema for LearningExperienceDiscoveryCollectionType */
-LearningExperienceDiscoveryCollectionTypeSchema = z.enum([
-  "Curated",
-  "Category",
-  "Skill",
-  "Career",
-  "Trending",
-  "NewReleases",
-]);
+LearningExperienceDiscoveryCollectionTypeSchema = z.enum(['Curated', 'Category', 'Skill', 'Career', 'Trending', 'NewReleases']);
 
 /** Zod schema for LearningExperienceDiscoveryCourseCollection */
 LearningExperienceDiscoveryCourseCollectionSchema = z.object({
@@ -22510,9 +24132,7 @@ LearningExperienceDiscoveryCourseCollectionSchema = z.object({
   slug: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   title: z.string().nullable().optional(),
-  type: z
-    .lazy(() => LearningExperienceDiscoveryCollectionTypeSchema)
-    .optional(),
+  type: z.lazy(() => LearningExperienceDiscoveryCollectionTypeSchema).optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
@@ -22521,9 +24141,7 @@ LearningExperienceDiscoveryCreateCourseCollectionSchema = z.object({
   description: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   title: z.string().nullable().optional(),
-  type: z
-    .lazy(() => LearningExperienceDiscoveryCollectionTypeSchema)
-    .optional(),
+  type: z.lazy(() => LearningExperienceDiscoveryCollectionTypeSchema).optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoveryCreateFeaturedContent */
@@ -22538,9 +24156,7 @@ LearningExperienceDiscoveryCreateFeaturedContentSchema = z.object({
   subtitle: z.string().nullable().optional(),
   targetAudience: z.string().nullable().optional(),
   title: z.string().nullable().optional(),
-  type: z
-    .lazy(() => LearningExperienceDiscoveryFeaturedContentTypeSchema)
-    .optional(),
+  type: z.lazy(() => LearningExperienceDiscoveryFeaturedContentTypeSchema).optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoveryFeaturedContent */
@@ -22559,21 +24175,19 @@ LearningExperienceDiscoveryFeaturedContentSchema = z.object({
   targetAudience: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   title: z.string().nullable().optional(),
-  type: z
-    .lazy(() => LearningExperienceDiscoveryFeaturedContentTypeSchema)
-    .optional(),
+  type: z.lazy(() => LearningExperienceDiscoveryFeaturedContentTypeSchema).optional(),
   updatedAt: z.string().datetime().optional(),
 });
 
 /** Zod schema for LearningExperienceDiscoveryFeaturedContentType */
 LearningExperienceDiscoveryFeaturedContentTypeSchema = z.enum([
-  "HeroBanner",
-  "CategoryHighlight",
-  "NewRelease",
-  "TopRated",
-  "TrendingNow",
-  "StaffPick",
-  "SeasonalPromotion",
+  'HeroBanner',
+  'CategoryHighlight',
+  'NewRelease',
+  'TopRated',
+  'TrendingNow',
+  'StaffPick',
+  'SeasonalPromotion',
 ]);
 
 /** Zod schema for LearningExperienceDiscoveryPopularSearchResult */
@@ -22645,9 +24259,7 @@ LearningExperienceLearningPathsCourseOrderSchema = z.object({
 /** Zod schema for LearningExperienceLearningPathsCreateLearningPath */
 LearningExperienceLearningPathsCreateLearningPathSchema = z.object({
   description: z.string().nullable().optional(),
-  difficulty: z
-    .lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema)
-    .optional(),
+  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
   estimatedHours: z.number().int().optional(),
   imageUrl: z.string().nullable().optional(),
   title: z.string().nullable().optional(),
@@ -22661,9 +24273,7 @@ LearningExperienceLearningPathsLearningPathSchema = z.object({
   createdAt: z.string().datetime().optional(),
   creatorId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
-  difficulty: z
-    .lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema)
-    .optional(),
+  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
   enrollmentCount: z.number().int().optional(),
   estimatedHours: z.number().int().optional(),
   imageUrl: z.string().nullable().optional(),
@@ -22687,17 +24297,13 @@ LearningExperienceLearningPathsLearningPathDetailSchema = z.object({
   id: z.string().uuid().optional(),
   completionCount: z.number().int().optional(),
   courses: z
-    .array(
-      z.lazy(() => LearningExperienceLearningPathsLearningPathCourseSchema),
-    )
+    .array(z.lazy(() => LearningExperienceLearningPathsLearningPathCourseSchema))
     .nullable()
     .optional(),
   createdAt: z.string().datetime().optional(),
   creatorId: z.string().uuid().optional(),
   description: z.string().nullable().optional(),
-  difficulty: z
-    .lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema)
-    .optional(),
+  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
   enrollmentCount: z.number().int().optional(),
   estimatedHours: z.number().int().optional(),
   imageUrl: z.string().nullable().optional(),
@@ -22710,12 +24316,7 @@ LearningExperienceLearningPathsLearningPathDetailSchema = z.object({
 });
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathDifficulty */
-LearningExperienceLearningPathsLearningPathDifficultySchema = z.enum([
-  "Beginner",
-  "Intermediate",
-  "Advanced",
-  "Expert",
-]);
+LearningExperienceLearningPathsLearningPathDifficultySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathEnrollment */
 LearningExperienceLearningPathsLearningPathEnrollmentSchema = z.object({
@@ -22726,22 +24327,14 @@ LearningExperienceLearningPathsLearningPathEnrollmentSchema = z.object({
   enrolledAt: z.string().datetime().optional(),
   learningPathId: z.string().uuid().optional(),
   progress: z.number().int().optional(),
-  status: z
-    .lazy(
-      () => LearningExperienceLearningPathsLearningPathEnrollmentStatusSchema,
-    )
-    .optional(),
+  status: z.lazy(() => LearningExperienceLearningPathsLearningPathEnrollmentStatusSchema).optional(),
   totalCourses: z.number().int().optional(),
   updatedAt: z.string().datetime().optional(),
   userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathEnrollmentStatus */
-LearningExperienceLearningPathsLearningPathEnrollmentStatusSchema = z.enum([
-  "InProgress",
-  "Completed",
-  "Abandoned",
-]);
+LearningExperienceLearningPathsLearningPathEnrollmentStatusSchema = z.enum(['InProgress', 'Completed', 'Abandoned']);
 
 /** Zod schema for LearningExperienceLearningPathsLearningPathStatistics */
 LearningExperienceLearningPathsLearningPathStatisticsSchema = z.object({
@@ -22765,9 +24358,7 @@ LearningExperienceLearningPathsReorderCoursesSchema = z.object({
 /** Zod schema for LearningExperienceLearningPathsUpdateLearningPath */
 LearningExperienceLearningPathsUpdateLearningPathSchema = z.object({
   description: z.string().nullable().optional(),
-  difficulty: z
-    .lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema)
-    .optional(),
+  difficulty: z.lazy(() => LearningExperienceLearningPathsLearningPathDifficultySchema).optional(),
   estimatedHours: z.number().int().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   isFeatured: z.boolean().nullable().optional(),
@@ -22785,15 +24376,13 @@ LearningExperienceRecommendationsAddSkillInputSchema = z.object({
 });
 
 /** Zod schema for LearningExperienceRecommendationsCreateOrUpdateLearningProfile */
-LearningExperienceRecommendationsCreateOrUpdateLearningProfileSchema = z.object(
-  {
-    learningGoals: z.array(z.string()).nullable().optional(),
-    preferredCategories: z.array(z.string()).nullable().optional(),
-    preferredDifficulty: z.string().nullable().optional(),
-    preferredDuration: z.string().nullable().optional(),
-    skills: z.array(z.string()).nullable().optional(),
-  },
-);
+LearningExperienceRecommendationsCreateOrUpdateLearningProfileSchema = z.object({
+  learningGoals: z.array(z.string()).nullable().optional(),
+  preferredCategories: z.array(z.string()).nullable().optional(),
+  preferredDifficulty: z.string().nullable().optional(),
+  preferredDuration: z.string().nullable().optional(),
+  skills: z.array(z.string()).nullable().optional(),
+});
 
 /** Zod schema for LearningExperienceRecommendationsPopularCourse */
 LearningExperienceRecommendationsPopularCourseSchema = z.object({
@@ -22817,9 +24406,7 @@ LearningExperienceRecommendationsRecommendationSchema = z.object({
   isViewed: z.boolean().optional(),
   reason: z.string().nullable().optional(),
   score: z.number().optional(),
-  type: z
-    .lazy(() => LearningExperienceRecommendationsRecommendationTypeSchema)
-    .optional(),
+  type: z.lazy(() => LearningExperienceRecommendationsRecommendationTypeSchema).optional(),
   userId: z.string().uuid().optional(),
 });
 
@@ -22846,14 +24433,14 @@ LearningExperienceRecommendationsRecommendationStatisticsSchema = z.object({
 
 /** Zod schema for LearningExperienceRecommendationsRecommendationType */
 LearningExperienceRecommendationsRecommendationTypeSchema = z.enum([
-  "PersonalizedAI",
-  "PopularInCategory",
-  "TrendingNow",
-  "BasedOnHistory",
-  "SimilarToCompleted",
-  "NextInPath",
-  "InstructorFollowed",
-  "PeerRecommended",
+  'PersonalizedAI',
+  'PopularInCategory',
+  'TrendingNow',
+  'BasedOnHistory',
+  'SimilarToCompleted',
+  'NextInPath',
+  'InstructorFollowed',
+  'PeerRecommended',
 ]);
 
 /** Zod schema for LearningExperienceRecommendationsSimilarCourse */
@@ -22895,25 +24482,23 @@ LearningExperienceRecommendationsUserLearningProfileSchema = z.object({
 });
 
 /** Zod schema for LearningExperienceSocialControllersUpdateReviewModerationInput */
-LearningExperienceSocialControllersUpdateReviewModerationInputSchema = z.object(
-  {
-    isApproved: z.boolean().optional(),
-    isFeatured: z.boolean().optional(),
-  },
-);
+LearningExperienceSocialControllersUpdateReviewModerationInputSchema = z.object({
+  isApproved: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+});
 
 /** Zod schema for LearningExperienceSocialFeedItemType */
 LearningExperienceSocialFeedItemTypeSchema = z.enum([
-  "NewCourse",
-  "PopularCourse",
-  "TrendingDiscussion",
-  "FeaturedReview",
-  "LearningPathSuggestion",
-  "CourseUpdate",
-  "InstructorActivity",
-  "PeerActivity",
-  "AchievementUnlocked",
-  "SkillMilestone",
+  'NewCourse',
+  'PopularCourse',
+  'TrendingDiscussion',
+  'FeaturedReview',
+  'LearningPathSuggestion',
+  'CourseUpdate',
+  'InstructorActivity',
+  'PeerActivity',
+  'AchievementUnlocked',
+  'SkillMilestone',
 ]);
 
 /** Zod schema for LearningExperienceSocialServicesCourseDiscussion */
@@ -23445,15 +25030,7 @@ MonitoringSLASloComplianceSchema = z.object({
 });
 
 /** Zod schema for MonitoringSLASloStatus */
-MonitoringSLASloStatusSchema = z.enum([
-  "Active",
-  "Breached",
-  "AtRisk",
-  "Disabled",
-  "Violated",
-  "Warning",
-  "Inactive",
-]);
+MonitoringSLASloStatusSchema = z.enum(['Active', 'Breached', 'AtRisk', 'Disabled', 'Violated', 'Warning', 'Inactive']);
 
 /** Zod schema for MonitoringSLASloViolation */
 MonitoringSLASloViolationSchema = z.object({
@@ -23492,12 +25069,7 @@ MonitoringSLAUpdateSloCommandSchema = z.object({
 });
 
 /** Zod schema for MonitoringSLAViolationSeverity */
-MonitoringSLAViolationSeveritySchema = z.enum([
-  "Low",
-  "Medium",
-  "High",
-  "Critical",
-]);
+MonitoringSLAViolationSeveritySchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
 /** Zod schema for MvcProblemDetails */
 MvcProblemDetailsSchema = z
@@ -23671,47 +25243,22 @@ NotificationsControllersUpdatePreferencesInputSchema = z.object({
 });
 
 /** Zod schema for NotificationsNotificationChannel */
-NotificationsNotificationChannelSchema = z.enum([
-  "InApp",
-  "Email",
-  "Push",
-  "Sms",
-  "Slack",
-  "Discord",
-  "Webhook",
-]);
+NotificationsNotificationChannelSchema = z.enum(['InApp', 'Email', 'Push', 'Sms', 'Slack', 'Discord', 'Webhook']);
 
 /** Zod schema for ObjectsAttestationConveyancePreference */
-ObjectsAttestationConveyancePreferenceSchema = z.enum([
-  "None",
-  "Indirect",
-  "Direct",
-  "Enterprise",
-]);
+ObjectsAttestationConveyancePreferenceSchema = z.enum(['None', 'Indirect', 'Direct', 'Enterprise']);
 
 /** Zod schema for ObjectsAttestationStatementFormatIdentifier */
-ObjectsAttestationStatementFormatIdentifierSchema = z.enum([
-  "Packed",
-  "Tpm",
-  "AndroidKey",
-  "AndroidSafetyNet",
-  "FidoU2f",
-  "Apple",
-  "None",
-]);
+ObjectsAttestationStatementFormatIdentifierSchema = z.enum(['Packed', 'Tpm', 'AndroidKey', 'AndroidSafetyNet', 'FidoU2f', 'Apple', 'None']);
 
 /** Zod schema for ObjectsAuthenticationExtensionsClientInputs */
 ObjectsAuthenticationExtensionsClientInputsSchema = z.object({
-  credentialProtectionPolicy: z
-    .lazy(() => ObjectsCredentialProtectionPolicySchema)
-    .optional(),
+  credentialProtectionPolicy: z.lazy(() => ObjectsCredentialProtectionPolicySchema).optional(),
   credProps: z.boolean().nullable().optional(),
   enforceCredentialProtectionPolicy: z.boolean().nullable().optional(),
-  "example.extension.bool": z.boolean().nullable().optional(),
+  'example.extension.bool': z.boolean().nullable().optional(),
   exts: z.boolean().nullable().optional(),
-  largeBlob: z
-    .lazy(() => ObjectsAuthenticationExtensionsLargeBlobInputsSchema)
-    .optional(),
+  largeBlob: z.lazy(() => ObjectsAuthenticationExtensionsLargeBlobInputsSchema).optional(),
   prf: z.lazy(() => ObjectsAuthenticationExtensionsPRFInputsSchema).optional(),
   uvm: z.boolean().nullable().optional(),
 });
@@ -23726,9 +25273,7 @@ ObjectsAuthenticationExtensionsLargeBlobInputsSchema = z.object({
 /** Zod schema for ObjectsAuthenticationExtensionsPRFInputs */
 ObjectsAuthenticationExtensionsPRFInputsSchema = z.object({
   eval: z.lazy(() => ObjectsAuthenticationExtensionsPRFValuesSchema).optional(),
-  evalByCredential: z
-    .lazy(() => KeyValuePairStringAuthenticationExtensionsPRFValuesSchema)
-    .optional(),
+  evalByCredential: z.lazy(() => KeyValuePairStringAuthenticationExtensionsPRFValuesSchema).optional(),
 });
 
 /** Zod schema for ObjectsAuthenticationExtensionsPRFValues */
@@ -23738,43 +25283,19 @@ ObjectsAuthenticationExtensionsPRFValuesSchema = z.object({
 });
 
 /** Zod schema for ObjectsAuthenticatorAttachment */
-ObjectsAuthenticatorAttachmentSchema = z.enum(["Platform", "CrossPlatform"]);
+ObjectsAuthenticatorAttachmentSchema = z.enum(['Platform', 'CrossPlatform']);
 
 /** Zod schema for ObjectsAuthenticatorTransport */
-ObjectsAuthenticatorTransportSchema = z.enum([
-  "Usb",
-  "Nfc",
-  "Ble",
-  "SmartCard",
-  "Hybrid",
-  "Internal",
-]);
+ObjectsAuthenticatorTransportSchema = z.enum(['Usb', 'Nfc', 'Ble', 'SmartCard', 'Hybrid', 'Internal']);
 
 /** Zod schema for ObjectsCOSEAlgorithm */
-ObjectsCOSEAlgorithmSchema = z.enum([
-  "RS1",
-  "RS512",
-  "RS384",
-  "RS256",
-  "ES256K",
-  "PS512",
-  "PS384",
-  "PS256",
-  "ES512",
-  "ES384",
-  "EdDSA",
-  "ES256",
-]);
+ObjectsCOSEAlgorithmSchema = z.enum(['RS1', 'RS512', 'RS384', 'RS256', 'ES256K', 'PS512', 'PS384', 'PS256', 'ES512', 'ES384', 'EdDSA', 'ES256']);
 
 /** Zod schema for ObjectsCredentialProtectionPolicy */
-ObjectsCredentialProtectionPolicySchema = z.enum([
-  "UserVerificationOptional",
-  "UserVerificationOptionalWithCredentialIdList",
-  "UserVerificationRequired",
-]);
+ObjectsCredentialProtectionPolicySchema = z.enum(['UserVerificationOptional', 'UserVerificationOptionalWithCredentialIdList', 'UserVerificationRequired']);
 
 /** Zod schema for ObjectsLargeBlobSupport */
-ObjectsLargeBlobSupportSchema = z.enum(["Required", "Preferred"]);
+ObjectsLargeBlobSupportSchema = z.enum(['Required', 'Preferred']);
 
 /** Zod schema for ObjectsPublicKeyCredentialDescriptor */
 ObjectsPublicKeyCredentialDescriptorSchema = z.object({
@@ -23787,28 +25308,16 @@ ObjectsPublicKeyCredentialDescriptorSchema = z.object({
 });
 
 /** Zod schema for ObjectsPublicKeyCredentialHint */
-ObjectsPublicKeyCredentialHintSchema = z.enum([
-  "SecurityKey",
-  "ClientDevice",
-  "Hybrid",
-]);
+ObjectsPublicKeyCredentialHintSchema = z.enum(['SecurityKey', 'ClientDevice', 'Hybrid']);
 
 /** Zod schema for ObjectsPublicKeyCredentialType */
-ObjectsPublicKeyCredentialTypeSchema = z.enum(["PublicKey", "Invalid"]);
+ObjectsPublicKeyCredentialTypeSchema = z.enum(['PublicKey', 'Invalid']);
 
 /** Zod schema for ObjectsResidentKeyRequirement */
-ObjectsResidentKeyRequirementSchema = z.enum([
-  "Required",
-  "Preferred",
-  "Discouraged",
-]);
+ObjectsResidentKeyRequirementSchema = z.enum(['Required', 'Preferred', 'Discouraged']);
 
 /** Zod schema for ObjectsUserVerificationRequirement */
-ObjectsUserVerificationRequirementSchema = z.enum([
-  "Required",
-  "Preferred",
-  "Discouraged",
-]);
+ObjectsUserVerificationRequirementSchema = z.enum(['Required', 'Preferred', 'Discouraged']);
 
 /** Zod schema for PagedResultOfCommerceProductsProduct */
 PagedResultOfCommerceProductsProductSchema = z.object({
@@ -24020,25 +25529,25 @@ PagedResultOfNotificationsControllersEmailSuppressionSchema = z.object({
 
 /** Zod schema for ProgramCategory */
 ProgramCategorySchema = z.enum([
-  "General",
-  "Programming",
-  "DataScience",
-  "WebDevelopment",
-  "MobileDevelopment",
-  "GameDevelopment",
-  "AI",
-  "Cybersecurity",
-  "DevOps",
-  "Database",
-  "Business",
-  "Design",
-  "Marketing",
-  "ProjectManagement",
-  "PersonalDevelopment",
-  "CreativeArts",
-  "Science",
-  "Language",
-  "Other",
+  'General',
+  'Programming',
+  'DataScience',
+  'WebDevelopment',
+  'MobileDevelopment',
+  'GameDevelopment',
+  'AI',
+  'Cybersecurity',
+  'DevOps',
+  'Database',
+  'Business',
+  'Design',
+  'Marketing',
+  'ProjectManagement',
+  'PersonalDevelopment',
+  'CreativeArts',
+  'Science',
+  'Language',
+  'Other',
 ]);
 
 /** Zod schema for ProjectsAddCollaboratorInput */
@@ -24091,22 +25600,12 @@ ProjectsCreateProjectInputSchema = z.object({
 /** Zod schema for ProjectsCreateProjectVersionInput */
 ProjectsCreateProjectVersionInputSchema = z.object({
   releaseNotes: z.string().max(10000).nullable().optional(),
-  status: z.string().max(50).nullable().optional(),
+  status: z.lazy(() => ProjectsProjectVersionStatusSchema).optional(),
   versionNumber: z.string().min(1).max(50),
 });
 
 /** Zod schema for ProjectsDevelopmentStatus */
-ProjectsDevelopmentStatusSchema = z.enum([
-  "Planning",
-  "InDevelopment",
-  "Alpha",
-  "Beta",
-  "Released",
-  "Completed",
-  "OnHold",
-  "Cancelled",
-  "Archived",
-]);
+ProjectsDevelopmentStatusSchema = z.enum(['Planning', 'InDevelopment', 'Alpha', 'Beta', 'Released', 'Completed', 'OnHold', 'Cancelled', 'Archived']);
 
 /** Zod schema for ProjectsEffectivePermission */
 ProjectsEffectivePermissionSchema = z.object({
@@ -24437,13 +25936,7 @@ ProjectsProjectInvitationSchema = z.object({
 });
 
 /** Zod schema for ProjectsProjectInvitationStatus */
-ProjectsProjectInvitationStatusSchema = z.enum([
-  "Pending",
-  "Accepted",
-  "Declined",
-  "Revoked",
-  "Expired",
-]);
+ProjectsProjectInvitationStatusSchema = z.enum(['Pending', 'Accepted', 'Declined', 'Revoked', 'Expired']);
 
 /** Zod schema for ProjectsProjectJamSubmission */
 ProjectsProjectJamSubmissionSchema = z.object({
@@ -24646,9 +26139,7 @@ ProjectsProjectTeamSchema = z.object({
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
   notes: z.string().max(1000).nullable().optional(),
-  participationMode: z
-    .lazy(() => ProjectsProjectTeamParticipationModeSchema)
-    .optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
   permissions: z.string().max(1000).nullable().optional(),
   projectId: z.string().uuid().optional(),
   role: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
@@ -24691,13 +26182,7 @@ ProjectsProjectTeamAgreementSchema = z.object({
 });
 
 /** Zod schema for ProjectsProjectTeamAgreementStatus */
-ProjectsProjectTeamAgreementStatusSchema = z.enum([
-  "Proposed",
-  "CounterProposed",
-  "Accepted",
-  "Cancelled",
-  "Completed",
-]);
+ProjectsProjectTeamAgreementStatusSchema = z.enum(['Proposed', 'CounterProposed', 'Accepted', 'Cancelled', 'Completed']);
 
 /** Zod schema for ProjectsProjectTeamApiOutput */
 ProjectsProjectTeamApiOutputSchema = z.object({
@@ -24708,9 +26193,7 @@ ProjectsProjectTeamApiOutputSchema = z.object({
   isActive: z.boolean().optional(),
   name: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
-  participationMode: z
-    .lazy(() => ProjectsProjectTeamParticipationModeSchema)
-    .optional(),
+  participationMode: z.lazy(() => ProjectsProjectTeamParticipationModeSchema).optional(),
   permissions: z.array(z.string()).nullable().optional(),
   role: z.lazy(() => ProjectsProjectTeamRoleSchema).optional(),
   slug: z.string().nullable().optional(),
@@ -24718,31 +26201,13 @@ ProjectsProjectTeamApiOutputSchema = z.object({
 });
 
 /** Zod schema for ProjectsProjectTeamParticipationMode */
-ProjectsProjectTeamParticipationModeSchema = z.enum([
-  "AllMembers",
-  "SelectedMembers",
-]);
+ProjectsProjectTeamParticipationModeSchema = z.enum(['AllMembers', 'SelectedMembers']);
 
 /** Zod schema for ProjectsProjectTeamRole */
-ProjectsProjectTeamRoleSchema = z.enum([
-  "Owner",
-  "CoOwner",
-  "Contributor",
-  "Guest",
-]);
+ProjectsProjectTeamRoleSchema = z.enum(['Owner', 'CoOwner', 'Contributor', 'Guest']);
 
 /** Zod schema for ProjectsProjectType */
-ProjectsProjectTypeSchema = z.enum([
-  "Game",
-  "Tool",
-  "Art",
-  "Music",
-  "Educational",
-  "Plugin",
-  "Template",
-  "Library",
-  "Other",
-]);
+ProjectsProjectTypeSchema = z.enum(['Game', 'Tool', 'Art', 'Music', 'Educational', 'Plugin', 'Template', 'Library', 'Other']);
 
 /** Zod schema for ProjectsProjectUserApiOutput */
 ProjectsProjectUserApiOutputSchema = z.object({
@@ -24767,7 +26232,7 @@ ProjectsProjectVersionSchema = z.object({
   isNew: z.boolean().optional(),
   projectId: z.string().uuid().optional(),
   releaseNotes: z.string().nullable().optional(),
-  status: z.string().min(1).max(50),
+  status: z.lazy(() => ProjectsProjectVersionStatusSchema),
   tenantId: z.string().uuid().nullable().optional(),
   updatedAt: z.string().datetime(),
   version: z.number().int().optional(),
@@ -24782,7 +26247,7 @@ ProjectsProjectVersionApiOutputSchema = z.object({
   downloadCount: z.number().int().optional(),
   projectId: z.string().uuid().optional(),
   releaseNotes: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
+  status: z.lazy(() => ProjectsProjectVersionStatusSchema).optional(),
   updatedAt: z.string().datetime().optional(),
   versionNumber: z.string().nullable().optional(),
 });
@@ -24792,10 +26257,13 @@ ProjectsProjectVersionOptionProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   projectId: z.string().uuid().optional(),
   projectTitle: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
+  status: z.lazy(() => ProjectsProjectVersionStatusSchema).optional(),
   updatedAt: z.string().datetime().optional(),
   versionNumber: z.string().nullable().optional(),
 });
+
+/** Zod schema for ProjectsProjectVersionStatus */
+ProjectsProjectVersionStatusSchema = z.enum(['Draft', 'ReadyForTesting', 'Released', 'Archived']);
 
 /** Zod schema for ProjectsShareProjectInput */
 ProjectsShareProjectInputSchema = z.object({
@@ -24854,33 +26322,23 @@ ProjectsUpdateProjectInputSchema = z.object({
   websiteUrl: z.string().nullable().optional(),
 });
 
+/** Zod schema for ProjectsUpdateProjectVersionInput */
+ProjectsUpdateProjectVersionInputSchema = z.object({
+  releaseNotes: z.string().max(10000).nullable().optional(),
+  versionNumber: z.string().min(1).max(50),
+});
+
+/** Zod schema for ProjectsVersionSubmissionPolicy */
+ProjectsVersionSubmissionPolicySchema = z.enum(['ReadyMutableUntilReview', 'ReleasedImmutable']);
+
 /** Zod schema for ProjectWorkProjectWorkColumnKind */
-ProjectWorkProjectWorkColumnKindSchema = z.enum([
-  "Backlog",
-  "Ready",
-  "InProgress",
-  "InReview",
-  "Done",
-  "Custom",
-]);
+ProjectWorkProjectWorkColumnKindSchema = z.enum(['Backlog', 'Ready', 'InProgress', 'InReview', 'Done', 'Custom']);
 
 /** Zod schema for ProjectWorkProjectWorkTaskPriority */
-ProjectWorkProjectWorkTaskPrioritySchema = z.enum([
-  "Low",
-  "Normal",
-  "High",
-  "Urgent",
-]);
+ProjectWorkProjectWorkTaskPrioritySchema = z.enum(['Low', 'Normal', 'High', 'Urgent']);
 
 /** Zod schema for ProjectWorkProjectWorkTaskStatus */
-ProjectWorkProjectWorkTaskStatusSchema = z.enum([
-  "Backlog",
-  "Ready",
-  "InProgress",
-  "InReview",
-  "Done",
-  "Cancelled",
-]);
+ProjectWorkProjectWorkTaskStatusSchema = z.enum(['Backlog', 'Ready', 'InProgress', 'InReview', 'Done', 'Cancelled']);
 
 /** Zod schema for ResourcesArchiveResourceUsageRecordsInput */
 ResourcesArchiveResourceUsageRecordsInputSchema = z.object({
@@ -24903,9 +26361,7 @@ ResourcesCleanupOrphanedResourcesInputSchema = z.object({
 
 /** Zod schema for ResourcesContentsAddReviewInput */
 ResourcesContentsAddReviewInputSchema = z.object({
-  decision: z
-    .lazy(() => ResourcesContentsContentReviewDecisionSchema)
-    .optional(),
+  decision: z.lazy(() => ResourcesContentsContentReviewDecisionSchema).optional(),
   feedback: z.string().nullable().optional(),
   suggestions: z.string().nullable().optional(),
 });
@@ -24921,9 +26377,7 @@ ResourcesContentsBulkGenerateContractsInputSchema = z.object({
 
 /** Zod schema for ResourcesContentsBulkGeneratedContractItemOutput */
 ResourcesContentsBulkGeneratedContractItemOutputSchema = z.object({
-  contract: z
-    .lazy(() => ResourcesContentsGeneratedContractOutputSchema)
-    .optional(),
+  contract: z.lazy(() => ResourcesContentsGeneratedContractOutputSchema).optional(),
   error: z.lazy(() => ErrorSchema).optional(),
   index: z.number().int().optional(),
   success: z.boolean().optional(),
@@ -24942,12 +26396,7 @@ ResourcesContentsBulkGeneratedContractsOutputSchema = z.object({
 });
 
 /** Zod schema for ResourcesContentsContentReviewDecision */
-ResourcesContentsContentReviewDecisionSchema = z.enum([
-  "Pending",
-  "Approve",
-  "RequestChanges",
-  "Reject",
-]);
+ResourcesContentsContentReviewDecisionSchema = z.enum(['Pending', 'Approve', 'RequestChanges', 'Reject']);
 
 /** Zod schema for ResourcesContentsContentVersion */
 ResourcesContentsContentVersionSchema = z.object({
@@ -24993,24 +26442,14 @@ ResourcesContentsContentVersionReviewSchema = z.object({
   id: z.string().uuid().optional(),
   contentVersionId: z.string().uuid().optional(),
   createdAt: z.string().datetime().optional(),
-  decision: z
-    .lazy(() => ResourcesContentsContentReviewDecisionSchema)
-    .optional(),
+  decision: z.lazy(() => ResourcesContentsContentReviewDecisionSchema).optional(),
   feedback: z.string().nullable().optional(),
   reviewerId: z.string().uuid().optional(),
   suggestions: z.string().nullable().optional(),
 });
 
 /** Zod schema for ResourcesContentsContentVersionStatus */
-ResourcesContentsContentVersionStatusSchema = z.enum([
-  "Draft",
-  "PendingReview",
-  "Approved",
-  "Rejected",
-  "Scheduled",
-  "Published",
-  "Archived",
-]);
+ResourcesContentsContentVersionStatusSchema = z.enum(['Draft', 'PendingReview', 'Approved', 'Rejected', 'Scheduled', 'Published', 'Archived']);
 
 /** Zod schema for ResourcesContentsCreateDraftInput */
 ResourcesContentsCreateDraftInputSchema = z.object({
@@ -25169,14 +26608,7 @@ ResourcesResourceQuotaOutputSchema = z.object({
 });
 
 /** Zod schema for ResourcesResourceQuotaPeriod */
-ResourcesResourceQuotaPeriodSchema = z.enum([
-  "Daily",
-  "Weekly",
-  "Monthly",
-  "Quarterly",
-  "Yearly",
-  "Unlimited",
-]);
+ResourcesResourceQuotaPeriodSchema = z.enum(['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly', 'Unlimited']);
 
 /** Zod schema for ResourcesResourceSettings */
 ResourcesResourceSettingsSchema = z.object({
@@ -25210,36 +26642,36 @@ ResourcesResourceSettingsSchema = z.object({
 
 /** Zod schema for ResourcesResourceUsageType */
 ResourcesResourceUsageTypeSchema = z.enum([
-  "Users",
-  "Projects",
-  "Storage",
-  "ApiCalls",
-  "Programs",
-  "Courses",
-  "FeatureFlags",
-  "SubscriptionPlans",
-  "Products",
-  "TestingSessions",
-  "Roles",
-  "Tenants",
-  "Subscriptions",
-  "SLOs",
-  "AccessReviewCampaigns",
-  "SoDRules",
-  "AbacPolicies",
-  "ConditionalPolicies",
-  "Wallets",
-  "Disputes",
-  "PromoCodes",
-  "Orders",
-  "AuditEntries",
-  "Assets",
-  "AssetStorage",
-  "AssetDownloads",
-  "AssetTransformations",
-  "AiRequests",
-  "AiTokens",
-  "Teams",
+  'Users',
+  'Projects',
+  'Storage',
+  'ApiCalls',
+  'Programs',
+  'Courses',
+  'FeatureFlags',
+  'SubscriptionPlans',
+  'Products',
+  'TestingSessions',
+  'Roles',
+  'Tenants',
+  'Subscriptions',
+  'SLOs',
+  'AccessReviewCampaigns',
+  'SoDRules',
+  'AbacPolicies',
+  'ConditionalPolicies',
+  'Wallets',
+  'Disputes',
+  'PromoCodes',
+  'Orders',
+  'AuditEntries',
+  'Assets',
+  'AssetStorage',
+  'AssetDownloads',
+  'AssetTransformations',
+  'AiRequests',
+  'AiTokens',
+  'Teams',
 ]);
 
 /** Zod schema for ResourcesSetQuotaInput */
@@ -25283,7 +26715,7 @@ ResourcesToggleResourceQuotaInputSchema = z.object({
 });
 
 /** Zod schema for ResourcesTrendGranularity */
-ResourcesTrendGranularitySchema = z.enum(["Daily", "Weekly", "Monthly"]);
+ResourcesTrendGranularitySchema = z.enum(['Daily', 'Weekly', 'Monthly']);
 
 /** Zod schema for ResourcesUsageRecord */
 ResourcesUsageRecordSchema = z.object({
@@ -25357,7 +26789,7 @@ SocialBlogBlogPostSchema = z.object({
 });
 
 /** Zod schema for SocialBlogBlogPostStatus */
-SocialBlogBlogPostStatusSchema = z.enum(["Draft", "Published", "Archived"]);
+SocialBlogBlogPostStatusSchema = z.enum(['Draft', 'Published', 'Archived']);
 
 /** Zod schema for SocialBlogCreateBlogPostInput */
 SocialBlogCreateBlogPostInputSchema = z.object({
@@ -25380,14 +26812,7 @@ SocialFeedAddFeedItemInputSchema = z.object({
 });
 
 /** Zod schema for SocialFeedFeedContentType */
-SocialFeedFeedContentTypeSchema = z.enum([
-  "Post",
-  "BlogPost",
-  "CourseReview",
-  "ProjectUpdate",
-  "Achievement",
-  "CourseCompletion",
-]);
+SocialFeedFeedContentTypeSchema = z.enum(['Post', 'BlogPost', 'CourseReview', 'ProjectUpdate', 'Achievement', 'CourseCompletion']);
 
 /** Zod schema for SocialFeedFeedItem */
 SocialFeedFeedItemSchema = z.object({
@@ -25405,15 +26830,7 @@ SocialFeedFeedItemSchema = z.object({
 });
 
 /** Zod schema for SocialFeedFeedItemReason */
-SocialFeedFeedItemReasonSchema = z.enum([
-  "Following",
-  "Trending",
-  "Recommended",
-  "Mentioned",
-  "Replied",
-  "Liked",
-  "InNetwork",
-]);
+SocialFeedFeedItemReasonSchema = z.enum(['Following', 'Trending', 'Recommended', 'Mentioned', 'Replied', 'Liked', 'InNetwork']);
 
 /** Zod schema for SocialGroupsApproveSocialGroupMemberInput */
 SocialGroupsApproveSocialGroupMemberInputSchema = z.object({
@@ -25438,9 +26855,7 @@ SocialGroupsCreateSocialGroupInputSchema = z.object({
 
 /** Zod schema for SocialGroupsJoinSocialGroupInput */
 SocialGroupsJoinSocialGroupInputSchema = z.object({
-  requestedRole: z
-    .lazy(() => SocialGroupsSocialGroupMemberRoleSchema)
-    .optional(),
+  requestedRole: z.lazy(() => SocialGroupsSocialGroupMemberRoleSchema).optional(),
   userId: z.string().uuid().optional(),
 });
 
@@ -25470,51 +26885,24 @@ SocialGroupsSocialGroupMemberSchema = z.object({
   removedAt: z.string().datetime().nullable().optional(),
   requestedAt: z.string().datetime().optional(),
   role: z.lazy(() => SocialGroupsSocialGroupMemberRoleSchema).optional(),
-  status: z
-    .lazy(() => SocialGroupsSocialGroupMembershipStatusSchema)
-    .optional(),
+  status: z.lazy(() => SocialGroupsSocialGroupMembershipStatusSchema).optional(),
   userId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialGroupsSocialGroupMemberRole */
-SocialGroupsSocialGroupMemberRoleSchema = z.enum([
-  "Owner",
-  "Admin",
-  "Moderator",
-  "Member",
-]);
+SocialGroupsSocialGroupMemberRoleSchema = z.enum(['Owner', 'Admin', 'Moderator', 'Member']);
 
 /** Zod schema for SocialGroupsSocialGroupMembershipStatus */
-SocialGroupsSocialGroupMembershipStatusSchema = z.enum([
-  "Pending",
-  "Active",
-  "Rejected",
-  "Removed",
-]);
+SocialGroupsSocialGroupMembershipStatusSchema = z.enum(['Pending', 'Active', 'Rejected', 'Removed']);
 
 /** Zod schema for SocialGroupsSocialGroupStatus */
-SocialGroupsSocialGroupStatusSchema = z.enum([
-  "Active",
-  "Archived",
-  "Suspended",
-]);
+SocialGroupsSocialGroupStatusSchema = z.enum(['Active', 'Archived', 'Suspended']);
 
 /** Zod schema for SocialGroupsSocialGroupType */
-SocialGroupsSocialGroupTypeSchema = z.enum([
-  "StudyGroup",
-  "ProjectTeam",
-  "InterestCommunity",
-  "CourseCohort",
-  "Institution",
-  "GameJamTeam",
-]);
+SocialGroupsSocialGroupTypeSchema = z.enum(['StudyGroup', 'ProjectTeam', 'InterestCommunity', 'CourseCohort', 'Institution', 'GameJamTeam']);
 
 /** Zod schema for SocialGroupsSocialGroupVisibility */
-SocialGroupsSocialGroupVisibilitySchema = z.enum([
-  "Public",
-  "Private",
-  "InviteOnly",
-]);
+SocialGroupsSocialGroupVisibilitySchema = z.enum(['Public', 'Private', 'InviteOnly']);
 
 /** Zod schema for SocialGroupsUpdateSocialGroupInput */
 SocialGroupsUpdateSocialGroupInputSchema = z.object({
@@ -25560,15 +26948,10 @@ SocialPostsControllersUpdatePostInputSchema = z.object({
 });
 
 /** Zod schema for SocialPostsMediaType */
-SocialPostsMediaTypeSchema = z.enum(["Image", "Video", "Audio", "Document"]);
+SocialPostsMediaTypeSchema = z.enum(['Image', 'Video', 'Audio', 'Document']);
 
 /** Zod schema for SocialPostsPostVisibility */
-SocialPostsPostVisibilitySchema = z.enum([
-  "Public",
-  "Followers",
-  "Private",
-  "Unlisted",
-]);
+SocialPostsPostVisibilitySchema = z.enum(['Public', 'Followers', 'Private', 'Unlisted']);
 
 /** Zod schema for SocialProfilesAddProfilePortfolioItemBody */
 SocialProfilesAddProfilePortfolioItemBodySchema = z.object({
@@ -25585,19 +26968,11 @@ SocialProfilesAddProfilePortfolioItemBodySchema = z.object({
 SocialProfilesAddProfileSkillBodySchema = z.object({
   displayOrder: z.number().int().optional(),
   name: z.string().nullable().optional(),
-  proficiency: z
-    .lazy(() => SocialProfilesProfileSkillProficiencySchema)
-    .optional(),
+  proficiency: z.lazy(() => SocialProfilesProfileSkillProficiencySchema).optional(),
 });
 
 /** Zod schema for SocialProfilesProfileAvailabilityStatus */
-SocialProfilesProfileAvailabilityStatusSchema = z.enum([
-  "NotSet",
-  "OpenToWork",
-  "OpenToCollaborate",
-  "Busy",
-  "Hidden",
-]);
+SocialProfilesProfileAvailabilityStatusSchema = z.enum(['NotSet', 'OpenToWork', 'OpenToCollaborate', 'Busy', 'Hidden']);
 
 /** Zod schema for SocialProfilesProfilePortfolioItem */
 SocialProfilesProfilePortfolioItemSchema = z.object({
@@ -25617,33 +26992,20 @@ SocialProfilesProfileSkillSchema = z.object({
   id: z.string().uuid().optional(),
   displayOrder: z.number().int().optional(),
   name: z.string().nullable().optional(),
-  proficiency: z
-    .lazy(() => SocialProfilesProfileSkillProficiencySchema)
-    .optional(),
+  proficiency: z.lazy(() => SocialProfilesProfileSkillProficiencySchema).optional(),
   profileId: z.string().uuid().optional(),
 });
 
 /** Zod schema for SocialProfilesProfileSkillProficiency */
-SocialProfilesProfileSkillProficiencySchema = z.enum([
-  "Beginner",
-  "Intermediate",
-  "Advanced",
-  "Expert",
-]);
+SocialProfilesProfileSkillProficiencySchema = z.enum(['Beginner', 'Intermediate', 'Advanced', 'Expert']);
 
 /** Zod schema for SocialProfilesProfileVisibility */
-SocialProfilesProfileVisibilitySchema = z.enum([
-  "Private",
-  "Connections",
-  "Public",
-]);
+SocialProfilesProfileVisibilitySchema = z.enum(['Private', 'Connections', 'Public']);
 
 /** Zod schema for SocialProfilesSocialProfile */
 SocialProfilesSocialProfileSchema = z.object({
   id: z.string().uuid().optional(),
-  availabilityStatus: z
-    .lazy(() => SocialProfilesProfileAvailabilityStatusSchema)
-    .optional(),
+  availabilityStatus: z.lazy(() => SocialProfilesProfileAvailabilityStatusSchema).optional(),
   avatarUrl: z.string().nullable().optional(),
   bannerUrl: z.string().nullable().optional(),
   bio: z.string().nullable().optional(),
@@ -25703,9 +27065,7 @@ SocialProfilesUpdateProfileStatsBodySchema = z.object({
 
 /** Zod schema for SocialProfilesUpdateSocialProfileBody */
 SocialProfilesUpdateSocialProfileBodySchema = z.object({
-  availabilityStatus: z
-    .lazy(() => SocialProfilesProfileAvailabilityStatusSchema)
-    .optional(),
+  availabilityStatus: z.lazy(() => SocialProfilesProfileAvailabilityStatusSchema).optional(),
   avatarUrl: z.string().nullable().optional(),
   bannerUrl: z.string().nullable().optional(),
   bio: z.string().nullable().optional(),
@@ -25730,24 +27090,10 @@ SocialReactionsReactionSchema = z.object({
 });
 
 /** Zod schema for SocialReactionsReactionTargetType */
-SocialReactionsReactionTargetTypeSchema = z.enum([
-  "Post",
-  "Comment",
-  "BlogPost",
-  "CourseReview",
-  "Discussion",
-  "Reply",
-]);
+SocialReactionsReactionTargetTypeSchema = z.enum(['Post', 'Comment', 'BlogPost', 'CourseReview', 'Discussion', 'Reply']);
 
 /** Zod schema for SocialReactionsReactionType */
-SocialReactionsReactionTypeSchema = z.enum([
-  "Like",
-  "Love",
-  "Insightful",
-  "Celebrate",
-  "Support",
-  "Curious",
-]);
+SocialReactionsReactionTypeSchema = z.enum(['Like', 'Love', 'Insightful', 'Celebrate', 'Support', 'Curious']);
 
 /** Zod schema for SocialReactionsRemoveReactionInput */
 SocialReactionsRemoveReactionInputSchema = z.object({
@@ -25783,15 +27129,7 @@ SocialReactionsTargetReactionSummarySchema = z.object({
 });
 
 /** Zod schema for SystemDayOfWeek */
-SystemDayOfWeekSchema = z.enum([
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-]);
+SystemDayOfWeekSchema = z.enum(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
 
 /** Zod schema for TeamsTeam */
 TeamsTeamSchema = z.object({
@@ -25880,18 +27218,13 @@ TeamsTeamMemberSchema = z.object({
 });
 
 /** Zod schema for TeamsTeamMemberAuthority */
-TeamsTeamMemberAuthoritySchema = z.enum([
-  "Viewer",
-  "Member",
-  "Manager",
-  "Owner",
-]);
+TeamsTeamMemberAuthoritySchema = z.enum(['Viewer', 'Member', 'Manager', 'Owner']);
 
 /** Zod schema for TeamsTeamStatus */
-TeamsTeamStatusSchema = z.enum(["Active", "Archived"]);
+TeamsTeamStatusSchema = z.enum(['Active', 'Archived']);
 
 /** Zod schema for TeamsTeamVisibility */
-TeamsTeamVisibilitySchema = z.enum(["Private", "Tenant", "Public"]);
+TeamsTeamVisibilitySchema = z.enum(['Private', 'Tenant', 'Public']);
 
 /** Zod schema for TenantInfo */
 TenantInfoSchema = z.object({
@@ -25925,12 +27258,7 @@ TestingLabAssignTestingProjectToTesterInputSchema = z.object({
 });
 
 /** Zod schema for TestingLabAttendanceStatus */
-TestingLabAttendanceStatusSchema = z.enum([
-  "Registered",
-  "Present",
-  "Completed",
-  "NoShow",
-]);
+TestingLabAttendanceStatusSchema = z.enum(['Registered', 'Present', 'Completed', 'NoShow']);
 
 /** Zod schema for TestingLabCancelTestingEventInput */
 TestingLabCancelTestingEventInputSchema = z.object({
@@ -25940,9 +27268,16 @@ TestingLabCancelTestingEventInputSchema = z.object({
 /** Zod schema for TestingLabCastTestingApplicationVoteInput */
 TestingLabCastTestingApplicationVoteInputSchema = z.object({
   comments: z.string().nullable().optional(),
-  decision: z
-    .lazy(() => TestingLabTestingApplicationVoteDecisionSchema)
-    .optional(),
+  decision: z.lazy(() => TestingLabTestingApplicationVoteDecisionSchema).optional(),
+});
+
+/** Zod schema for TestingLabConfigureTestingEventInput */
+TestingLabConfigureTestingEventInputSchema = z.object({
+  candidateInstructions: z.string().nullable().optional(),
+  generalRules: z.string().nullable().optional(),
+  projectApplicationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+  testerInstructions: z.string().nullable().optional(),
+  testerRegistrationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
 });
 
 /** Zod schema for TestingLabConfigureTestingEventLearningInput */
@@ -25950,9 +27285,7 @@ TestingLabConfigureTestingEventLearningInputSchema = z.object({
   cohortId: z.string().uuid().nullable().optional(),
   courseId: z.string().uuid().optional(),
   learningActivityId: z.string().uuid().optional(),
-  requirement: z
-    .lazy(() => TestingLabTestingLearningCompletionRequirementSchema)
-    .optional(),
+  requirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
 });
 
 /** Zod schema for TestingLabCreateSimpleTestingInput */
@@ -25976,18 +27309,15 @@ TestingLabCreateSimpleTestingInputSchema = z.object({
 TestingLabCreateTestingEventInputSchema = z.object({
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
-  approvalMode: z
-    .lazy(() => TestingLabTestingEventApprovalModeSchema)
-    .optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
   description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
   mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
   name: z.string().nullable().optional(),
-  recurrence: z
-    .lazy(() => TestingLabTestingEventRecurrenceInputSchema)
-    .optional(),
+  recurrence: z.lazy(() => TestingLabTestingEventRecurrenceInputSchema).optional(),
   requiresFeedback: z.boolean().optional(),
   startsAt: z.string().datetime().optional(),
+  templateRevisionId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingInput */
@@ -26025,6 +27355,7 @@ TestingLabCreateTestingLabSettingsSchema = z.object({
   reminderDaysBefore: z.string().nullable().optional(),
   requireApproval: z.boolean().optional(),
   timezone: z.string().min(1).max(50),
+  versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingLocation */
@@ -26044,6 +27375,11 @@ TestingLabCreateTestingLocationSchema = z.object({
   state: z.string().nullable().optional(),
   status: z.lazy(() => TestingLabLocationStatusSchema).optional(),
   virtualUrl: z.string().nullable().optional(),
+});
+
+/** Zod schema for TestingLabCreateTestingProjectApplicationDraftInput */
+TestingLabCreateTestingProjectApplicationDraftInputSchema = z.object({
+  projectId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabCreateTestingSession */
@@ -26067,13 +27403,7 @@ TestingLabDecideTestingProjectApplicationInputSchema = z.object({
 });
 
 /** Zod schema for TestingLabFeedbackFormType */
-TestingLabFeedbackFormTypeSchema = z.enum([
-  "General",
-  "BugReport",
-  "Usability",
-  "Performance",
-  "Accessibility",
-]);
+TestingLabFeedbackFormTypeSchema = z.enum(['General', 'BugReport', 'Usability', 'Performance', 'Accessibility']);
 
 /** Zod schema for TestingLabFeedbackInput */
 TestingLabFeedbackInputSchema = z.object({
@@ -26085,7 +27415,7 @@ TestingLabFeedbackInputSchema = z.object({
 });
 
 /** Zod schema for TestingLabFeedbackQuality */
-TestingLabFeedbackQualitySchema = z.enum(["Low", "Medium", "High"]);
+TestingLabFeedbackQualitySchema = z.enum(['Low', 'Medium', 'High']);
 
 /** Zod schema for TestingLabFeedbackQualityRating */
 TestingLabFeedbackQualityRatingSchema = z.object({
@@ -26120,7 +27450,7 @@ TestingLabGrantResourcePermissionInputSchema = z.object({
 });
 
 /** Zod schema for TestingLabInstructionType */
-TestingLabInstructionTypeSchema = z.enum(["Text", "Url", "File"]);
+TestingLabInstructionTypeSchema = z.enum(['Text', 'Url', 'File']);
 
 /** Zod schema for TestingLabLinkSessionProjectInput */
 TestingLabLinkSessionProjectInputSchema = z.object({
@@ -26130,16 +27460,10 @@ TestingLabLinkSessionProjectInputSchema = z.object({
 });
 
 /** Zod schema for TestingLabLocationStatus */
-TestingLabLocationStatusSchema = z.enum(["Active", "Maintenance", "Inactive"]);
+TestingLabLocationStatusSchema = z.enum(['Active', 'Maintenance', 'Inactive']);
 
 /** Zod schema for TestingLabParticipationStatus */
-TestingLabParticipationStatusSchema = z.enum([
-  "Registered",
-  "Active",
-  "Completed",
-  "Withdrawn",
-  "Suspended",
-]);
+TestingLabParticipationStatusSchema = z.enum(['Registered', 'Active', 'Completed', 'Withdrawn', 'Suspended']);
 
 /** Zod schema for TestingLabPublicTestingEventProjection */
 TestingLabPublicTestingEventProjectionSchema = z.object({
@@ -26147,9 +27471,8 @@ TestingLabPublicTestingEventProjectionSchema = z.object({
   applicationCount: z.number().int().optional(),
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
-  approvalMode: z
-    .lazy(() => TestingLabTestingEventApprovalModeSchema)
-    .optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  configuration: z.lazy(() => TestingLabTestingEventConfigurationProjectionSchema).optional(),
   description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
   mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
@@ -26180,6 +27503,62 @@ TestingLabPublicTestingEventSlotProjectionSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
+/** Zod schema for TestingLabQuestionnaireAnswer */
+TestingLabQuestionnaireAnswerSchema = z.object({
+  questionId: z.string().nullable().optional(),
+  selectedOptionIds: z.array(z.string()).nullable().optional(),
+  textValue: z.string().nullable().optional(),
+});
+
+/** Zod schema for TestingLabQuestionnaireCondition */
+TestingLabQuestionnaireConditionSchema = z.object({
+  operator: z.lazy(() => TestingLabQuestionnaireConditionOperatorSchema).optional(),
+  questionId: z.string().nullable().optional(),
+  value: z.string().nullable().optional(),
+});
+
+/** Zod schema for TestingLabQuestionnaireConditionOperator */
+TestingLabQuestionnaireConditionOperatorSchema = z.enum(['Equals', 'NotEquals', 'Includes']);
+
+/** Zod schema for TestingLabQuestionnaireOption */
+TestingLabQuestionnaireOptionSchema = z.object({
+  id: z.string().nullable().optional(),
+  label: z.string().nullable().optional(),
+});
+
+/** Zod schema for TestingLabQuestionnaireOutput */
+TestingLabQuestionnaireOutputSchema = z.object({
+  answers: z
+    .array(z.lazy(() => TestingLabQuestionnaireAnswerSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for TestingLabQuestionnaireQuestion */
+TestingLabQuestionnaireQuestionSchema = z.object({
+  id: z.string().nullable().optional(),
+  condition: z.lazy(() => TestingLabQuestionnaireConditionSchema).optional(),
+  options: z
+    .array(z.lazy(() => TestingLabQuestionnaireOptionSchema))
+    .nullable()
+    .optional(),
+  prompt: z.string().nullable().optional(),
+  required: z.boolean().optional(),
+  type: z.lazy(() => TestingLabQuestionnaireQuestionTypeSchema).optional(),
+});
+
+/** Zod schema for TestingLabQuestionnaireQuestionType */
+TestingLabQuestionnaireQuestionTypeSchema = z.enum(['FreeText', 'SingleChoice', 'MultipleChoice']);
+
+/** Zod schema for TestingLabQuestionnaireSchema */
+TestingLabQuestionnaireSchemaSchema = z.object({
+  questions: z
+    .array(z.lazy(() => TestingLabQuestionnaireQuestionSchema))
+    .nullable()
+    .optional(),
+  title: z.string().nullable().optional(),
+});
+
 /** Zod schema for TestingLabRateFeedbackQuality */
 TestingLabRateFeedbackQualitySchema = z.object({
   quality: z.lazy(() => TestingLabFeedbackQualitySchema).optional(),
@@ -26187,24 +27566,31 @@ TestingLabRateFeedbackQualitySchema = z.object({
 
 /** Zod schema for TestingLabRegisterTestingEventSlotInput */
 TestingLabRegisterTestingEventSlotInputSchema = z.object({
+  acceptedRules: z.boolean().optional(),
   notes: z.string().nullable().optional(),
+  registrationResponse: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
 });
 
 /** Zod schema for TestingLabRegistrationStatus */
-TestingLabRegistrationStatusSchema = z.enum([
-  "Registered",
-  "Confirmed",
-  "Cancelled",
-  "Attended",
-  "NoShow",
-]);
+TestingLabRegistrationStatusSchema = z.enum(['Registered', 'Confirmed', 'Cancelled', 'Attended', 'NoShow']);
 
 /** Zod schema for TestingLabRegistrationType */
-TestingLabRegistrationTypeSchema = z.enum(["ProjectMember", "Tester"]);
+TestingLabRegistrationTypeSchema = z.enum(['ProjectMember', 'Tester']);
 
 /** Zod schema for TestingLabReportFeedback */
 TestingLabReportFeedbackSchema = z.object({
   reason: z.string().nullable().optional(),
+});
+
+/** Zod schema for TestingLabSaveTestingProjectApplicationDraftInput */
+TestingLabSaveTestingProjectApplicationDraftInputSchema = z.object({
+  acceptedRules: z.boolean().nullable().optional(),
+  brief: z.lazy(() => TestingLabTestingProjectBriefSchema).optional(),
+  eventApplicationResponse: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
+  feedbackQuestionnaire: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+  preferredAvailability: z.string().nullable().optional(),
+  projectVersionId: z.string().uuid().nullable().optional(),
+  submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
 });
 
 /** Zod schema for TestingLabSessionProjectProjection */
@@ -26258,12 +27644,7 @@ TestingLabSessionRegistrationInputSchema = z.object({
 });
 
 /** Zod schema for TestingLabSessionStatus */
-TestingLabSessionStatusSchema = z.enum([
-  "Scheduled",
-  "Active",
-  "Completed",
-  "Cancelled",
-]);
+TestingLabSessionStatusSchema = z.enum(['Scheduled', 'Active', 'Completed', 'Cancelled']);
 
 /** Zod schema for TestingLabSessionWaitlist */
 TestingLabSessionWaitlistSchema = z.object({
@@ -26304,11 +27685,17 @@ TestingLabSubmitTestingEventFeedbackInputSchema = z.object({
   additionalNotes: z.string().nullable().optional(),
   feedbackData: z.string().nullable().optional(),
   overallRating: z.number().int().nullable().optional(),
+  questionnaireRevisionId: z.string().uuid().nullable().optional(),
+  responses: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
   wouldRecommend: z.boolean().nullable().optional(),
 });
 
 /** Zod schema for TestingLabSubmitTestingProjectApplicationInput */
 TestingLabSubmitTestingProjectApplicationInputSchema = z.object({
+  acceptedRules: z.boolean().optional(),
+  brief: z.lazy(() => TestingLabTestingProjectBriefSchema).optional(),
+  eventApplicationResponse: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
+  feedbackQuestionnaire: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
   preferredAvailability: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().optional(),
@@ -26328,27 +27715,20 @@ TestingLabTestingApplicationReviewAssetProjectionSchema = z.object({
 TestingLabTestingApplicationReviewPackageProjectionSchema = z.object({
   applicationId: z.string().uuid().optional(),
   assets: z
-    .array(
-      z.lazy(() => TestingLabTestingApplicationReviewAssetProjectionSchema),
-    )
+    .array(z.lazy(() => TestingLabTestingApplicationReviewAssetProjectionSchema))
     .nullable()
     .optional(),
+  brief: z.lazy(() => TestingLabTestingProjectBriefSchema).optional(),
+  feedbackQuestionnaire: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().optional(),
   releaseNotes: z.string().nullable().optional(),
   versionNumber: z.string().nullable().optional(),
-  versionStatus: z.string().nullable().optional(),
+  versionStatus: z.lazy(() => ProjectsProjectVersionStatusSchema).optional(),
 });
 
 /** Zod schema for TestingLabTestingApplicationStatus */
-TestingLabTestingApplicationStatusSchema = z.enum([
-  "Pending",
-  "UnderReview",
-  "Approved",
-  "Rejected",
-  "Waitlisted",
-  "Withdrawn",
-]);
+TestingLabTestingApplicationStatusSchema = z.enum(['Draft', 'Pending', 'UnderReview', 'Approved', 'Rejected', 'Waitlisted', 'Withdrawn']);
 
 /** Zod schema for TestingLabTestingApplicationTesterEligibilityProjection */
 TestingLabTestingApplicationTesterEligibilityProjectionSchema = z.object({
@@ -26359,15 +27739,11 @@ TestingLabTestingApplicationTesterEligibilityProjectionSchema = z.object({
 /** Zod schema for TestingLabTestingApplicationVote */
 TestingLabTestingApplicationVoteSchema = z.object({
   id: z.string().uuid().optional(),
-  application: z
-    .lazy(() => TestingLabTestingProjectApplicationSchema)
-    .optional(),
+  application: z.lazy(() => TestingLabTestingProjectApplicationSchema).optional(),
   applicationId: z.string().uuid().optional(),
   comments: z.string().max(2000).nullable().optional(),
   createdAt: z.string().datetime(),
-  decision: z
-    .lazy(() => TestingLabTestingApplicationVoteDecisionSchema)
-    .optional(),
+  decision: z.lazy(() => TestingLabTestingApplicationVoteDecisionSchema).optional(),
   deletedAt: z.string().datetime().nullable().optional(),
   domainEvents: z
     .array(z.lazy(() => CQRSIDomainEventSchema))
@@ -26384,20 +27760,14 @@ TestingLabTestingApplicationVoteSchema = z.object({
 });
 
 /** Zod schema for TestingLabTestingApplicationVoteDecision */
-TestingLabTestingApplicationVoteDecisionSchema = z.enum([
-  "Approve",
-  "Reject",
-  "Abstain",
-]);
+TestingLabTestingApplicationVoteDecisionSchema = z.enum(['Approve', 'Reject', 'Abstain']);
 
 /** Zod schema for TestingLabTestingApplicationVoteProjection */
 TestingLabTestingApplicationVoteProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   comments: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
-  decision: z
-    .lazy(() => TestingLabTestingApplicationVoteDecisionSchema)
-    .optional(),
+  decision: z.lazy(() => TestingLabTestingApplicationVoteDecisionSchema).optional(),
   reviewerId: z.string().uuid().optional(),
 });
 
@@ -26425,7 +27795,7 @@ TestingLabTestingCommitteeMemberSchema = z.object({
 });
 
 /** Zod schema for TestingLabTestingContext */
-TestingLabTestingContextSchema = z.enum(["Online", "InPerson"]);
+TestingLabTestingContextSchema = z.enum(['Online', 'InPerson']);
 
 /** Zod schema for TestingLabTestingEvent */
 TestingLabTestingEventSchema = z.object({
@@ -26436,16 +27806,16 @@ TestingLabTestingEventSchema = z.object({
     .optional(),
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
-  approvalMode: z
-    .lazy(() => TestingLabTestingEventApprovalModeSchema)
-    .optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
   cancellationReason: z.string().max(1000).nullable().optional(),
   cancelledAt: z.string().datetime().nullable().optional(),
+  candidateInstructions: z.string().max(20000).nullable().optional(),
   cohortId: z.string().uuid().nullable().optional(),
   committeeMembers: z
     .array(z.lazy(() => TestingLabTestingCommitteeMemberSchema))
     .nullable()
     .optional(),
+  configurationFrozenAt: z.string().datetime().nullable().optional(),
   courseId: z.string().uuid().nullable().optional(),
   createdAt: z.string().datetime(),
   deletedAt: z.string().datetime().nullable().optional(),
@@ -26455,22 +27825,21 @@ TestingLabTestingEventSchema = z.object({
     .nullable()
     .optional(),
   endsAt: z.string().datetime().optional(),
+  generalRules: z.string().max(20000).nullable().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
   isNew: z.boolean().optional(),
   learningActivityId: z.string().uuid().nullable().optional(),
-  learningCompletionRequirement: z
-    .lazy(() => TestingLabTestingLearningCompletionRequirementSchema)
-    .optional(),
+  learningCompletionRequirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
   manager: z.lazy(() => IdentityUsersUserSchema).optional(),
   managerUserId: z.string().uuid().optional(),
   mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
   name: z.string().min(1).max(255),
+  projectApplicationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+  projectApplicationSchemaJson: z.string().nullable().optional(),
   recurrenceDaysOfWeek: z.string().max(64).nullable().optional(),
   recurrenceEndsAt: z.string().datetime().nullable().optional(),
-  recurrenceFrequency: z
-    .lazy(() => TestingLabTestingEventRecurrenceFrequencySchema)
-    .optional(),
+  recurrenceFrequency: z.lazy(() => TestingLabTestingEventRecurrenceFrequencySchema).optional(),
   recurrenceInterval: z.number().int().nullable().optional(),
   recurrenceOccurrence: z.number().int().nullable().optional(),
   recurrenceOccurrenceCount: z.number().int().nullable().optional(),
@@ -26482,15 +27851,27 @@ TestingLabTestingEventSchema = z.object({
     .array(z.lazy(() => TestingLabTestingEventSlotSchema))
     .nullable()
     .optional(),
+  sourceTemplateId: z.string().uuid().nullable().optional(),
+  sourceTemplateRevisionId: z.string().uuid().nullable().optional(),
   startsAt: z.string().datetime().optional(),
   status: z.lazy(() => TestingLabTestingEventStatusSchema).optional(),
   tenantId: z.string().uuid().nullable().optional(),
+  testerInstructions: z.string().max(20000).nullable().optional(),
+  testerRegistrationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+  testerRegistrationSchemaJson: z.string().nullable().optional(),
   updatedAt: z.string().datetime(),
   version: z.number().int().optional(),
 });
 
+/** Zod schema for TestingLabTestingEventApplicationAccessProjection */
+TestingLabTestingEventApplicationAccessProjectionSchema = z.object({
+  canManageApplications: z.boolean().optional(),
+  canViewApplications: z.boolean().optional(),
+  canVote: z.boolean().optional(),
+});
+
 /** Zod schema for TestingLabTestingEventApprovalMode */
-TestingLabTestingEventApprovalModeSchema = z.enum(["ManagerOnly", "Committee"]);
+TestingLabTestingEventApprovalModeSchema = z.enum(['ManagerOnly', 'Committee']);
 
 /** Zod schema for TestingLabTestingEventCommitteeMemberProjection */
 TestingLabTestingEventCommitteeMemberProjectionSchema = z.object({
@@ -26503,6 +27884,18 @@ TestingLabTestingEventCommitteeMemberProjectionSchema = z.object({
   userName: z.string().nullable().optional(),
 });
 
+/** Zod schema for TestingLabTestingEventConfigurationProjection */
+TestingLabTestingEventConfigurationProjectionSchema = z.object({
+  candidateInstructions: z.string().nullable().optional(),
+  frozenAt: z.string().datetime().nullable().optional(),
+  generalRules: z.string().nullable().optional(),
+  projectApplicationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+  sourceTemplateId: z.string().uuid().nullable().optional(),
+  sourceTemplateRevisionId: z.string().uuid().nullable().optional(),
+  testerInstructions: z.string().nullable().optional(),
+  testerRegistrationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+});
+
 /** Zod schema for TestingLabTestingEventFeedbackProjection */
 TestingLabTestingEventFeedbackProjectionSchema = z.object({
   id: z.string().uuid().optional(),
@@ -26511,6 +27904,8 @@ TestingLabTestingEventFeedbackProjectionSchema = z.object({
   eventId: z.string().uuid().optional(),
   feedbackData: z.string().nullable().optional(),
   overallRating: z.number().int().nullable().optional(),
+  questionnaireRevisionId: z.string().uuid().nullable().optional(),
+  responses: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
   submittedAt: z.string().datetime().optional(),
   testerUserId: z.string().uuid().optional(),
   wouldRecommend: z.boolean().nullable().optional(),
@@ -26520,20 +27915,16 @@ TestingLabTestingEventFeedbackProjectionSchema = z.object({
 TestingLabTestingEventFeedbackReviewProjectionSchema = z.object({
   applicationId: z.string().uuid().optional(),
   eventId: z.string().uuid().optional(),
-  feedback: z
-    .lazy(() => TestingLabTestingEventFeedbackProjectionSchema)
-    .optional(),
+  feedback: z.lazy(() => TestingLabTestingEventFeedbackProjectionSchema).optional(),
   fulfilledAt: z.string().datetime().nullable().optional(),
   obligationId: z.string().uuid().optional(),
   slotId: z.string().uuid().optional(),
-  status: z
-    .lazy(() => TestingLabTestingFeedbackObligationStatusSchema)
-    .optional(),
+  status: z.lazy(() => TestingLabTestingFeedbackObligationStatusSchema).optional(),
   testerUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabTestingEventMode */
-TestingLabTestingEventModeSchema = z.enum(["Online", "InPerson", "Hybrid"]);
+TestingLabTestingEventModeSchema = z.enum(['Online', 'InPerson', 'Hybrid']);
 
 /** Zod schema for TestingLabTestingEventProjection */
 TestingLabTestingEventProjectionSchema = z.object({
@@ -26541,17 +27932,14 @@ TestingLabTestingEventProjectionSchema = z.object({
   applicationCount: z.number().int().optional(),
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
-  approvalMode: z
-    .lazy(() => TestingLabTestingEventApprovalModeSchema)
-    .optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
   cohortId: z.string().uuid().nullable().optional(),
+  configuration: z.lazy(() => TestingLabTestingEventConfigurationProjectionSchema).optional(),
   courseId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
   learningActivityId: z.string().uuid().nullable().optional(),
-  learningCompletionRequirement: z
-    .lazy(() => TestingLabTestingLearningCompletionRequirementSchema)
-    .optional(),
+  learningCompletionRequirement: z.lazy(() => TestingLabTestingLearningCompletionRequirementSchema).optional(),
   managerUserId: z.string().uuid().optional(),
   mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
   name: z.string().nullable().optional(),
@@ -26560,9 +27948,7 @@ TestingLabTestingEventProjectionSchema = z.object({
     .nullable()
     .optional(),
   recurrenceEndsAt: z.string().datetime().nullable().optional(),
-  recurrenceFrequency: z
-    .lazy(() => TestingLabTestingEventRecurrenceFrequencySchema)
-    .optional(),
+  recurrenceFrequency: z.lazy(() => TestingLabTestingEventRecurrenceFrequencySchema).optional(),
   recurrenceInterval: z.number().int().nullable().optional(),
   recurrenceOccurrence: z.number().int().nullable().optional(),
   recurrenceOccurrenceCount: z.number().int().nullable().optional(),
@@ -26575,11 +27961,7 @@ TestingLabTestingEventProjectionSchema = z.object({
 });
 
 /** Zod schema for TestingLabTestingEventRecurrenceFrequency */
-TestingLabTestingEventRecurrenceFrequencySchema = z.enum([
-  "Daily",
-  "Weekly",
-  "Monthly",
-]);
+TestingLabTestingEventRecurrenceFrequencySchema = z.enum(['Daily', 'Weekly', 'Monthly']);
 
 /** Zod schema for TestingLabTestingEventRecurrenceInput */
 TestingLabTestingEventRecurrenceInputSchema = z.object({
@@ -26588,9 +27970,7 @@ TestingLabTestingEventRecurrenceInputSchema = z.object({
     .nullable()
     .optional(),
   endsAt: z.string().datetime().nullable().optional(),
-  frequency: z
-    .lazy(() => TestingLabTestingEventRecurrenceFrequencySchema)
-    .optional(),
+  frequency: z.lazy(() => TestingLabTestingEventRecurrenceFrequencySchema).optional(),
   interval: z.number().int().optional(),
   occurrenceCount: z.number().int().nullable().optional(),
 });
@@ -26644,23 +28024,41 @@ TestingLabTestingEventSlotProjectionSchema = z.object({
 });
 
 /** Zod schema for TestingLabTestingEventStatus */
-TestingLabTestingEventStatusSchema = z.enum([
-  "Draft",
-  "ApplicationsOpen",
-  "ApplicationsClosed",
-  "Scheduled",
-  "Active",
-  "Completed",
-  "Cancelled",
-]);
+TestingLabTestingEventStatusSchema = z.enum(['Draft', 'ApplicationsOpen', 'ApplicationsClosed', 'Scheduled', 'Active', 'Completed', 'Cancelled']);
+
+/** Zod schema for TestingLabTestingEventTemplateProjection */
+TestingLabTestingEventTemplateProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  currentRevision: z.lazy(() => TestingLabTestingEventTemplateRevisionProjectionSchema).optional(),
+  currentRevisionNumber: z.number().int().optional(),
+  description: z.string().nullable().optional(),
+  isArchived: z.boolean().optional(),
+  name: z.string().nullable().optional(),
+  tenantId: z.string().uuid().optional(),
+});
+
+/** Zod schema for TestingLabTestingEventTemplateRevisionProjection */
+TestingLabTestingEventTemplateRevisionProjectionSchema = z.object({
+  id: z.string().uuid().optional(),
+  candidateInstructions: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  createdByUserId: z.string().uuid().optional(),
+  defaultApprovalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  defaultMode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  defaultRequiresFeedback: z.boolean().optional(),
+  generalRules: z.string().nullable().optional(),
+  projectApplicationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+  revisionNumber: z.number().int().optional(),
+  templateId: z.string().uuid().optional(),
+  testerInstructions: z.string().nullable().optional(),
+  testerRegistrationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+});
 
 /** Zod schema for TestingLabTestingFeedback */
 TestingLabTestingFeedbackSchema = z.object({
   id: z.string().uuid().optional(),
   additionalNotes: z.string().nullable().optional(),
-  application: z
-    .lazy(() => TestingLabTestingProjectApplicationSchema)
-    .optional(),
+  application: z.lazy(() => TestingLabTestingProjectApplicationSchema).optional(),
   applicationId: z.string().uuid().nullable().optional(),
   averageQualityRating: z.number().nullable().optional(),
   createdAt: z.string().datetime(),
@@ -26686,6 +28084,7 @@ TestingLabTestingFeedbackSchema = z.object({
     .array(z.lazy(() => TestingLabFeedbackQualityRatingSchema))
     .nullable()
     .optional(),
+  questionnaireRevisionId: z.string().uuid().nullable().optional(),
   reportedAt: z.string().datetime().nullable().optional(),
   reportedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
   reportedById: z.string().uuid().nullable().optional(),
@@ -26693,6 +28092,8 @@ TestingLabTestingFeedbackSchema = z.object({
   reportReason: z.string().max(500).nullable().optional(),
   session: z.lazy(() => TestingLabTestingSessionSchema).optional(),
   sessionId: z.string().uuid().nullable().optional(),
+  structuredResponses: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
+  structuredResponsesJson: z.string().nullable().optional(),
   tenantId: z.string().uuid().nullable().optional(),
   testingContext: z.lazy(() => TestingLabTestingContextSchema),
   testingRequest: z.lazy(() => TestingLabTestingInputSchema).optional(),
@@ -26786,22 +28187,17 @@ TestingLabTestingFeedbackObligationProjectionSchema = z.object({
   eventId: z.string().uuid().optional(),
   feedbackId: z.string().uuid().nullable().optional(),
   fulfilledAt: z.string().datetime().nullable().optional(),
+  questionnaireRevisionId: z.string().uuid().nullable().optional(),
   slotId: z.string().uuid().optional(),
-  status: z
-    .lazy(() => TestingLabTestingFeedbackObligationStatusSchema)
-    .optional(),
+  status: z.lazy(() => TestingLabTestingFeedbackObligationStatusSchema).optional(),
   testerUserId: z.string().uuid().optional(),
 });
 
 /** Zod schema for TestingLabTestingFeedbackObligationStatus */
-TestingLabTestingFeedbackObligationStatusSchema = z.enum([
-  "Pending",
-  "Fulfilled",
-  "Waived",
-]);
+TestingLabTestingFeedbackObligationStatusSchema = z.enum(['Pending', 'Fulfilled', 'Waived']);
 
 /** Zod schema for TestingLabTestingFeedbackSource */
-TestingLabTestingFeedbackSourceSchema = z.enum(["Request", "Event"]);
+TestingLabTestingFeedbackSourceSchema = z.enum(['Request', 'Event']);
 
 /** Zod schema for TestingLabTestingInput */
 TestingLabTestingInputSchema = z.object({
@@ -26863,21 +28259,15 @@ TestingLabTestingInputSchema = z.object({
 
 /** Zod schema for TestingLabTestingLabAnalyticsReportProjection */
 TestingLabTestingLabAnalyticsReportProjectionSchema = z.object({
-  current: z
-    .lazy(() => TestingLabTestingLabAnalyticsSummaryProjectionSchema)
-    .optional(),
+  current: z.lazy(() => TestingLabTestingLabAnalyticsSummaryProjectionSchema).optional(),
   events: z
     .array(z.lazy(() => TestingLabTestingLabEventAnalyticsProjectionSchema))
     .nullable()
     .optional(),
   fromDate: z.string().datetime().optional(),
   generatedAt: z.string().datetime().optional(),
-  locations: z
-    .lazy(() => TestingLabTestingLabLocationAnalyticsProjectionSchema)
-    .optional(),
-  previous: z
-    .lazy(() => TestingLabTestingLabAnalyticsSummaryProjectionSchema)
-    .optional(),
+  locations: z.lazy(() => TestingLabTestingLabLocationAnalyticsProjectionSchema).optional(),
+  previous: z.lazy(() => TestingLabTestingLabAnalyticsSummaryProjectionSchema).optional(),
   toDate: z.string().datetime().optional(),
   trend: z
     .array(z.lazy(() => TestingLabTestingLabAnalyticsTrendProjectionSchema))
@@ -26997,6 +28387,7 @@ TestingLabTestingLabSettingsSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
   timezone: z.string().nullable().optional(),
   updatedAt: z.string().datetime().optional(),
+  versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
 /** Zod schema for TestingLabTestingLearningCompletionRequirement. A comma-separated combination of the declared flag names. */
@@ -27044,7 +28435,7 @@ TestingLabTestingLocationSchema = z.object({
 });
 
 /** Zod schema for TestingLabTestingMode */
-TestingLabTestingModeSchema = z.enum(["Online", "InPerson", "Hybrid"]);
+TestingLabTestingModeSchema = z.enum(['Online', 'InPerson', 'Hybrid']);
 
 /** Zod schema for TestingLabTestingParticipant */
 TestingLabTestingParticipantSchema = z.object({
@@ -27101,9 +28492,7 @@ TestingLabTestingParticipantDirectoryItemProjectionSchema = z.object({
   roomName: z.string().nullable().optional(),
   slotId: z.string().uuid().optional(),
   startsAt: z.string().datetime().optional(),
-  status: z
-    .lazy(() => TestingLabTestingSlotRegistrationStatusSchema)
-    .optional(),
+  status: z.lazy(() => TestingLabTestingSlotRegistrationStatusSchema).optional(),
   userEmail: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
   userName: z.string().nullable().optional(),
@@ -27116,9 +28505,7 @@ TestingLabTestingParticipantDirectoryProjectionSchema = z.object({
   checkedInCount: z.number().int().optional(),
   completedCount: z.number().int().optional(),
   items: z
-    .array(
-      z.lazy(() => TestingLabTestingParticipantDirectoryItemProjectionSchema),
-    )
+    .array(z.lazy(() => TestingLabTestingParticipantDirectoryItemProjectionSchema))
     .nullable()
     .optional(),
   noShowCount: z.number().int().optional(),
@@ -27137,14 +28524,17 @@ TestingLabTestingParticipantMutationProjectionSchema = z.object({
 });
 
 /** Zod schema for TestingLabTestingPriority */
-TestingLabTestingPrioritySchema = z.enum(["Low", "Medium", "High", "Critical"]);
+TestingLabTestingPrioritySchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
 
 /** Zod schema for TestingLabTestingProjectApplication */
 TestingLabTestingProjectApplicationSchema = z.object({
   id: z.string().uuid().optional(),
   assignedSlot: z.lazy(() => TestingLabTestingEventSlotSchema).optional(),
   assignedSlotId: z.string().uuid().nullable().optional(),
+  brief: z.lazy(() => TestingLabTestingProjectBriefSchema).optional(),
+  briefJson: z.string().nullable().optional(),
   createdAt: z.string().datetime(),
+  currentQuestionnaireRevisionId: z.string().uuid().nullable().optional(),
   decidedAt: z.string().datetime().nullable().optional(),
   decidedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
   decidedByUserId: z.string().uuid().nullable().optional(),
@@ -27155,6 +28545,8 @@ TestingLabTestingProjectApplicationSchema = z.object({
     .nullable()
     .optional(),
   event: z.lazy(() => TestingLabTestingEventSchema).optional(),
+  eventApplicationResponse: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
+  eventApplicationResponseJson: z.string().nullable().optional(),
   eventId: z.string().uuid().optional(),
   isDeleted: z.boolean().optional(),
   isGlobal: z.boolean().optional(),
@@ -27164,7 +28556,13 @@ TestingLabTestingProjectApplicationSchema = z.object({
   projectId: z.string().uuid().optional(),
   projectVersion: z.lazy(() => ProjectsProjectVersionSchema).optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
+  questionnaireRevisions: z
+    .array(z.lazy(() => TestingLabTestingQuestionnaireRevisionSchema))
+    .nullable()
+    .optional(),
+  rulesAcceptedAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => TestingLabTestingApplicationStatusSchema).optional(),
+  submissionVersionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
   submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
   submittedAssetReferenceIdsJson: z.string().max(10000).nullable().optional(),
   submittedBy: z.lazy(() => IdentityUsersUserSchema).optional(),
@@ -27182,20 +28580,58 @@ TestingLabTestingProjectApplicationSchema = z.object({
 TestingLabTestingProjectApplicationProjectionSchema = z.object({
   id: z.string().uuid().optional(),
   assignedSlotId: z.string().uuid().nullable().optional(),
+  brief: z.lazy(() => TestingLabTestingProjectBriefSchema).optional(),
+  currentQuestionnaireRevisionId: z.string().uuid().nullable().optional(),
   decidedAt: z.string().datetime().nullable().optional(),
   decidedByUserId: z.string().uuid().nullable().optional(),
   decisionRationale: z.string().nullable().optional(),
+  eventApplicationResponse: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
   eventId: z.string().uuid().optional(),
+  feedbackQuestionnaire: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
   preferredAvailability: z.string().nullable().optional(),
   projectId: z.string().uuid().optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
+  rulesAcceptedAt: z.string().datetime().nullable().optional(),
   status: z.lazy(() => TestingLabTestingApplicationStatusSchema).optional(),
+  submissionVersionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
   submittedAssetReferenceIds: z.array(z.string().uuid()).nullable().optional(),
   submittedByUserId: z.string().uuid().optional(),
   votes: z
     .array(z.lazy(() => TestingLabTestingApplicationVoteProjectionSchema))
     .nullable()
     .optional(),
+});
+
+/** Zod schema for TestingLabTestingProjectBrief */
+TestingLabTestingProjectBriefSchema = z.object({
+  controls: z.string().nullable().optional(),
+  installationAndAccess: z.string().nullable().optional(),
+  knownLimitations: z.string().nullable().optional(),
+  links: z.array(z.string()).nullable().optional(),
+  testObjective: z.string().nullable().optional(),
+  testTasks: z.array(z.string()).nullable().optional(),
+});
+
+/** Zod schema for TestingLabTestingQuestionnaireRevision */
+TestingLabTestingQuestionnaireRevisionSchema = z.object({
+  id: z.string().uuid().optional(),
+  applicationId: z.string().uuid().optional(),
+  createdAt: z.string().datetime(),
+  createdByUserId: z.string().uuid().optional(),
+  deletedAt: z.string().datetime().nullable().optional(),
+  domainEvents: z
+    .array(z.lazy(() => CQRSIDomainEventSchema))
+    .nullable()
+    .optional(),
+  isDeleted: z.boolean().optional(),
+  isGlobal: z.boolean().optional(),
+  isNew: z.boolean().optional(),
+  revisionNumber: z.number().int().optional(),
+  schema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+  schemaJson: z.string().min(1),
+  tenantId: z.string().uuid().nullable().optional(),
+  updatedAt: z.string().datetime(),
+  version: z.number().int().optional(),
 });
 
 /** Zod schema for TestingLabTestingRequestDetailProjection */
@@ -27209,9 +28645,7 @@ TestingLabTestingRequestDetailProjectionSchema = z.object({
   instructionsContent: z.string().nullable().optional(),
   isDeleted: z.boolean().optional(),
   maxTesters: z.number().int().nullable().optional(),
-  projectVersion: z
-    .lazy(() => TestingLabTestingRequestProjectVersionProjectionSchema)
-    .optional(),
+  projectVersion: z.lazy(() => TestingLabTestingRequestProjectVersionProjectionSchema).optional(),
   projectVersionId: z.string().uuid().nullable().optional(),
   startDate: z.string().datetime().optional(),
   status: z.lazy(() => TestingLabTestingRequestStatusSchema).optional(),
@@ -27228,24 +28662,14 @@ TestingLabTestingRequestProjectProjectionSchema = z.object({
 /** Zod schema for TestingLabTestingRequestProjectVersionProjection */
 TestingLabTestingRequestProjectVersionProjectionSchema = z.object({
   id: z.string().uuid().optional(),
-  project: z
-    .lazy(() => TestingLabTestingRequestProjectProjectionSchema)
-    .optional(),
+  project: z.lazy(() => TestingLabTestingRequestProjectProjectionSchema).optional(),
   projectId: z.string().uuid().optional(),
-  status: z.string().nullable().optional(),
+  status: z.lazy(() => ProjectsProjectVersionStatusSchema).optional(),
   versionNumber: z.string().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingRequestStatus */
-TestingLabTestingRequestStatusSchema = z.enum([
-  "Draft",
-  "Open",
-  "Active",
-  "InProgress",
-  "Paused",
-  "Completed",
-  "Cancelled",
-]);
+TestingLabTestingRequestStatusSchema = z.enum(['Draft', 'Open', 'Active', 'InProgress', 'Paused', 'Completed', 'Cancelled']);
 
 /** Zod schema for TestingLabTestingSession */
 TestingLabTestingSessionSchema = z.object({
@@ -27304,29 +28728,22 @@ TestingLabTestingSlotRegistrationProjectionSchema = z.object({
   checkedInAt: z.string().datetime().nullable().optional(),
   checkedOutAt: z.string().datetime().nullable().optional(),
   completedAt: z.string().datetime().nullable().optional(),
+  eventConfigurationFrozenAt: z.string().datetime().nullable().optional(),
   eventId: z.string().uuid().optional(),
   notes: z.string().nullable().optional(),
   pendingFeedbackCount: z.number().int().optional(),
   promotedAt: z.string().datetime().nullable().optional(),
   registeredAt: z.string().datetime().optional(),
+  registrationResponse: z.lazy(() => TestingLabQuestionnaireOutputSchema).optional(),
+  rulesAcceptedAt: z.string().datetime().nullable().optional(),
   slotId: z.string().uuid().optional(),
-  status: z
-    .lazy(() => TestingLabTestingSlotRegistrationStatusSchema)
-    .optional(),
+  status: z.lazy(() => TestingLabTestingSlotRegistrationStatusSchema).optional(),
   userId: z.string().uuid().optional(),
   waitlistPosition: z.number().int().nullable().optional(),
 });
 
 /** Zod schema for TestingLabTestingSlotRegistrationStatus */
-TestingLabTestingSlotRegistrationStatusSchema = z.enum([
-  "Registered",
-  "Waitlisted",
-  "CheckedIn",
-  "Attended",
-  "Completed",
-  "Cancelled",
-  "NoShow",
-]);
+TestingLabTestingSlotRegistrationStatusSchema = z.enum(['Registered', 'Waitlisted', 'CheckedIn', 'Attended', 'Completed', 'Cancelled', 'NoShow']);
 
 /** Zod schema for TestingLabUpdateAttendance */
 TestingLabUpdateAttendanceSchema = z.object({
@@ -27338,9 +28755,7 @@ TestingLabUpdateAttendanceSchema = z.object({
 TestingLabUpdateTestingEventInputSchema = z.object({
   applicationsCloseAt: z.string().datetime().optional(),
   applicationsOpenAt: z.string().datetime().optional(),
-  approvalMode: z
-    .lazy(() => TestingLabTestingEventApprovalModeSchema)
-    .optional(),
+  approvalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
   description: z.string().nullable().optional(),
   endsAt: z.string().datetime().optional(),
   mode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
@@ -27376,26 +28791,15 @@ TestingLabUpdateTestingLabRoleInputSchema = z.object({
 /** Zod schema for TestingLabUpdateTestingLabSettings */
 TestingLabUpdateTestingLabSettingsSchema = z.object({
   allowPublicSignups: z.boolean().nullable().optional(),
-  defaultSessionDuration: z
-    .number()
-    .int()
-    .min(15)
-    .max(480)
-    .nullable()
-    .optional(),
+  defaultSessionDuration: z.number().int().min(15).max(480).nullable().optional(),
   description: z.string().max(1000).nullable().optional(),
   enableNotifications: z.boolean().nullable().optional(),
   labName: z.string().max(255).nullable().optional(),
-  maxSimultaneousSessions: z
-    .number()
-    .int()
-    .min(1)
-    .max(100)
-    .nullable()
-    .optional(),
+  maxSimultaneousSessions: z.number().int().min(1).max(100).nullable().optional(),
   reminderDaysBefore: z.string().nullable().optional(),
   requireApproval: z.boolean().nullable().optional(),
   timezone: z.string().max(50).nullable().optional(),
+  versionSubmissionPolicy: z.lazy(() => ProjectsVersionSubmissionPolicySchema).optional(),
 });
 
 /** Zod schema for TestingLabUpdateTestingLocation */
@@ -27437,6 +28841,20 @@ TestingLabUpsertTestingEventSlotInputSchema = z.object({
   startsAt: z.string().datetime().optional(),
 });
 
+/** Zod schema for TestingLabUpsertTestingEventTemplateInput */
+TestingLabUpsertTestingEventTemplateInputSchema = z.object({
+  candidateInstructions: z.string().nullable().optional(),
+  defaultApprovalMode: z.lazy(() => TestingLabTestingEventApprovalModeSchema).optional(),
+  defaultMode: z.lazy(() => TestingLabTestingEventModeSchema).optional(),
+  defaultRequiresFeedback: z.boolean().optional(),
+  description: z.string().nullable().optional(),
+  generalRules: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  projectApplicationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+  testerInstructions: z.string().nullable().optional(),
+  testerRegistrationSchema: z.lazy(() => TestingLabQuestionnaireSchemaSchema).optional(),
+});
+
 /** Zod schema for TestingLabUserTestingLabPermissions */
 TestingLabUserTestingLabPermissionsSchema = z.object({
   assignedRoles: z.array(z.string()).nullable().optional(),
@@ -27448,3 +28866,24 @@ TestingLabUserTestingLabPermissionsSchema = z.object({
   tenantId: z.string().uuid().nullable().optional(),
   userId: z.string().uuid().optional(),
 });
+
+/** Zod schema for TrustSafetyTrustSafetyAppeal */
+TrustSafetyTrustSafetyAppealSchema = z.object({
+  id: z.string().uuid().optional(),
+  assignedTo: z.string().uuid().nullable().optional(),
+  decidedAt: z.string().datetime().nullable().optional(),
+  decidedBy: z.string().uuid().nullable().optional(),
+  decisionEvidenceHash: z.string().nullable().optional(),
+  reasonCode: z.string().nullable().optional(),
+  restrictionReferenceHash: z.string().nullable().optional(),
+  state: z.lazy(() => TrustSafetyTrustSafetyAppealStateSchema).optional(),
+  subjectHash: z.string().nullable().optional(),
+  submissionEvidenceHash: z.string().nullable().optional(),
+  submittedAt: z.string().datetime().optional(),
+  submittedBy: z.string().uuid().optional(),
+  tenantId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for TrustSafetyTrustSafetyAppealState */
+TrustSafetyTrustSafetyAppealStateSchema = z.enum(['Submitted', 'Assigned', 'Upheld', 'Overturned']);

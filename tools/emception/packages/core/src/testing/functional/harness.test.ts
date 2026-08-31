@@ -4,14 +4,12 @@
 //   (a) mapCppType for all 4 v1 types.
 //   (b) serializeCppLiteral for all 4 v1 types.
 //   (c) throws on Array/Dictionary in both mapCppType and serializeCppLiteral.
-//   (d) generated source includes the doctest include, <string>, the
-//       `extern "C"` forward decl with correct types, the TEST_CASE block,
-//       and the CHECK macro with correctly serialized arguments.
+//   (d) generated source is a self-contained runner with <string>, the
+//       `extern "C"` forward decl with correct types, and serialized checks.
 //   (e) escapeCppString handles `"`, `\`, newline, tab.
 //   (f) integration smoke (gated on `EMCEPTION_SMOKE`): writes the harness
 //       + a stub student function into an emception workspace and runs
-//       `runTests` to prove the harness compiles and the doctest.h path
-//       resolves.
+//       `runTests` to prove the harness compiles and executes.
 //
 // Run: `node --test packages/core/src/testing/functional/harness.test.ts`
 // (Node 24 strips types).
@@ -160,16 +158,24 @@ test('generateDoctestHarness: produces correct shape for int add(int, int)', () 
 
     assert.equal(out.filename, 'functional_0_test.cpp');
 
-    // (d1) doctest include
-    assert.match(out.source, /^#include "doctest\.h"$/m);
-    // (d2) <string> include
-    assert.match(out.source, /^#include <string>$/m);
+    // (d1) standalone runtime declarations (no external test or C++ headers
+    // for the common numeric case).
+    assert.doesNotMatch(out.source, /#include <cstdio>/);
+    assert.doesNotMatch(out.source, /#include <cstdlib>/);
+    assert.doesNotMatch(out.source, /doctest\.h/);
+    assert.match(out.source, /^extern "C" int printf\(const char\*, \.\.\.\);$/m);
+    assert.doesNotMatch(out.source, /^extern "C" void exit\(int\);$/m);
+    // (d2) numeric signatures do not pay for the C++ string header.
+    assert.doesNotMatch(out.source, /#include <string>/);
     // (d3) extern "C" forward decl with types only (no param names)
     assert.match(out.source, /^extern "C" int add\(int, int\);$/m);
-    // (d4) TEST_CASE block named "<index>:<functionName>"
-    assert.match(out.source, /^TEST_CASE\("0:add"\) \{$/m);
-    // (d5) CHECK macro with serialized args + expected literal
-    assert.match(out.source, /^    CHECK\(add\(2, 3\) == 5\);$/m);
+    // (d4) runner reports before the student's own main(), without declaring
+    // another main or terminating the user's program.
+    assert.match(out.source, /^struct EmceptionFunctionalTest \{$/m);
+    assert.match(out.source, /^const EmceptionFunctionalTest emceptionFunctionalTest;$/m);
+    assert.doesNotMatch(out.source, /\bexit\(/);
+    // (d5) serialized assertion checks are emitted in the runner.
+    assert.match(out.source, /^        check\(add\(2, 3\) == 5, "add\(2, 3\) == 5"\);$/m);
 });
 
 test('generateDoctestHarness: multi-case group emits ONE decl + N CHECK lines', () => {
@@ -193,18 +199,18 @@ test('generateDoctestHarness: multi-case group emits ONE decl + N CHECK lines', 
     const declMatches = out.source.match(/^extern "C" int add\(int, int\);$/gm);
     assert.equal(declMatches?.length, 1, 'extern "C" decl emitted exactly once');
 
-    // ONE TEST_CASE block
-    const testCaseMatches = out.source.match(/^TEST_CASE\("0:add"\) \{$/gm);
-    assert.equal(testCaseMatches?.length, 1, 'TEST_CASE block emitted exactly once');
+    // ONE static runner
+    const runnerMatches = out.source.match(/^struct EmceptionFunctionalTest \{$/gm);
+    assert.equal(runnerMatches?.length, 1, 'runner emitted exactly once');
 
-    // N CHECK lines (one per case), in the order the cases were supplied
-    assert.match(out.source, /^    CHECK\(add\(2, 3\) == 5\);$/m);
-    assert.match(out.source, /^    CHECK\(add\(10, 20\) == 30\);$/m);
-    const checkMatches = out.source.match(/^    CHECK\(add\(/gm);
-    assert.equal(checkMatches?.length, 2, '2 CHECK lines for 2 cases');
+    // N runner checks (one per case), in the order the cases were supplied
+    assert.match(out.source, /^        check\(add\(2, 3\) == 5, "add\(2, 3\) == 5"\);$/m);
+    assert.match(out.source, /^        check\(add\(10, 20\) == 30, "add\(10, 20\) == 30"\);$/m);
+    const checkMatches = out.source.match(/^        check\(add\(/gm);
+    assert.equal(checkMatches?.length, 2, '2 checks for 2 cases');
 });
 
-test('generateDoctestHarness: options.name overrides TEST_CASE label', () => {
+test('generateDoctestHarness: options.name identifies the standalone runner', () => {
     const out = generateDoctestHarness(
         {
             functionName: 'add',
@@ -221,7 +227,7 @@ test('generateDoctestHarness: options.name overrides TEST_CASE label', () => {
         { index: 7, name: 'add-basics' },
     );
     assert.equal(out.filename, 'functional_7_test.cpp', 'index still seeds filename');
-    assert.match(out.source, /TEST_CASE\("7:add-basics"\)/, 'label falls back to options.name');
+    assert.match(out.source, /constexpr const char\* testName = "7:add-basics";/, 'label falls back to options.name');
 });
 
 test('generateDoctestHarness: defaults index=0 when options omitted', () => {
@@ -234,7 +240,7 @@ test('generateDoctestHarness: defaults index=0 when options omitted', () => {
         [{ Inputs: [], Expected: { type: 'Integer', content: 7 } }],
     );
     assert.equal(out.filename, 'functional_0_test.cpp');
-    assert.match(out.source, /TEST_CASE\("0:one"\)/);
+    assert.match(out.source, /constexpr const char\* testName = "0:one";/);
 });
 
 test('generateDoctestHarness: String returnType → std::string decl + quoted result', () => {
@@ -249,7 +255,8 @@ test('generateDoctestHarness: String returnType → std::string decl + quoted re
     );
 
     assert.match(out.source, /^extern "C" std::string greet\(std::string\);$/m);
-    assert.match(out.source, /^    CHECK\(greet\("world"\) == "hello world"\);$/m);
+    assert.match(out.source, /^#include <string>$/m);
+    assert.match(out.source, /^        check\(greet\("world"\) == "hello world", "greet\(\\"world\\"\) == \\"hello world\\""\);$/m);
 });
 
 test('generateDoctestHarness: Boolean returnType + literal', () => {
@@ -264,7 +271,7 @@ test('generateDoctestHarness: Boolean returnType + literal', () => {
     );
 
     assert.match(out.source, /^extern "C" bool isEven\(int\);$/m);
-    assert.match(out.source, /^    CHECK\(isEven\(4\) == true\);$/m);
+    assert.match(out.source, /^        check\(isEven\(4\) == true, "isEven\(4\) == true"\);$/m);
 });
 
 test('generateDoctestHarness: Float returnType + double args', () => {
@@ -285,7 +292,7 @@ test('generateDoctestHarness: Float returnType + double args', () => {
     );
 
     assert.match(out.source, /^extern "C" double avg\(double, double\);$/m);
-    assert.match(out.source, /^    CHECK\(avg\(1\.5, 2\.5\) == 2\);$/m);
+    assert.match(out.source, /^        check\(avg\(1\.5, 2\.5\) == 2, "avg\(1\.5, 2\.5\) == 2"\);$/m);
 });
 
 test('generateDoctestHarness: re-throws on Array param (does not generate)', () => {
@@ -354,7 +361,7 @@ test('generateDoctestHarness: string content with quotes/backslash/newline/tab i
 // --- (f) Integration smoke — gated on EMCEPTION_SMOKE ----------------------
 //
 // Boots a real emception runtime (browser/worker adapter) to verify the
-// generated harness compiles and `doctest.h` resolves in the sysroot. Skipped
+// generated harness compiles and executes in the browser runtime. Skipped
 // by default — the orchestrator runs it explicitly when a runtime is present.
 //
 // Two skip gates:
@@ -380,7 +387,7 @@ test({
         try {
             // Multi-case group: signature add(int, int) → int with 2 cases.
             // Proves: (a) the harness compiles in the real worker, (b) the
-            // doctest.h path resolves, (c) both CHECK lines execute and pass.
+            // standalone runner executes, (c) both checks pass.
             const harness = generateDoctestHarness(
                 {
                     functionName: 'add',

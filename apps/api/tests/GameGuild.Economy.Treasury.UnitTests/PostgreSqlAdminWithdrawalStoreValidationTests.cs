@@ -20,6 +20,11 @@ public sealed class PostgreSqlAdminWithdrawalStoreValidationTests
             .Should().Throw<ArgumentNullException>();
         FluentActions.Invoking(() => new PostgreSqlAdminWithdrawalAuditTrail(new NonRelationalContext()))
             .Should().Throw<InvalidOperationException>();
+        FluentActions.Invoking(() => new PostgreSqlAdminWithdrawalFencingTokenAllocator(null!))
+            .Should().Throw<ArgumentNullException>();
+        FluentActions.Invoking(() => new PostgreSqlAdminWithdrawalFencingTokenAllocator(
+                new NonRelationalContext()))
+            .Should().Throw<InvalidOperationException>();
 
         using var context = new ApplicationDbContext(
             new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -51,7 +56,7 @@ public sealed class PostgreSqlAdminWithdrawalStoreValidationTests
     }
 
     private static AdminWithdrawalRun CreateRun() => new(
-        Guid.NewGuid(), new IdempotencyKey("treasury-validation"), "request-hash",
+        Guid.NewGuid(), Guid.NewGuid(), new IdempotencyKey("treasury-validation"), "request-hash",
         new DateOnly(2026, 8, 1), Guid.NewGuid(), null, WalletId.New(),
         new CoinAmount(CurrencyCode.HardCoin, 1), "asset", "destination",
         AdminWithdrawalRunState.PendingApproval, 1, 1, 1, new ReserveVersion(1),

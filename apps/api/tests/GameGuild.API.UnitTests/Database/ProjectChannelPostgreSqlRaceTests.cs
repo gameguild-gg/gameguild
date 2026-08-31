@@ -674,14 +674,8 @@ public sealed class ProjectChannelPostgreSqlRaceTests : IAsyncLifetime
         Visibility = visibility
     };
 
-    private static ProjectVersion NewProjectVersion(Project project, Guid actorId, Guid tenantId) => new()
-    {
-        Id = Guid.NewGuid(),
-        ProjectId = project.Id,
-        TenantId = tenantId,
-        VersionNumber = "1.0.0",
-        CreatedById = actorId
-    };
+    private static ProjectVersion NewProjectVersion(Project project, Guid actorId, Guid tenantId) =>
+        ProjectVersion.Create(project.Id, "1.0.0", releaseNotes: null, actorId, tenantId);
 
     private static TestingRequest NewTestingRequest(Guid projectVersionId) => new()
     {

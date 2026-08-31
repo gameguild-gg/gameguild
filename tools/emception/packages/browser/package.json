@@ -49,7 +49,11 @@
     "emception": "4.3.0",
     "@gameguild/emception-xterm": "4.3.0"
   },
+  "peerDependencies": {
+    "@xterm/xterm": "^6.0.0"
+  },
   "devDependencies": {
+    "@xterm/xterm": "^6.0.0",
     "typescript": "^5.8.3"
   }
 }

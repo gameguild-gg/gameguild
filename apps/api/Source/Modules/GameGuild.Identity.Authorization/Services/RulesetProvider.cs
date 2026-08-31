@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 using Microsoft.Extensions.Caching.Memory;
@@ -18,8 +19,9 @@ public sealed class RulesetProvider : IRulesetProvider
     ///     Tracks all cache keys for proper invalidation.
     ///     Using ConcurrentDictionary as a thread-safe set.
     /// </summary>
-    private static readonly ConcurrentDictionary<string, byte> CacheKeys = new();
+    private static readonly ConditionalWeakTable<IMemoryCache, ConcurrentDictionary<string, byte>> CacheKeySets = new();
 
+    private readonly ConcurrentDictionary<string, byte> _cacheKeys;
     private readonly ILogger<RulesetProvider> _logger;
     private readonly IMemoryCache _memoryCache;
     private readonly IPolicyDefinitionRepository _policyRepository;
@@ -31,6 +33,7 @@ public sealed class RulesetProvider : IRulesetProvider
     {
         _policyRepository = policyRepository;
         _memoryCache = memoryCache;
+        _cacheKeys = CacheKeySets.GetValue(memoryCache, _ => new ConcurrentDictionary<string, byte>());
         _logger = logger;
     }
 
@@ -67,7 +70,7 @@ public sealed class RulesetProvider : IRulesetProvider
         var ruleset = ConvertToRuleset(entity);
 
         // Track the cache key for proper invalidation
-        CacheKeys.TryAdd(cacheKey, 0);
+        _cacheKeys.TryAdd(cacheKey, 0);
 
         _memoryCache.Set(cacheKey, ruleset, new MemoryCacheEntryOptions
         {
@@ -80,7 +83,7 @@ public sealed class RulesetProvider : IRulesetProvider
                     {
                         if (key is string keyStr)
                         {
-                            CacheKeys.TryRemove(keyStr, out _);
+                            _cacheKeys.TryRemove(keyStr, out _);
                         }
                     }
                 }
@@ -93,14 +96,14 @@ public sealed class RulesetProvider : IRulesetProvider
     public void InvalidatePolicy(string policyName)
     {
         // Find all cache keys for this policy (base and tenant-specific)
-        var keysToRemove = CacheKeys.Keys
+        var keysToRemove = _cacheKeys.Keys
             .Where(k => k.StartsWith($"{CacheKeyPrefix}{policyName}", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         foreach (var key in keysToRemove)
         {
             _memoryCache.Remove(key);
-            CacheKeys.TryRemove(key, out _);
+            _cacheKeys.TryRemove(key, out _);
         }
 
         _logger.LogDebug("Invalidated {Count} cache entries for policy {PolicyName}", keysToRemove.Count, policyName);
@@ -108,13 +111,13 @@ public sealed class RulesetProvider : IRulesetProvider
 
     public void InvalidateAll()
     {
-        var keysToRemove = CacheKeys.Keys.ToList();
+        var keysToRemove = _cacheKeys.Keys.ToList();
         var count = keysToRemove.Count;
 
         foreach (var key in keysToRemove)
         {
             _memoryCache.Remove(key);
-            CacheKeys.TryRemove(key, out _);
+            _cacheKeys.TryRemove(key, out _);
         }
 
         _logger.LogInformation("Invalidated all {Count} cached rulesets", count);
@@ -122,8 +125,8 @@ public sealed class RulesetProvider : IRulesetProvider
 
     private PolicyRuleset ConvertToRuleset(PolicyDefinitionEntity entity)
     {
-        // Parse rules from JSON
         var rules = new List<RuleDefinition>();
+        var configurationIsValid = true;
 
         if (!string.IsNullOrEmpty(entity.RulesJson))
         {
@@ -136,66 +139,67 @@ public sealed class RulesetProvider : IRulesetProvider
                 {
                     rules = parsedRules;
                 }
+                else
+                {
+                    configurationIsValid = false;
+                }
             }
             catch (JsonException ex)
             {
+                configurationIsValid = false;
                 _logger.LogWarning(ex,
                     "Failed to parse RulesJson for policy {PolicyName}",
                     entity.PolicyName);
             }
         }
 
-        // Add permission rules from RequiredPermissionsJson if no explicit rules
-        if (rules.Count == 0)
+        var permissionsResult = ParseJsonArray(entity.RequiredPermissionsJson);
+        configurationIsValid &= permissionsResult.IsValid;
+        if (permissionsResult.Values.Count > 0)
         {
-            var permissions = ParseJsonArray(entity.RequiredPermissionsJson);
-            if (permissions.Count > 0)
+            rules.Add(new RuleDefinition
             {
-                rules.Add(new RuleDefinition
+                Type = RuleTypes.RequireAllPermissions,
+                Description = "Require all specified permissions",
+                Params = new Dictionary<string, JsonElement>
                 {
-                    Type = RuleTypes.RequireAllPermissions,
-                    Description = "Require all specified permissions",
-                    Params = new Dictionary<string, JsonElement>
-                    {
-                        ["permissions"] = JsonSerializer.SerializeToElement(permissions)
-                    },
-                    Enabled = true
-                });
-            }
+                    ["permissions"] = JsonSerializer.SerializeToElement(permissionsResult.Values)
+                },
+                Enabled = true
+            });
+        }
 
-            // Add role rules from RequiredRolesJson
-            var roles = ParseJsonArray(entity.RequiredRolesJson);
-            if (roles.Count > 0)
+        var rolesResult = ParseJsonArray(entity.RequiredRolesJson);
+        configurationIsValid &= rolesResult.IsValid;
+        if (rolesResult.Values.Count > 0)
+        {
+            rules.Add(new RuleDefinition
             {
-                rules.Add(new RuleDefinition
+                Type = RuleTypes.RequireAllPermissions,
+                Description = "Require all specified roles (as permissions)",
+                Params = new Dictionary<string, JsonElement>
                 {
-                    Type = RuleTypes.RequireAllPermissions,
-                    Description = "Require all specified roles (as permissions)",
-                    Params = new Dictionary<string, JsonElement>
-                    {
-                        ["permissions"] = JsonSerializer.SerializeToElement(
-                            roles.Select(r => $"role:{r}").ToList())
-                    },
-                    Enabled = true
-                });
-            }
+                    ["permissions"] = JsonSerializer.SerializeToElement(
+                        rolesResult.Values.Select(role => $"role:{role}").ToList())
+                },
+                Enabled = true
+            });
+        }
 
-            // Add ACL rules from RequireAccessControlListAccess
-            if (entity.RequireAccessControlListAccess)
+        if (entity.RequireAccessControlListAccess)
+        {
+            rules.Add(new RuleDefinition
             {
-                rules.Add(new RuleDefinition
+                Type = RuleTypes.OwnerOrAcl,
+                Description = "Check ACL access",
+                Params = new Dictionary<string, JsonElement>
                 {
-                    Type = RuleTypes.OwnerOrAcl,
-                    Description = "Check ACL access",
-                    Params = new Dictionary<string, JsonElement>
-                    {
-                        ["allowOwner"] = JsonSerializer.SerializeToElement(false),
-                        ["minimumAccessLevel"] = JsonSerializer.SerializeToElement(
-                            entity.MinimumAccessLevel ?? "Read")
-                    },
-                    Enabled = true
-                });
-            }
+                    ["allowOwner"] = JsonSerializer.SerializeToElement(false),
+                    ["minimumAccessLevel"] = JsonSerializer.SerializeToElement(
+                        entity.MinimumAccessLevel ?? "Read")
+                },
+                Enabled = true
+            });
         }
 
         return new PolicyRuleset
@@ -205,23 +209,24 @@ public sealed class RulesetProvider : IRulesetProvider
             RequireAuthentication = entity.RequireAuthentication,
             Rules = rules,
             Version = entity.PolicyVersion,
-            IsActive = entity.IsActive
+            IsActive = entity.IsActive && configurationIsValid
         };
     }
 
-    private List<string> ParseJsonArray(string? json)
+    private (List<string> Values, bool IsValid) ParseJsonArray(string? json)
     {
         if (string.IsNullOrEmpty(json))
-            return [];
+            return ([], true);
 
         try
         {
-            return JsonSerializer.Deserialize<List<string>>(json) ?? [];
+            var values = JsonSerializer.Deserialize<List<string>>(json);
+            return values is null ? ([], false) : (values, true);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to parse JSON array: {Json}", json);
-            return [];
+            return ([], false);
         }
     }
 }

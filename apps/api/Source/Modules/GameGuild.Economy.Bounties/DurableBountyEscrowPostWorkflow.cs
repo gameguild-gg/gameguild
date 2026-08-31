@@ -1,5 +1,8 @@
+using System.Data;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
+using GameGuild.Economy.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Economy.Bounties;
 
@@ -44,19 +47,15 @@ public sealed class PostgreSqlDurableBountyEscrowPostWorkflow(
     {
         Validate(request);
 
-        var replay = escrows.FindPostReplay(request.IdempotencyKey, request.RequestHash);
+        var replay = escrows.FindPostReplay(request.Authority.TenantId, request.IdempotencyKey, request.RequestHash);
         if (replay is not null)
-            return EnsureSameBounty(replay, request.Id);
-
-        await using var transaction = await dbContext.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        try
+            return EnsureSameBounty(replay, request.Authority.TenantId, request.Id);
+        return await PostgreSqlTransactionExecutor.ExecuteAsync(
+            dbContext, IsolationLevel.ReadCommitted, async _ =>
         {
-            replay = escrows.FindPostReplay(request.IdempotencyKey, request.RequestHash);
+            replay = escrows.FindPostReplay(request.Authority.TenantId, request.IdempotencyKey, request.RequestHash);
             if (replay is not null)
-            {
-                await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
-                return EnsureSameBounty(replay, request.Id);
-            }
+                return EnsureSameBounty(replay, request.Authority.TenantId, request.Id);
 
             var command = new PostBountyCommand(
                 request.Id,
@@ -93,9 +92,11 @@ public sealed class PostgreSqlDurableBountyEscrowPostWorkflow(
 
             var persisted = escrows.Create(new CreateBountyEscrowPersistenceCommand(
                 position,
+                request.Authority.TenantId,
                 request.IdempotencyKey,
                 request.RequestHash.Trim(),
                 receipt.PostingId));
+            EnsureSameBounty(persisted, request.Authority.TenantId, request.Id);
             var consumed = reservations.Transition(
                 request.Id.Value,
                 PersistedFragmentReservationStatus.Reserved,
@@ -104,21 +105,19 @@ public sealed class PostgreSqlDurableBountyEscrowPostWorkflow(
             if (consumed != persistedReservations.Length)
                 throw new RegisteredPostingRejectedException(
                     "Bounty FIFO reservations could not be consumed atomically with the escrow posting.");
-            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+            await Task.CompletedTask;
             return persisted;
-        }
-        catch
-        {
-            await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
-            throw;
-        }
+        }, cancellationToken).ConfigureAwait(false);
     }
 
-    private static PersistedBountyEscrow EnsureSameBounty(PersistedBountyEscrow replay, BountyId requestedId)
+    private static PersistedBountyEscrow EnsureSameBounty(
+        PersistedBountyEscrow replay,
+        Guid tenantId,
+        BountyId requestedId)
     {
-        if (replay.Id != requestedId)
+        if (replay.TenantId != tenantId || replay.Id != requestedId)
             throw new BountyIdempotencyConflictException(
-                "Bounty post idempotency key is bound to another bounty.");
+                "Bounty post idempotency key is bound to another tenant or bounty.");
         return replay;
     }
 
@@ -165,6 +164,8 @@ public sealed class PostgreSqlDurableBountyEscrowPostWorkflow(
             throw new ArgumentException("Poster ID is required.", nameof(request));
         if (request.Authority.ActorId != request.PosterId)
             throw new ArgumentException("The bounty posting authority must be the poster.", nameof(request));
+        if (request.Authority.TenantId == Guid.Empty)
+            throw new ArgumentException("The bounty posting authority must be tenant scoped.", nameof(request));
         if (request.PosterWalletId == request.EscrowWalletId)
             throw new ArgumentException("Poster and escrow wallets must be distinct.", nameof(request));
         if (request.ExpiresAt <= request.PostedAt)

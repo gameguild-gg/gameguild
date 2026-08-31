@@ -116,6 +116,18 @@ public sealed class AdRewardAccumulatorTests
             .Should().Throw<OverflowException>();
     }
 
+    [Fact]
+    public void Calculate_RejectsEveryOutOfRangeRemainder()
+    {
+        FluentActions.Invoking(() => AdRewardRationalAccumulator.Calculate(
+                Wallet, new IdempotencyKey("negative-remainder"), Policy(), 1, -1))
+            .Should().Throw<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => AdRewardRationalAccumulator.Calculate(
+                Wallet, new IdempotencyKey("large-remainder"), Policy(), 1,
+                AdRewardRationalAccumulator.CanonicalDenominator))
+            .Should().Throw<ArgumentOutOfRangeException>();
+    }
+
     private static AdNetworkPolicy Policy(
         string network = "unity",
         long version = 1,

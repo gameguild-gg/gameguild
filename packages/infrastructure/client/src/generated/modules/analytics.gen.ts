@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,20 +17,14 @@ export class AnalyticsModule {
 
   /**
    */
-  async postApiAnalyticsEvents(
-    body: Types.AnalyticsTrackAnalyticsEventCommand,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/api/analytics/events";
+  async postApiAnalyticsEvents(body: Types.AnalyticsTrackAnalyticsEventCommand): Promise<Result<void, ApiError>> {
+    const url = '/api/analytics/events';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.AnalyticsTrackAnalyticsEventCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.AnalyticsTrackAnalyticsEventCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -41,20 +35,14 @@ export class AnalyticsModule {
 
   /**
    */
-  async postApiAnalyticsFunnel(
-    body: Types.AnalyticsAnalyzeFunnelQuery,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/api/analytics/funnel";
+  async postApiAnalyticsFunnel(body: Types.AnalyticsAnalyzeFunnelQuery): Promise<Result<void, ApiError>> {
+    const url = '/api/analytics/funnel';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.AnalyticsAnalyzeFunnelQuerySchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.AnalyticsAnalyzeFunnelQuerySchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -65,14 +53,11 @@ export class AnalyticsModule {
 
   /**
    */
-  async getApiAnalyticsKpi(
-    kpiName: string,
-    query?: { startDate?: string; endDate?: string; tenantId?: string },
-  ): Promise<Result<void, ApiError>> {
+  async getApiAnalyticsKpi(kpiName: string, query?: { startDate?: string; endDate?: string; tenantId?: string }): Promise<Result<void, ApiError>> {
     const url = `/api/analytics/kpi/${kpiName}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -90,10 +75,10 @@ export class AnalyticsModule {
     granularity?: Types.AnalyticsTimeSeriesGranularity;
     tenantId?: string;
   }): Promise<Result<void, ApiError>> {
-    const url = "/api/analytics/timeseries";
+    const url = '/api/analytics/timeseries';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -111,10 +96,10 @@ export class AnalyticsModule {
     factName?: string;
     take?: number;
   }): Promise<Result<void, ApiError>> {
-    const url = "/api/analytics/warehouse/export";
+    const url = '/api/analytics/warehouse/export';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -132,37 +117,28 @@ export class AnalyticsModule {
     factName?: string;
     take?: number;
   }): Promise<Result<Array<Types.AnalyticsAnalyticsWarehouseFact>, ApiError>> {
-    const url = "/api/analytics/warehouse/facts";
+    const url = '/api/analytics/warehouse/facts';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.AnalyticsAnalyticsWarehouseFact>,
-      ApiError
-    >;
+    return result as Result<Array<Types.AnalyticsAnalyticsWarehouseFact>, ApiError>;
   }
 
   /**
    */
-  async postApiAnalyticsWarehouseRun(
-    body: Types.AnalyticsAnalyticsWarehouseRunInput,
-  ): Promise<Result<Types.AnalyticsAnalyticsWarehouseRunOutput, ApiError>> {
-    const url = "/api/analytics/warehouse/run";
+  async postApiAnalyticsWarehouseRun(body: Types.AnalyticsAnalyticsWarehouseRunInput): Promise<Result<Types.AnalyticsAnalyticsWarehouseRunOutput, ApiError>> {
+    const url = '/api/analytics/warehouse/run';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.AnalyticsAnalyticsWarehouseRunInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.AnalyticsAnalyticsWarehouseRunInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -170,11 +146,7 @@ export class AnalyticsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AnalyticsAnalyticsWarehouseRunOutputSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AnalyticsAnalyticsWarehouseRunOutputSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

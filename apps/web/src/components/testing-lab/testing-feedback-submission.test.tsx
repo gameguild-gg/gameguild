@@ -17,13 +17,21 @@ describe('TestingFeedbackSubmission', () => {
           {
             id: 'obligation-1',
             applicationId: 'application-1',
+            questionnaireRevisionId: '11111111-1111-1111-1111-111111111111',
             status: 'Pending',
+            reviewPackage: {
+              feedbackQuestionnaire: {
+                title: 'Playtest feedback',
+                questions: [{ id: 'clarity', prompt: 'What was clear?', type: 'FreeText', required: true, options: [] }],
+              },
+            },
           },
         ]}
       />,
     );
 
-    expect(screen.getByLabelText(/structured feedback/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/what was clear/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/overall rating/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /submit required feedback/i })).toBeInTheDocument();
   });
 

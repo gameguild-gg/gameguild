@@ -14,7 +14,8 @@ public sealed class TestingParticipationHandlers(
     ILogger<TestingParticipationHandlers> logger,
     IProjectLifecycleLock? capacityLock = null,
     IPublisher? publisher = null,
-    ITestingLabPermissionService? testingLabPermissionService = null) :
+    ITestingLabPermissionService? testingLabPermissionService = null,
+    IProjectAuthorizationService? projectAuthorizationService = null) :
     ICommandHandler<RegisterTestingEventSlotCommand, Result<TestingSlotRegistrationProjection>>,
     ICommandHandler<CancelTestingEventSlotRegistrationCommand, Result<TestingSlotRegistrationProjection>>,
     ICommandHandler<CheckInTestingEventRegistrationCommand, Result<TestingSlotRegistrationProjection>>,
@@ -27,6 +28,7 @@ public sealed class TestingParticipationHandlers(
     IQueryHandler<GetTestingEventSlotRegistrationsQuery, Result<IReadOnlyList<TestingSlotRegistrationProjection>>>,
     IQueryHandler<GetTestingParticipantDirectoryQuery, Result<TestingParticipantDirectoryProjection>>,
     IQueryHandler<GetMyTestingFeedbackObligationsQuery, Result<IReadOnlyList<TestingFeedbackObligationProjection>>>,
+    IQueryHandler<GetMyTestingEventFeedbackQuery, Result<IReadOnlyList<TestingEventFeedbackProjection>>>,
     IQueryHandler<GetTestingEventFeedbackQuery, Result<IReadOnlyList<TestingEventFeedbackReviewProjection>>>
 {
     private bool IsTenantAdmin => actorContextAccessor.ActorContext.IsTenantAdmin;
@@ -67,6 +69,23 @@ public sealed class TestingParticipationHandlers(
                 TestingEventStatus.Active))
             return Result.Failure<TestingSlotRegistrationProjection>(
                 Validation("Tester registration is not open for this event."));
+        if (!request.AcceptedRules)
+            return Result.Failure<TestingSlotRegistrationProjection>(Validation("The event rules must be accepted before registration."));
+        if (request.RegistrationResponse == null)
+            return Result.Failure<TestingSlotRegistrationProjection>(Validation("Tester registration responses are required."));
+        var registrationSchema = slot.Event.TesterRegistrationSchema;
+        if (registrationSchema == null || !slot.Event.ConfigurationFrozenAt.HasValue)
+            return Result.Failure<TestingSlotRegistrationProjection>(Validation("The event registration configuration is not frozen."));
+        try
+        {
+            QuestionnaireResponseValidator.EnsureValid(registrationSchema, request.RegistrationResponse);
+        }
+        catch (ArgumentException exception)
+        {
+            return Result.Failure<TestingSlotRegistrationProjection>(Validation(exception.Message));
+        }
+        var rulesAcceptedAt = SystemClock.UtcNow;
+        var configurationFrozenAt = slot.Event.ConfigurationFrozenAt.Value;
 
         var existing = await context.Set<TestingSlotRegistration>()
             .FirstOrDefaultAsync(candidate =>
@@ -100,7 +119,10 @@ public sealed class TestingParticipationHandlers(
                 actor.UserId,
                 nextPosition,
                 request.Notes,
-                actor.TenantId);
+                actor.TenantId,
+                request.RegistrationResponse,
+                rulesAcceptedAt,
+                configurationFrozenAt);
         }
         else
         {
@@ -109,7 +131,10 @@ public sealed class TestingParticipationHandlers(
                 slot.Id,
                 actor.UserId,
                 request.Notes,
-                actor.TenantId);
+                actor.TenantId,
+                request.RegistrationResponse,
+                rulesAcceptedAt,
+                configurationFrozenAt);
         }
 
         context.Set<TestingSlotRegistration>().Add(registration);
@@ -250,7 +275,8 @@ public sealed class TestingParticipationHandlers(
             loaded.Registration.SlotId,
             application.Id,
             loaded.Registration.UserId,
-            loaded.Actor!.TenantId);
+            loaded.Actor!.TenantId,
+            application.CurrentQuestionnaireRevisionId);
         if (!loaded.Registration.Event.RequiresFeedback) obligation.Waive();
         context.Set<TestingFeedbackObligation>().Add(obligation);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -300,16 +326,48 @@ public sealed class TestingParticipationHandlers(
 
         try
         {
-            var feedback = TestingFeedback.CreateForEvent(
-                obligation.EventId,
-                obligation.ApplicationId,
-                actor.UserId,
-                slotMode == TestingEventMode.InPerson ? TestingContext.InPerson : TestingContext.Online,
-                request.FeedbackData,
-                request.OverallRating,
-                request.WouldRecommend,
-                request.AdditionalNotes,
-                actor.TenantId);
+            TestingFeedback feedback;
+            var testingContext = slotMode == TestingEventMode.InPerson
+                ? TestingContext.InPerson
+                : TestingContext.Online;
+            if (obligation.QuestionnaireRevisionId.HasValue)
+            {
+                if (request.QuestionnaireRevisionId != obligation.QuestionnaireRevisionId || request.Responses == null)
+                    throw new ArgumentException("Responses for the assigned questionnaire revision are required.");
+                var revision = await context.Set<TestingQuestionnaireRevision>().AsNoTracking()
+                    .FirstOrDefaultAsync(candidate =>
+                        candidate.Id == obligation.QuestionnaireRevisionId &&
+                        candidate.ApplicationId == obligation.ApplicationId &&
+                        candidate.TenantId == actor.TenantId &&
+                        candidate.DeletedAt == null,
+                        cancellationToken).ConfigureAwait(false)
+                    ?? throw new InvalidOperationException("The assigned questionnaire revision was not found.");
+                feedback = TestingFeedback.CreateStructuredForEvent(
+                    obligation.EventId,
+                    obligation.ApplicationId,
+                    actor.UserId,
+                    testingContext,
+                    revision.Id,
+                    revision.Schema,
+                    request.Responses,
+                    request.OverallRating,
+                    request.WouldRecommend,
+                    request.AdditionalNotes,
+                    actor.TenantId);
+            }
+            else
+            {
+                feedback = TestingFeedback.CreateForEvent(
+                    obligation.EventId,
+                    obligation.ApplicationId,
+                    actor.UserId,
+                    testingContext,
+                    request.FeedbackData ?? throw new ArgumentException("Feedback data is required."),
+                    request.OverallRating,
+                    request.WouldRecommend,
+                    request.AdditionalNotes,
+                    actor.TenantId);
+            }
             context.Set<TestingFeedback>().Add(feedback);
             obligation.Fulfill(feedback.Id);
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -553,6 +611,26 @@ public sealed class TestingParticipationHandlers(
         return Result.Success<IReadOnlyList<TestingSlotRegistrationProjection>>(projections);
     }
 
+    public async Task<Result<IReadOnlyList<TestingEventFeedbackProjection>>> Handle(
+        GetMyTestingEventFeedbackQuery request,
+        CancellationToken cancellationToken)
+    {
+        var actor = await RequireActorAsync(cancellationToken).ConfigureAwait(false);
+        if (actor.Error != null)
+            return Result.Failure<IReadOnlyList<TestingEventFeedbackProjection>>(actor.Error);
+        var query = context.Set<TestingFeedback>().AsNoTracking().Where(feedback =>
+            feedback.UserId == actor.UserId &&
+            feedback.TenantId == actor.TenantId &&
+            feedback.EventId.HasValue &&
+            feedback.ApplicationId.HasValue &&
+            feedback.DeletedAt == null);
+        if (request.EventId.HasValue) query = query.Where(feedback => feedback.EventId == request.EventId.Value);
+        var feedback = await query
+            .OrderByDescending(candidate => candidate.CreatedAt)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success<IReadOnlyList<TestingEventFeedbackProjection>>(feedback.Select(ToProjection).ToList());
+    }
+
     public async Task<Result<IReadOnlyList<TestingEventFeedbackReviewProjection>>> Handle(
         GetTestingEventFeedbackQuery request,
         CancellationToken cancellationToken)
@@ -576,18 +654,40 @@ public sealed class TestingParticipationHandlers(
             actor,
             TestingLabActions.Read,
             TestingLabResourceTypes.Feedback).ConfigureAwait(false);
-        if (testingEvent.ManagerUserId != actor.UserId && !IsTenantAdmin && !canReadFeedback)
-            return Result.Failure<IReadOnlyList<TestingEventFeedbackReviewProjection>>(
-                Error.Forbidden(
-                    "TestingLab.EventManagerRequired",
-                    "Only the event manager can review event feedback."));
+        var canReadAllFeedback = testingEvent.ManagerUserId == actor.UserId || IsTenantAdmin || canReadFeedback;
+        HashSet<Guid>? projectEditorApplicationIds = null;
+        if (!canReadAllFeedback)
+        {
+            if (projectAuthorizationService == null)
+                return Result.Failure<IReadOnlyList<TestingEventFeedbackReviewProjection>>(
+                    Error.Forbidden("TestingLab.FeedbackForbidden", "Feedback access is not available."));
+            var eventApplications = await context.Set<TestingProjectApplication>().AsNoTracking()
+                .Where(application =>
+                    application.EventId == request.EventId &&
+                    application.TenantId == actor.TenantId &&
+                    application.DeletedAt == null)
+                .Select(application => new { application.Id, application.ProjectId })
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
+            projectEditorApplicationIds = [];
+            foreach (var application in eventApplications)
+            {
+                if (await projectAuthorizationService.HasPermissionAsync(
+                        application.ProjectId,
+                        PermissionType.Edit,
+                        cancellationToken).ConfigureAwait(false))
+                    projectEditorApplicationIds.Add(application.Id);
+            }
+        }
 
-        var obligations = await context.Set<TestingFeedbackObligation>()
+        var obligationsQuery = context.Set<TestingFeedbackObligation>()
             .AsNoTracking()
             .Where(candidate =>
                 candidate.EventId == request.EventId &&
                 candidate.TenantId == actor.TenantId &&
-                candidate.DeletedAt == null)
+                candidate.DeletedAt == null);
+        if (!canReadAllFeedback)
+            obligationsQuery = obligationsQuery.Where(candidate => projectEditorApplicationIds!.Contains(candidate.ApplicationId));
+        var obligations = await obligationsQuery
             .OrderBy(candidate => candidate.Status)
             .ThenBy(candidate => candidate.CreatedAt)
             .ThenBy(candidate => candidate.Id)
@@ -775,7 +875,10 @@ public sealed class TestingParticipationHandlers(
             registration.CheckedInAt,
             registration.CheckedOutAt,
             registration.CompletedAt,
-            pendingFeedback);
+            pendingFeedback,
+            registration.RegistrationResponse,
+            registration.RulesAcceptedAt,
+            registration.EventConfigurationFrozenAt);
     }
 
 
@@ -841,7 +944,8 @@ public sealed class TestingParticipationHandlers(
         obligation.TesterUserId,
         obligation.FeedbackId,
         obligation.Status,
-        obligation.FulfilledAt);
+        obligation.FulfilledAt,
+        obligation.QuestionnaireRevisionId);
 
     private static TestingEventFeedbackProjection ToProjection(TestingFeedback feedback) => new(
         feedback.Id,
@@ -852,7 +956,9 @@ public sealed class TestingParticipationHandlers(
         feedback.OverallRating,
         feedback.WouldRecommend,
         feedback.AdditionalNotes,
-        feedback.CreatedAt);
+        feedback.CreatedAt,
+        feedback.QuestionnaireRevisionId,
+        feedback.StructuredResponses);
 
     private static Error Validation(string message) => Error.Validation("TestingLab.Validation", message);
 

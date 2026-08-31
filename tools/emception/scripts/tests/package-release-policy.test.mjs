@@ -17,6 +17,21 @@ const EMCEPTION_PACKAGES = [
   '@gameguild/emception-ide',
 ];
 
+const INTERNAL_RUNTIME_DEPENDENCIES = {
+  '@gameguild/emception-browser': ['emception', '@gameguild/emception-xterm'],
+  '@gameguild/emception-xterm': ['emception'],
+  '@gameguild/emception-react': ['emception', '@gameguild/emception-browser'],
+  '@gameguild/emception-webcomponent': ['emception', '@gameguild/emception-browser'],
+  '@gameguild/emception-ide': ['emception', '@gameguild/emception-browser'],
+};
+
+const INTERNAL_RUNTIME_PEERS = {
+  '@gameguild/emception-browser': ['@xterm/xterm'],
+  '@gameguild/emception-react': ['@gameguild/emception-xterm'],
+  '@gameguild/emception-webcomponent': ['@gameguild/emception-xterm'],
+  '@gameguild/emception-ide': ['@gameguild/emception-xterm'],
+};
+
 async function json(filename) {
   return JSON.parse(await readFile(filename, 'utf8'));
 }
@@ -27,6 +42,19 @@ test('published Emception packages have one version and the intended dependency 
     const manifest = await json(path.join(emceptionRoot, 'packages', directory, 'package.json'));
     return [manifest.name, manifest];
   })));
+  const releaseVersion = packages.emception.version;
+
+  for (const [consumer, dependencies] of Object.entries(INTERNAL_RUNTIME_DEPENDENCIES)) {
+    for (const dependency of dependencies) {
+      assert.equal(packages[consumer].dependencies?.[dependency], releaseVersion, `${consumer} must use ${dependency} at the release version`);
+    }
+  }
+  for (const [consumer, dependencies] of Object.entries(INTERNAL_RUNTIME_PEERS)) {
+    for (const dependency of dependencies) {
+      const expectedRange = dependency === '@xterm/xterm' ? '^6.0.0' : `^${releaseVersion}`;
+      assert.equal(packages[consumer].peerDependencies?.[dependency], expectedRange, `${consumer} must require a compatible ${dependency}`);
+    }
+  }
   const versions = new Set(EMCEPTION_PACKAGES.map((name) => packages[name].version));
 
   assert.equal(versions.size, 1);
@@ -47,6 +75,18 @@ test('private workspace links public packages without duplicating their release 
   assert.equal(workspace.private, true);
   assert.equal(workspace.dependencies['@gameguild/emception-browser'], 'workspace:*');
   assert.equal(workspace.dependencies['@gameguild/emception-xterm'], 'workspace:*');
+});
+
+test('package tests build Xterm before testing Browser from a clean checkout', async () => {
+  const workspace = await json(path.join(emceptionRoot, 'package.json'));
+  const packageTests = workspace.scripts['test:packages'];
+
+  assert.match(packageTests, /test:packages:xterm/);
+  assert.equal(
+    packageTests.indexOf('test:packages:xterm') < packageTests.indexOf('test:packages:browser'),
+    true,
+    'Browser imports Xterm declarations from its built package output',
+  );
 });
 
 test('Changesets fixes only the seven public Emception packages together', async () => {

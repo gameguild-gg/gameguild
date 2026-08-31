@@ -16,11 +16,18 @@ public sealed class AdRewardsPersistenceModelTests
 
         entities.Select(entity => entity.GetTableName()).Should().BeEquivalentTo(
             "economy_ad_network_policy_versions",
+            "economy_ad_reward_sessions",
+            "economy_ad_reward_playback_milestones",
+            "economy_ad_reward_session_events",
+            "economy_ad_reward_provider_proof_inbox",
+            "economy_ad_reward_pending_claims",
+            "economy_ad_reward_cap_consumptions",
             "economy_ad_reward_completions",
             "economy_ad_reward_accumulators",
             "economy_ad_reward_budget_consumptions",
             "economy_ad_reward_attributions",
             "economy_ad_provider_reports",
+            "economy_ad_reward_provider_batch_claims",
             "economy_ad_reward_reconciliations");
 
         Entity(entities, "economy_ad_reward_completions").GetIndexes()
@@ -29,7 +36,7 @@ public sealed class AdRewardsPersistenceModelTests
         Entity(entities, "economy_ad_provider_reports").GetIndexes()
             .Should().Contain(index => index.IsUnique &&
                 index.Properties.Select(property => property.Name)
-                    .SequenceEqual(new[] { "Network", "ReportId", "Version" }));
+                    .SequenceEqual(new[] { "TenantId", "Network", "ReportId", "Version" }));
         Entity(entities, "economy_ad_reward_reconciliations").GetCheckConstraints()
             .Should().Contain(constraint => constraint.Name == "ck_economy_ad_reward_reconciliations_conservation");
     }

@@ -29,6 +29,13 @@ public enum MarketplaceCreditPurpose
     PlatformFee = 2
 }
 
+public enum MarketplaceEntitlementStatus
+{
+    PendingGrant = 1,
+    Granted = 2,
+    Revoked = 3
+}
+
 public sealed class MarketplaceFundingFragment
 {
     public MarketplaceFundingFragment(CreditLot parentLot, FragmentSelection selection)

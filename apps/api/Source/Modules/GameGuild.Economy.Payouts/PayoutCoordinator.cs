@@ -90,7 +90,7 @@ public sealed class PayoutCoordinator
         ArgumentNullException.ThrowIfNull(request);
         ValidateRequest(request);
         var requestHash = RequestHash(request);
-        var replay = _operations.FindReplay(request.IdempotencyKey.Value, requestHash);
+        var replay = _operations.FindReplay(request.TenantId, request.IdempotencyKey.Value, requestHash);
         if (replay is not null) return replay;
         _execution.EnsureEnabled();
 
@@ -155,7 +155,7 @@ public sealed class PayoutCoordinator
 
         lock (_gate)
         {
-            replay = _operations.FindReplay(request.IdempotencyKey.Value, requestHash);
+            replay = _operations.FindReplay(request.TenantId, request.IdempotencyKey.Value, requestHash);
             if (replay is not null) return replay;
             var roots = Roots(selection);
             var rootSnapshot = _rootFences.Capture(roots);
@@ -197,7 +197,7 @@ public sealed class PayoutCoordinator
                         request.WalletId, request.Amount, account.ProviderAccountId, account.DestinationHash,
                         providerBindingHash, eligibilityHash, null, null, PayoutOperationState.Reserved, 1,
                         fencingToken, _execution.Epoch, request.ReserveVersion, request.ReserveAuthorizationEpoch,
-                        request.PolicyVersion, decision.Id, request.RequestedAt, request.RequestedAt);
+                        request.PolicyVersion, decision.Id, request.RequestedAt, request.RequestedAt, request.TenantId);
                 });
                 _operations.Add(operation);
                 return operation;
@@ -456,8 +456,9 @@ public sealed class PayoutCoordinator
 
     private static void ValidateRequest(PayoutReservationRequest request)
     {
-        if (request.OperationId == Guid.Empty || request.ActorId == Guid.Empty || request.PayeeId == Guid.Empty)
-            throw new ArgumentException("Operation, actor, and payee identities are required.", nameof(request));
+        if (request.OperationId == Guid.Empty || request.TenantId == Guid.Empty ||
+            request.ActorId == Guid.Empty || request.PayeeId == Guid.Empty)
+            throw new ArgumentException("Operation, tenant, actor, and payee identities are required.", nameof(request));
         if (request.Amount.Currency != CurrencyCode.HardCoin || request.Amount.Units <= 0)
             throw new PayoutEligibilityException("Payouts require a positive hard-coin amount.");
         ArgumentException.ThrowIfNullOrWhiteSpace(request.ExpectedProviderAccountId);

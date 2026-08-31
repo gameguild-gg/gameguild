@@ -119,18 +119,15 @@ export function createMetricsInterceptor(userConfig?: MetricsConfig): MetricsInt
   };
 
   const metrics: RequestMetrics[] = [];
-  const requestTimes = new Map<
-    string,
-    { startTime: number; requestId?: string; method: string; path: string }
-  >();
+  const requestTimes = new Map<string, { startTime: number; requestId?: string; method: string; path: string }>();
 
   const interceptor: MetricsInterceptor = {
     getMetrics: () => [...metrics],
 
     getAggregatedMetrics: (): AggregatedMetrics => {
       const total = metrics.length;
-      const successful = metrics.filter(m => m.success).length;
-      const durations = metrics.map(m => m.duration).sort((a, b) => a - b);
+      const successful = metrics.filter((m) => m.success).length;
+      const durations = metrics.map((m) => m.duration).sort((a, b) => a - b);
 
       const byStatus: Record<number, number> = {};
       const byPath: Record<string, number> = {};
@@ -215,7 +212,7 @@ export function createMetricsInterceptor(userConfig?: MetricsConfig): MetricsInt
         const timing = requestTimes.get(metricsKey);
         /* v8 ignore start */
         if (timing) {
-        /* v8 ignore stop */
+          /* v8 ignore stop */
           requestTimes.delete(metricsKey);
 
           const metric: RequestMetrics = {

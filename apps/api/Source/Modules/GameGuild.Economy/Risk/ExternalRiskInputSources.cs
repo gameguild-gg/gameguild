@@ -6,6 +6,16 @@ public interface IFinancialCrimeRiskInputSource
         string opaqueSubjectReference,
         DateTimeOffset observedAt,
         CancellationToken cancellationToken = default);
+
+    ValueTask<FinancialCrimeRiskInput> ReadAsync(
+        Guid tenantId,
+        string opaqueSubjectReference,
+        DateTimeOffset observedAt,
+        CancellationToken cancellationToken = default)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("A tenant is required.", nameof(tenantId));
+        return ReadAsync(opaqueSubjectReference, observedAt, cancellationToken);
+    }
 }
 
 public interface ITrustSafetyRiskInputSource
@@ -14,4 +24,14 @@ public interface ITrustSafetyRiskInputSource
         string opaqueSubjectReference,
         DateTimeOffset observedAt,
         CancellationToken cancellationToken = default);
+
+    ValueTask<TrustSafetyRiskInput> ReadAsync(
+        Guid tenantId,
+        string opaqueSubjectReference,
+        DateTimeOffset observedAt,
+        CancellationToken cancellationToken = default)
+    {
+        if (tenantId == Guid.Empty) throw new ArgumentException("A tenant is required.", nameof(tenantId));
+        return ReadAsync(opaqueSubjectReference, observedAt, cancellationToken);
+    }
 }

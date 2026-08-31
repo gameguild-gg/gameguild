@@ -29,8 +29,7 @@ public sealed class OwnerOrAclRuleEvaluator(IAccessControlListService aclService
         var resource = context.Resource;
         if (resource is null)
         {
-            // No resource - skip this rule (can't check ownership/ACL)
-            return RuleEvaluationResult.Skip("No resource provided for ownership/ACL check");
+            return RuleEvaluationResult.Fail("No resource provided for ownership/ACL check");
         }
 
         var allowOwner = parameters.GetBool("allowOwner", true);

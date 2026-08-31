@@ -317,7 +317,7 @@ export function LearningShell({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 disabled={isLoading || signingOut}
-                onSelect={(event) => {
+                onClick={(event) => {
                   event.preventDefault();
                   void handleSignOut();
                 }}

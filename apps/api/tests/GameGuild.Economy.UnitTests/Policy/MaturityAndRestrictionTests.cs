@@ -47,6 +47,16 @@ public sealed class MaturityAndRestrictionTests
             .Should().Be(ConfirmedAt);
         CreditLotMaturity.Assign(CurrencyCode.SoftCoin, ProvenanceKind.AdRewardSoft, ConfirmedAt)
             .Should().Be(ConfirmedAt);
+        FluentActions.Invoking(() => CreditLotMaturity.EnsureExactEarnedHard(
+                CurrencyCode.HardCoin, ProvenanceKind.EarnedHard, ConfirmedAt,
+                ConfirmedAt.Add(EconomyParity.EarnedHardMaturity)))
+            .Should().NotThrow();
+        FluentActions.Invoking(() => CreditLotMaturity.EnsureExactEarnedHard(
+                CurrencyCode.HardCoin, ProvenanceKind.PurchasedHard, ConfirmedAt, ConfirmedAt))
+            .Should().NotThrow();
+        FluentActions.Invoking(() => CreditLotMaturity.EnsureExactEarnedHard(
+                CurrencyCode.SoftCoin, ProvenanceKind.EarnedHard, ConfirmedAt, ConfirmedAt))
+            .Should().NotThrow();
     }
 
     [Fact]

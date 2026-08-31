@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   request: vi.fn(),
-  getToken: vi.fn(),
+  getRequestAuthContext: vi.fn(),
 }));
 
-vi.mock("@/auth", () => ({ getToken: mocks.getToken }));
+vi.mock("@/auth", () => ({
+  getRequestAuthContext: mocks.getRequestAuthContext,
+}));
 vi.mock("@game-guild/client", () => ({
   createServerClient: mocks.createServerClient,
 }));
@@ -19,6 +21,10 @@ import {
 describe("dashboard contexts query", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getRequestAuthContext.mockResolvedValue({
+      token: "reviewer-token",
+      tenantId: "reviewer-tenant",
+    });
     mocks.createServerClient.mockReturnValue({ request: mocks.request });
   });
 
@@ -36,6 +42,9 @@ describe("dashboard contexts query", () => {
       method: "GET",
       path: "/v1/access/capabilities",
     });
+    const clientOptions = mocks.createServerClient.mock.calls[0]?.[0];
+    expect(await clientOptions?.auth.getAccessToken()).toBe("reviewer-token");
+    expect(await clientOptions?.tenant.getTenantId()).toBe("reviewer-tenant");
     expect(result.capabilities).toEqual(["TestingLab.ManageEvents"]);
     expect(result.contexts.map((context) => context.type)).toEqual([
       "Operations",

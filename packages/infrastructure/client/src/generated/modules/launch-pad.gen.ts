@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,13 +17,11 @@ export class LaunchPadModule {
 
   /**
    */
-  async getLaunchPadForGetLaunchPad(query?: {
-    status?: Types.LaunchPadLaunchPlanStatus;
-  }): Promise<Result<Array<Types.LaunchPadLaunchPlan>, ApiError>> {
-    const url = "/v1/launch-pad";
+  async getLaunchPadForGetLaunchPad(query?: { status?: Types.LaunchPadLaunchPlanStatus }): Promise<Result<Array<Types.LaunchPadLaunchPlan>, ApiError>> {
+    const url = '/v1/launch-pad';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -34,20 +32,14 @@ export class LaunchPadModule {
 
   /**
    */
-  async postLaunchPad(
-    body: Types.LaunchPadCreateLaunchPlanInput,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/v1/launch-pad";
+  async postLaunchPad(body: Types.LaunchPadCreateLaunchPlanInput): Promise<Result<void, ApiError>> {
+    const url = '/v1/launch-pad';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LaunchPadCreateLaunchPlanInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LaunchPadCreateLaunchPlanInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -58,24 +50,18 @@ export class LaunchPadModule {
 
   /**
    */
-  async getLaunchPadForGetLaunchPadById(
-    id: string,
-  ): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+  async getLaunchPadForGetLaunchPadById(id: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
     const url = `/v1/launch-pad/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPlanSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPlanSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -84,24 +70,18 @@ export class LaunchPadModule {
 
   /**
    */
-  async postLaunchPadPublish(
-    id: string,
-  ): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+  async postLaunchPadPublish(id: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
     const url = `/v1/launch-pad/${id}:publish`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPlanSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPlanSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -110,25 +90,18 @@ export class LaunchPadModule {
 
   /**
    */
-  async postLaunchPadChecklistComplete(
-    id: string,
-    itemId: string,
-  ): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+  async postLaunchPadChecklistComplete(id: string, itemId: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
     const url = `/v1/launch-pad/${id}/checklist/${itemId}:complete`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPlanSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPlanSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -137,24 +110,18 @@ export class LaunchPadModule {
 
   /**
    */
-  async getLaunchPadProjects(
-    projectId: string,
-  ): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
+  async getLaunchPadProjects(projectId: string): Promise<Result<Types.LaunchPadLaunchPlan, ApiError>> {
     const url = `/v1/launch-pad/projects/${projectId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LaunchPadLaunchPlanSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LaunchPadLaunchPlanSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

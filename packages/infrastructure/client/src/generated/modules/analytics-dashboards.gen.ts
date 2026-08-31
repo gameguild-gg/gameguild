@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,13 +17,11 @@ export class AnalyticsDashboardsModule {
 
   /**
    */
-  async getApiAnalyticsDashboards(query?: {
-    tenantId?: string;
-  }): Promise<Result<Array<Types.AnalyticsDashboard>, ApiError>> {
-    const url = "/api/analytics/dashboards";
+  async getApiAnalyticsDashboards(query?: { tenantId?: string }): Promise<Result<Array<Types.AnalyticsDashboard>, ApiError>> {
+    const url = '/api/analytics/dashboards';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -34,20 +32,14 @@ export class AnalyticsDashboardsModule {
 
   /**
    */
-  async postApiAnalyticsDashboards(
-    body: Types.AnalyticsCreateDashboardInput,
-  ): Promise<Result<Types.AnalyticsDashboard, ApiError>> {
-    const url = "/api/analytics/dashboards";
+  async postApiAnalyticsDashboards(body: Types.AnalyticsCreateDashboardInput): Promise<Result<Types.AnalyticsDashboard, ApiError>> {
+    const url = '/api/analytics/dashboards';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.AnalyticsCreateDashboardInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.AnalyticsCreateDashboardInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -55,11 +47,7 @@ export class AnalyticsDashboardsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AnalyticsDashboardSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AnalyticsDashboardSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -68,24 +56,18 @@ export class AnalyticsDashboardsModule {
 
   /**
    */
-  async getAnalyticsDashboardById(
-    id: string,
-  ): Promise<Result<Types.AnalyticsDashboard, ApiError>> {
+  async getAnalyticsDashboardById(id: string): Promise<Result<Types.AnalyticsDashboard, ApiError>> {
     const url = `/api/analytics/dashboards/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AnalyticsDashboardSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AnalyticsDashboardSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -94,21 +76,14 @@ export class AnalyticsDashboardsModule {
 
   /**
    */
-  async putApiAnalyticsDashboards(
-    id: string,
-    body: Types.AnalyticsUpdateDashboardInput,
-  ): Promise<Result<Types.AnalyticsDashboard, ApiError>> {
+  async putApiAnalyticsDashboards(id: string, body: Types.AnalyticsUpdateDashboardInput): Promise<Result<Types.AnalyticsDashboard, ApiError>> {
     const url = `/api/analytics/dashboards/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.AnalyticsUpdateDashboardInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.AnalyticsUpdateDashboardInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -116,11 +91,7 @@ export class AnalyticsDashboardsModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.AnalyticsDashboardSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.AnalyticsDashboardSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -128,8 +99,6 @@ export class AnalyticsDashboardsModule {
   }
 }
 
-export function createAnalyticsDashboardsModule(
-  client: ApiClient,
-): AnalyticsDashboardsModule {
+export function createAnalyticsDashboardsModule(client: ApiClient): AnalyticsDashboardsModule {
   return new AnalyticsDashboardsModule(client);
 }

@@ -24,6 +24,17 @@ public sealed class TestingSlotRegistration : EntityBase
     [MaxLength(1000)]
     public string? Notes { get; private set; }
 
+    public string? RegistrationResponseJson { get; private set; }
+
+    [NotMapped]
+    public QuestionnaireResponse? RegistrationResponse => string.IsNullOrWhiteSpace(RegistrationResponseJson)
+        ? null
+        : QuestionnaireResponse.FromJson(RegistrationResponseJson);
+
+    public DateTime? RulesAcceptedAt { get; private set; }
+
+    public DateTime? EventConfigurationFrozenAt { get; private set; }
+
     public DateTime RegisteredAt { get; private set; }
 
     public DateTime? PromotedAt { get; private set; }
@@ -51,7 +62,20 @@ public sealed class TestingSlotRegistration : EntityBase
         Guid userId,
         string? notes,
         Guid? tenantId)
-        => Create(eventId, slotId, userId, TestingSlotRegistrationStatus.Registered, null, notes, tenantId);
+        => Register(eventId, slotId, userId, notes, tenantId, new QuestionnaireResponse([]),
+            SystemClock.UtcNow, SystemClock.UtcNow);
+
+    public static TestingSlotRegistration Register(
+        Guid eventId,
+        Guid slotId,
+        Guid userId,
+        string? notes,
+        Guid? tenantId,
+        QuestionnaireResponse registrationResponse,
+        DateTime rulesAcceptedAt,
+        DateTime eventConfigurationFrozenAt)
+        => Create(eventId, slotId, userId, TestingSlotRegistrationStatus.Registered, null, notes, tenantId,
+            registrationResponse, rulesAcceptedAt, eventConfigurationFrozenAt);
 
     public static TestingSlotRegistration Waitlist(
         Guid eventId,
@@ -60,9 +84,23 @@ public sealed class TestingSlotRegistration : EntityBase
         int position,
         string? notes,
         Guid? tenantId)
+        => Waitlist(eventId, slotId, userId, position, notes, tenantId, new QuestionnaireResponse([]),
+            SystemClock.UtcNow, SystemClock.UtcNow);
+
+    public static TestingSlotRegistration Waitlist(
+        Guid eventId,
+        Guid slotId,
+        Guid userId,
+        int position,
+        string? notes,
+        Guid? tenantId,
+        QuestionnaireResponse registrationResponse,
+        DateTime rulesAcceptedAt,
+        DateTime eventConfigurationFrozenAt)
     {
         if (position <= 0) throw new ArgumentOutOfRangeException(nameof(position));
-        return Create(eventId, slotId, userId, TestingSlotRegistrationStatus.Waitlisted, position, notes, tenantId);
+        return Create(eventId, slotId, userId, TestingSlotRegistrationStatus.Waitlisted, position, notes, tenantId,
+            registrationResponse, rulesAcceptedAt, eventConfigurationFrozenAt);
     }
 
     public void Promote()
@@ -137,7 +175,10 @@ public sealed class TestingSlotRegistration : EntityBase
         TestingSlotRegistrationStatus status,
         int? waitlistPosition,
         string? notes,
-        Guid? tenantId)
+        Guid? tenantId,
+        QuestionnaireResponse registrationResponse,
+        DateTime rulesAcceptedAt,
+        DateTime eventConfigurationFrozenAt)
     {
         if (eventId == Guid.Empty || slotId == Guid.Empty || userId == Guid.Empty)
             throw new ArgumentException("Event, slot, and user are required.");
@@ -151,6 +192,9 @@ public sealed class TestingSlotRegistration : EntityBase
             Status = status,
             WaitlistPosition = waitlistPosition,
             Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
+            RegistrationResponseJson = registrationResponse.ToJson(),
+            RulesAcceptedAt = rulesAcceptedAt,
+            EventConfigurationFrozenAt = eventConfigurationFrozenAt,
             RegisteredAt = SystemClock.UtcNow,
             TenantId = tenantId,
         };

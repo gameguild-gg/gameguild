@@ -19,6 +19,8 @@ public sealed class PostingMatrixTests
         PostingTemplateKind.HardToSoftConversionFee,
         PostingTemplateKind.SystemBackedGrant,
         PostingTemplateKind.AdRewardIssuance,
+        PostingTemplateKind.MarketplaceSettlement,
+        PostingTemplateKind.MarketplaceRefund,
         PostingTemplateKind.Burn,
         PostingTemplateKind.Escrow,
         PostingTemplateKind.BountyEscrow,
@@ -39,7 +41,7 @@ public sealed class PostingMatrixTests
     {
         var registered = Enum.GetValues<PostingTemplateKind>();
 
-        registered.Should().HaveCount(24);
+        registered.Should().HaveCount(26);
         registered.Select(kind => kind.ToString()).Should().NotContain(name =>
             name.Contains("Observed", StringComparison.OrdinalIgnoreCase) ||
             name.Contains("FailedMint", StringComparison.OrdinalIgnoreCase));
@@ -521,6 +523,30 @@ public sealed class PostingMatrixTests
                 valid.Lines[1] with { Provenance = ProvenanceKind.EarnedHard }
             ]
         };
+        var purchasedAccountMismatch = valid with
+        {
+            Lines =
+            [
+                valid.Lines[0],
+                valid.Lines[1] with
+                {
+                    Account = EconomyAccountCode.EarnedHardLiability,
+                    Provenance = ProvenanceKind.PurchasedHard
+                }
+            ]
+        };
+        var validEarnedReturn = valid with
+        {
+            Lines =
+            [
+                valid.Lines[0],
+                valid.Lines[1] with
+                {
+                    Account = EconomyAccountCode.EarnedHardLiability,
+                    Provenance = ProvenanceKind.EarnedHard
+                }
+            ]
+        };
         var softHardProvenance = valid with
         {
             Lines =
@@ -546,6 +572,7 @@ public sealed class PostingMatrixTests
         PostingMatrix.Validate(hardFee).IsValid.Should().BeTrue();
         PostingMatrix.Validate(softFee).IsValid.Should().BeTrue();
         PostingMatrix.Validate(validSoftReturn).IsValid.Should().BeTrue();
+        PostingMatrix.Validate(validEarnedReturn).IsValid.Should().BeTrue();
         PostingMatrix.Validate(unsupportedCurrency).Errors.Should().Contain(error =>
             error.Code == PostingErrorCode.InvalidCurrency);
         PostingMatrix.Validate(oddPairCount).Errors.Should().Contain(error =>
@@ -559,6 +586,8 @@ public sealed class PostingMatrixTests
         PostingMatrix.Validate(missingProvenance).Errors.Should().Contain(error =>
             error.Code == PostingErrorCode.InvalidProvenance);
         PostingMatrix.Validate(hardAccountMismatch).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidAccountShape);
+        PostingMatrix.Validate(purchasedAccountMismatch).Errors.Should().Contain(error =>
             error.Code == PostingErrorCode.InvalidAccountShape);
         PostingMatrix.Validate(softHardProvenance).Errors.Should().Contain(error =>
             error.Code == PostingErrorCode.InvalidProvenance);
@@ -619,6 +648,80 @@ public sealed class PostingMatrixTests
         };
 
         PostingMatrix.Validate(request).Errors.Should().Contain(error => error.Code == PostingErrorCode.InvalidParity);
+    }
+
+    [Fact]
+    public void MarketplaceRefund_AllowsExplicitSoftReceivableButRejectsAnUnrelatedSystemDebit()
+    {
+        var wallet = WalletId.New();
+        var valid = PostingFixture.Valid(PostingTemplateKind.MarketplaceRefund) with
+        {
+            Lines =
+            [
+                PostingFixture.Line(1, EntrySide.Debit, EconomyAccountCode.RecoveryReceivableSoft,
+                    CurrencyCode.SoftCoin, 25),
+                PostingFixture.Line(2, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability,
+                    CurrencyCode.SoftCoin, 25, wallet, ProvenanceKind.MarketplaceSoft)
+            ]
+        };
+
+        PostingMatrix.Validate(valid).IsValid.Should().BeTrue();
+        PostingMatrix.Validate(valid with
+        {
+            Lines =
+            [
+                valid.Lines[0] with { Account = EconomyAccountCode.SoftCoinReserve },
+                valid.Lines[1]
+            ]
+        }).Errors.Should().Contain(error => error.Code == PostingErrorCode.InvalidAccountShape);
+    }
+
+    [Fact]
+    public void MarketplaceTemplatesRejectMissingSidesAndSettlementCoversEveryCurrencyBranch()
+    {
+        var settlement = PostingFixture.Valid(PostingTemplateKind.MarketplaceSettlement);
+        var onlyCredits = settlement with
+        {
+            Lines = settlement.Lines.Select(line => line with { Side = EntrySide.Credit }).ToArray()
+        };
+        var onlyDebits = settlement with
+        {
+            Lines = settlement.Lines.Select(line => line with { Side = EntrySide.Debit }).ToArray()
+        };
+        PostingMatrix.Validate(onlyCredits).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidAccountShape);
+        PostingMatrix.Validate(onlyDebits).Errors.Should().Contain(error =>
+            error.Code == PostingErrorCode.InvalidAccountShape);
+
+        var wallet = WalletId.New();
+        var soft = settlement with
+        {
+            Lines =
+            [
+                PostingFixture.Line(1, EntrySide.Debit, EconomyAccountCode.SoftCoinLiability,
+                    CurrencyCode.SoftCoin, 10, wallet, ProvenanceKind.MarketplaceSoft),
+                PostingFixture.Line(2, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability,
+                    CurrencyCode.SoftCoin, 9, WalletId.New(), ProvenanceKind.MarketplaceSoft),
+                PostingFixture.Line(3, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability,
+                    CurrencyCode.SoftCoin, 1, WalletId.New(), ProvenanceKind.MarketplaceSoft)
+            ]
+        };
+        PostingMatrix.Validate(soft).Errors.Should().NotContain(error =>
+            error.Code == PostingErrorCode.InvalidCurrency);
+        PostingMatrix.Validate(soft with
+        {
+            Lines = [soft.Lines[0], soft.Lines[1] with { Amount = default }, soft.Lines[2]]
+        }).Errors.Should().Contain(error => error.Code == PostingErrorCode.InvalidCurrency);
+
+        var refund = PostingFixture.Valid(PostingTemplateKind.MarketplaceRefund);
+        PostingMatrix.Validate(refund with
+        {
+            Lines = refund.Lines.Select(line => line with { Side = EntrySide.Credit }).ToArray()
+        }).Errors.Should().Contain(error => error.Code == PostingErrorCode.InvalidAccountShape);
+        PostingMatrix.Validate(refund with
+        {
+            Lines = refund.Lines.Select(line => line with { Side = EntrySide.Debit }).ToArray()
+        }).Errors.Should().Contain(error => error.Code == PostingErrorCode.InvalidAccountShape);
     }
 }
 
@@ -695,6 +798,26 @@ internal static class PostingFixture
                 {
                     Line(1, EntrySide.Debit, EconomyAccountCode.SoftCoinReserve, CurrencyCode.SoftCoin, 10),
                     Line(2, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability, CurrencyCode.SoftCoin, 10, WalletId.New(), ProvenanceKind.AdRewardSoft)
+                }, null),
+            PostingTemplateKind.MarketplaceSettlement => (PostingAuthority.MarketplaceCoordinator,
+                new[]
+                {
+                    Line(1, EntrySide.Debit, EconomyAccountCode.PurchasedHardLiability,
+                        CurrencyCode.HardCoin, 10, WalletId.New(), ProvenanceKind.PurchasedHard),
+                    Line(2, EntrySide.Credit, EconomyAccountCode.EarnedHardLiability,
+                        CurrencyCode.HardCoin, 9, WalletId.New(), ProvenanceKind.EarnedHard),
+                    Line(3, EntrySide.Credit, EconomyAccountCode.EarnedHardLiability,
+                        CurrencyCode.HardCoin, 1, WalletId.New(), ProvenanceKind.EarnedHard)
+                }, null),
+            PostingTemplateKind.MarketplaceRefund => (PostingAuthority.MarketplaceCoordinator,
+                new[]
+                {
+                    Line(1, EntrySide.Debit, EconomyAccountCode.EarnedHardLiability,
+                        CurrencyCode.HardCoin, 8, WalletId.New(), ProvenanceKind.EarnedHard),
+                    Line(2, EntrySide.Debit, EconomyAccountCode.RecoveryReceivableHard,
+                        CurrencyCode.HardCoin, 2),
+                    Line(3, EntrySide.Credit, EconomyAccountCode.PurchasedHardLiability,
+                        CurrencyCode.HardCoin, 10, WalletId.New(), ProvenanceKind.PurchasedHard)
                 }, null),
             PostingTemplateKind.Burn => (PostingAuthority.WalletOwner,
                 new[]

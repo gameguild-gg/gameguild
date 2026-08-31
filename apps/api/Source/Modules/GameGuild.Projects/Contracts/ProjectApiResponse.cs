@@ -122,7 +122,7 @@ public sealed record ProjectVersionApiResponse(
     Guid ProjectId,
     string VersionNumber,
     string? ReleaseNotes,
-    string Status,
+    ProjectVersionStatus Status,
     int DownloadCount,
     Guid CreatedById,
     DateTime CreatedAt,

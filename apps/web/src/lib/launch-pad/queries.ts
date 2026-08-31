@@ -123,6 +123,12 @@ export interface LaunchPadAnalytics {
   completedRegistrations: number;
 }
 
+export interface LaunchPadSettings {
+  id?: string;
+  tenantId?: string | null;
+  versionSubmissionPolicy?: 'ReadyMutableUntilReview' | 'ReleasedImmutable';
+}
+
 export const getPublicLaunchPadEvents = cache(async (): Promise<LaunchPadEvent[]> =>
   (await launchPadApiGet<LaunchPadEvent[]>('/v1/launch-pad/events/public', 30)) ?? []);
 
@@ -151,6 +157,9 @@ export const getManagedLaunchPadRegistrations = cache(async (eventIds: string[])
 
 export const getLaunchPadAnalytics = cache(async (): Promise<LaunchPadAnalytics | null> =>
   launchPadApiGet<LaunchPadAnalytics>('/v1/launch-pad/events/analytics', 30));
+
+export const getLaunchPadSettings = cache(async (): Promise<LaunchPadSettings | null> =>
+  launchPadApiGet<LaunchPadSettings>('/v1/launch-pad/settings', 0));
 
 export const getLaunchPadDashboard = cache(async (): Promise<LaunchPlan[]> => {
   return (await launchPadApiGet<LaunchPlan[]>('/v1/launch-pad', 30)) ?? [];

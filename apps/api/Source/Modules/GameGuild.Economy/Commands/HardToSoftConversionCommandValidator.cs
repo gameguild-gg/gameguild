@@ -10,7 +10,6 @@ public sealed class ConvertMyHardToSoftCommandValidator : AbstractValidator<Conv
         When(command => command.Request is not null, () =>
         {
             RuleFor(command => command.Request.PrincipalHardCoinUnits).GreaterThan(0);
-            RuleFor(command => command.Request.FeeHardCoinUnits).GreaterThanOrEqualTo(0);
             RuleFor(command => command.Request.IdempotencyKey).NotEmpty().MaximumLength(128);
         });
     }

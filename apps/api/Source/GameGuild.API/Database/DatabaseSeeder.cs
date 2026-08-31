@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using GameGuild.LaunchPad;
 using GameGuild.Projects;
@@ -24,6 +25,8 @@ public static class DatabaseSeeder
     {
         // Ensure ApplicationDbContext is registered (validates DI configuration)
         var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
+        var policyDefinitionSeeder = serviceProvider.GetRequiredService<PolicyDefinitionSeeder>();
+        await policyDefinitionSeeder.SeedAsync().ConfigureAwait(false);
 
         // Try to get Identity managers - they may not be registered in all configurations
         var userManager = serviceProvider.GetService<UserManager<LegacyIdentityUser>>();
@@ -296,19 +299,14 @@ public static class DatabaseSeeder
             return version.IsDeleted ? null : version;
         }
 
-        version = new ProjectVersion
-        {
-            Id = Guid.NewGuid(),
-            ProjectId = project.Id,
-            VersionNumber = seed.VersionNumber,
-            CreatedById = adminUser.Id
-        };
+        version = ProjectVersion.Create(
+            project.Id,
+            seed.VersionNumber,
+            $"{seed.Title} seeded build for moderated playtesting and launch readiness.",
+            adminUser.Id,
+            project.TenantId);
+        version.MarkReadyForTesting();
         dbContext.Set<ProjectVersion>().Add(version);
-
-        version.ReleaseNotes = $"{seed.Title} seeded build for moderated playtesting and launch readiness.";
-        version.Status = "testing";
-        version.CreatedById = adminUser.Id;
-        version.Touch();
 
         await dbContext.SaveChangesAsync().ConfigureAwait(false);
         return version;

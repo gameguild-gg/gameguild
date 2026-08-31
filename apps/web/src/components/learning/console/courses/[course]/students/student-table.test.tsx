@@ -91,7 +91,7 @@ describe('StudentTable', () => {
 
     await user.clear(screen.getByPlaceholderText(/search by name or email/i));
     await user.click(screen.getByRole('combobox'));
-    await user.click(screen.getByRole('option', { name: /inactive/i }));
+    await user.click(await screen.findByRole('option', { name: /inactive/i }));
 
     expect(screen.getByText('Alan Inactive')).toBeInTheDocument();
     expect(screen.queryByText('Ada Learner')).not.toBeInTheDocument();
@@ -110,7 +110,7 @@ describe('StudentTable', () => {
     expect(screen.getByRole('button', { name: /^remove$/i })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Actions for Ada Learner' }));
-    expect(screen.getByText('View profile')).toBeInTheDocument();
+    expect(await screen.findByText('View profile')).toBeInTheDocument();
     expect(screen.getByText('View progress')).toBeInTheDocument();
     expect(screen.getByText('Remove from Course')).toBeInTheDocument();
   });
@@ -225,7 +225,7 @@ describe('StudentTable', () => {
     render(<StudentTable courseId="course-1" students={students} total={students.length} />);
 
     await user.click(screen.getAllByRole('button', { name: 'Actions for Ada Learner' })[0]);
-    expect(screen.getByRole('menuitem', { name: 'View profile' })).toHaveAttribute(
+    expect(await screen.findByRole('menuitem', { name: 'View profile' })).toHaveAttribute(
       'href',
       '/console/community/members/users/user-1',
     );

@@ -76,19 +76,36 @@ public sealed class HardToSoftConversionRiskEvidenceVerifierTests
     }
 
     [Fact]
-    public void OpaqueReference_IsStablePerActorAndTenant_AndRejectsMissingIdentity()
+    public void OpaqueReference_IsCanonicalAcrossEconomyAndCompliance_AndRejectsMissingIdentity()
     {
         var actorId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
 
-        HardToSoftConversionRiskEvidenceVerifier.CreateOpaqueSubjectReference(actorId, tenantId)
-            .Should().Be(HardToSoftConversionRiskEvidenceVerifier.CreateOpaqueSubjectReference(actorId, tenantId));
-        HardToSoftConversionRiskEvidenceVerifier.CreateOpaqueSubjectReference(actorId, tenantId)
-            .Should().NotBe(HardToSoftConversionRiskEvidenceVerifier.CreateOpaqueSubjectReference(Guid.NewGuid(), tenantId));
-        Action noActor = () => HardToSoftConversionRiskEvidenceVerifier.CreateOpaqueSubjectReference(Guid.Empty, tenantId);
-        Action noTenant = () => HardToSoftConversionRiskEvidenceVerifier.CreateOpaqueSubjectReference(actorId, Guid.Empty);
-        noActor.Should().Throw<ArgumentException>();
-        noTenant.Should().Throw<ArgumentException>();
+        var reference = EconomySubjectReference.ForUser(tenantId, actorId);
+
+        reference.Should().Be(EconomySubjectReference.ForUser(tenantId, actorId));
+        reference.Should().HaveLength(64).And.NotContain(actorId.ToString("N"));
+        reference.Should().NotBe(EconomySubjectReference.ForUser(tenantId, Guid.NewGuid()));
+        reference.Should().NotBe(EconomySubjectReference.ForUser(Guid.NewGuid(), actorId));
+        Action noActor = () => EconomySubjectReference.ForUser(tenantId, Guid.Empty);
+        Action noTenant = () => EconomySubjectReference.ForUser(Guid.Empty, actorId);
+        noActor.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("actorId");
+        noTenant.Should().Throw<ArgumentException>().Which.ParamName.Should().Be("tenantId");
+    }
+
+    [Fact]
+    public async Task TenantAwareRiskSourceOverloadsRequireTenantAndDelegateOpaqueSubject()
+    {
+        var observed = DateTimeOffset.UtcNow;
+        IFinancialCrimeRiskInputSource financial = new FinancialCrimeSource(AllowFinancialCrime(observed));
+        ITrustSafetyRiskInputSource trust = new TrustSafetySource(AllowTrustSafety(observed));
+
+        (await financial.ReadAsync(Guid.NewGuid(), "opaque", observed)).Outcome.Should().Be(ExternalRiskOutcome.Allow);
+        (await trust.ReadAsync(Guid.NewGuid(), "opaque", observed)).Outcome.Should().Be(ExternalRiskOutcome.Allow);
+        await FluentActions.Invoking(() => financial.ReadAsync(Guid.Empty, "opaque", observed).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Invoking(() => trust.ReadAsync(Guid.Empty, "opaque", observed).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
     }
 
     private static FinancialCrimeRiskInput AllowFinancialCrime(DateTimeOffset observed) => new(

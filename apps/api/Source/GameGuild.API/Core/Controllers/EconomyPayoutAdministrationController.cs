@@ -124,6 +124,6 @@ public sealed class EconomyPayoutAdministrationController(
     {
         var actor = actorContextAccessor.ActorContext;
         return actor.IsAuthenticated && actor.SubjectIdAsGuid.HasValue && actor.TenantId.HasValue &&
-               actor.HasPermission(WalletsPermission.Keys.Admin);
+               actor.HasPermission(EconomyPermission.Keys.ReviewPayouts);
     }
 }

@@ -15,7 +15,6 @@ export function MediaViewer({ url }: { url: string }): React.JSX.Element {
   if (isAudioUrl(url)) {
     return (
       <div data-testid="media-viewer" className="rounded-md border bg-card p-4">
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption -- submitted media carries no captions */}
         <audio data-testid="media-audio" src={url} controls className="w-full">
           <a href={url}>Download audio</a>
         </audio>
@@ -24,7 +23,6 @@ export function MediaViewer({ url }: { url: string }): React.JSX.Element {
   }
   return (
     <div data-testid="media-viewer" className="rounded-md border bg-card p-4">
-      {/* eslint-disable-next-line jsx-a11y/media-has-caption -- submitted media carries no captions */}
       <video data-testid="media-video" src={url} controls className="max-h-[70vh] w-full">
         <a href={url}>Download video</a>
       </video>

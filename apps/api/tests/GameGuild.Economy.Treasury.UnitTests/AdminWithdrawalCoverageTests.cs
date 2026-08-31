@@ -30,7 +30,7 @@ public sealed partial class AdminWithdrawalWorkflowTests
     public void DispatchContractExposesEveryFencedField()
     {
         var command = new AdminWithdrawalDispatchCommand(
-            Guid.NewGuid(), 2, 3, 4, new CoinAmount(CurrencyCode.HardCoin, 5),
+            Guid.NewGuid(), Guid.NewGuid(), 2, 3, 4, new CoinAmount(CurrencyCode.HardCoin, 5),
             "asset", "destination", "snapshot", "idempotency", Now);
 
         command.ExpectedVersion.Should().Be(2);
@@ -633,7 +633,7 @@ public sealed partial class AdminWithdrawalWorkflowTests
     private static AdminWithdrawalProviderReceipt ReceiptFor(
         AdminWithdrawalDispatchCommand command,
         AdminWithdrawalProviderOutcome outcome) => new(
-        command.RunId, outcome, "transfer-1", command.FencingToken,
+        command.RunId, command.TenantId, outcome, "transfer-1", command.FencingToken,
         command.ExecutionEpoch, command.Amount, command.SourceAssetKey,
         command.DestinationHash, "receipt", "signature", command.RequestedAt);
 
@@ -641,7 +641,7 @@ public sealed partial class AdminWithdrawalWorkflowTests
         AdminWithdrawalRun run,
         AdminWithdrawalProviderOutcome outcome,
         string eventId) => new(
-        eventId, run.Id, outcome, run.ProviderTransferId ?? "transfer-1",
+        eventId, run.Id, run.TenantId, outcome, run.ProviderTransferId ?? "transfer-1",
         run.FencingToken, run.ExecutionEpoch, run.Amount, run.SourceAssetKey,
         run.DestinationHash, "event", "signature", Now.AddMinutes(1));
 
@@ -726,7 +726,7 @@ public sealed partial class AdminWithdrawalWorkflowTests
         ]);
     }
     private static AdminWithdrawalRun StandaloneRun() => new(
-        Guid.NewGuid(), new IdempotencyKey("standalone"), "request-hash",
+        Guid.NewGuid(), Guid.NewGuid(), new IdempotencyKey("standalone"), "request-hash",
         new DateOnly(2026, 8, 1), Guid.NewGuid(), null, WalletId.New(),
         new CoinAmount(CurrencyCode.HardCoin, 10), "asset", "destination",
         AdminWithdrawalRunState.PendingApproval, 1, 1, 1,

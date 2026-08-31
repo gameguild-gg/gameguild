@@ -17,12 +17,11 @@ public sealed class HardToSoftConversionWorkflowTests
     {
         var postingId = Guid.NewGuid();
         var feePostingId = Guid.NewGuid();
-        var request = new SelfServiceHardToSoftConversionRequest(100, 3, "conversion-key");
+        var request = new SelfServiceHardToSoftConversionRequest(100, "conversion-key");
         var receipt = new SelfServiceHardToSoftConversionReceipt(postingId, feePostingId, 17, "journal-hash", true);
         var rejection = new EconomySelfServiceCommandRejectedException("rejected");
 
         request.PrincipalHardCoinUnits.Should().Be(100);
-        request.FeeHardCoinUnits.Should().Be(3);
         request.IdempotencyKey.Should().Be("conversion-key");
         receipt.PrincipalPostingId.Should().Be(postingId);
         receipt.FeePostingId.Should().Be(feePostingId);
@@ -71,13 +70,11 @@ public sealed class HardToSoftConversionWorkflowTests
         Func<Task> nullRequest = () => workflow.ConvertAsync(null!, CancellationToken.None);
         Func<Task> cancelled = () => workflow.ConvertAsync(valid, new CancellationToken(canceled: true));
         Func<Task> invalidPrincipal = () => workflow.ConvertAsync(valid with { PrincipalHardCoinUnits = 0 }, CancellationToken.None);
-        Func<Task> invalidFee = () => workflow.ConvertAsync(valid with { FeeHardCoinUnits = -1 }, CancellationToken.None);
         Func<Task> emptyIdempotencyKey = () => workflow.ConvertAsync(valid with { IdempotencyKey = string.Empty }, CancellationToken.None);
 
         await nullRequest.Should().ThrowAsync<ArgumentNullException>();
         await cancelled.Should().ThrowAsync<OperationCanceledException>();
         await invalidPrincipal.Should().ThrowAsync<ArgumentOutOfRangeException>();
-        await invalidFee.Should().ThrowAsync<ArgumentOutOfRangeException>();
         await emptyIdempotencyKey.Should().ThrowAsync<ArgumentException>();
         enabled.EnsuredCapabilities.Should().OnlyContain(capability => capability == EconomyValueMovementCapability.ConvertHardToSoft);
     }
@@ -158,7 +155,8 @@ public sealed class HardToSoftConversionWorkflowTests
                 .WithMessage("*issuer rejected*");
             issuer.Requests.Should().ContainSingle().Which.Should().Match<HardToSoftConversionRiskDecisionRequest>(issued =>
                 issued.ActorId == actorId && issued.TenantId == tenantId &&
-                issued.TotalHardCoinUnits == request.PrincipalHardCoinUnits + request.FeeHardCoinUnits);
+                issued.TotalHardCoinUnits == request.PrincipalHardCoinUnits &&
+                issued.PolicyVersion == 7 && issued.JurisdictionCode == "BRA");
         }
         finally
         {
@@ -234,11 +232,11 @@ public sealed class HardToSoftConversionWorkflowTests
                 context,
                 accessor,
                 new EnabledGate(),
+                policyResolver: new FixedPolicyResolver(feeHardCoinUnits),
                 riskDecisionIssuer: new FixedRiskDecisionIssuer(decisionId, [rootId]));
             return await workflow.ConvertAsync(
                 new SelfServiceHardToSoftConversionRequest(
                     principalHardCoinUnits,
-                    feeHardCoinUnits,
                     key),
                 CancellationToken.None);
         }
@@ -255,7 +253,6 @@ public sealed class HardToSoftConversionWorkflowTests
 
     private static SelfServiceHardToSoftConversionRequest Request() => new(
         100,
-        0,
         $"conversion-{Guid.NewGuid():N}");
 
     private static PostgreSqlHardToSoftConversionWorkflow CreateWorkflow(
@@ -263,12 +260,14 @@ public sealed class HardToSoftConversionWorkflowTests
         ActorContextAccessor accessor,
         IEconomyValueMovementDecisionGate gate,
         IHardToSoftConversionRiskEvidenceVerifier? evidenceVerifier = null,
+        IHardToSoftConversionPolicyResolver? policyResolver = null,
         IHardToSoftConversionRiskDecisionIssuer? riskDecisionIssuer = null) =>
         new(
             context,
             accessor,
             gate,
             evidenceVerifier ?? AllowingEvidenceVerifier.Instance,
+            policyResolver ?? new FixedPolicyResolver(0),
             riskDecisionIssuer ?? new RejectingRiskDecisionIssuer());
 
     private static ActorContextAccessor SetActorContext(out Guid actorId, out Guid tenantId)
@@ -358,6 +357,21 @@ public sealed class HardToSoftConversionWorkflowTests
             cancellationToken.ThrowIfCancellationRequested();
             Requests.Add(request);
             throw new EconomySelfServiceCommandRejectedException("The server-bound risk decision issuer rejected this conversion.");
+        }
+    }
+
+    private sealed class FixedPolicyResolver(long feeHardCoinUnits) : IHardToSoftConversionPolicyResolver
+    {
+        public ValueTask<HardToSoftConversionPolicyAuthorization> ResolveAsync(
+            Guid tenantId,
+            Guid actorId,
+            long principalHardCoinUnits,
+            DateTimeOffset evaluatedAt,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return ValueTask.FromResult(new HardToSoftConversionPolicyAuthorization(
+                "BRA", 7, "signed-policy-hash", feeHardCoinUnits, 1_000, 300));
         }
     }
 
