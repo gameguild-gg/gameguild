@@ -3,8 +3,12 @@ import {
   createServerClient,
   GeneratedApi,
   type APIControllersEconomySelfServiceCapability,
+  type APIControllersEconomyKycStatus,
+  type EconomyBountiesDurableBountyView,
   type EconomyContractsEconomyWalletSummary,
   type EconomyContractsEconomyWalletTransaction,
+  type EconomyFundingEconomyTopUpStatus,
+  type EconomyPayoutsConnectAccountSnapshot,
   type EconomyPayoutsQueriesEconomyPayoutInput,
   type EconomyPayoutsQueriesEconomyPayoutOperation,
 } from '@game-guild/client';
@@ -37,6 +41,25 @@ async function createEconomyModule() {
   return new GeneratedApi.EconomyModule(client);
 }
 
+async function createEconomyModules() {
+  const session = await auth().catch(() => null);
+  const client = createServerClient({
+    baseUrl: getApiUrl(),
+    auth: { getAccessToken: () => getToken() },
+    tenant: {
+      getTenantId: async () =>
+        session && typeof session !== 'function' ? (session.tenantId ?? null) : null,
+    },
+  });
+
+  return {
+    adRewards: new GeneratedApi.EconomyAdRewardsModule(client),
+    bounties: new GeneratedApi.EconomyBountiesModule(client),
+    economy: new GeneratedApi.EconomyModule(client),
+    kyc: new GeneratedApi.EconomyKycModule(client),
+  };
+}
+
 function resultIssue(label: string, result: { ok: boolean; error?: { message?: string | null } }) {
   return result.ok ? null : `${label}: ${result.error?.message || 'unavailable'}`;
 }
@@ -67,4 +90,101 @@ export const getEconomyWorkspaceData = cache(async (): Promise<EconomyWorkspaceD
     payoutOperations: payoutOperations.ok ? payoutOperations.data : [],
     issue: issues.length ? issues.join(' · ') : null,
   };
+});
+
+export interface EconomyTopUpsData {
+  issue: string | null;
+  topUps: EconomyFundingEconomyTopUpStatus[];
+}
+
+export const getEconomyTopUpsData = cache(async (): Promise<EconomyTopUpsData> => {
+  const { economy } = await createEconomyModules();
+  const result = await economy.getEconomyTopUpsForGetEconomyTopUps({ take: 100 });
+  return {
+    topUps: result.ok ? result.data : [],
+    issue: resultIssue('Top-ups', result),
+  };
+});
+
+export const getEconomyTopUp = cache(async (topUpId: string) => {
+  if (!topUpId.trim()) return null;
+  const { economy } = await createEconomyModules();
+  const result = await economy.getEconomyTopUpsForGetEconomyTopUpsByTopUpId(topUpId.trim());
+  return result.ok ? result.data : null;
+});
+
+export interface EconomyKycData {
+  issue: string | null;
+  status: APIControllersEconomyKycStatus | null;
+}
+
+export const getEconomyKycData = cache(async (): Promise<EconomyKycData> => {
+  const { kyc } = await createEconomyModules();
+  const result = await kyc.getEconomyKycStatus();
+  return {
+    status: result.ok ? result.data : null,
+    issue: resultIssue('KYC', result),
+  };
+});
+
+export interface EconomyPayoutsData {
+  account: EconomyPayoutsConnectAccountSnapshot | null;
+  issue: string | null;
+  operations: EconomyPayoutsQueriesEconomyPayoutOperation[];
+  requests: EconomyPayoutsQueriesEconomyPayoutInput[];
+}
+
+export const getEconomyPayoutsData = cache(async (): Promise<EconomyPayoutsData> => {
+  const { economy } = await createEconomyModules();
+  const [account, requests, operations] = await Promise.all([
+    economy.getEconomyPayoutsAccount(),
+    economy.getEconomyPayoutRequests({ take: 100 }),
+    economy.getEconomyPayoutsForGetEconomyPayouts({ take: 100 }),
+  ]);
+  const issues = [
+    resultIssue('Payout account', account),
+    resultIssue('Payout requests', requests),
+    resultIssue('Payout operations', operations),
+  ].filter((issue): issue is string => issue !== null);
+  return {
+    account: account.ok ? account.data : null,
+    requests: requests.ok ? requests.data : [],
+    operations: operations.ok ? operations.data : [],
+    issue: issues.length ? issues.join(' | ') : null,
+  };
+});
+
+export interface EconomyBountiesData {
+  bounties: EconomyBountiesDurableBountyView[];
+  issue: string | null;
+}
+
+export const getEconomyBountiesData = cache(async (): Promise<EconomyBountiesData> => {
+  const { bounties } = await createEconomyModules();
+  const result = await bounties.getEconomyBountiesForGetEconomyBounties();
+  return {
+    bounties: result.ok ? result.data : [],
+    issue: resultIssue('Bounties', result),
+  };
+});
+
+export const getEconomyBounty = cache(async (bountyId: string) => {
+  if (!bountyId.trim()) return null;
+  const { bounties } = await createEconomyModules();
+  const result = await bounties.getEconomyBountiesForGetEconomyBountiesByBountyId(bountyId.trim());
+  return result.ok ? result.data : null;
+});
+
+export const getEconomyPayoutOperation = cache(async (operationId: string) => {
+  if (!operationId.trim()) return null;
+  const { economy } = await createEconomyModules();
+  const result = await economy.getEconomyPayoutsForGetEconomyPayoutsByOperationId(operationId.trim());
+  return result.ok ? result.data : null;
+});
+
+export const getAdRewardSession = cache(async (sessionId: string) => {
+  if (!sessionId.trim()) return null;
+  const { adRewards } = await createEconomyModules();
+  const result = await adRewards.getEconomyAdRewardsSessions(sessionId.trim());
+  return result.ok ? result.data : null;
 });

@@ -205,7 +205,7 @@ export function EconomyWalletWorkspace({ data }: { data: EconomyWorkspaceData })
                 {request.state === 'Submitted' ? (
                   <Button
                     disabled={pending || !request.id}
-                    onClick={() => execute(() => cancelPayoutRequestAction(request.id || ''))}
+                    onClick={() => execute(() => cancelPayoutRequestAction(request.id!))}
                     size="sm"
                     type="button"
                     variant="outline"
@@ -276,7 +276,7 @@ function DataTable({
   empty: string;
   title: string;
 }) {
-  const rows = Array.isArray(children) ? children : [children];
+  const rows = children as ReactNode[];
   return (
     <Card>
       <CardHeader>

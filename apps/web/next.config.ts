@@ -132,6 +132,19 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source: "/:locale/workspace/economy/kyc",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.sumsub.com; style-src 'self' 'unsafe-inline' https://static.sumsub.com; frame-src 'self' https://*.sumsub.com; connect-src 'self' https://*.sumsub.com wss://*.sumsub.com; img-src 'self' data: blob: https://*.sumsub.com; media-src 'self' blob: https://*.sumsub.com; worker-src 'self' blob:;",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self \"https://api.sumsub.com\"), microphone=(self \"https://api.sumsub.com\")",
+          },
+        ],
+      },
+      {
         source: "/block-content-editor/:path((?!doc-editor|quiz-editor).*)",
         headers: [
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
