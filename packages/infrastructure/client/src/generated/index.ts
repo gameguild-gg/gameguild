@@ -78,6 +78,7 @@ export * from './modules/commerce-payments-tax-rules.gen.js';
 export * from './modules/commerce-payments-wallets.gen.js';
 export * from './modules/assets-cdn.gen.js';
 export * from './modules/learning-courses-checkout.gen.js';
+export * from './modules/commerce-marketplace-cart.gen.js';
 export * from './modules/testing-lab-testing-event-templates.gen.js';
 export * from './modules/access-control-access-reviews.gen.js';
 export * from './modules/api-access-capabilities.gen.js';
