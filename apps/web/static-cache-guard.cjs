@@ -14,11 +14,21 @@
 //    server starts immediately (the pod must become Ready or the rollout
 //    deadlocks) and a background watcher waits for our Deployment's
 //    rollout to complete (+ termination grace for old pods) before
-//    purging. A purge only fires when the finished rollout is recent, so
-//    a plain pod restart hours later does not wipe the zone cache.
-//    Enabled only when CF_PURGE_TOKEN and CF_ZONE_ID are set; absence is
-//    fine. Requires read access to pods/replicasets/deployments in this
-//    namespace for the pod's service account (see
+//    purging. Rollout completion is read from the Progressing condition
+//    (status=True, reason=NewReplicaSetAvailable) — the same signal
+//    `kubectl rollout status` uses. Comparing updatedReplicas/readyReplicas
+//    to spec.replicas is NOT enough with multiple replicas + maxSurge:
+//    mid-rollout it transiently holds while a surge pod is still
+//    ContainerCreating (e.g. 2 replicas: 1 new ready + 1 old ready + 1
+//    new creating => updated==2==spec, ready==2==spec) and a purge fired
+//    at that moment lands while old pods still serve the previous build —
+//    they re-poison the zone right after the purge. A purge only fires
+//    when this pod was CREATED BEFORE the rollout finished (i.e. this pod
+//    is a member of that rollout); a pod recreated later (node drain,
+//    eviction, restart) does not wipe the zone cache. Enabled only when
+//    CF_PURGE_TOKEN and CF_ZONE_ID are set; absence is fine. Requires
+//    read access to pods/replicasets/deployments in this namespace for
+//    the pod's service account (see
 //    infra/helm/manifests/web-rollout-reader-rbac.yaml).
 "use strict";
 
@@ -86,10 +96,11 @@ http.ServerResponse.prototype.writeHead = function (statusCode, ...rest) {
 const fs = require("fs");
 const https = require("https");
 
-const ROLLOUT_WATCH_TIMEOUT_MS = 10 * 60 * 1000;
-const ROLLOUT_RECENT_MS = 10 * 60 * 1000; // rollout must have finished within this window
+const ROLLOUT_WATCH_TIMEOUT_MS = 15 * 60 * 1000; // > progressDeadlineSeconds (600s) + an auto-rollback undo rollout
 const TERMINATION_GRACE_MS = 45 * 1000; // let old pods finish serving + terminate
 const POLL_INTERVAL_MS = 5 * 1000;
+const PURGE_ATTEMPTS = 3;
+const PURGE_RETRY_DELAY_MS = 5 * 1000;
 
 function readSaFile(name) {
   try {
@@ -159,7 +170,58 @@ async function findOwnDeployment() {
   );
   if (!depRef) throw new Error("replicaset is not owned by a Deployment");
 
-  return { ns, token, ca, deployment: depRef.name };
+  return {
+    ns,
+    token,
+    ca,
+    deployment: depRef.name,
+    podCreatedMs: Date.parse((pod.metadata || {}).creationTimestamp || ""),
+  };
+}
+
+/**
+ * Parse a Deployment object into its rollout state.
+ *
+ * Completion MUST be read from the Progressing condition
+ * (status=True, reason=NewReplicaSetAvailable, observedGeneration caught
+ * up) — the same signal `kubectl rollout status` and the cluster's
+ * auto-rollback CronJob use. Comparing updatedReplicas/readyReplicas to
+ * spec.replicas yields FALSE positives mid-rollout with maxSurge (see
+ * header comment) and caused purges to fire while old pods were still
+ * serving the previous build.
+ */
+function rolloutStatus(dep) {
+  const gen = (dep.metadata || {}).generation || 0;
+  const st = dep.status || {};
+  const prog = (st.conditions || []).find((c) => c.type === "Progressing");
+  const complete =
+    (st.observedGeneration || 0) >= gen &&
+    !!prog &&
+    prog.status === "True" &&
+    prog.reason === "NewReplicaSetAvailable";
+  const finishedAtMs =
+    prog && prog.lastUpdateTime ? Date.parse(prog.lastUpdateTime) : NaN;
+  return {
+    complete,
+    finishedAtMs,
+    reason: (prog && prog.reason) || "Unknown",
+  };
+}
+
+/**
+ * True when this pod is a member of the rollout that finished at
+ * finishedAtMs: the pod was created before the rollout finished. Pods
+ * recreated after that (node drain, eviction, crash restart of the same
+ * template) did not witness a content change and must not wipe the zone.
+ * Both timestamps come from the API server, so no clock-skew slack is
+ * needed.
+ */
+function isMemberOfFinishedRollout(podCreatedMs, finishedAtMs) {
+  return (
+    Number.isFinite(podCreatedMs) &&
+    Number.isFinite(finishedAtMs) &&
+    podCreatedMs <= finishedAtMs
+  );
 }
 
 async function waitForRollout(ctx) {
@@ -170,31 +232,20 @@ async function waitForRollout(ctx) {
       ctx.token,
       ctx.ca,
     );
-    const spec = dep.spec || {};
-    const st = dep.status || {};
-    const complete =
-      st.observedGeneration >= (dep.metadata || {}).generation &&
-      st.updatedReplicas === spec.replicas &&
-      st.readyReplicas === spec.replicas;
-    if (complete) {
-      const prog = (st.conditions || []).find((c) => c.type === "Progressing");
-      const finishedAt = prog && prog.lastUpdateTime ? Date.parse(prog.lastUpdateTime) : NaN;
-      const recent =
-        Number.isFinite(finishedAt) && Date.now() - finishedAt < ROLLOUT_RECENT_MS;
-      return { deployment: ctx.deployment, recent };
+    const status = rolloutStatus(dep);
+    if (status.complete) {
+      return { deployment: ctx.deployment, ...status };
     }
     if (Date.now() > deadline) {
-      return { deployment: ctx.deployment, recent: false, timedOut: true };
+      return { deployment: ctx.deployment, timedOut: true, ...status };
     }
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
   }
 }
 
-async function purgeCloudflare() {
+async function purgeCloudflareOnce() {
   const token = process.env.CF_PURGE_TOKEN;
   const zone = process.env.CF_ZONE_ID;
-  if (!token || !zone) return;
-
   const res = await fetch(
     `https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`,
     {
@@ -208,25 +259,59 @@ async function purgeCloudflare() {
     },
   );
   const body = await res.json().catch(() => ({}));
-  console.log(
-    `[static-cache-guard] Cloudflare purge post-rollout: HTTP ${res.status} success=${body.success}`,
+  return { ok: res.status === 200 && body.success === true, res, body };
+}
+
+async function purgeCloudflare() {
+  for (let attempt = 1; attempt <= PURGE_ATTEMPTS; attempt++) {
+    try {
+      const { ok, res, body } = await purgeCloudflareOnce();
+      if (ok) {
+        console.log(
+          `[static-cache-guard] Cloudflare purge post-rollout: HTTP ${res.status} success=true (attempt ${attempt})`,
+        );
+        return true;
+      }
+      console.warn(
+        `[static-cache-guard] purge attempt ${attempt}/${PURGE_ATTEMPTS}: HTTP ${res.status} success=${body.success} errors=${JSON.stringify(body.errors || [])}`,
+      );
+    } catch (err) {
+      console.warn(
+        `[static-cache-guard] purge attempt ${attempt}/${PURGE_ATTEMPTS} error: ${err && err.message}`,
+      );
+    }
+    if (attempt < PURGE_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, PURGE_RETRY_DELAY_MS));
+    }
+  }
+  console.warn(
+    "[static-cache-guard] purge failed after all attempts — manual purge may be needed",
   );
+  return false;
 }
 
 async function purgeCloudflareAfterRollout() {
-  if (!process.env.CF_PURGE_TOKEN || !process.env.CF_ZONE_ID) return;
+  if (!process.env.CF_PURGE_TOKEN || !process.env.CF_ZONE_ID) {
+    console.log(
+      "[static-cache-guard] CF_PURGE_TOKEN/CF_ZONE_ID unset — post-rollout purge disabled",
+    );
+    return;
+  }
   try {
     const ctx = await findOwnDeployment();
-    const { recent, timedOut } = await waitForRollout(ctx);
+    console.log(
+      `[static-cache-guard] watching rollout of ${ctx.ns}/${ctx.deployment} for post-rollout purge`,
+    );
+    const { finishedAtMs, reason, timedOut } = await waitForRollout(ctx);
     if (timedOut) {
       console.warn(
-        "[static-cache-guard] rollout watch timed out — skipping purge (manual purge may be needed)",
+        `[static-cache-guard] rollout watch timed out (last reason: ${reason}) — skipping purge (manual purge may be needed)`,
       );
       return;
     }
-    if (!recent) {
+    if (!isMemberOfFinishedRollout(ctx.podCreatedMs, finishedAtMs)) {
       console.log(
-        "[static-cache-guard] no recent rollout — skipping purge (pod restart)",
+        "[static-cache-guard] rollout finished before this pod was created — skipping purge (pod restart)",
       );
       return;
     }
@@ -241,5 +326,14 @@ async function purgeCloudflareAfterRollout() {
 
 // Serve immediately — blocking startup on the purge would deadlock the
 // rollout this pod must complete (it can never become Ready otherwise).
-require("./apps/web/server.js");
-purgeCloudflareAfterRollout();
+if (require.main === module) {
+  require("./apps/web/server.js");
+  purgeCloudflareAfterRollout();
+}
+
+module.exports = {
+  rolloutStatus,
+  isMemberOfFinishedRollout,
+  waitForRollout,
+  purgeCloudflareAfterRollout,
+};
