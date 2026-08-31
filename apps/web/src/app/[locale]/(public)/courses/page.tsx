@@ -2,12 +2,12 @@ import { CourseHighlightCarousel } from '@/components/courses/course-highlight-c
 import { PublicCourseCatalog } from '@/components/courses/public-course-catalog';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
-import { publicPlaytests } from '@/lib/community/public-community';
+import { getPublicPlaytests } from '@/lib/community/public-community-queries';
 import { getPublicCourseCatalog } from '@/lib/courses/services/course.service';
 import { ArrowRight, FlaskConical, Layers3 } from 'lucide-react';
 
 export default async function CoursesPage() {
-  const catalog = await getPublicCourseCatalog();
+  const [catalog, playtests] = await Promise.all([getPublicCourseCatalog(), getPublicPlaytests(1)]);
   const courses = catalog.data;
   const courseCount = courses.length;
   const openEnrollmentCount = courses.filter((course) => course.isEnrollmentOpen).length;
@@ -91,7 +91,7 @@ export default async function CoursesPage() {
               <FlaskConical className="mb-5 text-sky-200" />
               <h3 className="text-xl font-semibold">Testing Lab handoff</h3>
               <p className="mt-3 text-sm leading-6 text-slate-400">
-                {publicPlaytests[0]?.title ?? 'Playtest sessions'} gives students a structured next step after lessons,
+                {playtests[0]?.title ?? 'Playtest sessions'} gives students a structured next step after lessons,
                 assignments, and prototype milestones.
               </p>
             </div>
