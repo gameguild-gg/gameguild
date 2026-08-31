@@ -203,7 +203,7 @@ describe('coding activity page', () => {
     expect(screen.getByRole('button', { name: /^Submit$/ })).toBeEnabled();
   });
 
-  it('runs public tests before sending only the session delta in the existing code payload shape', async () => {
+  it('submits the current session delta without recompiling the browser workspace', async () => {
     const delta = [{ path: 'main.cpp', content: 'int main(){}' }];
     const session = stubAssessmentEditor(delta);
     mocks.getCodingAssignmentPublic.mockResolvedValue(makeAssignment());
@@ -214,9 +214,8 @@ describe('coding activity page', () => {
     await screen.findByTestId('mock-assessment-editor');
     fireEvent.click(screen.getByRole('button', { name: /^Submit$/ }));
     await waitFor(() => expect(mocks.submitAssessment).toHaveBeenCalledTimes(1));
-    expect(session.run).toHaveBeenCalledWith('public');
+    expect(session.run).not.toHaveBeenCalled();
     expect(session.getSubmissionDelta).toHaveBeenCalledTimes(1);
-    expect(session.run.mock.invocationCallOrder[0]).toBeLessThan(session.getSubmissionDelta.mock.invocationCallOrder[0]);
     const [, formData] = mocks.submitAssessment.mock.calls[0] as [unknown, FormData];
     expect(formData.get('assessmentId')).toBe('assessment-1');
     expect(formData.get('enrollmentId')).toBe('enrollment-1');

@@ -60,6 +60,24 @@ public class EmailDeliveryAdminControllerTests
         (await authorizationService.AuthorizeAsync(systemAdmin, null, Policies.Admin)).Succeeded.Should().BeTrue();
     }
 
+    [Fact]
+    public async Task Admin_Policy_Should_Deny_All_Users_When_The_Stored_Definition_Is_Missing()
+    {
+        var policyProvider = CreatePolicyProvider(includeAdminPolicy: false);
+        using var serviceProvider = BuildAuthorizationServiceProvider(policyProvider);
+        var authorizationService = serviceProvider.GetRequiredService<IAuthorizationService>();
+
+        var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
+        var plainUser = new ClaimsPrincipal(new ClaimsIdentity("Bearer", nameType: "sub", roleType: "role"));
+        var admin = PrincipalWithRole("Admin");
+        var systemAdmin = PrincipalWithRole("SystemAdmin");
+
+        (await authorizationService.AuthorizeAsync(anonymous, null, Policies.Admin)).Succeeded.Should().BeFalse();
+        (await authorizationService.AuthorizeAsync(plainUser, null, Policies.Admin)).Succeeded.Should().BeFalse();
+        (await authorizationService.AuthorizeAsync(admin, null, Policies.Admin)).Succeeded.Should().BeFalse();
+        (await authorizationService.AuthorizeAsync(systemAdmin, null, Policies.Admin)).Succeeded.Should().BeFalse();
+    }
+
     // ── Event feed ───────────────────────────────────────────────────────
 
     [Fact]
@@ -360,19 +378,27 @@ public class EmailDeliveryAdminControllerTests
     private static ClaimsPrincipal PrincipalWithRole(string role)
         => new(new ClaimsIdentity([new Claim(ClaimTypes.Role, role)], "Bearer"));
 
-    private static DbAuthorizationPolicyProvider CreatePolicyProvider()
+    private static DbAuthorizationPolicyProvider CreatePolicyProvider(bool includeAdminPolicy = true)
     {
         var versionStore = new Mock<ITenantSecurityVersionStore>();
         versionStore.Setup(v => v.GetVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0L);
 
         var policyStore = new Mock<IPolicyDefinitionStore>();
-        policyStore.Setup(p => p.GetPolicyAsync(Policies.Admin, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PolicyDefinition
-            {
-                PolicyName = Policies.Admin,
-                RequiredRoles = ["Admin", "SystemAdmin"]
-            });
+        if (includeAdminPolicy)
+        {
+            policyStore.Setup(p => p.GetPolicyAsync(Policies.Admin, null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PolicyDefinition
+                {
+                    PolicyName = Policies.Admin,
+                    RequiredRoles = ["Admin", "SystemAdmin"]
+                });
+        }
+        else
+        {
+            policyStore.Setup(p => p.GetPolicyAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((PolicyDefinition?)null);
+        }
 
         var serviceProvider = new Mock<System.IServiceProvider>();
         serviceProvider.Setup(sp => sp.GetService(typeof(ITenantSecurityVersionStore))).Returns(versionStore.Object);
