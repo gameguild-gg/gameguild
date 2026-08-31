@@ -55,7 +55,54 @@ test('facade.runTests compiles persisted plan sources without replacing them wit
   );
   const link = runs.find(({ cmd }) => cmd === 'wasm-ld');
   assert.ok(link, 'links all compiled source objects');
-  assert.equal(link.argv.filter((value) => /^\/tmp\/emception-build-\d+\.o$/.test(value)).length, 2);
+  assert.equal(link.argv.filter((value) => /^\/tmp\/emception-build-\d+-\d+\.o$/.test(value)).length, 2);
+});
+
+test('facade isolates native scratch outputs between sequential test runs', async () => {
+  const runs = [];
+  const api = wrapWorkerClient(makeStubClient({
+    run: async (cmd, argv) => {
+      runs.push({ cmd, argv });
+      return { exitCode: 0, stdout: '5\n', stderr: '', durationMs: 1, timedOut: false };
+    },
+  }));
+
+  const plan = {
+    build: {
+      toolchain: ToolchainPreset.CPP,
+      sources: ['/user/main.cpp'],
+    },
+    cases: [{ kind: 'stdio', expectedStdout: '5\n' }],
+  };
+
+  await api.runTests(plan);
+  await api.runTests(plan);
+
+  const links = runs.filter(({ cmd }) => cmd === 'wasm-ld');
+  assert.equal(links.length, 2);
+  const outputs = links.map(({ argv }) => argv[argv.indexOf('-o') + 1]);
+  assert.notEqual(outputs[0], outputs[1], 'each invocation must use a fresh WASM output path');
+});
+
+test('facade removes an explicit native output before relinking it', async () => {
+  const deletedPaths = [];
+  const api = wrapWorkerClient(makeStubClient({
+    deleteFile: async (path) => { deletedPaths.push(path); },
+  }));
+
+  await api.compileAndRun(undefined, {
+    build: {
+      toolchain: ToolchainPreset.CPP,
+      sources: ['/user/main.cpp'],
+      output: '/user/program.wasm',
+    },
+  });
+
+  assert.equal(deletedPaths[0], '/user/program.wasm');
+  assert.ok(
+    deletedPaths.some((path) => /^\/tmp\/emception-build-\d+-0\.o$/.test(path)),
+    'private object files are cleaned after execution',
+  );
 });
 
 test('facade.runTests resolves a TestReport-shaped value', async () => {

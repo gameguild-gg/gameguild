@@ -22,6 +22,7 @@ public sealed class GetProductsPagedQueryHandler(IProductRepository productRepos
             take: request.Take,
             sortBy: request.SortBy,
             sortDirection: request.SortDirection,
+            tenantId: request.TenantId,
             cancellationToken: cancellationToken
         ).ConfigureAwait(false);
 
@@ -40,7 +41,8 @@ public sealed class GetProductsPagedQueryHandler(IProductRepository productRepos
             product.CommissionConfig?.MaxAffiliateDiscount ?? 0m,
             product.CommissionConfig?.AffiliateCommissionPercentage ?? 30m,
             product.CreatedAt,
-            product.UpdatedAt
+            product.UpdatedAt,
+            TenantId: product.TenantId
         )).ToList();
 
         return new PagedResult<ProductDto>(

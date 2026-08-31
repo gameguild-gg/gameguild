@@ -12,6 +12,7 @@ run_sequence=0
 gate_started_epoch="$(date +%s)"
 gate_profile="${ECONOMY_GATE_PROFILE:-full}"
 test_hang_timeout="${ECONOMY_TEST_HANG_TIMEOUT:-5m}"
+api_test_timeout="${ECONOMY_API_TEST_TIMEOUT:-12m}"
 whole_solution_jobs="${ECONOMY_WHOLE_SOLUTION_JOBS:-}"
 
 # shellcheck source=economy-gate.sh
@@ -179,11 +180,7 @@ case "$gate_profile" in
 esac
 
 if [[ -z "$whole_solution_jobs" ]]; then
-  if [[ "${GITHUB_ACTIONS:-}" == true ]]; then
-    whole_solution_jobs=2
-  else
-    whole_solution_jobs=1
-  fi
+  whole_solution_jobs=2
 fi
 [[ "$whole_solution_jobs" =~ ^[1-9][0-9]*$ ]] || {
   printf 'ECONOMY_WHOLE_SOLUTION_JOBS must be a positive integer: %s\n' "$whole_solution_jobs" >&2
@@ -327,7 +324,7 @@ if [[ "$(uname -s)" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
   export DOTNET_CLI_DO_NOT_USE_MSBUILD_SERVER=1
   export MSBUILDDISABLENODEREUSE=1
   export TESTCONTAINERS_RYUK_DISABLED=true
-  dotnet_build_isolation=(-m:1 -p:UseSharedCompilation=false)
+  dotnet_build_isolation=(-m:4 -p:UseSharedCompilation=false)
   testcontainers_reaper_disabled=true
   testcontainers_baseline="$(docker ps -aq --filter label=org.testcontainers=true)"
 fi
@@ -351,7 +348,7 @@ assert_economy_manifest "$repository_root" "$manifest_path"
 
 gate_stage='preflight-postgres-isolation'
 mapfile -t nested_postgres_builders < <(
-  grep -RIl --include='*.cs' 'new PostgreSqlBuilder' apps/api/tests \
+  grep -RIl --include='*.cs' --exclude-dir=bin --exclude-dir=obj 'new PostgreSqlBuilder' apps/api/tests \
     | grep -v '^apps/api/tests/GameGuild.TestSupport.Economy/' \
     || true
 )
@@ -587,7 +584,7 @@ fi
 
 run_whole_solution_test_project() {
   local test_project="$1" whole_solution_results="$2"
-  local test_name results project_log
+  local test_name results project_log project_timeout="$test_hang_timeout"
   local -a test_environment=()
 
   test_name="$(basename "${test_project%.csproj}")"
@@ -602,8 +599,9 @@ run_whole_solution_test_project() {
       ECONOMY_POSTGRES_CONNECTION="$whole_solution_connection_string"
       ECONOMY_POSTGRES_TEMPLATE_DATABASE=
     )
+    project_timeout="$api_test_timeout"
   fi
-  run_logged "$project_log" timeout --kill-after=30s "$test_hang_timeout" \
+  run_logged "$project_log" timeout --kill-after=30s "$project_timeout" \
     "${test_environment[@]}" \
     dotnet test "$test_project" -c Release --no-build --nologo --verbosity minimal -m:1 "${test_hang_arguments[@]}" \
     --logger "trx;LogFileName=$test_name.trx" \
@@ -711,9 +709,16 @@ if [[ "$gate_profile" == full ]]; then
   run "${pnpm_command[@]}" --filter @game-guild/client build
 
   web_evidence="$artifact_root/vitest/web.json"
-  run env -u API_URL "${pnpm_command[@]}" --filter @game-guild/web exec vitest run --reporter=json "--outputFile=$web_evidence"
+  run env -u API_URL "${pnpm_command[@]}" --filter @game-guild/web exec vitest run --maxWorkers=4 --reporter=json "--outputFile=$web_evidence"
   assert_vitest_evidence "$web_evidence" >/dev/null
-  GAMEGUILD_DISABLE_WEBPACK_CACHE=1 run "${pnpm_command[@]}" --filter @game-guild/web build
+  economy_web_evidence="$artifact_root/vitest/economy-coverage.json"
+  ECONOMY_WEB_COVERAGE_DIR="$artifact_root/coverage/web" run env -u API_URL \
+    "${pnpm_command[@]}" --filter @game-guild/web run test:economy:coverage \
+    --reporter=json "--outputFile=$economy_web_evidence"
+  assert_vitest_evidence "$economy_web_evidence" >/dev/null
+  run "${pnpm_command[@]}" --filter @game-guild/web run build:emception-runtime-dependencies
+  run "${pnpm_command[@]}" --filter @game-guild/web run sync:emception
+  GAMEGUILD_DISABLE_WEBPACK_CACHE=1 run "${pnpm_command[@]}" --filter @game-guild/web exec next build --webpack
 }
 
 {
@@ -735,6 +740,10 @@ if [[ "$gate_profile" == full ]]; then
   wait_http_ready "http://127.0.0.1:$web_port/" "$web_pid" 90
   run "${pnpm_command[@]}" --filter @game-guild/web test:browser:public
   assert_playwright_evidence "$playwright_evidence" >/dev/null
+  economy_playwright_evidence="$artifact_root/playwright/economy-browser.json"
+  export PLAYWRIGHT_JSON_OUTPUT_NAME="$(native_path "$economy_playwright_evidence")"
+  run "${pnpm_command[@]}" --filter @game-guild/web test:browser:economy
+  assert_playwright_evidence "$economy_playwright_evidence" >/dev/null
 }
 fi
 

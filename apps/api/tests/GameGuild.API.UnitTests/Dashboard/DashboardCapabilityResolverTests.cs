@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.API.Dashboard;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.TestingLab;
 
@@ -61,7 +62,38 @@ public sealed class DashboardCapabilityResolverTests
 
         var result = DashboardCapabilityResolver.Resolve(actor, []);
 
-        result.Should().BeEquivalentTo(DashboardCapabilities.EconomyManagePayouts);
+        result.Should().BeEquivalentTo(
+            DashboardCapabilities.EconomyManagePayouts,
+            DashboardCapabilities.EconomyReviewPayouts,
+            DashboardCapabilities.EconomyOperatePayouts);
+    }
+
+    [Fact]
+    public void Resolve_MapsEachEconomyPermissionToItsOwnCapability()
+    {
+        var mappings = new Dictionary<string, string>
+        {
+            [EconomyPermission.Keys.ReadOperations] = DashboardCapabilities.EconomyReadOperations,
+            [EconomyPermission.Keys.ReviewPayouts] = DashboardCapabilities.EconomyReviewPayouts,
+            [EconomyPermission.Keys.OperatePayouts] = DashboardCapabilities.EconomyOperatePayouts,
+            [EconomyPermission.Keys.OperateCompliance] = DashboardCapabilities.EconomyOperateCompliance,
+            [EconomyPermission.Keys.ManagePolicies] = DashboardCapabilities.EconomyManagePolicies,
+            [EconomyPermission.Keys.ManageReserves] = DashboardCapabilities.EconomyManageReserves,
+            [EconomyPermission.Keys.OperateLedger] = DashboardCapabilities.EconomyOperateLedger,
+            [EconomyPermission.Keys.ManageKillSwitches] = DashboardCapabilities.EconomyManageKillSwitches,
+            [EconomyPermission.Keys.OperateAdRewards] = DashboardCapabilities.EconomyOperateAdRewards,
+            [EconomyPermission.Keys.OperateMarketplace] = DashboardCapabilities.EconomyOperateMarketplace,
+            [EconomyPermission.Keys.OperateBounties] = DashboardCapabilities.EconomyOperateBounties,
+            [EconomyPermission.Keys.OperateTreasury] = DashboardCapabilities.EconomyOperateTreasury,
+            [EconomyPermission.Keys.ManageLegacyMigration] = DashboardCapabilities.EconomyManageLegacyMigration,
+        };
+
+        foreach (var (permission, capability) in mappings)
+        {
+            var actor = Actor(roles: Set("Member"), permissions: Set(permission));
+
+            DashboardCapabilityResolver.Resolve(actor, []).Should().BeEquivalentTo(capability);
+        }
     }
 
     [Fact]

@@ -21,7 +21,7 @@ function loadMessages(locale: string): Record<string, unknown> {
 }
 
 describe('i18n locale parity', () => {
-  it.each(['notificationPrefs', 'settings', 'emailDeliverability'])(
+  it.each(['notificationPrefs', 'settings', 'emailDeliverability', 'economy', 'marketplace'])(
     '%s has identical key sets in en-US and pt-BR',
     (namespace) => {
       const en = flatten(loadMessages('en-US')[namespace] as Record<string, unknown>).sort();

@@ -176,6 +176,10 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
         if (order == null)
             return NotFound();
 
+        var actor = actorContextAccessor.ActorContext;
+        if (order.UserId != actor.SubjectIdAsGuid && !actor.HasPermission(OrdersPermission.Keys.ReadAll))
+            return NotFound();
+
         return Ok(MapToDto(order));
     }
 
@@ -185,14 +189,19 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
     /// Admin users can list all orders without owner filter.
     /// </summary>
     [HttpGet]
+    [MinimumOrderRoute]
     [RequirePermission(OrdersPermission.Keys.Read)]
     public async Task<ActionResult<IEnumerable<OrderDto>>> ListOrders(
         [FromQuery] string? owner = null,
         [FromQuery] OrderStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        // Admin can list all orders when no owner filter is specified
-        if (string.IsNullOrEmpty(owner) || !string.Equals(owner, "me", StringComparison.OrdinalIgnoreCase))
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid is not { } actorId || actorId == Guid.Empty)
+            return Forbid();
+
+        if (!string.Equals(owner, "me", StringComparison.OrdinalIgnoreCase) &&
+            actor.HasPermission(OrdersPermission.Keys.ReadAll))
         {
             var allOrders = await sender.Send<IEnumerable<Order>>(
                 new GetAllOrdersQuery(status),
@@ -202,7 +211,7 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
 
         // owner=me resolves to current user's orders
         var userOrders = await sender.Send<IEnumerable<Order>>(
-            new GetUserOrdersQuery(GetUserId(), status),
+            new GetUserOrdersQuery(actorId, status),
             cancellationToken).ConfigureAwait(false);
 
         return Ok(userOrders.Select(MapToDto));
@@ -295,6 +304,19 @@ public class OrdersController(ISender sender, IActorContextAccessor actorContext
             value.PaymentId ?? value.Order.PaymentId,
             value.ClientActionToken,
             value.PaymentMessage));
+    }
+
+    [HttpPost("{orderId:guid}:payment-intent")]
+    [MinimumOrderRoute]
+    [RequirePermission(OrdersPermission.Keys.Create)]
+    public async Task<ActionResult<OrderPaymentIntentPreparation>> PreparePaymentIntent(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await sender.Send<Result<OrderPaymentIntentPreparation>>(
+            new PrepareOrderPaymentIntentCommand(orderId), cancellationToken).ConfigureAwait(false);
+        if (result.IsFailure) return BadRequest(CreateProblemDetails(result.Error.Description));
+        return Ok(result.Value);
     }
 
     /// <summary>

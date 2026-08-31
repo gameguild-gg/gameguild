@@ -1199,6 +1199,99 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("invoices");
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Orders.MarketplaceCart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CheckedOutAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "UserId", "State")
+                        .IsUnique()
+                        .HasFilter("\"State\" = 0 AND \"DeletedAt\" IS NULL");
+
+                    b.ToTable("marketplace_carts");
+                });
+
+            modelBuilder.Entity("GameGuild.Commerce.Orders.MarketplaceCartItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductPricingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductPricingVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CartId", "IdempotencyKey")
+                        .IsUnique();
+
+                    b.HasIndex("CartId", "ProductPricingVersionId")
+                        .IsUnique();
+
+                    b.ToTable("marketplace_cart_items");
+                });
+
             modelBuilder.Entity("GameGuild.Commerce.Orders.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -26092,6 +26185,17 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("SourceContent");
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Orders.MarketplaceCartItem", b =>
+                {
+                    b.HasOne("GameGuild.Commerce.Orders.MarketplaceCart", "Cart")
+                        .WithMany("Items")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cart");
+                });
+
             modelBuilder.Entity("GameGuild.Commerce.Orders.Order", b =>
                 {
                     b.HasOne("GameGuild.Identity.Users.User", "User")
@@ -28932,6 +29036,11 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("Reports");
 
                     b.Navigation("Revisions");
+                });
+
+            modelBuilder.Entity("GameGuild.Commerce.Orders.MarketplaceCart", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Orders.Order", b =>

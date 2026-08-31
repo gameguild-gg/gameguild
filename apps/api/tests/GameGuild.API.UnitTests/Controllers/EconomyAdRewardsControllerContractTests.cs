@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Controllers;
 using GameGuild.Economy.AdRewards;
+using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Risk;
 using GameGuild.Identity.Context.Actors;
@@ -18,9 +19,6 @@ public sealed class EconomyAdRewardsControllerContractTests
             .Should().BeEquivalentTo([
                 "Network",
                 "CreativeId",
-                "DeviceRiskHash",
-                "IpRiskHash",
-                "AsnRiskHash",
                 "RequiredDurationSeconds",
                 "IdempotencyKey"
             ]);
@@ -62,6 +60,7 @@ public sealed class EconomyAdRewardsControllerContractTests
             completions.Object,
             Mock.Of<IDurableAdRewardSessionReader>(),
             Mock.Of<IEconomyWalletDirectory>(),
+            Mock.Of<IAdRewardRequestRiskContextResolver>(),
             actor,
             TimeProvider.System);
 
@@ -88,5 +87,100 @@ public sealed class EconomyAdRewardsControllerContractTests
             ReviewId = reviewId,
             Diagnostics = new[] { "not-ready" }
         });
+    }
+
+    [Fact]
+    public async Task StartUsesOnlyServerResolvedRiskContext()
+    {
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var walletId = new WalletId(Guid.NewGuid());
+        var actor = new ActorContextAccessor();
+        actor.SetActorContext(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = actorId.ToString(),
+            TenantId = tenantId,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        });
+        var wallets = new Mock<IEconomyWalletDirectory>(MockBehavior.Strict);
+        wallets.Setup(directory => directory.GetOwnerWalletAsync(tenantId, actorId, default))
+            .ReturnsAsync(new EconomyWalletIdentity(walletId, tenantId, actorId, WalletLifecycleState.Active));
+        var risks = new Mock<IAdRewardRequestRiskContextResolver>(MockBehavior.Strict);
+        risks.Setup(resolver => resolver.ResolveAsync(tenantId, actorId, default))
+            .ReturnsAsync(new AdRewardRequestRiskContext("device", "ip", "asn"));
+        var sessions = new Mock<IDurableAdRewardSessionService>(MockBehavior.Strict);
+        sessions.Setup(service => service.StartAsync(
+                It.Is<StartDurableAdRewardSessionRequest>(request =>
+                    request.TenantId == tenantId && request.UserId == actorId && request.WalletId == walletId &&
+                    request.Network == "google" && request.CreativeId == "creative" &&
+                    request.DeviceRiskHash == "device" && request.IpRiskHash == "ip" &&
+                    request.AsnRiskHash == "asn" && request.RequiredDuration == TimeSpan.FromSeconds(30) &&
+                    request.IdempotencyKey == new IdempotencyKey("session-1")), default))
+            .ReturnsAsync((DurableAdRewardSessionResult)null!);
+        var controller = new EconomyAdRewardsController(
+            sessions.Object,
+            Mock.Of<IDurableAdRewardCompletionService>(),
+            Mock.Of<IDurableAdRewardSessionReader>(),
+            wallets.Object,
+            risks.Object,
+            actor,
+            TimeProvider.System);
+
+        var result = await controller.Start(
+            new StartMyAdRewardSessionRequest("google", "creative", 30, "session-1"), default);
+
+        result.Should().BeOfType<ObjectResult>().Which.StatusCode.Should().Be(201);
+        sessions.VerifyAll();
+        risks.VerifyAll();
+        wallets.VerifyAll();
+    }
+
+    [Fact]
+    public async Task StartFailsClosedWhenTrustedRiskContextIsUnavailable()
+    {
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var actor = new ActorContextAccessor();
+        actor.SetActorContext(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = actorId.ToString(),
+            TenantId = tenantId,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        });
+        var wallets = new Mock<IEconomyWalletDirectory>(MockBehavior.Strict);
+        wallets.Setup(directory => directory.GetOwnerWalletAsync(tenantId, actorId, default))
+            .ReturnsAsync(new EconomyWalletIdentity(
+                new WalletId(Guid.NewGuid()), tenantId, actorId, WalletLifecycleState.Active));
+        var risks = new Mock<IAdRewardRequestRiskContextResolver>(MockBehavior.Strict);
+        risks.Setup(resolver => resolver.ResolveAsync(tenantId, actorId, default))
+            .ThrowsAsync(new AdRewardRiskContextUnavailableException("secret internal detail"));
+        var sessions = new Mock<IDurableAdRewardSessionService>(MockBehavior.Strict);
+        var controller = new EconomyAdRewardsController(
+            sessions.Object,
+            Mock.Of<IDurableAdRewardCompletionService>(),
+            Mock.Of<IDurableAdRewardSessionReader>(),
+            wallets.Object,
+            risks.Object,
+            actor,
+            TimeProvider.System);
+
+        var result = await controller.Start(
+            new StartMyAdRewardSessionRequest("google", "creative", 30, "session-1"), default);
+
+        var response = result.Should().BeOfType<ObjectResult>().Subject;
+        response.StatusCode.Should().Be(503);
+        response.Value.Should().BeEquivalentTo(new
+        {
+            State = "RiskContextUnavailable",
+            Message = "Ad reward risk evidence is unavailable."
+        });
+        response.Value!.ToString().Should().NotContain("secret internal detail");
+        sessions.VerifyNoOtherCalls();
     }
 }
