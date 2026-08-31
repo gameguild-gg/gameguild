@@ -135,7 +135,13 @@ async function main() {
   });
   page.on('response', (response) => {
     const status = response.status();
-    if (status === 404 || status >= 500) {
+    const request = response.request();
+    const isRefusedCloudflarePrefetch =
+      status === 503 &&
+      request.headers()['sec-purpose'] === 'prefetch' &&
+      response.headers()['cf-speculation-refused']?.startsWith('prefetch refused:');
+
+    if ((status === 404 || status >= 500) && !isRefusedCloudflarePrefetch) {
       requestErrors.push(`${response.request().method()} ${response.url()}: HTTP ${response.status()}`);
     }
   });
