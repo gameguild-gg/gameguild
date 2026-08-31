@@ -71,6 +71,31 @@ public sealed class CourseContentAccessRuleEvaluatorTests
     }
 
     [Fact]
+    public async Task Learner_AllowsJwtSubjectClaimWithExistingEnrollmentProgress()
+    {
+        var userId = Guid.NewGuid();
+        var program = new Program { Id = Guid.NewGuid() };
+        _programService
+            .Setup(service => service.GetUserProgressDtoAsync(program.Id, userId))
+            .ReturnsAsync(new UserProgressDto(
+                Guid.NewGuid(),
+                program.Id,
+                userId,
+                0,
+                null,
+                null,
+                null,
+                []));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("sub", userId.ToString())],
+            "Bearer"));
+
+        var result = await EvaluateAsync(program, "Learner", user);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Learner_DeniesAuthenticatedUserWithoutEnrollmentProgress()
     {
         var userId = Guid.NewGuid();

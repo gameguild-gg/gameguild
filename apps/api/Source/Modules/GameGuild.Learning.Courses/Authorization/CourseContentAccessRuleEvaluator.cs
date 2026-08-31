@@ -60,7 +60,7 @@ public sealed class CourseContentAccessRuleEvaluator(
         ClaimsPrincipal user,
         Program program)
     {
-        var userId = GetCurrentUserId(user);
+        var userId = ClaimsExtractor.GetUserIdAsGuid(user);
         if (!(user.Identity?.IsAuthenticated ?? false) || userId is not Guid authenticatedUserId)
         {
             return RuleEvaluationResult.Fail("Authenticated learner identity is required");
@@ -87,7 +87,7 @@ public sealed class CourseContentAccessRuleEvaluator(
             return RuleEvaluationResult.Success();
         }
 
-        var userId = GetCurrentUserId(user);
+        var userId = ClaimsExtractor.GetUserIdAsGuid(user);
         if (!(user.Identity?.IsAuthenticated ?? false) || userId is not Guid authenticatedUserId)
         {
             return RuleEvaluationResult.Fail("Authenticated manager identity is required");
@@ -120,9 +120,4 @@ public sealed class CourseContentAccessRuleEvaluator(
         return RuleEvaluationResult.Fail("No course management permission was granted");
     }
 
-    private static Guid? GetCurrentUserId(ClaimsPrincipal user)
-    {
-        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.TryParse(userId, out var parsedUserId) ? parsedUserId : null;
-    }
 }
