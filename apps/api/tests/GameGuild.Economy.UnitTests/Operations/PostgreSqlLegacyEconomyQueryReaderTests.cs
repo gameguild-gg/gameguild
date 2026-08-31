@@ -51,6 +51,40 @@ public sealed class PostgreSqlLegacyEconomyQueryReaderTests
             .Should().ThrowAsync<ArgumentException>();
     }
 
+    [Fact]
+    public async Task MapsEveryStateAndRejectsUnknownStates()
+    {
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("legacy_query_states");
+        await using var context = CreateContext(database.ConnectionString);
+        await context.Database.EnsureCreatedAsync();
+        var publicStates = Enum.GetValues<LegacyEconomyShadowState>();
+        var storedStates = Enum.GetValues<EconomyLegacyShadowBatchState>();
+        var rows = storedStates.Select((state, index) =>
+        {
+            var row = Batch(TenantId, index + 1);
+            row.State = state;
+            return row;
+        }).ToArray();
+        context.Set<EconomyLegacyShadowBatchRow>().AddRange(rows);
+        await context.SaveChangesAsync();
+        var reader = new PostgreSqlLegacyEconomyQueryReader(context);
+
+        var all = await reader.ListAsync(TenantId, null, 100, null, default);
+        all.Items.Select(item => item.State).Should().BeEquivalentTo(publicStates);
+        foreach (var state in publicStates)
+        {
+            var filtered = await reader.ListAsync(TenantId, state, 100, null, default);
+            filtered.Items.Should().ContainSingle().Which.State.Should().Be(state);
+        }
+
+        await FluentActions.Awaiting(() => reader.ListAsync(
+                TenantId, (LegacyEconomyShadowState)int.MaxValue, 20, null, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        FluentActions.Invoking(() => PostgreSqlLegacyEconomyQueryReader.ToPublicState(
+                (EconomyLegacyShadowBatchState)int.MaxValue))
+            .Should().Throw<InvalidOperationException>();
+    }
+
     private static EconomyLegacyShadowBatchRow Batch(Guid tenantId, int index) => new()
     {
         Id = Guid.NewGuid(), TenantId = tenantId, RequestedBy = Guid.NewGuid(), JurisdictionCode = "BR",

@@ -70,6 +70,75 @@ public sealed class PostgreSqlEconomyPolicyQueryReaderTests
         await FluentActions.Awaiting(() => reader.ListAsync(
                 TenantId, null, 10, "invalid", Now, default).AsTask())
             .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.ListAsync(
+                Guid.Empty, null, 10, null, Now, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.ListAsync(
+                TenantId, null, 0, null, Now, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await FluentActions.Awaiting(() => reader.ListAsync(
+                TenantId, null, 101, null, Now, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await FluentActions.Awaiting(() => reader.FindAsync(
+                Guid.Empty, foreign.Id, Now, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.FindAsync(
+                TenantId, Guid.Empty, Now, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
+    public async Task MapsEveryPublicPolicyState()
+    {
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("policy_query_states");
+        await using var context = CreateContext(database.ConnectionString);
+        await context.Database.EnsureCreatedAsync();
+        var expired = Policy(TenantId, 1, Now.AddMinutes(-4));
+        expired.ExpiresAt = Now.AddMinutes(-1);
+        var active = Policy(TenantId, 2, Now.AddMinutes(-3));
+        var pending = Policy(TenantId, 3, Now.AddMinutes(-2));
+        pending.IsActive = false;
+        pending.ApprovedBy = null;
+        pending.ApprovedAt = null;
+        var approved = Policy(TenantId, 4, Now.AddMinutes(-1));
+        approved.IsActive = false;
+        context.Set<EconomyCapabilityPolicyRow>().AddRange(expired, active, pending, approved);
+        await context.SaveChangesAsync();
+        var reader = new PostgreSqlEconomyPolicyQueryReader(context);
+
+        var result = await reader.ListAsync(TenantId, null, 10, null, Now, default);
+
+        result.Items.ToDictionary(item => item.Version, item => item.State).Should().BeEquivalentTo(
+            new Dictionary<long, EconomyCapabilityPolicyState>
+            {
+                [1] = EconomyCapabilityPolicyState.Expired,
+                [2] = EconomyCapabilityPolicyState.Active,
+                [3] = EconomyCapabilityPolicyState.PendingApproval,
+                [4] = EconomyCapabilityPolicyState.Approved
+            });
+    }
+
+    [Fact]
+    public void CursorCodecCoversEveryRejectedComponent()
+    {
+        var identifier = Guid.NewGuid().ToString("N");
+        PostgreSqlEconomyPolicyQueryReader.DecodeCursor(null).Should().BeNull();
+        PostgreSqlEconomyPolicyQueryReader.DecodeCursor("   ").Should().BeNull();
+        PostgreSqlEconomyPolicyQueryReader.DecodeCursor(
+            PostgreSqlEconomyPolicyQueryReader.EncodeCursor(Now, Guid.Parse(identifier))).Should().NotBeNull();
+
+        foreach (var cursor in new[]
+                 {
+                     "invalid",
+                     $"ZZZZZZZZZZZZZZZZ{identifier}",
+                     $"0000000000000001{new string('Z', 32)}",
+                     $"FFFFFFFFFFFFFFFF{identifier}",
+                     $"7FFFFFFFFFFFFFFF{identifier}"
+                 })
+        {
+            FluentActions.Invoking(() => PostgreSqlEconomyPolicyQueryReader.DecodeCursor(cursor))
+                .Should().Throw<ArgumentException>();
+        }
     }
 
     private static EconomyCapabilityPolicyRow Policy(Guid? tenantId, long version, DateTimeOffset proposedAt)

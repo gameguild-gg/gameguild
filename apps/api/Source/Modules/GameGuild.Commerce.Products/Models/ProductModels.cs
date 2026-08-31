@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace GameGuild.Commerce.Products;
 
 /// <summary>
@@ -19,6 +21,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="CreatedAt">Creation timestamp</param>
 /// <param name="UpdatedAt">Last update timestamp</param>
 /// <param name="Pricing">Pricing information (optional)</param>
+/// <param name="TenantId">Internal tenant scope; omitted from JSON responses</param>
 public sealed record ProductDto(
     Guid Id,
     string Name,
@@ -35,7 +38,8 @@ public sealed record ProductDto(
     decimal AffiliateCommissionPercentage,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    List<ProductPricingDto>? Pricing = null
+    List<ProductPricingDto>? Pricing = null,
+    [property: JsonIgnore] Guid? TenantId = null
 )
 {
     public ProductDto(
@@ -89,6 +93,7 @@ public sealed record ProductDto(
 /// <param name="IsDefault">Whether this is the default pricing</param>
 /// <param name="CurrentPrice">Current effective price</param>
 /// <param name="IsSaleActive">Whether sale is currently active</param>
+/// <param name="CurrentVersionId">Immutable current pricing version used by checkout</param>
 public sealed record ProductPricingDto(
     Guid Id,
     Guid ProductId,
@@ -100,5 +105,6 @@ public sealed record ProductPricingDto(
     DateTime? SaleEndDate,
     bool IsDefault,
     decimal CurrentPrice,
-    bool IsSaleActive
+    bool IsSaleActive,
+    Guid? CurrentVersionId = null
 );

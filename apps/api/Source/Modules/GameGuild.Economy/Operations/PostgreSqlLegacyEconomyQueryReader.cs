@@ -47,8 +47,6 @@ public sealed class PostgreSqlLegacyEconomyQueryReader : ILegacyEconomyQueryRead
         CancellationToken cancellationToken)
     {
         if (tenantId == Guid.Empty) throw new ArgumentException("Tenant ID cannot be empty.", nameof(tenantId));
-        if (state is not null && !Enum.IsDefined(state.Value))
-            throw new ArgumentOutOfRangeException(nameof(state));
         if (limit is < 1 or > 100) throw new ArgumentOutOfRangeException(nameof(limit));
         var position = DecodeCursor(cursor);
         var query = _db.Set<EconomyLegacyShadowBatchRow>().AsNoTracking()
@@ -81,7 +79,7 @@ public sealed class PostgreSqlLegacyEconomyQueryReader : ILegacyEconomyQueryRead
         row.BackfilledHardUnits, row.ReconciledHardUnits, row.FailureCode, row.CapturedAt,
         row.UpdatedAt, row.Version);
 
-    private static LegacyEconomyShadowState ToPublicState(EconomyLegacyShadowBatchState state) => state switch
+    internal static LegacyEconomyShadowState ToPublicState(EconomyLegacyShadowBatchState state) => state switch
     {
         EconomyLegacyShadowBatchState.Captured => LegacyEconomyShadowState.Captured,
         EconomyLegacyShadowBatchState.Backfilling => LegacyEconomyShadowState.Backfilling,
