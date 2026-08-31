@@ -38,6 +38,7 @@ import {
   EditTestingEventDialog,
   ManageTestingEventSlotDialog,
   TestingEventApplications,
+  TestingEventLifecycleActions,
 } from "./testing-event-management";
 
 describe("TestingEventApplications", () => {
@@ -214,6 +215,40 @@ describe("TestingEventApplications", () => {
     fireEvent.click(screen.getByRole("button", { name: "Keep editing" }));
 
     expect(screen.getByText("Create testing event")).toBeInTheDocument();
+  });
+
+  it("collects the required rules and instructions when a blank event is created", () => {
+    render(<CreateTestingEventDialog />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New event" }));
+
+    expect(
+      screen.getByRole("textbox", { name: "General rules" }),
+    ).toBeRequired();
+    expect(
+      screen.getByRole("textbox", { name: "Candidate instructions" }),
+    ).toBeRequired();
+    expect(
+      screen.getByRole("textbox", { name: "Tester instructions" }),
+    ).toBeRequired();
+  });
+
+  it("replaces the open action with a setup link while a draft is incomplete", () => {
+    render(
+      <TestingEventLifecycleActions
+        event={{ id: "event-1", status: "Draft", configuration: undefined }}
+      />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "Complete setup" }),
+    ).toHaveAttribute(
+      "href",
+      "/console/community/testing-lab/events/event-1/overview#event-configuration-heading",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Open applications" }),
+    ).not.toBeInTheDocument();
   });
   it("opens as a controlled sheet with the calendar day prefilled", () => {
     render(
