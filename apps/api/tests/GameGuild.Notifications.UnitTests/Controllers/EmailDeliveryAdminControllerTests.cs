@@ -43,11 +43,27 @@ public class EmailDeliveryAdminControllerTests
     }
 
     [Fact]
+    public async Task Admin_Policy_Should_Deny_Anonymous_And_Plain_Users_And_Allow_Admin_Roles()
+    {
+        var policyProvider = CreatePolicyProvider();
+        using var serviceProvider = BuildAuthorizationServiceProvider(policyProvider);
+        var authorizationService = serviceProvider.GetRequiredService<IAuthorizationService>();
+
+        var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
+        var plainUser = new ClaimsPrincipal(new ClaimsIdentity("Bearer", nameType: "sub", roleType: "role"));
+        var admin = PrincipalWithRole("Admin");
+        var systemAdmin = PrincipalWithRole("SystemAdmin");
+
+        (await authorizationService.AuthorizeAsync(anonymous, null, Policies.Admin)).Succeeded.Should().BeFalse();
+        (await authorizationService.AuthorizeAsync(plainUser, null, Policies.Admin)).Succeeded.Should().BeFalse();
+        (await authorizationService.AuthorizeAsync(admin, null, Policies.Admin)).Succeeded.Should().BeTrue();
+        (await authorizationService.AuthorizeAsync(systemAdmin, null, Policies.Admin)).Succeeded.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Admin_Policy_Should_Deny_All_Users_When_The_Stored_Definition_Is_Missing()
     {
-        // A missing registered policy is a configuration failure. The real provider must
-        // fail closed rather than silently restoring the removed static role fallback.
-        var policyProvider = CreatePolicyProvider();
+        var policyProvider = CreatePolicyProvider(includeAdminPolicy: false);
         using var serviceProvider = BuildAuthorizationServiceProvider(policyProvider);
         var authorizationService = serviceProvider.GetRequiredService<IAuthorizationService>();
 
@@ -362,15 +378,27 @@ public class EmailDeliveryAdminControllerTests
     private static ClaimsPrincipal PrincipalWithRole(string role)
         => new(new ClaimsIdentity([new Claim(ClaimTypes.Role, role)], "Bearer"));
 
-    private static DbAuthorizationPolicyProvider CreatePolicyProvider()
+    private static DbAuthorizationPolicyProvider CreatePolicyProvider(bool includeAdminPolicy = true)
     {
         var versionStore = new Mock<ITenantSecurityVersionStore>();
         versionStore.Setup(v => v.GetVersionAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0L);
 
         var policyStore = new Mock<IPolicyDefinitionStore>();
-        policyStore.Setup(p => p.GetPolicyAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((PolicyDefinition?)null);
+        if (includeAdminPolicy)
+        {
+            policyStore.Setup(p => p.GetPolicyAsync(Policies.Admin, null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PolicyDefinition
+                {
+                    PolicyName = Policies.Admin,
+                    RequiredRoles = ["Admin", "SystemAdmin"]
+                });
+        }
+        else
+        {
+            policyStore.Setup(p => p.GetPolicyAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((PolicyDefinition?)null);
+        }
 
         var serviceProvider = new Mock<System.IServiceProvider>();
         serviceProvider.Setup(sp => sp.GetService(typeof(ITenantSecurityVersionStore))).Returns(versionStore.Object);
@@ -388,7 +416,7 @@ public class EmailDeliveryAdminControllerTests
         return new DbAuthorizationPolicyProvider(
             Options.Create(new AuthorizationOptions()),
             policyCache.Object,
-            Mock.Of<IPolicyMerger>(),
+            new DefaultPolicyMerger(),
             scopeFactory.Object,
             Options.Create(new TenancyOptions()),
             NullLogger<DbAuthorizationPolicyProvider>.Instance);

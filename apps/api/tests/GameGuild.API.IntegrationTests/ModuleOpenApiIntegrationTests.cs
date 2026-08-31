@@ -70,7 +70,7 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
     }
 
     [Fact]
-    public async Task Swagger_ShouldExposeOnlyTheVerifiedMinimumOrderSurface()
+    public async Task Swagger_ShouldExposeOnlyTheVerifiedOrderSurface()
     {
         using var client = _factory.CreateClient();
 
@@ -86,11 +86,13 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
             .ToArray();
 
         orderOperations.Should().Equal(
+            "get /v1/orders",
             "get /v1/orders/{orderId}",
             "post /v1/orders",
             "post /v1/orders/{orderId}/items",
             "post /v1/orders/{orderId}:capture",
-            "post /v1/orders/{orderId}:complete");
+            "post /v1/orders/{orderId}:complete",
+            "post /v1/orders/{orderId}:payment-intent");
     }
 
     [Fact]
@@ -187,7 +189,7 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
     }
 
     [Fact]
-    public async Task Runtime_ShouldNotRouteUnverifiedOrderOperations()
+    public async Task Runtime_ShouldRouteOnlyVerifiedOrderOperations()
     {
         using var client = _factory.CreateClient();
         var orderId = Guid.NewGuid();
@@ -195,11 +197,15 @@ public sealed class ModuleOpenApiIntegrationTests : IClassFixture<WebApplication
         var listResponse = await client.GetAsync("/v1/orders");
         var cancelResponse = await client.PostAsync($"/v1/orders/{orderId}:cancel", content: null);
         var verifiedResponse = await client.GetAsync($"/v1/orders/{orderId}");
+        var paymentIntentResponse = await client.PostAsync(
+            $"/v1/orders/{orderId}:payment-intent", content: null);
 
-        listResponse.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
+        listResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         cancelResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
         verifiedResponse.StatusCode.Should().NotBe(HttpStatusCode.NotFound);
         verifiedResponse.StatusCode.Should().NotBe(HttpStatusCode.MethodNotAllowed);
+        paymentIntentResponse.StatusCode.Should().NotBe(HttpStatusCode.NotFound);
+        paymentIntentResponse.StatusCode.Should().NotBe(HttpStatusCode.MethodNotAllowed);
     }
     [Fact]
     public async Task Swagger_ShouldExposeAuthenticatedEconomyWalletReadRoutes()

@@ -17,6 +17,24 @@ export class CommerceOrdersModule {
 
   /**
    */
+  async getOrdersForGetOrders(query?: {
+    owner?: string;
+    status?: Types.CommerceOrdersOrderStatus;
+  }): Promise<Result<Array<Types.CommerceOrdersOrder>, ApiError>> {
+    const url = '/v1/orders';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.CommerceOrdersOrder>, ApiError>;
+  }
+
+  /**
+   */
   async postOrders(body: Types.CommerceOrdersCreateOrderInput): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
     const url = '/v1/orders';
 
@@ -41,7 +59,7 @@ export class CommerceOrdersModule {
 
   /**
    */
-  async getOrders(orderId: string): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
+  async getOrdersForGetOrdersByOrderId(orderId: string): Promise<Result<Types.CommerceOrdersOrder, ApiError>> {
     const url = `/v1/orders/${orderId}`;
 
     const result = await this.client.request({
@@ -101,6 +119,26 @@ export class CommerceOrdersModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.CommerceOrdersOrderSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async postOrdersPaymentIntent(orderId: string): Promise<Result<Types.CommerceOrderPaymentIntentPreparation, ApiError>> {
+    const url = `/v1/orders/${orderId}:payment-intent`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceOrderPaymentIntentPreparationSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

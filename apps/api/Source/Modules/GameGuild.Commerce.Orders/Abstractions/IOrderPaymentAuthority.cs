@@ -16,3 +16,16 @@ internal sealed class DenyOrderPaymentProcessor : IOrderPaymentProcessor
         CancellationToken cancellationToken = default) =>
         Task.FromResult(OrderChargeResult.Failed(null, "Payments is not configured for order charging."));
 }
+
+internal sealed class DenyOrderPaymentIntentPreparer : IOrderPaymentIntentPreparer
+{
+    public Task<OrderPaymentIntentPreparation> PrepareAsync(
+        AuthoritativeOrderPaymentIntent intent,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(new OrderPaymentIntentPreparation(
+            false,
+            null,
+            null,
+            "Payments is not configured for Payment Element setup.",
+            OrderChargeState.Failed));
+}

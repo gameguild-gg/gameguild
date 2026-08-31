@@ -14,6 +14,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="Take">Number of items to take</param>
 /// <param name="SortBy">Sort field (Name, CreatedAt)</param>
 /// <param name="SortDirection">Sort direction (ASC, DESC)</param>
+/// <param name="TenantId">Internal tenant filter for draft ownership</param>
 public sealed record GetProductsPagedQuery(
     ProductType? Type = null,
     Guid? CreatorId = null,
@@ -23,5 +24,6 @@ public sealed record GetProductsPagedQuery(
     int Skip = 0,
     int Take = 50,
     string SortBy = "CreatedAt",
-    string SortDirection = "DESC"
+    string SortDirection = "DESC",
+    Guid? TenantId = null
 ) : IQuery<PagedResult<ProductDto>>;

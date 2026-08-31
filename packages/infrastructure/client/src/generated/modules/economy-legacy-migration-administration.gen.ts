@@ -17,6 +17,35 @@ export class EconomyLegacyMigrationAdministrationModule {
 
   /**
    */
+  async getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatches(query?: {
+    state?: Types.EconomyOperationsLegacyEconomyShadowState;
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummary, ApiError>> {
+    const url = '/api/v1/admin/economy/legacy-migration/batches';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummarySchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAdminEconomyLegacyMigrationBatches(
     body: Types.APIControllersCaptureLegacyEconomyMigrationInput,
   ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
@@ -43,7 +72,9 @@ export class EconomyLegacyMigrationAdministrationModule {
 
   /**
    */
-  async getAdminEconomyLegacyMigrationBatches(batchId: string): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
+  async getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesByBatchId(
+    batchId: string,
+  ): Promise<Result<Types.EconomyOperationsLegacyEconomyShadowBatchView, ApiError>> {
     const url = `/api/v1/admin/economy/legacy-migration/batches/${batchId}`;
 
     const result = await this.client.request({

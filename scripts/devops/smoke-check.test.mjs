@@ -8,11 +8,12 @@ import test from 'node:test';
 const smokeScript = fileURLToPath(new URL('./smoke-check.mjs', import.meta.url));
 
 const expectedOrderOperations = {
-  '/v1/orders': { post: {} },
+  '/v1/orders': { get: {}, post: {} },
   '/v1/orders/{orderId}': { get: {} },
   '/v1/orders/{orderId}/items': { post: {} },
   '/v1/orders/{orderId}:capture': { post: {} },
   '/v1/orders/{orderId}:complete': { post: {} },
+  '/v1/orders/{orderId}:payment-intent': { post: {} },
 };
 
 async function runSmokeWithOpenApi(paths) {
@@ -78,7 +79,7 @@ async function runSmokeWithOpenApi(paths) {
   return { exitCode, requestedPaths, stderr, stdout };
 }
 
-test('deployment smoke checks liveness, readiness, and the minimum Orders OpenAPI surface', async () => {
+test('deployment smoke checks liveness, readiness, and the verified Orders OpenAPI surface', async () => {
   const result = await runSmokeWithOpenApi(expectedOrderOperations);
 
   assert.equal(result.exitCode, 0, result.stderr || result.stdout);

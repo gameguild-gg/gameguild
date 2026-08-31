@@ -267,6 +267,33 @@ export class CommerceProductsModule {
 
     return result as Result<Array<Types.CommerceProductsProductPricing>, ApiError>;
   }
+
+  /**
+   */
+  async putProductsPricing(
+    productId: string,
+    body: Types.CommerceProductsSetProductPricingInput,
+  ): Promise<Result<Types.CommerceProductsProductPricing, ApiError>> {
+    const url = `/v1/products/${productId}/pricing`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.CommerceProductsSetProductPricingInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'PUT',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.CommerceProductsProductPricingSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
 }
 
 export function createCommerceProductsModule(client: ApiClient): CommerceProductsModule {

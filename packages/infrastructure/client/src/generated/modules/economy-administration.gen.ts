@@ -17,6 +17,64 @@ export class EconomyAdministrationModule {
 
   /**
    */
+  async getAdminEconomyAdRewardsPendingClaims(query?: {
+    confirmed?: boolean;
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatus, ApiError>> {
+    const url = '/api/v1/admin/economy/ad-rewards/pending-claims';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatusSchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyAdRewardsReconciliations(query?: {
+    network?: string;
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatus, ApiError>> {
+    const url = '/api/v1/admin/economy/ad-rewards/reconciliations';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatusSchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getAdminEconomyAdRewardsReports(query?: {
     network?: string;
     limit?: number;
@@ -53,6 +111,58 @@ export class EconomyAdministrationModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.EconomyAdRewardsDurableAdProviderReportImportResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessions(query?: {
+    state?: Types.EconomyAdRewardsDurableAdRewardSessionState;
+    network?: string;
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummary, ApiError>> {
+    const url = '/api/v1/admin/economy/ad-rewards/sessions';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummarySchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsBySessionId(
+    sessionId: string,
+  ): Promise<Result<Types.EconomyAdRewardsAdRewardSessionOperationalDetails, ApiError>> {
+    const url = `/api/v1/admin/economy/ad-rewards/sessions/${sessionId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyAdRewardsAdRewardSessionOperationalDetailsSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -125,6 +235,34 @@ export class EconomyAdministrationModule {
 
   /**
    */
+  async getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservations(query?: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatus, ApiError>> {
+    const url = '/api/v1/admin/economy/custody/observations';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatusSchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAdminEconomyCustodyObservations(
     body: Types.EconomyReservesCustodyObservationCommand,
   ): Promise<Result<Types.EconomyReservesDurableCustodyObservation, ApiError>> {
@@ -143,6 +281,28 @@ export class EconomyAdministrationModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.EconomyReservesDurableCustodyObservationSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsByObservationId(
+    observationId: string,
+  ): Promise<Result<Types.EconomyOperationsEconomyCustodyObservationOperationalStatus, ApiError>> {
+    const url = `/api/v1/admin/economy/custody/observations/${observationId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyOperationsEconomyCustodyObservationOperationalStatusSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -251,6 +411,34 @@ export class EconomyAdministrationModule {
 
   /**
    */
+  async getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchors(query?: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetails, ApiError>> {
+    const url = '/api/v1/admin/economy/ledger/anchors';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetailsSchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAdminEconomyLedgerAnchors(
     body: Types.APIControllersPublishEconomyAnchorInput,
   ): Promise<Result<Types.EconomyLedgerEconomyAnchorPublicationResult, ApiError>> {
@@ -273,6 +461,44 @@ export class EconomyAdministrationModule {
     }
 
     return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsByAnchorId(
+    anchorId: string,
+  ): Promise<Result<Types.EconomyOperationsEconomyAnchorOperationalDetails, ApiError>> {
+    const url = `/api/v1/admin/economy/ledger/anchors/${anchorId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyOperationsEconomyAnchorOperationalDetailsSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyLedgerAnchorsVerifications(
+    anchorId: string,
+  ): Promise<Result<Array<Types.EconomyOperationsEconomyAnchorVerificationOperationalStatus>, ApiError>> {
+    const url = `/api/v1/admin/economy/ledger/anchors/${anchorId}/verifications`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.EconomyOperationsEconomyAnchorVerificationOperationalStatus>, ApiError>;
   }
 
   /**
@@ -317,6 +543,34 @@ export class EconomyAdministrationModule {
 
   /**
    */
+  async getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerations(query?: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetails, ApiError>> {
+    const url = '/api/v1/admin/economy/ledger/projection-generations';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAdminEconomyLedgerProjectionGenerations(): Promise<Result<Types.EconomyProjectionsProjectionGenerationState, ApiError>> {
     const url = '/api/v1/admin/economy/ledger/projection-generations';
 
@@ -329,6 +583,28 @@ export class EconomyAdministrationModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.EconomyProjectionsProjectionGenerationStateSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsByGeneration(
+    generation: number,
+  ): Promise<Result<Types.EconomyOperationsEconomyProjectionGenerationOperationalDetails, ApiError>> {
+    const url = `/api/v1/admin/economy/ledger/projection-generations/${generation}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyOperationsEconomyProjectionGenerationOperationalDetailsSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -364,6 +640,50 @@ export class EconomyAdministrationModule {
 
   /**
    */
+  async getAdminEconomyLedgerProjectionGenerationsAudit(
+    generation: number,
+  ): Promise<Result<Array<Types.EconomyOperationsEconomyProjectionApprovalAuditEntry>, ApiError>> {
+    const url = `/api/v1/admin/economy/ledger/projection-generations/${generation}/audit`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.EconomyOperationsEconomyProjectionApprovalAuditEntry>, ApiError>;
+  }
+
+  /**
+   */
+  async getAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRuns(query?: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetails, ApiError>> {
+    const url = '/api/v1/admin/economy/ledger/verification-runs';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetailsSchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAdminEconomyLedgerVerificationRuns(): Promise<Result<Types.EconomyLedgerJournalIntegrityRunResult, ApiError>> {
     const url = '/api/v1/admin/economy/ledger/verification-runs';
 
@@ -376,6 +696,158 @@ export class EconomyAdministrationModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.EconomyLedgerJournalIntegrityRunResultSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsByVerificationId(
+    verificationId: string,
+  ): Promise<Result<Types.EconomyOperationsEconomyJournalVerificationRunDetails, ApiError>> {
+    const url = `/api/v1/admin/economy/ledger/verification-runs/${verificationId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyOperationsEconomyJournalVerificationRunDetailsSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyMarketplaceOutbox(query?: {
+    published?: boolean;
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatus, ApiError>> {
+    const url = '/api/v1/admin/economy/marketplace/outbox';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatusSchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefunds(query?: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatus, ApiError>> {
+    const url = '/api/v1/admin/economy/marketplace/refunds';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatusSchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsByRefundId(
+    refundId: string,
+  ): Promise<Result<Types.EconomyMarketplaceMarketplaceRefundOperationalStatus, ApiError>> {
+    const url = `/api/v1/admin/economy/marketplace/refunds/${refundId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyMarketplaceMarketplaceRefundOperationalStatusSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlements(query?: {
+    status?: Types.EconomyMarketplaceMarketplaceSettlementStatus;
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummary, ApiError>> {
+    const url = '/api/v1/admin/economy/marketplace/settlements';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummarySchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsBySettlementId(
+    settlementId: string,
+  ): Promise<Result<Types.EconomyMarketplaceMarketplaceSettlementOperationalDetails, ApiError>> {
+    const url = `/api/v1/admin/economy/marketplace/settlements/${settlementId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyMarketplaceMarketplaceSettlementOperationalDetailsSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -531,6 +1003,35 @@ export class EconomyAdministrationModule {
 
   /**
    */
+  async getAdminEconomyPoliciesForGetAdminEconomyPolicies(query?: {
+    capability?: Types.EconomyRiskEconomyValueMovementCapability;
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatus, ApiError>> {
+    const url = '/api/v1/admin/economy/policies';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatusSchema,
+        result.data,
+        'response',
+      );
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async postAdminEconomyPolicies(body: Types.APIControllersProposeEconomyPolicyInput): Promise<Result<Types.EconomyRiskEconomyCapabilityPolicy, ApiError>> {
     const url = '/api/v1/admin/economy/policies';
 
@@ -547,6 +1048,28 @@ export class EconomyAdministrationModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.EconomyRiskEconomyCapabilityPolicySchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyPoliciesForGetAdminEconomyPoliciesByPolicyId(
+    policyId: string,
+  ): Promise<Result<Types.EconomyOperationsEconomyPolicyOperationalDetails, ApiError>> {
+    const url = `/api/v1/admin/economy/policies/${policyId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyOperationsEconomyPolicyOperationalDetailsSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -582,6 +1105,40 @@ export class EconomyAdministrationModule {
 
   /**
    */
+  async getAdminEconomyPoliciesAudit(policyId: string): Promise<Result<Array<Types.EconomyOperationsEconomyPolicyAuditEntry>, ApiError>> {
+    const url = `/api/v1/admin/economy/policies/${policyId}/audit`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<Array<Types.EconomyOperationsEconomyPolicyAuditEntry>, ApiError>;
+  }
+
+  /**
+   */
+  async getAdminEconomyReservesActive(): Promise<Result<Types.EconomyOperationsEconomyActiveReserveOperationalDetails, ApiError>> {
+    const url = '/api/v1/admin/economy/reserves/active';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyOperationsEconomyActiveReserveOperationalDetailsSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getAdminEconomyReservesLiabilities(): Promise<Result<Types.EconomyReservesEconomyLiabilitySnapshot, ApiError>> {
     const url = '/api/v1/admin/economy/reserves/liabilities';
 
@@ -594,6 +1151,34 @@ export class EconomyAdministrationModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.EconomyReservesEconomyLiabilitySnapshotSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposals(query?: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<Result<Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatus, ApiError>> {
+    const url = '/api/v1/admin/economy/reserves/proposals';
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      params: query,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(
+        Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatusSchema,
+        result.data,
+        'response',
+      );
       return { ok: true, data: validatedData };
     }
 
@@ -620,6 +1205,28 @@ export class EconomyAdministrationModule {
     // Validate response
     if (result.ok) {
       const validatedData = safeParse(Types.EconomyReservesDurableReserveProposalStateSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
+  async getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsByProposalId(
+    proposalId: string,
+  ): Promise<Result<Types.EconomyOperationsEconomyReserveProposalOperationalStatus, ApiError>> {
+    const url = `/api/v1/admin/economy/reserves/proposals/${proposalId}`;
+
+    const result = await this.client.request({
+      method: 'GET',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.EconomyOperationsEconomyReserveProposalOperationalStatusSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 

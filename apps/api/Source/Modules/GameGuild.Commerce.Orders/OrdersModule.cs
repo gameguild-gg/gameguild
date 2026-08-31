@@ -18,6 +18,7 @@ public static class OrdersModule
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.TryAddScoped<IOrderPaymentAuthority, DenyOrderPaymentAuthority>();
         services.TryAddScoped<IOrderPaymentProcessor, DenyOrderPaymentProcessor>();
+        services.TryAddScoped<IOrderPaymentIntentPreparer, DenyOrderPaymentIntentPreparer>();
         services.TryAddScoped<IOrderMarketplaceSettlementAuthority, DenyOrderMarketplaceSettlementAuthority>();
 
         // IOrderService removed — all operations now use CQRS commands/queries dispatched via ISender.
@@ -87,6 +88,29 @@ public static class OrdersModule
                 .WithMany()
                 .HasForeignKey(e => e.UserProductId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<MarketplaceCart>(entity =>
+        {
+            entity.HasKey(cart => cart.Id);
+            entity.Property(cart => cart.TenantId).IsRequired();
+            entity.Property(cart => cart.Version).IsConcurrencyToken();
+            entity.HasIndex(cart => new { cart.TenantId, cart.UserId, cart.State })
+                .HasFilter("\"State\" = 0 AND \"DeletedAt\" IS NULL")
+                .IsUnique();
+            entity.HasMany(cart => cart.Items)
+                .WithOne(item => item.Cart)
+                .HasForeignKey(item => item.CartId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MarketplaceCartItem>(entity =>
+        {
+            entity.HasKey(item => item.Id);
+            entity.Property(item => item.TenantId).IsRequired();
+            entity.Property(item => item.IdempotencyKey).HasMaxLength(100).IsRequired();
+            entity.HasIndex(item => new { item.CartId, item.ProductPricingVersionId }).IsUnique();
+            entity.HasIndex(item => new { item.CartId, item.IdempotencyKey }).IsUnique();
         });
 
         // OrderAuditLog configuration - immutable audit trail for order state transitions

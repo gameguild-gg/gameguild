@@ -19,6 +19,7 @@ public sealed class MarketplaceModule : ModuleBase
         services.AddScoped<IDurableMarketplacePolicyReader, PostgreSqlDurableMarketplacePolicyReader>();
         services.AddScoped<IDurableMarketplaceSettlementService, DurableMarketplaceSettlementService>();
         services.AddScoped<IDurableMarketplaceRefundService, DurableMarketplaceRefundService>();
+        services.AddScoped<IMarketplaceOperationalQueryReader, PostgreSqlMarketplaceOperationalQueryReader>();
         services.TryAddSingleton(TimeProvider.System);
         services.Replace(ServiceDescriptor.Scoped<
             IOrderMarketplaceSettlementAuthority,

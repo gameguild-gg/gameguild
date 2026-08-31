@@ -61,6 +61,26 @@ public interface IOrderPaymentProcessor
         CancellationToken cancellationToken = default);
 }
 
+public sealed record AuthoritativeOrderPaymentIntent(
+    Guid OrderId,
+    Guid TenantId,
+    decimal Amount,
+    string Currency);
+
+public sealed record OrderPaymentIntentPreparation(
+    bool Success,
+    Guid? PaymentId,
+    string? ClientSecret,
+    string? FailureReason,
+    OrderChargeState State);
+
+public interface IOrderPaymentIntentPreparer
+{
+    Task<OrderPaymentIntentPreparation> PrepareAsync(
+        AuthoritativeOrderPaymentIntent intent,
+        CancellationToken cancellationToken = default);
+}
+
 /// <summary>
 /// Immutable settlement facts Orders requires before fulfillment.
 /// </summary>

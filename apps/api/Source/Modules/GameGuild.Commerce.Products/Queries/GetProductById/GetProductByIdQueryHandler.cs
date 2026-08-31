@@ -50,8 +50,10 @@ public sealed class GetProductByIdQueryHandler(IProductRepository productReposit
                 p.SaleEndDate,
                 p.IsDefault,
                 p.GetCurrentPrice(),
-                p.IsSaleActive()
-            )).ToList() : null
+                p.IsSaleActive(),
+                p.GetCurrentActiveVersion()?.Id
+            )).ToList() : null,
+            product.TenantId
         );
     }
 }

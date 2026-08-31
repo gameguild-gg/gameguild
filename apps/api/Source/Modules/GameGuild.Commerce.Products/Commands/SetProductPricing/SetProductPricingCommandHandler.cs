@@ -65,7 +65,8 @@ public sealed class SetProductPricingCommandHandler(
                 request.SaleStartDate,
                 request.SaleEndDate,
                 request.IsDefault,
-                request.UpdatedByUserId);
+                request.UpdatedByUserId,
+                product.TenantId);
 
             pricing = newPricing;
             version = initialVersion;
@@ -111,7 +112,8 @@ public sealed class SetProductPricingCommandHandler(
             pricing.SaleEndDate,
             pricing.IsDefault,
             currentPrice,
-            isSaleActive
+            isSaleActive,
+            version?.Id ?? pricing.GetCurrentActiveVersion()?.Id
         );
     }
 }

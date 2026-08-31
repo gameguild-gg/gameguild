@@ -8,7 +8,7 @@ namespace GameGuild.Identity.Authorization;
 /// </summary>
 public sealed class PolicyDefinitionSeeder
 {
-    public const long CurrentPolicyVersion = 3;
+    public const long CurrentPolicyVersion = 4;
 
     private readonly IPolicyDefinitionRepository _repository;
     private readonly ILogger<PolicyDefinitionSeeder> _logger;
@@ -888,6 +888,9 @@ public sealed class PolicyDefinitionSeeder
                 {
                     "Type": "TenantMatch",
                     "Description": "Ensure user belongs to the request tenant",
+                    "Params": {
+                        "allowNoTenant": true
+                    },
                     "Enabled": true
                 },
                 {

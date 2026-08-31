@@ -25,11 +25,13 @@ const config = {
 };
 
 const expectedOrderOperations = [
+  'get /v1/orders',
   'get /v1/orders/{orderId}',
   'post /v1/orders',
   'post /v1/orders/{orderId}/items',
   'post /v1/orders/{orderId}:capture',
   'post /v1/orders/{orderId}:complete',
+  'post /v1/orders/{orderId}:payment-intent',
 ];
 const openApiMethods = new Set(['delete', 'get', 'head', 'options', 'patch', 'post', 'put', 'trace']);
 
@@ -317,7 +319,7 @@ for (const result of results) {
 const failed = results.filter((result) => !result.ok);
 if (failed.length > 0) {
   console.error(`Smoke check failed: ${failed.length}/${results.length} checks failed.`);
-  process.exit(1);
+  process.exitCode = 1;
 }
 
 console.log(`Smoke check passed: ${results.length}/${results.length} checks passed.`);

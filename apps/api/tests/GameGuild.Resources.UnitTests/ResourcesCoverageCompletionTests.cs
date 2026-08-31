@@ -554,10 +554,10 @@ public sealed class QuotaExceededAlertHandlerCoverageCompletionTests
         var gate = typeof(QuotaExceededAlertHandler)
             .GetField("ViolationsLock", BindingFlags.Static | BindingFlags.NonPublic)!
             .GetValue(null)!;
+        var expiredKey = $"expired:{Guid.NewGuid():N}";
         lock (gate)
         {
-            dictionary.Clear();
-            dictionary["expired"] = (1, SystemClock.UtcNow.AddHours(-1));
+            dictionary[expiredKey] = (1, SystemClock.UtcNow.AddHours(-1));
         }
 
         var notification = new QuotaExceededEvent(
@@ -576,7 +576,7 @@ public sealed class QuotaExceededAlertHandlerCoverageCompletionTests
 
         lock (gate)
         {
-            dictionary.Should().NotContainKey("expired");
+            dictionary.Should().NotContainKey(expiredKey);
         }
     }
 }

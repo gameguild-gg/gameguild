@@ -14,9 +14,6 @@ namespace GameGuild.API.Controllers;
 public sealed record StartMyAdRewardSessionRequest(
     string Network,
     string CreativeId,
-    string DeviceRiskHash,
-    string IpRiskHash,
-    string AsnRiskHash,
     double RequiredDurationSeconds,
     string IdempotencyKey);
 public sealed record CompleteMyAdRewardSessionRequest(
@@ -28,6 +25,17 @@ public sealed record AdRewardProtectedOperationFailureResponse(
     EconomyProtectedOperationState State,
     Guid? ReviewId,
     IReadOnlyList<string> Diagnostics);
+public sealed record AdRewardRequestRiskContext(
+    string DeviceRiskHash,
+    string IpRiskHash,
+    string AsnRiskHash);
+public interface IAdRewardRequestRiskContextResolver
+{
+    ValueTask<AdRewardRequestRiskContext> ResolveAsync(
+        Guid tenantId,
+        Guid actorId,
+        CancellationToken cancellationToken = default);
+}
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/economy/ad-rewards")]
@@ -38,6 +46,7 @@ public sealed class EconomyAdRewardsController(
     IDurableAdRewardCompletionService completions,
     IDurableAdRewardSessionReader reader,
     IEconomyWalletDirectory wallets,
+    IAdRewardRequestRiskContextResolver requestRiskContext,
     IActorContextAccessor actorContextAccessor,
     TimeProvider timeProvider) : BaseApiController
 {
@@ -51,15 +60,29 @@ public sealed class EconomyAdRewardsController(
         ArgumentNullException.ThrowIfNull(request);
         var wallet = await wallets.GetOwnerWalletAsync(tenantId, actorId, cancellationToken)
             .ConfigureAwait(false);
+        AdRewardRequestRiskContext risk;
+        try
+        {
+            risk = await requestRiskContext.ResolveAsync(tenantId, actorId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (AdRewardRiskContextUnavailableException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+            {
+                State = "RiskContextUnavailable",
+                Message = "Ad reward risk evidence is unavailable."
+            });
+        }
         var result = await sessions.StartAsync(new StartDurableAdRewardSessionRequest(
             tenantId,
             actorId,
             wallet.WalletId,
             request.Network,
             request.CreativeId,
-            request.DeviceRiskHash,
-            request.IpRiskHash,
-            request.AsnRiskHash,
+            risk.DeviceRiskHash,
+            risk.IpRiskHash,
+            risk.AsnRiskHash,
             TimeSpan.FromSeconds(request.RequiredDurationSeconds),
             new IdempotencyKey(request.IdempotencyKey),
             timeProvider.GetUtcNow()), cancellationToken).ConfigureAwait(false);

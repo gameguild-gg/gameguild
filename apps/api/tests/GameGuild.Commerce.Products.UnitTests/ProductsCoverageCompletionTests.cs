@@ -645,10 +645,12 @@ public class ProductsCoverageCompletionTests
     public async Task ProductsController_CanIncludeUnpublished_CoversAuthenticationBranches()
     {
         var mediator = new Mock<IMediator>();
+        var actorAccessor = new Mock<IActorContextAccessor>();
+        actorAccessor.SetupGet(x => x.ActorContext).Returns(ActorContext.Anonymous);
         var productId = Guid.NewGuid();
         mediator.Setup(x => x.Send(It.IsAny<ProductExistsQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        var controller = new ProductsController(mediator.Object)
+        var controller = new ProductsController(mediator.Object, actorAccessor.Object)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
@@ -658,16 +660,30 @@ public class ProductsCoverageCompletionTests
         result.Should().BeOfType<OkResult>();
         mediator.Verify(x => x.Send(It.Is<ProductExistsQuery>(q => !q.IncludeUnpublished), It.IsAny<CancellationToken>()), Times.Once);
 
-        controller.ControllerContext.HttpContext.User = new System.Security.Claims.ClaimsPrincipal(
-            new System.Security.Claims.ClaimsIdentity(authenticationType: "Test"));
+        var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        actorAccessor.SetupGet(x => x.ActorContext).Returns(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = actorId.ToString(),
+            TenantId = tenantId,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        });
+        mediator.Setup(x => x.Send(It.IsAny<GetProductByIdQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ProductDto(
+                productId, "Draft", null, null, null, ProductType.Program, false, false, actorId,
+                null, 0m, 0m, 0m, DateTime.UtcNow, DateTime.UtcNow, null, tenantId));
 
         await controller.ProductExists(productId, includeUnpublished: true);
         await controller.ProductExists(productId, includeUnpublished: false);
 
-        mediator.Verify(x => x.Send(It.Is<ProductExistsQuery>(q => q.IncludeUnpublished), It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(x => x.Send(It.Is<GetProductByIdQuery>(q => q.IncludeUnpublished), It.IsAny<CancellationToken>()), Times.Once);
         mediator.Verify(x => x.Send(It.Is<ProductExistsQuery>(q => !q.IncludeUnpublished), It.IsAny<CancellationToken>()), Times.Exactly(2));
 
-        var controllerWithoutHttpContext = new ProductsController(mediator.Object);
+        actorAccessor.SetupGet(x => x.ActorContext).Returns(ActorContext.Anonymous);
+        var controllerWithoutHttpContext = new ProductsController(mediator.Object, actorAccessor.Object);
         await controllerWithoutHttpContext.ProductExists(productId, includeUnpublished: true);
         await controllerWithoutHttpContext.ProductExists(productId, includeUnpublished: false);
         mediator.Verify(x => x.Send(It.Is<ProductExistsQuery>(q => !q.IncludeUnpublished), It.IsAny<CancellationToken>()), Times.Exactly(4));

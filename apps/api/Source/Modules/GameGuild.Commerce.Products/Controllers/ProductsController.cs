@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +15,7 @@ namespace GameGuild.Commerce.Products;
 [Route("v{version:apiVersion}/products")]
 [Microsoft.AspNetCore.Http.Tags("products")]
 [Authorize]
-public class ProductsController(IMediator mediator) : BaseApiController
+public class ProductsController(IMediator mediator, IActorContextAccessor actorContextAccessor) : BaseApiController
 {
     /// <summary>
     /// Get product by ID
@@ -30,10 +31,10 @@ public class ProductsController(IMediator mediator) : BaseApiController
         [FromQuery] bool includePricing = true,
         [FromQuery] bool includeUnpublished = false)
     {
-        var query = new GetProductByIdQuery(productId, includePricing, IncludeUnpublished: CanIncludeUnpublished(includeUnpublished));
+        var query = new GetProductByIdQuery(productId, includePricing, IncludeUnpublished: includeUnpublished && HasActor());
         var product = await mediator.Send(query).ConfigureAwait(false);
 
-        if (product == null)
+        if (product == null || (!product.IsPublished && !CanAccessUnpublished(product)))
             return NotFound();
 
         return Ok(product);
@@ -49,8 +50,13 @@ public class ProductsController(IMediator mediator) : BaseApiController
     [AllowAnonymous]
     public async Task<IActionResult> ProductExists(Guid productId, [FromQuery] bool includeUnpublished = false)
     {
-        var query = new ProductExistsQuery(productId, CanIncludeUnpublished(includeUnpublished));
-        var exists = await mediator.Send(query).ConfigureAwait(false);
+        if (includeUnpublished && HasActor())
+        {
+            var product = await mediator.Send(new GetProductByIdQuery(productId, IncludePricing: false, IncludeUnpublished: true)).ConfigureAwait(false);
+            return product is not null && (product.IsPublished || CanAccessUnpublished(product)) ? Ok() : NotFound();
+        }
+
+        var exists = await mediator.Send(new ProductExistsQuery(productId)).ConfigureAwait(false);
         return exists ? Ok() : NotFound();
     }
 
@@ -66,8 +72,38 @@ public class ProductsController(IMediator mediator) : BaseApiController
         Guid productId,
         [FromQuery] bool includeUnpublished = false)
     {
-        var query = new GetProductPricingQuery(productId, CanIncludeUnpublished(includeUnpublished));
+        var canInclude = false;
+        if (includeUnpublished && HasActor())
+        {
+            var product = await mediator.Send(new GetProductByIdQuery(productId, IncludePricing: false, IncludeUnpublished: true)).ConfigureAwait(false);
+            if (product is null || (!product.IsPublished && !CanAccessUnpublished(product))) return NotFound();
+            canInclude = true;
+        }
+
+        var query = new GetProductPricingQuery(productId, canInclude);
         var pricing = await mediator.Send(query).ConfigureAwait(false);
+        return Ok(pricing);
+    }
+
+    [HttpPut("{productId:guid}/pricing")]
+    [RequirePermission(ProductsPermission.Keys.PricingManage)]
+    public async Task<ActionResult<ProductPricingDto>> SetProductPricing(
+        Guid productId,
+        [FromBody] SetProductPricingRequest request)
+    {
+        if (!await CanMutateAsync(productId).ConfigureAwait(false) || !TryActor(out _, out var actorId)) return Forbid();
+
+        var pricing = await mediator.Send(new SetProductPricingCommand(
+            productId,
+            request.Name,
+            request.BasePrice,
+            request.Currency,
+            request.SalePrice,
+            request.SaleStartDate,
+            request.SaleEndDate,
+            request.IsDefault,
+            request.PricingId,
+            actorId)).ConfigureAwait(false);
         return Ok(pricing);
     }
 
@@ -97,16 +133,23 @@ public class ProductsController(IMediator mediator) : BaseApiController
         [FromQuery] string sortBy = "CreatedAt",
         [FromQuery] string sortDirection = "DESC")
     {
+        var tenantId = Guid.Empty;
+        var actorId = Guid.Empty;
+        var includeDrafts = includeUnpublished && TryActor(out tenantId, out actorId);
+        if (includeDrafts && !actorContextAccessor.ActorContext.HasPermission(ProductsPermission.Keys.Manage))
+            creatorId = actorId;
+
         var query = new GetProductsPagedQuery(
             type,
             creatorId,
             searchTerm,
             isBundle,
-            CanIncludeUnpublished(includeUnpublished),
+            includeDrafts,
             skip,
             take,
             sortBy,
-            sortDirection);
+            sortDirection,
+            includeDrafts ? tenantId : null);
         var result = await mediator.Send(query).ConfigureAwait(false);
         return Ok(result);
     }
@@ -120,6 +163,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     [RequirePermission(ProductsPermission.Keys.Create)]
     public async Task<ActionResult<ProductDto>> CreateProduct([FromBody] CreateProductRequest request)
     {
+        if (!TryActor(out var tenantId, out var actorId)) return Forbid();
         var command = new CreateProductCommand(
             request.Name,
             request.Description,
@@ -127,12 +171,12 @@ public class ProductsController(IMediator mediator) : BaseApiController
             request.ImageUrl,
             request.Type,
             request.IsBundle,
-            request.CreatorId,
+            actorId,
             request.BundleItems,
             request.ReferralCommissionPercentage,
             request.MaxAffiliateDiscount,
             request.AffiliateCommissionPercentage,
-            request.TenantId
+            tenantId
         );
 
         var product = await mediator.Send(command).ConfigureAwait(false);
@@ -148,7 +192,9 @@ public class ProductsController(IMediator mediator) : BaseApiController
     [RequirePermission(ProductsPermission.Keys.Create)]
     public async Task<ActionResult<List<ProductDto>>> BatchCreateProducts([FromBody] BatchCreateProductsRequest request)
     {
-        var command = new BatchCreateProductsCommand(request.Products, request.TenantId);
+        if (!TryActor(out var tenantId, out var actorId)) return Forbid();
+        var productsToCreate = request.Products.Select(item => item with { CreatorId = actorId }).ToList();
+        var command = new BatchCreateProductsCommand(productsToCreate, tenantId);
         var products = await mediator.Send(command).ConfigureAwait(false);
         return StatusCode(StatusCodes.Status201Created, products);
     }
@@ -163,6 +209,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     [RequirePermission(ProductsPermission.Keys.Update)]
     public async Task<ActionResult<ProductDto>> UpdateProduct(Guid productId, [FromBody] UpdateProductRequest request)
     {
+        if (!await CanMutateAsync(productId).ConfigureAwait(false)) return Forbid();
         var command = new UpdateProductCommand(
             productId,
             request.Name,
@@ -192,6 +239,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     [RequirePermission(ProductsPermission.Keys.Update)]
     public async Task<ActionResult<ProductDto>> PatchProduct(Guid productId, [FromBody] PatchProductRequest request)
     {
+        if (!await CanMutateAsync(productId).ConfigureAwait(false)) return Forbid();
         var command = new PatchProductCommand(
             productId,
             request.Name,
@@ -220,6 +268,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     [RequirePermission(ProductsPermission.Keys.Update)]
     public async Task<ActionResult<ProductDto>> ActivateProduct(Guid productId)
     {
+        if (!await CanMutateAsync(productId).ConfigureAwait(false)) return Forbid();
         var command = new ActivateProductCommand(productId);
         var product = await mediator.Send(command).ConfigureAwait(false);
         return Ok(product);
@@ -234,6 +283,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     [RequirePermission(ProductsPermission.Keys.Update)]
     public async Task<ActionResult<ProductDto>> DeactivateProduct(Guid productId)
     {
+        if (!await CanMutateAsync(productId).ConfigureAwait(false)) return Forbid();
         var command = new DeactivateProductCommand(productId);
         var product = await mediator.Send(command).ConfigureAwait(false);
         return Ok(product);
@@ -248,6 +298,7 @@ public class ProductsController(IMediator mediator) : BaseApiController
     [RequirePermission(ProductsPermission.Keys.Delete)]
     public async Task<ActionResult<ProductDto>> ArchiveProduct(Guid productId)
     {
+        if (!await CanMutateAsync(productId).ConfigureAwait(false)) return Forbid();
         var command = new ArchiveProductCommand(productId);
         var product = await mediator.Send(command).ConfigureAwait(false);
         return Ok(product);
@@ -267,18 +318,40 @@ public class ProductsController(IMediator mediator) : BaseApiController
         [FromQuery] bool softDelete = true,
         [FromQuery] string? reason = null)
     {
+        if (!await CanMutateAsync(productId).ConfigureAwait(false)) return Forbid();
         var command = new DeleteProductCommand(productId, softDelete, reason);
         await mediator.Send(command).ConfigureAwait(false);
         return NoContent();
     }
 
-    private bool CanIncludeUnpublished(bool includeUnpublished)
+    private bool HasActor()
+        => TryActor(out _, out _);
+
+    private bool TryActor(out Guid tenantId, out Guid actorId)
     {
-        if (!includeUnpublished)
+        tenantId = Guid.Empty;
+        actorId = Guid.Empty;
+        var actor = actorContextAccessor.ActorContext;
+        if (!actor.IsAuthenticated || !actor.TenantId.HasValue || !actor.SubjectIdAsGuid.HasValue)
             return false;
 
-        var identity = User?.Identity;
-        return identity is { IsAuthenticated: true };
+        tenantId = actor.TenantId.Value;
+        actorId = actor.SubjectIdAsGuid.Value;
+        return true;
+    }
+
+    private bool CanAccessUnpublished(ProductDto product)
+    {
+        if (!TryActor(out var tenantId, out var actorId) || product.TenantId != tenantId)
+            return false;
+
+        return product.CreatorId == actorId || actorContextAccessor.ActorContext.HasPermission(ProductsPermission.Keys.Manage);
+    }
+
+    private async Task<bool> CanMutateAsync(Guid productId)
+    {
+        var product = await mediator.Send(new GetProductByIdQuery(productId, IncludePricing: false, IncludeUnpublished: true)).ConfigureAwait(false);
+        return product is not null && CanAccessUnpublished(product);
     }
 }
 
@@ -293,12 +366,10 @@ public sealed record CreateProductRequest
     public string? ImageUrl { get; init; }
     public ProductType Type { get; init; } = ProductType.Program;
     public bool IsBundle { get; init; }
-    public Guid? CreatorId { get; init; }
     public List<Guid>? BundleItems { get; init; }
     public decimal ReferralCommissionPercentage { get; init; } = 30m;
     public decimal MaxAffiliateDiscount { get; init; }
     public decimal AffiliateCommissionPercentage { get; init; } = 30m;
-    public Guid? TenantId { get; init; }
 }
 
 /// <summary>
@@ -343,6 +414,15 @@ public sealed record PatchProductRequest
 public sealed record BatchCreateProductsRequest
 {
     public List<BatchProductCreateItem> Products { get; init; } = new();
-    public Guid? TenantId { get; init; }
 }
+
+public sealed record SetProductPricingRequest(
+    string Name,
+    decimal BasePrice,
+    string Currency,
+    decimal? SalePrice,
+    DateTime? SaleStartDate,
+    DateTime? SaleEndDate,
+    bool IsDefault,
+    Guid? PricingId);
 

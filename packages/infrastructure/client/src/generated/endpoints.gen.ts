@@ -2746,6 +2746,39 @@ export const postApiTestingLabSettingsResetEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAdminEconomyAdRewardsPendingClaimsInput {
+  query?: {
+    confirmed?: boolean;
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyAdRewardsPendingClaimsOutput = Types.EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardPendingClaimOperationalStatus;
+export const getAdminEconomyAdRewardsPendingClaimsEndpoint = {
+  operationId: 'getAdminEconomyAdRewardsPendingClaims' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ad-rewards/pending-claims' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyAdRewardsReconciliationsInput {
+  query?: {
+    network?: string;
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyAdRewardsReconciliationsOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardReconciliationOperationalStatus;
+export const getAdminEconomyAdRewardsReconciliationsEndpoint = {
+  operationId: 'getAdminEconomyAdRewardsReconciliations' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ad-rewards/reconciliations' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetAdminEconomyAdRewardsReportsInput {
   query?: {
     network?: string;
@@ -2769,6 +2802,36 @@ export const postAdminEconomyAdRewardsReportsEndpoint = {
   operationId: 'postAdminEconomyAdRewardsReports' as const,
   method: 'POST' as const,
   path: '/api/v1/admin/economy/ad-rewards/reports' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsInput {
+  query?: {
+    state?: Types.EconomyAdRewardsDurableAdRewardSessionState;
+    network?: string;
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyAdRewardsAdRewardSessionOperationalSummary;
+export const getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsEndpoint = {
+  operationId: 'getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessions' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ad-rewards/sessions' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsBySessionIdInput {
+  sessionId: string;
+}
+export type GetAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsBySessionIdOutput = Types.EconomyAdRewardsAdRewardSessionOperationalDetails;
+export const getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsBySessionIdEndpoint = {
+  operationId: 'getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsBySessionId' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ad-rewards/sessions/{sessionId}' as const,
   tags: ['EconomyAdministration'] as const,
   requiresAuth: true,
 } as const;
@@ -2986,6 +3049,22 @@ export const postAdminEconomyComplianceTrustSafetyAppealsDecisionsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsInput {
+  query?: {
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCustodyObservationOperationalStatus;
+export const getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsEndpoint = {
+  operationId: 'getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservations' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/custody/observations' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostAdminEconomyCustodyObservationsInput {
   body?: Types.EconomyReservesCustodyObservationCommand;
 }
@@ -2994,6 +3073,19 @@ export const postAdminEconomyCustodyObservationsEndpoint = {
   operationId: 'postAdminEconomyCustodyObservations' as const,
   method: 'POST' as const,
   path: '/api/v1/admin/economy/custody/observations' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsByObservationIdInput {
+  observationId: string;
+}
+export type GetAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsByObservationIdOutput =
+  Types.EconomyOperationsEconomyCustodyObservationOperationalStatus;
+export const getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsByObservationIdEndpoint = {
+  operationId: 'getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsByObservationId' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/custody/observations/{observationId}' as const,
   tags: ['EconomyAdministration'] as const,
   requiresAuth: true,
 } as const;
@@ -3048,6 +3140,22 @@ export const postAdminEconomyKillSwitchesReleaseProposalsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsInput {
+  query?: {
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyAnchorOperationalDetails;
+export const getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsEndpoint = {
+  operationId: 'getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchors' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ledger/anchors' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostAdminEconomyLedgerAnchorsInput {
   body?: Types.APIControllersPublishEconomyAnchorInput;
 }
@@ -3056,6 +3164,30 @@ export const postAdminEconomyLedgerAnchorsEndpoint = {
   operationId: 'postAdminEconomyLedgerAnchors' as const,
   method: 'POST' as const,
   path: '/api/v1/admin/economy/ledger/anchors' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsByAnchorIdInput {
+  anchorId: string;
+}
+export type GetAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsByAnchorIdOutput = Types.EconomyOperationsEconomyAnchorOperationalDetails;
+export const getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsByAnchorIdEndpoint = {
+  operationId: 'getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsByAnchorId' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ledger/anchors/{anchorId}' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyLedgerAnchorsVerificationsInput {
+  anchorId: string;
+}
+export type GetAdminEconomyLedgerAnchorsVerificationsOutput = Array<Types.EconomyOperationsEconomyAnchorVerificationOperationalStatus>;
+export const getAdminEconomyLedgerAnchorsVerificationsEndpoint = {
+  operationId: 'getAdminEconomyLedgerAnchorsVerifications' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ledger/anchors/{anchorId}/verifications' as const,
   tags: ['EconomyAdministration'] as const,
   requiresAuth: true,
 } as const;
@@ -3080,12 +3212,41 @@ export const getAdminEconomyLedgerHealthEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsInput {
+  query?: {
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyProjectionGenerationOperationalDetails;
+export const getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsEndpoint = {
+  operationId: 'getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerations' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ledger/projection-generations' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
 export type PostAdminEconomyLedgerProjectionGenerationsInput = void;
 export type PostAdminEconomyLedgerProjectionGenerationsOutput = Types.EconomyProjectionsProjectionGenerationState;
 export const postAdminEconomyLedgerProjectionGenerationsEndpoint = {
   operationId: 'postAdminEconomyLedgerProjectionGenerations' as const,
   method: 'POST' as const,
   path: '/api/v1/admin/economy/ledger/projection-generations' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsByGenerationInput {
+  generation: number;
+}
+export type GetAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsByGenerationOutput =
+  Types.EconomyOperationsEconomyProjectionGenerationOperationalDetails;
+export const getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsByGenerationEndpoint = {
+  operationId: 'getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsByGeneration' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ledger/projection-generations/{generation}' as const,
   tags: ['EconomyAdministration'] as const,
   requiresAuth: true,
 } as const;
@@ -3103,6 +3264,34 @@ export const postAdminEconomyLedgerProjectionGenerationsApprovalsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAdminEconomyLedgerProjectionGenerationsAuditInput {
+  generation: number;
+}
+export type GetAdminEconomyLedgerProjectionGenerationsAuditOutput = Array<Types.EconomyOperationsEconomyProjectionApprovalAuditEntry>;
+export const getAdminEconomyLedgerProjectionGenerationsAuditEndpoint = {
+  operationId: 'getAdminEconomyLedgerProjectionGenerationsAudit' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ledger/projection-generations/{generation}/audit' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsInput {
+  query?: {
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyJournalVerificationRunDetails;
+export const getAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsEndpoint = {
+  operationId: 'getAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRuns' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ledger/verification-runs' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
 export type PostAdminEconomyLedgerVerificationRunsInput = void;
 export type PostAdminEconomyLedgerVerificationRunsOutput = Types.EconomyLedgerJournalIntegrityRunResult;
 export const postAdminEconomyLedgerVerificationRunsEndpoint = {
@@ -3110,6 +3299,36 @@ export const postAdminEconomyLedgerVerificationRunsEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/admin/economy/ledger/verification-runs' as const,
   tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsByVerificationIdInput {
+  verificationId: string;
+}
+export type GetAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsByVerificationIdOutput =
+  Types.EconomyOperationsEconomyJournalVerificationRunDetails;
+export const getAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsByVerificationIdEndpoint = {
+  operationId: 'getAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsByVerificationId' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/ledger/verification-runs/{verificationId}' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesInput {
+  query?: {
+    state?: Types.EconomyOperationsLegacyEconomyShadowState;
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsLegacyEconomyShadowBatchSummary;
+export const getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesEndpoint = {
+  operationId: 'getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatches' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/legacy-migration/batches' as const,
+  tags: ['EconomyLegacyMigrationAdministration'] as const,
   requiresAuth: true,
 } as const;
 
@@ -3125,12 +3344,12 @@ export const postAdminEconomyLegacyMigrationBatchesEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetAdminEconomyLegacyMigrationBatchesInput {
+export interface GetAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesByBatchIdInput {
   batchId: string;
 }
-export type GetAdminEconomyLegacyMigrationBatchesOutput = Types.EconomyOperationsLegacyEconomyShadowBatchView;
-export const getAdminEconomyLegacyMigrationBatchesEndpoint = {
-  operationId: 'getAdminEconomyLegacyMigrationBatches' as const,
+export type GetAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesByBatchIdOutput = Types.EconomyOperationsLegacyEconomyShadowBatchView;
+export const getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesByBatchIdEndpoint = {
+  operationId: 'getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesByBatchId' as const,
   method: 'GET' as const,
   path: '/api/v1/admin/economy/legacy-migration/batches/{batchId}' as const,
   tags: ['EconomyLegacyMigrationAdministration'] as const,
@@ -3198,6 +3417,80 @@ export const postAdminEconomyLegacyMigrationBatchesWalletsBackfillEndpoint = {
   method: 'POST' as const,
   path: '/api/v1/admin/economy/legacy-migration/batches/{batchId}/wallets:backfill' as const,
   tags: ['EconomyLegacyMigrationAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyMarketplaceOutboxInput {
+  query?: {
+    published?: boolean;
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyMarketplaceOutboxOutput = Types.EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceOutboxOperationalStatus;
+export const getAdminEconomyMarketplaceOutboxEndpoint = {
+  operationId: 'getAdminEconomyMarketplaceOutbox' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/marketplace/outbox' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsInput {
+  query?: {
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceRefundOperationalStatus;
+export const getAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsEndpoint = {
+  operationId: 'getAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefunds' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/marketplace/refunds' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsByRefundIdInput {
+  refundId: string;
+}
+export type GetAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsByRefundIdOutput = Types.EconomyMarketplaceMarketplaceRefundOperationalStatus;
+export const getAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsByRefundIdEndpoint = {
+  operationId: 'getAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsByRefundId' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/marketplace/refunds/{refundId}' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsInput {
+  query?: {
+    status?: Types.EconomyMarketplaceMarketplaceSettlementStatus;
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyMarketplaceMarketplaceSettlementOperationalSummary;
+export const getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsEndpoint = {
+  operationId: 'getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlements' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/marketplace/settlements' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsBySettlementIdInput {
+  settlementId: string;
+}
+export type GetAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsBySettlementIdOutput =
+  Types.EconomyMarketplaceMarketplaceSettlementOperationalDetails;
+export const getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsBySettlementIdEndpoint = {
+  operationId: 'getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsBySettlementId' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/marketplace/settlements/{settlementId}' as const,
+  tags: ['EconomyAdministration'] as const,
   requiresAuth: true,
 } as const;
 
@@ -3363,6 +3656,23 @@ export const postAdminEconomyPayoutRequestsOperationsReconcileEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAdminEconomyPoliciesForGetAdminEconomyPoliciesInput {
+  query?: {
+    capability?: Types.EconomyRiskEconomyValueMovementCapability;
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyPoliciesForGetAdminEconomyPoliciesOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyCapabilityPolicyOperationalStatus;
+export const getAdminEconomyPoliciesForGetAdminEconomyPoliciesEndpoint = {
+  operationId: 'getAdminEconomyPoliciesForGetAdminEconomyPolicies' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/policies' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostAdminEconomyPoliciesInput {
   body?: Types.APIControllersProposeEconomyPolicyInput;
 }
@@ -3371,6 +3681,18 @@ export const postAdminEconomyPoliciesEndpoint = {
   operationId: 'postAdminEconomyPolicies' as const,
   method: 'POST' as const,
   path: '/api/v1/admin/economy/policies' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyPoliciesForGetAdminEconomyPoliciesByPolicyIdInput {
+  policyId: string;
+}
+export type GetAdminEconomyPoliciesForGetAdminEconomyPoliciesByPolicyIdOutput = Types.EconomyOperationsEconomyPolicyOperationalDetails;
+export const getAdminEconomyPoliciesForGetAdminEconomyPoliciesByPolicyIdEndpoint = {
+  operationId: 'getAdminEconomyPoliciesForGetAdminEconomyPoliciesByPolicyId' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/policies/{policyId}' as const,
   tags: ['EconomyAdministration'] as const,
   requiresAuth: true,
 } as const;
@@ -3388,12 +3710,50 @@ export const postAdminEconomyPoliciesApproveEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetAdminEconomyPoliciesAuditInput {
+  policyId: string;
+}
+export type GetAdminEconomyPoliciesAuditOutput = Array<Types.EconomyOperationsEconomyPolicyAuditEntry>;
+export const getAdminEconomyPoliciesAuditEndpoint = {
+  operationId: 'getAdminEconomyPoliciesAudit' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/policies/{policyId}/audit' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export type GetAdminEconomyReservesActiveInput = void;
+export type GetAdminEconomyReservesActiveOutput = Types.EconomyOperationsEconomyActiveReserveOperationalDetails;
+export const getAdminEconomyReservesActiveEndpoint = {
+  operationId: 'getAdminEconomyReservesActive' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/reserves/active' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
 export type GetAdminEconomyReservesLiabilitiesInput = void;
 export type GetAdminEconomyReservesLiabilitiesOutput = Types.EconomyReservesEconomyLiabilitySnapshot;
 export const getAdminEconomyReservesLiabilitiesEndpoint = {
   operationId: 'getAdminEconomyReservesLiabilities' as const,
   method: 'GET' as const,
   path: '/api/v1/admin/economy/reserves/liabilities' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsInput {
+  query?: {
+    limit?: number;
+    cursor?: string;
+  };
+}
+export type GetAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsOutput =
+  Types.EconomyOperationsEconomyOperationalPageOfEconomyOperationsEconomyReserveProposalOperationalStatus;
+export const getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsEndpoint = {
+  operationId: 'getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposals' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/reserves/proposals' as const,
   tags: ['EconomyAdministration'] as const,
   requiresAuth: true,
 } as const;
@@ -3406,6 +3766,19 @@ export const postAdminEconomyReservesProposalsEndpoint = {
   operationId: 'postAdminEconomyReservesProposals' as const,
   method: 'POST' as const,
   path: '/api/v1/admin/economy/reserves/proposals' as const,
+  tags: ['EconomyAdministration'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsByProposalIdInput {
+  proposalId: string;
+}
+export type GetAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsByProposalIdOutput =
+  Types.EconomyOperationsEconomyReserveProposalOperationalStatus;
+export const getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsByProposalIdEndpoint = {
+  operationId: 'getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsByProposalId' as const,
+  method: 'GET' as const,
+  path: '/api/v1/admin/economy/reserves/proposals/{proposalId}' as const,
   tags: ['EconomyAdministration'] as const,
   requiresAuth: true,
 } as const;
@@ -6623,6 +6996,74 @@ export const postVCoursesCheckoutCompleteEndpoint = {
   method: 'POST' as const,
   path: '/v{version}/courses/{courseId}/checkout/complete' as const,
   tags: ['LearningCoursesCheckout'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface GetVMarketplaceCartInput {
+  version: string;
+}
+export type GetVMarketplaceCartOutput = Types.CommerceOrdersMarketplaceCart;
+export const getVMarketplaceCartEndpoint = {
+  operationId: 'getVMarketplaceCart' as const,
+  method: 'GET' as const,
+  path: '/v{version}/marketplace/cart' as const,
+  tags: ['CommerceMarketplaceCart'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostVMarketplaceCartCheckoutInput {
+  version: string;
+  body?: Types.CommerceOrdersCheckoutMarketplaceCartInput;
+}
+export type PostVMarketplaceCartCheckoutOutput = Types.CommerceOrdersMarketplaceCheckout;
+export const postVMarketplaceCartCheckoutEndpoint = {
+  operationId: 'postVMarketplaceCartCheckout' as const,
+  method: 'POST' as const,
+  path: '/v{version}/marketplace/cart/checkout' as const,
+  tags: ['CommerceMarketplaceCart'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostVMarketplaceCartItemsInput {
+  version: string;
+  body?: Types.CommerceOrdersAddMarketplaceCartItemInput;
+}
+export type PostVMarketplaceCartItemsOutput = Types.CommerceOrdersMarketplaceCart;
+export const postVMarketplaceCartItemsEndpoint = {
+  operationId: 'postVMarketplaceCartItems' as const,
+  method: 'POST' as const,
+  path: '/v{version}/marketplace/cart/items' as const,
+  tags: ['CommerceMarketplaceCart'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteVMarketplaceCartItemsInput {
+  itemId: string;
+  version: string;
+  query?: {
+    expectedVersion?: number;
+  };
+}
+export type DeleteVMarketplaceCartItemsOutput = Types.CommerceOrdersMarketplaceCart;
+export const deleteVMarketplaceCartItemsEndpoint = {
+  operationId: 'deleteVMarketplaceCartItems' as const,
+  method: 'DELETE' as const,
+  path: '/v{version}/marketplace/cart/items/{itemId}' as const,
+  tags: ['CommerceMarketplaceCart'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PatchVMarketplaceCartItemsInput {
+  itemId: string;
+  version: string;
+  body?: Types.CommerceOrdersSetMarketplaceCartItemQuantityInput;
+}
+export type PatchVMarketplaceCartItemsOutput = Types.CommerceOrdersMarketplaceCart;
+export const patchVMarketplaceCartItemsEndpoint = {
+  operationId: 'patchVMarketplaceCartItems' as const,
+  method: 'PATCH' as const,
+  path: '/v{version}/marketplace/cart/items/{itemId}' as const,
+  tags: ['CommerceMarketplaceCart'] as const,
   requiresAuth: true,
 } as const;
 
@@ -12616,6 +13057,21 @@ export const getOgEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetOrdersForGetOrdersInput {
+  query?: {
+    owner?: string;
+    status?: Types.CommerceOrdersOrderStatus;
+  };
+}
+export type GetOrdersForGetOrdersOutput = Array<Types.CommerceOrdersOrder>;
+export const getOrdersForGetOrdersEndpoint = {
+  operationId: 'getOrdersForGetOrders' as const,
+  method: 'GET' as const,
+  path: '/v1/orders' as const,
+  tags: ['CommerceOrders'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostOrdersInput {
   body?: Types.CommerceOrdersCreateOrderInput;
 }
@@ -12628,12 +13084,12 @@ export const postOrdersEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetOrdersInput {
+export interface GetOrdersForGetOrdersByOrderIdInput {
   orderId: string;
 }
-export type GetOrdersOutput = Types.CommerceOrdersOrder;
-export const getOrdersEndpoint = {
-  operationId: 'getOrders' as const,
+export type GetOrdersForGetOrdersByOrderIdOutput = Types.CommerceOrdersOrder;
+export const getOrdersForGetOrdersByOrderIdEndpoint = {
+  operationId: 'getOrdersForGetOrdersByOrderId' as const,
   method: 'GET' as const,
   path: '/v1/orders/{orderId}' as const,
   tags: ['CommerceOrders'] as const,
@@ -12662,6 +13118,18 @@ export const postOrdersCompleteEndpoint = {
   operationId: 'postOrdersComplete' as const,
   method: 'POST' as const,
   path: '/v1/orders/{orderId}:complete' as const,
+  tags: ['CommerceOrders'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostOrdersPaymentIntentInput {
+  orderId: string;
+}
+export type PostOrdersPaymentIntentOutput = Types.CommerceOrderPaymentIntentPreparation;
+export const postOrdersPaymentIntentEndpoint = {
+  operationId: 'postOrdersPaymentIntent' as const,
+  method: 'POST' as const,
+  path: '/v1/orders/{orderId}:payment-intent' as const,
   tags: ['CommerceOrders'] as const,
   requiresAuth: true,
 } as const;
@@ -13230,6 +13698,19 @@ export type GetProductsPricingOutput = Array<Types.CommerceProductsProductPricin
 export const getProductsPricingEndpoint = {
   operationId: 'getProductsPricing' as const,
   method: 'GET' as const,
+  path: '/v1/products/{productId}/pricing' as const,
+  tags: ['CommerceProducts'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutProductsPricingInput {
+  productId: string;
+  body?: Types.CommerceProductsSetProductPricingInput;
+}
+export type PutProductsPricingOutput = Types.CommerceProductsProductPricing;
+export const putProductsPricingEndpoint = {
+  operationId: 'putProductsPricing' as const,
+  method: 'PUT' as const,
   path: '/v1/products/{productId}/pricing' as const,
   tags: ['CommerceProducts'] as const,
   requiresAuth: true,
@@ -20342,8 +20823,13 @@ export const endpoints = {
   patchApiTestingLabSettings: patchApiTestingLabSettingsEndpoint,
   getApiTestingLabSettingsExists: getApiTestingLabSettingsExistsEndpoint,
   postApiTestingLabSettingsReset: postApiTestingLabSettingsResetEndpoint,
+  getAdminEconomyAdRewardsPendingClaims: getAdminEconomyAdRewardsPendingClaimsEndpoint,
+  getAdminEconomyAdRewardsReconciliations: getAdminEconomyAdRewardsReconciliationsEndpoint,
   getAdminEconomyAdRewardsReports: getAdminEconomyAdRewardsReportsEndpoint,
   postAdminEconomyAdRewardsReports: postAdminEconomyAdRewardsReportsEndpoint,
+  getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessions: getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsEndpoint,
+  getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsBySessionId:
+    getAdminEconomyAdRewardsSessionsForGetAdminEconomyAdRewardsSessionsBySessionIdEndpoint,
   getAdminEconomyBountiesExpired: getAdminEconomyBountiesExpiredEndpoint,
   getAdminEconomyCapabilitiesConfiguration: getAdminEconomyCapabilitiesConfigurationEndpoint,
   postAdminEconomyCapabilitiesReadiness: postAdminEconomyCapabilitiesReadinessEndpoint,
@@ -20362,24 +20848,50 @@ export const endpoints = {
   getAdminEconomyComplianceTrustSafetyAppeals: getAdminEconomyComplianceTrustSafetyAppealsEndpoint,
   postAdminEconomyComplianceTrustSafetyAppealsAssignment: postAdminEconomyComplianceTrustSafetyAppealsAssignmentEndpoint,
   postAdminEconomyComplianceTrustSafetyAppealsDecisions: postAdminEconomyComplianceTrustSafetyAppealsDecisionsEndpoint,
+  getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservations: getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsEndpoint,
   postAdminEconomyCustodyObservations: postAdminEconomyCustodyObservationsEndpoint,
+  getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsByObservationId:
+    getAdminEconomyCustodyObservationsForGetAdminEconomyCustodyObservationsByObservationIdEndpoint,
   postAdminEconomyKillSwitches: postAdminEconomyKillSwitchesEndpoint,
   postAdminEconomyKillSwitchesRelease: postAdminEconomyKillSwitchesReleaseEndpoint,
   postAdminEconomyKillSwitchesReleaseApprovals: postAdminEconomyKillSwitchesReleaseApprovalsEndpoint,
   postAdminEconomyKillSwitchesReleaseProposals: postAdminEconomyKillSwitchesReleaseProposalsEndpoint,
+  getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchors: getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsEndpoint,
   postAdminEconomyLedgerAnchors: postAdminEconomyLedgerAnchorsEndpoint,
+  getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsByAnchorId: getAdminEconomyLedgerAnchorsForGetAdminEconomyLedgerAnchorsByAnchorIdEndpoint,
+  getAdminEconomyLedgerAnchorsVerifications: getAdminEconomyLedgerAnchorsVerificationsEndpoint,
   postAdminEconomyLedgerAnchorsVerificationRuns: postAdminEconomyLedgerAnchorsVerificationRunsEndpoint,
   getAdminEconomyLedgerHealth: getAdminEconomyLedgerHealthEndpoint,
+  getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerations:
+    getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsEndpoint,
   postAdminEconomyLedgerProjectionGenerations: postAdminEconomyLedgerProjectionGenerationsEndpoint,
+  getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsByGeneration:
+    getAdminEconomyLedgerProjectionGenerationsForGetAdminEconomyLedgerProjectionGenerationsByGenerationEndpoint,
   postAdminEconomyLedgerProjectionGenerationsApprovals: postAdminEconomyLedgerProjectionGenerationsApprovalsEndpoint,
+  getAdminEconomyLedgerProjectionGenerationsAudit: getAdminEconomyLedgerProjectionGenerationsAuditEndpoint,
+  getAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRuns:
+    getAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsEndpoint,
   postAdminEconomyLedgerVerificationRuns: postAdminEconomyLedgerVerificationRunsEndpoint,
+  getAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsByVerificationId:
+    getAdminEconomyLedgerVerificationRunsForGetAdminEconomyLedgerVerificationRunsByVerificationIdEndpoint,
+  getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatches:
+    getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesEndpoint,
   postAdminEconomyLegacyMigrationBatches: postAdminEconomyLegacyMigrationBatchesEndpoint,
-  getAdminEconomyLegacyMigrationBatches: getAdminEconomyLegacyMigrationBatchesEndpoint,
+  getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesByBatchId:
+    getAdminEconomyLegacyMigrationBatchesForGetAdminEconomyLegacyMigrationBatchesByBatchIdEndpoint,
   postAdminEconomyLegacyMigrationBatchesReconcile: postAdminEconomyLegacyMigrationBatchesReconcileEndpoint,
   postAdminEconomyLegacyMigrationBatchesCutoverApprove: postAdminEconomyLegacyMigrationBatchesCutoverApproveEndpoint,
   postAdminEconomyLegacyMigrationBatchesCutoverPropose: postAdminEconomyLegacyMigrationBatchesCutoverProposeEndpoint,
   postAdminEconomyLegacyMigrationBatchesCutoverRollback: postAdminEconomyLegacyMigrationBatchesCutoverRollbackEndpoint,
   postAdminEconomyLegacyMigrationBatchesWalletsBackfill: postAdminEconomyLegacyMigrationBatchesWalletsBackfillEndpoint,
+  getAdminEconomyMarketplaceOutbox: getAdminEconomyMarketplaceOutboxEndpoint,
+  getAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefunds: getAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsEndpoint,
+  getAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsByRefundId:
+    getAdminEconomyMarketplaceRefundsForGetAdminEconomyMarketplaceRefundsByRefundIdEndpoint,
+  getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlements:
+    getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsEndpoint,
+  getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsBySettlementId:
+    getAdminEconomyMarketplaceSettlementsForGetAdminEconomyMarketplaceSettlementsBySettlementIdEndpoint,
   postAdminEconomyMarketplaceSettlementsRefund: postAdminEconomyMarketplaceSettlementsRefundEndpoint,
   getAdminEconomyPayoutRequests: getAdminEconomyPayoutRequestsEndpoint,
   postAdminEconomyPayoutRequestsApprove: postAdminEconomyPayoutRequestsApproveEndpoint,
@@ -20392,10 +20904,17 @@ export const endpoints = {
     getAdminEconomyPayoutRequestsOperationsForGetAdminEconomyPayoutRequestsOperationsByOperationIdEndpoint,
   postAdminEconomyPayoutRequestsOperationsDispatch: postAdminEconomyPayoutRequestsOperationsDispatchEndpoint,
   postAdminEconomyPayoutRequestsOperationsReconcile: postAdminEconomyPayoutRequestsOperationsReconcileEndpoint,
+  getAdminEconomyPoliciesForGetAdminEconomyPolicies: getAdminEconomyPoliciesForGetAdminEconomyPoliciesEndpoint,
   postAdminEconomyPolicies: postAdminEconomyPoliciesEndpoint,
+  getAdminEconomyPoliciesForGetAdminEconomyPoliciesByPolicyId: getAdminEconomyPoliciesForGetAdminEconomyPoliciesByPolicyIdEndpoint,
   postAdminEconomyPoliciesApprove: postAdminEconomyPoliciesApproveEndpoint,
+  getAdminEconomyPoliciesAudit: getAdminEconomyPoliciesAuditEndpoint,
+  getAdminEconomyReservesActive: getAdminEconomyReservesActiveEndpoint,
   getAdminEconomyReservesLiabilities: getAdminEconomyReservesLiabilitiesEndpoint,
+  getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposals: getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsEndpoint,
   postAdminEconomyReservesProposals: postAdminEconomyReservesProposalsEndpoint,
+  getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsByProposalId:
+    getAdminEconomyReservesProposalsForGetAdminEconomyReservesProposalsByProposalIdEndpoint,
   postAdminEconomyReservesProposalsApprove: postAdminEconomyReservesProposalsApproveEndpoint,
   getAdminEconomyRiskReviewsForGetAdminEconomyRiskReviews: getAdminEconomyRiskReviewsForGetAdminEconomyRiskReviewsEndpoint,
   getAdminEconomyRiskReviewsForGetAdminEconomyRiskReviewsByReviewId: getAdminEconomyRiskReviewsForGetAdminEconomyRiskReviewsByReviewIdEndpoint,
@@ -20608,6 +21127,11 @@ export const endpoints = {
   getReady: getReadyEndpoint,
   getT: getTEndpoint,
   postVCoursesCheckoutComplete: postVCoursesCheckoutCompleteEndpoint,
+  getVMarketplaceCart: getVMarketplaceCartEndpoint,
+  postVMarketplaceCartCheckout: postVMarketplaceCartCheckoutEndpoint,
+  postVMarketplaceCartItems: postVMarketplaceCartItemsEndpoint,
+  deleteVMarketplaceCartItems: deleteVMarketplaceCartItemsEndpoint,
+  patchVMarketplaceCartItems: patchVMarketplaceCartItemsEndpoint,
   getVTestingTemplates: getVTestingTemplatesEndpoint,
   postVTestingTemplates: postVTestingTemplatesEndpoint,
   putVTestingTemplates: putVTestingTemplatesEndpoint,
@@ -21041,10 +21565,12 @@ export const endpoints = {
   getMeTasks: getMeTasksEndpoint,
   postOauthToken: postOauthTokenEndpoint,
   getOg: getOgEndpoint,
+  getOrdersForGetOrders: getOrdersForGetOrdersEndpoint,
   postOrders: postOrdersEndpoint,
-  getOrders: getOrdersEndpoint,
+  getOrdersForGetOrdersByOrderId: getOrdersForGetOrdersByOrderIdEndpoint,
   postOrdersCapture: postOrdersCaptureEndpoint,
   postOrdersComplete: postOrdersCompleteEndpoint,
+  postOrdersPaymentIntent: postOrdersPaymentIntentEndpoint,
   postOrdersItems: postOrdersItemsEndpoint,
   getPagesForGetPages: getPagesForGetPagesEndpoint,
   postPages: postPagesEndpoint,
@@ -21086,6 +21612,7 @@ export const endpoints = {
   postProductsArchive: postProductsArchiveEndpoint,
   postProductsDeactivate: postProductsDeactivateEndpoint,
   getProductsPricing: getProductsPricingEndpoint,
+  putProductsPricing: putProductsPricingEndpoint,
   getProjectsForGetProjects: getProjectsForGetProjectsEndpoint,
   postProjects: postProjectsEndpoint,
   getProjectsForGetProjectsById: getProjectsForGetProjectsByIdEndpoint,
