@@ -657,11 +657,8 @@ export interface APIControllersSettleMyMarketplaceOrderInput {
 }
 
 export interface APIControllersStartMyAdRewardSessionInput {
-  asnRiskHash?: string | null;
   creativeId?: string | null;
-  deviceRiskHash?: string | null;
   idempotencyKey?: string | null;
-  ipRiskHash?: string | null;
   network?: string | null;
   requiredDurationSeconds?: number;
 }
@@ -1282,6 +1279,22 @@ export type CommerceBillingInvoiceStatus = 'Draft' | 'Open' | 'Paid' | 'Void' | 
 
 export type CommerceOrderChargeState = 'Succeeded' | 'Failed' | 'Processing' | 'RequiresAction' | 'RequiresReconciliation';
 
+export interface CommerceOrderPaymentIntentPreparation {
+  clientSecret?: string | null;
+  failureReason?: string | null;
+  paymentId?: string | null;
+  state?: CommerceOrderChargeState;
+  success?: boolean;
+}
+
+export interface CommerceOrdersAddMarketplaceCartItemInput {
+  idempotencyKey?: string | null;
+  productId?: string;
+  productPricingId?: string;
+  productPricingVersionId?: string;
+  quantity?: number;
+}
+
 export interface CommerceOrdersAddOrderItemInput {
   productId?: string;
   productPricingId?: string;
@@ -1292,6 +1305,11 @@ export interface CommerceOrdersAddOrderItemInput {
 
 export interface CommerceOrdersCaptureOrderInput {
   paymentMethodId?: string | null;
+}
+
+export interface CommerceOrdersCheckoutMarketplaceCartInput {
+  expectedVersion?: number;
+  idempotencyKey?: string | null;
 }
 
 export interface CommerceOrdersCompleteOrderInput {
@@ -1308,6 +1326,36 @@ export interface CommerceOrdersCompleteOrderMarketplaceSettlement {
 
 export interface CommerceOrdersCreateOrderInput {
   idempotencyKey?: string | null;
+}
+
+export interface CommerceOrdersMarketplaceCart {
+  id?: string | null;
+  items?: Array<CommerceOrdersMarketplaceCartItem> | null;
+  state?: CommerceOrdersMarketplaceCartState;
+  tenantId?: string;
+  userId?: string;
+  version?: number;
+}
+
+export interface CommerceOrdersMarketplaceCartItem {
+  id?: string;
+  productId?: string;
+  productPricingId?: string;
+  productPricingVersionId?: string;
+  quantity?: number;
+}
+
+export type CommerceOrdersMarketplaceCartState = 'Active' | 'CheckedOut' | 'Abandoned';
+
+export interface CommerceOrdersMarketplaceCheckout {
+  cartId?: string;
+  orders?: Array<CommerceOrdersMarketplaceCheckoutOrder> | null;
+}
+
+export interface CommerceOrdersMarketplaceCheckoutOrder {
+  currency?: string | null;
+  orderId?: string;
+  total?: number;
 }
 
 export interface CommerceOrdersOrder {
@@ -1378,6 +1426,11 @@ export type CommerceOrdersOrderMarketplaceCurrencyChoice = 'Hard' | 'Soft' | 'Fi
 
 export type CommerceOrdersOrderStatus =
   'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Cancelled' | 'Refunded' | 'PartiallyRefunded' | 'Disputed' | 'Paid' | 'Fulfilled' | 'OnHold';
+
+export interface CommerceOrdersSetMarketplaceCartItemQuantityInput {
+  expectedVersion?: number;
+  quantity?: number;
+}
 
 export interface CommercePaymentsBillingChargesControllerCancelBillingChargeInput {
   canceledBy?: string | null;
@@ -1786,7 +1839,6 @@ export interface CommerceProductsAssignSupportTicketInput {
 
 export interface CommerceProductsBatchCreateProductsInput {
   products?: Array<CommerceProductsBatchProductCreateItem> | null;
-  tenantId?: string | null;
 }
 
 export interface CommerceProductsBatchProductCreateItem {
@@ -1824,7 +1876,6 @@ export interface CommerceProductsCreateMySupportTicketInput {
 export interface CommerceProductsCreateProductInput {
   affiliateCommissionPercentage?: number;
   bundleItems?: Array<string> | null;
-  creatorId?: string | null;
   description?: string | null;
   imageUrl?: string | null;
   isBundle?: boolean;
@@ -1832,7 +1883,6 @@ export interface CommerceProductsCreateProductInput {
   name?: string | null;
   referralCommissionPercentage?: number;
   shortDescription?: string | null;
-  tenantId?: string | null;
   type?: CommerceProductsProductType;
 }
 
@@ -1953,6 +2003,7 @@ export interface CommerceProductsProductPricing {
   basePrice?: number;
   currency?: string | null;
   currentPrice?: number;
+  currentVersionId?: string | null;
   isDefault?: boolean;
   isSaleActive?: boolean;
   name?: string | null;
@@ -2048,6 +2099,17 @@ export interface CommerceProductsRevokeEntitlementInput {
   productId?: string;
   reason?: string | null;
   userId?: string;
+}
+
+export interface CommerceProductsSetProductPricingInput {
+  basePrice?: number;
+  currency?: string | null;
+  isDefault?: boolean;
+  name?: string | null;
+  pricingId?: string | null;
+  saleEndDate?: string | null;
+  salePrice?: number | null;
+  saleStartDate?: string | null;
 }
 
 export interface CommerceProductsSupportTicket {
@@ -13072,16 +13134,25 @@ export let BulkOperationOutputSchema: z.ZodType<BulkOperationOutput>;
 export let CommerceBillingInvoicePaymentRetryResultSchema: z.ZodType<CommerceBillingInvoicePaymentRetryResult>;
 export let CommerceBillingInvoiceStatusSchema: z.ZodType<CommerceBillingInvoiceStatus>;
 export let CommerceOrderChargeStateSchema: z.ZodType<CommerceOrderChargeState>;
+export let CommerceOrderPaymentIntentPreparationSchema: z.ZodType<CommerceOrderPaymentIntentPreparation>;
+export let CommerceOrdersAddMarketplaceCartItemInputSchema: z.ZodType<CommerceOrdersAddMarketplaceCartItemInput>;
 export let CommerceOrdersAddOrderItemInputSchema: z.ZodType<CommerceOrdersAddOrderItemInput>;
 export let CommerceOrdersCaptureOrderInputSchema: z.ZodType<CommerceOrdersCaptureOrderInput>;
+export let CommerceOrdersCheckoutMarketplaceCartInputSchema: z.ZodType<CommerceOrdersCheckoutMarketplaceCartInput>;
 export let CommerceOrdersCompleteOrderInputSchema: z.ZodType<CommerceOrdersCompleteOrderInput>;
 export let CommerceOrdersCompleteOrderMarketplaceSettlementSchema: z.ZodType<CommerceOrdersCompleteOrderMarketplaceSettlement>;
 export let CommerceOrdersCreateOrderInputSchema: z.ZodType<CommerceOrdersCreateOrderInput>;
+export let CommerceOrdersMarketplaceCartSchema: z.ZodType<CommerceOrdersMarketplaceCart>;
+export let CommerceOrdersMarketplaceCartItemSchema: z.ZodType<CommerceOrdersMarketplaceCartItem>;
+export let CommerceOrdersMarketplaceCartStateSchema: z.ZodType<CommerceOrdersMarketplaceCartState>;
+export let CommerceOrdersMarketplaceCheckoutSchema: z.ZodType<CommerceOrdersMarketplaceCheckout>;
+export let CommerceOrdersMarketplaceCheckoutOrderSchema: z.ZodType<CommerceOrdersMarketplaceCheckoutOrder>;
 export let CommerceOrdersOrderSchema: z.ZodType<CommerceOrdersOrder>;
 export let CommerceOrdersOrderCaptureSchema: z.ZodType<CommerceOrdersOrderCapture>;
 export let CommerceOrdersOrderLineItemSchema: z.ZodType<CommerceOrdersOrderLineItem>;
 export let CommerceOrdersOrderMarketplaceCurrencyChoiceSchema: z.ZodType<CommerceOrdersOrderMarketplaceCurrencyChoice>;
 export let CommerceOrdersOrderStatusSchema: z.ZodType<CommerceOrdersOrderStatus>;
+export let CommerceOrdersSetMarketplaceCartItemQuantityInputSchema: z.ZodType<CommerceOrdersSetMarketplaceCartItemQuantityInput>;
 export let CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCancelBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerCreateBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerCreateBillingChargeInput>;
 export let CommercePaymentsBillingChargesControllerRefundBillingChargeInputSchema: z.ZodType<CommercePaymentsBillingChargesControllerRefundBillingChargeInput>;
@@ -13152,6 +13223,7 @@ export let CommerceProductsPromoCodeValidationResultSchema: z.ZodType<CommercePr
 export let CommerceProductsRejectedPromoCodeSchema: z.ZodType<CommerceProductsRejectedPromoCode>;
 export let CommerceProductsResolveSupportTicketInputSchema: z.ZodType<CommerceProductsResolveSupportTicketInput>;
 export let CommerceProductsRevokeEntitlementInputSchema: z.ZodType<CommerceProductsRevokeEntitlementInput>;
+export let CommerceProductsSetProductPricingInputSchema: z.ZodType<CommerceProductsSetProductPricingInput>;
 export let CommerceProductsSupportTicketSchema: z.ZodType<CommerceProductsSupportTicket>;
 export let CommerceProductsSupportTicketMessageSchema: z.ZodType<CommerceProductsSupportTicketMessage>;
 export let CommerceProductsSupportTicketMessageAuthorTypeSchema: z.ZodType<CommerceProductsSupportTicketMessageAuthorType>;
@@ -15108,11 +15180,8 @@ APIControllersSettleMyMarketplaceOrderInputSchema = z.object({
 
 /** Zod schema for APIControllersStartMyAdRewardSessionInput */
 APIControllersStartMyAdRewardSessionInputSchema = z.object({
-  asnRiskHash: z.string().nullable().optional(),
   creativeId: z.string().nullable().optional(),
-  deviceRiskHash: z.string().nullable().optional(),
   idempotencyKey: z.string().nullable().optional(),
-  ipRiskHash: z.string().nullable().optional(),
   network: z.string().nullable().optional(),
   requiredDurationSeconds: z.number().optional(),
 });
@@ -15886,6 +15955,24 @@ CommerceBillingInvoiceStatusSchema = z.enum(['Draft', 'Open', 'Paid', 'Void', 'P
 /** Zod schema for CommerceOrderChargeState */
 CommerceOrderChargeStateSchema = z.enum(['Succeeded', 'Failed', 'Processing', 'RequiresAction', 'RequiresReconciliation']);
 
+/** Zod schema for CommerceOrderPaymentIntentPreparation */
+CommerceOrderPaymentIntentPreparationSchema = z.object({
+  clientSecret: z.string().nullable().optional(),
+  failureReason: z.string().nullable().optional(),
+  paymentId: z.string().uuid().nullable().optional(),
+  state: z.lazy(() => CommerceOrderChargeStateSchema).optional(),
+  success: z.boolean().optional(),
+});
+
+/** Zod schema for CommerceOrdersAddMarketplaceCartItemInput */
+CommerceOrdersAddMarketplaceCartItemInputSchema = z.object({
+  idempotencyKey: z.string().nullable().optional(),
+  productId: z.string().uuid().optional(),
+  productPricingId: z.string().uuid().optional(),
+  productPricingVersionId: z.string().uuid().optional(),
+  quantity: z.number().int().optional(),
+});
+
 /** Zod schema for CommerceOrdersAddOrderItemInput */
 CommerceOrdersAddOrderItemInputSchema = z.object({
   productId: z.string().uuid().optional(),
@@ -15898,6 +15985,12 @@ CommerceOrdersAddOrderItemInputSchema = z.object({
 /** Zod schema for CommerceOrdersCaptureOrderInput */
 CommerceOrdersCaptureOrderInputSchema = z.object({
   paymentMethodId: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceOrdersCheckoutMarketplaceCartInput */
+CommerceOrdersCheckoutMarketplaceCartInputSchema = z.object({
+  expectedVersion: z.number().int().optional(),
+  idempotencyKey: z.string().nullable().optional(),
 });
 
 /** Zod schema for CommerceOrdersCompleteOrderInput */
@@ -15917,6 +16010,47 @@ CommerceOrdersCompleteOrderMarketplaceSettlementSchema = z.object({
 /** Zod schema for CommerceOrdersCreateOrderInput */
 CommerceOrdersCreateOrderInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for CommerceOrdersMarketplaceCart */
+CommerceOrdersMarketplaceCartSchema = z.object({
+  id: z.string().uuid().nullable().optional(),
+  items: z
+    .array(z.lazy(() => CommerceOrdersMarketplaceCartItemSchema))
+    .nullable()
+    .optional(),
+  state: z.lazy(() => CommerceOrdersMarketplaceCartStateSchema).optional(),
+  tenantId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  version: z.number().int().optional(),
+});
+
+/** Zod schema for CommerceOrdersMarketplaceCartItem */
+CommerceOrdersMarketplaceCartItemSchema = z.object({
+  id: z.string().uuid().optional(),
+  productId: z.string().uuid().optional(),
+  productPricingId: z.string().uuid().optional(),
+  productPricingVersionId: z.string().uuid().optional(),
+  quantity: z.number().int().optional(),
+});
+
+/** Zod schema for CommerceOrdersMarketplaceCartState */
+CommerceOrdersMarketplaceCartStateSchema = z.enum(['Active', 'CheckedOut', 'Abandoned']);
+
+/** Zod schema for CommerceOrdersMarketplaceCheckout */
+CommerceOrdersMarketplaceCheckoutSchema = z.object({
+  cartId: z.string().uuid().optional(),
+  orders: z
+    .array(z.lazy(() => CommerceOrdersMarketplaceCheckoutOrderSchema))
+    .nullable()
+    .optional(),
+});
+
+/** Zod schema for CommerceOrdersMarketplaceCheckoutOrder */
+CommerceOrdersMarketplaceCheckoutOrderSchema = z.object({
+  currency: z.string().nullable().optional(),
+  orderId: z.string().uuid().optional(),
+  total: z.number().optional(),
 });
 
 /** Zod schema for CommerceOrdersOrder */
@@ -16009,6 +16143,12 @@ CommerceOrdersOrderStatusSchema = z.enum([
   'Fulfilled',
   'OnHold',
 ]);
+
+/** Zod schema for CommerceOrdersSetMarketplaceCartItemQuantityInput */
+CommerceOrdersSetMarketplaceCartItemQuantityInputSchema = z.object({
+  expectedVersion: z.number().int().optional(),
+  quantity: z.number().int().optional(),
+});
 
 /** Zod schema for CommercePaymentsBillingChargesControllerCancelBillingChargeInput */
 CommercePaymentsBillingChargesControllerCancelBillingChargeInputSchema = z.object({
@@ -16493,7 +16633,6 @@ CommerceProductsBatchCreateProductsInputSchema = z.object({
     .array(z.lazy(() => CommerceProductsBatchProductCreateItemSchema))
     .nullable()
     .optional(),
-  tenantId: z.string().uuid().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsBatchProductCreateItem */
@@ -16536,7 +16675,6 @@ CommerceProductsCreateMySupportTicketInputSchema = z.object({
 CommerceProductsCreateProductInputSchema = z.object({
   affiliateCommissionPercentage: z.number().optional(),
   bundleItems: z.array(z.string().uuid()).nullable().optional(),
-  creatorId: z.string().uuid().nullable().optional(),
   description: z.string().nullable().optional(),
   imageUrl: z.string().nullable().optional(),
   isBundle: z.boolean().optional(),
@@ -16544,7 +16682,6 @@ CommerceProductsCreateProductInputSchema = z.object({
   name: z.string().nullable().optional(),
   referralCommissionPercentage: z.number().optional(),
   shortDescription: z.string().nullable().optional(),
-  tenantId: z.string().uuid().nullable().optional(),
   type: z.lazy(() => CommerceProductsProductTypeSchema).optional(),
 });
 
@@ -16678,6 +16815,7 @@ CommerceProductsProductPricingSchema = z.object({
   basePrice: z.number().optional(),
   currency: z.string().nullable().optional(),
   currentPrice: z.number().optional(),
+  currentVersionId: z.string().uuid().nullable().optional(),
   isDefault: z.boolean().optional(),
   isSaleActive: z.boolean().optional(),
   name: z.string().nullable().optional(),
@@ -16789,6 +16927,18 @@ CommerceProductsRevokeEntitlementInputSchema = z.object({
   productId: z.string().uuid().optional(),
   reason: z.string().nullable().optional(),
   userId: z.string().uuid().optional(),
+});
+
+/** Zod schema for CommerceProductsSetProductPricingInput */
+CommerceProductsSetProductPricingInputSchema = z.object({
+  basePrice: z.number().optional(),
+  currency: z.string().nullable().optional(),
+  isDefault: z.boolean().optional(),
+  name: z.string().nullable().optional(),
+  pricingId: z.string().uuid().nullable().optional(),
+  saleEndDate: z.string().datetime().nullable().optional(),
+  salePrice: z.number().nullable().optional(),
+  saleStartDate: z.string().datetime().nullable().optional(),
 });
 
 /** Zod schema for CommerceProductsSupportTicket */

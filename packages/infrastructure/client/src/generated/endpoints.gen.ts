@@ -6999,6 +6999,74 @@ export const postVCoursesCheckoutCompleteEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetVMarketplaceCartInput {
+  version: string;
+}
+export type GetVMarketplaceCartOutput = Types.CommerceOrdersMarketplaceCart;
+export const getVMarketplaceCartEndpoint = {
+  operationId: 'getVMarketplaceCart' as const,
+  method: 'GET' as const,
+  path: '/v{version}/marketplace/cart' as const,
+  tags: ['CommerceMarketplaceCart'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostVMarketplaceCartCheckoutInput {
+  version: string;
+  body?: Types.CommerceOrdersCheckoutMarketplaceCartInput;
+}
+export type PostVMarketplaceCartCheckoutOutput = Types.CommerceOrdersMarketplaceCheckout;
+export const postVMarketplaceCartCheckoutEndpoint = {
+  operationId: 'postVMarketplaceCartCheckout' as const,
+  method: 'POST' as const,
+  path: '/v{version}/marketplace/cart/checkout' as const,
+  tags: ['CommerceMarketplaceCart'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostVMarketplaceCartItemsInput {
+  version: string;
+  body?: Types.CommerceOrdersAddMarketplaceCartItemInput;
+}
+export type PostVMarketplaceCartItemsOutput = Types.CommerceOrdersMarketplaceCart;
+export const postVMarketplaceCartItemsEndpoint = {
+  operationId: 'postVMarketplaceCartItems' as const,
+  method: 'POST' as const,
+  path: '/v{version}/marketplace/cart/items' as const,
+  tags: ['CommerceMarketplaceCart'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface DeleteVMarketplaceCartItemsInput {
+  itemId: string;
+  version: string;
+  query?: {
+    expectedVersion?: number;
+  };
+}
+export type DeleteVMarketplaceCartItemsOutput = Types.CommerceOrdersMarketplaceCart;
+export const deleteVMarketplaceCartItemsEndpoint = {
+  operationId: 'deleteVMarketplaceCartItems' as const,
+  method: 'DELETE' as const,
+  path: '/v{version}/marketplace/cart/items/{itemId}' as const,
+  tags: ['CommerceMarketplaceCart'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PatchVMarketplaceCartItemsInput {
+  itemId: string;
+  version: string;
+  body?: Types.CommerceOrdersSetMarketplaceCartItemQuantityInput;
+}
+export type PatchVMarketplaceCartItemsOutput = Types.CommerceOrdersMarketplaceCart;
+export const patchVMarketplaceCartItemsEndpoint = {
+  operationId: 'patchVMarketplaceCartItems' as const,
+  method: 'PATCH' as const,
+  path: '/v{version}/marketplace/cart/items/{itemId}' as const,
+  tags: ['CommerceMarketplaceCart'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetVTestingTemplatesInput {
   version: string;
   query?: {
@@ -12989,6 +13057,21 @@ export const getOgEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface GetOrdersForGetOrdersInput {
+  query?: {
+    owner?: string;
+    status?: Types.CommerceOrdersOrderStatus;
+  };
+}
+export type GetOrdersForGetOrdersOutput = Array<Types.CommerceOrdersOrder>;
+export const getOrdersForGetOrdersEndpoint = {
+  operationId: 'getOrdersForGetOrders' as const,
+  method: 'GET' as const,
+  path: '/v1/orders' as const,
+  tags: ['CommerceOrders'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface PostOrdersInput {
   body?: Types.CommerceOrdersCreateOrderInput;
 }
@@ -13001,12 +13084,12 @@ export const postOrdersEndpoint = {
   requiresAuth: true,
 } as const;
 
-export interface GetOrdersInput {
+export interface GetOrdersForGetOrdersByOrderIdInput {
   orderId: string;
 }
-export type GetOrdersOutput = Types.CommerceOrdersOrder;
-export const getOrdersEndpoint = {
-  operationId: 'getOrders' as const,
+export type GetOrdersForGetOrdersByOrderIdOutput = Types.CommerceOrdersOrder;
+export const getOrdersForGetOrdersByOrderIdEndpoint = {
+  operationId: 'getOrdersForGetOrdersByOrderId' as const,
   method: 'GET' as const,
   path: '/v1/orders/{orderId}' as const,
   tags: ['CommerceOrders'] as const,
@@ -13035,6 +13118,18 @@ export const postOrdersCompleteEndpoint = {
   operationId: 'postOrdersComplete' as const,
   method: 'POST' as const,
   path: '/v1/orders/{orderId}:complete' as const,
+  tags: ['CommerceOrders'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PostOrdersPaymentIntentInput {
+  orderId: string;
+}
+export type PostOrdersPaymentIntentOutput = Types.CommerceOrderPaymentIntentPreparation;
+export const postOrdersPaymentIntentEndpoint = {
+  operationId: 'postOrdersPaymentIntent' as const,
+  method: 'POST' as const,
+  path: '/v1/orders/{orderId}:payment-intent' as const,
   tags: ['CommerceOrders'] as const,
   requiresAuth: true,
 } as const;
@@ -13603,6 +13698,19 @@ export type GetProductsPricingOutput = Array<Types.CommerceProductsProductPricin
 export const getProductsPricingEndpoint = {
   operationId: 'getProductsPricing' as const,
   method: 'GET' as const,
+  path: '/v1/products/{productId}/pricing' as const,
+  tags: ['CommerceProducts'] as const,
+  requiresAuth: true,
+} as const;
+
+export interface PutProductsPricingInput {
+  productId: string;
+  body?: Types.CommerceProductsSetProductPricingInput;
+}
+export type PutProductsPricingOutput = Types.CommerceProductsProductPricing;
+export const putProductsPricingEndpoint = {
+  operationId: 'putProductsPricing' as const,
+  method: 'PUT' as const,
   path: '/v1/products/{productId}/pricing' as const,
   tags: ['CommerceProducts'] as const,
   requiresAuth: true,
@@ -21019,6 +21127,11 @@ export const endpoints = {
   getReady: getReadyEndpoint,
   getT: getTEndpoint,
   postVCoursesCheckoutComplete: postVCoursesCheckoutCompleteEndpoint,
+  getVMarketplaceCart: getVMarketplaceCartEndpoint,
+  postVMarketplaceCartCheckout: postVMarketplaceCartCheckoutEndpoint,
+  postVMarketplaceCartItems: postVMarketplaceCartItemsEndpoint,
+  deleteVMarketplaceCartItems: deleteVMarketplaceCartItemsEndpoint,
+  patchVMarketplaceCartItems: patchVMarketplaceCartItemsEndpoint,
   getVTestingTemplates: getVTestingTemplatesEndpoint,
   postVTestingTemplates: postVTestingTemplatesEndpoint,
   putVTestingTemplates: putVTestingTemplatesEndpoint,
@@ -21452,10 +21565,12 @@ export const endpoints = {
   getMeTasks: getMeTasksEndpoint,
   postOauthToken: postOauthTokenEndpoint,
   getOg: getOgEndpoint,
+  getOrdersForGetOrders: getOrdersForGetOrdersEndpoint,
   postOrders: postOrdersEndpoint,
-  getOrders: getOrdersEndpoint,
+  getOrdersForGetOrdersByOrderId: getOrdersForGetOrdersByOrderIdEndpoint,
   postOrdersCapture: postOrdersCaptureEndpoint,
   postOrdersComplete: postOrdersCompleteEndpoint,
+  postOrdersPaymentIntent: postOrdersPaymentIntentEndpoint,
   postOrdersItems: postOrdersItemsEndpoint,
   getPagesForGetPages: getPagesForGetPagesEndpoint,
   postPages: postPagesEndpoint,
@@ -21497,6 +21612,7 @@ export const endpoints = {
   postProductsArchive: postProductsArchiveEndpoint,
   postProductsDeactivate: postProductsDeactivateEndpoint,
   getProductsPricing: getProductsPricingEndpoint,
+  putProductsPricing: putProductsPricingEndpoint,
   getProjectsForGetProjects: getProjectsForGetProjectsEndpoint,
   postProjects: postProjectsEndpoint,
   getProjectsForGetProjectsById: getProjectsForGetProjectsByIdEndpoint,
