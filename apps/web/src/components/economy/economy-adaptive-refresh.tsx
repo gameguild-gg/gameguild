@@ -12,8 +12,9 @@ export function getEconomyPollingInterval(pathname: string) {
   return fastSurfaces.test(pathname) ? 15_000 : 30_000;
 }
 export function EconomyAdaptiveRefresh({ children }: { children: ReactNode }) {
-  const pathname = usePathname() ?? '';
-  return <EconomyAdaptiveRefreshForPath key={pathname} pathname={pathname}>{children}</EconomyAdaptiveRefreshForPath>;
+  const pathname = usePathname();
+  const safePathname = typeof pathname === 'string' ? pathname : '';
+  return <EconomyAdaptiveRefreshForPath key={safePathname} pathname={safePathname}>{children}</EconomyAdaptiveRefreshForPath>;
 }
 
 function EconomyAdaptiveRefreshForPath({ children, pathname }: { children: ReactNode; pathname: string }) {
