@@ -37,7 +37,7 @@ public sealed class PostgreSqlFifoTransferGateway : IFifoTransferGateway
         if (command.SourceWalletId == command.DestinationWalletId)
             throw new ArgumentException("Source and destination wallets must differ.", nameof(request));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(command.Amount.Units);
-        if (!Enum.IsDefined(command.Amount.Currency) || !Enum.IsDefined(command.Provenance))
+        if (!Enum.IsDefined(command.Provenance))
             throw new ArgumentOutOfRangeException(nameof(request));
         if (request.DispatchSnapshotHash is { Length: > 128 })
             throw new ArgumentException("Dispatch snapshot hashes cannot exceed 128 characters.", nameof(request));

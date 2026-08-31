@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,13 +17,11 @@ export class FeaturesModule {
 
   /**
    */
-  async getFeatures(query?: {
-    isEnabled?: boolean;
-  }): Promise<Result<Array<Types.FeaturesFeatureFlag>, ApiError>> {
-    const url = "/v1/features";
+  async getFeatures(query?: { isEnabled?: boolean }): Promise<Result<Array<Types.FeaturesFeatureFlag>, ApiError>> {
+    const url = '/v1/features';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -34,20 +32,14 @@ export class FeaturesModule {
 
   /**
    */
-  async postFeatures(
-    body: Types.FeaturesCreateFeatureInput,
-  ): Promise<Result<Record<string, unknown>, ApiError>> {
-    const url = "/v1/features";
+  async postFeatures(body: Types.FeaturesCreateFeatureInput): Promise<Result<Record<string, unknown>, ApiError>> {
+    const url = '/v1/features';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.FeaturesCreateFeatureInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.FeaturesCreateFeatureInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -62,7 +54,7 @@ export class FeaturesModule {
     const url = `/v1/features/${id}:disable`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -76,7 +68,7 @@ export class FeaturesModule {
     const url = `/v1/features/${id}:enable`;
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       requiresAuth: true,
     });
@@ -86,21 +78,14 @@ export class FeaturesModule {
 
   /**
    */
-  async postFeaturesToggle(
-    id: string,
-    body: Types.FeaturesToggleFeatureInput,
-  ): Promise<Result<void, ApiError>> {
+  async postFeaturesToggle(id: string, body: Types.FeaturesToggleFeatureInput): Promise<Result<void, ApiError>> {
     const url = `/v1/features/${id}:toggle`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.FeaturesToggleFeatureInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.FeaturesToggleFeatureInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -115,7 +100,7 @@ export class FeaturesModule {
     const url = `/v1/features/${key}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
@@ -125,21 +110,14 @@ export class FeaturesModule {
 
   /**
    */
-  async putFeatures(
-    key: string,
-    body: Types.FeaturesUpdateFeatureInput,
-  ): Promise<Result<void, ApiError>> {
+  async putFeatures(key: string, body: Types.FeaturesUpdateFeatureInput): Promise<Result<void, ApiError>> {
     const url = `/v1/features/${key}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.FeaturesUpdateFeatureInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.FeaturesUpdateFeatureInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -154,7 +132,7 @@ export class FeaturesModule {
     const url = `/v1/features/${key}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -164,14 +142,11 @@ export class FeaturesModule {
 
   /**
    */
-  async getFeaturesExists(
-    key: string,
-    query?: { environment?: string },
-  ): Promise<Result<boolean, ApiError>> {
+  async getFeaturesExists(key: string, query?: { environment?: string }): Promise<Result<boolean, ApiError>> {
     const url = `/v1/features/${key}/exists`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,

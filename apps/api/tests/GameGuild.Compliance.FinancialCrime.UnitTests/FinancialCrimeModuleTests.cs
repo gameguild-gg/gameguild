@@ -16,7 +16,7 @@ public sealed class FinancialCrimeModuleTests
         var now = new DateTimeOffset(2026, 7, 19, 12, 0, 0, TimeSpan.Zero);
 
         module.Name.Should().Be("Compliance.FinancialCrime");
-        module.EnabledByDefault.Should().BeFalse();
+        module.EnabledByDefault.Should().BeTrue();
         module.ConfigureServices(services, configuration).Should().BeSameAs(services);
         services.AddFinancialCrimeComposition().Should().BeSameAs(services);
 

@@ -10,7 +10,10 @@ describe('createAssessmentWorkspaceConfig', () => {
 
     expect(config.run.type).toBe('canvas');
     expect(config.compile.toolchain).toBe('sdl-cpp');
-    expect(config.files).toBe(files);
+    expect(config.compile.sourceDetect?.entryPoint).toBe('/home/user/sdl-main.cpp');
+    expect(config.files).toEqual({
+      '/home/user/solution.cpp': files['/user/solution.cpp'],
+    });
   });
 
   it('preserves the terminal runtime while declaring the C++ toolchain', () => {

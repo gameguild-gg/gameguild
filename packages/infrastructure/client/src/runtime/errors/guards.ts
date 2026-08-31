@@ -20,14 +20,7 @@ import type {
  * Check if error is an ApiError
  */
 export function isApiError(error: unknown): error is ApiError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'name' in error &&
-    error.name === 'ApiError' &&
-    'status' in error &&
-    'code' in error
-  );
+  return typeof error === 'object' && error !== null && 'name' in error && error.name === 'ApiError' && 'status' in error && 'code' in error;
 }
 
 /**

@@ -71,5 +71,6 @@ describe('member teams list page', () => {
     render(await TeamsPage());
 
     expect(screen.getByText('No Teams yet')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Create Team' })).toHaveLength(1);
   });
 });

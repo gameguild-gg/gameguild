@@ -35,11 +35,7 @@ export async function createCSRFToken(secret: string): Promise<{
  * @param secret - The auth secret
  * @returns True if valid
  */
-export async function validateCSRFToken(
-  cookieValue: string | null | undefined,
-  bodyToken: string | null | undefined,
-  secret: string
-): Promise<boolean> {
+export async function validateCSRFToken(cookieValue: string | null | undefined, bodyToken: string | null | undefined, secret: string): Promise<boolean> {
   if (!cookieValue || !bodyToken) return false;
 
   const [tokenValue, tokenHash] = cookieValue.split('|');
@@ -50,8 +46,7 @@ export async function validateCSRFToken(
   const expectedHash = await hashToken(tokenValue, secret);
 
   // Check that both the cookie hash and body token match
-  return constantTimeEqual(tokenHash, expectedHash) &&
-    constantTimeEqual(bodyToken, expectedHash);
+  return constantTimeEqual(tokenHash, expectedHash) && constantTimeEqual(bodyToken, expectedHash);
 }
 
 /**

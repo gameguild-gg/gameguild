@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.API.Database;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using GameGuild.LaunchPad;
@@ -31,12 +32,29 @@ public sealed class DatabaseSeederTests
         services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton<ILogger<ApplicationDbContext>>(logger);
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+        AddPolicySeeder(services);
 
         await using var provider = services.BuildServiceProvider();
 
         await DatabaseSeeder.SeedAsync(provider);
 
         logger.Messages.Where(message => message.Level >= LogLevel.Warning).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SeedAsync_Should_Create_The_Canonical_SystemAdmin_Policy()
+    {
+        var services = CreateSeederServices("UnitTestAdmin123!");
+        await using var provider = services.BuildServiceProvider();
+
+        await DatabaseSeeder.SeedAsync(provider);
+
+        var dbContext = provider.GetRequiredService<ApplicationDbContext>();
+        var policy = await dbContext.Set<PolicyDefinitionEntity>()
+            .SingleAsync(candidate => candidate.PolicyName == Policies.SystemAdmin && candidate.TenantId == null);
+
+        policy.RequiredRolesJson.Should().Be("[\"SystemAdmin\"]");
+        policy.PolicyVersion.Should().Be(PolicyDefinitionSeeder.CurrentPolicyVersion);
     }
 
     [Fact]
@@ -159,8 +177,17 @@ public sealed class DatabaseSeederTests
         services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton<ILogger<ApplicationDbContext>, CapturingLogger<ApplicationDbContext>>();
         services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+        AddPolicySeeder(services);
 
         return services;
+    }
+
+    private static void AddPolicySeeder(IServiceCollection services)
+    {
+        services.AddLogging();
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IPolicyDefinitionRepository, PolicyDefinitionRepository>();
+        services.AddScoped<PolicyDefinitionSeeder>();
     }
 
     private sealed class CapturingLogger<T> : ILogger<T>

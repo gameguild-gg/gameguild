@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using GameGuild.API;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -176,61 +177,37 @@ public sealed class SecurityServiceCollectionExtensionsTests
         result.Should().BeTrue();
     }
 
-    [Theory]
-    [InlineData("tenant_id")]
-    [InlineData("TenantId")]
-    public async Task SetupAuthorization_TenantPoliciesAcceptSupportedTenantClaims(string claimType)
+    [Fact]
+    public void SetupAuthorization_TenantMemberIsDatabaseBacked()
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.SetupAuthorization(new ConfigurationBuilder().Build(), new AuthorizationOptions());
         using var provider = services.BuildServiceProvider();
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(
-            [new Claim("sub", Guid.NewGuid().ToString()), new Claim(claimType, Guid.NewGuid().ToString())],
-            "test"));
-
-        var result = await EvaluatePolicyAsync(provider, principal, "TenantMember");
-
-        result.Should().BeTrue();
+        var options = provider.GetRequiredService<IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>>().Value;
+        options.GetPolicy(Policies.TenantMember).Should().BeNull();
     }
 
     [Fact]
-    public async Task SetupAuthorization_TenantAdminRequiresTenantClaimEvenForTenantAdministrator()
+    public void SetupAuthorization_TenantAdminIsDatabaseBacked()
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.SetupAuthorization(new ConfigurationBuilder().Build(), new AuthorizationOptions());
         using var provider = services.BuildServiceProvider();
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(
-            [new Claim("sub", Guid.NewGuid().ToString()), new Claim("role", "TenantAdmin")],
-            "test",
-            "sub",
-            "role"));
-
-        var result = await EvaluatePolicyAsync(provider, principal, "TenantAdmin");
-
-        result.Should().BeFalse();
+        var options = provider.GetRequiredService<IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>>().Value;
+        options.GetPolicy(Policies.TenantAdmin).Should().BeNull();
     }
 
-    [Theory]
-    [InlineData(true, true)]
-    [InlineData(false, false)]
-    public async Task SetupAuthorization_SecureAdminRequiresAdministrativeRoleAndMfa(
-        bool mfaVerified,
-        bool expected)
+    [Fact]
+    public void SetupAuthorization_SecureAdminIsDatabaseBacked()
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.SetupAuthorization(new ConfigurationBuilder().Build(), new AuthorizationOptions());
         using var provider = services.BuildServiceProvider();
-        var claims = new List<Claim> { new("role", "Admin") };
-        if (mfaVerified)
-            claims.Add(new Claim("mfa_verified", "true"));
-        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "test", "sub", "role"));
-
-        var result = await EvaluatePolicyAsync(provider, principal, "SecureAdmin");
-
-        result.Should().Be(expected);
+        var options = provider.GetRequiredService<IOptions<Microsoft.AspNetCore.Authorization.AuthorizationOptions>>().Value;
+        options.GetPolicy(Policies.SecureAdmin).Should().BeNull();
     }
 
     private static async Task<bool> EvaluatePolicyAsync(

@@ -20,7 +20,7 @@ public sealed class PostgreSqlAdminWithdrawalProviderIntegrityTests
         var run = CreateRun(now);
         await context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO public.economy_wallets ("Id", "OwnerId", "TenantId", "State", "CreatedAt")
-            VALUES ({run.PlatformFeeWalletId.Value}, {run.RequestedBy}, {Guid.NewGuid()}, 1, {now});
+            VALUES ({run.PlatformFeeWalletId.Value}, {run.RequestedBy}, {run.TenantId}, 1, {now});
             """);
         var store = new PostgreSqlAdminWithdrawalStore(context);
         store.Add(run);
@@ -38,7 +38,7 @@ public sealed class PostgreSqlAdminWithdrawalProviderIntegrityTests
         };
         await context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO public.economy_wallets ("Id", "OwnerId", "TenantId", "State", "CreatedAt")
-            VALUES ({secondRun.PlatformFeeWalletId.Value}, {secondRun.RequestedBy}, {Guid.NewGuid()}, 1, {now});
+            VALUES ({secondRun.PlatformFeeWalletId.Value}, {secondRun.RequestedBy}, {secondRun.TenantId}, 1, {now});
             """);
         store.Add(secondRun);
         var secondApproved = secondRun with { State = AdminWithdrawalRunState.Approved, ApprovedBy = Guid.NewGuid(), Version = 2, UpdatedAt = now.AddMinutes(1) };
@@ -48,19 +48,20 @@ public sealed class PostgreSqlAdminWithdrawalProviderIntegrityTests
         var secondSucceeded = secondDispatching with { State = AdminWithdrawalRunState.Succeeded, ProviderTransferId = "transfer-2", Version = 4, UpdatedAt = now.AddMinutes(3) };
 
 
-        FluentActions.Invoking(() => store.RecordProviderEvent("event-1", "event-hash", secondSucceeded, secondDispatching.Version))
-            .Should().Throw<AdminWithdrawalEvidenceException>();
+        store.RecordProviderEvent("event-1", "event-hash", secondSucceeded, secondDispatching.Version);
+        store.FindProviderEvent(run.TenantId, "event-1", "event-hash").Should().Be(run.Id);
+        store.FindProviderEvent(secondRun.TenantId, "event-1", "event-hash").Should().Be(secondRun.Id);
 
         await context.Database.ExecuteSqlInterpolatedAsync($"""
-            INSERT INTO public.economy_admin_withdrawal_provider_events ("EventId", "EventHash", "RunId", "RecordedAt")
-            VALUES ({"invalid-time"}, {"invalid-time-hash"}, {run.Id}, {DateTimeOffset.MinValue});
+            INSERT INTO public.economy_admin_withdrawal_provider_events ("TenantId", "EventId", "EventHash", "RunId", "RecordedAt")
+            VALUES ({run.TenantId}, {"invalid-time"}, {"invalid-time-hash"}, {run.Id}, {DateTimeOffset.MinValue});
             """);
         FluentActions.Invoking(() => store.FindProviderEvent("invalid-time", "invalid-time-hash"))
             .Should().Throw<AdminWithdrawalEvidenceException>();
     }
 
     private static AdminWithdrawalRun CreateRun(DateTimeOffset now) => new(
-        Guid.NewGuid(), new IdempotencyKey("provider-integrity"), "request-hash",
+        Guid.NewGuid(), Guid.NewGuid(), new IdempotencyKey("provider-integrity"), "request-hash",
         new DateOnly(2026, 8, 1), Guid.NewGuid(), null, WalletId.New(),
         new CoinAmount(CurrencyCode.HardCoin, 1), "asset", "destination",
         AdminWithdrawalRunState.PendingApproval, 1, 1, 1, new ReserveVersion(1), 1,

@@ -14,6 +14,7 @@ public sealed class EconomyAdminWithdrawalPostgreSqlMigrationTests
     private static readonly Guid RequestedBy = Guid.Parse("95000000-0000-0000-0000-000000000002");
     private static readonly Guid ApprovedBy = Guid.Parse("95000000-0000-0000-0000-000000000003");
     private static readonly Guid RunId = Guid.Parse("95000000-0000-0000-0000-000000000004");
+    private static readonly Guid TenantId = Guid.Parse("95000000-0000-0000-0000-000000000005");
     private static readonly DateTimeOffset CreatedAt = new(2026, 8, 9, 12, 30, 0, TimeSpan.Zero);
 
     [DockerFact]
@@ -32,10 +33,10 @@ public sealed class EconomyAdminWithdrawalPostgreSqlMigrationTests
         await SeedWalletAsync(connection);
 
         (await ScalarAsync<string?>(connection,
-            "SELECT to_regprocedure('economy_private.create_admin_withdrawal_run_v1(uuid,text,text,date,uuid,uuid,bigint,text,text,integer,bigint,bigint,bigint,bigint,bigint,bigint,text,text,timestamptz,timestamptz)')::text;"))
+            "SELECT to_regprocedure('economy_private.create_admin_withdrawal_run_v2(uuid,uuid,text,text,date,uuid,uuid,bigint,text,text,integer,bigint,bigint,bigint,bigint,bigint,bigint,text,text,timestamptz,timestamptz)')::text;"))
             .Should().NotBeNull();
         (await ScalarAsync<string?>(connection,
-            "SELECT to_regprocedure('economy_private.append_admin_withdrawal_audit_event_v1(uuid,text,uuid,text,timestamptz)')::text;"))
+            "SELECT to_regprocedure('economy_private.append_admin_withdrawal_audit_event_v2(uuid,uuid,text,uuid,text,timestamptz)')::text;"))
             .Should().NotBeNull();
 
         var directInsert = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsRoleAsync(
@@ -45,8 +46,8 @@ public sealed class EconomyAdminWithdrawalPostgreSqlMigrationTests
         directInsert.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
 
         await ExecuteAsRoleAsync(connection, "gameguild_economy_writer", $"""
-            SELECT economy_private.create_admin_withdrawal_run_v1(
-                '{RunId}', 'withdrawal:2026-08', 'request-hash', '2026-08-01',
+            SELECT economy_private.create_admin_withdrawal_run_v2(
+                '{RunId}', '{TenantId}', 'withdrawal:2026-08', 'request-hash', '2026-08-01',
                 '{RequestedBy}', '{WalletId}', 750, 'reserve:hard:primary', 'destination-hash',
                 1, 1, 1, 1, 1, 1, 1, NULL, NULL, '{CreatedAt:O}', '{CreatedAt:O}');
             """);
@@ -57,16 +58,16 @@ public sealed class EconomyAdminWithdrawalPostgreSqlMigrationTests
         created.Should().Be(1);
 
         await ExecuteAsRoleAsync(connection, "gameguild_economy_writer", $"""
-            SELECT economy_private.transition_admin_withdrawal_run_v1(
-                '{RunId}', 1, 2, '{ApprovedBy}', NULL, NULL, '{CreatedAt.AddMinutes(1):O}');
+            SELECT economy_private.transition_admin_withdrawal_run_v2(
+                '{TenantId}', '{RunId}', 1, 2, '{ApprovedBy}', NULL, NULL, '{CreatedAt.AddMinutes(1):O}');
             """);
         await ExecuteAsRoleAsync(connection, "gameguild_economy_writer", $"""
-            SELECT economy_private.transition_admin_withdrawal_run_v1(
-                '{RunId}', 2, 3, '{ApprovedBy}', 'dispatch-hash', NULL, '{CreatedAt.AddMinutes(2):O}');
+            SELECT economy_private.transition_admin_withdrawal_run_v2(
+                '{TenantId}', '{RunId}', 2, 3, '{ApprovedBy}', 'dispatch-hash', NULL, '{CreatedAt.AddMinutes(2):O}');
             """);
         await ExecuteAsRoleAsync(connection, "gameguild_economy_writer", $"""
-            SELECT * FROM economy_private.append_admin_withdrawal_audit_event_v1(
-                '{RunId}', 'dispatching', '{ApprovedBy}', 'dispatch-hash', '{CreatedAt.AddMinutes(2):O}');
+            SELECT * FROM economy_private.append_admin_withdrawal_audit_event_v2(
+                '{TenantId}', '{RunId}', 'dispatching', '{ApprovedBy}', 'dispatch-hash', '{CreatedAt.AddMinutes(2):O}');
             """);
 
         var auditRows = await ScalarAsync<long>(connection, $"""
@@ -81,8 +82,8 @@ public sealed class EconomyAdminWithdrawalPostgreSqlMigrationTests
         directAuditUpdate.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
 
         await ExecuteAsRoleAsync(connection, "gameguild_economy_writer", $"""
-            SELECT economy_private.complete_admin_withdrawal_provider_event_v1(
-                'provider-event-1', 'provider-hash-1', '{RunId}', 3, 5, 'provider-transfer-1',
+            SELECT economy_private.complete_admin_withdrawal_provider_event_v2(
+                '{TenantId}', 'provider-event-1', 'provider-hash-1', '{RunId}', 3, 5, 'provider-transfer-1',
                 '{CreatedAt.AddMinutes(3):O}');
             """);
 
@@ -125,7 +126,7 @@ public sealed class EconomyAdminWithdrawalPostgreSqlMigrationTests
 
     private static Task SeedWalletAsync(NpgsqlConnection connection) => ExecuteAsync(connection, $"""
         INSERT INTO public.economy_wallets ("Id", "OwnerId", "TenantId", "State", "CreatedAt")
-        VALUES ('{WalletId}', '{RequestedBy}', '95000000-0000-0000-0000-000000000005', 1, '{CreatedAt:O}');
+        VALUES ('{WalletId}', '{RequestedBy}', '{TenantId}', 1, '{CreatedAt:O}');
         """);
 
     private static async Task ExecuteAsRoleAsync(NpgsqlConnection connection, string role, string sql)

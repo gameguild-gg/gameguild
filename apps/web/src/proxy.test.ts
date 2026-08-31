@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import proxy from "./proxy";
 
 describe("GameGuild internationalization proxy", () => {
-  it("rewrites an unprefixed learner route to the default locale", async () => {
+  it("redirects an unprefixed learner route to the explicit default locale", async () => {
     const response = await proxy(
       new NextRequest(
         "https://gameguild.gg/learn/courses/game-ai/content?module=2",
@@ -14,9 +14,10 @@ describe("GameGuild internationalization proxy", () => {
       ),
     );
 
-    expect(response.headers.get("x-middleware-rewrite")).toBe(
+    expect(response.headers.get("location")).toBe(
       "https://gameguild.gg/en-US/learn/courses/game-ai/content?module=2",
     );
+    expect(response.headers.get("x-middleware-rewrite")).toBeNull();
   });
 
   it("preserves an explicitly selected non-default locale", async () => {

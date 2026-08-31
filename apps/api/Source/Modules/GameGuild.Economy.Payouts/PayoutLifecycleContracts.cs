@@ -89,7 +89,8 @@ public sealed record PayoutReservationRequest(
     string DestinationHash,
     RiskEntityNode AccountNode,
     RiskEntityNode DestinationNode,
-    DateTimeOffset RequestedAt);
+    DateTimeOffset RequestedAt,
+    Guid TenantId = default);
 
 public sealed record PayoutDispatchCommand(
     Guid OperationId,
@@ -157,7 +158,8 @@ public sealed record PayoutOperation(
     PolicyVersion PolicyVersion,
     Guid RiskDecisionId,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt)
+    DateTimeOffset UpdatedAt,
+    Guid TenantId = default)
 {
     public PayoutOperation BindProviderDispatch(string providerPayoutId, DateTimeOffset occurredAt)
     {
@@ -302,7 +304,11 @@ public sealed class PayoutExecutionGate
     }
 }
 
-public sealed class PayoutExecutionDisabledException(string message) : InvalidOperationException(message);
+public sealed class PayoutExecutionDisabledException : InvalidOperationException
+{
+    public PayoutExecutionDisabledException(string message) : base(message) { }
+    public PayoutExecutionDisabledException(string message, Exception innerException) : base(message, innerException) { }
+}
 public sealed class PayoutEligibilityException(string message) : InvalidOperationException(message);
 public sealed class PayoutProviderBindingException(string message) : InvalidOperationException(message);
 public sealed class PayoutStaleCommandException(string message) : InvalidOperationException(message);

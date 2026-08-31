@@ -159,4 +159,3 @@ This course leans on a subset of Champlain's twelve competencies; forcing all tw
 | **[Information Literacy](https://competencies.champlain.edu/information-literacy/)** | Job Hunt and Research on Game Industry Issues require finding, evaluating, and citing sources on the industry |
 | **[Inquiry](https://competencies.champlain.edu/inquiry/)** | Game Industry Issues research and the game-programmer interview are open-ended explorations with no single "correct" finding |
 | **[Integration](https://competencies.champlain.edu/integration/)** | The final project asks you to combine design, prototyping, and QA into one shippable product across Weeks 9-15 |
-

@@ -27,7 +27,7 @@ public class RequireAnyPermissionRuleEvaluatorTests
     }
 
     [Fact]
-    public async Task EvaluateAsync_WithNoPermissionsParameter_ReturnsSuccess()
+    public async Task EvaluateAsync_WithNoPermissionsParameter_ReturnsFail()
     {
         // Arrange
         var user = new ClaimsPrincipal(new ClaimsIdentity("TestAuth"));
@@ -38,11 +38,11 @@ public class RequireAnyPermissionRuleEvaluatorTests
         var result = await _evaluator.EvaluateAsync(context, parameters);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.Should().BeFalse();
     }
     
     [Fact]
-    public async Task EvaluateAsync_WithEmptyPermissionsParameter_ReturnsSuccess()
+    public async Task EvaluateAsync_WithEmptyPermissionsParameter_ReturnsFail()
     {
         // Arrange
         var user = new ClaimsPrincipal(new ClaimsIdentity("TestAuth"));
@@ -53,7 +53,7 @@ public class RequireAnyPermissionRuleEvaluatorTests
         var result = await _evaluator.EvaluateAsync(context, parameters);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.Should().BeFalse();
     }
 
     [Fact]

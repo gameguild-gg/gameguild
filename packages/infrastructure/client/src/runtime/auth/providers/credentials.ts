@@ -61,7 +61,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
     type: 'credentials',
     authorize:
       customAuthorize ??
-      (async (credentials, _request) => {
+      (async (credentials) => {
         // The apiUrl can come from options or from the main config
         // When called from the auth system, the apiUrl is injected
         const apiUrl = options.apiUrl || (credentials.__apiUrl as string);

@@ -22,7 +22,7 @@ public sealed class EconomyWalletControllerTests
         var controller = CreateController(sender.Object, new ActorContextAccessor());
 
         var result = await controller.ConvertMyHardToSoft(
-            new ConvertMyHardToSoftRequest(100, 0, "conversion-key"),
+            new ConvertMyHardToSoftRequest(100, "conversion-key"),
             CancellationToken.None);
 
         result.Should().BeOfType<ForbidResult>();
@@ -34,7 +34,7 @@ public sealed class EconomyWalletControllerTests
     {
         var actorId = Guid.Parse("93000000-0000-0000-0000-000000000001");
         var tenantId = Guid.Parse("93000000-0000-0000-0000-000000000002");
-        var request = new ConvertMyHardToSoftRequest(100, 3, "conversion-key");
+        var request = new ConvertMyHardToSoftRequest(100, "conversion-key");
         var receipt = new SelfServiceHardToSoftConversionReceipt(
             Guid.Parse("93000000-0000-0000-0000-000000000004"), null, 17, "journal-hash", false);
         var sender = new Mock<ISender>();
@@ -157,17 +157,29 @@ public sealed class EconomyWalletControllerTests
     [Fact]
     public void GetMyCapabilityReadiness_ReturnsOnlySelfServiceCapabilityStates()
     {
+        EconomyValueMovementCapability[] expectedCapabilities =
+        [
+            EconomyValueMovementCapability.ConfirmHardCoinFunding,
+            EconomyValueMovementCapability.ConvertHardToSoft,
+            EconomyValueMovementCapability.Transfer,
+            EconomyValueMovementCapability.IssueAdReward,
+            EconomyValueMovementCapability.BountyEscrow,
+            EconomyValueMovementCapability.BountyClaim,
+            EconomyValueMovementCapability.BountyReclaim,
+            EconomyValueMovementCapability.MarketplaceSettlement,
+            EconomyValueMovementCapability.MarketplaceRefund,
+            EconomyValueMovementCapability.PayoutExecution
+        ];
         var readiness = new Mock<IEconomyProviderCapabilityReadiness>(MockBehavior.Strict);
-        readiness.Setup(value => value.Assess(EconomyValueMovementCapability.ConvertHardToSoft))
-            .Returns(new EconomyCapabilityReadinessResult(
-                EconomyValueMovementCapability.ConvertHardToSoft,
-                EconomyCapabilityReadinessState.Ready,
-                []));
-        readiness.Setup(value => value.Assess(EconomyValueMovementCapability.PayoutExecution))
-            .Returns(new EconomyCapabilityReadinessResult(
-                EconomyValueMovementCapability.PayoutExecution,
-                EconomyCapabilityReadinessState.ProviderNotReady,
-                ["Provider configuration is incomplete."]));
+        readiness.Setup(value => value.Assess(It.IsAny<EconomyValueMovementCapability>()))
+            .Returns((EconomyValueMovementCapability capability) => new EconomyCapabilityReadinessResult(
+                capability,
+                capability == EconomyValueMovementCapability.PayoutExecution
+                    ? EconomyCapabilityReadinessState.ProviderNotReady
+                    : EconomyCapabilityReadinessState.Ready,
+                capability == EconomyValueMovementCapability.PayoutExecution
+                    ? ["Provider configuration is incomplete."]
+                    : []));
         var controller = new EconomyWalletController(
             Mock.Of<ISender>(),
             CreateAccessor(),
@@ -175,18 +187,14 @@ public sealed class EconomyWalletControllerTests
 
         var result = controller.GetMyCapabilityReadiness();
 
-        result.Should().BeOfType<OkObjectResult>().Which.Value.Should().BeEquivalentTo(
-        new EconomySelfServiceCapabilityDto[]
-        {
-            new EconomySelfServiceCapabilityDto(
-                EconomyValueMovementCapability.ConvertHardToSoft,
-                EconomyCapabilityReadinessState.Ready,
-                []),
-            new EconomySelfServiceCapabilityDto(
+        var capabilities = result.Should().BeOfType<OkObjectResult>().Which.Value
+            .Should().BeAssignableTo<IReadOnlyList<EconomySelfServiceCapabilityDto>>().Subject;
+        capabilities.Select(item => item.Capability).Should().Equal(expectedCapabilities);
+        capabilities.Single(item => item.Capability == EconomyValueMovementCapability.PayoutExecution)
+            .Should().BeEquivalentTo(new EconomySelfServiceCapabilityDto(
                 EconomyValueMovementCapability.PayoutExecution,
                 EconomyCapabilityReadinessState.ProviderNotReady,
-                ["Provider configuration is incomplete."])
-        });
+                ["Provider configuration is incomplete."]));
     }
 
     private static ActorContextAccessor CreateAccessor(Guid? actorId = null)

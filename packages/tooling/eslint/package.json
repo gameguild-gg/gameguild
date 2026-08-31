@@ -14,12 +14,13 @@
     "@game-guild/prettier-config": "workspace:*"
   },
   "devDependencies": {
+    "@eslint/compat": "^2.1.0",
     "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.39.2",
     "@next/eslint-plugin-next": "^16.2.4",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
-    "eslint": "^10.8.1",
+    "eslint": "^9.39.2",
     "eslint-config-next": "16.3.1",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.2.5",

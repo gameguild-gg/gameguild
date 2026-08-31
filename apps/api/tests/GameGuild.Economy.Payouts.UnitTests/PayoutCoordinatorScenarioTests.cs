@@ -197,6 +197,7 @@ public sealed class PayoutCoordinatorScenarioTests
 
     internal sealed class Fixture
     {
+        public Guid TenantId { get; } = Guid.NewGuid();
         public Guid ActorId { get; } = Guid.NewGuid();
         public Guid PayeeId { get; } = Guid.NewGuid();
         public WalletId WalletId { get; } = WalletId.New();
@@ -246,7 +247,7 @@ public sealed class PayoutCoordinatorScenarioTests
             new(operationId ?? Guid.NewGuid(), idempotencyKey ?? new IdempotencyKey(Guid.NewGuid().ToString("N")),
                 ActorId, PayeeId, WalletId, new CoinAmount(CurrencyCode.HardCoin, units), WalletLifecycleState.Active,
                 new PolicyVersion(1), new ReserveVersion(1), 1, 1, ProviderAccountId, DestinationHash,
-                AccountNode, DestinationNode, Time);
+                AccountNode, DestinationNode, Time, TenantId);
 
         public CreditLot AddLot(long units, ProvenanceKind provenance, int daysSinceConfirmation,
             long journalSequence, SourceConfirmationState sourceState = SourceConfirmationState.Confirmed,

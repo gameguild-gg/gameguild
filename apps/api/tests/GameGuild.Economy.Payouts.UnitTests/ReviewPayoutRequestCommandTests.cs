@@ -75,7 +75,7 @@ public sealed class ReviewPayoutRequestCommandTests
             SubjectId = actorId.ToString(),
             TenantId = tenantId,
             Roles = new HashSet<string>(),
-            Permissions = new HashSet<string> { WalletsPermission.Keys.Admin },
+            Permissions = new HashSet<string> { EconomyPermission.Keys.ReviewPayouts },
             TypedAttributes = ActorAttributes.Empty,
             IsAuthenticated = true
         });
@@ -103,11 +103,11 @@ public sealed class ReviewPayoutRequestCommandTests
         public string? Reason { get; private set; }
         public bool ReadWasAttempted { get; private set; }
 
-        public PayoutRequest? FindReplay(Guid payeeId, string idempotencyKey, string requestHash) => throw new NotSupportedException();
+        public PayoutRequest? FindReplay(Guid tenantId, Guid payeeId, string idempotencyKey, string requestHash) => throw new NotSupportedException();
 
         public void Add(PayoutRequest payoutRequest) => throw new NotSupportedException();
 
-        public PayoutRequest GetForPayee(Guid requestId, Guid payeeId) => throw new NotSupportedException();
+        public PayoutRequest GetForPayee(Guid tenantId, Guid requestId, Guid payeeId) => throw new NotSupportedException();
 
         public PayoutRequest GetForReview(Guid requestId, Guid tenantId)
         {
@@ -116,7 +116,7 @@ public sealed class ReviewPayoutRequestCommandTests
             return request;
         }
 
-        public IReadOnlyList<PayoutRequest> ListForPayee(Guid payeeId, int take) => throw new NotSupportedException();
+        public IReadOnlyList<PayoutRequest> ListForPayee(Guid tenantId, Guid payeeId, int take) => throw new NotSupportedException();
 
         public IReadOnlyList<PayoutRequest> ListForReview(Guid tenantId, int take) => throw new NotSupportedException();
 

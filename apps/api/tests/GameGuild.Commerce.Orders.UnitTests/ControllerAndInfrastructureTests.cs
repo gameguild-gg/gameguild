@@ -161,6 +161,27 @@ public class OrdersControllerTests
     }
 
     [Fact]
+    public async Task CompleteOrder_MapsEconomyMarketplaceIntent()
+    {
+        var order = CreateTestOrder();
+        var evidence = new CompleteOrderMarketplaceSettlement(
+            OrderMarketplaceCurrencyChoice.FixedMix,
+            "idempotency");
+        _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(
+                It.Is<CompleteOrderCommand>(command =>
+                    command.OrderId == order.Id &&
+                    command.MarketplaceSettlement == evidence),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(OrderOperationResult.FromOrder(order)));
+
+        var result = await _sut.CompleteOrder(
+            order.Id,
+            new CompleteOrderRequest(MarketplaceSettlement: evidence));
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
     public async Task CancelOrder_ReturnsExpectedResults()
     {
         _senderMock.SetupSequence(sender => sender.Send<Result>(It.IsAny<CancelOrderCommand>(), It.IsAny<CancellationToken>()))
@@ -498,6 +519,23 @@ public class OrdersInfrastructureTests
         var isSettled = await authority.IsSettledAsync(binding);
 
         isSettled.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task AddOrdersModule_RegistersFailClosedEconomyMarketplaceAuthority()
+    {
+        var services = new ServiceCollection();
+        services.AddOrdersModule();
+        var provider = services.BuildServiceProvider();
+        var authority = provider.GetRequiredService<IOrderMarketplaceSettlementAuthority>();
+
+        var result = await authority.SettleAsync(new OrderMarketplaceSettlementRequest(
+            Guid.NewGuid(),
+            OrderMarketplaceCurrencyChoice.Hard,
+            "idempotency"));
+
+        result.IsAccepted.Should().BeFalse();
+        result.ErrorCode.Should().Be("Orders.EconomyMarketplaceDisabled");
     }
 
     [Fact]

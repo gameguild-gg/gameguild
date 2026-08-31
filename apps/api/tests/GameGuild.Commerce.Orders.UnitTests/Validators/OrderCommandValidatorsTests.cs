@@ -39,6 +39,22 @@ public class CompleteOrderCommandValidatorTests
         _sut.TestValidate(new CompleteOrderCommand(Guid.Empty)).ShouldHaveValidationErrorFor(command => command.OrderId);
         _sut.TestValidate(new CompleteOrderCommand(Guid.NewGuid())).ShouldNotHaveValidationErrorFor(command => command.OrderId);
     }
+
+    [Fact]
+    public void ShouldValidateEconomyMarketplaceSettlementIntent()
+    {
+        var invalid = new CompleteOrderMarketplaceSettlement(
+            (OrderMarketplaceCurrencyChoice)0,
+            string.Empty);
+        var valid = new CompleteOrderMarketplaceSettlement(
+            OrderMarketplaceCurrencyChoice.FixedMix,
+            "idempotency");
+
+        _sut.TestValidate(new CompleteOrderCommand(Guid.NewGuid(), MarketplaceSettlement: invalid))
+            .ShouldHaveValidationErrorFor(command => command.MarketplaceSettlement);
+        _sut.TestValidate(new CompleteOrderCommand(Guid.NewGuid(), MarketplaceSettlement: valid))
+            .ShouldNotHaveValidationErrorFor(command => command.MarketplaceSettlement);
+    }
 }
 
 public class UpdateOrderCommandValidatorTests

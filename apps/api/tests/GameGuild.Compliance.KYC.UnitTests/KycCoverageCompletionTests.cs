@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using GameGuild.Identity.Users;
 using Moq;
 using Xunit;
@@ -282,7 +283,10 @@ public sealed class KycCoverageCompletionTests
     }
 
     private static KycService CreateService(Mock<IKycRepository> repository)
-        => new(repository.Object, NullLogger<KycService>.Instance);
+        => new(
+            repository.Object,
+            NullLogger<KycService>.Instance,
+            Options.Create(new KycPolicyOptions { ApprovedEvidenceLifetime = TimeSpan.FromDays(30) }));
 
     private static KycTestDbContext CreateDbContext()
     {

@@ -126,12 +126,15 @@ public static class PostingMatrix
         var expectedCount = request.Template.Kind is PostingTemplateKind.HardToSoftConversion or
             PostingTemplateKind.SystemBackedGrant or
             PostingTemplateKind.ProviderConvertedSoftReversal ? 4 : 2;
-        var hasValidLineCount = request.Template.Kind is PostingTemplateKind.BountyEscrow or PostingTemplateKind.BountyReclaim
+        var isVariable = request.Template.Kind is PostingTemplateKind.BountyEscrow or
+            PostingTemplateKind.BountyReclaim or PostingTemplateKind.MarketplaceSettlement or
+            PostingTemplateKind.MarketplaceRefund;
+        var hasValidLineCount = isVariable
             ? registeredTemplate?.AllowsLineCount(request.Lines.Count) == true
             : request.Lines.Count == expectedCount;
         if (!hasValidLineCount)
         {
-            var requirement = request.Template.Kind is PostingTemplateKind.BountyEscrow or PostingTemplateKind.BountyReclaim
+            var requirement = isVariable
                 ? "at least two lines"
                 : $"exactly {expectedCount} lines";
             Add(errors, PostingErrorCode.InvalidLineCount, $"Template requires {requirement}.");
@@ -213,6 +216,12 @@ public static class PostingMatrix
             case PostingTemplateKind.BountyReclaim:
                 ValidateBountyReclaim(lines, errors);
                 break;
+            case PostingTemplateKind.MarketplaceSettlement:
+                ValidateMarketplaceSettlement(lines, errors);
+                break;
+            case PostingTemplateKind.MarketplaceRefund:
+                ValidateMarketplaceRefund(lines, errors);
+                break;
             case PostingTemplateKind.Reclaim:
                 var escrowAccount = EscrowFor(lines[1].Amount.Currency);
                 if (escrowAccount.HasValue)
@@ -250,6 +259,67 @@ public static class PostingMatrix
                 break;
             default:
                 break;
+        }
+    }
+
+    private static void ValidateMarketplaceSettlement(
+        PostingLine[] lines,
+        ICollection<PostingValidationError> errors)
+    {
+        if (lines.All(line => line.Side != EntrySide.Debit) ||
+            lines.All(line => line.Side != EntrySide.Credit))
+            Add(errors, PostingErrorCode.InvalidAccountShape,
+                "Marketplace settlement requires buyer debits and seller/platform credits.");
+        foreach (var line in lines)
+        {
+            if (line.Side == EntrySide.Debit)
+            {
+                ValidateLiability(line, EntrySide.Debit, line.Provenance, errors);
+                continue;
+            }
+            if (line.Amount.Currency == CurrencyCode.HardCoin)
+                Match(line, EntrySide.Credit, EconomyAccountCode.EarnedHardLiability,
+                    CurrencyCode.HardCoin, true, ProvenanceKind.EarnedHard, errors);
+            else if (line.Amount.Currency == CurrencyCode.SoftCoin)
+                Match(line, EntrySide.Credit, EconomyAccountCode.SoftCoinLiability,
+                    CurrencyCode.SoftCoin, true, ProvenanceKind.MarketplaceSoft, errors);
+            else
+                Add(errors, PostingErrorCode.InvalidCurrency,
+                    "Marketplace settlement requires a supported coin currency.");
+        }
+    }
+
+    private static void ValidateMarketplaceRefund(
+        PostingLine[] lines,
+        ICollection<PostingValidationError> errors)
+    {
+        if (lines.All(line => line.Side != EntrySide.Debit) ||
+            lines.All(line => line.Side != EntrySide.Credit))
+            Add(errors, PostingErrorCode.InvalidAccountShape,
+                "Marketplace refund requires proceeds debits and buyer credits.");
+        foreach (var line in lines)
+        {
+            if (line.Side == EntrySide.Credit)
+            {
+                ValidateLiability(line, EntrySide.Credit, line.Provenance, errors);
+                continue;
+            }
+
+            if (line.Account == EconomyAccountCode.RecoveryReceivableHard)
+            {
+                Match(line, EntrySide.Debit, EconomyAccountCode.RecoveryReceivableHard,
+                    CurrencyCode.HardCoin, false, null, errors);
+                continue;
+            }
+
+            if (line.Account == EconomyAccountCode.RecoveryReceivableSoft)
+            {
+                Match(line, EntrySide.Debit, EconomyAccountCode.RecoveryReceivableSoft,
+                    CurrencyCode.SoftCoin, false, null, errors);
+                continue;
+            }
+
+            ValidateLiability(line, EntrySide.Debit, line.Provenance, errors);
         }
     }
 

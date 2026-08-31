@@ -12,6 +12,10 @@ import type {
   CodingAssessmentParameter,
   CodingAssessmentTest,
 } from './types';
+import {
+  ASSESSMENT_WORKSPACE_MOUNT,
+  normalizeAssessmentWorkspacePath,
+} from './paths';
 
 export type AssessmentTestScope = 'public' | 'full';
 
@@ -32,8 +36,6 @@ export interface AssessmentExecutionPlan {
   readonly overlay: readonly AssessmentOverlayFile[];
   readonly weights: readonly number[];
 }
-
-const WORKSPACE_MOUNT = '/home/user';
 
 function toHarnessParameter(
   parameter: CodingAssessmentParameter | { readonly Type: CodingAssessmentParameter['Type'] },
@@ -81,7 +83,7 @@ function toPlanCase(
         index,
         name: test.Name ?? undefined,
       });
-      const path = `${WORKSPACE_MOUNT}/${harness.filename}`;
+      const path = `${ASSESSMENT_WORKSPACE_MOUNT}/${harness.filename}`;
       overlay.push({ path, content: harness.source });
 
       return {
@@ -113,12 +115,12 @@ export function buildAssessmentExecutionPlan(
   const sources = Object.entries(definition.Data.Files)
     .filter(([, file]) => (file.Encoding ?? 'text') === 'text')
     .filter(([, file]) => scope === 'full' || file.Visibility !== 'Private')
-    .map(([path]) => path);
+    .map(([path]) => normalizeAssessmentWorkspacePath(path));
 
   if (scope === 'full') {
     for (const [path, file] of Object.entries(definition.Data.Files)) {
       if (file.Visibility === 'Private' && (file.Encoding ?? 'text') === 'text') {
-        overlay.push({ path, content: file.Content });
+        overlay.push({ path: normalizeAssessmentWorkspacePath(path), content: file.Content });
       }
     }
   }

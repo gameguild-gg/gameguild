@@ -9,5 +9,6 @@
     <ProjectReference Include="..\GameGuild.Economy\GameGuild.Economy.csproj" />
     <ProjectReference Include="..\GameGuild.Compliance.KYC\GameGuild.Compliance.KYC.csproj" />
     <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+    <InternalsVisibleTo Include="GameGuild.Economy.Payouts.UnitTests" />
   </ItemGroup>
 </Project>

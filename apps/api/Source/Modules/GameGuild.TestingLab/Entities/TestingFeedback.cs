@@ -79,6 +79,15 @@ public class TestingFeedback : EntityBase
     [Required]
     public string FeedbackData { get; set; } = string.Empty;
 
+    public Guid? QuestionnaireRevisionId { get; set; }
+
+    public string? StructuredResponsesJson { get; set; }
+
+    [NotMapped]
+    public QuestionnaireResponse? StructuredResponses => string.IsNullOrWhiteSpace(StructuredResponsesJson)
+        ? null
+        : QuestionnaireResponse.FromJson(StructuredResponsesJson);
+
     /// <summary>
     /// Overall rating (1-10)
     /// </summary>
@@ -174,6 +183,42 @@ public class TestingFeedback : EntityBase
             AdditionalNotes = string.IsNullOrWhiteSpace(additionalNotes) ? null : additionalNotes.Trim(),
             TenantId = tenantId,
         };
+    }
+
+    public static TestingFeedback CreateStructuredForEvent(
+        Guid eventId,
+        Guid applicationId,
+        Guid testerUserId,
+        TestingContext testingContext,
+        Guid questionnaireRevisionId,
+        QuestionnaireSchema questionnaireSchema,
+        QuestionnaireResponse responses,
+        int? overallRating,
+        bool? wouldRecommend,
+        string? additionalNotes,
+        Guid? tenantId)
+    {
+        if (questionnaireRevisionId == Guid.Empty)
+            throw new ArgumentException("Questionnaire revision is required.", nameof(questionnaireRevisionId));
+        if (!overallRating.HasValue || overallRating is < 1 or > 10)
+            throw new ArgumentException("Overall rating from 1 to 10 is required.", nameof(overallRating));
+        if (!wouldRecommend.HasValue)
+            throw new ArgumentException("A recommendation answer is required.", nameof(wouldRecommend));
+        QuestionnaireResponseValidator.EnsureValid(questionnaireSchema, responses);
+
+        var feedback = CreateForEvent(
+            eventId,
+            applicationId,
+            testerUserId,
+            testingContext,
+            responses.ToJson(),
+            overallRating,
+            wouldRecommend,
+            additionalNotes,
+            tenantId);
+        feedback.QuestionnaireRevisionId = questionnaireRevisionId;
+        feedback.StructuredResponsesJson = responses.ToJson();
+        return feedback;
     }
 
     /// <summary>

@@ -73,12 +73,14 @@ async function renderHeaderWithBellOpen() {
   const user = userEvent.setup();
   render(<DashboardHeader user={USER} notifications={NOTIFICATIONS} />);
   await user.click(screen.getByRole('button', { name: /notifications/i }));
+  await screen.findByRole('menu');
   return user;
 }
 
 async function ensureBellDropdownOpen(user: ReturnType<typeof userEvent.setup>) {
   if (!screen.queryByRole('menu')) {
     await user.click(screen.getByRole('button', { name: /notifications/i }));
+    await screen.findByRole('menu');
   }
 }
 
@@ -103,8 +105,8 @@ describe('DashboardHeader bell dropdown mark-read wiring', () => {
 
     expect(mocks.setNotificationReadAction).toHaveBeenCalledWith('notif-unread', true);
 
-    // Radix closes the dropdown on item select; reopen to inspect state.
-    await user.click(screen.getByRole('button', { name: /notifications/i }));
+    // Base UI closes the dropdown on item activation; reopen to inspect state.
+    await ensureBellDropdownOpen(user);
     await waitFor(() => {
       expect(screen.queryByLabelText('Unread')).not.toBeInTheDocument();
     });
@@ -118,7 +120,7 @@ describe('DashboardHeader bell dropdown mark-read wiring', () => {
 
     expect(mocks.setNotificationReadAction).toHaveBeenCalledWith('notif-read', false);
 
-    // The affordance stops propagation, so the menu may stay open; reopen only if radix closed it.
+    // The affordance stops propagation, so the menu may stay open; reopen only if Base UI closed it.
     await ensureBellDropdownOpen(user);
     await waitFor(() => {
       expect(screen.getAllByLabelText('Unread')).toHaveLength(2);
@@ -133,8 +135,8 @@ describe('DashboardHeader bell dropdown mark-read wiring', () => {
 
     expect(mocks.toastError).toHaveBeenCalledWith('Failed to update notifications. Please try again.');
 
-    await user.click(screen.getByRole('button', { name: /notifications/i }));
-    expect(screen.getByLabelText('Unread')).toBeInTheDocument();
+    await ensureBellDropdownOpen(user);
+    expect(await screen.findByLabelText('Unread')).toBeInTheDocument();
   });
 
   it('marks everything read from the footer button and clears the badge', async () => {
@@ -174,6 +176,7 @@ describe('DashboardHeader bell dropdown mark-read wiring', () => {
       />,
     );
     await user.click(screen.getByRole('button', { name: /notifications/i }));
+    await screen.findByRole('menu');
 
     await user.click(screen.getByText('Course invitation'));
 
@@ -189,6 +192,7 @@ describe('DashboardHeader bell dropdown mark-read wiring', () => {
       />,
     );
     await user.click(screen.getByRole('button', { name: /notifications/i }));
+    await screen.findByRole('menu');
 
     expect(screen.getByRole('button', { name: /mark all read/i })).toBeDisabled();
 

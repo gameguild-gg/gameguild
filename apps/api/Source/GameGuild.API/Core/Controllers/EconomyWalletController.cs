@@ -4,11 +4,14 @@ using GameGuild.CQRS;
 using GameGuild.Economy.Commands;
 using GameGuild.Economy.Contracts;
 using GameGuild.Economy.Funding;
+using GameGuild.Economy.Integrations;
+using GameGuild.Economy.Ledger;
 using GameGuild.Economy.Payouts;
 using GameGuild.Economy.Payouts.Commands;
 using GameGuild.Economy.Payouts.Queries;
 using GameGuild.Economy.Queries;
 using GameGuild.Economy.Risk;
+using GameGuild.Economy.Transfers;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -20,6 +23,13 @@ public sealed record EconomySelfServiceCapabilityDto(
     EconomyValueMovementCapability Capability,
     EconomyCapabilityReadinessState State,
     IReadOnlyList<string> Diagnostics);
+
+public sealed record EconomyTransferProtectedOperationFailureResponse(
+    EconomyProtectedOperationState State,
+    Guid? ReviewId,
+    IReadOnlyList<string> Diagnostics);
+
+public sealed record EconomyTopUpFailureResponse(string State, string Message);
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/economy")]
@@ -71,6 +81,135 @@ public sealed class EconomyWalletController(
         return Ok(receipt);
     }
 
+    [HttpPost("transfers")]
+    [EndpointSummary("Send a typed Economy transfer to another user in my tenant")]
+    [EndpointDescription("The server resolves wallets, jurisdiction, policy, reserve, risk, and posting authority. The request contains business intent only.")]
+    [ProducesResponseType(typeof(SelfServiceEconomyTransferReceipt), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(EconomyTransferProtectedOperationFailureResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(EconomyTransferProtectedOperationFailureResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(EconomyTransferProtectedOperationFailureResponse), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> CreateMyTransfer(
+        [FromBody] SelfServiceEconomyTransferRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!HasSelfServiceContext())
+            return Forbid();
+
+        ArgumentNullException.ThrowIfNull(request);
+        try
+        {
+            var receipt = await sender.Send(
+                new CreateMyEconomyTransferCommand(request), cancellationToken).ConfigureAwait(false);
+            return Ok(receipt);
+        }
+        catch (EconomyProtectedOperationException exception)
+        {
+            var status = exception.State switch
+            {
+                EconomyProtectedOperationState.Denied => StatusCodes.Status403Forbidden,
+                EconomyProtectedOperationState.ReviewRequired or EconomyProtectedOperationState.Hold or
+                    EconomyProtectedOperationState.Challenge => StatusCodes.Status409Conflict,
+                _ => StatusCodes.Status503ServiceUnavailable
+            };
+            return StatusCode(status, new EconomyTransferProtectedOperationFailureResponse(
+                exception.State, exception.ReviewId, exception.Diagnostics));
+        }
+        catch (SelfServiceEconomyTransferException exception)
+        {
+            return Conflict(exception.Message);
+        }
+        catch (EconomyWalletUnavailableException)
+        {
+            return Conflict("An active sender and recipient Economy wallet are required.");
+        }
+        catch (RegisteredPostingRejectedException)
+        {
+            return Conflict("The Economy transfer could not be committed.");
+        }
+    }
+
+    [HttpPost("top-ups")]
+    [EndpointSummary("Create my HardCoin top-up payment intent")]
+    [EndpointDescription("The server derives tenant, wallet, jurisdiction, signed quote, amount, provider binding, and idempotency authority.")]
+    [ProducesResponseType(typeof(SelfServiceHardCoinTopUpReceipt), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(EconomyTopUpFailureResponse), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(EconomyTopUpFailureResponse), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> CreateMyTopUp(
+        [FromBody] CreateMyHardCoinTopUpRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!HasSelfServiceContext())
+            return Forbid();
+
+        ArgumentNullException.ThrowIfNull(request);
+        try
+        {
+            var receipt = await sender.Send(
+                new CreateMyHardCoinTopUpCommand(request), cancellationToken).ConfigureAwait(false);
+            return CreatedAtAction(nameof(GetMyTopUp), new { topUpId = receipt.TopUpId }, receipt);
+        }
+        catch (EconomyTopUpProviderUnavailableException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new EconomyTopUpFailureResponse(
+                "ProviderUnavailable", "The top-up provider is not available."));
+        }
+        catch (EconomyTopUpProviderAmbiguousException)
+        {
+            return Conflict(new EconomyTopUpFailureResponse(
+                "Ambiguous", "The top-up provider outcome requires reconciliation."));
+        }
+        catch (EconomyTopUpReplayConflictException)
+        {
+            return Conflict(new EconomyTopUpFailureResponse(
+                "Conflict", "The idempotency key is already bound to another top-up."));
+        }
+        catch (EconomySelfServiceCommandRejectedException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new EconomyTopUpFailureResponse(
+                "Disabled", "HardCoin top-up is disabled by the active Economy controls."));
+        }
+        catch (EconomyWalletUnavailableException)
+        {
+            return Conflict(new EconomyTopUpFailureResponse(
+                "WalletUnavailable", "An active Economy wallet is required."));
+        }
+    }
+
+    [HttpGet("top-ups")]
+    [EndpointSummary("List my HardCoin top-ups")]
+    [ProducesResponseType(typeof(IReadOnlyList<EconomyTopUpStatusDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListMyTopUps(
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
+    {
+        if (!HasSelfServiceContext())
+            return Forbid();
+        if (take is < 1 or > 100)
+            return BadRequest("Take must be between 1 and 100.");
+
+        var topUps = await sender.Send(new ListMyHardCoinTopUpsQuery(take), cancellationToken)
+            .ConfigureAwait(false);
+        return Ok(topUps);
+    }
+
+    [HttpGet("top-ups/{topUpId:guid}")]
+    [EndpointSummary("Get one of my HardCoin top-ups")]
+    [ProducesResponseType(typeof(EconomyTopUpStatusDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMyTopUp(
+        Guid topUpId,
+        CancellationToken cancellationToken)
+    {
+        if (!HasSelfServiceContext())
+            return Forbid();
+        if (topUpId == Guid.Empty)
+            return BadRequest("Top-up ID is required.");
+
+        var topUp = await sender.Send(new GetMyHardCoinTopUpQuery(topUpId), cancellationToken)
+            .ConfigureAwait(false);
+        return topUp is null ? NotFound() : Ok(topUp);
+    }
+
     [HttpGet("capabilities")]
     [EndpointSummary("Get my Economy capability readiness")]
     [ProducesResponseType(typeof(IReadOnlyList<EconomySelfServiceCapabilityDto>), StatusCodes.Status200OK)]
@@ -82,7 +221,15 @@ public sealed class EconomyWalletController(
 
         EconomyValueMovementCapability[] capabilities =
         [
+            EconomyValueMovementCapability.ConfirmHardCoinFunding,
             EconomyValueMovementCapability.ConvertHardToSoft,
+            EconomyValueMovementCapability.Transfer,
+            EconomyValueMovementCapability.IssueAdReward,
+            EconomyValueMovementCapability.BountyEscrow,
+            EconomyValueMovementCapability.BountyClaim,
+            EconomyValueMovementCapability.BountyReclaim,
+            EconomyValueMovementCapability.MarketplaceSettlement,
+            EconomyValueMovementCapability.MarketplaceRefund,
             EconomyValueMovementCapability.PayoutExecution
         ];
         var result = capabilities
@@ -107,12 +254,12 @@ public sealed class EconomyWalletController(
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
     {
-        if (!TryGetSelfServiceActorId(out var actorId))
+        if (!TryGetSelfServiceActor(out var tenantId, out var actorId))
             return Forbid();
         if (take is < 1 or > 100)
             return BadRequest("Take must be between 1 and 100.");
 
-        var payouts = await sender.Send(new ListMyPayoutOperationsQuery(actorId, take), cancellationToken)
+        var payouts = await sender.Send(new ListMyPayoutOperationsQuery(tenantId, actorId, take), cancellationToken)
             .ConfigureAwait(false);
         return Ok(payouts);
     }
@@ -161,12 +308,12 @@ public sealed class EconomyWalletController(
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
     {
-        if (!TryGetSelfServiceActorId(out var actorId))
+        if (!TryGetSelfServiceActor(out var tenantId, out var actorId))
             return Forbid();
         if (take is < 1 or > 100)
             return BadRequest("Take must be between 1 and 100.");
 
-        var requests = await sender.Send(new ListMyPayoutRequestsQuery(actorId, take), cancellationToken)
+        var requests = await sender.Send(new ListMyPayoutRequestsQuery(tenantId, actorId, take), cancellationToken)
             .ConfigureAwait(false);
         return Ok(requests);
     }
@@ -212,10 +359,10 @@ public sealed class EconomyWalletController(
         Guid operationId,
         CancellationToken cancellationToken = default)
     {
-        if (!TryGetSelfServiceActorId(out var actorId))
+        if (!TryGetSelfServiceActor(out var tenantId, out var actorId))
             return Forbid();
 
-        var payout = await sender.Send(new GetMyPayoutOperationQuery(actorId, operationId), cancellationToken)
+        var payout = await sender.Send(new GetMyPayoutOperationQuery(tenantId, actorId, operationId), cancellationToken)
             .ConfigureAwait(false);
         return payout is null ? NotFound() : Ok(payout);
     }
@@ -226,12 +373,14 @@ public sealed class EconomyWalletController(
         return actor.IsAuthenticated && actor.SubjectIdAsGuid.HasValue && actor.TenantId.HasValue;
     }
 
-    private bool TryGetSelfServiceActorId(out Guid actorId)
+    private bool TryGetSelfServiceActor(out Guid tenantId, out Guid actorId)
     {
+        tenantId = Guid.Empty;
         actorId = Guid.Empty;
         if (!HasSelfServiceContext())
             return false;
 
+        tenantId = actorContextAccessor.ActorContext.TenantId!.Value;
         actorId = actorContextAccessor.ActorContext.SubjectIdAsGuid!.Value;
         return true;
     }

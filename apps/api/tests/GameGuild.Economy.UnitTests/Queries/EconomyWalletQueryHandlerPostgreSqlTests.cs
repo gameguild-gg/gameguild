@@ -109,6 +109,43 @@ public sealed class EconomyWalletQueryHandlerPostgreSqlTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetMyWalletRejectsAuthenticatedActorWithoutGuidSubjectOrTenant()
+    {
+        await using var context = CreateContext();
+        var accessor = new ActorContextAccessor();
+        accessor.SetActorContext(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = "not-a-guid",
+            TenantId = Guid.NewGuid(),
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        });
+        var invalidSubject = new GetMyEconomyWalletQueryHandler(context, accessor);
+        await FluentActions.Invoking(() => invalidSubject.Handle(
+                new GetMyEconomyWalletQuery(), CancellationToken.None))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+
+        accessor.SetActorContext(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = Guid.NewGuid().ToString(),
+            TenantId = null,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            IsAuthenticated = true
+        });
+        var missingTenant = new GetMyEconomyWalletQueryHandler(context, accessor);
+        await FluentActions.Invoking(() => missingTenant.Handle(
+                new GetMyEconomyWalletQuery(), CancellationToken.None))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+
+        var valid = new GetMyEconomyWalletQueryHandler(context, CreateActor(Guid.NewGuid(), Guid.NewGuid()));
+        await valid.Handle(new GetMyEconomyWalletQuery(), CancellationToken.None);
+    }
+
+    [Fact]
     public async Task ListMyWalletTransactions_ReturnsEmptyWhenActorOwnsNoWallet()
     {
         await ResetSchemaAsync();

@@ -73,16 +73,7 @@ public static class ProgramContentMappingExtensions
     }
 
     var contentStart = markerEnd + 3;
-    while (contentStart < body.Length)
-    {
-      var current = body[contentStart];
-      if (current != '\r' && current != '\n')
-      {
-        break;
-      }
-
-      contentStart++;
-    }
+    while (contentStart < body.Length && body[contentStart] is '\r' or '\n') contentStart++;
 
     return body[contentStart..];
   }

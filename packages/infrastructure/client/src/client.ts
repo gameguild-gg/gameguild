@@ -104,15 +104,13 @@ export function createClient(config: ClientConfig): ApiClient {
     interceptors,
   });
 
-  async function performRequest<T>(
-    requestConfig: RequestConfig
-  ): Promise<Result<ApiResponse<T>, ApiError>> {
+  async function performRequest<T>(requestConfig: RequestConfig): Promise<Result<ApiResponse<T>, ApiError>> {
     // Check auth requirement
     /* v8 ignore start */
     if (requestConfig.requiresAuth && config.auth) {
       const token = await config.auth.getAccessToken();
       if (!token) {
-      /* v8 ignore stop */
+        /* v8 ignore stop */
         await config.auth.onAuthenticationRequired?.();
         return err({
           name: 'ApiError',
@@ -145,7 +143,7 @@ export function createClient(config: ClientConfig): ApiClient {
         requestConfig.path || '',
         /* v8 ignore stop */
         requestConfig.body,
-        executeRequest
+        executeRequest,
       );
     }
 

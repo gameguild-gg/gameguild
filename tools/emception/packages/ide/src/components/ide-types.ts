@@ -145,6 +145,8 @@ export type InjectedEmceptionAPI = BrowserEmceptionAPI;
 export interface IdeController {
   readonly api: InjectedEmceptionAPI;
   getFiles(): Promise<readonly WorkspaceFile[]>;
+  /** Flush the IDE's current in-memory text files to the runtime VFS. */
+  syncWorkspace(): Promise<void>;
   replaceFiles(files: readonly WorkspaceFile[]): Promise<void>;
   setFilesReadOnly(paths: readonly string[], readOnly: boolean): void;
 }

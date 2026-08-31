@@ -13,4 +13,7 @@
     <ProjectReference Include="..\GameGuild.Commerce.Orders\GameGuild.Commerce.Orders.csproj" />
     <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="GameGuild.Economy.Marketplace.UnitTests" />
+  </ItemGroup>
 </Project>

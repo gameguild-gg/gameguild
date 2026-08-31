@@ -6,21 +6,7 @@
 
 // Result types
 export type { Result, Ok, Err, ResultData, ResultError } from './result/types.js';
-export {
-  ok,
-  err,
-  isOk,
-  isErr,
-  unwrap,
-  unwrapOr,
-  unwrapOrElse,
-  map,
-  mapErr,
-  flatMap,
-  match,
-  fromPromise,
-  toPromise,
-} from './result/helpers.js';
+export { ok, err, isOk, isErr, unwrap, unwrapOr, unwrapOrElse, map, mapErr, flatMap, match, fromPromise, toPromise } from './result/helpers.js';
 
 // Error types
 export type {

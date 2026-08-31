@@ -7,14 +7,14 @@ namespace GameGuild.Economy.Bounties.UnitTests;
 public sealed class BountiesModuleTests
 {
     [Fact]
-    public void ModuleRemainsDisabledByDefaultAndRegistersOnlyPersistentBountyServices()
+    public void ModuleComposesPersistentBountyServicesByDefault()
     {
         var module = new BountiesModule();
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().Build();
 
         module.Name.Should().Be("Economy.Bounties");
-        module.EnabledByDefault.Should().BeFalse();
+        module.EnabledByDefault.Should().BeTrue();
         module.ConfigureServices(services, configuration).Should().BeSameAs(services);
         services.AddBountiesComposition(configuration).Should().BeSameAs(services);
         services.Should().SatisfyRespectively(
@@ -47,8 +47,24 @@ public sealed class BountiesModuleTests
                 item.ImplementationType == typeof(PostgreSqlBountyTerminalReclaimWriter) &&
                 item.Lifetime == ServiceLifetime.Scoped),
             descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
+                item.ServiceType == typeof(PostgreSqlBountyExpirationWorkflow) &&
+                item.ImplementationType == typeof(PostgreSqlBountyExpirationWorkflow) &&
+                item.Lifetime == ServiceLifetime.Scoped),
+            descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
+                item.ServiceType == typeof(IDurableBountyExpirationWorkflow) &&
+                item.ImplementationFactory != null &&
+                item.Lifetime == ServiceLifetime.Scoped),
+            descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
+                item.ServiceType == typeof(IBountyExpirationTransition) &&
+                item.ImplementationFactory != null &&
+                item.Lifetime == ServiceLifetime.Scoped),
+            descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
                 item.ServiceType == typeof(IDurableBountyReclaimWorkflow) &&
                 item.ImplementationType == typeof(PostgreSqlDurableBountyReclaimWorkflow) &&
+                item.Lifetime == ServiceLifetime.Scoped),
+            descriptor => descriptor.Should().Match<ServiceDescriptor>(item =>
+                item.ServiceType == typeof(IDurableBountyApplicationService) &&
+                item.ImplementationType == typeof(DurableBountyApplicationService) &&
                 item.Lifetime == ServiceLifetime.Scoped));
         typeof(IBountyTerminalEventStore).GetMethod("Complete").Should().BeNull(
             "a terminal state transition must be coupled to its immutable ledger posting");

@@ -84,6 +84,7 @@ public sealed class PayoutCoordinatorGuardTests
         var cases = new (PayoutReservationRequest Request, Type ExceptionType)[]
         {
             (valid with { OperationId = Guid.Empty }, typeof(ArgumentException)),
+            (valid with { TenantId = Guid.Empty }, typeof(ArgumentException)),
             (valid with { ActorId = Guid.Empty }, typeof(ArgumentException)),
             (valid with { PayeeId = Guid.Empty }, typeof(ArgumentException)),
             (valid with { Amount = new CoinAmount(CurrencyCode.SoftCoin, 1) }, typeof(PayoutEligibilityException)),
@@ -479,5 +480,5 @@ public sealed class PayoutCoordinatorGuardTests
         Guid.NewGuid(), new IdempotencyKey(Guid.NewGuid().ToString("N")), "request", f.ActorId, f.PayeeId,
         f.WalletId, new CoinAmount(CurrencyCode.HardCoin, 1), f.ProviderAccountId, f.DestinationHash,
         "provider-binding", "eligibility", null, null, state, 1, 1, 1,
-        new ReserveVersion(1), 1, new PolicyVersion(1), Guid.NewGuid(), Time, Time);
+        new ReserveVersion(1), 1, new PolicyVersion(1), Guid.NewGuid(), Time, Time, f.TenantId);
 }

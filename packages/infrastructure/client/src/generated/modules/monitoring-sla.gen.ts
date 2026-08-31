@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,20 +17,14 @@ export class MonitoringSlaModule {
 
   /**
    */
-  async postSlaSlis(
-    body: Types.MonitoringSLARecordSliMetricCommand,
-  ): Promise<Result<void, ApiError>> {
-    const url = "/api/v1/sla/slis";
+  async postSlaSlis(body: Types.MonitoringSLARecordSliMetricCommand): Promise<Result<void, ApiError>> {
+    const url = '/api/v1/sla/slis';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.MonitoringSLARecordSliMetricCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.MonitoringSLARecordSliMetricCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -48,10 +42,10 @@ export class MonitoringSlaModule {
     skip?: number;
     take?: number;
   }): Promise<Result<Array<Types.MonitoringSLASlo>, ApiError>> {
-    const url = "/api/v1/sla/slos";
+    const url = '/api/v1/sla/slos';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -62,20 +56,14 @@ export class MonitoringSlaModule {
 
   /**
    */
-  async postSlaSlos(
-    body: Types.MonitoringSLACreateSloCommand,
-  ): Promise<Result<Types.MonitoringSLASlo, ApiError>> {
-    const url = "/api/v1/sla/slos";
+  async postSlaSlos(body: Types.MonitoringSLACreateSloCommand): Promise<Result<Types.MonitoringSLASlo, ApiError>> {
+    const url = '/api/v1/sla/slos';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.MonitoringSLACreateSloCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.MonitoringSLACreateSloCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -83,11 +71,7 @@ export class MonitoringSlaModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.MonitoringSLASloSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.MonitoringSLASloSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -96,24 +80,18 @@ export class MonitoringSlaModule {
 
   /**
    */
-  async getSlaSlosForGetSlaSlosById(
-    id: string,
-  ): Promise<Result<Types.MonitoringSLASlo, ApiError>> {
+  async getSlaSlosForGetSlaSlosById(id: string): Promise<Result<Types.MonitoringSLASlo, ApiError>> {
     const url = `/api/v1/sla/slos/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.MonitoringSLASloSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.MonitoringSLASloSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -122,21 +100,14 @@ export class MonitoringSlaModule {
 
   /**
    */
-  async putSlaSlos(
-    id: string,
-    body: Types.MonitoringSLAUpdateSloCommand,
-  ): Promise<Result<Types.MonitoringSLASlo, ApiError>> {
+  async putSlaSlos(id: string, body: Types.MonitoringSLAUpdateSloCommand): Promise<Result<Types.MonitoringSLASlo, ApiError>> {
     const url = `/api/v1/sla/slos/${id}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.MonitoringSLAUpdateSloCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.MonitoringSLAUpdateSloCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -144,11 +115,7 @@ export class MonitoringSlaModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.MonitoringSLASloSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.MonitoringSLASloSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -161,7 +128,7 @@ export class MonitoringSlaModule {
     const url = `/api/v1/sla/slos/${id}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -171,14 +138,11 @@ export class MonitoringSlaModule {
 
   /**
    */
-  async getSlaSlosCompliance(
-    id: string,
-    query?: { startDate?: string; endDate?: string },
-  ): Promise<Result<Types.MonitoringSLASloCompliance, ApiError>> {
+  async getSlaSlosCompliance(id: string, query?: { startDate?: string; endDate?: string }): Promise<Result<Types.MonitoringSLASloCompliance, ApiError>> {
     const url = `/api/v1/sla/slos/${id}/compliance`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -186,11 +150,7 @@ export class MonitoringSlaModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.MonitoringSLASloComplianceSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.MonitoringSLASloComplianceSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -199,24 +159,18 @@ export class MonitoringSlaModule {
 
   /**
    */
-  async getSlaSlosErrorBudget(
-    id: string,
-  ): Promise<Result<Types.MonitoringSLAErrorBudget, ApiError>> {
+  async getSlaSlosErrorBudget(id: string): Promise<Result<Types.MonitoringSLAErrorBudget, ApiError>> {
     const url = `/api/v1/sla/slos/${id}/error-budget`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.MonitoringSLAErrorBudgetSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.MonitoringSLAErrorBudgetSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -234,10 +188,10 @@ export class MonitoringSlaModule {
     skip?: number;
     take?: number;
   }): Promise<Result<Array<Types.MonitoringSLASloViolation>, ApiError>> {
-    const url = "/api/v1/sla/violations";
+    const url = '/api/v1/sla/violations';
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -248,21 +202,14 @@ export class MonitoringSlaModule {
 
   /**
    */
-  async postSlaViolationsResolve(
-    id: string,
-    body: Types.MonitoringSLAResolveSloViolationCommand,
-  ): Promise<Result<void, ApiError>> {
+  async postSlaViolationsResolve(id: string, body: Types.MonitoringSLAResolveSloViolationCommand): Promise<Result<void, ApiError>> {
     const url = `/api/v1/sla/violations/${id}/resolve`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.MonitoringSLAResolveSloViolationCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.MonitoringSLAResolveSloViolationCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -272,8 +219,6 @@ export class MonitoringSlaModule {
   }
 }
 
-export function createMonitoringSlaModule(
-  client: ApiClient,
-): MonitoringSlaModule {
+export function createMonitoringSlaModule(client: ApiClient): MonitoringSlaModule {
   return new MonitoringSlaModule(client);
 }

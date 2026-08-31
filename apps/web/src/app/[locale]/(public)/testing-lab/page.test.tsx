@@ -69,6 +69,10 @@ describe("Public Testing Lab page", () => {
       "href",
       "/testing-lab/events",
     );
+    expect(screen.getByRole("link", { name: "Submit a project" })).toHaveAttribute(
+      "href",
+      "/workspace/projects",
+    );
     expect(
       screen.queryByText("August campus playtest"),
     ).not.toBeInTheDocument();

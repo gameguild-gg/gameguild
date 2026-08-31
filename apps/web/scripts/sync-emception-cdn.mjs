@@ -1,127 +1,174 @@
-// Sync the emception CDN payload into apps/web/public/emception (gitignored,
-// served at build/dev time as /emception/*). Wired into prebuild/predev.
-//
-// Three-tier fallback chain:
-//   Tier 1 (dev primary): tools/emception/public/cdn (local WASM build)
-//   Tier 2 (Docker always; dev fallback): npm tarball matching the workspace
-//                                         emception version, cdn/
-//                                         subset extracted on demand into cache.
-//   Tier 3 (last resort): jsDelivr URL — no sync, instruct env var so the app
-//                         fetches WASM at runtime.
-//
-// Skips the 108MB copy when the target manifest already matches the source.
 import { promises as fs } from 'node:fs';
 import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import os from 'node:os';
 import path from 'node:path';
+import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 
-const execFileP = promisify(execFile);
-
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const CORE_PACKAGE_JSON = path.join(REPO_ROOT, 'tools/emception/packages/core/package.json');
-const corePackage = JSON.parse(await fs.readFile(CORE_PACKAGE_JSON, 'utf8'));
-if (typeof corePackage.version !== 'string' || corePackage.version.length === 0) {
-  throw new Error(`${CORE_PACKAGE_JSON} must contain a version`);
-}
+const execFileAsync = promisify(execFile);
+export const SOURCE_CANONICAL = path.join(
+  REPO_ROOT,
+  'tools',
+  'emception',
+  'artifacts',
+  'toolchain',
+  'release',
+  'cdn',
+);
+export const TARGET = path.join(REPO_ROOT, 'apps', 'web', 'public', 'emception');
+export const TOOLCHAIN_PACKAGE_JSON = path.join(
+  REPO_ROOT,
+  'tools',
+  'emception',
+  'packages',
+  'toolchain',
+  'package.json',
+);
 
-export const EMCEPTION_VERSION = corePackage.version;
-export const SOURCE_LOCAL = path.join(REPO_ROOT, 'tools/emception/public/cdn');
-export const SOURCE_NPM_CACHE = path.join(REPO_ROOT, 'node_modules/.cache/emception-cdn', EMCEPTION_VERSION);
-export const TARGET = path.join(REPO_ROOT, 'apps/web/public/emception');
-export const JSDELIVR_MANIFEST_URL = `https://cdn.jsdelivr.net/npm/emception@${EMCEPTION_VERSION}/cdn/manifest.json`;
-export const NPM_REGISTRY_URL = `https://registry.npmjs.org/emception/${EMCEPTION_VERSION}`;
-
-// Byte-compare of the two manifest.json files. Any missing/unreadable file on
-// either side counts as "no match" so the caller re-copies.
 export async function manifestsMatch(srcManifestPath, tgtManifestPath) {
   try {
-    const [src, tgt] = await Promise.all([fs.readFile(srcManifestPath), fs.readFile(tgtManifestPath)]);
+    const [src, tgt] = await Promise.all([
+      fs.readFile(srcManifestPath),
+      fs.readFile(tgtManifestPath),
+    ]);
     return src.equals(tgt);
   } catch {
     return false;
   }
 }
 
-async function exists(p) {
+async function readReleaseManifest(srcDir) {
+  const manifestPath = path.join(srcDir, 'manifest.json');
   try {
-    await fs.stat(p);
+    return JSON.parse(await fs.readFile(manifestPath, 'utf8'));
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`canonical Toolchain release is unavailable at ${srcDir}: ${detail}`);
+  }
+}
+
+async function releaseTreesMatch(srcDir, tgtDir) {
+  if (!await manifestsMatch(
+    path.join(srcDir, 'manifest.json'),
+    path.join(tgtDir, 'manifest.json'),
+  )) return false;
+
+  try {
+    const sourceFiles = await fs.readdir(srcDir, { recursive: true });
+    const targetFiles = await fs.readdir(tgtDir, { recursive: true });
+    if (sourceFiles.length !== targetFiles.length) return false;
+
+    const targetSet = new Set(targetFiles);
+    for (const entry of sourceFiles) {
+      if (!targetSet.has(entry)) return false;
+      const [sourceStat, targetStat] = await Promise.all([
+        fs.stat(path.join(srcDir, entry)),
+        fs.stat(path.join(tgtDir, entry)),
+      ]);
+      if (sourceStat.isFile() !== targetStat.isFile()) return false;
+      if (sourceStat.isFile() && sourceStat.size !== targetStat.size) return false;
+    }
     return true;
   } catch {
     return false;
   }
 }
 
-async function directoryNotEmpty(dir) {
-  if (!(await exists(dir))) return false;
-  const entries = await fs.readdir(dir);
-  return entries.length > 0;
+async function validateCanonicalRelease(srcDir) {
+  const manifest = await readReleaseManifest(srcDir);
+  if (manifest?.schemaVersion !== 2) {
+    throw new Error(`canonical Toolchain release must use manifest schemaVersion 2: ${srcDir}`);
+  }
+  return manifest;
 }
 
-// Resolve the npm tarball URL via the registry API (no npm CLI dependency).
-async function resolveNpmTarballUrlWith(fetchImpl) {
-  const resp = await fetchImpl(NPM_REGISTRY_URL);
-  if (!resp.ok) throw new Error(`npm registry returned ${resp.status}`);
-  const meta = await resp.json();
-  const tarballUrl = meta?.dist?.tarball;
-  if (!tarballUrl) throw new Error('npm registry response missing dist.tarball');
-  return tarballUrl;
+async function validatePublishedRelease(srcDir, version) {
+  const manifest = await readReleaseManifest(srcDir);
+  if (manifest?.schemaVersion === 2) {
+    if (manifest.artifactVersion !== version) {
+      throw new Error(
+        `published Toolchain artifact version ${manifest.artifactVersion ?? '<missing>'} does not match ${version}`,
+      );
+    }
+    return manifest;
+  }
+  if (manifest?.version !== 1) {
+    throw new Error(`published Toolchain release uses an unsupported manifest schema: ${srcDir}`);
+  }
+  return manifest;
 }
 
-// ponytail: shell out to system `tar` instead of pulling in the npm `tar`
-// package — every target (macOS dev, alpine Docker) ships tar in $PATH.
-async function extractTarball(tgzPath, destDir) {
-  await fs.mkdir(destDir, { recursive: true });
-  await execFileP('tar', ['-xzf', path.basename(tgzPath), 'package/cdn'], {
-    cwd: destDir,
-  });
-}
-
-// Tier 2: download the workspace emception version, extract package/cdn/ into
-// the cache dir. Re-uses the cache if a previous extraction is present.
-export async function fetchNpmTarball({ cacheDir, log = console.log, fetchImpl = fetch, extractImpl = extractTarball }) {
-  // npm tarballs already wrap their contents in a top-level `package/` dir, so
-  // extracting straight into cacheDir yields cacheDir/package/{cdn,dist,...}.
-  const cachedTarball = path.join(cacheDir, 'package.tgz');
-  const cachedExtractedRoot = cacheDir;
-  const cachedCdn = path.join(cachedExtractedRoot, 'package', 'cdn');
-
-  if (await directoryNotEmpty(cachedCdn)) {
-    log('npm emception tarball cache hit');
-    return cachedCdn;
+async function hydratePublishedRelease({ srcDir, version, log }) {
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
+    throw new Error(`invalid Toolchain package version: ${version}`);
   }
 
-  await fs.mkdir(cacheDir, { recursive: true });
-
-  log(`fetching emception@${EMCEPTION_VERSION} tarball URL from npm registry...`);
-  const tarballUrl = await resolveNpmTarballUrlWith(fetchImpl);
-
-  log(`downloading ${tarballUrl}...`);
-  const tarballResp = await fetchImpl(tarballUrl);
-  if (!tarballResp.ok) throw new Error(`tarball download failed: ${tarballResp.status}`);
-  const tarballBuf = Buffer.from(await tarballResp.arrayBuffer());
-  await fs.writeFile(cachedTarball, tarballBuf);
-
-  await fs.rm(path.join(cachedExtractedRoot, 'package'), {
-    recursive: true,
-    force: true,
-  });
-  log('extracting cdn/ subset from tarball...');
-  await extractImpl(cachedTarball, cachedExtractedRoot);
-
-  if (!(await directoryNotEmpty(cachedCdn))) {
-    throw new Error(`npm tarball did not contain package/cdn/ — emception@${EMCEPTION_VERSION} may be malformed`);
-  }
-  return cachedCdn;
-}
-
-async function checkJsdelivrReachable(fetchImpl = fetch) {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'gameguild-emception-'));
   try {
-    const resp = await fetchImpl(JSDELIVR_MANIFEST_URL, { method: 'HEAD' });
-    return resp.ok;
-  } catch {
-    return false;
+    const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    const { stdout } = await execFileAsync(
+      npmCommand,
+      ['pack', `emception@${version}`, '--pack-destination', tempDir, '--json'],
+      {
+        maxBuffer: 10 * 1024 * 1024,
+        // Windows exposes npm as npm.cmd, which requires cmd.exe dispatch.
+        shell: process.platform === 'win32',
+      },
+    );
+    const packResults = JSON.parse(stdout);
+    const filename = Array.isArray(packResults) ? packResults.at(-1)?.filename : undefined;
+    if (!filename) throw new Error('npm pack did not return a Toolchain archive filename');
+
+    const archivePath = path.join(tempDir, filename);
+    await execFileAsync('tar', ['-xzf', archivePath, '-C', tempDir]);
+    const publishedCdn = path.join(tempDir, 'package', 'cdn');
+    const manifest = await validatePublishedRelease(publishedCdn, version);
+
+    await fs.rm(srcDir, { recursive: true, force: true });
+    await fs.mkdir(srcDir, { recursive: true });
+    await fs.cp(publishedCdn, srcDir, { recursive: true });
+    const schemaVersion = manifest.schemaVersion ?? manifest.version;
+    log(`hydrated Toolchain release from emception@${version} (manifest schema ${schemaVersion})`);
+  } finally {
+    await fs.rm(tempDir, { recursive: true, force: true });
   }
+}
+
+export async function ensureCanonicalRelease({
+  srcDir = SOURCE_CANONICAL,
+  versionPackagePath = TOOLCHAIN_PACKAGE_JSON,
+  hydrate = hydratePublishedRelease,
+  log = console.log,
+} = {}) {
+  const { version } = JSON.parse(await fs.readFile(versionPackagePath, 'utf8'));
+  try {
+    const manifest = await validateCanonicalRelease(srcDir);
+    if (manifest.artifactVersion === version) {
+      return { action: 'skip', source: srcDir, version, schemaVersion: 2 };
+    }
+  } catch {
+    try {
+      const manifest = await validatePublishedRelease(srcDir, version);
+      return {
+        action: 'skip',
+        source: srcDir,
+        version,
+        schemaVersion: manifest.schemaVersion ?? manifest.version,
+      };
+    } catch {
+      // A missing or invalid local release is hydrated from the pinned package.
+    }
+  }
+
+  await hydrate({ srcDir, version, log });
+  const manifest = await validatePublishedRelease(srcDir, version);
+  return {
+    action: 'hydrated',
+    source: srcDir,
+    version,
+    schemaVersion: manifest.schemaVersion ?? manifest.version,
+  };
 }
 
 async function copyDirCounted(srcDir, tgtDir, log) {
@@ -139,84 +186,33 @@ async function copyDirCounted(srcDir, tgtDir, log) {
   log(`copied ${fileCount} files (${bytes} bytes) to ${tgtDir}`);
 }
 
-// Returns { tier: 1|2|3, action: 'skip'|'synced'|'jsdelivr', source|url }.
-// Throws if every tier is unavailable.
-export async function syncEmceptionCdn({
-  srcDir = SOURCE_LOCAL,
-  tgtDir = TARGET,
-  log = console.log,
-  npmCacheDir = SOURCE_NPM_CACHE,
-  fetchNpm = true,
-  allowJsDelivr = true,
-  fetchImpl = fetch,
-  extractImpl = extractTarball,
-} = {}) {
-  // Tier 1: local WASM build.
-  if (srcDir && (await directoryNotEmpty(srcDir))) {
-    const srcManifest = path.join(srcDir, 'manifest.json');
-    const tgtManifest = path.join(tgtDir, 'manifest.json');
-    if ((await exists(tgtManifest)) && (await manifestsMatch(srcManifest, tgtManifest))) {
-      log('emception cdn up to date (local build)');
-      return { tier: 1, action: 'skip', source: srcDir };
-    }
-    await copyDirCounted(srcDir, tgtDir, log);
-    log(`synced from local build: ${srcDir}`);
-    return { tier: 1, action: 'synced', source: srcDir };
+export async function syncEmceptionCdn(options = {}) {
+  const srcDir = options.srcDir ?? SOURCE_CANONICAL;
+  const tgtDir = options.tgtDir ?? TARGET;
+  const log = options.log ?? console.log;
+  let sourceSchemaVersion = 2;
+  if (!Object.hasOwn(options, 'srcDir')) {
+    const release = await ensureCanonicalRelease({ srcDir, log });
+    sourceSchemaVersion = release.schemaVersion;
   }
-
-  // Tier 2: npm tarball pinned to the workspace emception version.
-  if (fetchNpm && npmCacheDir) {
-    try {
-      const npmCdnDir = await fetchNpmTarball({
-        cacheDir: npmCacheDir,
-        log,
-        fetchImpl,
-        extractImpl,
-      });
-      const npmManifest = path.join(npmCdnDir, 'manifest.json');
-      const tgtManifest = path.join(tgtDir, 'manifest.json');
-      if ((await exists(tgtManifest)) && (await manifestsMatch(npmManifest, tgtManifest))) {
-        log(`emception cdn up to date (npm emception@${EMCEPTION_VERSION})`);
-        return { tier: 2, action: 'skip', source: npmCdnDir };
-      }
-      await copyDirCounted(npmCdnDir, tgtDir, log);
-      log(`synced from npm emception@${EMCEPTION_VERSION}: ${npmCdnDir}`);
-      return { tier: 2, action: 'synced', source: npmCdnDir };
-    } catch (err) {
-      log(`npm fetch failed: ${err.message}`);
-    }
+  if (sourceSchemaVersion === 1) {
+    const { version } = JSON.parse(await fs.readFile(TOOLCHAIN_PACKAGE_JSON, 'utf8'));
+    await validatePublishedRelease(srcDir, version);
+  } else {
+    await validateCanonicalRelease(srcDir);
   }
-
-  // Tier 3: jsDelivr runtime URL — no sync, just instruct env var.
-  if (allowJsDelivr && (await checkJsdelivrReachable(fetchImpl))) {
-    log('WARNING: no local emception CDN; falling back to jsDelivr runtime fetch.');
-    log(`         Set NEXT_PUBLIC_EMCEPTION_MANIFEST_URL=${JSDELIVR_MANIFEST_URL} in your environment.`);
-    log('         (For a local WASM build, run: pnpm --dir tools/emception run build:all)');
-    return { tier: 3, action: 'jsdelivr', url: JSDELIVR_MANIFEST_URL };
+  if (await releaseTreesMatch(srcDir, tgtDir)) {
+    log('emception CDN is up to date (validated Toolchain release tree)');
+    return { action: 'skip', source: srcDir };
   }
-
-  throw new Error(
-    'No emception CDN source available. Run `pnpm --dir tools/emception run build:all`, ' + 'or set NEXT_PUBLIC_EMCEPTION_MANIFEST_URL manually.',
-  );
+  await copyDirCounted(srcDir, tgtDir, log);
+  log(`synced from canonical Toolchain release: ${srcDir}`);
+  return { action: 'synced', source: srcDir };
 }
 
-// CLI entrypoint — only runs when executed directly, never on import (vitest).
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const noNpm = process.argv.includes('--no-npm');
-  const jsdelivrOnly = process.argv.includes('--jsdelivr-only');
-  try {
-    const result = await syncEmceptionCdn({
-      srcDir: SOURCE_LOCAL,
-      tgtDir: TARGET,
-      npmCacheDir: SOURCE_NPM_CACHE,
-      fetchNpm: !jsdelivrOnly && !noNpm,
-      allowJsDelivr: !noNpm,
-    });
-    if (result.tier === 3) {
-      console.log(`\nNext step: export NEXT_PUBLIC_EMCEPTION_MANIFEST_URL=${result.url}`);
-    }
-  } catch (err) {
-    console.error(`error: emception CDN sync failed: ${err.message}`);
-    process.exit(1);
-  }
+  syncEmceptionCdn().catch((error) => {
+    console.error(`error: emception CDN sync failed: ${error instanceof Error ? error.message : String(error)}`);
+    process.exitCode = 1;
+  });
 }

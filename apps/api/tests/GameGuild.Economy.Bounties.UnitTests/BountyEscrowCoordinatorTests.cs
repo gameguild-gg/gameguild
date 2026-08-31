@@ -546,6 +546,23 @@ public sealed class BountyEscrowCoordinatorTests
     }
 
     [Fact]
+    public void TerminalIdempotencyKey_CannotMoveBetweenBounties()
+    {
+        var harness = new Harness();
+        var first = harness.Post(
+            3, [harness.Lot(3, ProvenanceKind.PurchasedHard, Now, 1)],
+            expiresAt: Now.AddMinutes(3));
+        var second = harness.Post(
+            3, [harness.Lot(3, ProvenanceKind.PurchasedHard, Now, 2)],
+            expiresAt: Now.AddMinutes(3));
+        harness.Coordinator.Claim(harness.ClaimCommand(first, Now.AddMinutes(1), "cross-bounty-key"));
+
+        FluentActions.Invoking(() => harness.Coordinator.Claim(
+                harness.ClaimCommand(second, Now.AddMinutes(1), "cross-bounty-key")))
+            .Should().Throw<BountyIdempotencyConflictException>();
+    }
+
+    [Fact]
     public void Reclaim_IsIdempotentAndSoftFeeCreditRemainsNonCashable()
     {
         var hard = new Harness();

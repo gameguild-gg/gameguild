@@ -12,6 +12,8 @@ namespace GameGuild.API.UnitTests.Database;
 public sealed class EconomyFifoTransferMigrationTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 9, 23, 0, 0, TimeSpan.Zero);
+    private static readonly Guid FifoTransferCapabilityId =
+        Guid.Parse("e1000000-0000-0000-0000-000000000011");
 
     [Fact]
     public void MigrationInstallsAnAtomicFifoTransferWriter()
@@ -52,7 +54,7 @@ public sealed class EconomyFifoTransferMigrationTests
         var secondRoot = Guid.NewGuid();
         var firstLot = Guid.NewGuid();
         var secondLot = Guid.NewGuid();
-        var capability = Guid.NewGuid();
+        var capability = FifoTransferCapabilityId;
         var riskDecision = Guid.NewGuid();
         var counter = Guid.NewGuid();
         var posting = Guid.NewGuid();
@@ -123,8 +125,6 @@ public sealed class EconomyFifoTransferMigrationTests
             INSERT INTO public.economy_accounts ("Id", "WalletId", "Code", "Currency", "Provenance", "CreatedAt") VALUES
                 ('{Guid.NewGuid()}', '{sourceWallet}', 2, 1, 1, '{Now.AddMinutes(-3):O}'),
                 ('{Guid.NewGuid()}', '{destinationWallet}', 2, 1, 1, '{Now.AddMinutes(-3):O}');
-            INSERT INTO public.economy_registered_capabilities ("Id", "Name", "AllowedTemplateKinds", "IsEnabled", "CreatedAt", "RevokedAt")
-            VALUES ('{capability}', 'fifo-transfer', '[4]'::jsonb, true, '{Now.AddMinutes(-3):O}', NULL);
             INSERT INTO public.economy_risk_counters (
                 "Id", "Dimension", "SubjectHash", "Operation", "Currency", "WindowStartedAt", "WindowEndsAt",
                 "CounterVersion", "MaxUnits", "UsedUnits", "UpdatedAt")

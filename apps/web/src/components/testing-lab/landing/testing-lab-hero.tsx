@@ -102,6 +102,14 @@ export function TestingLabHero() {
                 <Link href="/testing-lab/events">Browse Events</Link>
               </Button>
             </div>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="border-blue-400/60 bg-blue-950/30 px-8 py-4 text-lg font-semibold text-blue-100 hover:bg-blue-900/50 hover:text-white"
+            >
+              <Link href="/workspace/projects">Submit a project</Link>
+            </Button>
           </div>
         </div>
       </div>

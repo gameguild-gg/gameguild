@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,25 +17,18 @@ export class LearningCohortsSchedulesModule {
 
   /**
    */
-  async getCoursesCohortsSchedule(
-    courseId: string,
-    cohortId: string,
-  ): Promise<Result<Types.LearningCohortsCohortSchedule, ApiError>> {
+  async getCoursesCohortsSchedule(courseId: string, cohortId: string): Promise<Result<Types.LearningCohortsCohortSchedule, ApiError>> {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningCohortsCohortScheduleSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningCohortsCohortScheduleSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -52,14 +45,10 @@ export class LearningCohortsSchedulesModule {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningCohortsApplyCohortScheduleInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningCohortsApplyCohortScheduleInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PUT",
+      method: 'PUT',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -67,11 +56,7 @@ export class LearningCohortsSchedulesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningCohortsCohortScheduleSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningCohortsCohortScheduleSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -83,21 +68,16 @@ export class LearningCohortsSchedulesModule {
   async getCoursesCohortsScheduleAvailableContent(
     courseId: string,
     cohortId: string,
-  ): Promise<
-    Result<Array<Types.LearningCohortsAvailableCohortContent>, ApiError>
-  > {
+  ): Promise<Result<Array<Types.LearningCohortsAvailableCohortContent>, ApiError>> {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule/available-content`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.LearningCohortsAvailableCohortContent>,
-      ApiError
-    >;
+    return result as Result<Array<Types.LearningCohortsAvailableCohortContent>, ApiError>;
   }
 
   /**
@@ -111,14 +91,10 @@ export class LearningCohortsSchedulesModule {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule/items/${itemId}`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningCohortsUpdateCohortScheduleInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningCohortsUpdateCohortScheduleInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "PATCH",
+      method: 'PATCH',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -126,11 +102,7 @@ export class LearningCohortsSchedulesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningCohortsCohortScheduleSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningCohortsCohortScheduleSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -148,14 +120,10 @@ export class LearningCohortsSchedulesModule {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule/items/${itemId}/shift`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningCohortsShiftCohortScheduleInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningCohortsShiftCohortScheduleInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -163,11 +131,7 @@ export class LearningCohortsSchedulesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningCohortsCohortScheduleSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningCohortsCohortScheduleSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -184,14 +148,10 @@ export class LearningCohortsSchedulesModule {
     const url = `/v1/courses/${courseId}/cohorts/${cohortId}/schedule/preview`;
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.LearningCohortsPreviewCohortScheduleInputSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.LearningCohortsPreviewCohortScheduleInputSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -199,11 +159,7 @@ export class LearningCohortsSchedulesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningCohortsCohortSchedulePreviewSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningCohortsCohortSchedulePreviewSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -219,7 +175,7 @@ export class LearningCohortsSchedulesModule {
     const url = `/v1/courses/${courseId}/cohorts/calendar`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -227,11 +183,7 @@ export class LearningCohortsSchedulesModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.LearningCohortsCourseCohortCalendarSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.LearningCohortsCourseCohortCalendarSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -239,8 +191,6 @@ export class LearningCohortsSchedulesModule {
   }
 }
 
-export function createLearningCohortsSchedulesModule(
-  client: ApiClient,
-): LearningCohortsSchedulesModule {
+export function createLearningCohortsSchedulesModule(client: ApiClient): LearningCohortsSchedulesModule {
   return new LearningCohortsSchedulesModule(client);
 }

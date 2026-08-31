@@ -7,10 +7,12 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
 {
     public void Configure(ModelBuilder modelBuilder)
     {
+        ConfigureTestingEventTemplates(modelBuilder);
         ConfigureTestingEvent(modelBuilder);
         ConfigureTestingEventSlot(modelBuilder);
         ConfigureTestingSlotRegistration(modelBuilder);
         ConfigureTestingProjectApplication(modelBuilder);
+        ConfigureTestingQuestionnaireRevision(modelBuilder);
         ConfigureTestingCommitteeMember(modelBuilder);
         ConfigureTestingApplicationVote(modelBuilder);
         ConfigureTestingFeedbackObligation(modelBuilder);
@@ -27,6 +29,42 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
         ConfigureTestingLabSettings(modelBuilder);
     }
 
+    private static void ConfigureTestingEventTemplates(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TestingEventTemplate>(builder =>
+        {
+            builder.ToTable("testing_event_templates");
+            builder.HasKey(template => template.Id);
+            builder.Property(template => template.Name).IsRequired().HasMaxLength(255);
+            builder.Property(template => template.Description).HasMaxLength(1000);
+            builder.HasIndex(template => new { template.TenantId, template.Name });
+            builder.HasMany(template => template.Revisions)
+                .WithOne(revision => revision.Template)
+                .HasForeignKey(revision => revision.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TestingEventTemplateRevision>(builder =>
+        {
+            builder.ToTable("testing_event_template_revisions");
+            builder.HasKey(revision => revision.Id);
+            builder.Property(revision => revision.GeneralRules).IsRequired().HasMaxLength(20000);
+            builder.Property(revision => revision.CandidateInstructions).IsRequired().HasMaxLength(20000);
+            builder.Property(revision => revision.TesterInstructions).IsRequired().HasMaxLength(20000);
+            builder.Property(revision => revision.ProjectApplicationSchemaJson).IsRequired().HasColumnType("jsonb");
+            builder.Property(revision => revision.TesterRegistrationSchemaJson).IsRequired().HasColumnType("jsonb");
+            builder.Property(revision => revision.DefaultMode).HasConversion<string>().HasMaxLength(40);
+            builder.Property(revision => revision.DefaultApprovalMode).HasConversion<string>().HasMaxLength(40);
+            builder.Ignore(revision => revision.ProjectApplicationSchema);
+            builder.Ignore(revision => revision.TesterRegistrationSchema);
+            builder.HasOne(revision => revision.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(revision => revision.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(revision => new { revision.TemplateId, revision.RevisionNumber }).IsUnique();
+        });
+    }
+
     private static void ConfigureTestingSlotRegistration(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TestingSlotRegistration>(builder =>
@@ -35,6 +73,8 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
             builder.HasKey(registration => registration.Id);
             builder.Property(registration => registration.Status).HasConversion<string>().HasMaxLength(40);
             builder.Property(registration => registration.Notes).HasMaxLength(1000);
+            builder.Property(registration => registration.RegistrationResponseJson).HasColumnType("jsonb");
+            builder.Ignore(registration => registration.RegistrationResponse);
             builder.HasOne(registration => registration.Event)
                 .WithMany()
                 .HasForeignKey(registration => registration.EventId)
@@ -162,6 +202,8 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
             builder.Property(feedback => feedback.TestingContext).HasConversion<string>().HasMaxLength(40);
             builder.Property(feedback => feedback.QualityRating).HasConversion<string>().HasMaxLength(40);
             builder.Property(feedback => feedback.ReportReason).HasMaxLength(500);
+            builder.Property(feedback => feedback.StructuredResponsesJson).HasColumnType("jsonb");
+            builder.Ignore(feedback => feedback.StructuredResponses);
             builder.HasOne(feedback => feedback.TestingRequest)
                 .WithMany(request => request.Feedback)
                 .HasForeignKey(feedback => feedback.TestingRequestId)
@@ -177,6 +219,10 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
             builder.HasOne(feedback => feedback.Application)
                 .WithMany()
                 .HasForeignKey(feedback => feedback.ApplicationId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<TestingQuestionnaireRevision>()
+                .WithMany()
+                .HasForeignKey(feedback => feedback.QuestionnaireRevisionId)
                 .OnDelete(DeleteBehavior.Restrict);
             builder.HasIndex(feedback => new { feedback.EventId, feedback.ApplicationId, feedback.UserId });
             builder.HasOne(feedback => feedback.User)
@@ -310,6 +356,7 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
             builder.Property(settings => settings.LabName).IsRequired().HasMaxLength(255);
             builder.Property(settings => settings.Description).HasMaxLength(1000);
             builder.Property(settings => settings.Timezone).IsRequired().HasMaxLength(50);
+            builder.Property(settings => settings.VersionSubmissionPolicy).HasConversion<string>().HasMaxLength(40);
             builder.HasOne(settings => settings.Tenant)
                 .WithMany()
                 .HasForeignKey(settings => settings.TenantId)
@@ -331,6 +378,14 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
             builder.Property(testingEvent => testingEvent.LearningCompletionRequirement).HasConversion<string>().HasMaxLength(100);
             builder.Property(testingEvent => testingEvent.RecurrenceFrequency).HasConversion<string>().HasMaxLength(20);
             builder.Property(testingEvent => testingEvent.RecurrenceDaysOfWeek).HasMaxLength(64);
+            builder.Property(testingEvent => testingEvent.GeneralRules).HasMaxLength(20000);
+            builder.Property(testingEvent => testingEvent.CandidateInstructions).HasMaxLength(20000);
+            builder.Property(testingEvent => testingEvent.TesterInstructions).HasMaxLength(20000);
+            builder.Property(testingEvent => testingEvent.ProjectApplicationSchemaJson).HasColumnType("jsonb");
+            builder.Property(testingEvent => testingEvent.TesterRegistrationSchemaJson).HasColumnType("jsonb");
+            builder.Ignore(testingEvent => testingEvent.ProjectApplicationSchema);
+            builder.Ignore(testingEvent => testingEvent.TesterRegistrationSchema);
+            builder.HasIndex(testingEvent => testingEvent.SourceTemplateRevisionId);
             builder.HasOne(testingEvent => testingEvent.Manager)
                 .WithMany()
                 .HasForeignKey(testingEvent => testingEvent.ManagerUserId)
@@ -381,9 +436,14 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
             builder.HasKey(application => application.Id);
             builder.Property(application => application.PreferredAvailability).HasMaxLength(1000);
             builder.Property(application => application.Status).HasConversion<string>().HasMaxLength(40);
+            builder.Property(application => application.SubmissionVersionPolicy).HasConversion<string>().HasMaxLength(40);
             builder.Property(application => application.DecisionRationale).HasMaxLength(2000);
             builder.Property(application => application.SubmittedAssetReferenceIdsJson).HasMaxLength(10000);
+            builder.Property(application => application.BriefJson).HasColumnType("jsonb");
+            builder.Property(application => application.EventApplicationResponseJson).HasColumnType("jsonb");
             builder.Ignore(application => application.SubmittedAssetReferenceIds);
+            builder.Ignore(application => application.Brief);
+            builder.Ignore(application => application.EventApplicationResponse);
             builder.HasOne(application => application.Project)
                 .WithMany()
                 .HasForeignKey(application => application.ProjectId)
@@ -408,12 +468,36 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
                 .WithOne(vote => vote.Application)
                 .HasForeignKey(vote => vote.ApplicationId)
                 .OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(application => application.QuestionnaireRevisions)
+                .WithOne()
+                .HasForeignKey(revision => revision.ApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
             builder.HasIndex(application => application.TenantId);
             builder.HasIndex(application => new { application.EventId, application.Status });
+            builder.HasIndex(application => application.CurrentQuestionnaireRevisionId);
             builder.HasIndex(application => new { application.EventId, application.ProjectId })
                 .IsUnique()
                 .HasFilter("\"DeletedAt\" IS NULL AND \"Status\" NOT IN ('Rejected', 'Withdrawn')")
                 .HasDatabaseName("IX_testing_project_applications_active_event_project");
+        });
+    }
+
+    private static void ConfigureTestingQuestionnaireRevision(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TestingQuestionnaireRevision>(builder =>
+        {
+            builder.ToTable("testing_questionnaire_revisions");
+            builder.HasKey(revision => revision.Id);
+            builder.Property(revision => revision.SchemaJson).IsRequired().HasColumnType("jsonb");
+            builder.Ignore(revision => revision.Schema);
+            builder.HasOne<GameGuild.Identity.Users.User>()
+                .WithMany()
+                .HasForeignKey(revision => revision.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(revision => revision.TenantId);
+            builder.HasIndex(revision => new { revision.ApplicationId, revision.RevisionNumber })
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL");
         });
     }
 
@@ -482,6 +566,10 @@ public sealed class TestingLabModelConfiguration : IModelConfiguration
                 .WithMany()
                 .HasForeignKey(obligation => obligation.FeedbackId)
                 .OnDelete(DeleteBehavior.SetNull);
+            builder.HasOne<TestingQuestionnaireRevision>()
+                .WithMany()
+                .HasForeignKey(obligation => obligation.QuestionnaireRevisionId)
+                .OnDelete(DeleteBehavior.Restrict);
             builder.HasIndex(obligation => obligation.TenantId);
             builder.HasIndex(obligation => obligation.Status);
             builder.HasIndex(obligation => new { obligation.SlotId, obligation.ApplicationId, obligation.TesterUserId })

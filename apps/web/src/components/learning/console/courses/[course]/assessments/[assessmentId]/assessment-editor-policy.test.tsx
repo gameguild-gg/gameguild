@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -294,7 +294,7 @@ describe("AssessmentEditor policy sections", () => {
     expect(
       screen.getByText("Rubric locked after grading started"),
     ).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: /grade by rubric/i })).toBeDisabled();
+    expect(screen.getByRole("switch", { name: /grade by rubric/i })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByRole("button", { name: /save rubric/i })).toBeDisabled();
     expect(screen.getByLabelText(/criterion 1 description/i)).toBeDisabled();
   });

@@ -14,8 +14,9 @@ public sealed class SelfServicePayoutRequestTests
     public async Task CreateBindsTheRequestToTheAuthenticatedActorsWalletAndReplaysIdempotently()
     {
         var actorId = Guid.Parse("b1000000-0000-0000-0000-000000000001");
+        var tenantId = Guid.NewGuid();
         var walletId = Guid.Parse("b1000000-0000-0000-0000-000000000002");
-        var accessor = AuthenticatedAccessor(actorId);
+        var accessor = AuthenticatedAccessor(actorId, tenantId);
         var store = new InMemoryPayoutRequestStore();
         var handler = new CreateMyPayoutRequestCommandHandler(
             new WalletSender(CreateWallet(walletId)), accessor, store);
@@ -27,7 +28,8 @@ public sealed class SelfServicePayoutRequestTests
         created.HardCoinUnits.Should().Be(250);
         created.State.Should().Be(PayoutRequestState.Submitted);
         replay.Id.Should().Be(created.Id);
-        store.Items.Should().ContainSingle(item => item.PayeeId == actorId && item.WalletId.Value == walletId);
+        store.Items.Should().ContainSingle(item =>
+            item.TenantId == tenantId && item.PayeeId == actorId && item.WalletId.Value == walletId);
     }
 
     [Fact]
@@ -145,26 +147,28 @@ public sealed class SelfServicePayoutRequestTests
     public async Task CancelOnlyChangesTheAuthenticatedPayeesSubmittedRequest()
     {
         var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
         var store = new InMemoryPayoutRequestStore();
-        var request = CreateRequest(actorId, PayoutRequestState.Submitted);
+        var request = CreateRequest(actorId, PayoutRequestState.Submitted, tenantId: tenantId);
         store.Add(request);
-        var handler = new CancelMyPayoutRequestCommandHandler(AuthenticatedAccessor(actorId), store);
+        var handler = new CancelMyPayoutRequestCommandHandler(AuthenticatedAccessor(actorId, tenantId), store);
 
         var cancelled = await handler.Handle(new CancelMyPayoutRequestCommand(request.Id), CancellationToken.None);
 
         cancelled.State.Should().Be(PayoutRequestState.Cancelled);
         cancelled.UpdatedAt.Should().BeOnOrAfter(request.UpdatedAt);
-        store.GetForPayee(request.Id, actorId).Version.Should().Be(2);
+        store.GetForPayee(tenantId, request.Id, actorId).Version.Should().Be(2);
     }
 
     [Fact]
     public async Task CancelRejectsARequestThatIsNoLongerSubmitted()
     {
         var actorId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
         var store = new InMemoryPayoutRequestStore();
-        var request = CreateRequest(actorId, PayoutRequestState.Approved);
+        var request = CreateRequest(actorId, PayoutRequestState.Approved, tenantId: tenantId);
         store.Add(request);
-        var handler = new CancelMyPayoutRequestCommandHandler(AuthenticatedAccessor(actorId), store);
+        var handler = new CancelMyPayoutRequestCommandHandler(AuthenticatedAccessor(actorId, tenantId), store);
 
         await FluentActions.Invoking(() => handler.Handle(
                 new CancelMyPayoutRequestCommand(request.Id), CancellationToken.None))
@@ -197,15 +201,17 @@ public sealed class SelfServicePayoutRequestTests
     public async Task ListReturnsOnlyThePayeesRequests()
     {
         var payeeId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
         var store = new InMemoryPayoutRequestStore();
-        var older = CreateRequest(payeeId, PayoutRequestState.Submitted, DateTimeOffset.UtcNow.AddMinutes(-1));
-        var latest = CreateRequest(payeeId, PayoutRequestState.Cancelled, DateTimeOffset.UtcNow);
+        var older = CreateRequest(payeeId, PayoutRequestState.Submitted, DateTimeOffset.UtcNow.AddMinutes(-1), tenantId);
+        var latest = CreateRequest(payeeId, PayoutRequestState.Cancelled, DateTimeOffset.UtcNow, tenantId);
         store.Add(older);
         store.Add(latest);
-        store.Add(CreateRequest(Guid.NewGuid(), PayoutRequestState.Submitted, DateTimeOffset.UtcNow.AddMinutes(1)));
+        store.Add(CreateRequest(Guid.NewGuid(), PayoutRequestState.Submitted, DateTimeOffset.UtcNow.AddMinutes(1), tenantId));
+        store.Add(CreateRequest(payeeId, PayoutRequestState.Submitted, DateTimeOffset.UtcNow.AddMinutes(2), Guid.NewGuid()));
         var handler = new ListMyPayoutRequestsQueryHandler(store);
 
-        var result = await handler.Handle(new ListMyPayoutRequestsQuery(payeeId, 10), CancellationToken.None);
+        var result = await handler.Handle(new ListMyPayoutRequestsQuery(tenantId, payeeId, 10), CancellationToken.None);
 
         result.Select(item => item.Id).Should().Equal(latest.Id, older.Id);
         result.Should().OnlyContain(item => item.HardCoinUnits == 250);
@@ -225,14 +231,14 @@ public sealed class SelfServicePayoutRequestTests
         result.IsValid.Should().BeFalse();
     }
 
-    private static ActorContextAccessor AuthenticatedAccessor(Guid actorId)
+    private static ActorContextAccessor AuthenticatedAccessor(Guid actorId, Guid? tenantId = null)
     {
         var accessor = new ActorContextAccessor();
         accessor.SetActorContext(new ActorContext
         {
             ActorKind = ActorKind.User,
             SubjectId = actorId.ToString(),
-            TenantId = Guid.NewGuid(),
+            TenantId = tenantId ?? Guid.NewGuid(),
             Roles = new HashSet<string>(),
             Permissions = new HashSet<string>(),
             TypedAttributes = ActorAttributes.Empty,
@@ -266,7 +272,8 @@ public sealed class SelfServicePayoutRequestTests
     private static PayoutRequest CreateRequest(
         Guid payeeId,
         PayoutRequestState state,
-        DateTimeOffset? createdAt = null)
+        DateTimeOffset? createdAt = null,
+        Guid tenantId = default)
     {
         var timestamp = createdAt ?? DateTimeOffset.UtcNow;
         return new PayoutRequest(
@@ -279,7 +286,8 @@ public sealed class SelfServicePayoutRequestTests
             state,
             1,
             timestamp,
-            timestamp);
+            timestamp,
+            TenantId: tenantId == Guid.Empty ? Guid.NewGuid() : tenantId);
     }
 
     private sealed class WalletSender(EconomyWalletSummaryDto? wallet) : ISender
@@ -314,10 +322,10 @@ public sealed class SelfServicePayoutRequestTests
 
         public IReadOnlyList<PayoutRequest> Items => _items;
 
-        public PayoutRequest? FindReplay(Guid payeeId, string idempotencyKey, string requestHash)
+        public PayoutRequest? FindReplay(Guid tenantId, Guid payeeId, string idempotencyKey, string requestHash)
         {
             var item = _items.SingleOrDefault(candidate =>
-                candidate.PayeeId == payeeId && candidate.IdempotencyKey.Value == idempotencyKey);
+                candidate.TenantId == tenantId && candidate.PayeeId == payeeId && candidate.IdempotencyKey.Value == idempotencyKey);
             if (item is null)
             {
                 return null;
@@ -332,20 +340,22 @@ public sealed class SelfServicePayoutRequestTests
         public void Add(PayoutRequest request)
         {
             if (_items.Any(item =>
-                    item.PayeeId == request.PayeeId && item.IdempotencyKey.Value == request.IdempotencyKey.Value))
+                    item.TenantId == request.TenantId && item.PayeeId == request.PayeeId &&
+                    item.IdempotencyKey.Value == request.IdempotencyKey.Value))
             {
                 throw new PayoutRequestReplayConflictException("Payout request idempotency key was reused.");
             }
             _items.Add(request);
         }
 
-        public PayoutRequest GetForPayee(Guid requestId, Guid payeeId) => _items.Single(item => item.Id == requestId && item.PayeeId == payeeId);
+        public PayoutRequest GetForPayee(Guid tenantId, Guid requestId, Guid payeeId) =>
+            _items.Single(item => item.TenantId == tenantId && item.Id == requestId && item.PayeeId == payeeId);
 
         public PayoutRequest GetForReview(Guid requestId, Guid tenantId) =>
             throw new NotSupportedException("Self-service tests do not use administrative payout review.");
 
-        public IReadOnlyList<PayoutRequest> ListForPayee(Guid payeeId, int take) => _items
-            .Where(item => item.PayeeId == payeeId)
+        public IReadOnlyList<PayoutRequest> ListForPayee(Guid tenantId, Guid payeeId, int take) => _items
+            .Where(item => item.TenantId == tenantId && item.PayeeId == payeeId)
             .OrderByDescending(item => item.CreatedAt)
             .ThenByDescending(item => item.Id)
             .Take(take)

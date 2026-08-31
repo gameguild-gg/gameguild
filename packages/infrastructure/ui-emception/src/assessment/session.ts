@@ -14,7 +14,7 @@ export interface AssessmentFile {
 }
 
 /** The controller subset required for assessment execution. */
-export type AssessmentController = Pick<IdeController, 'getFiles'> & {
+export type AssessmentController = Pick<IdeController, 'getFiles' | 'syncWorkspace'> & {
   readonly api: {
     readonly workspace: Pick<IdeController['api']['workspace'], 'readFile' | 'writeFile' | 'deleteFile'>;
     readonly runTests: IdeController['api']['runTests'];
@@ -106,6 +106,11 @@ export function createAssessmentSession(options: AssessmentSessionOptions): Asse
 
       status = 'running';
       try {
+        // `runTests` is a low-level Browser API and operates on the Worker VFS.
+        // Flush the neutral IDE's current React/Monaco state before adding the
+        // transient harness overlay, so an assessment always executes the code
+        // the learner is actually seeing.
+        await options.controller.syncWorkspace();
         const execution = buildAssessmentExecutionPlan(options.definition, scope);
         const nextReport = await withWorkspaceOverlay(
           options.controller.api.workspace,

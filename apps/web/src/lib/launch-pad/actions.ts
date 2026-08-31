@@ -1,7 +1,7 @@
 'use server';
 
 import { auth, getToken } from '@/auth';
-import type { LaunchPadApplication, LaunchPadEvent, LaunchPadRegistration, LaunchPadSlot, LaunchPlan } from './queries';
+import type { LaunchPadApplication, LaunchPadEvent, LaunchPadRegistration, LaunchPadSettings, LaunchPadSlot, LaunchPlan } from './queries';
 import { revalidatePath } from 'next/cache';
 
 type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -236,4 +236,16 @@ export async function publishLaunchPlan(formData: FormData): Promise<void> {
   });
 
   if (result.success) revalidatePath('/console/community/launch-pad');
+}
+
+export async function updateLaunchPadSettings(formData: FormData): Promise<ActionResult<LaunchPadSettings>> {
+  const versionSubmissionPolicy = value(formData, 'versionSubmissionPolicy');
+  if (!['ReadyMutableUntilReview', 'ReleasedImmutable'].includes(versionSubmissionPolicy))
+    return { success: false, error: 'Choose a valid project version policy.' };
+  const result = await launchPadApiRequest<LaunchPadSettings>('/v1/launch-pad/settings', {
+    method: 'PUT',
+    body: JSON.stringify({ versionSubmissionPolicy }),
+  });
+  if (result.success) revalidatePath('/console/community/launch-pad/settings');
+  return result;
 }

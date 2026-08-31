@@ -10,8 +10,10 @@ public sealed record PayoutProviderEventRecord(
 public interface IPayoutOperationStore
 {
     PayoutOperation Get(Guid operationId);
-    IReadOnlyList<PayoutOperation> ListForPayee(Guid payeeId, int take);
-    PayoutOperation? FindReplay(string idempotencyKey, string requestHash);
+    PayoutOperation GetForTenant(Guid tenantId, Guid operationId);
+    IReadOnlyList<PayoutOperation> ListForTenant(Guid tenantId, int take);
+    IReadOnlyList<PayoutOperation> ListForPayee(Guid tenantId, Guid payeeId, int take);
+    PayoutOperation? FindReplay(Guid tenantId, string idempotencyKey, string requestHash);
     void Add(PayoutOperation operation);
     PayoutOperation Update(PayoutOperation operation, long expectedVersion);
     PayoutProviderEventRecord? FindProviderEvent(string eventId, string eventHash);
@@ -27,7 +29,7 @@ public sealed class InMemoryPayoutOperationStore : IPayoutOperationStore
 {
     private readonly object _gate = new();
     private readonly Dictionary<Guid, PayoutOperation> _operations = [];
-    private readonly Dictionary<string, Guid> _idempotency = new(StringComparer.Ordinal);
+    private readonly Dictionary<(Guid TenantId, string Key), Guid> _idempotency = [];
     private readonly Dictionary<string, PayoutProviderEventRecord> _events = new(StringComparer.Ordinal);
 
     public IReadOnlyList<PayoutOperation> Operations
@@ -48,30 +50,53 @@ public sealed class InMemoryPayoutOperationStore : IPayoutOperationStore
                 : throw new KeyNotFoundException($"Payout operation {operationId:N} was not found.");
     }
 
-    public IReadOnlyList<PayoutOperation> ListForPayee(Guid payeeId, int take)
+    public PayoutOperation GetForTenant(Guid tenantId, Guid operationId)
     {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        var operation = Get(operationId);
+        return operation.TenantId == tenantId
+            ? operation
+            : throw new KeyNotFoundException($"Payout operation {operationId:N} was not found.");
+    }
+
+    public IReadOnlyList<PayoutOperation> ListForTenant(Guid tenantId, int take)
+    {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
+        ValidateTake(take);
+        lock (_gate)
+            return [.. _operations.Values.Where(operation => operation.TenantId == tenantId)
+                .OrderByDescending(operation => operation.CreatedAt).ThenByDescending(operation => operation.Id).Take(take)];
+    }
+
+    public IReadOnlyList<PayoutOperation> ListForPayee(Guid tenantId, Guid payeeId, int take)
+    {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
         if (payeeId == Guid.Empty)
             throw new ArgumentException("Payee ID is required.", nameof(payeeId));
-        if (take is < 1 or > 100)
-            throw new ArgumentOutOfRangeException(nameof(take), "Take must be between 1 and 100.");
+        ValidateTake(take);
 
         lock (_gate)
         {
             return [.. _operations.Values
-                .Where(operation => operation.PayeeId == payeeId)
+                .Where(operation => operation.TenantId == tenantId && operation.PayeeId == payeeId)
                 .OrderByDescending(operation => operation.CreatedAt)
                 .ThenByDescending(operation => operation.Id)
                 .Take(take)];
         }
     }
 
-    public PayoutOperation? FindReplay(string idempotencyKey, string requestHash)
+    public PayoutOperation? FindReplay(Guid tenantId, string idempotencyKey, string requestHash)
     {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(requestHash);
         lock (_gate)
         {
-            if (!_idempotency.TryGetValue(idempotencyKey, out var operationId)) return null;
+            if (!_idempotency.TryGetValue((tenantId, idempotencyKey), out var operationId)) return null;
             var operation = _operations[operationId];
             if (!string.Equals(operation.RequestHash, requestHash, StringComparison.Ordinal))
                 throw new PayoutReplayConflictException("Payout idempotency key was reused with different inputs.");
@@ -82,12 +107,15 @@ public sealed class InMemoryPayoutOperationStore : IPayoutOperationStore
     public void Add(PayoutOperation operation)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        if (operation.TenantId == Guid.Empty)
+            throw new ArgumentException("Tenant ID is required.", nameof(operation));
         lock (_gate)
         {
-            if (_operations.ContainsKey(operation.Id) || _idempotency.ContainsKey(operation.IdempotencyKey.Value))
+            var replayKey = (operation.TenantId, operation.IdempotencyKey.Value);
+            if (_operations.ContainsKey(operation.Id) || _idempotency.ContainsKey(replayKey))
                 throw new PayoutReplayConflictException("Payout operation or idempotency key already exists.");
             _operations.Add(operation.Id, operation);
-            _idempotency.Add(operation.IdempotencyKey.Value, operation.Id);
+            _idempotency.Add(replayKey, operation.Id);
         }
     }
 
@@ -160,5 +188,11 @@ public sealed class InMemoryPayoutOperationStore : IPayoutOperationStore
         if (!string.Equals(record.EventHash, eventHash, StringComparison.Ordinal))
             throw new PayoutReplayConflictException("Provider event ID was replayed with different evidence.");
         return record;
+    }
+
+    private static void ValidateTake(int take)
+    {
+        if (take is < 1 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(take), "Take must be between 1 and 100.");
     }
 }

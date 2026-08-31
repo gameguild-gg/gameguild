@@ -21,11 +21,12 @@ beforeAll(() => {
 });
 
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ href, children, locale: _locale, prefetch: _prefetch, ...props }: { href: string; children: React.ReactNode; locale?: string; prefetch?: boolean }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
+  Link: (props: { href: string; children: React.ReactNode; locale?: string; prefetch?: boolean }) => {
+    const { href, children, ...anchorProps } = props;
+    delete anchorProps.locale;
+    delete anchorProps.prefetch;
+    return <a href={href} {...anchorProps}>{children}</a>;
+  },
 }));
 
 vi.mock('@/lib/learning/course-route', () => ({
@@ -87,7 +88,7 @@ describe('CourseList', () => {
 
     await user.clear(screen.getByPlaceholderText(/search courses/i));
     await user.click(screen.getByRole('combobox', { name: /course status filter/i }));
-    await user.click(screen.getByRole('option', { name: /archived/i }));
+    await user.click(await screen.findByRole('option', { name: /archived/i }));
 
     expect(screen.getByText('Technical Art')).toBeInTheDocument();
     expect(screen.queryByText('Boss AI')).not.toBeInTheDocument();
@@ -110,7 +111,7 @@ describe('CourseList', () => {
     expect(within(resortedRows[0]).getByText('Boss AI')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /open boss ai actions/i }));
-    expect(screen.getByRole('menuitem', { name: /^edit$/i })).toBeInTheDocument();
+    expect(await screen.findByRole('menuitem', { name: /^edit$/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /preview/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /manage lifecycle/i })).toBeInTheDocument();
   });

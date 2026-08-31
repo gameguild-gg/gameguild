@@ -1,11 +1,16 @@
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 // Guard logic lives in the script itself (node runs it directly, so it must be
 // plain ESM); vitest can import .mjs via a relative path regardless of its
 // `src/**` include pattern (include only governs test discovery).
-import { EMCEPTION_VERSION, JSDELIVR_MANIFEST_URL, NPM_REGISTRY_URL, manifestsMatch, syncEmceptionCdn } from '../../../scripts/sync-emception-cdn.mjs';
+import {
+  ensureCanonicalRelease,
+  manifestsMatch,
+  SOURCE_CANONICAL,
+  syncEmceptionCdn,
+} from '../../../scripts/sync-emception-cdn.mjs';
 
 const tempDirs: string[] = [];
 
@@ -15,15 +20,12 @@ async function makeTree() {
   return root;
 }
 
+function canonicalManifest() {
+  return JSON.stringify({ schemaVersion: 2, artifactVersion: '4.3.0' });
+}
+
 afterEach(async () => {
   await Promise.all(tempDirs.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true })));
-});
-
-describe('workspace version pin', () => {
-  it('uses the workspace emception version for npm and jsDelivr', () => {
-    expect(NPM_REGISTRY_URL).toBe(`https://registry.npmjs.org/emception/${EMCEPTION_VERSION}`);
-    expect(JSDELIVR_MANIFEST_URL).toBe(`https://cdn.jsdelivr.net/npm/emception@${EMCEPTION_VERSION}/cdn/manifest.json`);
-  });
 });
 
 describe('manifestsMatch', () => {
@@ -33,7 +35,7 @@ describe('manifestsMatch', () => {
     const tgt = path.join(root, 'tgt', 'manifest.json');
     await fs.mkdir(path.dirname(src), { recursive: true });
     await fs.mkdir(path.dirname(tgt), { recursive: true });
-    const content = JSON.stringify({ version: 1, files: ['a.wasm'] });
+    const content = canonicalManifest();
     await fs.writeFile(src, content);
     await fs.writeFile(tgt, content);
     await expect(manifestsMatch(src, tgt)).resolves.toBe(true);
@@ -45,8 +47,8 @@ describe('manifestsMatch', () => {
     const tgt = path.join(root, 'tgt', 'manifest.json');
     await fs.mkdir(path.dirname(src), { recursive: true });
     await fs.mkdir(path.dirname(tgt), { recursive: true });
-    await fs.writeFile(src, '{"version":1}');
-    await fs.writeFile(tgt, '{"version":2}');
+    await fs.writeFile(src, canonicalManifest());
+    await fs.writeFile(tgt, JSON.stringify({ schemaVersion: 2, artifactVersion: '4.2.0' }));
     await expect(manifestsMatch(src, tgt)).resolves.toBe(false);
   });
 
@@ -55,153 +57,167 @@ describe('manifestsMatch', () => {
     const src = path.join(root, 'src', 'manifest.json');
     const tgt = path.join(root, 'tgt', 'manifest.json');
     await fs.mkdir(path.dirname(src), { recursive: true });
-    await fs.writeFile(src, '{"version":1}');
+    await fs.writeFile(src, canonicalManifest());
     await expect(manifestsMatch(src, tgt)).resolves.toBe(false);
   });
 });
 
-describe('syncEmceptionCdn — tier 1 (local WASM build, real fs)', () => {
-  it('first run copies the whole dir and reports tier 1 synced', async () => {
+describe('syncEmceptionCdn', () => {
+  it('uses the canonical Toolchain release directory by default', () => {
+    expect(SOURCE_CANONICAL).toContain(path.join('tools', 'emception', 'artifacts', 'toolchain', 'release', 'cdn'));
+  });
+
+  it('first run copies the canonical Toolchain release', async () => {
     const root = await makeTree();
     const src = path.join(root, 'cdn');
     const tgt = path.join(root, 'public', 'emception');
     await fs.mkdir(src);
-    await fs.writeFile(path.join(src, 'manifest.json'), '{"version":1}');
+    await fs.writeFile(path.join(src, 'manifest.json'), canonicalManifest());
     await fs.writeFile(path.join(src, 'bundle.tar.br'), 'bytes');
 
     const logs: string[] = [];
-    const result = await syncEmceptionCdn({
-      srcDir: src,
-      tgtDir: tgt,
-      log: (m) => logs.push(m),
-    });
+    const result = await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: (m) => logs.push(m) });
 
-    expect(result).toEqual({ tier: 1, action: 'synced', source: src });
-    expect(await fs.readFile(path.join(tgt, 'manifest.json'), 'utf8')).toBe('{"version":1}');
+    expect(result).toEqual({ action: 'synced', source: src });
+    expect(await fs.readFile(path.join(tgt, 'manifest.json'), 'utf8')).toBe(canonicalManifest());
     expect(await fs.readFile(path.join(tgt, 'bundle.tar.br'), 'utf8')).toBe('bytes');
     expect(logs.join('\n')).toContain('copied');
   });
 
-  it('second run with matching manifest is a no-op (tier 1 skip)', async () => {
+  it('second run with matching manifest is a no-op', async () => {
     const root = await makeTree();
     const src = path.join(root, 'cdn');
     const tgt = path.join(root, 'public', 'emception');
     await fs.mkdir(src);
-    await fs.writeFile(path.join(src, 'manifest.json'), '{"version":1}');
+    await fs.writeFile(path.join(src, 'manifest.json'), canonicalManifest());
     await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} });
 
     const logs: string[] = [];
-    const result = await syncEmceptionCdn({
-      srcDir: src,
-      tgtDir: tgt,
-      log: (m) => logs.push(m),
-    });
+    const result = await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: (m) => logs.push(m) });
 
-    expect(result).toEqual({ tier: 1, action: 'skip', source: src });
+    expect(result).toEqual({ action: 'skip', source: src });
     expect(logs.join('\n')).toContain('up to date');
   });
 
-  it('diverged target manifest triggers a re-copy (tier 1 synced)', async () => {
+  it('re-copies when a target asset is missing despite a matching manifest', async () => {
     const root = await makeTree();
     const src = path.join(root, 'cdn');
     const tgt = path.join(root, 'public', 'emception');
     await fs.mkdir(src);
-    await fs.writeFile(path.join(src, 'manifest.json'), '{"version":2}');
+    await fs.writeFile(path.join(src, 'manifest.json'), canonicalManifest());
+    await fs.writeFile(path.join(src, 'bundle.tar.br'), 'bytes');
+    await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} });
+    await fs.rm(path.join(tgt, 'bundle.tar.br'));
+
+    const result = await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} });
+
+    expect(result).toEqual({ action: 'synced', source: src });
+    await expect(fs.readFile(path.join(tgt, 'bundle.tar.br'), 'utf8')).resolves.toBe('bytes');
+  });
+
+  it('diverged target manifest triggers a re-copy', async () => {
+    const root = await makeTree();
+    const src = path.join(root, 'cdn');
+    const tgt = path.join(root, 'public', 'emception');
+    await fs.mkdir(src);
+    await fs.writeFile(path.join(src, 'manifest.json'), canonicalManifest());
     await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} });
 
-    await fs.writeFile(path.join(src, 'manifest.json'), '{"version":3}');
-    const result = await syncEmceptionCdn({
-      srcDir: src,
-      tgtDir: tgt,
-      log: () => {},
-    });
+    const updatedManifest = JSON.stringify({ schemaVersion: 2, artifactVersion: '4.3.1' });
+    await fs.writeFile(path.join(src, 'manifest.json'), updatedManifest);
+    const result = await syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} });
 
-    expect(result).toEqual({ tier: 1, action: 'synced', source: src });
-    expect(await fs.readFile(path.join(tgt, 'manifest.json'), 'utf8')).toBe('{"version":3}');
+    expect(result).toEqual({ action: 'synced', source: src });
+    expect(await fs.readFile(path.join(tgt, 'manifest.json'), 'utf8')).toBe(updatedManifest);
   });
-});
-
-describe('syncEmceptionCdn — tier 2 (npm tarball, mocked fetch + extract)', () => {
-  it('falls through to npm fetch when local src is missing', async () => {
+  it('refuses a missing canonical Toolchain release', async () => {
     const root = await makeTree();
     const srcMissing = path.join(root, 'no-such-src');
     const tgt = path.join(root, 'public', 'emception');
-    const npmCache = path.join(root, 'npm-cache');
-    // Pre-create the cached cdn so fetchNpmTarball short-circuits as a cache hit.
-    const cachedCdn = path.join(npmCache, 'package', 'cdn');
-    await fs.mkdir(cachedCdn, { recursive: true });
-    await fs.writeFile(path.join(cachedCdn, 'manifest.json'), '{"version":1,"npm":true}');
-
-    // fetch should never be called for tier 2 in the cache-hit path; if it is,
-    // fail the test by throwing.
-    const fetchImpl = vi.fn(async () => {
-      throw new Error('fetch should not be called (cache hit)');
-    });
-
-    const logs: string[] = [];
-    const result = await syncEmceptionCdn({
-      srcDir: srcMissing,
-      tgtDir: tgt,
-      npmCacheDir: npmCache,
-      log: (m) => logs.push(m),
-      fetchImpl,
-    });
-
-    expect(result.tier).toBe(2);
-    expect(result.action).toBe('synced');
-    expect(await fs.readFile(path.join(tgt, 'manifest.json'), 'utf8')).toBe('{"version":1,"npm":true}');
-    expect(logs.join('\n')).toContain('cache hit');
-  });
-
-  it('tier 2 failure (registry 500) falls through to tier 3 when jsDelivr reachable', async () => {
-    const root = await makeTree();
-    const srcMissing = path.join(root, 'no-such-src');
-    const tgt = path.join(root, 'public', 'emception');
-    const npmCache = path.join(root, 'npm-cache');
-
-    const fetchImpl = vi.fn(async (url: string) => {
-      if (url === NPM_REGISTRY_URL) return { ok: false, status: 500 };
-      if (url === JSDELIVR_MANIFEST_URL) return { ok: true };
-      throw new Error(`unexpected fetch ${url}`);
-    });
-
-    const logs: string[] = [];
-    const result = await syncEmceptionCdn({
-      srcDir: srcMissing,
-      tgtDir: tgt,
-      npmCacheDir: npmCache,
-      log: (m) => logs.push(m),
-      fetchImpl,
-    });
-
-    expect(result.tier).toBe(3);
-    expect(result.action).toBe('jsdelivr');
-    expect(result.url).toBe(JSDELIVR_MANIFEST_URL);
-    expect(logs.join('\n')).toContain('jsDelivr');
-  });
-});
-
-describe('syncEmceptionCdn — tier 3 (jsDelivr fallback) and exhaustion', () => {
-  it('throws when local + npm + jsDelivr all unavailable', async () => {
-    const root = await makeTree();
-    const srcMissing = path.join(root, 'no-such-src');
-    const tgt = path.join(root, 'public', 'emception');
-    const npmCache = path.join(root, 'npm-cache');
-
-    const fetchImpl = vi.fn(async (url: string) => {
-      if (url === NPM_REGISTRY_URL) return { ok: false, status: 500 };
-      if (url === JSDELIVR_MANIFEST_URL) return { ok: false, status: 503 };
-      throw new Error(`unexpected fetch ${url}`);
-    });
 
     await expect(
       syncEmceptionCdn({
         srcDir: srcMissing,
         tgtDir: tgt,
-        npmCacheDir: npmCache,
         log: () => {},
-        fetchImpl,
       }),
-    ).rejects.toThrow(/No emception CDN source available/);
+    ).rejects.toThrow(/canonical Toolchain release is unavailable/);
+  });
+
+  it('refuses a legacy manifest before it can replace the target', async () => {
+    const root = await makeTree();
+    const src = path.join(root, 'cdn');
+    const tgt = path.join(root, 'public', 'emception');
+    await fs.mkdir(src);
+    await fs.mkdir(tgt, { recursive: true });
+    await fs.writeFile(path.join(src, 'manifest.json'), '{"version":1}');
+    await fs.writeFile(path.join(tgt, 'manifest.json'), canonicalManifest());
+
+    await expect(syncEmceptionCdn({ srcDir: src, tgtDir: tgt, log: () => {} }))
+      .rejects.toThrow(/schemaVersion 2/);
+    await expect(fs.readFile(path.join(tgt, 'manifest.json'), 'utf8')).resolves.toBe(canonicalManifest());
+  });
+});
+
+describe('ensureCanonicalRelease', () => {
+  it('hydrates a missing canonical release from the pinned package version', async () => {
+    const root = await makeTree();
+    const src = path.join(root, 'canonical', 'cdn');
+    const packageJson = path.join(root, 'toolchain-package.json');
+    await fs.writeFile(packageJson, JSON.stringify({ version: '4.3.0' }));
+
+    const result = await ensureCanonicalRelease({
+      srcDir: src,
+      versionPackagePath: packageJson,
+      log: () => {},
+      hydrate: async ({ srcDir, version }) => {
+        await fs.mkdir(srcDir, { recursive: true });
+        await fs.writeFile(
+          path.join(srcDir, 'manifest.json'),
+          JSON.stringify({ schemaVersion: 2, artifactVersion: version }),
+        );
+      },
+    });
+
+    expect(result).toEqual({ action: 'hydrated', source: src, version: '4.3.0', schemaVersion: 2 });
+  });
+
+  it('rejects a hydrated release whose manifest does not match the pinned version', async () => {
+    const root = await makeTree();
+    const src = path.join(root, 'canonical', 'cdn');
+    const packageJson = path.join(root, 'toolchain-package.json');
+    await fs.writeFile(packageJson, JSON.stringify({ version: '4.3.0' }));
+
+    await expect(ensureCanonicalRelease({
+      srcDir: src,
+      versionPackagePath: packageJson,
+      log: () => {},
+      hydrate: async ({ srcDir }) => {
+        await fs.mkdir(srcDir, { recursive: true });
+        await fs.writeFile(
+          path.join(srcDir, 'manifest.json'),
+          JSON.stringify({ schemaVersion: 2, artifactVersion: '4.2.0' }),
+        );
+      },
+    })).rejects.toThrow(/does not match 4\.3\.0/);
+  });
+
+  it('accepts the pinned package legacy manifest as an explicit compatibility fallback', async () => {
+    const root = await makeTree();
+    const src = path.join(root, 'canonical', 'cdn');
+    const packageJson = path.join(root, 'toolchain-package.json');
+    await fs.writeFile(packageJson, JSON.stringify({ version: '4.3.0' }));
+
+    const result = await ensureCanonicalRelease({
+      srcDir: src,
+      versionPackagePath: packageJson,
+      log: () => {},
+      hydrate: async ({ srcDir }) => {
+        await fs.mkdir(srcDir, { recursive: true });
+        await fs.writeFile(path.join(srcDir, 'manifest.json'), JSON.stringify({ version: 1 }));
+      },
+    });
+
+    expect(result).toEqual({ action: 'hydrated', source: src, version: '4.3.0', schemaVersion: 1 });
   });
 });

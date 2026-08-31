@@ -4,11 +4,11 @@
  * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  */
 
-import type { ApiClient } from "../../runtime/client.js";
-import type { Result } from "../../runtime/result/types.js";
-import type { ApiError } from "../../runtime/errors/types.js";
-import * as Types from "../types.gen.js";
-import { safeParse } from "../../runtime/errors/validation.js";
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+import * as Types from '../types.gen.js';
+import { safeParse } from '../../runtime/errors/validation.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -20,17 +20,13 @@ export class AccessControlDelegatedAdminModule {
   async postDelegatedAdmin(
     body: Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommand,
   ): Promise<Result<Types.IdentityAuthorizationDelegatedAdminScope, ApiError>> {
-    const url = "/v1/delegated-admin";
+    const url = '/v1/delegated-admin';
 
     // Validate request body
-    const validatedBody = safeParse(
-      Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommandSchema,
-      body,
-      "request",
-    );
+    const validatedBody = safeParse(Types.IdentityAuthorizationCommandsGrantDelegatedAdminCommandSchema, body, 'request');
 
     const result = await this.client.request({
-      method: "POST",
+      method: 'POST',
       path: url,
       body: validatedBody,
       requiresAuth: true,
@@ -38,11 +34,7 @@ export class AccessControlDelegatedAdminModule {
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationDelegatedAdminScopeSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthorizationDelegatedAdminScopeSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -51,24 +43,18 @@ export class AccessControlDelegatedAdminModule {
 
   /**
    */
-  async getDelegatedAdmin(
-    id: string,
-  ): Promise<Result<Types.IdentityAuthorizationDelegatedAdminScope, ApiError>> {
+  async getDelegatedAdmin(id: string): Promise<Result<Types.IdentityAuthorizationDelegatedAdminScope, ApiError>> {
     const url = `/v1/delegated-admin/${id}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       requiresAuth: true,
     });
 
     // Validate response
     if (result.ok) {
-      const validatedData = safeParse(
-        Types.IdentityAuthorizationDelegatedAdminScopeSchema,
-        result.data,
-        "response",
-      );
+      const validatedData = safeParse(Types.IdentityAuthorizationDelegatedAdminScopeSchema, result.data, 'response');
       return { ok: true, data: validatedData };
     }
 
@@ -81,7 +67,7 @@ export class AccessControlDelegatedAdminModule {
     const url = `/v1/delegated-admin/${id}`;
 
     const result = await this.client.request({
-      method: "DELETE",
+      method: 'DELETE',
       path: url,
       requiresAuth: true,
     });
@@ -91,14 +77,11 @@ export class AccessControlDelegatedAdminModule {
 
   /**
    */
-  async getDelegatedAdminUserCanManageResource(
-    adminUserId: string,
-    query?: { resourceType?: string; tenantId?: string },
-  ): Promise<Result<boolean, ApiError>> {
+  async getDelegatedAdminUserCanManageResource(adminUserId: string, query?: { resourceType?: string; tenantId?: string }): Promise<Result<boolean, ApiError>> {
     const url = `/v1/delegated-admin/user/${adminUserId}/can-manage-resource`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -109,15 +92,11 @@ export class AccessControlDelegatedAdminModule {
 
   /**
    */
-  async getDelegatedAdminUserCanManageUser(
-    adminUserId: string,
-    targetUserId: string,
-    query?: { tenantId?: string },
-  ): Promise<Result<boolean, ApiError>> {
+  async getDelegatedAdminUserCanManageUser(adminUserId: string, targetUserId: string, query?: { tenantId?: string }): Promise<Result<boolean, ApiError>> {
     const url = `/v1/delegated-admin/user/${adminUserId}/can-manage-user/${targetUserId}`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -128,14 +107,11 @@ export class AccessControlDelegatedAdminModule {
 
   /**
    */
-  async getDelegatedAdminUserManagedResources(
-    adminUserId: string,
-    query?: { tenantId?: string },
-  ): Promise<Result<Array<string>, ApiError>> {
+  async getDelegatedAdminUserManagedResources(adminUserId: string, query?: { tenantId?: string }): Promise<Result<Array<string>, ApiError>> {
     const url = `/v1/delegated-admin/user/${adminUserId}/managed-resources`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -146,14 +122,11 @@ export class AccessControlDelegatedAdminModule {
 
   /**
    */
-  async getDelegatedAdminUserManagedUsers(
-    adminUserId: string,
-    query?: { tenantId?: string },
-  ): Promise<Result<Array<string>, ApiError>> {
+  async getDelegatedAdminUserManagedUsers(adminUserId: string, query?: { tenantId?: string }): Promise<Result<Array<string>, ApiError>> {
     const url = `/v1/delegated-admin/user/${adminUserId}/managed-users`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
@@ -167,27 +140,20 @@ export class AccessControlDelegatedAdminModule {
   async getDelegatedAdminUserScopes(
     adminUserId: string,
     query?: { tenantId?: string },
-  ): Promise<
-    Result<Array<Types.IdentityAuthorizationDelegatedAdminScope>, ApiError>
-  > {
+  ): Promise<Result<Array<Types.IdentityAuthorizationDelegatedAdminScope>, ApiError>> {
     const url = `/v1/delegated-admin/user/${adminUserId}/scopes`;
 
     const result = await this.client.request({
-      method: "GET",
+      method: 'GET',
       path: url,
       params: query,
       requiresAuth: true,
     });
 
-    return result as Result<
-      Array<Types.IdentityAuthorizationDelegatedAdminScope>,
-      ApiError
-    >;
+    return result as Result<Array<Types.IdentityAuthorizationDelegatedAdminScope>, ApiError>;
   }
 }
 
-export function createAccessControlDelegatedAdminModule(
-  client: ApiClient,
-): AccessControlDelegatedAdminModule {
+export function createAccessControlDelegatedAdminModule(client: ApiClient): AccessControlDelegatedAdminModule {
   return new AccessControlDelegatedAdminModule(client);
 }

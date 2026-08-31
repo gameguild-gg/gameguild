@@ -12,6 +12,7 @@ const { authMock, getTokenMock, requestMock, getPublishedProjectsMock, getVisibl
 
 vi.mock('@/auth', () => ({
   auth: authMock,
+  getSession: authMock,
   getToken: getTokenMock,
 }));
 

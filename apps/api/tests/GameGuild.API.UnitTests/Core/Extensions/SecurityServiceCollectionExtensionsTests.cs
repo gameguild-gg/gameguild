@@ -47,10 +47,10 @@ public sealed class SecurityServiceCollectionExtensionsTests
     [InlineData("Admin")]
     [InlineData("SystemAdmin")]
     [InlineData("TenantAdmin")]
-    public async Task UserManagementPolicies_ShouldAuthorizeAdministrativeRoles(string role)
+    public void UserManagementPolicies_ShouldNotBeRegisteredStatically(string role)
     {
         using var serviceProvider = BuildServiceProvider();
-        var principal = CreatePrincipal(role);
+        var options = serviceProvider.GetRequiredService<IOptions<MicrosoftAuthorizationOptions>>().Value;
 
         foreach (var policy in new[]
                  {
@@ -61,44 +61,40 @@ public sealed class SecurityServiceCollectionExtensionsTests
                      Policies.UsersPurge
                  })
         {
-            var result = await AuthorizeAsync(serviceProvider, principal, policy);
-
-            Assert.True(result.Succeeded, $"Role '{role}' should satisfy policy '{policy}'.");
+            Assert.Null(options.GetPolicy(policy));
         }
+
+        Assert.False(string.IsNullOrWhiteSpace(role));
     }
 
     [Fact]
-    public async Task UserManagementPolicies_ShouldRejectRegularMembers()
+    public void UserManagementPolicies_ShouldBeResolvedByDynamicProvider()
     {
         using var serviceProvider = BuildServiceProvider();
-        var principal = CreatePrincipal("User");
-
-        var result = await AuthorizeAsync(serviceProvider, principal, Policies.UsersCreate);
-
-        Assert.False(result.Succeeded);
+        var options = serviceProvider.GetRequiredService<IOptions<MicrosoftAuthorizationOptions>>().Value;
+        Assert.Null(options.GetPolicy(Policies.UsersCreate));
     }
 
     [Fact]
-    public async Task SystemAdminPolicy_ShouldAuthorizeOnlySystemAdmin()
+    public void SystemAdminPolicy_ShouldBeResolvedByDynamicProvider()
     {
         using var serviceProvider = BuildServiceProvider();
 
-        var result = await AuthorizeAsync(serviceProvider, CreatePrincipal("SystemAdmin"), Policies.SystemAdmin);
-
-        Assert.True(result.Succeeded);
+        var options = serviceProvider.GetRequiredService<IOptions<MicrosoftAuthorizationOptions>>().Value;
+        Assert.Null(options.GetPolicy(Policies.SystemAdmin));
     }
 
     [Theory]
     [InlineData("Admin")]
     [InlineData("TenantAdmin")]
     [InlineData("Owner")]
-    public async Task SystemAdminPolicy_ShouldRejectTenantScopedAdministrativeRoles(string role)
+    public void SystemAdminPolicy_ShouldNotHaveStaticRoleFallbacks(string role)
     {
         using var serviceProvider = BuildServiceProvider();
 
-        var result = await AuthorizeAsync(serviceProvider, CreatePrincipal(role), Policies.SystemAdmin);
-
-        Assert.False(result.Succeeded);
+        var options = serviceProvider.GetRequiredService<IOptions<MicrosoftAuthorizationOptions>>().Value;
+        Assert.Null(options.GetPolicy(Policies.SystemAdmin));
+        Assert.False(string.IsNullOrWhiteSpace(role));
     }
 
     [Theory]

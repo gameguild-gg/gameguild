@@ -57,7 +57,10 @@ export interface NextClientConfig extends Omit<ServerClientConfig, 'auth' | 'ten
    * Function to get auth session from NextAuth
    * This should return the session with accessToken
    */
-  getSession?: () => Promise<{ accessToken?: string; refreshToken?: string } | null>;
+  getSession?: () => Promise<{
+    accessToken?: string;
+    refreshToken?: string;
+  } | null>;
 
   /**
    * Function to get tenant ID

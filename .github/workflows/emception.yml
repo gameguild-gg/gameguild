@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - develop
   pull_request:
     branches:
       - main
+      - develop
   workflow_dispatch:
     inputs:
       publish_packages:
@@ -63,7 +65,7 @@ jobs:
               heavy=true
             else
               CHANGED="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
-              if grep -Eq '^(\.changeset/|\.github/workflows/emception\.yml|demos/emception-[^/]+/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|scripts/devops/(emception-release-policy|publish-emception|version-emception)\.mjs|scripts/sync-emception-cdn\.mjs|tools/emception/)' <<< "$CHANGED"; then
+              if grep -Eq '^(\.changeset/|\.github/workflows/emception\.yml|apps/web/(Dockerfile|scripts/(sync-emception-cdn|coding-cycle-browser-e2e)\.mjs|src/lib/emception/)|demos/emception-[^/]+/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|scripts/devops/(emception-release-policy|publish-emception|version-emception)\.mjs|scripts/sync-emception-cdn\.mjs|tools/emception/)' <<< "$CHANGED"; then
                 required=true
               fi
               if grep -Eq '^tools/emception/(toolchain/|scripts/(build-|deploy-|generate-|patch-|populate-|setup-|stage-|toolchain/|warmup-)|package\.json)' <<< "$CHANGED"; then
@@ -100,9 +102,10 @@ jobs:
         uses: actions/setup-node@v7 # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
 
       - name: Install workspace dependencies
-        run: pnpm install --no-lockfile --no-frozen-lockfile --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Cache immutable Toolchain downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -160,6 +163,9 @@ jobs:
       - name: Build all Emception packages
         run: pnpm run build:emception
 
+      - name: Build generated API client
+        run: pnpm --filter @game-guild/client run build
+
       - name: Type-check all Emception packages
         run: pnpm run typecheck:emception
 
@@ -185,6 +191,9 @@ jobs:
 
       - name: Stage CDN into demos
         run: node scripts/sync-emception-cdn.mjs
+
+      - name: Run instructor and learner coding assessment cycle
+        run: pnpm --dir apps/web run test:browser:coding-cycle
 
       - name: Run browser C++ compilation smoke test
         run: pnpm run test:emception:e2e

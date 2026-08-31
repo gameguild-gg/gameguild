@@ -26,12 +26,13 @@ public enum TestingEventStatus
 
 public enum TestingApplicationStatus
 {
-    Pending = 0,
-    UnderReview = 1,
-    Approved = 2,
-    Rejected = 3,
-    Waitlisted = 4,
-    Withdrawn = 5,
+    Draft = 0,
+    Pending = 1,
+    UnderReview = 2,
+    Approved = 3,
+    Rejected = 4,
+    Waitlisted = 5,
+    Withdrawn = 6,
 }
 
 public enum TestingApplicationVoteDecision
