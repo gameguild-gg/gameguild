@@ -45,6 +45,21 @@ function unique() {
   return `${Date.now()}-${randomUUID().slice(0, 8)}`;
 }
 
+function accessTokenRoles(accessToken) {
+  const payload = accessToken.split(".")[1];
+  if (!payload) return [];
+
+  const claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+  const roleClaims = [
+    claims.role,
+    claims.roles,
+    claims["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"],
+  ];
+  return roleClaims
+    .flatMap((claim) => (Array.isArray(claim) ? claim : [claim]))
+    .filter((claim) => typeof claim === "string");
+}
+
 async function apiRequest(pathname, init = {}, accessToken, tenantId) {
   const response = await fetch(`${apiBaseUrl}${pathname}`, {
     ...init,
@@ -103,6 +118,12 @@ async function bootstrap() {
   if (!auth.accessToken || !auth.tenantId) {
     throw new Error(
       "The system administrator session did not expose accessToken and tenantId.",
+    );
+  }
+  const adminRoles = accessTokenRoles(auth.accessToken);
+  if (!adminRoles.some((role) => role.toLowerCase() === "systemadmin")) {
+    throw new Error(
+      `The seeded administrator token is missing SystemAdmin. Issued roles: ${adminRoles.join(", ") || "none"}.`,
     );
   }
 
@@ -405,8 +426,11 @@ async function visit(page, pathname, label) {
   }
   await assertNoErrorSurface(page, label);
   await page.waitForFunction(() => document.readyState !== "loading");
+  // RSC navigation can briefly replace the rendered route while the client
+  // applies its final payload. Run semantic checks only after that boundary,
+  // otherwise a valid heading can disappear between waitFor and evaluation.
+  await waitForClientHydration(page);
   await page.locator("h1").first().waitFor({ state: "visible" });
-  await page.waitForTimeout(350);
   quality.accessibilityFailures.push(
     ...(await collectAccessibilityFailures(page, label)),
   );

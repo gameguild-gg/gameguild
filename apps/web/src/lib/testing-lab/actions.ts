@@ -1,6 +1,6 @@
 'use server';
 
-import { auth, getToken } from '@/auth';
+import { getRequestAuthContext } from '@/auth';
 import {
   createServerClient,
   GeneratedApi,
@@ -25,11 +25,11 @@ type TestingLabActionData<T> = [T] extends [void] ? null : T | null;
 
 export type TestingLabActionResult<T = null> = { success: true; data: TestingLabActionData<T>; message: string } | { success: false; error: string };
 
-function createModules() {
+function createModules(requestAuth = getRequestAuthContext()) {
   const client = createServerClient({
     baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-    auth: { getAccessToken: () => getToken() },
-    tenant: { getTenantId: async () => (await auth().catch(() => null))?.tenantId ?? null },
+    auth: { getAccessToken: async () => (await requestAuth).token },
+    tenant: { getTenantId: async () => (await requestAuth).tenantId },
   });
 
   return {
@@ -202,12 +202,13 @@ export async function createTestingSession(formData: FormData): Promise<TestingL
   );
   if (invalid) return invalid;
 
-  const session = await auth().catch(() => null);
+  const requestAuth = getRequestAuthContext();
+  const { session } = await requestAuth;
   const managerUserId = text(formData, 'managerUserId') || session?.user?.id?.trim();
   if (!managerUserId) return { success: false, error: 'A session manager is required.' };
 
   return complete(
-    createModules().sessions.postTestingSessions({
+    createModules(requestAuth).sessions.postTestingSessions({
       testingRequestId: text(formData, 'testingRequestId'),
       locationId: text(formData, 'locationId'),
       managerUserId,

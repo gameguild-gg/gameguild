@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  getToken: vi.fn(),
-  auth: vi.fn(),
+  getRequestAuthContext: vi.fn(),
+  createServerClient: vi.fn(() => ({})),
   revalidatePath: vi.fn(),
   postTestingSubmitSimple: vi.fn(),
   deleteTestingRequests: vi.fn(),
@@ -20,8 +20,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/auth', () => ({
-  getToken: mocks.getToken,
-  auth: mocks.auth,
+  getRequestAuthContext: mocks.getRequestAuthContext,
 }));
 
 vi.mock('next/cache', () => ({
@@ -29,7 +28,7 @@ vi.mock('next/cache', () => ({
 }));
 
 vi.mock('@game-guild/client', () => ({
-  createServerClient: vi.fn(() => ({})),
+  createServerClient: mocks.createServerClient,
   GeneratedApi: {
     TestingLabTestingRequestsModule: vi.fn(function TestingLabTestingRequestsModule() {
       return {
@@ -93,8 +92,22 @@ function form(values: Record<string, string>) {
 describe('Testing Lab server actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getToken.mockResolvedValue('token');
-    mocks.auth.mockResolvedValue({ user: { id: 'manager-1' }, tenantId: 'tenant-1' });
+    mocks.getRequestAuthContext.mockResolvedValue({
+      token: 'token',
+      tenantId: 'tenant-1',
+      session: { user: { id: 'manager-1' }, tenantId: 'tenant-1' },
+    });
+  });
+
+  it('uses one request authentication context for both token and tenant', async () => {
+    mocks.postApiTestingLabPermissionsRoleTemplates.mockResolvedValue({ ok: true, data: { id: 'role-1' } });
+
+    await createTestingLabRole(form({ name: 'Facilitator' }));
+
+    const clientOptions = mocks.createServerClient.mock.calls[0]?.[0];
+    await expect(clientOptions.auth.getAccessToken()).resolves.toBe('token');
+    await expect(clientOptions.tenant.getTenantId()).resolves.toBe('tenant-1');
+    expect(mocks.getRequestAuthContext).toHaveBeenCalledTimes(1);
   });
 
   it('submits a build through the generated requests client', async () => {

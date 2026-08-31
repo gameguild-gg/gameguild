@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Configuration.ApplicationLayer;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -115,7 +116,9 @@ public sealed class JwtTokenService(
             };
 
             // Add roles
-            foreach (var role in roles) { claims.Add(new Claim(ClaimTypes.Role, role)); }
+            // The API disables inbound claim mapping and configures "role" as
+            // RoleClaimType, so access tokens must emit the canonical short claim.
+            foreach (var role in roles) { claims.Add(new Claim(ClaimNames.Role, role)); }
 
             // Add tenant claim if multi-tenant
             if (tenantId.HasValue) { claims.Add(new Claim("tenant_id", tenantId.Value.ToString())); }
@@ -281,7 +284,12 @@ public sealed class JwtTokenService(
 
             var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
             var email = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value;
-            var roles = jwtToken.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToArray();
+            // Read both the canonical API claim and the legacy URI claim so
+            // tokens issued immediately before this rollout remain readable.
+            var roles = jwtToken.Claims
+                .Where(c => c.Type == ClaimNames.Role || c.Type == ClaimTypes.Role || c.Type == "roles")
+                .Select(c => c.Value)
+                .ToArray();
             var tenantIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "tenant_id")?.Value;
 
             Guid? tenantId = null;

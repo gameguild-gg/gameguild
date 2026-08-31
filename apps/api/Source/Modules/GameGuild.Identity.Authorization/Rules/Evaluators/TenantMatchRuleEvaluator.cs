@@ -52,6 +52,14 @@ public sealed class TenantMatchRuleEvaluator : IRuleEvaluator
             return Task.FromResult(RuleEvaluationResult.Fail("No tenant context available"));
         }
 
+        // System administrators are explicitly platform-wide, but tenant-scoped
+        // requests must still resolve a concrete target tenant above. Once scoped,
+        // they may administer a tenant other than the one carried by their token.
+        if (Utilities.ClaimsExtractor.GetRoles(user).Contains(Policies.SystemAdmin))
+        {
+            return Task.FromResult(RuleEvaluationResult.Success());
+        }
+
         // Compare tenants - convert Guid to string for comparison with claim
         var requestTenantIdStr = requestTenantId.Value.ToString();
         if (!string.Equals(userTenantClaim, requestTenantIdStr, StringComparison.OrdinalIgnoreCase))
