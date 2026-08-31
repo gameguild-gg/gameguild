@@ -154,6 +154,7 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
     // Local workspace state.
     let currentBuild: WorkspaceBuildConfig = { toolchain: ToolchainPreset.CPP };
     let currentWorkspaceName = 'default';
+    let nativeBuildSequence = 0;
     const mountPath = () => `/home/user/${currentWorkspaceName}`;
 
     /** Translate a core RunOptions into the browser WorkerClient RunOptions. */
@@ -254,42 +255,60 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
                     throw new Error(`compileAndRun: toolchain '${toolchain}' does not support native source builds`);
                 }
 
-                const objectPaths = sourcePaths.map((_, index) => `/tmp/emception-build-${index}.o`);
-                const wasmPath = nativeBuild?.output ?? '/tmp/emception-build.wasm';
+                // Every native build gets private scratch files. Reusing a
+                // shorter output path can leave stale bytes in Emscripten's
+                // process-local VFS mapping and corrupt a later WASM module.
+                const scratchPrefix = `/tmp/emception-build-${++nativeBuildSequence}`;
+                const objectPaths = sourcePaths.map((_, index) => `${scratchPrefix}-${index}.o`);
+                const wasmPath = nativeBuild?.output ?? `${scratchPrefix}.wasm`;
+                const scratchPaths = nativeBuild?.output
+                    ? objectPaths
+                    : [...objectPaths, wasmPath];
                 const runOptions = {
                     ...(opts?.cwd ? { cwd: opts.cwd } : {}),
                     ...(opts?.stdout ? { stdout: opts.stdout } : {}),
                     ...(opts?.stderr ? { stderr: opts.stderr } : {}),
                 };
 
-                for (let index = 0; index < sourcePaths.length; index++) {
-                    const compile = await run(
-                        preset.compileTool,
-                        preset.compileArgv({
-                            sourcePath: sourcePaths[index]!,
-                            objectPath: objectPaths[index]!,
-                        }),
-                        runOptions,
-                    );
-                    if (compile.exitCode !== 0) return compile;
-                }
+                try {
+                    // An explicit artifact path is caller-owned and remains
+                    // after the run, but it must never be linked over stale
+                    // VFS contents from a previous invocation.
+                    if (nativeBuild?.output) {
+                        await Promise.allSettled([client.deleteFile(wasmPath)]);
+                    }
 
-                const linkArgs = preset.linkArgv({
-                    objectPath: objectPaths[0]!,
-                    wasmPath,
-                });
-                const firstObjectIndex = linkArgs.indexOf(objectPaths[0]!);
-                if (firstObjectIndex === -1) {
-                    throw new Error('compileAndRun: preset linker argv does not contain its object path');
-                }
-                linkArgs.splice(firstObjectIndex, 1, ...objectPaths);
-                const link = await run(preset.linkTool, linkArgs, runOptions);
-                if (link.exitCode !== 0) return link;
+                    for (let index = 0; index < sourcePaths.length; index++) {
+                        const compile = await run(
+                            preset.compileTool,
+                            preset.compileArgv({
+                                sourcePath: sourcePaths[index]!,
+                                objectPath: objectPaths[index]!,
+                            }),
+                            runOptions,
+                        );
+                        if (compile.exitCode !== 0) return compile;
+                    }
 
-                return run('wasi-run', ['wasi-run', wasmPath], {
-                    ...runOptions,
-                    ...(stdinStr === undefined ? {} : { stdin: stdinStr }),
-                });
+                    const linkArgs = preset.linkArgv({
+                        objectPath: objectPaths[0]!,
+                        wasmPath,
+                    });
+                    const firstObjectIndex = linkArgs.indexOf(objectPaths[0]!);
+                    if (firstObjectIndex === -1) {
+                        throw new Error('compileAndRun: preset linker argv does not contain its object path');
+                    }
+                    linkArgs.splice(firstObjectIndex, 1, ...objectPaths);
+                    const link = await run(preset.linkTool, linkArgs, runOptions);
+                    if (link.exitCode !== 0) return link;
+
+                    return await run('wasi-run', ['wasi-run', wasmPath], {
+                        ...runOptions,
+                        ...(stdinStr === undefined ? {} : { stdin: stdinStr }),
+                    });
+                } finally {
+                    await Promise.allSettled(scratchPaths.map((path) => client.deleteFile(path)));
+                }
             }
 
             // ponytail: CompileAndRunOptions has no timeoutMs field; the
