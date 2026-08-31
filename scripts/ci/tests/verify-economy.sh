@@ -218,16 +218,25 @@ test_economy_unit_tests_bound_parallelism_without_global_serialization() {
   grep -Fq 'adminBuilder.CommandTimeout = 120;' "$database_support"
 }
 
-test_economy_gate_builds_release_targets_strictly_once() {
+test_economy_gate_builds_release_targets_before_packaging() {
   local gate="$ci_dir/verify-economy.sh"
 
   grep -Fq 'dotnet build apps/api/GameGuild.sln -c Release --no-restore --nologo --verbosity minimal' "$gate" || return 1
   ! grep -Fq 'dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj' "$gate" || return 1
-  grep -Fq 'dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-build --no-restore' "$gate" || return 1
+  grep -Fq 'dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-restore' "$gate" || return 1
+  ! grep -Fq 'dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj -c Release --no-build' "$gate" || return 1
+  grep -A3 -F 'dotnet publish apps/api/Source/GameGuild.API/GameGuild.API.csproj' "$gate" | grep -Fq -- '-p:TreatWarningsAsErrors=true' || return 1
   grep -Fq 'provider_build_arguments=(--no-build --no-restore)' "$gate" || return 1
   grep -Fq 'dotnet_build_isolation=(-m:4 -p:UseSharedCompilation=false)' "$gate" || return 1
   grep -Fq -- '-p:TreatWarningsAsErrors=true' "$gate" || return 1
   ! grep -Fq 'warning_projects=' "$gate"
+}
+
+test_openapi_gate_uses_semantic_generated_client_diff() {
+  local verifier="$ci_dir/verify-openapi-client.sh"
+
+  grep -Fq 'pnpm --filter @game-guild/client generate:diff' "$verifier" || return 1
+  ! grep -Fq 'git diff --exit-code -- packages/infrastructure/client/src/generated' "$verifier"
 }
 
 test_economy_gate_rejects_nested_postgres_testcontainers() {
@@ -283,6 +292,7 @@ test_economy_gate_migrates_one_template_and_clones_isolated_test_databases() {
 
   grep -Fq "gate_stage='postgres-economy-template'" "$gate" || return 1
   grep -Fq "economy_template_database='economy_tests_template'" "$gate" || return 1
+  grep -Fq 'run dotnet tool restore' "$gate" || return 1
   grep -Fq 'dotnet ef database update' "$gate" || return 1
   grep -Fq 'export ECONOMY_POSTGRES_TEMPLATE_DATABASE="$economy_template_database"' "$gate" || return 1
   grep -Fq 'ECONOMY_POSTGRES_TEMPLATE_DATABASE' "$database_support" || return 1
@@ -770,7 +780,8 @@ run_test 'Economy gate bounds hung tests and records timings' test_economy_gate_
 run_test 'Economy gate supports fast PR and full release profiles' test_economy_gate_supports_fast_pr_and_full_release_profiles
 run_test 'Economy gate batches whole-solution tests' test_economy_gate_batches_whole_solution_tests
 run_test 'Economy unit tests bound parallelism without global serialization' test_economy_unit_tests_bound_parallelism_without_global_serialization
-run_test 'Economy gate builds strict release targets once' test_economy_gate_builds_release_targets_strictly_once
+run_test 'Economy gate builds release targets before packaging' test_economy_gate_builds_release_targets_before_packaging
+run_test 'OpenAPI gate ignores generator provenance only' test_openapi_gate_uses_semantic_generated_client_diff
 run_test 'Economy gate rejects nested PostgreSQL Testcontainers' test_economy_gate_rejects_nested_postgres_testcontainers
 run_test 'Economy gate isolates global roles from application databases' test_economy_gate_isolates_global_economy_roles_from_application_databases
 run_test 'full gate isolates API migration tests from the Economy template' test_full_gate_isolates_api_migration_tests_from_the_economy_template
