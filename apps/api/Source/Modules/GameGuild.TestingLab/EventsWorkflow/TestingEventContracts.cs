@@ -123,7 +123,8 @@ public sealed record CreateTestingEventCommand(
     DateTime EndsAt,
     bool RequiresFeedback,
     TestingEventRecurrenceRequest? Recurrence = null,
-    Guid? TemplateRevisionId = null) : ICommand<Result<TestingEventProjection>>;
+    Guid? TemplateRevisionId = null,
+    ConfigureTestingEventRequest? Configuration = null) : ICommand<Result<TestingEventProjection>>;
 
 public sealed record ConfigureTestingEventCommand(
     Guid EventId,
@@ -254,7 +255,8 @@ public sealed record CreateTestingEventRequest(
     DateTime EndsAt,
     bool RequiresFeedback,
     TestingEventRecurrenceRequest? Recurrence = null,
-    Guid? TemplateRevisionId = null);
+    Guid? TemplateRevisionId = null,
+    ConfigureTestingEventRequest? Configuration = null);
 
 public sealed record ConfigureTestingEventRequest(
     string GeneralRules,

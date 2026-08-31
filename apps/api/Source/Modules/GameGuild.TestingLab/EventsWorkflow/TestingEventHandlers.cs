@@ -90,7 +90,19 @@ public sealed class TestingEventHandlers(
                         recurrenceDaysOfWeek,
                         request.Recurrence?.EndsAt,
                         request.Recurrence?.OccurrenceCount);
-                    if (templateRevision != null) testingEvent.ConfigureFromTemplate(templateRevision);
+                    if (templateRevision != null)
+                    {
+                        testingEvent.ConfigureFromTemplate(templateRevision);
+                    }
+                    else if (request.Configuration is { } configuration)
+                    {
+                        testingEvent.Configure(
+                            configuration.GeneralRules,
+                            configuration.CandidateInstructions,
+                            configuration.TesterInstructions,
+                            configuration.ProjectApplicationSchema,
+                            configuration.TesterRegistrationSchema);
+                    }
                     return testingEvent;
                 })
                 .ToArray();

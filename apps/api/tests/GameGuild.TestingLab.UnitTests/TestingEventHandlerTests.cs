@@ -96,6 +96,37 @@ public sealed class TestingEventHandlerTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateEvent_WithCustomConfiguration_PersistsAReadyToOpenDraftAtomically()
+    {
+        var configuration = new ConfigureTestingEventRequest(
+            "Respect the code of conduct.",
+            "Provide a playable build.",
+            "Complete the assigned tasks.",
+            BasicSchema("Project"),
+            BasicSchema("Tester"));
+
+        var result = await CreateEventHandler().Handle(new CreateTestingEventCommand(
+            "Configured event",
+            null,
+            TestingEventMode.Online,
+            TestingEventApprovalMode.ManagerOnly,
+            SystemClock.UtcNow.AddDays(-1),
+            SystemClock.UtcNow.AddDays(1),
+            SystemClock.UtcNow.AddDays(2),
+            SystemClock.UtcNow.AddDays(3),
+            true,
+            Configuration: configuration), default);
+
+        result.IsSuccess.Should().BeTrue();
+        var testingEvent = await _context.Set<TestingEvent>().SingleAsync();
+        testingEvent.GeneralRules.Should().Be(configuration.GeneralRules);
+        testingEvent.CandidateInstructions.Should().Be(configuration.CandidateInstructions);
+        testingEvent.TesterInstructions.Should().Be(configuration.TesterInstructions);
+        testingEvent.ProjectApplicationSchema.Should().NotBeNull();
+        testingEvent.TesterRegistrationSchema.Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task EventConfiguration_IsRequiredForOpeningAndCannotChangeAfterFreeze()
     {
         var created = await CreateEventHandler().Handle(new CreateTestingEventCommand(
