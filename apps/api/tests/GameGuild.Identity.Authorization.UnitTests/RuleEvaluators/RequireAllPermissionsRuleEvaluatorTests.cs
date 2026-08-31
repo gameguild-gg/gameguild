@@ -112,6 +112,29 @@ public class RequireAllPermissionsRuleEvaluatorTests
     }
 
     [Fact]
+    public async Task EvaluateAsync_SystemAdministrator_ReturnsSuccessWithoutPermissionLookup()
+    {
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.Role, Policies.SystemAdmin)
+        ], "TestAuth"));
+        var context = new AuthorizationHandlerContext([], user, null);
+        var parameters = RuleParameters.FromJson("{\"permissions\": [\"users:admin\"]}");
+
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        result.IsSuccess.Should().BeTrue();
+        _mockPermissionService.Verify(
+            x => x.HasAllPermissionsAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task EvaluateAsync_HasAllPermissions_ReturnsSuccess()
     {
         // Arrange

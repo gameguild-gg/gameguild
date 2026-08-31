@@ -72,6 +72,46 @@ public class SelfOrPermissionRuleEvaluatorTests
     }
 
     [Fact]
+    public async Task EvaluateAsync_SystemAdministratorTargetingAnotherUser_ReturnsSuccess()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var targetUserId = Guid.NewGuid();
+        var user = new ClaimsPrincipal(new ClaimsIdentity(
+        [
+            new Claim("sub", userId.ToString()),
+            new Claim("tid", tenantId.ToString()),
+            new Claim(ClaimTypes.Role, "SystemAdmin")
+        ], "test"));
+
+        _tenantContextMock.Setup(x => x.TenantId).Returns(tenantId);
+        _tenantContextMock.Setup(x => x.HasTenant).Returns(true);
+
+        var context = new AuthorizationHandlerContext(
+            [],
+            user,
+            new TestUserResource { UserId = targetUserId });
+        var parameters = RuleParameters.FromJson("{\"anyPermission\":\"users:manage\"}");
+
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        result.IsSuccess.Should().BeTrue();
+        _tenantMembershipCheckerMock.Verify(
+            x => x.IsUserMemberOfTenantAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+        _permissionServiceMock.Verify(
+            x => x.HasPermissionAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task EvaluateAsync_IsSelf_ReturnsSuccess()
     {
         var userId = Guid.NewGuid();
