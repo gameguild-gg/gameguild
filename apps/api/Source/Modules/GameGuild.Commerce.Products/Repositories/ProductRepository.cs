@@ -36,6 +36,7 @@ public class ProductRepository(IApplicationDbContext context)
         int take = 50,
         string sortBy = "CreatedAt",
         string sortDirection = "DESC",
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default)
     {
         var query = Query;
@@ -61,6 +62,9 @@ public class ProductRepository(IApplicationDbContext context)
 
         if (isPublished.HasValue)
             query = query.Where(p => p.IsPublished == isPublished.Value);
+
+        if (tenantId.HasValue)
+            query = query.Where(p => p.TenantId == tenantId.Value);
 
         // Get total count before pagination
         var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);

@@ -159,7 +159,7 @@ public sealed class PostgreSqlAdRewardOperationalQueryReader : IAdRewardOperatio
 
     private static string EncodeCursor(DateTimeOffset at, Guid id) => $"{at.UtcTicks:X16}{id:N}";
 
-    private static (DateTimeOffset At, Guid Id)? DecodeCursor(string? cursor, string label)
+    internal static (DateTimeOffset At, Guid Id)? DecodeCursor(string? cursor, string label)
     {
         if (string.IsNullOrWhiteSpace(cursor)) return null;
         if (cursor.Length != 48 ||

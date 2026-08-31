@@ -28,7 +28,8 @@ public static class ProductMappingExtensions
             product.CommissionConfig?.AffiliateCommissionPercentage ?? 30m,
             product.CreatedAt,
             product.UpdatedAt,
-            pricing
+            pricing,
+            product.TenantId
         );
     }
 
@@ -80,7 +81,8 @@ public static class ProductMappingExtensions
             pricing.SaleEndDate,
             pricing.IsDefault,
             isSaleActive ? pricing.SalePrice!.Value : pricing.BasePrice,
-            isSaleActive
+            isSaleActive,
+            pricing.GetCurrentActiveVersion()?.Id
         );
     }
 }

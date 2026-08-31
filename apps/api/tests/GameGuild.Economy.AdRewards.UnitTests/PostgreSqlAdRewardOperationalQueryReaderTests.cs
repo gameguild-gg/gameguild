@@ -37,11 +37,27 @@ public sealed class PostgreSqlAdRewardOperationalQueryReaderTests
         var second = await reader.ListSessionsAsync(TenantId, null, null, 2, first.NextCursor, default);
         var claims = await reader.ListPendingClaimsAsync(TenantId, false, 20, null, default);
         var reconciliations = await reader.ListReconciliationsAsync(TenantId, null, 20, null, default);
+        var filtered = await reader.ListSessionsAsync(
+            TenantId, null, " google-ad-manager ", 20, null, default);
 
         first.Items.Select(item => item.Id).Should().Equal(sessions[0].Id, sessions[1].Id);
         second.Items.Select(item => item.Id).Should().Equal(sessions[2].Id);
         claims.Items.Should().ContainSingle().Which.TenantId.Should().Be(TenantId);
         reconciliations.Items.Should().ContainSingle().Which.ProviderReportId.Should().Be(report.Id);
+        filtered.Items.Should().HaveCount(3);
+
+        await FluentActions.Awaiting(() => reader.ListSessionsAsync(
+                Guid.Empty, null, null, 20, null, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.ListSessionsAsync(
+                TenantId, null, " ", 20, null, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.ListSessionsAsync(
+                TenantId, null, null, 0, null, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await FluentActions.Awaiting(() => reader.ListSessionsAsync(
+                TenantId, null, null, 101, null, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
     }
 
     [Fact]
@@ -81,6 +97,39 @@ public sealed class PostgreSqlAdRewardOperationalQueryReaderTests
         detail.Summary.GetType().GetProperties().Select(property => property.Name)
             .Should().NotContain(["DeviceRiskHash", "IpRiskHash", "AsnRiskHash", "TokenHash", "NonceHash"]);
         (await reader.FindSessionAsync(Guid.NewGuid(), session.Id, default)).Should().BeNull();
+        await FluentActions.Awaiting(() => reader.FindSessionAsync(
+                Guid.Empty, session.Id, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.FindSessionAsync(
+                TenantId, Guid.Empty, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
+    public void ConstructorAndCursorCodecRejectInvalidInfrastructureAndComponents()
+    {
+        FluentActions.Invoking(() => new PostgreSqlAdRewardOperationalQueryReader(new NonDbContext()))
+            .Should().Throw<InvalidOperationException>();
+
+        var identifier = Guid.NewGuid().ToString("N");
+        PostgreSqlAdRewardOperationalQueryReader.DecodeCursor(null, "Session").Should().BeNull();
+        PostgreSqlAdRewardOperationalQueryReader.DecodeCursor("   ", "Session").Should().BeNull();
+        PostgreSqlAdRewardOperationalQueryReader.DecodeCursor(
+            $"{Now.UtcTicks:X16}{identifier}", "Session").Should().NotBeNull();
+
+        foreach (var cursor in new[]
+                 {
+                     "invalid",
+                     $"ZZZZZZZZZZZZZZZZ{identifier}",
+                     $"0000000000000001{new string('Z', 32)}",
+                     $"FFFFFFFFFFFFFFFF{identifier}",
+                     $"7FFFFFFFFFFFFFFF{identifier}"
+                 })
+        {
+            FluentActions.Invoking(() =>
+                    PostgreSqlAdRewardOperationalQueryReader.DecodeCursor(cursor, "Session"))
+                .Should().Throw<ArgumentException>();
+        }
     }
 
     private static AdRewardSessionRow Session(Guid tenantId, int index) => new()
@@ -137,5 +186,16 @@ public sealed class PostgreSqlAdRewardOperationalQueryReaderTests
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
             Database.BeginTransactionAsync(cancellationToken);
+    }
+
+    private sealed class NonDbContext : IApplicationDbContext
+    {
+        public DbSet<T> Set<T>() where T : class => throw new NotSupportedException();
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
     }
 }

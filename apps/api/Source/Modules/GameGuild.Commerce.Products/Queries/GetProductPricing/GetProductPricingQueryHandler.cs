@@ -48,7 +48,8 @@ public sealed class GetProductPricingQueryHandler(
                 p.SaleEndDate,
                 p.IsDefault,
                 currentPrice,
-                isSaleActive
+                isSaleActive,
+                p.GetCurrentActiveVersion()?.Id
             );
         }).ToList();
     }

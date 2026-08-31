@@ -760,7 +760,9 @@ public class ProductControllerConstructorTests
     [Fact]
     public void ProductsController_CanBeConstructed()
     {
-        var controller = new ProductsController(new Mock<IMediator>().Object);
+        var controller = new ProductsController(
+            new Mock<IMediator>().Object,
+            new Mock<IActorContextAccessor>().Object);
         controller.Should().NotBeNull();
     }
 

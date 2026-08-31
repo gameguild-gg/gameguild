@@ -34,6 +34,7 @@ public interface IProductRepository
         int take = 50,
         string sortBy = "CreatedAt",
         string sortDirection = "DESC",
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

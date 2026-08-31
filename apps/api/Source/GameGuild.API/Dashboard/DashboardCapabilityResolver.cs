@@ -25,6 +25,19 @@ public static class DashboardCapabilities
     public const string LaunchPadViewAnalytics = "LaunchPad.ViewAnalytics";
     public const string LaunchPadManageSettings = "LaunchPad.ManageSettings";
     public const string EconomyManagePayouts = "Economy.ManagePayouts";
+    public const string EconomyReadOperations = "Economy.ReadOperations";
+    public const string EconomyReviewPayouts = "Economy.ReviewPayouts";
+    public const string EconomyOperatePayouts = "Economy.OperatePayouts";
+    public const string EconomyOperateCompliance = "Economy.OperateCompliance";
+    public const string EconomyManagePolicies = "Economy.ManagePolicies";
+    public const string EconomyManageReserves = "Economy.ManageReserves";
+    public const string EconomyOperateLedger = "Economy.OperateLedger";
+    public const string EconomyManageKillSwitches = "Economy.ManageKillSwitches";
+    public const string EconomyOperateAdRewards = "Economy.OperateAdRewards";
+    public const string EconomyOperateMarketplace = "Economy.OperateMarketplace";
+    public const string EconomyOperateBounties = "Economy.OperateBounties";
+    public const string EconomyOperateTreasury = "Economy.OperateTreasury";
+    public const string EconomyManageLegacyMigration = "Economy.ManageLegacyMigration";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.Ordinal)
     {
@@ -47,6 +60,19 @@ public static class DashboardCapabilities
         LaunchPadViewAnalytics,
         LaunchPadManageSettings,
         EconomyManagePayouts,
+        EconomyReadOperations,
+        EconomyReviewPayouts,
+        EconomyOperatePayouts,
+        EconomyOperateCompliance,
+        EconomyManagePolicies,
+        EconomyManageReserves,
+        EconomyOperateLedger,
+        EconomyManageKillSwitches,
+        EconomyOperateAdRewards,
+        EconomyOperateMarketplace,
+        EconomyOperateBounties,
+        EconomyOperateTreasury,
+        EconomyManageLegacyMigration,
     };
 }
 
@@ -86,7 +112,25 @@ public static class DashboardCapabilityResolver
             capabilities.Add(DashboardCapabilities.CommunityManageProjects);
 
         if (actor.HasPermission(WalletsPermission.Keys.Admin))
+        {
             capabilities.Add(DashboardCapabilities.EconomyManagePayouts);
+            capabilities.Add(DashboardCapabilities.EconomyReviewPayouts);
+            capabilities.Add(DashboardCapabilities.EconomyOperatePayouts);
+        }
+
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyReadOperations, EconomyPermission.Keys.ReadOperations);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyReviewPayouts, EconomyPermission.Keys.ReviewPayouts);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyOperatePayouts, EconomyPermission.Keys.OperatePayouts);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyOperateCompliance, EconomyPermission.Keys.OperateCompliance);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyManagePolicies, EconomyPermission.Keys.ManagePolicies);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyManageReserves, EconomyPermission.Keys.ManageReserves);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyOperateLedger, EconomyPermission.Keys.OperateLedger);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyManageKillSwitches, EconomyPermission.Keys.ManageKillSwitches);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyOperateAdRewards, EconomyPermission.Keys.OperateAdRewards);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyOperateMarketplace, EconomyPermission.Keys.OperateMarketplace);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyOperateBounties, EconomyPermission.Keys.OperateBounties);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyOperateTreasury, EconomyPermission.Keys.OperateTreasury);
+        AddIfAny(actor, capabilities, DashboardCapabilities.EconomyManageLegacyMigration, EconomyPermission.Keys.ManageLegacyMigration);
 
         if (actor.HasAnyPermission("roles:read", "roles:create", "roles:update", "roles:delete", "roles:assign"))
             capabilities.Add(DashboardCapabilities.PlatformManageRoles);

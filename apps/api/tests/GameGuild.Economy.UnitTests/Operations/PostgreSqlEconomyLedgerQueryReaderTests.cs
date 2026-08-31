@@ -106,6 +106,54 @@ public sealed class PostgreSqlEconomyLedgerQueryReaderTests
         await FluentActions.Awaiting(() => reader.ListAnchorsAsync(
                 TenantId, 20, "invalid", default).AsTask())
             .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.ListProjectionsAsync(
+                TenantId, 20, "invalid", default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+
+        var identifier = Guid.NewGuid().ToString("N");
+        foreach (var invalidCursor in new[]
+                 {
+                     $"ZZZZZZZZZZZZZZZZ{identifier}",
+                     $"FFFFFFFFFFFFFFFF{identifier}",
+                     $"7FFFFFFFFFFFFFFF{identifier}",
+                     $"0000000000000001{new string('Z', 32)}"
+                 })
+        {
+            await FluentActions.Awaiting(() => reader.ListAnchorsAsync(
+                    TenantId, 20, invalidCursor, default).AsTask())
+                .Should().ThrowAsync<ArgumentException>();
+        }
+
+        foreach (var invalidCursor in new[]
+                 {
+                     $"ZZZZZZZZZZZZZZZZ{identifier}",
+                     $"0000000000000000{identifier}",
+                     $"0000000000000001{new string('Z', 32)}"
+                 })
+        {
+            await FluentActions.Awaiting(() => reader.ListProjectionsAsync(
+                    TenantId, 20, invalidCursor, default).AsTask())
+                .Should().ThrowAsync<ArgumentException>();
+        }
+
+        await FluentActions.Awaiting(() => reader.ListVerificationsAsync(
+                TenantId, 0, null, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await FluentActions.Awaiting(() => reader.ListVerificationsAsync(
+                TenantId, 101, null, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await FluentActions.Awaiting(() => reader.FindVerificationAsync(
+                TenantId, Guid.Empty, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.FindVerificationAsync(
+                Guid.Empty, verification.Id, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.FindProjectionAsync(
+                TenantId, 0, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await FluentActions.Awaiting(() => reader.ReadProjectionAuditAsync(
+                TenantId, 0, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
     }
 
     private static EconomyJournalVerificationCheckpointRow Verification(int sequence) => new()

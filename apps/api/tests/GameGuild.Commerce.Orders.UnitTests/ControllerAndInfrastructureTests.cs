@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using GameGuild.Commerce.Products;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Authorization;
 using Moq;
 using Xunit;
 
@@ -231,6 +232,11 @@ public class OrdersControllerTests
     public async Task ListOrders_UsesExpectedQueryBranch()
     {
         var order = CreateTestOrder();
+        _actorMock.Setup(accessor => accessor.ActorContext).Returns(new ActorContext
+        {
+            SubjectId = _userId.ToString(), TenantId = _tenantId, ActorKind = ActorKind.User,
+            Roles = new HashSet<string>(), Permissions = new HashSet<string> { OrdersPermission.Keys.ReadAll }, IsAuthenticated = true
+        });
         _senderMock.Setup(sender => sender.Send<IEnumerable<Order>>(
                 It.Is<GetAllOrdersQuery>(query => query.Status == OrderStatus.Pending),
                 It.IsAny<CancellationToken>()))
@@ -248,9 +254,8 @@ public class OrdersControllerTests
     }
 
     [Fact]
-    public async Task ListOrders_UsesGuidEmptyWhenActorSubjectIsInvalid()
+    public async Task ListOrders_ForbidsWhenActorSubjectIsInvalid()
     {
-        var order = CreateTestOrder();
         _actorMock.Setup(accessor => accessor.ActorContext).Returns(new ActorContext
         {
             SubjectId = "not-a-guid",
@@ -261,14 +266,9 @@ public class OrdersControllerTests
             IsAuthenticated = true
         });
 
-        _senderMock.Setup(sender => sender.Send<IEnumerable<Order>>(
-                It.Is<GetUserOrdersQuery>(query => query.UserId == Guid.Empty && query.Status == OrderStatus.Pending),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync([order]);
-
         var result = await _sut.ListOrders(owner: "me", status: OrderStatus.Pending);
 
-        result.Result.Should().BeOfType<OkObjectResult>();
+        result.Result.Should().BeOfType<ForbidResult>();
     }
 
     [Fact]
@@ -389,6 +389,25 @@ public class OrdersControllerTests
     }
 
     [Fact]
+    public async Task PreparePaymentIntent_ReturnsOkOrBadRequest()
+    {
+        var preparation = new OrderPaymentIntentPreparation(
+            true, Guid.NewGuid(), "pi_secret", null, OrderChargeState.RequiresAction);
+        _senderMock.SetupSequence(sender => sender.Send<Result<OrderPaymentIntentPreparation>>(
+                It.IsAny<PrepareOrderPaymentIntentCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(preparation))
+            .ReturnsAsync(Result.Failure<OrderPaymentIntentPreparation>(
+                Error.Failure("Orders.PaymentIntentUnavailable", "Provider unavailable.")));
+
+        var ok = await _sut.PreparePaymentIntent(Guid.NewGuid());
+        var badRequest = await _sut.PreparePaymentIntent(Guid.NewGuid());
+
+        ok.Result.Should().BeOfType<OkObjectResult>()
+            .Which.Value.Should().Be(preparation);
+        badRequest.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
     public async Task ReleaseOrder_ReturnsBadRequestWithDefaultProblemDetailsWhenDescriptionIsNull()
     {
         _senderMock.Setup(sender => sender.Send<Result<OrderOperationResult>>(It.IsAny<ReleaseOrderCommand>(), It.IsAny<CancellationToken>()))
@@ -426,7 +445,9 @@ public class OrdersInfrastructureTests
             nameof(OrdersController.CaptureOrder),
             nameof(OrdersController.CompleteOrder),
             nameof(OrdersController.CreateOrder),
-            nameof(OrdersController.GetOrder));
+            nameof(OrdersController.GetOrder),
+            nameof(OrdersController.ListOrders),
+            nameof(OrdersController.PreparePaymentIntent));
     }
 
     [Fact]

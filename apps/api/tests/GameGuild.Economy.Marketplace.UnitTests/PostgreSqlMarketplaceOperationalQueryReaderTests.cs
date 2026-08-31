@@ -40,6 +40,16 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReaderTests
         second.Items.Select(item => item.OrderId).Should().Equal(settlements[2].OrderId);
         refunds.Items.Should().ContainSingle().Which.TenantId.Should().Be(TenantId);
         outbox.Items.Should().ContainSingle().Which.TenantId.Should().Be(TenantId);
+
+        await FluentActions.Awaiting(() => reader.ListSettlementsAsync(
+                Guid.Empty, null, 20, null, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.ListSettlementsAsync(
+                TenantId, null, 0, null, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
+        await FluentActions.Awaiting(() => reader.ListSettlementsAsync(
+                TenantId, null, 101, null, default).AsTask())
+            .Should().ThrowAsync<ArgumentOutOfRangeException>();
     }
 
     [Fact]
@@ -83,6 +93,39 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReaderTests
             .Should().NotContain(["Payload", "LastError", "LeaseOwner"]);
         refundDetail!.ReasonCode.Should().Be("buyer-request");
         (await reader.FindSettlementAsync(Guid.NewGuid(), settlement.Id, default)).Should().BeNull();
+        await FluentActions.Awaiting(() => reader.FindSettlementAsync(
+                Guid.Empty, settlement.Id, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+        await FluentActions.Awaiting(() => reader.FindSettlementAsync(
+                TenantId, Guid.Empty, default).AsTask())
+            .Should().ThrowAsync<ArgumentException>();
+    }
+
+    [Fact]
+    public void ConstructorAndCursorCodecRejectInvalidInfrastructureAndComponents()
+    {
+        FluentActions.Invoking(() => new PostgreSqlMarketplaceOperationalQueryReader(new NonDbContext()))
+            .Should().Throw<InvalidOperationException>();
+
+        var identifier = Guid.NewGuid().ToString("N");
+        PostgreSqlMarketplaceOperationalQueryReader.DecodeCursor(null, "Settlement").Should().BeNull();
+        PostgreSqlMarketplaceOperationalQueryReader.DecodeCursor("   ", "Settlement").Should().BeNull();
+        PostgreSqlMarketplaceOperationalQueryReader.DecodeCursor(
+            $"{Now.UtcTicks:X16}{identifier}", "Settlement").Should().NotBeNull();
+
+        foreach (var cursor in new[]
+                 {
+                     "invalid",
+                     $"ZZZZZZZZZZZZZZZZ{identifier}",
+                     $"0000000000000001{new string('Z', 32)}",
+                     $"FFFFFFFFFFFFFFFF{identifier}",
+                     $"7FFFFFFFFFFFFFFF{identifier}"
+                 })
+        {
+            FluentActions.Invoking(() =>
+                    PostgreSqlMarketplaceOperationalQueryReader.DecodeCursor(cursor, "Settlement"))
+                .Should().Throw<ArgumentException>();
+        }
     }
 
     private static MarketplaceSettlementRow Settlement(Guid tenantId, int index) => new()
@@ -157,5 +200,16 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReaderTests
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
             Database.BeginTransactionAsync(cancellationToken);
+    }
+
+    private sealed class NonDbContext : IApplicationDbContext
+    {
+        public DbSet<T> Set<T>() where T : class => throw new NotSupportedException();
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
     }
 }
