@@ -57,8 +57,6 @@ export function getTrackCatalogItem(slug: string): TrackCatalogItem | null {
 
 const TRACK_PROGRAM_SLUGS: Record<string, string> = {
   'game-programming-fundamentals': 'game-programming-foundations',
-  'digital-art-for-games': 'portfolio-and-career',
-  'game-design-principles': 'data-for-games',
 };
 
 export function getTrackProgramHref(slug: string): string {
