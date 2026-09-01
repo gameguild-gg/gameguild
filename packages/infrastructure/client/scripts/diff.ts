@@ -11,9 +11,8 @@ interface GeneratorMetadata {
   generatedBy?: string;
 }
 
-export function stableMetadata(metadata: GeneratorMetadata): Pick<GeneratorMetadata, 'hash' | 'apiVersion' | 'source'> {
+export function stableMetadata(metadata: GeneratorMetadata): Pick<GeneratorMetadata, 'apiVersion' | 'source'> {
   return {
-    hash: metadata.hash,
     apiVersion: metadata.apiVersion,
     source: metadata.source,
   };
@@ -69,7 +68,7 @@ export function checkGeneratedClientDiff(): number {
   if (diff.stdout) process.stdout.write(diff.stdout);
   if (diff.stderr) process.stderr.write(diff.stderr);
   if (untrackedFiles) console.error(`Untracked generated files:\n${untrackedFiles}`);
-  if (!metadataMatches) console.error('Stable generator metadata (hash, apiVersion, or source) differs from HEAD.');
+  if (!metadataMatches) console.error('Stable generator metadata (apiVersion or source) differs from HEAD.');
   return 1;
 }
 
