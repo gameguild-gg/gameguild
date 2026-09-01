@@ -13,6 +13,7 @@ const releaseSha = 'a'.repeat(40);
 const treeSha = 'b'.repeat(40);
 const previousRelease = 'c'.repeat(40);
 const previousTree = 'd'.repeat(40);
+const linuxShellOnly = process.platform === 'win32' ? { skip: 'requires the Linux release shell and jq' } : {};
 
 async function run(command, args, options) {
   const child = spawn(command, args, { ...options, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -97,7 +98,7 @@ async function createFixture(t, failCurrentWeb) {
   };
 }
 
-test('rolls API out before Web and runs smoke only after both are verified', async (t) => {
+test('rolls API out before Web and runs smoke only after both are verified', linuxShellOnly, async (t) => {
   const fixture = await createFixture(t, false);
   const result = await run('bash', [script], fixture.options);
   assert.equal(result.exitCode, 0, result.stderr || result.stdout);
@@ -106,7 +107,7 @@ test('rolls API out before Web and runs smoke only after both are verified', asy
   assert.ok(log.indexOf('smoke') > log.indexOf(`verify:web:${releaseSha}`));
 });
 
-test('restores Web and API in reverse order when the Web release identity fails', async (t) => {
+test('restores Web and API in reverse order when the Web release identity fails', linuxShellOnly, async (t) => {
   const fixture = await createFixture(t, true);
   const result = await run('bash', [script], fixture.options);
   assert.notEqual(result.exitCode, 0);
