@@ -7,6 +7,9 @@ const expectedEmptyClassification = {
   api: false,
   web: false,
   learning: false,
+  apiRuntimeChanged: false,
+  webRuntimeChanged: false,
+  learningRuntimeChanged: false,
   testingLab: false,
   economyCritical: false,
   openApi: false,
@@ -31,6 +34,7 @@ test("a Web component change deploys only Web", () => {
     {
       ...expectedEmptyClassification,
       web: true,
+      webRuntimeChanged: true,
       runtimeChanged: true,
     },
   );
@@ -46,6 +50,8 @@ test("Testing Lab Web and API changes select focused gates and both services", (
       ...expectedEmptyClassification,
       api: true,
       web: true,
+      apiRuntimeChanged: true,
+      webRuntimeChanged: true,
       testingLab: true,
       openApi: true,
       runtimeChanged: true,
@@ -61,6 +67,7 @@ test("an API contract change requires OpenAPI verification", () => {
     {
       ...expectedEmptyClassification,
       api: true,
+      apiRuntimeChanged: true,
       openApi: true,
       runtimeChanged: true,
     },
@@ -75,6 +82,7 @@ test("an EF migration selects API, migration, and OpenAPI gates", () => {
     {
       ...expectedEmptyClassification,
       api: true,
+      apiRuntimeChanged: true,
       openApi: true,
       migration: true,
       runtimeChanged: true,
@@ -89,6 +97,8 @@ test("a shared UI package deploys each JavaScript consumer", () => {
       ...expectedEmptyClassification,
       web: true,
       learning: true,
+      webRuntimeChanged: true,
+      learningRuntimeChanged: true,
       runtimeChanged: true,
     },
   );
@@ -102,6 +112,7 @@ test("Economy changes always require the complete Economy release gate", () => {
     {
       ...expectedEmptyClassification,
       api: true,
+      apiRuntimeChanged: true,
       economyCritical: true,
       openApi: true,
       runtimeChanged: true,
@@ -114,6 +125,8 @@ test("a root dependency lock change rebuilds Node runtimes without selecting Eco
     ...expectedEmptyClassification,
     web: true,
     learning: true,
+    webRuntimeChanged: true,
+    learningRuntimeChanged: true,
     runtimeChanged: true,
   });
 });
@@ -124,6 +137,19 @@ test("unknown runtime configuration changes fail conservatively", () => {
     api: true,
     web: true,
     learning: true,
+    apiRuntimeChanged: true,
+    webRuntimeChanged: true,
+    learningRuntimeChanged: true,
     runtimeChanged: true,
   });
+});
+
+test("test-only changes select verification without rebuilding a runtime image", () => {
+  assert.deepEqual(
+    classifyReleaseChanges(["apps/web/src/components/ui/button.test.tsx"]),
+    {
+      ...expectedEmptyClassification,
+      web: true,
+    },
+  );
 });

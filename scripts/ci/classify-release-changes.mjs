@@ -8,6 +8,9 @@ const emptyClassification = Object.freeze({
   api: false,
   web: false,
   learning: false,
+  apiRuntimeChanged: false,
+  webRuntimeChanged: false,
+  learningRuntimeChanged: false,
   testingLab: false,
   economyCritical: false,
   openApi: false,
@@ -117,11 +120,20 @@ export function classifyReleaseChanges(filePaths) {
       classification.migration = true;
     }
 
-    if (
-      !isTest &&
-      (isApi || isWeb || isLearning || isShared || isNodeRoot || isApiRoot || isRuntimeConfig)
-    ) {
-      classification.runtimeChanged = true;
+    if (!isTest) {
+      if (isApi || isApiRoot) classification.apiRuntimeChanged = true;
+      if (isWeb || isShared || isNodeRoot) classification.webRuntimeChanged = true;
+      if (isLearning || isShared || isNodeRoot) classification.learningRuntimeChanged = true;
+      if (isRuntimeConfig) {
+        classification.apiRuntimeChanged = true;
+        classification.webRuntimeChanged = true;
+        classification.learningRuntimeChanged = true;
+      }
+
+      classification.runtimeChanged =
+        classification.apiRuntimeChanged ||
+        classification.webRuntimeChanged ||
+        classification.learningRuntimeChanged;
     }
   }
 
@@ -178,6 +190,11 @@ function writeGitHubOutputs(classification, changedFiles) {
     `changedFiles=${JSON.stringify(changedFiles.map(normalizePath))}`,
     `serviceMatrix=${JSON.stringify(
       ["api", "web", "learning"].filter((service) => classification[service]),
+    )}`,
+    `runtimeServiceMatrix=${JSON.stringify(
+      ["api", "web", "learning"].filter(
+        (service) => classification[`${service}RuntimeChanged`],
+      ),
     )}`,
   ];
   appendFileSync(outputPath, `${lines.join("\n")}\n`, "utf8");
