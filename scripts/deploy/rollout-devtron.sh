@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -Eeuo pipefail
 
 require_env() {
   local name="$1"
@@ -13,6 +13,9 @@ require_env() {
 for name in RELEASE_SHA TREE_SHA RELEASED_AT DEVTRON_BASE_URL DEVTRON_API_TOKEN GITHUB_REPOSITORY; do
   require_env "$name"
 done
+
+release_sha="${RELEASE_SHA:?RELEASE_SHA is required}"
+tree_sha="${TREE_SHA:?TREE_SHA is required}"
 
 RELEASE_DIR="${RELEASE_DIR:-artifacts/release}"
 PROMOTED_SERVICES="$RELEASE_DIR/promoted-services.json"
@@ -148,9 +151,9 @@ for service in api web learning; do
   fi
   image=$(jq -r '.image' <<<"$current")
   digest=$(jq -r '.imageDigest' <<<"$current")
-  trigger_devtron "$service" "$image" "release-${RELEASE_SHA}" "$digest" "$RELEASE_SHA"
+  trigger_devtron "$service" "$image" "release-${release_sha}" "$digest" "$release_sha"
   triggered_services+=("$service")
-  verify_service "$service" "$RELEASE_SHA" "$TREE_SHA" "$digest"
+  verify_service "$service" "$release_sha" "$tree_sha" "$digest"
 done
 
 node scripts/deploy/production-smoke.mjs
