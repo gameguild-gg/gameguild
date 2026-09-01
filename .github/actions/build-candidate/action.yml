@@ -1,0 +1,107 @@
+name: Build immutable candidate
+description: Build and push one content-addressed service candidate
+
+inputs:
+  service:
+    description: Service name
+    required: true
+  dockerfile:
+    description: Dockerfile path
+    required: true
+  registry-host:
+    description: Container registry hostname
+    required: true
+  registry-namespace:
+    description: Container registry namespace
+    required: true
+  registry-username:
+    description: Registry username
+    required: true
+  registry-password:
+    description: Registry password or token
+    required: true
+  source-sha:
+    description: Source commit SHA
+    required: true
+  tree-sha:
+    description: Git tree SHA used to build the image
+    required: true
+  build-args:
+    description: Additional Docker build arguments
+    required: false
+    default: ""
+
+outputs:
+  digest:
+    description: Immutable digest pushed to the registry
+    value: ${{ steps.build.outputs.digest }}
+  image:
+    description: Candidate image name without tag
+    value: ${{ steps.identity.outputs.image }}
+  tag:
+    description: Candidate tag
+    value: ${{ steps.identity.outputs.tag }}
+  built_at:
+    description: Candidate build timestamp
+    value: ${{ steps.identity.outputs.built_at }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate registry configuration
+      shell: bash
+      env:
+        REGISTRY_HOST: ${{ inputs.registry-host }}
+        REGISTRY_NAMESPACE: ${{ inputs.registry-namespace }}
+        REGISTRY_USERNAME: ${{ inputs.registry-username }}
+        REGISTRY_PASSWORD: ${{ inputs.registry-password }}
+        EXPECTED_TREE_SHA: ${{ inputs.tree-sha }}
+      run: |
+        for value in \
+          "$REGISTRY_HOST" \
+          "$REGISTRY_NAMESPACE" \
+          "$REGISTRY_USERNAME" \
+          "$REGISTRY_PASSWORD"; do
+          if [[ -z "$value" ]]; then
+            echo 'Devtron registry configuration is incomplete.' >&2
+            exit 1
+          fi
+        done
+        actual_tree_sha=$(git rev-parse 'HEAD^{tree}')
+        if [[ "$actual_tree_sha" != "$EXPECTED_TREE_SHA" ]]; then
+          echo "Candidate checkout tree $actual_tree_sha does not match classified tree $EXPECTED_TREE_SHA." >&2
+          exit 1
+        fi
+    - name: Resolve candidate identity
+      id: identity
+      shell: bash
+      run: |
+        echo "image=${{ inputs.registry-host }}/${{ inputs.registry-namespace }}/gameguild-${{ inputs.service }}" >> "$GITHUB_OUTPUT"
+        echo "tag=candidate-${{ inputs.tree-sha }}-${{ inputs.service }}" >> "$GITHUB_OUTPUT"
+        echo "built_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+        echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/login-action@v3
+      with:
+        registry: ${{ inputs.registry-host }}
+        username: ${{ inputs.registry-username }}
+        password: ${{ inputs.registry-password }}
+    - name: Build and push candidate
+      id: build
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: ${{ inputs.dockerfile }}
+        push: true
+        provenance: mode=max
+        sbom: true
+        tags: ${{ steps.identity.outputs.image }}:${{ steps.identity.outputs.tag }}
+        cache-from: type=registry,ref=${{ steps.identity.outputs.image }}:buildcache-${{ inputs.service }}
+        cache-to: type=registry,ref=${{ steps.identity.outputs.image }}:buildcache-${{ inputs.service }},mode=max
+        build-args: |
+          ${{ inputs.build-args }}
+          SOURCE_SHA=${{ inputs.source-sha }}
+          SOURCE_TREE=${{ inputs.tree-sha }}
+          RELEASE_SHA=${{ inputs.source-sha }}
+          VERSION=${{ steps.identity.outputs.version }}
+          BUILD_TIMESTAMP=${{ steps.identity.outputs.built_at }}
