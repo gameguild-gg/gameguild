@@ -1,0 +1,40 @@
+name: Nightly Full
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-full
+  cancel-in-progress: false
+
+jobs:
+  full-verification:
+    name: Full solution, Economy, browser, and OpenAPI
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-node-workspace
+      - uses: ./.github/actions/setup-dotnet
+      - name: Install Chromium
+        run: pnpm --filter @game-guild/web exec playwright install --with-deps chromium
+      - name: Run complete verification
+        env:
+          ECONOMY_GATE_PROFILE: full
+          ECONOMY_WHOLE_SOLUTION_JOBS: "2"
+          ECONOMY_BASE_SHA: ${{ github.event.before || github.sha }}
+        run: bash scripts/ci/verify-economy.sh
+      - name: Upload nightly evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nightly-full-${{ github.sha }}
+          path: artifacts/test-results
+          if-no-files-found: error
