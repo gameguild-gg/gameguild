@@ -76,23 +76,23 @@
   },
   "dependencies": {
     "jose": "^6.1.3",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@game-guild/eslint-config": "workspace:*",
     "@game-guild/prettier-config": "workspace:*",
     "@game-guild/typescript-config": "workspace:*",
-    "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-query": "^5.102.8",
     "@testing-library/jest-dom": "^7.0.0",
-    "@testing-library/react": "^16.3.2",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.39.2",
     "handlebars": "^4.7.8",
-    "happy-dom": "^20.6.1",
-    "next": "16.3.1",
+    "happy-dom": "^20.12.0",
+    "next": "16.3.3",
     "openapi-types": "^12.1.3",
     "prettier": "^3.5.0",
     "react": "19.2.8",
