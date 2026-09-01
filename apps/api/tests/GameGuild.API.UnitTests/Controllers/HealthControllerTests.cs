@@ -22,6 +22,7 @@ public class HealthControllerTests
         _healthCheckServiceMock = new Mock<HealthCheckService>();
         _loggerMock = new Mock<ILogger<HealthController>>();
         _controller = new HealthController(_healthCheckServiceMock.Object, _loggerMock.Object);
+        _controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
     }
 
     [Fact]
@@ -74,6 +75,8 @@ public class HealthControllerTests
         var response = okResult.Value.Should().BeOfType<HealthinessResponse>().Subject;
         response.Status.Should().Be("Healthy");
         response.Checks.Should().ContainKey("Database");
+        response.ReleaseSha.Should().NotBeNullOrWhiteSpace();
+        _controller.Response.Headers["X-GameGuild-Release-Sha"].ToString().Should().Be(response.ReleaseSha);
     }
 
     [Fact]
