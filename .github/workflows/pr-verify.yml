@@ -1,0 +1,284 @@
+name: PR Verify
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  classify:
+    name: Classify release surfaces
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.changes.outputs.api }}
+      web: ${{ steps.changes.outputs.web }}
+      learning: ${{ steps.changes.outputs.learning }}
+      testingLab: ${{ steps.changes.outputs.testingLab }}
+      economyCritical: ${{ steps.changes.outputs.economyCritical }}
+      openApi: ${{ steps.changes.outputs.openApi }}
+      migration: ${{ steps.changes.outputs.migration }}
+      runtimeChanged: ${{ steps.changes.outputs.runtimeChanged }}
+      changedFiles: ${{ steps.changes.outputs.changedFiles }}
+      serviceMatrix: ${{ steps.changes.outputs.serviceMatrix }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.0.0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Classify changed paths
+        id: changes
+        run: >-
+          node scripts/ci/classify-release-changes.mjs
+          --base "${{ github.event.pull_request.base.sha }}"
+          --head "${{ github.event.pull_request.head.sha }}"
+      - name: Test classifier contract
+        run: node --test scripts/ci/tests/classify-release-changes.test.mjs scripts/ci/tests/select-affected-dotnet-tests.test.mjs
+
+  repository-policy:
+    name: Repository policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node-workspace
+      - name: Verify repository policy
+        run: bash scripts/ci/verify-repository-policy.sh
+      - name: Upload policy evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: repository-policy-${{ github.event.pull_request.head.sha }}
+          path: artifacts/test-results
+          if-no-files-found: error
+
+  web:
+    name: Web verify
+    needs: classify
+    if: needs.classify.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node-workspace
+      - name: Build generated client
+        run: pnpm --filter @game-guild/client build
+      - name: Lint Web
+        run: pnpm --filter @game-guild/web lint
+      - name: Typecheck Web
+        run: pnpm --filter @game-guild/web exec tsc --noEmit
+      - name: Test Web
+        run: pnpm --filter @game-guild/web exec vitest run --maxWorkers=4
+      - name: Build Web
+        env:
+          GAMEGUILD_DISABLE_WEBPACK_CACHE: "1"
+        run: pnpm --filter @game-guild/web build
+
+  learning:
+    name: Learning verify
+    needs: classify
+    if: needs.classify.outputs.learning == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node-workspace
+      - name: Lint Learning
+        run: pnpm --filter @game-guild/learning lint
+      - name: Typecheck Learning
+        run: pnpm --filter @game-guild/learning typecheck
+      - name: Test Learning
+        run: pnpm --filter @game-guild/learning test
+      - name: Build Learning
+        run: pnpm --filter @game-guild/learning build
+
+  api:
+    name: API verify
+    needs: classify
+    if: needs.classify.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-dotnet
+      - name: Build API
+        run: >-
+          dotnet build apps/api/Source/GameGuild.API/GameGuild.API.csproj
+          -c Release --nologo -p:TreatWarningsAsErrors=true
+      - name: Run affected API tests
+        shell: bash
+        run: |
+          mapfile -t projects < <(node scripts/ci/select-affected-dotnet-tests.mjs \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}")
+          if ((${#projects[@]} == 0)); then
+            projects=(apps/api/tests/GameGuild.API.UnitTests/GameGuild.API.UnitTests.csproj)
+          fi
+          for project in "${projects[@]}"; do
+            dotnet test "$project" -c Release --nologo --blame-hang-timeout 5m
+          done
+
+  testing-lab:
+    name: Testing Lab critical flow
+    needs: [classify, web, api]
+    if: >-
+      always() &&
+      needs.classify.outputs.testingLab == 'true' &&
+      (needs.web.result == 'success' || needs.web.result == 'skipped') &&
+      (needs.api.result == 'success' || needs.api.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node-workspace
+      - uses: ./.github/actions/setup-dotnet
+      - name: Install Chromium
+        run: pnpm --filter @game-guild/web exec playwright install --with-deps chromium
+      - name: Run Testing Lab browser workflow
+        run: pnpm --filter @game-guild/web test:browser:testing-lab
+      - name: Upload Testing Lab evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: testing-lab-${{ github.event.pull_request.head.sha }}
+          path: artifacts/test-results
+          if-no-files-found: warn
+
+  openapi:
+    name: OpenAPI client consistency
+    needs: classify
+    if: needs.classify.outputs.openApi == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: gameguild
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d gameguild"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=gameguild;Username=postgres;Password=postgres
+      ConnectionStrings__AuthenticationDb: Host=localhost;Port=5432;Database=gameguild;Username=postgres;Password=postgres
+      ConnectionStrings__MigrationConnection: Host=localhost;Port=5432;Database=gameguild;Username=postgres;Password=postgres
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node-workspace
+      - uses: ./.github/actions/setup-dotnet
+      - name: Verify generated OpenAPI client
+        run: bash scripts/ci/verify-openapi-surface.sh
+      - name: Upload OpenAPI evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: openapi-${{ github.event.pull_request.head.sha }}
+          path: artifacts/test-results/openapi
+          if-no-files-found: error
+
+  migration:
+    name: Migration compatibility
+    needs: classify
+    if: needs.classify.outputs.migration == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: gameguild
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d gameguild"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: gameguild
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-node-workspace
+      - uses: ./.github/actions/setup-dotnet
+      - run: dotnet tool restore
+      - run: dotnet restore apps/api/Source/GameGuild.API/GameGuild.API.csproj
+      - name: Apply migrations to a clean database
+        run: >-
+          dotnet ef database update
+          --project apps/api/Source/GameGuild.API/GameGuild.API.csproj
+          --startup-project apps/api/Source/GameGuild.API/GameGuild.API.csproj
+      - name: Verify model and migrated schema agree
+        run: pnpm db:dbml:verify
+
+  economy:
+    name: Economy Release Gate
+    needs: classify
+    if: needs.classify.outputs.economyCritical == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-node-workspace
+      - uses: ./.github/actions/setup-dotnet
+      - name: Install Chromium
+        run: pnpm --filter @game-guild/web exec playwright install --with-deps chromium
+      - name: Run complete Economy release profile
+        env:
+          ECONOMY_GATE_PROFILE: full
+          ECONOMY_WHOLE_SOLUTION_JOBS: "2"
+          ECONOMY_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bash scripts/ci/verify-economy.sh
+      - name: Upload Economy evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: economy-${{ github.event.pull_request.head.sha }}
+          path: artifacts/test-results
+          if-no-files-found: error
+
+  required-gate:
+    name: PR Required Gate
+    if: always()
+    needs: [classify, repository-policy, web, learning, api, testing-lab, openapi, migration, economy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every selected gate
+        env:
+          GATE_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node - <<'NODE'
+          const gates = JSON.parse(process.env.GATE_RESULTS);
+          const failed = Object.entries(gates)
+            .filter(([, gate]) => gate.result === 'failure' || gate.result === 'cancelled')
+            .map(([name, gate]) => `${name}=${gate.result}`);
+          if (failed.length) {
+            console.error(`Required PR gates failed: ${failed.join(', ')}`);
+            process.exit(1);
+          }
+          console.log('Every selected PR gate passed or was intentionally skipped.');
+          NODE
