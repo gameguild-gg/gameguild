@@ -1,20 +1,24 @@
 # Deployment Smoke Checks
 
-Date: 2026-07-17
+Date: 2026-09-01
 
-Run the smoke gate after starting local services or after a Coolify redeploy:
+> Production releases run through Devtron and the immutable release workflow documented in [the Devtron production runbook](operations/devtron-production-release.md). The Coolify instructions below are legacy recovery material only during the three-release cutover window.
+
+Run the general smoke gate after starting local services:
 
 ```bash
 pnpm smoke
 ```
 
-For the public staging domains:
+For the public staging domains outside the release workflow:
 
 ```bash
 pnpm smoke:live
 ```
 
-Coolify is configured to deploy this branch from the Git push webhook. A normal release must use exactly one trigger:
+Production automatically runs `scripts/deploy/production-smoke.mjs` after exact release identity is verified. It checks API liveness/readiness, Web health, a no-cache Testing Lab event listing, authenticated event access, and project access before Cloudflare is purged.
+
+Legacy Coolify recovery, while the cutover window remains open, must use exactly one trigger:
 
 1. Push the verified commit and wait for the automatic Coolify deployment.
 2. Use the manual Coolify deploy API only for recovery when no webhook deployment exists.
@@ -37,7 +41,7 @@ The remaining checks verify:
 - Web app health, root, courses, programs, and learning dashboard routes.
 - Learning app root and sign-in route.
 
-## Coolify startup configuration
+## Legacy Coolify startup configuration
 
 Set `POSTGRES_MIGRATION_CONNECTION` to a full PostgreSQL connection string for a DDL-capable migration role. Its username must differ from `POSTGRES_USER`; the API fails startup initialization when the migration connection is absent or resolves to the runtime role. Do not grant blanket table privileges to the runtime role after migrations.
 
