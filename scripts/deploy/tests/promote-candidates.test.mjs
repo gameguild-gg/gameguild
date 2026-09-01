@@ -13,6 +13,7 @@ const releaseSha = 'a'.repeat(40);
 const treeSha = 'b'.repeat(40);
 const candidateDigest = `sha256:${'c'.repeat(64)}`;
 const previousDigest = `sha256:${'d'.repeat(64)}`;
+const linuxShellOnly = process.platform === 'win32' ? { skip: 'requires the Linux release shell and jq' } : {};
 
 async function run(command, args, options) {
   const child = spawn(command, args, { ...options, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -26,7 +27,7 @@ async function run(command, args, options) {
   return { exitCode, stdout, stderr };
 }
 
-test('promotes the verified candidate digest and preserves unchanged services', async (t) => {
+test('promotes the verified candidate digest and preserves unchanged services', linuxShellOnly, async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'gameguild-promote-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const fakeBin = join(root, 'bin');
