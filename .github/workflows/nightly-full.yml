@@ -23,8 +23,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup-node-workspace
       - uses: ./.github/actions/setup-dotnet
-      - name: Install Chromium
-        run: pnpm --filter @game-guild/web exec playwright install --with-deps chromium
+      - uses: ./.github/actions/setup-playwright
       - name: Run complete verification
         env:
           ECONOMY_GATE_PROFILE: full

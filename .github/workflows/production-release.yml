@@ -1,0 +1,278 @@
+name: Production Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: production-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Resolve tested release candidate
+    runs-on: ubuntu-latest
+    outputs:
+      runtimeChanged: ${{ steps.classify.outputs.runtimeChanged }}
+      services: ${{ steps.classify.outputs.runtimeServiceMatrix }}
+      migration: ${{ steps.classify.outputs.migration }}
+      treeSha: ${{ steps.identity.outputs.treeSha }}
+      releasedAt: ${{ steps.identity.outputs.releasedAt }}
+      verificationRunId: ${{ steps.verification.outputs.runId }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Resolve release base
+        id: base
+        env:
+          EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          base="$EVENT_BEFORE"
+          if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
+            base=$(git rev-parse HEAD^)
+          fi
+          echo "sha=$base" >> "$GITHUB_OUTPUT"
+      - name: Classify release surfaces
+        id: classify
+        run: >-
+          node scripts/ci/classify-release-changes.mjs
+          --base "${{ steps.base.outputs.sha }}"
+          --head "${{ github.sha }}"
+      - name: Resolve immutable release identity
+        id: identity
+        run: |
+          echo "treeSha=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+          echo "releasedAt=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+      - name: Locate the successful PR verification run
+        id: verification
+        if: steps.classify.outputs.runtimeChanged == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          pr_json=$(gh api \
+            -H 'Accept: application/vnd.github+json' \
+            "/repos/$REPOSITORY/commits/$RELEASE_SHA/pulls")
+          pr_number=$(jq -r 'map(select(.merged_at != null))[0].number // empty' <<<"$pr_json")
+          head_sha=$(jq -r 'map(select(.merged_at != null))[0].head.sha // empty' <<<"$pr_json")
+          if [[ -z "$pr_number" || -z "$head_sha" ]]; then
+            echo 'The main commit is not associated with a merged pull request.' >&2
+            exit 1
+          fi
+          run_id=$(gh run list \
+            --repo "$REPOSITORY" \
+            --workflow pr-verify.yml \
+            --event pull_request \
+            --status success \
+            --commit "$head_sha" \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty')
+          if [[ -z "$run_id" ]]; then
+            echo "No successful PR Verify run exists for PR #$pr_number ($head_sha)." >&2
+            exit 1
+          fi
+          echo "runId=$run_id" >> "$GITHUB_OUTPUT"
+          echo "Using PR #$pr_number verification run $run_id."
+
+  promote:
+    name: Promote exact candidate digests
+    needs: prepare
+    if: needs.prepare.outputs.runtimeChanged == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.DEVTRON_REGISTRY_HOST }}
+          username: ${{ secrets.DEVTRON_REGISTRY_USERNAME }}
+          password: ${{ secrets.DEVTRON_REGISTRY_PASSWORD }}
+      - uses: oras-project/setup-oras@v1
+      - name: Validate registry release configuration
+        env:
+          REGISTRY_HOST: ${{ vars.DEVTRON_REGISTRY_HOST }}
+          REGISTRY_NAMESPACE: ${{ vars.DEVTRON_REGISTRY_NAMESPACE }}
+          REGISTRY_USERNAME: ${{ secrets.DEVTRON_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.DEVTRON_REGISTRY_PASSWORD }}
+        run: |
+          for value in "$REGISTRY_HOST" "$REGISTRY_NAMESPACE" "$REGISTRY_USERNAME" "$REGISTRY_PASSWORD"; do
+            if [[ -z "$value" ]]; then
+              echo 'Devtron registry release configuration is incomplete.' >&2
+              exit 1
+            fi
+          done
+          printf '%s' "$REGISTRY_PASSWORD" | oras login "$REGISTRY_HOST" --username "$REGISTRY_USERNAME" --password-stdin
+      - name: Download the tested candidate evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERIFY_RUN_ID: ${{ needs.prepare.outputs.verificationRunId }}
+          TREE_SHA: ${{ needs.prepare.outputs.treeSha }}
+        run: >-
+          gh run download "$VERIFY_RUN_ID"
+          --repo "${{ github.repository }}"
+          --pattern "candidate-*-${TREE_SHA}"
+          --dir candidate-evidence
+      - name: Load previous stable release state
+        env:
+          STATE_IMAGE: ${{ vars.DEVTRON_REGISTRY_HOST }}/${{ vars.DEVTRON_REGISTRY_NAMESPACE }}/gameguild-release-state
+          ALLOW_MISSING_STATE: ${{ vars.ALLOW_INITIAL_RELEASE_WITHOUT_STABLE }}
+        run: |
+          mkdir -p previous-state
+          if oras pull "$STATE_IMAGE:stable" --output previous-state; then
+            test -s previous-state/release-manifest.json
+          elif [[ "$ALLOW_MISSING_STATE" == 'true' ]]; then
+            printf '{"services":[]}\n' > previous-state/release-manifest.json
+          else
+            echo 'No stable release state exists. Seed and validate staging before production cutover.' >&2
+            exit 1
+          fi
+      - name: Promote candidates without rebuilding
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+          TREE_SHA: ${{ needs.prepare.outputs.treeSha }}
+          SERVICES_JSON: ${{ needs.prepare.outputs.services }}
+          REGISTRY_HOST: ${{ vars.DEVTRON_REGISTRY_HOST }}
+          REGISTRY_NAMESPACE: ${{ vars.DEVTRON_REGISTRY_NAMESPACE }}
+          VERIFICATION_RUN_ID: ${{ needs.prepare.outputs.verificationRunId }}
+          RELEASED_AT: ${{ needs.prepare.outputs.releasedAt }}
+          MIGRATION_REQUIRED: ${{ needs.prepare.outputs.migration }}
+          PREVIOUS_MANIFEST: previous-state/release-manifest.json
+        run: bash scripts/deploy/promote-candidates.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-plan-${{ github.sha }}
+          path: artifacts/release
+          retention-days: 30
+          if-no-files-found: error
+
+  deploy:
+    name: Roll out through Devtron
+    needs: [prepare, promote]
+    if: needs.prepare.outputs.runtimeChanged == 'true' && needs.promote.result == 'success'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-plan-${{ github.sha }}
+          path: artifacts/release
+      - uses: oras-project/setup-oras@v1
+      - name: Preflight production and rollback configuration
+        env:
+          SERVICES_JSON: ${{ needs.prepare.outputs.services }}
+          DEVTRON_BASE_URL: ${{ vars.DEVTRON_BASE_URL }}
+          DEVTRON_API_TOKEN: ${{ secrets.DEVTRON_API_TOKEN }}
+          DEVTRON_EXTERNAL_CI_ID_API: ${{ vars.DEVTRON_EXTERNAL_CI_ID_API }}
+          DEVTRON_EXTERNAL_CI_ID_WEB: ${{ vars.DEVTRON_EXTERNAL_CI_ID_WEB }}
+          DEVTRON_EXTERNAL_CI_ID_LEARNING: ${{ vars.DEVTRON_EXTERNAL_CI_ID_LEARNING }}
+          DEVTRON_RELEASE_IDENTITY_CONFIGURED: ${{ vars.DEVTRON_RELEASE_IDENTITY_CONFIGURED }}
+          GAMEGUILD_API_URL: ${{ vars.GAMEGUILD_API_URL }}
+          GAMEGUILD_WEB_URL: ${{ vars.GAMEGUILD_WEB_URL }}
+          GAMEGUILD_LEARNING_URL: ${{ vars.GAMEGUILD_LEARNING_URL }}
+          GAMEGUILD_SMOKE_ADMIN_EMAIL: ${{ secrets.GAMEGUILD_SMOKE_ADMIN_EMAIL }}
+          GAMEGUILD_SMOKE_ADMIN_PASSWORD: ${{ secrets.GAMEGUILD_SMOKE_ADMIN_PASSWORD }}
+          GAMEGUILD_SMOKE_PROJECT_ID: ${{ vars.GAMEGUILD_SMOKE_PROJECT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+        run: |
+          for value in \
+            "$DEVTRON_BASE_URL" "$DEVTRON_API_TOKEN" \
+            "$GAMEGUILD_API_URL" "$GAMEGUILD_WEB_URL" \
+            "$GAMEGUILD_SMOKE_ADMIN_EMAIL" "$GAMEGUILD_SMOKE_ADMIN_PASSWORD" \
+            "$GAMEGUILD_SMOKE_PROJECT_ID" "$CLOUDFLARE_API_TOKEN" "$CLOUDFLARE_ZONE_ID"; do
+            if [[ -z "$value" ]]; then
+              echo 'Production release configuration is incomplete.' >&2
+              exit 1
+            fi
+          done
+          if [[ "$DEVTRON_RELEASE_IDENTITY_CONFIGURED" != 'true' ]]; then
+            echo 'Devtron must inject release SHA, image digest, and deployment time before rollout.' >&2
+            exit 1
+          fi
+          for service in $(jq -r '.[]' <<<"$SERVICES_JSON"); do
+            variable="DEVTRON_EXTERNAL_CI_ID_${service^^}"
+            if [[ -z "${!variable:-}" ]]; then
+              echo "$variable is required." >&2
+              exit 1
+            fi
+            url_variable="GAMEGUILD_${service^^}_URL"
+            if [[ -z "${!url_variable:-}" ]]; then
+              echo "$url_variable is required." >&2
+              exit 1
+            fi
+          done
+      - name: Deploy API before Web and roll back on failure
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+          TREE_SHA: ${{ needs.prepare.outputs.treeSha }}
+          RELEASED_AT: ${{ needs.prepare.outputs.releasedAt }}
+          MIGRATION_REQUIRED: ${{ needs.prepare.outputs.migration }}
+          DEVTRON_API_PREDEPLOY_MIGRATIONS: ${{ vars.DEVTRON_API_PREDEPLOY_MIGRATIONS }}
+          DEVTRON_BASE_URL: ${{ vars.DEVTRON_BASE_URL }}
+          DEVTRON_API_TOKEN: ${{ secrets.DEVTRON_API_TOKEN }}
+          DEVTRON_EXTERNAL_CI_ID_API: ${{ vars.DEVTRON_EXTERNAL_CI_ID_API }}
+          DEVTRON_EXTERNAL_CI_ID_WEB: ${{ vars.DEVTRON_EXTERNAL_CI_ID_WEB }}
+          DEVTRON_EXTERNAL_CI_ID_LEARNING: ${{ vars.DEVTRON_EXTERNAL_CI_ID_LEARNING }}
+          GAMEGUILD_API_URL: ${{ vars.GAMEGUILD_API_URL }}
+          GAMEGUILD_WEB_URL: ${{ vars.GAMEGUILD_WEB_URL }}
+          GAMEGUILD_LEARNING_URL: ${{ vars.GAMEGUILD_LEARNING_URL }}
+          GAMEGUILD_SMOKE_ADMIN_EMAIL: ${{ secrets.GAMEGUILD_SMOKE_ADMIN_EMAIL }}
+          GAMEGUILD_SMOKE_ADMIN_PASSWORD: ${{ secrets.GAMEGUILD_SMOKE_ADMIN_PASSWORD }}
+          GAMEGUILD_SMOKE_PROJECT_ID: ${{ vars.GAMEGUILD_SMOKE_PROJECT_ID }}
+          ROLLOUT_TIMEOUT_MS: "300000"
+        run: bash scripts/deploy/rollout-devtron.sh
+      - name: Publish stable release state
+        env:
+          REGISTRY_HOST: ${{ vars.DEVTRON_REGISTRY_HOST }}
+          REGISTRY_USERNAME: ${{ secrets.DEVTRON_REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.DEVTRON_REGISTRY_PASSWORD }}
+          STATE_IMAGE: ${{ vars.DEVTRON_REGISTRY_HOST }}/${{ vars.DEVTRON_REGISTRY_NAMESPACE }}/gameguild-release-state
+        run: |
+          printf '%s' "$REGISTRY_PASSWORD" | oras login "$REGISTRY_HOST" --username "$REGISTRY_USERNAME" --password-stdin
+          oras push \
+            "$STATE_IMAGE:release-${{ github.sha }}" \
+            --artifact-type application/vnd.gameguild.release-manifest.v1+json \
+            artifacts/release/release-manifest.json:application/json
+          oras cp "$STATE_IMAGE:release-${{ github.sha }}" "$STATE_IMAGE:stable"
+      - name: Purge Cloudflare after confirmed rollout
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}
+        run: |
+          response=$(curl --fail --silent --show-error \
+            --retry 3 --retry-all-errors --connect-timeout 10 --max-time 30 \
+            -X POST "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data '{"purge_everything":true}')
+          jq -e '.success == true' <<<"$response" >/dev/null
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: production-release-${{ github.sha }}
+          path: artifacts/release
+          retention-days: 30
+          if-no-files-found: error
+
+  no-runtime-release:
+    name: No runtime deployment required
+    needs: prepare
+    if: needs.prepare.outputs.runtimeChanged != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'The main change does not affect a runtime service.'
