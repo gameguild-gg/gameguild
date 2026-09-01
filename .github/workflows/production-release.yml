@@ -3,6 +3,20 @@ name: Production Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      hotfix_ref:
+        description: Existing hotfix/* branch with a green PR Verify run
+        required: true
+        type: string
+      incident:
+        description: Incident or change record authorizing this hotfix
+        required: true
+        type: string
+      confirmation:
+        description: Type DEPLOY HOTFIX to confirm the audited exception
+        required: true
+        type: string
 
 permissions:
   actions: read
@@ -22,23 +36,92 @@ jobs:
       services: ${{ steps.classify.outputs.runtimeServiceMatrix }}
       migration: ${{ steps.classify.outputs.migration }}
       treeSha: ${{ steps.identity.outputs.treeSha }}
+      releaseSha: ${{ steps.base.outputs.releaseSha }}
+      releaseMode: ${{ steps.base.outputs.releaseMode }}
       releasedAt: ${{ steps.identity.outputs.releasedAt }}
       verificationRunId: ${{ steps.verification.outputs.runId }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.hotfix_ref || github.sha }}
       - uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: Resolve release base
         id: base
         env:
+          EVENT_NAME: ${{ github.event_name }}
           EVENT_BEFORE: ${{ github.event.before }}
+          HOTFIX_REF: ${{ inputs.hotfix_ref }}
+          HOTFIX_INCIDENT: ${{ inputs.incident }}
+          HOTFIX_CONFIRMATION: ${{ inputs.confirmation }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
         run: |
-          base="$EVENT_BEFORE"
-          if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
-            base=$(git rev-parse HEAD^)
+          if [[ "$EVENT_NAME" == 'workflow_dispatch' ]]; then
+            branch="${HOTFIX_REF#refs/heads/}"
+            if [[ ! "$branch" =~ ^hotfix/.+ ]]; then
+              echo 'Manual production releases are restricted to hotfix/* branches.' >&2
+              exit 1
+            fi
+            if [[ "$HOTFIX_CONFIRMATION" != 'DEPLOY HOTFIX' || -z "$HOTFIX_INCIDENT" ]]; then
+              echo 'An incident record and the exact DEPLOY HOTFIX confirmation are required.' >&2
+              exit 1
+            fi
+
+            actor_is_admin=$(gh api "/repos/$REPOSITORY/collaborators/$GITHUB_ACTOR/permission" \
+              --jq '.user.permissions.admin // false')
+            if [[ "$actor_is_admin" != 'true' ]]; then
+              echo "Only a repository administrator may promote a production hotfix; $GITHUB_ACTOR is not an administrator." >&2
+              exit 1
+            fi
+
+            git fetch origin \
+              "+refs/heads/main:refs/remotes/origin/main" \
+              "+refs/heads/$branch:refs/remotes/origin/$branch"
+            head_sha=$(git rev-parse HEAD)
+            if ! git merge-base --is-ancestor origin/main "$head_sha"; then
+              echo 'The hotfix branch must contain the latest main commit.' >&2
+              exit 1
+            fi
+
+            pr_json=$(gh api "/repos/$REPOSITORY/commits/$head_sha/pulls")
+            pr_number=$(jq -r \
+              --arg branch "$branch" \
+              'map(select(.state == "open" and .base.ref == "main" and .head.ref == $branch))[0].number // empty' \
+              <<<"$pr_json")
+            if [[ -z "$pr_number" ]]; then
+              echo 'The hotfix must have an open pull request targeting main.' >&2
+              exit 1
+            fi
+
+            git fetch origin "+refs/pull/$pr_number/merge:refs/remotes/pull/$pr_number/merge"
+            git checkout --detach "refs/remotes/pull/$pr_number/merge"
+            base=$(git rev-parse origin/main)
+            {
+              echo "prNumber=$pr_number"
+              echo "verificationHead=$head_sha"
+              echo "releaseSha=$head_sha"
+              echo 'releaseMode=hotfix'
+            } >> "$GITHUB_OUTPUT"
+            {
+              printf '### Audited hotfix\n\n'
+              printf -- '- Actor: %s\n' "$GITHUB_ACTOR"
+              printf -- '- Branch: %s\n' "$branch"
+              printf -- '- PR: #%s\n' "$pr_number"
+              printf -- '- Incident: %s\n' "$HOTFIX_INCIDENT"
+              printf -- '- Source: %s\n' "$head_sha"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            base="$EVENT_BEFORE"
+            if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
+              base=$(git rev-parse HEAD^)
+            fi
+            {
+              echo "releaseSha=$GITHUB_SHA"
+              echo 'releaseMode=main'
+            } >> "$GITHUB_OUTPUT"
           fi
           echo "sha=$base" >> "$GITHUB_OUTPUT"
       - name: Classify release surfaces
@@ -46,28 +129,38 @@ jobs:
         run: >-
           node scripts/ci/classify-release-changes.mjs
           --base "${{ steps.base.outputs.sha }}"
-          --head "${{ github.sha }}"
+          --head "$(git rev-parse HEAD)"
       - name: Resolve immutable release identity
         id: identity
         run: |
-          echo "treeSha=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
-          echo "releasedAt=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+          {
+            echo "treeSha=$(git rev-parse 'HEAD^{tree}')"
+            echo "releasedAt=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          } >> "$GITHUB_OUTPUT"
       - name: Locate the successful PR verification run
         id: verification
         if: steps.classify.outputs.runtimeChanged == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
-          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_SHA: ${{ steps.base.outputs.releaseSha }}
+          RELEASE_MODE: ${{ steps.base.outputs.releaseMode }}
+          HOTFIX_PR_NUMBER: ${{ steps.base.outputs.prNumber }}
+          HOTFIX_VERIFY_HEAD: ${{ steps.base.outputs.verificationHead }}
         run: |
-          pr_json=$(gh api \
-            -H 'Accept: application/vnd.github+json' \
-            "/repos/$REPOSITORY/commits/$RELEASE_SHA/pulls")
-          pr_number=$(jq -r 'map(select(.merged_at != null))[0].number // empty' <<<"$pr_json")
-          head_sha=$(jq -r 'map(select(.merged_at != null))[0].head.sha // empty' <<<"$pr_json")
-          if [[ -z "$pr_number" || -z "$head_sha" ]]; then
-            echo 'The main commit is not associated with a merged pull request.' >&2
-            exit 1
+          if [[ "$RELEASE_MODE" == 'hotfix' ]]; then
+            pr_number="$HOTFIX_PR_NUMBER"
+            head_sha="$HOTFIX_VERIFY_HEAD"
+          else
+            pr_json=$(gh api \
+              -H 'Accept: application/vnd.github+json' \
+              "/repos/$REPOSITORY/commits/$RELEASE_SHA/pulls")
+            pr_number=$(jq -r 'map(select(.merged_at != null))[0].number // empty' <<<"$pr_json")
+            head_sha=$(jq -r 'map(select(.merged_at != null))[0].head.sha // empty' <<<"$pr_json")
+            if [[ -z "$pr_number" || -z "$head_sha" ]]; then
+              echo 'The main commit is not associated with a merged pull request.' >&2
+              exit 1
+            fi
           fi
           run_id=$(gh run list \
             --repo "$REPOSITORY" \
@@ -141,7 +234,7 @@ jobs:
           fi
       - name: Promote candidates without rebuilding
         env:
-          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.releaseSha }}
           TREE_SHA: ${{ needs.prepare.outputs.treeSha }}
           SERVICES_JSON: ${{ needs.prepare.outputs.services }}
           REGISTRY_HOST: ${{ vars.DEVTRON_REGISTRY_HOST }}
@@ -153,7 +246,7 @@ jobs:
         run: bash scripts/deploy/promote-candidates.sh
       - uses: actions/upload-artifact@v7
         with:
-          name: release-plan-${{ github.sha }}
+          name: release-plan-${{ needs.prepare.outputs.releaseSha }}
           path: artifacts/release
           retention-days: 30
           if-no-files-found: error
@@ -169,7 +262,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
-          name: release-plan-${{ github.sha }}
+          name: release-plan-${{ needs.prepare.outputs.releaseSha }}
           path: artifacts/release
       - uses: oras-project/setup-oras@v1
       - name: Preflight production and rollback configuration
@@ -218,7 +311,7 @@ jobs:
           done
       - name: Deploy API before Web and roll back on failure
         env:
-          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.releaseSha }}
           TREE_SHA: ${{ needs.prepare.outputs.treeSha }}
           RELEASED_AT: ${{ needs.prepare.outputs.releasedAt }}
           MIGRATION_REQUIRED: ${{ needs.prepare.outputs.migration }}
@@ -245,10 +338,10 @@ jobs:
         run: |
           printf '%s' "$REGISTRY_PASSWORD" | oras login "$REGISTRY_HOST" --username "$REGISTRY_USERNAME" --password-stdin
           oras push \
-            "$STATE_IMAGE:release-${{ github.sha }}" \
+            "$STATE_IMAGE:release-${{ needs.prepare.outputs.releaseSha }}" \
             --artifact-type application/vnd.gameguild.release-manifest.v1+json \
             artifacts/release/release-manifest.json:application/json
-          oras cp "$STATE_IMAGE:release-${{ github.sha }}" "$STATE_IMAGE:stable"
+          oras cp "$STATE_IMAGE:release-${{ needs.prepare.outputs.releaseSha }}" "$STATE_IMAGE:stable"
       - name: Purge Cloudflare after confirmed rollout
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -264,7 +357,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: production-release-${{ github.sha }}
+          name: production-release-${{ needs.prepare.outputs.releaseSha }}
           path: artifacts/release
           retention-days: 30
           if-no-files-found: error
