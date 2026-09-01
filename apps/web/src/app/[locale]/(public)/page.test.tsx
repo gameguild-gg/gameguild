@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
 }));
 
-vi.mock('@/auth', () => ({ auth: mocks.auth }));
+vi.mock('@/auth', () => ({ auth: mocks.auth, getToken: vi.fn().mockResolvedValue(null) }));
 vi.mock('@/components/feed/feed-shell', () => ({
   FeedShell: ({ tab }: { tab?: string }) => <div data-testid="feed-shell" data-tab={tab ?? 'foryou'} />,
 }));
@@ -14,6 +14,14 @@ vi.mock('@/i18n/navigation', () => ({
   Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
     <a href={href}>{children}</a>
   ),
+}));
+vi.mock('@/lib/community/public-community-queries', () => ({
+  getPublicActivities: vi.fn().mockResolvedValue([]),
+  getPublicMemberSpotlights: vi.fn().mockResolvedValue([]),
+  getPublicPlaytests: vi.fn().mockResolvedValue([]),
+}));
+vi.mock('@/lib/projects/public-projects', () => ({
+  getPublishedProjects: vi.fn().mockResolvedValue([]),
 }));
 
 import RootPage from './page';

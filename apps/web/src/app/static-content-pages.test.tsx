@@ -19,6 +19,16 @@ vi.mock('@/i18n/navigation', () => ({
   usePathname: () => '/',
 }));
 
+vi.mock('@/lib/community/public-community-queries', () => ({
+  getPublicActivities: vi.fn().mockResolvedValue([]),
+  getPublicMemberSpotlights: vi.fn().mockResolvedValue([]),
+  getPublicPlaytests: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('@/lib/projects/public-projects', () => ({
+  getPublishedProjects: vi.fn().mockResolvedValue([]),
+}));
+
 import LicensesPage from './[locale]/(legal)/legal/licenses/page';
 import FerpaWaiverPage from './[locale]/(legal)/legal/ferpa-waiver/page';
 import AcademicHonestyPage from './[locale]/(legal)/legal/academic-honesty/page';
