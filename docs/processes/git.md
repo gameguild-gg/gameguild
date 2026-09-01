@@ -1,5 +1,11 @@
 # Git Workflow
 
+## Production delivery
+
+All changes to `main`, including hotfixes, go through an internal pull request and the stable `PR Required Gate`. Production images are built and tested before merge, then promoted by immutable digest through Devtron. The normal deployment is automatic and does not wait for a manual Devtron approval. See [the Devtron production release runbook](../operations/devtron-production-release.md).
+
+Repository administrators may invoke the audited hotfix path for a current `hotfix/*` PR, but cannot skip its targeted gates or the complete Economy gate when Economy is affected.
+
 ## Overview
 
 The full lifecycle: feature flows into `develop`, `develop` flows into `release`, `release` flows into both `main` (tagged) and `develop`, and `hotfix` branches from `main` flow back into both `main` (tagged) and `develop`.
