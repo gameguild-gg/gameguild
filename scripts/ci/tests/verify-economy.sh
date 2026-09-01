@@ -59,7 +59,7 @@ run_test() {
 
 test_shell_only_ci_policy() {
   ! find "$ci_dir" -type f \( -name '*.ps1' -o -name '*.psm1' \) -print -quit | grep -q . || return 1
-  ! grep -qiE 'pwsh|powershell|\.ps1|\.psm1' "$repository_root/.github/workflows/main.yml" || return 1
+  ! grep -RqiE 'pwsh|powershell|\.ps1|\.psm1' "$repository_root/.github/workflows" || return 1
   grep -q '"ci:dependencies": "bash scripts/ci/install-and-audit-pnpm.sh"' "$repository_root/package.json" || return 1
   grep -q '"ci:repository-policy": "bash scripts/ci/verify-repository-policy.sh"' "$repository_root/package.json" || return 1
   grep -q '"ci:economy": "bash scripts/ci/verify-economy.sh"' "$repository_root/package.json" || return 1
@@ -72,7 +72,7 @@ test_shell_only_ci_policy() {
 }
 
 test_contributors_visualization_uses_native_xvfb() {
-  local workflow="$repository_root/.github/workflows/main.yml"
+  local workflow="$repository_root/.github/workflows/contributors.yml"
 
   grep -Fq 'sudo apt-get install -y --fix-missing ffmpeg gource xvfb' "$workflow" || return 1
   grep -Fq 'xvfb-run --auto-servernum env OUTPUT_DIR="${RUNNER_TEMP}/gameguild-gource" ./contributors/gource.sh' "$workflow" || return 1
@@ -81,10 +81,8 @@ test_contributors_visualization_uses_native_xvfb() {
 
 test_release_flow_opens_version_pr_to_main() {
   local emception_workflow="$repository_root/.github/workflows/emception.yml"
-  local main_workflow="$repository_root/.github/workflows/main.yml"
 
   [[ ! -e "$repository_root/.github/workflows/release.yml" ]] || return 1
-  ! grep -Fq 'release.yml' "$main_workflow" || return 1
   grep -Fq 'uses: changesets/action@v2' "$emception_workflow" || return 1
   grep -Fq 'version-script: pnpm run version:emception' "$emception_workflow" || return 1
   grep -Fq 'run: pnpm run publish:emception' "$emception_workflow" || return 1
@@ -93,30 +91,35 @@ test_release_flow_opens_version_pr_to_main() {
 }
 
 test_repository_policy_runs_in_a_parallel_required_gate() {
-  local workflow="$repository_root/.github/workflows/main.yml"
+  local workflow="$repository_root/.github/workflows/pr-verify.yml"
 
-  grep -Fq 'repository-policy-gate:' "$workflow" || return 1
-  grep -Fq 'name: Repository Policy Gate' "$workflow" || return 1
+  grep -Fq 'repository-policy:' "$workflow" || return 1
+  grep -Fq 'name: Repository policy' "$workflow" || return 1
   grep -Fq 'run: bash scripts/ci/verify-repository-policy.sh' "$workflow" || return 1
-  ! grep -Fq 'needs: [repository-policy-gate]' "$workflow" || return 1
+  grep -Fq 'needs: [classify, repository-policy,' "$workflow"
 }
 
 test_workflow_uses_fast_pr_and_full_release_economy_profiles() {
-  local workflow="$repository_root/.github/workflows/main.yml"
+  local pr_workflow="$repository_root/.github/workflows/pr-verify.yml"
+  local nightly_workflow="$repository_root/.github/workflows/nightly-full.yml"
 
-  grep -Fq 'name: Economy PR Gate' "$workflow" || return 1
-  grep -Fq 'name: Economy Release Gate' "$workflow" || return 1
-  grep -Fq 'ECONOMY_GATE_PROFILE: pr' "$workflow" || return 1
-  grep -Fq 'ECONOMY_GATE_PROFILE: full' "$workflow"
+  grep -Fq 'name: Economy Release Gate' "$pr_workflow" || return 1
+  grep -Fq "needs.classify.outputs.economyCritical == 'true'" "$pr_workflow" || return 1
+  grep -Fq 'ECONOMY_GATE_PROFILE: full' "$pr_workflow" || return 1
+  grep -Fq 'cron: "17 3 * * *"' "$nightly_workflow" || return 1
+  grep -Fq 'ECONOMY_GATE_PROFILE: full' "$nightly_workflow"
 }
 
 test_workflow_caches_gate_dependencies() {
-  local workflow="$repository_root/.github/workflows/main.yml"
+  local node_setup="$repository_root/.github/actions/setup-node-workspace/action.yml"
+  local dotnet_setup="$repository_root/.github/actions/setup-dotnet/action.yml"
+  local playwright_setup="$repository_root/.github/actions/setup-playwright/action.yml"
 
-  grep -Fq 'actions/cache@v4' "$workflow" || return 1
-  grep -Fq 'nuget-packages-' "$workflow" || return 1
-  grep -Fq 'pnpm-store-' "$workflow" || return 1
-  grep -Fq 'playwright-browsers-' "$workflow"
+  grep -Fq 'cache: pnpm' "$node_setup" || return 1
+  grep -Fq 'actions/cache@v4' "$dotnet_setup" || return 1
+  grep -Fq 'key: nuget-' "$dotnet_setup" || return 1
+  grep -Fq 'actions/cache@v4' "$playwright_setup" || return 1
+  grep -Fq 'playwright-browsers-' "$playwright_setup"
 }
 
 test_economy_preflight_has_no_repository_policy_side_effect() {

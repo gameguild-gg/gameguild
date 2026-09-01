@@ -1,0 +1,15 @@
+name: Setup Playwright Chromium
+description: Cache and install the pinned Chromium browser runtime
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-browsers-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'apps/web/package.json') }}
+        restore-keys: |
+          playwright-browsers-${{ runner.os }}-
+    - name: Install Chromium
+      shell: bash
+      run: pnpm --filter @game-guild/web exec playwright install --with-deps chromium

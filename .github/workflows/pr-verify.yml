@@ -153,8 +153,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-node-workspace
       - uses: ./.github/actions/setup-dotnet
-      - name: Install Chromium
-        run: pnpm --filter @game-guild/web exec playwright install --with-deps chromium
+      - uses: ./.github/actions/setup-playwright
       - name: Run Testing Lab browser workflow
         run: pnpm --filter @game-guild/web test:browser:testing-lab
       - name: Upload Testing Lab evidence
@@ -253,8 +252,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/setup-node-workspace
       - uses: ./.github/actions/setup-dotnet
-      - name: Install Chromium
-        run: pnpm --filter @game-guild/web exec playwright install --with-deps chromium
+      - uses: ./.github/actions/setup-playwright
       - name: Run complete Economy release profile
         env:
           ECONOMY_GATE_PROFILE: full
