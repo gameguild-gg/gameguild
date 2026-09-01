@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
+import { readReleaseIdentity } from '@/lib/server/release-identity';
 import { elapsedMs, getErrorMessage, getRequestId, logWebRequest } from '@/lib/server/request-logging';
 
 export const GET = async (request: Request): Promise<NextResponse> => {
   const startedAt = performance.now();
   const requestId = getRequestId(request.headers);
+  const releaseIdentity = readReleaseIdentity();
 
   try {
     const response = NextResponse.json(
@@ -11,11 +13,12 @@ export const GET = async (request: Request): Promise<NextResponse> => {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         service: 'web',
-        version: process.env.npm_package_version || 'Unknown',
+        ...releaseIdentity,
       },
       { status: 200 },
     );
     response.headers.set('x-request-id', requestId);
+    response.headers.set('X-GameGuild-Release-Sha', releaseIdentity.releaseSha);
     logWebRequest({
       event: 'web.route.complete',
       method: request.method,
@@ -32,11 +35,13 @@ export const GET = async (request: Request): Promise<NextResponse> => {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
         service: 'web',
+        ...releaseIdentity,
         error: getErrorMessage(error) ?? 'Unknown error',
       },
       { status: 503 },
     );
     response.headers.set('x-request-id', requestId);
+    response.headers.set('X-GameGuild-Release-Sha', releaseIdentity.releaseSha);
     logWebRequest({
       event: 'web.route.error',
       method: request.method,
