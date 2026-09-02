@@ -53,14 +53,14 @@ describe("services/route GET", () => {
     expect(byName.API).toBe("pass");
     expect(byName.Web).toBe("pass");
     expect(byName.Registry).toBe("pass");
-    expect(byName.AFFiNE).toBe("pass");
+    expect(byName.Excalidraw).toBe("pass");
     expect(body).toHaveLength(8);
   });
 
-  it("returns fail for AFFiNE when /info returns 500, others still pass", async () => {
+  it("returns fail for Excalidraw when the probe returns 500, others still pass", async () => {
     globalThis.fetch = vi.fn(async (input: URL | RequestInfo, _init?: RequestInit) => {
       const u = String(input);
-      if (u.includes("/info")) return new Response("", { status: 500 });
+      if (u.includes("excalidraw")) return new Response("", { status: 500 });
       if (u.includes("/api/healthz")) return jsonRes({ status: "pass" });
       if (u.includes("devtron-service")) return jsonRes({ result: "OK" });
       if (u.includes("grafana")) return jsonRes({ database: "ok" });
@@ -71,7 +71,7 @@ describe("services/route GET", () => {
 
     const body = (await (await GET()).json()) as Array<{ name: string; status: string }>;
     const byName = Object.fromEntries(body.map((r) => [r.name, r.status]));
-    expect(byName.AFFiNE).toBe("fail");
+    expect(byName.Excalidraw).toBe("fail");
     expect(body).toHaveLength(8);
     expect(body.filter((r) => r.status === "pass")).toHaveLength(7);
   });
