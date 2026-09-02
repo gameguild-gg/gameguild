@@ -16,7 +16,7 @@ const acceptableAiUses = [
 const unacceptableAiUses = [
   'You cannot copy the question, prompt an AI to answer it, and use the answer as your own.',
   'You cannot ask AI to code a solution for you.',
-  'You cannot use any AI while coding (e.g., GitHub Copilot); use a plain IDE instead.',
+  'You cannot use any AI while coding (e.g., GitHub Copilot); use an IDE instead without advanced autocomplete features.',
   'You cannot use AI assistance to solve quizzes or exams under any circumstances.',
   'Even in accepted cases, using AI assistance without citing it is considered plagiarism: it will be reported and zeroed.',
 ];
