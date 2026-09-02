@@ -55,8 +55,8 @@ const SERVICES: readonly ServiceProbe[] = [
     pass: (_b, s) => s === 401,
   },
   {
-    name: "AFFiNE",
-    url: "http://affine.affine.svc.cluster.local:3010/info",
+    name: "Excalidraw",
+    url: "http://excalidraw.draw.svc.cluster.local/",
     pass: (_b, s) => s === 200,
   },
 ];
