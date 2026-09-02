@@ -116,9 +116,9 @@ test_workflow_caches_gate_dependencies() {
   local playwright_setup="$repository_root/.github/actions/setup-playwright/action.yml"
 
   grep -Fq 'cache: pnpm' "$node_setup" || return 1
-  grep -Fq 'actions/cache@v4' "$dotnet_setup" || return 1
+  grep -Fq 'actions/cache@v6' "$dotnet_setup" || return 1
   grep -Fq 'key: nuget-' "$dotnet_setup" || return 1
-  grep -Fq 'actions/cache@v4' "$playwright_setup" || return 1
+  grep -Fq 'actions/cache@v6' "$playwright_setup" || return 1
   grep -Fq 'playwright-browsers-' "$playwright_setup"
 }
 
