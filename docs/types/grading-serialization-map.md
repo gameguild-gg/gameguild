@@ -31,9 +31,16 @@ AssessmentSubmission
   Score / Passed / Feedback / GradedAt      <- resultado confiavel
 ```
 
-`ContentGradingDefinition` pertence ao conteudo. `Assessment` e uma projecao
-operacional desse conteudo. `AssessmentGroup.WeightPercent` decide participacao
-no gradebook. `AssessmentSubmission` guarda tentativas e resultados confiaveis.
+No codigo atual, `ContentGradingDefinition` pertence ao conteudo e mistura itens
+autorais com policies operacionais. O alvo aprovado separa
+`ContentGradingDefinitionV2`, limitado aos items, de
+`AssessmentExecutionPolicyV1`, pertencente ao assessment.
+`AssessmentGroup.WeightPercent` decide participacao no gradebook.
+`AssessmentSubmission` guarda tentativas e resultados confiaveis.
+
+No alvo, `AssessmentExecutionPolicyV1` e materializado pelas fontes unicas do
+agregado Assessment e congelado na revisao. Ele nao e um segundo JSON mutavel
+que replique as colunas relacionais.
 
 ## Limites entre packages e camadas
 
@@ -81,7 +88,7 @@ ocorre em `quiz-content` e no adapter quiz de grading.
 
 ## JSON autoral de grading
 
-O contrato raiz e `ContentGradingDefinition`:
+O contrato raiz atual e `ContentGradingDefinition`:
 
 ```ts
 interface ContentGradingDefinition {
@@ -93,6 +100,44 @@ interface ContentGradingDefinition {
   presentation: PresentationPolicy;
   items: Record<string, GradedItemConfig>;
 }
+```
+
+Esse formato e estado atual, nao o ownership final. O plano canonico substitui
+o contrato atomicamente, sem dual-read:
+
+```ts
+interface ContentGradingDefinitionV2 {
+  schemaVersion: 2;
+  items: Record<string, GradingItemAuthoringV2>;
+}
+
+interface GradingItemAuthoringV2 {
+  rubricRef?: string;
+}
+
+interface AssessmentExecutionPolicyV1 {
+  schemaVersion: 1;
+  passingScore?: ScoreValue;
+  maxAttempts?: number;
+  attemptContribution?: AttemptContributionPolicyV1;
+  timeLimitMinutes?: number;
+  availability: AssessmentAvailabilityPolicyV1;
+  completion: AssessmentContentCompletionPolicyV1;
+  resultRelease: AssessmentResultReleasePolicyV1;
+  presentation: AssessmentPresentationPolicyV1;
+  review: AssessmentReviewPolicyV1;
+}
+
+type AssessmentContentCompletionMode =
+  | "on-submit"
+  | "on-finalize"
+  | "on-release"
+  | "on-release-and-pass";
+
+type AssessmentResultReleasePolicyV1 =
+  | { mode: "immediate" }
+  | { mode: "manual" }
+  | { mode: "scheduled"; scheduledFor: string };
 ```
 
 No quiz, ele e persistido como `grading`, irmao de `schemaVersion`, `order` e
@@ -145,6 +190,27 @@ interface ScorePolicy {
 `passingScore` no package e um valor absoluto nessa mesma escala. Na API atual,
 o resultado `Passed` usa `Program.PassingScore`, que e percentual de curso. Os
 dois campos nao sao hoje a mesma fonte de verdade.
+
+O plano canonico fecha a semantica alvo assim:
+
+- todo score academico usa `ScoreValue` de largura fixa com quatro casas no
+  PostgreSQL e no TypeScript/JSON; o dominio da API faz parse e calculo exato;
+- `Assessment.PassingScore` e absoluto na escala do assessment e decide
+  `AssessmentSubmission.Passed`;
+- `Program.PassingScore` e `AssessmentGroup.WeightPercent` usam
+  `PercentValue` de largura fixa e decidem consolidacao ponderada e aprovacao
+  global.
+
+Essa decisao ainda nao descreve o codigo atual: enquanto a fase de persistencia
+nao for aplicada, os campos de assessment continuam inteiros e o service usa o
+percentual do programa para a submission.
+
+O formato alvo de score e `^\d{8}\.\d{4}$`, por exemplo
+`"00000012.5000"`; percentuais usam `^\d{3}\.\d{4}$`, limitados no dominio a
+`"100.0000"`. O banco nao usa `numeric/decimal` nem cast numerico. Largura fixa
+permite filtrar e ordenar lexicalmente; soma, media, mediana e ponderacao
+pertencem ao dominio da API e alimentam projecoes precomputadas. Colunas e
+indices ordenaveis usam collation binaria/invariante explicita.
 
 ### AttemptPolicy
 
@@ -383,7 +449,7 @@ Principios:
 definicao de grading validada no payload learner. Cada adapter futuro continua
 responsavel por redigir somente o seu proprio tipo.
 
-## Resposta estruturada
+## Resposta estruturada atual
 
 O vocabulario generico submetido pelo aluno e:
 
@@ -436,7 +502,16 @@ Alguns tipos usam codificacao textual dentro do vocabulario generico:
 - hotspot: `hotspot_x` e `hotspot_y` em `textAnswers`;
 - highlight: JSON string em `textAnswers.highlight_spans`.
 
-## Resultado de grading
+### Alvo aprovado para respostas
+
+Na `SEQ-01`, esse vocabulário é removido sem dual-read. O core passa a persistir
+`AssessmentResponseEnvelopeV1 { schemaVersion, contentType, payloadSchema,
+payload }`, com payload opaco. `@game-guild/grading-adapter-quiz` possui
+`QuizAnswerEnvelopeV1`, discriminado pelos 14 tipos de `QuizAnswer`, e elimina
+delimitadores, JSON embutido em strings e coerção textual de coordenadas. O
+manifest resolve o decoder exato, e TypeScript e C# compartilham fixtures.
+
+## Resultado de grading atual
 
 ```ts
 interface GradeItemResult {
@@ -476,6 +551,15 @@ Agregacao atual:
 `AssessmentSubmission`; a integracao deve projetar seus campos para a entidade
 persistida.
 
+### Alvo aprovado para resultados
+
+Rounds e stages passam a usar somente `GradeResultV1` e `GradeItemResultV1`
+genéricos, com `itemId`, `ScoreValue`, estado, feedback, evidências e proveniência
+do review. O core não referencia resultado específico de quiz,
+`contentBlockId` ou outro
+tipo específico. Evidência de quiz é versionada pelo adapter e referenciada pelo
+resultado genérico.
+
 ## Projecao para Assessment
 
 Ao salvar um quiz, `content-item-editor.tsx` le o grading do JSON e executa a
@@ -510,35 +594,92 @@ descricao e `IsRequired` vem do `ProgramContent`, nao de grading.
   `InstructorGraded`;
 - `GroupSetId`, `RubricId` e politica de peer review;
 - disponibilidade operacional e regras de atraso;
-- `DefinitionPayload` para definicoes operacionais especificas.
+- no modelo atual, `DefinitionPayload` para definicoes operacionais especificas;
+  no alvo, o payload generico e removido e uma policy sem coluna so pode ter
+  fonte mutavel tipada, com nome e ownership proprios.
 
 No codigo atual, `GradingMethods` possui somente as quatro flags acima e o
-backend ainda nao executa todas como pipeline. O alvo aprovado em
-`docs/plans/quiz-grading-end-to-end` adiciona `SelfGraded = 16` e formaliza:
+backend ainda nao as executa como um pipeline completo. O plano canonico em
+`docs/plans/quiz-grading-end-to-end` separa a fonte da revisao do efeito de
+grading:
 
-| Flag | Semantica |
-| --- | --- |
-| `PeerReview` | pares produzem a avaliacao primaria |
-| `AIGraded` | IA produz a avaliacao primaria |
-| `AutoGraded` | o sistema produz correcao deterministica |
-| `SelfGraded` | o proprio aluno produz sua autoavaliacao e nota |
-| `InstructorGraded` | o instrutor avalia ou revisa e finaliza por ultimo |
+- **review** define quem ou o que analisa a submissao;
+- **grading** transforma a analise em score, feedback e resultado oficial.
 
-Sao validos apenas um metodo primario ou um metodo primario seguido de
-`InstructorGraded`: `PeerReview`, `AIGraded`, `AutoGraded`, `SelfGraded`,
-`InstructorGraded`, `PeerReview,InstructorGraded`,
-`AIGraded,InstructorGraded`, `AutoGraded,InstructorGraded` e
-`SelfGraded,InstructorGraded`. Como a persistencia e bitmask, a ordem nao e
-armazenada; a precedencia final do instrutor precisa ser regra canonica do
-dominio. Grupo e peso nao alteram essa escolha.
+Por isso, o modelo alvo renomeia `GradingMethods` para `ReviewMethods`, adota
+`AssessmentReviewMethod` e preserva os bits existentes:
 
-Esta secao descreve um alvo ainda nao implementado. Ate a conclusao da fase de
-dominio, serializers e DTOs reais ainda nao reconhecem `SelfGraded`.
+| Nome atual | Nome alvo | Valor | Semantica alvo |
+| --- | --- | ---: | --- |
+| `PeerReview` | `PeerReview` | 1 | alunos analisam submissoes de outros alunos; as revisoes recebidas sao agregadas |
+| `AIGraded` | `AIReview` | 2 | um provider de IA produz a revisao primaria |
+| `AutoGraded` | `AutomatedReview` | 4 | o sistema executa correcao deterministica |
+| `InstructorGraded` | `InstructorReview` | 8 | o instrutor revisa diretamente ou finaliza uma revisao primaria |
+| inexistente | `SelfReview` | 16 | o proprio aluno realiza uma autoavaliacao estruturada |
+
+Sao validos um unico metodo primario ou um metodo primario seguido de
+`InstructorReview`:
+
+```text
+PeerReview
+AIReview
+AutomatedReview
+InstructorReview
+SelfReview
+PeerReview,InstructorReview
+AIReview,InstructorReview
+AutomatedReview,InstructorReview
+SelfReview,InstructorReview
+```
+
+Como a persistencia e bitmask, a ordem nao e armazenada. A precedencia final de
+`InstructorReview` e uma regra canonica do dominio. Grupo e peso nao alteram a
+escolha do workflow.
+
+`PeerReview` participa do mesmo pipeline dos demais metodos. O codigo atual ja
+persiste cada revisao individual em `AssessmentPeerReview`, mas ainda precisa
+agregar os scores recebidos e projetar o resultado em `AssessmentSubmission`.
+O limite atual `PeerReviewsRequiredCount` indica quantas revisoes cada aluno
+deve realizar; ele nao substitui a quantidade minima de revisoes recebidas por
+submissao nem a politica de agregacao necessarias ao resultado oficial.
+
+O plano implementa a infraestrutura dos cinco metodos. `InstructorReview`,
+`AutomatedReview` e `SelfReview` ganham fluxo integral; `PeerReview` reaproveita
+a infraestrutura existente e recebe a agregacao oficial; `AIReview` recebe
+contratos, registro de providers e bloqueios operacionais, sem incluir um
+provider concreto. Sem provider registrado e compativel, `AIReview` nao pode
+publicar. Provider temporariamente indisponivel no runtime mantem o estagio
+pendente para retry e nao produz uma nota sintetica.
+
+Essa e uma direcao alvo, nao uma descricao dos serializers atuais. Ate a
+alteracao coordenada dos contratos e do baseline limpo de schema, os DTOs reais
+continuam usando `GradingMethods`, os nomes `AIGraded`, `AutoGraded` e
+`InstructorGraded`, e nao reconhecem o bit `16`. O plano nao preve migration
+incremental, backfill ou compatibilidade legacy.
+
+`ReviewMethods` pertence a `Assessment`, nao ao JSON autoral do quiz. O quiz
+mantem questoes, respostas, criterios deterministas e definicoes de score; o
+assessment mantem workflow, politicas operacionais e estado das revisoes. Um
+contrato operacional versionado pode carregar configuracoes por metodo, como o
+provider de IA, a agregacao de peers e as exigencias da autoavaliacao, sem
+incluir segredos de provider. Sua fonte mutavel na API nao e um payload generico:
+se alguma policy nao possuir coluna, ela exige contrato tipado e persistencia de
+nome especifico aprovada no `SCHEMA-GATE`.
 
 `Assessment.DefinitionPayload` e outro campo `jsonb`, versionado por
 `DefinitionSchemaVersion`. Ele nao e automaticamente o
 `ContentGradingDefinition` nem o `QuizContentDocument`; atualmente e uma area
 separada usada por definicoes como coding assessment.
+
+No modelo alvo, esse payload, sua versao e o setter generico sao removidos.
+Policies complexas sem coluna relacional podem possuir somente uma fonte tipada
+e nomeada, sem replicar tentativas, tempo, datas, passing score ou apresentacao.
+A API materializa
+`AssessmentExecutionPolicyV1` dessas fontes unicas. Prepare/test cria uma
+`AssessmentDefinitionRevision` candidata e imutavel; publish ativa a mesma
+revision quando o source hash ainda coincide. Submission oficial aponta para a
+ativa e test run pode apontar para candidata ou ativa. A visibility do content
+nao substitui esse lifecycle.
 
 ### Gradebook e peso
 
@@ -552,6 +693,47 @@ Id, CourseId, Name, Description, WeightPercent, Order
 Grupos com peso zero podem representar atividades com resultado confiavel que
 nao contribuem para a nota global. Portanto nao existem `resultUse`,
 `feedbackOnly` ou `gradebook` em `ContentGradingDefinition`.
+
+### Tentativa coletiva
+
+`AssessmentGroup` acima e uma categoria ponderada do gradebook. Ele nao e o
+`CourseGroup` usado por `GroupAssignment`.
+
+No codigo atual, uma entrega coletiva e replicada em varias
+`AssessmentSubmission` por `FanOutGroupSubmitAsync`. No modelo alvo:
+
+- uma tentativa de grupo possui uma unica `AssessmentSubmission` ligada ao
+  `CourseGroup`;
+- os integrantes sao congelados em `AssessmentSubmissionParticipant` no start;
+- grading recebe apenas a submission e produz uma unica rodada e resultado;
+- depois de `GradeResultFinalized`, o subsistema de grupos/gradebook cria uma
+  projecao idempotente por enrollment;
+- regrade acontece uma vez e atualiza as projecoes, sem recriar submissions.
+
+### Raiz da execucao de grading no modelo alvo
+
+Stages, rodadas, evidencias e resultados nao pertencem diretamente ao JSON do
+quiz nem ao lifecycle mutavel da submission. O plano canonico introduz
+`GradingExecution` como raiz persistente compartilhada:
+
+```text
+GradingExecution
+  AssessmentTestRunSubjectId nullable
+  AssessmentSubmissionId nullable
+  DefinitionRevisionId
+  EvaluationState
+  ActiveGradeRoundId nullable
+  EvaluationPayload versionado
+  CHECK exatamente um owner preenchido
+  UNIQUE parcial por owner
+```
+
+O owner relacional e exatamente um `AssessmentTestRunSubject` ou uma
+`AssessmentSubmission`. Um test run possui um ou mais subjects sinteticos, cada
+um com sua propria execucao, o que evita misturar resultados de alvos de peer
+review. Nao existe `ownerId` polimorfico. Somente a submission oficial pode
+possuir `AssessmentResultRelease`. Test run produz resultado diagnostico e
+nunca estado ou evento de liberacao academica.
 
 ## Persistencia de submission na API
 
@@ -613,8 +795,10 @@ Record<blockId, QuizAnswer>
     -> buildQuizStructuredAnswerPayload
       -> AssessmentSubmission.StructuredAnswerPayload
         -> answer key server-owned + grading definition snapshot
-          -> GradeResult
-            -> Score / Passed / Feedback / GradedAt
+          -> GradingExecution
+            -> GradeRoundV1
+              -> GradeResult
+                -> projecao Score / Passed / Feedback / GradedAt
 ```
 
 Na implementacao atual, `ActivityComponent` ja monta
@@ -630,16 +814,26 @@ esta conectado ponta a ponta.
 | --- | --- |
 | stem, options, answer correta e configuracao da pergunta | `quiz` |
 | lista, IDs e ordem das perguntas | `quiz-content` |
-| pontos autorais opcionais da pergunta | `quiz`, projetados pelo adapter |
-| politica total de score/tentativas/feedback/apresentacao | `grading` |
-| classificacao deterministica/manual de uma pergunta quiz | adapter quiz de `grading` |
-| conversao `QuizAnswer <-> StructuredAnswer` | `quiz` para a forma tipada; grading aplica whitelist do envelope |
-| extracao de answer key do quiz | adapter quiz de `grading` |
+| pontos autorais da pergunta | `quiz`, como string canônica e projetados pelo adapter |
+| configuracao autoral adicional de grading por item | `ContentGradingDefinitionV2` em `grading`, sem copiar pontos ou capability |
+| tentativas, tempo, disponibilidade, passing score, result release e apresentacao operacional | `AssessmentExecutionPolicyV1` no Assessment backend |
+| capability deterministica de uma pergunta quiz | manifest, projetado por `@game-guild/grading-adapter-quiz` |
+| conversao `QuizAnswerV1 <-> AssessmentResponseEnvelopeV1` | `@game-guild/grading-adapter-quiz` |
+| extracao de answer key do quiz | `@game-guild/grading-adapter-quiz` |
 | redaction da forma completa de QuizEntry | `quiz`; adapter apenas orquestra/fallback defensivo |
 | embedding e sync do grading no documento quiz | `quiz-content` |
 | controles visuais de grading do quiz | host/surface, consumindo contratos sem redefini-los |
 | criacao e remocao da projecao Assessment | camada integradora/aplicacao |
+| fonte e sequencia da revisao (`ReviewMethods`) | Assessment backend |
+| politicas de peer, IA, autoavaliacao e revisao docente | Assessment backend, em contrato operacional versionado |
+| avaliacao individual produzida por um aluno revisor | `AssessmentPeerReview` |
+| agregacao das revisoes em score e feedback | pipeline de grading do Assessment backend |
+| stages, rodadas, evidencias e resultado autoritativo | `GradingExecution` no Assessment backend |
+| owner da execucao | exatamente um entre `AssessmentTestRunSubject` e `AssessmentSubmission` |
+| liberacao academica | `AssessmentResultRelease` por `GradeRoundId` unico; submission derivada pelo owner da `GradingExecution` |
 | grupos, pesos e participacao no gradebook | Assessment/gradebook backend |
+| resolucao do CourseGroup e snapshot de participantes | Assessment/group integration antes do grading |
+| projecao de resultado coletivo por enrollment | Assessment/gradebook integration depois do grading |
 | tentativa, submission e resultado oficial | Assessment backend |
 | preferencia visual ou estado React | surface, nunca no JSON autoral |
 
@@ -670,9 +864,10 @@ Regras praticas:
 ## Lacunas e riscos atuais
 
 1. **`GradingMethods` ainda nao executa o pipeline no backend.** O submit C# nao
-   inicia os estagios de IA, correcao deterministica, autoavaliacao ou revisao
-   docente conforme as combinacoes. O avaliador deterministico do package
-   tambem nao esta conectado, e `SelfGraded` ainda nao existe no enum atual.
+   inicia os estagios de peer, IA, correcao deterministica, autoavaliacao ou
+   revisao docente conforme as combinacoes. O avaliador deterministico do
+   package tambem nao esta conectado. O modelo alvo `ReviewMethods` ainda nao
+   foi aplicado, e `SelfReview = 16` nao existe no enum atual.
 
 2. **Nao existe snapshot server-owned da definicao e do answer key por
    tentativa.** A avaliacao futura precisa evitar que uma edicao posterior do
@@ -682,16 +877,16 @@ Regras praticas:
    `StructuredAnswerPayload`.** `JsonBody` e `StructuredAnswerPayload` sao JSON
    generico no backend.
 
-4. **`passingScore` possui duas semanticas ativas.** O package usa valor absoluto
-   por conteudo; a API usa percentual global de `Program`. O host web ainda
-   possui campos `passingScore` que nao fazem parte dos DTOs atuais de
-   Assessment.
+4. **`passingScore` possui duas semanticas ativas no codigo atual.** O package
+   usa valor absoluto por conteudo; a API usa percentual global de `Program`.
+   O plano alvo reserva `Assessment.PassingScore` para pontos absolutos da
+   submission e `Program.PassingScore` para o percentual global do curso.
 
 5. **`score.maxScore` pode divergir da soma dos items.** A sincronizacao de quiz
    troca os items, mas preserva um max score positivo antigo. Isso pode ser
    intencional para escala, porem exige regra explicita de reescala dos pontos.
 
-6. **Politicas nao sao totalmente projetadas.** O reconcile atual copia
+6. **Policies possuem ownership duplicado e nao sao totalmente projetadas.** O reconcile atual copia
    maxScore, maxAttempts, timeLimit e presentation; nao copia datas, atraso,
    feedback mode ou passing score.
 
@@ -709,9 +904,10 @@ Regras praticas:
 
 11. **O core e o adapter quiz compartilham o mesmo package.** Como
     `@game-guild/grading` depende de `@game-guild/quiz`, cada novo adapter pode
-    aumentar dependencias do package central. Se houver varios dominios, convem
-    separar adapters em subpackages (`grading-adapter-quiz`, por exemplo) ou
-    exports independentes.
+    aumentar dependencias do package central. A resolução aprovada para a
+    `SEQ-01` é extrair e reescrever essa integração em
+    `@game-guild/grading-adapter-quiz`, removendo a dependência de quiz do core,
+    sem aliases ou reexports de compatibilidade.
 
 12. **Existe contrato duplicado no editor antigo.** O arquivo
     [`apps/web/src/components/block-content-editor/lib/assessment/assessment-contracts.ts`](../../apps/web/src/components/block-content-editor/lib/assessment/assessment-contracts.ts)
@@ -728,6 +924,20 @@ Regras praticas:
 15. **`AnswerKey.items` e `unknown`.** Isso preserva genericidade, mas nao existe
     discriminante/versionamento generico para validar o key depois de
     serializado fora do processo.
+
+16. **Scores de assessment e peer review ainda sao inteiros, enquanto pesos e
+    percentuais usam `decimal`.** Media, mediana, partial credit e a politica de
+    nao persistir decimais exigem a conversao coordenada para `ScoreValue` e
+    `PercentValue` no baseline limpo.
+
+17. **`FanOutGroupSubmitAsync` duplica a submission coletiva por integrante.**
+    O modelo alvo exige uma submission e um resultado por grupo, com snapshot de
+    participantes e fan-out apenas das projecoes posteriores.
+
+18. **O historico ainda nao possui `GradingExecution` como raiz compartilhada.**
+    O alvo exige exatamente um owner relacional entre subject sintetico de test
+    run e submission, mantendo release academico exclusivamente na submission
+    oficial.
 
 ## Avaliacao de cobertura
 
