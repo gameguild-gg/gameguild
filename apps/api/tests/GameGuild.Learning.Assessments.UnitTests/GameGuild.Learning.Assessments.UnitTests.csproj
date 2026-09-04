@@ -35,6 +35,11 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Assessments.QuizAdapter\GameGuild.Learning.Assessments.QuizAdapter.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="..\..\..\..\packages\features\grading-adapter-quiz\fixtures\quiz-answer-envelope-v1.json"
+                          LogicalName="GameGuild.Grading.Fixtures.quiz-answer-envelope-v1.json" />
     </ItemGroup>
 </Project>

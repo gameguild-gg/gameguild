@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@game-guild/typescript-config",
+  "display": "Grading Adapter Quiz",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
+    "paths": {
+      "@game-guild/grading-adapter-quiz": ["./src/index.ts"],
+      "@game-guild/grading-adapter-quiz/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

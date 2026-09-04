@@ -85,6 +85,7 @@
         <ProjectReference Include="..\Modules\GameGuild.Learning.TestingLab\GameGuild.Learning.TestingLab.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Cohorts\GameGuild.Learning.Cohorts.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Learning.Assessments.QuizAdapter\GameGuild.Learning.Assessments.QuizAdapter.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Lti\GameGuild.Lti.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Certificates\GameGuild.Learning.Certificates.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Workspaces\GameGuild.Learning.Workspaces.csproj" />

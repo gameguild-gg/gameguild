@@ -15,7 +15,7 @@ The canonical persisted shape is `QuizContentDocumentV1`:
   schemaVersion: 1;
   order: readonly [string, "quiz"][];
   blocks: Record<string, QuizEntry>;
-  grading?: ContentGradingDefinition;
+  grading?: ContentGradingDefinitionV2;
 }
 ```
 

@@ -10,7 +10,7 @@ import type {
   LearningCoursesProgramContentType,
   LearningCoursesVisibility,
 } from "@game-guild/client";
-import type { ContentGradingDefinition } from "@game-guild/grading";
+import type { ContentGradingDefinitionV2 } from "@game-guild/grading";
 
 export type { LearningCoursesProgramContentType } from "@game-guild/client";
 
@@ -117,7 +117,7 @@ export interface CourseContentItemViewModel {
   duration: number | null;
   estimatedMinutesSource: "Auto" | "Manual" | null;
   metadata: Record<string, unknown>;
-  gradingConfig: ContentGradingDefinition | null;
+  gradingConfig: ContentGradingDefinitionV2 | null;
   createdAt: string;
   updatedAt: string;
 }

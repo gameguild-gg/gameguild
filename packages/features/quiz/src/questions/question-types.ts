@@ -1,4 +1,5 @@
 import type { AssetUri } from "@game-guild/assets"
+import type { QuizPoints } from "./quiz-points"
 
 export type SerializedRichTextPayload = Record<string, unknown> | null
 
@@ -8,7 +9,7 @@ export type SerializedRichTextPayload = Record<string, unknown> | null
 
 interface QuizEntryBase {
   stem: string // The question text
-  points?: number
+  points?: QuizPoints
   feedback?: QuizFeedback
   settings: QuizSettings
   attachments?: QuizAuthoringAttachments

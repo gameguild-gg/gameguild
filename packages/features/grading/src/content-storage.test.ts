@@ -1,62 +1,25 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 import {
   CONTENT_GRADING_STORAGE_KEY,
-  type ContentGradingDefinition,
+  type ContentGradingDefinitionV2,
   readContentGradingDefinition,
   writeContentGradingDefinition,
-} from './index';
+} from "./index";
 
-const grading: ContentGradingDefinition = {
-  enabled: true,
-  schemaVersion: 1,
-  score: {
-    maxScore: 1,
-  },
-  attempts: {},
-  feedback: {
-    mode: 'immediate',
-  },
-  presentation: {
-    mode: 'continuous',
-  },
-  items: {
-    '1': {
-      contentBlockId: '1',
-      points: 1,
-      gradingKind: 'deterministic',
-    },
-  },
+const grading: ContentGradingDefinitionV2 = {
+  schemaVersion: 2,
+  items: { q1: {} },
 };
 
-describe('content storage grading metadata', () => {
-  it('writes grading beside existing content body data', () => {
-    const body = writeContentGradingDefinition(
-      {
-        order: [['1', 'quiz']],
-        blocks: {
-          '1': { type: 'TRUE_FALSE', correctAnswer: true },
-        },
-      },
-      grading,
-    );
-
-    expect(body[CONTENT_GRADING_STORAGE_KEY]).toMatchObject({
-      enabled: true,
-      score: { maxScore: 1 },
-    });
-    expect(body.order).toEqual([['1', 'quiz']]);
-  });
-
-  it('reads grading from object body', () => {
-    const body = writeContentGradingDefinition({ order: [], blocks: {} }, grading);
-
-    expect(readContentGradingDefinition(body)?.enabled).toBe(true);
+describe("content storage grading metadata", () => {
+  it("writes and reads grading beside content data", () => {
+    const body = writeContentGradingDefinition({ order: [["q1", "quiz"]] }, grading);
+    expect(body[CONTENT_GRADING_STORAGE_KEY]).toEqual(grading);
+    expect(readContentGradingDefinition(body)).toEqual(grading);
     expect(readContentGradingDefinition(JSON.stringify(body))).toBeNull();
   });
 
-  it('removes grading when disabled', () => {
-    const body = writeContentGradingDefinition({ order: [], blocks: {}, grading }, null);
-
-    expect(body).toEqual({ order: [], blocks: {} });
+  it("removes grading when the feature is disabled", () => {
+    expect(writeContentGradingDefinition({ order: [], grading }, null)).toEqual({ order: [] });
   });
 });

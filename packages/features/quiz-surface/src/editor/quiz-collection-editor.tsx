@@ -263,7 +263,7 @@ export function QuizCollectionEditor({
                   </span>
                   {item.entry.points !== undefined && (
                     <span className="text-xs text-gray-400 dark:text-gray-500">
-                      {item.entry.points} pts
+                      {Number(item.entry.points)} pts
                     </span>
                   )}
 

@@ -2,22 +2,20 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { QuizCollectionEditor } from "@game-guild/quiz-surface/editor";
-import type { ContentGradingDefinition } from "@game-guild/grading";
-import { sumGradedItemPoints } from "@game-guild/grading";
+import { sumQuizItemPoints } from "@game-guild/grading-adapter-quiz";
 import {
   disableQuizContentGrading,
   enableQuizContentGrading,
   parseQuizContentDocument,
   quizContentItemsToDocument,
   quizDocumentToContentItems,
+  quizDocumentToGradingItems,
   readQuizContentGrading,
   serializeQuizContentDocument,
-  updateQuizContentGrading,
   type QuizContentDocument,
   type QuizContentItem,
 } from "@game-guild/quiz-content";
 import { Badge } from "@game-guild/ui/components/badge";
-import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import { Switch } from "@game-guild/ui/components/switch";
 
@@ -47,8 +45,12 @@ export function QuizContentEditor({
     () => readQuizContentGrading(document),
     [document],
   );
-  const gradedItemCount = Object.keys(gradingConfig.items).length;
-  const gradedPoints = sumGradedItemPoints(gradingConfig);
+  const gradingEnabled = gradingConfig !== null;
+  const gradedItemCount = gradingConfig ? Object.keys(gradingConfig.items).length : 0;
+  const gradedPoints = useMemo(
+    () => sumQuizItemPoints(quizDocumentToGradingItems(document)),
+    [document],
+  );
 
   const commitDocument = useCallback(
     (nextDocument: QuizContentDocument) => {
@@ -68,15 +70,6 @@ export function QuizContentEditor({
     [commitDocument, document.grading],
   );
 
-  const updateGrading = useCallback(
-    (
-      updater: (current: ContentGradingDefinition) => ContentGradingDefinition,
-    ) => {
-      commitDocument(updateQuizContentGrading(document, updater));
-    },
-    [commitDocument, document],
-  );
-
   const handleGradingEnabledChange = useCallback(
     (enabled: boolean) => {
       commitDocument(
@@ -88,54 +81,13 @@ export function QuizContentEditor({
     [commitDocument, document],
   );
 
-  const handleMaxScoreChange = useCallback(
-    (value: string) => {
-      const maxScore = Math.max(1, Number(value) || 1);
-      updateGrading((current) => {
-        return {
-          ...current,
-          score: {
-            ...current.score,
-            maxScore,
-            passingScore:
-              current.score.passingScore === undefined
-                ? undefined
-                : Math.min(current.score.passingScore, maxScore),
-          },
-        };
-      });
-    },
-    [updateGrading],
-  );
-
-  const handlePassingScoreChange = useCallback(
-    (value: string) => {
-      const passingScore = value.trim()
-        ? Math.max(0, Number(value) || 0)
-        : undefined;
-      updateGrading((current) => {
-        return {
-          ...current,
-          score: {
-            ...current.score,
-            passingScore:
-              passingScore === undefined
-                ? undefined
-                : Math.min(passingScore, current.score.maxScore),
-          },
-        };
-      });
-    },
-    [updateGrading],
-  );
-
   if (mode === "preview") {
     return (
       <QuizCollectionEditor
         items={quizItems}
         onChange={handleQuizItemsChange}
         submissionMode={
-          gradingConfig.enabled ? "server-graded" : "local-practice"
+          gradingEnabled ? "server-graded" : "local-practice"
         }
         readOnly={true}
       />
@@ -157,55 +109,25 @@ export function QuizContentEditor({
             <Label htmlFor="quiz-grading-enabled">Grading</Label>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge
-                variant={gradingConfig.enabled ? "secondary" : "outline"}
+                variant={gradingEnabled ? "secondary" : "outline"}
               >
-                {gradingConfig.enabled
+                {gradingEnabled
                   ? `${gradedItemCount} items`
                   : "Off"}
               </Badge>
-              {gradingConfig.enabled && (
+              {gradingEnabled && (
                 <span>{gradedPoints} configured pts</span>
               )}
             </div>
           </div>
           <Switch
             id="quiz-grading-enabled"
-            checked={gradingConfig.enabled}
+            checked={gradingEnabled}
             onCheckedChange={handleGradingEnabledChange}
           />
         </div>
 
-        {gradingConfig.enabled && (
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="quiz-max-score">Max score</Label>
-              <Input
-                id="quiz-max-score"
-                type="number"
-                min={1}
-                value={gradingConfig.score.maxScore}
-                onChange={(event) =>
-                  handleMaxScoreChange(event.currentTarget.value)
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="quiz-passing-score">Passing score</Label>
-              <Input
-                id="quiz-passing-score"
-                type="number"
-                min={0}
-                value={gradingConfig.score.passingScore ?? ""}
-                onChange={(event) =>
-                  handlePassingScoreChange(event.currentTarget.value)
-                }
-              />
-            </div>
-          </div>
-        )}
-
-        {gradingConfig.enabled && (
+        {gradingEnabled && (
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge variant="outline">Assessment</Badge>
           </div>
@@ -216,7 +138,7 @@ export function QuizContentEditor({
         items={quizItems}
         onChange={handleQuizItemsChange}
         submissionMode={
-          gradingConfig.enabled ? "server-graded" : "local-practice"
+          gradingEnabled ? "server-graded" : "local-practice"
         }
       />
     </div>

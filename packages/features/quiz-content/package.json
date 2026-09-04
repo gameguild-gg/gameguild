@@ -16,6 +16,7 @@
   "dependencies": {
     "@game-guild/block-list": "workspace:^",
     "@game-guild/grading": "workspace:^",
+    "@game-guild/grading-adapter-quiz": "workspace:^",
     "@game-guild/quiz": "workspace:^"
   },
   "devDependencies": {

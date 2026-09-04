@@ -4,7 +4,7 @@ import type {
   TypedBlockStorage,
   TypedBlockView,
 } from "@game-guild/block-list";
-import type { ContentGradingDefinition } from "@game-guild/grading";
+import type { ContentGradingDefinitionV2 } from "@game-guild/grading";
 import type { QuizEntry, QuizLearnerEntry } from "@game-guild/quiz";
 import type {
   QUIZ_BLOCK_TYPE,
@@ -33,7 +33,7 @@ export interface QuizContentDocumentV1 {
   schemaVersion: typeof QUIZ_CONTENT_SCHEMA_VERSION;
   order: QuizBlockOrderEntry[];
   blocks: Record<string, QuizEntry>;
-  grading?: ContentGradingDefinition;
+  grading?: ContentGradingDefinitionV2;
 }
 
 export type QuizContentDocument = QuizContentDocumentV1;
@@ -42,7 +42,6 @@ export interface QuizLearnerContentDocument {
   schemaVersion: typeof QUIZ_CONTENT_SCHEMA_VERSION;
   order: QuizBlockOrderEntry[];
   blocks: Record<string, QuizLearnerEntry>;
-  grading?: ContentGradingDefinition;
 }
 
 export type QuizRuntimeContentDocument =
@@ -72,5 +71,5 @@ export interface QuizContentParseResult {
 
 export interface QuizContentDocumentInput {
   items: readonly QuizContentItem[];
-  grading?: ContentGradingDefinition | null;
+  grading?: ContentGradingDefinitionV2 | null;
 }

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "contentType": "quiz",
+  "payloadSchema": "quiz-answer/v1",
+  "payload": {
+    "answers": {
+      "single": { "type": "SINGLE_CHOICE", "optionId": "a" },
+      "multiple": { "type": "MULTIPLE_CHOICE", "optionIds": ["a", "b"] },
+      "boolean": { "type": "TRUE_FALSE", "value": true },
+      "blanks": { "type": "FILL_IN_THE_BLANK", "values": { "blank": "answer" } },
+      "short": { "type": "SHORT_ANSWER", "value": "answer" },
+      "essay": { "type": "ESSAY", "richText": null, "plainText": "answer" },
+      "matching": { "type": "MATCHING", "matches": { "left": "right" } },
+      "ordering": { "type": "ORDERING", "itemIds": ["first", "second"] },
+      "categorization": { "type": "CATEGORIZATION", "categoryIdsByItem": { "item": ["category"] } },
+      "rating": { "type": "RATING", "value": 4 },
+      "numeric": { "type": "NUMERIC", "value": "42.5" },
+      "formula": { "type": "FORMULA", "expression": "x * 2" },
+      "hotspot": { "type": "HOTSPOT", "point": { "x": 25, "y": 75 } },
+      "highlight": { "type": "HIGHLIGHT", "spans": [{ "start": 0, "end": 6 }] }
+    }
+  }
+}

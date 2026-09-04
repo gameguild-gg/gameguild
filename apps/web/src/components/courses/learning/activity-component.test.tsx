@@ -45,17 +45,21 @@ const quizItem = {
   isRequired: true,
   activityType: "quiz" as const,
   content: {
-    order: [["question-1", "quiz"]],
-    blocks: {
-      "question-1": {
-        type: "TRUE_FALSE",
-        stem: "The package owns this question",
-        correctAnswer: true,
-        points: 2,
-        settings: {
-          allowRetry: true,
-          showFeedback: true,
-          showCorrectAnswer: true,
+    mode: "local-practice",
+    document: {
+      schemaVersion: 1,
+      order: [["question-1", "quiz"]],
+      blocks: {
+        "question-1": {
+          type: "TRUE_FALSE",
+          stem: "The package owns this question",
+          correctAnswer: true,
+          points: "00000002.0000",
+          settings: {
+            allowRetry: true,
+            showFeedback: true,
+            showCorrectAnswer: true,
+          },
         },
       },
     },
@@ -91,13 +95,57 @@ describe("ActivityComponent quiz integration", () => {
     expect(mocks.submitActivity).toHaveBeenCalledWith(
       expect.objectContaining({
         content: {
-          answers: {
-            "question-1": { selectedOptionIds: ["true"] },
+          schemaVersion: 1,
+          contentType: "quiz",
+          payloadSchema: "quiz-answer/v1",
+          payload: {
+            answers: {
+              "question-1": { type: "TRUE_FALSE", value: true },
+            },
           },
         },
         isGraded: false,
       }),
     );
     expect(onComplete).toHaveBeenCalledWith(100);
+  });
+
+  it("keeps the explicit server-graded mode after learner redaction", async () => {
+    const user = userEvent.setup();
+    const serverItem = {
+      ...quizItem,
+      content: {
+        mode: "server-graded" as const,
+        document: {
+          schemaVersion: 1 as const,
+          order: [["question-1", "quiz"]] as const,
+          blocks: {
+            "question-1": {
+              type: "TRUE_FALSE" as const,
+              stem: "The answer key was redacted",
+              points: "00000002.0000",
+              settings: { allowRetry: false },
+            },
+          },
+        },
+      },
+    };
+
+    render(
+      <ActivityComponent
+        item={serverItem}
+        courseId="course-1"
+        onComplete={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Start Activity" }));
+    expect(screen.getByTestId("server-player")).toHaveTextContent(
+      "The answer key was redacted",
+    );
+    await user.click(screen.getByRole("button", { name: "Submit Quiz" }));
+    expect(mocks.submitActivity).toHaveBeenCalledWith(
+      expect.objectContaining({ isGraded: true }),
+    );
   });
 });

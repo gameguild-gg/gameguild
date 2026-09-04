@@ -1,140 +1,91 @@
 # GameGuild Grading
 
-`@game-guild/grading` is the framework-independent grading contract package for
-GameGuild learning content. It defines how content-owned activities describe
-scores, attempts, feedback, answer keys, learner-safe payloads, structured
-answers, and deterministic grading results.
+`@game-guild/grading` contains the framework-independent contracts and pure
+rules shared by assessment authoring and grading runtimes.
 
-This package does not own React UI, database persistence, HTTP routes, or
-course navigation. It provides contracts and pure helpers that the web app and
-the Learning backend can share.
+It does not own React UI, HTTP routes, persistence, course navigation, or the
+implementation of a specific assessment type.
 
-## Ownership Model
+## Package boundary
 
-- `Content` owns authored activity data and grading metadata.
-- `ProgramContent` is the current backend anchor for authored content data.
-- `Assessments` is an operational view over content with grading enabled.
-- `AssessmentSubmission` is the trusted attempt/result path for learner answers,
-  structured answer payloads, score, pass/fail, grading time, and feedback.
-- This package owns portable grading contracts and adapter behavior.
+The dependency direction for a content-specific integration is:
 
-## Runtime Model
-
-There are two runtime paths:
-
-- Grading disabled: the learner can receive the full practice payload when the
-  content type supports local pedagogy. Any client-side correctness is transient
-  practice feedback and is not a trusted score.
-- Grading enabled: the learner receives a learner-safe payload, submits answers,
-  and the server produces trusted correctness, score, feedback, and pass/fail.
-
-Client-provided `score`, `grade`, `correctness`, `isCorrect`, answer-key fields,
-or feedback are never trusted as grading evidence.
-
-## Core Contract
-
-The top-level contract is `ContentGradingDefinition`:
-
-```ts
-interface ContentGradingDefinition {
-  enabled: boolean;
-  schemaVersion: number;
-  score: ScorePolicy;
-  attempts: AttemptPolicy;
-  feedback: FeedbackPolicy;
-  presentation: PresentationPolicy;
-  items: Record<string, GradedItemConfig>;
-}
+```text
+@game-guild/grading <- adapter -> content domain
 ```
 
-The grading contract deliberately does not decide whether a result contributes
-to a course grade. Assessment groups and their weights own that decision. This
-package only defines how content is scored and how its result is presented.
+Quiz integration lives in `@game-guild/grading-adapter-quiz`. Neither this
+package nor `@game-guild/quiz` depends on that adapter.
 
-## Adapter Contract
+## Core contracts
 
-Each content type integrates through a `GradingAdapter`:
+- `ContentGradingDefinitionV2` identifies authored items by stable ID.
+- `AssessmentExecutionPolicyV1` fixes attempts, completion, release,
+  presentation, and review workflow.
+- `AssessmentExecutionManifestV1` fixes executable component keys and exact
+  versions.
+- `AssessmentExecutionSnapshotV1` binds authoring, policy, manifest, and
+  immutable item projections.
+- `AssessmentExecutionDeliveryV1` records the concrete learner-safe delivery.
+- `AssessmentResponseEnvelopeV1` carries an opaque, content-discriminated
+  response.
+- `GradeResultV1`, `GradeRoundV1`, and `GradingExecutionV1` describe generic
+  review output and execution state.
 
-```ts
-interface GradingAdapter<TAuthoringPayload = unknown> {
-  contentType: string;
-  extractItems(payload: TAuthoringPayload): Record<string, GradedItemConfig>;
-  extractAnswerKey(payload: TAuthoringPayload, grading: ContentGradingDefinition): AnswerKey;
-  redactLearnerPayload(payload: TAuthoringPayload, grading: ContentGradingDefinition): unknown;
-  buildStructuredAnswerPayload(input: unknown, grading: ContentGradingDefinition): StructuredAnswerPayload;
-}
-```
+`ScoreValue` and `PercentValue` are canonical strings. JSON numbers are not
+accepted for academic values.
 
-Adapter responsibilities:
+## Validation and identity
 
-- inspect authored content and produce `GradedItemConfig` entries;
-- extract server-owned answer-key material from authored payloads;
-- produce learner-safe payloads without answer-key material;
-- normalize learner submissions into `StructuredAnswerPayload`;
-- support server-side grading helpers when the content type is deterministic.
+Use the public validators before hashing or executing untrusted contract data:
 
-The adapter registry in `src/adapters/registry.ts` is content-type agnostic.
-Register adapters by content type and keep UI-specific imports out of this
-package.
+- `validateContentGradingDefinition`
+- `validateAssessmentExecutionPolicy`
+- `validateAssessmentExecutionManifest`
+- `validateAssessmentExecutionSnapshot`
+- `validateAssessmentExecutionDelivery`
 
-## Quiz Adapter
+Snapshot validation binds the same item IDs across grading metadata, manifest,
+and projections. It also binds projection type/source fields and requires the
+manifest stages to match the policy review workflow in canonical order.
 
-The first adapter is `quiz`, implemented under `src/adapters/quiz`.
+Canonical identity uses JSON Canonicalization Scheme bytes and SHA-256:
 
-It supports:
+- `hashAssessmentAuthoringSource`
+- `hashAssessmentExecutionSnapshot`
+- `hashAssessmentExecutionDelivery`
 
-- item extraction from quiz blocks;
-- answer-key extraction from authored quiz data;
-- learner-safe redaction;
-- structured answer payload whitelisting;
-- deterministic grading for supported quiz question types;
-- backend-facing test vectors.
+Changing executable versions changes the execution snapshot hash without
+changing authoring identity.
 
-Deterministic quiz grading is available when the question has a complete answer
-key for the relevant type. Essay is manual. Numeric and formula questions are
-unsupported for official deterministic grading until server evaluators exist for
-those domains. Any incomplete answer-key shape is classified as unsupported.
+Persist canonical JSON bytes together with their hash. Server code must hash
+the validated raw JSON representation, not a DTO serialized again later. A
+runtime request carries the authoritative execution snapshot hash so delivery
+bindings can be checked without reconstructing identity.
 
-## Answer Safety
+## Runtime safety
 
-Authoring payloads may contain answer keys. Learner payloads must not rely on
-answer keys or answer-key-shaped fields.
+Authoring content may contain private answer material. Learner delivery and
+response envelopes must be produced by the content-specific adapter. Trusted
+scores, correctness, feedback, and pass/fail decisions are produced by the
+server runtime, never accepted from the browser.
 
-Structured answer payloads are whitelisted to learner answer fields only:
+`src/content-storage.ts` only reads and writes the generic
+`ContentGradingDefinitionV2` field in an authoring document. It does not execute
+grading.
 
-- `selectedOptionIds`
-- `textAnswers`
-- `categorizations`
-- `ordering`
-- `rating`
+## Development rules
 
-Unsafe nested fields such as answer keys, correctness, scores, grades, formulas,
-hotspots, highlights, and feedback are dropped during normalization.
-
-## Storage Helpers
-
-`src/content-storage.ts` provides temporary content-body helpers:
-
-- `readContentGradingDefinition`
-- `writeContentGradingDefinition`
-- `parseContentBodyObject`
-
-They keep grading metadata inside the content-owned structured body until the
-backend stores the full content-owned grading definition directly.
-
-## Development Rules
-
-- Keep this package framework-independent.
-- Keep content-type behavior behind adapters.
-- Keep official grading server-side for grading-enabled content.
-- Keep client-side correctness limited to grading-disabled practice flows.
-- Keep assessment groups, weights, and course-grade placement outside this
-  package.
-- Add test vectors when adapter behavior is meant to be mirrored by the backend.
+- Keep this package independent of quiz and every other content domain.
+- Keep content-specific projection, redaction, decoding, and evaluation in an
+  adapter package.
+- Keep operational state out of authored content documents.
+- Resolve executable components by the exact key, version, and execution
+  context fixed in the manifest.
+- Add cross-language fixtures whenever a wire contract is implemented in both
+  TypeScript and C#.
 
 ## Validation
-
-Useful package commands:
 
 ```bash
 pnpm --filter @game-guild/grading test
