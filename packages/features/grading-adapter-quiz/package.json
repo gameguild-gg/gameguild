@@ -1,0 +1,25 @@
+{
+  "name": "@game-guild/grading-adapter-quiz",
+  "version": "4.3.0",
+  "type": "module",
+  "description": "Quiz integration adapter for the generic GameGuild grading contracts",
+  "license": "UNLICENSED",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@game-guild/grading": "workspace:^",
+    "@game-guild/quiz": "workspace:^"
+  },
+  "devDependencies": {
+    "@game-guild/typescript-config": "workspace:*",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.10"
+  }
+}

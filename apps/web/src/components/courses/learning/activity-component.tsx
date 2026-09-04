@@ -9,17 +9,17 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   createEmptyQuizAnswer,
   evaluateQuizAnswer,
-  toStructuredGradingAnswer,
   type QuizAnswer,
   type QuizLearnerEntry,
   type QuizPracticeEntry,
 } from '@game-guild/quiz';
+import { createQuizAnswerEnvelope } from '@game-guild/grading-adapter-quiz';
+import { isQuizRuntimeContentDocument } from '@game-guild/quiz-content';
 import {
   QuizPlayer,
   QuizPracticePlayer,
   type QuizSubmissionResult,
 } from '@game-guild/quiz-surface/player';
-import { readContentGradingDefinition } from '@game-guild/grading';
 import { submitActivity } from '@/lib/courses/server-actions';
 import { Clock, Code, FileText, MessageSquare, Play, Save, Send, Upload } from 'lucide-react';
 import { useState } from 'react';
@@ -59,11 +59,6 @@ type QuizActivityContent =
       serverGraded: false;
     };
 
-interface QuizStorage {
-  order: unknown[];
-  blocks: Record<string, unknown>;
-}
-
 export function ActivityComponent({ item, courseId, onComplete }: ActivityComponentProps) {
   const [hasStarted, setHasStarted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,16 +83,14 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
         courseId,
         activityType: item.activityType || 'text',
         content: quiz
-          ? {
-              answers: Object.fromEntries(
-                quiz.questions.map((question) => {
-                  const answer =
-                    quizAnswers[question.id] ??
-                    createEmptyQuizAnswer(question.data.type);
-                  return [question.id, toStructuredGradingAnswer(answer)];
-                }),
-              ),
-            }
+          ? createQuizAnswerEnvelope(Object.fromEntries(
+              quiz.questions.map((question) => {
+                const answer =
+                  quizAnswers[question.id] ??
+                  createEmptyQuizAnswer(question.data.type);
+                return [question.id, answer];
+              }),
+            ))
           : submission,
         isGraded:
           item.type === 'quiz'
@@ -127,7 +120,7 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
   ): number => {
     const totals = quiz.questions.reduce(
       (current, question) => {
-        const points = question.data.points ?? 1;
+        const points = Number(question.data.points ?? "00000001.0000");
         const answer =
           quizAnswers[question.id] ??
           createEmptyQuizAnswer(question.data.type);
@@ -147,12 +140,12 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
   };
 
   const getQuizContent = (): QuizActivityContent => {
-    const content = item.content;
-    if (!isBlockStorage(content)) {
+    const runtime = item.content;
+    if (!isQuizRuntimeContentDocument(runtime)) {
       return { questions: [], serverGraded: false };
     }
 
-    const grading = readContentGradingDefinition(content);
+    const content = runtime.document;
     const rawQuestions = content.order.flatMap((entry) => {
       if (
         !Array.isArray(entry) ||
@@ -168,7 +161,7 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
       return [{ id: entry[0], data }];
     });
 
-    return grading?.enabled
+    return runtime.mode === 'server-graded'
       ? {
           questions: rawQuestions as Array<
             QuizActivityQuestion<QuizLearnerEntry>
@@ -231,7 +224,9 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
           <h3 className="text-lg font-semibold">
             Question {currentStep + 1} of {quiz.questions.length}
           </h3>
-          <Badge variant="outline">{currentQuestion.data.points ?? 1} points</Badge>
+          <Badge variant="outline">
+            {Number(currentQuestion.data.points ?? "00000001.0000")} points
+          </Badge>
         </div>
 
         <Card>
@@ -454,17 +449,5 @@ export function ActivityComponent({ item, courseId, onComplete }: ActivityCompon
         </div>
       )}
     </div>
-  );
-}
-
-function isBlockStorage(value: unknown): value is QuizStorage {
-  if (!value || typeof value !== 'object') return false;
-
-  const candidate = value as { order?: unknown; blocks?: unknown };
-  return (
-    Array.isArray(candidate.order) &&
-    Boolean(candidate.blocks) &&
-    typeof candidate.blocks === 'object' &&
-    !Array.isArray(candidate.blocks)
   );
 }

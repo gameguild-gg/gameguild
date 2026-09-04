@@ -433,6 +433,8 @@ Persona simulada nunca substitui o ator autenticado no registro de auditoria.
 
 ## `SEQ-02`. Aprovar o schema do núcleo e o reset global
 
+Artefato de aprovação: [`01-schema-gate.md`](./01-schema-gate.md).
+
 ### Resultado
 
 Somente a persistência necessária para autoria, revisão imutável, test run e

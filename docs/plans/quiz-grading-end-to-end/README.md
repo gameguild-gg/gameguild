@@ -106,9 +106,6 @@ flowchart TD
         REVIEW_CHOICE{"Exigir revisão final<br/>do instrutor?"}
         CAPABILITIES["Validar projeção segura<br/>e capabilities de AuthorTest"]
         PREPARE["Congelar revisão candidata<br/>imutável"]
-        PUBLISH_READY{"Capabilities de<br/>OfficialSubmission disponíveis?"}
-        PUBLISH_BLOCKED["Publicação bloqueada<br/>com diagnóstico"]
-        PUBLISH["Ativar a mesma revisão<br/>para uso futuro"]
 
         CONTENT --> ASSESSMENT --> WORKFLOW --> REVIEW_CHOICE --> CAPABILITIES --> PREPARE
     end
@@ -117,6 +114,19 @@ flowchart TD
         TEST_RUN["Assessment Test Run<br/>modo de teste"]
         TEST_ANSWER["Professor responde<br/>em uma ou mais personas"]
         TEST_RUN --> TEST_ANSWER
+    end
+
+    subgraph PUBLICATION["Publicação da revisão"]
+        PUBLISH_REQUEST["Solicitar publicação<br/>da revisão candidata"]
+        HASH_MATCH{"Draft ainda corresponde<br/>à revisão candidata?"}
+        PUBLISH_READY{"Capabilities de<br/>OfficialSubmission disponíveis?"}
+        PUBLISH_BLOCKED["Publicação bloqueada<br/>com diagnóstico"]
+        PUBLISH["Ativar a mesma revisão<br/>para uso futuro"]
+
+        PUBLISH_REQUEST --> HASH_MATCH
+        HASH_MATCH -->|"Sim"| PUBLISH_READY
+        PUBLISH_READY -->|"Sim"| PUBLISH
+        PUBLISH_READY -->|"Não"| PUBLISH_BLOCKED
     end
 
     subgraph LEARNER_RUN["Jornada acadêmica oficial"]
@@ -128,7 +138,7 @@ flowchart TD
     end
 
     PREPARE -->|"Testar antes de disponibilizar"| TEST_RUN
-    PREPARE -->|"Publicar sem test run"| PUBLISH_READY
+    PREPARE -->|"Publicar sem test run"| PUBLISH_REQUEST
     TEST_ANSWER --> ORCHESTRATOR
     LEARNER_ANSWER --> ORCHESTRATOR
 
@@ -171,9 +181,8 @@ flowchart TD
     subgraph TEST_OUTCOME["Saída do test run"]
         TEST_RESULT["Professor inspeciona<br/>resultado, etapas e diagnósticos"]
         NO_EFFECTS["Sem enrollment, progresso,<br/>gradebook ou notificação acadêmica"]
-        APPROVE{"Ativar esta revisão<br/>para uso futuro?"}
-        TEST_RESULT --> NO_EFFECTS
-        NO_EFFECTS --> APPROVE
+        TEST_COMPLETE["Test run concluído"]
+        TEST_RESULT --> NO_EFFECTS --> TEST_COMPLETE
     end
 
     subgraph OFFICIAL_OUTCOME["Saída acadêmica oficial"]
@@ -204,10 +213,9 @@ flowchart TD
 
     CONTEXT -->|"AuthorTest"| TEST_RESULT
     CONTEXT -->|"OfficialSubmission"| ACADEMIC_FINALIZED
-    APPROVE -->|"Sim, hash ainda coincide"| PUBLISH_READY
-    APPROVE -->|"Não, editar draft"| CONTENT
-    PUBLISH_READY -->|"Sim"| PUBLISH
-    PUBLISH_READY -->|"Não"| PUBLISH_BLOCKED
+    TEST_COMPLETE -.->|"Ação posterior e opcional do professor"| PUBLISH_REQUEST
+    HASH_MATCH -->|"Não, editar e preparar novamente"| CONTENT
+    PUBLISH -.->|"Acesso posterior e independente"| LEARNER_ACCESS
 ```
 
 Leitura central do fluxo:
@@ -215,9 +223,10 @@ Leitura central do fluxo:
 - content define o que será respondido;
 - assessment define como, quando e por quem o conteúdo será avaliado;
 - review identifica a origem da avaliação e grading produz o resultado;
-- test run usa uma revisão candidata imutável; o publish ativa essa mesma
-  revisão se o draft ainda possuir o mesmo hash e capabilities oficiais, mas
-  não cria tentativa, enrollment ou ação para aluno;
+- test run usa uma revisão candidata imutável e termina integralmente no
+  contexto do instrutor; em um comando posterior e opcional, o publish ativa
+  essa mesma revisão se o draft ainda possuir o mesmo hash e capabilities
+  oficiais, sem criar tentativa, enrollment ou ação para aluno;
 - toda execução do test run é manipulada pelo instrutor em contexto
   `AuthorTest` e termina no próprio fluxo de autoria;
 - a jornada acadêmica começa separadamente quando um aluno acessa um assessment

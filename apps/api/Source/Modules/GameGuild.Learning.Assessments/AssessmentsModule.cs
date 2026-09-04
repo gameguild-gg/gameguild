@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Learning.Courses;
+using GameGuild.Learning.Assessments.Grading.Capabilities;
+using GameGuild.Learning.Assessments.Grading.Abstractions;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -24,6 +26,18 @@ public static class AssessmentsModule
         services.AddScoped<ITasksService, TasksService>();
         services.AddScoped<IProgramContentLifecycleGuard, AssessmentProgramContentLifecycleGuard>();
         services.AddScoped<GameGuild.Learning.Courses.IAssessmentGradingSync, AssessmentGradingSync>();
+        services.AddSingleton<IReviewCapabilityRegistry>(provider =>
+        {
+            var registry = new ReviewCapabilityRegistry();
+            foreach (var registration in provider.GetServices<IReviewCapabilityRegistration>())
+            {
+                registration.Register(registry);
+            }
+
+            return registry;
+        });
+        services.AddSingleton<IAssessmentExecutionComponentResolver, AssessmentExecutionComponentResolver>();
+        services.AddSingleton<IReviewStageHandlerResolver, ReviewStageHandlerResolver>();
 
         return services;
     }

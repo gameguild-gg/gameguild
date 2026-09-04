@@ -83,6 +83,13 @@ export async function submitActivity(
     data: SubmitActivityData
 ): Promise<SubmitActivityResult> {
     try {
+        if (data.activityType === 'quiz' && data.isGraded) {
+            return {
+                success: false,
+                message: 'Official graded submissions are not available through the generic activity endpoint.',
+            };
+        }
+
         const userId = await getCurrentUserId();
         if (!userId) {
             return {
@@ -359,15 +366,15 @@ function mapLearningStatus(
 
 function prepareQuizContentForLearner(
     contentBody: Record<string, unknown> | null | undefined,
-): Record<string, unknown> | undefined {
+): ReturnType<typeof prepareQuizContentForRuntime> | undefined {
     if (!contentBody) return undefined;
 
     const { document } = parseQuizContentDocument(contentBody);
     const runtime = prepareQuizContentForRuntime(
         document,
-        document.grading?.enabled ? 'server-graded' : 'local-practice',
+        document.grading ? 'server-graded' : 'local-practice',
     );
-    return { ...runtime.document };
+    return runtime;
 }
 
 export async function getCourseLearningData(courseSlug: string): Promise<CourseLearningData | null> {

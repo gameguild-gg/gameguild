@@ -44,8 +44,13 @@ import type { SerializedEditorState } from "lexical";
 import type { LearningCoursesLessonContentFormat, LearningCoursesVisibility } from "@game-guild/client";
 import {
   readContentGradingDefinition,
-  type ContentGradingDefinition,
+  type ContentGradingDefinitionV2,
 } from "@game-guild/grading";
+import { sumQuizItemPoints } from "@game-guild/grading-adapter-quiz";
+import {
+  parseQuizContentDocument,
+  quizDocumentToGradingItems,
+} from "@game-guild/quiz-content";
 import type { ContentItemDetail } from "@/lib/learning/types";
 import type { CodingDefinition } from "@/lib/learning/queries/assessments";
 import {
@@ -255,6 +260,9 @@ export function ContentItemEditor({
     const quizGrading = isQuiz
       ? readContentGradingDefinition(jsonBodyToSave)
       : null;
+    const quizItems = isQuiz
+      ? quizDocumentToGradingItems(parseQuizContentDocument(jsonBodyToSave).document)
+      : [];
 
     startTransition(async () => {
       const result = await updateContent({
@@ -283,7 +291,7 @@ export function ContentItemEditor({
       }
 
       if (isQuiz) {
-        const assessmentResult = await reconcileQuizAssessment(quizGrading);
+        const assessmentResult = await reconcileQuizAssessment(quizGrading, quizItems);
         if (!assessmentResult.success) {
           setError(
             `Quiz content was saved, but its assessment could not be synchronized: ${assessmentResult.error}`,
@@ -310,11 +318,12 @@ export function ContentItemEditor({
   }
 
   async function reconcileQuizAssessment(
-    grading: ContentGradingDefinition | null,
+    grading: ContentGradingDefinitionV2 | null,
+    gradingItems: ReturnType<typeof quizDocumentToGradingItems>,
   ): Promise<{ success: true } | { success: false; error: string }> {
     const assessmentId = quizAssessmentIdRef.current;
 
-    if (!grading?.enabled) {
+    if (!grading) {
       if (!assessmentId) return { success: true };
 
       const result = await deleteAssessment(courseId, assessmentId);
@@ -327,14 +336,11 @@ export function ContentItemEditor({
     const assessmentFields = {
       title: title.trim(),
       description: description.trim() || undefined,
-      maxScore: Math.max(1, Math.round(grading.score.maxScore)),
-      timeLimitMinutes: grading.attempts.timeLimitMinutes ?? null,
-      maxAttempts: grading.attempts.maxAttempts ?? null,
+      maxScore: Math.max(1, Math.round(Number(sumQuizItemPoints(gradingItems)))),
+      timeLimitMinutes: null,
+      maxAttempts: null,
       isRequired,
-      presentationMode:
-        grading.presentation.mode === "single-step"
-          ? ("SingleStep" as const)
-          : ("Continuous" as const),
+      presentationMode: "Continuous" as const,
       gradingMethods: "AutoGraded,InstructorGraded",
     };
 

@@ -49,6 +49,7 @@
     "@game-guild/dotnet-wasm": "workspace:^",
     "@game-guild/emception-ui": "workspace:*",
     "@game-guild/grading": "workspace:*",
+    "@game-guild/grading-adapter-quiz": "workspace:*",
     "@game-guild/lexical-surface": "workspace:*",
     "@game-guild/quiz": "workspace:*",
     "@game-guild/quiz-content": "workspace:*",
