@@ -84,8 +84,8 @@
       "postcss": "8.5.23",
       "sharp": "0.35.3",
       "prismjs": "1.30.0",
-      "react": "19.2.3",
-      "react-dom": "19.2.3",
+      "react": "19.2.8",
+      "react-dom": "19.2.8",
       "tsup>esbuild": "0.28.1",
       "ws": "8.21.0"
     }
