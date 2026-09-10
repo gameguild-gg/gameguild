@@ -4,6 +4,7 @@ import type {
   FeedItemKind,
   FeedScope,
   PostComment,
+  PostCommentPage,
   SocialFeedAuthor,
   SocialFeedItem,
   SocialFeedPage,
@@ -229,14 +230,18 @@ function mapComment(
   };
 }
 
-export async function loadPostComments(postId: string, skip = 0, take = 50) {
+export async function loadPostCommentsPage(
+  postId: string,
+  skip = 0,
+  take = 50,
+): Promise<PostCommentPage> {
   const data = await request<unknown>({
     method: "GET",
     path: `/api/v1/posts/${postId}/comments`,
     params: { skip, take },
     requiresAuth: true,
   });
-  if (!Array.isArray(data)) return [];
+  if (!Array.isArray(data)) return { items: [], nextSkip: null };
   const authorIds = [
     ...new Set(
       data
@@ -269,7 +274,14 @@ export async function loadPostComments(postId: string, skip = 0, take = 50) {
     if (parent) parent.replies.push(comment);
     else roots.push(comment);
   });
-  return roots;
+  return {
+    items: roots,
+    nextSkip: data.length === take ? skip + take : null,
+  };
+}
+
+export async function loadPostComments(postId: string, skip = 0, take = 50) {
+  return (await loadPostCommentsPage(postId, skip, take)).items;
 }
 
 export async function loadStories(): Promise<SocialStory[]> {

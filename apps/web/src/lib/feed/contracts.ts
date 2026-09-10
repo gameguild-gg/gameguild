@@ -94,6 +94,8 @@ export interface SocialPostMutation {
   content: string;
   createdAt?: string;
   visibility?: string;
+  hasReposted?: boolean;
+  repostsCount?: number;
 }
 
 export interface DeletedSocialPost { postId: string; deleted: true; }
@@ -118,6 +120,11 @@ export interface PostComment {
   createdAt: string;
   updatedAt: string | null;
   replies: PostComment[];
+}
+
+export interface PostCommentPage {
+  items: PostComment[];
+  nextSkip: number | null;
 }
 
 export interface SavedPostState {

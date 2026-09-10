@@ -29,6 +29,7 @@ import type {
 } from "./contracts";
 import {
   loadPostComments,
+  loadPostCommentsPage,
   loadSocialFeed,
   mapSocialFeedItem,
   type SocialFeedRequestError,
@@ -59,6 +60,8 @@ function postMutation(value: SocialPostMutation): SocialPostMutation {
     content: value.content,
     createdAt: value.createdAt,
     visibility: value.visibility,
+    hasReposted: value.hasReposted,
+    repostsCount: value.repostsCount,
   };
 }
 
@@ -124,6 +127,10 @@ export async function loadSocialFeedAction(
 
 export async function loadPostCommentsAction(postId: string) {
   return loadPostComments(postId);
+}
+
+export async function loadPostCommentsPageAction(postId: string, skip = 0, take = 10) {
+  return loadPostCommentsPage(postId, skip, take);
 }
 
 export async function createSocialPost(input: {
