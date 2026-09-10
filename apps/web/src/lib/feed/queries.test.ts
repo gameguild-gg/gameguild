@@ -13,12 +13,14 @@ vi.mock("@game-guild/client", () => ({
 
 import {
   SocialFeedRequestError,
+  loadCreatorSuggestions,
   loadPostCommentRepliesPage,
   loadPostComments,
   loadPostCommentsPage,
   loadSocialFeed,
   loadSocialPost,
   loadSocialProfileByHandle,
+  loadSocialProfileCollections,
   loadStories,
   searchSocialProfiles,
 } from "./queries";
@@ -201,6 +203,55 @@ describe("social feed queries", () => {
     expect(profiles[0]?.isFollowing).toBe(true);
   });
 
+  it("excludes the current actor, followed, blocked, and muted creators from suggestions", async () => {
+    mocks.request.mockImplementation(async (input: { path: string }) => {
+      if (input.path === "/api/social/profiles/search") {
+        return {
+          ok: true,
+          data: [
+            { userId: "viewer-1", displayName: "Viewer", handle: "viewer" },
+            { userId: "followed-1", displayName: "Followed", handle: "followed" },
+            { userId: "blocked-1", displayName: "Blocked", handle: "blocked" },
+            { userId: "muted-1", displayName: "Muted", handle: "muted" },
+            { userId: "visible-1", displayName: "Visible", handle: "visible" },
+            { displayName: "Missing identity", handle: "missing" },
+          ],
+        };
+      }
+      if (input.path === "/api/followers/batch/status") {
+        return { ok: true, data: { "followed-1": true } };
+      }
+      if (input.path === "/api/followers/muted-users") {
+        return { ok: true, data: [{ mutedId: "muted-1" }] };
+      }
+      if (input.path === "/api/social/feed/profiles/users/blocked-1") {
+        return { ok: true, data: null };
+      }
+      if (input.path === "/api/social/feed/profiles/users/visible-1") {
+        return {
+          ok: true,
+          data: {
+            userId: "visible-1",
+            displayName: "Visible",
+            handle: "visible",
+            isFollowing: false,
+          },
+        };
+      }
+      throw new Error(`Unexpected request: ${input.path}`);
+    });
+
+    const profiles = await loadCreatorSuggestions("viewer-1", 4);
+
+    expect(profiles.map((profile) => profile.userId)).toEqual(["visible-1"]);
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: "GET",
+      path: "/api/followers/muted-users",
+      params: { skip: 0, take: 50 },
+      requiresAuth: true,
+    });
+  });
+
   it("loads the viewer-aware aggregate social profile by handle", async () => {
     mocks.request
       .mockResolvedValueOnce({
@@ -223,6 +274,79 @@ describe("social feed queries", () => {
       requiresAuth: true,
     });
     expect(profile).toMatchObject({ handle: "lin", displayName: "Lin", projectCount: 3, isFollowing: true });
+  });
+
+  it("loads persisted public post and project collections for a profile", async () => {
+    mocks.request.mockImplementation(async (input: { path: string }) => {
+      if (input.path === "/api/v1/posts/author/user-2") {
+        return {
+          ok: true,
+          data: [
+            {
+              id: "post-1",
+              content: "Public update",
+              visibility: "Public",
+              mediaUrl: null,
+              mediaType: null,
+              createdAt: "2026-09-10T00:00:00Z",
+            },
+            { id: "post-private", content: "Private", visibility: "Private" },
+          ],
+        };
+      }
+      if (input.path === "/v1/projects/creator/user-2") {
+        return {
+          ok: true,
+          data: [
+            {
+              id: "project-1",
+              title: "Skybound",
+              slug: "skybound",
+              shortDescription: "Public project",
+              imageUrl: null,
+              publishedAt: "2026-09-09T00:00:00Z",
+            },
+          ],
+        };
+      }
+      throw new Error(`Unexpected request: ${input.path}`);
+    });
+
+    const collections = await loadSocialProfileCollections("user-2");
+
+    expect(collections.posts).toEqual([
+      expect.objectContaining({ id: "post-1", content: "Public update" }),
+    ]);
+    expect(collections.projects).toEqual([
+      expect.objectContaining({ id: "project-1", slug: "skybound" }),
+    ]);
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: "GET",
+      path: "/api/v1/posts/author/user-2",
+      params: { skip: 0, take: 12 },
+      requiresAuth: true,
+    });
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: "GET",
+      path: "/v1/projects/creator/user-2",
+      params: { status: "Published", skip: 0, take: 12 },
+      requiresAuth: true,
+    });
+  });
+
+  it("surfaces a typed profile collection error instead of demo content", async () => {
+    mocks.request.mockResolvedValue({
+      ok: false,
+      error: { status: 503, code: "SERVER_ERROR", message: "offline" },
+    });
+
+    await expect(loadSocialProfileCollections("user-2")).rejects.toEqual(
+      expect.objectContaining({
+        name: "SocialFeedRequestError",
+        status: 503,
+        retryable: true,
+      }),
+    );
   });
 
   it("keeps authenticated asset paths on the Web origin for session-aware proxying", async () => {

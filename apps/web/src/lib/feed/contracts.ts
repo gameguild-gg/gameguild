@@ -180,6 +180,28 @@ export interface SocialProfile {
   isFollowing: boolean;
 }
 
+export interface SocialProfilePost {
+  id: string;
+  content: string;
+  mediaUrl: string | null;
+  mediaType: string | null;
+  createdAt: string;
+}
+
+export interface SocialProfileProject {
+  id: string;
+  title: string;
+  slug: string;
+  shortDescription: string | null;
+  imageUrl: string | null;
+  publishedAt: string | null;
+}
+
+export interface SocialProfileCollections {
+  posts: SocialProfilePost[];
+  projects: SocialProfileProject[];
+}
+
 export interface TrendingTag {
   name: string;
   postCount: number;
