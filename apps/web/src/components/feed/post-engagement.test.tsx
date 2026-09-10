@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   followCreator: vi.fn(),
+  hydrateSocialPost: vi.fn(),
   savePost: vi.fn(),
   setPostReaction: vi.fn(),
   sharePost: vi.fn(),
@@ -11,6 +12,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/feed/actions", () => ({
   followCreator: mocks.followCreator,
+  hydrateSocialPost: mocks.hydrateSocialPost,
   savePost: mocks.savePost,
   setPostReaction: mocks.setPostReaction,
   sharePost: mocks.sharePost,
@@ -26,6 +28,17 @@ describe("PostEngagement", () => {
     mocks.savePost.mockResolvedValue({ postId: "post-1", isSaved: true });
     mocks.followCreator.mockResolvedValue({ userId: "author-1", isFollowing: true });
     mocks.sharePost.mockResolvedValue({ postId: "post-1", shared: true });
+    mocks.hydrateSocialPost.mockResolvedValue({
+      id: "post-1",
+      kind: "Post",
+      createdAt: "2026-09-10T00:00:00Z",
+      author: { userId: "author-1", handle: "ada", displayName: "Ada", avatarUrl: null, isVerified: false },
+      post: { content: "Post", mediaUrl: null, mediaType: null, visibility: "Public", isEdited: false, editedAt: null, repostedPost: null },
+      testingSession: null,
+      engagement: { reactionsCount: 11, commentsCount: 0, repostsCount: 0, viewsCount: 0 },
+      viewer: { reaction: "Like", isSaved: false, isFollowingAuthor: false, hasReposted: false, canEdit: false, canDelete: false },
+      tags: [],
+    });
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: { writeText: vi.fn().mockResolvedValue(undefined) },
@@ -77,7 +90,12 @@ describe("PostEngagement", () => {
     fireEvent.click(screen.getByRole("button", { name: "React to post" }));
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Remove Like reaction" })).toHaveTextContent("3"));
-    expect(screen.getByRole("status")).toHaveTextContent("Reaction saved. Counts will refresh shortly.");
+    expect(screen.getByRole("status")).toHaveTextContent("Reaction saved");
+    fireEvent.click(screen.getByRole("button", { name: "Retry reaction count refresh" }));
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Remove Like reaction" })).toHaveTextContent("11"));
+    expect(screen.queryByRole("button", { name: "Retry reaction count refresh" })).not.toBeInTheDocument();
+    expect(mocks.hydrateSocialPost).toHaveBeenCalledWith("post-1");
     expect(mocks.setPostReaction).toHaveBeenCalledTimes(1);
   });
 
