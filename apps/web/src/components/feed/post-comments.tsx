@@ -3,6 +3,7 @@
 import {
   createPostComment,
   deletePostComment,
+  loadPostCommentRepliesPageAction,
   loadPostCommentsPageAction,
   updatePostComment,
 } from "@/lib/feed/actions";
@@ -20,13 +21,6 @@ import {
 } from "@game-guild/ui/components/alert-dialog";
 import { Button } from "@game-guild/ui/components/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@game-guild/ui/components/dialog";
-import {
   Drawer,
   DrawerContent,
   DrawerDescription,
@@ -40,7 +34,7 @@ import * as React from "react";
 import { toast } from "sonner";
 
 const COMMENT_PAGE_SIZE = 10;
-const INITIAL_REPLY_LIMIT = 2;
+const REPLY_PAGE_SIZE = 2;
 
 function useResponsiveMobile() {
   const [mobile, setMobile] = React.useState(() => typeof window !== "undefined" && window.innerWidth < 768);
@@ -111,14 +105,22 @@ function removeComment(comments: PostComment[], commentId: string): PostComment[
     .map((comment) => ({ ...comment, replies: removeComment(comment.replies, commentId) }));
 }
 
-function countCommentTree(comment: PostComment): number {
-  return 1 + comment.replies.reduce((total, reply) => total + countCommentTree(reply), 0);
+function seedReplyOffsets(comments: PostComment[], current: Record<string, number | null> = {}) {
+  const next = { ...current };
+  for (const comment of comments) {
+    if (!(comment.id in next)) {
+      next[comment.id] = comment.replies.length >= REPLY_PAGE_SIZE ? comment.replies.length : null;
+    }
+    Object.assign(next, seedReplyOffsets(comment.replies, next));
+  }
+  return next;
 }
 
 function CommentThread({
   comments,
   currentUserId,
-  replyLimits,
+  replyNextSkips,
+  replyPendingIds,
   editingId,
   editValue,
   editPending,
@@ -133,13 +135,14 @@ function CommentThread({
 }: {
   comments: PostComment[];
   currentUserId?: string | null;
-  replyLimits: Record<string, number>;
+  replyNextSkips: Record<string, number | null>;
+  replyPendingIds: Set<string>;
   editingId: string | null;
   editValue: string;
   editPending: boolean;
   deletePendingIds: Set<string>;
   onReply: (comment: PostComment) => void;
-  onMoreReplies: (commentId: string) => void;
+  onMoreReplies: (comment: PostComment) => void;
   onBeginEdit: (comment: PostComment) => void;
   onEditValue: (value: string) => void;
   onCancelEdit: () => void;
@@ -149,8 +152,10 @@ function CommentThread({
   return (
     <div className="space-y-4">
       {comments.map((comment) => {
-        const limit = replyLimits[comment.id] ?? INITIAL_REPLY_LIMIT;
-        const visibleReplies = comment.replies.slice(0, limit);
+        const nextReplySkip = comment.id in replyNextSkips
+          ? replyNextSkips[comment.id]
+          : comment.replies.length >= REPLY_PAGE_SIZE ? comment.replies.length : null;
+        const replyPending = replyPendingIds.has(comment.id);
         const deletePending = deletePendingIds.has(comment.id);
         return (
           <div key={comment.id} className="flex gap-3">
@@ -209,12 +214,13 @@ function CommentThread({
                   </AlertDialog>
                 </>
               ) : null}
-              {visibleReplies.length > 0 ? (
+              {comment.replies.length > 0 ? (
                 <div className="mt-3 border-l border-border/50 pl-3">
                   <CommentThread
-                    comments={visibleReplies}
+                    comments={comment.replies}
                     currentUserId={currentUserId}
-                    replyLimits={replyLimits}
+                    replyNextSkips={replyNextSkips}
+                    replyPendingIds={replyPendingIds}
                     editingId={editingId}
                     editValue={editValue}
                     editPending={editPending}
@@ -229,9 +235,9 @@ function CommentThread({
                   />
                 </div>
               ) : null}
-              {comment.replies.length > visibleReplies.length ? (
-                <button type="button" aria-label={`Load more replies to ${comment.authorName}`} onClick={() => onMoreReplies(comment.id)} className="mt-2 text-xs font-medium text-primary">
-                  Load more replies
+              {nextReplySkip !== null ? (
+                <button type="button" disabled={replyPending} aria-label={`Load more replies to ${comment.authorName}`} onClick={() => onMoreReplies(comment)} className="mt-2 text-xs font-medium text-primary disabled:opacity-60">
+                  {replyPending ? "Loading…" : "Load more replies"}
                 </button>
               ) : null}
             </div>
@@ -246,10 +252,14 @@ function CommentsPanel({
   postId,
   currentUserId,
   onCommentCountChange,
+  onCommentCountReconciled,
+  onCommentCountInvalidated,
 }: {
   postId: string;
   currentUserId?: string | null;
   onCommentCountChange?: (change: number) => void;
+  onCommentCountReconciled?: (count: number) => void;
+  onCommentCountInvalidated?: () => void;
 }) {
   const [comments, setComments] = React.useState<PostComment[]>([]);
   const [nextSkip, setNextSkip] = React.useState<number | null>(null);
@@ -258,7 +268,8 @@ function CommentsPanel({
   const [commentPending, setCommentPending] = React.useState(false);
   const [commentText, setCommentText] = React.useState("");
   const [replyingTo, setReplyingTo] = React.useState<PostComment | null>(null);
-  const [replyLimits, setReplyLimits] = React.useState<Record<string, number>>({});
+  const [replyNextSkips, setReplyNextSkips] = React.useState<Record<string, number | null>>({});
+  const [replyPendingIds, setReplyPendingIds] = React.useState<Set<string>>(new Set());
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [editValue, setEditValue] = React.useState("");
   const [editPending, setEditPending] = React.useState(false);
@@ -268,6 +279,7 @@ function CommentsPanel({
   const commentPendingRef = React.useRef(false);
   const editPendingRef = React.useRef(false);
   const deletePendingIdsRef = React.useRef(new Set<string>());
+  const replyPendingIdsRef = React.useRef(new Set<string>());
 
   React.useEffect(() => {
     let active = true;
@@ -275,6 +287,7 @@ function CommentsPanel({
       .then((page) => {
         if (!active) return;
         setComments(page.items);
+        setReplyNextSkips(seedReplyOffsets(page.items));
         setNextSkip(page.nextSkip);
       })
       .catch((reason) => {
@@ -303,6 +316,27 @@ function CommentsPanel({
     } finally {
       pagePendingRef.current = false;
       setPagePending(false);
+    }
+  }
+
+  async function loadMoreReplies(comment: PostComment) {
+    if (replyPendingIdsRef.current.has(comment.id)) return;
+    const skip = comment.id in replyNextSkips ? replyNextSkips[comment.id] : comment.replies.length;
+    if (skip === null) return;
+    replyPendingIdsRef.current.add(comment.id);
+    setReplyPendingIds(new Set(replyPendingIdsRef.current));
+    setError(null);
+    try {
+      const page = await loadPostCommentRepliesPageAction(postId, comment.id, skip, REPLY_PAGE_SIZE);
+      setComments((current) => appendComments(current, page.items));
+      setReplyNextSkips((current) => seedReplyOffsets(page.items, { ...current, [comment.id]: page.nextSkip }));
+    } catch (reason) {
+      const message = reason instanceof Error ? reason.message : "More replies could not be loaded.";
+      setError(message);
+      toast.error(message);
+    } finally {
+      replyPendingIdsRef.current.delete(comment.id);
+      setReplyPendingIds(new Set(replyPendingIdsRef.current));
     }
   }
 
@@ -362,9 +396,10 @@ function CommentsPanel({
     setDeletePendingIds(new Set(deletePendingIdsRef.current));
     setError(null);
     try {
-      await deletePostComment(postId, comment.id);
+      const result = await deletePostComment(postId, comment.id);
       setComments((current) => removeComment(current, comment.id));
-      onCommentCountChange?.(-countCommentTree(comment));
+      if (result.kind === "confirmed") onCommentCountReconciled?.(result.commentsCount);
+      else onCommentCountInvalidated?.();
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : "Comment could not be deleted.";
       setError(message);
@@ -384,13 +419,14 @@ function CommentsPanel({
           <CommentThread
             comments={comments}
             currentUserId={currentUserId}
-            replyLimits={replyLimits}
+            replyNextSkips={replyNextSkips}
+            replyPendingIds={replyPendingIds}
             editingId={editingId}
             editValue={editValue}
             editPending={editPending}
             deletePendingIds={deletePendingIds}
             onReply={setReplyingTo}
-            onMoreReplies={(commentId) => setReplyLimits((current) => ({ ...current, [commentId]: (current[commentId] ?? INITIAL_REPLY_LIMIT) + INITIAL_REPLY_LIMIT }))}
+            onMoreReplies={(comment) => void loadMoreReplies(comment)}
             onBeginEdit={(comment) => {
               setEditingId(comment.id);
               setEditValue(comment.content);
@@ -439,15 +475,28 @@ export function PostComments({
   open,
   onOpenChange,
   onCommentCountChange,
+  onCommentCountReconciled,
+  onCommentCountInvalidated,
 }: {
   postId: string;
   currentUserId?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCommentCountChange?: (change: number) => void;
+  onCommentCountReconciled?: (count: number) => void;
+  onCommentCountInvalidated?: () => void;
 }): React.JSX.Element {
   const isMobile = useResponsiveMobile();
-  const panel = open ? <CommentsPanel key={postId} postId={postId} currentUserId={currentUserId} onCommentCountChange={onCommentCountChange} /> : null;
+  const panel = open ? (
+    <CommentsPanel
+      key={postId}
+      postId={postId}
+      currentUserId={currentUserId}
+      onCommentCountChange={onCommentCountChange}
+      onCommentCountReconciled={onCommentCountReconciled}
+      onCommentCountInvalidated={onCommentCountInvalidated}
+    />
+  ) : null;
 
   return isMobile ? (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -459,15 +508,16 @@ export function PostComments({
         {panel}
       </DrawerContent>
     </Drawer>
-  ) : (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[80vh] flex-col sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Comments</DialogTitle>
-          <DialogDescription>Read the discussion or add a reply.</DialogDescription>
-        </DialogHeader>
-        {panel}
-      </DialogContent>
-    </Dialog>
-  );
+  ) : open ? (
+    <section aria-label="Comments" className="mx-4 mt-3 border-t px-0 pb-4 pt-4 sm:mx-6">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">Comments</h3>
+          <p className="text-xs text-muted-foreground">Read the discussion or add a reply.</p>
+        </div>
+        <Button type="button" variant="ghost" size="xs" onClick={() => onOpenChange(false)}>Close</Button>
+      </div>
+      {panel}
+    </section>
+  ) : <></>;
 }

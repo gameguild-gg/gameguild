@@ -13,6 +13,7 @@ vi.mock("@game-guild/client", () => ({
 
 import {
   SocialFeedRequestError,
+  loadPostCommentRepliesPage,
   loadPostComments,
   loadPostCommentsPage,
   loadSocialFeed,
@@ -158,6 +159,27 @@ describe("social feed queries", () => {
     await expect(loadPostCommentsPage("post-1", 10, 2)).resolves.toMatchObject({ nextSkip: 12 });
     await expect(loadPostCommentsPage("post-1", 12, 2)).resolves.toEqual({ items: [], nextSkip: null });
     expect(mocks.request).toHaveBeenNthCalledWith(1, expect.objectContaining({ params: { skip: 10, take: 2 } }));
+  });
+
+  it("loads replies through an authenticated parent-scoped offset", async () => {
+    mocks.request.mockResolvedValueOnce({
+      ok: true,
+      data: [
+        { id: "r-3", postId: "post-1", authorId: "", parentCommentId: "c-1", content: "Third", createdAt: "2026-09-10T00:03:00Z" },
+        { id: "r-4", postId: "post-1", authorId: "", parentCommentId: "c-1", content: "Fourth", createdAt: "2026-09-10T00:04:00Z" },
+      ],
+    });
+
+    await expect(loadPostCommentRepliesPage("post-1", "c-1", 2, 2)).resolves.toMatchObject({
+      items: [{ id: "r-3", parentCommentId: "c-1" }, { id: "r-4", parentCommentId: "c-1" }],
+      nextSkip: 4,
+    });
+    expect(mocks.request).toHaveBeenCalledWith({
+      method: "GET",
+      path: "/api/v1/posts/post-1/comments",
+      params: { parentCommentId: "c-1", skip: 2, take: 2 },
+      requiresAuth: true,
+    });
   });
 
   it("hydrates creator suggestions with the viewer follow state", async () => {

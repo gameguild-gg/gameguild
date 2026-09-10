@@ -22,7 +22,7 @@ describe("PostEngagement", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.replaceState({}, "", "/pt-BR/social");
-    mocks.setPostReaction.mockResolvedValue({ type: "Like", reactionsCount: 3 });
+    mocks.setPostReaction.mockResolvedValue({ kind: "confirmed", reaction: "Like", reactionsCount: 3 });
     mocks.savePost.mockResolvedValue({ postId: "post-1", isSaved: true });
     mocks.followCreator.mockResolvedValue({ userId: "author-1", isFollowing: true });
     mocks.sharePost.mockResolvedValue({ postId: "post-1", shared: true });
@@ -39,7 +39,7 @@ describe("PostEngagement", () => {
   afterEach(cleanup);
 
   it("reconciles reaction and save controls with authoritative responses", async () => {
-    mocks.setPostReaction.mockResolvedValueOnce({ type: "Love", reactionsCount: 9 });
+    mocks.setPostReaction.mockResolvedValueOnce({ kind: "confirmed", reaction: "Love", reactionsCount: 9 });
     mocks.savePost.mockResolvedValueOnce({ postId: "post-1", isSaved: false });
     render(
       <PostEngagement
@@ -58,6 +58,27 @@ describe("PostEngagement", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Save post" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Save post" })).toHaveAttribute("aria-pressed", "false"));
+  });
+
+  it("keeps the committed optimistic reaction when projection hydration is pending", async () => {
+    mocks.setPostReaction.mockResolvedValueOnce({ kind: "committed-needs-hydration", reaction: "Like" });
+    render(
+      <PostEngagement
+        postId="post-1"
+        authorName="Ada"
+        initialReaction={null}
+        initialReactionCount={2}
+        initialSaved={false}
+        commentCount={0}
+        onOpenComments={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "React to post" }));
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Remove Like reaction" })).toHaveTextContent("3"));
+    expect(screen.getByRole("status")).toHaveTextContent("Reaction saved. Counts will refresh shortly.");
+    expect(mocks.setPostReaction).toHaveBeenCalledTimes(1);
   });
 
   it("rolls a failed reaction back visibly and ignores only duplicate reaction clicks", async () => {

@@ -8,12 +8,14 @@ const mocks = vi.hoisted(() => ({
   repostPost: vi.fn(),
   sharePost: vi.fn(),
   followCreator: vi.fn(),
+  hydrateSocialPost: vi.fn(),
   createPostComment: vi.fn(),
   deletePostComment: vi.fn(),
   updatePostComment: vi.fn(),
   deleteSocialPost: vi.fn(),
   updateSocialPost: vi.fn(),
   loadPostCommentsPageAction: vi.fn(),
+  loadPostCommentRepliesPageAction: vi.fn(),
   recordPostView: vi.fn(),
 }));
 
@@ -39,7 +41,7 @@ const item: SocialFeedItem = {
 describe("PostCard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.setPostReaction.mockResolvedValue({ type: "Like" });
+    mocks.setPostReaction.mockResolvedValue({ kind: "confirmed", reaction: "Like", reactionsCount: 3 });
     mocks.savePost.mockResolvedValue({ postId: "post-1", isSaved: true });
     mocks.repostPost.mockResolvedValue({ id: "repost-1" });
     mocks.sharePost.mockResolvedValue(undefined);
@@ -60,6 +62,8 @@ describe("PostCard", () => {
       replies: [],
     });
     mocks.loadPostCommentsPageAction.mockResolvedValue({ items: [], nextSkip: null });
+    mocks.loadPostCommentRepliesPageAction.mockResolvedValue({ items: [], nextSkip: null });
+    mocks.hydrateSocialPost.mockResolvedValue(item);
     mocks.recordPostView.mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) }, share: undefined });
     Object.defineProperty(window, "innerWidth", { configurable: true, value: 1024 });
@@ -95,6 +99,9 @@ describe("PostCard", () => {
     render(<PostCard item={item} />);
     fireEvent.click(screen.getByRole("button", { name: /comments/i }));
     await waitFor(() => expect(mocks.loadPostCommentsPageAction).toHaveBeenCalledWith("post-1", 0, 10));
+    const comments = screen.getByRole("region", { name: "Comments" });
+    expect(screen.getByTestId("post-card")).toContainElement(comments);
+    expect(screen.queryByRole("dialog", { name: "Comments" })).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByPlaceholderText(/add a comment/i), { target: { value: "Nice" } });
     fireEvent.submit(screen.getByPlaceholderText(/add a comment/i).closest("form")!);

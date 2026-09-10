@@ -280,6 +280,45 @@ export async function loadPostCommentsPage(
   };
 }
 
+export async function loadPostCommentRepliesPage(
+  postId: string,
+  parentCommentId: string,
+  skip = 0,
+  take = 20,
+): Promise<PostCommentPage> {
+  const data = await request<unknown>({
+    method: "GET",
+    path: `/api/v1/posts/${postId}/comments`,
+    params: { parentCommentId, skip, take },
+    requiresAuth: true,
+  });
+  if (!Array.isArray(data)) return { items: [], nextSkip: null };
+  const authorIds = [
+    ...new Set(data.map((value) => text(record(value).authorId)).filter(Boolean)),
+  ];
+  const profiles = new Map<string, SocialProfile>();
+  await Promise.all(
+    authorIds.map(async (authorId) => {
+      try {
+        const profileData = await request<unknown>({
+          method: "GET",
+          path: `/api/social/profiles/users/${authorId}`,
+          requiresAuth: true,
+        });
+        if (profileData) profiles.set(authorId, mapProfile(profileData));
+      } catch {
+        // A missing public profile does not hide the reply itself.
+      }
+    }),
+  );
+  return {
+    items: data
+      .map((value) => mapComment(value, profiles))
+      .filter((comment) => comment.parentCommentId === parentCommentId),
+    nextSkip: data.length === take ? skip + take : null,
+  };
+}
+
 export async function loadPostComments(postId: string, skip = 0, take = 50) {
   return (await loadPostCommentsPage(postId, skip, take)).items;
 }
