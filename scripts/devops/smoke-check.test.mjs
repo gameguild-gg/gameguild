@@ -128,6 +128,8 @@ async function runSmokeWithOpenApi(paths, options = {}) {
     SMOKE_RETRIES: '0',
     SMOKE_TIMEOUT_MS: '5000',
   };
+  delete childEnv.SMOKE_SOCIAL_EVIDENCE_MAX_AGE_MS;
+  if (options.maxAge !== undefined) childEnv.SMOKE_SOCIAL_EVIDENCE_MAX_AGE_MS = options.maxAge;
   if (options.credentials === false) {
     delete childEnv.GAMEGUILD_SMOKE_ADMIN_EMAIL;
     delete childEnv.GAMEGUILD_SMOKE_ADMIN_PASSWORD;
@@ -216,4 +218,13 @@ test('deployment smoke fails closed when auth credentials are not configured', a
   assert.equal(result.exitCode, 1, result.stdout);
   assert.match(result.stderr, /GAMEGUILD_SMOKE_ADMIN_EMAIL.*GAMEGUILD_SMOKE_ADMIN_PASSWORD/);
   assert.equal(result.requestedPaths.includes('/v1/auth/sign-in'), false);
+});
+
+test('deployment smoke fails closed for malformed social evidence age configuration', async () => {
+  const paths = { ...expectedOrderOperations, ...expectedSocialOperations };
+  for (const maxAge of ['NaN', '-1', '1.5', 'Infinity']) {
+    const result = await runSmokeWithOpenApi(paths, { maxAge });
+    assert.equal(result.exitCode, 1, `${maxAge}: ${result.stdout}`);
+    assert.match(result.stderr, /SMOKE_SOCIAL_EVIDENCE_MAX_AGE_MS must be a finite non-negative integer/);
+  }
 });

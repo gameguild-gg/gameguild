@@ -14,8 +14,11 @@ import {
   DEFAULT_SOCIAL_EVIDENCE_PATH,
   getAccessTokenRoles,
   missingSocialEvidence,
+  prepareNonAdminActor,
   readRequiredActorCredentials,
   REQUIRED_SOCIAL_EVIDENCE,
+  createSocialRunState,
+  writeSocialRunFailure,
 } from './social-feed-browser-e2e.mjs';
 
 const socialScript = fileURLToPath(new URL('./social-feed-browser-e2e.mjs', import.meta.url));
@@ -119,6 +122,29 @@ test('non-admin guard requires distinct actors with explicit non-admin role clai
   );
 });
 
+test('rejects an administrator immediately after sign-in and before any profile write', async () => {
+  const calls = [];
+
+  await assert.rejects(
+    prepareNonAdminActor('A', 'run-tag', { email: 'admin@example.test', password: 'secret' }, {
+      authenticate: async () => {
+        calls.push('signIn');
+        return {
+          id: 'actor-a',
+          email: 'admin@example.test',
+          password: 'secret',
+          accessToken: jwt({ role: 'Admin' }),
+          tenantId: 'tenant-id',
+        };
+      },
+      writeProfile: async () => { calls.push('profileWrite'); },
+    }),
+    /actor A.*Admin/i,
+  );
+
+  assert.deepEqual(calls, ['signIn']);
+});
+
 test('CLI fails closed before network access and writes failure evidence when credentials are absent', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'social-feed-contract-'));
   const evidencePath = join(directory, 'evidence.json');
@@ -168,4 +194,30 @@ test('run metadata records the real elapsed interval and target context', () => 
     actorIds: ['actor-a', 'actor-b'],
     runTag: 'run-tag',
   });
+});
+
+test('failure evidence preserves capabilities completed before a mid-journey error', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'social-feed-partial-'));
+  const evidencePath = join(directory, 'evidence.json');
+  const state = createSocialRunState(1_000);
+  state.capabilities.nonAdminActors = true;
+  state.capabilities.crossActorMutationForbidden = true;
+  state.capabilities.published = true;
+
+  try {
+    await writeSocialRunFailure(evidencePath, state, new Error('mid-journey failure'), {
+      actorIds: ['actor-a', 'actor-b'],
+    }, 4_000);
+    const artifact = JSON.parse(await readFile(evidencePath, 'utf8'));
+    assert.equal(artifact.status, 'failed');
+    assert.equal(artifact.capabilities.nonAdminActors, true);
+    assert.equal(artifact.capabilities.crossActorMutationForbidden, true);
+    assert.equal(artifact.capabilities.published, true);
+    assert.equal(artifact.capabilities.reacted, false);
+    assert.deepEqual(artifact.errors, ['mid-journey failure']);
+    assert.equal(artifact.metadata.durationMs, 3000);
+    assert.equal(JSON.stringify(artifact).includes('secret'), false);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
