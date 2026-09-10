@@ -14,6 +14,7 @@ vi.mock("@game-guild/client", () => ({
 import {
   SocialFeedRequestError,
   loadPostComments,
+  loadPostCommentsPage,
   loadSocialFeed,
   loadSocialPost,
   loadSocialProfileByHandle,
@@ -141,6 +142,22 @@ describe("social feed queries", () => {
 
     expect(comments).toHaveLength(1);
     expect(comments[0]).toMatchObject({ authorName: "Ada", replies: [{ authorName: "Lin", content: "Reply" }] });
+  });
+
+  it("returns a stable next offset only for full comment pages", async () => {
+    mocks.request
+      .mockResolvedValueOnce({
+        ok: true,
+        data: [
+          { id: "c-1", postId: "post-1", authorId: "", content: "One", createdAt: "2026-09-10T00:00:00Z" },
+          { id: "c-2", postId: "post-1", authorId: "", content: "Two", createdAt: "2026-09-10T00:01:00Z" },
+        ],
+      })
+      .mockResolvedValueOnce({ ok: true, data: [] });
+
+    await expect(loadPostCommentsPage("post-1", 10, 2)).resolves.toMatchObject({ nextSkip: 12 });
+    await expect(loadPostCommentsPage("post-1", 12, 2)).resolves.toEqual({ items: [], nextSkip: null });
+    expect(mocks.request).toHaveBeenNthCalledWith(1, expect.objectContaining({ params: { skip: 10, take: 2 } }));
   });
 
   it("hydrates creator suggestions with the viewer follow state", async () => {

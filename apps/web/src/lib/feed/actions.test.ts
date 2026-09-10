@@ -100,12 +100,16 @@ describe("social feed actions", () => {
     mocks.request
       .mockResolvedValueOnce({ ok: true, data: { id: "r-1", type: "Love", targetId: "post-1" } })
       .mockResolvedValueOnce({ ok: true, data: { id: "c-1", postId: "post-1", content: "Nice" } })
-      .mockResolvedValueOnce({ ok: true, data: { id: "rp-1", repostOfPostId: "post-1", content: "Boost" } })
+      .mockResolvedValueOnce({ ok: true, data: { id: "rp-1", repostOfPostId: "post-1", content: "Boost", hasReposted: true, repostsCount: 8 } })
       .mockResolvedValueOnce({ ok: true, data: { postId: "post-1", isSaved: true } });
 
     await expect(setPostReaction("post-1", "Love")).resolves.toMatchObject({ type: "Love" });
     await expect(createPostComment("post-1", { content: "Nice" })).resolves.toMatchObject({ id: "c-1" });
-    await expect(repostPost("post-1", "Boost")).resolves.toMatchObject({ id: "rp-1" });
+    await expect(repostPost("post-1", "Boost")).resolves.toMatchObject({
+      id: "rp-1",
+      hasReposted: true,
+      repostsCount: 8,
+    });
     await expect(savePost("post-1", true)).resolves.toEqual({ postId: "post-1", isSaved: true });
   });
 

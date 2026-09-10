@@ -7,15 +7,18 @@ const mocks = vi.hoisted(() => ({
   savePost: vi.fn(),
   repostPost: vi.fn(),
   sharePost: vi.fn(),
+  followCreator: vi.fn(),
   createPostComment: vi.fn(),
+  deletePostComment: vi.fn(),
+  updatePostComment: vi.fn(),
   deleteSocialPost: vi.fn(),
   updateSocialPost: vi.fn(),
-  loadPostCommentsAction: vi.fn(),
+  loadPostCommentsPageAction: vi.fn(),
   recordPostView: vi.fn(),
 }));
 
 vi.mock("@/lib/feed/actions", () => mocks);
-vi.mock("next/image", () => ({ default: (props: Record<string, unknown>) => <img alt="" {...props} /> }));
+vi.mock("next/image", () => ({ default: () => <span data-testid="next-image" /> }));
 vi.mock("@/i18n/navigation", () => ({ Link: ({ children, ...props }: React.ComponentProps<"a">) => <a {...props}>{children}</a> }));
 
 import { PostCard } from "./post-card";
@@ -40,10 +43,39 @@ describe("PostCard", () => {
     mocks.savePost.mockResolvedValue({ postId: "post-1", isSaved: true });
     mocks.repostPost.mockResolvedValue({ id: "repost-1" });
     mocks.sharePost.mockResolvedValue(undefined);
-    mocks.createPostComment.mockResolvedValue({ id: "comment-1", content: "Nice" });
-    mocks.loadPostCommentsAction.mockResolvedValue([]);
+    mocks.followCreator.mockResolvedValue({ userId: "user-2", isFollowing: true });
+    mocks.createPostComment.mockResolvedValue({
+      id: "comment-1",
+      postId: "post-1",
+      authorId: "user-1",
+      authorName: "Viewer",
+      authorHandle: "viewer",
+      authorAvatarUrl: null,
+      parentCommentId: null,
+      content: "Nice",
+      likesCount: 0,
+      isEdited: false,
+      createdAt: "2026-09-10T00:00:00Z",
+      updatedAt: null,
+      replies: [],
+    });
+    mocks.loadPostCommentsPageAction.mockResolvedValue({ items: [], nextSkip: null });
     mocks.recordPostView.mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) }, share: undefined });
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 1024 });
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: vi.fn().mockReturnValue({
+        matches: false,
+        media: "(max-width: 767px)",
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      }),
+    });
   });
   afterEach(cleanup);
 
@@ -52,7 +84,7 @@ describe("PostCard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /react to post/i }));
     await waitFor(() => expect(mocks.setPostReaction).toHaveBeenCalledWith("post-1", "Like"));
-    expect(screen.getByRole("button", { name: /remove reaction/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /remove like reaction/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /save post/i }));
     await waitFor(() => expect(mocks.savePost).toHaveBeenCalledWith("post-1", true));
@@ -62,7 +94,7 @@ describe("PostCard", () => {
   it("loads comments on demand and submits a comment", async () => {
     render(<PostCard item={item} />);
     fireEvent.click(screen.getByRole("button", { name: /comments/i }));
-    await waitFor(() => expect(mocks.loadPostCommentsAction).toHaveBeenCalledWith("post-1"));
+    await waitFor(() => expect(mocks.loadPostCommentsPageAction).toHaveBeenCalledWith("post-1", 0, 10));
 
     fireEvent.change(screen.getByPlaceholderText(/add a comment/i), { target: { value: "Nice" } });
     fireEvent.submit(screen.getByPlaceholderText(/add a comment/i).closest("form")!);
@@ -84,7 +116,7 @@ describe("PostCard", () => {
     fireEvent.click(reaction);
 
     await waitFor(() => expect(reaction).toHaveAttribute("aria-pressed", "false"));
-    expect(screen.queryByRole("button", { name: /remove reaction/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /remove like reaction/i })).not.toBeInTheDocument();
   });
 
   it("prevents duplicate repost submissions while the mutation is pending", async () => {
@@ -94,12 +126,13 @@ describe("PostCard", () => {
     );
     render(<PostCard item={item} />);
 
-    const repost = screen.getByRole("button", { name: "Repost" });
+    fireEvent.click(screen.getByRole("button", { name: "Repost" }));
+    const repost = screen.getByRole("button", { name: "Publish repost" });
     fireEvent.click(repost);
     fireEvent.click(repost);
 
     expect(mocks.repostPost).toHaveBeenCalledTimes(1);
     release({ id: "repost-1" });
-    await waitFor(() => expect(repost).toHaveAttribute("aria-pressed", "true"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Reposted" })).toHaveAttribute("aria-pressed", "true"));
   });
 });
