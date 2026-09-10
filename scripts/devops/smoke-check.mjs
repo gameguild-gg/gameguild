@@ -28,7 +28,12 @@ const config = {
 };
 const socialEvidencePath = process.env.SOCIAL_FEED_E2E_EVIDENCE_PATH ??
   fileURLToPath(new URL('../../.tmp/social-feed-browser-e2e/evidence.json', import.meta.url));
-const socialEvidenceMaxAgeMs = Number.parseInt(process.env.SOCIAL_FEED_E2E_EVIDENCE_MAX_AGE_MS ?? '86400000', 10);
+const socialEvidenceMaxAgeRaw = process.env.SMOKE_SOCIAL_EVIDENCE_MAX_AGE_MS ?? '86400000';
+const socialEvidenceMaxAgeMs = Number(socialEvidenceMaxAgeRaw);
+const socialEvidenceMaxAgeError = /^(0|[1-9]\d*)$/.test(socialEvidenceMaxAgeRaw) &&
+  Number.isSafeInteger(socialEvidenceMaxAgeMs)
+  ? null
+  : 'SMOKE_SOCIAL_EVIDENCE_MAX_AGE_MS must be a finite non-negative integer in milliseconds.';
 
 const expectedOrderOperations = [
   'get /v1/orders',
@@ -280,6 +285,17 @@ function normalizeOrigin(value) {
 
 async function runSocialBrowserEvidenceCheck() {
   const started = Date.now();
+  if (socialEvidenceMaxAgeError) {
+    return {
+      name: 'Social non-admin browser evidence',
+      url: socialEvidencePath,
+      status: 'CONFIG',
+      elapsed: Date.now() - started,
+      ok: false,
+      attempts: 0,
+      error: socialEvidenceMaxAgeError,
+    };
+  }
   try {
     const evidence = JSON.parse(await readFile(socialEvidencePath, 'utf8'));
     const missing = expectedSocialCapabilities.filter((key) => evidence.capabilities?.[key] !== true);

@@ -37,7 +37,7 @@ pnpm smoke
 
 Use identical normalized API and Web origins in both commands; the smoke intentionally rejects evidence generated against a different target.
 
-The browser journey writes `.tmp/social-feed-browser-e2e/evidence.json` by default. Override it with `SOCIAL_FEED_E2E_EVIDENCE_PATH` when the browser and smoke execute in different workspaces. The artifact is ignored by Git, contains capability booleans, aggregate status, errors, target origins, timing, and actor IDs, and never contains passwords or tokens. The smoke accepts only a passing artifact for the same API/Web origins that is no more than 24 hours old by default; override that window with `SOCIAL_FEED_E2E_EVIDENCE_MAX_AGE_MS` only under an explicit release policy.
+The browser journey writes `.tmp/social-feed-browser-e2e/evidence.json` by default. Override it with `SOCIAL_FEED_E2E_EVIDENCE_PATH` when the browser and smoke execute in different workspaces. The artifact is ignored by Git, contains capability booleans, aggregate status, errors, target origins, timing, and actor IDs, and never contains passwords or tokens. The smoke accepts only a passing artifact for the same API/Web origins that is no more than 24 hours old by default; override that window with `SMOKE_SOCIAL_EVIDENCE_MAX_AGE_MS` only under an explicit release policy. The override must be a finite non-negative integer in milliseconds or the smoke fails closed.
 
 The smoke validates the social OpenAPI surface and consumes the browser artifact. It does not claim to execute the two-user journey itself.
 
