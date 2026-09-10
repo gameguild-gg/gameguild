@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+
 const liveMode = process.argv.includes('--live');
 const timeoutMs = Number.parseInt(process.env.SMOKE_TIMEOUT_MS ?? '20000', 10);
 const retryCount = Number.parseInt(process.env.SMOKE_RETRIES ?? (liveMode ? '2' : '0'), 10);
@@ -20,9 +23,12 @@ const config = {
   api: process.env.GAMEGUILD_API_URL ?? process.env.API_URL ?? defaults.api,
   web: process.env.GAMEGUILD_WEB_URL ?? process.env.WEB_URL ?? defaults.web,
   learning: process.env.GAMEGUILD_LEARNING_URL ?? process.env.LEARNING_URL ?? defaults.learning,
-  adminEmail: process.env.GAMEGUILD_SMOKE_ADMIN_EMAIL ?? 'admin@game-guild.com',
-  adminPassword: process.env.GAMEGUILD_SMOKE_ADMIN_PASSWORD ?? 'Admin123!',
+  adminEmail: process.env.GAMEGUILD_SMOKE_ADMIN_EMAIL,
+  adminPassword: process.env.GAMEGUILD_SMOKE_ADMIN_PASSWORD,
 };
+const socialEvidencePath = process.env.SOCIAL_FEED_E2E_EVIDENCE_PATH ??
+  fileURLToPath(new URL('../../.tmp/social-feed-browser-e2e/evidence.json', import.meta.url));
+const socialEvidenceMaxAgeMs = Number.parseInt(process.env.SOCIAL_FEED_E2E_EVIDENCE_MAX_AGE_MS ?? '86400000', 10);
 
 const expectedOrderOperations = [
   'get /v1/orders',
@@ -32,6 +38,46 @@ const expectedOrderOperations = [
   'post /v1/orders/{orderId}:capture',
   'post /v1/orders/{orderId}:complete',
   'post /v1/orders/{orderId}:payment-intent',
+];
+const expectedSocialOperations = [
+  'delete /api/social/saved-posts/{postId}',
+  'delete /api/social/stories/{storyId}',
+  'delete /api/v1/posts/{postId}',
+  'get /api/social/feed',
+  'get /api/social/stories',
+  'post /api/social/stories',
+  'post /api/social/stories/{storyId}/views',
+  'put /api/social/saved-posts/{postId}',
+  'put /api/v1/posts/{postId}',
+];
+const expectedSocialCapabilities = [
+  'nonAdminActors',
+  'crossActorMutationForbidden',
+  'published',
+  'mediaPublished',
+  'postEdited',
+  'trendingTagVisible',
+  'followed',
+  'profileMetrics',
+  'followingVisible',
+  'reacted',
+  'commented',
+  'replyCreated',
+  'commentEdited',
+  'commentDeleted',
+  'reposted',
+  'saved',
+  'shared',
+  'permalinkOpened',
+  'savedVisible',
+  'storyPublished',
+  'storyMediaDelivered',
+  'storyViewed',
+  'storyDeleted',
+  'persistedAfterReload',
+  'streamsSeparated',
+  'unfollowed',
+  'postDeleted',
 ];
 const openApiMethods = new Set(['delete', 'get', 'head', 'options', 'patch', 'post', 'put', 'trace']);
 
@@ -138,6 +184,20 @@ function getOrderOperations(document) {
     .sort((left, right) => left.localeCompare(right));
 }
 
+function getSocialOperations(document) {
+  if (!document?.paths || typeof document.paths !== 'object' || Array.isArray(document.paths)) {
+    return [];
+  }
+
+  return Object.entries(document.paths)
+    .flatMap(([path, pathItem]) =>
+      Object.keys(pathItem ?? {})
+        .map((method) => method.toLowerCase())
+        .filter((method) => openApiMethods.has(method))
+        .map((method) => `${method} ${path}`),
+    );
+}
+
 async function runOrdersOpenApiCheck() {
   const started = Date.now();
   const url = joinUrl(config.api, '/swagger/v1/swagger.json');
@@ -179,6 +239,89 @@ async function runOrdersOpenApiCheck() {
   }
 }
 
+async function runSocialOpenApiCheck() {
+  const started = Date.now();
+  const url = joinUrl(config.api, '/swagger/v1/swagger.json');
+
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(timeoutMs),
+      headers: { 'User-Agent': 'gameguild-smoke/1.0' },
+    });
+    const document = await readJson(response);
+    const actualOperations = getSocialOperations(document);
+    const missing = expectedSocialOperations.filter((operation) => !actualOperations.includes(operation));
+    const matches = response.ok && missing.length === 0;
+    return {
+      name: 'Social production OpenAPI',
+      url,
+      status: response.status,
+      elapsed: Date.now() - started,
+      ok: matches,
+      attempts: 1,
+      error: matches ? undefined : `Social OpenAPI operations missing=[${missing.join(', ')}]`,
+    };
+  } catch (error) {
+    return {
+      name: 'Social production OpenAPI',
+      url,
+      status: 'ERR',
+      elapsed: Date.now() - started,
+      ok: false,
+      attempts: 1,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+function normalizeOrigin(value) {
+  return value.replace(/\/$/, '');
+}
+
+async function runSocialBrowserEvidenceCheck() {
+  const started = Date.now();
+  try {
+    const evidence = JSON.parse(await readFile(socialEvidencePath, 'utf8'));
+    const missing = expectedSocialCapabilities.filter((key) => evidence.capabilities?.[key] !== true);
+    const completedAt = Date.parse(evidence.metadata?.completedAt ?? '');
+    const ageMs = Date.now() - completedAt;
+    const problems = [];
+    if (evidence.schemaVersion !== 1) problems.push('schemaVersion must be 1');
+    if (evidence.status !== 'passed' || evidence.aggregate?.passed !== true) problems.push('aggregate status is not passed');
+    if (missing.length > 0) problems.push(`missing capabilities=[${missing.join(', ')}]`);
+    if (!Array.isArray(evidence.errors) || evidence.errors.length > 0) problems.push('errors must be an empty array');
+    if (!Number.isFinite(completedAt) || ageMs < -300_000 || ageMs > socialEvidenceMaxAgeMs) {
+      problems.push(`completedAt is invalid or older than ${socialEvidenceMaxAgeMs}ms`);
+    }
+    if (normalizeOrigin(evidence.metadata?.apiBaseUrl ?? '') !== normalizeOrigin(config.api)) {
+      problems.push('API origin does not match this smoke target');
+    }
+    if (normalizeOrigin(evidence.metadata?.webBaseUrl ?? '') !== normalizeOrigin(config.web)) {
+      problems.push('Web origin does not match this smoke target');
+    }
+    const ok = problems.length === 0;
+    return {
+      name: 'Social non-admin browser evidence',
+      url: socialEvidencePath,
+      status: 'FILE',
+      elapsed: Date.now() - started,
+      ok,
+      attempts: 1,
+      error: ok ? undefined : `Social browser evidence rejected: ${problems.join('; ')}`,
+    };
+  } catch (error) {
+    return {
+      name: 'Social non-admin browser evidence',
+      url: socialEvidencePath,
+      status: 'ERR',
+      elapsed: Date.now() - started,
+      ok: false,
+      attempts: 1,
+      error: `Social browser evidence could not be read: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
 function getCookieHeader(response) {
   const setCookies =
     typeof response.headers.getSetCookie === 'function'
@@ -194,6 +337,21 @@ function getCookieHeader(response) {
 async function runApiAuthCheck() {
   const started = Date.now();
   const url = joinUrl(config.api, '/v1/auth/sign-in');
+  const missing = [
+    !config.adminEmail && 'GAMEGUILD_SMOKE_ADMIN_EMAIL',
+    !config.adminPassword && 'GAMEGUILD_SMOKE_ADMIN_PASSWORD',
+  ].filter(Boolean);
+  if (missing.length > 0) {
+    return {
+      name: 'api admin auth',
+      url,
+      status: 'CONFIG',
+      elapsed: Date.now() - started,
+      ok: false,
+      attempts: 0,
+      error: `Required smoke credentials are missing: ${missing.join(', ')}`,
+    };
+  }
 
   try {
     const response = await fetch(url, {
@@ -235,6 +393,21 @@ async function runWebAuthBridgeCheck() {
   const started = Date.now();
   const csrfUrl = joinUrl(config.web, '/api/auth/csrf');
   const signInUrl = joinUrl(config.web, '/api/auth/signin/credentials');
+  const missing = [
+    !config.adminEmail && 'GAMEGUILD_SMOKE_ADMIN_EMAIL',
+    !config.adminPassword && 'GAMEGUILD_SMOKE_ADMIN_PASSWORD',
+  ].filter(Boolean);
+  if (missing.length > 0) {
+    return {
+      name: 'web auth bridge',
+      url: signInUrl,
+      status: 'CONFIG',
+      elapsed: Date.now() - started,
+      ok: false,
+      attempts: 0,
+      error: `Required smoke credentials are missing: ${missing.join(', ')}`,
+    };
+  }
 
   try {
     const csrfResponse = await fetch(csrfUrl, {
@@ -298,6 +471,8 @@ async function runWebAuthBridgeCheck() {
 const results = [
   ...(await Promise.all(checks.map(runCheck))),
   await runOrdersOpenApiCheck(),
+  await runSocialOpenApiCheck(),
+  await runSocialBrowserEvidenceCheck(),
   await runApiAuthCheck(),
   await runWebAuthBridgeCheck(),
 ];
@@ -320,6 +495,6 @@ const failed = results.filter((result) => !result.ok);
 if (failed.length > 0) {
   console.error(`Smoke check failed: ${failed.length}/${results.length} checks failed.`);
   process.exitCode = 1;
+} else {
+  console.log(`Smoke check passed: ${results.length}/${results.length} checks passed.`);
 }
-
-console.log(`Smoke check passed: ${results.length}/${results.length} checks passed.`);
