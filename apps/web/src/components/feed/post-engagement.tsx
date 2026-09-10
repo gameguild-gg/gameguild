@@ -36,12 +36,6 @@ function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
-function authoritativeReactionCount(value: unknown): number | null {
-  if (!value || typeof value !== "object") return null;
-  const count = (value as { reactionsCount?: unknown }).reactionsCount;
-  return typeof count === "number" && Number.isFinite(count) ? count : null;
-}
-
 function localizedPostUrl(postId: string) {
   const localePrefix = window.location.pathname.match(/^\/(?:pt-BR|en-US)(?=\/|$)/)?.[0] ?? "";
   return `${window.location.origin}${localePrefix}/social/posts/${postId}`;
@@ -129,6 +123,7 @@ export function PostEngagement({
   const [reactionPending, setReactionPending] = React.useState(false);
   const [savePending, setSavePending] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [status, setStatus] = React.useState<string | null>(null);
   const reactionPendingRef = React.useRef(false);
   const savePendingRef = React.useRef(false);
 
@@ -141,15 +136,15 @@ export function PostEngagement({
     setReactionCount(Math.max(0, previousCount + (previous ? -1 : 0) + (next ? 1 : 0)));
     setReactionPending(true);
     setError(null);
+    setStatus(null);
     try {
       const state = await setPostReaction(postId, next);
-      const persisted = state?.type;
-      const authoritative = REACTIONS.some((entry) => entry.value === persisted)
-        ? (persisted as SocialReaction)
-        : null;
-      setReaction(authoritative);
-      const count = authoritativeReactionCount(state);
-      if (count !== null) setReactionCount(count);
+      setReaction(state.reaction);
+      if (state.kind === "confirmed") {
+        setReactionCount(state.reactionsCount);
+      } else {
+        setStatus("Reaction saved. Counts will refresh shortly.");
+      }
     } catch (reason) {
       setReaction(previous);
       setReactionCount(previousCount);
@@ -271,6 +266,7 @@ export function PostEngagement({
         <Bookmark className={`size-[19px] ${saved ? "fill-current" : ""}`} />
       </button>
       {error ? <span role="alert" className="sr-only">{error}</span> : null}
+      {status ? <span role="status" className="sr-only">{status}</span> : null}
     </div>
   );
 }

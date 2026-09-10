@@ -93,10 +93,15 @@ public class PostCommentService : IPostCommentService
         return Result.Success();
     }
 
-    public async Task<Result<IEnumerable<PostComment>>> GetPostCommentsAsync(Guid postId, int skip = 0, int take = 50, CancellationToken cancellationToken = default)
+    public async Task<Result<IEnumerable<PostComment>>> GetPostCommentsAsync(Guid postId, int skip = 0, int take = 50, Guid? parentCommentId = null, CancellationToken cancellationToken = default)
     {
-        var comments = await _context.Set<PostComment>()
-            .Where(c => c.PostId == postId && c.DeletedAt == null)
+        var query = _context.Set<PostComment>()
+            .Where(c => c.PostId == postId && c.DeletedAt == null);
+
+        if (parentCommentId.HasValue)
+            query = query.Where(c => c.ParentCommentId == parentCommentId.Value);
+
+        var comments = await query
             .OrderBy(c => c.CreatedAt)
             .Skip(skip)
             .Take(take)

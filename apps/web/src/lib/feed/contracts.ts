@@ -99,7 +99,12 @@ export interface SocialPostMutation {
 }
 
 export interface DeletedSocialPost { postId: string; deleted: true; }
-export interface DeletedPostComment { postId: string; commentId: string; deleted: true; }
+export type DeletedPostComment =
+  | { kind: "confirmed"; postId: string; commentId: string; commentsCount: number }
+  | { kind: "committed-needs-hydration"; postId: string; commentId: string };
+export type SocialReactionMutationResult =
+  | { kind: "confirmed"; reaction: SocialReaction | null; reactionsCount: number }
+  | { kind: "committed-needs-hydration"; reaction: SocialReaction | null };
 export interface SocialFollowState { userId: string; isFollowing: boolean; }
 export interface SharedPostState { postId: string; shared: true; }
 export interface ViewedPostState { postId: string; viewed: true; }

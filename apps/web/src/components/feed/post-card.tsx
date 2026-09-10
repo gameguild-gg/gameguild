@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "@/i18n/navigation";
-import { recordPostView } from "@/lib/feed/actions";
+import { hydrateSocialPost, recordPostView } from "@/lib/feed/actions";
 import type { SocialFeedItem } from "@/lib/feed/contracts";
 import { formatSocialDate, formatSocialDateTime } from "@/lib/feed/format";
 import { Button } from "@game-guild/ui/components/button";
@@ -82,6 +82,16 @@ export function PostCard({ item, currentUserId }: { item: SocialFeedItem; curren
   const [commentCount, setCommentCount] = React.useState(item.engagement.commentsCount);
   const articleRef = React.useRef<HTMLElement>(null);
 
+  async function refreshCommentCount() {
+    try {
+      const post = await hydrateSocialPost(item.id);
+      setCommentCount(post.engagement.commentsCount);
+    } catch {
+      // A committed deletion remains removed locally; a later feed refresh will
+      // reconcile a projection that is temporarily unavailable.
+    }
+  }
+
   React.useEffect(() => {
     if (item.kind === "TestingSession" || typeof IntersectionObserver === "undefined") return;
     const node = articleRef.current;
@@ -156,7 +166,15 @@ export function PostCard({ item, currentUserId }: { item: SocialFeedItem; curren
           repostControl={<RepostDialog postId={item.id} initialReposted={item.viewer.hasReposted} initialCount={item.engagement.repostsCount} />}
         />
       </div>
-      <PostComments postId={item.id} currentUserId={currentUserId} open={commentsOpen} onOpenChange={setCommentsOpen} onCommentCountChange={(change) => setCommentCount((count) => Math.max(0, count + change))} />
+      <PostComments
+        postId={item.id}
+        currentUserId={currentUserId}
+        open={commentsOpen}
+        onOpenChange={setCommentsOpen}
+        onCommentCountChange={(change) => setCommentCount((count) => Math.max(0, count + change))}
+        onCommentCountReconciled={setCommentCount}
+        onCommentCountInvalidated={() => void refreshCommentCount()}
+      />
     </article>
   );
 }
