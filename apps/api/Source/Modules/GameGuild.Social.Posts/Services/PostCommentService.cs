@@ -85,8 +85,35 @@ public class PostCommentService : IPostCommentService
         var post = await _context.Set<Post>()
             .FirstOrDefaultAsync(p => p.Id == comment.PostId, cancellationToken).ConfigureAwait(false);
 
-        comment.Delete();
-        post?.DecrementComments();
+        var postComments = await _context.Set<PostComment>()
+            .Where(c => c.PostId == comment.PostId)
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        var commentsById = postComments.ToDictionary(candidate => candidate.Id);
+        var childrenByParentId = postComments
+            .Where(candidate => candidate.ParentCommentId.HasValue)
+            .GroupBy(candidate => candidate.ParentCommentId!.Value)
+            .ToDictionary(group => group.Key, group => group.ToList());
+        var pending = new Stack<Guid>();
+        var visited = new HashSet<Guid>();
+        var deletedCount = 0;
+        pending.Push(comment.Id);
+
+        while (pending.Count > 0)
+        {
+            var currentId = pending.Pop();
+            if (!visited.Add(currentId) || !commentsById.TryGetValue(currentId, out var current)) continue;
+
+            if (!current.IsDeleted)
+            {
+                current.Delete();
+                deletedCount++;
+            }
+
+            if (!childrenByParentId.TryGetValue(currentId, out var children)) continue;
+            foreach (var child in children) pending.Push(child.Id);
+        }
+
+        for (var index = 0; index < deletedCount; index++) post?.DecrementComments();
 
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 

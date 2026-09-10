@@ -2,6 +2,7 @@
 
 import {
   followCreator,
+  hydrateSocialPost,
   savePost,
   setPostReaction,
   sharePost,
@@ -122,10 +123,13 @@ export function PostEngagement({
   const [saved, setSaved] = React.useState(initialSaved);
   const [reactionPending, setReactionPending] = React.useState(false);
   const [savePending, setSavePending] = React.useState(false);
+  const [reactionHydrationPending, setReactionHydrationPending] = React.useState(false);
+  const [reactionRetryAvailable, setReactionRetryAvailable] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [status, setStatus] = React.useState<string | null>(null);
   const reactionPendingRef = React.useRef(false);
   const savePendingRef = React.useRef(false);
+  const reactionHydrationPendingRef = React.useRef(false);
 
   async function react(next: SocialReaction | null) {
     if (reactionPendingRef.current) return;
@@ -137,13 +141,15 @@ export function PostEngagement({
     setReactionPending(true);
     setError(null);
     setStatus(null);
+    setReactionRetryAvailable(false);
     try {
       const state = await setPostReaction(postId, next);
       setReaction(state.reaction);
       if (state.kind === "confirmed") {
         setReactionCount(state.reactionsCount);
       } else {
-        setStatus("Reaction saved. Counts will refresh shortly.");
+        setReactionRetryAvailable(true);
+        setStatus("Reaction saved. Refresh the authoritative count.");
       }
     } catch (reason) {
       setReaction(previous);
@@ -154,6 +160,25 @@ export function PostEngagement({
     } finally {
       reactionPendingRef.current = false;
       setReactionPending(false);
+    }
+  }
+
+  async function retryReactionHydration() {
+    if (reactionHydrationPendingRef.current) return;
+    reactionHydrationPendingRef.current = true;
+    setReactionHydrationPending(true);
+    setStatus("Refreshing the authoritative reaction count.");
+    try {
+      const post = await hydrateSocialPost(postId);
+      setReaction(post.viewer.reaction);
+      setReactionCount(post.engagement.reactionsCount);
+      setReactionRetryAvailable(false);
+      setStatus(null);
+    } catch {
+      setStatus("Reaction saved, but the authoritative count is still unavailable.");
+    } finally {
+      reactionHydrationPendingRef.current = false;
+      setReactionHydrationPending(false);
     }
   }
 
@@ -209,7 +234,7 @@ export function PostEngagement({
       <button
         type="button"
         onClick={() => void react(reaction ? null : "Like")}
-        disabled={reactionPending}
+        disabled={reactionPending || reactionHydrationPending}
         aria-label={reactionLabel}
         aria-pressed={Boolean(reaction)}
         className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-2 text-sm transition hover:bg-accent disabled:opacity-60 ${reaction ? "text-destructive" : "text-muted-foreground hover:text-foreground"}`}
@@ -228,7 +253,7 @@ export function PostEngagement({
             <DropdownMenuItem
               key={entry.value}
               onClick={() => void react(entry.value)}
-              disabled={reactionPending}
+              disabled={reactionPending || reactionHydrationPending}
               className="flex size-10 justify-center p-0 text-lg"
               aria-label={entry.label}
             >
@@ -265,6 +290,17 @@ export function PostEngagement({
       >
         <Bookmark className={`size-[19px] ${saved ? "fill-current" : ""}`} />
       </button>
+      {reactionRetryAvailable ? (
+        <button
+          type="button"
+          aria-label="Retry reaction count refresh"
+          disabled={reactionHydrationPending}
+          onClick={() => void retryReactionHydration()}
+          className="text-xs font-medium text-primary disabled:opacity-60"
+        >
+          {reactionHydrationPending ? "Refreshing…" : "Refresh count"}
+        </button>
+      ) : null}
       {error ? <span role="alert" className="sr-only">{error}</span> : null}
       {status ? <span role="status" className="sr-only">{status}</span> : null}
     </div>
