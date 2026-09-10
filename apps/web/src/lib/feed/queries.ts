@@ -9,6 +9,9 @@ import type {
   SocialFeedItem,
   SocialFeedPage,
   SocialProfile,
+  SocialProfileCollections,
+  SocialProfilePost,
+  SocialProfileProject,
   SocialReaction,
   SocialStory,
   TrendingTag,
@@ -417,6 +420,98 @@ export async function searchSocialProfiles(query = "", take = 5) {
   });
   const profiles = Array.isArray(data) ? data.map(mapProfile) : [];
   return hydrateFollowState(profiles);
+}
+
+export async function loadCreatorSuggestions(
+  currentUserId: string,
+  take = 5,
+): Promise<SocialProfile[]> {
+  const candidateTake = Math.min(50, Math.max(take, take * 3));
+  const [candidates, mutedData] = await Promise.all([
+    searchSocialProfiles("", candidateTake),
+    request<unknown>({
+      method: "GET",
+      path: "/api/followers/muted-users",
+      params: { skip: 0, take: 50 },
+      requiresAuth: true,
+    }),
+  ]);
+  const mutedIds = new Set(
+    (Array.isArray(mutedData) ? mutedData : [])
+      .map((value) => text(record(value).mutedId))
+      .filter(Boolean),
+  );
+  const eligible = candidates.filter(
+    (profile) =>
+      Boolean(profile.userId) &&
+      profile.userId !== currentUserId &&
+      !profile.isFollowing &&
+      !mutedIds.has(profile.userId),
+  );
+  const viewerAwareProfiles = await Promise.all(
+    eligible.map(async (profile) => {
+      const data = await request<unknown>({
+        method: "GET",
+        path: `/api/social/feed/profiles/users/${encodeURIComponent(profile.userId)}`,
+        requiresAuth: true,
+      });
+      return data ? mapProfile(data) : null;
+    }),
+  );
+  return viewerAwareProfiles
+    .filter((profile): profile is SocialProfile => profile !== null)
+    .filter((profile) => !profile.isFollowing)
+    .slice(0, take);
+}
+
+function mapProfilePost(value: unknown): SocialProfilePost {
+  const raw = record(value);
+  return {
+    id: text(raw.id),
+    content: text(raw.content),
+    mediaUrl: publicMediaUrl(raw.mediaUrl),
+    mediaType: nullableText(raw.mediaType),
+    createdAt: text(raw.createdAt),
+  };
+}
+
+function mapProfileProject(value: unknown): SocialProfileProject {
+  const raw = record(value);
+  return {
+    id: text(raw.id),
+    title: text(raw.title),
+    slug: text(raw.slug),
+    shortDescription: nullableText(raw.shortDescription),
+    imageUrl: publicMediaUrl(raw.imageUrl),
+    publishedAt: nullableText(raw.publishedAt),
+  };
+}
+
+export async function loadSocialProfileCollections(
+  userId: string,
+  take = 12,
+): Promise<SocialProfileCollections> {
+  const encodedUserId = encodeURIComponent(userId);
+  const [postData, projectData] = await Promise.all([
+    request<unknown>({
+      method: "GET",
+      path: `/api/v1/posts/author/${encodedUserId}`,
+      params: { skip: 0, take },
+      requiresAuth: true,
+    }),
+    request<unknown>({
+      method: "GET",
+      path: `/v1/projects/creator/${encodedUserId}`,
+      params: { status: "Published", skip: 0, take },
+      requiresAuth: true,
+    }),
+  ]);
+  return {
+    posts: (Array.isArray(postData) ? postData : [])
+      .filter((value) => text(record(value).visibility).toLowerCase() === "public")
+      .map(mapProfilePost),
+    projects: (Array.isArray(projectData) ? projectData : []).map(mapProfileProject),
+  };
 }
 
 export async function loadTrendingTags(count = 6): Promise<TrendingTag[]> {
