@@ -1025,7 +1025,7 @@ export function LessonAuthoringWorkspace({
       </main>
 
       <Dialog open={diffOpen} onOpenChange={setDiffOpen}>
-        <DialogContent className="flex h-[88dvh] max-w-[94vw] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-[94vw]">
+        <DialogContent className="grid h-[88dvh] max-w-[94vw] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-[94vw]">
           <DialogHeader className="border-b px-5 py-4">
             <div className="flex items-start justify-between gap-4 pr-10">
               <div>
