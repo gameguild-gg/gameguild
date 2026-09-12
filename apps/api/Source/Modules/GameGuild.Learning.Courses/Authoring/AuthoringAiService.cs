@@ -18,6 +18,7 @@ public interface IAuthoringAiService
     Task<IReadOnlyList<AiAuthoringConversationDto>> GetConversations(Guid tenantId, Guid actorId, Guid programId, Guid contentId, CancellationToken cancellationToken);
     Task<AiAuthoringRunDto> CreateRun(Guid tenantId, Guid actorId, Guid programId, Guid contentId, AiAuthoringRunRequest request, CancellationToken cancellationToken);
     Task<AiAuthoringRunDto> GetRun(Guid tenantId, Guid actorId, Guid programId, Guid contentId, Guid runId, CancellationToken cancellationToken);
+    Task<AiAuthoringRunDto> CancelRun(Guid tenantId, Guid actorId, Guid programId, Guid contentId, Guid runId, CancellationToken cancellationToken);
     IAsyncEnumerable<AiStreamEvent> StreamRun(Guid tenantId, Guid actorId, Guid programId, Guid contentId, Guid runId, long afterSequence, CancellationToken cancellationToken);
     Task<AuthoringDraftDto> ApplyProposal(Guid tenantId, Guid actorId, Guid programId, Guid contentId, Guid proposalId, ApplyAiProposalRequest request, CancellationToken cancellationToken);
     Task<AiProposalDto> DiscardProposal(Guid tenantId, Guid actorId, Guid programId, Guid contentId, Guid proposalId, CancellationToken cancellationToken);
@@ -226,6 +227,32 @@ internal sealed class AuthoringAiService(
         return await ToDto(run, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<AiAuthoringRunDto> CancelRun(
+        Guid tenantId,
+        Guid actorId,
+        Guid programId,
+        Guid contentId,
+        Guid runId,
+        CancellationToken cancellationToken)
+    {
+        var run = await FindOwnedRun(tenantId, actorId, programId, contentId, runId, cancellationToken).ConfigureAwait(false);
+        if (run.Status is AiAuthoringRunStatus.Completed or AiAuthoringRunStatus.Failed or AiAuthoringRunStatus.Cancelled)
+            return await ToDto(run, cancellationToken).ConfigureAwait(false);
+
+        if (run.Status == AiAuthoringRunStatus.Running)
+        {
+            run.RequestCancellation(timeProvider.GetUtcNow());
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return await ToDto(run, cancellationToken).ConfigureAwait(false);
+        }
+
+        await ReleaseAndCancel(
+            run,
+            await NextSequence(run.Id, cancellationToken).ConfigureAwait(false),
+            cancellationToken).ConfigureAwait(false);
+        return await ToDto(run, cancellationToken).ConfigureAwait(false);
+    }
+
     public async IAsyncEnumerable<AiStreamEvent> StreamRun(
         Guid tenantId,
         Guid actorId,
@@ -374,19 +401,25 @@ internal sealed class AuthoringAiService(
 
         try
         {
-            var completion = await ai.GenerateForActorStreamingAsync(
+            if (await IsCancellationRequested(run.Id, cancellationToken).ConfigureAwait(false))
+                throw new OperationCanceledException("AI generation was cancelled by the author.");
+            var completion = await ai.GenerateForActorStreamingWithReservedQuotaAsync(
                 new AiExecutionActor(run.TenantId!.Value, run.ActorId),
                 BuildGenerationRequest(run, draft.PayloadJson),
                 async (delta, streamCancellationToken) =>
                 {
                     if (string.IsNullOrEmpty(delta))
                         return;
+                    if (await IsCancellationRequested(run.Id, streamCancellationToken).ConfigureAwait(false))
+                        throw new OperationCanceledException("AI generation was cancelled by the author.");
                     AddEvent(run.Id, nextSequence++, "delta", AiAuthoringRunStatus.Running.ToString(), delta, null, timeProvider.GetUtcNow());
                     await db.SaveChangesAsync(streamCancellationToken).ConfigureAwait(false);
                 },
                 cancellationToken).ConfigureAwait(false);
             if (completion.IsFailure)
                 throw new AiAuthoringExecutionException(completion.Error.Code, completion.Error.Description);
+            if (await IsCancellationRequested(run.Id, cancellationToken).ConfigureAwait(false))
+                throw new OperationCanceledException("AI generation was cancelled by the author.");
 
             var inputTokens = completion.Value.Usage.InputTokens ?? 0;
             var outputTokens = completion.Value.Usage.OutputTokens ?? 0;
@@ -465,9 +498,9 @@ internal sealed class AuthoringAiService(
             }
             await ReleaseQuota(run.TenantId!.Value, run.ActorId, reservedQuotaTokens - actualQuotaTokens, releaseRequest: false, cancellationToken).ConfigureAwait(false);
         }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException)
         {
-            await ReleaseAndFail(run, nextSequence, "AI_CANCELLED", "AI generation was cancelled.", CancellationToken.None).ConfigureAwait(false);
+            await ReleaseAndCancel(run, nextSequence, CancellationToken.None).ConfigureAwait(false);
         }
         catch (AiAuthoringExecutionException exception)
         {
@@ -498,6 +531,54 @@ internal sealed class AuthoringAiService(
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         await ReleaseQuota(run.TenantId!.Value, run.ActorId, checked(run.MaximumInputTokens + run.MaximumOutputTokens), releaseRequest: false, cancellationToken).ConfigureAwait(false);
     }
+
+    private async Task ReleaseAndCancel(AiAuthoringRun run, long sequence, CancellationToken cancellationToken)
+    {
+        long released = 0;
+        try
+        {
+            var reservation = await credits.ReleaseAsync(
+                run.Id,
+                "AI_CANCELLED",
+                $"release:{run.Id:N}",
+                cancellationToken).ConfigureAwait(false);
+            released = reservation.ReleasedSoftUnits;
+        }
+        catch (InvalidOperationException)
+        {
+            // An already settled reservation is terminal and cannot be released.
+        }
+        run.Cancel(released, timeProvider.GetUtcNow());
+        var streamEvent = new AiStreamEvent(
+            sequence,
+            "cancelled",
+            null,
+            run.Id,
+            run.Status.ToString(),
+            ErrorCode: "AI_CANCELLED");
+        AddEvent(
+            run.Id,
+            sequence,
+            "cancelled",
+            run.Status.ToString(),
+            null,
+            JsonSerializer.Serialize(streamEvent, JsonOptions),
+            timeProvider.GetUtcNow());
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await ReleaseQuota(
+            run.TenantId!.Value,
+            run.ActorId,
+            checked(run.MaximumInputTokens + run.MaximumOutputTokens),
+            releaseRequest: false,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private Task<bool> IsCancellationRequested(Guid runId, CancellationToken cancellationToken) =>
+        db.Set<AiAuthoringRun>()
+            .AsNoTracking()
+            .Where(item => item.Id == runId)
+            .Select(item => item.ErrorCode == "AI_CANCEL_REQUESTED")
+            .SingleAsync(cancellationToken);
 
     private async Task ReserveQuota(Guid tenantId, Guid actorId, long maximumTokens, CancellationToken cancellationToken)
     {

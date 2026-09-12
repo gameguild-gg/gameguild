@@ -227,6 +227,30 @@ public sealed class AiAuthoringRun : EntityBase
         UpdatedAt = now.UtcDateTime;
     }
 
+    public void RequestCancellation(DateTimeOffset now)
+    {
+        if (Status == AiAuthoringRunStatus.Cancelled)
+            return;
+        EnsureStatus(AiAuthoringRunStatus.Running);
+        ErrorCode = "AI_CANCEL_REQUESTED";
+        ErrorMessage = "Cancellation requested by the author.";
+        UpdatedAt = now.UtcDateTime;
+    }
+
+    public void Cancel(long releasedAmount, DateTimeOffset now)
+    {
+        if (Status == AiAuthoringRunStatus.Cancelled)
+            return;
+        if (Status is not (AiAuthoringRunStatus.Reserved or AiAuthoringRunStatus.Running))
+            throw new InvalidOperationException("Only a reserved or running AI run can be cancelled.");
+        ReleasedAmount = Math.Max(0, releasedAmount);
+        ErrorCode = "AI_CANCELLED";
+        ErrorMessage = "AI generation was cancelled by the author.";
+        Status = AiAuthoringRunStatus.Cancelled;
+        CompletedAt = now;
+        UpdatedAt = now.UtcDateTime;
+    }
+
     private void EnsureStatus(AiAuthoringRunStatus expected)
     {
         if (Status != expected)

@@ -221,6 +221,31 @@ public sealed class ProgramContentAuthoringController(
         }
     }
 
+    [HttpPost("ai/runs/{runId:guid}/cancel")]
+    [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit, "programId")]
+    [ProducesResponseType<AiAuthoringRunDto>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<AiAuthoringRunDto>> CancelAiRun(
+        Guid programId,
+        Guid contentId,
+        Guid runId,
+        CancellationToken cancellationToken)
+    {
+        var actor = RequireActor();
+        try
+        {
+            return Ok(await sender.Send(new CancelAiAuthoringRunCommand(
+                actor.TenantId,
+                actor.ActorId,
+                programId,
+                contentId,
+                runId), cancellationToken).ConfigureAwait(false));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
     [HttpGet("ai/runs/{runId:guid}/stream")]
     [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit, "programId")]
     [Produces("text/event-stream")]
@@ -247,7 +272,7 @@ public sealed class ProgramContentAuthoringController(
         {
             await Response.WriteAsync($"id: {streamEvent.Sequence}\n", cancellationToken).ConfigureAwait(false);
             await Response.WriteAsync($"event: {streamEvent.Type}\n", cancellationToken).ConfigureAwait(false);
-            await Response.WriteAsync($"data: {JsonSerializer.Serialize(streamEvent)}\n\n", cancellationToken).ConfigureAwait(false);
+            await Response.WriteAsync($"data: {SerializeStreamEvent(streamEvent)}\n\n", cancellationToken).ConfigureAwait(false);
             await Response.Body.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
     }
@@ -351,6 +376,9 @@ public sealed class ProgramContentAuthoringController(
     };
 
     private void SetEtag(string etag) => Response.Headers.ETag = etag;
+
+    internal static string SerializeStreamEvent(AiStreamEvent streamEvent) =>
+        JsonSerializer.Serialize(streamEvent, JsonSerializerOptions.Web);
 
     private ConflictObjectResult ConflictResponse(string code, string detail, int currentRevision) => Conflict(new ProblemDetails
     {

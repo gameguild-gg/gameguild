@@ -26,6 +26,17 @@ public interface IAiOrchestrator
         AiGenerateRequest request,
         Func<string, CancellationToken, ValueTask> onDelta,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes a streamed request whose request and token quota envelope was
+    /// already reserved atomically by the owning workflow. Provider resolution,
+    /// moderation, history, and actor binding remain enforced here.
+    /// </summary>
+    Task<Result<AiCompletionResponse>> GenerateForActorStreamingWithReservedQuotaAsync(
+        AiExecutionActor actor,
+        AiGenerateRequest request,
+        Func<string, CancellationToken, ValueTask> onDelta,
+        CancellationToken cancellationToken = default);
 }
 
 public interface IAiConversationHistoryReader

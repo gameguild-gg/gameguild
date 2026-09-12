@@ -7,11 +7,13 @@ import { LessonVideoEditor } from "@/components/learning/console/courses/[course
 import { QuizContentEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/quiz-content-editor";
 import {
   applyAiProposal,
+  cancelAiAuthoringRun,
   createAiAuthoringRun,
   discardAiProposal,
   getAiAuthoringRun,
   getAiConversations,
   getAiEntitlement,
+  getAuthoringDraft,
   publishAuthoringDraft,
   saveAuthoringDraft,
   type AiAuthoringMessage,
@@ -84,6 +86,7 @@ import {
   Users,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   lazy,
   Suspense,
@@ -158,11 +161,14 @@ export function LessonAuthoringWorkspace({
   const router = useRouter();
   const params = useParams<{ locale?: string }>();
   const learningBase = useLearningBase();
+  const { resolvedTheme } = useTheme();
   const [draft, setDraft] = useState(initialDraft);
   const [payload, setPayload] = useState(initialDraft.payload);
   const [mode, setMode] = useState<EditorMode>("split");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [conflictBackup, setConflictBackup] =
+    useState<AuthoringContentPayload | null>(null);
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
   const [mobileLeftOpen, setMobileLeftOpen] = useState(false);
@@ -214,7 +220,10 @@ export function LessonAuthoringWorkspace({
     const operation = saveAuthoringDraft(courseId, item.id, revision, nextPayload)
       .then((result) => {
         if (!result.success) {
-          if (result.status === 409) setSaveStatus("conflict");
+          if (result.status === 409) {
+            setConflictBackup(nextPayload);
+            setSaveStatus("conflict");
+          }
           else setSaveStatus("offline");
           setSaveError(result.error);
           return null;
@@ -237,11 +246,45 @@ export function LessonAuthoringWorkspace({
     return operation;
   }, [courseId, item.id]);
 
+  const loadLatestDraft = async () => {
+    const result = await getAuthoringDraft(courseId, item.id);
+    if (!result.success) {
+      setSaveError(result.error);
+      return;
+    }
+    setDraft(result.data);
+    setPayload(result.data.payload);
+    payloadRef.current = result.data.payload;
+    revisionRef.current = result.data.revision;
+    setSavedSnapshot(JSON.stringify(result.data.payload));
+    setSaveStatus("saved");
+    setSaveError(null);
+  };
+
+  const restoreConflictCopy = () => {
+    if (!conflictBackup) return;
+    setPayload(conflictBackup);
+    payloadRef.current = conflictBackup;
+    setConflictBackup(null);
+    setSaveStatus("saved");
+    setSaveError(null);
+  };
+
   useEffect(() => {
     if (!isDirty || !payload.title.trim() || saveStatus === "conflict") return;
     const timer = window.setTimeout(() => void persist(payload), 1200);
     return () => window.clearTimeout(timer);
   }, [isDirty, payload, persist, saveStatus]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const warnAboutUnsavedChanges = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnAboutUnsavedChanges);
+    return () => window.removeEventListener("beforeunload", warnAboutUnsavedChanges);
+  }, [isDirty]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -253,7 +296,8 @@ export function LessonAuthoringWorkspace({
       if (command && event.shiftKey && event.key.toLowerCase() === "i") {
         event.preventDefault();
         setRightPanel("copilot");
-        setRightOpen(true);
+        if (window.matchMedia("(min-width: 1280px)").matches) setRightOpen(true);
+        else setMobileRightOpen(true);
       }
     };
     window.addEventListener("keydown", onKeyDown);
@@ -397,7 +441,11 @@ export function LessonAuthoringWorkspace({
               setProposal(event.proposal);
               setDiffOpen(true);
             }
-            if (event?.errorCode) setAiError(event.errorCode);
+            if (
+              event?.errorCode &&
+              !["AI_CANCEL_REQUESTED", "AI_CANCELLED"].includes(event.errorCode)
+            )
+              setAiError(event.errorCode);
           }
           if (done) break;
         }
@@ -506,6 +554,24 @@ export function LessonAuthoringWorkspace({
     }
   };
 
+  const stopCopilot = async () => {
+    if (!activeRun || !isRunning || activeRun.errorCode === "AI_CANCEL_REQUESTED")
+      return;
+    const result = await cancelAiAuthoringRun(courseId, item.id, activeRun.id);
+    if (!result.success) {
+      setAiError(result.error);
+      return;
+    }
+    setActiveRun(result.data);
+    if (result.data.status === "Cancelled") {
+      streamAbortRef.current?.abort();
+      window.sessionStorage.removeItem(activeRunStorageKey);
+      setIsRunning(false);
+      const balance = await getAiEntitlement(courseId, item.id);
+      if (balance.success) setEntitlement(balance.data);
+    }
+  };
+
   const acceptProposal = async () => {
     if (!proposal) return;
     const result = await applyAiProposal(
@@ -581,13 +647,14 @@ export function LessonAuthoringWorkspace({
   const editorPanel = (
     <section className="h-full min-w-0 overflow-auto bg-background px-5 py-6 xl:px-8">
       <div className="mx-auto w-full max-w-4xl">
-        <Input
+        <Textarea
           aria-label="Lesson title"
           value={payload.title}
           onChange={(event) => handleTitle(event.target.value)}
-          className="mb-5 h-auto border-0 bg-transparent px-0 text-3xl font-semibold shadow-none focus-visible:ring-0"
+          rows={1}
+          className="mb-5 min-h-0 resize-none overflow-hidden border-0 bg-transparent px-0 text-2xl font-semibold leading-tight shadow-none focus-visible:ring-0 md:text-3xl [field-sizing:content]"
         />
-        <div className="authoring-editor-surface [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-0 [&_[data-slot=card]]:shadow-none [&_label]:text-xs">
+        <div className="authoring-editor-surface [&_[data-slot=card]]:rounded-none [&_[data-slot=card]]:border-0 [&_[data-slot=card]]:shadow-none [&_label]:text-sm">
           {renderEditor()}
         </div>
       </div>
@@ -597,7 +664,7 @@ export function LessonAuthoringWorkspace({
   const previewPanel = (
     <section className="h-full min-w-0 overflow-auto bg-muted/20 px-6 py-8 xl:px-10">
       <article className="mx-auto max-w-3xl">
-        <p className="mb-3 text-xs font-medium text-primary">{courseTitle}</p>
+        <p className="mb-3 text-sm font-medium text-primary">{courseTitle}</p>
         <h1 className="text-3xl font-semibold tracking-tight">{payload.title}</h1>
         {payload.description ? (
           <p className="mt-3 text-base text-muted-foreground">{payload.description}</p>
@@ -622,14 +689,14 @@ export function LessonAuthoringWorkspace({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={leftOpen ? "Hide curriculum" : "Show curriculum"}
+                aria-label="Toggle curriculum"
                 onClick={toggleLeftPanel}
               />
             }
           >
             {leftOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
           </TooltipTrigger>
-          <TooltipContent>{leftOpen ? "Hide curriculum" : "Show curriculum"}</TooltipContent>
+          <TooltipContent>Toggle curriculum</TooltipContent>
         </Tooltip>
         <Button
           variant="ghost"
@@ -640,11 +707,11 @@ export function LessonAuthoringWorkspace({
           <ArrowLeft />
           <span className="hidden md:inline">Curriculum</span>
         </Button>
-        <Separator orientation="vertical" className="mx-1 h-5" />
-        <div className="min-w-0 flex-1">
+        <Separator orientation="vertical" className="mx-1 hidden h-5 md:block" />
+        <div className="hidden min-w-0 flex-1 md:block">
           <p className="truncate text-sm font-medium">{payload.title}</p>
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Badge variant="outline" className="h-4 rounded-sm px-1.5 text-[10px]">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Badge variant="outline" className="h-5 rounded-sm px-1.5 text-sm">
               {item.status === "published" ? "Published" : "Draft"}
             </Badge>
             <span className={saveStatus === "conflict" ? "text-destructive" : ""}>
@@ -653,7 +720,19 @@ export function LessonAuthoringWorkspace({
             </span>
           </div>
         </div>
-        <div className="hidden items-center rounded-md border bg-muted/25 p-0.5 sm:flex">
+        <Select
+          value={mode === "preview" ? "preview" : "editor"}
+          onValueChange={(value) => setMode(value as "editor" | "preview")}
+        >
+          <SelectTrigger aria-label="Editor view" size="sm" className="w-24 2xl:hidden">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="editor">Editor</SelectItem>
+            <SelectItem value="preview">Preview</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="hidden items-center rounded-md border bg-muted/25 p-0.5 2xl:flex">
           {(["editor", "split", "preview"] as EditorMode[]).map((value) => (
             <Button
               key={value}
@@ -691,6 +770,7 @@ export function LessonAuthoringWorkspace({
         <Button
           variant={rightPanel === "copilot" && rightOpen ? "secondary" : "ghost"}
           size="sm"
+          aria-label="Open Copilot"
           onClick={openCopilot}
         >
           <Sparkles />
@@ -698,6 +778,7 @@ export function LessonAuthoringWorkspace({
         </Button>
         <Button
           size="sm"
+          aria-label="Publish changes"
           disabled={isPublishing || saveStatus === "conflict"}
           onClick={() => void handlePublish()}
         >
@@ -710,25 +791,49 @@ export function LessonAuthoringWorkspace({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={rightOpen ? "Hide side panel" : "Show side panel"}
+                aria-label="Toggle lesson panel"
                 onClick={toggleRightPanel}
               />
             }
           >
             {rightOpen ? <PanelRightClose /> : <PanelRightOpen />}
           </TooltipTrigger>
-          <TooltipContent>{rightOpen ? "Hide panel" : "Show panel"}</TooltipContent>
+          <TooltipContent>Toggle lesson panel</TooltipContent>
         </Tooltip>
       </header>
 
-      {saveError ? (
-        <div className="flex h-8 shrink-0 items-center justify-between bg-destructive/10 px-4 text-xs text-destructive">
-          <span className="truncate">{saveError}</span>
-          {saveStatus === "offline" ? (
-            <Button variant="ghost" size="xs" onClick={() => void persist()}>
-              <RotateCcw /> Retry
-            </Button>
-          ) : null}
+      {saveError || conflictBackup ? (
+        <div
+          role="status"
+          className={`flex min-h-10 shrink-0 items-center justify-between gap-3 px-4 py-1.5 text-sm ${saveStatus === "conflict" ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground"}`}
+        >
+          <span className="truncate">
+            {saveStatus === "conflict"
+              ? saveError
+              : conflictBackup
+                ? "Latest draft loaded. Your unsaved version is still available."
+                : saveError}
+          </span>
+          <div className="flex shrink-0 items-center gap-1">
+            {saveStatus === "conflict" ? (
+              <Button variant="ghost" size="xs" onClick={() => void loadLatestDraft()}>
+                <RotateCcw /> Load latest
+              </Button>
+            ) : conflictBackup ? (
+              <>
+                <Button variant="ghost" size="xs" onClick={() => setConflictBackup(null)}>
+                  Discard my copy
+                </Button>
+                <Button variant="secondary" size="xs" onClick={restoreConflictCopy}>
+                  Restore my changes
+                </Button>
+              </>
+            ) : saveStatus === "offline" ? (
+              <Button variant="ghost" size="xs" onClick={() => void persist()}>
+                <RotateCcw /> Retry
+              </Button>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
@@ -737,7 +842,7 @@ export function LessonAuthoringWorkspace({
           <button
             type="button"
             aria-label="Close curriculum"
-            className="fixed inset-x-0 bottom-0 top-14 z-30 bg-black/35 lg:hidden"
+            className="fixed inset-x-0 bottom-0 top-14 z-30 bg-background/80 backdrop-blur-sm lg:hidden"
             onClick={() => setMobileLeftOpen(false)}
           />
         ) : null}
@@ -752,7 +857,7 @@ export function LessonAuthoringWorkspace({
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{courseTitle}</p>
-                <p className="text-[11px] text-muted-foreground">Curriculum</p>
+                <p className="text-sm text-muted-foreground">Curriculum</p>
               </div>
             </div>
             <div className="px-3 pb-3">
@@ -762,7 +867,7 @@ export function LessonAuthoringWorkspace({
                   value={curriculumSearch}
                   onChange={(event) => setCurriculumSearch(event.target.value)}
                   placeholder="Search lessons and quizzes"
-                  className="h-8 pl-8 text-xs"
+                  className="h-8 pl-8 text-sm"
                 />
               </div>
             </div>
@@ -776,7 +881,7 @@ export function LessonAuthoringWorkspace({
                     <button
                       key={entry.id}
                       type="button"
-                      className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs transition-colors ${
+                      className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm transition-colors ${
                         active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                       onClick={() => {
@@ -788,13 +893,17 @@ export function LessonAuthoringWorkspace({
                     >
                       <Icon className="size-3.5 shrink-0" />
                       <span className="min-w-0 flex-1 truncate">{entry.title}</span>
-                      <span className={`size-1.5 rounded-full ${entry.status === "published" ? "bg-emerald-500" : "bg-amber-500"}`} />
+                      {entry.status === "published" ? (
+                        <Check className="size-3 text-primary" aria-label="Published" />
+                      ) : (
+                        <Clock3 className="size-3 text-muted-foreground" aria-label="Draft" />
+                      )}
                     </button>
                   );
                 })}
               </nav>
             </ScrollArea>
-            <div className="flex h-10 items-center border-t px-3 text-[11px] text-muted-foreground">
+            <div className="flex h-10 items-center border-t px-3 text-sm text-muted-foreground">
               <span>{curriculum.length} items</span>
             </div>
           </aside>
@@ -817,7 +926,7 @@ export function LessonAuthoringWorkspace({
           <button
             type="button"
             aria-label="Close lesson panel"
-            className="fixed inset-x-0 bottom-0 top-14 z-30 bg-black/35 xl:hidden"
+            className="fixed inset-x-0 bottom-0 top-14 z-30 bg-background/80 backdrop-blur-sm xl:hidden"
             onClick={() => setMobileRightOpen(false)}
           />
         ) : null}
@@ -848,7 +957,7 @@ export function LessonAuthoringWorkspace({
               <ScrollArea className="min-h-0 flex-1">
                 <div className="space-y-5 p-4">
                   <div>
-                    <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Publishing</h2>
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Publishing</h2>
                     <div className="mt-3 space-y-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="authoring-visibility">Lesson access</Label>
@@ -871,7 +980,7 @@ export function LessonAuthoringWorkspace({
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <Label htmlFor="authoring-required">Required for completion</Label>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground">Students must complete this item.</p>
+                          <p className="mt-0.5 text-sm text-muted-foreground">Students must complete this item.</p>
                         </div>
                         <Switch
                           id="authoring-required"
@@ -883,7 +992,7 @@ export function LessonAuthoringWorkspace({
                   </div>
                   <Separator />
                   <div className="space-y-3">
-                    <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Lesson details</h2>
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Lesson details</h2>
                     <div className="space-y-1.5">
                       <Label htmlFor="authoring-slug">URL</Label>
                       <Input
@@ -923,7 +1032,7 @@ export function LessonAuthoringWorkspace({
                     </div>
                   </div>
                   <Separator />
-                  <div className="space-y-2 text-xs text-muted-foreground">
+                  <div className="space-y-2 text-sm text-muted-foreground">
                     <div className="flex justify-between"><span>Format</span><span className="text-foreground">{format}</span></div>
                     <div className="flex justify-between"><span>Draft revision</span><span className="text-foreground">{draft.revision}</span></div>
                     <div className="flex justify-between"><span>Published version</span><span className="text-foreground">{draft.basePublishedVersion}</span></div>
@@ -937,9 +1046,9 @@ export function LessonAuthoringWorkspace({
                   <div className="flex items-center justify-between gap-2">
                     <div>
                       <p className="text-sm font-medium">AI authoring copilot</p>
-                      <p className="text-[11px] text-muted-foreground">Changes always require your approval.</p>
+                      <p className="text-sm text-muted-foreground">Changes always require your approval.</p>
                     </div>
-                    <Badge variant="outline" className="font-mono text-[10px]">
+                    <Badge variant="outline" className="font-mono text-sm">
                       {entitlement ? `${entitlement.availableSoftCredits} SC` : "… SC"}
                     </Badge>
                   </div>
@@ -950,10 +1059,10 @@ export function LessonAuthoringWorkspace({
                       <div className="py-5 text-center">
                         <Sparkles className="mx-auto size-5 text-primary" />
                         <p className="mt-2 text-sm font-medium">Improve this lesson</p>
-                        <p className="mx-auto mt-1 max-w-56 text-xs text-muted-foreground">Ask for a rewrite, explanation, example, code sample, summary, or quiz.</p>
+                        <p className="mx-auto mt-1 max-w-56 text-sm text-muted-foreground">Ask for a rewrite, explanation, example, code sample, summary, or quiz.</p>
                         <div className="mt-4 grid gap-1.5">
                           {["Make this clearer and more concise", "Add a practical example", "Create a short knowledge check"].map((suggestion) => (
-                            <Button key={suggestion} variant="outline" size="sm" className="h-auto justify-start py-2 text-left text-xs" onClick={() => void runCopilot(suggestion)}>
+                            <Button key={suggestion} variant="outline" size="sm" className="h-auto justify-start py-2 text-left text-sm" onClick={() => void runCopilot(suggestion)}>
                               {suggestion}
                             </Button>
                           ))}
@@ -961,16 +1070,31 @@ export function LessonAuthoringWorkspace({
                       </div>
                     ) : null}
                     {messages.map((message) => (
-                      <div key={message.id} className={message.role === "user" ? "ml-7 rounded-lg bg-primary px-3 py-2 text-xs text-primary-foreground" : "mr-3 rounded-lg bg-muted px-3 py-2 text-xs leading-relaxed"}>
+                      <div key={message.id} className={message.role === "user" ? "ml-7 rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground" : "mr-3 rounded-lg bg-muted px-3 py-2 text-sm leading-relaxed"}>
                         {message.content}
                       </div>
                     ))}
                     {isRunning ? (
-                      <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground"><Loader2 className="size-3 animate-spin" /> Generating proposal…</div>
+                      <div className="flex items-center justify-between gap-3 px-2 py-1 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="size-3 animate-spin" />
+                          {activeRun?.errorCode === "AI_CANCEL_REQUESTED"
+                            ? "Stopping Copilot…"
+                            : "Generating proposal…"}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          disabled={activeRun?.errorCode === "AI_CANCEL_REQUESTED"}
+                          onClick={() => void stopCopilot()}
+                        >
+                          Stop
+                        </Button>
+                      </div>
                     ) : null}
-                    {aiError ? <p className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">{aiError}</p> : null}
+                    {aiError ? <p className="rounded-md bg-destructive/10 p-2 text-sm text-destructive">{aiError}</p> : null}
                     {activeRun?.usage.maximumEstimatedCost ? (
-                      <div className="rounded-md bg-muted/50 p-2 text-[10px] text-muted-foreground">
+                      <div className="rounded-md bg-muted/50 p-2 text-sm text-muted-foreground">
                         Max {activeRun.usage.maximumEstimatedCost} SC · Used {activeRun.usage.inputTokens + activeRun.usage.outputTokens} tokens · Settled {activeRun.usage.settledCost} SC
                       </div>
                     ) : null}
@@ -979,7 +1103,7 @@ export function LessonAuthoringWorkspace({
                 <div className="space-y-2 border-t p-3">
                   {!isStructured && format !== "Video" ? (
                     <Select value={proposalMode} onValueChange={(value) => setProposalMode(value as AiProposalKind)}>
-                      <SelectTrigger className="h-7 w-full text-xs"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-8 w-full text-sm"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="ReplaceDocument">Replace document</SelectItem>
                         <SelectItem value="InsertAtCursor">Insert at cursor</SelectItem>
@@ -987,7 +1111,7 @@ export function LessonAuthoringWorkspace({
                     </Select>
                   ) : null}
                   {format === "Video" ? (
-                    <p className="rounded-md bg-muted/50 px-2.5 py-2 text-[11px] text-muted-foreground">
+                    <p className="rounded-md bg-muted/50 px-2.5 py-2 text-sm text-muted-foreground">
                       Video media is protected. Copilot can only propose metadata changes.
                     </p>
                   ) : null}
@@ -1003,7 +1127,7 @@ export function LessonAuthoringWorkspace({
                         }
                       }}
                       rows={3}
-                      className="resize-none pr-10 text-xs"
+                      className="resize-none pr-10 text-sm"
                       placeholder="Ask AI to revise this lesson…"
                     />
                     <Button
@@ -1016,7 +1140,7 @@ export function LessonAuthoringWorkspace({
                       {isRunning ? <Loader2 className="animate-spin" /> : <Send />}
                     </Button>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Maximum cost is reserved first. Only actual token usage is charged to your wallet.</p>
+                  <p className="text-sm text-muted-foreground">Maximum cost is reserved first. Only actual token usage is charged to your wallet.</p>
                 </div>
               </div>
             )}
@@ -1038,14 +1162,14 @@ export function LessonAuthoringWorkspace({
               </div>
             </div>
           </DialogHeader>
-          <div className="min-h-0 bg-[#070b17]">
+          <div className="min-h-0 bg-background">
             {proposal ? (
               <Suspense fallback={<div className="flex h-full items-center justify-center"><Loader2 className="animate-spin" /></div>}>
                 <MonacoDiffEditor
                   original={proposal.originalContent}
                   modified={proposal.proposedContent}
                   language={format === "Html" ? "html" : "markdown"}
-                  theme="vs-dark"
+                  theme={resolvedTheme === "light" ? "vs-light" : "vs-dark"}
                   height="100%"
                   options={{ readOnly: true, renderSideBySide: !unifiedDiff, minimap: { enabled: false }, wordWrap: "on" }}
                 />
@@ -1053,7 +1177,7 @@ export function LessonAuthoringWorkspace({
             ) : null}
           </div>
           <DialogFooter className="border-t px-5 py-3">
-            <div className="mr-auto text-xs text-muted-foreground">Base draft revision {proposal?.baseDraftRevision}</div>
+            <div className="mr-auto text-sm text-muted-foreground">Base draft revision {proposal?.baseDraftRevision}</div>
             <Button variant="outline" onClick={() => void rejectProposal()}>Discard</Button>
             <Button onClick={() => void acceptProposal()}><Check /> Accept and apply</Button>
           </DialogFooter>

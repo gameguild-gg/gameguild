@@ -6,7 +6,11 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/auth", () => ({ getRequestAuthContext: mocks.authContext }));
 
-import { createAiAuthoringRun, saveAuthoringDraft } from "./authoring";
+import {
+  cancelAiAuthoringRun,
+  createAiAuthoringRun,
+  saveAuthoringDraft,
+} from "./authoring";
 
 describe("authoring server actions", () => {
   beforeEach(() => {
@@ -67,5 +71,29 @@ describe("authoring server actions", () => {
       code: "AUTHORING_REVISION_CONFLICT",
       currentRevision: 7,
     });
+  });
+
+  it("cancels only the authenticated actor's run through the scoped authoring endpoint", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ id: "run-1", status: "Cancelled" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    await cancelAiAuthoringRun("course-1", "lesson-1", "run-1");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining(
+        "/v1/courses/course-1/content/lesson-1/authoring/ai/runs/run-1/cancel",
+      ),
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          Authorization: "Bearer signed-token",
+          "X-Tenant-Id": "tenant-1",
+        }),
+      }),
+    );
   });
 });
