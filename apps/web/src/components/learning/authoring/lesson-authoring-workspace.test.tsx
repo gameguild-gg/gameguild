@@ -6,11 +6,13 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   refresh: vi.fn(),
   saveDraft: vi.fn(),
+  getDraft: vi.fn(),
   publishDraft: vi.fn(),
   getEntitlement: vi.fn(),
   getConversations: vi.fn(),
   createRun: vi.fn(),
   getRun: vi.fn(),
+  cancelRun: vi.fn(),
   applyProposal: vi.fn(),
   discardProposal: vi.fn(),
 }));
@@ -24,11 +26,13 @@ vi.mock("@/lib/learning/use-learning-base", () => ({
 }));
 vi.mock("@/lib/learning/authoring", () => ({
   saveAuthoringDraft: mocks.saveDraft,
+  getAuthoringDraft: mocks.getDraft,
   publishAuthoringDraft: mocks.publishDraft,
   getAiEntitlement: mocks.getEntitlement,
   getAiConversations: mocks.getConversations,
   createAiAuthoringRun: mocks.createRun,
   getAiAuthoringRun: mocks.getRun,
+  cancelAiAuthoringRun: mocks.cancelRun,
   applyAiProposal: mocks.applyProposal,
   discardAiProposal: mocks.discardProposal,
 }));
@@ -52,6 +56,7 @@ vi.mock("@/components/learning/console/courses/[course]/content/[contentId]/quiz
   QuizContentEditor: () => <div>Quiz editor</div>,
 }));
 vi.mock("@monaco-editor/react", () => ({ DiffEditor: () => <div>Diff editor</div> }));
+vi.mock("next-themes", () => ({ useTheme: () => ({ resolvedTheme: "dark" }) }));
 
 import { LessonAuthoringWorkspace } from "./lesson-authoring-workspace";
 
@@ -102,6 +107,10 @@ describe("LessonAuthoringWorkspace", () => {
       success: true,
       data: { ...initialDraft, payload, revision: revision + 1 },
     }));
+    mocks.getDraft.mockResolvedValue({
+      success: true,
+      data: initialDraft,
+    });
     mocks.publishDraft.mockImplementation(async (_courseId, _contentId, revision) => ({
       success: true,
       data: { draft: { ...initialDraft, revision: revision + 1, basePublishedVersion: 4 } },
@@ -115,6 +124,7 @@ describe("LessonAuthoringWorkspace", () => {
 
   afterEach(() => {
     cleanup();
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
@@ -208,5 +218,93 @@ describe("LessonAuthoringWorkspace", () => {
       "lesson-1",
       expect.objectContaining({ proposalKind: "MetadataPatch" }),
     );
+  });
+
+  it("preserves local edits while resolving a concurrent draft conflict", async () => {
+    mocks.saveDraft.mockResolvedValueOnce({
+      success: false,
+      error: "This lesson was updated by another author.",
+      status: 409,
+      currentRevision: 2,
+    });
+    mocks.getDraft.mockResolvedValue({
+      success: true,
+      data: {
+        ...initialDraft,
+        revision: 2,
+        payload: { ...initialDraft.payload, title: "Latest team version" },
+      },
+    });
+    renderWorkspace();
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Lesson title" }), {
+      target: { value: "My unsaved version" },
+    });
+    await act(async () => vi.advanceTimersByTimeAsync(1200));
+
+    expect(screen.getByText("Conflict")).toBeInTheDocument();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /load latest/i }));
+      await Promise.resolve();
+    });
+    expect(screen.getByRole("textbox", { name: "Lesson title" })).toHaveValue(
+      "Latest team version",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /restore my changes/i }));
+    expect(screen.getByRole("textbox", { name: "Lesson title" })).toHaveValue(
+      "My unsaved version",
+    );
+  });
+
+  it("lets the author cancel a running Copilot request", async () => {
+    const running = {
+      id: "run-1",
+      conversationId: "conversation-1",
+      status: "Running",
+      errorCode: null,
+      usage: {
+        maximumEstimatedCost: 20,
+        reservedCost: 20,
+        settledCost: 0,
+        releasedCost: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+      },
+    };
+    window.sessionStorage.setItem("authoring-ai-run:course-1:lesson-1", running.id);
+    mocks.getRun.mockResolvedValue({ success: true, data: running });
+    mocks.cancelRun.mockResolvedValue({
+      success: true,
+      data: { ...running, status: "Cancelled", errorCode: "AI_CANCELLED" },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url: string, init?: RequestInit) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("Aborted", "AbortError")),
+          );
+        }),
+      ),
+    );
+
+    renderWorkspace();
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Stop" }));
+      await Promise.resolve();
+    });
+
+    expect(mocks.cancelRun).toHaveBeenCalledWith(
+      "course-1",
+      "lesson-1",
+      "run-1",
+    );
+    expect(window.sessionStorage.getItem("authoring-ai-run:course-1:lesson-1")).toBeNull();
   });
 });

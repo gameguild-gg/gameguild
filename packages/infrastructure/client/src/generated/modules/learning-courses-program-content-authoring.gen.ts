@@ -207,6 +207,30 @@ export class LearningCoursesProgramContentAuthoringModule {
 
   /**
    */
+  async postCoursesContentAuthoringAiRunsCancel(
+    programId: string,
+    contentId: string,
+    runId: string,
+  ): Promise<Result<Types.LearningCoursesAiAuthoringRunDto, ApiError>> {
+    const url = `/v1/courses/${programId}/content/${contentId}/authoring/ai/runs/${runId}/cancel`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.LearningCoursesAiAuthoringRunDtoSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   */
   async getCoursesContentAuthoringAiRunsStream(programId: string, contentId: string, runId: string): Promise<Result<void, ApiError>> {
     const url = `/v1/courses/${programId}/content/${contentId}/authoring/ai/runs/${runId}/stream`;
 

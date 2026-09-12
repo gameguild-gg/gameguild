@@ -162,6 +162,38 @@ internal sealed class AiOrchestrator(
             : await ExecuteAsync(resolved.Value, actor.UserId, cancellationToken, onDelta).ConfigureAwait(false);
     }
 
+    public async Task<Result<AiCompletionResponse>> GenerateForActorStreamingWithReservedQuotaAsync(
+        AiExecutionActor actor,
+        AiGenerateRequest request,
+        Func<string, CancellationToken, ValueTask> onDelta,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateActor(actor);
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(onDelta);
+        if (string.IsNullOrWhiteSpace(request.Prompt))
+            return Result.Failure<AiCompletionResponse>(Error.Validation("AI.PromptRequired", "A prompt is required."));
+
+        var resolved = await ResolveRequestAsync(
+            actor.TenantId,
+            request.Provider,
+            request.Model,
+            request.SystemPrompt,
+            [new AiChatMessage("user", request.Prompt.Trim())],
+            request.Temperature,
+            request.MaxTokens,
+            AiRequestKind.Generate,
+            cancellationToken).ConfigureAwait(false);
+        return resolved.IsFailure
+            ? Result.Failure<AiCompletionResponse>(resolved.Error)
+            : await ExecuteAsync(
+                resolved.Value,
+                actor.UserId,
+                cancellationToken,
+                onDelta,
+                enforceQuota: false).ConfigureAwait(false);
+    }
+
     private static void ValidateActor(AiExecutionActor actor)
     {
         ArgumentNullException.ThrowIfNull(actor);
@@ -252,7 +284,8 @@ internal sealed class AiOrchestrator(
         AiResolvedRequest resolvedRequest,
         Guid? actorId,
         CancellationToken cancellationToken,
-        Func<string, CancellationToken, ValueTask>? onDelta = null)
+        Func<string, CancellationToken, ValueTask>? onDelta = null,
+        bool enforceQuota = true)
     {
         var inputModerationResult = ModerateInput(resolvedRequest);
         if (inputModerationResult.IsFailure)
@@ -261,13 +294,17 @@ internal sealed class AiOrchestrator(
             return Result.Failure<AiCompletionResponse>(inputModerationResult.Error);
         }
 
-        var requestQuotaResult = await ConsumeQuotaAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, "AI request quota exceeded.", cancellationToken).ConfigureAwait(false);
-        if (requestQuotaResult.IsFailure)
-            return Result.Failure<AiCompletionResponse>(requestQuotaResult.Error);
+        if (enforceQuota)
+        {
+            var requestQuotaResult = await ConsumeQuotaAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, "AI request quota exceeded.", cancellationToken).ConfigureAwait(false);
+            if (requestQuotaResult.IsFailure)
+                return Result.Failure<AiCompletionResponse>(requestQuotaResult.Error);
+        }
 
         if (!_adapters.TryGetValue(resolvedRequest.Provider, out var adapter))
         {
-            await quotaEnforcer.DecrementUsageAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, actorId, "AI.ProviderNotRegistered", cancellationToken).ConfigureAwait(false);
+            if (enforceQuota)
+                await quotaEnforcer.DecrementUsageAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, actorId, "AI.ProviderNotRegistered", cancellationToken).ConfigureAwait(false);
             return Result.Failure<AiCompletionResponse>(Error.Problem(
                 "AI.ProviderNotRegistered",
                 $"Provider '{AiProviderParser.ToResponseValue(resolvedRequest.Provider)}' is not registered."));
@@ -279,7 +316,8 @@ internal sealed class AiOrchestrator(
             : await adapter.CompleteAsync(resolvedRequest, cancellationToken).ConfigureAwait(false);
         if (executionResult.IsFailure)
         {
-            await quotaEnforcer.DecrementUsageAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, actorId, "AI.ProviderExecutionFailed", cancellationToken).ConfigureAwait(false);
+            if (enforceQuota)
+                await quotaEnforcer.DecrementUsageAsync(resolvedRequest.TenantId, ResourceUsageType.AiRequests, 1, actorId, "AI.ProviderExecutionFailed", cancellationToken).ConfigureAwait(false);
             await RecordHistoryAsync(resolvedRequest, actorId, null, "Failed", executionResult.Error.Code, executionResult.Error.Description, cancellationToken).ConfigureAwait(false);
             return Result.Failure<AiCompletionResponse>(executionResult.Error);
         }
@@ -287,7 +325,7 @@ internal sealed class AiOrchestrator(
         var providerResult = executionResult.Value;
 
         var totalTokens = providerResult.TotalTokens ?? ((providerResult.InputTokens ?? 0) + (providerResult.OutputTokens ?? 0));
-        if (totalTokens > 0)
+        if (enforceQuota && totalTokens > 0)
         {
             var tokenQuotaResult = await ConsumeQuotaAsync(resolvedRequest.TenantId, ResourceUsageType.AiTokens, totalTokens, "AI token quota exceeded.", cancellationToken).ConfigureAwait(false);
             if (tokenQuotaResult.IsFailure)

@@ -223,6 +223,47 @@ public sealed class AuthoringAiServiceTests
     }
 
     [Fact]
+    public async Task CancelRun_BeforeProviderStarts_ReleasesReservationAndReservedQuota()
+    {
+        await using var fixture = CreateFixture();
+        var created = await fixture.Service.CreateRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            Request("cancel-before-provider"),
+            CancellationToken.None);
+
+        var cancelled = await fixture.Service.CancelRun(
+            fixture.TenantId,
+            fixture.ActorId,
+            fixture.ProgramId,
+            fixture.ContentId,
+            created.Id,
+            CancellationToken.None);
+        await fixture.Service.ProcessRun(created.Id, CancellationToken.None);
+
+        cancelled.Status.Should().Be(AiAuthoringRunStatus.Cancelled);
+        cancelled.Usage.ReleasedAmount.Should().Be(100);
+        fixture.Credits.ReleaseCalls.Should().Be(1);
+        fixture.Ai.StreamCalls.Should().Be(0);
+        fixture.Quota.Verify(service => service.DecrementUsageAsync(
+            fixture.TenantId,
+            ResourceUsageType.AiRequests,
+            1,
+            fixture.ActorId,
+            "lesson-authoring",
+            It.IsAny<CancellationToken>()), Times.Never);
+        fixture.Quota.Verify(service => service.DecrementUsageAsync(
+            fixture.TenantId,
+            ResourceUsageType.AiTokens,
+            It.Is<long>(amount => amount > 64),
+            fixture.ActorId,
+            "lesson-authoring",
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task CreateRun_VideoLessonRejectsDocumentReplacementBeforeReservingCredits()
     {
         await using var fixture = CreateFixture(lessonFormat: LessonContentFormat.Video);
@@ -441,6 +482,13 @@ public sealed class AuthoringAiServiceTests
             return Result.Success(new AiCompletionResponse(
                 "OpenAi", "gpt-test", providerOutput, "stop", new AiUsageDto(12, 5, 17)));
         }
+
+        public Task<Result<AiCompletionResponse>> GenerateForActorStreamingWithReservedQuotaAsync(
+            AiExecutionActor actor,
+            AiGenerateRequest request,
+            Func<string, CancellationToken, ValueTask> onDelta,
+            CancellationToken cancellationToken = default) =>
+            GenerateForActorStreamingAsync(actor, request, onDelta, cancellationToken);
 
         public Task<Result<AiCompletionResponse>> ChatAsync(AiChatRequest request, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();

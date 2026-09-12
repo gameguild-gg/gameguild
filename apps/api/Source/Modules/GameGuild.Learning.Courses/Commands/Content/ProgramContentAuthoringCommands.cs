@@ -22,6 +22,13 @@ public sealed record CreateAiAuthoringRunCommand(
     Guid ContentId,
     AiAuthoringRunRequest Request) : ICommand<AiAuthoringRunDto>;
 
+public sealed record CancelAiAuthoringRunCommand(
+    Guid TenantId,
+    Guid ActorId,
+    Guid ProgramId,
+    Guid ContentId,
+    Guid RunId) : ICommand<AiAuthoringRunDto>;
+
 public sealed record ApplyAiAuthoringProposalCommand(
     Guid TenantId,
     Guid ActorId,
@@ -61,11 +68,15 @@ public sealed class ProgramContentAuthoringCommandHandler(IProgramContentAuthori
 
 public sealed class AiAuthoringCommandHandler(IAuthoringAiService authoring) :
     ICommandHandler<CreateAiAuthoringRunCommand, AiAuthoringRunDto>,
+    ICommandHandler<CancelAiAuthoringRunCommand, AiAuthoringRunDto>,
     ICommandHandler<ApplyAiAuthoringProposalCommand, AuthoringDraftDto>,
     ICommandHandler<DiscardAiAuthoringProposalCommand, AiProposalDto>
 {
     public Task<AiAuthoringRunDto> Handle(CreateAiAuthoringRunCommand request, CancellationToken cancellationToken) =>
         authoring.CreateRun(request.TenantId, request.ActorId, request.ProgramId, request.ContentId, request.Request, cancellationToken);
+
+    public Task<AiAuthoringRunDto> Handle(CancelAiAuthoringRunCommand request, CancellationToken cancellationToken) =>
+        authoring.CancelRun(request.TenantId, request.ActorId, request.ProgramId, request.ContentId, request.RunId, cancellationToken);
 
     public Task<AuthoringDraftDto> Handle(ApplyAiAuthoringProposalCommand request, CancellationToken cancellationToken) =>
         authoring.ApplyProposal(request.TenantId, request.ActorId, request.ProgramId, request.ContentId, request.ProposalId, request.Request, cancellationToken);

@@ -238,6 +238,17 @@ export async function getAiAuthoringRun(
   );
 }
 
+export async function cancelAiAuthoringRun(
+  courseId: string,
+  contentId: string,
+  runId: string,
+) {
+  return authoringRequest<AiAuthoringRun>(
+    path(courseId, contentId, `/ai/runs/${encodeURIComponent(runId)}/cancel`),
+    { method: "POST" },
+  );
+}
+
 export async function applyAiProposal(
   courseId: string,
   contentId: string,

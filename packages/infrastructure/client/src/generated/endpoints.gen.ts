@@ -11773,6 +11773,20 @@ export const getCoursesContentAuthoringAiRunsEndpoint = {
   requiresAuth: true,
 } as const;
 
+export interface PostCoursesContentAuthoringAiRunsCancelInput {
+  programId: string;
+  contentId: string;
+  runId: string;
+}
+export type PostCoursesContentAuthoringAiRunsCancelOutput = Types.LearningCoursesAiAuthoringRunDto;
+export const postCoursesContentAuthoringAiRunsCancelEndpoint = {
+  operationId: 'postCoursesContentAuthoringAiRunsCancel' as const,
+  method: 'POST' as const,
+  path: '/v1/courses/{programId}/content/{contentId}/authoring/ai/runs/{runId}/cancel' as const,
+  tags: ['LearningCoursesProgramContentAuthoring'] as const,
+  requiresAuth: true,
+} as const;
+
 export interface GetCoursesContentAuthoringAiRunsStreamInput {
   programId: string;
   contentId: string;
@@ -22161,6 +22175,7 @@ export const endpoints = {
   postCoursesContentAuthoringAiProposalsApply: postCoursesContentAuthoringAiProposalsApplyEndpoint,
   postCoursesContentAuthoringAiRuns: postCoursesContentAuthoringAiRunsEndpoint,
   getCoursesContentAuthoringAiRuns: getCoursesContentAuthoringAiRunsEndpoint,
+  postCoursesContentAuthoringAiRunsCancel: postCoursesContentAuthoringAiRunsCancelEndpoint,
   getCoursesContentAuthoringAiRunsStream: getCoursesContentAuthoringAiRunsStreamEndpoint,
   postCoursesContentAuthoringPublish: postCoursesContentAuthoringPublishEndpoint,
   getCoursesContentById: getCoursesContentByIdEndpoint,
