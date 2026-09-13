@@ -33,10 +33,6 @@ vi.mock('@/i18n/navigation', () => ({
   ),
 }));
 
-vi.mock('next-intl', () => ({
-  useLocale: () => 'en-US',
-}));
-
 // Must import AFTER mocks
 const { SignInForm } = await import('@/components/sign-in-form');
 const { GoogleSignInButton } = await import('@/components/google-sign-in-button');
@@ -67,13 +63,13 @@ describe('SignInForm', () => {
   it('renders navigation links', () => {
     renderWithUser(<SignInForm />);
 
-    expect(screen.getByText('Sign up')).toHaveAttribute('href', '/en-US/sign-up?redirectTo=%2F');
+    expect(screen.getByText('Sign up')).toHaveAttribute('href', '/sign-up?redirectTo=%2F');
     expect(screen.getByText('Forgot your password?')).toHaveAttribute(
       'href',
-      '/en-US/forgot-password'
+      '/forgot-password'
     );
-    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/en-US/legal/terms-of-service');
-    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/en-US/legal/privacy');
+    expect(screen.getByText('Terms of Service')).toHaveAttribute('href', '/legal/terms-of-service');
+    expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/legal/privacy');
   });
 
   /* ---------- Client-side validation ---------- */
