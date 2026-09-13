@@ -99,14 +99,61 @@ describe("social feed actions", () => {
   it("returns authoritative reaction, comment, repost and save responses", async () => {
     mocks.request
       .mockResolvedValueOnce({ ok: true, data: { id: "r-1", type: "Love", targetId: "post-1" } })
+      .mockResolvedValueOnce({ ok: true, data: { id: "post-1", engagement: { reactionsCount: 7 }, viewer: { reaction: "Love" } } })
       .mockResolvedValueOnce({ ok: true, data: { id: "c-1", postId: "post-1", content: "Nice" } })
-      .mockResolvedValueOnce({ ok: true, data: { id: "rp-1", repostOfPostId: "post-1", content: "Boost" } })
+      .mockResolvedValueOnce({ ok: true, data: { id: "rp-1", repostOfPostId: "post-1", content: "Boost", hasReposted: true, repostsCount: 8 } })
       .mockResolvedValueOnce({ ok: true, data: { postId: "post-1", isSaved: true } });
 
-    await expect(setPostReaction("post-1", "Love")).resolves.toMatchObject({ type: "Love" });
+    await expect(setPostReaction("post-1", "Love")).resolves.toEqual({ kind: "confirmed", reaction: "Love", reactionsCount: 7 });
     await expect(createPostComment("post-1", { content: "Nice" })).resolves.toMatchObject({ id: "c-1" });
-    await expect(repostPost("post-1", "Boost")).resolves.toMatchObject({ id: "rp-1" });
+    await expect(repostPost("post-1", "Boost")).resolves.toMatchObject({
+      id: "rp-1",
+      hasReposted: true,
+      repostsCount: 8,
+    });
     await expect(savePost("post-1", true)).resolves.toEqual({ postId: "post-1", isSaved: true });
+  });
+
+  it("reconciles reaction state from the viewer-aware post projection", async () => {
+    mocks.request
+      .mockResolvedValueOnce({ ok: true, data: { id: "reaction-1", type: "Love" } })
+      .mockResolvedValueOnce({ ok: true, data: { id: "post-1", engagement: { reactionsCount: 9 }, viewer: { reaction: "Love" } } });
+
+    await expect(setPostReaction("post-1", "Love")).resolves.toEqual({
+      kind: "confirmed",
+      reaction: "Love",
+      reactionsCount: 9,
+    });
+    expect(mocks.request).toHaveBeenNthCalledWith(2, {
+      method: "GET",
+      path: "/api/social/feed/posts/post-1",
+      requiresAuth: true,
+    });
+  });
+
+  it("preserves a committed reaction when projection hydration fails without repeating the mutation", async () => {
+    mocks.request
+      .mockResolvedValueOnce({ ok: true, data: { id: "reaction-1", type: "Like" } })
+      .mockResolvedValueOnce({ ok: false, error: { status: 503, code: "PROJECTION_PENDING", message: "Not ready" } });
+
+    await expect(setPostReaction("post-1", "Like")).resolves.toEqual({
+      kind: "committed-needs-hydration",
+      reaction: "Like",
+    });
+    expect(mocks.request.mock.calls.filter(([request]) => request.method === "PUT" && request.path === "/api/social/reactions")).toHaveLength(1);
+  });
+
+  it("reconciles deletion with the authoritative comment count", async () => {
+    mocks.request
+      .mockResolvedValueOnce({ ok: true, data: undefined })
+      .mockResolvedValueOnce({ ok: true, data: { id: "post-1", engagement: { commentsCount: 41 }, viewer: {} } });
+
+    await expect(deletePostComment("post-1", "comment-1")).resolves.toEqual({
+      kind: "confirmed",
+      postId: "post-1",
+      commentId: "comment-1",
+      commentsCount: 41,
+    });
   });
 
   it("uses the actor-safe follow contract", async () => {
@@ -148,6 +195,7 @@ describe("social feed actions", () => {
       .mockResolvedValueOnce({ ok: true, data: undefined })
       .mockResolvedValueOnce({ ok: true, data: { id: "comment-1", postId: "post-1", content: "Updated comment" } })
       .mockResolvedValueOnce({ ok: true, data: undefined })
+      .mockResolvedValueOnce({ ok: true, data: { id: "post-1", engagement: { commentsCount: 6 }, viewer: {} } })
       .mockResolvedValueOnce({ ok: true, data: undefined })
       .mockResolvedValueOnce({ ok: true, data: undefined })
       .mockResolvedValueOnce({ ok: true, data: { assetReferenceId: "asset-1", state: "Ready", sizeBytes: 1 } })
@@ -160,7 +208,7 @@ describe("social feed actions", () => {
     await expect(updateSocialPost("post-1", " Updated ")).resolves.toEqual({ id: "post-1", content: "Updated" });
     await expect(deleteSocialPost("post-1")).resolves.toEqual({ postId: "post-1", deleted: true });
     await expect(updatePostComment("post-1", "comment-1", " Updated comment ")).resolves.toEqual({ id: "comment-1", postId: "post-1", content: "Updated comment" });
-    await expect(deletePostComment("post-1", "comment-1")).resolves.toEqual({ postId: "post-1", commentId: "comment-1", deleted: true });
+    await expect(deletePostComment("post-1", "comment-1")).resolves.toEqual({ kind: "confirmed", postId: "post-1", commentId: "comment-1", commentsCount: 6 });
     await expect(sharePost("post-1")).resolves.toEqual({ postId: "post-1", shared: true });
     await expect(recordPostView("post-1")).resolves.toEqual({ postId: "post-1", viewed: true });
     await expect(uploadSocialMedia(new FormData())).resolves.toEqual({ assetReferenceId: "asset-1", deliveryUrl: null, mimeType: null, sizeBytes: 1, state: "Ready" });
@@ -188,10 +236,11 @@ describe("social feed actions", () => {
   it("returns concrete states for reaction removal, unsaving, and following", async () => {
     mocks.request
       .mockResolvedValueOnce({ ok: true, data: undefined })
+      .mockResolvedValueOnce({ ok: true, data: { id: "post-1", engagement: { reactionsCount: 0 }, viewer: { reaction: null } } })
       .mockResolvedValueOnce({ ok: true, data: undefined })
       .mockResolvedValueOnce({ ok: true, data: { id: "follow-1", followedEntityId: "user-2" } });
 
-    await expect(setPostReaction("post-1", null)).resolves.toBeNull();
+    await expect(setPostReaction("post-1", null)).resolves.toEqual({ kind: "confirmed", reaction: null, reactionsCount: 0 });
     await expect(savePost("post-1", false)).resolves.toEqual({ postId: "post-1", isSaved: false });
     await expect(followCreator("user-2", true)).resolves.toEqual({ userId: "user-2", isFollowing: true });
   });

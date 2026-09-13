@@ -360,9 +360,9 @@ public class PostServiceFacadeTests
     public async Task GetPostCommentsAsync_ShouldDelegate()
     {
         var postId = Guid.NewGuid();
-        _commentMock.Setup(s => s.GetPostCommentsAsync(postId, 0, 50, default)).Returns(Task.FromResult(Result<IEnumerable<PostComment>>.Success(Enumerable.Empty<PostComment>())));
+        _commentMock.Setup(s => s.GetPostCommentsAsync(postId, 0, 50, null, default)).Returns(Task.FromResult(Result<IEnumerable<PostComment>>.Success(Enumerable.Empty<PostComment>())));
         await _sut.GetPostCommentsAsync(postId);
-        _commentMock.Verify(s => s.GetPostCommentsAsync(postId, 0, 50, default), Times.Once);
+        _commentMock.Verify(s => s.GetPostCommentsAsync(postId, 0, 50, null, default), Times.Once);
     }
 
     // ── Tag delegations ──────────────────────────────────────────

@@ -36,11 +36,7 @@ export function SignInForm({
 }) {
   const { signIn, isLoading, error, clearError } = useAuth()
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-  const isHydrated = useSyncExternalStore(
-    subscribeToHydration,
-    () => true,
-    () => false
-  )
+  const isHydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false)
   const locale = useLocale()
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {

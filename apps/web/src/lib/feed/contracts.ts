@@ -94,10 +94,17 @@ export interface SocialPostMutation {
   content: string;
   createdAt?: string;
   visibility?: string;
+  hasReposted?: boolean;
+  repostsCount?: number;
 }
 
 export interface DeletedSocialPost { postId: string; deleted: true; }
-export interface DeletedPostComment { postId: string; commentId: string; deleted: true; }
+export type DeletedPostComment =
+  | { kind: "confirmed"; postId: string; commentId: string; commentsCount: number }
+  | { kind: "committed-needs-hydration"; postId: string; commentId: string };
+export type SocialReactionMutationResult =
+  | { kind: "confirmed"; reaction: SocialReaction | null; reactionsCount: number }
+  | { kind: "committed-needs-hydration"; reaction: SocialReaction | null };
 export interface SocialFollowState { userId: string; isFollowing: boolean; }
 export interface SharedPostState { postId: string; shared: true; }
 export interface ViewedPostState { postId: string; viewed: true; }
@@ -118,6 +125,11 @@ export interface PostComment {
   createdAt: string;
   updatedAt: string | null;
   replies: PostComment[];
+}
+
+export interface PostCommentPage {
+  items: PostComment[];
+  nextSkip: number | null;
 }
 
 export interface SavedPostState {
@@ -166,6 +178,28 @@ export interface SocialProfile {
   followerCount: number;
   followingCount: number;
   isFollowing: boolean;
+}
+
+export interface SocialProfilePost {
+  id: string;
+  content: string;
+  mediaUrl: string | null;
+  mediaType: string | null;
+  createdAt: string;
+}
+
+export interface SocialProfileProject {
+  id: string;
+  title: string;
+  slug: string;
+  shortDescription: string | null;
+  imageUrl: string | null;
+  publishedAt: string | null;
+}
+
+export interface SocialProfileCollections {
+  posts: SocialProfilePost[];
+  projects: SocialProfileProject[];
 }
 
 export interface TrendingTag {
