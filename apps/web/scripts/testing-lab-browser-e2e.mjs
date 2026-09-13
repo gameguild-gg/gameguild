@@ -442,7 +442,21 @@ async function visit(page, pathname, label) {
 function monitorPage(page) {
   page.on("pageerror", (error) => quality.browserErrors.push(error.message));
   page.on("console", (message) => {
-    if (message.type() === "error") quality.browserErrors.push(message.text());
+    if (message.type() === "error") {
+      const location = message.location();
+      const source = location.url
+        ? ` (${location.url}${location.lineNumber ? `:${location.lineNumber}` : ""})`
+        : "";
+      quality.browserErrors.push(`${message.text()}${source}`);
+    }
+  });
+  page.on("requestfailed", (request) => {
+    const failure = request.failure();
+    if (failure?.errorText.includes("ERR_TOO_MANY_REDIRECTS")) {
+      quality.browserErrors.push(
+        `${failure.errorText}: ${request.method()} ${request.url()}`,
+      );
+    }
   });
   page.on("response", (response) => {
     const failure = responseFailure(response, webBaseUrl);
@@ -462,6 +476,13 @@ async function waitForClientHydration(page) {
   await page.waitForTimeout(750);
 }
 
+async function settleServerActionNavigation(page) {
+  await page
+    .waitForLoadState("networkidle", { timeout: 20_000 })
+    .catch(() => undefined);
+  await page.waitForTimeout(250);
+}
+
 async function assertAuthenticatedBrowserSession(page, label) {
   const session = await page.evaluate(async () => {
     const response = await fetch("/api/auth/session");
@@ -478,14 +499,22 @@ async function assertAuthenticatedBrowserSession(page, label) {
 }
 
 async function signIn(page, email = adminEmail, password = adminPassword) {
-  await visit(page, "/sign-in", "sign in");
+  await visit(
+    page,
+    "/sign-in?redirectTo=%2Fworkspace",
+    "sign in",
+  );
   await waitForClientHydration(page);
-  await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password", { exact: true }).fill(password);
-  await page
+  const form = page
+    .locator('form[data-auth-ready="true"]')
+    .filter({ has: page.locator('input[name="email"]') })
+    .first();
+  await form.waitFor({ state: "visible", timeout: 60_000 });
+  await form.locator('input[name="email"]').fill(email);
+  await form.locator('input[name="password"]').fill(password);
+  await form
     .getByRole("button", { name: "Sign in", exact: true })
     .click({ noWaitAfter: true });
-  await page.waitForURL(/\/dashboard/, { timeout: 60_000 });
   await page.waitForURL(
     (url) => url.pathname.endsWith("/workspace"),
     { timeout: 60_000 },
@@ -769,7 +798,7 @@ async function run() {
     console.log("[testing-lab-browser-e2e] manager operations surfaces");
     for (const [pathname, title] of [
       ["/workspace/testing-lab", "Testing Lab"],
-      ["/workspace/testing-lab/events", "Testing events"],
+      ["/workspace/testing-lab/events", "Testing sessions"],
       [
         `/workspace/testing-lab/events/${fixture.event.id}/overview`,
         "Event overview",
@@ -783,8 +812,12 @@ async function run() {
         "Schedule and capacity",
       ],
       [
-        `/workspace/testing-lab/events/${fixture.event.id}/testers`,
-        "Testers and attendance",
+        `/workspace/testing-lab/events/${fixture.event.id}/projects`,
+        "Projects",
+      ],
+      [
+        `/workspace/testing-lab/events/${fixture.event.id}/participants`,
+        "Participants and attendance",
       ],
       [
         `/workspace/testing-lab/events/${fixture.event.id}/feedback`,
@@ -794,14 +827,12 @@ async function run() {
         `/workspace/testing-lab/events/${fixture.event.id}/learning`,
         "Learning evidence",
       ],
-      ["/workspace/testing-lab/projects", "Community projects"],
       [
-        "/workspace/testing-lab/participants",
-        "Testing Lab participants",
+        "/workspace/testing-lab/settings/analytics",
+        "Testing Lab analytics",
       ],
-      ["/workspace/testing-lab/analytics", "Testing Lab analytics"],
       ["/workspace/testing-lab/settings/general", "General settings"],
-      ["/workspace/testing-lab/settings/templates", "Event templates"],
+      ["/workspace/testing-lab/settings/templates", "Event calendars"],
       [
         "/workspace/testing-lab/settings/locations",
         "Testing locations",
@@ -813,16 +844,16 @@ async function run() {
       await assertNoViewportOverflow(page, title);
     }
 
-    console.log("[testing-lab-browser-e2e] versioned event template creation");
+    console.log("[testing-lab-browser-e2e] versioned event calendar creation");
     await visit(
       page,
       "/workspace/testing-lab/settings/templates",
-      "Testing Lab event templates",
+      "Testing Lab event calendars",
     );
     await waitForClientHydration(page);
     await page
       .getByLabel("Name")
-      .fill(`Browser playtest template ${fixture.tag}`);
+      .fill(`Browser playtest calendar ${fixture.tag}`);
     await page
       .getByLabel("Description")
       .fill("Reusable browser-verified event package.");
@@ -840,11 +871,11 @@ async function run() {
       .getByLabel("Tester instructions")
       .fill("Follow the project tasks and submit structured feedback.");
     await page
-      .getByRole("button", { name: "Create template", exact: true })
+      .getByRole("button", { name: "Create calendar", exact: true })
       .click();
-    await waitForText(page, "Event template created.");
+    await waitForText(page, "Event calendar created.");
     await page.screenshot({
-      path: path.join(artifactsDirectory, "event-templates-desktop.png"),
+      path: path.join(artifactsDirectory, "event-calendars-desktop.png"),
       fullPage: true,
     });
 
@@ -864,6 +895,7 @@ async function run() {
       .getByRole("button", { name: "Save settings", exact: true })
       .click();
     await waitForText(page, "Testing Lab settings updated.");
+    await settleServerActionNavigation(page);
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.getByLabel("Lab name").waitFor();
     if ((await page.getByLabel("Lab name").inputValue()) !== labName) {
@@ -899,6 +931,7 @@ async function run() {
       .click();
     await waitForText(page, "Testing location created.");
     await actionDialog.waitFor({ state: "hidden" });
+    await settleServerActionNavigation(page);
     await page.reload({ waitUntil: "domcontentloaded" });
     await waitForClientHydration(page);
     await waitForText(page, locationName);
@@ -914,6 +947,7 @@ async function run() {
       .click();
     await waitForText(page, "Testing location updated.");
     await actionDialog.waitFor({ state: "hidden" });
+    await settleServerActionNavigation(page);
     await page.reload({ waitUntil: "domcontentloaded" });
     await waitForClientHydration(page);
     await waitForText(page, updatedLocationName);
@@ -975,6 +1009,7 @@ async function run() {
       .click();
     await waitForText(page, "Testing Lab role created.");
     await actionDialog.waitFor({ state: "hidden" });
+    await settleServerActionNavigation(page);
     await page.reload({ waitUntil: "domcontentloaded" });
     await waitForClientHydration(page);
     await waitForText(page, roleName);
@@ -991,6 +1026,7 @@ async function run() {
       .click();
     await waitForText(page, "Testing Lab role updated.");
     await actionDialog.waitFor({ state: "hidden" });
+    await settleServerActionNavigation(page);
     await page.reload({ waitUntil: "domcontentloaded" });
     await waitForText(page, updatedRoleName);
     await waitForClientHydration(page);
@@ -1133,43 +1169,21 @@ async function run() {
     );
     await waitForText(page, "Browser-verified required feedback.");
 
-    console.log("[testing-lab-browser-e2e] filters search and pagination");
+    console.log("[testing-lab-browser-e2e] event filters search and pagination");
     await visit(
       page,
       "/workspace/testing-lab/events",
       "Testing Lab event directory filters",
     );
     await page.getByLabel("Search testing events").fill(fixture.event.name);
-    await page.getByRole("button", { name: "Search", exact: true }).click();
+    await page.getByRole("button", { name: "Run event search", exact: true }).click();
     await page.waitForURL(/q=/);
     await waitForText(page, fixture.event.name);
-    await page
-      .getByRole("navigation", { name: "Filter testing events" })
-      .getByRole("link", { name: "Active", exact: true })
-      .click();
+    await page.getByLabel("Filter testing events by status").click();
+    await page.getByRole("option", { name: "Active", exact: true }).click();
     await page.waitForURL(/status=Active/);
     await waitForText(page, fixture.event.name);
 
-    await visit(
-      page,
-      "/workspace/testing-lab/participants",
-      "Testing Lab participant filters",
-    );
-    await waitForClientHydration(page);
-    await page.getByLabel("Search participants").fill(fixture.event.name);
-    await page.getByRole("button", { name: "Search", exact: true }).click();
-    await page.waitForURL(/q=/);
-    await waitForText(page, fixture.event.name);
-    await page.getByLabel("Filter participants by status").click();
-    await page.getByRole("option", { name: "Completed", exact: true }).click();
-    await page.waitForURL(/status=Completed/);
-    await waitForText(page, "Completed");
-    await page
-      .getByRole("button", { name: "Clear participant filters", exact: true })
-      .click();
-    await page.waitForURL(
-      (url) => !url.searchParams.has("q") && !url.searchParams.has("status"),
-    );
     console.log("[testing-lab-browser-e2e] mobile public and manager surfaces");
     await page.setViewportSize({ width: 390, height: 844 });
     await visit(
@@ -1224,6 +1238,7 @@ async function run() {
       .click();
     await waitForText(page, "Event status updated.");
     await actionDialog.waitFor({ state: "hidden" });
+    await settleServerActionNavigation(page);
     await page.reload({ waitUntil: "domcontentloaded" });
     await waitForText(
       page,
