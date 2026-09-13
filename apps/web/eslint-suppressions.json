@@ -150,16 +150,6 @@
       "count": 1
     }
   },
-  "src/app/api/static-viewer/file/[...path]/route.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/app/api/static-viewer/folder/[folderName]/route.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
   "src/app/global-error.tsx": {
     "@next/next/no-location-assign-relative-destination": {
       "count": 1
@@ -214,14 +204,6 @@
   "src/components/block-content-editor/engines/editor-toolbar.tsx": {
     "react-hooks/set-state-in-effect": {
       "count": 1
-    }
-  },
-  "src/components/block-content-editor/engines/static-viewer-sections.tsx": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 3
-    },
-    "react-hooks/set-state-in-effect": {
-      "count": 4
     }
   },
   "src/components/block-content-editor/engines/static-viewer.tsx": {
@@ -625,9 +607,6 @@
     }
   },
   "src/components/block-content-editor/extras/markdown/markdown-components.tsx": {
-    "@next/next/no-img-element": {
-      "count": 1
-    },
     "@typescript-eslint/no-explicit-any": {
       "count": 3
     },
