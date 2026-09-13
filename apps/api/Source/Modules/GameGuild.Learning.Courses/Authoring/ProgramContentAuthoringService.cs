@@ -47,7 +47,9 @@ public sealed class ProgramContentPublicationAudit : EntityBase
         };
 }
 
-public sealed class ProgramContentAuthoringService(IApplicationDbContext db) : IProgramContentAuthoringService
+public sealed class ProgramContentAuthoringService(
+    IApplicationDbContext db,
+    ILearningAssetManifestService? assetManifestService = null) : IProgramContentAuthoringService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -115,6 +117,10 @@ public sealed class ProgramContentAuthoringService(IApplicationDbContext db) : I
         ValidateActor(actorId);
         ArgumentNullException.ThrowIfNull(payload);
         var draft = await FindDraft(programId, contentId, cancellationToken).ConfigureAwait(false);
+        var content = await FindContent(programId, contentId, cancellationToken).ConfigureAwait(false);
+        if (assetManifestService is not null)
+            await assetManifestService.ValidateAndReconcileAsync(content, payload, false, cancellationToken)
+                .ConfigureAwait(false);
         draft.Update(expectedRevision, JsonSerializer.Serialize(payload, JsonOptions), actorId, DateTimeOffset.UtcNow);
         try
         {
@@ -151,6 +157,9 @@ public sealed class ProgramContentAuthoringService(IApplicationDbContext db) : I
 
         var basePublishedVersion = draft.BasePublishedVersion;
         var payload = Deserialize(draft.PayloadJson);
+        if (assetManifestService is not null)
+            await assetManifestService.ValidateAndReconcileAsync(content, payload, true, cancellationToken)
+                .ConfigureAwait(false);
         ApplyPayload(content, payload);
         var now = DateTimeOffset.UtcNow;
         var nextPublishedVersion = checked(content.Version + 1);
