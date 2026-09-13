@@ -17,9 +17,10 @@
  */
 
 import { useMemo, useRef } from "react"
-import ReactMarkdown from "react-markdown"
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeRaw from "rehype-raw"
+import { isAssetUri } from "@game-guild/assets"
 
 import { useMarkdownComponents } from "./markdown-components"
 import { EMBEDDABLE_BLOCK_CONFIG } from "../../embed/block-embed-registry"
@@ -243,6 +244,7 @@ export function MarkdownRenderer({
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw, rehypeUnwrapBlockEmbed]}
           components={components}
+          urlTransform={(url) => (isAssetUri(url) ? url : defaultUrlTransform(url))}
         >
           {content}
         </ReactMarkdown>

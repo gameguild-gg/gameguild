@@ -3,7 +3,7 @@
 import 'katex/dist/katex.min.css';
 
 import type React from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components, type UrlTransform } from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import rehypeKatex from 'rehype-katex';
@@ -21,6 +21,8 @@ export interface MarkdownRendererProps {
   content: string;
   renderer?: MarkdownRendererMode;
   tone?: MarkdownRendererTone;
+  components?: Components;
+  urlTransform?: UrlTransform;
 }
 
 type MarkdownDivProps = React.HTMLAttributes<HTMLDivElement> & {
@@ -116,7 +118,7 @@ function getAdmonitionTone(type: string | undefined, tone: MarkdownRendererTone)
   return 'border-gray-400 bg-gray-50';
 }
 
-export function MarkdownRenderer({ content, renderer = 'markdown', tone = 'learning' }: MarkdownRendererProps) {
+export function MarkdownRenderer({ content, renderer = 'markdown', tone = 'learning', components: componentOverrides, urlTransform }: MarkdownRendererProps) {
   if (renderer === 'reveal') {
     return (
       <div className="gameguild-revealjs-wrapper">
@@ -128,7 +130,7 @@ export function MarkdownRenderer({ content, renderer = 'markdown', tone = 'learn
   const processedContent = preprocessMarkdown(content);
   const isLearningTone = tone === 'learning';
 
-  const components = {
+  const components: Components = {
     h1: (props: React.HTMLAttributes<HTMLHeadingElement>) => <h1 className={isLearningTone ? 'mt-6 mb-4 text-4xl font-bold' : 'text-4xl font-bold mt-6 mb-4'} {...props} />,
     h2: (props: React.HTMLAttributes<HTMLHeadingElement>) => <h2 className={isLearningTone ? 'mt-5 mb-3 text-3xl font-semibold' : 'text-3xl font-semibold mt-5 mb-3'} {...props} />,
     h3: (props: React.HTMLAttributes<HTMLHeadingElement>) => <h3 className={isLearningTone ? 'mt-4 mb-2 text-2xl font-semibold' : 'text-2xl font-semibold mt-4 mb-2'} {...props} />,
@@ -225,11 +227,12 @@ export function MarkdownRenderer({ content, renderer = 'markdown', tone = 'learn
         </div>
       );
     },
+    ...componentOverrides,
   };
 
   return (
     <div className={isLearningTone ? 'prose dark:prose-invert max-w-none prose-pre:bg-transparent' : 'markdown-content'}>
-      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={components}>
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeRaw, rehypeKatex]} components={components} urlTransform={urlTransform}>
         {processedContent}
       </ReactMarkdown>
     </div>
