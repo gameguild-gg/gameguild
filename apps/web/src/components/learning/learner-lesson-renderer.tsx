@@ -1,13 +1,29 @@
 'use client';
 
+import { AssetImage } from '@/components/block-content-editor/extras/media/asset-image';
+import { getLearningAssetRepository } from '@/lib/learning/assets/learning-asset-repository';
 import { recordLessonEvent } from '@/lib/learner/lesson-interaction-actions';
+import { AssetsProvider, useResolvedAssetUrl } from '@game-guild/assets/react';
 import type { LearningCoursesLessonContentFormat } from '@game-guild/client';
 import { MarkdownRenderer } from '@game-guild/content-rendering';
 import { Button } from '@game-guild/ui/components/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { lazy, Suspense, useRef, useState } from 'react';
+import { defaultUrlTransform, type Components } from 'react-markdown';
 
 type ContentRecord = Record<string, unknown>;
+
+const ASSET_MARKDOWN_COMPONENTS: Components = {
+    img: ({ src, alt, ...props }) => <AssetImage src={typeof src === 'string' ? src : undefined} alt={alt ?? ''} {...props} />,
+};
+
+function learningUrlTransform(url: string): string {
+    return url.startsWith('asset://') ? url : defaultUrlTransform(url);
+}
+
+function LessonMarkdown({ content }: { content: string }) {
+    return <MarkdownRenderer content={content} components={ASSET_MARKDOWN_COMPONENTS} urlTransform={learningUrlTransform} />;
+}
 
 const LexicalLessonRenderer = lazy(async () => {
     const mod = await import('./lexical-lesson-renderer');
@@ -37,7 +53,7 @@ function RevealRenderer({ content }: { content: unknown }) {
     const [index, setIndex] = useState(0);
     if (!slides.length) return <p className="text-sm text-muted-foreground">This presentation has no published slides.</p>;
     return <section aria-label="Slide presentation" className="bg-muted/30 p-6 sm:p-10">
-        <div className="min-h-72"><MarkdownRenderer content={slides[index]} /></div>
+        <div className="min-h-72"><LessonMarkdown content={slides[index]} /></div>
         <footer className="mt-6 flex items-center justify-between border-t pt-4">
             <Button variant="outline" size="icon" aria-label="Previous slide" disabled={index === 0} onClick={() => setIndex((value) => Math.max(0, value - 1))}><ChevronLeft /></Button>
             <span className="text-sm text-muted-foreground">{index + 1} / {slides.length}</span>
@@ -49,16 +65,26 @@ function RevealRenderer({ content }: { content: unknown }) {
 function VideoRenderer({ courseId, enrollmentId, itemId, content }: { courseId: string; enrollmentId?: string; itemId: string; content: unknown }) {
     const record = asRecord(content);
     const src = typeof record?.videoUrl === 'string' ? record.videoUrl : typeof record?.url === 'string' ? record.url : typeof record?.src === 'string' ? record.src : textContent(content);
+    const { url: resolvedSrc, loading } = useResolvedAssetUrl(src);
     const lastHeartbeat = useRef(0);
     const send = (type: 'Opened' | 'Progressed' | 'Paused' | 'Completed', video: HTMLVideoElement) => {
         if (!enrollmentId) return;
         void recordLessonEvent({ courseId, enrollmentId, contentId: itemId, type, positionSeconds: Math.round(video.currentTime), durationSeconds: Number.isFinite(video.duration) ? Math.round(video.duration) : undefined, progressPercentage: Number.isFinite(video.duration) && video.duration > 0 ? Math.round((video.currentTime / video.duration) * 100) : undefined, idempotencyKey: crypto.randomUUID() });
     };
     if (!src) return <p className="text-sm text-muted-foreground">This video lesson has no published media.</p>;
-    return <video aria-label="Video lesson" controls preload="metadata" src={src} className="aspect-video w-full bg-black" onPlay={(event) => send('Opened', event.currentTarget)} onPause={(event) => send('Paused', event.currentTarget)} onEnded={(event) => send('Completed', event.currentTarget)} onTimeUpdate={(event) => { const second = Math.floor(event.currentTarget.currentTime); if (second - lastHeartbeat.current >= 15) { lastHeartbeat.current = second; send('Progressed', event.currentTarget); } }} />;
+    if (loading) return <div className="aspect-video w-full animate-pulse bg-muted" aria-label="Loading video" />;
+    if (!resolvedSrc) return <p className="text-sm text-destructive">This lesson media is unavailable.</p>;
+    return <video aria-label="Video lesson" controls preload="metadata" src={resolvedSrc} className="aspect-video w-full bg-black" onPlay={(event) => send('Opened', event.currentTarget)} onPause={(event) => send('Paused', event.currentTarget)} onEnded={(event) => send('Completed', event.currentTarget)} onTimeUpdate={(event) => { const second = Math.floor(event.currentTarget.currentTime); if (second - lastHeartbeat.current >= 15) { lastHeartbeat.current = second; send('Progressed', event.currentTarget); } }} />;
 }
 
 export function LearnerLessonRenderer({ courseId, enrollmentId, itemId, format, content }: { courseId: string; enrollmentId?: string; itemId: string; format?: LearningCoursesLessonContentFormat; content: unknown }) {
+    const assetRepository = getLearningAssetRepository();
+    return <AssetsProvider repository={assetRepository} scope={{ type: 'ProgramContent', id: itemId }}>
+        <LearnerLessonContent courseId={courseId} enrollmentId={enrollmentId} itemId={itemId} format={format} content={content} />
+    </AssetsProvider>;
+}
+
+function LearnerLessonContent({ courseId, enrollmentId, itemId, format, content }: { courseId: string; enrollmentId?: string; itemId: string; format?: LearningCoursesLessonContentFormat; content: unknown }) {
     switch (format ?? 'Markdown') {
         case 'Lexical': return <Suspense fallback={<div className="min-h-32 animate-pulse rounded-md bg-muted" />}><LexicalLessonRenderer content={content} itemId={itemId} /></Suspense>;
         case 'RevealJs': return <RevealRenderer content={content} />;
@@ -66,7 +92,7 @@ export function LearnerLessonRenderer({ courseId, enrollmentId, itemId, format, 
         case 'Markdown':
         default: {
             const markdown = textContent(content);
-            return markdown ? <MarkdownRenderer content={markdown} /> : <p className="text-sm text-muted-foreground">This lesson has no published content.</p>;
+            return markdown ? <LessonMarkdown content={markdown} /> : <p className="text-sm text-muted-foreground">This lesson has no published content.</p>;
         }
     }
 }

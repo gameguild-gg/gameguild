@@ -4,6 +4,7 @@ import { vscDarkPlus, vs } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { useTheme } from "next-themes"
 import { MermaidDiagram } from "@game-guild/content-rendering"
 import { VegaLiteViewer } from "@game-guild/lexical-surface"
+import { AssetImage } from "../media/asset-image"
 
 export function useMarkdownComponents(): Components {
   const { theme } = useTheme()
@@ -201,8 +202,8 @@ export function useMarkdownComponents(): Components {
 
     // Images
     img: ({ src, alt, ...props }) => (
-      <img
-        src={src}
+      <AssetImage
+        src={typeof src === "string" ? src : undefined}
         alt={alt}
         className="rounded-lg shadow-md max-w-full h-auto my-4"
         {...props}
