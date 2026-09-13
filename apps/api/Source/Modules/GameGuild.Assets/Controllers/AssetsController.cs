@@ -35,6 +35,7 @@ public class AssetsController(
         [FromQuery] string? parentResourceType = null,
         [FromQuery] Guid? parentResourceId = null,
         [FromQuery] Guid? folderId = null,
+        [FromQuery] Guid? referenceId = null,
         CancellationToken ct = default)
     {
         if (file == null || file.Length == 0)
@@ -59,7 +60,8 @@ public class AssetsController(
             accessPolicy,
             parentResourceType,
             parentResourceId,
-            folderId);
+            folderId,
+            referenceId);
 
         var result = await sender.Send(command, ct).ConfigureAwait(false);
 

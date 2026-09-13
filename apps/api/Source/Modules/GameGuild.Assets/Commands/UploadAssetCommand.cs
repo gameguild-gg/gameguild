@@ -22,7 +22,8 @@ public sealed record UploadAssetCommand(
     AssetAccessPolicy AccessPolicy = AssetAccessPolicy.Private,
     string? ParentResourceType = null,
     Guid? ParentResourceId = null,
-    Guid? FolderId = null) : ICommand<UploadAssetResponse>;
+    Guid? FolderId = null,
+    Guid? ReferenceId = null) : ICommand<UploadAssetResponse>;
 
 public sealed record UploadAssetResponse(
     Guid AssetReferenceId,
@@ -45,6 +46,7 @@ public sealed class UploadAssetValidator : AbstractValidator<UploadAssetCommand>
         RuleFor(x => x.ParentResourceId).NotEmpty().When(x => !string.IsNullOrWhiteSpace(x.ParentResourceType));
         RuleFor(x => x.ParentResourceType).NotEmpty().When(x => x.ParentResourceId.HasValue);
         RuleFor(x => x.ParentResourceId).NotEmpty().When(x => x.FolderId.HasValue);
+        RuleFor(x => x.ReferenceId).NotEmpty().When(x => x.ReferenceId.HasValue);
     }
 }
 
@@ -86,7 +88,8 @@ public sealed class UploadAssetHandler : ICommandHandler<UploadAssetCommand, Upl
             request.ParentResourceType,
             request.ParentResourceId,
             request.FolderId,
-            request.TenantId);
+            request.TenantId,
+            request.ReferenceId);
 
         var result = await _secureUploadService.UploadWithSecurityChecksAsync(
             request.Content,

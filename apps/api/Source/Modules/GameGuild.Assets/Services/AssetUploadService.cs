@@ -130,6 +130,11 @@ public class AssetUploadService : IAssetUploadService
             options.ParentResourceType,
             options.ParentResourceId);
 
+        if (options.RequestedReferenceId.HasValue)
+        {
+            reference.Id = options.RequestedReferenceId.Value;
+        }
+
         reference.TenantId = options.TenantId;
         reference.MoveToFolder(options.FolderId);
 
