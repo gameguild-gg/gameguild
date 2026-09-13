@@ -5,7 +5,7 @@ import {
   resetTestingLabSettings,
   updateTestingLabSettings,
 } from "@/lib/testing-lab/actions";
-import { getTestingLabAdministration } from "@/lib/testing-lab";
+import { getTestingLabSettings } from "@/lib/testing-lab";
 import { Input } from "@game-guild/ui/components/input";
 import { Label } from "@game-guild/ui/components/label";
 import { Switch } from "@game-guild/ui/components/switch";
@@ -37,8 +37,8 @@ const operatingControls = [
 ] as const;
 
 export default async function TestingLabSettingsPage() {
-  const administration = await getTestingLabAdministration();
-  const settings = administration.settings;
+  const result = await getTestingLabSettings();
+  const settings = result.settings;
   const enabledByName = {
     allowPublicSignups: settings?.allowPublicSignups,
     requireApproval: settings?.requireApproval,
@@ -52,7 +52,7 @@ export default async function TestingLabSettingsPage() {
         title="General settings"
         description="Set the identity, scheduling defaults, and participation policy used across this Testing Lab."
       />
-      <TestingLabAccessIssues issues={administration.accessIssues} />
+      <TestingLabAccessIssues issues={result.accessIssues} />
 
       <TestingLabActionForm
         action={updateTestingLabSettings}
