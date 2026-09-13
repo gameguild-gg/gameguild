@@ -353,7 +353,8 @@ public class RubricServiceTests
             _actor.Object,
             _programs.Object,
             _permissions.Object,
-            _log.Object);
+            _log.Object,
+            new AssessmentEndpointTestSender(rubricService: _rubrics.Object));
     }
 
     [Fact]

@@ -44,7 +44,8 @@ public class ControllerAndModuleTests
             _enrollments.Object,
             _permissions.Object,
             _gradingQueue.Object,
-            _log.Object);
+            _log.Object,
+            new AssessmentEndpointTestSender(assessmentService: _svc.Object));
     }
 
     [Fact] public void Ctor_Creates() => CreateController().Should().NotBeNull();

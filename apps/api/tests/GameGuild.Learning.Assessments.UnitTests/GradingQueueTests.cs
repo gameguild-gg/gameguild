@@ -235,7 +235,8 @@ public class GradingQueueTests
                 db,
                 new RubricService(db, NullLogger<RubricService>.Instance),
                 NullLogger<GradingQueueService>.Instance),
-            _log.Object);
+            _log.Object,
+            new AssessmentEndpointTestSender(assessmentService: _assessments.Object));
     }
 
     // ===== FIXTURE =====

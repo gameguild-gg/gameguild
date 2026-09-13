@@ -320,14 +320,18 @@ public class PeerReviewAnonymityTests
                 .FirstOrDefaultAsync(s => s.Id == id && s.DeletedAt == null));
         _programs.Setup(p => p.GetProgramByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Guid id) => new Program { Id = id, CreatorId = programCreatorId ?? Guid.NewGuid(), TenantId = null });
+        var peerReviewService = new PeerReviewAssignmentService(
+            db,
+            NullLogger<PeerReviewAssignmentService>.Instance);
         return new PeerReviewsController(
-            new PeerReviewAssignmentService(db, NullLogger<PeerReviewAssignmentService>.Instance),
+            peerReviewService,
             _assessments.Object,
             new RubricService(db, NullLogger<RubricService>.Instance),
             _actor.Object,
             _programs.Object,
             _permissions.Object,
-            _log.Object);
+            _log.Object,
+            new AssessmentEndpointTestSender(peerReviewService: peerReviewService));
     }
 
     /// <summary>Builds a rubric-scores JSON payload keyed by criterion id (same shape the web client sends).</summary>
