@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   cancelRun: vi.fn(),
   applyProposal: vi.fn(),
   discardProposal: vi.fn(),
+  prepareAssets: vi.fn(),
+  assetRepository: {},
 }));
 
 vi.mock("next/navigation", () => ({
@@ -35,6 +37,12 @@ vi.mock("@/lib/learning/authoring", () => ({
   cancelAiAuthoringRun: mocks.cancelRun,
   applyAiProposal: mocks.applyProposal,
   discardAiProposal: mocks.discardProposal,
+}));
+vi.mock("@/lib/learning/assets/learning-asset-repository", () => ({
+  getLearningAssetRepository: () => mocks.assetRepository,
+}));
+vi.mock("@/lib/learning/assets/prepare-authoring-assets", () => ({
+  prepareAuthoringAssets: mocks.prepareAssets,
 }));
 vi.mock("@/components/learning/learner-lesson-renderer", () => ({
   LearnerLessonRenderer: ({ content }: { content: string }) => (
@@ -120,6 +128,7 @@ describe("LessonAuthoringWorkspace", () => {
       data: { availableSoftCredits: 100, reservedSoftCredits: 0, settledSoftCredits: 0, currency: "SoftCoin" },
     });
     mocks.getConversations.mockResolvedValue({ success: true, data: [] });
+    mocks.prepareAssets.mockResolvedValue({ assetUris: [], promotedUris: [] });
   });
 
   afterEach(() => {

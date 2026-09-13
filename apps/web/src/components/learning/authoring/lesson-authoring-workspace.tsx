@@ -30,6 +30,8 @@ import type {
 } from "@/lib/learning/view-models";
 import { useLearningBase } from "@/lib/learning/use-learning-base";
 import { configureMonacoWorkers } from "@/lib/learning/configure-monaco-workers";
+import { getLearningAssetRepository } from "@/lib/learning/assets/learning-asset-repository";
+import { prepareAuthoringAssets } from "@/lib/learning/assets/prepare-authoring-assets";
 import { normalizeSlug, slugify } from "@/lib/slugify";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
@@ -197,6 +199,11 @@ export function LessonAuthoringWorkspace({
   const streamAbortRef = useRef<AbortController | null>(null);
   const restoredRunRef = useRef(false);
   const saveInFlightRef = useRef<Promise<AuthoringDraft | null> | null>(null);
+  const assetRepository = useMemo(() => getLearningAssetRepository(), []);
+  const assetScope = useMemo(
+    () => ({ type: "ProgramContent", id: item.id }),
+    [item.id],
+  );
 
   const format = payload.lessonFormat ?? (payload.jsonBody ? "Lexical" : "Markdown");
   const isLesson = payload.type === "Lesson";
@@ -217,7 +224,8 @@ export function LessonAuthoringWorkspace({
     setSaveStatus("saving");
     setSaveError(null);
     const revision = revisionRef.current;
-    const operation = saveAuthoringDraft(courseId, item.id, revision, nextPayload)
+    const operation = prepareAuthoringAssets(nextPayload, assetRepository, assetScope)
+      .then(() => saveAuthoringDraft(courseId, item.id, revision, nextPayload))
       .then((result) => {
         if (!result.success) {
           if (result.status === 409) {
@@ -244,7 +252,7 @@ export function LessonAuthoringWorkspace({
       });
     saveInFlightRef.current = operation;
     return operation;
-  }, [courseId, item.id]);
+  }, [assetRepository, assetScope, courseId, item.id]);
 
   const loadLatestDraft = async () => {
     const result = await getAuthoringDraft(courseId, item.id);
@@ -364,6 +372,14 @@ export function LessonAuthoringWorkspace({
     setSaveError(null);
     const savedDraft = isDirty ? await persist() : draft;
     if (!savedDraft) {
+      setIsPublishing(false);
+      return;
+    }
+    try {
+      await prepareAuthoringAssets(payloadRef.current, assetRepository, assetScope);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Lesson assets are not ready to publish.");
+      setSaveStatus("offline");
       setIsPublishing(false);
       return;
     }

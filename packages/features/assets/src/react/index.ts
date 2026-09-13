@@ -4,6 +4,7 @@ export { AssetStorageStatus, type AssetStorageStatusProps } from "./asset-storag
 export {
   AssetsProvider,
   useHasAssetsProvider,
+  useAssetScope,
   type AssetsProviderProps,
 } from "./assets-provider";
 export {
