@@ -1,6 +1,9 @@
 import { auth } from "@/auth";
 import { SocialProfileView } from "@/components/feed/social-profile";
-import { loadSocialProfileByHandle } from "@/lib/feed/queries";
+import {
+  loadSocialProfileByHandle,
+  loadSocialProfileCollections,
+} from "@/lib/feed/queries";
 import { notFound } from "next/navigation";
 
 export default async function SocialProfilePage({
@@ -12,5 +15,21 @@ export default async function SocialProfilePage({
   const profile = await loadSocialProfileByHandle(handle);
   if (!profile) notFound();
   const currentUserId = session && typeof session !== "function" ? session.user?.id ?? null : null;
-  return <SocialProfileView profile={profile} currentUserId={currentUserId} />;
+  let posts: Awaited<ReturnType<typeof loadSocialProfileCollections>>["posts"] = [];
+  let projects: Awaited<ReturnType<typeof loadSocialProfileCollections>>["projects"] = [];
+  let collectionsError: string | null = null;
+  try {
+    ({ posts, projects } = await loadSocialProfileCollections(profile.userId));
+  } catch {
+    collectionsError = "Public work could not be loaded. Refresh to retry.";
+  }
+  return (
+    <SocialProfileView
+      profile={profile}
+      currentUserId={currentUserId}
+      posts={posts}
+      projects={projects}
+      collectionsError={collectionsError}
+    />
+  );
 }

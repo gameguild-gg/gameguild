@@ -26,8 +26,25 @@ public sealed class SocialFeedMigrationTests
         builder.Operations.OfType<AlterColumnOperation>().Should().BeEmpty();
     }
 
+    [Fact]
+    public void ProductionSocialFeedMigration_DownRemovesOnlyItsAdditiveObjects()
+    {
+        var builder = new MigrationBuilder("Npgsql.EntityFrameworkCore.PostgreSQL");
+
+        new ExposedSocialFeedMigration().BuildDown(builder);
+
+        builder.Operations.OfType<DropTableOperation>()
+            .Select(operation => operation.Name)
+            .Should().BeEquivalentTo("social_saved_posts", "social_stories", "social_story_views");
+        builder.Operations.OfType<DropIndexOperation>()
+            .Should().ContainSingle(operation => operation.Name == "IX_posts_AuthorId_RepostOfPostId" && operation.Table == "posts");
+        builder.Operations.OfType<DropColumnOperation>().Should().BeEmpty();
+        builder.Operations.OfType<AlterColumnOperation>().Should().BeEmpty();
+    }
+
     private sealed class ExposedSocialFeedMigration : AddProductionSocialFeed
     {
         public void BuildUp(MigrationBuilder migrationBuilder) => Up(migrationBuilder);
+        public void BuildDown(MigrationBuilder migrationBuilder) => Down(migrationBuilder);
     }
 }

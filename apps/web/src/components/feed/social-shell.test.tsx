@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   loadSocialFeed: vi.fn(),
   loadStories: vi.fn(),
   loadSocialProfile: vi.fn(),
+  loadCreatorSuggestions: vi.fn(),
   searchSocialProfiles: vi.fn(),
   loadTrendingTags: vi.fn(),
 }));
@@ -17,6 +18,7 @@ vi.mock("@/lib/feed/queries", () => ({
   loadSocialFeed: mocks.loadSocialFeed,
   loadStories: mocks.loadStories,
   loadSocialProfile: mocks.loadSocialProfile,
+  loadCreatorSuggestions: mocks.loadCreatorSuggestions,
   searchSocialProfiles: mocks.searchSocialProfiles,
   loadTrendingTags: mocks.loadTrendingTags,
 }));
@@ -36,6 +38,7 @@ describe("SocialShell", () => {
     mocks.loadSocialFeed.mockResolvedValue({ items: [], nextCursor: null });
     mocks.loadStories.mockResolvedValue([]);
     mocks.loadSocialProfile.mockResolvedValue(null);
+    mocks.loadCreatorSuggestions.mockResolvedValue([]);
     mocks.searchSocialProfiles.mockResolvedValue([]);
     mocks.loadTrendingTags.mockResolvedValue([]);
   });
@@ -56,5 +59,11 @@ describe("SocialShell", () => {
     render(await SocialShell({ tab: "foryou" }));
     expect(screen.getByText(/feed is temporarily unavailable/i)).toBeInTheDocument();
     expect(screen.queryByTestId("post-card")).not.toBeInTheDocument();
+  });
+
+  it("loads moderation-aware creator suggestions for the current actor", async () => {
+    render(await SocialShell({ tab: "foryou" }));
+
+    expect(mocks.loadCreatorSuggestions).toHaveBeenCalledWith("user-1", 8);
   });
 });
