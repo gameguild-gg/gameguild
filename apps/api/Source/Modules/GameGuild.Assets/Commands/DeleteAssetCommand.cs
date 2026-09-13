@@ -27,13 +27,19 @@ public sealed class DeleteAssetHandler : ICommandHandler<DeleteAssetCommand, Del
 {
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetContentRepository _contentRepository;
+    private readonly IReadOnlyList<IAssetUsageGuard> _usageGuards;
+    private readonly IUseCaseOperationContextAccessor? _operationContextAccessor;
 
     public DeleteAssetHandler(
         IAssetReferenceRepository referenceRepository,
-        IAssetContentRepository contentRepository)
+        IAssetContentRepository contentRepository,
+        IEnumerable<IAssetUsageGuard>? usageGuards = null,
+        IUseCaseOperationContextAccessor? operationContextAccessor = null)
     {
         _referenceRepository = referenceRepository;
         _contentRepository = contentRepository;
+        _usageGuards = usageGuards?.ToArray() ?? [];
+        _operationContextAccessor = operationContextAccessor;
     }
 
     public async Task<DeleteAssetResponse> Handle(
@@ -53,15 +59,26 @@ public sealed class DeleteAssetHandler : ICommandHandler<DeleteAssetCommand, Del
             return new DeleteAssetResponse(false, false);
         }
 
+        if (!request.ForceDelete)
+        {
+            foreach (var guard in _usageGuards)
+            {
+                if (await guard.IsInUseAsync(request.AssetReferenceId, ct).ConfigureAwait(false))
+                    return new DeleteAssetResponse(false, false);
+            }
+        }
+
         var contentId = reference.AssetContentId;
 
+        var operation = _operationContextAccessor?.Current;
         reference.AddIntegrationEvent(new AssetReferenceRemovedEvent(reference.Id, contentId)
         {
             TenantId = reference.TenantId ?? DurableIntegrationEventTenants.Platform,
             ActorId = request.UserId,
             AggregateType = nameof(AssetReference),
             AggregateId = reference.Id.ToString(),
-            CorrelationId = Guid.NewGuid()
+            CorrelationId = operation?.CorrelationId ?? Guid.NewGuid(),
+            CausationId = operation?.CausationId,
         });
 
         // Soft delete the reference
