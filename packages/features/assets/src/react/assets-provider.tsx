@@ -4,6 +4,7 @@ import * as React from "react";
 import type { AssetRepository } from "../repository/asset-repository";
 import { getDefaultBrowserAssetRepository } from "../browser/browser-asset-repository";
 import type { AssetProcessor } from "../processing/asset-processor";
+import type { AssetScope } from "../core/asset-contracts";
 
 interface AssetsContextValue {
   repository: AssetRepository;
@@ -11,6 +12,7 @@ interface AssetsContextValue {
   notifyMutation: () => void;
   processors: readonly AssetProcessor[];
   provided: boolean;
+  scope?: AssetScope;
 }
 
 const defaultAssetsContext: AssetsContextValue = {
@@ -27,9 +29,10 @@ const EMPTY_PROCESSORS: readonly AssetProcessor[] = [];
 export interface AssetsProviderProps extends React.PropsWithChildren {
   repository?: AssetRepository;
   processors?: readonly AssetProcessor[];
+  scope?: AssetScope;
 }
 
-export function AssetsProvider({ repository, processors = EMPTY_PROCESSORS, children }: AssetsProviderProps) {
+export function AssetsProvider({ repository, processors = EMPTY_PROCESSORS, scope, children }: AssetsProviderProps) {
   const [revision, setRevision] = React.useState(0);
   const value = React.useMemo<AssetsContextValue>(
     () => ({
@@ -38,8 +41,9 @@ export function AssetsProvider({ repository, processors = EMPTY_PROCESSORS, chil
       notifyMutation: () => setRevision((current) => current + 1),
       processors,
       provided: true,
+      scope,
     }),
-    [processors, repository, revision],
+    [processors, repository, revision, scope],
   );
 
   return <AssetsContext.Provider value={value}>{children}</AssetsContext.Provider>;
@@ -51,4 +55,8 @@ export function useAssetsContext(): AssetsContextValue {
 
 export function useHasAssetsProvider(): boolean {
   return useAssetsContext().provided;
+}
+
+export function useAssetScope(): AssetScope | undefined {
+  return useAssetsContext().scope;
 }
