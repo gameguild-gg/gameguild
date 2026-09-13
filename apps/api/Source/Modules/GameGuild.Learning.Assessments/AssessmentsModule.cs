@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Learning.Courses;
+using GameGuild.Assets;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -24,6 +25,7 @@ public static class AssessmentsModule
         services.AddScoped<ITasksService, TasksService>();
         services.AddScoped<IProgramContentLifecycleGuard, AssessmentProgramContentLifecycleGuard>();
         services.AddScoped<GameGuild.Learning.Courses.IAssessmentGradingSync, AssessmentGradingSync>();
+        services.AddScoped<IAssetParentAuthorizationResolver, AssessmentSubmissionAssetAuthorizationResolver>();
 
         return services;
     }

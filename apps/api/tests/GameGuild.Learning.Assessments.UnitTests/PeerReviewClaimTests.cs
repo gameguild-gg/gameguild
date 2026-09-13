@@ -305,7 +305,8 @@ public class PeerReviewClaimTests
             _actor.Object,
             _programs.Object,
             _permissions.Object,
-            _log.Object);
+            _log.Object,
+            new AssessmentEndpointTestSender(peerReviewService: _svc.Object));
     }
 
     private void SetupAssessment(Guid assessmentId, Guid courseId, Guid? programTenantId = null)
@@ -329,7 +330,8 @@ public class PeerReviewClaimTests
         });
         var controller = new PeerReviewsController(
             _svc.Object, _assessments.Object, _rubrics.Object, _actor.Object,
-            _programs.Object, _permissions.Object, _log.Object);
+            _programs.Object, _permissions.Object, _log.Object,
+            new AssessmentEndpointTestSender(peerReviewService: _svc.Object));
 
         var result = await controller.ClaimPeerReview(Guid.NewGuid());
 
