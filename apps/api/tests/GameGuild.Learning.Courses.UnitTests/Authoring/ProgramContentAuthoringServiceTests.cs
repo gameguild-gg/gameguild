@@ -2,11 +2,121 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Xunit;
+using GameGuild.Assets;
+using System.ComponentModel.DataAnnotations;
 
 namespace GameGuild.Learning.Courses.UnitTests.Authoring;
 
 public sealed class ProgramContentAuthoringServiceTests
 {
+    [Fact]
+    public async Task SaveAndPublish_ValidatesAssetManifestAndPromotesPrivateAssets()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var content = PublishedContent("Asset lesson", "Original");
+        content.TenantId = tenantId;
+        var assetContent = new AssetContent("bucket", "key", new string('a', 64), "image/png", 4, null, null)
+        {
+            TenantId = tenantId,
+            VirusScanStatus = VirusScanStatus.Clean,
+            ModerationStatus = ModerationStatus.Approved,
+        };
+        var asset = new AssetReference(
+            assetContent.Id,
+            actorId,
+            "diagram.png",
+            AssetAccessPolicy.Private,
+            nameof(ProgramContent),
+            content.Id)
+        {
+            TenantId = tenantId,
+            Content = assetContent,
+        };
+        context.AddRange(content, assetContent, asset);
+        await context.SaveChangesAsync();
+        var manifest = new LearningAssetManifestService(context);
+        var service = new ProgramContentAuthoringService(context, manifest);
+        var draft = await service.GetOrCreateDraft(content.ProgramId, content.Id, actorId, CancellationToken.None);
+        var portablePayload = draft.Payload with { Body = $"![diagram](asset://{asset.Id})" };
+
+        var saved = await service.SaveDraft(content.ProgramId, content.Id, draft.Revision, portablePayload, actorId, CancellationToken.None);
+        await service.Publish(content.ProgramId, content.Id, saved.Revision, actorId, CancellationToken.None);
+
+        asset.AccessPolicy.Should().Be(AssetAccessPolicy.Inherited);
+        (await manifest.IsInUseAsync(asset.Id)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Publish_WhenAssetWasRemovedFromLesson_DemotesItToPrivate()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var content = PublishedContent("Asset lesson", "Original");
+        content.TenantId = tenantId;
+        var assetContent = new AssetContent("bucket", "key", new string('b', 64), "image/png", 4, null, null)
+        {
+            TenantId = tenantId,
+            VirusScanStatus = VirusScanStatus.Clean,
+            ModerationStatus = ModerationStatus.Approved,
+        };
+        var asset = new AssetReference(
+            assetContent.Id,
+            actorId,
+            "old-diagram.png",
+            AssetAccessPolicy.Inherited,
+            nameof(ProgramContent),
+            content.Id)
+        {
+            TenantId = tenantId,
+            Content = assetContent,
+        };
+        content.Body = $"![diagram](asset://{asset.Id})";
+        context.AddRange(content, assetContent, asset);
+        await context.SaveChangesAsync();
+        var manifest = new LearningAssetManifestService(context);
+        var service = new ProgramContentAuthoringService(context, manifest);
+        var draft = await service.GetOrCreateDraft(content.ProgramId, content.Id, actorId, CancellationToken.None);
+        var saved = await service.SaveDraft(
+            content.ProgramId,
+            content.Id,
+            draft.Revision,
+            draft.Payload with { Body = "The image was removed." },
+            actorId,
+            CancellationToken.None);
+
+        await service.Publish(content.ProgramId, content.Id, saved.Revision, actorId, CancellationToken.None);
+
+        asset.AccessPolicy.Should().Be(AssetAccessPolicy.Private);
+        (await manifest.IsInUseAsync(asset.Id)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SaveDraft_RejectsAnAssetMissingFromTheAuthoritativeContentScope()
+    {
+        await using var context = CreateContext();
+        var content = PublishedContent("Asset lesson", "Original");
+        content.TenantId = Guid.NewGuid();
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var service = new ProgramContentAuthoringService(context, new LearningAssetManifestService(context));
+        var draft = await service.GetOrCreateDraft(content.ProgramId, content.Id, Guid.NewGuid(), CancellationToken.None);
+        var missingAssetId = Guid.NewGuid();
+
+        var save = () => service.SaveDraft(
+            content.ProgramId,
+            content.Id,
+            draft.Revision,
+            draft.Payload with { Body = $"asset://{missingAssetId}" },
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        await save.Should().ThrowAsync<ValidationException>()
+            .WithMessage("*not available in this lesson*");
+    }
+
     [Fact]
     public async Task GetDraft_CreatesSharedDraftFromPublishedContent()
     {
@@ -112,6 +222,17 @@ public sealed class ProgramContentAuthoringServiceTests
             modelBuilder.Entity<ProgramContentDraft>().HasKey(candidate => candidate.Id);
             modelBuilder.Entity<ProgramContentDraft>().Ignore(candidate => candidate.ETag);
             modelBuilder.Entity<ProgramContentPublicationAudit>().HasKey(candidate => candidate.Id);
+            modelBuilder.Entity<AssetContent>().HasKey(candidate => candidate.Id);
+            modelBuilder.Entity<AssetContent>().Ignore(candidate => candidate.References);
+            modelBuilder.Entity<AssetContent>().Ignore(candidate => candidate.TransformedVersions);
+            modelBuilder.Entity<AssetReference>().HasKey(candidate => candidate.Id);
+            modelBuilder.Entity<AssetReference>().Ignore(candidate => candidate.Reports);
+            modelBuilder.Entity<AssetReference>().Ignore(candidate => candidate.Localizations);
+            modelBuilder.Entity<AssetReference>().Ignore(candidate => candidate.Revisions);
+            modelBuilder.Entity<AssetReference>()
+                .HasOne(candidate => candidate.Content)
+                .WithMany()
+                .HasForeignKey(candidate => candidate.AssetContentId);
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

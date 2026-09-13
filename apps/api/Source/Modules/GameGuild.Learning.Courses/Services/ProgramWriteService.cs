@@ -21,6 +21,7 @@ public class ProgramWriteService(
 
   public async Task<Program> CreateProgramAsync(Program program)
   {
+    program.TenantId ??= requestContextAccessor?.CurrentTenantId;
     program.Status = ContentStatus.Draft;
     program.Visibility = ContentVisibility.Private;
 
@@ -62,6 +63,7 @@ public class ProgramWriteService(
 
     var clonedProgram = new Program
     {
+      TenantId = originalProgram.TenantId,
       CreatorId = originalProgram.CreatorId,
       Title = newTitle,
       Description = originalProgram.Description,
@@ -79,6 +81,7 @@ public class ProgramWriteService(
     {
       var clonedContent = new ProgramContent
       {
+        TenantId = clonedProgram.TenantId,
         ProgramId = clonedProgram.Id,
         Title = content.Title,
         Description = content.Description,
@@ -110,6 +113,7 @@ public class ProgramWriteService(
     var program = new Program
     {
       Id = Guid.NewGuid(),
+      TenantId = requestContextAccessor?.CurrentTenantId,
       CreatorId = createDto.CreatorId,
       Title = createDto.Title,
       Description = createDto.Description,
@@ -162,11 +166,16 @@ public class ProgramWriteService(
 
   public async Task<ProgramContent> AddContentAsync(Guid programId, ProgramContent content)
   {
-    var program = await context.Set<Program>().Where(p => p.DeletedAt == null).AnyAsync(p => p.Id == programId).ConfigureAwait(false);
+    var program = await context.Set<Program>()
+      .AsNoTracking()
+      .Where(p => p.DeletedAt == null)
+      .SingleOrDefaultAsync(p => p.Id == programId)
+      .ConfigureAwait(false);
 
-    if (!program) throw new ArgumentException("Program not found", nameof(programId));
+    if (program == null) throw new ArgumentException("Program not found", nameof(programId));
 
     content.ProgramId = programId;
+    content.TenantId = program.TenantId;
     content.NormalizeLearningContract();
 
     if (content.SortOrder == 0)
@@ -261,6 +270,7 @@ public class ProgramWriteService(
     var content = new ProgramContent
     {
       Id = Guid.NewGuid(),
+      TenantId = program.TenantId,
       ProgramId = programId,
       Title = contentDto.Title,
       Description = contentDto.Description,
@@ -360,7 +370,20 @@ public class ProgramWriteService(
       return existingUser;
     }
 
-    var programUser = new ProgramUser { ProgramId = programId, UserId = userId, IsActive = true, JoinedAt = SystemClock.UtcNow };
+    var programTenantId = await context.Set<Program>()
+      .AsNoTracking()
+      .Where(program => program.Id == programId && program.DeletedAt == null)
+      .Select(program => program.TenantId)
+      .SingleOrDefaultAsync()
+      .ConfigureAwait(false);
+    var programUser = new ProgramUser
+    {
+      ProgramId = programId,
+      UserId = userId,
+      IsActive = true,
+      JoinedAt = SystemClock.UtcNow,
+      TenantId = programTenantId,
+    };
 
     context.Set<ProgramUser>().Add(programUser);
     await context.SaveChangesAsync().ConfigureAwait(false);

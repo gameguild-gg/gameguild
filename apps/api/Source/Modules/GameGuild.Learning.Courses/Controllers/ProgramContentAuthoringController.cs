@@ -6,6 +6,7 @@ using GameGuild.Finance.Economy.Integrations.AI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
 namespace GameGuild.Learning.Courses;
@@ -65,6 +66,13 @@ public sealed class ProgramContentAuthoringController(
         {
             return ConflictResponse("AUTHORING_REVISION_CONFLICT", conflict.Message, conflict.CurrentRevision);
         }
+        catch (ValidationException validation)
+        {
+            return UnprocessableEntity(ErrorResponse(
+                StatusCodes.Status422UnprocessableEntity,
+                "AUTHORING_ASSET_VALIDATION_FAILED",
+                validation.Message));
+        }
         catch (KeyNotFoundException)
         {
             return NotFound();
@@ -99,6 +107,13 @@ public sealed class ProgramContentAuthoringController(
         catch (AuthoringPublishedVersionConflictException conflict)
         {
             return ConflictResponse("PUBLISHED_VERSION_CONFLICT", conflict.Message, conflict.CurrentVersion);
+        }
+        catch (ValidationException validation)
+        {
+            return UnprocessableEntity(ErrorResponse(
+                StatusCodes.Status422UnprocessableEntity,
+                "AUTHORING_ASSET_VALIDATION_FAILED",
+                validation.Message));
         }
         catch (KeyNotFoundException)
         {

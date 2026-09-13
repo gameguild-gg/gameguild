@@ -11,6 +11,13 @@ public class ProgramContentService(
   IProgramContentScheduleGuard scheduleGuard,
   IProgramContentLifecycleGuard lifecycleGuard) : IProgramContentService {
   public async Task<ProgramContent> CreateContentAsync(ProgramContent content) {
+    var parentTenantId = await context.Set<Program>()
+      .AsNoTracking()
+      .Where(program => program.Id == content.ProgramId && program.DeletedAt == null)
+      .Select(program => program.TenantId)
+      .SingleOrDefaultAsync()
+      .ConfigureAwait(false);
+    content.TenantId = parentTenantId;
     content.NormalizeLearningContract();
 
     // Set creation timestamp
