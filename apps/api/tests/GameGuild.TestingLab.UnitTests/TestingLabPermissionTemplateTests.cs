@@ -438,6 +438,36 @@ public sealed class TestingLabPermissionTemplateTests
     }
 
     [Fact]
+    public async Task UserPermissions_ShouldIgnoreMalformedEntriesAndParseOptionalResourceIds()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+        context.Set<TenantPermission>().Add(new TenantPermission
+        {
+            UserId = userId,
+            TenantId = tenantId,
+            Permissions =
+            [
+                "malformed",
+                $"{TestingLabResourceTypes.Request}:{TestingLabActions.Read}",
+                $"{TestingLabResourceTypes.Request}:{TestingLabActions.Edit}:not-a-guid",
+                $"{TestingLabResourceTypes.Request}:{TestingLabActions.Manage}:{resourceId}"
+            ]
+        });
+        await context.SaveChangesAsync();
+        var service = new TestingLabPermissionService(context);
+
+        var permissions = await service.GetUserPermissionsAsync(userId, tenantId);
+
+        permissions.Should().HaveCount(3);
+        permissions.Should().Contain(permission => permission.Action == TestingLabActions.Read && permission.ResourceId == null);
+        permissions.Should().Contain(permission => permission.Action == TestingLabActions.Edit && permission.ResourceId == null);
+        permissions.Should().Contain(permission => permission.Action == TestingLabActions.Manage && permission.ResourceId == resourceId);
+    }
+
+    [Fact]
     public void TestingLab_Model_Configuration_Should_Register_Runtime_Entities()
     {
         var modelBuilder = new ModelBuilder();

@@ -69,6 +69,18 @@ public sealed class TestingLabTenantIsolationTests
     }
 
     [Fact]
+    public async Task FeedbackQueries_ShouldRequireASelectedTenant()
+    {
+        await using var context = CreateContext();
+        var actor = new ActorContextAccessor();
+        actor.SetActorContext(ActorContextBuilder.ForUser(Guid.NewGuid()).Build());
+        var service = CreateService<TestingFeedbackOperationsService>(context, actor);
+
+        await FluentActions.Awaiting(() => service.GetTestingRequestFeedbackAsync(Guid.NewGuid()))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
     public async Task RequestQueries_ShouldReturnOnlyCurrentTenantRows()
     {
         await using var context = CreateContext();

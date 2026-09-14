@@ -29,6 +29,24 @@ public sealed class TestingLabEventApplicationEdgeCoverageTests
         Set(testingEvent, nameof(TestingEvent.TesterRegistrationSchemaJson), null);
         Invoking(testingEvent.OpenApplications).Should().Throw<InvalidOperationException>()
             .WithMessage("*registration schemas*");
+
+        var missingProjectSchema = Event(testingEvent.TenantId!.Value);
+        Set(missingProjectSchema, nameof(TestingEvent.GeneralRules), "Rules");
+        Set(missingProjectSchema, nameof(TestingEvent.CandidateInstructions), "Candidates");
+        Set(missingProjectSchema, nameof(TestingEvent.TesterInstructions), "Testers");
+        Invoking(missingProjectSchema.OpenApplications).Should().Throw<InvalidOperationException>()
+            .WithMessage("*registration schemas*");
+
+        var template = TestingEventTemplate.Create(
+            testingEvent.TenantId.Value, "Same tenant", "Rules", "Candidates", "Testers", Schema, Schema,
+            TestingEventMode.Online, TestingEventApprovalMode.ManagerOnly, true, Guid.NewGuid());
+        var globalEvent = Event(testingEvent.TenantId.Value);
+        globalEvent.TenantId = null;
+        Invoking(() => globalEvent.ConfigureFromTemplate(template.CurrentRevision))
+            .Should().Throw<InvalidOperationException>().WithMessage("*event tenant*");
+        template.CurrentRevision.TenantId = null;
+        globalEvent.ConfigureFromTemplate(template.CurrentRevision);
+        globalEvent.SourceTemplateRevisionId.Should().Be(template.CurrentRevision.Id);
     }
 
     [Fact]

@@ -63,12 +63,16 @@ public sealed class TestingLabAuthorizationFilterCoverageTests
         var malformed = await AuthorizeAsync(
             context, actor, TestingLabActions.Read, TestingLabResourceTypes.Event, "eventId",
             routeValue: "not-a-guid");
+        var malformedQuery = await AuthorizeAsync(
+            context, actor, TestingLabActions.Read, TestingLabResourceTypes.Event, "eventId",
+            queryValue: "not-a-guid");
         var unknown = await AuthorizeAsync(
             context, actor, TestingLabActions.Read, "unknown", "resourceId",
             routeValue: Guid.NewGuid().ToString());
 
         missing.Result.Should().BeOfType<ForbidResult>();
         malformed.Result.Should().BeOfType<ForbidResult>();
+        malformedQuery.Result.Should().BeOfType<ForbidResult>();
         unknown.Result.Should().BeOfType<ForbidResult>();
     }
 
@@ -89,6 +93,18 @@ public sealed class TestingLabAuthorizationFilterCoverageTests
         result.Result.Should().BeNull();
         permission.Verify(service => service.HasPermissionAsync(
             actorId, tenantId, TestingLabActions.Edit, TestingLabResourceTypes.Request, request.Id), Times.Once);
+    }
+
+    [Fact]
+    public void ResourceIdResolver_TreatsAnExplicitNullRouteValueAsMissing()
+    {
+        var context = FilterContext(null, null, null);
+        context.RouteData.Values["eventId"] = null;
+        var method = typeof(TestingLabPermissionAuthorizationFilter).GetMethod(
+            "ResolveResourceId",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+
+        method.Invoke(null, [context, "eventId"]).Should().BeNull();
     }
 
     [Fact]
