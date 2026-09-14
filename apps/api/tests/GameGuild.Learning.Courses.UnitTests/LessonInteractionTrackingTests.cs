@@ -197,6 +197,53 @@ public sealed class LessonInteractionTrackingTests
             .WithParameterName("progressPercentage");
     }
 
+    [Theory]
+    [InlineData("-0.01")]
+    [InlineData("100.01")]
+    public void CreateEvent_ShouldRejectProgressOutsideDatabaseRange(string value)
+    {
+        var action = () => ContentInteractionEvent.Create(
+            Guid.NewGuid(),
+            ContentInteractionEventType.Progressed,
+            progressPercentage: decimal.Parse(value, System.Globalization.CultureInfo.InvariantCulture));
+
+        action.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("progressPercentage");
+    }
+
+    [Fact]
+    public void MatchesReplay_AllowsOmittedTimestampAndComparesExplicitTimestamp()
+    {
+        var occurredAt = new DateTime(2026, 9, 14, 12, 0, 0, DateTimeKind.Utc);
+        var interactionEvent = ContentInteractionEvent.Create(
+            Guid.NewGuid(),
+            ContentInteractionEventType.Progressed,
+            progressPercentage: 50,
+            occurredAt: occurredAt);
+
+        interactionEvent.MatchesReplay(
+            ContentInteractionEventType.Progressed,
+            null,
+            null,
+            50,
+            null,
+            null).Should().BeTrue();
+        interactionEvent.MatchesReplay(
+            ContentInteractionEventType.Progressed,
+            null,
+            null,
+            50,
+            null,
+            occurredAt).Should().BeTrue();
+        interactionEvent.MatchesReplay(
+            ContentInteractionEventType.Progressed,
+            null,
+            null,
+            50,
+            null,
+            occurredAt.AddSeconds(1)).Should().BeFalse();
+    }
+
     [Fact]
     public void Complete_ShouldSetCompletedStatusAndPreventProgressRegression()
     {
