@@ -9,6 +9,44 @@ namespace GameGuild.Learning.Courses.UnitTests.Configuration;
 public sealed class EfConfigurationCoverageTests
 {
     [Fact]
+    public void CoursesModelConfiguration_AppliesCourseConfigurationsFromModuleAssembly()
+    {
+        var modelBuilder = new ModelBuilder(new ConventionSet());
+
+        new CoursesModelConfiguration().Configure(modelBuilder);
+
+        modelBuilder.Model.FindEntityType(typeof(Program)).Should().NotBeNull();
+        modelBuilder.Model.FindEntityType(typeof(ProgramContent)).Should().NotBeNull();
+        modelBuilder.Model.FindEntityType(typeof(ContentInteractionEvent)).Should().NotBeNull();
+    }
+
+    [Fact]
+    public void ProgramUserConfiguration_DefinesProgramAndUserOwnership()
+    {
+        var builder = CreateBuilder<ProgramUser>();
+
+        new ProgramUserConfiguration().Configure(builder);
+
+        builder.Metadata.FindNavigation(nameof(ProgramUser.Program))!.ForeignKey.DeleteBehavior
+            .Should().Be(DeleteBehavior.Cascade);
+        builder.Metadata.FindNavigation(nameof(ProgramUser.User))!.ForeignKey.DeleteBehavior
+            .Should().Be(DeleteBehavior.Cascade);
+    }
+
+    [Fact]
+    public void ActivityGradeConfiguration_DefinesInteractionAndGraderOwnership()
+    {
+        var builder = CreateBuilder<ActivityGrade>();
+
+        new ActivityGradeConfiguration().Configure(builder);
+
+        builder.Metadata.FindNavigation(nameof(ActivityGrade.ContentInteraction))!.ForeignKey.DeleteBehavior
+            .Should().Be(DeleteBehavior.Cascade);
+        builder.Metadata.FindNavigation(nameof(ActivityGrade.GraderProgramUser))!.ForeignKey.DeleteBehavior
+            .Should().Be(DeleteBehavior.Restrict);
+    }
+
+    [Fact]
     public void CoursePrerequisiteConfiguration_DefinesConstraintsRelationshipsAndSoftDeleteFilter()
     {
         var builder = CreateBuilder<CoursePrerequisite>();
