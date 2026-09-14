@@ -5,6 +5,8 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using Xunit;
 
 namespace GameGuild.Learning.Courses.UnitTests.Configuration;
@@ -51,6 +53,17 @@ public sealed class CoursesModuleCoverageTests
         services.Should().ContainSingle(descriptor =>
             descriptor.ServiceType == typeof(IHostedService) &&
             descriptor.ImplementationType == typeof(AuthoringAiBackgroundService));
+    }
+
+    [Fact]
+    public void AuthoringAiBackgroundService_CanBeConstructedFromRegisteredDependencies()
+    {
+        using var service = new AuthoringAiBackgroundService(
+            new AuthoringAiRunQueue(),
+            Mock.Of<IServiceScopeFactory>(),
+            NullLogger<AuthoringAiBackgroundService>.Instance);
+
+        service.Should().NotBeNull();
     }
 
     private static void AssertRegistration<TService, TImplementation>(
