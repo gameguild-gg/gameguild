@@ -76,4 +76,24 @@ public sealed class ActivityResponseContractCoverageTests
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*threadRootId must be a GUID*");
     }
+
+    [Fact]
+    public void CreateDefaultSettings_RejectsNonActivityContent()
+    {
+        var act = () => LearningActivityContract.CreateDefaultSettings(ProgramContentType.Lesson);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*does not support activity settings*");
+    }
+
+    [Fact]
+    public void ContentInteractionCollection_ToDtoMapsEveryItem()
+    {
+        var first = new ContentInteraction { Id = Guid.NewGuid() };
+        var second = new ContentInteraction { Id = Guid.NewGuid() };
+
+        var result = new[] { first, second }.ToDto().ToArray();
+
+        result.Select(item => item.Id).Should().Equal(first.Id, second.Id);
+    }
 }
