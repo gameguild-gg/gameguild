@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FluentAssertions;
+using GameGuild.Identity.Users;
 using Xunit;
 
 namespace GameGuild.Learning.Courses.UnitTests.Contracts;
@@ -86,6 +87,71 @@ public sealed class ActivityResponseContractCoverageTests
             .WithMessage("*does not support activity settings*");
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void GetSettings_UsesDefaultsWhenSerializedSettingsAreBlank(string? serializedSettings)
+    {
+        var settings = LearningActivityContract.GetSettings(
+            ProgramContentType.Discussion,
+            serializedSettings);
+
+        settings.Should().Be(new DiscussionActivitySettings());
+    }
+
+    [Fact]
+    public void GetSettings_RejectsSerializedNullSettings()
+    {
+        var act = () => LearningActivityContract.GetSettings(
+            ProgramContentType.Discussion,
+            "null");
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*settings are invalid*");
+    }
+
+    [Fact]
+    public void SurveyFlags_RequireSurveyContentAndEnabledSettings()
+    {
+        var lesson = new ProgramContent
+        {
+            Type = ProgramContentType.Lesson,
+            Title = "Lesson",
+        };
+        var disabledSurvey = new ProgramContent
+        {
+            Type = ProgramContentType.Survey,
+            Title = "Survey",
+        };
+        var enabledSurvey = new ProgramContent
+        {
+            Type = ProgramContentType.Survey,
+            Title = "Anonymous repeatable survey",
+        };
+        disabledSurvey.SetActivitySettings(new SurveyActivitySettings());
+        enabledSurvey.SetActivitySettings(
+            new SurveyActivitySettings(IsAnonymous: true, AllowMultipleResponses: true));
+
+        LearningActivityContract.AllowsMultipleResponses(lesson).Should().BeFalse();
+        LearningActivityContract.IsAnonymousSurvey(lesson).Should().BeFalse();
+        LearningActivityContract.AllowsMultipleResponses(disabledSurvey).Should().BeFalse();
+        LearningActivityContract.IsAnonymousSurvey(disabledSurvey).Should().BeFalse();
+        LearningActivityContract.AllowsMultipleResponses(enabledSurvey).Should().BeTrue();
+        LearningActivityContract.IsAnonymousSurvey(enabledSurvey).Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("{\"kind\":\"survey\"}")]
+    [InlineData("{\"kind\":\"survey\",\"answers\":[]}")]
+    public void ParseSurvey_RequiresAnswersObject(string payload)
+    {
+        var act = () => ActivityResponseContract.Parse(ProgramContentType.Survey, payload, null);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*answers object*");
+    }
+
     [Fact]
     public void ContentInteractionCollection_ToDtoMapsEveryItem()
     {
@@ -95,5 +161,97 @@ public sealed class ActivityResponseContractCoverageTests
         var result = new[] { first, second }.ToDto().ToArray();
 
         result.Select(item => item.Id).Should().Equal(first.Id, second.Id);
+    }
+
+    [Fact]
+    public void ContentInteraction_ToDtoMapsLoadedContentAndEnrollmentUser()
+    {
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Learner",
+            Email = "learner@example.com",
+        };
+        var interaction = new ContentInteraction
+        {
+            Content = new ProgramContent
+            {
+                Id = Guid.NewGuid(),
+                Title = "Discussion",
+                Type = ProgramContentType.Discussion,
+                EstimatedMinutes = 8,
+            },
+            ProgramUser = new ProgramUser { User = user },
+        };
+
+        var dto = interaction.ToDto();
+
+        dto.Content.Should().NotBeNull();
+        dto.Content!.Title.Should().Be("Discussion");
+        dto.ProgramUser.Should().NotBeNull();
+        dto.ProgramUser!.Id.Should().Be(user.Id);
+        dto.ProgramUser.UserDisplayName.Should().Be("Learner");
+        dto.ProgramUser.UserEmail.Should().Be("learner@example.com");
+    }
+
+    [Fact]
+    public void ContentInteraction_ToDtoOmitsEnrollmentSummaryWhenUserIsNotLoaded()
+    {
+        var interaction = new ContentInteraction
+        {
+            ProgramUser = new ProgramUser { User = null! },
+        };
+
+        interaction.ToDto().ProgramUser.Should().BeNull();
+    }
+
+    [Fact]
+    public void ReflectionProjection_CanIncludeRespondentIdentity()
+    {
+        var userId = Guid.NewGuid();
+        var interaction = new ContentInteraction
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            SubmissionData = "{\"kind\":\"reflection\",\"body\":\"A reflection\"}",
+        };
+
+        var result = ReflectionResponseResultDto.FromInteraction(interaction, includeRespondentIdentity: true);
+
+        result.RespondentUserId.Should().Be(userId);
+    }
+
+    [Fact]
+    public void ReflectionProjection_RejectsMissingSubmissionData()
+    {
+        var act = () => ReflectionResponseResultDto.FromInteraction(new ContentInteraction());
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*submission data is missing*");
+    }
+
+    [Fact]
+    public void SurveyProjection_CanIncludeRespondentIdentity()
+    {
+        var userId = Guid.NewGuid();
+        var interaction = new ContentInteraction
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            SubmissionData = "{\"kind\":\"survey\",\"answers\":{\"choice\":\"A\"}}",
+        };
+
+        var result = SurveyResponseResultDto.FromInteraction(interaction, includeRespondentIdentity: true);
+
+        result.RespondentUserId.Should().Be(userId);
+    }
+
+    [Fact]
+    public void SurveyProjection_RejectsMissingSubmissionData()
+    {
+        var act = () => SurveyResponseResultDto.FromInteraction(new ContentInteraction());
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*submission data is missing*");
     }
 }
