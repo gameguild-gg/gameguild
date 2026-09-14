@@ -23,6 +23,8 @@ const assetUri = "asset://aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
 describe("LearnerLessonRenderer assets", () => {
   it("resolves Markdown assets with the authenticated learning repository", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
     render(
       <LearnerLessonRenderer
         courseId="course-1"
@@ -38,6 +40,8 @@ describe("LearnerLessonRenderer assets", () => {
         "https://cdn.example.test/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
       );
     });
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 
   it("resolves a video asset without exposing asset:// to the media element", async () => {

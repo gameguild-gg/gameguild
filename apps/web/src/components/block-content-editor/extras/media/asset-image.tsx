@@ -17,11 +17,16 @@ export function AssetImage({ src, ...props }: AssetImageProps) {
   
   if (isLoading) {
     return (
-      <div className={props.className} style={props.style}>
-        <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-          <div className="text-xs text-gray-400">Loading...</div>
-        </div>
-      </div>
+      <span
+        aria-label={props.alt ? `Loading ${props.alt}` : "Loading image"}
+        className={props.className}
+        role="status"
+        style={props.style}
+      >
+        <span className="flex h-full w-full items-center justify-center bg-gray-100 dark:bg-gray-800">
+          <span className="text-xs text-gray-400">Loading...</span>
+        </span>
+      </span>
     )
   }
 
