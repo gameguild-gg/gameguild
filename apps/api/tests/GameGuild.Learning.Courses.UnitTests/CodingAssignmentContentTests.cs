@@ -119,6 +119,29 @@ public class CodingAssignmentContentTests
         CodingAssignmentContentService.NormalizeTestDiscriminatorOrder(json).Should().Be(json);
     }
 
+    [Fact]
+    public void NormalizeTestDiscriminatorOrder_PreservesNonArraySuitesAndNonObjectEntries()
+    {
+        const string json = """
+            {
+              "Tests": {
+                "Metadata": { "version": 1 },
+                "Public": [42, { "Name": "first", "kind": "standard", "Stdout": "ok" }]
+              }
+            }
+            """;
+
+        var normalized = CodingAssignmentContentService.NormalizeTestDiscriminatorOrder(json);
+
+        using var document = JsonDocument.Parse(normalized);
+        document.RootElement.GetProperty("Tests").GetProperty("Metadata").GetProperty("version")
+            .GetInt32().Should().Be(1);
+        document.RootElement.GetProperty("Tests").GetProperty("Public")[0]
+            .GetInt32().Should().Be(42);
+        document.RootElement.GetProperty("Tests").GetProperty("Public")[1]
+            .EnumerateObject().First().Name.Should().Be("kind");
+    }
+
     private static string JsonbOrderedJson() => """
         {
           "Type": "coding-assignment",
