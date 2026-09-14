@@ -302,6 +302,33 @@ public class CodingAssignmentContentTests
         errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
     }
 
+    [Fact]
+    public void Validator_FunctionalTypeCheck_ToleratesNullParameterEntries()
+    {
+        var content = CreateMinimalValidWithFunctional("add");
+        var functional = (FunctionalTestGroup)content.Tests.Public.Single();
+        var function = functional.Function with
+        {
+            Parameters = [null!],
+        };
+        var testCase = functional.Cases.Single() with
+        {
+            Inputs = [null!],
+        };
+        content = content with
+        {
+            Tests = new TestSuite
+            {
+                Public = [functional with { Function = function, Cases = [testCase] }],
+                Private = [],
+            },
+        };
+
+        var errors = Validate(content);
+
+        errors.Should().NotContain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+    }
+
     // ── (c) bad FunctionName (add+, ns::add) → invalid_function_name ─────────────────────────────────
 
     [Theory]
