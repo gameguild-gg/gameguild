@@ -128,6 +128,22 @@ public sealed class ProgramContentMappingCoverageTests
     }
 
     [Fact]
+    public void ToDto_WhenLessonFormatIsMissing_InfersItFromBody()
+    {
+        var content = new ProgramContent
+        {
+            Title = "Imported HTML lesson",
+            Type = ProgramContentType.Lesson,
+            Body = "<article>Lesson</article>",
+            LessonFormat = null,
+        };
+
+        var dto = content.ToDto();
+
+        dto.LessonFormat.Should().Be(LessonContentFormat.Html);
+    }
+
+    [Fact]
     public void ToEntity_PreservesExplicitAuthoringMetadata()
     {
         var json = System.Text.Json.JsonDocument.Parse("{\"root\":{}}").RootElement.Clone();
@@ -222,5 +238,59 @@ public sealed class ProgramContentMappingCoverageTests
         });
 
         content.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Auto);
+    }
+
+    [Fact]
+    public void ApplyUpdates_MapsAllMutableScalarFieldsOnNonLessonContent()
+    {
+        var content = new ProgramContent
+        {
+            Title = "Assignment",
+            Type = ProgramContentType.Assignment,
+            Slug = "old-slug",
+            Description = "Old description",
+            SortOrder = 1,
+            IsRequired = true,
+            Visibility = Visibility.Private,
+        };
+
+        content.ApplyUpdates(new UpdateProgramContentDto
+        {
+            Id = content.Id,
+            Slug = "new-slug",
+            Description = "New description",
+            SortOrder = 7,
+            IsRequired = false,
+            Visibility = Visibility.Public,
+        });
+
+        content.Slug.Should().Be("new-slug");
+        content.Description.Should().Be("New description");
+        content.SortOrder.Should().Be(7);
+        content.IsRequired.Should().BeFalse();
+        content.Visibility.Should().Be(Visibility.Public);
+    }
+
+    [Fact]
+    public void ApplyUpdates_MapsActivitySettingsForMatchingActivityType()
+    {
+        var content = new ProgramContent
+        {
+            Title = "Discussion",
+            Type = ProgramContentType.Discussion,
+        };
+        var settings = new DiscussionActivitySettings(
+            AllowReplies: true,
+            RequireThreadRoot: true,
+            MinimumBodyLength: 5,
+            MaximumBodyLength: 500);
+
+        content.ApplyUpdates(new UpdateProgramContentDto
+        {
+            Id = content.Id,
+            ActivitySettings = settings,
+        });
+
+        content.GetActivitySettings().Should().Be(settings);
     }
 }
