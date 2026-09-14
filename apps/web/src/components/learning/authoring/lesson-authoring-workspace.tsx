@@ -740,7 +740,7 @@ export function LessonAuthoringWorkspace({
           value={mode === "preview" ? "preview" : "editor"}
           onValueChange={(value) => setMode(value as "editor" | "preview")}
         >
-          <SelectTrigger aria-label="Editor view" size="sm" className="w-24 2xl:hidden">
+          <SelectTrigger aria-label="Editor view" size="sm" className="w-24 lg:hidden">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -748,10 +748,11 @@ export function LessonAuthoringWorkspace({
             <SelectItem value="preview">Preview</SelectItem>
           </SelectContent>
         </Select>
-        <div className="hidden items-center rounded-md border bg-muted/25 p-0.5 2xl:flex">
+        <div className="hidden items-center rounded-md border bg-muted/25 p-0.5 lg:flex">
           {(["editor", "split", "preview"] as EditorMode[]).map((value) => (
             <Button
               key={value}
+              aria-label={value}
               variant={mode === value ? "secondary" : "ghost"}
               size="sm"
               className="h-7 capitalize"
