@@ -46,4 +46,27 @@ public sealed class RemainingServiceCoverageTests
         first.Should().Be(repeated);
         first.Should().NotBe(second);
     }
+
+    [Fact]
+    public async Task NullLifecycleGuards_DoNotBlockContentChanges()
+    {
+        IProgramContentScheduleGuard schedule = new NullProgramContentScheduleGuard();
+        IProgramContentLifecycleGuard lifecycle = new NullProgramContentLifecycleGuard();
+        var contentId = Guid.NewGuid();
+
+        (await schedule.HasActiveScheduleReference(contentId)).Should().BeFalse();
+        (await lifecycle.HasBlockingDeleteReference(contentId)).Should().BeFalse();
+        (await lifecycle.HasBlockingIncompatibleUpdateReference(
+            contentId,
+            ProgramContentType.Lesson,
+            LessonContentFormat.Markdown)).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ProgramLifecycleService_UsesExplicitPersistenceDependency()
+    {
+        var service = new ProgramLifecycleService(Mock.Of<IApplicationDbContext>());
+
+        service.Should().BeAssignableTo<IProgramLifecycleService>();
+    }
 }
