@@ -1,0 +1,197 @@
+using Microsoft.AspNetCore.Http;
+using Xunit;
+
+namespace GameGuild.Learning.Courses.UnitTests.Contracts;
+
+public sealed class RemainingContractCoverageTests
+{
+    [Fact]
+    public void ProgramAnalyticsDto_ExposesEveryMetric()
+    {
+        var programId = Guid.NewGuid();
+        var lastActivity = DateTime.UtcNow;
+        var completionTime = TimeSpan.FromHours(6);
+        var metrics = new Dictionary<string, object> { ["retention"] = 0.75m };
+
+        var dto = new ProgramAnalyticsDto(
+            programId,
+            "Game Programming",
+            100,
+            80,
+            60,
+            60m,
+            completionTime,
+            1_500,
+            lastActivity,
+            metrics);
+
+        Assert.Equal(programId, dto.ProgramId);
+        Assert.Equal("Game Programming", dto.Title);
+        Assert.Equal(100, dto.TotalUsers);
+        Assert.Equal(80, dto.ActiveUsers);
+        Assert.Equal(60, dto.CompletedUsers);
+        Assert.Equal(60m, dto.CompletionRate);
+        Assert.Equal(completionTime, dto.AverageCompletionTime);
+        Assert.Equal(1_500, dto.TotalViews);
+        Assert.Equal(lastActivity, dto.LastActivity);
+        Assert.Same(metrics, dto.AdditionalMetrics);
+    }
+
+    [Fact]
+    public void ProgramProgressAndStatisticsContracts_ExposeEveryValue()
+    {
+        var programId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var creatorId = Guid.NewGuid();
+        var completedAt = DateTime.UtcNow;
+        var timeSpent = TimeSpan.FromHours(4);
+        var averageTime = TimeSpan.FromHours(8);
+        var progress = new ProgramUserProgress(programId, userId, 6, 10, 60m, timeSpent, completedAt, true, completedAt);
+        var program = new ProgramStatistics(programId, 100, 80, 60, 4.5m, 50, 60m, averageTime);
+        var global = new GlobalProgramStatistics(20, 15, 1_000, 750, 4.2m, 300, (ProgramCategory)1, (ProgramDifficulty)1);
+        var creator = new CreatorProgramStatistics(creatorId, 8, 6, 500, 350, 4.7m, 200, 72m);
+
+        Assert.Equal(programId, progress.ProgramId);
+        Assert.Equal(userId, progress.UserId);
+        Assert.Equal(6, progress.CompletedContent);
+        Assert.Equal(10, progress.TotalContent);
+        Assert.Equal(60m, progress.ProgressPercentage);
+        Assert.Equal(timeSpent, progress.TimeSpent);
+        Assert.Equal(completedAt, progress.LastActivityAt);
+        Assert.True(progress.IsCompleted);
+        Assert.Equal(completedAt, progress.CompletedAt);
+
+        Assert.Equal(programId, program.ProgramId);
+        Assert.Equal(100, program.TotalEnrollments);
+        Assert.Equal(80, program.ActiveEnrollments);
+        Assert.Equal(60, program.CompletedEnrollments);
+        Assert.Equal(4.5m, program.AverageRating);
+        Assert.Equal(50, program.TotalRatings);
+        Assert.Equal(60m, program.CompletionRate);
+        Assert.Equal(averageTime, program.AverageCompletionTime);
+
+        Assert.Equal(20, global.TotalPrograms);
+        Assert.Equal(15, global.PublishedPrograms);
+        Assert.Equal(1_000, global.TotalEnrollments);
+        Assert.Equal(750, global.ActiveEnrollments);
+        Assert.Equal(4.2m, global.AverageRating);
+        Assert.Equal(300, global.TotalRatings);
+        Assert.Equal((ProgramCategory)1, global.MostPopularCategory);
+        Assert.Equal((ProgramDifficulty)1, global.MostPopularDifficulty);
+
+        Assert.Equal(creatorId, creator.CreatorId);
+        Assert.Equal(8, creator.TotalPrograms);
+        Assert.Equal(6, creator.PublishedPrograms);
+        Assert.Equal(500, creator.TotalEnrollments);
+        Assert.Equal(350, creator.ActiveEnrollments);
+        Assert.Equal(4.7m, creator.AverageRating);
+        Assert.Equal(200, creator.TotalRatings);
+        Assert.Equal(72m, creator.AverageCompletionRate);
+    }
+
+    [Fact]
+    public void PrerequisiteContracts_ExposeCreationUpdateAndStatusValues()
+    {
+        var courseId = Guid.NewGuid();
+        var prerequisiteCourseId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var prerequisiteId = Guid.NewGuid();
+        var create = new CreatePrerequisiteRequest(
+            courseId,
+            prerequisiteCourseId,
+            tenantId,
+            PrerequisiteType.Required,
+            80,
+            "Complete foundations",
+            2,
+            "core");
+        var update = new UpdatePrerequisiteRequest(
+            PrerequisiteType.Recommended,
+            70,
+            "Recommended foundation",
+            3,
+            "recommended");
+        var status = new PrerequisiteStatus(
+            prerequisiteId,
+            prerequisiteCourseId,
+            "Foundations",
+            PrerequisiteType.Required,
+            true,
+            80,
+            95,
+            "Satisfied");
+        var result = new PrerequisiteCheckResult(true, [status]);
+
+        Assert.Equal(courseId, create.CourseId);
+        Assert.Equal(prerequisiteCourseId, create.PrerequisiteCourseId);
+        Assert.Equal(tenantId, create.TenantId);
+        Assert.Equal(PrerequisiteType.Required, create.Type);
+        Assert.Equal(80, create.MinimumGrade);
+        Assert.Equal("Complete foundations", create.Description);
+        Assert.Equal(2, create.DisplayOrder);
+        Assert.Equal("core", create.PrerequisiteGroup);
+
+        Assert.Equal(PrerequisiteType.Recommended, update.Type);
+        Assert.Equal(70, update.MinimumGrade);
+        Assert.Equal("Recommended foundation", update.Description);
+        Assert.Equal(3, update.DisplayOrder);
+        Assert.Equal("recommended", update.PrerequisiteGroup);
+
+        Assert.Equal(prerequisiteId, status.PrerequisiteId);
+        Assert.Equal(prerequisiteCourseId, status.PrerequisiteCourseId);
+        Assert.Equal("Foundations", status.CourseName);
+        Assert.Equal(PrerequisiteType.Required, status.Type);
+        Assert.True(status.IsSatisfied);
+        Assert.Equal(80, status.RequiredGrade);
+        Assert.Equal(95, status.AchievedGrade);
+        Assert.Equal("Satisfied", status.Reason);
+        Assert.True(result.IsSatisfied);
+        Assert.Same(status, Assert.Single(result.Prerequisites));
+    }
+
+    [Fact]
+    public void CourseCheckoutContracts_ExposeRequestResponseSuccessAndFailure()
+    {
+        var courseId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var entitlementId = Guid.NewGuid();
+        var enrollmentIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var request = new CompleteCourseCheckoutRequest(productId, "payment-1", "card");
+        var response = new CompleteCourseCheckoutResponse(
+            courseId,
+            productId,
+            entitlementId,
+            enrollmentIds,
+            true,
+            49.90m,
+            "BRL",
+            "/courses/game-programming/content",
+            "payment-1");
+
+        var success = CompleteCourseCheckoutOutcome.Success(response);
+        var failure = CompleteCourseCheckoutOutcome.Failure(
+            StatusCodes.Status409Conflict,
+            "Enrollment closed",
+            "The enrollment window has ended.");
+
+        Assert.Equal(productId, request.ProductId);
+        Assert.Equal("payment-1", request.PaymentProviderReference);
+        Assert.Equal("card", request.PaymentMethod);
+        Assert.Equal(courseId, response.CourseId);
+        Assert.Equal(productId, response.ProductId);
+        Assert.Equal(entitlementId, response.EntitlementId);
+        Assert.Same(enrollmentIds, response.EnrollmentIds);
+        Assert.True(response.AlreadyHadAccess);
+        Assert.Equal(49.90m, response.Amount);
+        Assert.Equal("BRL", response.Currency);
+        Assert.Equal("/courses/game-programming/content", response.LearningUrl);
+        Assert.Equal("payment-1", response.PaymentProviderReference);
+        Assert.Same(response, success.Response);
+        Assert.Equal(StatusCodes.Status200OK, success.StatusCode);
+        Assert.Null(success.Problem);
+        Assert.Null(failure.Response);
+        Assert.Equal(StatusCodes.Status409Conflict, failure.StatusCode);
+        Assert.Equal("Enrollment closed", failure.Problem!.Title);
+        Assert.Equal("The enrollment window has ended.", failure.Problem.Detail);
+    }
+}
