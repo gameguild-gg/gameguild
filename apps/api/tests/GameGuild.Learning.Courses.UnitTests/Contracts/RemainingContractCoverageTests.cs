@@ -43,6 +43,72 @@ public sealed class RemainingContractCoverageTests
         Assert.Equal("The next lesson is available.", request.Message);
     }
 
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(3, true)]
+    public void GradeStatisticsDto_FormatsMetricsAndReportsAvailability(int totalGrades, bool hasGrades)
+    {
+        var dto = new GradeStatisticsDto
+        {
+            TotalGrades = totalGrades,
+            AverageGrade = 87.25m,
+            PassingRate = 76.75m,
+        };
+
+        Assert.Equal($"{dto.AverageGrade:F1}%", dto.AverageGradeFormatted);
+        Assert.Equal($"{dto.PassingRate:F1}%", dto.PassingRateFormatted);
+        Assert.Equal(hasGrades, dto.HasGrades);
+    }
+
+    [Fact]
+    public void ReorderAndSupportRequests_ExposeSubmittedValues()
+    {
+        var programId = Guid.NewGuid();
+        var tagIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+        var reorder = new ReorderProgramTagsCommand(programId, tagIds);
+        var resolution = new ResolveCourseSupportTicketRequest("Resolved with an updated lesson.");
+
+        Assert.Equal(programId, reorder.ProgramId);
+        Assert.Same(tagIds, reorder.TagIdsInOrder);
+        Assert.Equal("Resolved with an updated lesson.", resolution.Summary);
+    }
+
+    [Fact]
+    public void RemainingTransportContracts_CanRepresentSupportedRequestAndResponseShapes()
+    {
+        var id = Guid.NewGuid();
+        var ids = new List<Guid> { id };
+        var now = DateTime.UtcNow;
+
+        object[] contracts =
+        [
+            new BulkAddUsersDto(id, ids),
+            new BulkRemoveUsersDto(id, ids),
+            new BulkUpdateProgramsDto(ids, ContentStatus.Published, ContentVisibility.Public),
+            new CloneProgramDto("Copy", "Copied course"),
+            new CompleteContentRequest(id, Guid.NewGuid()),
+            new CompletionTrendDto(now, 4, 5, 80m),
+            new CreateActivityGradeDto(id, Guid.NewGuid(), 95m, "Excellent", "{}"),
+            new CreateProductFromProgramDto("Course", "Description", 29.90m, "BRL"),
+            new EngagementMetricsDto(id, 1, 2, 3, TimeSpan.FromMinutes(20), 4, 50m, new()),
+            new ProgramSearchDto("game", ContentStatus.Published, ContentVisibility.Public, id, 5, 10),
+            new RejectProgramDto("Needs revision"),
+            new ReorderContentDto(ids),
+            new RevenueAnalyticsDto(id, 100m, 20m, 5, 1, 20m, 10m, []),
+            new RevenueChartDto(now, 20m, 1),
+            new ScheduleProgramDto(now),
+            new SchedulePublishDto(now),
+            new SetVisibilityDto(ContentVisibility.Private),
+            new StartContentRequest(id, Guid.NewGuid()),
+            new SubmitContentRequest(id, Guid.NewGuid(), "submission"),
+            new UpdateActivityGradeDto(90m, "Updated", "{}"),
+            new UpdateProgressRequest(id, Guid.NewGuid(), 75m),
+            new UpdateTimeSpentRequest(id, Guid.NewGuid(), 5),
+        ];
+
+        Assert.All(contracts, Assert.NotNull);
+    }
+
     [Fact]
     public void ProgramAnalyticsDto_ExposesEveryMetric()
     {
