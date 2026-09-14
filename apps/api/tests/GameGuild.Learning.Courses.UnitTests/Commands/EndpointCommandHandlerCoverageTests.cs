@@ -233,4 +233,30 @@ public sealed class EndpointCommandHandlerCoverageTests
 
         service.VerifyAll();
     }
+
+    [Fact]
+    public async Task PrerequisiteHandler_DelegatesEveryCommand()
+    {
+        var service = new Mock<IPrerequisiteService>(MockBehavior.Strict);
+        var handler = new PrerequisiteEndpointCommandHandler(service.Object);
+        var prerequisiteId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        CreatePrerequisiteRequest create = null!;
+        UpdatePrerequisiteRequest update = null!;
+        IEnumerable<Guid> order = [Guid.NewGuid(), Guid.NewGuid()];
+        var prerequisiteResult = default(Result<CoursePrerequisite>)!;
+        var boolResult = default(Result<bool>)!;
+
+        service.Setup(candidate => candidate.CreatePrerequisiteAsync(create)).ReturnsAsync(prerequisiteResult);
+        service.Setup(candidate => candidate.UpdatePrerequisiteAsync(prerequisiteId, update)).ReturnsAsync(prerequisiteResult);
+        service.Setup(candidate => candidate.DeletePrerequisiteAsync(prerequisiteId)).ReturnsAsync(boolResult);
+        service.Setup(candidate => candidate.ReorderPrerequisitesAsync(courseId, order)).ReturnsAsync(boolResult);
+
+        Assert.Equal(prerequisiteResult, await handler.Handle(new CreatePrerequisiteEndpointCommand(create), default));
+        Assert.Equal(prerequisiteResult, await handler.Handle(new UpdatePrerequisiteEndpointCommand(prerequisiteId, update), default));
+        Assert.Equal(boolResult, await handler.Handle(new DeletePrerequisiteEndpointCommand(prerequisiteId), default));
+        Assert.Equal(boolResult, await handler.Handle(new ReorderPrerequisitesEndpointCommand(courseId, order), default));
+
+        service.VerifyAll();
+    }
 }
