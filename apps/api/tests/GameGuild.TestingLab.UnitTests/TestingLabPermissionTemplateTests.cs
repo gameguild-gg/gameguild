@@ -418,6 +418,26 @@ public sealed class TestingLabPermissionTemplateTests
     }
 
     [Fact]
+    public async Task ResourcePermission_ShouldRejectUnknownResourceTypesAndActions()
+    {
+        await using var context = CreateContext();
+        var service = new TestingLabPermissionService(context);
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+
+        var invalidResource = () => service.RevokePermissionAsync(
+            userId, tenantId, TestingLabActions.Read, "unknown", resourceId);
+        await invalidResource.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*not a valid Testing Lab resource type*");
+
+        var invalidAction = () => service.RevokePermissionAsync(
+            userId, tenantId, "unknown", TestingLabResourceTypes.Request, resourceId);
+        await invalidAction.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*not a valid Testing Lab action*");
+    }
+
+    [Fact]
     public void TestingLab_Model_Configuration_Should_Register_Runtime_Entities()
     {
         var modelBuilder = new ModelBuilder();

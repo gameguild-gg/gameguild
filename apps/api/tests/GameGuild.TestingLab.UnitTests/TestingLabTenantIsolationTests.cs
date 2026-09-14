@@ -16,6 +16,59 @@ namespace GameGuild.TestingLab.UnitTests;
 public sealed class TestingLabTenantIsolationTests
 {
     [Fact]
+    public async Task RequestQueries_ShouldRequireAnAuthenticatedTenantActor()
+    {
+        await using var context = CreateContext();
+
+        var anonymous = new ActorContextAccessor();
+        anonymous.ClearActorContext();
+        await FluentActions.Awaiting(() => CreateRequestService(context, anonymous).GetAllTestingRequestsAsync())
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+
+        var missingSubject = new Mock<IActorContextAccessor>();
+        missingSubject.SetupGet(accessor => accessor.ActorContext).Returns(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            IsAuthenticated = true,
+            TenantId = Guid.NewGuid(),
+            SubjectId = null,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>()
+        });
+        await FluentActions.Awaiting(() => CreateRequestService(context, missingSubject.Object).GetAllTestingRequestsAsync())
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+
+        var missingTenant = new ActorContextAccessor();
+        missingTenant.SetActorContext(ActorContextBuilder.ForUser(Guid.NewGuid()).Build());
+        await FluentActions.Awaiting(() => CreateRequestService(context, missingTenant).GetAllTestingRequestsAsync())
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task SessionQueries_ShouldRequireAuthenticationAndSubjectIdentity()
+    {
+        await using var context = CreateContext();
+
+        var anonymous = new ActorContextAccessor();
+        anonymous.ClearActorContext();
+        await FluentActions.Awaiting(() => CreateService<TestingSessionOperationsService>(context, anonymous).GetTestingSessionsAsync())
+            .Should().ThrowAsync<AuthenticationRequiredException>();
+
+        var missingSubject = new Mock<IActorContextAccessor>();
+        missingSubject.SetupGet(accessor => accessor.ActorContext).Returns(new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            IsAuthenticated = true,
+            TenantId = Guid.NewGuid(),
+            SubjectId = null,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>()
+        });
+        await FluentActions.Awaiting(() => CreateService<TestingSessionOperationsService>(context, missingSubject.Object).GetTestingSessionsAsync())
+            .Should().ThrowAsync<AuthenticationRequiredException>();
+    }
+
+    [Fact]
     public async Task RequestQueries_ShouldReturnOnlyCurrentTenantRows()
     {
         await using var context = CreateContext();
