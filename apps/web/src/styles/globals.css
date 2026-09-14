@@ -2,6 +2,7 @@
 
 @source "../../../../packages/features/lexical-surface/src/**/*.{ts,tsx}";
 @source "../../../../packages/features/quiz-surface/src/**/*.{ts,tsx}";
+@source "../../../../packages/features/content-rendering/src/**/*.{ts,tsx}";
 
 /* Scrollbar utilities */
 @utility scrollbar-hide {
