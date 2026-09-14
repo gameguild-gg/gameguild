@@ -125,6 +125,129 @@ public sealed class EfConfigurationCoverageTests
         builder.Metadata.FindProperty(nameof(Program.PassingScore))!.GetDefaultValue().Should().Be(60m);
     }
 
+    [Fact]
+    public void ProgramContentDraftConfiguration_DefinesConcurrencyPayloadAndOwnership()
+    {
+        var builder = CreateBuilder<ProgramContentDraft>();
+
+        new ProgramContentDraftConfiguration().Configure(builder);
+
+        builder.Metadata.GetTableName().Should().Be("program_content_drafts");
+        builder.Metadata.FindProperty(nameof(ProgramContentDraft.PayloadJson))!.GetColumnType().Should().Be("jsonb");
+        builder.Metadata.FindProperty(nameof(ProgramContentDraft.Revision))!.IsConcurrencyToken.Should().BeTrue();
+        builder.Metadata.FindProperty(nameof(ProgramContentDraft.ETag)).Should().BeNull();
+        builder.Metadata.GetIndexes().Should().Contain(index => index.IsUnique &&
+            index.Properties.Single().Name == nameof(ProgramContentDraft.ContentId));
+        builder.Metadata.GetForeignKeys().Should().Contain(foreignKey =>
+            foreignKey.Properties.Single().Name == nameof(ProgramContentDraft.ContentId) &&
+            foreignKey.DeleteBehavior == DeleteBehavior.Cascade);
+    }
+
+    [Fact]
+    public void ProgramContentPublicationAuditConfiguration_DefinesAuditIndexes()
+    {
+        var builder = CreateBuilder<ProgramContentPublicationAudit>();
+
+        new ProgramContentPublicationAuditConfiguration().Configure(builder);
+
+        builder.Metadata.GetTableName().Should().Be("program_content_publication_audits");
+        builder.Metadata.GetIndexes().Should().Contain(index =>
+            index.Properties.Select(property => property.Name)
+                .SequenceEqual(new[] { nameof(ProgramContentPublicationAudit.ContentId), nameof(ProgramContentPublicationAudit.PublishedAt) }));
+        builder.Metadata.GetIndexes().Should().Contain(index =>
+            index.Properties.Select(property => property.Name)
+                .SequenceEqual(new[] { nameof(ProgramContentPublicationAudit.TenantId), nameof(ProgramContentPublicationAudit.PublishedBy) }));
+    }
+
+    [Fact]
+    public void AiAuthoringProposalConfiguration_DefinesContentColumnsAndIndexes()
+    {
+        var builder = CreateBuilder<AiAuthoringProposal>();
+
+        new AiAuthoringProposalConfiguration().Configure(builder);
+
+        builder.Metadata.GetTableName().Should().Be("ai_authoring_proposals");
+        builder.Metadata.FindProperty(nameof(AiAuthoringProposal.OriginalContent))!.GetColumnType().Should().Be("text");
+        builder.Metadata.FindProperty(nameof(AiAuthoringProposal.ProposedContent))!.GetColumnType().Should().Be("text");
+        builder.Metadata.GetIndexes().Should().Contain(index => index.IsUnique &&
+            index.Properties.Single().Name == nameof(AiAuthoringProposal.RunId));
+    }
+
+    [Fact]
+    public void AiAuthoringConversationConfiguration_DefinesAuthorScopedConversationIndexes()
+    {
+        var builder = CreateBuilder<AiAuthoringConversation>();
+
+        new AiAuthoringConversationConfiguration().Configure(builder);
+
+        builder.Metadata.GetTableName().Should().Be("ai_authoring_conversations");
+        builder.Metadata.GetIndexes().Should().Contain(index => index.IsUnique &&
+            index.Properties.Select(property => property.Name).SequenceEqual(new[]
+            {
+                nameof(AiAuthoringConversation.TenantId),
+                nameof(AiAuthoringConversation.ContentId),
+                nameof(AiAuthoringConversation.AuthorId)
+            }));
+    }
+
+    [Fact]
+    public void AiAuthoringMessageConfiguration_DefinesStableMessageIdentityAndPayload()
+    {
+        var builder = CreateBuilder<AiAuthoringMessage>();
+
+        new AiAuthoringMessageConfiguration().Configure(builder);
+
+        builder.Metadata.GetTableName().Should().Be("ai_authoring_messages");
+        builder.Metadata.FindPrimaryKey()!.Properties.Single().Name.Should().Be(nameof(AiAuthoringMessage.Id));
+        builder.Metadata.FindProperty(nameof(AiAuthoringMessage.Id))!.ValueGenerated.Should().Be(Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never);
+        builder.Metadata.FindProperty(nameof(AiAuthoringMessage.Role))!.GetMaxLength().Should().Be(16);
+        builder.Metadata.FindProperty(nameof(AiAuthoringMessage.Content))!.GetColumnType().Should().Be("text");
+    }
+
+    [Fact]
+    public void AiAuthoringRunConfiguration_DefinesProviderMetadataAndIdempotency()
+    {
+        var builder = CreateBuilder<AiAuthoringRun>();
+
+        new AiAuthoringRunConfiguration().Configure(builder);
+
+        builder.Metadata.GetTableName().Should().Be("ai_authoring_runs");
+        builder.Metadata.FindProperty(nameof(AiAuthoringRun.Instruction))!.GetColumnType().Should().Be("text");
+        builder.Metadata.FindProperty(nameof(AiAuthoringRun.IdempotencyKey))!.GetMaxLength().Should().Be(128);
+        builder.Metadata.FindProperty(nameof(AiAuthoringRun.Provider))!.GetMaxLength().Should().Be(64);
+        builder.Metadata.FindProperty(nameof(AiAuthoringRun.Model))!.GetMaxLength().Should().Be(256);
+        builder.Metadata.FindProperty(nameof(AiAuthoringRun.ErrorCode))!.GetMaxLength().Should().Be(128);
+        builder.Metadata.GetIndexes().Should().Contain(index => index.IsUnique &&
+            index.Properties.Select(property => property.Name).SequenceEqual(new[]
+            {
+                nameof(AiAuthoringRun.TenantId),
+                nameof(AiAuthoringRun.ActorId),
+                nameof(AiAuthoringRun.IdempotencyKey)
+            }));
+    }
+
+    [Fact]
+    public void AiAuthoringStreamEventConfiguration_DefinesSequenceAndStreamPayload()
+    {
+        var builder = CreateBuilder<AiAuthoringStreamEvent>();
+
+        new AiAuthoringStreamEventConfiguration().Configure(builder);
+
+        builder.Metadata.GetTableName().Should().Be("ai_authoring_stream_events");
+        builder.Metadata.FindPrimaryKey()!.Properties.Single().Name.Should().Be(nameof(AiAuthoringStreamEvent.Id));
+        builder.Metadata.FindProperty(nameof(AiAuthoringStreamEvent.Id))!.ValueGenerated.Should().Be(Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never);
+        builder.Metadata.FindProperty(nameof(AiAuthoringStreamEvent.Type))!.GetMaxLength().Should().Be(64);
+        builder.Metadata.FindProperty(nameof(AiAuthoringStreamEvent.Status))!.GetMaxLength().Should().Be(32);
+        builder.Metadata.FindProperty(nameof(AiAuthoringStreamEvent.Delta))!.GetColumnType().Should().Be("text");
+        builder.Metadata.FindProperty(nameof(AiAuthoringStreamEvent.PayloadJson))!.GetColumnType().Should().Be("jsonb");
+        builder.Metadata.GetIndexes().Should().Contain(index => index.IsUnique &&
+            index.Properties.Select(property => property.Name).SequenceEqual(new[]
+            {
+                nameof(AiAuthoringStreamEvent.RunId),
+                nameof(AiAuthoringStreamEvent.Sequence)
+            }));
+    }
+
     private static EntityTypeBuilder<TEntity> CreateBuilder<TEntity>() where TEntity : class
     {
         var modelBuilder = new ModelBuilder(new ConventionSet());
