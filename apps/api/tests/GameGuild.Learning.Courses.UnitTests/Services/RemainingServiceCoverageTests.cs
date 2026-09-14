@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentAssertions;
 using GameGuild.Learning.Abstractions;
+using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
 using Xunit;
 
@@ -60,6 +61,22 @@ public sealed class RemainingServiceCoverageTests
             contentId,
             ProgramContentType.Lesson,
             LessonContentFormat.Markdown)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task LifecycleLockCommit_DelegatesToOwnedTransaction()
+    {
+        var transaction = new Mock<IDbContextTransaction>();
+        var cancellationToken = new CancellationTokenSource().Token;
+        transaction
+            .Setup(value => value.CommitAsync(cancellationToken))
+            .Returns(Task.CompletedTask);
+
+        await ProgramContentLifecycleDatabaseLock.CommitAsync(
+            transaction.Object,
+            cancellationToken);
+
+        transaction.Verify(value => value.CommitAsync(cancellationToken), Times.Once);
     }
 
     [Fact]

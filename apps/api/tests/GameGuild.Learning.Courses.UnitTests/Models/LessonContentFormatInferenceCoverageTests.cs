@@ -11,4 +11,16 @@ public sealed class LessonContentFormatInferenceCoverageTests
     {
         Assert.Equal(LessonContentFormat.Html, LessonContentFormatInference.FromBody(body));
     }
+
+    [Fact]
+    public void FromBody_WhenJsonObjectIsNotLexical_ReturnsMarkdown()
+    {
+        Assert.Equal(LessonContentFormat.Markdown, LessonContentFormatInference.FromBody("{}"));
+    }
+
+    [Fact]
+    public void FromBody_WhenJsonRootIsNotAnObject_ReturnsMarkdown()
+    {
+        Assert.Equal(LessonContentFormat.Markdown, LessonContentFormatInference.FromBody("[]"));
+    }
 }
