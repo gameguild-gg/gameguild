@@ -508,6 +508,39 @@ public sealed class SessionProjectChannelTests : IDisposable
 
 public sealed class SessionProjectControllerTests
 {
+    [Theory]
+    [InlineData(ErrorType.Unauthorized, 401)]
+    [InlineData(ErrorType.Forbidden, 403)]
+    [InlineData(ErrorType.NotFound, 404)]
+    [InlineData(ErrorType.Conflict, 409)]
+    [InlineData(ErrorType.Validation, 400)]
+    [InlineData(ErrorType.Failure, 500)]
+    public async Task GetSessionProjects_Should_MapEveryChannelFailure(
+        ErrorType errorType, int expectedStatusCode)
+    {
+        var error = errorType switch
+        {
+            ErrorType.Unauthorized => Error.Unauthorized("TestingLab.Unauthorized", "Unauthorized"),
+            ErrorType.Forbidden => Error.Forbidden("TestingLab.Forbidden", "Forbidden"),
+            ErrorType.NotFound => Error.NotFound("TestingLab.NotFound", "Not found"),
+            ErrorType.Conflict => Error.Conflict("TestingLab.Conflict", "Conflict"),
+            ErrorType.Validation => Error.Validation("TestingLab.Invalid", "Invalid"),
+            _ => Error.Failure("TestingLab.Failure", "Failure")
+        };
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(candidate => candidate.Send(
+                It.IsAny<GetSessionProjectLinksQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<IReadOnlyList<SessionProjectProjection>>(error));
+        var controller = new TestingSessionsController(
+            Mock.Of<ITestingSessionOperations>(), mediator.Object, Mock.Of<IActorContextAccessor>(),
+            NullLogger<TestingSessionsController>.Instance);
+
+        var result = await controller.GetSessionProjects(Guid.NewGuid());
+
+        result.Result.Should().BeAssignableTo<ObjectResult>()
+            .Which.StatusCode.Should().Be(expectedStatusCode);
+    }
+
     [Fact]
     public async Task LinkSessionProject_Should_Delegate_Through_Cqrs()
     {
