@@ -457,7 +457,7 @@ describe(
       }
     });
 
-    it('sessions:refresh returns 400 when JWT lacks session_id claim', async () => {
+    it('refreshes the active session identified by the JWT session_id claim', async () => {
       const client = authedClient(accessToken);
 
       const res = await client.request<{ message: string }>({
@@ -466,11 +466,9 @@ describe(
         requiresAuth: true,
       });
 
-      // The JWT from sign-in does not include a "session_id" claim,
-      // so the endpoint always returns 400 "No active session found".
-      expect(res.ok).toBe(false);
-      if (!res.ok) {
-        expect(res.error?.status).toBe(400);
+      expect(res.ok).toBe(true);
+      if (res.ok) {
+        expect(res.data.message).toBe('Session refreshed successfully');
       }
     });
 
