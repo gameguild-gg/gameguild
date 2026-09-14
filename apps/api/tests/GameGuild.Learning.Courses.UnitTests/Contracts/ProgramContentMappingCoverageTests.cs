@@ -77,4 +77,150 @@ public sealed class ProgramContentMappingCoverageTests
 
         content.LessonFormat.Should().Be(LessonContentFormat.RevealJs);
     }
+
+    [Fact]
+    public void ToDto_MapsStructuredContentAndLoadedRelationships()
+    {
+        var parent = new ProgramContent { Id = Guid.NewGuid(), Title = "Module" };
+        var visibleChild = new ProgramContent { Id = Guid.NewGuid(), Title = "Visible child" };
+        var deletedChild = new ProgramContent { Id = Guid.NewGuid(), Title = "Deleted child", Version = 1 };
+        deletedChild.SoftDelete();
+        var content = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = Guid.NewGuid(),
+            Title = "Structured lesson",
+            Description = "A description",
+            Type = ProgramContentType.Lesson,
+            JsonBody = "{\"root\":{}}",
+            LessonFormat = LessonContentFormat.Lexical,
+            Program = new Program { Title = "Course" },
+            Parent = parent,
+            Children = [visibleChild, deletedChild],
+        };
+
+        var dto = content.ToDto();
+
+        dto.Description.Should().Be("A description");
+        dto.JsonBody.Should().NotBeNull();
+        dto.LessonFormat.Should().Be(LessonContentFormat.Lexical);
+        dto.ProgramTitle.Should().Be("Course");
+        dto.ParentTitle.Should().Be("Module");
+        dto.ChildrenCount.Should().Be(1);
+        dto.Children.Should().ContainSingle().Which.Id.Should().Be(visibleChild.Id);
+    }
+
+    [Fact]
+    public void ToDto_WhenOptionalRelationshipsAreNotLoaded_UsesEmptyValues()
+    {
+        var content = new ProgramContent
+        {
+            Title = "Assignment",
+            Type = ProgramContentType.Assignment,
+            Children = null!,
+        };
+
+        var dto = content.ToDto();
+
+        dto.LessonFormat.Should().BeNull();
+        dto.ChildrenCount.Should().Be(0);
+        dto.Children.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void ToEntity_PreservesExplicitAuthoringMetadata()
+    {
+        var json = System.Text.Json.JsonDocument.Parse("{\"root\":{}}").RootElement.Clone();
+        var dto = new CreateProgramContentDto
+        {
+            ProgramId = Guid.NewGuid(),
+            Title = "Explicit lesson",
+            Slug = "stable-slug",
+            Description = "Description",
+            Type = ProgramContentType.Lesson,
+            Body = "ignored by structured content",
+            JsonBody = json,
+            LessonFormat = LessonContentFormat.Lexical,
+            EstimatedMinutesSource = EstimatedMinutesSource.Manual,
+        };
+
+        var content = dto.ToEntity();
+
+        content.Slug.Should().Be("stable-slug");
+        content.JsonBody.Should().NotBeNull();
+        content.Body.Should().BeNull();
+        content.LessonFormat.Should().Be(LessonContentFormat.Lexical);
+        content.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Manual);
+    }
+
+    [Fact]
+    public void ApplyUpdates_StructuredBodyWinsAndManualEstimateIsRecorded()
+    {
+        var content = new ProgramContent
+        {
+            Title = "Lesson",
+            Type = ProgramContentType.Lesson,
+            Body = "# Old",
+            LessonFormat = LessonContentFormat.Markdown,
+        };
+        var json = System.Text.Json.JsonDocument.Parse("{\"root\":{}}").RootElement.Clone();
+        var update = new UpdateProgramContentDto
+        {
+            Id = content.Id,
+            JsonBody = json,
+            LessonFormat = LessonContentFormat.Lexical,
+            EstimatedMinutes = 12,
+        };
+
+        content.ApplyUpdates(update);
+
+        content.JsonBody.Should().NotBeNull();
+        content.Body.Should().BeNull();
+        content.EstimatedMinutes.Should().Be(12);
+        content.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Manual);
+    }
+
+    [Fact]
+    public void ApplyUpdates_WhenContentBecomesLesson_InfersFormatFromBody()
+    {
+        var content = new ProgramContent
+        {
+            Title = "Assignment",
+            Type = ProgramContentType.Assignment,
+            Body = "old",
+            LessonFormat = null,
+        };
+        var update = new UpdateProgramContentDto
+        {
+            Id = content.Id,
+            Type = ProgramContentType.Lesson,
+            Body = "<p>Lesson</p>",
+        };
+
+        content.ApplyUpdates(update);
+
+        content.Type.Should().Be(ProgramContentType.Lesson);
+        content.LessonFormat.Should().Be(LessonContentFormat.Html);
+    }
+
+    [Fact]
+    public void ApplyUpdates_WhenAutoEstimateIsRequested_PreservesAutomaticSource()
+    {
+        var content = new ProgramContent
+        {
+            Title = "Lesson",
+            Type = ProgramContentType.Lesson,
+            Body = "A short lesson",
+            EstimatedMinutes = 10,
+            EstimatedMinutesSource = EstimatedMinutesSource.Manual,
+        };
+
+        content.ApplyUpdates(new UpdateProgramContentDto
+        {
+            Id = content.Id,
+            EstimatedMinutesSource = EstimatedMinutesSource.Auto,
+        });
+
+        content.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Auto);
+    }
 }
