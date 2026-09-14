@@ -557,6 +557,8 @@ public static class InfrastructureLayerExtensions
         }
 
         services.Replace(ServiceDescriptor.Scoped<ITenantMembershipChecker, TenantMembershipChecker>());
+        services.TryAddEnumerable(
+            ServiceDescriptor.Scoped<IAuthorizationRolePermissionProvider, TenantMembershipRolePermissionProvider>());
 
         totalStopwatch.Stop();
         logger.LogInformation("Completed service setup in {ElapsedMs}ms", serviceStopwatch.ElapsedMilliseconds);
