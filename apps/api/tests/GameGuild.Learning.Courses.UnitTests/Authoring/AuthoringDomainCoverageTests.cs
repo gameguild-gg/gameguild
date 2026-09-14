@@ -12,6 +12,73 @@ public sealed class AuthoringDomainCoverageTests
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
+    public void AiAuthoringConversation_CreateRejectsEveryMissingIdentity(int emptyIndex)
+    {
+        var ids = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+        ids[emptyIndex] = Guid.Empty;
+
+        var act = () => AiAuthoringConversation.Create(ids[0], ids[1], ids[2], ids[3], Now);
+
+        if (emptyIndex is 0 or 3)
+            act.Should().Throw<UnauthorizedAccessException>();
+        else
+            act.Should().Throw<ArgumentException>()
+                .WithMessage("*Program and content IDs*");
+    }
+
+    [Fact]
+    public void AiAuthoringMessage_CreateRejectsMissingConversationAndUnsupportedRole()
+    {
+        var missingConversation = () => AiAuthoringMessage.Create(
+            Guid.Empty,
+            null,
+            "user",
+            "Question",
+            Now);
+        var unsupportedRole = () => AiAuthoringMessage.Create(
+            Guid.NewGuid(),
+            null,
+            "system",
+            "Instruction",
+            Now);
+
+        missingConversation.Should().Throw<ArgumentException>()
+            .WithParameterName("conversationId");
+        unsupportedRole.Should().Throw<ArgumentOutOfRangeException>()
+            .WithParameterName("role");
+    }
+
+    [Fact]
+    public void AiAuthoringStreamEvent_CreateRejectsMissingRun()
+    {
+        var act = () => AiAuthoringStreamEvent.Create(
+            Guid.Empty,
+            1,
+            "delta",
+            "running",
+            null,
+            null,
+            Now);
+
+        act.Should().Throw<ArgumentException>()
+            .WithParameterName("runId");
+    }
+
+    [Fact]
+    public void PublishedVersionConflict_ExposesExpectedAndCurrentVersions()
+    {
+        var exception = new AuthoringPublishedVersionConflictException(3, 5);
+
+        exception.ExpectedVersion.Should().Be(3);
+        exception.CurrentVersion.Should().Be(5);
+        exception.Message.Should().Contain("3").And.Contain("5");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
     public void ProgramContentDraft_CreateRejectsEveryMissingIdentity(int emptyIndex)
     {
         var ids = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
