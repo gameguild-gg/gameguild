@@ -97,7 +97,10 @@ public static class ProgramContentMappingExtensions
       SortOrder = dto.SortOrder,
       IsRequired = dto.IsRequired,
       EstimatedMinutes = dto.EstimatedMinutes,
-      EstimatedMinutesSource = dto.EstimatedMinutesSource ?? EstimatedMinutesSource.Auto,
+      EstimatedMinutesSource = dto.EstimatedMinutesSource ??
+                               (dto.EstimatedMinutes.HasValue
+                                 ? EstimatedMinutesSource.Manual
+                                 : EstimatedMinutesSource.Auto),
       Visibility = dto.Visibility,
     };
 
