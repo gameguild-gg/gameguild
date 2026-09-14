@@ -60,6 +60,14 @@ public sealed class TestingLabEventApplicationEdgeCoverageTests
                     .Should().Throw<InvalidOperationException>();
             }
         }
+
+        var missingCurrentVersion = TestingProjectApplication.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), null, Guid.NewGuid(), null, Guid.NewGuid(),
+            submissionVersionPolicy: VersionSubmissionPolicy.ReleasedImmutable);
+        Invoking(() => missingCurrentVersion.UpdateDraftPackage(Guid.NewGuid(), null, null, null, null))
+            .Should().Throw<InvalidOperationException>();
+        Invoking(() => missingCurrentVersion.UpdateSubmission(Guid.NewGuid(), null))
+            .Should().Throw<InvalidOperationException>();
     }
 
     [Fact]
@@ -72,6 +80,18 @@ public sealed class TestingLabEventApplicationEdgeCoverageTests
 
         global.UseQuestionnaireRevision(revision);
         global.CurrentQuestionnaireRevisionId.Should().Be(revision.Id);
+
+        var tenantApplication = TestingProjectApplication.CreateDraft(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        var globalRevision = TestingQuestionnaireRevision.Create(
+            tenantApplication.Id, 1, Schema, Guid.NewGuid(), null);
+        Invoking(() => tenantApplication.UseQuestionnaireRevision(globalRevision))
+            .Should().Throw<InvalidOperationException>();
+
+        var tenantRevision = TestingQuestionnaireRevision.Create(
+            global.Id, 2, Schema, Guid.NewGuid(), Guid.NewGuid());
+        Invoking(() => global.UseQuestionnaireRevision(tenantRevision))
+            .Should().Throw<InvalidOperationException>();
 
         var corrupt = TestingProjectApplication.Submit(
             Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), null, Guid.NewGuid());

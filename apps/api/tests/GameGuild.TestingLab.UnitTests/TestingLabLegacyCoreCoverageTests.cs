@@ -62,6 +62,10 @@ public sealed class TestingRequestDomainCoverageTests
         request.RemoveTester();
         request.CurrentTesterCount.Should().Be(0);
 
+        request.MaxTesters = null;
+        request.AddTester();
+        request.CurrentTesterCount.Should().Be(1);
+
         request.SetPriority(TestingPriority.Critical);
         request.SetEstimatedDuration(4);
         request.Priority.Should().Be(TestingPriority.Critical);
@@ -109,6 +113,11 @@ public sealed class TestingSessionDomainCoverageTests
         session.RegisteredTesterCount = 5;
         session.AvailableSpots.Should().Be(0);
         session.AllowsRegistration.Should().BeFalse();
+
+        session.Status = SessionStatus.Active;
+        session.RegisteredTesterCount = 0;
+        session.AllowsRegistration.Should().BeFalse();
+        session.CanUserRegister(Guid.NewGuid()).Should().BeFalse();
 
         session.TenantId = Guid.NewGuid();
         session.IsGlobal.Should().BeFalse();

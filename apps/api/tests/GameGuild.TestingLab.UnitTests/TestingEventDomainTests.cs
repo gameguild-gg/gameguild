@@ -22,6 +22,20 @@ public sealed class TestingEventDomainTests
         act.Should().Throw<ArgumentException>();
     }
 
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void CommitteeMember_RequiresBothEventAndReviewer(bool emptyEvent, bool emptyReviewer)
+    {
+        var act = () => TestingCommitteeMember.Create(
+            emptyEvent ? Guid.Empty : Guid.NewGuid(),
+            emptyReviewer ? Guid.Empty : Guid.NewGuid(),
+            false,
+            Guid.NewGuid());
+
+        act.Should().Throw<ArgumentException>();
+    }
+
     [Fact]
     public void TemplateRevision_RejectsMissingCreatorAndInvalidRevisionNumber()
     {
