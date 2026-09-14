@@ -109,6 +109,33 @@ public sealed class ProgramWriteServiceTests
     }
 
     [Fact]
+    public async Task ManagerReflectionResponses_WithoutPermissionService_ShouldRejectAccess()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var program = CreateProgram();
+        program.TenantId = tenantId;
+        var reflection = new ProgramContent
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            Title = "Reflection",
+            Type = ProgramContentType.Reflection,
+        };
+        reflection.SetActivitySettings(new ReflectionActivitySettings());
+        context.AddRange(program, reflection);
+        await context.SaveChangesAsync();
+        var service = new ContentInteractionService(
+            context,
+            new TestRequestContextAccessor(Guid.NewGuid(), tenantId));
+
+        var action = () => service.GetReflectionResponsesAsync(program.Id, reflection.Id);
+
+        await action.Should().ThrowAsync<RequestValidationException>()
+            .WithMessage("*review permission*");
+    }
+
+    [Fact]
     public async Task GetSurveyResults_WhenServiceRejectsRequestValidation_ShouldReturnBadRequest()
     {
         var programId = Guid.NewGuid();
@@ -744,6 +771,22 @@ public sealed class ProgramWriteServiceTests
         analytics.Should().NotBeNull();
         analytics!.AverageCompletionTime.Should().Be(
             hasPositiveDuration ? TimeSpan.FromHours(2) : TimeSpan.Zero);
+    }
+
+    [Fact]
+    public async Task GetProgramAnalyticsAsync_WithNoLearners_ReportsZeroCompletionRate()
+    {
+        await using var context = CreateContext();
+        var program = CreateProgram();
+        context.Add(program);
+        await context.SaveChangesAsync();
+        var service = new ProgramReadService(context);
+
+        var analytics = await service.GetProgramAnalyticsAsync(program.Id);
+
+        analytics.Should().NotBeNull();
+        analytics!.CompletionRate.Should().Be(0);
+        analytics.TotalUsers.Should().Be(0);
     }
 
     [Fact]
