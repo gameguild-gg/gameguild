@@ -142,6 +142,15 @@ public class CodingAssignmentContentTests
             .EnumerateObject().First().Name.Should().Be("kind");
     }
 
+    [Theory]
+    [InlineData("[]")]
+    [InlineData("{}")]
+    [InlineData("{\"Tests\":[]}")]
+    public void NormalizeTestDiscriminatorOrder_LeavesUnsupportedDocumentShapesUnchanged(string json)
+    {
+        CodingAssignmentContentService.NormalizeTestDiscriminatorOrder(json).Should().Be(json);
+    }
+
     private static string JsonbOrderedJson() => """
         {
           "Type": "coding-assignment",
@@ -366,6 +375,23 @@ public class CodingAssignmentContentTests
 
         var errors = Validate(content);
 
+        errors.Should().Contain(e => e.ErrorCode == "case_inputs_length_mismatch");
+        errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+    }
+
+    [Fact]
+    public void Validator_RejectsNullFunctionalCasesCollectionWithoutThrowing()
+    {
+        var content = CreateMinimalValidWithFunctional("add");
+        var functional = (FunctionalTestGroup)content.Tests.Public.Single();
+        content = content with
+        {
+            Tests = new TestSuite { Public = [functional with { Cases = null! }], Private = [] },
+        };
+
+        var errors = Validate(content);
+
+        errors.Should().Contain(e => e.ErrorCode == "at_least_one_case");
         errors.Should().Contain(e => e.ErrorCode == "case_inputs_length_mismatch");
         errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
     }
