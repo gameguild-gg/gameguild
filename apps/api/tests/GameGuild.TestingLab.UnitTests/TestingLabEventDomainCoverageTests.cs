@@ -328,6 +328,9 @@ public sealed class TestingEventRecurrenceCoverageTests
         Invoking(() => Expand(start, new(TestingEventRecurrenceFrequency.Weekly, 1,
                 [(DayOfWeek)99], null, 1)))
             .Should().Throw<ArgumentOutOfRangeException>();
+        Invoking(() => Expand(start, new(TestingEventRecurrenceFrequency.Weekly, 1,
+                [], null, 1)))
+            .Should().Throw<ArgumentException>().WithMessage("*at least one day*");
         Invoking(() => Expand(start, new(TestingEventRecurrenceFrequency.Daily, 1, null,
                 start.AddDays(200), null)))
             .Should().Throw<ArgumentException>().WithMessage("*104*");
@@ -346,6 +349,25 @@ public sealed class TestingEventRecurrenceCoverageTests
             .Should().ContainSingle().Which.Kind.Should().Be(DateTimeKind.Utc);
         Expand(unspecified, new(TestingEventRecurrenceFrequency.Daily, 1, null, null, 1))
             .Should().ContainSingle().Which.Kind.Should().Be(DateTimeKind.Utc);
+    }
+
+    [Fact]
+    public void Expand_StopsWeeklySchedulesAtEndDateAndRejectsDstGaps()
+    {
+        var start = new DateTime(2026, 1, 5, 15, 0, 0, DateTimeKind.Utc);
+        Expand(start, new(
+                TestingEventRecurrenceFrequency.Weekly,
+                1,
+                [DayOfWeek.Monday, DayOfWeek.Wednesday],
+                start.AddDays(3),
+                null))
+            .Should().Equal(start, start.AddDays(2));
+
+        var beforeDstGap = new DateTime(2026, 3, 7, 7, 30, 0, DateTimeKind.Utc);
+        Invoking(() => Expand(beforeDstGap, new(
+                TestingEventRecurrenceFrequency.Daily, 1, null, null, 2),
+                "America/New_York"))
+            .Should().Throw<ArgumentException>().WithMessage("*does not exist*");
     }
 
     private static IReadOnlyList<DateTime> Expand(
