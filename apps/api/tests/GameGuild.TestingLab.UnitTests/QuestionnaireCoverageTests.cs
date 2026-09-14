@@ -170,6 +170,10 @@ public sealed class QuestionnaireResponseCoverageTests
 
         QuestionnaireResponseValidator.Validate(textConditionSchema, new QuestionnaireResponse([]))
             .Should().BeEmpty();
+
+        QuestionnaireResponseValidator.Validate(textConditionSchema, new QuestionnaireResponse([
+            new QuestionnaireAnswer("source", TextValue: " ")
+        ])).Should().BeEmpty();
     }
 
     private static QuestionnaireQuestion Conditional(
