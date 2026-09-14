@@ -158,4 +158,71 @@ public sealed class QueriesAndValidatorCoverageTests
         Assert.True(withoutReview.IsValid);
         Assert.True(valid.IsValid);
     }
+
+    [Fact]
+    public void TwoIdentityValidators_RejectMissingValuesAndAcceptValidValues()
+    {
+        Assert.False(new AddToWishlistCommandValidator()
+            .Validate(new AddToWishlistCommand(Guid.Empty, string.Empty)).IsValid);
+        Assert.True(new AddToWishlistCommandValidator()
+            .Validate(new AddToWishlistCommand(Guid.NewGuid(), "user")).IsValid);
+
+        Assert.False(new RemoveFromWishlistCommandValidator()
+            .Validate(new RemoveFromWishlistCommand(Guid.Empty, string.Empty)).IsValid);
+        Assert.True(new RemoveFromWishlistCommandValidator()
+            .Validate(new RemoveFromWishlistCommand(Guid.NewGuid(), "user")).IsValid);
+
+        Assert.False(new UnenrollUserCommandValidator()
+            .Validate(new UnenrollUserCommand(Guid.Empty, string.Empty)).IsValid);
+        Assert.True(new UnenrollUserCommandValidator()
+            .Validate(new UnenrollUserCommand(Guid.NewGuid(), "user")).IsValid);
+
+        Assert.False(new DeleteProgramRatingCommandValidator()
+            .Validate(new DeleteProgramRatingCommand(Guid.Empty, string.Empty)).IsValid);
+        Assert.True(new DeleteProgramRatingCommandValidator()
+            .Validate(new DeleteProgramRatingCommand(Guid.NewGuid(), "user")).IsValid);
+
+        Assert.False(new RemoveProgramContentCommandValidator()
+            .Validate(new RemoveProgramContentCommand(Guid.Empty, Guid.Empty)).IsValid);
+        Assert.True(new RemoveProgramContentCommandValidator()
+            .Validate(new RemoveProgramContentCommand(Guid.NewGuid(), Guid.NewGuid())).IsValid);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("ab")]
+    [InlineData("Invalid Slug")]
+    public void SlugValidators_RejectInvalidSlugs(string slug)
+    {
+        Assert.False(new GetProgramBySlugQueryValidator()
+            .Validate(new GetProgramBySlugQuery(slug)).IsValid);
+        Assert.False(new GetPublishedProgramBySlugQueryValidator()
+            .Validate(new GetPublishedProgramBySlugQuery(slug)).IsValid);
+    }
+
+    [Fact]
+    public void SlugValidators_AcceptCanonicalSlug()
+    {
+        Assert.True(new GetProgramBySlugQueryValidator()
+            .Validate(new GetProgramBySlugQuery("game-programming-101")).IsValid);
+        Assert.True(new GetPublishedProgramBySlugQueryValidator()
+            .Validate(new GetPublishedProgramBySlugQuery("game-programming-101")).IsValid);
+    }
+
+    [Fact]
+    public void SingleIdentityValidators_RejectEmptyAndAcceptValidIds()
+    {
+        Assert.False(new ArchiveProgramCommandValidator().Validate(new ArchiveProgramCommand(Guid.Empty)).IsValid);
+        Assert.True(new ArchiveProgramCommandValidator().Validate(new ArchiveProgramCommand(Guid.NewGuid())).IsValid);
+        Assert.False(new DeleteProgramCommandValidator().Validate(new DeleteProgramCommand(Guid.Empty)).IsValid);
+        Assert.True(new DeleteProgramCommandValidator().Validate(new DeleteProgramCommand(Guid.NewGuid())).IsValid);
+        Assert.False(new PublishProgramCommandValidator().Validate(new PublishProgramCommand(Guid.Empty)).IsValid);
+        Assert.True(new PublishProgramCommandValidator().Validate(new PublishProgramCommand(Guid.NewGuid())).IsValid);
+        Assert.False(new RestoreProgramCommandValidator().Validate(new RestoreProgramCommand(Guid.Empty)).IsValid);
+        Assert.True(new RestoreProgramCommandValidator().Validate(new RestoreProgramCommand(Guid.NewGuid())).IsValid);
+        Assert.False(new UnpublishProgramCommandValidator().Validate(new UnpublishProgramCommand(Guid.Empty)).IsValid);
+        Assert.True(new UnpublishProgramCommandValidator().Validate(new UnpublishProgramCommand(Guid.NewGuid())).IsValid);
+        Assert.False(new GetProgramByIdQueryValidator().Validate(new GetProgramByIdQuery(Guid.Empty)).IsValid);
+        Assert.True(new GetProgramByIdQueryValidator().Validate(new GetProgramByIdQuery(Guid.NewGuid())).IsValid);
+    }
 }
