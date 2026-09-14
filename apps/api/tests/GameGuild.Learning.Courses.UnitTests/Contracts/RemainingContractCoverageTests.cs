@@ -5,6 +5,44 @@ namespace GameGuild.Learning.Courses.UnitTests.Contracts;
 
 public sealed class RemainingContractCoverageTests
 {
+    [Theory]
+    [InlineData(69.9, false)]
+    [InlineData(70, true)]
+    public void ActivityGradeDto_FormatsGradeAndReportsOptionalDetails(
+        decimal grade,
+        bool isPassing)
+    {
+        var withoutDetails = new ActivityGradeDto { Grade = grade };
+        var withDetails = new ActivityGradeDto
+        {
+            Grade = grade,
+            Feedback = "Strong solution",
+            GradingDetails = "All assertions passed",
+        };
+
+        Assert.Equal(isPassing, withoutDetails.IsPassingGrade);
+        Assert.Equal($"{grade:F1}%", withoutDetails.GradePercentage);
+        Assert.False(withoutDetails.HasFeedback);
+        Assert.False(withoutDetails.HasGradingDetails);
+        Assert.True(withDetails.HasFeedback);
+        Assert.True(withDetails.HasGradingDetails);
+    }
+
+    [Fact]
+    public void SendCourseStudentMessageRequest_ExposesRecipientsAndMessage()
+    {
+        var recipients = new[] { Guid.NewGuid(), Guid.NewGuid() };
+
+        var request = new SendCourseStudentMessageRequest(
+            recipients,
+            "Course update",
+            "The next lesson is available.");
+
+        Assert.Same(recipients, request.UserIds);
+        Assert.Equal("Course update", request.Subject);
+        Assert.Equal("The next lesson is available.", request.Message);
+    }
+
     [Fact]
     public void ProgramAnalyticsDto_ExposesEveryMetric()
     {
