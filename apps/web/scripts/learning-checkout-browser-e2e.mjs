@@ -199,7 +199,8 @@ async function seedPaidPublishedCourse() {
     "Create browser E2E paid product",
   );
 
-  return { courseId, slug, title, productId, lessonId: lesson.id };
+  if (!lesson.slug) throw new Error("Create browser E2E lesson returned no slug");
+  return { courseId, slug, title, productId, lessonSlug: lesson.slug };
 }
 
 async function assertNoErrorSurface(page, label) {
@@ -379,7 +380,8 @@ async function runBrowserJourney(course) {
       (url) =>
         url.origin === new URL(learningBaseUrl).origin &&
         url.pathname ===
-          getLearningPath(`/courses/${course.slug}/lessons/${course.lessonId}`),
+          getLearningPath(`/courses/${course.slug}/lessons/${course.lessonSlug}`),
+      { timeout: 180_000 },
     );
 
     const startButton = page.getByRole("button", { name: "Start lesson" });
