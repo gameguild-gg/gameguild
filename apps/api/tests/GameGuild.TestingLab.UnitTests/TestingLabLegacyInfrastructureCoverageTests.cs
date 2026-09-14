@@ -104,6 +104,23 @@ public sealed class TestingLabLegacyInfrastructureCoverageTests
     }
 
     [Fact]
+    public void UserCreatedPermissionHandler_IsConstructibleWithItsRuntimeDependencies()
+    {
+        var handlerType = typeof(TestingRequest).Assembly.GetType(
+            "GameGuild.TestingLab.UserCreatedTestingLabPermissionHandler", throwOnError: true)!;
+        var loggerType = typeof(Microsoft.Extensions.Logging.Abstractions.NullLogger<>).MakeGenericType(handlerType);
+        var logger = Activator.CreateInstance(loggerType);
+
+        var handler = Activator.CreateInstance(
+            handlerType,
+            logger,
+            Mock.Of<IApplicationDbContext>(),
+            new ConfigurationBuilder().Build());
+
+        handler.Should().NotBeNull();
+    }
+
+    [Fact]
     public void ModuleAndResourcePermissionAdapters_RegisterAndMapEndpoints()
     {
         var services = new ServiceCollection();
