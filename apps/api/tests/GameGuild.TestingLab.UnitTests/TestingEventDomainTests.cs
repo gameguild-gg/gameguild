@@ -50,6 +50,25 @@ public sealed class TestingEventDomainTests
     }
 
     [Fact]
+    public void TimeZoneValidation_MapsCorruptZoneDataToAStableDomainError()
+    {
+        var validate = typeof(TestingEvent).GetMethod(
+            "ValidateTimeZoneId",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static,
+            binder: null,
+            types: [typeof(string), typeof(Func<string, TimeZoneInfo>)],
+            modifiers: null);
+        validate.Should().NotBeNull();
+        Func<string, TimeZoneInfo> corruptResolver = _ => throw new InvalidTimeZoneException("corrupt zone");
+
+        var act = () => validate!.Invoke(null, ["America/Sao_Paulo", corruptResolver]);
+
+        act.Should().Throw<System.Reflection.TargetInvocationException>()
+            .WithInnerException<ArgumentException>()
+            .WithMessage("*valid time zone*");
+    }
+
+    [Fact]
     public void InPersonSlot_RequiresCampusAndRoom()
     {
         var act = () => TestingEventSlot.Create(
