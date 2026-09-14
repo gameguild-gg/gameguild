@@ -40,8 +40,9 @@ public static class AuthoringStructuredPatch
 
     private static void ApplyOperation(JsonNode document, JsonObject operation, AiProposalKind kind)
     {
-        var op = operation["op"]?.GetValue<string>()?.Trim().ToLowerInvariant()
-                 ?? throw new ArgumentException("Every AI patch operation requires an op value.", nameof(operation));
+        var opNode = operation["op"]
+                     ?? throw new ArgumentException("Every AI patch operation requires an op value.", nameof(operation));
+        var op = opNode.GetValue<string>().Trim().ToLowerInvariant();
         var pointer = operation["path"]?.GetValue<string>()
                       ?? throw new ArgumentException("Every AI patch operation requires a path value.", nameof(operation));
         var segments = ParsePointer(pointer);
