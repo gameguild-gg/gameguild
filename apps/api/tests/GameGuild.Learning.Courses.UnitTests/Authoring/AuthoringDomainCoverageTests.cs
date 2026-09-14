@@ -152,6 +152,113 @@ public sealed class AuthoringDomainCoverageTests
         applicability.Should().Throw<AiProposalStateConflictException>();
     }
 
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void AiAuthoringRun_CreateRejectsMissingTenantOrActor(bool emptyTenant, bool emptyActor)
+    {
+        var act = () => AiAuthoringRun.Create(
+            emptyTenant ? Guid.Empty : Guid.NewGuid(),
+            emptyActor ? Guid.Empty : Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            1,
+            AiProposalKind.ReplaceDocument,
+            "Improve the lesson",
+            null,
+            "run-key",
+            Now);
+
+        act.Should().Throw<UnauthorizedAccessException>();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void AiAuthoringRun_CreateRejectsEveryMissingContentIdentity(int emptyIndex)
+    {
+        var ids = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+        ids[emptyIndex] = Guid.Empty;
+
+        var act = () => AiAuthoringRun.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            ids[0],
+            ids[1],
+            ids[2],
+            ids[3],
+            1,
+            AiProposalKind.ReplaceDocument,
+            "Improve the lesson",
+            null,
+            "run-key",
+            Now);
+
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*Program, content, draft, and conversation IDs*");
+    }
+
+    [Fact]
+    public void AiAuthoringRun_RequestCancellationAndCancelAreSafeToRepeat()
+    {
+        var run = CreateRun();
+        run.Reserve("provider", "model", 100, 200, 500, Now.AddMinutes(1));
+        run.Start(Now.AddMinutes(2));
+
+        run.RequestCancellation(Now.AddMinutes(3));
+
+        run.ErrorCode.Should().Be("AI_CANCEL_REQUESTED");
+        run.ErrorMessage.Should().Be("Cancellation requested by the author.");
+        run.UpdatedAt.Should().Be(Now.AddMinutes(3).UtcDateTime);
+
+        run.Cancel(400, Now.AddMinutes(4));
+        run.Cancel(999, Now.AddMinutes(5));
+        run.RequestCancellation(Now.AddMinutes(6));
+
+        run.Status.Should().Be(AiAuthoringRunStatus.Cancelled);
+        run.ReleasedAmount.Should().Be(400);
+        run.CompletedAt.Should().Be(Now.AddMinutes(4));
+    }
+
+    [Fact]
+    public void AiAuthoringRun_RejectsInvalidTransitions()
+    {
+        var run = CreateRun();
+
+        var start = () => run.Start(Now.AddMinutes(1));
+        var cancel = () => run.Cancel(0, Now.AddMinutes(1));
+
+        start.Should().Throw<InvalidOperationException>()
+            .WithMessage("*must be Reserved*");
+        cancel.Should().Throw<InvalidOperationException>()
+            .WithMessage("*reserved or running*");
+    }
+
+    [Fact]
+    public void AiAuthoringRun_FailRejectsCompletedAndCancelledRuns()
+    {
+        var completed = CreateRun();
+        completed.Reserve("provider", "model", 100, 200, 500, Now.AddMinutes(1));
+        completed.Start(Now.AddMinutes(2));
+        completed.Complete("Done", 50, 75, 250, 250, Now.AddMinutes(3));
+
+        var cancelled = CreateRun();
+        cancelled.Reserve("provider", "model", 100, 200, 500, Now.AddMinutes(1));
+        cancelled.Cancel(500, Now.AddMinutes(2));
+
+        var failCompleted = () => completed.Fail("FAILED", "late", 0, Now.AddMinutes(4));
+        var failCancelled = () => cancelled.Fail("FAILED", "late", 0, Now.AddMinutes(4));
+
+        failCompleted.Should().Throw<InvalidOperationException>()
+            .WithMessage("*terminal AI run*");
+        failCancelled.Should().Throw<InvalidOperationException>()
+            .WithMessage("*terminal AI run*");
+    }
+
     private static ProgramContentDraft CreateDraft(string payload = "{}") =>
         ProgramContentDraft.Create(
             Guid.NewGuid(),
@@ -170,5 +277,20 @@ public sealed class AuthoringDomainCoverageTests
             AiProposalKind.ReplaceDocument,
             "original",
             "proposed",
+            Now);
+
+    private static AiAuthoringRun CreateRun() =>
+        AiAuthoringRun.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            1,
+            AiProposalKind.ReplaceDocument,
+            "Improve the lesson",
+            null,
+            "run-key",
             Now);
 }
