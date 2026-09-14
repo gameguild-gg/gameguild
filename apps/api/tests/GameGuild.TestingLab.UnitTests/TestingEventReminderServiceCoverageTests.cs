@@ -127,6 +127,15 @@ public sealed class TestingEventReminderServiceCoverageTests
     }
 
     [Fact]
+    public void ReminderInterval_IsHourly()
+    {
+        var field = typeof(TestingEventReminderService).GetField(
+            "Interval", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        field.GetValue(null).Should().Be(TimeSpan.FromHours(1));
+    }
+
+    [Fact]
     public async Task HostedService_StopsCleanlyWhenAlreadyCancelled()
     {
         var provider = new ServiceCollection().BuildServiceProvider();
