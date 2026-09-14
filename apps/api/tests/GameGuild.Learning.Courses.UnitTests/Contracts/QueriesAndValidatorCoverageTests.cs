@@ -1,9 +1,69 @@
 using Xunit;
+using GameGuild.Tags;
 
 namespace GameGuild.Learning.Courses.UnitTests.Contracts;
 
 public sealed class QueriesAndValidatorCoverageTests
 {
+    [Fact]
+    public void ProgramTagQueries_PreserveFiltersPaginationAndSkillProjection()
+    {
+        var tagId = Guid.NewGuid();
+        var secondTagId = Guid.NewGuid();
+        var program = new Program { Id = Guid.NewGuid(), Title = "Rendering", Slug = "rendering" };
+        var tag = new ProgramTagDto(
+            Guid.NewGuid(),
+            program.Id,
+            tagId,
+            "C++",
+            "Skill",
+            SkillProficiencyLevel.Advanced,
+            true,
+            1);
+
+        var byTag = new GetProgramsByTagQuery(tagId, 5, 10);
+        var bySkill = new GetProgramsBySkillQuery(tagId, SkillProficiencyLevel.Intermediate, 10, 15);
+        var bySkills = new GetProgramsBySkillsQuery([tagId, secondTagId], true, 20, 25);
+        var search = new SearchProgramsByTagNameQuery("render", 30, 35);
+        var projected = new ProgramWithSkillDto(program, tag);
+
+        Assert.Equal(tagId, byTag.TagId);
+        Assert.Equal(5, byTag.Skip);
+        Assert.Equal(10, byTag.Take);
+        Assert.Equal(tagId, bySkill.SkillTagId);
+        Assert.Equal(SkillProficiencyLevel.Intermediate, bySkill.MinProficiency);
+        Assert.Equal(10, bySkill.Skip);
+        Assert.Equal(15, bySkill.Take);
+        Assert.Equal(new[] { tagId, secondTagId }, bySkills.SkillTagIds);
+        Assert.True(bySkills.RequireAll);
+        Assert.Equal(20, bySkills.Skip);
+        Assert.Equal(25, bySkills.Take);
+        Assert.Equal("render", search.TagName);
+        Assert.Equal(30, search.Skip);
+        Assert.Equal(35, search.Take);
+        Assert.Same(program, projected.Program);
+        Assert.Same(tag, projected.SkillTag);
+    }
+
+    [Fact]
+    public void ProgramTagRequests_ExposeDefaultsAndExplicitUpdates()
+    {
+        var tagId = Guid.NewGuid();
+        var defaults = new GetProgramsBySkillQuery(tagId);
+        var multipleDefaults = new GetProgramsBySkillsQuery([tagId]);
+        var update = new UpdateProgramTagDto(SkillProficiencyLevel.Expert, true, 4);
+
+        Assert.Equal(SkillProficiencyLevel.Beginner, defaults.MinProficiency);
+        Assert.Equal(0, defaults.Skip);
+        Assert.Equal(20, defaults.Take);
+        Assert.False(multipleDefaults.RequireAll);
+        Assert.Equal(0, multipleDefaults.Skip);
+        Assert.Equal(20, multipleDefaults.Take);
+        Assert.Equal(SkillProficiencyLevel.Expert, update.ProficiencyLevel);
+        Assert.True(update.IsPrimary);
+        Assert.Equal(4, update.DisplayOrder);
+    }
+
     [Fact]
     public void GetAllProgramsQuery_PreservesEveryFilterAndDefault()
     {
