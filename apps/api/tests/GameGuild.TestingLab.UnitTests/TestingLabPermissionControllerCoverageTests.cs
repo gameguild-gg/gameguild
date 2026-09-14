@@ -11,6 +11,20 @@ namespace GameGuild.TestingLab.UnitTests;
 public sealed class TestingLabPermissionControllerCoverageTests
 {
     [Fact]
+    public void CurrentUserId_FallsBackToEmptyForAnAnonymousActor()
+    {
+        var controller = Controller(
+            ActorContext.Anonymous,
+            Mock.Of<ITestingLabPermissionService>(),
+            Mock.Of<ISender>());
+        var method = typeof(TestingLabPermissionController).GetMethod(
+            "GetCurrentUserId",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+
+        method.Invoke(controller, null).Should().Be(Guid.Empty);
+    }
+
+    [Fact]
     public async Task RoleTemplateReadsAndWrites_MapEveryPermissionFlag()
     {
         var mappedTemplate = new RoleTemplate
@@ -168,6 +182,11 @@ public sealed class TestingLabPermissionControllerCoverageTests
 
         (await controller.AssignTestingLabRole(userId, new AssignTestingLabRoleRequest
         {
+            RoleName = "Manager"
+        })).Should().BeOfType<OkResult>();
+        (await controller.AssignTestingLabRole(userId, new AssignTestingLabRoleRequest
+        {
+            TenantId = tenantId,
             RoleName = "Manager"
         })).Should().BeOfType<OkResult>();
         (await controller.RevokeTestingLabRole(userId, "Manager")).Should().BeOfType<NoContentResult>();
