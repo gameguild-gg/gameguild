@@ -712,6 +712,40 @@ public sealed class ProgramWriteServiceTests
         item.Status.Should().Be(ProgressStatus.InProgress);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetProgramAnalyticsAsync_ShouldAverageOnlyPositiveCompletionDurations(
+        bool hasPositiveDuration)
+    {
+        await using var context = CreateContext();
+        var program = CreateProgram();
+        var completedAt = SystemClock.UtcNow;
+        var startedAt = hasPositiveDuration
+            ? completedAt.AddHours(-2)
+            : completedAt;
+        var enrollment = new ProgramUser
+        {
+            Id = Guid.NewGuid(),
+            ProgramId = program.Id,
+            UserId = Guid.NewGuid(),
+            IsActive = true,
+            JoinedAt = startedAt,
+            StartedAt = startedAt,
+            CompletedAt = completedAt,
+            CompletionPercentage = 100,
+        };
+        context.AddRange(program, enrollment);
+        await context.SaveChangesAsync();
+        var service = new ProgramReadService(context);
+
+        var analytics = await service.GetProgramAnalyticsAsync(program.Id);
+
+        analytics.Should().NotBeNull();
+        analytics!.AverageCompletionTime.Should().Be(
+            hasPositiveDuration ? TimeSpan.FromHours(2) : TimeSpan.Zero);
+    }
+
     [Fact]
     public async Task UpdateUserProgressAsync_ShouldReturnOnlyTheCurrentAttemptPerContent()
     {
