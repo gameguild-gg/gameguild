@@ -407,6 +407,29 @@ public class GroupSetServiceTests
     }
 
     [Fact]
+    public async Task GetGroupSets_WhenCrossTenantActorHasActiveEnrollment_ReturnsOk()
+    {
+        var actorId = Guid.NewGuid();
+        var actorTenantId = Guid.NewGuid();
+        var courseTenantId = Guid.NewGuid();
+        var courseId = Guid.NewGuid();
+        _programs.Setup(service => service.GetProgramByIdAsync(courseId))
+            .ReturnsAsync(new Program
+            {
+                Id = courseId,
+                CreatorId = Guid.NewGuid(),
+                TenantId = courseTenantId
+            });
+        _svc.Setup(service => service.HasActiveEnrollmentAsync(courseId, actorId)).ReturnsAsync(true);
+        _svc.Setup(service => service.GetCourseGroupSetsAsync(courseId))
+            .ReturnsAsync(new List<GroupSetSummaryDto>());
+
+        var result = await CreateController(actorId, tenantId: actorTenantId).GetGroupSets(courseId);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
     public async Task GetGroupSets_WhenActorIsOutsideCourse_ReturnsForbidden()
     {
         var actorId = Guid.NewGuid();
