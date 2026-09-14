@@ -140,7 +140,11 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
     }
 
     private static bool HasAtLeastOneCase(Test? t)
-        => t is not FunctionalTestGroup g || g.Cases is { Count: > 0 };
+    {
+        if (t is not FunctionalTestGroup g) return true;
+        if (g.Cases == null) return false;
+        return g.Cases.Count > 0;
+    }
 
     private static bool AreCaseInputLengthsValid(Test? t)
     {
