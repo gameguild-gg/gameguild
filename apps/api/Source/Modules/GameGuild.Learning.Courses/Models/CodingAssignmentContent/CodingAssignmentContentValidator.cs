@@ -140,22 +140,24 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
     }
 
     private static bool HasAtLeastOneCase(Test? t)
-        => t is not FunctionalTestGroup g || g.Cases.Count > 0;
+        => t is not FunctionalTestGroup g || g.Cases is { Count: > 0 };
 
     private static bool AreCaseInputLengthsValid(Test? t)
     {
-        if (t is not FunctionalTestGroup g || g.Function == null) return true;
+        if (t is not FunctionalTestGroup g) return true;
+        if (g.Function?.Parameters == null || g.Cases == null) return false;
         var expected = g.Function.Parameters.Count;
         foreach (var c in g.Cases)
         {
-            if (c == null || c.Inputs == null || c.Inputs.Length != expected) return false;
+            if (c?.Inputs == null || c.Inputs.Length != expected) return false;
         }
         return true;
     }
 
     private static bool AreFunctionalParamTypesValid(Test? t)
     {
-        if (t is not FunctionalTestGroup f || f.Function == null) return true;
+        if (t is not FunctionalTestGroup f) return true;
+        if (f.Function?.ReturnType == null || f.Function.Parameters == null || f.Cases == null) return false;
         if (!IsValidParamType(f.Function.ReturnType.Type)) return false;
         foreach (var p in f.Function.Parameters)
         {
@@ -163,7 +165,7 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
         }
         foreach (var c in f.Cases)
         {
-            if (c == null || c.Expected == null || !IsValidParamType(c.Expected.Type)) return false;
+            if (c?.Expected == null || c.Inputs == null || !IsValidParamType(c.Expected.Type)) return false;
             foreach (var i in c.Inputs)
             {
                 if (i != null && !IsValidParamType(i.Type)) return false;
