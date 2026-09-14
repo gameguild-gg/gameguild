@@ -272,6 +272,36 @@ public class CodingAssignmentContentTests
         errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
     }
 
+    [Fact]
+    public void Validator_Rejects_FunctionalCaseInputWithNonV1ParameterType()
+    {
+        var content = CreateMinimalValidWithFunctional("add");
+        var functional = (FunctionalTestGroup)content.Tests.Public.Single();
+        var invalidCase = functional.Cases.Single() with
+        {
+            Inputs =
+            [
+                new FunctionParameter
+                {
+                    Type = (FunctionParameterType)4,
+                    Content = JsonSerializer.SerializeToElement(0),
+                },
+            ],
+        };
+        content = content with
+        {
+            Tests = new TestSuite
+            {
+                Public = [functional with { Cases = [invalidCase] }],
+                Private = [],
+            },
+        };
+
+        var errors = Validate(content);
+
+        errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+    }
+
     // ── (c) bad FunctionName (add+, ns::add) → invalid_function_name ─────────────────────────────────
 
     [Theory]
