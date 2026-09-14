@@ -4,6 +4,7 @@ namespace GameGuild.TestingLab;
 /// <summary> GraphQL type definition for TestingParticipant entity </summary>
 public class TestingParticipantType : ObjectType<TestingParticipant> {
   protected override void Configure(IObjectTypeDescriptor<TestingParticipant> descriptor) {
+    descriptor.BindFieldsExplicitly();
     descriptor.Name("TestingParticipant");
     descriptor.Description("Represents a participant in a testing request.");
 
