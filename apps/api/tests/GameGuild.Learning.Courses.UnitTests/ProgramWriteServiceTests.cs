@@ -775,6 +775,30 @@ public sealed class ProgramWriteServiceTests
     }
 
     [Fact]
+    public async Task UpdateUserProgressAsync_WithActiveAttempt_ShouldApplyNonTerminalStatus()
+    {
+        await using var context = CreateContext();
+        var graph = CreateAttemptGraph();
+        context.AddRange(
+            graph.Program,
+            graph.Content,
+            graph.Enrollment,
+            graph.CurrentAttempt);
+        await context.SaveChangesAsync();
+        var previousAccess = graph.CurrentAttempt.LastAccessedAt;
+        var service = new ProgramWriteService(context);
+
+        await service.UpdateUserProgressAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId,
+            graph.Content.Id,
+            ProgressStatus.Submitted);
+
+        graph.CurrentAttempt.Status.Should().Be(ProgressStatus.Submitted);
+        graph.CurrentAttempt.LastAccessedAt.Should().NotBe(previousAccess);
+    }
+
+    [Fact]
     public async Task UpdateUserProgressAsync_WhenConcurrentAttemptWins_ShouldCompleteTheWinner()
     {
         var databaseName = Guid.NewGuid().ToString();
