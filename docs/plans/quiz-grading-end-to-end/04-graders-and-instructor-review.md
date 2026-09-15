@@ -171,8 +171,8 @@ Reutilizar a implementação concreta de revisão entre alunos:
 
 `AssessmentPeerReview` pode continuar persistindo cada claim/evidência
 individual se o `SCHEMA-GATE` confirmar ownership e invariantes. Seu score,
-quando persistido, usa `ScoreValue` textual e não é a autoridade do resultado
-agregado. O handler de `PeerReview` acrescenta:
+quando persistido, usa unidades inteiras de `ScoreValue` na escala `100` e não
+é a autoridade do resultado agregado. O handler de `PeerReview` acrescenta:
 
 - limiar de reviews recebidos por submissão, separado da cota do revisor;
 - agregação determinística conforme a policy publicada;

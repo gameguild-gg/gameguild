@@ -1,6 +1,6 @@
 # SCHEMA-GATE da Parte 1: fundacao e autoria
 
-- Status: aprovado; implementacao em andamento
+- Status: aprovado e implementado
 - Data do inventario: 2026-09-04
 - Plano executor: [`01-foundation-and-authoring.md`](./01-foundation-and-authoring.md)
 - Escopo liberado apos aprovacao: `SEQ-03` a `SEQ-06`

@@ -177,11 +177,14 @@ Na tentativa oficial, acrescentar:
 - regrade preserva versão anterior e reutiliza revisão, manifest, entrega e
   respostas da execução; definição diferente exige nova submission/execução;
 - `Assessment.PassingScore` não é substituído por `Program.PassingScore`;
-- mean, median e partial credit preservam quatro casas na string persistida;
-- scores e percentuais de largura fixa ordenam corretamente como texto;
-- índices de score e percentual usam collation invariante e preservam a ordem
-  nos valores de transição entre casas decimais;
-- SQL não soma, tira média nem converte strings acadêmicas para `numeric`;
+- mean, median e partial credit usam intermediários largos e uma única
+  quantização `half-up` para unidades inteiras de escala `100`;
+- scores e percentuais respeitam limites, ordem numérica e transições de meia
+  unidade sem overflow;
+- contratos convertem a representação decimal da UI apenas na fronteira e
+  rejeitam strings numéricas ou valores fracionários no JSON;
+- SQL não reimplementa fórmulas nem converte inteiros acadêmicos para
+  `numeric`, `decimal` ou ponto flutuante;
 - projeções precomputadas são refeitas idempotentemente após resultado, peso ou
   policy de contribuição mudar;
 - assessment sem grupo não recebe colocação no gradebook e troca de grupo/peso

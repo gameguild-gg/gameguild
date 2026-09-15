@@ -339,8 +339,8 @@ A implementação deve parar e retornar ao planejamento quando:
 
 | Parte | Status | Gate de conclusão |
 | --- | --- | --- |
-| 1. Fundação e autoria | pendente | base contratual, relacional, segura e autoral aprovada |
-| 2. E2E principal | bloqueada pela Parte 1 | test run e fluxo oficial individual/coletivo aprovados |
+| 1. Fundação e autoria | concluída | base contratual, relacional, segura e autoral aprovada |
+| 2. E2E principal | pronta para iniciar | test run e fluxo oficial individual/coletivo aprovados |
 | 3. Expansão e operação | bloqueada pela Parte 2 | reviews adicionais, operação e auditoria aprovados |
 
 O detalhe de cada marco é atualizado somente no documento da parte

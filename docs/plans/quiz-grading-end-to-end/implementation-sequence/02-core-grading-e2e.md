@@ -340,8 +340,8 @@ Não criar uma migration de evolução.
 - calcular `AssessmentSubmission.Passed` exclusivamente pelo
   `Assessment.PassingScore` absoluto capturado na revisão imutável. O primeiro
   E2E e a projeção mínima não consultam `Program.PassingScore`; esse percentual
-  global, embora já normalizado em string desde `SEQ-03`, só ganha efeito
-  acadêmico na consolidação do curso em `SEQ-15`;
+  global, embora já normalizado como unidades inteiras de `PercentValue` desde
+  `SEQ-03`, só ganha efeito acadêmico na consolidação do curso em `SEQ-15`;
 - tratar grupo e peso como configuração da projeção, fora da revisão de
   execução. Alteração autorizada emite evento auditável e reprojeta de forma
   idempotente todas as contribuições afetadas; não cria round, regrade, release

@@ -1,10 +1,10 @@
 # Quiz grading end-to-end
 
-Status: proposto.
+Status: em implementação; Parte 1 concluída e Parte 2 pronta para iniciar.
 
 Data: 2026-08-21.
 
-Atualizado: 2026-08-31.
+Atualizado: 2026-09-15.
 
 ## Objetivo
 
@@ -43,11 +43,11 @@ Semântica:
 - `SelfReview`: o aluno avalia a própria submissão;
 - `InstructorReview`: o instrutor avalia integralmente ou revisa por último.
 
-O código atual ainda usa `AIGraded`, `AutoGraded` e `InstructorGraded`. Esses
-nomes serão substituídos atomicamente, preservando os valores numéricos `2`,
-`4` e `8`. `PeerReview = 1` já possui o nome correto. `SelfReview = 16` será
-adicionado no mesmo corte de contratos. Como o produto não foi lançado, não
-haverá aliases, dual-read ou compatibilidade permanente com os nomes antigos.
+O corte de contratos já substituiu atomicamente `AIGraded`, `AutoGraded` e
+`InstructorGraded` por `AIReview`, `AutomatedReview` e `InstructorReview`,
+preservando os valores numéricos `2`, `4` e `8`, e adicionou
+`SelfReview = 16`. Como o produto não foi lançado, não existem aliases,
+dual-read ou compatibilidade permanente com os nomes antigos.
 
 ## Escopo de implementação
 
@@ -313,8 +313,8 @@ o baseline de schema do fluxo:
    sem fabricar conclusão peer.
 8. `ContentGradingDefinitionV2` possui somente configuração autoral adicional
    por ID de item; não copia ID, pontos, tipo ou capability. Em quiz,
-   `QuizEntry.points` textual canônico é a fonte única, e políticas de execução
-   pertencem ao Assessment.
+   `QuizEntry.points` em unidades inteiras de `ScoreValue` é a fonte única, e
+   políticas de execução pertencem ao Assessment.
 9. `AuthoringSourceHash` usa `AssessmentAuthoringSourceV1`, JCS e SHA-256 e é
    a única identidade de `Published`/`ChangesPending`.
 10. Resultado finalizado e resultado liberado são estados independentes.

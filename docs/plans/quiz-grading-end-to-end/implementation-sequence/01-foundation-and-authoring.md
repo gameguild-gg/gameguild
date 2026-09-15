@@ -946,10 +946,10 @@ classificada como bloqueadora.
 
 | Marco | Status | Evidência |
 | --- | --- | --- |
-| `SEQ-00` | pendente | ADRs aprovados |
-| `SEQ-01` | pendente | contratos, adapter de quiz isolado, domínio e autorização |
-| `SEQ-02` | pendente | schema do núcleo, entrega e reset global aprovados |
-| `SEQ-03` | pendente | baseline global e persistência imutável da entrega |
-| `SEQ-04` | pendente | testes de save draft atômico |
-| `SEQ-05` | pendente | rotas learner/escritas genéricas fechadas e registry versionado |
-| `SEQ-06` | pendente | prepare, policies autorais, publish fail-closed e E2E autoral |
+| `SEQ-00` | concluído | ADRs aceitos e matriz de decisões consolidada |
+| `SEQ-01` | concluído | contratos C#/TypeScript, domínio genérico e adapter de quiz isolado |
+| `SEQ-02` | concluído | schema gate aprovado e baseline global definido sem migrations incrementais |
+| `SEQ-03` | concluído | baseline limpo, persistência imutável e ausência de drift do EF verificadas |
+| `SEQ-04` | concluído | autoria atômica coberta por testes de API e web |
+| `SEQ-05` | concluído | fronteira learner fechada e registry/capabilities versionados |
+| `SEQ-06` | concluído | prepare, publish/unpublish e falha fechada cobertos por testes |
