@@ -1032,19 +1032,26 @@ export async function updateCourseReviewModeration(
   isApproved: boolean,
   isFeatured: boolean,
 ): Promise<ActionResult<null>> {
-  const { reviews } = createCourseModules();
-  const result = await reviews.patchApiSocialReviewsModeration(reviewId, {
-    isApproved,
-    isFeatured,
-  });
+  try {
+    const { reviews } = createCourseModules();
+    const result = await reviews.patchApiSocialReviewsModeration(reviewId, {
+      isApproved,
+      isFeatured,
+    });
 
-  if (!result.ok) return { success: false, error: extractError(result.error) };
+    if (!result.ok) return { success: false, error: extractError(result.error) };
 
-  revalidatePath(
-    `/workspace/learning/courses/${courseId}/listing/testimonials`,
-  );
-  revalidatePath(`/courses/${courseId}`);
-  return { success: true, data: null };
+    revalidatePath(
+      `/workspace/learning/courses/${courseId}/listing/testimonials`,
+    );
+    revalidatePath(`/courses/${courseId}`);
+    return { success: true, data: null };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
 }
 
 export async function updateCourseFaq(
@@ -2151,11 +2158,12 @@ export async function updateDiscussionPin(
       ? await discussions.postApiSocialDiscussionsPin(discussionId)
       : await discussions.postApiSocialDiscussionsUnpin(discussionId);
 
-    if (!result.ok)
+    if (result.ok) {
+      revalidateCourseSupport(courseId, discussionId);
+      return { success: true, data: null };
+    } else {
       return { success: false, error: extractError(result.error) };
-
-    revalidateCourseSupport(courseId, discussionId);
-    return { success: true, data: null };
+    }
   } catch (e) {
     return {
       success: false,
