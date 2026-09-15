@@ -92,11 +92,14 @@ export function TestingLabBulkRequestForm({ children, matchingCount }: { childre
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button type="button" variant={operation === 'archive' ? 'destructive' : 'default'} disabled={pending} onClick={execute}>
-                {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                {pending ? 'Working...' : operation === 'archive' ? 'Archive requests' : 'Restore requests'}
-              </Button>
+            <AlertDialogAction
+              type="button"
+              variant={operation === 'archive' ? 'destructive' : 'default'}
+              disabled={pending}
+              onClick={execute}
+            >
+              {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+              {pending ? 'Working...' : operation === 'archive' ? 'Archive requests' : 'Restore requests'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

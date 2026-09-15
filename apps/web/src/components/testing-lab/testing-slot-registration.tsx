@@ -8,6 +8,7 @@ import {
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { AlertCircle, CalendarDays, CheckCircle2, Loader2, MapPin, UsersRound } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
@@ -125,9 +126,7 @@ export function TestingSlotRegistration({
       </div>
 
       {!isAuthenticated ? (
-        <Button asChild className="w-full">
-          <Link href="/sign-in">Sign in to register</Link>
-        </Button>
+        <Link href="/sign-in" className={buttonVariants({ className: 'w-full' })}>Sign in to register</Link>
       ) : registration && registration.status !== 'Cancelled' ? (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <div>

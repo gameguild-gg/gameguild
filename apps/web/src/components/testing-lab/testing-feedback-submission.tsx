@@ -9,6 +9,7 @@ import type {
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
@@ -66,7 +67,7 @@ function FeedbackForm({ eventId, obligation }: { eventId: string; obligation: Fe
       </div>
       <BriefSummary brief={reviewPackage?.brief} />
       {(reviewPackage?.assets?.length ?? 0) > 0 ? (
-        <div className="space-y-2"><p className="text-sm font-medium">Test assets</p><div className="flex flex-wrap gap-2">{reviewPackage?.assets?.map((asset) => asset.accessUrl ? <Button key={asset.assetReferenceId} asChild size="sm" variant="outline"><a href={asset.accessUrl} target="_blank" rel="noreferrer">{asset.displayName || 'Open asset'}</a></Button> : null)}</div></div>
+        <div className="space-y-2"><p className="text-sm font-medium">Test assets</p><div className="flex flex-wrap gap-2">{reviewPackage?.assets?.map((asset) => asset.accessUrl ? <a key={asset.assetReferenceId} href={asset.accessUrl} target="_blank" rel="noreferrer" className={buttonVariants({ size: 'sm', variant: 'outline' })}>{asset.displayName || 'Open asset'}</a> : null)}</div></div>
       ) : null}
       <QuestionnaireFieldset
         schema={reviewPackage?.feedbackQuestionnaire}
@@ -90,7 +91,7 @@ function FeedbackForm({ eventId, obligation }: { eventId: string; obligation: Fe
 
 export function TestingFeedbackSubmission({ eventId, isAuthenticated, obligations }: { eventId: string; isAuthenticated: boolean; obligations: FeedbackObligation[] }) {
   const pending = obligations.filter((obligation) => obligation.status === 'Pending');
-  if (!isAuthenticated && pending.length > 0) return <Button asChild><Link href="/sign-in">Sign in to submit feedback</Link></Button>;
+  if (!isAuthenticated && pending.length > 0) return <Link href="/sign-in" className={buttonVariants()}>Sign in to submit feedback</Link>;
   if (obligations.length === 0) return <p className="text-sm text-muted-foreground">No project feedback is assigned to you for this event.</p>;
   if (pending.length === 0) return <Alert><CheckCircle2 className="size-4" /><AlertDescription>All assigned feedback is complete.</AlertDescription></Alert>;
   return (

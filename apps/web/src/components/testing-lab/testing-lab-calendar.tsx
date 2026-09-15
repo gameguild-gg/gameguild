@@ -16,6 +16,7 @@ import type {
 } from "@game-guild/client";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
+import { buttonVariants } from "@game-guild/ui/components/button-variants";
 import { Calendar } from "@game-guild/ui/components/calendar";
 import {
   HoverCard,
@@ -815,15 +816,14 @@ function TestingLabPlanningSidebar({
               Grouped by event template.
             </p>
           </div>
-          <Button asChild variant="ghost" size="icon-sm">
-            <Link
-              href="/workspace/testing-lab/settings/templates"
-              aria-label="Manage event calendars"
-              title="Manage event calendars"
-            >
-              <Settings2 aria-hidden="true" />
-            </Link>
-          </Button>
+          <Link
+            href="/workspace/testing-lab/settings/templates"
+            aria-label="Manage event calendars"
+            title="Manage event calendars"
+            className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+          >
+            <Settings2 aria-hidden="true" />
+          </Link>
         </div>
         <div className="mt-3 space-y-1">
           {eventCalendars.map((eventCalendar) => {
@@ -921,11 +921,12 @@ function TestingLabPlanningSidebar({
             )}
           </div>
         )}
-        <Button asChild variant="link" size="sm" className="mt-3 h-auto px-0">
-          <Link href="/workspace/testing-lab/settings/analytics">
-            View analytics
-          </Link>
-        </Button>
+        <Link
+          href="/workspace/testing-lab/settings/analytics"
+          className={buttonVariants({ variant: "link", size: "sm", className: "mt-3 h-auto px-0" })}
+        >
+          View analytics
+        </Link>
       </section>
     </aside>
   );
@@ -1281,13 +1282,12 @@ export function TestingLabCalendar({
                 </p>
               ) : null}
               <DialogFooter>
-                <Button asChild>
-                  <Link
-                    href={`/workspace/testing-lab/events/${selectedEvent.id}`}
-                  >
-                    Open event
-                  </Link>
-                </Button>
+                <Link
+                  href={`/workspace/testing-lab/events/${selectedEvent.id}`}
+                  className={buttonVariants()}
+                >
+                  Open event
+                </Link>
               </DialogFooter>
             </>
           ) : null}

@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { TestingLabTestingEventTemplateProjection } from "@game-guild/client";
+import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 global.ResizeObserver = class ResizeObserver {
@@ -403,6 +404,16 @@ describe("TestingEventApplications", () => {
     expect(
       screen.queryByRole("button", { name: "Open applications" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("server-renders the archive action for a cancelled event", () => {
+    expect(() =>
+      renderToString(
+        <TestingEventLifecycleActions
+          event={{ id: "event-1", status: "Cancelled" }}
+        />,
+      ),
+    ).not.toThrow();
   });
   it("opens as a controlled sheet with the calendar day prefilled", () => {
     render(
