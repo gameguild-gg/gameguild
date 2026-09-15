@@ -37,6 +37,23 @@ public sealed class TestingEventDomainTests
     }
 
     [Fact]
+    public void CommitteeMember_Deactivate_IsIdempotent()
+    {
+        var member = TestingCommitteeMember.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            false,
+            Guid.NewGuid());
+
+        member.Deactivate();
+        var firstUpdatedAt = member.UpdatedAt;
+        member.Deactivate();
+
+        member.IsActive.Should().BeFalse();
+        member.UpdatedAt.Should().Be(firstUpdatedAt);
+    }
+
+    [Fact]
     public void TemplateRevision_RejectsMissingCreatorAndInvalidRevisionNumber()
     {
         var schema = new QuestionnaireSchema("Basic", []);
