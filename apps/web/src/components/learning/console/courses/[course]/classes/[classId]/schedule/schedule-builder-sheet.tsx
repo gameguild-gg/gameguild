@@ -153,12 +153,12 @@ export function ScheduleBuilderSheet({
   };
 
   const conflicts = preview?.conflicts ?? [];
+  const previewItems = preview?.items ?? [];
   const hasBlockingConflicts = preview?.hasBlockingConflicts || conflicts.some((conflict) => conflict.severity === 'Blocking');
   const hasAdvisoryConflicts = conflicts.some((conflict) => conflict.severity === 'Advisory');
   const canApply = Boolean(preview) && !hasBlockingConflicts && (!hasAdvisoryConflicts || advisoriesConfirmed) && pending === null;
 
   const applyPreview = async () => {
-    if (!preview || !canApply) return;
     setPending('apply');
     setError(null);
     const result = await applyCohortSchedule(courseId, cohort.id, {
@@ -305,7 +305,7 @@ export function ScheduleBuilderSheet({
               <section aria-labelledby="preview-summary-heading">
                 <h3 id="preview-summary-heading" className="text-sm font-semibold">Generated schedule</h3>
                 <div className="mt-3 divide-y rounded-md border">
-                  {(preview.items ?? []).slice(0, 8).map((item, index) => (
+                  {previewItems.slice(0, 8).map((item, index) => (
                     <div key={`${item.programContentId ?? item.assessmentId ?? 'item'}-${index}`} className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
                       <div className="min-w-0">
                         <p className="truncate font-medium">{item.title?.trim() || 'Untitled schedule item'}</p>
@@ -317,7 +317,7 @@ export function ScheduleBuilderSheet({
                     </div>
                   ))}
                 </div>
-                {(preview.items?.length ?? 0) > 8 ? <p className="mt-2 text-xs text-muted-foreground">And {(preview.items?.length ?? 0) - 8} more items.</p> : null}
+                {previewItems.length > 8 ? <p className="mt-2 text-xs text-muted-foreground">And {previewItems.length - 8} more items.</p> : null}
               </section>
 
               {conflicts.length > 0 ? (
