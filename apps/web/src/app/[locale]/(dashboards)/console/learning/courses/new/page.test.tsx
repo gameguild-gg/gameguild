@@ -91,7 +91,7 @@ describe('CreateCoursePage', () => {
       skillsRequired: 'C# basics',
       skillsProvided: 'AI behavior trees',
     }));
-    expect(pushMock).toHaveBeenCalledWith('/console/learning/courses/boss-ai-by-gameguild');
+    expect(pushMock).toHaveBeenCalledWith('/console/learning/courses/boss-ai-by-gameguild/overview');
   });
 
   it('shows create errors and keeps the professor on the final step', async () => {
@@ -175,7 +175,7 @@ describe('CreateCoursePage', () => {
     expect(await screen.findByText(/The draft still exists as "rollback-failure"/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /open the draft/i })).toHaveAttribute(
       'href',
-      '/console/learning/courses/rollback-failure-by-gameguild',
+      '/console/learning/courses/rollback-failure-by-gameguild/overview',
     );
     expect(pushMock).not.toHaveBeenCalled();
   });

@@ -1,8 +1,11 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using FluentAssertions;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Assessments;
 using GameGuild.Learning.Assessments.Grading.Authoring;
+using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Enrollments;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -547,6 +551,27 @@ public class ControllerAndModuleTests
         sc.AddScoped<IProgramContentService>(_ => Mock.Of<IProgramContentService>());
         sc.AddAssessmentsModule();
         sc.BuildServiceProvider().GetService<IAssessmentService>().Should().NotBeNull();
+    }
+
+    [Fact]
+    public void AddAssessmentsModule_PrioritizesNumericReviewMethodsJsonContract()
+    {
+        var services = new ServiceCollection();
+        services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+        services.AddAssessmentsModule();
+
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptions<Microsoft.AspNetCore.Mvc.JsonOptions>>()
+            .Value.JsonSerializerOptions;
+        var methods = ReviewMethods.AutomatedReview | ReviewMethods.InstructorReview;
+
+        JsonSerializer.Serialize(methods, options).Should().Be("12");
+        JsonSerializer.Deserialize<ReviewMethods>("12", options).Should().Be(methods);
+        var deserializeString = () => JsonSerializer.Deserialize<ReviewMethods>(
+            "\"AutomatedReview, InstructorReview\"",
+            options);
+        deserializeString.Should().Throw<JsonException>();
     }
 
     [Fact]

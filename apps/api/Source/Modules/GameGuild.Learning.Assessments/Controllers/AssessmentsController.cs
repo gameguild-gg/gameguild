@@ -68,7 +68,7 @@ public class AssessmentsController : BaseApiController
         var result = await _authoringService
             .SaveDraftAsync(courseId, contentId, actorId.Value, request, cancellationToken)
             .ConfigureAwait(false);
-        return result.IsSuccess ? Ok(result.Value) : MapAuthoringError(result.Error);
+        return ToActionResult(result);
     }
 
     /// <summary>Prepares an immutable candidate revision for instructor testing.</summary>
@@ -82,7 +82,7 @@ public class AssessmentsController : BaseApiController
         if (!await CanManageCourseAsync(assessment.CourseId).ConfigureAwait(false)) return Forbid();
 
         var result = await _authoringService.GetStateAsync(id, cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? Ok(result.Value) : MapAuthoringError(result.Error);
+        return ToActionResult(result);
     }
 
     /// <summary>Prepares an immutable candidate revision for instructor testing.</summary>
@@ -99,7 +99,7 @@ public class AssessmentsController : BaseApiController
         if (!actorId.HasValue) return Unauthorized();
 
         var result = await _authoringService.PrepareAsync(id, actorId.Value, request, cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? Ok(result.Value) : MapAuthoringError(result.Error);
+        return ToActionResult(result);
     }
 
     /// <summary>Publishes exactly the prepared revision after official capability validation.</summary>
@@ -116,12 +116,12 @@ public class AssessmentsController : BaseApiController
         if (!actorId.HasValue) return Unauthorized();
 
         var result = await _authoringService.PublishAsync(id, actorId.Value, request, cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? Ok(result.Value) : MapAuthoringError(result.Error);
+        return ToActionResult(result);
     }
 
     /// <summary>Stops new official starts without deleting revisions or existing executions.</summary>
     [HttpPost("{id:guid}/revisions/unpublish")]
-    public async Task<ActionResult> UnpublishAssessmentRevision(
+    public async Task<IActionResult> UnpublishAssessmentRevision(
         Guid id,
         [FromBody] UnpublishAssessmentRevisionRequest request,
         CancellationToken cancellationToken)
@@ -133,7 +133,7 @@ public class AssessmentsController : BaseApiController
         if (!actorId.HasValue) return Unauthorized();
 
         var result = await _authoringService.UnpublishAsync(id, actorId.Value, request, cancellationToken).ConfigureAwait(false);
-        return result.IsSuccess ? NoContent() : MapAuthoringError(result.Error);
+        return ToActionResult(result);
     }
 
     /// <summary>
@@ -415,8 +415,8 @@ public class AssessmentsController : BaseApiController
         var result = await _assessmentService.DeleteAssessmentAsync(id).ConfigureAwait(false);
         if (!result.IsSuccess)
         {
-            return result.Error.Type == ErrorType.NotFound 
-                ? NotFound(result.Error) 
+            return result.Error.Type == ErrorType.NotFound
+                ? NotFound(result.Error)
                 : BadRequest(result.Error);
         }
 
@@ -451,7 +451,7 @@ public class AssessmentsController : BaseApiController
     /// </summary>
     [HttpPost("{assessmentId:guid}/submissions/start")]
     public async Task<ActionResult<LearnerAssessmentAttemptDto>> StartSubmission(
-        Guid assessmentId, 
+        Guid assessmentId,
         [FromBody] StartSubmissionRequest request)
     {
         var actor = _actorContextAccessor.ActorContext;
@@ -504,8 +504,8 @@ public class AssessmentsController : BaseApiController
         }
 
         return CreatedAtAction(
-            nameof(GetSubmission), 
-            new { submissionId = result.Value.Id }, 
+            nameof(GetSubmission),
+            new { submissionId = result.Value.Id },
             LearnerAssessmentAttemptDto.FromEntity(result.Value));
     }
 
@@ -537,7 +537,7 @@ public class AssessmentsController : BaseApiController
     /// </summary>
     [HttpPost("submissions/{submissionId:guid}/grade")]
     public async Task<ActionResult<AssessmentSubmissionDto>> GradeSubmission(
-        Guid submissionId, 
+        Guid submissionId,
         [FromBody] GradeSubmissionRequest request)
     {
         var submission = await _assessmentService.GetSubmissionByIdAsync(submissionId).ConfigureAwait(false);
@@ -781,14 +781,6 @@ public class AssessmentsController : BaseApiController
             .ConfigureAwait(false);
     }
 
-    private ActionResult MapAuthoringError(Error error) => error.Type switch
-    {
-        ErrorType.NotFound => NotFound(error),
-        ErrorType.Conflict => Conflict(error),
-        ErrorType.Unauthorized => Unauthorized(error),
-        ErrorType.Forbidden => Forbid(),
-        _ => BadRequest(error),
-    };
 }
 
 // ===== DTOs =====

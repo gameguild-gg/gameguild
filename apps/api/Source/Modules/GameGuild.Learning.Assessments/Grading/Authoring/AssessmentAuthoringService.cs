@@ -201,111 +201,114 @@ public sealed class AssessmentAuthoringService(
     {
         try
         {
-            if (actorId == Guid.Empty)
-                return Result.Failure<AssessmentDraftResult>(Error.Validation("AssessmentAuthoring.Actor", "An authenticated actor is required."));
-            await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-            await using var contentLifecycleLock = await AssessmentLifecycleDatabaseLock
-                .AcquireAsync(context, contentId, cancellationToken)
-                .ConfigureAwait(false);
-            var content = await context.Set<ProgramContent>()
-                .FirstOrDefaultAsync(item => item.Id == contentId && item.ProgramId == courseId && item.DeletedAt == null, cancellationToken)
-                .ConfigureAwait(false);
-            if (content is null) return Result.Failure<AssessmentDraftResult>(Error.NotFound("ProgramContent", "Assessment content was not found."));
-            if (content.Version != request.ExpectedContentVersion)
-                return Result.Failure<AssessmentDraftResult>(Error.Conflict("AssessmentAuthoring.ContentVersion", "Assessment content changed before it was saved."));
-
-            var adapter = assessmentTypeAdapters.ResolveForAuthoring(content.Type);
-            var projection = adapter.ProjectAuthoring(request.Document);
-
-            var assessment = await context.Set<Assessment>()
-                .FirstOrDefaultAsync(value => value.ContentId == contentId && value.DeletedAt == null, cancellationToken)
-                .ConfigureAwait(false);
-            if (assessment is not null)
+            return await ExecuteWithExecutionStrategyAsync(async () =>
             {
-                await AssessmentLifecycleDatabaseLock
-                    .AcquireAsync(context, assessment.Id, cancellationToken)
+                if (actorId == Guid.Empty)
+                    return Result.Failure<AssessmentDraftResult>(Error.Validation("AssessmentAuthoring.Actor", "An authenticated actor is required."));
+                await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+                await using var contentLifecycleLock = await AssessmentLifecycleDatabaseLock
+                    .AcquireAsync(context, contentId, cancellationToken)
                     .ConfigureAwait(false);
-            }
-            if (assessment is not null && request.ExpectedAssessmentVersion != assessment.Version)
-                return Result.Failure<AssessmentDraftResult>(Error.Conflict("AssessmentAuthoring.AssessmentVersion", "Assessment policy changed before it was saved."));
-            if (assessment is null && request.ExpectedAssessmentVersion.HasValue)
-                return Result.Failure<AssessmentDraftResult>(Error.Conflict("AssessmentAuthoring.AssessmentMissing", "The linked assessment no longer exists."));
-            if (assessment is not null && assessment.Type != adapter.AssessmentType)
-                return Result.Failure<AssessmentDraftResult>(Error.Conflict("AssessmentAuthoring.TypeMismatch", "The linked assessment type does not match its content adapter."));
+                var content = await context.Set<ProgramContent>()
+                    .FirstOrDefaultAsync(item => item.Id == contentId && item.ProgramId == courseId && item.DeletedAt == null, cancellationToken)
+                    .ConfigureAwait(false);
+                if (content is null) return Result.Failure<AssessmentDraftResult>(Error.NotFound("ProgramContent", "Assessment content was not found."));
+                if (content.Version != request.ExpectedContentVersion)
+                    return Result.Failure<AssessmentDraftResult>(Error.Conflict("AssessmentAuthoring.ContentVersion", "Assessment content changed before it was saved."));
 
-            ApplyContent(content, request);
+                var adapter = assessmentTypeAdapters.ResolveForAuthoring(content.Type);
+                var projection = adapter.ProjectAuthoring(request.Document);
 
-            if (projection.Grading is null)
-            {
+                var assessment = await context.Set<Assessment>()
+                    .FirstOrDefaultAsync(value => value.ContentId == contentId && value.DeletedAt == null, cancellationToken)
+                    .ConfigureAwait(false);
                 if (assessment is not null)
                 {
-                    if (assessment.PublishedDefinitionRevisionId.HasValue)
-                        assessment.UnpublishRevision(assessment.PublishedDefinitionRevisionId.Value, assessment.Version);
-                    assessment.SoftDelete();
-                    context.Set<Assessment>().Update(assessment);
+                    await AssessmentLifecycleDatabaseLock
+                        .AcquireAsync(context, assessment.Id, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                if (assessment is not null && request.ExpectedAssessmentVersion != assessment.Version)
+                    return Result.Failure<AssessmentDraftResult>(Error.Conflict("AssessmentAuthoring.AssessmentVersion", "Assessment policy changed before it was saved."));
+                if (assessment is null && request.ExpectedAssessmentVersion.HasValue)
+                    return Result.Failure<AssessmentDraftResult>(Error.Conflict("AssessmentAuthoring.AssessmentMissing", "The linked assessment no longer exists."));
+                if (assessment is not null && assessment.Type != adapter.AssessmentType)
+                    return Result.Failure<AssessmentDraftResult>(Error.Conflict("AssessmentAuthoring.TypeMismatch", "The linked assessment type does not match its content adapter."));
+
+                ApplyContent(content, request);
+
+                if (projection.Grading is null)
+                {
+                    if (assessment is not null)
+                    {
+                        if (assessment.PublishedDefinitionRevisionId.HasValue)
+                            assessment.UnpublishRevision(assessment.PublishedDefinitionRevisionId.Value, assessment.Version);
+                        assessment.SoftDelete();
+                        context.Set<Assessment>().Update(assessment);
+                    }
+
+                    context.Set<ProgramContent>().Update(content);
+                    await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                    await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
+                    return Result.Success(new AssessmentDraftResult(content.Id, content.Version, null, null));
                 }
 
+                if (projection.Items.Count == 0)
+                    return Result.Failure<AssessmentDraftResult>(Error.Validation("AssessmentAuthoring.Empty", "Graded content requires at least one assessable item."));
+
+                var methods = request.ReviewMethods ?? assessment?.ReviewMethods ??
+                    (Contracts.ReviewMethods.AutomatedReview | Contracts.ReviewMethods.InstructorReview);
+                methods.EnsureValid();
+                var reviewConfiguration = NormalizeReviewConfiguration(methods, request.ReviewConfigurationCanonicalJson ?? assessment?.ReviewConfigurationCanonicalJson);
+                if (assessment is null)
+                {
+                    assessment = Assessment.Create(
+                        courseId,
+                        request.Title,
+                        adapter.AssessmentType,
+                        projection.MaxScore,
+                        request.IsRequired,
+                        contentId: contentId,
+                        reviewMethods: methods,
+                        slug: request.Slug);
+                    assessment.TenantId = content.TenantId;
+                    context.Set<Assessment>().Add(assessment);
+                }
+
+                assessment.Update(
+                    title: request.Title,
+                    description: request.Description,
+                    clearDescription: request.Description is null,
+                    maxScore: projection.MaxScore,
+                    passingScore: request.PassingScore ?? assessment.PassingScore,
+                    timeLimitMinutes: request.TimeLimitMinutes,
+                    clearTimeLimitMinutes: request.TimeLimitMinutes is null,
+                    maxAttempts: request.MaxAttempts,
+                    isRequired: request.IsRequired,
+                    availableFrom: assessment.AvailableFrom,
+                    clearAvailableFrom: false,
+                    availableUntil: assessment.AvailableUntil,
+                    clearAvailableUntil: false,
+                    contentId: contentId,
+                    submissionModalities: adapter.SubmissionModalities,
+                    presentationMode: request.PresentationMode,
+                    dueAt: assessment.DueAt,
+                    allowLateSubmissions: assessment.AllowLateSubmissions,
+                    lateSubmissionDeadline: assessment.LateSubmissionDeadline,
+                    reviewMethods: methods,
+                    reviewConfigurationCanonicalJson: reviewConfiguration,
+                    attemptContributionMode: request.AttemptContributionMode ?? assessment.AttemptContributionMode,
+                    contentCompletionMode: request.ContentCompletionMode,
+                    resultReleaseMode: request.ResultReleaseMode,
+                    resultReleaseScheduledFor: request.ResultReleaseScheduledFor,
+                    slug: request.Slug);
+
                 context.Set<ProgramContent>().Update(content);
+                if (assessment.Version > 0) context.Set<Assessment>().Update(assessment);
                 await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
-                return Result.Success(new AssessmentDraftResult(content.Id, content.Version, null, null));
-            }
-
-            if (projection.Items.Count == 0)
-                return Result.Failure<AssessmentDraftResult>(Error.Validation("AssessmentAuthoring.Empty", "Graded content requires at least one assessable item."));
-
-            var methods = request.ReviewMethods ?? assessment?.ReviewMethods ??
-                (Contracts.ReviewMethods.AutomatedReview | Contracts.ReviewMethods.InstructorReview);
-            methods.EnsureValid();
-            var reviewConfiguration = NormalizeReviewConfiguration(methods, request.ReviewConfigurationCanonicalJson ?? assessment?.ReviewConfigurationCanonicalJson);
-            if (assessment is null)
-            {
-                assessment = Assessment.Create(
-                    courseId,
-                    request.Title,
-                    adapter.AssessmentType,
-                    projection.MaxScore,
-                    request.IsRequired,
-                    contentId: contentId,
-                    reviewMethods: methods,
-                    slug: request.Slug);
-                assessment.TenantId = content.TenantId;
-                context.Set<Assessment>().Add(assessment);
-            }
-
-            assessment.Update(
-                title: request.Title,
-                description: request.Description,
-                clearDescription: request.Description is null,
-                maxScore: projection.MaxScore,
-                passingScore: request.PassingScore ?? assessment.PassingScore,
-                timeLimitMinutes: request.TimeLimitMinutes,
-                clearTimeLimitMinutes: request.TimeLimitMinutes is null,
-                maxAttempts: request.MaxAttempts,
-                isRequired: request.IsRequired,
-                availableFrom: assessment.AvailableFrom,
-                clearAvailableFrom: false,
-                availableUntil: assessment.AvailableUntil,
-                clearAvailableUntil: false,
-                contentId: contentId,
-                submissionModalities: adapter.SubmissionModalities,
-                presentationMode: request.PresentationMode,
-                dueAt: assessment.DueAt,
-                allowLateSubmissions: assessment.AllowLateSubmissions,
-                lateSubmissionDeadline: assessment.LateSubmissionDeadline,
-                reviewMethods: methods,
-                reviewConfigurationCanonicalJson: reviewConfiguration,
-                attemptContributionMode: request.AttemptContributionMode ?? assessment.AttemptContributionMode,
-                contentCompletionMode: request.ContentCompletionMode,
-                resultReleaseMode: request.ResultReleaseMode,
-                resultReleaseScheduledFor: request.ResultReleaseScheduledFor,
-                slug: request.Slug);
-
-            context.Set<ProgramContent>().Update(content);
-            if (assessment.Version > 0) context.Set<Assessment>().Update(assessment);
-            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
-            return Result.Success(new AssessmentDraftResult(content.Id, content.Version, assessment.Id, assessment.Version));
+                return Result.Success(new AssessmentDraftResult(content.Id, content.Version, assessment.Id, assessment.Version));
+            }).ConfigureAwait(false);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -330,50 +333,53 @@ public sealed class AssessmentAuthoringService(
     {
         try
         {
-            if (actorId == Guid.Empty)
-                return Result.Failure<PreparedAssessmentRevisionResult>(Error.Validation("AssessmentRevision.Actor", "An authenticated actor is required."));
-            await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-            await using var lifecycleLock = await AssessmentLifecycleDatabaseLock
-                .AcquireAsync(context, assessmentId, cancellationToken)
-                .ConfigureAwait(false);
-            var materialized = await MaterializeAsync(assessmentId, ReviewExecutionContext.AuthorTest, cancellationToken).ConfigureAwait(false);
-            if (!materialized.IsSuccess) return Result.Failure<PreparedAssessmentRevisionResult>(materialized.Error);
-            if (materialized.Value.Assessment.Version != request.ExpectedAssessmentVersion)
-                return Result.Failure<PreparedAssessmentRevisionResult>(Error.Conflict("AssessmentRevision.ConcurrentWrite", "Assessment policy changed before prepare."));
-
-            var latest = await context.Set<AssessmentDefinitionRevision>()
-                .Where(revision => revision.AssessmentId == assessmentId)
-                .OrderByDescending(revision => revision.RevisionNumber)
-                .FirstOrDefaultAsync(cancellationToken)
-                .ConfigureAwait(false);
-            if (latest is not null &&
-                latest.AuthoringSourceHash == materialized.Value.AuthoringHash &&
-                latest.ExecutionSnapshotHash == materialized.Value.ExecutionHash)
+            return await ExecuteWithExecutionStrategyAsync(async () =>
             {
+                if (actorId == Guid.Empty)
+                    return Result.Failure<PreparedAssessmentRevisionResult>(Error.Validation("AssessmentRevision.Actor", "An authenticated actor is required."));
+                await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+                await using var lifecycleLock = await AssessmentLifecycleDatabaseLock
+                    .AcquireAsync(context, assessmentId, cancellationToken)
+                    .ConfigureAwait(false);
+                var materialized = await MaterializeAsync(assessmentId, ReviewExecutionContext.AuthorTest, cancellationToken).ConfigureAwait(false);
+                if (!materialized.IsSuccess) return Result.Failure<PreparedAssessmentRevisionResult>(materialized.Error);
+                if (materialized.Value.Assessment.Version != request.ExpectedAssessmentVersion)
+                    return Result.Failure<PreparedAssessmentRevisionResult>(Error.Conflict("AssessmentRevision.ConcurrentWrite", "Assessment policy changed before prepare."));
+
+                var latest = await context.Set<AssessmentDefinitionRevision>()
+                    .Where(revision => revision.AssessmentId == assessmentId)
+                    .OrderByDescending(revision => revision.RevisionNumber)
+                    .FirstOrDefaultAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                if (latest is not null &&
+                    latest.AuthoringSourceHash == materialized.Value.AuthoringHash &&
+                    latest.ExecutionSnapshotHash == materialized.Value.ExecutionHash)
+                {
+                    await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
+                    return Result.Success(ToResult(latest));
+                }
+
+                var revision = AssessmentDefinitionRevision.Create(
+                    materialized.Value.Assessment.TenantId,
+                    assessmentId,
+                    (latest?.RevisionNumber ?? 0) + 1,
+                    materialized.Value.AuthoringCanonicalJson,
+                    materialized.Value.ExecutionCanonicalJson,
+                    actorId);
+                context.Set<AssessmentDefinitionRevision>().Add(revision);
+                AddOutbox(materialized.Value.Assessment, "assessment-definition-prepared", new
+                {
+                    schemaVersion = 1,
+                    assessmentId,
+                    revisionId = revision.Id,
+                    revisionNumber = revision.RevisionNumber,
+                    revision.AuthoringSourceHash,
+                    revision.ExecutionSnapshotHash,
+                });
+                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
-                return Result.Success(ToResult(latest));
-            }
-
-            var revision = AssessmentDefinitionRevision.Create(
-                materialized.Value.Assessment.TenantId,
-                assessmentId,
-                (latest?.RevisionNumber ?? 0) + 1,
-                materialized.Value.AuthoringCanonicalJson,
-                materialized.Value.ExecutionCanonicalJson,
-                actorId);
-            context.Set<AssessmentDefinitionRevision>().Add(revision);
-            AddOutbox(materialized.Value.Assessment, "assessment-definition-prepared", new
-            {
-                schemaVersion = 1,
-                assessmentId,
-                revisionId = revision.Id,
-                revisionNumber = revision.RevisionNumber,
-                revision.AuthoringSourceHash,
-                revision.ExecutionSnapshotHash,
-            });
-            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
-            return Result.Success(ToResult(revision));
+                return Result.Success(ToResult(revision));
+            }).ConfigureAwait(false);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -399,39 +405,42 @@ public sealed class AssessmentAuthoringService(
     {
         try
         {
-            if (actorId == Guid.Empty)
-                return Result.Failure<PreparedAssessmentRevisionResult>(Error.Validation("AssessmentRevision.Actor", "An authenticated actor is required."));
-            await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-            await using var lifecycleLock = await AssessmentLifecycleDatabaseLock
-                .AcquireAsync(context, assessmentId, cancellationToken)
-                .ConfigureAwait(false);
-            var assessment = await context.Set<Assessment>()
-                .FirstOrDefaultAsync(value => value.Id == assessmentId && value.DeletedAt == null, cancellationToken)
-                .ConfigureAwait(false);
-            if (assessment is null) return Result.Failure<PreparedAssessmentRevisionResult>(Error.NotFound("Assessment", "Assessment was not found."));
-            var revision = await context.Set<AssessmentDefinitionRevision>()
-                .FirstOrDefaultAsync(value => value.Id == request.RevisionId && value.AssessmentId == assessmentId, cancellationToken)
-                .ConfigureAwait(false);
-            if (revision is null) return Result.Failure<PreparedAssessmentRevisionResult>(Error.NotFound("AssessmentRevision", "Prepared revision was not found."));
-
-            var current = await MaterializeAsync(assessmentId, ReviewExecutionContext.AuthorTest, cancellationToken).ConfigureAwait(false);
-            if (!current.IsSuccess) return Result.Failure<PreparedAssessmentRevisionResult>(current.Error);
-            if (!string.Equals(current.Value.AuthoringHash, revision.AuthoringSourceHash, StringComparison.Ordinal))
-                return Result.Failure<PreparedAssessmentRevisionResult>(Error.Conflict("AssessmentRevision.ChangesPending", "The draft changed after this revision was prepared."));
-
-            ValidatePersistedSnapshot(revision, ReviewExecutionContext.OfficialSubmission);
-            assessment.PublishRevision(revision.Id, request.ExpectedAssessmentVersion);
-            context.Set<Assessment>().Update(assessment);
-            AddOutbox(assessment, "assessment-definition-published", new
+            return await ExecuteWithExecutionStrategyAsync(async () =>
             {
-                schemaVersion = 1,
-                assessmentId,
-                revisionId = revision.Id,
-                actorId,
-            });
-            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
-            return Result.Success(ToResult(revision));
+                if (actorId == Guid.Empty)
+                    return Result.Failure<PreparedAssessmentRevisionResult>(Error.Validation("AssessmentRevision.Actor", "An authenticated actor is required."));
+                await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+                await using var lifecycleLock = await AssessmentLifecycleDatabaseLock
+                    .AcquireAsync(context, assessmentId, cancellationToken)
+                    .ConfigureAwait(false);
+                var assessment = await context.Set<Assessment>()
+                    .FirstOrDefaultAsync(value => value.Id == assessmentId && value.DeletedAt == null, cancellationToken)
+                    .ConfigureAwait(false);
+                if (assessment is null) return Result.Failure<PreparedAssessmentRevisionResult>(Error.NotFound("Assessment", "Assessment was not found."));
+                var revision = await context.Set<AssessmentDefinitionRevision>()
+                    .FirstOrDefaultAsync(value => value.Id == request.RevisionId && value.AssessmentId == assessmentId, cancellationToken)
+                    .ConfigureAwait(false);
+                if (revision is null) return Result.Failure<PreparedAssessmentRevisionResult>(Error.NotFound("AssessmentRevision", "Prepared revision was not found."));
+
+                var current = await MaterializeAsync(assessmentId, ReviewExecutionContext.AuthorTest, cancellationToken).ConfigureAwait(false);
+                if (!current.IsSuccess) return Result.Failure<PreparedAssessmentRevisionResult>(current.Error);
+                if (!string.Equals(current.Value.AuthoringHash, revision.AuthoringSourceHash, StringComparison.Ordinal))
+                    return Result.Failure<PreparedAssessmentRevisionResult>(Error.Conflict("AssessmentRevision.ChangesPending", "The draft changed after this revision was prepared."));
+
+                ValidatePersistedSnapshot(revision, ReviewExecutionContext.OfficialSubmission);
+                assessment.PublishRevision(revision.Id, request.ExpectedAssessmentVersion);
+                context.Set<Assessment>().Update(assessment);
+                AddOutbox(assessment, "assessment-definition-published", new
+                {
+                    schemaVersion = 1,
+                    assessmentId,
+                    revisionId = revision.Id,
+                    actorId,
+                });
+                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
+                return Result.Success(ToResult(revision));
+            }).ConfigureAwait(false);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -452,79 +461,82 @@ public sealed class AssessmentAuthoringService(
     {
         try
         {
-            if (actorId == Guid.Empty)
-                return Result.Failure(Error.Validation("AssessmentRevision.Actor", "An authenticated actor is required."));
-            if (string.IsNullOrWhiteSpace(request.IdempotencyKey) || request.IdempotencyKey.Length > 200)
-                return Result.Failure(Error.Validation("AssessmentRevision.IdempotencyKey", "Idempotency key must contain 1 to 200 characters."));
-            await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-            await using var lifecycleLock = await AssessmentLifecycleDatabaseLock
-                .AcquireAsync(context, assessmentId, cancellationToken)
-                .ConfigureAwait(false);
-            var assessment = await context.Set<Assessment>()
-                .FirstOrDefaultAsync(value => value.Id == assessmentId && value.DeletedAt == null, cancellationToken)
-                .ConfigureAwait(false);
-            if (assessment is null) return Result.Failure(Error.NotFound("Assessment", "Assessment was not found."));
-            if (!assessment.TenantId.HasValue)
-                return Result.Failure(Error.Validation("AssessmentRevision.Tenant", "A tenant-scoped assessment is required."));
+            return await ExecuteWithExecutionStrategyAsync(async () =>
+            {
+                if (actorId == Guid.Empty)
+                    return Result.Failure(Error.Validation("AssessmentRevision.Actor", "An authenticated actor is required."));
+                if (string.IsNullOrWhiteSpace(request.IdempotencyKey) || request.IdempotencyKey.Length > 200)
+                    return Result.Failure(Error.Validation("AssessmentRevision.IdempotencyKey", "Idempotency key must contain 1 to 200 characters."));
+                await using var transaction = await BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+                await using var lifecycleLock = await AssessmentLifecycleDatabaseLock
+                    .AcquireAsync(context, assessmentId, cancellationToken)
+                    .ConfigureAwait(false);
+                var assessment = await context.Set<Assessment>()
+                    .FirstOrDefaultAsync(value => value.Id == assessmentId && value.DeletedAt == null, cancellationToken)
+                    .ConfigureAwait(false);
+                if (assessment is null) return Result.Failure(Error.NotFound("Assessment", "Assessment was not found."));
+                if (!assessment.TenantId.HasValue)
+                    return Result.Failure(Error.Validation("AssessmentRevision.Tenant", "A tenant-scoped assessment is required."));
 
-            var requestElement = JsonSerializer.SerializeToElement(new
-            {
-                schemaVersion = 1,
-                assessmentId,
-                request.ExpectedRevisionId,
-                request.ExpectedAssessmentVersion,
-            }, GradingJson.Options);
-            var requestHash = CanonicalJson.Sha256(requestElement);
-            var idempotencyKey = request.IdempotencyKey.Trim();
-            const string commandType = "assessment-definition-unpublish";
-            var receipt = await context.Set<GradingCommandReceipt>()
-                .AsNoTracking()
-                .FirstOrDefaultAsync(value =>
-                    value.TenantId == assessment.TenantId.Value &&
-                    value.ResourceId == assessmentId &&
-                    value.CommandType == commandType &&
-                    value.ActorId == actorId &&
-                    value.IdempotencyKey == idempotencyKey,
-                    cancellationToken)
-                .ConfigureAwait(false);
-            if (receipt is not null)
-            {
-                if (!string.Equals(receipt.RequestHash, requestHash, StringComparison.Ordinal))
-                    return Result.Failure(Error.Conflict("AssessmentRevision.IdempotencyConflict", "The idempotency key was already used with a different request."));
+                var requestElement = JsonSerializer.SerializeToElement(new
+                {
+                    schemaVersion = 1,
+                    assessmentId,
+                    request.ExpectedRevisionId,
+                    request.ExpectedAssessmentVersion,
+                }, GradingJson.Options);
+                var requestHash = CanonicalJson.Sha256(requestElement);
+                var idempotencyKey = request.IdempotencyKey.Trim();
+                const string commandType = "assessment-definition-unpublish";
+                var receipt = await context.Set<GradingCommandReceipt>()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(value =>
+                        value.TenantId == assessment.TenantId.Value &&
+                        value.ResourceId == assessmentId &&
+                        value.CommandType == commandType &&
+                        value.ActorId == actorId &&
+                        value.IdempotencyKey == idempotencyKey,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+                if (receipt is not null)
+                {
+                    if (!string.Equals(receipt.RequestHash, requestHash, StringComparison.Ordinal))
+                        return Result.Failure(Error.Conflict("AssessmentRevision.IdempotencyConflict", "The idempotency key was already used with a different request."));
+                    await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
+                    return Result.Success();
+                }
+
+                assessment.UnpublishRevision(request.ExpectedRevisionId, request.ExpectedAssessmentVersion);
+                context.Set<Assessment>().Update(assessment);
+                AddOutbox(assessment, "assessment-definition-unpublished", new
+                {
+                    schemaVersion = 1,
+                    assessmentId,
+                    revisionId = request.ExpectedRevisionId,
+                    actorId,
+                    idempotencyKey,
+                });
+                var outcomeElement = JsonSerializer.SerializeToElement(new
+                {
+                    schemaVersion = 1,
+                    assessmentId,
+                    revisionId = request.ExpectedRevisionId,
+                    unpublished = true,
+                }, GradingJson.Options);
+                context.Set<GradingCommandReceipt>().Add(GradingCommandReceipt.Create(
+                    assessment.TenantId.Value,
+                    assessmentId,
+                    commandType,
+                    actorId,
+                    idempotencyKey,
+                    requestHash,
+                    "1",
+                    CanonicalJson.Serialize(outcomeElement),
+                    SystemClock.UtcNow.AddDays(90)));
+                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
                 return Result.Success();
-            }
-
-            assessment.UnpublishRevision(request.ExpectedRevisionId, request.ExpectedAssessmentVersion);
-            context.Set<Assessment>().Update(assessment);
-            AddOutbox(assessment, "assessment-definition-unpublished", new
-            {
-                schemaVersion = 1,
-                assessmentId,
-                revisionId = request.ExpectedRevisionId,
-                actorId,
-                idempotencyKey,
-            });
-            var outcomeElement = JsonSerializer.SerializeToElement(new
-            {
-                schemaVersion = 1,
-                assessmentId,
-                revisionId = request.ExpectedRevisionId,
-                unpublished = true,
-            }, GradingJson.Options);
-            context.Set<GradingCommandReceipt>().Add(GradingCommandReceipt.Create(
-                assessment.TenantId.Value,
-                assessmentId,
-                commandType,
-                actorId,
-                idempotencyKey,
-                requestHash,
-                "1",
-                CanonicalJson.Serialize(outcomeElement),
-                SystemClock.UtcNow.AddDays(90)));
-            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            await CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
-            return Result.Success();
+            }).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
         {
@@ -765,8 +777,21 @@ public sealed class AssessmentAuthoringService(
         }
     }
 
+    private Task<TResult> ExecuteWithExecutionStrategyAsync<TResult>(Func<Task<TResult>> operation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+
+        return context is DbContext dbContext &&
+               dbContext.Database.IsRelational() &&
+               dbContext.Database.CurrentTransaction is null
+            ? dbContext.Database.CreateExecutionStrategy().ExecuteAsync(operation)
+            : operation();
+    }
+
     private async Task<IDbContextTransaction?> BeginTransactionAsync(CancellationToken cancellationToken) =>
-        context is DbContext dbContext && dbContext.Database.IsRelational()
+        context is DbContext dbContext &&
+        dbContext.Database.IsRelational() &&
+        dbContext.Database.CurrentTransaction is null
             ? await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
             : null;
 
