@@ -13,11 +13,15 @@ import { defaultUrlTransform, type Components } from 'react-markdown';
 
 type ContentRecord = Record<string, unknown>;
 
+export function learningImageSource(source: string | Blob | undefined): string | undefined {
+    return typeof source === 'string' ? source : undefined;
+}
+
 const ASSET_MARKDOWN_COMPONENTS: Components = {
-    img: ({ src, alt, ...props }) => <AssetImage src={typeof src === 'string' ? src : undefined} alt={alt ?? ''} {...props} />,
+    img: ({ src, alt, ...props }) => <AssetImage src={learningImageSource(src)} alt={alt} {...props} />,
 };
 
-function learningUrlTransform(url: string): string {
+export function learningUrlTransform(url: string): string {
     return url.startsWith('asset://') ? url : defaultUrlTransform(url);
 }
 
@@ -30,7 +34,7 @@ const LexicalLessonRenderer = lazy(async () => {
     return { default: mod.LexicalLessonRenderer };
 });
 
-function asRecord(content: unknown): ContentRecord | null {
+export function asRecord(content: unknown): ContentRecord | null {
     if (content && typeof content === 'object' && !Array.isArray(content)) return content as ContentRecord;
     if (typeof content === 'string') {
         try { const parsed = JSON.parse(content) as unknown; return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as ContentRecord : null; } catch { return null; }
@@ -38,7 +42,7 @@ function asRecord(content: unknown): ContentRecord | null {
     return null;
 }
 
-function textContent(content: unknown): string {
+export function textContent(content: unknown): string {
     if (typeof content === 'string') return content;
     const record = asRecord(content);
     if (!record) return '';
@@ -46,6 +50,17 @@ function textContent(content: unknown): string {
         if (typeof record[key] === 'string') return record[key] as string;
     }
     return '';
+}
+
+export function videoSource(content: unknown): string {
+    const record = asRecord(content);
+    return typeof record?.videoUrl === 'string'
+        ? record.videoUrl
+        : typeof record?.url === 'string'
+          ? record.url
+          : typeof record?.src === 'string'
+            ? record.src
+            : textContent(content);
 }
 
 function RevealRenderer({ content }: { content: unknown }) {
@@ -63,8 +78,7 @@ function RevealRenderer({ content }: { content: unknown }) {
 }
 
 function VideoRenderer({ courseId, enrollmentId, itemId, content }: { courseId: string; enrollmentId?: string; itemId: string; content: unknown }) {
-    const record = asRecord(content);
-    const src = typeof record?.videoUrl === 'string' ? record.videoUrl : typeof record?.url === 'string' ? record.url : typeof record?.src === 'string' ? record.src : textContent(content);
+    const src = videoSource(content);
     const { url: resolvedSrc, loading } = useResolvedAssetUrl(src);
     const lastHeartbeat = useRef(0);
     const send = (type: 'Opened' | 'Progressed' | 'Paused' | 'Completed', video: HTMLVideoElement) => {
