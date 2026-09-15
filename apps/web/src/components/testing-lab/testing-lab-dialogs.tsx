@@ -64,11 +64,18 @@ function ActionDialog({
     const form = event.currentTarget;
     const formData = new FormData(form);
     startTransition(async () => {
-      const next = await action(formData);
-      setResult(next);
-      if (next.success) {
-        form.reset();
-        window.setTimeout(() => setOpen(false), 500);
+      try {
+        const next = await action(formData);
+        setResult(next);
+        if (next.success) {
+          form.reset();
+          window.setTimeout(() => setOpen(false), 500);
+        }
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
       }
     });
   }
@@ -91,7 +98,15 @@ function ActionDialog({
           {children}
           <ActionMessage result={result} />
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setResult(null);
+                setOpen(false);
+              }}
+              disabled={pending}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={pending}>
