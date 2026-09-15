@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { redirect } from '@/i18n/navigation';
 
 /**
  * L1: Learning Home Redirect
@@ -8,5 +8,5 @@ import { redirect } from 'next/navigation';
  */
 export default async function Page({ params }: PageProps<'/[locale]/console/learning'>): Promise<never> {
   const { locale } = await params;
-  redirect(`/${locale}/console/learning/overview`);
+  redirect({ href: '/console/learning/overview', locale });
 }

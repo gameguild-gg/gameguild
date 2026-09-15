@@ -1,6 +1,6 @@
+import { redirect } from '@/i18n/navigation';
 import { getCourse } from '@/lib/learning';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
-import { redirect } from 'next/navigation';
 
 /**
  * Analytics is surfaced inside Overview.
@@ -12,5 +12,8 @@ export default async function AnalyticsPage({
   const course = await getCourse(courseIdentifier);
   const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
 
-  redirect(`/${locale}/console/learning/courses/${encodeURIComponent(courseRouteParam)}/overview`);
+  redirect({
+    href: `/console/learning/courses/${encodeURIComponent(courseRouteParam)}/overview`,
+    locale,
+  });
 }
