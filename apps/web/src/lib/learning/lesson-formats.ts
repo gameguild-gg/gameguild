@@ -12,6 +12,8 @@ export const LESSON_FORMATS: ReadonlyArray<{
   { value: "Lexical", label: "Rich text (Lexical)" },
   { value: "RevealJs", label: "Presentation (RevealJS)" },
   { value: "Video", label: "Video (link)" },
+  { value: "Html", label: "HTML" },
+  { value: "ExternalLink", label: "External resource" },
 ];
 
 export function getLessonFormatLabel(format: string | null | undefined) {

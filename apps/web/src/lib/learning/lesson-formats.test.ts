@@ -9,6 +9,8 @@ describe("LESSON_FORMATS", () => {
       "Lexical",
       "RevealJs",
       "Video",
+      "Html",
+      "ExternalLink",
     ]);
   });
 });
