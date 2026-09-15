@@ -342,6 +342,10 @@ type EventFieldsProps = {
   compact?: boolean;
 };
 
+type EventTimelineFieldsProps = Omit<EventFieldsProps, "timeZoneId"> & {
+  timeZoneId: string;
+};
+
 function EventIdentityFields({
   event,
   includeBrief = true,
@@ -383,9 +387,9 @@ function EventIdentityFields({
         />
       </div>
       {availableTemplates.length > 0 ? (
-        <div className={compact ? compactRow : "space-y-2"}>
+        <div className={compactRow}>
           <Label
-            className={compact ? "text-xs text-muted-foreground" : undefined}
+            className="text-xs text-muted-foreground"
             htmlFor={`event-calendar-${fieldSuffix}`}
           >
             Calendar
@@ -496,8 +500,8 @@ function EventTimelineFields({
   timeZoneId,
   stacked = false,
   compact = false,
-}: EventFieldsProps) {
-  const eventTimeZone = timeZoneId ?? event?.timeZoneId ?? "UTC";
+}: EventTimelineFieldsProps) {
+  const eventTimeZone = timeZoneId;
   const applicationsOpenAt =
     schedule?.applicationsOpenAt ??
     apiDatetimeLocal(event?.applicationsOpenAt, eventTimeZone);
@@ -611,7 +615,7 @@ function EventTimelineFields({
 function EventFeedbackField({
   event,
 }: {
-  event?: TestingLabTestingEventProjection;
+  event: TestingLabTestingEventProjection;
 }) {
   return (
     <label className="flex items-start gap-3 rounded-md bg-muted/30 p-3 text-sm">
@@ -633,25 +637,18 @@ function EventFeedbackField({
 
 function EventFields({
   event,
-  schedule,
-  onScheduleChange,
   timeZoneId,
-}: EventFieldsProps) {
+}: {
+  event: TestingLabTestingEventProjection;
+  timeZoneId: string;
+}) {
   return (
     <div className="space-y-6">
-      {event?.id ? (
-        <input type="hidden" name="eventId" value={event.id} />
-      ) : null}
-      <input
-        type="hidden"
-        name="timeZoneId"
-        value={timeZoneId ?? event?.timeZoneId ?? "UTC"}
-      />
+      <input type="hidden" name="eventId" value={event.id} />
+      <input type="hidden" name="timeZoneId" value={timeZoneId} />
       <EventIdentityFields event={event} />
       <EventTimelineFields
         event={event}
-        schedule={schedule}
-        onScheduleChange={onScheduleChange}
         timeZoneId={timeZoneId}
       />
       <EventFeedbackField event={event} />
@@ -659,15 +656,7 @@ function EventFields({
   );
 }
 
-function EventRecurrenceFields({
-  onDirty,
-  startDate,
-  compact = false,
-}: {
-  onDirty: () => void;
-  startDate: string;
-  compact?: boolean;
-}) {
+export function testingEventRecurrenceStart(startDate: string) {
   const allDays = [
     "Sunday",
     "Monday",
@@ -677,6 +666,19 @@ function EventRecurrenceFields({
     "Friday",
     "Saturday",
   ];
+  const parsedStart = new Date(startDate);
+  return Number.isNaN(parsedStart.valueOf())
+    ? { day: "Monday", dayOfMonth: 1 }
+    : { day: allDays[parsedStart.getDay()]!, dayOfMonth: parsedStart.getDate() };
+}
+
+function EventRecurrenceFields({
+  onDirty,
+  startDate,
+}: {
+  onDirty: () => void;
+  startDate: string;
+}) {
   const displayDays = [
     "Monday",
     "Tuesday",
@@ -686,13 +688,8 @@ function EventRecurrenceFields({
     "Saturday",
     "Sunday",
   ];
-  const parsedStart = new Date(startDate);
-  const startDay = Number.isNaN(parsedStart.valueOf())
-    ? "Monday"
-    : allDays[parsedStart.getDay()]!;
-  const startDayOfMonth = Number.isNaN(parsedStart.valueOf())
-    ? 1
-    : parsedStart.getDate();
+  const { day: startDay, dayOfMonth: startDayOfMonth } =
+    testingEventRecurrenceStart(startDate);
   const [repeatOption, setRepeatOption] = useState("none");
   const [customFrequency, setCustomFrequency] = useState("Weekly");
   const [customDays, setCustomDays] = useState<string[]>([startDay]);
@@ -716,18 +713,14 @@ function EventRecurrenceFields({
   return (
     <section
       aria-labelledby="event-recurrence-heading"
-      className={compact ? "space-y-2.5" : "space-y-3"}
+      className="space-y-2.5"
     >
       <div
-        className={
-          compact
-            ? "grid gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3"
-            : "space-y-2"
-        }
+        className="grid gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3"
       >
         <Label
           id="event-recurrence-heading"
-          className={compact ? "text-xs text-muted-foreground" : undefined}
+          className="text-xs text-muted-foreground"
           htmlFor="event-recurrence"
         >
           Repeats
@@ -769,7 +762,7 @@ function EventRecurrenceFields({
 
       {frequency ? (
         <div
-          className={`space-y-3 rounded-md bg-muted/30 p-3 ${compact ? "sm:ml-[7.75rem]" : ""}`}
+          className="space-y-3 rounded-md bg-muted/30 p-3 sm:ml-[7.75rem]"
         >
           {repeatOption === "custom" ? (
             <div className="space-y-2">
@@ -1009,10 +1002,7 @@ export function CreateTestingEventDialog({
       ) : null}
       <Dialog
         open={open}
-        onOpenChange={(next) => {
-          if (next) setOpen(true);
-          else requestClose();
-        }}
+        onOpenChange={requestClose}
       >
         <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <form
@@ -1066,7 +1056,6 @@ export function CreateTestingEventDialog({
                 <EventRecurrenceFields
                   startDate={schedule.startsAt}
                   onDirty={() => setDirty(true)}
-                  compact
                 />
                 <input type="hidden" name="requiresFeedback" value="true" />
               </div>
@@ -1669,7 +1658,7 @@ export function TestingEventApplications({
 
   return (
     <div className="divide-y rounded-md border">
-      {applications.map((application) => {
+      {applications.map((application, index) => {
         const status = application.status ?? "Pending";
         const projectLabel = application.projectId
           ? (projectLabels[application.projectId] ??
@@ -1681,7 +1670,7 @@ export function TestingEventApplications({
           : "Member details unavailable";
         return (
           <div
-            key={application.id}
+            key={application.id ?? `${application.projectId ?? "unknown"}:${index}`}
             className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between"
           >
             <div className="min-w-0">
