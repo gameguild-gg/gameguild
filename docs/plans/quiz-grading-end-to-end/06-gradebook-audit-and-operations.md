@@ -61,13 +61,15 @@ cria ou atualiza uma projeção por enrollment. A chave
 `(SubmissionId, GradeRoundId, EnrollmentId)` impede duplicação. Regrade atualiza
 essas projeções a partir da nova rodada sem executar grading por integrante.
 
-`AssessmentGroup.WeightPercent` e `Program.PassingScore` usam `PercentValue`
-canônico em string. Scores e contribuições usam `ScoreValue`. Aritmética e
-arredondamento ocorrem na API; projeções agregadas são precomputadas e também
-persistidas como strings de largura fixa. Consultas podem ordenar essas strings,
-mas não usam `SUM`, `AVG` nem cast para `numeric`. A API mantém aritmética exata
-durante a agregação e quantiza uma única vez ao produzir cada projeção canônica;
-assessment, grupo e curso compartilham os mesmos vetores de conformidade.
+`AssessmentGroup.WeightPercent` e `Program.PassingScore` usam unidades inteiras
+de `PercentValue`; scores e contribuições usam unidades inteiras de
+`ScoreValue`. Ambos têm escala `100`. A API faz a aritmética com intermediários
+largos e quantiza uma única vez, com arredondamento `half-up`, ao produzir cada
+projeção canônica. As projeções agregadas são precomputadas e persistidas como
+inteiros. Consultas podem ordenar esses valores diretamente, mas não
+reimplementam `SUM`, `AVG` ou fórmulas alternativas com `numeric`, `decimal` ou
+ponto flutuante. Assessment, grupo e curso compartilham os mesmos vetores de
+conformidade.
 
 `Assessment.PassingScore` decide `Passed` para aquela submissão, em pontos
 absolutos da revisão publicada. `Program.PassingScore` é percentual e decide o
@@ -76,12 +78,12 @@ um campo no lugar do outro.
 
 O baseline do núcleo em `SEQ-03` converte `Program.PassingScore`,
 `AssessmentGroup.WeightPercent` e os demais campos acadêmicos existentes para
-os value objects textuais antes de qualquer test run. O primeiro E2E usa
-`Assessment.PassingScore` para a submission e `AssessmentGroup.WeightPercent`
-para sua contribuição mínima; ele não consulta `Program.PassingScore`. Somente
-`SEQ-15` aplica esse percentual à consolidação global do curso. Nenhuma fase
-posterior pode reintroduzir conversão tardia, `decimal` persistido ou cast de
-ponto flutuante.
+os value objects inteiros de escala `100` antes de qualquer test run. O primeiro
+E2E usa `Assessment.PassingScore` para a submission e
+`AssessmentGroup.WeightPercent` para sua contribuição mínima; ele não consulta
+`Program.PassingScore`. Somente `SEQ-15` aplica esse percentual à consolidação
+global do curso. Nenhuma fase posterior pode reintroduzir conversão tardia,
+string numérica, `decimal` persistido ou cast de ponto flutuante.
 
 ## Tentativas
 

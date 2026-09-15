@@ -1,4 +1,4 @@
-# ADR: Valores acadêmicos textuais e fórmula do gradebook
+# ADR: Valores acadêmicos inteiros e fórmula do gradebook
 
 - Status: Aceito
 - Data: 2026-09-03
@@ -13,15 +13,18 @@ reinterpretar pesos e escalas.
 
 ## Decisão
 
-Valores acadêmicos persistidos e serializados são strings canônicas:
+Valores acadêmicos persistidos e serializados são inteiros de ponto fixo com
+escala `100`:
 
-- `ScoreValue`: `^\d{8}\.\d{4}$`, de `00000000.0000` a `99999999.9999`;
-- `PercentValue`: `^\d{3}\.\d{4}$`, de `000.0000` a `100.0000`.
+- `ScoreValue`: `0..2147483647`; `100` unidades representam `1` ponto;
+- `PercentValue`: `0..10000`; `100` unidades representam `1%` e `10000`
+  representam `100%`.
 
-O domínio usa aritmética decimal exata. A quantização ocorre uma única vez,
-com quatro casas e midpoint away from zero, antes da serialização. Banco e SQL
-não somam, tiram média ou convertem esses campos para tipos numéricos. Colunas
-ordenáveis usam largura fixa e collation binária/invariante.
+O domínio usa aritmética inteira exata. Cálculos fracionários usam
+intermediários largos (`long`, `BigInteger` ou `bigint`) e quantizam uma única
+vez para unidades inteiras com arredondamento `half-up`. JSON transporta
+números inteiros e o PostgreSQL persiste `integer`; strings numéricas,
+`decimal`, `numeric`, `double` e `float` não representam valores acadêmicos.
 
 `QuizEntry.points` é um `ScoreValue`; `Assessment.MaxScore` é derivado da soma
 dos pontos das questões. `Assessment.PassingScore` é absoluto na escala do
@@ -41,7 +44,8 @@ Não há média de percentuais por assessment nem renormalização de pesos ause
 Grupo de peso zero e assessment sem grupo não entram no total. Denominador vazio
 ou não positivo não produz contribuição nem resultado global oficial. Antes de
 publicar resultado global por `Program.PassingScore`, os grupos publicados de
-peso positivo devem totalizar exatamente `100.0000`.
+peso positivo devem totalizar exatamente `10000` unidades, equivalentes a
+`100%`.
 
 Até uma policy de múltiplas tentativas estar implementada de ponta a ponta,
 `maxAttempts > 1` é rejeitado. O primeiro modo seleciona uma única tentativa;
@@ -49,16 +53,17 @@ média fica fora do corte inicial.
 
 ## Consequências
 
-- nenhuma API pública de grading aceita score acadêmico como `number`,
-  `decimal`, `double` ou `float`;
-- projeções são calculadas pela API e persistidas em formato canônico;
-- UI pode usar texto decimal durante edição, mas só envia forma canônica nos
-  contratos publicados;
+- APIs públicas aceitam scores e percentuais somente como unidades inteiras
+  dentro dos limites dos respectivos value objects;
+- projeções são calculadas pela API e persistidas como inteiros canônicos;
+- a UI pode exibir e editar valores decimais humanos, mas converte na fronteira
+  para unidades inteiras antes de enviar o contrato;
 - qualquer fórmula alternativa por consumer é defeito arquitetural.
 
 ## Alternativas rejeitadas
 
 - `decimal` no banco;
-- `number` no JSON;
+- strings numéricas no banco ou no JSON;
+- ponto flutuante para persistência ou cálculo acadêmico autoritativo;
 - média simples dos percentuais dos assessments;
 - redistribuição silenciosa de pesos incompletos.

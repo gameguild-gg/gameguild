@@ -119,9 +119,9 @@ eliminadas em `SEQ-11`. Apresentar apenas eventuais mudanças necessárias para:
 - lease, expiração, reatribuição e idempotência de claims;
 - cota do revisor separada do limiar recebido pela submission;
 - evidências e agregação versionada;
-- preservação de `AssessmentPeerReview.Score` como `ScoreValue` textual já
-  normalizado em `SEQ-03`, caso a entidade continue armazenando a contribuição
-  individual;
+- preservação de `AssessmentPeerReview.Score` como unidades inteiras de
+  `ScoreValue`, na escala `100` já normalizada em `SEQ-03`, caso a entidade
+  continue armazenando a contribuição individual;
 - anonimato na projeção e identidade preservada para auditoria;
 - exclusão de todos os participantes quando o alvo for coletivo;
 - transição durável `AwaitingInstructorResolution` quando o prazo encerrar sem o
@@ -278,8 +278,9 @@ suporta `ScheduledFor` em UTC, versão de concorrência e índice eficiente por
 - ampliar, se necessário, as policies além da seleção mínima entregue em
   `SEQ-10`; uma eventual média deve ser modelada como agregação explícita,
   mantendo uma única contribuição canônica;
-- integrar `Program.PassingScore` textual e as projeções globais já
-  normalizadas à consolidação do curso, sem conversão tardia ou cast numérico;
+- integrar `Program.PassingScore` em unidades inteiras de `PercentValue` e as
+  projeções globais já normalizadas à consolidação do curso, sem conversão
+  tardia ou cast para tipos fracionários;
 - manter projeções agregadas precomputadas sem aritmética decimal em SQL;
 - construir filas docentes por estado de review;
 - implementar os consumers de notificação e passback, que permaneceram

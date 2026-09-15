@@ -6,7 +6,7 @@ Fechar o vocabulário e as invariantes antes de alterar API, banco ou UI. Esta
 fase elimina a ambiguidade entre capacidade técnica de uma questão, origem do
 review e etapa de grading que publica o resultado.
 
-## Estado atual
+## Estado encontrado antes da Parte 1
 
 - `AssessmentGradingMethod` usa `PeerReview = 1`, `AIGraded = 2`,
   `AutoGraded = 4` e `InstructorGraded = 8`;
