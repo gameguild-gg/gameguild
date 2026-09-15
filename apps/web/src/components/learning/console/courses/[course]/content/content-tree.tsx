@@ -359,7 +359,6 @@ export function ContentTree({
       if (!realModuleIds.has(overId)) return;
       const oldIndex = realModules.findIndex((m) => m.id === activeId);
       const newIndex = realModules.findIndex((m) => m.id === overId);
-      if (oldIndex < 0 || newIndex < 0) return;
       const newIds = arrayMove(
         realModules.map((m) => m.id),
         oldIndex,
@@ -423,10 +422,9 @@ export function ContentTree({
     }
 
     const overIsDropArea = overId.startsWith(MODULE_DROP_PREFIX);
-    const dropIndex = overIsDropArea
+    const newSortOrder = overIsDropArea
       ? destChildren.length
       : destChildren.findIndex((c) => c.id === overId);
-    const newSortOrder = dropIndex < 0 ? destChildren.length : dropIndex;
     const newParentId = isVirtualModule(destModule.id) ? null : destModule.id;
     setError("");
     startTransition(async () => {
@@ -482,15 +480,15 @@ export function ContentTree({
   }
 
   function handleAddSubmodule() {
-    if (!moduleTitle.trim() || !submoduleParentId) return;
+    const parentId = submoduleParentId!;
     setError("");
     const parentChildren = allItems.filter(
-      (i) => i.parentId === submoduleParentId,
+      (i) => i.parentId === parentId,
     );
     startTransition(async () => {
       const result = await addContent({
         courseId,
-        parentId: submoduleParentId,
+        parentId,
         title: moduleTitle.trim(),
         description: moduleDescription.trim(),
         ...(normalizeSlug(moduleSlug) ? { slug: normalizeSlug(moduleSlug) } : {}),
@@ -517,7 +515,6 @@ export function ContentTree({
   }
 
   function handleAddModule() {
-    if (!moduleTitle.trim()) return;
     setError("");
     startTransition(async () => {
       const result = await addContent({
@@ -539,7 +536,6 @@ export function ContentTree({
   }
 
   function handleAddLesson() {
-    if (!lessonTitle.trim()) return;
     setError("");
     const parentChildren = allItems.filter(
       (i) => i.parentId === lessonParentId,
@@ -569,10 +565,10 @@ export function ContentTree({
   }
 
   function handleDelete() {
-    if (!deleteTarget) return;
+    const target = deleteTarget!;
     setError("");
     startTransition(async () => {
-      const result = await deleteContent(courseId, deleteTarget.id);
+      const result = await deleteContent(courseId, target.id);
       if (result.success) {
         setDeleteTarget(null);
         router.refresh();
@@ -603,12 +599,12 @@ export function ContentTree({
   }
 
   function handleEditModule() {
-    if (!editTarget || !editTitle.trim()) return;
+    const target = editTarget!;
     setError("");
     startTransition(async () => {
       const result = await updateContent({
         courseId,
-        contentId: editTarget.id,
+        contentId: target.id,
         title: editTitle.trim(),
         description: editDescription.trim(),
         slug: normalizeSlug(editSlug) || normalizeSlug(editTitle),
@@ -643,9 +639,8 @@ export function ContentTree({
   function handleMoveModule(moduleId: string, direction: "up" | "down") {
     const ids = realModules.map((m) => m.id);
     const idx = ids.indexOf(moduleId);
-    if (idx < 0) return;
     const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= ids.length) return;
+    // Boundary actions are disabled in the rendered module controls.
     [ids[idx], ids[swapIdx]] = [ids[swapIdx], ids[idx]];
     setError("");
     startTransition(async () => {
@@ -668,9 +663,8 @@ export function ContentTree({
       .sort((a, b) => a.order - b.order);
     const ids = siblings.map((s) => s.id);
     const idx = ids.indexOf(itemId);
-    if (idx < 0) return;
     const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= ids.length) return;
+    // Boundary actions are disabled in the rendered lesson controls.
     [ids[idx], ids[swapIdx]] = [ids[swapIdx], ids[idx]];
     setError("");
     startTransition(async () => {
@@ -1308,9 +1302,7 @@ export function ContentTree({
       {/* ── Delete Confirmation Dialog ── */}
       <Dialog
         open={!!deleteTarget}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
+        onOpenChange={() => setDeleteTarget(null)}
       >
         <DialogContent>
           <DialogHeader>
@@ -1345,9 +1337,7 @@ export function ContentTree({
       {/* ── Edit Module Dialog ── */}
       <Dialog
         open={!!editTarget}
-        onOpenChange={(open) => {
-          if (!open) setEditTarget(null);
-        }}
+        onOpenChange={() => setEditTarget(null)}
       >
         <DialogContent>
           <DialogHeader>
@@ -1414,9 +1404,7 @@ export function ContentTree({
       {/* ── Add Submodule Dialog ── */}
       <Dialog
         open={submoduleParentId !== null}
-        onOpenChange={(open) => {
-          if (!open) setSubmoduleParentId(null);
-        }}
+        onOpenChange={() => setSubmoduleParentId(null)}
       >
         <DialogContent>
           <DialogHeader>
