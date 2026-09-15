@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@game-guild/ui": "workspace:^",
-    "react": "19.2.8"
+    "react": "19.3.0"
   },
   "devDependencies": {
     "@game-guild/typescript-config": "workspace:*",
