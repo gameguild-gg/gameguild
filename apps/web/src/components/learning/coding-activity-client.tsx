@@ -30,6 +30,13 @@ import {
 import { PublicTestEstimateBanner } from './public-test-estimate-banner';
 import { publicSeedFiles, type SeedFile } from './resolve-seed';
 
+type CodingEditorLoader = () => Promise<ComponentType<CodingAssessmentEditorProps>>;
+
+async function loadCodingEditor(): Promise<ComponentType<CodingAssessmentEditorProps>> {
+  const { CodingAssessmentEditor } = await import('@game-guild/emception-ui/assessment/editor');
+  return CodingAssessmentEditor;
+}
+
 function IdeSkeleton() {
   return (
     <div
@@ -55,6 +62,8 @@ export interface CodingActivityClientProps {
   userId?: string;
   /** Prior submission files for overlay restore; null = no submission yet. */
   submissionFiles?: SeedFile[] | null;
+  /** Alternate lazy loader used by embedded hosts and deterministic tests. */
+  loadEditor?: CodingEditorLoader;
 }
 
 export function CodingActivityClient({
@@ -65,6 +74,7 @@ export function CodingActivityClient({
   manifestUrl,
   userId,
   submissionFiles,
+  loadEditor = loadCodingEditor,
 }: CodingActivityClientProps) {
   const sessionRef = useRef<AssessmentSession | null>(null);
   const router = useRouter();
@@ -81,8 +91,8 @@ export function CodingActivityClient({
   useEffect(() => {
     let active = true;
 
-    void import('@game-guild/emception-ui/assessment/editor')
-      .then(({ CodingAssessmentEditor }) => {
+    void loadEditor()
+      .then((CodingAssessmentEditor) => {
         if (active) setEditor(() => CodingAssessmentEditor);
       })
       .catch((error: unknown) => {
@@ -93,7 +103,7 @@ export function CodingActivityClient({
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadEditor]);
 
   const receiveSession = useCallback((session: AssessmentSession) => {
     sessionRef.current = session;
@@ -160,6 +170,11 @@ export function CodingActivityClient({
       if (outcome.success) {
         router.push(`/learn/courses/${slug}/activities`);
       }
+    } catch (error) {
+      setResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unable to submit the coding activity.',
+      });
     } finally {
       setSubmitting(false);
     }
