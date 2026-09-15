@@ -7,7 +7,7 @@ import { AssetsProvider, useResolvedAssetUrl } from '@game-guild/assets/react';
 import type { LearningCoursesLessonContentFormat } from '@game-guild/client';
 import { MarkdownRenderer } from '@game-guild/content-rendering';
 import { Button } from '@game-guild/ui/components/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { lazy, Suspense, useRef, useState } from 'react';
 import { defaultUrlTransform, type Components } from 'react-markdown';
 
@@ -63,6 +63,23 @@ export function videoSource(content: unknown): string {
             : textContent(content);
 }
 
+export function externalLinkSource(content: unknown): string {
+    const record = asRecord(content);
+    const candidate = typeof record?.url === 'string'
+        ? record.url
+        : typeof record?.href === 'string'
+          ? record.href
+          : typeof record?.src === 'string'
+            ? record.src
+            : textContent(content);
+    try {
+        const url = new URL(candidate);
+        return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : '';
+    } catch {
+        return '';
+    }
+}
+
 function RevealRenderer({ content }: { content: unknown }) {
     const slides = textContent(content).split(/^\s*---\s*$/m).map((slide) => slide.trim()).filter(Boolean);
     const [index, setIndex] = useState(0);
@@ -91,6 +108,29 @@ function VideoRenderer({ courseId, enrollmentId, itemId, content }: { courseId: 
     return <video aria-label="Video lesson" controls preload="metadata" src={resolvedSrc} className="aspect-video w-full bg-black" onPlay={(event) => send('Opened', event.currentTarget)} onPause={(event) => send('Paused', event.currentTarget)} onEnded={(event) => send('Completed', event.currentTarget)} onTimeUpdate={(event) => { const second = Math.floor(event.currentTarget.currentTime); if (second - lastHeartbeat.current >= 15) { lastHeartbeat.current = second; send('Progressed', event.currentTarget); } }} />;
 }
 
+function HtmlRenderer({ content }: { content: unknown }) {
+    const html = textContent(content);
+    if (!html) return <p className="text-sm text-muted-foreground">This HTML lesson has no published content.</p>;
+    return <iframe
+        title="HTML lesson"
+        sandbox=""
+        referrerPolicy="no-referrer"
+        srcDoc={html}
+        className="min-h-[32rem] w-full border-0 bg-white"
+    />;
+}
+
+function ExternalLinkRenderer({ content }: { content: unknown }) {
+    const href = externalLinkSource(content);
+    if (!href) return <p className="text-sm text-muted-foreground">This lesson resource link is unavailable.</p>;
+    return <Button asChild>
+        <a href={href} target="_blank" rel="noopener noreferrer">
+            Open lesson resource
+            <ExternalLink className="ml-2 h-4 w-4" />
+        </a>
+    </Button>;
+}
+
 export function LearnerLessonRenderer({ courseId, enrollmentId, itemId, format, content }: { courseId: string; enrollmentId?: string; itemId: string; format?: LearningCoursesLessonContentFormat; content: unknown }) {
     const assetRepository = getLearningAssetRepository();
     return <AssetsProvider repository={assetRepository} scope={{ type: 'ProgramContent', id: itemId }}>
@@ -103,6 +143,8 @@ function LearnerLessonContent({ courseId, enrollmentId, itemId, format, content 
         case 'Lexical': return <Suspense fallback={<div className="min-h-32 animate-pulse rounded-md bg-muted" />}><LexicalLessonRenderer content={content} itemId={itemId} /></Suspense>;
         case 'RevealJs': return <RevealRenderer content={content} />;
         case 'Video': return <VideoRenderer courseId={courseId} enrollmentId={enrollmentId} itemId={itemId} content={content} />;
+        case 'Html': return <HtmlRenderer content={content} />;
+        case 'ExternalLink': return <ExternalLinkRenderer content={content} />;
         case 'Markdown':
         default: {
             const markdown = textContent(content);

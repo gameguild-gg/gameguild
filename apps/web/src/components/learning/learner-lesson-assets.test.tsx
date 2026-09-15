@@ -24,6 +24,7 @@ vi.mock("./lexical-lesson-renderer", () => ({
 
 import {
   asRecord,
+  externalLinkSource,
   LearnerLessonRenderer,
   learningImageSource,
   learningUrlTransform,
@@ -64,6 +65,20 @@ describe("LearnerLessonRenderer assets", () => {
     expect(videoSource({ src: "src" })).toBe("src");
     expect(videoSource("fallback.mp4")).toBe("fallback.mp4");
     expect(videoSource({})).toBe("");
+    expect(externalLinkSource({ url: "https://example.test/resource" })).toBe(
+      "https://example.test/resource",
+    );
+    expect(externalLinkSource({ href: "http://example.test/lesson" })).toBe(
+      "http://example.test/lesson",
+    );
+    expect(externalLinkSource({ src: "https://example.test/file" })).toBe(
+      "https://example.test/file",
+    );
+    expect(externalLinkSource("https://example.test/plain")).toBe(
+      "https://example.test/plain",
+    );
+    expect(externalLinkSource("javascript:alert(1)")).toBe("");
+    expect(externalLinkSource("not a URL")).toBe("");
     expect(learningImageSource(assetUri)).toBe(assetUri);
     expect(learningImageSource(new Blob(["image"]))).toBeUndefined();
     expect(learningImageSource(undefined)).toBeUndefined();
@@ -196,6 +211,58 @@ describe("LearnerLessonRenderer assets", () => {
       />,
     );
     expect(await screen.findByText("This Lexical lesson has no published content.")).toBeInTheDocument();
+  });
+
+  it("isolates published HTML in a sandboxed document", () => {
+    const { rerender } = render(
+      <LearnerLessonRenderer
+        courseId="course-1"
+        itemId="lesson-html"
+        format="Html"
+        content={{ content: "<h1>Safe lesson</h1><script>window.top.location='https://evil.test'</script>" }}
+      />,
+    );
+
+    const frame = screen.getByTitle("HTML lesson");
+    expect(frame).toHaveAttribute("sandbox", "");
+    expect(frame).toHaveAttribute("referrerpolicy", "no-referrer");
+    expect(frame).toHaveAttribute("srcdoc", expect.stringContaining("Safe lesson"));
+
+    rerender(
+      <LearnerLessonRenderer
+        courseId="course-1"
+        itemId="lesson-html-empty"
+        format="Html"
+        content=""
+      />,
+    );
+    expect(screen.getByText("This HTML lesson has no published content.")).toBeInTheDocument();
+  });
+
+  it("renders only safe external lesson links", () => {
+    const { rerender } = render(
+      <LearnerLessonRenderer
+        courseId="course-1"
+        itemId="lesson-link"
+        format="ExternalLink"
+        content="https://example.test/resource"
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: /open lesson resource/i })).toHaveAttribute(
+      "href",
+      "https://example.test/resource",
+    );
+
+    rerender(
+      <LearnerLessonRenderer
+        courseId="course-1"
+        itemId="lesson-link-invalid"
+        format="ExternalLink"
+        content="javascript:alert(1)"
+      />,
+    );
+    expect(screen.getByText("This lesson resource link is unavailable.")).toBeInTheDocument();
   });
 
   it("records video lifecycle and throttled progress for the authenticated enrollment", async () => {
