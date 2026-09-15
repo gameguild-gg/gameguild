@@ -470,7 +470,7 @@ export function TestingLabAccessManagement({
 
               <div className="grid gap-3 rounded-md bg-muted/25 p-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Resource type</Label>
+                  <Label htmlFor="testing-access-resource-type">Resource type</Label>
                   <Select
                     value={resourceType}
                     onValueChange={(value) => {
@@ -482,7 +482,7 @@ export function TestingLabAccessManagement({
                       );
                     }}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="testing-access-resource-type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -493,12 +493,12 @@ export function TestingLabAccessManagement({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Action</Label>
+                  <Label htmlFor="testing-access-action">Action</Label>
                   <Select
                     value={permissionAction}
                     onValueChange={setPermissionAction}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="testing-access-action">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -513,9 +513,9 @@ export function TestingLabAccessManagement({
                   </Select>
                 </div>
                 <div className="space-y-2 sm:col-span-2">
-                  <Label>Resource</Label>
+                  <Label htmlFor="testing-access-resource">Resource</Label>
                   <Select value={resourceId} onValueChange={setResourceId}>
-                    <SelectTrigger>
+                    <SelectTrigger id="testing-access-resource">
                       <SelectValue placeholder="Choose a resource" />
                     </SelectTrigger>
                     <SelectContent>
