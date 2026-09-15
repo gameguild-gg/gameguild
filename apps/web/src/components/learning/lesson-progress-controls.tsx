@@ -24,13 +24,22 @@ export function LessonProgressControls({
   async function mutate(action: typeof beginCourseContent) {
     setPending(true);
     setError(null);
-    const result = await action(courseId, contentId);
-    setPending(false);
-    if (!result.success) {
-      setError(result.error);
-      return;
+    try {
+      const result = await action(courseId, contentId);
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+      router.refresh();
+    } catch (mutationError) {
+      setError(
+        mutationError instanceof Error
+          ? mutationError.message
+          : 'Unable to update lesson progress.',
+      );
+    } finally {
+      setPending(false);
     }
-    router.refresh();
   }
 
   return (
