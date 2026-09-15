@@ -1,105 +1,172 @@
-import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CourseLifecycleActions } from './course-lifecycle-actions';
-import { publishCourse, unpublishCourse } from '@/lib/learning/actions';
+import "@testing-library/jest-dom/vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { CourseLifecycleActions } from "./course-lifecycle-actions";
+import { publishCourse, unpublishCourse } from "@/lib/learning/actions";
 
 const refreshMock = vi.fn();
 const pushMock = vi.fn();
 
-vi.mock('next/navigation', () => ({
-  usePathname: () => '/workspace/learning',
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/workspace/learning",
   useRouter: () => ({
     refresh: refreshMock,
     push: pushMock,
   }),
 }));
 
-vi.mock('@/lib/learning/actions', () => ({
+vi.mock("@/lib/learning/actions", () => ({
   publishCourse: vi.fn(),
   unpublishCourse: vi.fn(),
 }));
 
-describe('CourseLifecycleActions', () => {
+describe("CourseLifecycleActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(publishCourse).mockResolvedValue({ success: true, data: null });
     vi.mocked(unpublishCourse).mockResolvedValue({ success: true, data: null });
   });
 
-  it('publishes draft courses without blocking on a dashboard refresh', async () => {
+  it("publishes draft courses without blocking on a dashboard refresh", async () => {
     const user = userEvent.setup();
 
-    render(<CourseLifecycleActions courseId="course-1" status="draft" locale="en-US" />);
+    render(
+      <CourseLifecycleActions
+        courseId="course-1"
+        status="draft"
+        locale="en-US"
+      />,
+    );
 
-    expect(screen.getByText('Draft')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /publish/i }));
+    expect(screen.getByText("Draft")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /publish/i }));
 
     await waitFor(() => {
-      expect(publishCourse).toHaveBeenCalledWith('course-1');
+      expect(publishCourse).toHaveBeenCalledWith("course-1");
     });
-    expect(await screen.findByText('Published')).toBeInTheDocument();
+    expect(await screen.findByText("Published")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /unpublish/i })).toBeEnabled();
+      expect(screen.getByRole("button", { name: /unpublish/i })).toBeEnabled();
     });
     expect(refreshMock).not.toHaveBeenCalled();
   });
 
-  it('unpublishes published courses and updates the lifecycle controls', async () => {
+  it("unpublishes published courses and updates the lifecycle controls", async () => {
     const user = userEvent.setup();
 
-    render(<CourseLifecycleActions courseId="course-1" status="published" locale="en-US" />);
+    render(
+      <CourseLifecycleActions
+        courseId="course-1"
+        status="published"
+        locale="en-US"
+      />,
+    );
 
-    await user.click(screen.getByRole('button', { name: /unpublish/i }));
+    await user.click(screen.getByRole("button", { name: /unpublish/i }));
     await waitFor(() => {
-      expect(unpublishCourse).toHaveBeenCalledWith('course-1');
+      expect(unpublishCourse).toHaveBeenCalledWith("course-1");
     });
-    expect(await screen.findByText('Draft')).toBeInTheDocument();
+    expect(await screen.findByText("Draft")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /^publish$/i })).toBeEnabled();
+      expect(screen.getByRole("button", { name: /^publish$/i })).toBeEnabled();
     });
     expect(refreshMock).not.toHaveBeenCalled();
   });
 
-  it('republishes archived courses', async () => {
+  it("republishes archived courses", async () => {
     const user = userEvent.setup();
 
-    render(<CourseLifecycleActions courseId="course-1" status="archived" locale="en-US" />);
+    render(
+      <CourseLifecycleActions
+        courseId="course-1"
+        status="archived"
+        locale="en-US"
+      />,
+    );
 
-    expect(screen.getByText('Archived')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /re-publish/i }));
+    expect(screen.getByText("Archived")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /re-publish/i }));
 
     await waitFor(() => {
-      expect(publishCourse).toHaveBeenCalledWith('course-1');
+      expect(publishCourse).toHaveBeenCalledWith("course-1");
     });
   });
 
-  it('keeps publish and unpublish available across a complete status sequence', async () => {
+  it("keeps publish and unpublish available across a complete status sequence", async () => {
     const user = userEvent.setup();
 
-    render(<CourseLifecycleActions courseId="course-1" status="published" locale="en-US" />);
+    render(
+      <CourseLifecycleActions
+        courseId="course-1"
+        status="published"
+        locale="en-US"
+      />,
+    );
 
-    await user.click(screen.getByRole('button', { name: /unpublish/i }));
-    const publishButton = await screen.findByRole('button', { name: /^publish$/i });
+    await user.click(screen.getByRole("button", { name: /unpublish/i }));
+    const publishButton = await screen.findByRole("button", {
+      name: /^publish$/i,
+    });
     await waitFor(() => expect(publishButton).toBeEnabled());
 
     await user.click(publishButton);
-    await waitFor(() => expect(screen.getByRole('button', { name: /unpublish/i })).toBeEnabled());
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /unpublish/i })).toBeEnabled(),
+    );
 
     expect(unpublishCourse).toHaveBeenCalledTimes(1);
     expect(publishCourse).toHaveBeenCalledTimes(1);
   });
 
-  it('shows action errors without navigating away', async () => {
+  it("shows action errors without navigating away", async () => {
     const user = userEvent.setup();
-    vi.mocked(publishCourse).mockResolvedValueOnce({ success: false, error: 'Course is missing lessons.' });
+    vi.mocked(publishCourse).mockResolvedValueOnce({
+      success: false,
+      error: "Course is missing lessons.",
+    });
 
-    render(<CourseLifecycleActions courseId="course-1" status="draft" locale="en-US" />);
+    render(
+      <CourseLifecycleActions
+        courseId="course-1"
+        status="draft"
+        locale="en-US"
+      />,
+    );
 
-    await user.click(screen.getByRole('button', { name: /publish/i }));
+    await user.click(screen.getByRole("button", { name: /publish/i }));
 
-    expect(await screen.findByText('Course is missing lessons.')).toBeInTheDocument();
+    expect(
+      await screen.findByText("Course is missing lessons."),
+    ).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("recovers from typed and unknown lifecycle exceptions", async () => {
+    const user = userEvent.setup();
+    vi.mocked(publishCourse)
+      .mockRejectedValueOnce(new Error("Publishing service unavailable."))
+      .mockRejectedValueOnce("offline");
+    render(
+      <CourseLifecycleActions
+        courseId="course-1"
+        status="draft"
+        locale="en-US"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^publish$/i }));
+    expect(
+      await screen.findByText("Publishing service unavailable."),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /^publish$/i })).toBeEnabled(),
+    );
+
+    await user.click(screen.getByRole("button", { name: /^publish$/i }));
+    expect(
+      await screen.findByText("The course lifecycle action failed."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Draft")).toBeInTheDocument();
   });
 });
