@@ -193,7 +193,7 @@ export async function getCourses(): Promise<{
           const id = String(program.id ?? '');
           const slug = typeof program.slug === 'string' ? program.slug.trim() : '';
           const creatorId = program.creatorId ?? null;
-          const creatorHandle = creatorId ? creatorHandles.get(creatorId) ?? null : null;
+          const creatorHandle = creatorId ? creatorHandles.get(creatorId)! : null;
 
           return {
             id,
