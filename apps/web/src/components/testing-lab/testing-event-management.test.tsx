@@ -18,13 +18,17 @@ global.ResizeObserver = class ResizeObserver {
 Element.prototype.scrollIntoView = vi.fn();
 
 const mocks = vi.hoisted(() => ({
+  approveApplication: vi.fn(),
   beginReview: vi.fn(),
   createEvent: vi.fn(),
   createSlot: vi.fn(),
   deleteEvent: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
+  rejectApplication: vi.fn(),
   transitionEvent: vi.fn(),
+  voteApplication: vi.fn(),
+  waitlistApplication: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -35,7 +39,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/testing-lab/events-actions", () => ({
   addTestingEventCommitteeMember: vi.fn(),
   assignTestedProjectToRegistration: vi.fn(),
-  approveTestingEventApplication: vi.fn(),
+  approveTestingEventApplication: mocks.approveApplication,
   beginTestingEventApplicationReview: mocks.beginReview,
   configureTestingEventLearning: vi.fn(),
   createTestingEvent: mocks.createEvent,
@@ -43,15 +47,15 @@ vi.mock("@/lib/testing-lab/events-actions", () => ({
   archiveTestingEvent: vi.fn(),
   deleteTestingEvent: mocks.deleteEvent,
   deleteTestingEventSlot: vi.fn(),
-  rejectTestingEventApplication: vi.fn(),
+  rejectTestingEventApplication: mocks.rejectApplication,
   removeTestingEventCommitteeMember: vi.fn(),
   restoreTestingEvent: vi.fn(),
   transitionTestingEvent: mocks.transitionEvent,
   updateTestingEventAttendance: vi.fn(),
   updateTestingEvent: vi.fn(),
   updateTestingEventSlot: vi.fn(),
-  voteOnTestingEventApplication: vi.fn(),
-  waitlistTestingEventApplication: vi.fn(),
+  voteOnTestingEventApplication: mocks.voteApplication,
+  waitlistTestingEventApplication: mocks.waitlistApplication,
 }));
 
 import {
@@ -63,6 +67,7 @@ import {
   ManageTestingEventSlotDialog,
   preferredNewEventTimeZone,
   scheduleDate,
+  testingEventRecurrenceStart,
   TestingEventApplications,
   TestingEventLifecycleActions,
   updateTestingEventSchedule,
@@ -90,6 +95,26 @@ describe("TestingEventApplications", () => {
       success: true,
       data: null,
       message: "Event transitioned.",
+    });
+    mocks.approveApplication.mockResolvedValue({
+      success: true,
+      data: null,
+      message: "Application approved.",
+    });
+    mocks.rejectApplication.mockResolvedValue({
+      success: true,
+      data: null,
+      message: "Application rejected.",
+    });
+    mocks.voteApplication.mockResolvedValue({
+      success: true,
+      data: null,
+      message: "Vote recorded.",
+    });
+    mocks.waitlistApplication.mockResolvedValue({
+      success: true,
+      data: null,
+      message: "Application waitlisted.",
     });
   });
 
@@ -155,6 +180,14 @@ describe("TestingEventApplications", () => {
 
   it("uses explicit non-UTC event time zones", () => {
     expect(preferredNewEventTimeZone("Europe/Paris")).toBe("Europe/Paris");
+    expect(testingEventRecurrenceStart("invalid")).toEqual({
+      day: "Monday",
+      dayOfMonth: 1,
+    });
+    expect(testingEventRecurrenceStart("2030-08-19T10:00")).toEqual({
+      day: "Monday",
+      dayOfMonth: 19,
+    });
   });
   it("shows human labels and refreshes the SSR view after review starts", async () => {
     mocks.beginReview.mockResolvedValue({
@@ -386,12 +419,18 @@ describe("TestingEventApplications", () => {
     ).toBe("true");
   });
 
-  it("uses an event calendar template when one is available", () => {
+  it("uses named and untitled event calendar templates", async () => {
+    const user = userEvent.setup();
     const templates = [
       {
         id: "template-1",
         name: "Community playtests",
         currentRevision: { id: "revision-1" },
+      },
+      {
+        id: "template-2",
+        name: "   ",
+        currentRevision: { id: "revision-2" },
       },
     ] as TestingLabTestingEventTemplateProjection[];
 
@@ -406,9 +445,15 @@ describe("TestingEventApplications", () => {
         'input[name="templateRevisionId"]',
       )?.value,
     ).toBe("revision-1");
+    await user.click(screen.getByRole("combobox", { name: "Event calendar" }));
+    await user.click(await screen.findByRole("option", { name: "Untitled calendar" }));
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="templateRevisionId"]'),
+    ).toHaveValue("revision-2");
   });
 
-  it("presents the event decisions first and groups its two time windows", () => {
+  it("presents and updates the event decisions before its two time windows", async () => {
+    const user = userEvent.setup();
     render(<CreateTestingEventDialog defaultTimeZone="America/Sao_Paulo" />);
 
     fireEvent.click(screen.getByRole("button", { name: "New event" }));
@@ -455,6 +500,17 @@ describe("TestingEventApplications", () => {
     expect(
       screen.getByRole("combobox", { name: "Repeats" }),
     ).toBeInTheDocument();
+    await user.click(eventFormat);
+    await user.click(await screen.findByRole("option", { name: "In person" }));
+    expect(eventFormat).toHaveTextContent("In person");
+    await user.click(eventFormat);
+    await user.click(await screen.findByRole("option", { name: "Hybrid" }));
+    expect(eventFormat).toHaveTextContent("Hybrid");
+    await user.click(projectReview);
+    await user.click(
+      await screen.findByRole("option", { name: "Review committee votes" }),
+    );
+    expect(projectReview).toHaveTextContent("Review committee votes");
     expect(screen.queryByLabelText("Start from")).not.toBeInTheDocument();
     expect(screen.getByRole("dialog")).toHaveClass("sm:max-w-lg");
     expect(screen.getByRole("dialog")).toHaveAttribute(
@@ -486,6 +542,85 @@ describe("TestingEventApplications", () => {
     expect(screen.getByLabelText("Number of events")).toHaveValue(4);
   });
 
+  it("updates either side of the application window without redundant schedule writes", async () => {
+    const user = userEvent.setup();
+    render(<CreateTestingEventDialog />);
+    await user.click(screen.getByRole("button", { name: "New event" }));
+
+    const applicationWindow = screen.getByRole("button", {
+      name: "Application window",
+    });
+    await user.click(applicationWindow);
+    await user.click(screen.getByRole("button", { name: "Apply application window" }));
+
+    const currentEnd = document.querySelector<HTMLInputElement>(
+      'input[name="applicationsCloseAt"]',
+    )!.value;
+    await user.click(applicationWindow);
+    const nextHour = String((Number(currentEnd.slice(11, 13)) + 1) % 24).padStart(2, "0");
+    fireEvent.change(screen.getByLabelText("End time"), {
+      target: { value: `${nextHour}:${currentEnd.slice(14, 16)}` },
+    });
+    await user.click(screen.getByRole("button", { name: "Apply application window" }));
+
+    expect(
+      document.querySelector<HTMLInputElement>('input[name="applicationsCloseAt"]')?.value,
+    ).not.toBe(currentEnd);
+  });
+
+  it("supports every repeat preset, custom unit, weekday, and end mode", async () => {
+    const user = userEvent.setup();
+    render(<CreateTestingEventDialog initialDate={new Date(2030, 7, 19)} />);
+    await user.click(screen.getByRole("button", { name: "New event" }));
+    const repeats = screen.getByRole("combobox", { name: "Repeats" });
+
+    for (const option of ["Daily", "Weekly on Monday", "Monthly on day 19"]) {
+      await user.click(repeats);
+      await user.click(await screen.findByRole("option", { name: option }));
+      expect(
+        document.querySelector<HTMLInputElement>('input[name="recurrenceFrequency"]')?.value,
+      ).not.toBe("");
+    }
+
+    await user.click(repeats);
+    await user.click(await screen.findByRole("option", { name: "Custom…" }));
+    const repeatUnit = screen.getByRole("combobox", { name: "Repeat unit" });
+    await user.click(repeatUnit);
+    await user.click(await screen.findByRole("option", { name: "Day(s)" }));
+    expect(repeatUnit).toHaveTextContent("Day(s)");
+    await user.click(repeatUnit);
+    await user.click(await screen.findByRole("option", { name: "Month(s)" }));
+    expect(repeatUnit).toHaveTextContent("Month(s)");
+    await user.click(repeatUnit);
+    await user.click(await screen.findByRole("option", { name: "Week(s)" }));
+
+    const monday = document.querySelector<HTMLInputElement>(
+      'input[name="recurrenceDaysOfWeek"][value="Monday"]',
+    )!;
+    const tuesday = document.querySelector<HTMLInputElement>(
+      'input[name="recurrenceDaysOfWeek"][value="Tuesday"]',
+    )!;
+    expect(monday).toBeChecked();
+    await user.click(monday);
+    expect(monday).not.toBeChecked();
+    await user.click(tuesday);
+    expect(tuesday).toBeChecked();
+
+    const ends = screen.getByRole("combobox", { name: "Ends" });
+    await user.click(ends);
+    await user.click(await screen.findByRole("option", { name: "On a date" }));
+    expect(screen.getByLabelText("End date")).toBeInTheDocument();
+  });
+
+  it("closes a pristine create dialog without a discard warning", async () => {
+    const user = userEvent.setup();
+    render(<CreateTestingEventDialog />);
+    await user.click(screen.getByRole("button", { name: "New event" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByText("New testing event")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
   it("replaces the open action with a setup link while a draft is incomplete", () => {
     render(
       <TestingEventLifecycleActions
@@ -504,6 +639,149 @@ describe("TestingEventApplications", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("shows an empty application state and safe labels for incomplete records", () => {
+    const { rerender } = render(
+      <TestingEventApplications
+        eventId="event-1"
+        access={null}
+        applications={[]}
+        slots={[]}
+      />,
+    );
+    expect(screen.getByText("No project applications yet.")).toBeInTheDocument();
+
+    rerender(
+      <TestingEventApplications
+        eventId="event-1"
+        access={{ canManageApplications: true, canVote: true }}
+        applications={[
+          {
+            id: undefined,
+            projectId: undefined,
+            submittedByUserId: undefined,
+            status: undefined,
+            decisionRationale: "Awaiting project metadata.",
+          },
+          {
+            id: "application-unmapped",
+            projectId: "project-missing",
+            submittedByUserId: "user-missing",
+            status: "Approved",
+          },
+        ]}
+        slots={[]}
+        projectLabels={{}}
+        memberLabels={{}}
+        readOnly
+      />,
+    );
+    expect(screen.getAllByText("Project details unavailable")).toHaveLength(2);
+    expect(screen.getAllByText(/Member details unavailable/)).toHaveLength(2);
+    expect(screen.getByText("Awaiting project metadata.")).toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("keeps review failures visible and clears its pending marker", async () => {
+    const user = userEvent.setup();
+    mocks.beginReview.mockResolvedValueOnce({
+      success: false,
+      error: "Review cannot start yet.",
+    });
+    const { unmount } = render(
+      <TestingEventApplications
+        eventId="event-1"
+        access={{ canManageApplications: true }}
+        applications={[{ id: "application-1", status: "Pending" }]}
+        slots={[]}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Review" }));
+    expect(await screen.findByText("Review cannot start yet.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
+    expect(mocks.refresh).not.toHaveBeenCalled();
+    unmount();
+
+    mocks.beginReview.mockRejectedValueOnce(new Error("Review API unavailable"));
+    render(
+      <TestingEventApplications
+        eventId="event-1"
+        access={{ canManageApplications: true }}
+        applications={[{ id: "application-1", status: "Pending" }]}
+        slots={[]}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Review" }));
+    expect(await screen.findByText("Review API unavailable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Review" })).toBeEnabled();
+  });
+
+  it("executes every application decision with meaningful slot fallbacks", async () => {
+    const user = userEvent.setup();
+    render(
+      <TestingEventApplications
+        eventId="event-1"
+        access={{ canManageApplications: true, canVote: true }}
+        applications={[
+          {
+            id: "application-1",
+            projectId: "project-1",
+            submittedByUserId: "user-1",
+            status: "UnderReview",
+          },
+        ]}
+        slots={[
+          { id: undefined, startsAt: "2026-08-01T12:00:00Z" },
+          {
+            id: "slot-campus",
+            startsAt: "2026-08-02T12:00:00Z",
+            campusName: "Campus A",
+          },
+          {
+            id: "slot-online",
+            startsAt: "2026-08-03T12:00:00Z",
+            meetingUrl: "https://meet.example.test",
+          },
+          {
+            id: "slot-mode",
+            startsAt: "2026-08-04T12:00:00Z",
+            mode: "Hybrid",
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Approve" }));
+    await user.click(screen.getByRole("combobox", { name: "Testing slot" }));
+    expect(await screen.findByText(/Campus A/)).toBeInTheDocument();
+    expect(screen.getByText(/https:\/\/meet\.example\.test/)).toBeInTheDocument();
+    expect(screen.getByText(/Hybrid/)).toBeInTheDocument();
+    const approveForm = screen.getByRole("dialog").querySelector("form")!;
+    const selectedSlot = document.createElement("input");
+    selectedSlot.name = "slotId";
+    selectedSlot.value = "slot-campus";
+    approveForm.appendChild(selectedSlot);
+    fireEvent.submit(approveForm);
+    await waitFor(() => expect(mocks.approveApplication).toHaveBeenCalledOnce());
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Approve project application" })).not.toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Waitlist" }));
+    await user.click(screen.getByRole("button", { name: "Add to waitlist" }));
+    await waitFor(() => expect(mocks.waitlistApplication).toHaveBeenCalledOnce());
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "Reject" }));
+    await user.type(screen.getByLabelText("Rejection rationale"), "Not ready");
+    await user.click(screen.getByRole("button", { name: "Reject project" }));
+    await waitFor(() => expect(mocks.rejectApplication).toHaveBeenCalledOnce());
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "Vote" }));
+    fireEvent.submit(screen.getByRole("dialog").querySelector("form")!);
+    await waitFor(() => expect(mocks.voteApplication).toHaveBeenCalledOnce());
+  });
+
   it("server-renders the archive action for a cancelled event", () => {
     expect(() =>
       renderToString(
@@ -513,13 +791,15 @@ describe("TestingEventApplications", () => {
       ),
     ).not.toThrow();
   });
-  it("opens as a controlled sheet with the calendar day prefilled", () => {
+  it("opens and requests closure as a controlled dialog with the calendar day prefilled", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
     render(
       <CreateTestingEventDialog
         open
         showTrigger={false}
         initialDate={new Date(2030, 7, 19)}
-        onOpenChange={vi.fn()}
+        onOpenChange={onOpenChange}
       />,
     );
 
@@ -529,6 +809,8 @@ describe("TestingEventApplications", () => {
     expect(
       document.querySelector<HTMLInputElement>('input[name="startsAt"]')?.value,
     ).toMatch(/^2030-08-19T/);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("shows API instants in the event timezone when editing an event", () => {
@@ -544,7 +826,7 @@ describe("TestingEventApplications", () => {
           mode: "Online",
           approvalMode: "ManagerOnly",
           status: "Draft",
-          requiresFeedback: true,
+          requiresFeedback: false,
           timeZoneId: "America/Sao_Paulo",
         }}
       />,
@@ -576,6 +858,15 @@ describe("TestingEventApplications", () => {
       document.querySelector<HTMLInputElement>('input[name="timeZoneId"]')
         ?.value,
     ).toBe("America/Sao_Paulo");
+    expect(document.querySelector<HTMLInputElement>('input[name="requiresFeedback"]')).not.toBeChecked();
+  });
+
+  it("defaults an edited event without timezone to UTC", async () => {
+    const user = userEvent.setup();
+    render(<EditTestingEventDialog event={{ id: "event-1", name: "Draft" }} />);
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(document.querySelector<HTMLInputElement>('input[name="timeZoneId"]')).toHaveValue("UTC");
+    expect(document.querySelector<HTMLInputElement>('input[name="requiresFeedback"]')).toBeChecked();
   });
 
   it("preserves API wall-clock values when editing a slot", () => {
@@ -606,6 +897,28 @@ describe("TestingEventApplications", () => {
       document.querySelector<HTMLInputElement>('input[name="endsAt"]')?.value,
     ).toBe("2026-08-13T18:30");
     timezoneOffset.mockRestore();
+  });
+
+  it("omits malformed slots and safely defaults optional slot fields", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <ManageTestingEventSlotDialog eventId="event-1" slot={{}} />,
+    );
+    expect(screen.queryByRole("button", { name: "Edit slot" })).not.toBeInTheDocument();
+
+    rerender(
+      <ManageTestingEventSlotDialog
+        eventId="event-1"
+        slot={{ id: "slot-empty", eventId: "event-1" }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Edit slot" }));
+    expect(document.querySelector<HTMLInputElement>('input[name="locationId"]')).toHaveValue("");
+    expect(document.querySelector<HTMLInputElement>('input[name="campusName"]')).toHaveValue("");
+    expect(document.querySelector<HTMLInputElement>('input[name="roomName"]')).toHaveValue("");
+    expect(document.querySelector<HTMLInputElement>('input[name="meetingUrl"]')).toHaveValue("");
+    expect(document.querySelector<HTMLInputElement>('input[name="maxTesters"]')).toHaveValue(null);
+    expect(document.querySelector<HTMLInputElement>('input[name="maxProjects"]')).toHaveValue(null);
   });
 
   it("submits a new event, closes the dialog, and refreshes the route", async () => {
@@ -646,7 +959,7 @@ describe("TestingEventApplications", () => {
   it("runs generic event dialogs and reports action exceptions", async () => {
     const user = userEvent.setup();
     mocks.createSlot.mockRejectedValueOnce(new Error("Slot API unavailable"));
-    render(<CreateTestingEventSlotDialog eventId="event-1" />);
+    const { unmount } = render(<CreateTestingEventSlotDialog eventId="event-1" />);
     await user.click(screen.getByRole("button", { name: "Add slot" }));
     const dialog = screen.getByRole("dialog", { name: "Add testing slot" });
     fireEvent.submit(dialog.querySelector("form")!);
@@ -654,6 +967,30 @@ describe("TestingEventApplications", () => {
     expect(await screen.findByText("Slot API unavailable")).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    unmount();
+
+    mocks.createSlot.mockResolvedValueOnce({ success: false, error: "Slot rejected" });
+    render(<CreateTestingEventSlotDialog eventId="event-2" />);
+    await user.click(screen.getByRole("button", { name: "Add slot" }));
+    fireEvent.submit(screen.getByRole("dialog").querySelector("form")!);
+    expect(await screen.findByText("Slot rejected")).toBeInTheDocument();
+  });
+
+  it("does not close quick create while its request is pending", async () => {
+    const user = userEvent.setup();
+    let finish!: (value: { success: true; data: { id: string }; message: string }) => void;
+    mocks.createEvent.mockImplementationOnce(
+      () => new Promise((resolve) => { finish = resolve; }),
+    );
+    render(<CreateTestingEventDialog />);
+    await user.click(screen.getByRole("button", { name: "New event" }));
+    await user.type(screen.getByRole("textbox", { name: "Event name" }), "Pending event");
+    await user.click(screen.getByRole("button", { name: "Create event" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Creating event..." })).toBeDisabled());
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.getByRole("dialog", { name: "New testing event" })).toBeInTheDocument();
+    finish({ success: true, data: { id: "event-created" }, message: "Created" });
+    await waitFor(() => expect(mocks.createEvent).toHaveBeenCalledOnce());
   });
 
   it("navigates after deleting a draft through a successful destructive dialog", async () => {
@@ -724,5 +1061,25 @@ describe("TestingEventApplications", () => {
 
     rerender(<TestingEventLifecycleActions event={{ status: "Draft" }} />);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("treats an unidentified lifecycle status as a draft", () => {
+    render(
+      <TestingEventLifecycleActions
+        event={{
+          id: "event-1",
+          configuration: {
+            generalRules: "Rules",
+            candidateInstructions: "Candidates",
+            testerInstructions: "Testers",
+            projectApplicationSchema: { title: "Apply", questions: [] },
+            testerRegistrationSchema: { title: "Register", questions: [] },
+          },
+        }}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Open applications" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel event" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Archive event" })).not.toBeInTheDocument();
   });
 });

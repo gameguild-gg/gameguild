@@ -255,6 +255,7 @@ describe("Testing Lab event operations", () => {
           { id: "completed", userId: "u2", status: "Completed", pendingFeedbackCount: 3 },
           { id: "no-show", userId: "u3", status: "NoShow", pendingFeedbackCount: 3 },
           { id: undefined, userId: "u4", status: "Scheduled" },
+          { id: undefined, userId: undefined, status: "Scheduled" },
           { id: "read-only", userId: "u5", status: "Attended" },
         ]}
         memberLabels={{}}
@@ -263,7 +264,7 @@ describe("Testing Lab event operations", () => {
       />,
     );
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
-    expect(screen.getAllByText(/0 pending feedback/)).toHaveLength(5);
+    expect(screen.getAllByText(/0 pending feedback/)).toHaveLength(6);
   });
 
   it("configures learning evidence and updates its course with the activity", async () => {
@@ -314,6 +315,13 @@ describe("Testing Lab event operations", () => {
     expect(screen.getByRole("combobox", { name: "Completion requirement" })).toHaveTextContent(
       "Attendance and feedback",
     );
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    rerender(
+      <TestingEventLearningDialog event={{ id: "event-1" }} activities={[]} />,
+    );
+    await user.click(screen.getByRole("button", { name: "Configure learning" }));
+    expect(document.querySelector<HTMLInputElement>('input[name="courseId"]')).toHaveValue("");
 
     rerender(
       <TestingEventLearningDialog event={{ id: "event-1" }} activities={[]} readOnly />,
