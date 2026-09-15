@@ -63,6 +63,7 @@ import { normalizeSlug, slugify } from "@/lib/slugify";
 import { LearnerLessonRenderer } from "@/components/learning/learner-lesson-renderer";
 import { LessonContentEditor } from "./lesson-content-editor";
 import { LessonCodeEditor } from "./lesson-code-editor";
+import { LessonExternalLinkEditor } from "./lesson-external-link-editor";
 import { LessonVideoEditor } from "./lesson-video-editor";
 import { QuizContentEditor } from "./quiz-content-editor";
 import { useLearningBase } from '@/lib/learning/use-learning-base';
@@ -121,7 +122,6 @@ export function ContentItemEditor({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
-  const [codingError, setCodingError] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(
     item.updatedAt ? new Date(item.updatedAt) : null,
   );
@@ -133,6 +133,9 @@ export function ContentItemEditor({
   // endpoint filters deleted rows server-side, so this is the only client-side signal.
   const [gradedChecked, setGradedChecked] =
     useState<boolean>(!!linkedAssessmentId);
+  const activeAssessmentIdRef = useRef<string | undefined>(
+    linkedAssessmentId,
+  );
   const [recentlyDeletedAssessmentId, setRecentlyDeletedAssessmentId] =
     useState<string | null>(null);
   const [showGradedOffConfirm, setShowGradedOffConfirm] = useState(false);
@@ -165,6 +168,7 @@ export function ContentItemEditor({
     useState<SerializedEditorState | null>(initialLexicalState);
   const [codeBody, setCodeBody] = useState(item.content ?? "");
   const [videoUrl, setVideoUrl] = useState(item.content ?? "");
+  const [externalUrl, setExternalUrl] = useState(item.content ?? "");
   const initialQuizContent = useMemo(
     () => (isQuiz ? (item.jsonBody ?? undefined) : undefined),
     [isQuiz, item.jsonBody],
@@ -197,8 +201,10 @@ export function ContentItemEditor({
         });
       case "Markdown":
       case "RevealJs":
+      case "Html":
         return estimateReadingMinutes({ body: codeBody || null });
       case "Video":
+      case "ExternalLink":
         return null;
       default:
         return null;
@@ -244,10 +250,14 @@ export function ContentItemEditor({
           break;
         case "Markdown":
         case "RevealJs":
+        case "Html":
           bodyToSave = codeBody || undefined;
           break;
         case "Video":
           bodyToSave = videoUrl || undefined;
+          break;
+        case "ExternalLink":
+          bodyToSave = externalUrl || undefined;
           break;
       }
     } else if (isQuiz) {
@@ -274,10 +284,16 @@ export function ContentItemEditor({
 
   const snapshotRef = useRef<string | null>(null);
   const saveInFlightRef = useRef(false);
+  const saveQueuedRef = useRef(false);
+  const manualSaveQueuedRef = useRef(false);
   const buildPayloadRef = useRef(buildSavePayload);
 
   async function performSave(isManual: boolean) {
-    if (!isManual && saveInFlightRef.current) return;
+    if (saveInFlightRef.current) {
+      saveQueuedRef.current = true;
+      manualSaveQueuedRef.current ||= isManual;
+      return;
+    }
     setError(null);
     if (isManual) setSaved(false);
 
@@ -341,6 +357,12 @@ export function ContentItemEditor({
         }
       } finally {
         saveInFlightRef.current = false;
+        if (saveQueuedRef.current) {
+          const queuedManualSave = manualSaveQueuedRef.current;
+          saveQueuedRef.current = false;
+          manualSaveQueuedRef.current = false;
+          void performSaveRef.current(queuedManualSave);
+        }
       }
     });
   }
@@ -382,6 +404,7 @@ export function ContentItemEditor({
     editorState,
     codeBody,
     videoUrl,
+    externalUrl,
     quizRevision,
     isLesson,
     isQuiz,
@@ -466,15 +489,13 @@ export function ContentItemEditor({
     );
   }
 
-  async function handleConfigureCoding() {
-    setCodingError(null);
-    if (!linkedAssessmentSlug && !linkedAssessmentId) {
-      setCodingError(
-        "No assessment is linked to this content item yet. Add an assessment in the Assessments tab first.",
-      );
-      return;
-    }
-    router.push(codingDefinitionRoute(linkedAssessmentSlug ?? linkedAssessmentId!));
+  const linkedAssessmentRouteId =
+    linkedAssessmentSlug ?? linkedAssessmentId;
+
+  function handleConfigureCoding() {
+    const routeId = linkedAssessmentSlug ?? activeAssessmentIdRef.current;
+    if (!routeId) return;
+    router.push(codingDefinitionRoute(routeId));
   }
 
   // ── Graded toggle handlers (Task 7) ──
@@ -492,12 +513,12 @@ export function ContentItemEditor({
   };
 
   function handleGradedToggle(next: boolean) {
-    if (next === gradedChecked || isGradedPending) return;
     if (!next) {
       setShowGradedOffConfirm(true);
       return;
     }
-    const restoreTargetId = recentlyDeletedAssessmentId ?? linkedAssessmentId;
+    const restoreTargetId =
+      recentlyDeletedAssessmentId ?? activeAssessmentIdRef.current;
     startGradedTransition(async () => {
       setGradedChecked(true);
       setGradedError(null);
@@ -508,12 +529,12 @@ export function ContentItemEditor({
           setGradedError(result.error);
           return;
         }
+        activeAssessmentIdRef.current = restoreTargetId;
         setRecentlyDeletedAssessmentId(null);
         router.refresh();
         return;
       }
-      const assessmentType =
-        CONTENT_TO_ASSESSMENT_TYPE[item.type] ?? "Assignment";
+      const assessmentType = CONTENT_TO_ASSESSMENT_TYPE[item.type]!;
       const result = await createAssessment({
         courseId,
         title: item.title,
@@ -530,12 +551,13 @@ export function ContentItemEditor({
         setGradedError(result.error);
         return;
       }
+      activeAssessmentIdRef.current = result.data.id;
       router.refresh();
     });
   }
 
   function confirmGradedOff() {
-    const targetId = linkedAssessmentId;
+    const targetId = activeAssessmentIdRef.current;
     setShowGradedOffConfirm(false);
     if (!targetId) return;
     startGradedTransition(async () => {
@@ -547,6 +569,7 @@ export function ContentItemEditor({
         setGradedError(result.error);
         return;
       }
+      activeAssessmentIdRef.current = undefined;
       setRecentlyDeletedAssessmentId(targetId);
       router.refresh();
     });
@@ -573,9 +596,12 @@ export function ContentItemEditor({
         return editorState;
       case "Markdown":
       case "RevealJs":
+      case "Html":
         return codeBody;
       case "Video":
         return videoUrl;
+      case "ExternalLink":
+        return externalUrl;
       default:
         return "";
     }
@@ -923,6 +949,14 @@ export function ContentItemEditor({
             />
           )}
 
+          {isLesson && selectedFormat === "ExternalLink" && !previewMode && (
+            <LessonExternalLinkEditor
+              key={item.id}
+              initialValue={externalUrl}
+              onChange={setExternalUrl}
+            />
+          )}
+
           {isLesson && selectedFormat !== "Markdown" && previewMode && (
             <div
               data-testid="lesson-preview"
@@ -964,15 +998,8 @@ export function ContentItemEditor({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() =>
-                      (linkedAssessmentSlug ?? linkedAssessmentId) &&
-                      router.push(
-                        codingDefinitionRoute(
-                          linkedAssessmentSlug ?? linkedAssessmentId!,
-                        ),
-                      )
-                    }
-                    disabled={!linkedAssessmentSlug && !linkedAssessmentId}
+                    onClick={handleConfigureCoding}
+                    disabled={!linkedAssessmentRouteId}
                   >
                     <Pencil className="mr-2 h-4 w-4" />
                     Edit Coding Tests
@@ -982,7 +1009,7 @@ export function ContentItemEditor({
                     type="button"
                     size="sm"
                     onClick={handleConfigureCoding}
-                    disabled={!linkedAssessmentId}
+                    disabled={!linkedAssessmentRouteId}
                   >
                     <Pencil className="mr-2 h-4 w-4" />
                     Configure Coding Tests
@@ -1002,15 +1029,12 @@ export function ContentItemEditor({
                     {initialCodingDefinition.maxScore}
                   </p>
                 </div>
-              ) : !linkedAssessmentId ? (
+              ) : !linkedAssessmentRouteId ? (
                 <p className="text-muted-foreground text-sm">
                   Link this content item to an assessment to enable coding
                   tests.
                 </p>
               ) : null}
-              {codingError && (
-                <p className="text-destructive text-sm">{codingError}</p>
-              )}
             </div>
           )}
 

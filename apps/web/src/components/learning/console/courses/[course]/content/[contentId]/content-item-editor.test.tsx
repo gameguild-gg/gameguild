@@ -61,8 +61,27 @@ vi.mock("@/lib/emception/put-coding-definition", () => ({
 }));
 
 vi.mock("@game-guild/lexical-surface", () => ({
-  LexicalSurface: ({ accessibleLabel }: { accessibleLabel?: string }) => (
-    <textarea aria-label={accessibleLabel ?? "Body"} readOnly />
+  LexicalSurface: ({
+    accessibleLabel,
+    onChange,
+  }: {
+    accessibleLabel?: string;
+    onChange?: (value: Record<string, unknown>) => void;
+  }) => (
+    <button
+      type="button"
+      aria-label={accessibleLabel ?? "Body"}
+      onClick={() =>
+        onChange?.({
+          root: {
+            type: "root",
+            children: [{ type: "paragraph", children: [{ type: "text", text: "Changed" }] }],
+          },
+        })
+      }
+    >
+      Change rich text
+    </button>
   ),
 }));
 
@@ -199,6 +218,36 @@ const lessonItemLexical = {
   lessonFormat: "Lexical",
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-02T00:00:00.000Z",
+} satisfies ContentItemDetail;
+
+const lessonItemHtml = {
+  ...lessonItemMarkdownBody,
+  id: "lesson-html",
+  title: "HTML lesson",
+  slug: "html-lesson",
+  description: "Has an HTML body.",
+  content: "<h1>Existing HTML</h1>",
+  lessonFormat: "Html",
+} satisfies ContentItemDetail;
+
+const lessonItemVideo = {
+  ...lessonItemMarkdownBody,
+  id: "lesson-video",
+  title: "Video lesson",
+  slug: "video-lesson",
+  description: "Has a video URL.",
+  content: "https://video.example.test/original.mp4",
+  lessonFormat: "Video",
+} satisfies ContentItemDetail;
+
+const lessonItemExternalLink = {
+  ...lessonItemMarkdownBody,
+  id: "lesson-link",
+  title: "External resource",
+  slug: "external-resource",
+  description: "Links to a resource.",
+  content: "https://example.test/original",
+  lessonFormat: "ExternalLink",
 } satisfies ContentItemDetail;
 
 // ── Task 10: reading-time estimation (auto hint / manual pin) ──
@@ -755,6 +804,143 @@ describe("ContentItemEditor", () => {
     expect(screen.getByText("Saved successfully.")).toBeInTheDocument();
   });
 
+  it("persists rich-text changes emitted by the Lexical editor", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemLexical}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Body" }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contentId: "lesson-3",
+          body: undefined,
+          lessonFormat: "Lexical",
+          jsonBody: {
+            root: {
+              type: "root",
+              children: [
+                {
+                  type: "paragraph",
+                  children: [{ type: "text", text: "Changed" }],
+                },
+              ],
+            },
+          },
+        }),
+      );
+    });
+  });
+
+  it("edits, previews, and saves an HTML lesson body", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemHtml}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Body"), {
+      target: { value: "<h1>Updated HTML</h1>" },
+    });
+    await user.click(screen.getByRole("button", { name: /preview/i }));
+    expect(screen.getByTitle("HTML lesson")).toHaveAttribute(
+      "srcdoc",
+      "<h1>Updated HTML</h1>",
+    );
+    await user.click(screen.getByRole("button", { name: /^edit$/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contentId: "lesson-html",
+          body: "<h1>Updated HTML</h1>",
+          lessonFormat: "Html",
+        }),
+      );
+    });
+  });
+
+  it("edits, previews, and saves a video lesson URL", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemVideo}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Video URL"));
+    await user.type(
+      screen.getByLabelText("Video URL"),
+      "https://video.example.test/updated.mp4",
+    );
+    await user.click(screen.getByRole("button", { name: /preview/i }));
+    await waitFor(() => {
+      expect(container.querySelector("video")).toHaveAttribute(
+        "src",
+        "https://video.example.test/updated.mp4",
+      );
+    });
+    await user.click(screen.getByRole("button", { name: /^edit$/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contentId: "lesson-video",
+          body: "https://video.example.test/updated.mp4",
+          lessonFormat: "Video",
+        }),
+      );
+    });
+  });
+
+  it("edits, previews, and saves a safe external lesson link", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={lessonItemExternalLink}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("External link URL"));
+    await user.type(
+      screen.getByLabelText("External link URL"),
+      "https://example.test/updated",
+    );
+    await user.click(screen.getByRole("button", { name: /preview/i }));
+    expect(screen.getByRole("link", { name: /open lesson resource/i })).toHaveAttribute(
+      "href",
+      "https://example.test/updated",
+    );
+    await user.click(screen.getByRole("button", { name: /^edit$/i }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          contentId: "lesson-link",
+          body: "https://example.test/updated",
+          lessonFormat: "ExternalLink",
+        }),
+      );
+    });
+  });
+
   it("shows the markdown body and preview side by side without a toggle", () => {
     render(
       <ContentItemEditor
@@ -835,6 +1021,58 @@ describe("ContentItemEditor", () => {
       ).toHaveTextContent(/last saved \d{1,2}:\d{2}:\d{2}/i);
       expect(routerMocks.refresh).not.toHaveBeenCalled();
       expect(routerMocks.replace).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("queues the newest edit while a slower autosave is still in flight", async () => {
+    vi.useFakeTimers();
+    let resolveFirstSave!: (value: { success: true; data: null }) => void;
+    vi.mocked(updateContent)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirstSave = resolve;
+          }),
+      )
+      .mockResolvedValue({ success: true, data: null });
+
+    try {
+      render(
+        <ContentItemEditor
+          courseId="course-1"
+          item={lessonItemMarkdownBody}
+          courseTitle="Advanced Game AI"
+        />,
+      );
+
+      fireEvent.change(screen.getByLabelText("Body"), {
+        target: { value: "# first edit" },
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000);
+      });
+      expect(updateContent).toHaveBeenCalledTimes(1);
+
+      fireEvent.change(screen.getByLabelText("Body"), {
+        target: { value: "# newest edit" },
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000);
+      });
+      expect(updateContent).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        resolveFirstSave({ success: true, data: null });
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(updateContent).toHaveBeenCalledTimes(2);
+      expect(updateContent).toHaveBeenLastCalledWith(
+        expect.objectContaining({ body: "# newest edit" }),
+      );
     } finally {
       vi.useRealTimers();
     }
@@ -1079,6 +1317,35 @@ describe("ContentItemEditor — Graded toggle (Task 7)", () => {
       );
     });
     expect(routerMocks.refresh).toHaveBeenCalled();
+  });
+
+  it("can remove an assessment immediately after creating it", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={codeItem}
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    const gradedSwitch = screen.getByRole("switch", { name: /^graded$/i });
+    await user.click(gradedSwitch);
+    await waitFor(() => {
+      expect(createAssessment).toHaveBeenCalledOnce();
+      expect(gradedSwitch).not.toBeDisabled();
+      expect(gradedSwitch).toBeChecked();
+    });
+
+    await user.click(gradedSwitch);
+    const dialog = await screen.findByRole("alertdialog");
+    await user.click(
+      within(dialog).getByRole("button", { name: /remove grading/i }),
+    );
+
+    await waitFor(() => {
+      expect(deleteAssessment).toHaveBeenCalledWith("course-1", "new-asmnt");
+    });
   });
 
   it("restores a recently soft-deleted assessment when toggled back ON", async () => {
