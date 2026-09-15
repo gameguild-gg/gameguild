@@ -193,7 +193,7 @@ jobs:
           registry: ${{ vars.DEVTRON_REGISTRY_HOST }}
           username: ${{ secrets.DEVTRON_REGISTRY_USERNAME }}
           password: ${{ secrets.DEVTRON_REGISTRY_PASSWORD }}
-      - uses: oras-project/setup-oras@v1
+      - uses: oras-project/setup-oras@v2
       - name: Validate registry release configuration
         env:
           REGISTRY_HOST: ${{ vars.DEVTRON_REGISTRY_HOST }}
@@ -264,7 +264,7 @@ jobs:
         with:
           name: release-plan-${{ needs.prepare.outputs.releaseSha }}
           path: artifacts/release
-      - uses: oras-project/setup-oras@v1
+      - uses: oras-project/setup-oras@v2
       - name: Preflight production and rollback configuration
         env:
           SERVICES_JSON: ${{ needs.prepare.outputs.services }}
