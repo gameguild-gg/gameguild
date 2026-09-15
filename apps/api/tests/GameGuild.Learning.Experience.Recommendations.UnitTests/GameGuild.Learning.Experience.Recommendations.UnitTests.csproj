@@ -25,6 +25,7 @@
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+        <PackageReference Include="MockQueryable.Moq" />
         <PackageReference Include="Moq" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio" />
@@ -38,5 +39,9 @@
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Experience.LearningPaths\GameGuild.Learning.Experience.LearningPaths.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Experience.Discovery\GameGuild.Learning.Experience.Discovery.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <!-- Keep the historical tests executing under the canonical coverage project until the duplicate project is retired. -->
+        <Compile Include="..\GameGuild.Recommendations.UnitTests\*.cs" Link="Consolidated\%(Filename)%(Extension)" />
     </ItemGroup>
 </Project>
