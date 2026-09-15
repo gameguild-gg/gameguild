@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -5,6 +6,7 @@ using GameGuild.Learning.Courses;
 using GameGuild.Learning.Assessments.Grading.Capabilities;
 using GameGuild.Learning.Assessments.Grading.Abstractions;
 using GameGuild.Learning.Assessments.Grading.Authoring;
+using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Assessments.Grading.Persistence;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -20,6 +22,11 @@ public static class AssessmentsModule
     /// </summary>
     public static IServiceCollection AddAssessmentsModule(this IServiceCollection services)
     {
+        services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
+            ConfigureReviewMethodsJson(options.JsonSerializerOptions));
+        services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+            ConfigureReviewMethodsJson(options.SerializerOptions));
+
         // Register services
         services.AddScoped<IAssessmentService, AssessmentService>();
         services.AddScoped<IGroupSetService, GroupSetService>();
@@ -60,5 +67,14 @@ public static class AssessmentsModule
     {
         // Controllers are auto-discovered, but this can be used for minimal API routes
         return endpoints;
+    }
+
+    private static void ConfigureReviewMethodsJson(JsonSerializerOptions options)
+    {
+        if (options.Converters.Any(static converter => converter is ReviewMethodsJsonConverter)) return;
+
+        // ReviewMethods is a numeric bitmask. It must precede the API-wide
+        // JsonStringEnumConverter so responses match the generated contract.
+        options.Converters.Insert(0, new ReviewMethodsJsonConverter());
     }
 }

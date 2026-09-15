@@ -409,7 +409,7 @@ export async function createCourse(
   }
 
   try {
-    const { programs } = createCourseModules();
+    const { programs, users } = createCourseModules();
     const result = await programs.postCourses({
       title: title.trim(),
       description: description.trim(),
@@ -423,6 +423,22 @@ export async function createCourse(
     if (result.ok) {
       const id = result.data.id!;
       const createdSlug = result.data.slug?.trim() || slug.trim();
+      const creatorId = result.data.creatorId ?? null;
+      let creatorName: string | null = null;
+      let creatorEmail: string | null = null;
+
+      if (creatorId) {
+        try {
+          const creatorResult =
+            await users.getUsersForGetUsersByUserId(creatorId);
+          if (creatorResult.ok) {
+            creatorName = creatorResult.data.name ?? null;
+            creatorEmail = creatorResult.data.email ?? null;
+          }
+        } catch {
+          // The creator ID remains a valid route fallback if identity lookup fails.
+        }
+      }
 
       revalidatePath("/workspace/learning/courses");
       revalidatePath("/console/learning/courses");
@@ -434,7 +450,9 @@ export async function createCourse(
           routeParam: getCourseRouteParam({
             id,
             slug: createdSlug,
-            creatorId: result.data.creatorId ?? null,
+            creatorId,
+            creatorName,
+            creatorEmail,
           }),
         },
       };
