@@ -45,7 +45,12 @@ public class WishlistsController : LearningControllerBase
         CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _sender.Send(new AddToWishlistCommand(courseId, userId, notifyOnSale, notifyOnUpdate), cancellationToken).ConfigureAwait(false);
+        var result = await _sender.Send(new AddToWishlistCommand(
+            courseId,
+            userId,
+            notifyOnSale,
+            notifyOnUpdate,
+            GetCurrentTenantId()), cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
