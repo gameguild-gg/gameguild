@@ -4,7 +4,7 @@ import type { TestingLabActionResult } from '@/lib/testing-lab/actions';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Button } from '@game-guild/ui/components/button';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-import { useRef, useState, useTransition, type FormEvent, type ReactNode } from 'react';
+import { useState, useTransition, type FormEvent, type ReactNode } from 'react';
 
 type Action = (formData: FormData) => Promise<TestingLabActionResult<unknown>>;
 
@@ -43,33 +43,43 @@ export function TestingLabActionForm({
   secondaryVariant?: 'outline' | 'destructive' | 'secondary' | 'ghost';
   resetOnSuccess?: boolean;
 }) {
-  const formRef = useRef<HTMLFormElement>(null);
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<TestingLabActionResult<unknown> | null>(null);
 
-  function run(nextAction: Action) {
-    const form = formRef.current;
-    if (!form || !form.reportValidity()) return;
+  function run(nextAction: Action, form: HTMLFormElement) {
+    if (!form.reportValidity()) return;
     const formData = new FormData(form);
     startTransition(async () => {
-      const next = await nextAction(formData);
-      setResult(next);
-      if (next.success && resetOnSuccess) form.reset();
+      try {
+        const next = await nextAction(formData);
+        setResult(next);
+        if (next.success && resetOnSuccess) form.reset();
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
+      }
     });
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    run(action);
+    run(action, event.currentTarget);
   }
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className={className} noValidate={false}>
+    <form onSubmit={handleSubmit} className={className} noValidate={false}>
       {children}
       <TestingLabActionMessage result={result} />
       <div className={actionsClassName}>
         {secondaryAction && secondaryLabel ? (
-          <Button type="button" variant={secondaryVariant} disabled={pending} onClick={() => run(secondaryAction)}>
+          <Button
+            type="button"
+            variant={secondaryVariant}
+            disabled={pending}
+            onClick={(event) => run(secondaryAction, event.currentTarget.form!)}
+          >
             {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
             {secondaryLabel}
           </Button>
