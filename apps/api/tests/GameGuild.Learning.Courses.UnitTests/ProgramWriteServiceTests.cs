@@ -651,6 +651,42 @@ public sealed class ProgramWriteServiceTests
     }
 
     [Fact]
+    public async Task UpdateUserProgressAsync_WhenCurrentAttemptIsCompleted_ShouldNotRegressItsState()
+    {
+        await using var context = CreateContext();
+        var graph = CreateAttemptGraph();
+        graph.CurrentAttempt.Complete();
+        context.AddRange(graph.Program, graph.Content, graph.Enrollment, graph.CurrentAttempt);
+        await context.SaveChangesAsync();
+        var service = new ProgramWriteService(context);
+
+        await service.UpdateUserProgressAsync(
+            graph.Program.Id,
+            graph.Enrollment.UserId,
+            graph.Content.Id,
+            ProgressStatus.InProgress);
+
+        graph.CurrentAttempt.IsCompleted.Should().BeTrue();
+        graph.CurrentAttempt.Status.Should().Be(ProgressStatus.Completed);
+    }
+
+    [Fact]
+    public void SubmissionTargetDetach_WhenContextIsNotEfCore_IsANoOp()
+    {
+        var service = new ContentInteractionService(
+            Mock.Of<IApplicationDbContext>(),
+            new TestRequestContextAccessor(Guid.NewGuid(), Guid.NewGuid()));
+        var detach = typeof(ContentInteractionService).GetMethod(
+            "DetachTrackedSubmissionTarget",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+        var action = () => detach!.Invoke(service, [Guid.NewGuid(), Guid.NewGuid()]);
+
+        detach.Should().NotBeNull();
+        action.Should().NotThrow();
+    }
+
+    [Fact]
     public async Task MarkContentCompletedAsync_ShouldCountDistinctRequiredContent()
     {
         await using var context = CreateContext();
