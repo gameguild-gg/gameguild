@@ -62,4 +62,87 @@ describe("NewClassSheet", () => {
     );
     expect(refresh).not.toHaveBeenCalled();
   });
+
+  it("closes the sheet when creation is cancelled", async () => {
+    const user = userEvent.setup();
+    render(<NewClassSheet courseId="course-1" />);
+
+    await user.click(screen.getByRole("button", { name: "New class" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Create class" }),
+      ).not.toBeInTheDocument();
+    });
+    expect(createCohort).not.toHaveBeenCalled();
+  });
+
+  it("keeps the sheet open and shows an API failure after the pending state", async () => {
+    let finish:
+      ((value: { success: false; error: string }) => void) | undefined;
+    vi.mocked(createCohort).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const user = userEvent.setup();
+    render(<NewClassSheet courseId="course-1" />);
+
+    await user.click(screen.getByRole("button", { name: "New class" }));
+    const form = screen
+      .getByRole("dialog", { name: "Create class" })
+      .querySelector("form");
+    expect(form).not.toBeNull();
+    fireEvent.submit(form!);
+
+    expect(
+      await screen.findByRole("button", { name: "Create and build schedule" }),
+    ).toBeDisabled();
+    finish?.({ success: false, error: "The class could not be created." });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The class could not be created.",
+    );
+    expect(screen.getByRole("dialog", { name: "Create class" })).toBeVisible();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("normalizes missing form entries before invoking the action", async () => {
+    const NativeFormData = globalThis.FormData;
+    vi.stubGlobal(
+      "FormData",
+      class {
+        get() {
+          return null;
+        }
+      },
+    );
+
+    try {
+      const user = userEvent.setup();
+      render(<NewClassSheet courseId="course-1" />);
+      await user.click(screen.getByRole("button", { name: "New class" }));
+      const form = screen
+        .getByRole("dialog", { name: "Create class" })
+        .querySelector("form");
+      expect(form).not.toBeNull();
+      fireEvent.submit(form!);
+
+      await waitFor(() => {
+        expect(createCohort).toHaveBeenCalledWith({
+          courseId: "course-1",
+          name: "",
+          description: "",
+          startDate: "T00:00:00",
+          endDate: "T23:59:59",
+          maxCapacity: Number.NaN,
+          meetingSchedule: "",
+        });
+      });
+    } finally {
+      vi.stubGlobal("FormData", NativeFormData);
+    }
+  });
 });
