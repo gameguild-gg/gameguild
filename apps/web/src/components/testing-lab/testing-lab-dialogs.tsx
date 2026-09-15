@@ -85,7 +85,7 @@ function ActionDialog({
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (!next) setResult(null);
+        setResult(null);
       }}
     >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -633,7 +633,7 @@ export function EditTestingLabRoleDialog({ role }: { role: TestingLabTestingLabR
           Edit
         </Button>
       }
-      title={`Edit ${role.name}`}
+      title={`Edit ${role.name ?? 'role'}`}
       description="Change the reusable permission matrix for this Testing Lab role."
       submitLabel="Save role"
       action={updateTestingLabRole}
@@ -641,12 +641,12 @@ export function EditTestingLabRoleDialog({ role }: { role: TestingLabTestingLabR
       <input type="hidden" name="idOrName" value={role.id ?? role.name ?? ''} />
       <div className="grid gap-4">
         <div className="space-y-2">
-          <Label>Role name</Label>
-          <Input name="name" required defaultValue={role.name ?? ''} />
+          <Label htmlFor="edit-testing-lab-role-name">Role name</Label>
+          <Input id="edit-testing-lab-role-name" name="name" required defaultValue={role.name ?? ''} />
         </div>
         <div className="space-y-2">
-          <Label>Description</Label>
-          <Textarea name="description" rows={2} defaultValue={role.description ?? ''} />
+          <Label htmlFor="edit-testing-lab-role-description">Description</Label>
+          <Textarea id="edit-testing-lab-role-description" name="description" rows={2} defaultValue={role.description ?? ''} />
         </div>
         <fieldset>
           <legend className="mb-3 text-sm font-medium">Permissions</legend>

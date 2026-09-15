@@ -184,4 +184,106 @@ describe("Testing Lab dialogs", () => {
     await user.click(screen.getByRole("button", { name: "New location" }));
     expect(screen.queryByText("The Testing Lab operation failed.")).not.toBeInTheDocument();
   });
+
+  it("falls back from participant names to email and then an unknown label", async () => {
+    const user = userEvent.setup();
+    render(
+      <AddTestingParticipantDialog
+        requestId="request-1"
+        members={[
+          { id: "user-email", email: "member@example.test" },
+          { id: "user-unknown" },
+        ]}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Add participant" }));
+    await user.click(screen.getByLabelText("Member"));
+
+    expect(
+      await screen.findByRole("option", { name: "member@example.test" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Unknown member" }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders empty request fields and dates without inventing values", async () => {
+    const user = userEvent.setup();
+    render(
+      <EditTestingRequestDialog
+        request={{
+          id: "request-empty",
+          title: "Empty request",
+          status: "Draft",
+          description: undefined,
+          downloadUrl: undefined,
+          startDate: undefined,
+          endDate: null,
+          maxTesters: undefined,
+          instructionsContent: undefined,
+          feedbackFormContent: undefined,
+        }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Edit request" }));
+
+    expect(screen.getByLabelText("Objective")).toHaveValue("");
+    expect(screen.getByLabelText("Build URL")).toHaveValue("");
+    expect(screen.getByLabelText("Starts")).toHaveValue("");
+    expect(screen.getByLabelText("Ends")).toHaveValue("");
+    expect(screen.getByLabelText("Tester capacity")).toHaveValue(null);
+    expect(screen.getByLabelText("Instructions")).toHaveValue("");
+    expect(screen.getByLabelText("Feedback prompt")).toHaveValue("");
+  });
+
+  it("uses safe session defaults when location and capacities are absent", async () => {
+    const user = userEvent.setup();
+    render(
+      <EditTestingSessionDialog
+        session={{
+          ...session,
+          locationId: undefined,
+          maxTesters: undefined,
+          maxProjects: undefined,
+        }}
+        locations={[]}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Edit session" }));
+
+    expect(document.querySelector<HTMLInputElement>('input[name="maxTesters"]')).toHaveValue(1);
+    expect(document.querySelector<HTMLInputElement>('input[name="maxProjects"]')).toHaveValue(1);
+  });
+
+  it("renders role defaults when optional role metadata is missing", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(
+      <EditTestingLabRoleDialog
+        role={{
+          id: undefined,
+          name: "Observer",
+          description: undefined,
+          permissions: undefined,
+        }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(document.querySelector<HTMLInputElement>('input[name="idOrName"]')).toHaveValue("Observer");
+    expect(screen.getByRole("textbox", { name: "Description" })).toHaveValue("");
+    unmount();
+
+    render(
+      <EditTestingLabRoleDialog
+        role={{
+          id: undefined,
+          name: undefined,
+          description: undefined,
+          permissions: undefined,
+        }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(document.querySelector<HTMLInputElement>('input[name="idOrName"]')).toHaveValue("");
+    expect(screen.getByRole("textbox", { name: "Role name" })).toHaveValue("");
+  });
 });
