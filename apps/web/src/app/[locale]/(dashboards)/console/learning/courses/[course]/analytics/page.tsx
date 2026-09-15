@@ -7,12 +7,12 @@ import { getCourseRouteParam } from '@/lib/learning/course-route';
  */
 export default async function AnalyticsPage({
   params,
-}: PageProps<'/[locale]/console/learning/courses/[course]/analytics'>): Promise<never> {
+}: PageProps<'/[locale]/console/learning/courses/[course]/analytics'>): Promise<void> {
   const { locale, course: courseIdentifier } = await params;
   const course = await getCourse(courseIdentifier);
   const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
 
-  redirect({
+  return redirect({
     href: `/console/learning/courses/${encodeURIComponent(courseRouteParam)}/overview`,
     locale,
   });

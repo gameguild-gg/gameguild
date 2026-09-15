@@ -8,12 +8,12 @@ import { getCourse } from '@/lib/learning';
  * Redirects to the overview page which contains the course dashboard
  * with analytics, metrics, and course summary.
  */
-export default async function Page({ params }: PageProps<'/[locale]/workspace/learning/courses/[course]'>): Promise<never> {
+export default async function Page({ params }: PageProps<'/[locale]/workspace/learning/courses/[course]'>): Promise<void> {
   const { locale, course: courseIdentifier } = await params;
   const course = await getCourse(courseIdentifier);
   const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
 
-  redirect({
+  return redirect({
     href: `/workspace/learning/courses/${encodeURIComponent(courseRouteParam)}/overview`,
     locale,
   });
