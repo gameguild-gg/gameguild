@@ -44,9 +44,16 @@ export function TestingLabSessionRegistration({
             : state === 'registered'
               ? unregisterFromTestingSession
               : leaveTestingSessionWaitlist;
-      const response = await operation(formData);
-      setResult(response);
-      if (response.success) setState(next);
+      try {
+        const response = await operation(formData);
+        setResult(response);
+        if (response.success) setState(next);
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
+      }
     });
   }
 
