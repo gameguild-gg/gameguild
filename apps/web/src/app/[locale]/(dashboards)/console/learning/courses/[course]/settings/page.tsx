@@ -1,6 +1,6 @@
+import { redirect } from '@/i18n/navigation';
 import { getCourse } from '@/lib/learning';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
-import { redirect } from 'next/navigation';
 
 /**
  * Settings Index Redirect
@@ -17,5 +17,8 @@ export default async function Page({ params }: PageProps<'/[locale]/console/lear
   const course = await getCourse(courseIdentifier);
   const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
 
-  redirect(`/${locale}/console/learning/courses/${encodeURIComponent(courseRouteParam)}/settings/danger`);
+  redirect({
+    href: `/console/learning/courses/${encodeURIComponent(courseRouteParam)}/settings/danger`,
+    locale,
+  });
 }
