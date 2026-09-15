@@ -146,6 +146,7 @@ function ApplicationWizard({
   const [preferredAvailability, setPreferredAvailability] = useState(application?.preferredAvailability ?? '');
   const [assetIds, setAssetIds] = useState(lines(application?.submittedAssetReferenceIds));
   const editable = acceptsApplications && (status === 'Draft' || status === 'Pending');
+  const canWithdraw = Boolean(applicationId) && ['Draft', 'Pending', 'UnderReview', 'Waitlisted'].includes(status);
   const versionMutable = status === 'Draft' || application?.submissionVersionPolicy !== 'ReleasedImmutable';
 
   function persist(intent: 'save' | 'submit', nextStep?: number) {
@@ -176,7 +177,16 @@ function ApplicationWizard({
     const formData = new FormData();
     formData.set('eventId', eventId);
     formData.set('applicationId', applicationId);
-    startTransition(async () => setResult(await withdrawTestingProjectApplication(formData)));
+    startTransition(async () => {
+      try {
+        setResult(await withdrawTestingProjectApplication(formData));
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
+      }
+    });
   }
 
   if (!editable) {
@@ -185,6 +195,12 @@ function ApplicationWizard({
         <Badge variant="outline">{status}</Badge>
         <p className="text-sm text-muted-foreground">This application package is frozen for review and historical integrity.</p>
         {application?.decisionRationale ? <Alert><AlertCircle className="size-4" /><AlertDescription>{application.decisionRationale}</AlertDescription></Alert> : null}
+        {canWithdraw ? (
+          <Button type="button" variant="ghost" className="text-destructive" disabled={pending} onClick={withdraw}>
+            Withdraw application
+          </Button>
+        ) : null}
+        <ResultMessage result={result} />
       </section>
     );
   }
@@ -287,7 +303,7 @@ function ApplicationWizard({
         </div>
       ) : null}
 
-      {applicationId && ['Draft', 'Pending', 'UnderReview', 'Waitlisted'].includes(status) ? (
+      {canWithdraw ? (
         <Button type="button" variant="ghost" className="text-destructive" disabled={pending} onClick={withdraw}>Withdraw application</Button>
       ) : null}
       <ResultMessage result={result} />
