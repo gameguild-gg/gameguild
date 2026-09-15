@@ -155,7 +155,7 @@ test('covers the complete Testing Lab operational browser matrix', async () => {
     'location lifecycle',
     'role and member access lifecycle',
     'attendance and required feedback',
-    'filters search and pagination',
+    'event filters search and pagination',
     'event cancellation and read-only history',
   ]) {
     assert.ok(
@@ -214,16 +214,16 @@ test('waits for the canonical workspace redirect after browser sign-in', async (
   );
 
   const signInStart = journey.indexOf('async function signIn(');
-  const dashboardIndex = journey.indexOf('waitForURL(/\\/dashboard/', signInStart);
+  const submitIndex = journey.indexOf('.click({ noWaitAfter: true });', signInStart);
   const workspaceIndex = journey.indexOf(
     'url.pathname.endsWith("/workspace")',
-    dashboardIndex,
+    submitIndex,
   );
 
   assert.ok(signInStart >= 0);
-  assert.ok(dashboardIndex > signInStart);
+  assert.ok(submitIndex > signInStart);
   assert.ok(
-    workspaceIndex > dashboardIndex,
+    workspaceIndex > submitIndex,
     'the canonical workspace redirect must settle before the next journey navigation',
   );
 });
