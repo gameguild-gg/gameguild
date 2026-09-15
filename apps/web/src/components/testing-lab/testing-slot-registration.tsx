@@ -76,22 +76,36 @@ export function TestingSlotRegistration({
   function register() {
     const formData = new FormData();
     formData.set('eventId', eventId);
-    formData.set('slotId', slot.id ?? '');
+    formData.set('slotId', slot.id!);
     formData.set('registrationResponseJson', JSON.stringify(responses));
     formData.set('acceptedRules', String(acceptedRules));
     startTransition(async () => {
-      const next = await registerForTestingEventSlot(formData);
-      setResult(next);
+      try {
+        const next = await registerForTestingEventSlot(formData);
+        setResult(next);
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
+      }
     });
   }
 
   function cancel() {
     const formData = new FormData();
     formData.set('eventId', eventId);
-    formData.set('registrationId', registration?.id ?? '');
+    formData.set('registrationId', registration!.id!);
     startTransition(async () => {
-      const next = await cancelTestingEventRegistration(formData);
-      setResult(next);
+      try {
+        const next = await cancelTestingEventRegistration(formData);
+        setResult(next);
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
+      }
     });
   }
 
@@ -135,7 +149,7 @@ export function TestingSlotRegistration({
               <p className="text-sm text-muted-foreground">Waitlist position {registration.waitlistPosition}</p>
             ) : null}
           </div>
-          {!['Cancelled', 'Completed', 'NoShow'].includes(registration.status ?? '') ? (
+          {registration.id && !['Cancelled', 'Completed', 'NoShow'].includes(registration.status ?? '') ? (
             <Button type="button" variant="outline" disabled={pending} onClick={cancel}>
               {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
               Cancel registration
