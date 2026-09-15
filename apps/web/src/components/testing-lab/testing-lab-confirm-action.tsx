@@ -17,7 +17,7 @@ import { Button } from '@game-guild/ui/components/button';
 import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { AlertCircle, Archive, CheckCircle2, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, type MouseEvent } from 'react';
 import { toast } from 'sonner';
 
 type Action = (formData: FormData) => Promise<TestingLabActionResult<unknown>>;
@@ -47,18 +47,25 @@ export function TestingLabConfirmAction({
   const [result, setResult] = useState<TestingLabActionResult<unknown> | null>(null);
   const Icon = intent === 'restore' ? RotateCcw : intent === 'delete' ? Trash2 : Archive;
 
-  function runAction() {
+  function runAction(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
     const formData = new FormData();
     Object.entries(fields).forEach(([key, value]) => formData.set(key, value));
     startTransition(async () => {
-      const next = await action(formData);
-      setResult(next);
-      if (next.success) {
-        toast.success(next.message);
-        if (successHref) router.push(successHref);
-        window.setTimeout(() => setOpen(false), 650);
-      } else {
-        toast.error(next.error);
+      try {
+        const next = await action(formData);
+        setResult(next);
+        if (next.success) {
+          toast.success(next.message);
+          if (successHref) router.push(successHref);
+          window.setTimeout(() => setOpen(false), 650);
+        } else {
+          toast.error(next.error);
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'The Testing Lab operation failed.';
+        setResult({ success: false, error: message });
+        toast.error(message);
       }
     });
   }
