@@ -1,14 +1,32 @@
-import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { StudentTable } from './student-table';
-import { manualEnrollStudent, removeCourseStudents, sendCourseStudentMessage } from '@/lib/learning/actions';
+import "@testing-library/jest-dom/vitest";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+import { StudentTable } from "./student-table";
+import {
+  manualEnrollStudent,
+  removeCourseStudents,
+  sendCourseStudentMessage,
+} from "@/lib/learning/actions";
 
 const refreshMock = vi.fn();
 
-vi.mock('next/navigation', () => ({
-  usePathname: () => '/workspace/learning',
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/workspace/learning",
   useRouter: () => ({ refresh: refreshMock }),
 }));
 
@@ -27,7 +45,7 @@ beforeAll(() => {
   };
 });
 
-vi.mock('@/lib/learning/actions', () => ({
+vi.mock("@/lib/learning/actions", () => ({
   manualEnrollStudent: vi.fn(),
   removeCourseStudents: vi.fn(),
   sendCourseStudentMessage: vi.fn(),
@@ -35,203 +53,521 @@ vi.mock('@/lib/learning/actions', () => ({
 
 const students = [
   {
-    id: 'student-1',
-    userId: 'user-1',
-    name: 'Ada Learner',
-    email: 'ada@example.com',
+    id: "student-1",
+    userId: "user-1",
+    name: "Ada Learner",
+    email: "ada@example.com",
     completionPercent: 100,
     isActive: true,
-    enrolledAt: '2026-06-01T00:00:00.000Z',
-    lastActivity: '2026-06-10T00:00:00.000Z',
+    enrolledAt: "2026-06-01T00:00:00.000Z",
+    lastActivity: "2026-06-10T00:00:00.000Z",
   },
   {
-    id: 'student-2',
-    userId: 'user-2',
-    name: 'Grace Builder',
-    email: 'grace@example.com',
+    id: "student-2",
+    userId: "user-2",
+    name: "Grace Builder",
+    email: "grace@example.com",
     completionPercent: 60,
     isActive: true,
-    enrolledAt: '2026-06-02T00:00:00.000Z',
-    lastActivity: '2026-06-11T00:00:00.000Z',
+    enrolledAt: "2026-06-02T00:00:00.000Z",
+    lastActivity: "2026-06-11T00:00:00.000Z",
   },
   {
-    id: 'student-3',
-    userId: 'user-3',
-    name: 'Alan Inactive',
-    email: 'alan@example.com',
+    id: "student-3",
+    userId: "user-3",
+    name: "Alan Inactive",
+    email: "alan@example.com",
     completionPercent: 20,
     isActive: false,
-    enrolledAt: '2026-06-03T00:00:00.000Z',
-    lastActivity: '2026-06-04T00:00:00.000Z',
+    enrolledAt: "2026-06-03T00:00:00.000Z",
+    lastActivity: "2026-06-04T00:00:00.000Z",
   },
 ];
 
-describe('StudentTable', () => {
+describe("StudentTable", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(manualEnrollStudent).mockResolvedValue({ success: true, data: { id: 'enrollment-1' } });
-    vi.mocked(removeCourseStudents).mockResolvedValue({ success: true, data: { removed: 1 } });
-    vi.mocked(sendCourseStudentMessage).mockResolvedValue({ success: true, data: { sent: 1 } });
+    vi.mocked(manualEnrollStudent).mockResolvedValue({
+      success: true,
+      data: { id: "enrollment-1" },
+    });
+    vi.mocked(removeCourseStudents).mockResolvedValue({
+      success: true,
+      data: { removed: 1 },
+    });
+    vi.mocked(sendCourseStudentMessage).mockResolvedValue({
+      success: true,
+      data: { sent: 1 },
+    });
   });
 
-  it('filters enrolled students by search and status', async () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("filters enrolled students by search and status", async () => {
     const user = userEvent.setup();
 
-    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
+    render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
+    );
 
-    expect(screen.getByText('3 students enrolled')).toBeInTheDocument();
-    expect(screen.getByText('Ada Learner')).toBeInTheDocument();
-    expect(screen.getByText('Grace Builder')).toBeInTheDocument();
-    expect(screen.getByText('Alan Inactive')).toBeInTheDocument();
+    expect(screen.getByText("3 students enrolled")).toBeInTheDocument();
+    expect(screen.getByText("Ada Learner")).toBeInTheDocument();
+    expect(screen.getByText("Grace Builder")).toBeInTheDocument();
+    expect(screen.getByText("Alan Inactive")).toBeInTheDocument();
 
-    await user.type(screen.getByPlaceholderText(/search by name or email/i), 'grace');
+    await user.type(
+      screen.getByPlaceholderText(/search by name or email/i),
+      "grace",
+    );
 
-    expect(screen.queryByText('Ada Learner')).not.toBeInTheDocument();
-    expect(screen.getByText('Grace Builder')).toBeInTheDocument();
+    expect(screen.queryByText("Ada Learner")).not.toBeInTheDocument();
+    expect(screen.getByText("Grace Builder")).toBeInTheDocument();
 
     await user.clear(screen.getByPlaceholderText(/search by name or email/i));
-    await user.click(screen.getByRole('combobox'));
-    await user.click(await screen.findByRole('option', { name: /inactive/i }));
+    await user.click(screen.getByRole("combobox"));
+    await user.click(await screen.findByRole("option", { name: /inactive/i }));
 
-    expect(screen.getByText('Alan Inactive')).toBeInTheDocument();
-    expect(screen.queryByText('Ada Learner')).not.toBeInTheDocument();
+    expect(screen.getByText("Alan Inactive")).toBeInTheDocument();
+    expect(screen.queryByText("Ada Learner")).not.toBeInTheDocument();
   });
 
-  it('supports bulk selection and row action menus', async () => {
+  it("supports bulk selection and row action menus", async () => {
     const user = userEvent.setup();
 
-    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
+    render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
+    );
 
-    const table = screen.getByRole('table');
-    await user.click(within(table).getAllByRole('checkbox')[0]);
+    const table = screen.getByRole("table");
+    await user.click(within(table).getAllByRole("checkbox")[0]);
 
-    expect(screen.getByText('3 student(s) selected')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /send message/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^remove$/i })).toBeInTheDocument();
+    expect(screen.getByText("3 student(s) selected")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /send message/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^remove$/i }),
+    ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Actions for Ada Learner' }));
-    expect(await screen.findByText('View profile')).toBeInTheDocument();
-    expect(screen.getByText('View progress')).toBeInTheDocument();
-    expect(screen.getByText('Remove from Course')).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Actions for Ada Learner" }),
+    );
+    expect(await screen.findByText("View profile")).toBeInTheDocument();
+    expect(screen.getByText("View progress")).toBeInTheDocument();
+    expect(screen.getByText("Remove from Course")).toBeInTheDocument();
   });
 
-  it('supports individual selection, bulk clearing, filtered empty states, and enrollment cancel', async () => {
+  it("supports individual selection, bulk clearing, filtered empty states, and enrollment cancel", async () => {
     const user = userEvent.setup();
 
-    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
+    render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
+    );
 
-    const table = screen.getByRole('table');
-    const checkboxes = within(table).getAllByRole('checkbox');
+    const table = screen.getByRole("table");
+    const checkboxes = within(table).getAllByRole("checkbox");
 
     await user.click(checkboxes[1]);
-    expect(screen.getByText('1 student(s) selected')).toBeInTheDocument();
+    expect(screen.getByText("1 student(s) selected")).toBeInTheDocument();
 
     await user.click(checkboxes[1]);
-    expect(screen.queryByText(/student\(s\) selected/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/student\(s\) selected/i),
+    ).not.toBeInTheDocument();
 
     await user.click(checkboxes[0]);
-    expect(screen.getByText('3 student(s) selected')).toBeInTheDocument();
+    expect(screen.getByText("3 student(s) selected")).toBeInTheDocument();
     await user.click(checkboxes[0]);
-    expect(screen.queryByText(/student\(s\) selected/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/student\(s\) selected/i),
+    ).not.toBeInTheDocument();
 
-    await user.type(screen.getByPlaceholderText(/search by name or email/i), 'nobody');
-    expect(screen.getByText('No students found')).toBeInTheDocument();
-    expect(screen.getByText('Try adjusting your search or filter criteria.')).toBeInTheDocument();
+    await user.type(
+      screen.getByPlaceholderText(/search by name or email/i),
+      "nobody",
+    );
+    expect(screen.getByText("No students found")).toBeInTheDocument();
+    expect(
+      screen.getByText("Try adjusting your search or filter criteria."),
+    ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /enroll student/i }));
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /cancel/i }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: /enroll student/i }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /cancel/i }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
   });
 
-  it('manually enrolls an existing student and closes the dialog on success', async () => {
+  it("manually enrolls an existing student and closes the dialog on success", async () => {
     render(<StudentTable courseId="course-1" students={[]} total={0} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /enroll student/i }));
-    fireEvent.change(screen.getByLabelText(/^student$/i), { target: { value: 'new-student@example.com' } });
-    fireEvent.change(screen.getByLabelText(/cohort id/i), { target: { value: 'cohort-1' } });
-    fireEvent.click(screen.getByRole('button', { name: /enroll student$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /enroll student/i }));
+    fireEvent.change(screen.getByLabelText(/^student$/i), {
+      target: { value: "new-student@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/cohort id/i), {
+      target: { value: "cohort-1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /enroll student$/i }));
 
     await waitFor(() => {
       expect(manualEnrollStudent).toHaveBeenCalledWith({
-        courseId: 'course-1',
-        userId: 'new-student@example.com',
-        cohortId: 'cohort-1',
+        courseId: "course-1",
+        userId: "new-student@example.com",
+        cohortId: "cohort-1",
       });
     });
     await waitFor(() => {
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
-    expect(screen.getByRole('status')).toHaveTextContent('Student enrolled successfully.');
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Student enrolled successfully.",
+    );
     expect(refreshMock).toHaveBeenCalled();
   });
 
-  it('renders the refreshed roster after a server refresh supplies newly enrolled students', async () => {
-    const view = render(<StudentTable courseId="course-1" students={[]} total={0} />);
+  it("renders the refreshed roster after a server refresh supplies newly enrolled students", async () => {
+    const view = render(
+      <StudentTable courseId="course-1" students={[]} total={0} />,
+    );
 
-    view.rerender(<StudentTable courseId="course-1" students={[students[0]!]} total={1} />);
+    view.rerender(
+      <StudentTable courseId="course-1" students={[students[0]!]} total={1} />,
+    );
 
-    expect(await screen.findByText('Ada Learner')).toBeInTheDocument();
-    expect(screen.getByText('1 student enrolled')).toBeInTheDocument();
+    expect(await screen.findByText("Ada Learner")).toBeInTheDocument();
+    expect(screen.getByText("1 student enrolled")).toBeInTheDocument();
   });
 
-  it('keeps the manual enrollment dialog open when the API returns a validation error', async () => {
-    vi.mocked(manualEnrollStudent).mockResolvedValueOnce({ success: false, error: 'Student was not found.' });
+  it("keeps the manual enrollment dialog open when the API returns a validation error", async () => {
+    vi.mocked(manualEnrollStudent).mockResolvedValueOnce({
+      success: false,
+      error: "Student was not found.",
+    });
 
     render(<StudentTable courseId="course-1" students={[]} total={0} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /enroll student/i }));
-    fireEvent.change(screen.getByLabelText(/^student$/i), { target: { value: 'missing@example.com' } });
-    fireEvent.click(screen.getByRole('button', { name: /enroll student$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /enroll student/i }));
+    fireEvent.change(screen.getByLabelText(/^student$/i), {
+      target: { value: "missing@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /enroll student$/i }));
 
-    expect(await screen.findByText('Student was not found.')).toBeInTheDocument();
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(
+      await screen.findByText("Student was not found."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
-  it('removes selected students after explicit confirmation', async () => {
+  it("removes selected students after explicit confirmation", async () => {
     const user = userEvent.setup();
-    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
-
-    await user.click(within(screen.getByRole('table')).getAllByRole('checkbox')[1]);
-    await user.click(screen.getByRole('button', { name: /^remove$/i }));
-    expect(screen.getByRole('dialog', { name: 'Remove students' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Confirm removal' }));
-
-    await waitFor(() => expect(removeCourseStudents).toHaveBeenCalledWith('course-1', ['user-1']));
-    expect(await screen.findByRole('status')).toHaveTextContent('1 student removed.');
-  });
-
-  it('sends a message to selected students through the course notification flow', async () => {
-    const user = userEvent.setup();
-    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
-
-    await user.click(within(screen.getByRole('table')).getAllByRole('checkbox')[2]);
-    await user.click(screen.getByRole('button', { name: /send message/i }));
-    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'Milestone update' } });
-    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'The critique session moved to Friday.' } });
-    await user.click(screen.getByRole('button', { name: 'Send message' }));
-
-    await waitFor(() => expect(sendCourseStudentMessage).toHaveBeenCalledWith({
-      courseId: 'course-1',
-      userIds: ['user-2'],
-      subject: 'Milestone update',
-      message: 'The critique session moved to Friday.',
-    }));
-    expect(await screen.findByRole('status')).toHaveTextContent('Message sent to 1 student.');
-  });
-
-  it('links to the member profile and opens course progress details', async () => {
-    const user = userEvent.setup();
-    render(<StudentTable courseId="course-1" students={students} total={students.length} />);
-
-    await user.click(screen.getAllByRole('button', { name: 'Actions for Ada Learner' })[0]);
-    expect(await screen.findByRole('menuitem', { name: 'View profile' })).toHaveAttribute(
-      'href',
-      '/console/community/members/users/user-1',
+    render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
     );
-    await user.click(screen.getByRole('menuitem', { name: 'View progress' }));
 
-    expect(screen.getByRole('dialog', { name: 'Ada Learner progress' })).toBeInTheDocument();
-    expect(screen.getByText('100% complete')).toBeInTheDocument();
+    await user.click(
+      within(screen.getByRole("table")).getAllByRole("checkbox")[1],
+    );
+    await user.click(screen.getByRole("button", { name: /^remove$/i }));
+    expect(
+      screen.getByRole("dialog", { name: "Remove students" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Confirm removal" }));
+
+    await waitFor(() =>
+      expect(removeCourseStudents).toHaveBeenCalledWith("course-1", ["user-1"]),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "1 student removed.",
+    );
+  });
+
+  it("sends a message to selected students through the course notification flow", async () => {
+    const user = userEvent.setup();
+    render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
+    );
+
+    await user.click(
+      within(screen.getByRole("table")).getAllByRole("checkbox")[2],
+    );
+    await user.click(screen.getByRole("button", { name: /send message/i }));
+    fireEvent.change(screen.getByLabelText("Subject"), {
+      target: { value: "Milestone update" },
+    });
+    fireEvent.change(screen.getByLabelText("Message"), {
+      target: { value: "The critique session moved to Friday." },
+    });
+    await user.click(screen.getByRole("button", { name: "Send message" }));
+
+    await waitFor(() =>
+      expect(sendCourseStudentMessage).toHaveBeenCalledWith({
+        courseId: "course-1",
+        userIds: ["user-2"],
+        subject: "Milestone update",
+        message: "The critique session moved to Friday.",
+      }),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Message sent to 1 student.",
+    );
+  });
+
+  it("links to the member profile and opens course progress details", async () => {
+    const user = userEvent.setup();
+    render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
+    );
+
+    await user.click(
+      screen.getAllByRole("button", { name: "Actions for Ada Learner" })[0],
+    );
+    expect(
+      await screen.findByRole("menuitem", { name: "View profile" }),
+    ).toHaveAttribute("href", "/console/community/members/users/user-1");
+    await user.click(screen.getByRole("menuitem", { name: "View progress" }));
+
+    expect(
+      screen.getByRole("dialog", { name: "Ada Learner progress" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("100% complete")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Ada Learner progress" }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("keeps the removal dialog open and reports API failures", async () => {
+    vi.mocked(removeCourseStudents).mockResolvedValueOnce({
+      success: false,
+      error: "Enrollment removal failed.",
+    });
+    const user = userEvent.setup();
+    render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
+    );
+
+    await user.click(
+      within(screen.getByRole("table")).getAllByRole("checkbox")[1],
+    );
+    await user.click(screen.getByRole("button", { name: /^remove$/i }));
+    await user.click(screen.getByRole("button", { name: "Confirm removal" }));
+
+    expect(
+      await screen.findByText("Enrollment removal failed."),
+    ).toHaveAttribute("role", "alert");
+    expect(
+      screen.getByRole("dialog", { name: "Remove students" }),
+    ).toBeInTheDocument();
+  });
+
+  it("supports row removal, cancellation, and plural removal status", async () => {
+    vi.mocked(removeCourseStudents).mockResolvedValueOnce({
+      success: true,
+      data: { removed: 3 },
+    });
+    const user = userEvent.setup();
+    render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Actions for Ada Learner" }),
+    );
+    await user.click(await screen.findByText("Remove from Course"));
+    expect(
+      screen.getByText(/Remove 1 selected student from this course/i),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Remove students" }),
+      ).not.toBeInTheDocument(),
+    );
+
+    await user.click(
+      within(screen.getByRole("table")).getAllByRole("checkbox")[0],
+    );
+    await user.click(screen.getByRole("button", { name: /^remove$/i }));
+    expect(
+      screen.getByText(/Remove 3 selected students from this course/i),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Confirm removal" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "3 students removed.",
+    );
+  });
+
+  it("keeps the message dialog open and reports delivery failures", async () => {
+    vi.mocked(sendCourseStudentMessage).mockResolvedValueOnce({
+      success: false,
+      error: "Notification delivery failed.",
+    });
+    const user = userEvent.setup();
+    render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
+    );
+
+    await user.click(
+      within(screen.getByRole("table")).getAllByRole("checkbox")[1],
+    );
+    await user.click(screen.getByRole("button", { name: /send message/i }));
+    fireEvent.change(screen.getByLabelText("Subject"), {
+      target: { value: "Progress update" },
+    });
+    fireEvent.change(screen.getByLabelText("Message"), {
+      target: { value: "Please review." },
+    });
+    await user.click(screen.getByRole("button", { name: "Send message" }));
+
+    expect(
+      await screen.findByText("Notification delivery failed."),
+    ).toHaveAttribute("role", "alert");
+    expect(
+      screen.getByRole("dialog", { name: "Message students" }),
+    ).toBeInTheDocument();
+  });
+
+  it("supports cancelling and sending a message to multiple students", async () => {
+    vi.mocked(sendCourseStudentMessage).mockResolvedValueOnce({
+      success: true,
+      data: { sent: 3 },
+    });
+    const user = userEvent.setup();
+    render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
+    );
+
+    await user.click(
+      within(screen.getByRole("table")).getAllByRole("checkbox")[0],
+    );
+    await user.click(screen.getByRole("button", { name: /send message/i }));
+    expect(
+      screen.getByText(/notification to 3 selected students/i),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Message students" }),
+      ).not.toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole("button", { name: /send message/i }));
+    fireEvent.change(screen.getByLabelText("Subject"), {
+      target: { value: "Group update" },
+    });
+    fireEvent.change(screen.getByLabelText("Message"), {
+      target: { value: "New material is ready." },
+    });
+    await user.click(screen.getByRole("button", { name: "Send message" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Message sent to 3 students.",
+    );
+  });
+
+  it("exports the filtered roster as an escaped CSV download", async () => {
+    const createObjectURL = vi.fn(() => "blob:student-export");
+    const revokeObjectURL = vi.fn();
+    class UrlStub extends URL {}
+    Object.assign(UrlStub, { createObjectURL, revokeObjectURL });
+    vi.stubGlobal("URL", UrlStub);
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+    const user = userEvent.setup();
+    render(
+      <StudentTable
+        courseId="course/1"
+        students={[
+          { ...students[0]!, name: 'Ada "Ace" Learner' },
+          students[1]!,
+        ]}
+        total={2}
+      />,
+    );
+
+    await user.type(
+      screen.getByPlaceholderText(/search by name or email/i),
+      "ada",
+    );
+    await user.click(screen.getByRole("button", { name: /export/i }));
+
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    expect(click).toHaveBeenCalledOnce();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:student-export");
+  });
+
+  it("prunes selected students when a refreshed roster no longer contains them", async () => {
+    const user = userEvent.setup();
+    const view = render(
+      <StudentTable
+        courseId="course-1"
+        students={students}
+        total={students.length}
+      />,
+    );
+
+    await user.click(
+      within(screen.getByRole("table")).getAllByRole("checkbox")[1],
+    );
+    expect(screen.getByText("1 student(s) selected")).toBeInTheDocument();
+
+    view.rerender(
+      <StudentTable courseId="course-1" students={[students[1]!]} total={1} />,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.queryByText(/student\(s\) selected/i),
+      ).not.toBeInTheDocument(),
+    );
   });
 });
