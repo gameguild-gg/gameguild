@@ -120,7 +120,7 @@ export interface TestingLabLearningActivityOption {
   label: string;
 }
 
-function apiDatetimeLocal(value?: string | null, timeZoneId = "UTC") {
+export function apiDatetimeLocal(value?: string | null, timeZoneId = "UTC") {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return "";
@@ -142,7 +142,7 @@ type TestingEventSchedule = {
 const Hour = 60 * 60 * 1000;
 const Day = 24 * Hour;
 
-function createTestingEventSchedule(
+export function createTestingEventSchedule(
   now = new Date(),
   eventDate?: Date,
 ): TestingEventSchedule {
@@ -161,11 +161,7 @@ function createTestingEventSchedule(
   const minimumStart = new Date(applicationsOpenAt.valueOf() + 2 * Hour);
   if (startsAt <= minimumStart) startsAt = minimumStart;
 
-  let applicationsCloseAt = new Date(startsAt.valueOf() - Hour);
-  if (applicationsCloseAt <= applicationsOpenAt) {
-    applicationsCloseAt = new Date(applicationsOpenAt.valueOf() + Hour);
-    startsAt = new Date(applicationsCloseAt.valueOf() + Hour);
-  }
+  const applicationsCloseAt = new Date(startsAt.valueOf() - Hour);
   const endsAt = new Date(startsAt.valueOf() + 2 * Hour);
 
   return {
@@ -176,13 +172,13 @@ function createTestingEventSchedule(
   };
 }
 
-function scheduleDate(value: string) {
+export function scheduleDate(value: string) {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.valueOf()) ? null : date;
 }
 
-function updateTestingEventSchedule(
+export function updateTestingEventSchedule(
   current: TestingEventSchedule,
   field: keyof TestingEventSchedule,
   value: string,
@@ -242,6 +238,16 @@ function ActionMessage({
   );
 }
 
+function actionFailure(error: unknown): TestingEventActionResult<unknown> {
+  return {
+    success: false,
+    error:
+      error instanceof Error
+        ? error.message
+        : "The Testing Lab operation failed.",
+  };
+}
+
 function EventActionDialog({
   trigger,
   title,
@@ -272,13 +278,17 @@ function EventActionDialog({
     const form = event.currentTarget;
     const data = new FormData(form);
     startTransition(async () => {
-      const next = await action(data);
-      setResult(next);
-      if (next.success) {
-        form.reset();
-        if (successHref) router.push(successHref);
-        else router.refresh();
-        window.setTimeout(() => setOpen(false), 450);
+      try {
+        const next = await action(data);
+        setResult(next);
+        if (next.success) {
+          form.reset();
+          if (successHref) router.push(successHref);
+          else router.refresh();
+          window.setTimeout(() => setOpen(false), 450);
+        }
+      } catch (error) {
+        setResult(actionFailure(error));
       }
     });
   }
@@ -288,7 +298,7 @@ function EventActionDialog({
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (!next) setResult(null);
+        setResult(null);
       }}
     >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -902,7 +912,7 @@ export interface CreateTestingEventDialogProps {
   defaultTimeZone?: string;
 }
 
-function preferredNewEventTimeZone(defaultTimeZone: string) {
+export function preferredNewEventTimeZone(defaultTimeZone: string) {
   return defaultTimeZone === "UTC"
     ? browserTimeZone(defaultTimeZone)
     : defaultTimeZone;
@@ -970,13 +980,17 @@ export function CreateTestingEventDialog({
     event.preventDefault();
     const form = event.currentTarget;
     startTransition(async () => {
-      const next = await createTestingEvent(new FormData(form));
-      if (next.success) {
-        closeDrawer();
-        router.refresh();
-        return;
+      try {
+        const next = await createTestingEvent(new FormData(form));
+        if (next.success) {
+          closeDrawer();
+          router.refresh();
+          return;
+        }
+        setResult(next);
+      } catch (error) {
+        setResult(actionFailure(error));
       }
-      setResult(next);
     });
   }
 
@@ -1371,12 +1385,19 @@ export function TestingEventLifecycleActions({
     configuration.testerRegistrationSchema,
   );
 
+  if (!event.id) return null;
+
   function run(transition: string) {
-    if (!event.id) return;
     const form = new FormData();
-    form.set("eventId", event.id);
+    form.set("eventId", event.id!);
     form.set("transition", transition);
-    startTransition(async () => setResult(await transitionTestingEvent(form)));
+    startTransition(async () => {
+      try {
+        setResult(await transitionTestingEvent(form));
+      } catch (error) {
+        setResult(actionFailure(error));
+      }
+    });
   }
 
   const NextIcon = next?.[2];
@@ -1696,17 +1717,25 @@ export function TestingEventApplications({
                   onClick={() => {
                     setReviewingApplicationId(application.id!);
                     startReviewTransition(async () => {
-                      const form = new FormData();
-                      form.set("eventId", eventId);
-                      form.set("applicationId", application.id!);
-                      const result =
-                        await beginTestingEventApplicationReview(form);
-                      setReviewResult({
-                        applicationId: application.id!,
-                        result,
-                      });
-                      if (result.success) router.refresh();
-                      setReviewingApplicationId(null);
+                      try {
+                        const form = new FormData();
+                        form.set("eventId", eventId);
+                        form.set("applicationId", application.id!);
+                        const result =
+                          await beginTestingEventApplicationReview(form);
+                        setReviewResult({
+                          applicationId: application.id!,
+                          result,
+                        });
+                        if (result.success) router.refresh();
+                      } catch (error) {
+                        setReviewResult({
+                          applicationId: application.id!,
+                          result: actionFailure(error),
+                        });
+                      } finally {
+                        setReviewingApplicationId(null);
+                      }
                     });
                   }}
                 >
