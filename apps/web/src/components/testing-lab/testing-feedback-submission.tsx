@@ -50,13 +50,22 @@ function FeedbackForm({ eventId, obligation }: { eventId: string; obligation: Fe
   function submit() {
     const formData = new FormData();
     formData.set('eventId', eventId);
-    formData.set('obligationId', obligation.id ?? '');
+    formData.set('obligationId', obligation.id!);
     formData.set('questionnaireRevisionId', obligation.questionnaireRevisionId ?? '');
     formData.set('responsesJson', JSON.stringify(responses));
     formData.set('overallRating', rating);
     formData.set('wouldRecommend', String(recommendation === 'yes'));
     formData.set('additionalNotes', notes);
-    startTransition(async () => setResult(await submitTestingEventFeedback(formData)));
+    startTransition(async () => {
+      try {
+        setResult(await submitTestingEventFeedback(formData));
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
+      }
+    });
   }
 
   return (
@@ -81,7 +90,7 @@ function FeedbackForm({ eventId, obligation }: { eventId: string; obligation: Fe
         <div className="space-y-2"><Label htmlFor={`recommend-${obligation.id}`}>Would you recommend it?</Label><select id={`recommend-${obligation.id}`} value={recommendation} onChange={(event) => setRecommendation(event.currentTarget.value)} className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="">Choose</option><option value="yes">Yes</option><option value="no">No</option></select></div>
       </div>
       <div className="space-y-2"><Label htmlFor={`notes-${obligation.id}`}>Additional observations (optional)</Label><Textarea id={`notes-${obligation.id}`} value={notes} onChange={(event) => setNotes(event.currentTarget.value)} rows={3} /></div>
-      <Button type="button" disabled={pending || !questionnaireComplete || !rating || !recommendation} onClick={submit}>
+      <Button type="button" disabled={pending || !obligation.id || !questionnaireComplete || !rating || !recommendation} onClick={submit}>
         {pending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}Submit required feedback
       </Button>
       {result ? <Alert variant={result.success ? 'default' : 'destructive'} aria-live="polite">{result.success ? <CheckCircle2 className="size-4" /> : <AlertCircle className="size-4" />}<AlertDescription>{result.success ? result.message : result.error}</AlertDescription></Alert> : null}
