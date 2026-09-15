@@ -30,7 +30,7 @@ import {
 } from '@game-guild/ui/components/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@game-guild/ui/components/tabs';
 import { AlertTriangle, CalendarDays, Clock3, ListTree, Loader2, MoveRight, Pencil, ShieldCheck } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { shiftCohortScheduleItem, updateCohortScheduleItem } from '@/lib/learning/actions/cohorts';
 import type { CourseCohortSummary } from '@/lib/learning/queries/cohorts';
@@ -66,6 +66,8 @@ function editForm(item: LearningCohortsCohortScheduleItem): EditItemForm {
 }
 
 export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: CohortScheduleWorkspaceProps) {
+  'use no memo';
+
   const [schedule, setSchedule] = useState(initialSchedule);
   const [view, setView] = useState<ScheduleView>('syllabus');
   const [shiftItem, setShiftItem] = useState<LearningCohortsCohortScheduleItem | null>(null);
@@ -110,7 +112,7 @@ export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: C
     setShiftItem(null);
   };
 
-  const submitEdit = async () => {
+  const submitEdit = useCallback(async () => {
     if (!editValues!.title.trim()) {
       setMutationError('Schedule item title is required.');
       return;
@@ -140,7 +142,7 @@ export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: C
     setSchedule(result.data);
     setEditItem(null);
     setEditValues(null);
-  };
+  }, [cohort.id, courseId, editItem, editValues, schedule]);
 
   return (
     <div className="min-w-0 space-y-5">
