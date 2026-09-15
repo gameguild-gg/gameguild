@@ -24,7 +24,7 @@ export function TestingLabBulkRequestForm({ children, matchingCount }: { childre
   const [result, setResult] = useState<TestingLabActionResult<unknown> | null>(null);
 
   function prepare(next: 'archive' | 'restore') {
-    const count = formRef.current?.querySelectorAll<HTMLInputElement>('input[name="requestIds"]:checked').length ?? 0;
+    const count = formRef.current!.querySelectorAll<HTMLInputElement>('input[name="requestIds"]:checked').length;
     if (count === 0) {
       setResult({ success: false, error: 'Select at least one testing request.' });
       return;
@@ -34,18 +34,25 @@ export function TestingLabBulkRequestForm({ children, matchingCount }: { childre
   }
 
   function execute() {
-    const form = formRef.current;
-    if (!form || !operation) return;
+    const form = formRef.current!;
     const data = new FormData(form);
-    data.set('operation', operation);
+    data.set('operation', operation!);
     startTransition(async () => {
-      const next = await bulkUpdateTestingRequests(data);
-      setResult(next);
-      if (next.success)
-        form.querySelectorAll<HTMLInputElement>('input[name="requestIds"]').forEach((input) => {
-          input.checked = false;
+      try {
+        const next = await bulkUpdateTestingRequests(data);
+        setResult(next);
+        if (next.success)
+          form.querySelectorAll<HTMLInputElement>('input[name="requestIds"]').forEach((input) => {
+            input.checked = false;
+          });
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
         });
-      setOperation(null);
+      } finally {
+        setOperation(null);
+      }
     });
   }
 
@@ -78,9 +85,7 @@ export function TestingLabBulkRequestForm({ children, matchingCount }: { childre
       {children}
       <AlertDialog
         open={operation !== null}
-        onOpenChange={(open) => {
-          if (!open && !pending) setOperation(null);
-        }}
+        onOpenChange={() => setOperation(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
