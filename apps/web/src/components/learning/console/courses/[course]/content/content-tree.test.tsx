@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -7,6 +8,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ContentTree } from "./content-tree";
 import type { ContentItem } from "@/lib/learning/types";
@@ -51,6 +53,13 @@ vi.mock("@/lib/learning/actions", () => ({
   moveContent: vi.fn(),
   reorderContent: vi.fn(),
   updateContent: vi.fn(),
+}));
+
+vi.mock("@game-guild/ui/components/tooltip", () => ({
+  TooltipProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
+  Tooltip: ({ children }: { children: ReactNode }) => <>{children}</>,
+  TooltipTrigger: ({ children }: { children: ReactNode; asChild?: boolean }) => <>{children}</>,
+  TooltipContent: () => null,
 }));
 
 const moduleItem = {
@@ -259,16 +268,18 @@ describe("ContentTree course management", () => {
       type: "Module" as const,
       title: "Production Foundations",
     };
-    view.rerender(
-      <TooltipProvider>
-        <ContentTree
-          courseId="course-1"
-          modules={[createdModule]}
-          allItems={[createdModule]}
-          virtualModuleIds={[]}
-        />
-      </TooltipProvider>,
-    );
+    await act(async () => {
+      view.rerender(
+        <TooltipProvider>
+          <ContentTree
+            courseId="course-1"
+            modules={[createdModule]}
+            allItems={[createdModule]}
+            virtualModuleIds={[]}
+          />
+        </TooltipProvider>,
+      );
+    });
 
     fireEvent.click(screen.getByRole("button", { name: /add lesson/i }));
     await screen.findByText("Production Foundations");
@@ -847,12 +858,14 @@ describe("ContentTree course management", () => {
     expect(deleteDialog).toHaveTextContent(
       "All lessons within this module will also be deleted.",
     );
-    fireEvent.click(
+    await user.click(
       within(deleteDialog).getByRole("button", { name: /cancel/i }),
     );
-    expect(
-      screen.queryByRole("dialog", { name: /delete module/i }),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: /delete module/i }),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   it("edits modules and surfaces server-action validation failures", async () => {
