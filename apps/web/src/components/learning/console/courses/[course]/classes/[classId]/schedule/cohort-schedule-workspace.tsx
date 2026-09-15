@@ -89,7 +89,6 @@ export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: C
   };
 
   const submitShift = async () => {
-    if (!schedule || !shiftItem?.id) return;
     const days = Number(shiftDays);
     if (!Number.isInteger(days) || days === 0) {
       setMutationError('Enter a non-zero whole number of days.');
@@ -97,8 +96,8 @@ export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: C
     }
     setPending('shift');
     setMutationError(null);
-    const result = await shiftCohortScheduleItem(courseId, cohort.id, shiftItem.id, {
-      expectedVersion: schedule.version ?? 0,
+    const result = await shiftCohortScheduleItem(courseId, cohort.id, shiftItem!.id!, {
+      expectedVersion: schedule!.version ?? 0,
       days,
       scope: shiftScope,
     });
@@ -112,26 +111,25 @@ export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: C
   };
 
   const submitEdit = async () => {
-    if (!schedule || !editItem?.id || !editValues) return;
-    if (!editValues.title.trim()) {
+    if (!editValues!.title.trim()) {
       setMutationError('Schedule item title is required.');
       return;
     }
     setPending('edit');
     setMutationError(null);
-    const result = await updateCohortScheduleItem(courseId, cohort.id, editItem.id, {
-      expectedVersion: schedule.version ?? 0,
+    const result = await updateCohortScheduleItem(courseId, cohort.id, editItem!.id!, {
+      expectedVersion: schedule!.version ?? 0,
       item: {
-        title: editValues.title.trim(),
-        startsAt: editItem.startsAt,
-        endsAt: editItem.endsAt,
-        availableFrom: editItem.availableFrom,
-        availableUntil: editItem.availableUntil,
-        dueAt: editItem.dueAt,
-        location: editValues.location.trim() || null,
-        meetingUrl: editValues.meetingUrl.trim() || null,
-        status: editValues.status,
-        visibilityOverride: editValues.visibilityOverride,
+        title: editValues!.title.trim(),
+        startsAt: editItem!.startsAt,
+        endsAt: editItem!.endsAt,
+        availableFrom: editItem!.availableFrom,
+        availableUntil: editItem!.availableUntil,
+        dueAt: editItem!.dueAt,
+        location: editValues!.location.trim() || null,
+        meetingUrl: editValues!.meetingUrl.trim() || null,
+        status: editValues!.status,
+        visibilityOverride: editValues!.visibilityOverride,
       },
     });
     setPending(null);
@@ -223,7 +221,7 @@ export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: C
         </div>
       )}
 
-      <Dialog open={Boolean(shiftItem)} onOpenChange={(open) => { if (!open) { setShiftItem(null); setMutationError(null); } }}>
+      <Dialog open={Boolean(shiftItem)} onOpenChange={() => { setShiftItem(null); setMutationError(null); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Shift {shiftItem?.title || 'schedule item'}</DialogTitle>
@@ -255,7 +253,7 @@ export function CohortScheduleWorkspace({ courseId, cohort, initialSchedule }: C
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(editItem)} onOpenChange={(open) => { if (!open) { setEditItem(null); setEditValues(null); setMutationError(null); } }}>
+      <Dialog open={Boolean(editItem)} onOpenChange={() => { setEditItem(null); setEditValues(null); setMutationError(null); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit schedule item</DialogTitle>
