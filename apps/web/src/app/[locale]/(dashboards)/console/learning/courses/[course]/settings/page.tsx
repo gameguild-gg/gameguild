@@ -12,12 +12,12 @@ import { getCourseRouteParam } from '@/lib/learning/course-route';
  * - /settings/integrations - Third-party integrations
  * - /settings/danger - Ownership transfer, archive, delete course
  */
-export default async function Page({ params }: PageProps<'/[locale]/console/learning/courses/[course]/settings'>): Promise<never> {
+export default async function Page({ params }: PageProps<'/[locale]/console/learning/courses/[course]/settings'>): Promise<void> {
   const { locale, course: courseIdentifier } = await params;
   const course = await getCourse(courseIdentifier);
   const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
 
-  redirect({
+  return redirect({
     href: `/console/learning/courses/${encodeURIComponent(courseRouteParam)}/settings/danger`,
     locale,
   });
