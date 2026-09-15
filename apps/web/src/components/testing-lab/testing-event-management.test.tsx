@@ -8,7 +8,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import type { TestingLabTestingEventTemplateProjection } from "@game-guild/client";
 import { renderToString } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 global.ResizeObserver = class ResizeObserver {
   observe() {}
@@ -19,12 +19,17 @@ Element.prototype.scrollIntoView = vi.fn();
 
 const mocks = vi.hoisted(() => ({
   beginReview: vi.fn(),
+  createEvent: vi.fn(),
+  createSlot: vi.fn(),
+  deleteEvent: vi.fn(),
+  push: vi.fn(),
   refresh: vi.fn(),
+  transitionEvent: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/workspace/learning",
-  useRouter: () => ({ refresh: mocks.refresh }),
+  useRouter: () => ({ push: mocks.push, refresh: mocks.refresh }),
 }));
 
 vi.mock("@/lib/testing-lab/events-actions", () => ({
@@ -33,15 +38,15 @@ vi.mock("@/lib/testing-lab/events-actions", () => ({
   approveTestingEventApplication: vi.fn(),
   beginTestingEventApplicationReview: mocks.beginReview,
   configureTestingEventLearning: vi.fn(),
-  createTestingEvent: vi.fn(),
-  createTestingEventSlot: vi.fn(),
+  createTestingEvent: mocks.createEvent,
+  createTestingEventSlot: mocks.createSlot,
   archiveTestingEvent: vi.fn(),
-  deleteTestingEvent: vi.fn(),
+  deleteTestingEvent: mocks.deleteEvent,
   deleteTestingEventSlot: vi.fn(),
   rejectTestingEventApplication: vi.fn(),
   removeTestingEventCommitteeMember: vi.fn(),
   restoreTestingEvent: vi.fn(),
-  transitionTestingEvent: vi.fn(),
+  transitionTestingEvent: mocks.transitionEvent,
   updateTestingEventAttendance: vi.fn(),
   updateTestingEvent: vi.fn(),
   updateTestingEventSlot: vi.fn(),
@@ -50,14 +55,107 @@ vi.mock("@/lib/testing-lab/events-actions", () => ({
 }));
 
 import {
+  apiDatetimeLocal,
+  createTestingEventSchedule,
   CreateTestingEventDialog,
+  CreateTestingEventSlotDialog,
   EditTestingEventDialog,
   ManageTestingEventSlotDialog,
+  preferredNewEventTimeZone,
+  scheduleDate,
   TestingEventApplications,
   TestingEventLifecycleActions,
+  updateTestingEventSchedule,
 } from "./testing-event-management";
 
 describe("TestingEventApplications", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.createEvent.mockResolvedValue({
+      success: true,
+      data: { id: "event-created" },
+      message: "Event created.",
+    });
+    mocks.createSlot.mockResolvedValue({
+      success: true,
+      data: { id: "slot-created" },
+      message: "Slot created.",
+    });
+    mocks.deleteEvent.mockResolvedValue({
+      success: true,
+      data: null,
+      message: "Event deleted.",
+    });
+    mocks.transitionEvent.mockResolvedValue({
+      success: true,
+      data: null,
+      message: "Event transitioned.",
+    });
+  });
+
+  it("normalizes API dates and rejects empty or invalid instants", () => {
+    expect(apiDatetimeLocal()).toBe("");
+    expect(apiDatetimeLocal("not-a-date")).toBe("");
+    expect(apiDatetimeLocal("2026-08-11T17:00:00Z", "America/Sao_Paulo")).toBe(
+      "2026-08-11T14:00",
+    );
+    expect(scheduleDate("")).toBeNull();
+    expect(scheduleDate("not-a-date")).toBeNull();
+    expect(scheduleDate("2030-01-01T12:00")?.getFullYear()).toBe(2030);
+  });
+
+  it("creates a chronological default schedule even for an early selected day", () => {
+    const schedule = createTestingEventSchedule(
+      new Date(2030, 0, 1, 8, 17),
+      new Date(2030, 0, 1),
+    );
+
+    expect(new Date(schedule.applicationsCloseAt).valueOf()).toBeGreaterThan(
+      new Date(schedule.applicationsOpenAt).valueOf(),
+    );
+    expect(new Date(schedule.startsAt).valueOf()).toBeGreaterThanOrEqual(
+      new Date(schedule.applicationsCloseAt).valueOf(),
+    );
+    expect(
+      new Date(schedule.endsAt).valueOf() - new Date(schedule.startsAt).valueOf(),
+    ).toBe(2 * 60 * 60 * 1000);
+  });
+
+  it("repairs dependent schedule windows when dates move", () => {
+    const original = {
+      applicationsOpenAt: "2030-01-01T09:00",
+      applicationsCloseAt: "2030-01-01T10:00",
+      startsAt: "2030-01-01T11:00",
+      endsAt: "2030-01-01T13:00",
+    };
+
+    const openMoved = updateTestingEventSchedule(
+      original,
+      "applicationsOpenAt",
+      "2030-01-02T09:00",
+    );
+    expect(openMoved.applicationsCloseAt).toBe("2030-01-03T09:00");
+    expect(openMoved.startsAt).toBe("2030-01-04T09:00");
+    expect(openMoved.endsAt).toBe("2030-01-04T11:00");
+
+    const startMoved = updateTestingEventSchedule(
+      original,
+      "startsAt",
+      "2030-01-05T12:00",
+    );
+    expect(startMoved.endsAt).toBe("2030-01-05T14:00");
+
+    const validEnd = updateTestingEventSchedule(
+      original,
+      "endsAt",
+      "2030-01-01T14:00",
+    );
+    expect(validEnd.endsAt).toBe("2030-01-01T14:00");
+  });
+
+  it("uses explicit non-UTC event time zones", () => {
+    expect(preferredNewEventTimeZone("Europe/Paris")).toBe("Europe/Paris");
+  });
   it("shows human labels and refreshes the SSR view after review starts", async () => {
     mocks.beginReview.mockResolvedValue({
       success: true,
@@ -508,5 +606,123 @@ describe("TestingEventApplications", () => {
       document.querySelector<HTMLInputElement>('input[name="endsAt"]')?.value,
     ).toBe("2026-08-13T18:30");
     timezoneOffset.mockRestore();
+  });
+
+  it("submits a new event, closes the dialog, and refreshes the route", async () => {
+    const user = userEvent.setup();
+    render(<CreateTestingEventDialog />);
+    await user.click(screen.getByRole("button", { name: "New event" }));
+    await user.type(screen.getByRole("textbox", { name: "Event name" }), "Ship night");
+    await user.click(screen.getByRole("button", { name: "Create event" }));
+
+    await waitFor(() => expect(mocks.createEvent).toHaveBeenCalledOnce());
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+    expect(screen.queryByText("New testing event")).not.toBeInTheDocument();
+  });
+
+  it("keeps create errors visible for returned and rejected failures", async () => {
+    const user = userEvent.setup();
+    mocks.createEvent.mockResolvedValueOnce({
+      success: false,
+      error: "Event name is already in use.",
+    });
+    const { unmount } = render(<CreateTestingEventDialog />);
+    await user.click(screen.getByRole("button", { name: "New event" }));
+    await user.type(screen.getByRole("textbox", { name: "Event name" }), "Duplicate");
+    await user.click(screen.getByRole("button", { name: "Create event" }));
+    expect(await screen.findByText("Event name is already in use.")).toBeInTheDocument();
+    unmount();
+
+    mocks.createEvent.mockRejectedValueOnce("offline");
+    render(<CreateTestingEventDialog />);
+    await user.click(screen.getByRole("button", { name: "New event" }));
+    await user.type(screen.getByRole("textbox", { name: "Event name" }), "Offline event");
+    await user.click(screen.getByRole("button", { name: "Create event" }));
+    expect(
+      await screen.findByText("The Testing Lab operation failed."),
+    ).toBeInTheDocument();
+  });
+
+  it("runs generic event dialogs and reports action exceptions", async () => {
+    const user = userEvent.setup();
+    mocks.createSlot.mockRejectedValueOnce(new Error("Slot API unavailable"));
+    render(<CreateTestingEventSlotDialog eventId="event-1" />);
+    await user.click(screen.getByRole("button", { name: "Add slot" }));
+    const dialog = screen.getByRole("dialog", { name: "Add testing slot" });
+    fireEvent.submit(dialog.querySelector("form")!);
+
+    expect(await screen.findByText("Slot API unavailable")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("navigates after deleting a draft through a successful destructive dialog", async () => {
+    const user = userEvent.setup();
+    render(
+      <TestingEventLifecycleActions
+        event={{ id: "event-1", status: "Draft", configuration: undefined }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Delete draft" }));
+    const dialog = screen.getByRole("dialog", { name: "Delete this draft event?" });
+    await user.click(within(dialog).getByRole("button", { name: "Delete draft" }));
+
+    await waitFor(() => expect(mocks.deleteEvent).toHaveBeenCalledOnce());
+    await waitFor(() =>
+      expect(mocks.push).toHaveBeenCalledWith("/workspace/testing-lab/events"),
+    );
+  });
+
+  it.each([
+    ["Draft", "Open applications", "open-applications"],
+    ["ApplicationsOpen", "Close applications", "close-applications"],
+    ["ApplicationsClosed", "Schedule event", "schedule"],
+    ["Scheduled", "Start event", "activate"],
+    ["Active", "Complete event", "complete"],
+  ] as const)(
+    "runs the %s lifecycle transition",
+    async (status, label, transition) => {
+      const user = userEvent.setup();
+      render(
+        <TestingEventLifecycleActions
+          event={{
+            id: "event-1",
+            status,
+            configuration: {
+              generalRules: "Rules",
+              candidateInstructions: "Candidates",
+              testerInstructions: "Testers",
+              projectApplicationSchema: { title: "Apply", questions: [] },
+              testerRegistrationSchema: { title: "Register", questions: [] },
+            },
+          }}
+        />,
+      );
+      await user.click(screen.getByRole("button", { name: label }));
+
+      await waitFor(() => expect(mocks.transitionEvent).toHaveBeenCalledOnce());
+      const data = mocks.transitionEvent.mock.calls[0]?.[0] as FormData;
+      expect(data.get("transition")).toBe(transition);
+      expect(await screen.findByText("Event transitioned.")).toBeInTheDocument();
+    },
+  );
+
+  it("reports lifecycle failures and omits actions for events without identity", async () => {
+    const user = userEvent.setup();
+    mocks.transitionEvent.mockRejectedValueOnce(new Error("Transition unavailable"));
+    const { rerender } = render(
+      <TestingEventLifecycleActions
+        event={{
+          id: "event-1",
+          status: "Scheduled",
+          configuration: undefined,
+        }}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Start event" }));
+    expect(await screen.findByText("Transition unavailable")).toBeInTheDocument();
+
+    rerender(<TestingEventLifecycleActions event={{ status: "Draft" }} />);
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });
