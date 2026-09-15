@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -253,11 +253,12 @@ export function TestingEventsTable({
                 </Badge>
               </td>
               <td className="p-4">
-                <Button asChild size="sm" variant="outline">
-                  <Link href={eventHref(session.id, projectId)}>
-                    View event
-                  </Link>
-                </Button>
+                <Link
+                  href={eventHref(session.id, projectId)}
+                  className={buttonVariants({ size: "sm", variant: "outline" })}
+                >
+                  View event
+                </Link>
               </td>
             </tr>
           ))}

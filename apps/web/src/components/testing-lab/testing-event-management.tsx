@@ -50,6 +50,7 @@ import {
 } from "@game-guild/ui/components/alert-dialog";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
+import { buttonVariants } from "@game-guild/ui/components/button-variants";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { DateTimeRangePicker } from "@/components/ui/date-time-range-picker";
 import { TimeZoneCombobox } from "@/components/ui/time-zone-combobox";
@@ -1383,14 +1384,13 @@ export function TestingEventLifecycleActions({
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         {event.status === "Draft" && !draftConfigurationReady && event.id ? (
-          <Button asChild size="sm">
-            <a
-              href={`/workspace/testing-lab/events/${event.id}/overview#event-configuration-heading`}
-            >
-              <Pencil className="mr-2 size-4" />
-              Complete setup
-            </a>
-          </Button>
+          <a
+            href={`/workspace/testing-lab/events/${event.id}/overview#event-configuration-heading`}
+            className={buttonVariants({ size: "sm" })}
+          >
+            <Pencil className="mr-2 size-4" />
+            Complete setup
+          </a>
         ) : next && NextIcon ? (
           <Button size="sm" disabled={pending} onClick={() => run(next[0])}>
             <NextIcon className="mr-2 size-4" />

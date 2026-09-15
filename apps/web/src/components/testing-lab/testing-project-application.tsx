@@ -12,6 +12,7 @@ import type {
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, FolderKanban, Loader2, Save } from 'lucide-react';
@@ -331,7 +332,7 @@ export function TestingProjectApplication({
     ? { application, applications, initialProjectId, projectVersions }
     : lastAuthenticatedData;
 
-  if (!applicationData) return <Button asChild className="w-full sm:w-auto"><Link href="/sign-in">Sign in to apply</Link></Button>;
+  if (!applicationData) return <Link href="/sign-in" className={buttonVariants({ className: 'w-full sm:w-auto' })}>Sign in to apply</Link>;
 
   const currentApplications = applicationData.applications ?? (applicationData.application ? [applicationData.application] : []);
   const activeProjectIds = new Set(currentApplications.filter((item) => !['Rejected', 'Withdrawn'].includes(item.status ?? '')).map((item) => item.projectId).filter((id): id is string => Boolean(id)));
@@ -345,7 +346,7 @@ export function TestingProjectApplication({
       {!acceptsApplications ? <p className="text-sm text-muted-foreground">Project applications are currently closed.</p> : availableVersions.length > 0 ? (
         <ApplicationWizard eventId={eventId} projectVersions={availableVersions} initialProjectId={applicationData.initialProjectId} applicationSchema={applicationSchema} generalRules={generalRules} candidateInstructions={candidateInstructions} requiresFeedback={requiresFeedback} acceptsApplications={acceptsApplications} />
       ) : currentApplications.length === 0 ? (
-        <div className="flex flex-col items-start gap-3"><p className="text-sm text-muted-foreground">Create a Ready for Testing or Released project version before applying.</p><Button asChild variant="outline"><Link href="/projects">Browse projects</Link></Button></div>
+        <div className="flex flex-col items-start gap-3"><p className="text-sm text-muted-foreground">Create a Ready for Testing or Released project version before applying.</p><Link href="/projects" className={buttonVariants({ variant: 'outline' })}>Browse projects</Link></div>
       ) : null}
     </div>
   );

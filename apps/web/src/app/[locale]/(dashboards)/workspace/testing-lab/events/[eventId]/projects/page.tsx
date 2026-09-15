@@ -5,7 +5,7 @@ import { getTestingEventWorkspaceData } from "@/lib/testing-lab/events-queries";
 import { getTestingProjectOptions } from "@/lib/testing-lab/queries";
 import { formatTestingEventStatus } from "@/lib/testing-lab/format";
 import { Badge } from "@game-guild/ui/components/badge";
-import { Button } from "@game-guild/ui/components/button";
+import { buttonVariants } from "@game-guild/ui/components/button-variants";
 import { ArrowRight, FolderKanban } from "lucide-react";
 import { notFound } from "next/navigation";
 
@@ -42,11 +42,12 @@ export default async function TestingEventProjectsPage({
           title="No projects yet"
           description="Projects appear here after they apply to this event."
           action={
-            <Button asChild variant="outline">
-              <Link href={`/workspace/testing-lab/events/${eventId}/applications`}>
-                Review applications
-              </Link>
-            </Button>
+            <Link
+              href={`/workspace/testing-lab/events/${eventId}/applications`}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Review applications
+            </Link>
           }
         />
       ) : (
@@ -75,14 +76,13 @@ export default async function TestingEventProjectsPage({
                       : "No testing slot assigned"}
                   </p>
                 </div>
-                <Button asChild size="sm" variant="ghost">
-                  <Link
-                    href={`/workspace/testing-lab/events/${eventId}/applications`}
-                  >
-                    Open application
-                    <ArrowRight aria-hidden="true" />
-                  </Link>
-                </Button>
+                <Link
+                  href={`/workspace/testing-lab/events/${eventId}/applications`}
+                  className={buttonVariants({ size: "sm", variant: "ghost" })}
+                >
+                  Open application
+                  <ArrowRight aria-hidden="true" />
+                </Link>
               </article>
             );
           })}
