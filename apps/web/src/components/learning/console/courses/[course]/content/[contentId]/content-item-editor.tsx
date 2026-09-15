@@ -102,8 +102,8 @@ export function ContentItemEditor({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [title, setTitle] = useState(item.title);
-  const [slug, setSlug] = useState(item.slug);
+  const [title, setTitle] = useState(item.title ?? "");
+  const [slug, setSlug] = useState(item.slug ?? "");
   // Slug starts in auto mode regardless of the stored value (it may be a
   // legacy backfill): title edits regenerate it until the slug is edited
   // directly in this session, which detaches it.

@@ -412,6 +412,37 @@ describe("ContentItemEditor", () => {
     expect(updateContent).not.toHaveBeenCalled();
   });
 
+  it("normalizes legacy items whose title and slug are absent", async () => {
+    const user = userEvent.setup();
+    render(
+      <ContentItemEditor
+        courseId="course-1"
+        item={
+          {
+            ...lessonItemMarkdownEmpty,
+            title: undefined,
+            slug: undefined,
+          } as unknown as ContentItemDetail
+        }
+        courseTitle="Advanced Game AI"
+      />,
+    );
+
+    expect(screen.getByLabelText(/^title$/i)).toHaveValue("");
+    expect(screen.getByLabelText(/url slug/i)).toHaveValue("");
+    await user.type(screen.getByLabelText(/^title$/i), "Recovered lesson");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Recovered lesson",
+          slug: "recovered-lesson",
+        }),
+      );
+    });
+  });
+
   it("saves edited quiz metadata and structured jsonBody, then refreshes the dashboard route", async () => {
     const user = userEvent.setup();
     render(
