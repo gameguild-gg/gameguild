@@ -1,6 +1,6 @@
+import { redirect } from '@/i18n/navigation';
 import { getCourseRouteParam } from '@/lib/learning/course-route';
 import { getCourse } from '@/lib/learning';
-import { redirect } from 'next/navigation';
 
 /**
  * L4: Course Detail Redirect
@@ -13,5 +13,8 @@ export default async function Page({ params }: PageProps<'/[locale]/workspace/le
   const course = await getCourse(courseIdentifier);
   const courseRouteParam = course ? getCourseRouteParam(course) : courseIdentifier;
 
-  redirect(`/${locale}/workspace/learning/courses/${encodeURIComponent(courseRouteParam)}/overview`);
+  redirect({
+    href: `/workspace/learning/courses/${encodeURIComponent(courseRouteParam)}/overview`,
+    locale,
+  });
 }
