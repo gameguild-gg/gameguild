@@ -133,7 +133,9 @@ export function ContentItemEditor({
   // endpoint filters deleted rows server-side, so this is the only client-side signal.
   const [gradedChecked, setGradedChecked] =
     useState<boolean>(!!linkedAssessmentId);
-  const activeAssessmentIdRef = useRef<string | undefined>(
+  const [activeAssessmentId, setActiveAssessmentId] = useState<
+    string | undefined
+  >(
     linkedAssessmentId,
   );
   const [recentlyDeletedAssessmentId, setRecentlyDeletedAssessmentId] =
@@ -264,14 +266,14 @@ export function ContentItemEditor({
       jsonBodyToSave = quizContentRef.current;
     }
     return {
-      title: (title ?? "").trim(),
+      title: title.trim(),
       // Backend keeps the stored slug when sent whitespace — derive locally
       // so a cleared field can't silently revert to the old slug. Re-slugify
       // to strip the trailing hyphen live typing can leave behind. Slugs can
       // be missing on legacy items, so coerce before slugify.
       slug:
-        normalizeSlug(slug ?? "") ||
-        normalizeSlug(title ?? ""),
+        normalizeSlug(slug) ||
+        normalizeSlug(title),
       description: description.trim() || undefined,
       body: bodyToSave,
       jsonBody: jsonBodyToSave,
@@ -389,8 +391,6 @@ export function ContentItemEditor({
     if (!title.trim()) return;
 
     const timer = setTimeout(() => {
-      const latestJson = JSON.stringify(buildPayloadRef.current());
-      if (latestJson === snapshotRef.current) return;
       void performSaveRef.current(false);
     }, AUTOSAVE_DELAY_MS);
     return () => clearTimeout(timer);
@@ -490,12 +490,10 @@ export function ContentItemEditor({
   }
 
   const linkedAssessmentRouteId =
-    linkedAssessmentSlug ?? linkedAssessmentId;
+    linkedAssessmentSlug ?? activeAssessmentId;
 
   function handleConfigureCoding() {
-    const routeId = linkedAssessmentSlug ?? activeAssessmentIdRef.current;
-    if (!routeId) return;
-    router.push(codingDefinitionRoute(routeId));
+    router.push(codingDefinitionRoute(linkedAssessmentRouteId!));
   }
 
   // ── Graded toggle handlers (Task 7) ──
@@ -518,7 +516,7 @@ export function ContentItemEditor({
       return;
     }
     const restoreTargetId =
-      recentlyDeletedAssessmentId ?? activeAssessmentIdRef.current;
+      recentlyDeletedAssessmentId ?? activeAssessmentId;
     startGradedTransition(async () => {
       setGradedChecked(true);
       setGradedError(null);
@@ -529,7 +527,7 @@ export function ContentItemEditor({
           setGradedError(result.error);
           return;
         }
-        activeAssessmentIdRef.current = restoreTargetId;
+        setActiveAssessmentId(restoreTargetId);
         setRecentlyDeletedAssessmentId(null);
         router.refresh();
         return;
@@ -551,15 +549,14 @@ export function ContentItemEditor({
         setGradedError(result.error);
         return;
       }
-      activeAssessmentIdRef.current = result.data.id;
+      setActiveAssessmentId(result.data.id);
       router.refresh();
     });
   }
 
   function confirmGradedOff() {
-    const targetId = activeAssessmentIdRef.current;
+    const targetId = activeAssessmentId!;
     setShowGradedOffConfirm(false);
-    if (!targetId) return;
     startGradedTransition(async () => {
       setGradedChecked(false);
       setGradedError(null);
@@ -569,7 +566,7 @@ export function ContentItemEditor({
         setGradedError(result.error);
         return;
       }
-      activeAssessmentIdRef.current = undefined;
+      setActiveAssessmentId(undefined);
       setRecentlyDeletedAssessmentId(targetId);
       router.refresh();
     });
@@ -976,7 +973,6 @@ export function ContentItemEditor({
               key={item.id}
               initialContent={initialQuizContent}
               onChange={handleQuizContentChange}
-              mode={previewMode ? "preview" : "edit"}
             />
           )}
 
@@ -1029,11 +1025,6 @@ export function ContentItemEditor({
                     {initialCodingDefinition.maxScore}
                   </p>
                 </div>
-              ) : !linkedAssessmentRouteId ? (
-                <p className="text-muted-foreground text-sm">
-                  Link this content item to an assessment to enable coding
-                  tests.
-                </p>
               ) : null}
             </div>
           )}
