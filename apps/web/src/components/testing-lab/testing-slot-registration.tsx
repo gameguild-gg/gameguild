@@ -72,6 +72,7 @@ export function TestingSlotRegistration({
   const [acceptedRules, setAcceptedRules] = useState(false);
   const isFull = (slot.availableTesterCount ?? 0) <= 0;
   const location = [slot.campusName, slot.roomName].filter(Boolean).join(' · ');
+  const registrationId = registration?.id ?? null;
 
   function register() {
     const formData = new FormData();
@@ -95,7 +96,7 @@ export function TestingSlotRegistration({
   function cancel() {
     const formData = new FormData();
     formData.set('eventId', eventId);
-    formData.set('registrationId', registration!.id!);
+    formData.set('registrationId', registrationId!);
     startTransition(async () => {
       try {
         const next = await cancelTestingEventRegistration(formData);
