@@ -1551,7 +1551,7 @@ export function TestingEventCommittee({
             <div className="space-y-2">
               <Label>Member</Label>
               <Select name="userId" required>
-                <SelectTrigger>
+                <SelectTrigger aria-label="Committee member">
                   <SelectValue placeholder="Choose a member" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1940,7 +1940,7 @@ export function TestingSlotRegistrations({
     );
   return (
     <div className="mt-3 divide-y border-t">
-      {registrations.map((registration) => {
+      {registrations.map((registration, index) => {
         const testerLabel = registration.userId
           ? memberLabels[registration.userId]
           : undefined;
@@ -1968,7 +1968,7 @@ export function TestingSlotRegistrations({
 
         return (
           <div
-            key={registration.id}
+            key={registration.id ?? `${registration.userId ?? "unknown"}:${index}`}
             className="flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between"
           >
             <div className="min-w-0">
@@ -2004,7 +2004,7 @@ export function TestingSlotRegistrations({
                     <div className="space-y-2">
                       <Label>Approved project</Label>
                       <Select name="applicationId" required>
-                        <SelectTrigger>
+                        <SelectTrigger aria-label="Approved project">
                           <SelectValue placeholder="Choose a project" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2034,7 +2034,7 @@ export function TestingSlotRegistrations({
                     value={registration.id}
                   />
                   <Select name="attendance" required>
-                    <SelectTrigger className="w-36">
+                    <SelectTrigger className="w-36" aria-label="Attendance">
                       <SelectValue placeholder="Attendance" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2103,7 +2103,7 @@ export function TestingEventLearningDialog({
           value={selectedActivityId}
           onValueChange={setSelectedActivityId}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label="Course activity">
             <SelectValue placeholder="Choose a lesson or graded activity" />
           </SelectTrigger>
           <SelectContent>
@@ -2135,7 +2135,7 @@ export function TestingEventLearningDialog({
             event.learningCompletionRequirement ?? "AttendanceAndFeedback"
           }
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label="Completion requirement">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
