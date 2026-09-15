@@ -24,6 +24,7 @@ import {
 const navigationMocks = vi.hoisted(() => ({
   refresh: vi.fn(),
   push: vi.fn(),
+  pathname: "/en-US/workspace/learning/courses/course-1/content",
 }));
 
 Object.defineProperties(HTMLElement.prototype, {
@@ -40,7 +41,7 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/en-US/workspace/learning/courses/course-1/content",
+  usePathname: () => navigationMocks.pathname,
   useRouter: () => ({
     push: navigationMocks.push,
     refresh: navigationMocks.refresh,
@@ -151,6 +152,7 @@ function renderContentTree({
 describe("ContentTree course management", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    navigationMocks.pathname = "/en-US/workspace/learning/courses/course-1/content";
     vi.mocked(addContent).mockResolvedValue({
       success: true,
       data: { id: "created-content" },
@@ -1004,5 +1006,198 @@ describe("ContentTree course management", () => {
     await waitFor(() => {
       expect(deleteContent).toHaveBeenCalledWith("course-1", "sublesson-1");
     });
+  });
+
+  it("preserves and normalizes custom slugs in module dialogs", async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole("button", { name: /^add module$/i }));
+    let dialog = screen.getByRole("dialog", { name: /add module/i });
+    const moduleTitle = within(dialog).getByLabelText(/^title$/i);
+    const moduleSlug = within(dialog).getByLabelText(/url slug/i);
+    await user.type(moduleTitle, "Initial module");
+    await user.clear(moduleSlug);
+    await user.type(moduleSlug, "stable module ");
+    fireEvent.blur(moduleSlug);
+    await user.clear(moduleTitle);
+    await user.type(moduleTitle, "Changed module");
+    expect(moduleSlug).toHaveValue("stable-module");
+    await user.click(within(dialog).getByRole("button", { name: /cancel/i }));
+
+    await user.click(screen.getByRole("button", { name: /add submodule/i }));
+    dialog = screen.getByRole("dialog", { name: /add submodule/i });
+    const submoduleSlug = within(dialog).getByLabelText(/url slug/i);
+    await user.type(within(dialog).getByLabelText(/^title$/i), "Nested module");
+    await user.clear(submoduleSlug);
+    await user.type(submoduleSlug, "nested stable ");
+    fireEvent.blur(submoduleSlug);
+    expect(submoduleSlug).toHaveValue("nested-stable");
+  });
+
+  it("preserves a custom edit slug and falls back to the title when cleared", async () => {
+    const user = userEvent.setup();
+    renderContentTree();
+
+    await user.click(screen.getByRole("button", { name: /edit module/i }));
+    const dialog = screen.getByRole("dialog", { name: /edit module/i });
+    const title = within(dialog).getByLabelText(/^title$/i);
+    const slug = within(dialog).getByLabelText(/url slug/i);
+    await user.clear(slug);
+    await user.type(slug, "stable edit ");
+    fireEvent.blur(slug);
+    await user.clear(title);
+    await user.type(title, "Renamed module");
+    expect(slug).toHaveValue("stable-edit");
+
+    await user.clear(slug);
+    await user.click(within(dialog).getByRole("button", { name: /save changes/i }));
+    await waitFor(() => {
+      expect(updateContent).toHaveBeenCalledWith({
+        courseId: "course-1",
+        contentId: "module-1",
+        title: "Renamed module",
+        slug: "renamed-module",
+        description: "",
+      });
+    });
+  });
+
+  it("cancels a lesson draft without creating content", async () => {
+    const user = userEvent.setup();
+    renderContentTree();
+
+    await user.click(screen.getByRole("button", { name: /add lesson/i }));
+    await user.type(screen.getByLabelText(/^title$/i), "Discarded lesson");
+    await user.click(screen.getByRole("button", { name: /cancel/i }));
+
+    expect(screen.queryByRole("dialog", { name: /add lesson/i })).not.toBeInTheDocument();
+    expect(addContent).not.toHaveBeenCalled();
+  });
+
+  it("renders and navigates unknown nested content through stable id fallbacks", async () => {
+    const user = userEvent.setup();
+    const customItem = {
+      ...lessonItem,
+      id: "custom-item",
+      slug: "",
+      type: "CustomType",
+      visibility: "Unknown",
+      title: "Custom item",
+    } as unknown as ContentItem;
+    const nestedA = {
+      ...subLessonItem,
+      id: "nested-a",
+      slug: "",
+      type: "NestedType",
+      visibility: "Unknown",
+      title: "Nested A",
+      order: 1,
+      parentId: "custom-item",
+    } as unknown as ContentItem;
+    const nestedB = {
+      ...nestedA,
+      id: "nested-b",
+      title: "Nested B",
+      order: 0,
+    } as unknown as ContentItem;
+    renderContentTree({
+      allItems: [moduleItem, customItem, nestedA, nestedB],
+    });
+
+    expect(screen.getAllByText("CustomType").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("NestedType")).toHaveLength(2);
+    const nestedLabels = screen.getAllByText(/Nested [AB]/).map((node) => node.textContent);
+    expect(nestedLabels).toEqual(["Nested B", "Nested A"]);
+
+    await user.click(screen.getByRole("button", { name: /edit customtype/i }));
+    expect(navigationMocks.push).toHaveBeenLastCalledWith(
+      "/en-US/workspace/learning/courses/course-1/content/custom-item",
+    );
+    await user.click(screen.getAllByRole("button", { name: /^edit$/i })[0]!);
+    expect(navigationMocks.push).toHaveBeenLastCalledWith(
+      "/en-US/workspace/learning/courses/course-1/content/nested-b",
+    );
+  });
+
+  it("derives the content base from an open editor route", async () => {
+    const user = userEvent.setup();
+    navigationMocks.pathname =
+      "/en-US/workspace/learning/courses/course-1/content/course-overview";
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole("button", { name: /edit lesson/i }));
+    expect(navigationMocks.push).toHaveBeenCalledWith(
+      "/en-US/workspace/learning/courses/course-1/content/course-overview",
+    );
+  });
+
+  it("omits intentionally cleared slugs for modules, lessons, and submodules", async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole("button", { name: /^add module$/i }));
+    let dialog = screen.getByRole("dialog", { name: /add module/i });
+    await user.type(within(dialog).getByLabelText(/^title$/i), "No slug module");
+    await user.clear(within(dialog).getByLabelText(/url slug/i));
+    await user.click(within(dialog).getByRole("button", { name: /^add module$/i }));
+    await waitFor(() =>
+      expect(addContent).toHaveBeenLastCalledWith({
+        courseId: "course-1",
+        title: "No slug module",
+        description: "",
+        type: "Module",
+        sortOrder: 1,
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: /add module/i })).not.toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole("button", { name: /add lesson/i }));
+    dialog = screen.getByRole("dialog", { name: /add lesson/i });
+    await user.type(within(dialog).getByLabelText(/^title$/i), "No slug lesson");
+    await user.clear(within(dialog).getByLabelText(/url slug/i));
+    await user.click(within(dialog).getByRole("button", { name: /^add lesson$/i }));
+    await waitFor(() =>
+      expect(addContent).toHaveBeenLastCalledWith({
+        courseId: "course-1",
+        parentId: "module-1",
+        title: "No slug lesson",
+        type: "Lesson",
+        lessonFormat: "Markdown",
+        sortOrder: 1,
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: /add lesson/i })).not.toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole("button", { name: /add submodule/i }));
+    dialog = screen.getByRole("dialog", { name: /add submodule/i });
+    await user.type(within(dialog).getByLabelText(/^title$/i), "No slug submodule");
+    await user.clear(within(dialog).getByLabelText(/url slug/i));
+    await user.click(within(dialog).getByRole("button", { name: /add submodule/i }));
+    await waitFor(() =>
+      expect(addContent).toHaveBeenLastCalledWith({
+        courseId: "course-1",
+        parentId: "module-1",
+        title: "No slug submodule",
+        description: "",
+        type: "Module",
+        sortOrder: 1,
+      }),
+    );
+  });
+
+  it("falls back to an outline badge for unknown module visibility", () => {
+    const unknownModule = {
+      ...moduleItem,
+      visibility: "Unknown",
+    } as unknown as ContentItem;
+
+    renderContentTree({ modules: [unknownModule], allItems: [unknownModule] });
+
+    expect(screen.getByText("Unknown")).toHaveAttribute("data-variant", "outline");
   });
 });

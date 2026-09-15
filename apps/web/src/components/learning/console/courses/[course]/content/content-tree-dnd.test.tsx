@@ -8,7 +8,10 @@ import { addContent, deleteContent, moveContent, reorderContent, updateContent }
 
 const dndHarness = vi.hoisted(() => ({
   handlers: [] as Array<(event: { active: { id: string }; over: { id: string } | null }) => void>,
+  startHandlers: [] as Array<(event: { active: { id: string } }) => void>,
+  cancelHandlers: [] as Array<() => void>,
   droppables: new Map<string, (el: HTMLElement | null) => void>(),
+  draggingId: null as string | null,
 }));
 
 const navigationMocks = vi.hoisted(() => ({
@@ -17,8 +20,10 @@ const navigationMocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children, onDragEnd }: { children: unknown; onDragEnd?: (event: { active: { id: string }; over: { id: string } | null }) => void }) => {
+  DndContext: ({ children, onDragStart, onDragEnd, onDragCancel }: { children: unknown; onDragStart?: (event: { active: { id: string } }) => void; onDragEnd?: (event: { active: { id: string }; over: { id: string } | null }) => void; onDragCancel?: () => void }) => {
+    if (onDragStart) dndHarness.startHandlers.push(onDragStart);
     if (onDragEnd) dndHarness.handlers.push(onDragEnd);
+    if (onDragCancel) dndHarness.cancelHandlers.push(onDragCancel);
     return children;
   },
   DragOverlay: ({ children }: { children: unknown }) => children ?? null,
@@ -42,13 +47,13 @@ vi.mock('@dnd-kit/sortable', () => ({
     copy.splice(to, 0, moved!);
     return copy;
   },
-  useSortable: () => ({
+  useSortable: ({ id }: { id: string }) => ({
     attributes: {},
     listeners: {},
     setNodeRef: vi.fn(),
-    transform: null,
+    transform: dndHarness.draggingId === id ? { x: 1, y: 2 } : null,
     transition: undefined,
-    isDragging: false,
+    isDragging: dndHarness.draggingId === id,
   }),
   verticalListSortingStrategy: {},
 }));
@@ -117,7 +122,10 @@ const lessonTwo = {
 
 function renderTree() {
   dndHarness.handlers.length = 0;
+  dndHarness.startHandlers.length = 0;
+  dndHarness.cancelHandlers.length = 0;
   dndHarness.droppables.clear();
+  dndHarness.draggingId = null;
   return render(
     <TooltipProvider>
       <ContentTree
@@ -356,5 +364,160 @@ describe('ContentTree deterministic drag handlers', () => {
       expect(moveContent).toHaveBeenCalledWith('course-1', 'lesson-orphan', 'module-1', 0);
     });
     expect(navigationMocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it('renders lesson drag previews and clears them on cancellation', async () => {
+    renderTree();
+
+    await act(async () => {
+      dndHarness.startHandlers[0]!({ active: { id: 'lesson-1' } });
+    });
+    expect(screen.getAllByText('Intro lesson')).toHaveLength(2);
+
+    await act(async () => {
+      dndHarness.cancelHandlers[0]!();
+    });
+    expect(screen.getAllByText('Intro lesson')).toHaveLength(1);
+  });
+
+  it('falls back to the module collection for drag previews', async () => {
+    dndHarness.handlers.length = 0;
+    dndHarness.startHandlers.length = 0;
+    dndHarness.cancelHandlers.length = 0;
+    render(
+      <TooltipProvider>
+        <ContentTree
+          courseId="course-1"
+          modules={[moduleOne]}
+          allItems={[lessonOne]}
+        />
+      </TooltipProvider>,
+    );
+
+    await act(async () => {
+      dndHarness.startHandlers[0]!({ active: { id: 'module-1' } });
+    });
+    expect(screen.getAllByText('Week 01')).toHaveLength(2);
+  });
+
+  it('renders the generic preview for unknown content types and ignores removed items', async () => {
+    const customItem = {
+      ...lessonOne,
+      id: 'custom-1',
+      type: 'CustomType',
+      title: 'Custom activity',
+    } as unknown as ContentItem;
+    dndHarness.handlers.length = 0;
+    dndHarness.startHandlers.length = 0;
+    dndHarness.cancelHandlers.length = 0;
+    render(
+      <TooltipProvider>
+        <ContentTree
+          courseId="course-1"
+          modules={[moduleOne]}
+          allItems={[moduleOne, customItem]}
+        />
+      </TooltipProvider>,
+    );
+
+    await act(async () => {
+      dndHarness.startHandlers[0]!({ active: { id: 'custom-1' } });
+    });
+    expect(screen.getAllByText('Custom activity')).toHaveLength(2);
+    expect(screen.getAllByText('CustomType')).toHaveLength(2);
+
+    await act(async () => {
+      dndHarness.startHandlers[0]!({ active: { id: 'removed-item' } });
+    });
+    expect(screen.queryByText('removed-item')).not.toBeInTheDocument();
+  });
+
+  it('renders the hidden source style while a sortable module is active', () => {
+    dndHarness.draggingId = 'module-1';
+    dndHarness.handlers.length = 0;
+    dndHarness.startHandlers.length = 0;
+    dndHarness.cancelHandlers.length = 0;
+
+    const { container } = render(
+      <TooltipProvider>
+        <ContentTree
+          courseId="course-1"
+          modules={[moduleOne, moduleTwo]}
+          allItems={[moduleOne, moduleTwo, lessonOne, lessonTwo]}
+        />
+      </TooltipProvider>,
+    );
+
+    expect(container.querySelector('[style*="opacity: 0"]')).toBeInTheDocument();
+  });
+
+  it('ignores a same-module drop on the module body', async () => {
+    renderTree();
+
+    await act(async () => {
+      dndHarness.handlers[0]!({
+        active: { id: 'lesson-1' },
+        over: { id: 'module-drop-module-1' },
+      });
+    });
+
+    expect(reorderContent).not.toHaveBeenCalled();
+    expect(moveContent).not.toHaveBeenCalled();
+  });
+
+  it('inserts a cross-module lesson at the hovered lesson position', async () => {
+    const destinationLesson = {
+      ...lessonOne,
+      id: 'lesson-destination',
+      parentId: 'module-2',
+      title: 'Destination lesson',
+    } satisfies ContentItem;
+    dndHarness.handlers.length = 0;
+    dndHarness.startHandlers.length = 0;
+    dndHarness.cancelHandlers.length = 0;
+    render(
+      <TooltipProvider>
+        <ContentTree
+          courseId="course-1"
+          modules={[moduleOne, moduleTwo]}
+          allItems={[moduleOne, moduleTwo, lessonOne, destinationLesson]}
+        />
+      </TooltipProvider>,
+    );
+
+    await act(async () => {
+      dndHarness.handlers[0]!({
+        active: { id: 'lesson-1' },
+        over: { id: 'lesson-destination' },
+      });
+    });
+
+    await waitFor(() => {
+      expect(moveContent).toHaveBeenCalledWith(
+        'course-1',
+        'lesson-1',
+        'module-2',
+        0,
+      );
+    });
+  });
+
+  it('renders the child dragging style while a lesson is active', () => {
+    dndHarness.draggingId = 'lesson-1';
+    dndHarness.handlers.length = 0;
+    dndHarness.startHandlers.length = 0;
+    dndHarness.cancelHandlers.length = 0;
+
+    const { container } = render(
+      <TooltipProvider>
+        <ContentTree
+          courseId="course-1"
+          modules={[moduleOne]}
+          allItems={[moduleOne, lessonOne]}
+        />
+      </TooltipProvider>,
+    );
+
+    expect(container.querySelector('.hover\\:bg-muted\\/50.opacity-50')).toBeInTheDocument();
   });
 });
