@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Tenants;
@@ -54,6 +55,8 @@ public static class ServiceCollectionExtensions
         // Tenant membership checker - overrides the fail-closed default from Authorization module
         stepStopwatch.Restart();
         services.AddScoped<Authorization.ITenantMembershipChecker, TenantMembershipChecker>();
+        services.TryAddEnumerable(
+            ServiceDescriptor.Scoped<Authorization.IAuthorizationRolePermissionProvider, TenantMembershipRolePermissionProvider>());
         logger.LogInformation("Registered Tenant Membership Checker in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         totalStopwatch.Stop();

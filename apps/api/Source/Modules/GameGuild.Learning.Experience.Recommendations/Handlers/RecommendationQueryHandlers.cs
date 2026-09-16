@@ -19,6 +19,7 @@ public sealed class GetUserRecommendationsQueryHandler(
         var query = context.Set<CourseRecommendation>()
             .AsNoTracking()
             .Where(r => r.UserId == request.UserId)
+            .Where(r => r.TenantId == request.TenantId)
             .Where(r => !r.IsDismissed)
             .Where(r => r.ExpiresAt > SystemClock.UtcNow);
 
@@ -163,7 +164,12 @@ public sealed class GetPopularCoursesQueryHandler(
 
         if (!string.IsNullOrEmpty(request.Category))
         {
-            query = query.Where(p => p.Category.ToString() == request.Category);
+            if (!Enum.TryParse<ProgramCategory>(request.Category, ignoreCase: true, out var category))
+            {
+                return [];
+            }
+
+            query = query.Where(p => p.Category == category);
         }
 
         var results = await query
@@ -265,7 +271,9 @@ public sealed class GetSimilarCoursesQueryHandler(
         // Get the source course
         var sourceCourse = await context.Set<Program>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == request.CourseId, cancellationToken).ConfigureAwait(false);
+            .FirstOrDefaultAsync(
+                p => p.Id == request.CourseId && p.DeletedAt == null && p.Status == ContentStatus.Published,
+                cancellationToken).ConfigureAwait(false);
 
         if (sourceCourse == null)
         {

@@ -119,6 +119,38 @@ public class CodingAssignmentContentTests
         CodingAssignmentContentService.NormalizeTestDiscriminatorOrder(json).Should().Be(json);
     }
 
+    [Fact]
+    public void NormalizeTestDiscriminatorOrder_PreservesNonArraySuitesAndNonObjectEntries()
+    {
+        const string json = """
+            {
+              "Tests": {
+                "Metadata": { "version": 1 },
+                "Public": [42, { "Name": "first", "kind": "standard", "Stdout": "ok" }]
+              }
+            }
+            """;
+
+        var normalized = CodingAssignmentContentService.NormalizeTestDiscriminatorOrder(json);
+
+        using var document = JsonDocument.Parse(normalized);
+        document.RootElement.GetProperty("Tests").GetProperty("Metadata").GetProperty("version")
+            .GetInt32().Should().Be(1);
+        document.RootElement.GetProperty("Tests").GetProperty("Public")[0]
+            .GetInt32().Should().Be(42);
+        document.RootElement.GetProperty("Tests").GetProperty("Public")[1]
+            .EnumerateObject().First().Name.Should().Be("kind");
+    }
+
+    [Theory]
+    [InlineData("[]")]
+    [InlineData("{}")]
+    [InlineData("{\"Tests\":[]}")]
+    public void NormalizeTestDiscriminatorOrder_LeavesUnsupportedDocumentShapesUnchanged(string json)
+    {
+        CodingAssignmentContentService.NormalizeTestDiscriminatorOrder(json).Should().Be(json);
+    }
+
     private static string JsonbOrderedJson() => """
         {
           "Type": "coding-assignment",
@@ -247,6 +279,169 @@ public class CodingAssignmentContentTests
         };
         var errors = Validate(content);
         errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+    }
+
+    [Fact]
+    public void Validator_Rejects_FunctionalCaseInputWithNonV1ParameterType()
+    {
+        var content = CreateMinimalValidWithFunctional("add");
+        var functional = (FunctionalTestGroup)content.Tests.Public.Single();
+        var invalidCase = functional.Cases.Single() with
+        {
+            Inputs =
+            [
+                new FunctionParameter
+                {
+                    Type = (FunctionParameterType)4,
+                    Content = JsonSerializer.SerializeToElement(0),
+                },
+            ],
+        };
+        content = content with
+        {
+            Tests = new TestSuite
+            {
+                Public = [functional with { Cases = [invalidCase] }],
+                Private = [],
+            },
+        };
+
+        var errors = Validate(content);
+
+        errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+    }
+
+    [Fact]
+    public void Validator_FunctionalTypeCheck_ToleratesNullParameterEntries()
+    {
+        var content = CreateMinimalValidWithFunctional("add");
+        var functional = (FunctionalTestGroup)content.Tests.Public.Single();
+        var function = functional.Function with
+        {
+            Parameters = [null!],
+        };
+        var testCase = functional.Cases.Single() with
+        {
+            Inputs = [null!],
+        };
+        content = content with
+        {
+            Tests = new TestSuite
+            {
+                Public = [functional with { Function = function, Cases = [testCase] }],
+                Private = [],
+            },
+        };
+
+        var errors = Validate(content);
+
+        errors.Should().NotContain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+    }
+
+    [Fact]
+    public void Validator_RejectsFunctionalGroupWithoutFunction()
+    {
+        var content = CreateMinimalValidWithFunctional("add");
+        var functional = (FunctionalTestGroup)content.Tests.Public.Single();
+        content = content with
+        {
+            Tests = new TestSuite { Public = [functional with { Function = null! }], Private = [] },
+        };
+
+        var errors = Validate(content);
+
+        errors.Should().Contain(e => e.ErrorCode == "invalid_function_name");
+        errors.Should().Contain(e => e.ErrorCode == "case_inputs_length_mismatch");
+        errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+    }
+
+    [Fact]
+    public void Validator_RejectsFunctionalGroupWithBlankFunctionName()
+    {
+        var errors = Validate(CreateMinimalValidWithFunctional(string.Empty));
+
+        errors.Should().Contain(e => e.ErrorCode == "invalid_function_name");
+    }
+
+    [Fact]
+    public void Validator_RejectsNullFunctionalCaseWithoutThrowing()
+    {
+        var content = CreateMinimalValidWithFunctional("add");
+        var functional = (FunctionalTestGroup)content.Tests.Public.Single();
+        content = content with
+        {
+            Tests = new TestSuite { Public = [functional with { Cases = [null!] }], Private = [] },
+        };
+
+        var errors = Validate(content);
+
+        errors.Should().Contain(e => e.ErrorCode == "case_inputs_length_mismatch");
+        errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+    }
+
+    [Fact]
+    public void Validator_RejectsNullFunctionalCasesCollectionWithoutThrowing()
+    {
+        var content = CreateMinimalValidWithFunctional("add");
+        var functional = (FunctionalTestGroup)content.Tests.Public.Single();
+        content = content with
+        {
+            Tests = new TestSuite { Public = [functional with { Cases = null! }], Private = [] },
+        };
+
+        var errors = Validate(content);
+
+        errors.Should().Contain(e => e.ErrorCode == "at_least_one_case");
+        errors.Should().Contain(e => e.ErrorCode == "case_inputs_length_mismatch");
+        errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+    }
+
+    [Fact]
+    public void Validator_RejectsNullFunctionalInputsWithoutThrowing()
+    {
+        var content = CreateMinimalValidWithFunctional("add");
+        var functional = (FunctionalTestGroup)content.Tests.Public.Single();
+        var testCase = functional.Cases.Single() with { Inputs = null! };
+        content = content with
+        {
+            Tests = new TestSuite { Public = [functional with { Cases = [testCase] }], Private = [] },
+        };
+
+        var errors = Validate(content);
+
+        errors.Should().Contain(e => e.ErrorCode == "case_inputs_length_mismatch");
+        errors.Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+    }
+
+    [Fact]
+    public void Validator_RejectsUnsupportedReturnAndExpectedTypes()
+    {
+        var content = CreateMinimalValidWithFunctional("add");
+        var functional = (FunctionalTestGroup)content.Tests.Public.Single();
+        var invalidReturn = functional.Function.ReturnType with { Type = (FunctionParameterType)4 };
+        var returnContent = content with
+        {
+            Tests = new TestSuite
+            {
+                Public = [functional with { Function = functional.Function with { ReturnType = invalidReturn } }],
+                Private = [],
+            },
+        };
+        var invalidExpected = functional.Cases.Single().Expected with { Type = (FunctionParameterType)4 };
+        var expectedContent = content with
+        {
+            Tests = new TestSuite
+            {
+                Public = [functional with
+                {
+                    Cases = [functional.Cases.Single() with { Expected = invalidExpected }],
+                }],
+                Private = [],
+            },
+        };
+
+        Validate(returnContent).Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
+        Validate(expectedContent).Should().Contain(e => e.ErrorCode == "functional_param_type_not_supported_v1");
     }
 
     // ── (c) bad FunctionName (add+, ns::add) → invalid_function_name ─────────────────────────────────

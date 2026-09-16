@@ -41,7 +41,7 @@ public class LikesController : LearningControllerBase
     public async Task<IActionResult> LikeCourse(Guid courseId, CancellationToken cancellationToken = default)
     {
         var userId = GetRequiredUserId();
-        var result = await _sender.Send(new LikeCourseCommand(courseId, userId, null), cancellationToken).ConfigureAwait(false);
+        var result = await _sender.Send(new LikeCourseCommand(courseId, userId, GetCurrentTenantId()), cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {

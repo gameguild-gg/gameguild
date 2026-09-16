@@ -15,6 +15,7 @@ public interface IReviewService
         string? title = null,
         string? content = null,
         Guid? enrollmentId = null,
+        Guid? tenantId = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

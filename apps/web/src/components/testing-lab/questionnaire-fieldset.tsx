@@ -23,8 +23,10 @@ import {
 } from '@game-guild/ui/components/questionnaire';
 
 function valuesFor(answer?: TestingLabQuestionnaireAnswer) {
-  if ((answer?.selectedOptionIds?.length ?? 0) > 0) return answer?.selectedOptionIds ?? [];
-  return answer?.textValue?.trim() ? [answer.textValue] : [];
+  const selectedOptionIds = answer?.selectedOptionIds ?? [];
+  if (selectedOptionIds.length > 0) return selectedOptionIds;
+  const textValue = answer?.textValue?.trim();
+  return textValue ? [textValue] : [];
 }
 
 function isActive(question: TestingLabQuestionnaireQuestion, answers: TestingLabQuestionnaireAnswer[]) {
@@ -138,9 +140,7 @@ export function QuestionnaireFieldset({
                           ? event.currentTarget.checked
                             ? [...selected, option.id!]
                             : selected.filter((id) => id !== option.id)
-                          : event.currentTarget.checked
-                            ? [option.id!]
-                            : [];
+                          : [option.id!];
                         onChange(setAnswer(value, question.id, { textValue: null, selectedOptionIds: nextSelected }));
                       }}
                     >

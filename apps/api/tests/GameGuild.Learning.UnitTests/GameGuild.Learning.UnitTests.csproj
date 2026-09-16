@@ -12,12 +12,12 @@
         <CollectCoverage>false</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <CoverletOutput>./TestResults/coverage.xml</CoverletOutput>
-        <Threshold>20</Threshold>
+        <Threshold>100</Threshold>
         <ThresholdType>line,branch,method</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
         <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
         <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
-        <Include>[GameGuild.Learning]*</Include>
+        <Include>[GameGuild.Learning]*,[GameGuild.Learning.TestingLab]*</Include>
     </PropertyGroup>
     <ItemGroup>
     </ItemGroup>

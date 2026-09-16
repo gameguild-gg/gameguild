@@ -13,11 +13,10 @@ public sealed record SurveyResponseResultDto(
 {
     public static SurveyResponseResultDto FromInteraction(ContentInteraction interaction, bool includeRespondentIdentity = false)
     {
-        var response = ActivityResponseContract.Parse(
+        var response = (SurveyActivityResponse)ActivityResponseContract.Parse(
             ProgramContentType.Survey,
             interaction.SubmissionData ?? throw new InvalidOperationException("Survey submission data is missing."),
-            null) as SurveyActivityResponse
-            ?? throw new InvalidOperationException("Survey submission data is invalid.");
+            null);
 
         return new SurveyResponseResultDto(
             interaction.Id,

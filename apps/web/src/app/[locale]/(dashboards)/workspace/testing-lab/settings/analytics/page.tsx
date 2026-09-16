@@ -14,6 +14,7 @@ import {
 } from "@/lib/testing-lab/analytics-period";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
+import { buttonVariants } from "@game-guild/ui/components/button-variants";
 import { Input } from "@game-guild/ui/components/input";
 import {
   ArrowRight,
@@ -294,12 +295,10 @@ export default async function TestingLabAnalyticsPage({
         title="Testing Lab analytics"
         description="Compare demand, approvals, capacity, attendance, and feedback across Testing Lab events."
         actions={
-          <Button asChild variant="outline">
-            <a href={exportHref}>
-              <Download className="mr-2 size-4" aria-hidden="true" />
-              Export CSV
-            </a>
-          </Button>
+          <a href={exportHref} className={buttonVariants({ variant: "outline" })}>
+            <Download className="mr-2 size-4" aria-hidden="true" />
+            Export CSV
+          </a>
         }
       />
 
@@ -322,16 +321,17 @@ export default async function TestingLabAnalyticsPage({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex gap-1" aria-label="Preset periods">
             {[7, 30, 90].map((days) => (
-              <Button
+              <Link
                 key={days}
-                asChild
-                size="sm"
-                variant={period.range === String(days) ? "default" : "outline"}
+                href={`/workspace/testing-lab/settings/analytics?range=${days}`}
+                className={buttonVariants({
+                  size: "sm",
+                  variant:
+                    period.range === String(days) ? "default" : "outline",
+                })}
               >
-                <Link href={`/workspace/testing-lab/settings/analytics?range=${days}`}>
-                  {days} days
-                </Link>
-              </Button>
+                {days} days
+              </Link>
             ))}
           </div>
           <form
@@ -370,9 +370,12 @@ export default async function TestingLabAnalyticsPage({
           title="No Testing Lab activity in this period"
           description="Choose another period or create an event to begin collecting applications, attendance, and feedback."
           action={
-            <Button asChild>
-              <Link href="/workspace/testing-lab/events">Manage events</Link>
-            </Button>
+            <Link
+              href="/workspace/testing-lab/events"
+              className={buttonVariants()}
+            >
+              Manage events
+            </Link>
           }
         />
       ) : (

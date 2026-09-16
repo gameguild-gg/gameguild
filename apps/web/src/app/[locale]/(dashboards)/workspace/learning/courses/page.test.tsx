@@ -11,11 +11,16 @@ vi.mock('@/lib/learning', () => ({
 }));
 
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ children, href, ...rest }: { children: ReactNode; href: string }) => (
-    <a href={href} {...rest}>
-      {children}
-    </a>
-  ),
+  Link: ({ children, href, ...rest }: { children: ReactNode; href: string; prefetch?: boolean }) => {
+    const anchorProps = { ...rest };
+    Reflect.deleteProperty(anchorProps, 'prefetch');
+
+    return (
+      <a href={href} {...anchorProps}>
+        {children}
+      </a>
+    );
+  },
 }));
 
 describe('dashboard learning courses page', () => {

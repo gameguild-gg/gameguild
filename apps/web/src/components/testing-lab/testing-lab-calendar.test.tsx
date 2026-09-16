@@ -35,7 +35,10 @@ vi.mock("./testing-event-management", () => ({
     ) : null,
 }));
 
-import { TestingLabCalendar } from "./testing-lab-calendar";
+import {
+  getServerMobileCalendarSnapshot,
+  TestingLabCalendar,
+} from "./testing-lab-calendar";
 
 const events = [
   {
@@ -70,6 +73,14 @@ const templates = [
     currentRevision: { id: "revision-1" },
   },
 ] as TestingLabTestingEventTemplateProjection[];
+
+async function selectView(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+) {
+  await user.click(screen.getByRole("combobox", { name: "Calendar view" }));
+  await user.click(await screen.findByRole("option", { name }));
+}
 
 describe("TestingLabCalendar", () => {
   it("opens as a month calendar and identifies event mode and capacity", () => {
@@ -459,5 +470,260 @@ describe("TestingLabCalendar", () => {
       screen.getByRole("combobox", { name: "Calendar view" }),
     ).toHaveTextContent("Schedule");
     vi.unstubAllGlobals();
+  });
+
+  it("provides a stable non-mobile server snapshot", () => {
+    expect(getServerMobileCalendarSnapshot()).toBe(false);
+  });
+
+  it("works without matchMedia and preserves injected toolbar actions", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal("matchMedia", undefined);
+
+    render(
+      <TestingLabCalendar
+        events={[]}
+        initialDate={new Date(2030, 7, 10)}
+        toolbarStart={<button type="button">Workspace action</button>}
+        toolbarEnd={<button type="button">New event</button>}
+      />,
+    );
+
+    expect(screen.getByText("Workspace action")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "New event" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Previous period" }));
+    expect(screen.getByRole("heading", { name: "July 2030" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next period" }));
+    expect(screen.getByRole("heading", { name: "August 2030" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Today" }));
+
+    vi.unstubAllGlobals();
+  });
+
+  it("opens creation from the keyboard but ignores unrelated keys", () => {
+    render(
+      <TestingLabCalendar events={[]} initialDate={new Date(2030, 7, 10)} />,
+    );
+    const day = screen.getByRole("button", {
+      name: /Create event on August 19, 2030/,
+    });
+
+    fireEvent.keyDown(day, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.keyDown(day, { key: "Enter" });
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Creating event for 2030-08-19",
+    );
+  });
+
+  it("shows the schedule empty state when no event has a valid date", async () => {
+    const user = userEvent.setup();
+    render(
+      <TestingLabCalendar
+        events={[
+          { id: "missing-date", name: "Missing date" },
+          { id: "invalid-date", name: "Invalid date", startsAt: "invalid" },
+        ]}
+        initialDate={new Date(2030, 7, 10)}
+      />,
+    );
+
+    await selectView(user, "Schedule");
+    expect(screen.getByText("No events in this period")).toBeInTheDocument();
+  });
+
+  it("renders the year view and summarizes crowded months", async () => {
+    const user = userEvent.setup();
+    const yearEvents = Array.from({ length: 5 }, (_, index) => ({
+      ...events[0],
+      id: `year-${index}`,
+      name: `Year event ${index + 1}`,
+      startsAt: `2030-08-${String(index + 10).padStart(2, "0")}T18:00:00.000Z`,
+      endsAt: `2030-08-${String(index + 10).padStart(2, "0")}T20:00:00.000Z`,
+    })) as TestingLabTestingEventProjection[];
+
+    render(
+      <TestingLabCalendar
+        events={[
+          ...yearEvents,
+          { id: "year-invalid", name: "Invalid", startsAt: "invalid" },
+        ]}
+        initialDate={new Date(2030, 7, 10)}
+      />,
+    );
+    await selectView(user, "Year");
+
+    expect(
+      screen.getByRole("region", { name: "Testing Lab year" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("+1 more events")).toBeInTheDocument();
+    expect(screen.getAllByText("No events")).toHaveLength(11);
+  });
+
+  it("supports week, day, and three-day grid views", async () => {
+    const user = userEvent.setup();
+    render(
+      <TestingLabCalendar
+        events={events}
+        initialDate={new Date(2030, 7, 10)}
+      />,
+    );
+
+    await selectView(user, "Year");
+    expect(screen.queryByText(/more events/)).not.toBeInTheDocument();
+
+    await selectView(user, "Week");
+    expect(
+      screen.getByRole("region", { name: "Week Testing Lab calendar" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Week numbers")).not.toBeInTheDocument();
+
+    await selectView(user, "Day");
+    expect(
+      screen.getByRole("region", { name: "Day Testing Lab calendar" }),
+    ).toBeInTheDocument();
+
+    await selectView(user, "3 days");
+    expect(
+      screen.getByRole("region", { name: "3 days Testing Lab calendar" }),
+    ).toBeInTheDocument();
+  });
+
+  it("handles status, capacity, and incomplete event metadata", async () => {
+    const user = userEvent.setup();
+    const edgeEvents = [
+      {
+        id: "untitled",
+        name: undefined,
+        description: undefined,
+        status: "Cancelled",
+        mode: "Hybrid",
+        startsAt: "2030-08-15T18:00:00.000Z",
+        endsAt: undefined,
+      },
+      {
+        id: "unlimited",
+        name: "Unlimited lab",
+        status: "Completed",
+        mode: "Online",
+        startsAt: "2030-08-16T18:00:00.000Z",
+        endsAt: "2030-08-16T20:00:00.000Z",
+      },
+      {
+        id: "one-seat",
+        name: "One seat left",
+        status: "Scheduled",
+        mode: "InPerson",
+        startsAt: "2030-08-17T18:00:00.000Z",
+        endsAt: "2030-08-17T20:00:00.000Z",
+      },
+      {
+        id: "backwards",
+        name: "Invalid duration",
+        startsAt: "2030-08-18T20:00:00.000Z",
+        endsAt: "2030-08-18T18:00:00.000Z",
+      },
+      {
+        id: undefined,
+        name: "Missing identity",
+        startsAt: "2030-08-19T18:00:00.000Z",
+      },
+    ] as TestingLabTestingEventProjection[];
+
+    render(
+      <TestingLabCalendar
+        events={edgeEvents}
+        eventAnalytics={[
+          {
+            eventId: "unlimited",
+            registeredTesters: 3,
+            capacity: 0,
+            fillRate: 0,
+          },
+          {
+            eventId: "one-seat",
+            registeredTesters: 1,
+            capacity: 2,
+            fillRate: 50,
+          },
+        ]}
+        initialDate={new Date(2030, 7, 10)}
+      />,
+    );
+
+    const cancelled = screen.getByRole("button", {
+      name: /Untitled event/i,
+    });
+    expect(cancelled).toHaveClass("line-through");
+    expect(screen.getByRole("button", { name: /Unlimited lab/i })).toHaveClass(
+      "opacity-70",
+    );
+    expect(screen.getByLabelText("Hybrid event")).toBeInTheDocument();
+    expect(screen.getAllByText("Capacity pending")).not.toHaveLength(0);
+    expect(screen.getByText("3 registered")).toBeInTheDocument();
+    expect(screen.getByText("1/2")).toBeInTheDocument();
+    expect(screen.queryByText("Missing identity")).not.toBeInTheDocument();
+
+    await user.hover(screen.getByRole("button", { name: /One seat left/i }));
+    expect(await screen.findByText("1 tester spot available")).toBeInTheDocument();
+
+    await user.click(cancelled);
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Untitled event")).toBeInTheDocument();
+    expect(within(dialog).getByText("Capacity information is not available yet.")).toBeInTheDocument();
+    expect(within(dialog).queryByText("undefined")).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("uses safe template calendar labels and toggles them independently", async () => {
+    const user = userEvent.setup();
+    render(
+      <TestingLabCalendar
+        events={[
+          {
+            ...events[0],
+            configuration: { sourceTemplateId: "template-blank" },
+          },
+          {
+            ...events[1],
+            id: "orphan-event",
+            configuration: { sourceTemplateId: "template-orphan" },
+          },
+        ]}
+        templates={[
+          { id: "template-blank", name: "   " },
+          { id: undefined, name: "Ignored" },
+        ]}
+        initialDate={new Date(2030, 7, 10)}
+      />,
+    );
+
+    const sidebar = screen.getByRole("complementary", {
+      name: "Testing Lab planning",
+    });
+    expect(within(sidebar).getByText("Untitled calendar")).toBeInTheDocument();
+    expect(within(sidebar).getByText("Event template")).toBeInTheDocument();
+
+    await user.click(
+      within(sidebar).getByRole("checkbox", { name: "Event template" }),
+    );
+    expect(screen.queryByText("Remote build review")).not.toBeInTheDocument();
+  });
+
+  it("keeps the selected mini-calendar date as the active anchor", async () => {
+    const user = userEvent.setup();
+    render(
+      <TestingLabCalendar events={[]} initialDate={new Date(2030, 7, 10)} />,
+    );
+    const sidebar = screen.getByRole("complementary", {
+      name: "Testing Lab planning",
+    });
+    const selectedDay = within(sidebar).getByRole("button", {
+      name: /August 10th, 2030/,
+    });
+
+    await user.click(selectedDay);
+    expect(screen.getByRole("heading", { name: "August 2030" })).toBeInTheDocument();
   });
 });

@@ -8,10 +8,11 @@ export default async function ActivitiesPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const routes = createLearnerRoutes(locale);
   return (
     <LearnerActivityCenter
       records={await getMyLearnerRecords()}
-      routes={createLearnerRoutes(locale)}
+      courseBasePath={routes.courses}
     />
   );
 }

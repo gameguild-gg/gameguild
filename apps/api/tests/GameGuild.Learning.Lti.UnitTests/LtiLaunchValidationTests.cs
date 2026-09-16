@@ -307,6 +307,24 @@ public class LtiLaunchValidationTests
         _db.Set<LtiUserMapping>().Should().BeEmpty();
     }
 
+    [Theory]
+    [InlineData("", ClientId)]
+    [InlineData(Issuer, "")]
+    public async Task Launch_WhenTokenOmitsPlatformIdentity_Returns401(
+        string issuer,
+        string audience)
+    {
+        var token = new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: [new Claim("sub", "learner-1")],
+            expires: DateTime.UtcNow.AddMinutes(5)));
+
+        var result = await CreateController(LaunchForm("unknown-state", token)).Launch();
+
+        result.Should().BeOfType<UnauthorizedObjectResult>();
+    }
+
     [Fact]
     public async Task Launch_WithReplayedTokenAndState_Returns401SecondTime()
     {

@@ -176,6 +176,24 @@ public class ProgramContentEstimatedTimeTests
     }
 
     [Fact]
+    public void ToEntity_ExplicitMinutesDefaultToManualSource()
+    {
+        var dto = new CreateProgramContentDto
+        {
+            ProgramId = Guid.NewGuid(),
+            Title = "T",
+            Type = ProgramContentType.Lesson,
+            Body = "{}",
+            EstimatedMinutes = 45,
+        };
+
+        var entity = dto.ToEntity();
+
+        entity.EstimatedMinutesSource.Should().Be(EstimatedMinutesSource.Manual);
+        entity.EstimatedMinutes.Should().Be(45);
+    }
+
+    [Fact]
     public void ToEntity_ThenNormalize_AutoComputesFromBody()
     {
         var dto = new CreateProgramContentDto

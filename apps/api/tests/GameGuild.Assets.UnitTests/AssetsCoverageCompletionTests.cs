@@ -513,7 +513,7 @@ public class AssetsCoverageCompletionTests
         payload.Should().NotBeNull();
 
         var cache = GetTokenCache(service);
-        var cacheKey = $"{token}:{assetId}:{tenantId}";
+        var cacheKey = $"{token}:{assetId}:{tenantId}:";
         cache[cacheKey] = (payload!, DateTimeOffset.UtcNow.AddSeconds(-1).ToUnixTimeSeconds());
         service.ValidateToken(token, assetId, tenantId).Should().NotBeNull();
 

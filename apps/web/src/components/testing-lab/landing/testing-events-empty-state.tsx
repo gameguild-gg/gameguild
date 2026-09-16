@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import { Search } from 'lucide-react';
 
@@ -29,12 +29,8 @@ export function TestingEventsEmptyState({ filtered, hasEvents, clearFilters }: T
         You can prepare a Project now, then apply as soon as project applications open.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <Button asChild>
-          <Link href="/workspace/projects">Prepare a project</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link href="/testing-lab">Back to Testing Lab</Link>
-        </Button>
+        <Link href="/workspace/projects" className={buttonVariants()}>Prepare a project</Link>
+        <Link href="/testing-lab" className={buttonVariants({ variant: 'outline' })}>Back to Testing Lab</Link>
       </div>
     </div>
   );

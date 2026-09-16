@@ -47,6 +47,7 @@ const eslintConfig = defineConfig([
     ".next-*/**",
     "out/**",
     "build/**",
+    "coverage/**",
     "next-env.d.ts",
     // Versioned browser assets are generated or vendored and linted at source.
     "public/**",
