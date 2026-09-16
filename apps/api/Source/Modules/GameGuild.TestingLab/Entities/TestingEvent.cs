@@ -190,7 +190,12 @@ public sealed class TestingEvent : EntityBase
         Touch();
     }
 
-    private static string ValidateTimeZoneId(string timeZoneId)
+    private static string ValidateTimeZoneId(string timeZoneId) =>
+        ValidateTimeZoneId(timeZoneId, TimeZoneInfo.FindSystemTimeZoneById);
+
+    private static string ValidateTimeZoneId(
+        string timeZoneId,
+        Func<string, TimeZoneInfo> resolveTimeZone)
     {
         if (string.IsNullOrWhiteSpace(timeZoneId))
             throw new ArgumentException("A valid time zone is required.", nameof(timeZoneId));
@@ -199,7 +204,7 @@ public sealed class TestingEvent : EntityBase
             throw new ArgumentException("The time zone identifier cannot exceed 100 characters.", nameof(timeZoneId));
         try
         {
-            _ = TimeZoneInfo.FindSystemTimeZoneById(normalized);
+            _ = resolveTimeZone(normalized);
             return normalized;
         }
         catch (TimeZoneNotFoundException)

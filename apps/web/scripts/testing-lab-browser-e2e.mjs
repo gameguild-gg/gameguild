@@ -440,14 +440,16 @@ async function visit(page, pathname, label) {
 }
 
 function monitorPage(page) {
-  page.on("pageerror", (error) => quality.browserErrors.push(error.message));
+  page.on("pageerror", (error) =>
+    quality.browserErrors.push(`${error.message} (page: ${page.url()})`),
+  );
   page.on("console", (message) => {
     if (message.type() === "error") {
       const location = message.location();
       const source = location.url
         ? ` (${location.url}${location.lineNumber ? `:${location.lineNumber}` : ""})`
         : "";
-      quality.browserErrors.push(`${message.text()}${source}`);
+      quality.browserErrors.push(`${message.text()}${source} (page: ${page.url()})`);
     }
   });
   page.on("requestfailed", (request) => {

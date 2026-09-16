@@ -96,4 +96,28 @@ describe('Testing Events page', () => {
     expect(screen.queryByRole('link', { name: /manage event/i })).not.toBeInTheDocument();
     expect(mocks.getArchivedTestingEventsDirectory).toHaveBeenCalledWith({ skip: 0, take: 100 });
   });
+
+  it('renders semantic pagination links without nesting links in client buttons', async () => {
+    mocks.getTestingEventsDirectory.mockResolvedValue({
+      accessIssues: [],
+      events: Array.from({ length: 26 }, (_, index) => ({
+        id: `event-${index + 1}`,
+        name: `Testing event ${index + 1}`,
+        mode: 'Online',
+        status: 'Active',
+        startsAt: '2026-08-12T18:00:00.000Z',
+      })),
+    });
+    mocks.getTestingEventTemplates.mockResolvedValue({ templates: [], accessIssues: [] });
+
+    render(await TestingEventsPage({ searchParams: Promise.resolve({ status: 'Active', page: '1' }) }));
+
+    expect(screen.getByText('Previous')).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByRole('link', { name: 'Previous' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
+      'href',
+      '/workspace/testing-lab/events?page=2&status=Active',
+    );
+    expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+  });
 });

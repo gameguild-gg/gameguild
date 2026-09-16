@@ -32,6 +32,13 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
+vi.mock('@/i18n/navigation', () => ({
+  useRouter: () => ({
+    refresh: refreshMock,
+    push: pushMock,
+  }),
+}));
+
 vi.mock('@/lib/learning/actions', () => ({
   archiveCourse: vi.fn(),
   deleteCourse: vi.fn(),
@@ -138,7 +145,7 @@ describe('course settings client pages', () => {
     await waitFor(() => {
       expect(deleteCourse).toHaveBeenCalledWith('course-1');
     });
-    expect(pushMock).toHaveBeenCalledWith('/en-US/workspace/learning/courses');
+    expect(pushMock).toHaveBeenCalledWith('/workspace/learning/courses');
   });
 
   it('renders danger-zone API errors without navigating away', async () => {

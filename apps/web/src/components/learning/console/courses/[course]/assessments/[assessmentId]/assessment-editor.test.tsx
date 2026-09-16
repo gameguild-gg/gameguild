@@ -497,4 +497,162 @@ describe("AssessmentEditor", () => {
       screen.queryByTestId("start-speedgrader-button"),
     ).not.toBeInTheDocument();
   });
+
+  it("saves cleared optional fields, quiz presentation, and no grading group", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={[
+          ...groups,
+          { ...groups[0]!, id: "practice", name: "Practice", weightPercent: 12.5 },
+        ]}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText(/description/i));
+    await user.clear(screen.getByLabelText(/max score/i));
+    await user.clear(screen.getByLabelText(/passing score/i));
+    await user.clear(screen.getByLabelText(/time limit/i));
+    await user.clear(screen.getByLabelText(/max attempts/i));
+    fireEvent.change(screen.getByLabelText(/available from/i), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText(/available until/i), { target: { value: "" } });
+    await user.click(screen.getByRole("switch", { name: /^required$/i }));
+    await user.click(screen.getByRole("combobox", { name: /grading group/i }));
+    expect(screen.getByRole("option", { name: /12.5% of Total/ })).toBeInTheDocument();
+    await user.click(screen.getByRole("option", { name: "No group" }));
+    await user.click(screen.getByRole("combobox", { name: /presentation/i }));
+    await user.click(screen.getByRole("option", { name: "One at a time" }));
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith({
+        courseId: "course-1",
+        assessmentId: "assessment-1",
+        title: assessment.title,
+        slug: assessment.slug,
+        description: undefined,
+        maxScore: undefined,
+        passingScore: undefined,
+        timeLimitMinutes: null,
+        maxAttempts: null,
+        isRequired: false,
+        availableFrom: null,
+        availableUntil: null,
+        assessmentGroupId: null,
+        clearAssessmentGroupId: true,
+        presentationMode: "SingleStep",
+      });
+    });
+    expect(routerMocks.refresh).toHaveBeenCalled();
+    expect(routerMocks.replace).not.toHaveBeenCalled();
+  });
+
+  it("navigates back, respects delete cancellation, and reports delete failures", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(routerMocks.push).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/assessments",
+    );
+
+    vi.mocked(confirm).mockReturnValueOnce(false);
+    await user.click(screen.getByRole("button", { name: /delete assessment/i }));
+    expect(deleteAssessment).not.toHaveBeenCalled();
+
+    vi.mocked(deleteAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Delete failed",
+    });
+    await user.click(screen.getByRole("button", { name: /delete assessment/i }));
+    expect(await screen.findByText("Delete failed")).toBeInTheDocument();
+  });
+
+  it("rolls back a grading method when persistence fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(updateAssessment).mockResolvedValueOnce({
+      success: false,
+      error: "Grading update failed",
+    });
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={assessment}
+        assessmentGroups={groups}
+      />,
+    );
+
+    const peerReview = screen.getByRole("checkbox", { name: /peerreview/i });
+    await user.click(peerReview);
+
+    expect(await screen.findByText("Grading update failed")).toBeInTheDocument();
+    expect(peerReview).not.toBeChecked();
+  });
+
+  it("renders legacy, practice, unavailable, and missing linked-content states", async () => {
+    const user = userEvent.setup();
+    const legacy = {
+      ...assessment,
+      type: "LegacyAssessment",
+      contentId: "missing-content",
+      assessmentGroupId: "practice",
+      isAvailable: false,
+    } as unknown as Assessment;
+    render(
+      <AssessmentEditor
+        courseId="course id"
+        assessment={legacy}
+        assessmentGroups={[
+          { ...groups[0]!, id: "practice", name: "Practice", weightPercent: 0 },
+        ]}
+        courseContent={courseContent}
+      />,
+    );
+
+    expect(screen.getAllByText("LegacyAssessment").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Practice").length).toBeGreaterThan(0);
+    expect(screen.getByText("No")).toBeInTheDocument();
+    expect(screen.getByTestId("linked-content-link")).toHaveTextContent("missing-content");
+    await user.click(screen.getByRole("button", { name: /edit coding definition/i }));
+    expect(routerMocks.push).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course%20id/assessments/assessment-1/coding-definition",
+    );
+  });
+
+  it("falls back to the title slug and zero passing score for empty fields", async () => {
+    const user = userEvent.setup();
+    render(
+      <AssessmentEditor
+        courseId="course-1"
+        assessment={{ ...assessment, description: null }}
+        assessmentGroups={groups}
+      />,
+    );
+
+    expect(screen.getByLabelText(/description/i)).toHaveValue("");
+    await user.clear(screen.getByLabelText(/url slug/i));
+    await user.clear(screen.getByLabelText(/passing score/i));
+    expect(screen.getByText(/0 out of 10 points to pass \(0%\)/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateAssessment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slug: "schema-patterns-quiz",
+          passingScore: undefined,
+        }),
+      );
+    });
+    expect(routerMocks.replace).toHaveBeenCalledWith(
+      "/workspace/learning/courses/course-1/assessments/schema-patterns-quiz",
+    );
+  });
 });

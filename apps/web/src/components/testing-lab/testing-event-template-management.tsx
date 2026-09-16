@@ -142,9 +142,18 @@ function TemplateEditor({
       JSON.stringify(registrationSchema),
     );
     startTransition(async () => {
-      const next = await saveTestingEventTemplate(formData);
-      setResult(next);
-      if (next.success) router.refresh();
+      try {
+        const next = await saveTestingEventTemplate(formData);
+        setResult(next);
+        if (next.success) router.refresh();
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error
+            ? error.message
+            : 'The Testing Lab operation failed.',
+        });
+      }
     });
   }
 
@@ -154,9 +163,18 @@ function TemplateEditor({
     formData.set('templateId', template.id);
     if (template.isArchived) formData.set('restore', 'true');
     startTransition(async () => {
-      const next = await setTestingEventTemplateArchived(formData);
-      setResult(next);
-      if (next.success) router.refresh();
+      try {
+        const next = await setTestingEventTemplateArchived(formData);
+        setResult(next);
+        if (next.success) router.refresh();
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error
+            ? error.message
+            : 'The Testing Lab operation failed.',
+        });
+      }
     });
   }
 

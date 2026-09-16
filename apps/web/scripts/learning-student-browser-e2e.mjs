@@ -361,12 +361,14 @@ async function seedLearnerCourse() {
     "Publish learner course",
   );
 
+  if (!lesson.slug) throw new Error("Create lesson returned no slug.");
+
   return {
     courseId: course.id,
     slug,
     title,
     platformTenantId,
-    lessonId: lesson.id,
+    lessonSlug: lesson.slug,
     reflectionId: reflection.id,
     assessmentId: assessment.id,
     assignmentId: assignment.id,
@@ -604,8 +606,9 @@ async function runLearnerJourney(fixture) {
         url.origin === new URL(learningBaseUrl).origin &&
         url.pathname ===
           getLearningPath(
-            `/courses/${fixture.slug}/lessons/${fixture.lessonId}`,
+            `/courses/${fixture.slug}/lessons/${fixture.lessonSlug}`,
           ),
+      { timeout: 180_000, waitUntil: "domcontentloaded" },
     );
     await page
       .getByRole("heading", { name: "Build a readable game loop", exact: true })
@@ -643,6 +646,7 @@ async function runLearnerJourney(fixture) {
       .waitFor();
     await page
       .getByText("Game loop knowledge check", { exact: true })
+      .last()
       .waitFor();
     await page.getByText("Production reflection", { exact: true }).waitFor();
     await page.getByText("Iteration survey", { exact: true }).waitFor();
@@ -652,6 +656,7 @@ async function runLearnerJourney(fixture) {
 
     const assessmentCard = page
       .getByText("Game loop knowledge check", { exact: true })
+      .last()
       .locator('xpath=ancestor::*[@data-slot="card"][1]');
     await assessmentCard.getByRole("link", { name: "Start" }).click();
     await page

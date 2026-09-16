@@ -1,7 +1,7 @@
-import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ThreadActionPanel } from './thread-action-panel';
+import "@testing-library/jest-dom/vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ThreadActionPanel } from "./thread-action-panel";
 
 const createDiscussionReplyMock = vi.fn();
 const updateDiscussionPinMock = vi.fn();
@@ -10,20 +10,23 @@ const acceptDiscussionReplyMock = vi.fn();
 const upvoteDiscussionReplyMock = vi.fn();
 const refreshMock = vi.fn();
 
-vi.mock('@/lib/learning/actions', () => ({
-  createDiscussionReply: (...args: unknown[]) => createDiscussionReplyMock(...args),
+vi.mock("@/lib/learning/actions", () => ({
+  createDiscussionReply: (...args: unknown[]) =>
+    createDiscussionReplyMock(...args),
   updateDiscussionPin: (...args: unknown[]) => updateDiscussionPinMock(...args),
   resolveDiscussion: (...args: unknown[]) => resolveDiscussionMock(...args),
-  acceptDiscussionReply: (...args: unknown[]) => acceptDiscussionReplyMock(...args),
-  upvoteDiscussionReply: (...args: unknown[]) => upvoteDiscussionReplyMock(...args),
+  acceptDiscussionReply: (...args: unknown[]) =>
+    acceptDiscussionReplyMock(...args),
+  upvoteDiscussionReply: (...args: unknown[]) =>
+    upvoteDiscussionReplyMock(...args),
 }));
 
-vi.mock('next/navigation', () => ({
-  usePathname: () => '/workspace/learning',
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/workspace/learning",
   useRouter: () => ({ refresh: refreshMock }),
 }));
 
-describe('ThreadActionPanel', () => {
+describe("ThreadActionPanel", () => {
   beforeEach(() => {
     createDiscussionReplyMock.mockReset();
     updateDiscussionPinMock.mockReset();
@@ -31,53 +34,89 @@ describe('ThreadActionPanel', () => {
     acceptDiscussionReplyMock.mockReset();
     upvoteDiscussionReplyMock.mockReset();
     refreshMock.mockReset();
-    createDiscussionReplyMock.mockResolvedValue({ success: true, data: { id: 'reply-2' } });
+    createDiscussionReplyMock.mockResolvedValue({
+      success: true,
+      data: { id: "reply-2" },
+    });
     updateDiscussionPinMock.mockResolvedValue({ success: true, data: null });
     resolveDiscussionMock.mockResolvedValue({ success: true, data: null });
     acceptDiscussionReplyMock.mockResolvedValue({ success: true, data: null });
     upvoteDiscussionReplyMock.mockResolvedValue({ success: true, data: null });
   });
 
-  it('posts replies and refreshes the discussion thread', async () => {
-    render(<ThreadActionPanel courseId="course-1" threadId="thread-1" pinned={false} resolved={false} replies={[]} />);
+  it("posts replies and refreshes the discussion thread", async () => {
+    render(
+      <ThreadActionPanel
+        courseId="course-1"
+        threadId="thread-1"
+        pinned={false}
+        resolved={false}
+        replies={[]}
+      />,
+    );
 
     fireEvent.change(screen.getByLabelText(/^reply$/i), {
-      target: { value: 'Use the updated milestone rubric before resubmitting.' },
+      target: {
+        value: "Use the updated milestone rubric before resubmitting.",
+      },
     });
-    fireEvent.click(screen.getByRole('button', { name: /post reply/i }));
+    fireEvent.click(screen.getByRole("button", { name: /post reply/i }));
 
     await waitFor(() => {
       expect(createDiscussionReplyMock).toHaveBeenCalledWith({
-        courseId: 'course-1',
-        discussionId: 'thread-1',
-        content: 'Use the updated milestone rubric before resubmitting.',
+        courseId: "course-1",
+        discussionId: "thread-1",
+        content: "Use the updated milestone rubric before resubmitting.",
       });
     });
     expect(refreshMock).toHaveBeenCalled();
-    expect(screen.getByText('Reply posted.')).toBeInTheDocument();
+    expect(screen.getByText("Reply posted.")).toBeInTheDocument();
   });
 
-  it('pins and resolves discussion threads from the action panel', async () => {
-    render(<ThreadActionPanel courseId="course-1" threadId="thread-1" pinned={false} resolved={false} replies={[]} />);
+  it("pins and resolves discussion threads from the action panel", async () => {
+    render(
+      <ThreadActionPanel
+        courseId="course-1"
+        threadId="thread-1"
+        pinned={false}
+        resolved={false}
+        replies={[]}
+      />,
+    );
 
-    fireEvent.click(screen.getByRole('button', { name: /^pin$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^pin$/i }));
     await waitFor(() => {
-      expect(updateDiscussionPinMock).toHaveBeenCalledWith('course-1', 'thread-1', true);
+      expect(updateDiscussionPinMock).toHaveBeenCalledWith(
+        "course-1",
+        "thread-1",
+        true,
+      );
     });
-    await screen.findByText('Discussion pinned.');
+    await screen.findByText("Discussion pinned.");
   });
 
-  it('resolves discussion threads from the action panel', async () => {
-    render(<ThreadActionPanel courseId="course-1" threadId="thread-1" pinned={false} resolved={false} replies={[]} />);
+  it("resolves discussion threads from the action panel", async () => {
+    render(
+      <ThreadActionPanel
+        courseId="course-1"
+        threadId="thread-1"
+        pinned={false}
+        resolved={false}
+        replies={[]}
+      />,
+    );
 
-    fireEvent.click(screen.getByRole('button', { name: /^resolve$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^resolve$/i }));
     await waitFor(() => {
-      expect(resolveDiscussionMock).toHaveBeenCalledWith('course-1', 'thread-1');
+      expect(resolveDiscussionMock).toHaveBeenCalledWith(
+        "course-1",
+        "thread-1",
+      );
     });
-    await screen.findByText('Discussion marked resolved.');
+    await screen.findByText("Discussion marked resolved.");
   });
 
-  it('accepts and upvotes replies from the action panel', async () => {
+  it("accepts and upvotes replies from the action panel", async () => {
     render(
       <ThreadActionPanel
         courseId="course-1"
@@ -86,29 +125,33 @@ describe('ThreadActionPanel', () => {
         resolved={false}
         replies={[
           {
-            id: 'reply-1',
-            threadId: 'thread-1',
-            authorId: 'student-1',
-            authorName: 'Student 1',
-            authorRole: 'student',
-            content: 'This helped.',
+            id: "reply-1",
+            threadId: "thread-1",
+            authorId: "student-1",
+            authorName: "Student 1",
+            authorRole: "student",
+            content: "This helped.",
             upvotes: 3,
             isAnswer: false,
-            createdAt: '2026-01-01T00:00:00.000Z',
-            updatedAt: '2026-01-01T00:00:00.000Z',
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
           },
         ]}
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^accept$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^accept$/i }));
     await waitFor(() => {
-      expect(acceptDiscussionReplyMock).toHaveBeenCalledWith('course-1', 'thread-1', 'reply-1');
+      expect(acceptDiscussionReplyMock).toHaveBeenCalledWith(
+        "course-1",
+        "thread-1",
+        "reply-1",
+      );
     });
-    await screen.findByText('Answer accepted.');
+    await screen.findByText("Answer accepted.");
   });
 
-  it('upvotes replies from the action panel', async () => {
+  it("upvotes replies from the action panel", async () => {
     render(
       <ThreadActionPanel
         courseId="course-1"
@@ -117,24 +160,115 @@ describe('ThreadActionPanel', () => {
         resolved={false}
         replies={[
           {
-            id: 'reply-1',
-            threadId: 'thread-1',
-            authorId: 'student-1',
-            authorName: 'Student 1',
-            authorRole: 'student',
-            content: 'This helped.',
+            id: "reply-1",
+            threadId: "thread-1",
+            authorId: "student-1",
+            authorName: "Student 1",
+            authorRole: "student",
+            content: "This helped.",
             upvotes: 3,
             isAnswer: false,
-            createdAt: '2026-01-01T00:00:00.000Z',
-            updatedAt: '2026-01-01T00:00:00.000Z',
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
           },
         ]}
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^upvote$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^upvote$/i }));
     await waitFor(() => {
-      expect(upvoteDiscussionReplyMock).toHaveBeenCalledWith('course-1', 'thread-1', 'reply-1');
+      expect(upvoteDiscussionReplyMock).toHaveBeenCalledWith(
+        "course-1",
+        "thread-1",
+        "reply-1",
+      );
     });
+  });
+
+  it("surfaces failures from reply, pin, and resolution actions", async () => {
+    createDiscussionReplyMock.mockResolvedValue({
+      success: false,
+      error: "Reply failed.",
+    });
+    updateDiscussionPinMock.mockResolvedValue({
+      success: false,
+      error: "Pin failed.",
+    });
+    resolveDiscussionMock.mockResolvedValue({
+      success: false,
+      error: "Resolution failed.",
+    });
+    render(
+      <ThreadActionPanel
+        courseId="course-1"
+        threadId="thread-1"
+        pinned={false}
+        resolved={false}
+        replies={[]}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/^reply$/i), {
+      target: { value: " Retry reply. " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /post reply/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Reply failed.");
+    expect(screen.getByLabelText(/^reply$/i)).toHaveValue(" Retry reply. ");
+    await waitFor(() => expect(screen.getByRole("button", { name: /^pin$/i })).toBeEnabled());
+
+    fireEvent.click(screen.getByRole("button", { name: /^pin$/i }));
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("Pin failed."),
+    );
+    expect(screen.getByText("Not pinned")).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: /^resolve$/i })).toBeEnabled());
+
+    fireEvent.click(screen.getByRole("button", { name: /^resolve$/i }));
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("Resolution failed."),
+    );
+    expect(screen.getByText("Open")).toBeInTheDocument();
+    expect(refreshMock).not.toHaveBeenCalled();
+  });
+
+  it("renders accepted moderation state and supports unpinning", async () => {
+    render(
+      <ThreadActionPanel
+        courseId="course-1"
+        threadId="thread-1"
+        pinned
+        resolved
+        replies={[
+          {
+            id: "reply-1",
+            threadId: "thread-1",
+            authorId: "student-1",
+            authorName: "Student 1",
+            authorRole: "student",
+            content: "Accepted response.",
+            upvotes: 3,
+            isAnswer: true,
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Resolved")).toBeInTheDocument();
+    expect(screen.getByText(/3 upvotes · accepted/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^resolve$/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^accept$/i })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: /^unpin$/i }));
+    await waitFor(() =>
+      expect(updateDiscussionPinMock).toHaveBeenCalledWith(
+        "course-1",
+        "thread-1",
+        false,
+      ),
+    );
+    expect(await screen.findByText("Discussion unpinned.")).toBeInTheDocument();
+    expect(screen.getByText("Not pinned")).toBeInTheDocument();
   });
 });
