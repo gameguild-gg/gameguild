@@ -14,6 +14,8 @@ describe("MarkdownRenderer assets", () => {
     const repository = { createObjectUrl } as unknown as AssetRepository;
     const assetUri = "asset://aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
     render(
       <AssetsProvider
         repository={repository}
@@ -30,5 +32,7 @@ describe("MarkdownRenderer assets", () => {
       );
     });
     expect(createObjectUrl).toHaveBeenCalledWith(assetUri);
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 });

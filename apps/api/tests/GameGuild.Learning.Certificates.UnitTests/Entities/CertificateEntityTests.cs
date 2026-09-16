@@ -158,6 +158,21 @@ public class CertificateTemplateEntityTests
     }
 
     [Fact]
+    public void Update_WithWhitespaceOptionalFields_ClearsDescriptionAndStyles()
+    {
+        var template = CertificateTemplate.Create(Guid.NewGuid(), "Original", "<h1>Original</h1>");
+        template.Update(
+            "Completion",
+            "   ",
+            "<main>Updated</main>",
+            "\t",
+            true);
+
+        template.Description.Should().BeNull();
+        template.TemplateStyles.Should().BeNull();
+    }
+
+    [Fact]
     public void SetDefault_ShouldBeReversible()
     {
         var template = CertificateTemplate.Create(Guid.NewGuid(), "Template", "<h1>Cert</h1>");

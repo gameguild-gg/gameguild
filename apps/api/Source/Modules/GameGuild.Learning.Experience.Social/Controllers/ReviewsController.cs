@@ -50,7 +50,8 @@ public class ReviewsController : LearningControllerBase
             request.Rating,
             request.Title,
             request.Content,
-            request.EnrollmentId), cancellationToken).ConfigureAwait(false);
+            request.EnrollmentId,
+            GetCurrentTenantId()), cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {

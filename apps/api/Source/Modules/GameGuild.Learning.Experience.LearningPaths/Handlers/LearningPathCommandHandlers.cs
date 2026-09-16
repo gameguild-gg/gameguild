@@ -33,7 +33,7 @@ public sealed class LearningPathCommandHandlers(IApplicationDbContext context, I
 
         // Ensure slug uniqueness
         var existingSlug = await context.Set<LearningPath>()
-            .Where(lp => lp.Slug == slug && lp.DeletedAt == null)
+            .Where(lp => lp.Slug == slug && lp.TenantId == request.TenantId && lp.DeletedAt == null)
             .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         if (existingSlug != null)
@@ -46,7 +46,10 @@ public sealed class LearningPathCommandHandlers(IApplicationDbContext context, I
             title: request.Title,
             slug: slug,
             difficulty: request.Difficulty,
-            tenantId: request.TenantId
+            tenantId: request.TenantId,
+            description: request.Description,
+            imageUrl: request.ImageUrl,
+            estimatedHours: request.EstimatedHours
         );
 
         context.Set<LearningPath>().Add(learningPath);
@@ -70,8 +73,13 @@ public sealed class LearningPathCommandHandlers(IApplicationDbContext context, I
             return null;
         }
 
-        // Note: Entity would need Update methods for proper encapsulation
-        context.Set<LearningPath>().Update(learningPath);
+        learningPath.Update(
+            request.Title,
+            request.Description,
+            request.ImageUrl,
+            request.EstimatedHours,
+            request.Difficulty,
+            request.IsFeatured);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Updated learning path: {Id}", request.Id);
@@ -216,18 +224,44 @@ public sealed class LearningPathCommandHandlers(IApplicationDbContext context, I
             return null;
         }
 
-        // Note: Entity would need ReorderCourses method for proper encapsulation
-        // This is a simplified implementation
-        foreach (var courseOrder in request.Courses)
+        var requestedOrders = request.Courses.ToList();
+        var requestedCourseIds = requestedOrders.Select(item => item.CourseId).ToHashSet();
+        if (requestedCourseIds.Count != requestedOrders.Count || requestedOrders.Select(item => item.Order).Distinct().Count() != requestedOrders.Count)
         {
-            var course = learningPath.Courses.FirstOrDefault(c => c.CourseId == courseOrder.CourseId);
-            if (course != null)
-            {
-                // Would need to update the Order property through proper methods
-            }
+            throw new InvalidOperationException("Each course and order must be unique when reordering a learning path");
+        }
+
+        var coursesById = learningPath.Courses.ToDictionary(course => course.CourseId);
+        if (requestedOrders.Any(item => !coursesById.ContainsKey(item.CourseId)))
+        {
+            throw new InvalidOperationException("One or more courses do not belong to this learning path");
+        }
+
+        var resultingOrders = learningPath.Courses
+            .Select(course => requestedCourseIds.Contains(course.CourseId)
+                ? requestedOrders.First(item => item.CourseId == course.CourseId).Order
+                : course.Order)
+            .ToList();
+        if (resultingOrders.Distinct().Count() != resultingOrders.Count)
+        {
+            throw new InvalidOperationException("Course orders must be unique within a learning path");
+        }
+
+        await using var transaction = await context.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        for (var index = 0; index < requestedOrders.Count; index++)
+        {
+            coursesById[requestedOrders[index].CourseId].SetOrder(-(index + 1));
         }
 
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        foreach (var courseOrder in requestedOrders)
+        {
+            coursesById[courseOrder.CourseId].SetOrder(courseOrder.Order);
+        }
+
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Reordered courses in path: {PathId}", request.LearningPathId);
         return learningPath;
@@ -349,7 +383,7 @@ public sealed class LearningPathCommandHandlers(IApplicationDbContext context, I
             return false;
         }
 
-        // Note: Entity would need Abandon method for proper encapsulation
+        enrollment.Abandon();
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("User {UserId} abandoned path {PathId}", request.UserId, request.LearningPathId);

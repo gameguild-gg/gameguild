@@ -29,7 +29,10 @@ public class LearningPath : EntityBase
         string title,
         string slug,
         LearningPathDifficulty difficulty = LearningPathDifficulty.Beginner,
-        Guid? tenantId = null)
+        Guid? tenantId = null,
+        string? description = null,
+        string? imageUrl = null,
+        int estimatedHours = 0)
     {
         return new LearningPath
         {
@@ -38,12 +41,32 @@ public class LearningPath : EntityBase
             CreatorId = creatorId,
             Title = title,
             Slug = slug,
+            Description = description,
+            ImageUrl = imageUrl,
+            EstimatedHours = estimatedHours,
             Difficulty = difficulty,
             IsPublished = false,
             IsFeatured = false,
             EnrollmentCount = 0,
             CompletionCount = 0
         };
+    }
+
+    public void Update(
+        string? title,
+        string? description,
+        string? imageUrl,
+        int? estimatedHours,
+        LearningPathDifficulty? difficulty,
+        bool? isFeatured)
+    {
+        if (title is not null) Title = title;
+        if (description is not null) Description = description;
+        if (imageUrl is not null) ImageUrl = imageUrl;
+        if (estimatedHours.HasValue) EstimatedHours = estimatedHours.Value;
+        if (difficulty.HasValue) Difficulty = difficulty.Value;
+        if (isFeatured.HasValue) IsFeatured = isFeatured.Value;
+        UpdatedAt = SystemClock.UtcNow;
     }
 
     public void AddCourse(Guid courseId, int order, bool isRequired = true)
@@ -85,6 +108,8 @@ public class LearningPathCourse
         Order = order;
         IsRequired = isRequired;
     }
+
+    public void SetOrder(int order) { Order = order; }
 }
 
 /// <summary>
@@ -120,6 +145,11 @@ public class LearningPathEnrollment : EntityBase
 
     public void UpdateProgress(int coursesCompleted)
     {
+        if (coursesCompleted < 0 || coursesCompleted > TotalCourses)
+        {
+            throw new ArgumentOutOfRangeException(nameof(coursesCompleted), coursesCompleted, $"Courses completed must be between 0 and {TotalCourses}.");
+        }
+
         CoursesCompleted = coursesCompleted;
         Progress = TotalCourses > 0 ? (int)((double)coursesCompleted / TotalCourses * 100) : 0;
         UpdatedAt = SystemClock.UtcNow;
@@ -135,6 +165,13 @@ public class LearningPathEnrollment : EntityBase
         Status = LearningPathEnrollmentStatus.Completed;
         CompletedAt = SystemClock.UtcNow;
         Progress = 100;
+        UpdatedAt = SystemClock.UtcNow;
+    }
+
+    public void Abandon()
+    {
+        Status = LearningPathEnrollmentStatus.Abandoned;
+        CompletedAt = null;
         UpdatedAt = SystemClock.UtcNow;
     }
 }

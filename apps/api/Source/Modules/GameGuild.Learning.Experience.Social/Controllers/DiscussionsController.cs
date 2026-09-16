@@ -1,5 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
+using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Abstractions;
 using GameGuild.Learning.Attributes;
 using GameGuild.Learning.Experience.Social.Services;
@@ -48,7 +49,8 @@ public class DiscussionsController : LearningControllerBase
             userId,
             request.Title,
             request.Content,
-            request.ContentId), cancellationToken).ConfigureAwait(false);
+            request.ContentId,
+            GetCurrentTenantId()), cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
@@ -132,6 +134,7 @@ public class DiscussionsController : LearningControllerBase
     /// Pins a discussion (instructor/admin only)
     /// </summary>
     [HttpPost("discussions/{id:guid}/pin")]
+    [RequireContentTypePermission<CourseDiscussion>(PermissionType.Edit)]
     [ProducesResponseType(typeof(CourseDiscussionDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> PinDiscussion(Guid id, CancellationToken cancellationToken = default)
@@ -150,6 +153,7 @@ public class DiscussionsController : LearningControllerBase
     /// Unpins a discussion
     /// </summary>
     [HttpPost("discussions/{id:guid}/unpin")]
+    [RequireContentTypePermission<CourseDiscussion>(PermissionType.Edit)]
     [ProducesResponseType(typeof(CourseDiscussionDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UnpinDiscussion(Guid id, CancellationToken cancellationToken = default)

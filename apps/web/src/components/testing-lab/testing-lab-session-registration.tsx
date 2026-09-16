@@ -9,6 +9,7 @@ import {
 } from '@/lib/testing-lab/actions';
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
@@ -43,17 +44,24 @@ export function TestingLabSessionRegistration({
             : state === 'registered'
               ? unregisterFromTestingSession
               : leaveTestingSessionWaitlist;
-      const response = await operation(formData);
-      setResult(response);
-      if (response.success) setState(next);
+      try {
+        const response = await operation(formData);
+        setResult(response);
+        if (response.success) setState(next);
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
+      }
     });
   }
 
   if (!isAuthenticated) {
     return (
-      <Button asChild className="w-full">
-        <Link href="/sign-in?callbackUrl=%2Ftesting-lab">Sign in to join this session</Link>
-      </Button>
+      <Link href="/sign-in?callbackUrl=%2Ftesting-lab" className={buttonVariants({ className: 'w-full' })}>
+        Sign in to join this session
+      </Link>
     );
   }
 
