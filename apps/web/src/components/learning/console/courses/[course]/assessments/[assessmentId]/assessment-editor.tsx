@@ -65,6 +65,7 @@ import {
 } from "@/lib/learning/actions";
 import { useLearningBase } from '@/lib/learning/use-learning-base';
 import { normalizeSlug, slugify } from "@/lib/slugify";
+import { RuntimeQuizTestRun } from '@/components/learning/grading/runtime-quiz-test-run';
 
 const ASSESSMENT_TYPE_OPTIONS: { value: AssessmentType; label: string }[] = [
   { value: "Quiz", label: "Quiz" },
@@ -1077,6 +1078,16 @@ export function AssessmentEditor({
                         )}
                         Prepare
                       </Button>
+                      {authoringState.candidate && (
+                        <RuntimeQuizTestRun
+                          assessmentId={assessment.id}
+                          revisionId={authoringState.candidate.revisionId}
+                          disabled={
+                            isLifecyclePending ||
+                            !authoringState.candidateMatchesDraft
+                          }
+                        />
+                      )}
                       <Button
                         type="button"
                         size="sm"

@@ -7,11 +7,11 @@ import {
   QUIZ_AUTOMATED_REVIEW_HANDLER,
 } from "./contracts";
 
-const AUTHOR_TEST_ONLY = ["author-test"] as const satisfies readonly ReviewExecutionContext[];
+const RUNTIME_CONTEXTS = ["author-test", "official-submission"] as const satisfies readonly ReviewExecutionContext[];
 
 export function registerQuizGradingCapabilities(
   registry: IReviewCapabilityRegistry,
-  contexts: readonly ReviewExecutionContext[] = AUTHOR_TEST_ONLY,
+  contexts: readonly ReviewExecutionContext[] = RUNTIME_CONTEXTS,
 ): void {
   registry.registerComponent({
     kind: "assessment-type-adapter",

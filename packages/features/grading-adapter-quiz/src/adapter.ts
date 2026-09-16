@@ -19,7 +19,7 @@ import { decodeQuizAnswerEnvelope } from "./responses";
 
 export type QuizEvaluationContextsV1 = Readonly<Record<string, QuizEvaluationContext>>;
 
-const contexts = ["author-test"] as const satisfies readonly ReviewExecutionContext[];
+const contexts = ["author-test", "official-submission"] as const satisfies readonly ReviewExecutionContext[];
 
 export const quizAssessmentTypeAdapter: AssessmentTypeAdapterV1<
   readonly QuizGradingItemInputV1[],

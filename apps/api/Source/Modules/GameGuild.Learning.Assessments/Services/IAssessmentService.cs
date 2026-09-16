@@ -21,6 +21,11 @@ public interface IAssessmentService
     Task<Assessment?> GetAssessmentByIdAsync(Guid id);
 
     /// <summary>
+    /// Gets the active assessment owned by one course content item.
+    /// </summary>
+    Task<Assessment?> GetAssessmentByContentIdAsync(Guid contentId);
+
+    /// <summary>
     /// Gets an assessment by ID, ignoring the soft-delete filter. Used by the restore flow.
     /// </summary>
     Task<Assessment?> GetAssessmentByIdIncludingDeletedAsync(Guid id);
@@ -111,11 +116,6 @@ public interface IAssessmentService
     /// Submits a completed assessment
     /// </summary>
     Task<Result<AssessmentSubmission>> SubmitAsync(Guid submissionId, SubmitAssessmentRequest? request = null);
-
-    /// <summary>
-    /// Grades a submission
-    /// </summary>
-    Task<Result<AssessmentSubmission>> GradeSubmissionAsync(Guid submissionId, GradeSubmissionRequest request);
 
     /// <summary>
     /// Gets a submission by ID
@@ -259,16 +259,6 @@ public sealed record SubmitAssessmentRequest(
     string? CodePayload = null,
     string? MediaPayload = null,
     string? ProjectPayload = null
-);
-
-/// <summary>
-/// Request to grade a submission
-/// </summary>
-public sealed record GradeSubmissionRequest(
-    ScoreValue Score,
-    Guid? GradedBy = null,
-    string? Feedback = null,
-    string? RubricScores = null
 );
 
 public sealed record AssessmentScoreBucketDto(

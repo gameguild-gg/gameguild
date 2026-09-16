@@ -2,71 +2,42 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { LearningAssessmentsGradingQueueAssessment, LearningAssessmentsGradingQueueItem } from '@game-guild/client';
+import type {
+  LearningAssessmentsGradingQueueAssessment,
+  LearningAssessmentsGradingQueueItem,
+} from '@game-guild/client';
+import type { AssessmentSubmissionRuntimeViewV1 } from '@game-guild/grading';
+
+const actions = vi.hoisted(() => ({
+  get: vi.fn(),
+  resolve: vi.fn(),
+  regrade: vi.fn(),
+  release: vi.fn(),
+}));
+const router = vi.hoisted(() => ({ refresh: vi.fn() }));
+
+vi.mock('@/lib/learning/grading-runtime-actions', () => ({
+  getRuntimeSubmission: actions.get,
+  resolveRuntimeInstructorReview: actions.resolve,
+  regradeRuntimeSubmission: actions.regrade,
+  releaseRuntimeSubmission: actions.release,
+}));
+vi.mock('@/i18n/navigation', () => ({ useRouter: () => router }));
+
 import { GradingPanel } from './grading-panel';
-import { gradeSubmission } from '@/lib/learning/grade-action';
 
-type GradingQueueAssessmentFixture = LearningAssessmentsGradingQueueAssessment & {
-  reviewMethods: number;
-};
-
-const actionsMock = vi.hoisted(() => ({
-  fetchPeerReviews: vi.fn(),
-}));
-
-const routerMocks = vi.hoisted(() => ({
-  refresh: vi.fn(),
-}));
-
-vi.mock('./speedgrader-actions', () => ({
-  fetchPeerReviewsAction: actionsMock.fetchPeerReviews,
-}));
-
-vi.mock('@/i18n/navigation', () => ({
-  useRouter: () => routerMocks,
-}));
-
-vi.mock('@/lib/learning/grade-action', () => ({
-  gradeSubmission: vi.fn(),
-}));
-
-// --- Fixtures ---------------------------------------------------------------
-
-const rubricAssessment = {
+const assessment = {
   id: 'assessment-1',
-  title: 'Final Project',
-  maxScore: 10_000,
-  hasRubric: true,
-  reviewMethods: 8,
-  rubric: {
-    id: 'rubric-1',
-    title: 'Project rubric',
-    criteria: [
-      { id: 'c1', description: 'Correctness', points: 6_000, order: 0 },
-      { id: 'c2', description: 'Style', points: 4_000, order: 1 },
-    ],
-  },
-} satisfies GradingQueueAssessmentFixture;
-
-const plainAssessment = {
-  id: 'assessment-1',
-  title: 'Essay',
-  maxScore: 10_000,
-  hasRubric: false,
-  reviewMethods: 8,
-} satisfies GradingQueueAssessmentFixture;
-
-const peerAssessment = {
-  ...plainAssessment,
-  reviewMethods: 9,
-  peerReviewsRequiredCount: 3,
-} satisfies GradingQueueAssessmentFixture;
+  title: 'Quiz',
+  maxScore: 300,
+} satisfies LearningAssessmentsGradingQueueAssessment;
 
 const individualItem = {
-  submissionId: 'sub-1',
-  canonicalSubmissionId: 'sub-1',
+  submissionId: 'submission-1',
+  canonicalSubmissionId: 'submission-1',
   displayName: 'Ada Lovelace',
   attemptNumber: 1,
+  attemptCount: 1,
   status: 'Submitted',
   submittedAt: '2026-08-01T10:00:00Z',
   isLate: false,
@@ -77,307 +48,249 @@ const groupItem = {
   ...individualItem,
   isGroup: true,
   groupId: 'group-1',
-  groupName: 'Team Rocket',
+  groupName: 'Team One',
   memberNames: ['Ada Lovelace', 'Grace Hopper'],
 } satisfies LearningAssessmentsGradingQueueItem;
 
-function renderPanel(props: Partial<React.ComponentProps<typeof GradingPanel>> = {}) {
-  return render(<GradingPanel item={individualItem} assessment={rubricAssessment} {...props} />);
+function runtimeSubmission(
+  overrides: Partial<AssessmentSubmissionRuntimeViewV1> = {},
+): AssessmentSubmissionRuntimeViewV1 {
+  return {
+    submissionId: 'submission-1',
+    assessmentId: 'assessment-1',
+    definitionRevisionId: 'revision-1',
+    enrollmentId: 'enrollment-1',
+    courseGroupId: null,
+    attemptNumber: 1,
+    status: 'submitted',
+    draftVersion: 0,
+    version: 4,
+    startedAt: '2026-08-01T09:00:00Z',
+    submittedAt: '2026-08-01T10:00:00Z',
+    submittedByUserId: 'user-1',
+    contentCompleted: false,
+    execution: {
+      executionId: 'execution-1',
+      definitionRevisionId: 'revision-1',
+      context: 'official-submission',
+      executionSnapshotHash: 'a'.repeat(64),
+      deliveryHash: 'b'.repeat(64),
+      delivery: {
+        schemaVersion: 1,
+        definitionRevisionId: 'revision-1',
+        executionSnapshotHash: 'a'.repeat(64),
+        itemOrder: ['q1', 'q2'],
+        items: {
+          q1: {
+            adapterKey: 'quiz-assessment-type',
+            adapterVersion: '1',
+            learnerPayload: { itemId: 'q1', entry: { stem: 'First question' } },
+          },
+          q2: {
+            adapterKey: 'quiz-assessment-type',
+            adapterVersion: '1',
+            learnerPayload: { itemId: 'q2', entry: { stem: 'Second question' } },
+          },
+        },
+      },
+      itemMaxScores: { q1: 100, q2: 200 },
+      submittedResponse: null,
+      status: 'awaitingReview',
+      activeRoundId: 'round-1',
+      instructorVisibleResult: {
+        schemaVersion: 1,
+        state: 'partial',
+        score: null,
+        maxScore: 300,
+        evidenceRefs: [],
+        feedback: 'Automated pass',
+        items: [
+          {
+            itemId: 'q1',
+            state: 'graded',
+            score: 100,
+            maxScore: 100,
+            evidenceRefs: [],
+            reviewMethod: 'AutomatedReview',
+            handlerKey: 'quiz-automated-review',
+            handlerVersion: '1',
+          },
+          {
+            itemId: 'q2',
+            state: 'pending',
+            score: null,
+            maxScore: 200,
+            evidenceRefs: [],
+            reviewMethod: 'AutomatedReview',
+            handlerKey: 'quiz-automated-review',
+            handlerVersion: '1',
+          },
+        ],
+      },
+      learnerVisibleResult: null,
+      requiresInstructorReview: true,
+      released: false,
+      history: [],
+    },
+    ...overrides,
+  };
 }
 
-async function setCriterionPoints(user: ReturnType<typeof userEvent.setup>, criterionId: string, value: string) {
-  await user.clear(screen.getByTestId(`criterion-points-${criterionId}`));
-  await user.type(screen.getByTestId(`criterion-points-${criterionId}`), value);
-}
-
-// --- Tests ------------------------------------------------------------------
-
-describe('GradingPanel — rubric mode', () => {
-  beforeEach(() => {
-    vi.mocked(gradeSubmission).mockReset();
-    actionsMock.fetchPeerReviews.mockReset();
-    actionsMock.fetchPeerReviews.mockResolvedValue({ ok: true, reviews: [] });
-    routerMocks.refresh.mockReset();
-  });
-
-  it('renders a row per criterion with its cap and a read-only derived score', () => {
-    renderPanel();
-
-    expect(screen.getByTestId('criterion-points-c1')).toBeInTheDocument();
-    expect(screen.getByTestId('criterion-points-c2')).toBeInTheDocument();
-    expect(screen.getByText('Correctness')).toBeInTheDocument();
-    expect(screen.getByText(/\/ 60/)).toBeInTheDocument();
-    // No manual score input in rubric mode — the score is auto-derived from Σ.
-    expect(screen.queryByTestId('plain-score-input')).not.toBeInTheDocument();
-  });
-
-  it('auto-derives the score from Σ of criterion points', async () => {
-    const user = userEvent.setup();
-    vi.mocked(gradeSubmission).mockResolvedValue({
-      success: true,
-      data: { submissionId: 'sub-1' },
-    });
-    renderPanel();
-
-    await setCriterionPoints(user, 'c1', '60');
-    await setCriterionPoints(user, 'c2', '25');
-
-    expect(screen.getByTestId('rubric-total')).toHaveTextContent('85');
-    expect(screen.getByTestId('derived-score')).toHaveTextContent('85');
-    expect(screen.getByTestId('submit-grade')).not.toBeDisabled();
-
-    await user.click(screen.getByTestId('submit-grade'));
-
-    await waitFor(() => expect(gradeSubmission).toHaveBeenCalledTimes(1));
-    const call = vi.mocked(gradeSubmission).mock.calls[0][0];
-    expect(call.submissionId).toBe('sub-1');
-    expect(call.score).toBe(85);
-    const rubricScores = JSON.parse(call.rubricScores ?? '{}');
-    expect(rubricScores).toEqual({
-      c1: { points: 60, comment: '' },
-      c2: { points: 25, comment: '' },
-    });
-    expect(routerMocks.refresh).toHaveBeenCalled();
-  });
-
-  it('includes criterion comments in the rubricScores payload', async () => {
-    const user = userEvent.setup();
-    vi.mocked(gradeSubmission).mockResolvedValue({
-      success: true,
-      data: { submissionId: 'sub-1' },
-    });
-    renderPanel();
-
-    await setCriterionPoints(user, 'c1', '60');
-    await setCriterionPoints(user, 'c2', '40');
-    await user.type(screen.getByTestId('criterion-comment-c1'), 'nice work');
-
-    await user.click(screen.getByTestId('submit-grade'));
-
-    await waitFor(() => expect(gradeSubmission).toHaveBeenCalled());
-    const rubricScores = JSON.parse(vi.mocked(gradeSubmission).mock.calls[0][0].rubricScores ?? '{}');
-    expect(rubricScores.c1).toEqual({ points: 60, comment: 'nice work' });
-  });
-
-  it('blocks submit and shows an error when a criterion exceeds its cap', async () => {
-    const user = userEvent.setup();
-    renderPanel();
-
-    await setCriterionPoints(user, 'c1', '61');
-    await setCriterionPoints(user, 'c2', '40');
-
-    expect(screen.getByTestId('criterion-error-c1')).toHaveTextContent(/0 to 60/i);
-    expect(screen.getByTestId('submit-grade')).toBeDisabled();
-    expect(gradeSubmission).not.toHaveBeenCalled();
-  });
-
-  it('blocks submit when a criterion is empty (incomplete, not red)', async () => {
-    const user = userEvent.setup();
-    renderPanel();
-
-    await setCriterionPoints(user, 'c1', '60');
-    // c2 left empty.
-    expect(screen.queryByTestId('criterion-error-c2')).not.toBeInTheDocument();
-    expect(screen.getByTestId('submit-grade')).toBeDisabled();
-  });
-
-  it('partial credit Σ < maxScore submits fine (no Σ==max gating)', async () => {
-    const user = userEvent.setup();
-    vi.mocked(gradeSubmission).mockResolvedValue({
-      success: true,
-      data: { submissionId: 'sub-1' },
-    });
-    renderPanel();
-
-    await setCriterionPoints(user, 'c1', '10');
-    await setCriterionPoints(user, 'c2', '5');
-
-    // Σ=15 of 100 — submit must stay enabled.
-    expect(screen.getByTestId('submit-grade')).not.toBeDisabled();
-    await user.click(screen.getByTestId('submit-grade'));
-
-    await waitFor(() => expect(gradeSubmission).toHaveBeenCalledWith(expect.objectContaining({ score: 15 })));
-  });
-
-  it('shows the overall comment textarea and sends composed feedback', async () => {
-    const user = userEvent.setup();
-    vi.mocked(gradeSubmission).mockResolvedValue({
-      success: true,
-      data: { submissionId: 'sub-1' },
-    });
-    renderPanel();
-
-    await setCriterionPoints(user, 'c1', '60');
-    await setCriterionPoints(user, 'c2', '40');
-    await user.type(screen.getByTestId('overall-comment'), 'Solid work.');
-
-    await user.click(screen.getByTestId('submit-grade'));
-
-    await waitFor(() => expect(gradeSubmission).toHaveBeenCalled());
-    expect(vi.mocked(gradeSubmission).mock.calls[0][0].feedback).toContain('Solid work.');
-  });
-});
-
-describe('GradingPanel — plain score mode', () => {
-  beforeEach(() => {
-    vi.mocked(gradeSubmission).mockReset();
-    actionsMock.fetchPeerReviews.mockReset();
-    actionsMock.fetchPeerReviews.mockResolvedValue({ ok: true, reviews: [] });
-  });
-
-  it('submits the plain score without rubricScores', async () => {
-    const user = userEvent.setup();
-    vi.mocked(gradeSubmission).mockResolvedValue({
-      success: true,
-      data: { submissionId: 'sub-1' },
-    });
-    renderPanel({ assessment: plainAssessment });
-
-    await user.type(screen.getByTestId('plain-score-input'), '90');
-    await user.click(screen.getByTestId('submit-grade'));
-
-    await waitFor(() => expect(gradeSubmission).toHaveBeenCalledTimes(1));
-    const call = vi.mocked(gradeSubmission).mock.calls[0][0];
-    expect(call.score).toBe(90);
-    expect(call.rubricScores).toBeUndefined();
-  });
-
-  it('accepts scores with two decimal places', async () => {
-    const user = userEvent.setup();
-    vi.mocked(gradeSubmission).mockResolvedValue({
-      success: true,
-      data: { submissionId: 'sub-1' },
-    });
-    renderPanel({ assessment: plainAssessment });
-
-    await user.type(screen.getByTestId('plain-score-input'), '0.5');
-    await user.click(screen.getByTestId('submit-grade'));
-
-    await waitFor(() => expect(gradeSubmission).toHaveBeenCalledWith(expect.objectContaining({ score: 0.5 })));
-  });
-
-  it('seeds the score input from a computed (run-tests) score', async () => {
-    const user = userEvent.setup();
-    vi.mocked(gradeSubmission).mockResolvedValue({
-      success: true,
-      data: { submissionId: 'sub-1' },
-    });
-    const { rerender } = renderPanel({
-      assessment: plainAssessment,
-      computedScore: null,
-    });
-
-    rerender(<GradingPanel item={individualItem} assessment={plainAssessment} computedScore={{ score: 67, autoFeedback: 'Score: 67/100' }} />);
-
-    expect(screen.getByTestId('plain-score-input')).toHaveValue(67);
-    await user.click(screen.getByTestId('submit-grade'));
-
-    await waitFor(() => expect(gradeSubmission).toHaveBeenCalledWith(expect.objectContaining({ score: 67 })));
-  });
-
-  it('rejects out-of-range plain scores', async () => {
-    const user = userEvent.setup();
-    renderPanel({ assessment: plainAssessment });
-
-    await user.type(screen.getByTestId('plain-score-input'), '150');
-
-    expect(screen.getByTestId('plain-score-error')).toBeInTheDocument();
-    expect(screen.getByTestId('submit-grade')).toBeDisabled();
-  });
-});
-
-describe('GradingPanel — group + meta + peers', () => {
-  beforeEach(() => {
-    vi.mocked(gradeSubmission).mockReset();
-    actionsMock.fetchPeerReviews.mockReset();
-    actionsMock.fetchPeerReviews.mockResolvedValue({ ok: true, reviews: [] });
-  });
-
-  it('shows a group banner with the member count and chips', () => {
-    renderPanel({ item: groupItem });
-
-    expect(screen.getByTestId('group-banner')).toHaveTextContent('Grade applies to 2 members');
-    expect(screen.getByTestId('group-members')).toHaveTextContent('Ada Lovelace');
-    expect(screen.getByTestId('group-members')).toHaveTextContent('Grace Hopper');
-  });
-
-  it('shows attempt meta with isLate badge when late', () => {
-    renderPanel({ item: { ...individualItem, isLate: true } });
-
-    expect(screen.getByTestId('attempt-meta')).toHaveTextContent('attempt 1');
-    expect(screen.getByTestId('late-badge')).toBeInTheDocument();
-  });
-
-  it('lists named peer reviews when the PeerReview flag is on', async () => {
-    actionsMock.fetchPeerReviews.mockResolvedValue({
-      ok: true,
-      reviews: [
+function finalSubmission(): AssessmentSubmissionRuntimeViewV1 {
+  const value = runtimeSubmission();
+  return {
+    ...value,
+    status: 'graded',
+    execution: {
+      ...value.execution,
+      status: 'completed',
+      requiresInstructorReview: false,
+      instructorVisibleResult: {
+        schemaVersion: 1,
+        state: 'final',
+        score: 250,
+        maxScore: 300,
+        evidenceRefs: [],
+        feedback: 'Done',
+        items: [
+          {
+            itemId: 'q1',
+            state: 'graded',
+            score: 100,
+            maxScore: 100,
+            evidenceRefs: [],
+            reviewMethod: 'InstructorReview',
+            handlerKey: 'instructor-review',
+            handlerVersion: '1',
+          },
+          {
+            itemId: 'q2',
+            state: 'graded',
+            score: 150,
+            maxScore: 200,
+            evidenceRefs: [],
+            reviewMethod: 'InstructorReview',
+            handlerKey: 'instructor-review',
+            handlerVersion: '1',
+          },
+        ],
+      },
+      history: [
         {
-          reviewId: 'rev-1',
-          reviewerName: 'Grace Hopper',
-          reviewerUserId: 'user-2',
-          score: 8_000,
-          feedback: 'Clear structure.',
-          submittedAt: '2026-08-02T10:00:00Z',
+          roundId: 'round-1',
+          roundNumber: 1,
+          reason: 'initial',
+          reasonDetail: null,
+          initiatedByActorId: null,
+          status: 'finalized',
+          startedAt: '2026-08-01T10:00:01Z',
+          finalizedAt: '2026-08-01T10:10:00Z',
+          result: null,
+          released: false,
+          releasedAt: null,
         },
       ],
-    });
+    },
+  };
+}
 
-    renderPanel({ assessment: peerAssessment });
-
-    await waitFor(() => expect(screen.getByTestId('peer-review-rev-1')).toBeInTheDocument());
-    expect(screen.getByTestId('peer-review-rev-1')).toHaveTextContent('Grace Hopper');
-    expect(screen.getByTestId('peer-review-rev-1')).toHaveTextContent('80');
-    expect(screen.getByTestId('peer-review-rev-1')).toHaveTextContent('Clear structure.');
+describe('runtime GradingPanel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    actions.get.mockResolvedValue({ success: true, data: runtimeSubmission() });
   });
 
-  it('does not fetch peer reviews without the PeerReview flag', async () => {
-    renderPanel({ assessment: plainAssessment });
-
-    await waitFor(() => expect(screen.getByTestId('grading-panel')).toBeInTheDocument());
-    expect(actionsMock.fetchPeerReviews).not.toHaveBeenCalled();
-    expect(screen.queryByTestId('peer-reviews')).not.toBeInTheDocument();
-  });
-
-  it('shows assignment score badge when assignmentScore is set', () => {
-    renderPanel({ item: { ...individualItem, assignmentScore: 7_500 } });
-
-    expect(screen.getByTestId('assignment-score-badge')).toHaveTextContent('Assignment: 75/100');
-  });
-
-  it('shows passed badge when assignmentPassed is true', () => {
-    renderPanel({ item: { ...individualItem, assignmentPassed: true } });
-
-    expect(screen.getByTestId('assignment-passed-badge')).toHaveTextContent('Passed');
-  });
-
-  it('shows not-passed badge when assignmentPassed is false', () => {
-    renderPanel({ item: { ...individualItem, assignmentPassed: false } });
-
-    expect(screen.getByTestId('assignment-passed-badge')).toHaveTextContent('Not passed');
-  });
-
-  it('omits assignment badges when fields are null', () => {
-    renderPanel({ item: { ...individualItem, assignmentScore: null, assignmentPassed: null } });
-
-    expect(screen.queryByTestId('assignment-score-badge')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('assignment-passed-badge')).not.toBeInTheDocument();
-  });
-
-  it('renders an alert when the action fails', async () => {
+  it('prefills deterministic evidence and sends one resolution per manifest item', async () => {
     const user = userEvent.setup();
-    vi.mocked(gradeSubmission).mockResolvedValue({
-      success: false,
-      error: 'Rubric scores must sum to the submitted score',
+    actions.resolve.mockResolvedValue({ success: true, data: finalSubmission() });
+    render(<GradingPanel item={individualItem} assessment={assessment} />);
+
+    expect(await screen.findByText('First question')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByTestId('item-score-q1')).toHaveValue(1),
+    );
+    await user.type(screen.getByTestId('item-score-q2'), '1.5');
+    await user.clear(screen.getByLabelText('Overall feedback'));
+    await user.type(screen.getByLabelText('Overall feedback'), 'Reviewed');
+    await user.click(screen.getByTestId('resolve-instructor-review'));
+
+    await waitFor(() => expect(actions.resolve).toHaveBeenCalledTimes(1));
+    expect(actions.resolve.mock.calls[0][1]).toMatchObject({
+      schemaVersion: 1,
+      feedback: 'Reviewed',
+      items: [
+        { itemId: 'q1', score: 100 },
+        { itemId: 'q2', score: 150 },
+      ],
     });
-    renderPanel({ assessment: plainAssessment });
+    expect(router.refresh).toHaveBeenCalled();
+  });
 
-    await user.type(screen.getByTestId('plain-score-input'), '50');
-    await user.click(screen.getByTestId('submit-grade'));
+  it('does not allow a score above the immutable item maximum', async () => {
+    const user = userEvent.setup();
+    render(<GradingPanel item={individualItem} assessment={assessment} />);
 
-    const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('Rubric scores must sum to the submitted score');
-    // Panel stays usable.
-    expect(screen.getByTestId('submit-grade')).not.toBeDisabled();
+    const input = await screen.findByTestId('item-score-q2');
+    await user.type(input, '3');
+    expect(screen.getByTestId('resolve-instructor-review')).toBeDisabled();
+    expect(actions.resolve).not.toHaveBeenCalled();
+  });
+
+  it('releases the active round with the current submission version', async () => {
+    const user = userEvent.setup();
+    actions.get
+      .mockResolvedValueOnce({ success: true, data: finalSubmission() })
+      .mockResolvedValueOnce({
+        success: true,
+        data: {
+          ...finalSubmission(),
+          execution: { ...finalSubmission().execution, released: true },
+        },
+      });
+    actions.release.mockResolvedValue({
+      success: true,
+      data: { releaseId: 'release-1', gradeRoundId: 'round-1' },
+    });
+    render(<GradingPanel item={individualItem} assessment={assessment} />);
+
+    await user.click(await screen.findByTestId('release-result'));
+    await waitFor(() => expect(actions.release).toHaveBeenCalledTimes(1));
+    expect(actions.release.mock.calls[0][0]).toEqual({
+      submissionId: 'submission-1',
+      version: 4,
+      expectedRoundId: 'round-1',
+    });
+  });
+
+  it('shows one collective result for the frozen participant snapshot', async () => {
+    render(<GradingPanel item={groupItem} assessment={assessment} />);
+
+    expect(await screen.findByTestId('group-banner')).toHaveTextContent(
+      'One result applies to 2 frozen participants',
+    );
+    expect(screen.getByTestId('group-members')).toHaveTextContent(
+      'Ada Lovelace',
+    );
+    expect(screen.getByTestId('group-members')).toHaveTextContent(
+      'Grace Hopper',
+    );
+  });
+
+  it('opens a new round only with an explicit regrade reason', async () => {
+    const user = userEvent.setup();
+    actions.get.mockResolvedValue({ success: true, data: finalSubmission() });
+    actions.regrade.mockResolvedValue({
+      success: true,
+      data: runtimeSubmission(),
+    });
+    render(<GradingPanel item={individualItem} assessment={assessment} />);
+
+    const button = await screen.findByRole('button', { name: 'Start regrade' });
+    expect(button).toBeDisabled();
+    await user.type(screen.getByLabelText('Regrade'), 'Corrected answer key');
+    await user.click(button);
+
+    await waitFor(() => expect(actions.regrade).toHaveBeenCalledTimes(1));
+    expect(actions.regrade.mock.calls[0][1]).toBe('Corrected answer key');
   });
 });

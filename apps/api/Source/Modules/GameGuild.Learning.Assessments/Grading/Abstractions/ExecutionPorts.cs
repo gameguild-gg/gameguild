@@ -22,6 +22,8 @@ public sealed record AssessmentAuthoringProjectionV1(
     public ScoreValue MaxScore => ScoreValue.Sum(Items.Select(item => item.MaxScore));
 }
 
+public sealed record AssessmentReviewHandlerBinding(string Key, string Version);
+
 /// <summary>
 /// Owns the complete executable boundary for one assessment content type.
 /// Its key and version bind authoring projection, delivery, response decoding,
@@ -37,10 +39,14 @@ public interface IAssessmentTypeAdapter
     AssessmentType AssessmentType { get; }
     SubmissionModality SubmissionModalities { get; }
     IReadOnlySet<ReviewExecutionContext> Contexts { get; }
+    IReadOnlyDictionary<ReviewMethod, AssessmentReviewHandlerBinding> ReviewHandlers { get; }
 
     AssessmentAuthoringProjectionV1 ProjectAuthoring(JsonElement authoringDocument);
     JsonElement GenerateDelivery(JsonElement projectedItem);
-    JsonElement DecodeResponse(AssessmentResponseEnvelopeV1 envelope);
+    JsonElement DecodeResponse(
+        AssessmentResponseEnvelopeV1 envelope,
+        IReadOnlyList<JsonElement> projectedItems);
+    bool CanEvaluateDeterministically(JsonElement projectedItem);
     ValueTask<GradeResultV1> EvaluateDeterministicAsync(
         DeterministicReviewRequest request,
         CancellationToken cancellationToken);

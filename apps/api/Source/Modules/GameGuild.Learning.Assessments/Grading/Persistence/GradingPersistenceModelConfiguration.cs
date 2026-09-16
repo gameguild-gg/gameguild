@@ -13,6 +13,9 @@ public sealed class GradingPersistenceModelConfiguration : IModelConfiguration
     private static readonly ValueConverter<ScoreValue?, int?> NullableScoreConverter =
         new(value => value.HasValue ? value.Value.Units : null,
             value => value == null ? null : ScoreValue.FromUnits(value.Value));
+    private static readonly ValueConverter<PercentValue?, int?> NullablePercentConverter =
+        new(value => value.HasValue ? value.Value.Units : null,
+            value => value == null ? null : PercentValue.FromUnits(value.Value));
 
     private static readonly ValueConverter<AssessmentTestRunStatus, string> TestRunStatusConverter =
         new(value => FormatTestRunStatus(value), value => ParseTestRunStatus(value));
@@ -30,6 +33,8 @@ public sealed class GradingPersistenceModelConfiguration : IModelConfiguration
         new(value => FormatOutboxStatus(value), value => ParseOutboxStatus(value));
     private static readonly ValueConverter<AcademicOutboxDeliveryStatus, string> DeliveryStatusConverter =
         new(value => FormatDeliveryStatus(value), value => ParseDeliveryStatus(value));
+    private static readonly ValueConverter<GradeResultReleaseStatus, string> ReleaseStatusConverter =
+        new(value => FormatReleaseStatus(value), value => ParseReleaseStatus(value));
 
     public void Configure(ModelBuilder modelBuilder)
     {
@@ -38,6 +43,7 @@ public sealed class GradingPersistenceModelConfiguration : IModelConfiguration
         ConfigureExecutions(modelBuilder);
         ConfigureRounds(modelBuilder);
         ConfigureEvidence(modelBuilder);
+        ConfigureOfficialResults(modelBuilder);
         ConfigureReliability(modelBuilder);
     }
 
@@ -146,6 +152,7 @@ public sealed class GradingPersistenceModelConfiguration : IModelConfiguration
                     "(\"Status\" IN ('completed', 'failed')) = (\"FinalizedAt\" IS NOT NULL)");
             });
             entity.HasKey(value => value.Id);
+            entity.HasAlternateKey(value => new { value.Id, value.ExecutionContext });
             entity.Property(value => value.ExecutionContext)
                 .HasConversion(value => value == ReviewExecutionContext.AuthorTest ? "author-test" : "official-submission",
                     value => value == "author-test" ? ReviewExecutionContext.AuthorTest : ReviewExecutionContext.OfficialSubmission)
@@ -162,7 +169,7 @@ public sealed class GradingPersistenceModelConfiguration : IModelConfiguration
             entity.Property(value => value.ResponseHashVersion).HasMaxLength(32);
             entity.Property(value => value.DeliveryHash).HasMaxLength(64).IsFixedLength();
             entity.Property(value => value.ResponseHash).HasMaxLength(64).IsFixedLength();
-            entity.HasIndex(value => value.TestRunSubjectId).IsUnique();
+            entity.HasIndex(value => value.TestRunSubjectId);
             entity.HasIndex(value => value.AssessmentSubmissionId).IsUnique();
             entity.HasOne<AssessmentDefinitionRevision>()
                 .WithMany()
@@ -215,6 +222,7 @@ public sealed class GradingPersistenceModelConfiguration : IModelConfiguration
             entity.Property(value => value.MaxScore).HasConversion(ScoreConverter).HasColumnType("integer");
             entity.Property(value => value.Status).HasConversion(RoundStatusConverter).HasMaxLength(48);
             entity.Property(value => value.Reason).HasMaxLength(64).IsRequired();
+            entity.Property(value => value.ReasonDetail).HasColumnType("text");
             entity.Property(value => value.Feedback).HasColumnType("text");
             entity.HasOne<GradingExecution>()
                 .WithMany()
@@ -314,6 +322,140 @@ public sealed class GradingPersistenceModelConfiguration : IModelConfiguration
                 .WithMany()
                 .HasForeignKey(value => value.ReviewStageId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private static void ConfigureOfficialResults(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<GradeResultRelease>(entity =>
+        {
+            entity.ToTable("GradeResultReleases", table =>
+            {
+                table.HasCheckConstraint("CK_GradeResultReleases_Status", "\"Status\" = 'released'");
+                table.HasCheckConstraint(
+                    "CK_GradeResultReleases_OfficialExecution",
+                    "\"ExecutionContext\" = 'official-submission'");
+                table.HasCheckConstraint(
+                    "CK_GradeResultReleases_Producer",
+                    "num_nonnulls(\"ReleasedByActorId\", \"ReleasedByService\") = 1");
+            });
+            entity.HasKey(value => value.Id);
+            entity.HasIndex(value => value.GradeRoundId).IsUnique();
+            entity.Property(value => value.ExecutionContext)
+                .HasConversion(
+                    value => value == ReviewExecutionContext.AuthorTest ? "author-test" : "official-submission",
+                    value => value == "author-test" ? ReviewExecutionContext.AuthorTest : ReviewExecutionContext.OfficialSubmission)
+                .HasMaxLength(32)
+                .IsRequired();
+            entity.Property(value => value.Status).HasConversion(ReleaseStatusConverter).HasMaxLength(16).IsRequired();
+            entity.Property(value => value.ReleasedByService).HasMaxLength(160);
+            entity.Property(value => value.Reason).HasColumnType("text");
+            entity.HasOne<GradeRound>()
+                .WithMany()
+                .HasForeignKey(value => new { value.GradeRoundId, value.GradingExecutionId })
+                .HasPrincipalKey(value => new { value.Id, value.GradingExecutionId })
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<GradingExecution>()
+                .WithMany()
+                .HasForeignKey(value => new { value.GradingExecutionId, value.ExecutionContext })
+                .HasPrincipalKey(value => new { value.Id, value.ExecutionContext })
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AssessmentSubmissionParticipant>(entity =>
+        {
+            entity.ToTable("AssessmentSubmissionParticipants");
+            entity.HasKey(value => value.Id);
+            entity.HasIndex(value => new { value.SubmissionId, value.UserId }).IsUnique();
+            entity.HasIndex(value => new { value.SubmissionId, value.EnrollmentId }).IsUnique();
+            entity.HasOne<AssessmentSubmission>()
+                .WithMany()
+                .HasForeignKey(value => value.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CollectiveAttemptDraftChange>(entity =>
+        {
+            entity.ToTable("CollectiveAttemptDraftChanges", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_CollectiveAttemptDraftChanges_Version",
+                    "\"PreviousVersion\" >= 0 AND \"NewVersion\" = \"PreviousVersion\" + 1");
+                table.HasCheckConstraint(
+                    "CK_CollectiveAttemptDraftChanges_Hashes",
+                    "\"RequestHash\" ~ '^[0-9a-f]{64}$' AND \"ResponseHash\" ~ '^[0-9a-f]{64}$'");
+            });
+            entity.HasKey(value => value.Id);
+            entity.HasIndex(value => new { value.SubmissionId, value.NewVersion }).IsUnique();
+            entity.HasIndex(value => new { value.SubmissionId, value.ActorId, value.IdempotencyKey }).IsUnique();
+            entity.Property(value => value.IdempotencyKey).HasMaxLength(200).IsRequired();
+            entity.Property(value => value.RequestHash).HasMaxLength(64).IsFixedLength().IsRequired();
+            entity.Property(value => value.ResponseHash).HasMaxLength(64).IsFixedLength().IsRequired();
+            entity.HasOne<AssessmentSubmission>()
+                .WithMany()
+                .HasForeignKey(value => value.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AssessmentGradebookEntry>(entity =>
+        {
+            entity.ToTable("AssessmentGradebookEntries", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_AssessmentGradebookEntries_Score",
+                    "\"EffectiveScore\" >= 0 AND \"CapturedMaxScore\" > 0 AND \"EffectiveScore\" <= \"CapturedMaxScore\"");
+                table.HasCheckConstraint(
+                    "CK_AssessmentGradebookEntries_Weight",
+                    "\"CapturedWeightPercent\" IS NULL OR (\"CapturedWeightPercent\" >= 0 AND \"CapturedWeightPercent\" <= 10000)");
+            });
+            entity.HasKey(value => value.Id);
+            entity.HasIndex(value => new { value.EnrollmentId, value.AssessmentId }).IsUnique();
+            entity.HasIndex(value => new { value.CourseId, value.EnrollmentId });
+            entity.HasIndex(value => value.GradeRoundId);
+            entity.Property(value => value.EffectiveScore).HasConversion(ScoreConverter).HasColumnType("integer");
+            entity.Property(value => value.CapturedMaxScore).HasConversion(ScoreConverter).HasColumnType("integer");
+            entity.Property(value => value.CapturedWeightPercent).HasConversion(NullablePercentConverter).HasColumnType("integer");
+            entity.HasOne<Assessment>()
+                .WithMany()
+                .HasForeignKey(value => value.AssessmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<AssessmentGroup>()
+                .WithMany()
+                .HasForeignKey(value => value.AssessmentGroupId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne<AssessmentSubmission>()
+                .WithMany()
+                .HasForeignKey(value => value.SubmissionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<GradeRound>()
+                .WithMany()
+                .HasForeignKey(value => value.GradeRoundId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AssessmentContentCompletionProjection>(entity =>
+        {
+            entity.ToTable("AssessmentContentCompletionProjections", table =>
+            {
+                table.HasCheckConstraint(
+                    "CK_AssessmentContentCompletionProjections_Transition",
+                    "\"Transition\" IN ('submit', 'finalize', 'release', 'release-and-pass')");
+            });
+            entity.HasKey(value => value.Id);
+            entity.HasIndex(value => new { value.AssessmentId, value.ContentId, value.EnrollmentId }).IsUnique();
+            entity.Property(value => value.Transition).HasMaxLength(32).IsRequired();
+            entity.HasOne<Assessment>()
+                .WithMany()
+                .HasForeignKey(value => value.AssessmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<AssessmentSubmission>()
+                .WithMany()
+                .HasForeignKey(value => value.SubmissionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<GradeRound>()
+                .WithMany()
+                .HasForeignKey(value => value.GradeRoundId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 
@@ -508,4 +650,15 @@ public sealed class GradingPersistenceModelConfiguration : IModelConfiguration
     private static AcademicOutboxStatus ParseOutboxStatus(string value) => Enum.Parse<AcademicOutboxStatus>(value, true);
     private static string FormatDeliveryStatus(AcademicOutboxDeliveryStatus value) => value.ToString().ToLowerInvariant();
     private static AcademicOutboxDeliveryStatus ParseDeliveryStatus(string value) => Enum.Parse<AcademicOutboxDeliveryStatus>(value, true);
+    private static string FormatReleaseStatus(GradeResultReleaseStatus value) => value switch
+    {
+        GradeResultReleaseStatus.Released => "released",
+        _ => throw new ArgumentOutOfRangeException(nameof(value)),
+    };
+
+    private static GradeResultReleaseStatus ParseReleaseStatus(string value) => value switch
+    {
+        "released" => GradeResultReleaseStatus.Released,
+        _ => throw new InvalidOperationException($"Unknown grade release status '{value}'."),
+    };
 }

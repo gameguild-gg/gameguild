@@ -196,55 +196,43 @@ public class RubricServiceTests
         result.Error.Type.Should().Be(ErrorType.NotFound);
     }
 
-    // ===== RUBRIC-AWARE GRADING (through AssessmentService.GradeSubmissionAsync) =====
+    // ===== RUBRIC SCORE VALIDATION =====
 
     [Fact]
-    public async Task Grade_WithRubricPartialCredit_PersistsScoresOnAllGroupRows()
+    public async Task ValidateScores_WithCompletePartialCredit_Succeeds()
     {
         await using var db = CreateContext();
-        var (assessment, submissionId) = await SeedSubmittedGroupAttemptAsync(db);
+        var assessment = await SeedAssessmentAsync(db);
         var rubric = await SaveStandardRubricAsync(db, assessment);
         var scores = Scores((rubric.Criteria[0].Id, 35, "mostly right"), (rubric.Criteria[1].Id, 5, null));
 
-        var result = await CreateGradingService(db).GradeSubmissionAsync(
-            submissionId, new GradeSubmissionRequest(Score(40), GradedBy: Guid.NewGuid(), RubricScores: scores));
+        var result = await CreateRubricService(db).ValidateScoresAsync(assessment.Id, Score(40), scores);
 
         result.IsSuccess.Should().BeTrue();
-        var rows = await db.Set<AssessmentSubmission>()
-            .Where(s => s.AssessmentId == assessment.Id).ToListAsync();
-        rows.Should().HaveCount(3, "group attempt fan-out");
-        rows.Should().OnlyContain(r =>
-            r.Status == SubmissionStatus.Graded &&
-            r.Score == Score(40) &&
-            r.RubricScoresPayload == scores);
     }
 
     [Fact]
-    public async Task Grade_WithRubric_MissingRubricScores_FailsWithMessage()
+    public async Task ValidateScores_WithRubricAndMissingScores_FailsWithMessage()
     {
         await using var db = CreateContext();
-        var (assessment, submissionId) = await SeedSubmittedAttemptAsync(db);
+        var assessment = await SeedAssessmentAsync(db);
         await SaveStandardRubricAsync(db, assessment);
 
-        var result = await CreateGradingService(db).GradeSubmissionAsync(
-            submissionId, new GradeSubmissionRequest(Score(40), GradedBy: Guid.NewGuid()));
+        var result = await CreateRubricService(db).ValidateScoresAsync(assessment.Id, Score(40), null);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Description.Should().Be("A rubric score is required for rubric-graded assessments");
-        (await db.Set<AssessmentSubmission>().SingleAsync(s => s.Id == submissionId)).Status
-            .Should().Be(SubmissionStatus.Submitted, "grading must not partially apply");
     }
 
     [Fact]
-    public async Task Grade_CriterionAboveItsMax_FailsNamingCriterion()
+    public async Task ValidateScores_CriterionAboveItsMax_FailsNamingCriterion()
     {
         await using var db = CreateContext();
-        var (assessment, submissionId) = await SeedSubmittedAttemptAsync(db);
+        var assessment = await SeedAssessmentAsync(db);
         var rubric = await SaveStandardRubricAsync(db, assessment);
         var scores = Scores((rubric.Criteria[0].Id, 61, null), (rubric.Criteria[1].Id, 40, null));
 
-        var result = await CreateGradingService(db).GradeSubmissionAsync(
-            submissionId, new GradeSubmissionRequest(Score(101), GradedBy: Guid.NewGuid(), RubricScores: scores));
+        var result = await CreateRubricService(db).ValidateScoresAsync(assessment.Id, Score(101), scores);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Type.Should().Be(ErrorType.Validation);
@@ -252,15 +240,14 @@ public class RubricServiceTests
     }
 
     [Fact]
-    public async Task Grade_MissingCriterionId_FailsNamingCriterion()
+    public async Task ValidateScores_MissingCriterionId_FailsNamingCriterion()
     {
         await using var db = CreateContext();
-        var (assessment, submissionId) = await SeedSubmittedAttemptAsync(db);
+        var assessment = await SeedAssessmentAsync(db);
         var rubric = await SaveStandardRubricAsync(db, assessment);
         var scores = Scores((rubric.Criteria[0].Id, 40, null));
 
-        var result = await CreateGradingService(db).GradeSubmissionAsync(
-            submissionId, new GradeSubmissionRequest(Score(40), GradedBy: Guid.NewGuid(), RubricScores: scores));
+        var result = await CreateRubricService(db).ValidateScoresAsync(assessment.Id, Score(40), scores);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Type.Should().Be(ErrorType.Validation);
@@ -268,45 +255,42 @@ public class RubricServiceTests
     }
 
     [Fact]
-    public async Task Grade_SumNotEqualToScore_FailsWithMessage()
+    public async Task ValidateScores_SumNotEqualToScore_FailsWithMessage()
     {
         await using var db = CreateContext();
-        var (assessment, submissionId) = await SeedSubmittedAttemptAsync(db);
+        var assessment = await SeedAssessmentAsync(db);
         var rubric = await SaveStandardRubricAsync(db, assessment);
         var scores = Scores((rubric.Criteria[0].Id, 35, null), (rubric.Criteria[1].Id, 5, null));
 
-        var result = await CreateGradingService(db).GradeSubmissionAsync(
-            submissionId, new GradeSubmissionRequest(Score(50), GradedBy: Guid.NewGuid(), RubricScores: scores));
+        var result = await CreateRubricService(db).ValidateScoresAsync(assessment.Id, Score(50), scores);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Description.Should().Be("Rubric scores must sum to the submitted score");
     }
 
     [Fact]
-    public async Task Grade_MalformedRubricScores_ReturnsValidationNotCrash()
+    public async Task ValidateScores_MalformedPayload_ReturnsValidationNotCrash()
     {
         await using var db = CreateContext();
-        var (assessment, submissionId) = await SeedSubmittedAttemptAsync(db);
+        var assessment = await SeedAssessmentAsync(db);
         await SaveStandardRubricAsync(db, assessment);
 
-        var result = await CreateGradingService(db).GradeSubmissionAsync(
-            submissionId, new GradeSubmissionRequest(Score(40), GradedBy: Guid.NewGuid(), RubricScores: "not json"));
+        var result = await CreateRubricService(db).ValidateScoresAsync(assessment.Id, Score(40), "not json");
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Type.Should().Be(ErrorType.Validation);
     }
 
     [Fact]
-    public async Task Grade_UnknownCriterionIdInPayload_Fails()
+    public async Task ValidateScores_UnknownCriterionId_Fails()
     {
         await using var db = CreateContext();
-        var (assessment, submissionId) = await SeedSubmittedAttemptAsync(db);
+        var assessment = await SeedAssessmentAsync(db);
         var rubric = await SaveStandardRubricAsync(db, assessment);
         var unknownId = Guid.NewGuid();
         var scores = Scores((rubric.Criteria[0].Id, 20, null), (unknownId, 20, null));
 
-        var result = await CreateGradingService(db).GradeSubmissionAsync(
-            submissionId, new GradeSubmissionRequest(Score(40), GradedBy: Guid.NewGuid(), RubricScores: scores));
+        var result = await CreateRubricService(db).ValidateScoresAsync(assessment.Id, Score(40), scores);
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Type.Should().Be(ErrorType.Validation);
@@ -314,13 +298,15 @@ public class RubricServiceTests
     }
 
     [Fact]
-    public async Task Grade_NoRubricWithRubricScores_FailsWithMessage()
+    public async Task ValidateScores_NoRubricWithScores_FailsWithMessage()
     {
         await using var db = CreateContext();
-        var (_, submissionId) = await SeedSubmittedAttemptAsync(db);
+        var assessment = await SeedAssessmentAsync(db);
 
-        var result = await CreateGradingService(db).GradeSubmissionAsync(
-            submissionId, new GradeSubmissionRequest(Score(40), GradedBy: Guid.NewGuid(), RubricScores: Scores((Guid.NewGuid(), 40, null))));
+        var result = await CreateRubricService(db).ValidateScoresAsync(
+            assessment.Id,
+            Score(40),
+            Scores((Guid.NewGuid(), 40, null)));
 
         result.IsSuccess.Should().BeFalse();
         result.Error.Description.Should().Be("This assessment is not rubric-graded");

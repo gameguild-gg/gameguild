@@ -82,7 +82,7 @@ export async function submitPeerReview(reviewId: string, input: SubmitPeerReview
 
   try {
     const body: LearningAssessmentsPeerReviewSubmitInput = {
-      score: input.score == null ? null : pointsToScoreUnits(input.score),
+      score: input.score == null ? undefined : pointsToScoreUnits(input.score),
       feedback,
       rubricScores: input.rubricScores == null ? null : rubricScoresToUnits(input.rubricScores),
     };

@@ -16516,10 +16516,16 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("DefinitionRevisionId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("EnrollmentId")
+                    b.Property<long>("DraftVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("EnrollmentId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Feedback")
@@ -16558,11 +16564,17 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("StartedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("SubmittedByUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("SubmittedModalities")
                         .HasColumnType("integer");
@@ -16580,7 +16592,7 @@ namespace GameGuild.API.Database.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Version")
@@ -16591,21 +16603,37 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("AssessmentId");
 
+                    b.HasIndex("CourseGroupId");
+
                     b.HasIndex("EnrollmentId");
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("DefinitionRevisionId", "AssessmentId");
+
+                    b.HasIndex("AssessmentId", "CourseGroupId", "AttemptNumber")
+                        .IsUnique()
+                        .HasDatabaseName("UX_AssessmentSubmissions_Assessment_Group_Attempt")
+                        .HasFilter("\"CourseGroupId\" IS NOT NULL AND \"EnrollmentId\" IS NULL");
+
                     b.HasIndex("AssessmentId", "EnrollmentId", "AttemptNumber")
                         .IsUnique()
-                        .HasDatabaseName("UX_AssessmentSubmissions_Assessment_Enrollment_Attempt");
+                        .HasDatabaseName("UX_AssessmentSubmissions_Assessment_Enrollment_Attempt")
+                        .HasFilter("\"EnrollmentId\" IS NOT NULL");
 
                     b.ToTable("AssessmentSubmissions", null, t =>
                         {
                             t.HasCheckConstraint("CK_AssessmentSubmissions_AttemptNumberPositive", "\"AttemptNumber\" > 0");
 
+                            t.HasCheckConstraint("CK_AssessmentSubmissions_DraftVersion", "\"DraftVersion\" >= 0");
+
                             t.HasCheckConstraint("CK_AssessmentSubmissions_PayloadConsistency", "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND (\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND (\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND (\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND (\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND (\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND (\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0)");
 
                             t.HasCheckConstraint("CK_AssessmentSubmissions_ScoreCanonical", "\"Score\" IS NULL OR \"Score\" >= 0");
+
+                            t.HasCheckConstraint("CK_AssessmentSubmissions_Starter", "\"StartedByUserId\" <> '00000000-0000-0000-0000-000000000000'");
+
+                            t.HasCheckConstraint("CK_AssessmentSubmissions_Subject", "(\"EnrollmentId\" IS NOT NULL AND \"UserId\" IS NOT NULL AND \"CourseGroupId\" IS NULL) OR (\"EnrollmentId\" IS NULL AND \"UserId\" IS NULL AND \"CourseGroupId\" IS NOT NULL)");
 
                             t.HasCheckConstraint("CK_AssessmentSubmissions_SubmittedModalities", "\"SubmittedModalities\" >= 0 AND (\"SubmittedModalities\" & ~127) = 0");
                         });
@@ -16846,6 +16874,66 @@ namespace GameGuild.API.Database.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.AssessmentContentCompletionProjection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AssessmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ContentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("EnrollmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("GradeRoundId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SubmissionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Transition")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradeRoundId");
+
+                    b.HasIndex("SubmissionId");
+
+                    b.HasIndex("AssessmentId", "ContentId", "EnrollmentId")
+                        .IsUnique();
+
+                    b.ToTable("AssessmentContentCompletionProjections", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AssessmentContentCompletionProjections_Transition", "\"Transition\" IN ('submit', 'finalize', 'release', 'release-and-pass')");
+                        });
+                });
+
             modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.AssessmentDefinitionRevision", b =>
                 {
                     b.Property<Guid>("Id")
@@ -16921,6 +17009,110 @@ namespace GameGuild.API.Database.Migrations
 
                             t.HasCheckConstraint("CK_AssessmentDefinitionRevisions_SnapshotSize", "octet_length(\"ExecutionSnapshotCanonicalJson\") <= 8388608");
                         });
+                });
+
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.AssessmentGradebookEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AssessmentGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AssessmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CapturedMaxScore")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CapturedWeightPercent")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EffectiveScore")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("EnrollmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GradeRoundId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SubmissionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssessmentGroupId");
+
+                    b.HasIndex("AssessmentId");
+
+                    b.HasIndex("GradeRoundId");
+
+                    b.HasIndex("SubmissionId");
+
+                    b.HasIndex("CourseId", "EnrollmentId");
+
+                    b.HasIndex("EnrollmentId", "AssessmentId")
+                        .IsUnique();
+
+                    b.ToTable("AssessmentGradebookEntries", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AssessmentGradebookEntries_Score", "\"EffectiveScore\" >= 0 AND \"CapturedMaxScore\" > 0 AND \"EffectiveScore\" <= \"CapturedMaxScore\"");
+
+                            t.HasCheckConstraint("CK_AssessmentGradebookEntries_Weight", "\"CapturedWeightPercent\" IS NULL OR (\"CapturedWeightPercent\" >= 0 AND \"CapturedWeightPercent\" <= 10000)");
+                        });
+                });
+
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.AssessmentSubmissionParticipant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CapturedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("EnrollmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SubmissionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubmissionId", "EnrollmentId")
+                        .IsUnique();
+
+                    b.HasIndex("SubmissionId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("AssessmentSubmissionParticipants", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.AssessmentTestRun", b =>
@@ -17023,6 +17215,63 @@ namespace GameGuild.API.Database.Migrations
                     b.ToTable("AssessmentTestRunSubjects", (string)null);
                 });
 
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.CollectiveAttemptDraftChange", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<long>("NewVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PreviousVersion")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<string>("ResponseHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .IsFixedLength();
+
+                    b.Property<Guid>("SubmissionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubmissionId", "NewVersion")
+                        .IsUnique();
+
+                    b.HasIndex("SubmissionId", "ActorId", "IdempotencyKey")
+                        .IsUnique();
+
+                    b.ToTable("CollectiveAttemptDraftChanges", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CollectiveAttemptDraftChanges_Hashes", "\"RequestHash\" ~ '^[0-9a-f]{64}$' AND \"ResponseHash\" ~ '^[0-9a-f]{64}$'");
+
+                            t.HasCheckConstraint("CK_CollectiveAttemptDraftChanges_Version", "\"PreviousVersion\" >= 0 AND \"NewVersion\" = \"PreviousVersion\" + 1");
+                        });
+                });
+
             modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.GradeItemResult", b =>
                 {
                     b.Property<Guid>("Id")
@@ -17070,6 +17319,63 @@ namespace GameGuild.API.Database.Migrations
                         });
                 });
 
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.GradeResultRelease", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ExecutionContext")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("GradeRoundId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GradingExecutionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ReleasedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReleasedByActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReleasedByService")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradeRoundId")
+                        .IsUnique();
+
+                    b.HasIndex("GradeRoundId", "GradingExecutionId");
+
+                    b.HasIndex("GradingExecutionId", "ExecutionContext");
+
+                    b.ToTable("GradeResultReleases", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_GradeResultReleases_OfficialExecution", "\"ExecutionContext\" = 'official-submission'");
+
+                            t.HasCheckConstraint("CK_GradeResultReleases_Producer", "num_nonnulls(\"ReleasedByActorId\", \"ReleasedByService\") = 1");
+
+                            t.HasCheckConstraint("CK_GradeResultReleases_Status", "\"Status\" = 'released'");
+                        });
+                });
+
             modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.GradeRound", b =>
                 {
                     b.Property<Guid>("Id")
@@ -17091,6 +17397,9 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<Guid>("GradingExecutionId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("InitiatedByActorId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("MaxScore")
                         .HasColumnType("integer");
 
@@ -17098,6 +17407,9 @@ namespace GameGuild.API.Database.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ReasonDetail")
+                        .HasColumnType("text");
 
                     b.Property<int>("ResultSchemaVersion")
                         .HasColumnType("integer");
@@ -17315,8 +17627,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("DefinitionRevisionId");
 
-                    b.HasIndex("TestRunSubjectId")
-                        .IsUnique();
+                    b.HasIndex("TestRunSubjectId");
 
                     b.HasIndex("ActiveGradeRoundId", "Id");
 
@@ -28581,11 +28892,80 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("AssessmentGroup");
                 });
 
+            modelBuilder.Entity("GameGuild.Learning.Assessments.AssessmentSubmission", b =>
+                {
+                    b.HasOne("GameGuild.Learning.Assessments.CourseGroup", null)
+                        .WithMany()
+                        .HasForeignKey("CourseGroupId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GameGuild.Learning.Assessments.Grading.Persistence.AssessmentDefinitionRevision", null)
+                        .WithMany()
+                        .HasForeignKey("DefinitionRevisionId", "AssessmentId")
+                        .HasPrincipalKey("Id", "AssessmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.AcademicOutboxDelivery", b =>
                 {
                     b.HasOne("GameGuild.Learning.Assessments.Grading.Persistence.AcademicOutboxMessage", null)
                         .WithMany()
                         .HasForeignKey("OutboxMessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.AssessmentContentCompletionProjection", b =>
+                {
+                    b.HasOne("GameGuild.Learning.Assessments.Assessment", null)
+                        .WithMany()
+                        .HasForeignKey("AssessmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Learning.Assessments.Grading.Persistence.GradeRound", null)
+                        .WithMany()
+                        .HasForeignKey("GradeRoundId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("GameGuild.Learning.Assessments.AssessmentSubmission", null)
+                        .WithMany()
+                        .HasForeignKey("SubmissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.AssessmentGradebookEntry", b =>
+                {
+                    b.HasOne("GameGuild.Learning.Assessments.AssessmentGroup", null)
+                        .WithMany()
+                        .HasForeignKey("AssessmentGroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("GameGuild.Learning.Assessments.Assessment", null)
+                        .WithMany()
+                        .HasForeignKey("AssessmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Learning.Assessments.Grading.Persistence.GradeRound", null)
+                        .WithMany()
+                        .HasForeignKey("GradeRoundId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Learning.Assessments.AssessmentSubmission", null)
+                        .WithMany()
+                        .HasForeignKey("SubmissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.AssessmentSubmissionParticipant", b =>
+                {
+                    b.HasOne("GameGuild.Learning.Assessments.AssessmentSubmission", null)
+                        .WithMany()
+                        .HasForeignKey("SubmissionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -28609,12 +28989,38 @@ namespace GameGuild.API.Database.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.CollectiveAttemptDraftChange", b =>
+                {
+                    b.HasOne("GameGuild.Learning.Assessments.AssessmentSubmission", null)
+                        .WithMany()
+                        .HasForeignKey("SubmissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.GradeItemResult", b =>
                 {
                     b.HasOne("GameGuild.Learning.Assessments.Grading.Persistence.ReviewStage", null)
                         .WithMany()
                         .HasForeignKey("ReviewStageId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GameGuild.Learning.Assessments.Grading.Persistence.GradeResultRelease", b =>
+                {
+                    b.HasOne("GameGuild.Learning.Assessments.Grading.Persistence.GradeRound", null)
+                        .WithMany()
+                        .HasForeignKey("GradeRoundId", "GradingExecutionId")
+                        .HasPrincipalKey("Id", "GradingExecutionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Learning.Assessments.Grading.Persistence.GradingExecution", null)
+                        .WithMany()
+                        .HasForeignKey("GradingExecutionId", "ExecutionContext")
+                        .HasPrincipalKey("Id", "ExecutionContext")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

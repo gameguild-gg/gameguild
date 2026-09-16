@@ -561,8 +561,8 @@ concreta pelo `DeliveryHash`.
 
 | Marco | Status | Evidência |
 | --- | --- | --- |
-| `SEQ-07` | pendente | runtime e isolamento do test run com handler controlado |
-| `SEQ-08` | pendente | E2E de teste de `InstructorReview` |
-| `SEQ-09` | pendente | E2E de teste de `AutomatedReview` |
-| `SEQ-10` | pendente | E2E individual, entrega imutável, gradebook/progresso e release idempotente |
-| `SEQ-11` | pendente | E2E coletivo, entrega compartilhada e schema aprovado |
+| `SEQ-07` | concluído | runtime comum, entrega imutável e `AuthorTest` isolado dos efeitos acadêmicos |
+| `SEQ-08` | concluído | `InstructorReview` executado pelo runtime, com override, regrade e trilha de auditoria |
+| `SEQ-09` | concluído | `AutomatedReview` autoritativo no servidor e paridade C#/TypeScript pelas fixtures compartilhadas |
+| `SEQ-10` | concluído | submissão individual, release durável, projeções learner-safe, gradebook e progresso idempotentes |
+| `SEQ-11` | concluído | submissão coletiva única, draft versionado, participantes congelados e projeção por participante |

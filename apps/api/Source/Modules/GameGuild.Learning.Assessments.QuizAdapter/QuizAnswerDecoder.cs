@@ -48,6 +48,29 @@ public sealed class QuizAnswerDecoder
         return envelope.Payload.Clone();
     }
 
+    public JsonElement Decode(
+        AssessmentResponseEnvelopeV1 envelope,
+        IReadOnlyList<JsonElement> projectedItems)
+    {
+        var normalized = Decode(envelope);
+        var projections = projectedItems.ToDictionary(
+            projection => RequiredProjectionText(projection, "itemId"),
+            StringComparer.Ordinal);
+        ValidateBindings(
+            normalized,
+            projections.ToDictionary(
+                pair => pair.Key,
+                pair => RequiredProjectionText(pair.Value, "itemType"),
+                StringComparer.Ordinal));
+
+        foreach (var answerProperty in normalized.GetProperty("answers").EnumerateObject())
+        {
+            ValidateAgainstProjection(answerProperty.Value, projections[answerProperty.Name]);
+        }
+
+        return normalized;
+    }
+
     internal static void ValidateBindings(
         JsonElement normalizedPayload,
         IReadOnlyDictionary<string, string> expectedItemTypes)
@@ -114,6 +137,172 @@ public sealed class QuizAnswerDecoder
                 ValidateSpans(answer.GetProperty("spans"));
                 break;
         }
+    }
+
+    private static void ValidateAgainstProjection(JsonElement answer, JsonElement projection)
+    {
+        var type = RequiredProjectionText(projection, "itemType");
+        var entry = projection.GetProperty("authoringEntry");
+        switch (type)
+        {
+            case "SINGLE_CHOICE":
+                ValidateOptionalDomainValue(
+                    answer.GetProperty("optionId"),
+                    IdSet(entry.GetProperty("options")),
+                    "optionId");
+                break;
+            case "MULTIPLE_CHOICE":
+            {
+                var values = ReadUniqueStrings(answer.GetProperty("optionIds"), "optionIds");
+                RequireKnown(values, IdSet(entry.GetProperty("options")), "optionIds");
+                var limit = entry.TryGetProperty("selectionLimit", out var selectionLimit)
+                    ? selectionLimit.GetInt32()
+                    : entry.GetProperty("options").GetArrayLength();
+                if (values.Length > limit) throw new JsonException("optionIds exceeds the configured selection limit.");
+                break;
+            }
+            case "FILL_IN_THE_BLANK":
+                RequireKnown(
+                    answer.GetProperty("values").EnumerateObject().Select(value => value.Name),
+                    IdSet(entry.GetProperty("blanks")),
+                    "blank IDs");
+                break;
+            case "MATCHING":
+            {
+                var matches = answer.GetProperty("matches");
+                var pairs = entry.GetProperty("pairs").EnumerateArray().ToArray();
+                RequireKnown(matches.EnumerateObject().Select(value => value.Name), IdSet(pairs), "matching pair IDs");
+                if (matches.EnumerateObject().Count() > pairs.Length)
+                    throw new JsonException("matches exceeds the number of matching pairs.");
+                var allowedValues = pairs.Select(value => RequiredProjectionText(value, "right"))
+                    .Concat(OptionalStringValues(entry, "rightOptions"))
+                    .Concat(OptionalStringValues(entry, "distractors"))
+                    .ToHashSet(StringComparer.Ordinal);
+                var selectedValues = matches.EnumerateObject().Select(value => value.Value.GetString()!).ToArray();
+                RequireKnown(selectedValues, allowedValues, "matching values");
+                RequireDistinct(selectedValues, "matching values");
+                break;
+            }
+            case "ORDERING":
+            {
+                var values = ReadUniqueStrings(answer.GetProperty("itemIds"), "itemIds");
+                var allowed = IdSet(entry.GetProperty("items"));
+                RequireKnown(values, allowed, "itemIds");
+                if (values.Length > allowed.Count) throw new JsonException("itemIds exceeds the number of ordering items.");
+                break;
+            }
+            case "CATEGORIZATION":
+            {
+                var categories = IdSet(entry.GetProperty("categories"));
+                var items = IdSet(entry.GetProperty("items"));
+                var assignments = answer.GetProperty("categoryIdsByItem");
+                RequireKnown(assignments.EnumerateObject().Select(value => value.Name), items, "categorization item IDs");
+                foreach (var assignment in assignments.EnumerateObject())
+                {
+                    var values = ReadUniqueStrings(assignment.Value, $"categoryIdsByItem.{assignment.Name}");
+                    RequireKnown(values, categories, "category IDs");
+                    if (values.Length > categories.Count)
+                        throw new JsonException("A categorization answer exceeds the number of categories.");
+                }
+                break;
+            }
+            case "RATING":
+                ValidateRating(answer.GetProperty("value"), entry.GetProperty("scale"));
+                break;
+            case "HOTSPOT":
+                ValidateHotspotPoint(answer.GetProperty("point"));
+                break;
+            case "HIGHLIGHT":
+                ValidateHighlightBounds(answer.GetProperty("spans"), RequiredProjectionText(entry, "plainText").Length);
+                break;
+        }
+    }
+
+    private static HashSet<string> IdSet(JsonElement array) => IdSet(array.EnumerateArray().ToArray());
+
+    private static HashSet<string> IdSet(IEnumerable<JsonElement> values)
+    {
+        var ids = values.Select(value => RequiredProjectionText(value, "id")).ToArray();
+        RequireDistinct(ids, "projection IDs");
+        return ids.ToHashSet(StringComparer.Ordinal);
+    }
+
+    private static string[] OptionalStringValues(JsonElement owner, string property) =>
+        owner.TryGetProperty(property, out var values)
+            ? values.EnumerateArray().Select(value => value.GetString()!).ToArray()
+            : [];
+
+    private static string[] ReadUniqueStrings(JsonElement values, string label)
+    {
+        var result = values.EnumerateArray().Select(value => value.GetString()!).ToArray();
+        RequireDistinct(result, label);
+        return result;
+    }
+
+    private static void RequireDistinct(IEnumerable<string> values, string label)
+    {
+        var source = values.ToArray();
+        if (source.Distinct(StringComparer.Ordinal).Count() != source.Length)
+            throw new JsonException($"{label} contains duplicate values.");
+    }
+
+    private static void RequireKnown(IEnumerable<string> values, IReadOnlySet<string> allowed, string label)
+    {
+        var unknown = values.FirstOrDefault(value => !allowed.Contains(value));
+        if (unknown is not null) throw new JsonException($"{label} contains unknown value {unknown}.");
+    }
+
+    private static void ValidateOptionalDomainValue(JsonElement value, IReadOnlySet<string> allowed, string label)
+    {
+        if (value.ValueKind == JsonValueKind.Null) return;
+        var selected = value.GetString()!;
+        if (!allowed.Contains(selected)) throw new JsonException($"{label} contains an unknown value.");
+    }
+
+    private static void ValidateRating(JsonElement value, JsonElement scale)
+    {
+        if (value.ValueKind == JsonValueKind.Null) return;
+        var selected = value.GetDecimal();
+        var minimum = scale.GetProperty("min").GetDecimal();
+        var maximum = scale.GetProperty("max").GetDecimal();
+        var step = scale.GetProperty("step").GetDecimal();
+        if (selected < minimum || selected > maximum || step <= 0 || (selected - minimum) % step != 0)
+            throw new JsonException("Rating value is outside its configured scale.");
+    }
+
+    private static void ValidateHotspotPoint(JsonElement point)
+    {
+        if (point.ValueKind == JsonValueKind.Null) return;
+        var x = point.GetProperty("x").GetDecimal();
+        var y = point.GetProperty("y").GetDecimal();
+        if (x is < 0 or > 100 || y is < 0 or > 100)
+            throw new JsonException("Hotspot coordinates must be between 0 and 100.");
+    }
+
+    private static void ValidateHighlightBounds(JsonElement spans, int textLength)
+    {
+        var ranges = spans.EnumerateArray()
+            .Select(span => (Start: span.GetProperty("start").GetInt32(), End: span.GetProperty("end").GetInt32()))
+            .OrderBy(span => span.Start)
+            .ThenBy(span => span.End)
+            .ToArray();
+        if (ranges.Any(span => span.End > textLength))
+            throw new JsonException("Highlight span exceeds the source text.");
+        for (var index = 1; index < ranges.Length; index++)
+        {
+            if (ranges[index].Start < ranges[index - 1].End)
+                throw new JsonException("Highlight spans cannot overlap.");
+        }
+    }
+
+    private static string RequiredProjectionText(JsonElement owner, string property)
+    {
+        if (!owner.TryGetProperty(property, out var value) || value.ValueKind != JsonValueKind.String ||
+            string.IsNullOrWhiteSpace(value.GetString()))
+        {
+            throw new JsonException($"Projection {property} is required.");
+        }
+        return value.GetString()!;
     }
 
     private static void ValidatePoint(JsonElement point)

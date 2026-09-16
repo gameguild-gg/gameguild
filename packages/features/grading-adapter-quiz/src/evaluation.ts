@@ -14,6 +14,8 @@ import {
 } from "@game-guild/quiz";
 import {
   QUIZ_AUTOMATED_REVIEW_HANDLER,
+  MATCHING_PARTIAL_CREDIT_ALGORITHM,
+  ORDERING_PARTIAL_CREDIT_ALGORITHM,
   type QuizAnswerPayloadV1,
   type QuizItemProjectionV1,
 } from "./contracts";
@@ -30,6 +32,7 @@ export function evaluateDeterministicQuizItem(
   if (classifyQuizReviewCapability(item.authoringEntry) !== "automated-review") {
     return unresolvedItem(item.itemId, maxScore, "pending");
   }
+  validatePartialCreditAlgorithm(item);
   if (!answer) return gradedItem(item.itemId, ZERO_SCORE_VALUE, maxScore);
 
   const partialScore = evaluatePartialCredit(item, answer, maxScore);
@@ -75,11 +78,13 @@ function evaluatePartialCredit(
 ): ScoreValue | null {
   const entry = item.authoringEntry;
   if (entry.type === QuizEntryType.Matching && entry.allowPartialCredit) {
+    requirePartialCreditAlgorithm(item, MATCHING_PARTIAL_CREDIT_ALGORITHM);
     if (answer.type !== entry.type || entry.pairs.length === 0) return ZERO_SCORE_VALUE;
     const correct = entry.pairs.filter((pair) => answer.matches[pair.id] === pair.right).length;
     return scoreValueByRatio(maxScore, BigInt(correct), BigInt(entry.pairs.length));
   }
   if (entry.type === QuizEntryType.Ordering && entry.allowPartialCredit) {
+    requirePartialCreditAlgorithm(item, ORDERING_PARTIAL_CREDIT_ALGORITHM);
     if (answer.type !== entry.type || entry.items.length === 0) return ZERO_SCORE_VALUE;
     const expected = [...entry.items]
       .sort((left, right) => left.correctPosition - right.correctPosition)
@@ -88,6 +93,24 @@ function evaluatePartialCredit(
     return scoreValueByRatio(maxScore, BigInt(correct), BigInt(expected.length));
   }
   return null;
+}
+
+function requirePartialCreditAlgorithm(
+  item: QuizItemProjectionV1,
+  expected: typeof MATCHING_PARTIAL_CREDIT_ALGORITHM | typeof ORDERING_PARTIAL_CREDIT_ALGORITHM,
+): void {
+  if (item.partialCreditAlgorithm !== expected) {
+    throw new TypeError(`Quiz partial-credit algorithm ${expected} is not pinned by the item projection.`);
+  }
+}
+
+function validatePartialCreditAlgorithm(item: QuizItemProjectionV1): void {
+  const entry = item.authoringEntry;
+  if (entry.type === QuizEntryType.Matching && entry.allowPartialCredit) {
+    requirePartialCreditAlgorithm(item, MATCHING_PARTIAL_CREDIT_ALGORITHM);
+  } else if (entry.type === QuizEntryType.Ordering && entry.allowPartialCredit) {
+    requirePartialCreditAlgorithm(item, ORDERING_PARTIAL_CREDIT_ALGORITHM);
+  }
 }
 
 function gradedItem(

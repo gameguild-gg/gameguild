@@ -137,7 +137,7 @@ function mapAssessment(
     maxScore: scoreUnitsToPoints(assessment.maxScore ?? 0),
     passingScore: passingScore ?? undefined,
     timeLimitMinutes: assessment.timeLimitMinutes,
-    maxAttempts: assessment.maxAttempts,
+    maxAttempts: assessment.maxAttempts ?? undefined,
     isRequired: assessment.isRequired,
     order: assessment.order,
     availableFrom: assessment.availableFrom,
@@ -163,7 +163,7 @@ function mapSubmission(
     assessmentId: submission.assessmentId,
     enrollmentId: submission.enrollmentId,
     attemptNumber: submission.attemptNumber,
-    score: optionalScoreUnitsToPoints(submission.score),
+    score: optionalScoreUnitsToPoints(submission.score) ?? undefined,
     passed: submission.passed,
     startedAt: submission.startedAt,
     submittedAt: submission.submittedAt,
@@ -390,7 +390,8 @@ export async function getMyLearnerRecords(): Promise<LearnerCourseRecord[]> {
                   item.submissionStatus as LearningAssessmentsLearnerAssessmentSubmission["status"],
                 ...("score" in item
                   ? {
-                      score: optionalScoreUnitsToPoints(item.score),
+                      score:
+                        optionalScoreUnitsToPoints(item.score) ?? undefined,
                       passed: item.passed,
                       feedback: item.feedback,
                       gradedAt: item.gradedAt,
@@ -417,10 +418,18 @@ export async function getMyLearnerRecords(): Promise<LearnerCourseRecord[]> {
         gradeSummary: gradeSummary
           ? {
               ...gradeSummary,
-              finalGrade: optionalPercentUnitsToPercentage(gradeSummary.finalGrade),
-              earnedPoints: optionalScoreUnitsToPoints(gradeSummary.earnedPoints),
-              possiblePoints: optionalScoreUnitsToPoints(gradeSummary.possiblePoints),
-              percentage: optionalPercentUnitsToPercentage(gradeSummary.percentage),
+              finalGrade:
+                optionalPercentUnitsToPercentage(gradeSummary.finalGrade) ??
+                undefined,
+              earnedPoints:
+                optionalScoreUnitsToPoints(gradeSummary.earnedPoints) ??
+                undefined,
+              possiblePoints:
+                optionalScoreUnitsToPoints(gradeSummary.possiblePoints) ??
+                undefined,
+              percentage:
+                optionalPercentUnitsToPercentage(gradeSummary.percentage) ??
+                undefined,
               groups: gradeSummary.groups?.map((group) => ({
                 ...group,
                 weightPercent: percentUnitsToPercentage(group.weightPercent ?? 0),
@@ -428,7 +437,7 @@ export async function getMyLearnerRecords(): Promise<LearnerCourseRecord[]> {
               items: gradeSummary.items?.map((item) => ({
                 ...item,
                 maxScore: scoreUnitsToPoints(item.maxScore ?? 0),
-                score: optionalScoreUnitsToPoints(item.score),
+                score: optionalScoreUnitsToPoints(item.score) ?? undefined,
               })),
             }
           : undefined,

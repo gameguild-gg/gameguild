@@ -14,6 +14,8 @@ import {
 import {
   QUIZ_CONTENT_TYPE,
   QUIZ_ITEM_PROJECTION_SCHEMA_VERSION,
+  MATCHING_PARTIAL_CREDIT_ALGORITHM,
+  ORDERING_PARTIAL_CREDIT_ALGORITHM,
   type QuizAnswerKeyV1,
   type QuizGradingItemInputV1,
   type QuizItemProjectionV1,
@@ -39,14 +41,22 @@ export function projectQuizGradingItems(
   items: readonly QuizGradingItemInputV1[],
 ): QuizItemProjectionV1[] {
   assertQuizGradingItems(items);
-  return items.map(({ itemId, entry }) => ({
-    schemaVersion: QUIZ_ITEM_PROJECTION_SCHEMA_VERSION,
-    itemId,
-    itemType: entry.type,
-    maxScore: getQuizItemMaxScore(entry),
-    source: { contentType: QUIZ_CONTENT_TYPE, itemId },
-    authoringEntry: structuredClone(entry),
-  }));
+  return items.map(({ itemId, entry }) => {
+    const partialCreditAlgorithm = entry.type === QuizEntryType.Matching && entry.allowPartialCredit
+      ? MATCHING_PARTIAL_CREDIT_ALGORITHM
+      : entry.type === QuizEntryType.Ordering && entry.allowPartialCredit
+        ? ORDERING_PARTIAL_CREDIT_ALGORITHM
+        : undefined;
+    return {
+      schemaVersion: QUIZ_ITEM_PROJECTION_SCHEMA_VERSION,
+      itemId,
+      itemType: entry.type,
+      maxScore: getQuizItemMaxScore(entry),
+      ...(partialCreditAlgorithm ? { partialCreditAlgorithm } : {}),
+      source: { contentType: QUIZ_CONTENT_TYPE, itemId },
+      authoringEntry: structuredClone(entry),
+    };
+  });
 }
 
 export function getQuizItemMaxScore(

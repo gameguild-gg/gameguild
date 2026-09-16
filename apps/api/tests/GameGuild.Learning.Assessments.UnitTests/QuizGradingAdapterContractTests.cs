@@ -105,7 +105,61 @@ public sealed class QuizGradingAdapterContractTests
     }
 
     [Fact]
-    public void Foundation_RegistersStructuralComponentsButNoReviewHandler()
+    public async Task PartialCredit_MatchesTheSharedVersionedVectorsAndRejectsInvalidAnswers()
+    {
+        using var fixture = JsonDocument.Parse(ReadFixture("quiz-partial-credit-v1.json"));
+        fixture.RootElement.GetProperty("schemaVersion").GetInt32().Should().Be(1);
+        var projector = new QuizItemProjector();
+        var projections = fixture.RootElement.GetProperty("items")
+            .EnumerateArray()
+            .ToDictionary(
+                item => item.GetProperty("itemId").GetString()!,
+                item => projector.Project(
+                    item.GetProperty("itemId").GetString()!,
+                    item.GetProperty("entry")),
+                StringComparer.Ordinal);
+
+        projections["matching-partial"].GetProperty("partialCreditAlgorithm").GetString()
+            .Should().Be(QuizAdapterContracts.MatchingPartialCreditAlgorithm);
+        projections["ordering-partial"].GetProperty("partialCreditAlgorithm").GetString()
+            .Should().Be(QuizAdapterContracts.OrderingPartialCreditAlgorithm);
+        projections["matching-all-or-nothing"].TryGetProperty("partialCreditAlgorithm", out _)
+            .Should().BeFalse();
+
+        var decoder = new QuizAnswerDecoder();
+        var algorithm = new QuizDeterministicReviewAlgorithm();
+        foreach (var testCase in fixture.RootElement.GetProperty("scoreCases").EnumerateArray())
+        {
+            var itemId = testCase.GetProperty("itemId").GetString()!;
+            var envelope = EnvelopeFor(itemId, testCase.GetProperty("answer"));
+            var decoded = decoder.Decode(envelope, [projections[itemId]]);
+            var result = await algorithm.EvaluateAsync(
+                new DeterministicReviewRequest(
+                    [projections[itemId]],
+                    EmptyDelivery(),
+                    decoded,
+                    QuizAdapterContracts.AutomatedReviewHandlerKey,
+                    QuizAdapterContracts.Version),
+                CancellationToken.None);
+
+            result.Score.Should().Be(
+                ScoreValue.FromUnits(testCase.GetProperty("expectedScore").GetInt32()),
+                testCase.GetProperty("name").GetString());
+        }
+
+        foreach (var testCase in fixture.RootElement.GetProperty("invalidCases").EnumerateArray())
+        {
+            var itemId = testCase.GetProperty("itemId").GetString()!;
+            var decode = () => decoder.Decode(
+                EnvelopeFor(itemId, testCase.GetProperty("answer")),
+                [projections[itemId]]);
+
+            decode.Should().Throw<JsonException>(testCase.GetProperty("name").GetString());
+        }
+    }
+
+    [Fact]
+    public void Runtime_RegistersQuizAdapterAndAutomatedReviewForBothContexts()
     {
         var registry = new ReviewCapabilityRegistry();
         new QuizCapabilityRegistration().Register(registry);
@@ -117,9 +171,9 @@ public sealed class QuizGradingAdapterContractTests
                 ReviewExecutionContext.AuthorTest)
             .Should().NotBeNull();
         registry.ResolveReview(ReviewMethod.AutomatedReview, "quiz-automated-review", "1", ReviewExecutionContext.AuthorTest)
-            .Should().BeNull();
+            .Should().NotBeNull();
         registry.ResolveReview(ReviewMethod.AutomatedReview, "quiz-automated-review", "1", ReviewExecutionContext.OfficialSubmission)
-            .Should().BeNull();
+            .Should().NotBeNull();
     }
 
     [Fact]
@@ -159,15 +213,17 @@ public sealed class QuizGradingAdapterContractTests
             .Which.IsCurrentForAuthoring.Should().BeTrue();
         resolver.Resolve("quiz", QuizAdapterContracts.AdapterKey, "1", ReviewExecutionContext.AuthorTest)
             .Should().BeOfType<QuizAssessmentTypeAdapter>();
-        var absentHandler = () => provider.GetRequiredService<IReviewStageHandlerResolver>()
-            .Resolve(ReviewMethod.AutomatedReview, "quiz-automated-review", "1", ReviewExecutionContext.AuthorTest);
+        resolver.Resolve("quiz", QuizAdapterContracts.AdapterKey, "1", ReviewExecutionContext.OfficialSubmission)
+            .Should().BeOfType<QuizAssessmentTypeAdapter>();
+        provider.GetRequiredService<IReviewStageHandlerResolver>()
+            .Resolve(ReviewMethod.AutomatedReview, "quiz-automated-review", "1", ReviewExecutionContext.AuthorTest)
+            .Should().BeOfType<QuizAutomatedReviewStageHandler>();
+        provider.GetRequiredService<IReviewStageHandlerResolver>()
+            .Resolve(ReviewMethod.AutomatedReview, "quiz-automated-review", "1", ReviewExecutionContext.OfficialSubmission)
+            .Should().BeOfType<QuizAutomatedReviewStageHandler>();
         var wrongVersion = () => resolver.Resolve(
             "quiz", QuizAdapterContracts.AdapterKey, "2", ReviewExecutionContext.AuthorTest);
-        var wrongContext = () => resolver.Resolve(
-            "quiz", QuizAdapterContracts.AdapterKey, "1", ReviewExecutionContext.OfficialSubmission);
         wrongVersion.Should().Throw<InvalidOperationException>().WithMessage("*unavailable*");
-        wrongContext.Should().Throw<InvalidOperationException>().WithMessage("*unavailable*");
-        absentHandler.Should().Throw<InvalidOperationException>().WithMessage("*unavailable*");
     }
 
     private static AssessmentResponseEnvelopeV1 Envelope(string payload)
@@ -176,6 +232,19 @@ public sealed class QuizGradingAdapterContractTests
         return new AssessmentResponseEnvelopeV1(1, "quiz", "quiz-answer/v1", document.RootElement.Clone());
     }
 
+    private static AssessmentResponseEnvelopeV1 EnvelopeFor(string itemId, JsonElement answer) =>
+        new(
+            1,
+            QuizAdapterContracts.ContentType,
+            QuizAdapterContracts.AnswerPayloadSchema,
+            JsonSerializer.SerializeToElement(new
+            {
+                answers = new Dictionary<string, JsonElement>(StringComparer.Ordinal)
+                {
+                    [itemId] = answer.Clone(),
+                },
+            }, GradingJson.Options));
+
     private static AssessmentExecutionDeliveryV1 EmptyDelivery() => new(
         1,
         Guid.NewGuid(),
@@ -183,10 +252,10 @@ public sealed class QuizGradingAdapterContractTests
         [],
         new Dictionary<string, AssessmentExecutionDeliveryItemV1>());
 
-    private static string ReadFixture()
+    private static string ReadFixture(string name = "quiz-answer-envelope-v1.json")
     {
         using var stream = Assembly.GetExecutingAssembly()
-            .GetManifestResourceStream("GameGuild.Grading.Fixtures.quiz-answer-envelope-v1.json")
+            .GetManifestResourceStream($"GameGuild.Grading.Fixtures.{name}")
             ?? throw new InvalidOperationException("Shared quiz answer fixture was not embedded.");
         using var reader = new StreamReader(stream, Encoding.UTF8);
         return reader.ReadToEnd();

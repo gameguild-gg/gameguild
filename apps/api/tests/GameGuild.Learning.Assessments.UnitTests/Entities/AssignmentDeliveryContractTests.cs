@@ -338,5 +338,18 @@ public sealed class AssignmentDeliveryContractTests
             constraint.Name == "CK_AssessmentSubmissions_SubmittedModalities");
     }
 
+    [Fact]
+    public void DatabaseContract_ShouldRequireExactlyOneSubmissionSubject()
+    {
+        var modelBuilder = new ModelBuilder(new ConventionSet());
+        new AssessmentsModelConfiguration().Configure(modelBuilder);
+        var entity = modelBuilder.Model.FindEntityType(typeof(AssessmentSubmission))!;
+
+        entity.GetCheckConstraints().Should().ContainSingle(constraint =>
+            constraint.Name == "CK_AssessmentSubmissions_Subject" &&
+            constraint.Sql.Contains("\"EnrollmentId\" IS NOT NULL AND \"UserId\" IS NOT NULL AND \"CourseGroupId\" IS NULL", StringComparison.Ordinal) &&
+            constraint.Sql.Contains("\"EnrollmentId\" IS NULL AND \"UserId\" IS NULL AND \"CourseGroupId\" IS NOT NULL", StringComparison.Ordinal));
+    }
+
     private static ScoreValue Score(string value) => ScoreValue.FromPoints(value);
 }

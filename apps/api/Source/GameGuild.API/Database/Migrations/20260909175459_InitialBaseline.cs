@@ -431,48 +431,6 @@ namespace GameGuild.API.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AssessmentSubmissions",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AssessmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    EnrollmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CourseGroupId = table.Column<Guid>(type: "uuid", nullable: true),
-                    AttemptNumber = table.Column<int>(type: "integer", nullable: false),
-                    Score = table.Column<int>(type: "integer", nullable: true),
-                    Passed = table.Column<bool>(type: "boolean", nullable: true),
-                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    GradedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    GradedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    Feedback = table.Column<string>(type: "text", nullable: true),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    IsLate = table.Column<bool>(type: "boolean", nullable: false),
-                    SubmittedModalities = table.Column<int>(type: "integer", nullable: false),
-                    TextPayload = table.Column<string>(type: "text", nullable: true),
-                    FilePayload = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
-                    UrlPayload = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
-                    CodePayload = table.Column<string>(type: "text", nullable: true),
-                    MediaPayload = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
-                    ProjectPayload = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
-                    RubricScoresPayload = table.Column<string>(type: "jsonb", nullable: true),
-                    Version = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AssessmentSubmissions", x => x.Id);
-                    table.CheckConstraint("CK_AssessmentSubmissions_AttemptNumberPositive", "\"AttemptNumber\" > 0");
-                    table.CheckConstraint("CK_AssessmentSubmissions_PayloadConsistency", "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND (\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND (\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND (\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND (\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND (\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND (\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0)");
-                    table.CheckConstraint("CK_AssessmentSubmissions_ScoreCanonical", "\"Score\" IS NULL OR \"Score\" >= 0");
-                    table.CheckConstraint("CK_AssessmentSubmissions_SubmittedModalities", "\"SubmittedModalities\" >= 0 AND (\"SubmittedModalities\" & ~127) = 0");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "asset_contents",
                 schema: "assets",
                 columns: table => new
@@ -5418,6 +5376,67 @@ namespace GameGuild.API.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AssessmentSubmissions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AssessmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DefinitionRevisionId = table.Column<Guid>(type: "uuid", nullable: true),
+                    EnrollmentId = table.Column<Guid>(type: "uuid", nullable: true),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CourseGroupId = table.Column<Guid>(type: "uuid", nullable: true),
+                    StartedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AttemptNumber = table.Column<int>(type: "integer", nullable: false),
+                    DraftVersion = table.Column<long>(type: "bigint", nullable: false),
+                    Score = table.Column<int>(type: "integer", nullable: true),
+                    Passed = table.Column<bool>(type: "boolean", nullable: true),
+                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    SubmittedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    SubmittedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    GradedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    GradedBy = table.Column<Guid>(type: "uuid", nullable: true),
+                    Feedback = table.Column<string>(type: "text", nullable: true),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    IsLate = table.Column<bool>(type: "boolean", nullable: false),
+                    SubmittedModalities = table.Column<int>(type: "integer", nullable: false),
+                    TextPayload = table.Column<string>(type: "text", nullable: true),
+                    FilePayload = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    UrlPayload = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    CodePayload = table.Column<string>(type: "text", nullable: true),
+                    MediaPayload = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    ProjectPayload = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    RubricScoresPayload = table.Column<string>(type: "jsonb", nullable: true),
+                    Version = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AssessmentSubmissions", x => x.Id);
+                    table.CheckConstraint("CK_AssessmentSubmissions_AttemptNumberPositive", "\"AttemptNumber\" > 0");
+                    table.CheckConstraint("CK_AssessmentSubmissions_DraftVersion", "\"DraftVersion\" >= 0");
+                    table.CheckConstraint("CK_AssessmentSubmissions_PayloadConsistency", "((\"SubmittedModalities\" & 1) = 0 OR \"TextPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 2) = 0 OR \"FilePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 4) = 0 OR \"UrlPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 8) = 0 OR \"CodePayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 16) = 0 OR \"MediaPayload\" IS NOT NULL) AND ((\"SubmittedModalities\" & 32) = 0 OR \"ProjectPayload\" IS NOT NULL) AND (\"TextPayload\" IS NULL OR (\"SubmittedModalities\" & 1) <> 0) AND (\"FilePayload\" IS NULL OR (\"SubmittedModalities\" & 2) <> 0) AND (\"UrlPayload\" IS NULL OR (\"SubmittedModalities\" & 4) <> 0) AND (\"CodePayload\" IS NULL OR (\"SubmittedModalities\" & 8) <> 0) AND (\"MediaPayload\" IS NULL OR (\"SubmittedModalities\" & 16) <> 0) AND (\"ProjectPayload\" IS NULL OR (\"SubmittedModalities\" & 32) <> 0)");
+                    table.CheckConstraint("CK_AssessmentSubmissions_ScoreCanonical", "\"Score\" IS NULL OR \"Score\" >= 0");
+                    table.CheckConstraint("CK_AssessmentSubmissions_Starter", "\"StartedByUserId\" <> '00000000-0000-0000-0000-000000000000'");
+                    table.CheckConstraint("CK_AssessmentSubmissions_Subject", "(\"EnrollmentId\" IS NOT NULL AND \"UserId\" IS NOT NULL AND \"CourseGroupId\" IS NULL) OR (\"EnrollmentId\" IS NULL AND \"UserId\" IS NULL AND \"CourseGroupId\" IS NOT NULL)");
+                    table.CheckConstraint("CK_AssessmentSubmissions_SubmittedModalities", "\"SubmittedModalities\" >= 0 AND (\"SubmittedModalities\" & ~127) = 0");
+                    table.ForeignKey(
+                        name: "FK_AssessmentSubmissions_AssessmentDefinitionRevisions_Definit~",
+                        columns: x => new { x.DefinitionRevisionId, x.AssessmentId },
+                        principalTable: "AssessmentDefinitionRevisions",
+                        principalColumns: new[] { "Id", "AssessmentId" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AssessmentSubmissions_CourseGroups_CourseGroupId",
+                        column: x => x.CourseGroupId,
+                        principalTable: "CourseGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DynamicRoleAssignment",
                 columns: table => new
                 {
@@ -8590,6 +8609,56 @@ namespace GameGuild.API.Database.Migrations
                         principalTable: "consent_policy_versions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AssessmentSubmissionParticipants",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: true),
+                    SubmissionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    EnrollmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CapturedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AssessmentSubmissionParticipants", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AssessmentSubmissionParticipants_AssessmentSubmissions_Subm~",
+                        column: x => x.SubmissionId,
+                        principalTable: "AssessmentSubmissions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CollectiveAttemptDraftChanges",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
+                    SubmissionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ActorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PreviousVersion = table.Column<long>(type: "bigint", nullable: false),
+                    NewVersion = table.Column<long>(type: "bigint", nullable: false),
+                    IdempotencyKey = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    RequestHash = table.Column<string>(type: "character(64)", fixedLength: true, maxLength: 64, nullable: false),
+                    ResponseHash = table.Column<string>(type: "character(64)", fixedLength: true, maxLength: 64, nullable: false),
+                    ChangedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CollectiveAttemptDraftChanges", x => x.Id);
+                    table.CheckConstraint("CK_CollectiveAttemptDraftChanges_Hashes", "\"RequestHash\" ~ '^[0-9a-f]{64}$' AND \"ResponseHash\" ~ '^[0-9a-f]{64}$'");
+                    table.CheckConstraint("CK_CollectiveAttemptDraftChanges_Version", "\"PreviousVersion\" >= 0 AND \"NewVersion\" = \"PreviousVersion\" + 1");
+                    table.ForeignKey(
+                        name: "FK_CollectiveAttemptDraftChanges_AssessmentSubmissions_Submiss~",
+                        column: x => x.SubmissionId,
+                        principalTable: "AssessmentSubmissions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -11853,6 +11922,87 @@ namespace GameGuild.API.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AssessmentContentCompletionProjections",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AssessmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ContentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    EnrollmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    SubmissionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    GradeRoundId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Transition = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Version = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AssessmentContentCompletionProjections", x => x.Id);
+                    table.CheckConstraint("CK_AssessmentContentCompletionProjections_Transition", "\"Transition\" IN ('submit', 'finalize', 'release', 'release-and-pass')");
+                    table.ForeignKey(
+                        name: "FK_AssessmentContentCompletionProjections_AssessmentSubmission~",
+                        column: x => x.SubmissionId,
+                        principalTable: "AssessmentSubmissions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AssessmentContentCompletionProjections_Assessments_Assessme~",
+                        column: x => x.AssessmentId,
+                        principalTable: "Assessments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AssessmentGradebookEntries",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CourseId = table.Column<Guid>(type: "uuid", nullable: false),
+                    EnrollmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AssessmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AssessmentGroupId = table.Column<Guid>(type: "uuid", nullable: true),
+                    SubmissionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    GradeRoundId = table.Column<Guid>(type: "uuid", nullable: false),
+                    EffectiveScore = table.Column<int>(type: "integer", nullable: false),
+                    CapturedMaxScore = table.Column<int>(type: "integer", nullable: false),
+                    CapturedWeightPercent = table.Column<int>(type: "integer", nullable: true),
+                    Version = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AssessmentGradebookEntries", x => x.Id);
+                    table.CheckConstraint("CK_AssessmentGradebookEntries_Score", "\"EffectiveScore\" >= 0 AND \"CapturedMaxScore\" > 0 AND \"EffectiveScore\" <= \"CapturedMaxScore\"");
+                    table.CheckConstraint("CK_AssessmentGradebookEntries_Weight", "\"CapturedWeightPercent\" IS NULL OR (\"CapturedWeightPercent\" >= 0 AND \"CapturedWeightPercent\" <= 10000)");
+                    table.ForeignKey(
+                        name: "FK_AssessmentGradebookEntries_AssessmentGroups_AssessmentGroup~",
+                        column: x => x.AssessmentGroupId,
+                        principalTable: "AssessmentGroups",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_AssessmentGradebookEntries_AssessmentSubmissions_Submission~",
+                        column: x => x.SubmissionId,
+                        principalTable: "AssessmentSubmissions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AssessmentGradebookEntries_Assessments_AssessmentId",
+                        column: x => x.AssessmentId,
+                        principalTable: "Assessments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "GradeItemResults",
                 columns: table => new
                 {
@@ -11874,6 +12024,29 @@ namespace GameGuild.API.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GradeResultReleases",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
+                    GradeRoundId = table.Column<Guid>(type: "uuid", nullable: false),
+                    GradingExecutionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ExecutionContext = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    Status = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                    ReleasedByActorId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ReleasedByService = table.Column<string>(type: "character varying(160)", maxLength: 160, nullable: true),
+                    Reason = table.Column<string>(type: "text", nullable: true),
+                    ReleasedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GradeResultReleases", x => x.Id);
+                    table.CheckConstraint("CK_GradeResultReleases_OfficialExecution", "\"ExecutionContext\" = 'official-submission'");
+                    table.CheckConstraint("CK_GradeResultReleases_Producer", "num_nonnulls(\"ReleasedByActorId\", \"ReleasedByService\") = 1");
+                    table.CheckConstraint("CK_GradeResultReleases_Status", "\"Status\" = 'released'");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "GradeRounds",
                 columns: table => new
                 {
@@ -11882,6 +12055,8 @@ namespace GameGuild.API.Database.Migrations
                     RoundNumber = table.Column<int>(type: "integer", nullable: false),
                     SupersedesGradeRoundId = table.Column<Guid>(type: "uuid", nullable: true),
                     Reason = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    ReasonDetail = table.Column<string>(type: "text", nullable: true),
+                    InitiatedByActorId = table.Column<Guid>(type: "uuid", nullable: true),
                     Status = table.Column<string>(type: "character varying(48)", maxLength: 48, nullable: false),
                     ResultSchemaVersion = table.Column<int>(type: "integer", nullable: false),
                     ResultState = table.Column<string>(type: "text", nullable: true),
@@ -11947,6 +12122,7 @@ namespace GameGuild.API.Database.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_GradingExecutions", x => x.Id);
+                    table.UniqueConstraint("AK_GradingExecutions_Id_ExecutionContext", x => new { x.Id, x.ExecutionContext });
                     table.CheckConstraint("CK_GradingExecutions_DeliveryAllOrNone", "num_nonnulls(\"DeliverySchemaVersion\", \"DeliveryCanonicalJson\", \"DeliveryHash\", \"DeliveryHashVersion\") IN (0, 4)");
                     table.CheckConstraint("CK_GradingExecutions_DeliverySize", "\"DeliveryCanonicalJson\" IS NULL OR octet_length(\"DeliveryCanonicalJson\") <= 8388608");
                     table.CheckConstraint("CK_GradingExecutions_Finalization", "(\"Status\" IN ('completed', 'failed')) = (\"FinalizedAt\" IS NOT NULL)");
@@ -12332,10 +12508,57 @@ namespace GameGuild.API.Database.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AssessmentContentCompletionProjections_AssessmentId_Content~",
+                table: "AssessmentContentCompletionProjections",
+                columns: new[] { "AssessmentId", "ContentId", "EnrollmentId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentContentCompletionProjections_GradeRoundId",
+                table: "AssessmentContentCompletionProjections",
+                column: "GradeRoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentContentCompletionProjections_SubmissionId",
+                table: "AssessmentContentCompletionProjections",
+                column: "SubmissionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AssessmentDefinitionRevisions_AssessmentId_RevisionNumber",
                 table: "AssessmentDefinitionRevisions",
                 columns: new[] { "AssessmentId", "RevisionNumber" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentGradebookEntries_AssessmentGroupId",
+                table: "AssessmentGradebookEntries",
+                column: "AssessmentGroupId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentGradebookEntries_AssessmentId",
+                table: "AssessmentGradebookEntries",
+                column: "AssessmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentGradebookEntries_CourseId_EnrollmentId",
+                table: "AssessmentGradebookEntries",
+                columns: new[] { "CourseId", "EnrollmentId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentGradebookEntries_EnrollmentId_AssessmentId",
+                table: "AssessmentGradebookEntries",
+                columns: new[] { "EnrollmentId", "AssessmentId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentGradebookEntries_GradeRoundId",
+                table: "AssessmentGradebookEntries",
+                column: "GradeRoundId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentGradebookEntries_SubmissionId",
+                table: "AssessmentGradebookEntries",
+                column: "SubmissionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AssessmentGroups_CourseId",
@@ -12396,9 +12619,31 @@ namespace GameGuild.API.Database.Migrations
                 column: "Slug");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AssessmentSubmissionParticipants_SubmissionId_EnrollmentId",
+                table: "AssessmentSubmissionParticipants",
+                columns: new[] { "SubmissionId", "EnrollmentId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentSubmissionParticipants_SubmissionId_UserId",
+                table: "AssessmentSubmissionParticipants",
+                columns: new[] { "SubmissionId", "UserId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AssessmentSubmissions_AssessmentId",
                 table: "AssessmentSubmissions",
                 column: "AssessmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentSubmissions_CourseGroupId",
+                table: "AssessmentSubmissions",
+                column: "CourseGroupId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AssessmentSubmissions_DefinitionRevisionId_AssessmentId",
+                table: "AssessmentSubmissions",
+                columns: new[] { "DefinitionRevisionId", "AssessmentId" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AssessmentSubmissions_EnrollmentId",
@@ -12414,7 +12659,15 @@ namespace GameGuild.API.Database.Migrations
                 name: "UX_AssessmentSubmissions_Assessment_Enrollment_Attempt",
                 table: "AssessmentSubmissions",
                 columns: new[] { "AssessmentId", "EnrollmentId", "AttemptNumber" },
-                unique: true);
+                unique: true,
+                filter: "\"EnrollmentId\" IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "UX_AssessmentSubmissions_Assessment_Group_Attempt",
+                table: "AssessmentSubmissions",
+                columns: new[] { "AssessmentId", "CourseGroupId", "AttemptNumber" },
+                unique: true,
+                filter: "\"CourseGroupId\" IS NOT NULL AND \"EnrollmentId\" IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AssessmentTestRuns_AssessmentId",
@@ -12728,6 +12981,18 @@ namespace GameGuild.API.Database.Migrations
                 name: "IX_certificate_tags_TagProficiencyId",
                 table: "certificate_tags",
                 column: "TagProficiencyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CollectiveAttemptDraftChanges_SubmissionId_ActorId_Idempote~",
+                table: "CollectiveAttemptDraftChanges",
+                columns: new[] { "SubmissionId", "ActorId", "IdempotencyKey" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CollectiveAttemptDraftChanges_SubmissionId_NewVersion",
+                table: "CollectiveAttemptDraftChanges",
+                columns: new[] { "SubmissionId", "NewVersion" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_compliance_financial_crime_case_events_CaseId_Sequence",
@@ -14745,6 +15010,22 @@ namespace GameGuild.API.Database.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_GradeResultReleases_GradeRoundId",
+                table: "GradeResultReleases",
+                column: "GradeRoundId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GradeResultReleases_GradeRoundId_GradingExecutionId",
+                table: "GradeResultReleases",
+                columns: new[] { "GradeRoundId", "GradingExecutionId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_GradeResultReleases_GradingExecutionId_ExecutionContext",
+                table: "GradeResultReleases",
+                columns: new[] { "GradingExecutionId", "ExecutionContext" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_GradeRounds_GradingExecutionId_RoundNumber",
                 table: "GradeRounds",
                 columns: new[] { "GradingExecutionId", "RoundNumber" },
@@ -14780,8 +15061,7 @@ namespace GameGuild.API.Database.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_GradingExecutions_TestRunSubjectId",
                 table: "GradingExecutions",
-                column: "TestRunSubjectId",
-                unique: true);
+                column: "TestRunSubjectId");
 
             migrationBuilder.CreateIndex(
                 name: "ix_identityverification_status",
@@ -18391,12 +18671,44 @@ namespace GameGuild.API.Database.Migrations
                 column: "WalletId");
 
             migrationBuilder.AddForeignKey(
+                name: "FK_AssessmentContentCompletionProjections_GradeRounds_GradeRou~",
+                table: "AssessmentContentCompletionProjections",
+                column: "GradeRoundId",
+                principalTable: "GradeRounds",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AssessmentGradebookEntries_GradeRounds_GradeRoundId",
+                table: "AssessmentGradebookEntries",
+                column: "GradeRoundId",
+                principalTable: "GradeRounds",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_GradeItemResults_ReviewStages_ReviewStageId",
                 table: "GradeItemResults",
                 column: "ReviewStageId",
                 principalTable: "ReviewStages",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_GradeResultReleases_GradeRounds_GradeRoundId_GradingExecuti~",
+                table: "GradeResultReleases",
+                columns: new[] { "GradeRoundId", "GradingExecutionId" },
+                principalTable: "GradeRounds",
+                principalColumns: new[] { "Id", "GradingExecutionId" },
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_GradeResultReleases_GradingExecutions_GradingExecutionId_Ex~",
+                table: "GradeResultReleases",
+                columns: new[] { "GradingExecutionId", "ExecutionContext" },
+                principalTable: "GradingExecutions",
+                principalColumns: new[] { "Id", "ExecutionContext" },
+                onDelete: ReferentialAction.Restrict);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_GradeRounds_GradingExecutions_GradingExecutionId",
@@ -18411,20 +18723,12 @@ namespace GameGuild.API.Database.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_AssessmentTestRuns_AssessmentDefinitionRevisions_Definition~",
-                table: "AssessmentTestRuns");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_GradingExecutions_AssessmentDefinitionRevisions_DefinitionR~",
+                name: "FK_GradingExecutions_AssessmentSubmissions_AssessmentSubmissio~",
                 table: "GradingExecutions");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_AssessmentTestRunSubjects_AssessmentTestRuns_TestRunId",
-                table: "AssessmentTestRunSubjects");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_GradeRounds_GradingExecutions_GradingExecutionId",
-                table: "GradeRounds");
+                name: "FK_GradingExecutions_GradeRounds_ActiveGradeRoundId_Id",
+                table: "GradingExecutions");
 
             migrationBuilder.DropTable(
                 name: "AbacPolicy");
@@ -18464,10 +18768,19 @@ namespace GameGuild.API.Database.Migrations
                 schema: "gameguild.authentication");
 
             migrationBuilder.DropTable(
+                name: "AssessmentContentCompletionProjections");
+
+            migrationBuilder.DropTable(
+                name: "AssessmentGradebookEntries");
+
+            migrationBuilder.DropTable(
                 name: "AssessmentPeerReviews");
 
             migrationBuilder.DropTable(
                 name: "AssessmentRubrics");
+
+            migrationBuilder.DropTable(
+                name: "AssessmentSubmissionParticipants");
 
             migrationBuilder.DropTable(
                 name: "asset_reference_revisions",
@@ -18503,6 +18816,9 @@ namespace GameGuild.API.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "certificate_tags");
+
+            migrationBuilder.DropTable(
+                name: "CollectiveAttemptDraftChanges");
 
             migrationBuilder.DropTable(
                 name: "compliance_financial_crime_case_events");
@@ -18568,9 +18884,6 @@ namespace GameGuild.API.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "CourseGroupMembers");
-
-            migrationBuilder.DropTable(
-                name: "CourseGroups");
 
             migrationBuilder.DropTable(
                 name: "CourseGroupSets");
@@ -18866,6 +19179,9 @@ namespace GameGuild.API.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "GradeItemResults");
+
+            migrationBuilder.DropTable(
+                name: "GradeResultReleases");
 
             migrationBuilder.DropTable(
                 name: "GradingCommandReceipts");
@@ -19621,22 +19937,25 @@ namespace GameGuild.API.Database.Migrations
                 name: "project_categories");
 
             migrationBuilder.DropTable(
-                name: "AssessmentDefinitionRevisions");
+                name: "AssessmentSubmissions");
 
             migrationBuilder.DropTable(
-                name: "AssessmentTestRuns");
+                name: "CourseGroups");
+
+            migrationBuilder.DropTable(
+                name: "GradeRounds");
 
             migrationBuilder.DropTable(
                 name: "GradingExecutions");
 
             migrationBuilder.DropTable(
-                name: "AssessmentSubmissions");
-
-            migrationBuilder.DropTable(
                 name: "AssessmentTestRunSubjects");
 
             migrationBuilder.DropTable(
-                name: "GradeRounds");
+                name: "AssessmentTestRuns");
+
+            migrationBuilder.DropTable(
+                name: "AssessmentDefinitionRevisions");
         }
     }
 }

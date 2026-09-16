@@ -445,10 +445,16 @@ public sealed class QuizAssessmentAuthoringServiceTests
         public AssessmentType AssessmentType => inner.AssessmentType;
         public SubmissionModality SubmissionModalities => inner.SubmissionModalities;
         public IReadOnlySet<ReviewExecutionContext> Contexts { get; } = contexts;
+        public IReadOnlyDictionary<ReviewMethod, AssessmentReviewHandlerBinding> ReviewHandlers => inner.ReviewHandlers;
         public AssessmentAuthoringProjectionV1 ProjectAuthoring(JsonElement authoringDocument) =>
             inner.ProjectAuthoring(authoringDocument);
         public JsonElement GenerateDelivery(JsonElement projectedItem) => inner.GenerateDelivery(projectedItem);
-        public JsonElement DecodeResponse(AssessmentResponseEnvelopeV1 envelope) => inner.DecodeResponse(envelope);
+        public JsonElement DecodeResponse(
+            AssessmentResponseEnvelopeV1 envelope,
+            IReadOnlyList<JsonElement> projectedItems) => inner.DecodeResponse(envelope, projectedItems);
+
+        public bool CanEvaluateDeterministically(JsonElement projectedItem) =>
+            inner.CanEvaluateDeterministically(projectedItem);
         public ValueTask<GradeResultV1> EvaluateDeterministicAsync(
             DeterministicReviewRequest request,
             CancellationToken cancellationToken) => inner.EvaluateDeterministicAsync(request, cancellationToken);

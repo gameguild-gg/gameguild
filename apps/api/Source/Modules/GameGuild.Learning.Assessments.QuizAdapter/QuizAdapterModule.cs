@@ -15,6 +15,8 @@ public static class QuizAdapterModule
         services.AddSingleton<QuizDeterministicReviewAlgorithm>();
         services.AddSingleton<QuizAssessmentTypeAdapter>();
         services.AddSingleton<IAssessmentTypeAdapter>(provider => provider.GetRequiredService<QuizAssessmentTypeAdapter>());
+        services.AddSingleton<QuizAutomatedReviewStageHandler>();
+        services.AddSingleton<IReviewStageHandler>(provider => provider.GetRequiredService<QuizAutomatedReviewStageHandler>());
         services.AddSingleton<QuizProgramContentBoundary>();
         services.AddSingleton<GameGuild.Learning.Courses.IProgramContentLearnerProjector>(provider => provider.GetRequiredService<QuizProgramContentBoundary>());
         services.AddSingleton<GameGuild.Learning.Courses.IProgramContentAcademicMutationGuard>(provider => provider.GetRequiredService<QuizProgramContentBoundary>());
