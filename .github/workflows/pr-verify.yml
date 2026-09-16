@@ -102,6 +102,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-node-workspace
+      - name: Build generated client
+        run: pnpm --filter @game-guild/client build
       - name: Lint Learning
         run: pnpm --filter @game-guild/learning lint
       - name: Typecheck Learning
