@@ -4,7 +4,8 @@ import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  redirect: vi.fn((href: string) => {
+  redirect: vi.fn((target: string | { href: string; locale: string }) => {
+    const href = typeof target === "string" ? target : `/${target.locale}${target.href}`;
     throw new Error(`redirect:${href}`);
   }),
   notFound: vi.fn(() => {
@@ -45,6 +46,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/i18n/navigation", () => ({
+  redirect: mocks.redirect,
   Link: ({
     href,
     children,

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Xunit;
 using GameGuild.Assets;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace GameGuild.Learning.Courses.UnitTests.Authoring;
 
@@ -188,6 +189,120 @@ public sealed class ProgramContentAuthoringServiceTests
         var audit = await context.Set<ProgramContentPublicationAudit>().SingleAsync();
         audit.PublishedBy.Should().Be(actorId);
         audit.ContentId.Should().Be(content.Id);
+    }
+
+    [Fact]
+    public async Task GetDraft_RequiresAuthenticatedAuthor()
+    {
+        await using var context = CreateContext();
+        var service = new ProgramContentAuthoringService(context);
+
+        var act = () => service.GetOrCreateDraft(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.Empty,
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+    }
+
+    [Fact]
+    public async Task GetDraft_RejectsContentFromAnotherProgram()
+    {
+        await using var context = CreateContext();
+        var content = PublishedContent("Wrong course", "Body");
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var service = new ProgramContentAuthoringService(context);
+
+        var act = () => service.GetOrCreateDraft(
+            Guid.NewGuid(),
+            content.Id,
+            Guid.NewGuid(),
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<KeyNotFoundException>()
+            .WithMessage("*not found in this course*");
+    }
+
+    [Fact]
+    public async Task GetDraft_RejectsPersistedNullPayload()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var content = PublishedContent("Invalid draft", "Body");
+        var draft = ProgramContentDraft.Create(
+            Guid.NewGuid(),
+            content.ProgramId,
+            content.Id,
+            actorId,
+            1,
+            "null",
+            DateTimeOffset.UtcNow);
+        context.AddRange(content, draft);
+        await context.SaveChangesAsync();
+        var service = new ProgramContentAuthoringService(context);
+
+        var act = () => service.GetOrCreateDraft(
+            content.ProgramId,
+            content.Id,
+            actorId,
+            CancellationToken.None);
+
+        await act.Should().ThrowAsync<ValidationException>()
+            .WithMessage("*draft payload is invalid*");
+    }
+
+    [Fact]
+    public async Task Publish_NormalizesBlankSlugAndPersistsStructuredActivityPayload()
+    {
+        await using var context = CreateContext();
+        var actorId = Guid.NewGuid();
+        var content = PublishedContent("Activity", "Original");
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var service = new ProgramContentAuthoringService(context);
+        var draft = await service.GetOrCreateDraft(
+            content.ProgramId,
+            content.Id,
+            actorId,
+            CancellationToken.None);
+        var jsonBody = JsonDocument.Parse("{\"root\":{\"children\":[]}}").RootElement.Clone();
+        var payload = draft.Payload with
+        {
+            Title = "Discussion activity",
+            Slug = "   ",
+            Type = ProgramContentType.Discussion,
+            JsonBody = jsonBody,
+            LessonFormat = null,
+            ActivitySettings = new DiscussionActivitySettings(
+                AllowReplies: true,
+                RequireThreadRoot: false,
+                MinimumBodyLength: 10,
+                MaximumBodyLength: 500),
+        };
+        var saved = await service.SaveDraft(
+            content.ProgramId,
+            content.Id,
+            draft.Revision,
+            payload,
+            actorId,
+            CancellationToken.None);
+
+        var result = await service.Publish(
+            content.ProgramId,
+            content.Id,
+            saved.Revision,
+            actorId,
+            CancellationToken.None);
+
+        result.PublishedContent.Slug.Should().Be("discussion-activity");
+        content.JsonBody.Should().BeNull("activity normalization stores its typed settings instead of lesson JSON");
+        var settings = content.GetActivitySettings().Should().BeOfType<DiscussionActivitySettings>().Which;
+        settings.AllowReplies.Should().BeTrue();
+        settings.RequireThreadRoot.Should().BeFalse();
+        settings.MinimumBodyLength.Should().Be(10);
+        settings.MaximumBodyLength.Should().Be(500);
     }
 
     private static ProgramContent PublishedContent(string title, string body) => new()

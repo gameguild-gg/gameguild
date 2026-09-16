@@ -6,6 +6,7 @@ using Npgsql;
 
 namespace GameGuild.API.UnitTests.Database;
 
+[Collection(PostgreSqlTestCollection.Name)]
 public sealed class EconomyProviderReversalWriterPostgreSqlTests
 {
     private static readonly DateTimeOffset Now = new(2026, 8, 10, 12, 0, 0, TimeSpan.Zero);

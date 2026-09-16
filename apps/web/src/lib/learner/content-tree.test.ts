@@ -29,7 +29,10 @@ describe("collectHiddenContentIds", () => {
 
     const hidden = collectHiddenContentIds(tree);
 
-    expect([...hidden].sort()).toEqual(["private-module", "public-child-of-private"]);
+    expect([...hidden].sort()).toEqual([
+      "private-module",
+      "public-child-of-private",
+    ]);
   });
 
   it("keeps public trees empty", () => {
@@ -47,7 +50,11 @@ describe("collectHiddenContentIds", () => {
 
 describe("flattenUniqueContent", () => {
   it("flattens nested children in sortOrder order", () => {
-    const child = content({ id: "child-1", visibility: "Public", sortOrder: 1 });
+    const child = content({
+      id: "child-1",
+      visibility: "Public",
+      sortOrder: 1,
+    });
     const tree = [
       content({
         id: "root-1",
@@ -63,5 +70,19 @@ describe("flattenUniqueContent", () => {
       "child-1",
       "root-1",
     ]);
+  });
+
+  it("keeps id-less content and removes repeated ids with default ordering", () => {
+    const anonymous = { visibility: "Public" } as LearningCoursesProgramContent;
+    const first = content({ id: "duplicate", visibility: "Public" });
+    const repeated = content({
+      id: "duplicate",
+      visibility: "Public",
+      sortOrder: 5,
+    });
+
+    const flattened = flattenUniqueContent([anonymous, first, repeated]);
+
+    expect(flattened).toEqual([anonymous, first]);
   });
 });

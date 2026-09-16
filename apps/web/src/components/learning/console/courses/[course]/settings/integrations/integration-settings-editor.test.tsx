@@ -1,49 +1,234 @@
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ updateCourseIntegrationSettings: vi.fn() }));
 
-vi.mock('@/lib/learning/actions', () => ({
+vi.mock("@/lib/learning/actions", () => ({
   updateCourseIntegrationSettings: mocks.updateCourseIntegrationSettings,
 }));
 
-import { IntegrationSettingsEditor } from './integration-settings-editor';
+import { IntegrationSettingsEditor } from "./integration-settings-editor";
 
-describe('IntegrationSettingsEditor', () => {
+describe("IntegrationSettingsEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.updateCourseIntegrationSettings.mockResolvedValue({ success: true, data: null });
+    mocks.updateCourseIntegrationSettings.mockResolvedValue({
+      success: true,
+      data: null,
+    });
   });
 
-  it('toggles an integration and adds an outbound webhook through a dialog', async () => {
+  it("toggles an integration and adds an outbound webhook through a dialog", async () => {
     const user = userEvent.setup();
     render(
       <IntegrationSettingsEditor
         settings={{
-          courseId: 'course-1',
-          integrations: [{ id: 'discord', type: 'discord', name: 'Class Discord', enabled: false, config: {}, status: 'disconnected' }],
+          courseId: "course-1",
+          integrations: [
+            {
+              id: "discord",
+              type: "discord",
+              name: "Class Discord",
+              enabled: false,
+              config: {},
+              status: "disconnected",
+            },
+          ],
           webhooks: [],
-          updatedAt: '2026-07-10T00:00:00.000Z',
+          updatedAt: "2026-07-10T00:00:00.000Z",
         }}
       />,
     );
 
-    await user.click(screen.getByRole('switch', { name: 'Enable Class Discord' }));
-    await user.click(screen.getByRole('button', { name: 'Add webhook' }));
-    await user.type(screen.getByLabelText('Webhook URL'), 'https://example.com/course-events');
-    await user.clear(screen.getByLabelText('Events'));
-    await user.type(screen.getByLabelText('Events'), 'course.updated, enrollment.created');
-    await user.click(screen.getByRole('button', { name: 'Add to course' }));
-    await user.click(screen.getByRole('button', { name: 'Save integration settings' }));
+    await user.click(
+      screen.getByRole("switch", { name: "Enable Class Discord" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Add webhook" }));
+    await user.type(
+      screen.getByLabelText("Webhook URL"),
+      "https://example.com/course-events",
+    );
+    await user.clear(screen.getByLabelText("Events"));
+    await user.type(
+      screen.getByLabelText("Events"),
+      "course.updated, enrollment.created",
+    );
+    await user.click(screen.getByRole("button", { name: "Add to course" }));
+    await user.click(
+      screen.getByRole("button", { name: "Save integration settings" }),
+    );
 
     expect(mocks.updateCourseIntegrationSettings).toHaveBeenCalledWith(
-      'course-1',
+      "course-1",
       expect.objectContaining({
-        integrations: [expect.objectContaining({ id: 'discord', enabled: true, status: 'connected' })],
-        webhooks: [expect.objectContaining({ url: 'https://example.com/course-events', events: ['course.updated', 'enrollment.created'] })],
+        integrations: [
+          expect.objectContaining({
+            id: "discord",
+            enabled: true,
+            status: "connected",
+          }),
+        ],
+        webhooks: [
+          expect.objectContaining({
+            url: "https://example.com/course-events",
+            events: ["course.updated", "enrollment.created"],
+          }),
+        ],
       }),
     );
-    expect(await screen.findByRole('status')).toHaveTextContent('Integration settings saved.');
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Integration settings saved.",
+    );
   }, 15_000);
+
+  it("ignores blank webhook URLs and normalizes duplicate event names", async () => {
+    const user = userEvent.setup();
+    render(
+      <IntegrationSettingsEditor
+        settings={{
+          courseId: "course-1",
+          integrations: [],
+          webhooks: [],
+          updatedAt: "2026-07-10T00:00:00.000Z",
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Add webhook" }));
+    await user.click(screen.getByRole("button", { name: "Add to course" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    await user.type(
+      screen.getByLabelText("Webhook URL"),
+      "  https://example.com/hook  ",
+    );
+    await user.clear(screen.getByLabelText("Events"));
+    fireEvent.change(screen.getByLabelText("Events"), {
+      target: {
+        value: "course.updated; course.updated, enrollment.created,  ",
+      },
+    });
+    await user.click(screen.getByRole("button", { name: "Add to course" }));
+
+    expect(
+      screen.getByText("course.updated, enrollment.created"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("https://example.com/hook")).toBeInTheDocument();
+  });
+
+  it("toggles and removes providers and webhooks without changing sibling rows", async () => {
+    const user = userEvent.setup();
+    render(
+      <IntegrationSettingsEditor
+        settings={{
+          courseId: "course-1",
+          integrations: [
+            {
+              id: "discord",
+              type: "discord",
+              name: "Class Discord",
+              enabled: true,
+              config: {},
+              status: "connected",
+            },
+            {
+              id: "zoom",
+              type: "zoom",
+              name: "Live classes",
+              enabled: false,
+              config: {},
+              status: "disconnected",
+            },
+          ],
+          webhooks: [
+            {
+              id: "first",
+              url: "https://example.com/first",
+              events: [],
+              enabled: true,
+            },
+            {
+              id: "second",
+              url: "https://example.com/second",
+              events: ["course.updated"],
+              enabled: false,
+            },
+          ],
+          updatedAt: "2026-07-10T00:00:00.000Z",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("No events selected")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("switch", { name: "Enable Class Discord" }),
+    );
+    await user.click(
+      screen.getByRole("switch", {
+        name: "Enable webhook https://example.com/first",
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", {
+        name: "Remove webhook https://example.com/first",
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Save integration settings" }),
+    );
+
+    expect(mocks.updateCourseIntegrationSettings).toHaveBeenCalledWith(
+      "course-1",
+      {
+        integrations: [
+          expect.objectContaining({
+            id: "discord",
+            enabled: false,
+            status: "disconnected",
+          }),
+          expect.objectContaining({
+            id: "zoom",
+            enabled: false,
+            status: "disconnected",
+          }),
+        ],
+        webhooks: [expect.objectContaining({ id: "second", enabled: false })],
+      },
+    );
+  });
+
+  it("renders an API error and disables save while persistence is pending", async () => {
+    let resolveSave!: (value: { success: false; error: string }) => void;
+    mocks.updateCourseIntegrationSettings.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveSave = resolve;
+      }),
+    );
+    const user = userEvent.setup();
+    render(
+      <IntegrationSettingsEditor
+        settings={{
+          courseId: "course-1",
+          integrations: [],
+          webhooks: [],
+          updatedAt: "2026-07-10T00:00:00.000Z",
+        }}
+      />,
+    );
+
+    const save = screen.getByRole("button", {
+      name: "Save integration settings",
+    });
+    await user.click(save);
+    await waitFor(() => expect(save).toBeDisabled());
+    resolveSave({
+      success: false,
+      error: "Integration settings were rejected.",
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Integration settings were rejected.",
+    );
+  });
 });

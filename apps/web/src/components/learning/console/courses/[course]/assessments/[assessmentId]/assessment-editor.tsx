@@ -61,6 +61,10 @@ const RUBRIC_LOCK_MESSAGE = "Rubric locked after grading started";
 
 const DEFAULT_PEER_REVIEWS = 3;
 
+export function resolvePeerReviewsRequiredCount(value: string) {
+  return Math.max(1, Number(value) || DEFAULT_PEER_REVIEWS);
+}
+
 export interface GroupSetOption {
   id: string;
   name: string;
@@ -351,10 +355,8 @@ export function AssessmentEditor({
               courseId,
               assessmentId: assessment.id,
               gradingMethods: serializeGradingMethods(next),
-              peerReviewsRequiredCount: Math.max(
-                1,
-                Number(peerReviewsRequired) || DEFAULT_PEER_REVIEWS,
-              ),
+              peerReviewsRequiredCount:
+                resolvePeerReviewsRequiredCount(peerReviewsRequired),
             }
           : {
               courseId,
@@ -433,7 +435,8 @@ export function AssessmentEditor({
         title: rubricTitle,
         criteria: criteria.map((row, index) => ({
           description: row.description.trim(),
-          points: row.points ?? 0,
+          // The save action is enabled only when every criterion has points.
+          points: row.points as number,
           order: index,
         })),
       });

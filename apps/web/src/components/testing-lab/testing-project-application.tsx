@@ -12,6 +12,7 @@ import type {
 import { Alert, AlertDescription } from '@game-guild/ui/components/alert';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { Label } from '@game-guild/ui/components/label';
 import { Textarea } from '@game-guild/ui/components/textarea';
 import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, FolderKanban, Loader2, Save } from 'lucide-react';
@@ -145,6 +146,7 @@ function ApplicationWizard({
   const [preferredAvailability, setPreferredAvailability] = useState(application?.preferredAvailability ?? '');
   const [assetIds, setAssetIds] = useState(lines(application?.submittedAssetReferenceIds));
   const editable = acceptsApplications && (status === 'Draft' || status === 'Pending');
+  const canWithdraw = Boolean(applicationId) && ['Draft', 'Pending', 'UnderReview', 'Waitlisted'].includes(status);
   const versionMutable = status === 'Draft' || application?.submissionVersionPolicy !== 'ReleasedImmutable';
 
   function persist(intent: 'save' | 'submit', nextStep?: number) {
@@ -175,7 +177,16 @@ function ApplicationWizard({
     const formData = new FormData();
     formData.set('eventId', eventId);
     formData.set('applicationId', applicationId);
-    startTransition(async () => setResult(await withdrawTestingProjectApplication(formData)));
+    startTransition(async () => {
+      try {
+        setResult(await withdrawTestingProjectApplication(formData));
+      } catch (error) {
+        setResult({
+          success: false,
+          error: error instanceof Error ? error.message : 'The Testing Lab operation failed.',
+        });
+      }
+    });
   }
 
   if (!editable) {
@@ -184,6 +195,12 @@ function ApplicationWizard({
         <Badge variant="outline">{status}</Badge>
         <p className="text-sm text-muted-foreground">This application package is frozen for review and historical integrity.</p>
         {application?.decisionRationale ? <Alert><AlertCircle className="size-4" /><AlertDescription>{application.decisionRationale}</AlertDescription></Alert> : null}
+        {canWithdraw ? (
+          <Button type="button" variant="ghost" className="text-destructive" disabled={pending} onClick={withdraw}>
+            Withdraw application
+          </Button>
+        ) : null}
+        <ResultMessage result={result} />
       </section>
     );
   }
@@ -286,7 +303,7 @@ function ApplicationWizard({
         </div>
       ) : null}
 
-      {applicationId && ['Draft', 'Pending', 'UnderReview', 'Waitlisted'].includes(status) ? (
+      {canWithdraw ? (
         <Button type="button" variant="ghost" className="text-destructive" disabled={pending} onClick={withdraw}>Withdraw application</Button>
       ) : null}
       <ResultMessage result={result} />
@@ -331,7 +348,7 @@ export function TestingProjectApplication({
     ? { application, applications, initialProjectId, projectVersions }
     : lastAuthenticatedData;
 
-  if (!applicationData) return <Button asChild className="w-full sm:w-auto"><Link href="/sign-in">Sign in to apply</Link></Button>;
+  if (!applicationData) return <Link href="/sign-in" className={buttonVariants({ className: 'w-full sm:w-auto' })}>Sign in to apply</Link>;
 
   const currentApplications = applicationData.applications ?? (applicationData.application ? [applicationData.application] : []);
   const activeProjectIds = new Set(currentApplications.filter((item) => !['Rejected', 'Withdrawn'].includes(item.status ?? '')).map((item) => item.projectId).filter((id): id is string => Boolean(id)));
@@ -345,7 +362,7 @@ export function TestingProjectApplication({
       {!acceptsApplications ? <p className="text-sm text-muted-foreground">Project applications are currently closed.</p> : availableVersions.length > 0 ? (
         <ApplicationWizard eventId={eventId} projectVersions={availableVersions} initialProjectId={applicationData.initialProjectId} applicationSchema={applicationSchema} generalRules={generalRules} candidateInstructions={candidateInstructions} requiresFeedback={requiresFeedback} acceptsApplications={acceptsApplications} />
       ) : currentApplications.length === 0 ? (
-        <div className="flex flex-col items-start gap-3"><p className="text-sm text-muted-foreground">Create a Ready for Testing or Released project version before applying.</p><Button asChild variant="outline"><Link href="/projects">Browse projects</Link></Button></div>
+        <div className="flex flex-col items-start gap-3"><p className="text-sm text-muted-foreground">Create a Ready for Testing or Released project version before applying.</p><Link href="/projects" className={buttonVariants({ variant: 'outline' })}>Browse projects</Link></div>
       ) : null}
     </div>
   );

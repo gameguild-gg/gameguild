@@ -1,18 +1,25 @@
 "use client";
 
 import { Button } from "@game-guild/ui/components/button";
-import { Link, useRouter } from "@/i18n/navigation";
+import {
+  getPathname,
+  Link,
+  usePathname,
+  useRouter,
+} from "@/i18n/navigation";
 import { getLearnerSignInHref } from "@/lib/learner/paths";
 import { LogIn } from "lucide-react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useLocale } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 export function LearningAuthRedirect() {
   const pathname = usePathname();
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const router = useRouter();
   const href = getLearnerSignInHref({
-    pathname,
+    pathname: getPathname({ href: pathname, locale }),
     search: searchParams.toString(),
   });
 

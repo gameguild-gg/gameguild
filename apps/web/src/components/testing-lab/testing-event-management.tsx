@@ -50,6 +50,7 @@ import {
 } from "@game-guild/ui/components/alert-dialog";
 import { Badge } from "@game-guild/ui/components/badge";
 import { Button } from "@game-guild/ui/components/button";
+import { buttonVariants } from "@game-guild/ui/components/button-variants";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { DateTimeRangePicker } from "@/components/ui/date-time-range-picker";
 import { TimeZoneCombobox } from "@/components/ui/time-zone-combobox";
@@ -119,7 +120,7 @@ export interface TestingLabLearningActivityOption {
   label: string;
 }
 
-function apiDatetimeLocal(value?: string | null, timeZoneId = "UTC") {
+export function apiDatetimeLocal(value?: string | null, timeZoneId = "UTC") {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.valueOf())) return "";
@@ -141,7 +142,7 @@ type TestingEventSchedule = {
 const Hour = 60 * 60 * 1000;
 const Day = 24 * Hour;
 
-function createTestingEventSchedule(
+export function createTestingEventSchedule(
   now = new Date(),
   eventDate?: Date,
 ): TestingEventSchedule {
@@ -160,11 +161,7 @@ function createTestingEventSchedule(
   const minimumStart = new Date(applicationsOpenAt.valueOf() + 2 * Hour);
   if (startsAt <= minimumStart) startsAt = minimumStart;
 
-  let applicationsCloseAt = new Date(startsAt.valueOf() - Hour);
-  if (applicationsCloseAt <= applicationsOpenAt) {
-    applicationsCloseAt = new Date(applicationsOpenAt.valueOf() + Hour);
-    startsAt = new Date(applicationsCloseAt.valueOf() + Hour);
-  }
+  const applicationsCloseAt = new Date(startsAt.valueOf() - Hour);
   const endsAt = new Date(startsAt.valueOf() + 2 * Hour);
 
   return {
@@ -175,13 +172,13 @@ function createTestingEventSchedule(
   };
 }
 
-function scheduleDate(value: string) {
+export function scheduleDate(value: string) {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.valueOf()) ? null : date;
 }
 
-function updateTestingEventSchedule(
+export function updateTestingEventSchedule(
   current: TestingEventSchedule,
   field: keyof TestingEventSchedule,
   value: string,
@@ -241,6 +238,16 @@ function ActionMessage({
   );
 }
 
+function actionFailure(error: unknown): TestingEventActionResult<unknown> {
+  return {
+    success: false,
+    error:
+      error instanceof Error
+        ? error.message
+        : "The Testing Lab operation failed.",
+  };
+}
+
 function EventActionDialog({
   trigger,
   title,
@@ -271,13 +278,17 @@ function EventActionDialog({
     const form = event.currentTarget;
     const data = new FormData(form);
     startTransition(async () => {
-      const next = await action(data);
-      setResult(next);
-      if (next.success) {
-        form.reset();
-        if (successHref) router.push(successHref);
-        else router.refresh();
-        window.setTimeout(() => setOpen(false), 450);
+      try {
+        const next = await action(data);
+        setResult(next);
+        if (next.success) {
+          form.reset();
+          if (successHref) router.push(successHref);
+          else router.refresh();
+          window.setTimeout(() => setOpen(false), 450);
+        }
+      } catch (error) {
+        setResult(actionFailure(error));
       }
     });
   }
@@ -287,7 +298,7 @@ function EventActionDialog({
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (!next) setResult(null);
+        setResult(null);
       }}
     >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -331,6 +342,10 @@ type EventFieldsProps = {
   compact?: boolean;
 };
 
+type EventTimelineFieldsProps = Omit<EventFieldsProps, "timeZoneId"> & {
+  timeZoneId: string;
+};
+
 function EventIdentityFields({
   event,
   includeBrief = true,
@@ -372,9 +387,9 @@ function EventIdentityFields({
         />
       </div>
       {availableTemplates.length > 0 ? (
-        <div className={compact ? compactRow : "space-y-2"}>
+        <div className={compactRow}>
           <Label
-            className={compact ? "text-xs text-muted-foreground" : undefined}
+            className="text-xs text-muted-foreground"
             htmlFor={`event-calendar-${fieldSuffix}`}
           >
             Calendar
@@ -485,8 +500,8 @@ function EventTimelineFields({
   timeZoneId,
   stacked = false,
   compact = false,
-}: EventFieldsProps) {
-  const eventTimeZone = timeZoneId ?? event?.timeZoneId ?? "UTC";
+}: EventTimelineFieldsProps) {
+  const eventTimeZone = timeZoneId;
   const applicationsOpenAt =
     schedule?.applicationsOpenAt ??
     apiDatetimeLocal(event?.applicationsOpenAt, eventTimeZone);
@@ -600,7 +615,7 @@ function EventTimelineFields({
 function EventFeedbackField({
   event,
 }: {
-  event?: TestingLabTestingEventProjection;
+  event: TestingLabTestingEventProjection;
 }) {
   return (
     <label className="flex items-start gap-3 rounded-md bg-muted/30 p-3 text-sm">
@@ -622,25 +637,18 @@ function EventFeedbackField({
 
 function EventFields({
   event,
-  schedule,
-  onScheduleChange,
   timeZoneId,
-}: EventFieldsProps) {
+}: {
+  event: TestingLabTestingEventProjection;
+  timeZoneId: string;
+}) {
   return (
     <div className="space-y-6">
-      {event?.id ? (
-        <input type="hidden" name="eventId" value={event.id} />
-      ) : null}
-      <input
-        type="hidden"
-        name="timeZoneId"
-        value={timeZoneId ?? event?.timeZoneId ?? "UTC"}
-      />
+      <input type="hidden" name="eventId" value={event.id} />
+      <input type="hidden" name="timeZoneId" value={timeZoneId} />
       <EventIdentityFields event={event} />
       <EventTimelineFields
         event={event}
-        schedule={schedule}
-        onScheduleChange={onScheduleChange}
         timeZoneId={timeZoneId}
       />
       <EventFeedbackField event={event} />
@@ -648,15 +656,7 @@ function EventFields({
   );
 }
 
-function EventRecurrenceFields({
-  onDirty,
-  startDate,
-  compact = false,
-}: {
-  onDirty: () => void;
-  startDate: string;
-  compact?: boolean;
-}) {
+export function testingEventRecurrenceStart(startDate: string) {
   const allDays = [
     "Sunday",
     "Monday",
@@ -666,6 +666,19 @@ function EventRecurrenceFields({
     "Friday",
     "Saturday",
   ];
+  const parsedStart = new Date(startDate);
+  return Number.isNaN(parsedStart.valueOf())
+    ? { day: "Monday", dayOfMonth: 1 }
+    : { day: allDays[parsedStart.getDay()]!, dayOfMonth: parsedStart.getDate() };
+}
+
+function EventRecurrenceFields({
+  onDirty,
+  startDate,
+}: {
+  onDirty: () => void;
+  startDate: string;
+}) {
   const displayDays = [
     "Monday",
     "Tuesday",
@@ -675,13 +688,8 @@ function EventRecurrenceFields({
     "Saturday",
     "Sunday",
   ];
-  const parsedStart = new Date(startDate);
-  const startDay = Number.isNaN(parsedStart.valueOf())
-    ? "Monday"
-    : allDays[parsedStart.getDay()]!;
-  const startDayOfMonth = Number.isNaN(parsedStart.valueOf())
-    ? 1
-    : parsedStart.getDate();
+  const { day: startDay, dayOfMonth: startDayOfMonth } =
+    testingEventRecurrenceStart(startDate);
   const [repeatOption, setRepeatOption] = useState("none");
   const [customFrequency, setCustomFrequency] = useState("Weekly");
   const [customDays, setCustomDays] = useState<string[]>([startDay]);
@@ -705,18 +713,14 @@ function EventRecurrenceFields({
   return (
     <section
       aria-labelledby="event-recurrence-heading"
-      className={compact ? "space-y-2.5" : "space-y-3"}
+      className="space-y-2.5"
     >
       <div
-        className={
-          compact
-            ? "grid gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3"
-            : "space-y-2"
-        }
+        className="grid gap-1.5 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-center sm:gap-3"
       >
         <Label
           id="event-recurrence-heading"
-          className={compact ? "text-xs text-muted-foreground" : undefined}
+          className="text-xs text-muted-foreground"
           htmlFor="event-recurrence"
         >
           Repeats
@@ -758,7 +762,7 @@ function EventRecurrenceFields({
 
       {frequency ? (
         <div
-          className={`space-y-3 rounded-md bg-muted/30 p-3 ${compact ? "sm:ml-[7.75rem]" : ""}`}
+          className="space-y-3 rounded-md bg-muted/30 p-3 sm:ml-[7.75rem]"
         >
           {repeatOption === "custom" ? (
             <div className="space-y-2">
@@ -901,7 +905,7 @@ export interface CreateTestingEventDialogProps {
   defaultTimeZone?: string;
 }
 
-function preferredNewEventTimeZone(defaultTimeZone: string) {
+export function preferredNewEventTimeZone(defaultTimeZone: string) {
   return defaultTimeZone === "UTC"
     ? browserTimeZone(defaultTimeZone)
     : defaultTimeZone;
@@ -969,13 +973,17 @@ export function CreateTestingEventDialog({
     event.preventDefault();
     const form = event.currentTarget;
     startTransition(async () => {
-      const next = await createTestingEvent(new FormData(form));
-      if (next.success) {
-        closeDrawer();
-        router.refresh();
-        return;
+      try {
+        const next = await createTestingEvent(new FormData(form));
+        if (next.success) {
+          closeDrawer();
+          router.refresh();
+          return;
+        }
+        setResult(next);
+      } catch (error) {
+        setResult(actionFailure(error));
       }
-      setResult(next);
     });
   }
 
@@ -994,10 +1002,7 @@ export function CreateTestingEventDialog({
       ) : null}
       <Dialog
         open={open}
-        onOpenChange={(next) => {
-          if (next) setOpen(true);
-          else requestClose();
-        }}
+        onOpenChange={requestClose}
       >
         <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
           <form
@@ -1051,7 +1056,6 @@ export function CreateTestingEventDialog({
                 <EventRecurrenceFields
                   startDate={schedule.startsAt}
                   onDirty={() => setDirty(true)}
-                  compact
                 />
                 <input type="hidden" name="requiresFeedback" value="true" />
               </div>
@@ -1370,12 +1374,19 @@ export function TestingEventLifecycleActions({
     configuration.testerRegistrationSchema,
   );
 
+  if (!event.id) return null;
+
   function run(transition: string) {
-    if (!event.id) return;
     const form = new FormData();
-    form.set("eventId", event.id);
+    form.set("eventId", event.id!);
     form.set("transition", transition);
-    startTransition(async () => setResult(await transitionTestingEvent(form)));
+    startTransition(async () => {
+      try {
+        setResult(await transitionTestingEvent(form));
+      } catch (error) {
+        setResult(actionFailure(error));
+      }
+    });
   }
 
   const NextIcon = next?.[2];
@@ -1383,14 +1394,13 @@ export function TestingEventLifecycleActions({
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         {event.status === "Draft" && !draftConfigurationReady && event.id ? (
-          <Button asChild size="sm">
-            <a
-              href={`/workspace/testing-lab/events/${event.id}/overview#event-configuration-heading`}
-            >
-              <Pencil className="mr-2 size-4" />
-              Complete setup
-            </a>
-          </Button>
+          <a
+            href={`/workspace/testing-lab/events/${event.id}/overview#event-configuration-heading`}
+            className={buttonVariants({ size: "sm" })}
+          >
+            <Pencil className="mr-2 size-4" />
+            Complete setup
+          </a>
         ) : next && NextIcon ? (
           <Button size="sm" disabled={pending} onClick={() => run(next[0])}>
             <NextIcon className="mr-2 size-4" />
@@ -1530,7 +1540,7 @@ export function TestingEventCommittee({
             <div className="space-y-2">
               <Label>Member</Label>
               <Select name="userId" required>
-                <SelectTrigger>
+                <SelectTrigger aria-label="Committee member">
                   <SelectValue placeholder="Choose a member" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1648,7 +1658,7 @@ export function TestingEventApplications({
 
   return (
     <div className="divide-y rounded-md border">
-      {applications.map((application) => {
+      {applications.map((application, index) => {
         const status = application.status ?? "Pending";
         const projectLabel = application.projectId
           ? (projectLabels[application.projectId] ??
@@ -1660,7 +1670,7 @@ export function TestingEventApplications({
           : "Member details unavailable";
         return (
           <div
-            key={application.id}
+            key={application.id ?? `${application.projectId ?? "unknown"}:${index}`}
             className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between"
           >
             <div className="min-w-0">
@@ -1696,17 +1706,25 @@ export function TestingEventApplications({
                   onClick={() => {
                     setReviewingApplicationId(application.id!);
                     startReviewTransition(async () => {
-                      const form = new FormData();
-                      form.set("eventId", eventId);
-                      form.set("applicationId", application.id!);
-                      const result =
-                        await beginTestingEventApplicationReview(form);
-                      setReviewResult({
-                        applicationId: application.id!,
-                        result,
-                      });
-                      if (result.success) router.refresh();
-                      setReviewingApplicationId(null);
+                      try {
+                        const form = new FormData();
+                        form.set("eventId", eventId);
+                        form.set("applicationId", application.id!);
+                        const result =
+                          await beginTestingEventApplicationReview(form);
+                        setReviewResult({
+                          applicationId: application.id!,
+                          result,
+                        });
+                        if (result.success) router.refresh();
+                      } catch (error) {
+                        setReviewResult({
+                          applicationId: application.id!,
+                          result: actionFailure(error),
+                        });
+                      } finally {
+                        setReviewingApplicationId(null);
+                      }
                     });
                   }}
                 >
@@ -1911,7 +1929,7 @@ export function TestingSlotRegistrations({
     );
   return (
     <div className="mt-3 divide-y border-t">
-      {registrations.map((registration) => {
+      {registrations.map((registration, index) => {
         const testerLabel = registration.userId
           ? memberLabels[registration.userId]
           : undefined;
@@ -1939,7 +1957,7 @@ export function TestingSlotRegistrations({
 
         return (
           <div
-            key={registration.id}
+            key={registration.id ?? `${registration.userId ?? "unknown"}:${index}`}
             className="flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between"
           >
             <div className="min-w-0">
@@ -1975,7 +1993,7 @@ export function TestingSlotRegistrations({
                     <div className="space-y-2">
                       <Label>Approved project</Label>
                       <Select name="applicationId" required>
-                        <SelectTrigger>
+                        <SelectTrigger aria-label="Approved project">
                           <SelectValue placeholder="Choose a project" />
                         </SelectTrigger>
                         <SelectContent>
@@ -2005,7 +2023,7 @@ export function TestingSlotRegistrations({
                     value={registration.id}
                   />
                   <Select name="attendance" required>
-                    <SelectTrigger className="w-36">
+                    <SelectTrigger className="w-36" aria-label="Attendance">
                       <SelectValue placeholder="Attendance" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2074,7 +2092,7 @@ export function TestingEventLearningDialog({
           value={selectedActivityId}
           onValueChange={setSelectedActivityId}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label="Course activity">
             <SelectValue placeholder="Choose a lesson or graded activity" />
           </SelectTrigger>
           <SelectContent>
@@ -2106,7 +2124,7 @@ export function TestingEventLearningDialog({
             event.learningCompletionRequirement ?? "AttendanceAndFeedback"
           }
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label="Completion requirement">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
