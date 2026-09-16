@@ -43,6 +43,23 @@ public sealed class ProgramCrudControllerLearnerTests
     service.Verify(candidate => candidate.GetUserProgramsAsync(It.IsAny<Guid>()), Times.Never);
   }
 
+  [Theory]
+  [InlineData("sub")]
+  [InlineData("userId")]
+  public async Task GetMyPrograms_AcceptsSupportedFallbackUserClaims(string claimType)
+  {
+    var userId = Guid.NewGuid();
+    var service = new Mock<IProgramCrudService>();
+    service.Setup(candidate => candidate.GetUserProgramsAsync(userId))
+      .ReturnsAsync(Array.Empty<GameGuild.Learning.Courses.Program>());
+    var controller = CreateController(service.Object, userId, claimType: claimType);
+
+    var result = await controller.GetMyPrograms();
+
+    result.Result.Should().BeOfType<OkObjectResult>();
+    service.Verify(candidate => candidate.GetUserProgramsAsync(userId), Times.Once);
+  }
+
   [Fact]
   public async Task AddUserToProgramByReference_ResolvesTenantUserAndEnrollsThem()
   {
@@ -89,10 +106,11 @@ public sealed class ProgramCrudControllerLearnerTests
   private static ProgramCrudController CreateController(
     IProgramCrudService service,
     Guid? userId,
-    ISender? sender = null)
+    ISender? sender = null,
+    string claimType = ClaimTypes.NameIdentifier)
   {
     var claims = userId.HasValue
-      ? new[] { new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString()) }
+      ? new[] { new Claim(claimType, userId.Value.ToString()) }
       : Array.Empty<Claim>();
     var actorAccessor = new Mock<GameGuild.Identity.Context.Actors.IActorContextAccessor>();
     actorAccessor.Setup(a => a.ActorContext).Returns(new GameGuild.Identity.Context.Actors.ActorContext

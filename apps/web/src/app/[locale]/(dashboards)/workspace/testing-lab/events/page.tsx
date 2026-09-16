@@ -8,7 +8,7 @@ import { getTestingLabSettings } from '@/lib/testing-lab';
 import { getArchivedTestingEventsDirectory, getTestingEventTemplates, getTestingEventsDirectory } from '@/lib/testing-lab/events-queries';
 import type { TestingLabTestingEventStatus } from '@game-guild/client';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import { CalendarDays, ChevronRight, FlaskConical, Layers3 } from 'lucide-react';
 
 const statuses: TestingLabTestingEventStatus[] = [
@@ -112,25 +112,50 @@ export default async function TestingEventsPage({
               {archived ? (
                 <RestoreTestingEventDialog event={event} />
               ) : event.id ? (
-                  <Button asChild variant="outline">
-                    <Link href={`/workspace/testing-lab/events/${event.id}`}>
-                      Manage event<ChevronRight className="ml-2 size-4" />
-                    </Link>
-                  </Button>
-                ) : null}
+                <Link
+                  href={`/workspace/testing-lab/events/${event.id}`}
+                  className={buttonVariants({ variant: 'outline' })}
+                >
+                  Manage event<ChevronRight className="ml-2 size-4" />
+                </Link>
+              ) : null}
             </article>
           ))}
         </section>
       )}
       {pageCount > 1 ? (
         <nav aria-label="Testing event pages" className="flex items-center justify-end gap-2">
-          <Button asChild size="sm" variant="outline" disabled={page <= 1}>
-            <Link href={`/workspace/testing-lab/events?page=${Math.max(1, page - 1)}${querySuffix}`}>Previous</Link>
-          </Button>
+          {page <= 1 ? (
+            <span
+              aria-disabled="true"
+              className={buttonVariants({ size: 'sm', variant: 'outline', className: 'pointer-events-none opacity-50' })}
+            >
+              Previous
+            </span>
+          ) : (
+            <Link
+              href={`/workspace/testing-lab/events?page=${page - 1}${querySuffix}`}
+              className={buttonVariants({ size: 'sm', variant: 'outline' })}
+            >
+              Previous
+            </Link>
+          )}
           <span className="text-sm text-muted-foreground">Page {Math.min(page, pageCount)} of {pageCount}</span>
-          <Button asChild size="sm" variant="outline" disabled={page >= pageCount}>
-            <Link href={`/workspace/testing-lab/events?page=${Math.min(pageCount, page + 1)}${querySuffix}`}>Next</Link>
-          </Button>
+          {page >= pageCount ? (
+            <span
+              aria-disabled="true"
+              className={buttonVariants({ size: 'sm', variant: 'outline', className: 'pointer-events-none opacity-50' })}
+            >
+              Next
+            </span>
+          ) : (
+            <Link
+              href={`/workspace/testing-lab/events?page=${page + 1}${querySuffix}`}
+              className={buttonVariants({ size: 'sm', variant: 'outline' })}
+            >
+              Next
+            </Link>
+          )}
         </nav>
       ) : null}
     </div>

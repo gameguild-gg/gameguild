@@ -44,6 +44,7 @@ export class AssetsModule {
     parentResourceType?: string;
     parentResourceId?: string;
     folderId?: string;
+    referenceId?: string;
   }): Promise<Result<void, ApiError>> {
     const url = '/v1/assets';
 

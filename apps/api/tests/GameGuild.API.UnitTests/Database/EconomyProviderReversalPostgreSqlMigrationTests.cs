@@ -6,6 +6,7 @@ using Npgsql;
 
 namespace GameGuild.API.UnitTests.Database;
 
+[Collection(PostgreSqlTestCollection.Name)]
 public sealed class EconomyProviderReversalPostgreSqlMigrationTests
 {
     [Fact]

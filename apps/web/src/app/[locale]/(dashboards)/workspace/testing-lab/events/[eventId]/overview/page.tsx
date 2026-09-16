@@ -10,7 +10,7 @@ import {
 } from '@/lib/testing-lab/event-workspace';
 import { getTestingEventWorkspaceData } from '@/lib/testing-lab/events-queries';
 import { Badge } from '@game-guild/ui/components/badge';
-import { Button } from '@game-guild/ui/components/button';
+import { buttonVariants } from '@game-guild/ui/components/button-variants';
 import {
   ArrowRight,
   CalendarClock,
@@ -103,16 +103,18 @@ export default async function TestingEventOverviewPage({
             </div>
           </dl>
           <div className="mt-4 flex flex-wrap gap-2 border-t pt-4">
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/workspace/testing-lab/events/${eventId}/applications`}>
-                Review applications <ArrowRight className="ml-2 size-4" />
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/workspace/testing-lab/events/${eventId}/schedule`}>
-                Manage schedule <ArrowRight className="ml-2 size-4" />
-              </Link>
-            </Button>
+            <Link
+              href={`/workspace/testing-lab/events/${eventId}/applications`}
+              className={buttonVariants({ size: 'sm', variant: 'outline' })}
+            >
+              Review applications <ArrowRight className="ml-2 size-4" />
+            </Link>
+            <Link
+              href={`/workspace/testing-lab/events/${eventId}/schedule`}
+              className={buttonVariants({ size: 'sm', variant: 'outline' })}
+            >
+              Manage schedule <ArrowRight className="ml-2 size-4" />
+            </Link>
           </div>
         </article>
 
@@ -145,11 +147,12 @@ export default async function TestingEventOverviewPage({
                 : 'No course activity is connected. Testing Lab evidence remains available in this event.'}
             </p>
           </div>
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/workspace/testing-lab/events/${eventId}/learning`}>
-              Open learning setup <ArrowRight className="ml-2 size-4" />
-            </Link>
-          </Button>
+          <Link
+            href={`/workspace/testing-lab/events/${eventId}/learning`}
+            className={buttonVariants({ size: 'sm', variant: 'outline' })}
+          >
+            Open learning setup <ArrowRight className="ml-2 size-4" />
+          </Link>
         </div>
       </section>
     </div>

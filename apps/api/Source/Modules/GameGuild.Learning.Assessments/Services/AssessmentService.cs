@@ -693,7 +693,7 @@ public class AssessmentService : IAssessmentService
     // ponytail: per-assessment PassingScore is gone (T3); course-level Program.PassingScore
     // drives grade time. For legacy rows where submission.Passed is null, fall back to the
     // historical course default of 60%. Revisit if analytics need course-specific thresholds.
-    private const decimal DefaultPassingPercent = 60m;
+    private static readonly decimal DefaultPassingPercent = 60m;
 
     private static decimal AveragePercent(IReadOnlyCollection<AssessmentScoreFact> facts)
     {

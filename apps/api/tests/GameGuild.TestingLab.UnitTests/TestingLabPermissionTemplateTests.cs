@@ -418,6 +418,56 @@ public sealed class TestingLabPermissionTemplateTests
     }
 
     [Fact]
+    public async Task ResourcePermission_ShouldRejectUnknownResourceTypesAndActions()
+    {
+        await using var context = CreateContext();
+        var service = new TestingLabPermissionService(context);
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+
+        var invalidResource = () => service.RevokePermissionAsync(
+            userId, tenantId, TestingLabActions.Read, "unknown", resourceId);
+        await invalidResource.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*not a valid Testing Lab resource type*");
+
+        var invalidAction = () => service.RevokePermissionAsync(
+            userId, tenantId, "unknown", TestingLabResourceTypes.Request, resourceId);
+        await invalidAction.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*not a valid Testing Lab action*");
+    }
+
+    [Fact]
+    public async Task UserPermissions_ShouldIgnoreMalformedEntriesAndParseOptionalResourceIds()
+    {
+        await using var context = CreateContext();
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var resourceId = Guid.NewGuid();
+        context.Set<TenantPermission>().Add(new TenantPermission
+        {
+            UserId = userId,
+            TenantId = tenantId,
+            Permissions =
+            [
+                "malformed",
+                $"{TestingLabResourceTypes.Request}:{TestingLabActions.Read}",
+                $"{TestingLabResourceTypes.Request}:{TestingLabActions.Edit}:not-a-guid",
+                $"{TestingLabResourceTypes.Request}:{TestingLabActions.Manage}:{resourceId}"
+            ]
+        });
+        await context.SaveChangesAsync();
+        var service = new TestingLabPermissionService(context);
+
+        var permissions = await service.GetUserPermissionsAsync(userId, tenantId);
+
+        permissions.Should().HaveCount(3);
+        permissions.Should().Contain(permission => permission.Action == TestingLabActions.Read && permission.ResourceId == null);
+        permissions.Should().Contain(permission => permission.Action == TestingLabActions.Edit && permission.ResourceId == null);
+        permissions.Should().Contain(permission => permission.Action == TestingLabActions.Manage && permission.ResourceId == resourceId);
+    }
+
+    [Fact]
     public void TestingLab_Model_Configuration_Should_Register_Runtime_Entities()
     {
         var modelBuilder = new ModelBuilder();
