@@ -82,6 +82,10 @@ jobs:
       - uses: ./.github/actions/setup-node-workspace
       - name: Build generated client
         run: pnpm --filter @game-guild/client build
+      - name: Build Web runtime dependencies
+        run: pnpm --filter @game-guild/web run build:emception-dependencies
+      - name: Generate Web route types
+        run: pnpm --filter @game-guild/web exec next typegen
       - name: Lint Web
         run: pnpm --filter @game-guild/web lint
       - name: Typecheck Web
