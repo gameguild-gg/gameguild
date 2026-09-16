@@ -11,12 +11,12 @@
       "persistent": true
     },
     "test": {
-      "dependsOn": ["^build", "build"],
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts"],
       "outputs": ["coverage/**"]
     },
     "test:coverage": {
-      "dependsOn": ["^build", "build"],
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "**/*.test.ts", "**/*.test.tsx"],
       "outputs": ["coverage/**"]
     },
